@@ -20,26 +20,25 @@
 #include <iostream>
 #include <boost/format.hpp>
 #include <boost/filesystem.hpp>
-#include <bitcoin/blockchain.hpp>
+#include <bitcoin/database.hpp>
 
 #define BS_INITCHAIN_DIR_NEW \
     "Failed to create directory %1% with error, '%2%'.\n"
 #define BS_INITCHAIN_DIR_EXISTS \
     "Failed because the directory %1% already exists.\n"
 #define BS_INITCHAIN_FAIL \
-    "Failed to initialize blockchain files.\n"
+    "Failed to initialize database files.\n"
 
 using namespace bc;
-using namespace bc::blockchain;
 using namespace bc::database;
 using namespace boost::filesystem;
 using namespace boost::system;
 using boost::format;
 
-// Create a new mainnet blockchain database.
+// Create a new mainnet database.
 int main(int argc, char** argv)
 {
-    std::string prefix("blockchain");
+    std::string prefix("mainnet");
 
     if (argc > 1)
         prefix = argv[1];

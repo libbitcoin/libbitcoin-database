@@ -1,0 +1,168 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\src\block_database.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\data_base.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\history_database.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\spend_database.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\stealth_database.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\transaction_database.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\record\record_allocator.cpp">
+      <Filter>src\record</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\record\linked_records.cpp">
+      <Filter>src\record</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\record\multimap_records.cpp">
+      <Filter>src\record</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\slab\slab_allocator.cpp">
+      <Filter>src\slab</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\disk\mmfile.cpp">
+      <Filter>src\disk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\mman-win32\mman.c">
+      <Filter>src\mman-win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\settings.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp">
+      <Filter>include\bitcoin\database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\mman-win32\mman.h">
+      <Filter>src\mman-win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\slab\slab_allocator.hpp">
+      <Filter>include\bitcoin\database\slab</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\mmfile.hpp">
+      <Filter>include\bitcoin\database\disk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\slab\htdb_slab.hpp">
+      <Filter>include\bitcoin\database\slab</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\record\htdb_record.hpp">
+      <Filter>include\bitcoin\database\record</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\record\linked_records.hpp">
+      <Filter>include\bitcoin\database\record</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\disk_array.hpp">
+      <Filter>include\bitcoin\database\disk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\record\multimap_records.hpp">
+      <Filter>include\bitcoin\database\record</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\record\record_allocator.hpp">
+      <Filter>include\bitcoin\database\record</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\database.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\block_database.hpp">
+      <Filter>include\bitcoin\database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\data_base.hpp">
+      <Filter>include\bitcoin\database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\history_database.hpp">
+      <Filter>include\bitcoin\database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\pointer_array_source.hpp">
+      <Filter>include\bitcoin\database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp">
+      <Filter>include\bitcoin\database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\spend_database.hpp">
+      <Filter>include\bitcoin\database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\stealth_database.hpp">
+      <Filter>include\bitcoin\database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\transaction_database.hpp">
+      <Filter>include\bitcoin\database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp">
+      <Filter>include\bitcoin\database</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\disk_array.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\htdb_record.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\htdb_record_list_item.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\htdb_slab.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\htdb_slab_list_item.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\multimap_records.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\remainder.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{11c7f4ed-eb93-43d0-9759-6f8123d97a2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin">
+      <UniqueIdentifier>{b76c4694-a30e-4226-bdf0-ab7f7fa65a91}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database">
+      <UniqueIdentifier>{941f0224-2e22-4651-b451-81eac5c4be1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\impl">
+      <UniqueIdentifier>{13dab59e-6461-4155-b441-720a884785bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\disk">
+      <UniqueIdentifier>{db51571c-ae1d-4ef5-a01e-b06c550baa19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\record">
+      <UniqueIdentifier>{fbf27321-beff-4f6d-a695-a3ee70ab923c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\slab">
+      <UniqueIdentifier>{1ef7bb1f-53c9-4ec4-94fb-50fc41d82478}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{60cb5d9d-8540-437e-bfa5-73e4c71c38a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\disk">
+      <UniqueIdentifier>{4fa3b137-c924-4fe4-920a-cb68f7f10ca1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\record">
+      <UniqueIdentifier>{0ea18be7-b14f-4fe5-b910-ed9e73ba08a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\slab">
+      <UniqueIdentifier>{2aa27da0-e313-4acc-9eb6-d210a08967db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\mman-win32">
+      <UniqueIdentifier>{b35b8e0a-f340-4650-b6b6-defdeb9bc4bc}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

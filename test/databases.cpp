@@ -18,11 +18,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include <boost/test/unit_test.hpp>
-#include <bitcoin/blockchain.hpp>
+#include <bitcoin/database.hpp>
 
 using namespace bc;
 using namespace bc::chain;
-using namespace bc::blockchain;
 using namespace bc::database;
 
 BOOST_AUTO_TEST_SUITE(databases)

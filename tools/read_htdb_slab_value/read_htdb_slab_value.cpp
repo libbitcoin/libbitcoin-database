@@ -1,9 +1,8 @@
 #include <iostream>
 #include <boost/lexical_cast.hpp>
-#include <bitcoin/blockchain.hpp>
+#include <bitcoin/database.hpp>
 
 using namespace bc;
-using namespace bc::blockchain;
 using namespace bc::database;
 
 template <size_t N>
