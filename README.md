@@ -1,14 +1,12 @@
-[![Build Status](https://travis-ci.org/libbitcoin/libbitcoin-blockchain.svg?branch=master)](https://travis-ci.org/libbitcoin/libbitcoin-blockchain)
+[![Build Status](https://travis-ci.org/libbitcoin/libbitcoin-database.svg?branch=master)](https://travis-ci.org/libbitcoin/libbitcoin-database)
 
-[![Coverage Status](https://coveralls.io/repos/libbitcoin/libbitcoin-blockchain/badge.svg)](https://coveralls.io/r/libbitcoin/libbitcoin-blockchain)
+[![Coverage Status](https://coveralls.io/repos/libbitcoin/libbitcoin-database/badge.svg)](https://coveralls.io/r/libbitcoin/libbitcoin-database)
 
-# Libbitcoin Blockchain
+# Libbitcoin Database
 
-*Fast Bitcoin blockchain database based on libbitcoin*
+*Bitcoin High Performance Database*
 
-Note that you need g++ 4.8 or higher. For this reason Ubuntu 12.04 and older are not supported.
-
-Make sure you have installed [libbitcoin](https://github.com/libbitcoin/libbitcoin) and [libbitcoin-consensus](https://github.com/libbitcoin/libbitcoin-consensus) beforehand according to their respective build instructions.
+Note that you need g++ 4.8 or higher. For this reason Ubuntu 12.04 and older are not supported. Make sure you have installed [libbitcoin](https://github.com/libbitcoin/libbitcoin) beforehand according to its build instructions.
 
 ```sh
 $ ./autogen.sh
@@ -18,8 +16,8 @@ $ sudo make install
 $ sudo ldconfig
 ```
 
-libbitcoin-blockchain is now installed in `/usr/local/`.
+libbitcoin-database is now installed in `/usr/local/`.
 
-## Configure Options
+**About Libbitcoin Database**
 
-The default configuration requires `libbitcoin-consensus`. This ensures consensus parity with the Satoshi client. To eliminate the `libbitcoin-consensus` dependency use the `--without-consensus` option. This results in use of `libbitcoin` consensus checks.
+Libbitcoin Database is a custom database build directly on the operating system's [memory-mapped file](https://en.wikipedia.org/wiki/Memory-mapped_file) system. All primary tables and indexes are built on an in-memory hash table, resulting in constant-time lookups. The database uses [sequence locking](https://en.wikipedia.org/wiki/Seqlock) to avoid writer starvation while never blocking the reader. This is ideal for a high performance blockchain server as reads are significantly more frequent than writes and yet writes must proceed wtihout delay. The [libbitcoin-blockchain](https://github.com/libbitcoin/libbitcoin-blockchain) library uses the database as the blockchain store.
