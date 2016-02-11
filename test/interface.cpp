@@ -233,8 +233,9 @@ BOOST_AUTO_TEST_CASE(pushpop_test)
     auto settings = database::settings::mainnet;
     settings.directory = { "chain" };
 
+    const auto block0 = chain::block::genesis_mainnet();
     boost::filesystem::create_directory(settings.directory);
-    BOOST_REQUIRE(data_base::initialize(settings.directory, mainnet_genesis_block()));
+    BOOST_REQUIRE(data_base::initialize(settings.directory, block0));
 
     data_base instance(settings);
     instance.start();
@@ -243,7 +244,6 @@ BOOST_AUTO_TEST_CASE(pushpop_test)
     BOOST_REQUIRE(instance.blocks.top(height));
     BOOST_REQUIRE_EQUAL(height, 0);
 
-    chain::block block0 = mainnet_genesis_block();
     test_block_exists(instance, 0, block0);
 
     std::cout << "pushpop: block 179" << std::endl;

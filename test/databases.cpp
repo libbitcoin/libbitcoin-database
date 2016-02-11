@@ -84,15 +84,15 @@ BOOST_AUTO_TEST_CASE(spend_db_test)
 
 chain::transaction random_tx(size_t fudge)
 {
-    chain::block genesis = mainnet_genesis_block();
-    chain::transaction result = genesis.transactions[0];
+    const auto genesis = chain::block::genesis_mainnet();
+    auto result = genesis.transactions[0];
     result.inputs[0].previous_output.index = fudge;
     return result;
 }
 
 BOOST_AUTO_TEST_CASE(block_db_test)
 {
-    chain::block block0 = mainnet_genesis_block();
+    auto block0 = chain::block::genesis_mainnet();
     block0.transactions.push_back(random_tx(0));
     block0.transactions.push_back(random_tx(1));
     //const hash_digest h0 = hash_block_header(block0.header);
