@@ -1,11 +1,11 @@
 #!/bin/bash
 ###############################################################################
-#  Copyright (c) 2014-2015 libbitcoin-blockchain developers (see COPYING).
+#  Copyright (c) 2014-2015 libbitcoin-database developers (see COPYING).
 #
 #         GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY
 #
 ###############################################################################
-# Script to build and install libbitcoin-blockchain.
+# Script to build and install libbitcoin-database.
 #
 # Script options:
 # --build-boost            Builds Boost libraries.
@@ -28,7 +28,7 @@
 #==============================================================================
 # The default build directory.
 #------------------------------------------------------------------------------
-BUILD_DIR="build-libbitcoin-blockchain"
+BUILD_DIR="build-libbitcoin-database"
 
 # Boost archive for gcc.
 #------------------------------------------------------------------------------
@@ -238,16 +238,9 @@ BITCOIN_OPTIONS=\
 "${with_boost} "\
 "${with_pkgconfigdir} "
 
-# Define bitcoin-consensus options.
+# Define bitcoin-database options.
 #------------------------------------------------------------------------------
-BITCOIN_CONSENSUS_OPTIONS=\
-"--without-tests "\
-"${with_boost} "\
-"${with_pkgconfigdir} "
-
-# Define bitcoin-blockchain options.
-#------------------------------------------------------------------------------
-BITCOIN_BLOCKCHAIN_OPTIONS=\
+BITCOIN_DATABASE_OPTIONS=\
 "${with_boost} "\
 "${with_pkgconfigdir} "
 
@@ -563,8 +556,7 @@ build_all()
     build_from_tarball_boost $BOOST_URL $BOOST_ARCHIVE boost $PARALLEL $BOOST_OPTIONS
     build_from_github libbitcoin secp256k1 version4 $PARALLEL "$@" $SECP256K1_OPTIONS
     build_from_github libbitcoin libbitcoin master $PARALLEL "$@" $BITCOIN_OPTIONS
-    build_from_github libbitcoin libbitcoin-consensus version2 $PARALLEL "$@" $BITCOIN_CONSENSUS_OPTIONS
-    build_from_travis libbitcoin libbitcoin-blockchain master $PARALLEL "$@" $BITCOIN_BLOCKCHAIN_OPTIONS
+    build_from_travis libbitcoin libbitcoin-database master $PARALLEL "$@" $BITCOIN_DATABASE_OPTIONS
 }
 
 

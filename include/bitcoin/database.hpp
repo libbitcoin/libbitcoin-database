@@ -15,15 +15,16 @@
  */
 
 #include <bitcoin/bitcoin.hpp>
-
 #include <bitcoin/database/block_database.hpp>
 #include <bitcoin/database/data_base.hpp>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/history_database.hpp>
 #include <bitcoin/database/pointer_array_source.hpp>
 #include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/spend_database.hpp>
 #include <bitcoin/database/stealth_database.hpp>
 #include <bitcoin/database/transaction_database.hpp>
+#include <bitcoin/database/version.hpp>
 #include <bitcoin/database/disk/disk_array.hpp>
 #include <bitcoin/database/disk/mmfile.hpp>
 #include <bitcoin/database/record/htdb_record.hpp>

@@ -1,6 +1,6 @@
 #!/bin/sh
 ###############################################################################
-#  Copyright (c) 2014-2015 libbitcoin-blockchain developers (see COPYING).
+#  Copyright (c) 2014-2015 libbitcoin-database developers (see COPYING).
 #
 #         GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY
 #
@@ -18,4 +18,4 @@ BOOST_UNIT_TEST_OPTIONS=\
 
 # Run tests.
 #==============================================================================
-./test/libbitcoin_blockchain_test ${BOOST_UNIT_TEST_OPTIONS}
+./test/libbitcoin_database_test ${BOOST_UNIT_TEST_OPTIONS}

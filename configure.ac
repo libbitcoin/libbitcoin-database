@@ -1,5 +1,5 @@
 ###############################################################################
-#  Copyright (c) 2014-2015 libbitcoin-blockchain developers (see COPYING).
+#  Copyright (c) 2014-2015 libbitcoin-database developers (see COPYING).
 #
 #         GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY
 #
@@ -13,7 +13,7 @@
 AC_PREREQ([2.65])
 
 # Process command-line arguments and perform initialization and verification.
-AC_INIT([libbitcoin-blockchain], [3.0.0], [eric@voskuil.org])
+AC_INIT([libbitcoin-database], [3.0.0], [eric@voskuil.org])
 
 # Do compilation tests.
 AC_LANG(C++)
@@ -66,17 +66,6 @@ AX_CXX_COMPILE_STDCXX_11([noext], [mandatory])
 
 # Process options.
 #==============================================================================
-# Implement --with-consensus and define WITH_CONSENSUS.
-#------------------------------------------------------------------------------
-AC_MSG_CHECKING([--with-consensus option])
-AC_ARG_WITH([consensus],
-    AS_HELP_STRING([--with-consensus],
-        [Link libbitcoin-consensus and use for consensus checks. @<:@default=yes@:>@]),
-    [with_consensus=$withval],
-    [with_consensus=yes])
-AC_MSG_RESULT([$with_consensus])
-AS_CASE([${with_consensus}], [yes], AC_DEFINE([WITH_CONSENSUS]))
-
 # Implement --with-pkgconfigdir and output ${pkgconfigdir}.
 #------------------------------------------------------------------------------
 AC_MSG_CHECKING([--with-pkgconfigdir option])
@@ -162,16 +151,6 @@ AC_SUBST([bitcoin_CPPFLAGS], [${bitcoin_CFLAGS}])
 AC_MSG_NOTICE([bitcoin_CPPFLAGS : ${bitcoin_CPPFLAGS}])
 AC_MSG_NOTICE([bitcoin_LIBS : ${bitcoin_LIBS}])
 
-# Require bitcoin-consensus of at least version 2.0.0 and output ${bitcoin_consensus_CPPFLAGS/LIBS/PKG}.
-#------------------------------------------------------------------------------
-AS_CASE([${with_consensus}], [yes],
-    [PKG_CHECK_MODULES([bitcoin_consensus], [libbitcoin-consensus >= 2.0.0])
-     AC_SUBST([bitcoin_consensus_PKG], ['libbitcoin-consensus >= 2.0.0'])
-     AC_SUBST([bitcoin_consensus_CPPFLAGS], [${bitcoin_consensus_CFLAGS}])
-     AC_MSG_NOTICE([bitcoin_consensus_CPPFLAGS : ${bitcoin_consensus_CPPFLAGS}])
-     AC_MSG_NOTICE([bitcoin_consensus_LIBS : ${bitcoin_consensus_LIBS}])],
-    [AC_SUBST([bitcoin_consensus_PKG], [])])
-
 
 # Set flags.
 #==============================================================================
@@ -252,5 +231,5 @@ AS_CASE([${CC}], [*gcc*],
 
 # Process outputs into templates.
 #==============================================================================
-AC_CONFIG_FILES([Makefile libbitcoin-blockchain.pc])
+AC_CONFIG_FILES([Makefile libbitcoin-database.pc])
 AC_OUTPUT

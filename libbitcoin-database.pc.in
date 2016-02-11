@@ -1,5 +1,5 @@
 ###############################################################################
-#  Copyright (c) 2014-2015 libbitcoin-blockchain developers (see COPYING).
+#  Copyright (c) 2014-2015 libbitcoin-database developers (see COPYING).
 #
 #         GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY
 #
@@ -15,9 +15,9 @@ includedir=@includedir@
 
 # Metadata
 #==============================================================================
-Name: libbitcoin-blockchain
-Description: Bitcoin Blockchain Library
-URL: https://github.com/libbitcoin/libbitcoin-blockchain
+Name: libbitcoin-database
+Description: Bitcoin High Performance Blockchain Database
+URL: https://github.com/libbitcoin/libbitcoin-database
 Version: @PACKAGE_VERSION@
 
 
@@ -25,7 +25,7 @@ Version: @PACKAGE_VERSION@
 #==============================================================================
 # Dependencies that publish package configuration.
 #------------------------------------------------------------------------------
-Requires: libbitcoin >= 3.0.0 @bitcoin_consensus_PKG@
+Requires: libbitcoin >= 3.0.0
 
 # Include directory and any other required compiler flags.
 #------------------------------------------------------------------------------
@@ -33,5 +33,5 @@ Cflags: -I${includedir}
 
 # Lib directory, lib and any required that do not publish pkg-config.
 #------------------------------------------------------------------------------
-Libs: -L${libdir} -lbitcoin-blockchain
+Libs: -L${libdir} -lbitcoin-database
 
