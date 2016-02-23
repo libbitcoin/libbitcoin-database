@@ -79,9 +79,10 @@ public:
     IndexType size() const;
 
 private:
-    /// Disk position of item.
+    // Disk position of item.
     position_type item_position(IndexType index) const;
-    /// Accessor for data.
+
+    // Accessor for data.
     uint8_t* data(position_type position) const;
 
     mmfile& file_;

@@ -162,7 +162,7 @@ bool data_base::start()
     if (!file_lock_.try_lock())
         return false;
 
-    const auto start_exclusive = start_write();
+    const auto start_exclusive = begin_write();
     blocks.start();
     spends.start();
     transactions.start();
@@ -174,7 +174,7 @@ bool data_base::start()
 
 bool data_base::stop()
 {
-    const auto start_exclusive = start_write();
+    const auto start_exclusive = begin_write();
     const auto result = blocks.stop() && spends.stop() &&
         transactions.stop() && history.stop() && stealth.stop();
     const auto end_exclusive = end_write();
@@ -184,7 +184,7 @@ bool data_base::stop()
 // ----------------------------------------------------------------------------
 // Locking.
 
-handle data_base::start_read()
+handle data_base::begin_read()
 {
     return sequential_lock_.load();
 }
@@ -199,7 +199,7 @@ bool data_base::is_write_locked(handle value)
     return (value % 2) == 1;
 }
 
-bool data_base::start_write()
+bool data_base::begin_write()
 {
     // slock is now odd.
     return is_write_locked(++sequential_lock_);

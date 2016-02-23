@@ -66,32 +66,32 @@ public:
 
     data_base(const settings& settings);
 
-    // ----------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Startup and shutdown.
 
     bool create();
     bool start();
     bool stop();
 
-    // ----------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Locking.
 
-    handle start_read();
-    bool start_write();
+    handle begin_read();
+    bool begin_write();
     bool end_write();
     bool is_read_valid(handle handle);
     bool is_write_locked(handle handle);
 
-    // ----------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Push and pop.
 
-    /// Full indexing but no validation.
+    /// Commit block at next height with indexing and no duplicate protection.
     void push(const chain::block& block);
 
     /// Throws if the chain is empty.
     chain::block pop();
 
-    // ----------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Query engines.
 
     /// Individual database query engines.
