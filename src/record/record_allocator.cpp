@@ -50,7 +50,7 @@ void record_allocator::sync()
 
 index_type record_allocator::allocate(/* size_t records=1 */)
 {
-    constexpr size_t records = 1;
+    static constexpr size_t records = 1;
     auto record_index = count_;
     reserve(records);
     return record_index;
