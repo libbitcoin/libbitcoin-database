@@ -88,6 +88,10 @@ public:
     /// Commit block at next height with indexing and no duplicate protection.
     void push(const chain::block& block);
 
+    /// Commit block at given height with indexing and no duplicate protection.
+    /// If height is not count + 1 then the count will not equal top height.
+    void push(const chain::block& block, uint64_t height);
+
     /// Throws if the chain is empty.
     chain::block pop();
 

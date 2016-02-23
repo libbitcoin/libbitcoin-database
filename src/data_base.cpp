@@ -244,8 +244,11 @@ void data_base::synchronize()
 
 void data_base::push(const block& block)
 {
-    const auto height = get_next_height(blocks);
+    push(block, get_next_height(blocks));
+}
 
+void data_base::push(const block& block, uint64_t height)
+{
     for (size_t index = 0; index < block.transactions.size(); ++index)
     {
         // Skip BIP30 allowed duplicates (coinbase txs of excepted blocks).
