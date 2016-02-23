@@ -73,13 +73,17 @@ public:
     bool unlink(const HashType& key);
 
 private:
-    /// What is the bucket given a hash.
+
+    // What is the bucket given a hash.
     index_type bucket_index(const HashType& key) const;
-    /// What is the slab start position for a chain.
+
+    // What is the slab start position for a chain.
     position_type read_bucket_value(const HashType& key) const;
-    /// Link a new chain into the bucket header.
+
+    // Link a new chain into the bucket header.
     void link(const HashType& key, const position_type begin);
-    /// Release node from linked chain.
+
+    // Release node from linked chain.
     template <typename ListItem>
     void release(const ListItem& item, const position_type previous);
 

@@ -81,16 +81,16 @@ public:
     uint64_t to_eof(slab_type slab) const;
 
 private:
-    /// File data access, by byte-wise position relative to start.
+    // File data access, by byte-wise position relative to start.
     uint8_t* data(const position_type position) const;
 
-    /// Ensure bytes for a new record are available.
+    // Ensure bytes for a new record are available.
     void reserve(size_t bytes_needed);
 
-    /// Read the size of the data from the file.
+    // Read the size of the data from the file.
     void read_size();
 
-    /// Write the size of the data from the file.
+    // Write the size of the data from the file.
     void write_size();
 
     mmfile& file_;

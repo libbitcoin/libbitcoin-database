@@ -131,9 +131,10 @@ public:
     void delete_last_row(const HashType& key);
 
 private:
-    /// Add new value to existing key.
+    // Add new value to existing key.
     void add_to_list(record_type start_info, write_function write);
-    /// Create new key with a single value.
+
+    // Create new key with a single value.
     void create_new(const HashType& key, write_function write);
 
     const std::string name_;

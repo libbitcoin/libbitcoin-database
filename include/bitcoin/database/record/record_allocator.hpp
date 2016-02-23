@@ -87,22 +87,22 @@ public:
     void count(const index_type records);
 
 private:
-    /// File data access, by byte-wise position relative to start.
+    // File data access, by byte-wise position relative to start.
     uint8_t* data(const position_type position) const;
 
-    /// Ensure bytes for a new record are available.
+    // Ensure bytes for a new record are available.
     void reserve(size_t count);
 
-    /// The record index of a disk position.
-    ///index_type position_to_record(position_type position) const;
+    //// The record index of a disk position.
+    ////index_type position_to_record(position_type position) const;
 
-    /// The disk position of a record index.
+    // The disk position of a record index.
     position_type record_to_position(index_type record) const;
 
-    /// Read the count of the records from the file.
+    // Read the count of the records from the file.
     void read_count();
 
-    /// Write the count of the records from the file.
+    // Write the count of the records from the file.
     void write_count();
 
     mmfile& file_;
