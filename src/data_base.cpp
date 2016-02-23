@@ -191,7 +191,7 @@ handle data_base::start_read()
 
 bool data_base::is_read_valid(handle value)
 {
-    return value == sequential_lock_;
+    return value == sequential_lock_.load();
 }
 
 bool data_base::is_write_locked(handle value)
