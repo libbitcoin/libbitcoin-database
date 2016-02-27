@@ -20,8 +20,10 @@
 #ifndef LIBBITCOIN_DATABASE_RECORD_ALLOCATOR_HPP
 #define LIBBITCOIN_DATABASE_RECORD_ALLOCATOR_HPP
 
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
+#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/disk/disk_array.hpp>
@@ -30,13 +32,13 @@
 namespace libbitcoin {
 namespace database {
 
-typedef uint8_t* record_type;
-typedef disk_array<index_type, index_type> htdb_record_header;
+typedef uint8_t* record_byte_pointer;
+typedef disk_array<array_index, array_index> htdb_record_header;
 
-BC_CONSTEXPR size_t min_records_fsize = sizeof(index_type);
+BC_CONSTEXPR size_t min_records_fsize = sizeof(array_index);
 BC_CONSTFUNC size_t htdb_record_header_fsize(size_t buckets)
 {
-    return sizeof(index_type) + min_records_fsize * buckets;
+    return sizeof(array_index) + min_records_fsize * buckets;
 }
 
 /**
@@ -47,7 +49,7 @@ BC_CONSTFUNC size_t htdb_record_header_fsize(size_t buckets)
 class BCD_API record_allocator
 {
 public:
-    record_allocator(mmfile& file, position_type sector_start,
+    record_allocator(mmfile& file, file_offset sector_start,
         size_t record_size);
 
     /**
@@ -64,7 +66,7 @@ public:
      * Allocate a record and return its logical index.
      * Call sync() after writing the record.
      */
-    index_type allocate(/* size_t records=1 */);
+    array_index new_record(/* size_t records=1 */);
 
     /**
      * Synchronise to disk.
@@ -74,30 +76,28 @@ public:
     /**
      * Return a record from its logical index.
      */
-    record_type get(index_type record) const;
+    const record_byte_pointer get_record(array_index record) const;
 
     /**
      * The number of records in this container.
      */
-    index_type count() const;
+    array_index count() const;
 
     /**
      * Change the number of records of this container.
      */
-    void count(const index_type records);
+    void count(const array_index records);
 
 private:
-    // File data access, by byte-wise position relative to start.
-    uint8_t* data(const position_type position) const;
 
     // Ensure bytes for a new record are available.
     void reserve(size_t count);
 
     //// The record index of a disk position.
-    ////index_type position_to_record(position_type position) const;
+    ////array_index position_to_record(file_offset position) const;
 
     // The disk position of a record index.
-    position_type record_to_position(index_type record) const;
+    file_offset record_to_position(array_index record) const;
 
     // Read the count of the records from the file.
     void read_count();
@@ -106,8 +106,9 @@ private:
     void write_count();
 
     mmfile& file_;
-    position_type start_;
-    index_type count_;
+    const file_offset start_;
+    std::atomic<array_index> count_;
+    mutable boost::shared_mutex mutex_;
     const size_t record_size_;
 };
 

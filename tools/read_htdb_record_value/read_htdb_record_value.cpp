@@ -6,7 +6,7 @@ using namespace bc;
 using namespace bc::database;
 
 template <size_t N>
-record_type get_record(htdb_record_header& header, record_allocator& alloc,
+record_byte_pointer get_record(htdb_record_header& header, record_allocator& alloc,
     const data_chunk& key_data)
 {
     typedef byte_array<N> hash_type;
@@ -36,9 +36,9 @@ int main(int argc, char** argv)
     }
 
     const size_t value_size = boost::lexical_cast<size_t>(argv[3]);
-    position_type offset = 0;
+    file_offset offset = 0;
     if (argc == 5)
-        offset = boost::lexical_cast<position_type>(argv[4]);
+        offset = boost::lexical_cast<file_offset>(argv[4]);
 
     mmfile file(filename);
     BITCOIN_ASSERT(file.data());
@@ -50,7 +50,7 @@ int main(int argc, char** argv)
     record_allocator alloc(file, offset + 4 + 4 * header.size(), record_size);
     alloc.start();
 
-    record_type record = nullptr;
+    record_byte_pointer record = nullptr;
     if (key_data.size() == 32)
     {
         record = get_record<32>(header, alloc, key_data);

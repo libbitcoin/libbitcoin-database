@@ -34,14 +34,16 @@
 #include <cstddef>
 #include <cstdint>
 #include <fcntl.h>
+#include <mutex>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <boost/filesystem.hpp>
+#include <boost/thread.hpp>
 #include <boost/format.hpp>
 #include <bitcoin/bitcoin.hpp>
 
-// mmfile should be able to support 32 bit but because the database 
+// mmfile is be able to support 32 bit but because the database 
 // requires a larger file this is not validated or supported.
 static_assert(sizeof(void*) == sizeof(uint64_t), "Not a 64 bit system!");
 
@@ -51,7 +53,49 @@ namespace database {
 using boost::format;
 using boost::filesystem::path;
 
-static void handle_error(const char* context, const path& filename)
+static constexpr size_t growth_factor = 3 / 2;
+
+size_t mmfile::file_size(int file_handle)
+{
+    if (file_handle == -1)
+        return 0;
+
+    // This is required because off_t is defined as long, whcih is 32 bits in
+    // msvc and 64 bits in linux/osx, and stat contains off_t.
+#ifdef _WIN32
+#ifdef _WIN64
+    struct _stat64 sbuf;
+    if (_fstat64(file_handle, &sbuf) == -1)
+        return 0;
+#else
+    struct _stat32 sbuf;
+    if (_fstat32(file_handle, &sbuf) == -1)
+        return 0;
+#endif
+#else
+    struct stat sbuf;
+    if (fstat(file_handle, &sbuf) == -1)
+        return 0;
+#endif
+
+    // Convert signed to unsigned size.
+    BITCOIN_ASSERT_MSG(sbuf.st_size > 0, "File size cannot be 0 bytes.");
+    return static_cast<size_t>(sbuf.st_size);
+}
+
+int mmfile::open_file(const path& filename)
+{
+#ifdef _WIN32
+    int handle = _wopen(filename.wstring().c_str(), O_RDWR,
+        FILE_OPEN_PERMISSIONS);
+#else
+    int handle = open(filename.string().c_str(), O_RDWR,
+        FILE_OPEN_PERMISSIONS);
+#endif
+    return handle;
+}
+
+void mmfile::handle_error(const char* context, const path& filename)
 {
     static const auto form = "The file failed to %1%: %2% error: %3%";
 #ifdef _WIN32
@@ -65,24 +109,18 @@ static void handle_error(const char* context, const path& filename)
 
 mmfile::mmfile(const path& filename)
   : filename_(filename),
-    stopped_(true)
+    file_handle_(open_file(filename_)),
+    size_(file_size(file_handle_)),
+    data_(nullptr),
+    stopped_(false)
 {
-    log::info(LOG_DATABASE) << "Mapping: " << filename_;
-    file_handle_ = open_file(filename);
-    size_ = file_size(file_handle_);
+    // This initializes data_.
     stopped_ = !map(size_);
+
     if (stopped_)
         handle_error("map", filename_);
-}
-
-mmfile::mmfile(mmfile&& file)
-  : file_handle_(file.file_handle_),
-    data_(file.data_),
-    size_(file.size_)
-{
-    file.file_handle_ = -1;
-    file.data_ = nullptr;
-    file.size_ = 0;
+    else
+        log::info(LOG_DATABASE) << "Mapping: " << filename_;
 }
 
 mmfile::~mmfile()
@@ -92,6 +130,10 @@ mmfile::~mmfile()
 
 bool mmfile::stop()
 {
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    boost::unique_lock<boost::shared_mutex> unique_lock(mutex_);
+
     if (stopped_)
         return true;
 
@@ -118,81 +160,63 @@ bool mmfile::stop()
 
     stopped_ = true;
     return unmapped && flushed && closed;
+    ///////////////////////////////////////////////////////////////////////////
 }
 
-uint8_t* mmfile::data()
-{
-    return data_;
-}
-const uint8_t* mmfile::data() const
-{
-    return data_;
-}
+// This is thread safe but only useful on initialization.
 size_t mmfile::size() const
 {
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
+
     return size_;
+    ///////////////////////////////////////////////////////////////////////////
 }
 
-// Grow file by 1.5x or keep it the same.
-bool mmfile::reserve(size_t size)
+// There is no guard against calling when stopped.
+void mmfile::resize(size_t size)
 {
-    if (size <= size_)
-        return true;
-
-    const size_t new_size = size * 3 / 2;
-    return resize(new_size);
+    // This establishes a shared lock during this one line.
+    /* write_accessor */ writer(size);
 }
 
-bool mmfile::resize(size_t new_size)
+// There is no guard against calling when stopped.
+const read_accessor mmfile::reader() const
 {
-    // Resize underlying file.
-    if (ftruncate(file_handle_, new_size) == -1)
+    // This establishes a shared lock until disposed.
+    return read_accessor(data_, mutex_);
+}
+
+// There is no guard against calling when stopped.
+write_accessor mmfile::writer(size_t size)
+{
+    // This establishes an upgradeable shared lock until disposed.
+    write_accessor accessor(data_, mutex_);
+
+    if (size > size_)
     {
-        handle_error("resize", filename_);
-        return false;
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        write_accessor::upgrade unique_lock(accessor.get_upgradeable());
+
+        // Must retest under the unique lock.
+        if (size > size_)
+        {
+            // There is no way to recover from this.
+            if (!reserve(size))
+                throw std::runtime_error(
+                    "The file could not be resized, disk space may be low.");
+        }
+        ///////////////////////////////////////////////////////////////////////
     }
 
-    const auto message = format("Resizing: %1% [%2%]") % filename_ % new_size;
-    log::debug(LOG_DATABASE) << message.str();
-
-    // Readjust memory map.
-#ifdef MREMAP_MAYMOVE
-    return remap(new_size);
-#else
-    return (unmap() && map(new_size));
-#endif
+    return accessor;
 }
 
 // privates
 
-size_t mmfile::file_size(int file_handle)
-{
-    if (file_handle == -1)
-        return 0;
-
-    // This is required because off_t is defined as long, whcih is 32 bits in
-    // mavc and 64 bits in linux/osx, and stat contains off_t.
-#ifdef _WIN32
-    #ifdef _WIN64
-    struct _stat64 sbuf;
-    if (_fstat64(file_handle, &sbuf) == -1)
-        return 0;
-    #else
-    struct _stat32 sbuf;
-    if (_fstat32(file_handle, &sbuf) == -1)
-        return 0;
-    #endif
-#else
-    struct stat sbuf;
-    if (fstat(file_handle, &sbuf) == -1)
-        return 0;
-#endif
-
-    // Convert signed to unsigned size.
-    BITCOIN_ASSERT_MSG(sbuf.st_size > 0, "File size cannot be 0 bytes.");
-    return static_cast<size_t>(sbuf.st_size);
-}
-
+// This sets data_ and size_, used on construct and resize.
 bool mmfile::map(size_t size)
 {
     if (size == 0)
@@ -202,18 +226,6 @@ bool mmfile::map(size_t size)
         MAP_SHARED, file_handle_, 0));
 
     return validate(size);
-}
-
-int mmfile::open_file(const path& filename)
-{
-#ifdef _WIN32
-    int handle = _wopen(filename.wstring().c_str(), O_RDWR,
-        FILE_OPEN_PERMISSIONS);
-#else
-    int handle = open(filename.string().c_str(), O_RDWR,
-        FILE_OPEN_PERMISSIONS);
-#endif
-    return handle;
 }
 
 #ifdef MREMAP_MAYMOVE
@@ -232,6 +244,28 @@ bool mmfile::unmap()
     size_ = 0;
     data_ = nullptr;
     return success;
+}
+
+bool mmfile::reserve(size_t size)
+{
+    const size_t new_size = size * growth_factor;
+
+    // Resize underlying file.
+    if (ftruncate(file_handle_, new_size) == -1)
+    {
+        handle_error("resize", filename_);
+        return false;
+    }
+
+    const auto message = format("Resizing: %1% [%2%]") % filename_ % new_size;
+    log::debug(LOG_DATABASE) << message.str();
+
+    // Readjust memory map.
+#ifdef MREMAP_MAYMOVE
+    return remap(new_size);
+#else
+    return (unmap() && map(new_size));
+#endif
 }
 
 bool mmfile::validate(size_t size)

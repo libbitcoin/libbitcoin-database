@@ -49,7 +49,7 @@ public:
     /**
      * sector_start represents the offset within the file.
      */
-    disk_array(mmfile& file, position_type sector_start);
+    disk_array(mmfile& file, file_offset sector_start);
 
     /**
      * Initialize a new array. The file must have enough space.
@@ -79,16 +79,12 @@ public:
     IndexType size() const;
 
 private:
-    // Disk position of item.
-    position_type item_position(IndexType index) const;
-
-    // Accessor for data.
-    uint8_t* data(position_type position) const;
+    // File offset of item.
+    file_offset item_position(IndexType index) const;
 
     mmfile& file_;
-    position_type sector_start_;
-
     IndexType size_;
+    const file_offset sector_start_;
 };
 
 } // namespace database

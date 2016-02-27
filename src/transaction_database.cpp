@@ -31,9 +31,9 @@ constexpr size_t number_buckets = 100000000;
 BC_CONSTEXPR size_t header_size = htdb_slab_header_fsize(number_buckets);
 BC_CONSTEXPR size_t initial_map_file_size = header_size + min_slab_fsize;
 
-BC_CONSTEXPR position_type alloc_offset = header_size;
+BC_CONSTEXPR file_offset alloc_offset = header_size;
 
-//chain::transaction deserialize_tx(const slab_type begin, uint64_t length)
+//chain::transaction deserialize_tx(const slab_byte_pointer begin, uint64_t length)
 //{
 //    boost::iostreams::stream<byte_pointer_array_source> istream(begin, length);
 //    istream.exceptions(std::ios_base::failbit);
@@ -55,7 +55,7 @@ chain::transaction deserialize_tx(const Iterator first)
     return tx;
 }
 
-transaction_result::transaction_result(const slab_type slab, uint64_t size_limit)
+transaction_result::transaction_result(const slab_byte_pointer slab, uint64_t size_limit)
   : slab_(slab), size_limit_(size_limit)
 {
 }
@@ -91,7 +91,7 @@ transaction_database::transaction_database(
     allocator_(map_file_, alloc_offset), 
     map_(header_, allocator_)
 {
-    BITCOIN_ASSERT(map_file_.data() != nullptr);
+    BITCOIN_ASSERT(map_file_.reader().buffer() != nullptr);
 }
 
 void transaction_database::create()

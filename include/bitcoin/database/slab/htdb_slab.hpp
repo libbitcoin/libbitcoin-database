@@ -59,13 +59,13 @@ public:
      * The provided write() function must write exactly value_size bytes.
      * Returns the position of the inserted value in the slab_allocator.
      */
-    position_type store(const HashType& key, write_function write,
+    file_offset store(const HashType& key, write_function write,
         const size_t value_size);
 
     /**
      * Return the slab for a given hash.
      */
-    slab_type get(const HashType& key) const;
+    slab_byte_pointer get(const HashType& key) const;
 
     /**
      * Delete a key-value pair from the hashtable by unlinking the node.
@@ -75,17 +75,17 @@ public:
 private:
 
     // What is the bucket given a hash.
-    index_type bucket_index(const HashType& key) const;
+    array_index bucket_index(const HashType& key) const;
 
     // What is the slab start position for a chain.
-    position_type read_bucket_value(const HashType& key) const;
+    file_offset read_bucket_value(const HashType& key) const;
 
     // Link a new chain into the bucket header.
-    void link(const HashType& key, const position_type begin);
+    void link(const HashType& key, const file_offset begin);
 
     // Release node from linked chain.
     template <typename ListItem>
-    void release(const ListItem& item, const position_type previous);
+    void release(const ListItem& item, const file_offset previous);
 
     htdb_slab_header& header_;
     slab_allocator& allocator_;

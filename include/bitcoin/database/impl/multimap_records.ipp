@@ -33,13 +33,13 @@ multimap_records<HashType>::multimap_records(htdb_type& map,
 }
 
 template <typename HashType>
-index_type multimap_records<HashType>::lookup(const HashType& key) const
+array_index multimap_records<HashType>::lookup(const HashType& key) const
 {
-    const record_type start_info = map_.get(key);
+    const record_byte_pointer start_info = map_.get(key);
     if (!start_info)
         return linked_rows_.empty;
 
-    const auto first = from_little_endian_unsafe<index_type>(start_info);
+    const auto first = from_little_endian_unsafe<array_index>(start_info);
     return first;
 }
 
@@ -62,7 +62,7 @@ void multimap_records<HashType>::delete_last_row(const HashType& key)
 {
     auto start_info = map_.get(key);
     BITCOIN_ASSERT(start_info != nullptr);
-    const auto old_begin = from_little_endian_unsafe<index_type>(start_info);
+    const auto old_begin = from_little_endian_unsafe<array_index>(start_info);
     BITCOIN_ASSERT(old_begin != linked_rows_.empty);
     const auto new_begin = linked_rows_.next(old_begin);
     if (new_begin == linked_rows_.empty)
@@ -79,10 +79,10 @@ void multimap_records<HashType>::delete_last_row(const HashType& key)
 }
 
 template <typename HashType>
-void multimap_records<HashType>::add_to_list(record_type start_info,
+void multimap_records<HashType>::add_to_list(record_byte_pointer start_info,
     write_function write)
 {
-    const auto old_begin = from_little_endian_unsafe<index_type>(start_info);
+    const auto old_begin = from_little_endian_unsafe<array_index>(start_info);
     const auto new_begin = linked_rows_.insert(old_begin);
     auto record = linked_rows_.get(new_begin);
     write(record);

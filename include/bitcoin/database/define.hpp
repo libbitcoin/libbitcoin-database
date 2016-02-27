@@ -41,7 +41,7 @@
     #define BCD_INTERNAL BC_HELPER_DLL_LOCAL
 #endif
 
-typedef uint32_t index_type;
-typedef uint64_t position_type;
+typedef uint32_t array_index;
+typedef uint64_t file_offset;
 
 #endif

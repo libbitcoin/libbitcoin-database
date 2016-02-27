@@ -50,7 +50,7 @@ void htdb_record<HashType>::store(const HashType& key,
 }
 
 template <typename HashType>
-record_type htdb_record<HashType>::get(const HashType& key) const
+record_byte_pointer htdb_record<HashType>::get(const HashType& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -135,7 +135,7 @@ bool htdb_record<HashType>::unlink(const HashType& key)
 }
 
 template <typename HashType>
-index_type htdb_record<HashType>::bucket_index(const HashType& key) const
+array_index htdb_record<HashType>::bucket_index(const HashType& key) const
 {
     const auto bucket = remainder(key, header_.size());
     BITCOIN_ASSERT(bucket < header_.size());
@@ -143,15 +143,15 @@ index_type htdb_record<HashType>::bucket_index(const HashType& key) const
 }
 
 template <typename HashType>
-index_type htdb_record<HashType>::read_bucket_value(const HashType& key) const
+array_index htdb_record<HashType>::read_bucket_value(const HashType& key) const
 {
     auto value = header_.read(bucket_index(key));
-    BITCOIN_ASSERT(sizeof(value) == sizeof(index_type));
+    BITCOIN_ASSERT(sizeof(value) == sizeof(array_index));
     return value;
 }
 
 template <typename HashType>
-void htdb_record<HashType>::link(const HashType& key, const index_type begin)
+void htdb_record<HashType>::link(const HashType& key, const array_index begin)
 {
     header_.write(bucket_index(key), begin);
 }
@@ -159,7 +159,7 @@ void htdb_record<HashType>::link(const HashType& key, const index_type begin)
 template <typename HashType>
 template <typename ListItem>
 void htdb_record<HashType>::release(const ListItem& item,
-    const position_type previous)
+    const file_offset previous)
 {
     ListItem previous_item(allocator_, previous);
     previous_item.write_next_index(item.next_index());

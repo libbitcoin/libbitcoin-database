@@ -20,8 +20,10 @@
 #ifndef LIBBITCOIN_DATABASE_SLAB_ALLOCATOR_HPP
 #define LIBBITCOIN_DATABASE_SLAB_ALLOCATOR_HPP
 
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
+#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/disk/disk_array.hpp>
@@ -30,13 +32,13 @@
 namespace libbitcoin {
 namespace database {
 
-typedef uint8_t* slab_type;
-typedef disk_array<index_type, position_type> htdb_slab_header;
+typedef uint8_t* slab_byte_pointer;
+typedef disk_array<array_index, file_offset> htdb_slab_header;
 
-BC_CONSTEXPR size_t min_slab_fsize = sizeof(position_type);
+BC_CONSTEXPR size_t min_slab_fsize = sizeof(file_offset);
 BC_CONSTFUNC size_t htdb_slab_header_fsize(size_t buckets)
 {
-    return sizeof(position_type) + min_slab_fsize * buckets;
+    return sizeof(file_offset) + min_slab_fsize * buckets;
 }
 
 /**
@@ -47,7 +49,7 @@ BC_CONSTFUNC size_t htdb_slab_header_fsize(size_t buckets)
 class BCD_API slab_allocator
 {
 public:
-    slab_allocator(mmfile& file, position_type sector_start);
+    slab_allocator(mmfile& file, file_offset sector_start);
 
     /**
       * Create slab allocator.
@@ -63,7 +65,7 @@ public:
      * Allocate a slab.
      * Call sync() after writing the record.
      */
-    position_type allocate(size_t bytes_needed);
+    file_offset new_slab(size_t bytes_needed);
 
     /**
      * Synchronise slab allocator to disk.
@@ -73,16 +75,14 @@ public:
     /**
      * Return a slab from its byte-wise position relative to start.
      */
-    slab_type get(position_type position) const;
+    const slab_byte_pointer get_slab(file_offset position) const;
 
     /**
      * Return distance from slab to eof providing a read boundary.
      */
-    uint64_t to_eof(slab_type slab) const;
+    uint64_t to_eof(slab_byte_pointer slab) const;
 
 private:
-    // File data access, by byte-wise position relative to start.
-    uint8_t* data(const position_type position) const;
 
     // Ensure bytes for a new record are available.
     void reserve(size_t bytes_needed);
@@ -94,8 +94,9 @@ private:
     void write_size();
 
     mmfile& file_;
-    position_type start_;
-    position_type size_;
+    const file_offset start_;
+    std::atomic<file_offset> size_;
+    mutable boost::shared_mutex mutex_;
 };
 
 } // namespace database

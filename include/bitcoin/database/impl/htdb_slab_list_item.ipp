@@ -35,54 +35,55 @@ class htdb_slab_list_item
 {
 public:
     static BC_CONSTEXPR size_t hash_size = std::tuple_size<HashType>::value;
-    static BC_CONSTEXPR position_type value_begin = hash_size + 8;
+    static BC_CONSTEXPR file_offset value_begin = hash_size + 8;
 
     htdb_slab_list_item(slab_allocator& allocator,
-        const position_type position=0);
+        const file_offset position=0);
 
-    position_type create(const HashType& key, const size_t value_size,
-        const position_type next);
+    file_offset create(const HashType& key, const size_t value_size,
+        const file_offset next);
 
     // Does this match?
     bool compare(const HashType& key) const;
 
     // The actual user data.
-    slab_type data() const;
+    slab_byte_pointer data() const;
 
     // Position of next item in the chained list.
-    position_type next_position() const;
+    file_offset next_position() const;
 
     // Write a new next position.
-    void write_next_position(position_type next);
+    void write_next_position(file_offset next);
 
 private:
     uint8_t* raw_next_data() const;
 
     slab_allocator& allocator_;
-    slab_type raw_data_;
+    slab_byte_pointer raw_data_;
 };
 
 template <typename HashType>
 htdb_slab_list_item<HashType>::htdb_slab_list_item(
-    slab_allocator& allocator, const position_type position)
-  : allocator_(allocator), raw_data_(allocator_.get(position))
+    slab_allocator& allocator, const file_offset position)
+  : allocator_(allocator),
+    raw_data_(allocator_.get_slab(position))
 {
 }
 
 template <typename HashType>
-position_type htdb_slab_list_item<HashType>::create(const HashType& key,
-    const size_t value_size, const position_type next)
+file_offset htdb_slab_list_item<HashType>::create(const HashType& key,
+    const size_t value_size, const file_offset next)
 {
-    const position_type info_size = key.size() + 8;
-    BITCOIN_ASSERT(sizeof(position_type) == 8);
+    const file_offset info_size = key.size() + 8;
+    BITCOIN_ASSERT(sizeof(file_offset) == 8);
 
     // Create new slab.
     //   [ HashType ]
     //   [ next:8   ]
     //   [ value... ]
     const size_t slab_size = info_size + value_size;
-    const position_type slab = allocator_.allocate(slab_size);
-    raw_data_ = allocator_.get(slab);
+    const file_offset slab = allocator_.new_slab(slab_size);
+    raw_data_ = allocator_.get_slab(slab);
 
     // Write to slab.
     auto serial = make_serializer(raw_data_);
@@ -102,21 +103,21 @@ bool htdb_slab_list_item<HashType>::compare(const HashType& key) const
 }
 
 template <typename HashType>
-slab_type htdb_slab_list_item<HashType>::data() const
+slab_byte_pointer htdb_slab_list_item<HashType>::data() const
 {
     // Value data is at the end.
     return raw_data_ + value_begin;
 }
 
 template <typename HashType>
-position_type htdb_slab_list_item<HashType>::next_position() const
+file_offset htdb_slab_list_item<HashType>::next_position() const
 {
     const auto next_data = raw_next_data();
-    return from_little_endian_unsafe<position_type>(next_data);
+    return from_little_endian_unsafe<file_offset>(next_data);
 }
 
 template <typename HashType>
-void htdb_slab_list_item<HashType>::write_next_position(position_type next)
+void htdb_slab_list_item<HashType>::write_next_position(file_offset next)
 {
     auto next_data = raw_next_data();
     auto serial = make_serializer(next_data);
@@ -129,8 +130,8 @@ template <typename HashType>
 uint8_t* htdb_slab_list_item<HashType>::raw_next_data() const
 {
     // Next position is after key data.
-    static_assert(sizeof(position_type) == 8, "Internal error");
-    BC_CONSTEXPR position_type next_begin = hash_size;
+    static_assert(sizeof(file_offset) == 8, "Internal error");
+    BC_CONSTEXPR file_offset next_begin = hash_size;
     return raw_data_ + next_begin;
 }
 

@@ -27,7 +27,7 @@ namespace libbitcoin {
 namespace database {
 
 // used by test
-BC_CONSTEXPR size_t linked_record_offset = sizeof(index_type);
+BC_CONSTEXPR size_t linked_record_offset = sizeof(array_index);
 
 /**
  * linked_records is a one-way linked list with a next value containing
@@ -38,30 +38,30 @@ BC_CONSTEXPR size_t linked_record_offset = sizeof(index_type);
 class BCD_API linked_records
 {
 public:
-    // std::numeric_limits<index_type>::max()
-    static BC_CONSTEXPR index_type empty = bc::max_uint32;
+    // std::numeric_limits<array_index>::max()
+    static BC_CONSTEXPR array_index empty = bc::max_uint32;
 
     linked_records(record_allocator& allocator);
 
     /**
      * Create new list with a single record.
      */
-    index_type create();
+    array_index create();
 
     /**
      * Insert new record before index. Returns index of new record.
      */
-    index_type insert(index_type next);
+    array_index insert(array_index next);
 
     /**
      * Read next index for record in list.
      */
-    index_type next(index_type index) const;
+    array_index next(array_index index) const;
 
     /**
      * Get underlying record data.
      */
-    record_type get(index_type index) const; 
+    record_byte_pointer get(array_index index) const; 
 
 private:
     record_allocator& allocator_;

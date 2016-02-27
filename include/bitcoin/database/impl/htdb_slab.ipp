@@ -36,7 +36,7 @@ htdb_slab<HashType>::htdb_slab(htdb_slab_header& header,
 }
 
 template <typename HashType>
-position_type htdb_slab<HashType>::store(const HashType& key,
+file_offset htdb_slab<HashType>::store(const HashType& key,
     write_function write, const size_t value_size)
 {
     // Store current bucket value.
@@ -53,7 +53,7 @@ position_type htdb_slab<HashType>::store(const HashType& key,
 }
 
 template <typename HashType>
-slab_type htdb_slab<HashType>::get(const HashType& key) const
+slab_byte_pointer htdb_slab<HashType>::get(const HashType& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -138,7 +138,7 @@ bool htdb_slab<HashType>::unlink(const HashType& key)
 }
 
 template <typename HashType>
-index_type htdb_slab<HashType>::bucket_index(const HashType& key) const
+array_index htdb_slab<HashType>::bucket_index(const HashType& key) const
 {
     const auto bucket = remainder(key, static_cast<uint32_t>(header_.size()));
     BITCOIN_ASSERT(bucket < header_.size());
@@ -146,15 +146,15 @@ index_type htdb_slab<HashType>::bucket_index(const HashType& key) const
 }
 
 template <typename HashType>
-position_type htdb_slab<HashType>::read_bucket_value(const HashType& key) const
+file_offset htdb_slab<HashType>::read_bucket_value(const HashType& key) const
 {
     auto value = header_.read(bucket_index(key));
-    static_assert(sizeof(value) == sizeof(position_type), "Invalid size");
+    static_assert(sizeof(value) == sizeof(file_offset), "Invalid size");
     return value;
 }
 
 template <typename HashType>
-void htdb_slab<HashType>::link(const HashType& key, const position_type begin)
+void htdb_slab<HashType>::link(const HashType& key, const file_offset begin)
 {
     // MUST BE ATOMIC
     header_.write(bucket_index(key), begin);
@@ -163,7 +163,7 @@ void htdb_slab<HashType>::link(const HashType& key, const position_type begin)
 template <typename HashType>
 template <typename ListItem>
 void htdb_slab<HashType>::release(const ListItem& item,
-    const position_type previous)
+    const file_offset previous)
 {
     ListItem previous_item(allocator_, previous);
 

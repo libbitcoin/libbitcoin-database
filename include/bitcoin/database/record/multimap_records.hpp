@@ -32,7 +32,7 @@ namespace database {
 template <typename HashType>
 BC_CONSTEXPR size_t map_record_fsize_multimap()
 {
-    return record_fsize_htdb<HashType>(sizeof(index_type));
+    return record_fsize_htdb<HashType>(sizeof(array_index));
 }
 
 /**
@@ -41,15 +41,15 @@ BC_CONSTEXPR size_t map_record_fsize_multimap()
  * multiple values in a for loop.
  *
  * @code
- *  for (const index_type idx: multimap.lookup(key))
- *      const record_type rec = linked_recs.get(idx);
+ *  for (const array_index idx: multimap.lookup(key))
+ *      const record_byte_pointer rec = linked_recs.get(idx);
  * @endcode
  */
 class BCD_API multimap_records_iterator
 {
 public:
     multimap_records_iterator(const linked_records& linked_rows,
-        index_type index);
+        array_index index);
 
     /**
      * Next value in the chain.
@@ -59,14 +59,14 @@ public:
     /**
      * Dereference the record index.
      */
-    index_type operator*() const;
+    array_index operator*() const;
 
 private:
     friend bool operator!=(multimap_records_iterator iter_a,
         multimap_records_iterator iter_b);
 
     const linked_records& linked_rows_;
-    index_type index_;
+    array_index index_;
 };
 
 /**
@@ -83,14 +83,14 @@ class BCD_API multimap_iterable
 {
 public:
     multimap_iterable(const linked_records& linked_rows,
-        index_type begin_index);
+        array_index begin_index);
 
     multimap_records_iterator begin() const;
     multimap_records_iterator end() const;
 
 private:
     const linked_records& linked_rows_;
-    index_type begin_index_;
+    array_index begin_index_;
 };
 
 /**
@@ -115,7 +115,7 @@ public:
     /**
      * Lookup a key, returning an iterable result with multiple values.
      */
-    index_type lookup(const HashType& key) const;
+    array_index lookup(const HashType& key) const;
 
     /**
      * Add a new row for a key. If the key doesn't exist, it will be
@@ -132,7 +132,7 @@ public:
 
 private:
     // Add new value to existing key.
-    void add_to_list(record_type start_info, write_function write);
+    void add_to_list(record_byte_pointer start_info, write_function write);
 
     // Create new key with a single value.
     void create_new(const HashType& key, write_function write);

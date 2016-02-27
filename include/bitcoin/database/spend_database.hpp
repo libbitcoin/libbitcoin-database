@@ -31,7 +31,7 @@ namespace database {
 class BCD_API spend_result
 {
 public:
-    spend_result(const record_type record);
+    spend_result(const record_byte_pointer record);
 
     /**
      * Test whether the result exists, return false otherwise.
@@ -49,7 +49,7 @@ public:
     uint32_t index() const;
 
 private:
-    const record_type record_;
+    const record_byte_pointer record_;
 };
 
 struct spend_statinfo

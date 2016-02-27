@@ -6,7 +6,7 @@ using namespace bc;
 using namespace bc::database;
 
 template <typename IndexType, typename ValueType>
-int show_array(const std::string& filename, position_type offset)
+int show_array(const std::string& filename, file_offset offset)
 {
     mmfile file(filename);
     if (!file.data())
@@ -16,7 +16,7 @@ int show_array(const std::string& filename, position_type offset)
     }
     disk_array<IndexType, ValueType> array(file, offset);
     array.start();
-    for (index_type i = 0; i < array.size(); ++i)
+    for (array_index i = 0; i < array.size(); ++i)
     {
         auto val = array.read(i);
         std::string val_string = boost::lexical_cast<std::string>(val);
@@ -37,9 +37,9 @@ int main(int argc, char** argv)
     }
     const std::string filename = argv[1];
     const std::string value_size = argv[2];
-    position_type offset = 0;
+    file_offset offset = 0;
     if (argc == 4)
-        offset = boost::lexical_cast<position_type>(argv[3]);
+        offset = boost::lexical_cast<file_offset>(argv[3]);
     if (value_size == "4")
         return show_array<uint32_t, uint32_t>(filename, offset);
     else if (value_size == "8")

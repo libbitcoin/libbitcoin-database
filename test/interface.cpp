@@ -1,22 +1,22 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- *
- * This file is part of libbitcoin.
- *
- * libbitcoin is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License with
- * additional permissions to the one published by the Free Software
- * Foundation, either version 3 of the License, or (at your option)
- * any later version. For more information see LICENSE.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+* Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
+*
+* This file is part of libbitcoin.
+*
+* libbitcoin is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Affero General Public License with
+* additional permissions to the one published by the Free Software
+* Foundation, either version 3 of the License, or (at your option)
+* any later version. For more information see LICENSE.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Affero General Public License for more details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <bitcoin/database.hpp>
@@ -87,7 +87,7 @@ void test_block_exists(const data_base& interface,
                 auto history = interface.history.get(address.hash(), 0, 0);
                 auto found = false;
 
-                for (const auto row: history)
+                for (const auto row : history)
                 {
                     if (row.point.hash == spend.hash &&
                         row.point.index == spend.index)
@@ -113,7 +113,7 @@ void test_block_exists(const data_base& interface,
             auto history = interface.history.get(address.hash(), 0, 0);
             auto found = false;
 
-            for (const auto& row: history)
+            for (const auto& row : history)
             {
                 bool is_valid = row.point.is_valid();
 
@@ -137,9 +137,9 @@ void test_block_exists(const data_base& interface,
 void test_block_not_exists(const data_base& interface,
     const chain::block block0)
 {
-    //const hash_digest blk_hash = hash_block_header(block0.header);
-    //auto r0_byhash = interface.blocks.get(blk_hash);
-    //BOOST_REQUIRE(!r0_byhash);
+    ////const hash_digest blk_hash = hash_block_header(block0.header);
+    ////auto r0_byhash = interface.blocks.get(blk_hash);
+    ////BOOST_REQUIRE(!r0_byhash);
     for (size_t i = 0; i < block0.transactions.size(); ++i)
     {
         const chain::transaction& tx = block0.transactions[i];
@@ -161,7 +161,7 @@ void test_block_not_exists(const data_base& interface,
                 auto history = interface.history.get(address.hash(), 0, 0);
                 auto found = false;
 
-                for (const auto& row: history)
+                for (const auto& row : history)
                 {
                     if (row.point.hash == spend.hash &&
                         row.point.index == spend.index)
@@ -186,7 +186,7 @@ void test_block_not_exists(const data_base& interface,
             auto history = interface.history.get(address.hash(), 0, 0);
             auto found = false;
 
-            for (const auto& row: history)
+            for (const auto& row : history)
             {
                 if (row.point.hash == outpoint.hash &&
                     row.point.index == outpoint.index)
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(pushpop_test)
 
     data_base instance(settings);
     instance.start();
-    
+
     size_t height = 42;
     BOOST_REQUIRE(instance.blocks.top(height));
     BOOST_REQUIRE_EQUAL(height, 0);

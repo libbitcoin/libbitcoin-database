@@ -371,7 +371,7 @@ chain::block data_base::pop()
     if (!blocks.top(height))
         throw std::runtime_error("The chain is empty.");
 
-    auto block_result = blocks.get(height);
+    const auto block_result = blocks.get(height);
 
     // Set result header.
     chain::block block;
@@ -386,7 +386,7 @@ chain::block data_base::pop()
     for (int64_t index = unsigned_count - 1; index >= 0; --index)
     {
         const auto tx_hash = block_result.transaction_hash(index);
-        auto tx_result = transactions.get(tx_hash);
+        const auto tx_result = transactions.get(tx_hash);
         BITCOIN_ASSERT(tx_result);
         BITCOIN_ASSERT(tx_result.height() == height);
         BITCOIN_ASSERT(tx_result.index() == static_cast<size_t>(index));

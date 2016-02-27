@@ -14,7 +14,7 @@ void show_usage()
 template <size_t KeySize>
 void mmr_create(const size_t value_size,
     const std::string& map_filename, const std::string& rows_filename,
-    const index_type buckets)
+    const array_index buckets)
 {
     const auto header_fsize = htdb_record_header_fsize(buckets);
 
@@ -30,7 +30,7 @@ void mmr_create(const size_t value_size,
     typedef byte_array<KeySize> hash_type;
     const size_t record_fsize = map_record_fsize_multimap<hash_type>();
     BITCOIN_ASSERT(record_fsize == KeySize + 4 + 4);
-    const position_type records_start = header_fsize;
+    const file_offset records_start = header_fsize;
 
     record_allocator alloc(ht_file, records_start, record_fsize);
     alloc.create();
@@ -63,9 +63,9 @@ int main(int argc, char** argv)
     const size_t value_size = boost::lexical_cast<size_t>(argv[2]);
     const std::string map_filename = argv[3];
     const std::string rows_filename = argv[4];
-    index_type buckets = 100;
+    array_index buckets = 100;
     if (argc == 6)
-        buckets = boost::lexical_cast<index_type>(argv[5]);
+        buckets = boost::lexical_cast<array_index>(argv[5]);
     if (key_size == 4)
         mmr_create<4>(value_size, map_filename, rows_filename, buckets);
     else if (key_size == 20)

@@ -15,9 +15,9 @@ int main(int argc, char** argv)
     }
     const std::string filename = argv[1];
     const size_t record_size = boost::lexical_cast<size_t>(argv[2]);
-    position_type offset = 0;
+    file_offset offset = 0;
     if (argc == 4)
-        offset = boost::lexical_cast<position_type>(argv[3]);
+        offset = boost::lexical_cast<file_offset>(argv[3]);
     mmfile file(filename);
     if (!file.data())
     {
@@ -26,9 +26,9 @@ int main(int argc, char** argv)
     }
     record_allocator recs(file, offset, record_size);
     recs.start();
-    for (index_type i = 0; i < recs.count(); ++i)
+    for (array_index i = 0; i < recs.count(); ++i)
     {
-        record_type rec = recs.get(i);
+        record_byte_pointer rec = recs.get(i);
         data_chunk data(rec, rec + record_size);
         std::cout << i << ": " << encode_base16(data) << std::endl;
     }

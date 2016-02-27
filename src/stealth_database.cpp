@@ -25,6 +25,7 @@
 namespace libbitcoin {
 namespace database {
 
+using path = boost::filesystem::path;
 using namespace bc::chain;
 
 // ephemkey is without sign byte and address is without version byte.
@@ -33,10 +34,10 @@ constexpr size_t prefix_size = sizeof(uint32_t);
 // [ prefix_bitfield:4 ][ ephemkey:32 ][ address:20 ][ tx_id:32 ]
 constexpr size_t row_size = prefix_size + 2 * hash_size + short_hash_size;
 
-stealth_database::stealth_database(const boost::filesystem::path& index_filename, 
-    const boost::filesystem::path& rows_filename)
+stealth_database::stealth_database(const path& index_filename,
+    const path& rows_filename)
   : index_file_(index_filename),
-    index_(index_file_, 0, sizeof(index_type)),
+    index_(index_file_, 0, sizeof(array_index)),
     rows_file_(rows_filename),
     rows_(rows_file_, 0, row_size)
 {
@@ -72,7 +73,7 @@ stealth stealth_database::scan(const binary& filter, size_t from_height) const
     for (auto index = start; index < rows_.count(); ++index)
     {
         // see if prefix matches
-        const auto record = rows_.get(index);
+        const auto record = rows_.get_record(index);
         const auto field = from_little_endian_unsafe<uint32_t>(record);
         if (!filter.is_prefix_of(field))
             continue;
@@ -90,11 +91,11 @@ stealth stealth_database::scan(const binary& filter, size_t from_height) const
     return result;
 }
 
-void stealth_database::store(uint32_t prefix, const chain::stealth_row& row)
+void stealth_database::store(uint32_t prefix, const stealth_row& row)
 {
     // Allocate new row.
-    const auto index = rows_.allocate();
-    const auto data = rows_.get(index);
+    const auto index = rows_.new_record();
+    const auto data = rows_.get_record(index);
 
     // Write data.
     auto serial = make_serializer(data);
@@ -122,8 +123,8 @@ void stealth_database::sync()
 void stealth_database::write_index()
 {
     // Write index of first row into block lookup index.
-    const auto index = index_.allocate();
-    const auto data = index_.get(index);
+    const auto index = index_.new_record();
+    const auto data = index_.get_record(index);
     auto serial = make_serializer(data);
 
     // MUST BE ATOMIC ???
@@ -136,11 +137,11 @@ void stealth_database::write_index()
     block_start_ = rows_.count();
 }
 
-index_type stealth_database::read_index(size_t from_height) const
+array_index stealth_database::read_index(size_t from_height) const
 {
     BITCOIN_ASSERT(from_height < index_.count());
-    const auto record = index_.get(from_height);
-    return from_little_endian_unsafe<index_type>(record);
+    const auto record = index_.get_record(from_height);
+    return from_little_endian_unsafe<array_index>(record);
 }
 
 } // namespace database

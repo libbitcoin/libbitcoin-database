@@ -29,20 +29,20 @@ linked_records::linked_records(record_allocator& allocator)
 {
 }
 
-index_type linked_records::create()
+array_index linked_records::create()
 {
     // Insert new record with empty next value.
     return insert(empty);
 }
 
-index_type linked_records::insert(index_type next)
+array_index linked_records::insert(array_index next)
 {
-    static_assert(sizeof(index_type) == sizeof(uint32_t),
-        "index_type incorrect size");
+    static_assert(sizeof(array_index) == sizeof(uint32_t),
+        "array_index incorrect size");
 
     // Create new record.
-    auto record = allocator_.allocate();
-    auto data = allocator_.get(record);
+    auto record = allocator_.new_record();
+    const auto data = allocator_.get_record(record);
 
     // Write next value at first 4 bytes of record.
     auto serial = make_serializer(data);
@@ -52,15 +52,15 @@ index_type linked_records::insert(index_type next)
     return record;
 }
 
-index_type linked_records::next(index_type index) const
+array_index linked_records::next(array_index index) const
 {
-    const auto data = allocator_.get(index);
-    return from_little_endian_unsafe<index_type>(data);
+    const auto data = allocator_.get_record(index);
+    return from_little_endian_unsafe<array_index>(data);
 }
 
-record_type linked_records::get(index_type index) const
+record_byte_pointer linked_records::get(array_index index) const
 {
-    return allocator_.get(index) + sizeof(index_type);
+    return allocator_.get_record(index) + sizeof(array_index);
 }
 
 } // namespace database

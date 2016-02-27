@@ -1,22 +1,22 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- *
- * This file is part of libbitcoin.
- *
- * libbitcoin is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License with
- * additional permissions to the one published by the Free Software
- * Foundation, either version 3 of the License, or (at your option)
- * any later version. For more information see LICENSE.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+* Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
+*
+* This file is part of libbitcoin.
+*
+* libbitcoin is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Affero General Public License with
+* additional permissions to the one published by the Free Software
+* Foundation, either version 3 of the License, or (at your option)
+* any later version. For more information see LICENSE.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Affero General Public License for more details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 #include <random>
 #include <boost/test/unit_test.hpp>
 #include <bitcoin/database.hpp>
@@ -31,11 +31,12 @@ BC_CONSTEXPR size_t buckets = 100;
 BOOST_AUTO_TEST_SUITE(htdb)
 
 data_chunk generate_random_bytes(
-    std::default_random_engine& engine, size_t size)
+std::default_random_engine& engine, size_t size)
 {
     data_chunk result(size);
-    for (uint8_t& byte: result)
+    for (uint8_t& byte : result)
         byte = engine() % std::numeric_limits<uint8_t>::max();
+
     return result;
 }
 
@@ -45,14 +46,14 @@ void write_data()
 
     data_base::touch_file("htdb_slabs");
     mmfile file("htdb_slabs");
-    BITCOIN_ASSERT(file.data());
+    BITCOIN_ASSERT(file.reader().buffer() != nullptr);
     file.resize(header_size + min_slab_fsize);
 
     htdb_slab_header header(file, 0);
     header.create(buckets);
     header.start();
 
-    const position_type slab_start = header_size;
+    const file_offset slab_start = header_size;
 
     slab_allocator alloc(file, slab_start);
     alloc.create();
@@ -80,14 +81,14 @@ BOOST_AUTO_TEST_CASE(htdb_slab_write_read)
     write_data();
 
     mmfile file("htdb_slabs");
-    BITCOIN_ASSERT(file.data());
+    BITCOIN_ASSERT(file.reader().buffer() != nullptr);
 
     htdb_slab_header header(file, 0);
     header.start();
 
     BOOST_REQUIRE(header.size() == buckets);
 
-    const position_type slab_start = htdb_slab_header_fsize(buckets);
+    const file_offset slab_start = htdb_slab_header_fsize(buckets);
 
     slab_allocator alloc(file, slab_start);
     alloc.start();
@@ -100,7 +101,7 @@ BOOST_AUTO_TEST_CASE(htdb_slab_write_read)
         data_chunk value = generate_random_bytes(engine, tx_size);
         hash_digest key = bitcoin_hash(value);
 
-        const slab_type slab = ht.get(key);
+        const slab_byte_pointer slab = ht.get(key);
         BOOST_REQUIRE(slab);
 
         BOOST_REQUIRE(std::equal(value.begin(), value.end(), slab));
@@ -114,7 +115,7 @@ BOOST_AUTO_TEST_CASE(htdb_record_test_32)
 
     data_base::touch_file("htdb_records");
     mmfile file("htdb_records");
-    BITCOIN_ASSERT(file.data());
+    BITCOIN_ASSERT(file.reader().buffer() != nullptr);
     file.resize(header_size + min_records_fsize);
 
     htdb_record_header header(file, 0);
@@ -123,7 +124,7 @@ BOOST_AUTO_TEST_CASE(htdb_record_test_32)
 
     typedef byte_array<4> tiny_hash;
     BC_CONSTEXPR size_t record_size = record_fsize_htdb<tiny_hash>(4);
-    const position_type records_start = header_size;
+    const file_offset records_start = header_size;
 
     record_allocator alloc(file, records_start, record_size);
     alloc.create();
@@ -131,7 +132,7 @@ BOOST_AUTO_TEST_CASE(htdb_record_test_32)
 
     htdb_record<tiny_hash> ht(header, alloc, "test");
 
-    tiny_hash key{{0xde, 0xad, 0xbe, 0xef}};
+    tiny_hash key{ { 0xde, 0xad, 0xbe, 0xef } };
     auto write = [](uint8_t* data)
     {
         data[0] = 110;
@@ -141,7 +142,7 @@ BOOST_AUTO_TEST_CASE(htdb_record_test_32)
     };
     ht.store(key, write);
 
-    tiny_hash key1{{0xb0, 0x0b, 0xb0, 0x0b}};
+    tiny_hash key1{ { 0xb0, 0x0b, 0xb0, 0x0b } };
     auto write1 = [](uint8_t* data)
     {
         data[0] = 99;
@@ -175,7 +176,7 @@ BOOST_AUTO_TEST_CASE(htdb_record_test_32)
 
     BOOST_REQUIRE(header.read(1) == 2);
 
-    tiny_hash invalid{{0x00, 0x01, 0x02, 0x03}};
+    tiny_hash invalid{ { 0x00, 0x01, 0x02, 0x03 } };
     BOOST_REQUIRE(!ht.unlink(invalid));
 }
 
@@ -186,7 +187,7 @@ BOOST_AUTO_TEST_CASE(htdb_record_test_64)
 
     data_base::touch_file("htdb_records");
     mmfile file("htdb_records");
-    BITCOIN_ASSERT(file.data());
+    BITCOIN_ASSERT(file.reader().buffer() != nullptr);
     file.resize(header_size + min_records_fsize);
 
     htdb_record_header header(file, 0);
@@ -195,7 +196,7 @@ BOOST_AUTO_TEST_CASE(htdb_record_test_64)
 
     typedef byte_array<8> tiny_hash;
     BC_CONSTEXPR size_t record_size = record_fsize_htdb<tiny_hash>(8);
-    const position_type records_start = header_size;
+    const file_offset records_start = header_size;
 
     record_allocator alloc(file, records_start, record_size);
     alloc.create();
@@ -203,7 +204,7 @@ BOOST_AUTO_TEST_CASE(htdb_record_test_64)
 
     htdb_record<tiny_hash> ht(header, alloc, "test");
 
-    tiny_hash key{{0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef}};
+    tiny_hash key{ { 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef } };
     auto write = [](uint8_t* data)
     {
         data[0] = 110;
@@ -217,7 +218,7 @@ BOOST_AUTO_TEST_CASE(htdb_record_test_64)
     };
     ht.store(key, write);
 
-    tiny_hash key1{{0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b}};
+    tiny_hash key1{ { 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b } };
     auto write1 = [](uint8_t* data)
     {
         data[0] = 99;
@@ -255,7 +256,7 @@ BOOST_AUTO_TEST_CASE(htdb_record_test_64)
 
     BOOST_REQUIRE(header.read(1) == 2);
 
-    tiny_hash invalid{{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}};
+    tiny_hash invalid{ { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 } };
     BOOST_REQUIRE(!ht.unlink(invalid));
 }
 

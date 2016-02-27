@@ -74,9 +74,9 @@ public:
 
 private:
     void write_index();
-    index_type read_index(size_t from_height) const;
+    array_index read_index(size_t from_height) const;
 
-    index_type block_start_;
+    array_index block_start_;
 
     // Table used for jumping to rows by height.
     // Resolves to a index within the rows.

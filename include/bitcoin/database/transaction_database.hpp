@@ -32,7 +32,7 @@ namespace database {
 class BCD_API transaction_result
 {
 public:
-    transaction_result(const slab_type slab, uint64_t size_limit);
+    transaction_result(const slab_byte_pointer slab, uint64_t size_limit);
 
     /**
      * Test whether the result exists, return false otherwise.
@@ -56,7 +56,7 @@ public:
 
 private:
 
-    const slab_type slab_;
+    const slab_byte_pointer slab_;
     uint64_t size_limit_;
 };
 

@@ -30,7 +30,7 @@ int mmr_add_row(
     const size_t record_size = map_record_fsize_multimap<hash_type>();
     BITCOIN_ASSERT(record_size == KeySize + 4 + 4);
     const size_t header_fsize = htdb_record_header_fsize(header.size());
-    const position_type records_start = header_fsize;
+    const file_offset records_start = header_fsize;
 
     record_allocator alloc(ht_file, records_start, record_size);
     alloc.start();

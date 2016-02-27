@@ -24,11 +24,11 @@
 namespace libbitcoin {
 namespace database {
 
-constexpr size_t number_buckets = 228110589;
+BC_CONSTEXPR size_t number_buckets = 228110589;
 BC_CONSTEXPR size_t header_size = htdb_record_header_fsize(number_buckets);
 BC_CONSTEXPR size_t initial_map_file_size = header_size + min_records_fsize;
 
-BC_CONSTEXPR position_type allocator_offset = header_size;
+BC_CONSTEXPR file_offset allocator_offset = header_size;
 BC_CONSTEXPR size_t value_size = hash_size + 4;
 BC_CONSTEXPR size_t record_size = record_fsize_htdb<hash_digest>(value_size);
 
@@ -48,7 +48,7 @@ static hash_digest output_to_hash(const chain::output_point& output)
     return sha256_hash(point);
 }
 
-spend_result::spend_result(const record_type record)
+spend_result::spend_result(const record_byte_pointer record)
   : record_(record)
 {
 }
@@ -78,7 +78,7 @@ spend_database::spend_database(const boost::filesystem::path& filename)
     allocator_(file_, allocator_offset, record_size),
     map_(header_, allocator_, filename.string())
 {
-    BITCOIN_ASSERT(file_.data() != nullptr);
+    BITCOIN_ASSERT(file_.reader().buffer() != nullptr);
 }
 
 void spend_database::create()
@@ -112,7 +112,7 @@ void spend_database::store(const chain::output_point& outpoint,
     const auto write = [&spend](uint8_t* data)
     {
         auto serial = make_serializer(data);
-        data_chunk raw_spend = spend.to_data();
+        auto raw_spend = spend.to_data();
         serial.write_data(raw_spend);
     };
 

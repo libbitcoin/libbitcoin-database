@@ -33,7 +33,7 @@ namespace database {
 template <typename HashType>
 BC_CONSTFUNC size_t record_fsize_htdb(size_t value_size)
 {
-    return std::tuple_size<HashType>::value + sizeof(index_type)
+    return std::tuple_size<HashType>::value + sizeof(array_index)
         + value_size;
 }
 
@@ -67,14 +67,14 @@ public:
 
     /**
      * Store a value. The provided write() function must write the correct
-     * number of bytes (record_size - hash_size - sizeof(index_type)).
+     * number of bytes (record_size - hash_size - sizeof(array_index)).
      */
     void store(const HashType& key, write_function write);
 
     /**
      * Return the record for a given hash.
      */
-    record_type get(const HashType& key) const;
+    record_byte_pointer get(const HashType& key) const;
 
     /**
      * Delete a key-value pair from the hashtable by unlinking the node.
@@ -83,17 +83,17 @@ public:
 
 private:
     // What is the bucket given a hash.
-    index_type bucket_index(const HashType& key) const;
+    array_index bucket_index(const HashType& key) const;
 
     // What is the record start index for a chain.
-    index_type read_bucket_value(const HashType& key) const;
+    array_index read_bucket_value(const HashType& key) const;
 
     // Link a new chain into the bucket header.
-    void link(const HashType& key, const index_type begin);
+    void link(const HashType& key, const array_index begin);
 
     // Release node from linked chain.
     template <typename ListItem>
-    void release(const ListItem& item, const position_type previous);
+    void release(const ListItem& item, const file_offset previous);
 
     const std::string name_;
     htdb_record_header& header_;

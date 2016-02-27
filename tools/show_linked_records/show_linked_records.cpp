@@ -26,7 +26,7 @@ using namespace bc::database;
 
 struct chain_item
 {
-    index_type rec_idx;
+    array_index rec_idx;
     data_chunk data;
 };
 
@@ -51,9 +51,9 @@ int main(int argc, char** argv)
     const std::string filename = argv[1];
     size_t record_size = boost::lexical_cast<size_t>(argv[2]);
     record_size += linked_record_offset;
-    position_type offset = 0;
+    file_offset offset = 0;
     if (argc == 4)
-        offset = boost::lexical_cast<position_type>(argv[3]);
+        offset = boost::lexical_cast<file_offset>(argv[3]);
     mmfile file(filename);
     if (!file.data())
     {
@@ -64,12 +64,12 @@ int main(int argc, char** argv)
     recs.start();
     linked_records lrs(recs);
     chain_list chains;
-    for (index_type rec_idx = 0; rec_idx < recs.count(); ++rec_idx)
+    for (array_index rec_idx = 0; rec_idx < recs.count(); ++rec_idx)
     {
         BITCOIN_ASSERT(record_size >= 4);
-        const record_type rec = recs.get(rec_idx);
+        const record_byte_pointer rec = recs.get(rec_idx);
         auto deserial = make_deserializer(rec, rec + 4);
-        const index_type prev_idx = deserial.read_4_bytes_little_endian();
+        const array_index prev_idx = deserial.read_4_bytes_little_endian();
         const data_chunk data(rec + 4, rec + record_size);
         const chain_item new_item{rec_idx, data};
         if (prev_idx == linked_records::empty)

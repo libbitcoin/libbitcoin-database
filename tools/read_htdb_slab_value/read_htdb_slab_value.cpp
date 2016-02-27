@@ -6,7 +6,7 @@ using namespace bc;
 using namespace bc::database;
 
 template <size_t N>
-slab_type get_slab(htdb_slab_header& header, slab_allocator& alloc,
+slab_byte_pointer get_slab(htdb_slab_header& header, slab_allocator& alloc,
     const data_chunk& key_data)
 {
     typedef byte_array<N> hash_type;
@@ -36,9 +36,9 @@ int main(int argc, char** argv)
     }
 
     const size_t value_size = boost::lexical_cast<size_t>(argv[3]);
-    position_type offset = 0;
+    file_offset offset = 0;
     if (argc == 5)
-        offset = boost::lexical_cast<position_type>(argv[4]);
+        offset = boost::lexical_cast<file_offset>(argv[4]);
 
     mmfile file(filename);
     BITCOIN_ASSERT(file.data());
@@ -49,7 +49,7 @@ int main(int argc, char** argv)
     slab_allocator alloc(file, offset + 4 + 8 * header.size());
     alloc.start();
 
-    slab_type slab = nullptr;
+    slab_byte_pointer slab = nullptr;
     if (key_data.size() == 32)
     {
         slab = get_slab<32>(header, alloc, key_data);

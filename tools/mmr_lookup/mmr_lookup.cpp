@@ -30,7 +30,7 @@ int mmr_lookup(
     const size_t record_size = map_record_fsize_multimap<hash_type>();
     BITCOIN_ASSERT(record_size == KeySize + 4 + 4);
     const size_t header_fsize = htdb_record_header_fsize(header.size());
-    const position_type records_start = header_fsize;
+    const file_offset records_start = header_fsize;
 
     record_allocator alloc(ht_file, records_start, record_size);
     alloc.start();
@@ -47,10 +47,10 @@ int mmr_lookup(
 
     multimap_records<hash_type> multimap(ht, lrs, "test");
     multimap_iterable container(lrs, multimap.lookup(key));
-    for (const index_type index: container)
+    for (const array_index index: container)
     {
         std::cout << "Index: " << index << std::endl;
-        const record_type record = recs.get(index) + linked_record_offset;
+        const record_byte_pointer record = recs.get(index) + linked_record_offset;
         const data_chunk data(record, record + value_size);
         std::cout << encode_base16(data) << std::endl;
         std::cout << std::endl;

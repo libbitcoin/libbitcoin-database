@@ -31,7 +31,7 @@ BC_CONSTEXPR size_t number_buckets = 97210744;
 BC_CONSTEXPR size_t header_size = htdb_record_header_fsize(number_buckets);
 BC_CONSTEXPR size_t initial_lookup_file_size = header_size + min_records_fsize;
 
-BC_CONSTEXPR position_type allocator_offset = header_size;
+BC_CONSTEXPR file_offset allocator_offset = header_size;
 BC_CONSTEXPR size_t alloc_record_size = map_record_fsize_multimap<short_hash>();
 
 BC_CONSTEXPR size_t value_size = 1 + 36 + 4 + 8;
@@ -48,8 +48,8 @@ history_database::history_database(const path& lookup_filename,
     linked_rows_(rows_),
     map_(start_lookup_, linked_rows_, rows_filename.string())
 {
-    BITCOIN_ASSERT(lookup_file_.data() != nullptr);
-    BITCOIN_ASSERT(rows_file_.data() != nullptr);
+    BITCOIN_ASSERT(lookup_file_.reader().buffer() != nullptr);
+    BITCOIN_ASSERT(rows_file_.reader().buffer() != nullptr);
 }
 
 void history_database::create()
@@ -124,7 +124,7 @@ history history_database::get(const short_hash& key, size_t limit,
     // Read the height value from the row.
     const auto read_height = [](const uint8_t* data)
     {
-        static constexpr position_type height_position = 1 + 36;
+        static constexpr file_offset height_position = 1 + 36;
         return from_little_endian_unsafe<uint32_t>(data + height_position);
     };
 
@@ -170,7 +170,7 @@ history history_database::get(const short_hash& key, size_t limit,
 
     history result;
     const auto start = map_.lookup(key);
-    for (const index_type index: multimap_iterable(linked_rows_, start))
+    for (const array_index index: multimap_iterable(linked_rows_, start))
     {
         // Stop once we reach the limit (if specified).
         if (limit && result.size() >= limit)

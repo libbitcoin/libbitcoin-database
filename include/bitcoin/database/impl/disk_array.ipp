@@ -26,9 +26,9 @@ namespace libbitcoin {
 namespace database {
 
 template <typename IndexType, typename ValueType>
-disk_array<IndexType, ValueType>::disk_array(mmfile& file, 
-    position_type sector_start)
-  : file_(file), sector_start_(sector_start), size_(0)
+disk_array<IndexType, ValueType>::disk_array(mmfile& file,
+    file_offset sector_start)
+  : file_(file), size_(0), sector_start_(sector_start)
 {
     static_assert(std::is_unsigned<ValueType>::value,
         "disk_array only works with unsigned types");
@@ -37,9 +37,16 @@ disk_array<IndexType, ValueType>::disk_array(mmfile& file,
 template <typename IndexType, typename ValueType>
 void disk_array<IndexType, ValueType>::create(IndexType size)
 {
+    // Calculate the minimum file size.
+    const auto minimum_file_size = sector_start_ + item_position(size);
+
+    auto writer = file_.writer(minimum_file_size);
+    auto write_position = writer.buffer() + sector_start_;
+
     // MUST BE ATOMIC ???
-    auto serial = make_serializer(data(0));
+    auto serial = make_serializer(write_position);
     serial.write_little_endian(size);
+
     for (IndexType i = 0; i < size; ++i)
         serial.write_little_endian(empty);
 }
@@ -47,8 +54,12 @@ void disk_array<IndexType, ValueType>::create(IndexType size)
 template <typename IndexType, typename ValueType>
 void disk_array<IndexType, ValueType>::start()
 {
-    BITCOIN_ASSERT(file_.size() >= sizeof(size_));
-    size_ = from_little_endian_unsafe<IndexType>(data(0));
+    BITCOIN_ASSERT(sizeof(IndexType) <= file_.size());
+
+    const auto reader = file_.reader();
+    const auto read_position = reader.buffer();
+
+    size_ = from_little_endian_unsafe<IndexType>(read_position);
 }
 
 template <typename IndexType, typename ValueType>
@@ -57,12 +68,14 @@ ValueType disk_array<IndexType, ValueType>::read(IndexType index) const
     BITCOIN_ASSERT_MSG(size_ != 0, "disk_array::start() wasn't called.");
     BITCOIN_ASSERT(index < size_);
 
-    // Find our item.
-    const auto position = item_position(index);
-    const auto begin = data(position);
+    // Find the item in the file.
+    const auto offset = sector_start_ + item_position(index);
+
+    const auto reader = file_.reader();
+    const auto read_position = reader.buffer() + offset;
 
     // Deserialize value.
-    return from_little_endian_unsafe<ValueType>(begin);
+    return from_little_endian_unsafe<ValueType>(read_position);
 }
 
 template <typename IndexType, typename ValueType>
@@ -71,13 +84,17 @@ void disk_array<IndexType, ValueType>::write(IndexType index, ValueType value)
     BITCOIN_ASSERT_MSG(size_ > 0, "disk_array::start() wasn't called.");
     BITCOIN_ASSERT(index < size_);
 
-    // Find our item.
-    const position_type position = item_position(index);
+    // Find the item in the file.
+    const auto position = sector_start_ + item_position(index);
 
-    // Write the value.
-    auto serial = make_serializer(data(position));
+    // Calculate the minimum file size.
+    const auto minimum_file_size = position + sizeof(value);
+
+    auto writer = file_.writer(minimum_file_size);
+    auto write_position = writer.buffer() + position;
 
     // MUST BE ATOMIC ???
+    auto serial = make_serializer(write_position);
     serial.write_little_endian(value);
 }
 
@@ -88,17 +105,10 @@ IndexType disk_array<IndexType, ValueType>::size() const
 }
 
 template <typename IndexType, typename ValueType>
-position_type disk_array<IndexType, ValueType>::item_position(
+file_offset disk_array<IndexType, ValueType>::item_position(
     IndexType index) const
 {
     return sizeof(IndexType) + index * sizeof(ValueType);
-}
-
-template <typename IndexType, typename ValueType>
-uint8_t* disk_array<IndexType, ValueType>::data(position_type position) const
-{
-    BITCOIN_ASSERT(sector_start_ + position <= file_.size());
-    return file_.data() + sector_start_ + position;
 }
 
 } // namespace database

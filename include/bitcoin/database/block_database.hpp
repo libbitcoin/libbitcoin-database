@@ -32,7 +32,7 @@ namespace database {
 class BCD_API block_result
 {
 public:
-    block_result(const slab_type slab, uint64_t size_limit);
+    block_result(const slab_byte_pointer slab, uint64_t size_limit);
 
     /**
      * Test whether the result exists, return false otherwise.
@@ -60,7 +60,7 @@ public:
     hash_digest transaction_hash(size_t i) const;
 
 private:
-    const slab_type slab_;
+    const slab_byte_pointer slab_;
     uint64_t size_limit_;
 };
 
@@ -133,10 +133,10 @@ private:
     typedef htdb_slab<hash_digest> map_type;
 
     /// Write position of tx.
-    void write_position(const position_type position);
+    void write_position(const file_offset position);
 
     /// Use intermediate records table to find blk position from height.
-    position_type read_position(const index_type index) const;
+    file_offset read_position(const array_index index) const;
 
     /// The hashtable used for looking up blocks by hash.
     mmfile map_file_;

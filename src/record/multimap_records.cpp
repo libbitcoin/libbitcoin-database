@@ -23,7 +23,7 @@ namespace libbitcoin {
 namespace database {
 
 multimap_records_iterator::multimap_records_iterator(
-    const linked_records& linked_rows, index_type index)
+    const linked_records& linked_rows, array_index index)
   : linked_rows_(linked_rows), index_(index)
 {
 }
@@ -32,13 +32,13 @@ void multimap_records_iterator::operator++()
 {
     index_ = linked_rows_.next(index_);
 }
-index_type multimap_records_iterator::operator*() const
+array_index multimap_records_iterator::operator*() const
 {
     return index_;
 }
 
 multimap_iterable::multimap_iterable(
-    const linked_records& linked_rows, index_type begin_index)
+    const linked_records& linked_rows, array_index begin_index)
   : linked_rows_(linked_rows), begin_index_(begin_index)
 {
 }
