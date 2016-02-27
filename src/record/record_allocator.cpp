@@ -114,7 +114,6 @@ void record_allocator::count(const array_index records)
 
 void record_allocator::reserve(size_t count)
 {
-    // See comment in hsdb_shard::reserve()
     const size_t required_size = start_ + record_to_position(count_ + count);
     file_.resize(required_size);
     count_ += count;

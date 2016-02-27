@@ -113,7 +113,6 @@ uint64_t slab_allocator::to_eof(slab_byte_pointer slab) const
 
 void slab_allocator::reserve(size_t bytes_needed)
 {
-    // See comment in hsdb_shard::reserve()
     const size_t required_size = start_ + size_ + bytes_needed;
     file_.resize(required_size);
     size_ += bytes_needed;
