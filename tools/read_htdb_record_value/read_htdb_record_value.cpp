@@ -6,7 +6,7 @@ using namespace bc;
 using namespace bc::database;
 
 template <size_t N>
-record_byte_pointer get_record(htdb_record_header& header, record_allocator& alloc,
+record_byte_pointer get_record(htdb_record_header& header, record_manager& alloc,
     const data_chunk& key_data)
 {
     typedef byte_array<N> hash_type;
@@ -47,7 +47,7 @@ int main(int argc, char** argv)
     header.start();
 
     const size_t record_size = key_data.size() + 4 + value_size;
-    record_allocator alloc(file, offset + 4 + 4 * header.size(), record_size);
+    record_manager alloc(file, offset + 4 + 4 * header.size(), record_size);
     alloc.start();
 
     record_byte_pointer record = nullptr;

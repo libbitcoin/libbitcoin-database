@@ -23,7 +23,7 @@
 #include <cstdint>
 #include <boost/filesystem.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/record/record_allocator.hpp>
+#include <bitcoin/database/record/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -81,11 +81,11 @@ private:
     // Table used for jumping to rows by height.
     // Resolves to a index within the rows.
     mmfile index_file_;
-    record_allocator index_;
+    record_manager index_;
 
     // Actual row entries containing stealth tx data.
     mmfile rows_file_;
-    record_allocator rows_;
+    record_manager rows_;
 };
 
 } // namespace database

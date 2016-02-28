@@ -17,8 +17,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_SLAB_ALLOCATOR_HPP
-#define LIBBITCOIN_DATABASE_SLAB_ALLOCATOR_HPP
+#ifndef LIBBITCOIN_DATABASE_SLAB_MANAGER_HPP
+#define LIBBITCOIN_DATABASE_SLAB_MANAGER_HPP
 
 #include <atomic>
 #include <cstddef>
@@ -32,7 +32,6 @@
 namespace libbitcoin {
 namespace database {
 
-typedef uint8_t* slab_byte_pointer;
 typedef disk_array<array_index, file_offset> htdb_slab_header;
 
 BC_CONSTEXPR size_t min_slab_fsize = sizeof(file_offset);
@@ -41,46 +40,33 @@ BC_CONSTFUNC size_t htdb_slab_header_fsize(size_t buckets)
     return sizeof(file_offset) + min_slab_fsize * buckets;
 }
 
-/**
- * The slab allocator represents a growing collection of various sized
- * slabs of data on disk. It will resize the file accordingly and keep
- * track of the current end pointer so new slabs can be allocated.
- */
-class BCD_API slab_allocator
+/// The slab manager represents a growing collection of various sized
+/// slabs of data on disk. It will resize the file accordingly and keep
+/// track of the current end pointer so new slabs can be allocated.
+/// It also provides logical slab mapping to the slab memory address.
+class BCD_API slab_manager
 {
 public:
-    slab_allocator(mmfile& file, file_offset sector_start);
+    slab_manager(mmfile& file, file_offset sector_start);
 
-    /**
-      * Create slab allocator.
-      */
+    /// Create slab allocator.
     void create();
 
-    /**
-     * Prepare allocator for usage.
-     */
+    /// Prepare manager for use.
     void start();
 
-    /**
-     * Allocate a slab.
-     * Call sync() after writing the record.
-     */
-    file_offset new_slab(size_t bytes_needed);
-
-    /**
-     * Synchronise slab allocator to disk.
-     */
+    /// Synchronise slab allocator to disk.
     void sync();
 
-    /**
-     * Return a slab from its byte-wise position relative to start.
-     */
-    const slab_byte_pointer get_slab(file_offset position) const;
+    /// Allocate a slab.
+    /// Call sync() after writing the record.
+    file_offset new_slab(size_t bytes_needed);
 
-    /**
-     * Return distance from slab to eof providing a read boundary.
-     */
-    uint64_t to_eof(slab_byte_pointer slab) const;
+    /// Return a slab from its byte-wise position relative to start.
+    uint8_t* get_slab(file_offset position);
+
+    /// Return a const slab memory address from its file offest.
+    const uint8_t* get_slab(file_offset position) const;
 
 private:
 

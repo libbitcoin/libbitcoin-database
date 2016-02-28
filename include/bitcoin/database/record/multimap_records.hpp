@@ -42,7 +42,7 @@ BC_CONSTEXPR size_t map_record_fsize_multimap()
  *
  * @code
  *  for (const array_index idx: multimap.lookup(key))
- *      const record_byte_pointer rec = linked_recs.get(idx);
+ *      const auto record = linked_recs.get(idx);
  * @endcode
  */
 class BCD_API multimap_records_iterator
@@ -132,7 +132,7 @@ public:
 
 private:
     // Add new value to existing key.
-    void add_to_list(record_byte_pointer start_info, write_function write);
+    void add_to_list(uint8_t* start_info, write_function write);
 
     // Create new key with a single value.
     void create_new(const HashType& key, write_function write);

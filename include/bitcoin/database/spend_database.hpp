@@ -31,7 +31,7 @@ namespace database {
 class BCD_API spend_result
 {
 public:
-    spend_result(const record_byte_pointer record);
+    spend_result(const uint8_t* record);
 
     /**
      * Test whether the result exists, return false otherwise.
@@ -49,7 +49,7 @@ public:
     uint32_t index() const;
 
 private:
-    const record_byte_pointer record_;
+    const uint8_t* record_;
 };
 
 struct spend_statinfo
@@ -118,7 +118,7 @@ private:
     /// The hashtable used for looking up inpoint spends by outpoint.
     mmfile file_;
     htdb_record_header header_;
-    record_allocator allocator_;
+    record_manager manager_;
     map_type map_;
 };
 

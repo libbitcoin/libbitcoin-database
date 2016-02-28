@@ -109,11 +109,11 @@ private:
     /// linked list by address hash.
     mmfile lookup_file_;
     htdb_record_header header_;
-    record_allocator allocator_;
+    record_manager manager_;
     map_type start_lookup_;
 
     mmfile rows_file_;
-    record_allocator rows_;
+    record_manager rows_;
     linked_records linked_rows_;
 
     multimap_type map_;

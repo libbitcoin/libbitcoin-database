@@ -32,7 +32,7 @@ void mmr_create(const size_t value_size,
     BITCOIN_ASSERT(record_fsize == KeySize + 4 + 4);
     const file_offset records_start = header_fsize;
 
-    record_allocator alloc(ht_file, records_start, record_fsize);
+    record_manager alloc(ht_file, records_start, record_fsize);
     alloc.create();
     alloc.start();
 
@@ -43,7 +43,7 @@ void mmr_create(const size_t value_size,
     BITCOIN_ASSERT(lrs_file.data());
     lrs_file.resize(min_records_fsize);
     const size_t lrs_record_size = linked_record_offset + value_size;
-    record_allocator recs(lrs_file, 0, lrs_record_size);
+    record_manager recs(lrs_file, 0, lrs_record_size);
     recs.create();
 
     recs.start();

@@ -47,8 +47,8 @@ src_libbitcoin_database_la_SOURCES = \
     src/mman-win32/mman.h \
     src/record/linked_records.cpp \
     src/record/multimap_records.cpp \
-    src/record/record_allocator.cpp \
-    src/slab/slab_allocator.cpp
+    src/record/record_manager.cpp \
+    src/slab/slab_manager.cpp
 
 # local: test/libbitcoin_database_test
 #------------------------------------------------------------------------------
@@ -281,6 +281,8 @@ include_bitcoin_database_HEADERS = \
 
 include_bitcoin_database_diskdir = ${includedir}/bitcoin/database/disk
 include_bitcoin_database_disk_HEADERS = \
+    include/bitcoin/database/disk/accessor.hpp \
+    include/bitcoin/database/disk/allocator.hpp \
     include/bitcoin/database/disk/disk_array.hpp \
     include/bitcoin/database/disk/mmfile.hpp
 
@@ -299,12 +301,12 @@ include_bitcoin_database_record_HEADERS = \
     include/bitcoin/database/record/htdb_record.hpp \
     include/bitcoin/database/record/linked_records.hpp \
     include/bitcoin/database/record/multimap_records.hpp \
-    include/bitcoin/database/record/record_allocator.hpp
+    include/bitcoin/database/record/record_manager.hpp
 
 include_bitcoin_database_slabdir = ${includedir}/bitcoin/database/slab
 include_bitcoin_database_slab_HEADERS = \
     include/bitcoin/database/slab/htdb_slab.hpp \
-    include/bitcoin/database/slab/slab_allocator.hpp
+    include/bitcoin/database/slab/slab_manager.hpp
 
 
 # Custom make targets.

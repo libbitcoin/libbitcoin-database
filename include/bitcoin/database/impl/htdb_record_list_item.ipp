@@ -34,8 +34,11 @@ template <typename HashType>
 class htdb_record_list_item
 {
 public:
-    htdb_record_list_item(record_allocator& allocator,
-        const array_index index=0);
+    static BC_CONSTEXPR size_t index_size = sizeof(array_index);
+    static BC_CONSTEXPR size_t hash_size = std::tuple_size<HashType>::value;
+    static BC_CONSTEXPR file_offset value_begin = hash_size + index_size;
+
+    htdb_record_list_item(record_manager& allocator, array_index index);
 
     array_index create(const HashType& key, const array_index next);
 
@@ -43,7 +46,7 @@ public:
     bool compare(const HashType& key) const;
 
     // The actual user data.
-    record_byte_pointer data() const;
+    uint8_t* data() const;
 
     // Position of next item in the chained list.
     array_index next_index() const;
@@ -52,36 +55,36 @@ public:
     void write_next_index(array_index next);
 
 private:
-    uint8_t* raw_data(file_offset offset) const;
     uint8_t* raw_next_data() const;
+    uint8_t* raw_data(file_offset offset) const;
 
-    record_allocator& allocator_;
     array_index index_;
+    record_manager& manager_;
 };
 
 template <typename HashType>
-htdb_record_list_item<HashType>::htdb_record_list_item(
-    record_allocator& allocator, const array_index index)
-  : allocator_(allocator), index_(index)
+htdb_record_list_item<HashType>::htdb_record_list_item(record_manager& manager,
+    const array_index index)
+  : manager_(manager), index_(index)
 {
+    static_assert(index_size == 4, "Invalid array_index size.");
 }
 
 template <typename HashType>
-array_index htdb_record_list_item<HashType>::create(
-    const HashType& key, const array_index next)
+array_index htdb_record_list_item<HashType>::create(const HashType& key,
+    const array_index next)
 {
     // Create new record.
     //   [ HashType ]
     //   [ next:4   ]
     //   [ value... ]
-    index_ = allocator_.new_record();
-    record_byte_pointer data = allocator_.get_record(index_);
+    index_ = manager_.new_record();
 
     // Write record.
-    auto serial = make_serializer(data);
+    auto serial = make_serializer(raw_data(0));
     serial.write_data(key);
 
-    // MUST BE ATOMIC ???
+    // MUST BE ATOMIC
     serial.write_4_bytes_little_endian(next);
     return index_;
 }
@@ -95,11 +98,9 @@ bool htdb_record_list_item<HashType>::compare(const HashType& key) const
 }
 
 template <typename HashType>
-record_byte_pointer htdb_record_list_item<HashType>::data() const
+uint8_t* htdb_record_list_item<HashType>::data() const
 {
     // Value data is at the end.
-    BC_CONSTEXPR size_t hash_size = std::tuple_size<HashType>::value;
-    BC_CONSTEXPR file_offset value_begin = hash_size + 4;
     return raw_data(value_begin);
 }
 
@@ -116,24 +117,21 @@ void htdb_record_list_item<HashType>::write_next_index(array_index next)
     const auto next_data = raw_next_data();
     auto serial = make_serializer(next_data);
 
-    // MUST BE ATOMIC ???
+    // MUST BE ATOMIC
     serial.write_4_bytes_little_endian(next);
 }
 
 template <typename HashType>
 uint8_t* htdb_record_list_item<HashType>::raw_data(file_offset offset) const
 {
-    return allocator_.get_record(index_) + offset;
+    return manager_.get_record(index_) + offset;
 }
 
 template <typename HashType>
 uint8_t* htdb_record_list_item<HashType>::raw_next_data() const
 {
     // Next position is after key data.
-    BITCOIN_ASSERT(sizeof(array_index) == 4);
-    BC_CONSTEXPR size_t hash_size = std::tuple_size<HashType>::value;
-    BC_CONSTEXPR file_offset next_begin = hash_size;
-    return raw_data(next_begin);
+    return raw_data(hash_size);
 }
 
 } // namespace database

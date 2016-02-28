@@ -40,10 +40,11 @@ void disk_array<IndexType, ValueType>::create(IndexType size)
     // Calculate the minimum file size.
     const auto minimum_file_size = sector_start_ + item_position(size);
 
-    auto writer = file_.writer(minimum_file_size);
-    auto write_position = writer.buffer() + sector_start_;
+    // The writer must remain in scope until the end of the block.
+    auto allocated = file_.allocate(minimum_file_size);
+    const auto write_position = allocated->buffer() + sector_start_;
 
-    // MUST BE ATOMIC ???
+    // MUST BE ATOMIC
     auto serial = make_serializer(write_position);
     serial.write_little_endian(size);
 
@@ -56,8 +57,9 @@ void disk_array<IndexType, ValueType>::start()
 {
     BITCOIN_ASSERT(sizeof(IndexType) <= file_.size());
 
-    const auto reader = file_.reader();
-    const auto read_position = reader.buffer();
+    // The reader must remain in scope until the end of the block.
+    const auto reader = file_.access();
+    const auto read_position = reader->buffer();
 
     size_ = from_little_endian_unsafe<IndexType>(read_position);
 }
@@ -71,8 +73,9 @@ ValueType disk_array<IndexType, ValueType>::read(IndexType index) const
     // Find the item in the file.
     const auto offset = sector_start_ + item_position(index);
 
-    const auto reader = file_.reader();
-    const auto read_position = reader.buffer() + offset;
+    // The reader must remain in scope until the end of the block.
+    const auto reader = file_.access();
+    const auto read_position = reader->buffer() + offset;
 
     // Deserialize value.
     return from_little_endian_unsafe<ValueType>(read_position);
@@ -90,10 +93,11 @@ void disk_array<IndexType, ValueType>::write(IndexType index, ValueType value)
     // Calculate the minimum file size.
     const auto minimum_file_size = position + sizeof(value);
 
-    auto writer = file_.writer(minimum_file_size);
-    auto write_position = writer.buffer() + position;
+    // The writer must remain in scope until the end of the block.
+    auto allocated = file_.allocate(minimum_file_size);
+    auto write_position = allocated->buffer() + position;
 
-    // MUST BE ATOMIC ???
+    // MUST BE ATOMIC
     auto serial = make_serializer(write_position);
     serial.write_little_endian(value);
 }

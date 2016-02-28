@@ -32,7 +32,7 @@ int mmr_lookup(
     const size_t header_size = htdb_record_header_fsize(header.size());
     const file_offset records_start = header_size;
 
-    record_allocator alloc(ht_file, records_start, record_size);
+    record_manager alloc(ht_file, records_start, record_size);
     alloc.start();
 
     htdb_record<hash_type> ht(header, alloc, "test");
@@ -40,7 +40,7 @@ int mmr_lookup(
     mmfile lrs_file(rows_filename);
     BITCOIN_ASSERT(lrs_file.data());
     const size_t lrs_record_size = linked_record_offset + value_size;
-    record_allocator recs(lrs_file, 0, lrs_record_size);
+    record_manager recs(lrs_file, 0, lrs_record_size);
 
     recs.start();
     linked_records lrs(recs);

@@ -28,7 +28,7 @@ BC_CONSTEXPR size_t number_buckets = 228110589;
 BC_CONSTEXPR size_t header_size = htdb_record_header_fsize(number_buckets);
 BC_CONSTEXPR size_t initial_map_file_size = header_size + min_records_fsize;
 
-BC_CONSTEXPR file_offset allocator_offset = header_size;
+BC_CONSTEXPR file_offset allocation_offset = header_size;
 BC_CONSTEXPR size_t value_size = hash_size + 4;
 BC_CONSTEXPR size_t record_size = record_fsize_htdb<hash_digest>(value_size);
 
@@ -48,7 +48,7 @@ static hash_digest output_to_hash(const chain::output_point& output)
     return sha256_hash(point);
 }
 
-spend_result::spend_result(const record_byte_pointer record)
+spend_result::spend_result(const uint8_t* record)
   : record_(record)
 {
 }
@@ -75,23 +75,23 @@ uint32_t spend_result::index() const
 spend_database::spend_database(const boost::filesystem::path& filename)
   : file_(filename), 
     header_(file_, 0),
-    allocator_(file_, allocator_offset, record_size),
-    map_(header_, allocator_, filename.string())
+    manager_(file_, allocation_offset, record_size),
+    map_(header_, manager_, filename.string())
 {
-    BITCOIN_ASSERT(file_.reader().buffer() != nullptr);
+    BITCOIN_ASSERT(file_.access().buffer() != nullptr);
 }
 
 void spend_database::create()
 {
     file_.resize(initial_map_file_size);
     header_.create(number_buckets);
-    allocator_.create();
+    manager_.create();
 }
 
 void spend_database::start()
 {
     header_.start();
-    allocator_.start();
+    manager_.start();
 }
 
 bool spend_database::stop()
@@ -129,7 +129,7 @@ void spend_database::remove(const chain::output_point& outpoint)
 
 void spend_database::sync()
 {
-    allocator_.sync();
+    manager_.sync();
 }
 
 spend_statinfo spend_database::statinfo() const
@@ -137,7 +137,7 @@ spend_statinfo spend_database::statinfo() const
     return
     {
         header_.size(),
-        allocator_.count()
+        manager_.count()
     };
 }
 

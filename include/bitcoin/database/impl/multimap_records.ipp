@@ -35,7 +35,7 @@ multimap_records<HashType>::multimap_records(htdb_type& map,
 template <typename HashType>
 array_index multimap_records<HashType>::lookup(const HashType& key) const
 {
-    const record_byte_pointer start_info = map_.get(key);
+    const auto start_info = map_.get(key);
     if (!start_info)
         return linked_rows_.empty;
 
@@ -74,12 +74,12 @@ void multimap_records<HashType>::delete_last_row(const HashType& key)
 
     auto serial = make_serializer(start_info);
 
-    // MUST BE ATOMIC ???
+    // MUST BE ATOMIC
     serial.write_4_bytes_little_endian(new_begin);
 }
 
 template <typename HashType>
-void multimap_records<HashType>::add_to_list(record_byte_pointer start_info,
+void multimap_records<HashType>::add_to_list(uint8_t* start_info,
     write_function write)
 {
     const auto old_begin = from_little_endian_unsafe<array_index>(start_info);
@@ -88,7 +88,7 @@ void multimap_records<HashType>::add_to_list(record_byte_pointer start_info,
     write(record);
     auto serial = make_serializer(start_info);
 
-    // MUST BE ATOMIC ???
+    // MUST BE ATOMIC
     serial.write_4_bytes_little_endian(new_begin);
 }
 
@@ -103,7 +103,7 @@ void multimap_records<HashType>::create_new(const HashType& key,
     {
         auto serial = make_serializer(data);
 
-        // MUST BE ATOMIC ???
+        // MUST BE ATOMIC
         serial.write_4_bytes_little_endian(first);
     };
     map_.store(key, write_start_info);

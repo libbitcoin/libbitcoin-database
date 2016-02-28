@@ -111,7 +111,7 @@ void stealth_database::store(uint32_t prefix, const stealth_row& row)
 void stealth_database::unlink(size_t from_height)
 {
     BITCOIN_ASSERT(index_.count() > from_height);
-    index_.count(from_height);
+    index_.set_count(from_height);
 }
 
 void stealth_database::sync()
@@ -127,7 +127,7 @@ void stealth_database::write_index()
     const auto data = index_.get_record(index);
     auto serial = make_serializer(data);
 
-    // MUST BE ATOMIC ???
+    // MUST BE ATOMIC
     serial.write_4_bytes_little_endian(block_start_);
 
     // Synchronise data.

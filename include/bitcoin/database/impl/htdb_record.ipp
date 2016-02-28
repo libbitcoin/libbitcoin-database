@@ -30,8 +30,8 @@ namespace database {
 
 template <typename HashType>
 htdb_record<HashType>::htdb_record(htdb_record_header& header,
-    record_allocator& allocator, const std::string& name)
-  : header_(header), allocator_(allocator), name_(name)
+    record_manager& allocator, const std::string& name)
+  : header_(header), manager_(allocator), name_(name)
 {
 }
 
@@ -41,7 +41,7 @@ void htdb_record<HashType>::store(const HashType& key,
 {
     // Store current bucket value.
     const auto old_begin = read_bucket_value(key);
-    htdb_record_list_item<HashType> item(allocator_);
+    htdb_record_list_item<HashType> item(manager_, 0);
     const auto new_begin = item.create(key, old_begin);
     write(item.data());
 
@@ -50,19 +50,15 @@ void htdb_record<HashType>::store(const HashType& key,
 }
 
 template <typename HashType>
-record_byte_pointer htdb_record<HashType>::get(const HashType& key) const
+uint8_t* htdb_record<HashType>::get(const HashType& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
 
-    // For logging
-    size_t index = 0;
-    auto bucket = current;
-
     // Iterate through list...
     while (current != header_.empty)
     {
-        const htdb_record_list_item<HashType> item(allocator_, current);
+        const htdb_record_list_item<HashType> item(manager_, current);
 
         // Found, return data.
         if (item.compare(key))
@@ -76,8 +72,6 @@ record_byte_pointer htdb_record<HashType>::get(const HashType& key) const
         // So we must return gracefully vs. looping forever.
         if (previous == current)
             return nullptr;
-
-        ++index;
     }
 
     // Not found.
@@ -89,7 +83,7 @@ bool htdb_record<HashType>::unlink(const HashType& key)
 {
     // Find start item...
     const auto begin = read_bucket_value(key);
-    const htdb_record_list_item<HashType> begin_item(allocator_, begin);
+    const htdb_record_list_item<HashType> begin_item(manager_, begin);
 
     // If start item has the key then unlink from buckets.
     if (begin_item.compare(key))
@@ -109,7 +103,7 @@ bool htdb_record<HashType>::unlink(const HashType& key)
     // Iterate through list...
     while (current != header_.empty)
     {
-        const htdb_record_list_item<HashType> item(allocator_, current);
+        const htdb_record_list_item<HashType> item(manager_, current);
 
         // Found, unlink current item from previous.
         if (item.compare(key))
@@ -161,7 +155,7 @@ template <typename ListItem>
 void htdb_record<HashType>::release(const ListItem& item,
     const file_offset previous)
 {
-    ListItem previous_item(allocator_, previous);
+    ListItem previous_item(manager_, previous);
     previous_item.write_next_index(item.next_index());
 }
 

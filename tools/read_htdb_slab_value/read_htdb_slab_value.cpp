@@ -6,7 +6,7 @@ using namespace bc;
 using namespace bc::database;
 
 template <size_t N>
-slab_byte_pointer get_slab(htdb_slab_header& header, slab_allocator& alloc,
+slab_byte_pointer get_slab(htdb_slab_header& header, slab_manager& alloc,
     const data_chunk& key_data)
 {
     typedef byte_array<N> hash_type;
@@ -46,7 +46,7 @@ int main(int argc, char** argv)
     htdb_slab_header header(file, offset);
     header.start();
 
-    slab_allocator alloc(file, offset + 4 + 8 * header.size());
+    slab_manager alloc(file, offset + 4 + 8 * header.size());
     alloc.start();
 
     slab_byte_pointer slab = nullptr;

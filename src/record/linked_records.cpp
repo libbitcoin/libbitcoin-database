@@ -24,8 +24,8 @@
 namespace libbitcoin {
 namespace database {
 
-linked_records::linked_records(record_allocator& allocator)
-  : allocator_(allocator)
+linked_records::linked_records(record_manager& manager)
+  : manager_(manager)
 {
 }
 
@@ -41,26 +41,26 @@ array_index linked_records::insert(array_index next)
         "array_index incorrect size");
 
     // Create new record.
-    auto record = allocator_.new_record();
-    const auto data = allocator_.get_record(record);
+    auto record = manager_.new_record();
+    const auto data = manager_.get_record(record);
 
     // Write next value at first 4 bytes of record.
     auto serial = make_serializer(data);
 
-    // MUST BE ATOMIC ???
+    // MUST BE ATOMIC
     serial.write_4_bytes_little_endian(next);
     return record;
 }
 
 array_index linked_records::next(array_index index) const
 {
-    const auto data = allocator_.get_record(index);
+    const auto data = manager_.get_record(index);
     return from_little_endian_unsafe<array_index>(data);
 }
 
-record_byte_pointer linked_records::get(array_index index) const
+uint8_t* linked_records::get(array_index index) const
 {
-    return allocator_.get_record(index) + sizeof(array_index);
+    return manager_.get_record(index) + sizeof(array_index);
 }
 
 } // namespace database

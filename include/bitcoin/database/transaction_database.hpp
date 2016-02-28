@@ -23,7 +23,7 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/record/record_allocator.hpp>
+#include <bitcoin/database/record/record_manager.hpp>
 #include <bitcoin/database/slab/htdb_slab.hpp>
 
 namespace libbitcoin {
@@ -32,7 +32,7 @@ namespace database {
 class BCD_API transaction_result
 {
 public:
-    transaction_result(const slab_byte_pointer slab, uint64_t size_limit);
+    transaction_result(const uint8_t* slab);
 
     /**
      * Test whether the result exists, return false otherwise.
@@ -55,9 +55,7 @@ public:
     chain::transaction transaction() const;
 
 private:
-
-    const slab_byte_pointer slab_;
-    uint64_t size_limit_;
+    const uint8_t* slab_;
 };
 
 /**
@@ -115,7 +113,7 @@ private:
     /// The hashtable used for looking up txs by hash.
     mmfile map_file_;
     htdb_slab_header header_;
-    slab_allocator allocator_;
+    slab_manager manager_;
     map_type map_;
 };
 

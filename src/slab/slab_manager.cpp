@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/slab/slab_allocator.hpp>
+#include <bitcoin/database/slab/slab_manager.hpp>
 
 #include <cstddef>
 #include <boost/thread.hpp>
@@ -27,14 +27,14 @@
 namespace libbitcoin {
 namespace database {
 
-slab_allocator::slab_allocator(mmfile& file, file_offset sector_start)
+slab_manager::slab_manager(mmfile& file, file_offset sector_start)
   : file_(file), start_(sector_start), size_(0)
 {
 }
 
 // This method is not thread safe.
 // Write the byte size of the allocated space to the file.
-void slab_allocator::create()
+void slab_manager::create()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -45,7 +45,7 @@ void slab_allocator::create()
     ///////////////////////////////////////////////////////////////////////////
 }
 
-void slab_allocator::start()
+void slab_manager::start()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ void slab_allocator::start()
     ///////////////////////////////////////////////////////////////////////////
 }
 
-void slab_allocator::sync()
+void slab_manager::sync()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -66,9 +66,9 @@ void slab_allocator::sync()
 }
 
 // new record allocation
-file_offset slab_allocator::new_slab(size_t bytes_needed)
+file_offset slab_manager::new_slab(size_t bytes_needed)
 {
-    BITCOIN_ASSERT_MSG(size_ > 0, "slab_allocator::start() wasn't called.");
+    BITCOIN_ASSERT_MSG(size_ > 0, "slab_manager::start() wasn't called.");
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -81,37 +81,38 @@ file_offset slab_allocator::new_slab(size_t bytes_needed)
 }
 
 // logical record access
-const slab_byte_pointer slab_allocator::get_slab(file_offset position) const
+uint8_t* slab_manager::get_slab(file_offset position)
 {
-    BITCOIN_ASSERT_MSG(size_ > 0, "slab_allocator::start() wasn't called.");
+    BITCOIN_ASSERT_MSG(size_ > 0, "slab_manager::start() wasn't called.");
     BITCOIN_ASSERT(position < size_);
 
-    const auto reader = file_.reader();
+    // The reader must remain in scope until the end of the block.
+    const auto reader = file_.access();
     const auto offset = start_ + position;
-    const auto read_position = reader.buffer() + offset;
-    return const_cast<uint8_t*>(read_position);
+    auto read_position = reader->buffer() + offset;
+
+    // BUGBUG: unprotected pointer.
+    return read_position;
 }
 
-// retrieve minimum eof/memory boundary (ok to grow before use).
-uint64_t slab_allocator::to_eof(slab_byte_pointer slab) const
+// const logical record access
+const uint8_t* slab_manager::get_slab(file_offset position) const
 {
-    // Hold the reader in scope to prevent file.size change until complete.
-    const auto reader = file_.reader();
-    const auto buffer = reader.buffer();
+    BITCOIN_ASSERT_MSG(size_ > 0, "slab_manager::start() wasn't called.");
+    BITCOIN_ASSERT(position < size_);
 
-    if (slab <= buffer)
-        return 0;
+    // The reader must remain in scope until the end of the block.
+    const auto reader = file_.access();
+    const auto offset = start_ + position;
+    const auto read_position = reader->buffer() + offset;
 
-    const auto size = file_.size();
-    const ptrdiff_t offset = slab - buffer;
-    const auto unsigned_offset = static_cast<size_t>(offset);
-    const auto valid = 0 <= offset && unsigned_offset < size;
-    return valid ? size - unsigned_offset : 0;
+    // BUGBUG: unprotected pointer.
+    return read_position;
 }
 
 // privates
 
-void slab_allocator::reserve(size_t bytes_needed)
+void slab_manager::reserve(size_t bytes_needed)
 {
     const size_t required_size = start_ + size_ + bytes_needed;
     file_.resize(required_size);
@@ -119,23 +120,29 @@ void slab_allocator::reserve(size_t bytes_needed)
 }
 
 // Read the size value from the first chunk of the file.
-void slab_allocator::read_size()
+void slab_manager::read_size()
 {
     BITCOIN_ASSERT(start_ + sizeof(file_offset) <= file_.size());
 
-    const auto reader = file_.reader();
-    const auto read_position = reader.buffer() + start_;
-    size_.store(from_little_endian_unsafe<file_offset>(read_position));
+    // The reader must remain in scope until the end of the block.
+    const auto reader = file_.access();
+    const auto read_position = reader->buffer() + start_;
+
+    const auto size = from_little_endian_unsafe<file_offset>(read_position);
+    size_.store(size);
 }
 
 // Write the size value to the first chunk of the file.
-void slab_allocator::write_size()
+void slab_manager::write_size()
 {
     BITCOIN_ASSERT(start_ + sizeof(file_offset) <= file_.size());
 
     const auto minimum_file_size = start_ + sizeof(file_offset);
-    auto writer = file_.writer(minimum_file_size);
-    auto write_position = writer.buffer() + start_;
+
+    // The writer must remain in scope until the end of the block.
+    auto allocated = file_.allocate(minimum_file_size);
+    auto write_position = allocated->buffer() + start_;
+
     auto serial = make_serializer(write_position);
     serial.write_little_endian(size_.load());
 }

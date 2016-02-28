@@ -19,17 +19,11 @@
     <ClCompile Include="..\..\..\..\src\transaction_database.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\record\record_allocator.cpp">
-      <Filter>src\record</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\record\linked_records.cpp">
       <Filter>src\record</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\record\multimap_records.cpp">
       <Filter>src\record</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\slab\slab_allocator.cpp">
-      <Filter>src\slab</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\disk\mmfile.cpp">
       <Filter>src\disk</Filter>
@@ -40,6 +34,12 @@
     <ClCompile Include="..\..\..\..\src\settings.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\record\record_manager.cpp">
+      <Filter>src\record</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\slab\slab_manager.cpp">
+      <Filter>src\slab</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp">
@@ -47,9 +47,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\src\mman-win32\mman.h">
       <Filter>src\mman-win32</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\slab\slab_allocator.hpp">
-      <Filter>include\bitcoin\database\slab</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\mmfile.hpp">
       <Filter>include\bitcoin\database\disk</Filter>
@@ -67,9 +64,6 @@
       <Filter>include\bitcoin\database\disk</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\record\multimap_records.hpp">
-      <Filter>include\bitcoin\database\record</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\record\record_allocator.hpp">
       <Filter>include\bitcoin\database\record</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\database.hpp">
@@ -101,6 +95,18 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp">
       <Filter>include\bitcoin\database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\accessor.hpp">
+      <Filter>include\bitcoin\database\disk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\allocator.hpp">
+      <Filter>include\bitcoin\database\disk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\slab\slab_manager.hpp">
+      <Filter>include\bitcoin\database\slab</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\record\record_manager.hpp">
+      <Filter>include\bitcoin\database\record</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -25,7 +25,7 @@
 #include <string>
 #include <tuple>
 #include <bitcoin/database/disk/disk_array.hpp>
-#include <bitcoin/database/record/record_allocator.hpp>
+#include <bitcoin/database/record/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -39,12 +39,12 @@ BC_CONSTFUNC size_t record_fsize_htdb(size_t value_size)
 
 /**
  * A hashtable mapping hashes to fixed sized values (records).
- * Uses a combination of the disk_array and record_allocator.
+ * Uses a combination of the disk_array and record_manager.
  *
  * The disk_array is basically a bucket list containing the start
  * value for the hashtable chain.
  *
- * The record_allocator is used to create linked chains. A header
+ * The record_manager is used to create linked chains. A header
  * containing the hash of the item, and the next value is stored
  * with each record.
  *
@@ -52,7 +52,7 @@ BC_CONSTFUNC size_t record_fsize_htdb(size_t value_size)
  *   [ next:4   ]
  *   [ record   ]
  *
- * By using the record_allocator instead of slabs, we can have smaller
+ * By using the record_manager instead of slabs, we can have smaller
  * indexes avoiding reading/writing extra bytes to the file.
  * Using fixed size records is therefore faster.
  */
@@ -62,7 +62,7 @@ class htdb_record
 public:
     typedef std::function<void (uint8_t*)> write_function;
 
-    htdb_record(htdb_record_header& header, record_allocator& allocator,
+    htdb_record(htdb_record_header& header, record_manager& allocator,
         const std::string& name);
 
     /**
@@ -74,7 +74,7 @@ public:
     /**
      * Return the record for a given hash.
      */
-    record_byte_pointer get(const HashType& key) const;
+    uint8_t* get(const HashType& key) const;
 
     /**
      * Delete a key-value pair from the hashtable by unlinking the node.
@@ -97,7 +97,7 @@ private:
 
     const std::string name_;
     htdb_record_header& header_;
-    record_allocator& allocator_;
+    record_manager& manager_;
 };
 
 } // namespace database

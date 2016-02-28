@@ -21,19 +21,19 @@
 #define LIBBITCOIN_DATABASE_HTDB_SLAB_HPP
 
 #include <bitcoin/database/disk/disk_array.hpp>
-#include <bitcoin/database/slab/slab_allocator.hpp>
+#include <bitcoin/database/slab/slab_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 /**
  * A hashtable mapping hashes to variable sized values (slabs).
- * Uses a combination of the disk_array and slab_allocator.
+ * Uses a combination of the disk_array and slab_manager.
  *
  * The disk_array is basically a bucket list containing the start
  * value for the hashtable chain.
  *
- * The slab_allocator is used to create linked chains. A header
+ * The slab_manager is used to create linked chains. A header
  * containing the hash of the item, and the next value is stored
  * with each slab.
  *
@@ -52,12 +52,12 @@ class htdb_slab
 public:
     typedef std::function<void (uint8_t*)> write_function;
 
-    htdb_slab(htdb_slab_header& header, slab_allocator& allocator);
+    htdb_slab(htdb_slab_header& header, slab_manager& allocator);
 
     /**
      * Store a value. value_size is the requested size for the value.
      * The provided write() function must write exactly value_size bytes.
-     * Returns the position of the inserted value in the slab_allocator.
+     * Returns the position of the inserted value in the slab_manager.
      */
     file_offset store(const HashType& key, write_function write,
         const size_t value_size);
@@ -65,7 +65,7 @@ public:
     /**
      * Return the slab for a given hash.
      */
-    slab_byte_pointer get(const HashType& key) const;
+    uint8_t* get(const HashType& key) const;
 
     /**
      * Delete a key-value pair from the hashtable by unlinking the node.
@@ -88,7 +88,7 @@ private:
     void release(const ListItem& item, const file_offset previous);
 
     htdb_slab_header& header_;
-    slab_allocator& allocator_;
+    slab_manager& manager_;
 };
 
 } // namespace database

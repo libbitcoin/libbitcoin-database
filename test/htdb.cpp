@@ -55,7 +55,7 @@ void write_data()
 
     const file_offset slab_start = header_size;
 
-    slab_allocator alloc(file, slab_start);
+    slab_manager alloc(file, slab_start);
     alloc.create();
     alloc.start();
 
@@ -88,9 +88,9 @@ BOOST_AUTO_TEST_CASE(htdb_slab_write_read)
 
     BOOST_REQUIRE(header.size() == buckets);
 
-    const file_offset slab_start = htdb_slab_header_fsize(buckets);
+    const auto slab_start = htdb_slab_header_fsize(buckets);
 
-    slab_allocator alloc(file, slab_start);
+    slab_manager alloc(file, slab_start);
     alloc.start();
 
     htdb_slab<hash_digest> ht(header, alloc);
@@ -98,12 +98,11 @@ BOOST_AUTO_TEST_CASE(htdb_slab_write_read)
     std::default_random_engine engine;
     for (size_t i = 0; i < total_txs; ++i)
     {
-        data_chunk value = generate_random_bytes(engine, tx_size);
-        hash_digest key = bitcoin_hash(value);
+        const auto value = generate_random_bytes(engine, tx_size);
+        const auto key = bitcoin_hash(value);
+        const auto slab = ht.get(key);
 
-        const slab_byte_pointer slab = ht.get(key);
         BOOST_REQUIRE(slab);
-
         BOOST_REQUIRE(std::equal(value.begin(), value.end(), slab));
     }
 }
@@ -126,7 +125,7 @@ BOOST_AUTO_TEST_CASE(htdb_record_test_32)
     BC_CONSTEXPR size_t record_size = record_fsize_htdb<tiny_hash>(4);
     const file_offset records_start = header_size;
 
-    record_allocator alloc(file, records_start, record_size);
+    record_manager alloc(file, records_start, record_size);
     alloc.create();
     alloc.start();
 
@@ -198,7 +197,7 @@ BOOST_AUTO_TEST_CASE(htdb_record_test_64)
     BC_CONSTEXPR size_t record_size = record_fsize_htdb<tiny_hash>(8);
     const file_offset records_start = header_size;
 
-    record_allocator alloc(file, records_start, record_size);
+    record_manager alloc(file, records_start, record_size);
     alloc.create();
     alloc.start();
 

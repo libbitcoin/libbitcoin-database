@@ -24,7 +24,7 @@ int main(int argc, char** argv)
         std::cerr << "show_records: file failed to open." << std::endl;
         return -1;
     }
-    record_allocator recs(file, offset, record_size);
+    record_manager recs(file, offset, record_size);
     recs.start();
     for (array_index i = 0; i < recs.count(); ++i)
     {

@@ -25,13 +25,15 @@
 #include <bitcoin/database/stealth_database.hpp>
 #include <bitcoin/database/transaction_database.hpp>
 #include <bitcoin/database/version.hpp>
+#include <bitcoin/database/disk/accessor.hpp>
+#include <bitcoin/database/disk/allocator.hpp>
 #include <bitcoin/database/disk/disk_array.hpp>
 #include <bitcoin/database/disk/mmfile.hpp>
 #include <bitcoin/database/record/htdb_record.hpp>
 #include <bitcoin/database/record/linked_records.hpp>
 #include <bitcoin/database/record/multimap_records.hpp>
-#include <bitcoin/database/record/record_allocator.hpp>
+#include <bitcoin/database/record/record_manager.hpp>
 #include <bitcoin/database/slab/htdb_slab.hpp>
-#include <bitcoin/database/slab/slab_allocator.hpp>
+#include <bitcoin/database/slab/slab_manager.hpp>
 
 #endif

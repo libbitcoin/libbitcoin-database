@@ -23,7 +23,7 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/record/record_allocator.hpp>
+#include <bitcoin/database/record/record_manager.hpp>
 #include <bitcoin/database/slab/htdb_slab.hpp>
 
 namespace libbitcoin {
@@ -32,7 +32,7 @@ namespace database {
 class BCD_API block_result
 {
 public:
-    block_result(const slab_byte_pointer slab, uint64_t size_limit);
+    block_result(const uint8_t* slab);
 
     /**
      * Test whether the result exists, return false otherwise.
@@ -60,8 +60,7 @@ public:
     hash_digest transaction_hash(size_t i) const;
 
 private:
-    const slab_byte_pointer slab_;
-    uint64_t size_limit_;
+    const uint8_t* slab_;
 };
 
 /**
@@ -141,13 +140,13 @@ private:
     /// The hashtable used for looking up blocks by hash.
     mmfile map_file_;
     htdb_slab_header header_;
-    slab_allocator allocator_;
+    slab_manager manager_;
     map_type map_;
 
     /// Table used for looking up blocks by height.
     /// Resolves to a position within the slab.
     mmfile index_file_;
-    record_allocator index_;
+    record_manager index_;
 };
 
 } // namespace database

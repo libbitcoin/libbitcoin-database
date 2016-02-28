@@ -23,7 +23,7 @@
 //#include <boost/iostreams/stream.hpp>
 #include <bitcoin/bitcoin.hpp>
 //#include <bitcoin/database/pointer_array_source.hpp>
-#include <bitcoin/database/slab/slab_allocator.hpp>
+#include <bitcoin/database/slab/slab_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -32,7 +32,7 @@ constexpr size_t number_buckets = 600000;
 BC_CONSTEXPR size_t header_size = htdb_slab_header_fsize(number_buckets);
 BC_CONSTEXPR size_t initial_map_file_size = header_size + min_slab_fsize;
 
-BC_CONSTEXPR file_offset allocator_offset = header_size;
+BC_CONSTEXPR file_offset allocation_offset = header_size;
 
 // Record format:
 // main:
@@ -44,7 +44,7 @@ BC_CONSTEXPR file_offset allocator_offset = header_size;
 //  [ [ tx_hash:32 ] ]
 //  [ [    ...     ] ]
 
-//chain::header deserialize_header(const slab_byte_pointer begin, uint64_t length)
+//chain::header deserialize_header(const uint8_t* begin, uint64_t length)
 //{
 //    boost::iostreams::stream<byte_pointer_array_source> istream(begin, length);
 //    istream.exceptions(std::ios_base::failbit);
@@ -66,8 +66,8 @@ chain::header deserialize_header(const Iterator first)
     return header;
 }
 
-block_result::block_result(const slab_byte_pointer slab, uint64_t size_limit)
-  : slab_(slab), size_limit_(size_limit)
+block_result::block_result(const uint8_t* slab)
+  : slab_(slab)
 {
 }
 
@@ -79,7 +79,7 @@ block_result::operator bool() const
 chain::header block_result::header() const
 {
     BITCOIN_ASSERT(slab_ != nullptr);
-//    return deserialize_header(slab_, size_limit_);
+//    return deserialize_header(slab_, 80);
     return deserialize_header(slab_);
 }
 
@@ -108,20 +108,20 @@ block_database::block_database(const boost::filesystem::path& map_filename,
     const boost::filesystem::path& index_filename)
   : map_file_(map_filename), 
     header_(map_file_, 0),
-    allocator_(map_file_, allocator_offset),
-    map_(header_, allocator_),
+    manager_(map_file_, allocation_offset),
+    map_(header_, manager_),
     index_file_(index_filename),
     index_(index_file_, 0, sizeof(file_offset))
 {
-    BITCOIN_ASSERT(map_file_.reader().buffer() != nullptr);
-    BITCOIN_ASSERT(index_file_.reader().buffer() != nullptr);
+    BITCOIN_ASSERT(map_file_.access().buffer() != nullptr);
+    BITCOIN_ASSERT(index_file_.access().buffer() != nullptr);
 }
 
 void block_database::create()
 {
     map_file_.resize(initial_map_file_size);
     header_.create(number_buckets);
-    allocator_.create();
+    manager_.create();
     index_file_.resize(min_records_fsize);
     index_.create();
 }
@@ -129,7 +129,7 @@ void block_database::create()
 void block_database::start()
 {
     header_.start();
-    allocator_.start();
+    manager_.start();
     index_.start();
 }
 
@@ -141,17 +141,17 @@ bool block_database::stop()
 block_result block_database::get(const size_t height) const
 {
     if (height >= index_.count())
-        return block_result(nullptr, 0);
+        return block_result(nullptr);
 
     const auto position = read_position(height);
-    const auto slab = allocator_.get_slab(position);
-    return block_result(slab, allocator_.to_eof(slab));
+    const auto slab = manager_.get_slab(position);
+    return block_result(slab);
 }
 
 block_result block_database::get(const hash_digest& hash) const
 {
     const auto slab = map_.get(hash);
-    return block_result(slab, allocator_.to_eof(slab));
+    return block_result(slab);
 }
 
 void block_database::store(const chain::block& block)
@@ -186,12 +186,12 @@ void block_database::store(const chain::block& block)
 
 void block_database::unlink(const size_t from_height)
 {
-    index_.count(from_height);
+    index_.set_count(from_height);
 }
 
 void block_database::sync()
 {
-    allocator_.sync();
+    manager_.sync();
     index_.sync();
 }
 
@@ -219,7 +219,7 @@ void block_database::write_position(const file_offset position)
     const auto data = index_.get_record(record);
     auto serial = make_serializer(data);
 
-    // MUST BE ATOMIC ???
+    // MUST BE ATOMIC
     serial.write_8_bytes_little_endian(position);
 }
 

@@ -29,9 +29,8 @@ namespace libbitcoin {
 namespace database {
 
 template <typename HashType>
-htdb_slab<HashType>::htdb_slab(htdb_slab_header& header,
-    slab_allocator& allocator)
-  : header_(header), allocator_(allocator)
+htdb_slab<HashType>::htdb_slab(htdb_slab_header& header, slab_manager& manager)
+  : header_(header), manager_(manager)
 {
 }
 
@@ -41,7 +40,7 @@ file_offset htdb_slab<HashType>::store(const HashType& key,
 {
     // Store current bucket value.
     const auto old_begin = read_bucket_value(key);
-    htdb_slab_list_item<HashType> item(allocator_);
+    htdb_slab_list_item<HashType> item(manager_, 0);
     const auto new_begin = item.create(key, value_size, old_begin);
     write(item.data());
 
@@ -53,7 +52,7 @@ file_offset htdb_slab<HashType>::store(const HashType& key,
 }
 
 template <typename HashType>
-slab_byte_pointer htdb_slab<HashType>::get(const HashType& key) const
+uint8_t* htdb_slab<HashType>::get(const HashType& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -65,7 +64,7 @@ slab_byte_pointer htdb_slab<HashType>::get(const HashType& key) const
     // Iterate through list...
     while (current != header_.empty)
     {
-        const htdb_slab_list_item<HashType> item(allocator_, current);
+        const htdb_slab_list_item<HashType> item(manager_, current);
 
         // Found.
         if (item.compare(key))
@@ -92,7 +91,7 @@ bool htdb_slab<HashType>::unlink(const HashType& key)
 {
     // Find start item...
     const auto begin = read_bucket_value(key);
-    const htdb_slab_list_item<HashType> begin_item(allocator_, begin);
+    const htdb_slab_list_item<HashType> begin_item(manager_, begin);
 
     // If start item has the key then unlink from buckets.
     if (begin_item.compare(key))
@@ -101,10 +100,6 @@ bool htdb_slab<HashType>::unlink(const HashType& key)
         return true;
     }
 
-    // For logging
-    size_t index = 1;
-    auto bucket = begin;
-
     // Continue on...
     auto previous = begin;
     auto current = begin_item.next_position();
@@ -112,7 +107,7 @@ bool htdb_slab<HashType>::unlink(const HashType& key)
     // Iterate through list...
     while (current != header_.empty)
     {
-        const htdb_slab_list_item<HashType> item(allocator_, current);
+        const htdb_slab_list_item<HashType> item(manager_, current);
 
         // Found, unlink current item from previous.
         if (item.compare(key))
@@ -129,8 +124,6 @@ bool htdb_slab<HashType>::unlink(const HashType& key)
         // So we must return gracefully vs. looping forever.
         if (previous == current)
             return false;
-
-        ++index;
     }
 
     // Not found.
@@ -156,7 +149,6 @@ file_offset htdb_slab<HashType>::read_bucket_value(const HashType& key) const
 template <typename HashType>
 void htdb_slab<HashType>::link(const HashType& key, const file_offset begin)
 {
-    // MUST BE ATOMIC
     header_.write(bucket_index(key), begin);
 }
 
@@ -165,9 +157,7 @@ template <typename ListItem>
 void htdb_slab<HashType>::release(const ListItem& item,
     const file_offset previous)
 {
-    ListItem previous_item(allocator_, previous);
-
-    // MUST BE ATOMIC
+    ListItem previous_item(manager_, previous);
     previous_item.write_next_position(item.next_position());
 }
 

@@ -31,7 +31,7 @@ BC_CONSTEXPR size_t number_buckets = 97210744;
 BC_CONSTEXPR size_t header_size = htdb_record_header_fsize(number_buckets);
 BC_CONSTEXPR size_t initial_lookup_file_size = header_size + min_records_fsize;
 
-BC_CONSTEXPR file_offset allocator_offset = header_size;
+BC_CONSTEXPR file_offset allocation_offset = header_size;
 BC_CONSTEXPR size_t alloc_record_size = map_record_fsize_multimap<short_hash>();
 
 BC_CONSTEXPR size_t value_size = 1 + 36 + 4 + 8;
@@ -41,22 +41,22 @@ history_database::history_database(const path& lookup_filename,
     const path& rows_filename)
   : lookup_file_(lookup_filename), 
     header_(lookup_file_, 0),
-    allocator_(lookup_file_, allocator_offset, alloc_record_size),
-    start_lookup_(header_, allocator_, lookup_filename.string()),
+    manager_(lookup_file_, allocation_offset, alloc_record_size),
+    start_lookup_(header_, manager_, lookup_filename.string()),
     rows_file_(rows_filename), 
     rows_(rows_file_, 0, row_record_size),
     linked_rows_(rows_),
     map_(start_lookup_, linked_rows_, rows_filename.string())
 {
-    BITCOIN_ASSERT(lookup_file_.reader().buffer() != nullptr);
-    BITCOIN_ASSERT(rows_file_.reader().buffer() != nullptr);
+    BITCOIN_ASSERT(lookup_file_.access().buffer() != nullptr);
+    BITCOIN_ASSERT(rows_file_.access().buffer() != nullptr);
 }
 
 void history_database::create()
 {
     lookup_file_.resize(initial_lookup_file_size);
     header_.create(number_buckets);
-    allocator_.create();
+    manager_.create();
 
     rows_file_.resize(min_records_fsize);
     rows_.create();
@@ -65,7 +65,7 @@ void history_database::create()
 void history_database::start()
 {
     header_.start();
-    allocator_.start();
+    manager_.start();
     rows_.start();
 }
 
@@ -139,7 +139,7 @@ history history_database::get(const short_hash& key, size_t limit,
 //            // output or spend?
 //            marker_to_id(read_byte(istream)),
 //            // point
-//            chain::point::factory_from_data(istream),
+//            chain::point::manager_from_data(istream),
 //            // height
 //            read_4_bytes(istream),
 //            // value or checksum
@@ -191,7 +191,7 @@ history history_database::get(const short_hash& key, size_t limit,
 
 void history_database::sync()
 {
-    allocator_.sync();
+    manager_.sync();
     rows_.sync();
 }
 
@@ -200,7 +200,7 @@ history_statinfo history_database::statinfo() const
     return
     {
         header_.size(),
-        allocator_.count(),
+        manager_.count(),
         rows_.count()
     };
 }

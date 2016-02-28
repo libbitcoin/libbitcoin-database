@@ -17,8 +17,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_RECORD_ALLOCATOR_HPP
-#define LIBBITCOIN_DATABASE_RECORD_ALLOCATOR_HPP
+#ifndef LIBBITCOIN_DATABASE_RECORD_MANAGER_HPP
+#define LIBBITCOIN_DATABASE_RECORD_MANAGER_HPP
 
 #include <atomic>
 #include <cstddef>
@@ -32,7 +32,6 @@
 namespace libbitcoin {
 namespace database {
 
-typedef uint8_t* record_byte_pointer;
 typedef disk_array<array_index, array_index> htdb_record_header;
 
 BC_CONSTEXPR size_t min_records_fsize = sizeof(array_index);
@@ -41,52 +40,40 @@ BC_CONSTFUNC size_t htdb_record_header_fsize(size_t buckets)
     return sizeof(array_index) + min_records_fsize * buckets;
 }
 
-/**
- * The record allocator represents a collection of fixed size chunks of
- * data referenced by an index. The file will be resized accordingly
- * and the total number of records updated so new chunks can be allocated.
- */
-class BCD_API record_allocator
+/// The record manager represents a collection of fixed size chunks of
+/// data referenced by an index. The file will be resized accordingly
+/// and the total number of records updated so new chunks can be allocated.
+/// It also provides logical record mapping to the record memory address.
+class BCD_API record_manager
 {
 public:
-    record_allocator(mmfile& file, file_offset sector_start,
+    record_manager(mmfile& file, file_offset sector_start,
         size_t record_size);
 
-    /**
-      * Create record allocator.
-      */
+    /// Create record allocator.
     void create();
 
-    /**
-     * Prepare allocator for usage.
-     */
+    /// Prepare manager for usage.
     void start();
 
-    /**
-     * Allocate a record and return its logical index.
-     * Call sync() after writing the record.
-     */
-    array_index new_record(/* size_t records=1 */);
-
-    /**
-     * Synchronise to disk.
-     */
+    /// Synchronise to disk.
     void sync();
 
-    /**
-     * Return a record from its logical index.
-     */
-    const record_byte_pointer get_record(array_index record) const;
-
-    /**
-     * The number of records in this container.
-     */
+    /// The number of records in this container.
     array_index count() const;
 
-    /**
-     * Change the number of records of this container.
-     */
-    void count(const array_index records);
+    /// Change the number of records of this container.
+    void set_count(const array_index value);
+
+    /// Allocate a record and return its logical index.
+    /// Call sync() after writing the record.
+    array_index new_record(/* size_t records=1 */);
+
+    /// Return a record from its logical index.
+    uint8_t* get_record(array_index record);
+
+    /// Return a const record memory address from its logical index.
+    const uint8_t* get_record(array_index record) const;
 
 private:
 

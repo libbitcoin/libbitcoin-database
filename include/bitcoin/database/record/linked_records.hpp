@@ -21,7 +21,7 @@
 #define LIBBITCOIN_DATABASE_LINKED_RECORDS_HPP
 
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/record/record_allocator.hpp>
+#include <bitcoin/database/record/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -41,7 +41,7 @@ public:
     // std::numeric_limits<array_index>::max()
     static BC_CONSTEXPR array_index empty = bc::max_uint32;
 
-    linked_records(record_allocator& allocator);
+    linked_records(record_manager& allocator);
 
     /**
      * Create new list with a single record.
@@ -61,10 +61,10 @@ public:
     /**
      * Get underlying record data.
      */
-    record_byte_pointer get(array_index index) const; 
+    uint8_t* get(array_index index) const; 
 
 private:
-    record_allocator& allocator_;
+    record_manager& manager_;
 };
 
 } // namespace database

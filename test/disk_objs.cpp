@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(slab)
     mmfile file("slabs");
     BITCOIN_ASSERT(file.reader().buffer() != nullptr);
     file.resize(200);
-    slab_allocator data(file, 0);
+    slab_manager data(file, 0);
     data.create();
 
     data.start();
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(record)
     mmfile file("records");
     BITCOIN_ASSERT(file.reader().buffer() != nullptr);
     file.resize(4);
-    record_allocator recs(file, 0, 10);
+    record_manager recs(file, 0, 10);
     recs.create();
 
     recs.start();
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(linked_records_tst)
     BITCOIN_ASSERT(file.reader().buffer() != nullptr);
     file.resize(4);
     BC_CONSTEXPR size_t record_size = linked_record_offset + 6;
-    record_allocator recs(file, 0, record_size);
+    record_manager recs(file, 0, record_size);
     recs.create();
 
     recs.start();
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(htdb_slab_tst)
     header.create(100);
     header.start();
 
-    slab_allocator alloc(file, 4 + 8 * 100);
+    slab_manager alloc(file, 4 + 8 * 100);
     alloc.create();
     alloc.start();
 
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(htdb_slab_tst)
         data[3] = 99;
     };
     ht.store(tiny_hash{ { 0xde, 0xad, 0xbe, 0xef } }, write, 8);
-    slab_byte_pointer slab = ht.get(tiny_hash{ { 0xde, 0xad, 0xbe, 0xef } });
+    auto slab = ht.get(tiny_hash{ { 0xde, 0xad, 0xbe, 0xef } });
     BOOST_REQUIRE(slab);
     BOOST_REQUIRE(slab[0] == 110);
     BOOST_REQUIRE(slab[1] == 110);

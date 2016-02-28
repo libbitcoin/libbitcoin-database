@@ -31,9 +31,9 @@ constexpr size_t number_buckets = 100000000;
 BC_CONSTEXPR size_t header_size = htdb_slab_header_fsize(number_buckets);
 BC_CONSTEXPR size_t initial_map_file_size = header_size + min_slab_fsize;
 
-BC_CONSTEXPR file_offset alloc_offset = header_size;
+BC_CONSTEXPR file_offset allocation_offset = header_size;
 
-//chain::transaction deserialize_tx(const slab_byte_pointer begin, uint64_t length)
+//chain::transaction deserialize_tx(const uint8_t* begin, uint64_t length)
 //{
 //    boost::iostreams::stream<byte_pointer_array_source> istream(begin, length);
 //    istream.exceptions(std::ios_base::failbit);
@@ -55,8 +55,8 @@ chain::transaction deserialize_tx(const Iterator first)
     return tx;
 }
 
-transaction_result::transaction_result(const slab_byte_pointer slab, uint64_t size_limit)
-  : slab_(slab), size_limit_(size_limit)
+transaction_result::transaction_result(const uint8_t* slab)
+  : slab_(slab)
 {
 }
 
@@ -88,23 +88,23 @@ transaction_database::transaction_database(
     const boost::filesystem::path& map_filename)
   : map_file_(map_filename), 
     header_(map_file_, 0),
-    allocator_(map_file_, alloc_offset), 
-    map_(header_, allocator_)
+    manager_(map_file_, allocation_offset),
+    map_(header_, manager_)
 {
-    BITCOIN_ASSERT(map_file_.reader().buffer() != nullptr);
+    BITCOIN_ASSERT(map_file_.access().buffer() != nullptr);
 }
 
 void transaction_database::create()
 {
     map_file_.resize(initial_map_file_size);
     header_.create(number_buckets);
-    allocator_.create();
+    manager_.create();
 }
 
 void transaction_database::start()
 {
     header_.start();
-    allocator_.start();
+    manager_.start();
 }
 
 bool transaction_database::stop()
@@ -115,7 +115,7 @@ bool transaction_database::stop()
 transaction_result transaction_database::get(const hash_digest& hash) const
 {
     const auto slab = map_.get(hash);
-    return transaction_result(slab, allocator_.to_eof(slab));
+    return transaction_result(slab);
 }
 
 void transaction_database::store(size_t height, size_t index,
@@ -143,7 +143,7 @@ void transaction_database::remove(const hash_digest& hash)
 
 void transaction_database::sync()
 {
-    allocator_.sync();
+    manager_.sync();
 }
 
 } // namespace database

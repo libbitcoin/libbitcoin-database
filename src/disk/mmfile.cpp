@@ -34,6 +34,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <fcntl.h>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <sys/stat.h>
@@ -178,43 +179,52 @@ size_t mmfile::size() const
 void mmfile::resize(size_t size)
 {
     // This establishes a shared lock during this one line.
-    /* write_accessor */ writer(size);
+    /* allocator */ allocate(size);
 }
 
 // There is no guard against calling when stopped.
-const read_accessor mmfile::reader() const
+accessor::ptr mmfile::access()
 {
     // This establishes a shared lock until disposed.
-    return read_accessor(data_, mutex_);
+    return std::make_shared<accessor>(data_, mutex_);
 }
 
 // There is no guard against calling when stopped.
-write_accessor mmfile::writer(size_t size)
+allocator::ptr mmfile::allocate(size_t size)
 {
-    // This establishes an upgradeable shared lock until disposed.
-    write_accessor accessor(data_, mutex_);
+    auto allocation = std::make_shared<allocator>(data_, mutex_);
 
     if (size > size_)
-    {
-        // Critical Section
-        ///////////////////////////////////////////////////////////////////////
-        write_accessor::upgrade unique_lock(accessor.get_upgradeable());
+        upgrade(size, allocation);
 
-        // Must retest under the unique lock.
-        if (size > size_)
-        {
-            // There is no way to recover from this.
-            if (!reserve(size))
-                throw std::runtime_error(
-                    "The file could not be resized, disk space may be low.");
-        }
-        ///////////////////////////////////////////////////////////////////////
-    }
-
-    return accessor;
+    // This maintains a shared lock until disposed.
+    return allocation;
 }
 
 // privates
+
+// This resizes the map under an upgraded lock and updates the accessor.
+// The upgrade will freeze if a shared lock is leaked This method cannot
+// reenter the mutex, making deadlock impossible.
+void mmfile::upgrade(size_t size, allocator::ptr allocation)
+{
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    allocator::upgrade unique_lock(allocation->get_upgradeable());
+
+    // Must retest under the unique lock.
+    if (size > size_)
+    {
+        // There is no way to recover from this.
+        if (!reserve(size))
+            throw std::runtime_error(
+                "The file could not be resized, disk space may be low.");
+
+        // Update the accessor with the updated memory map pointer.
+        allocation->set_data(data_);
+    }
+    ///////////////////////////////////////////////////////////////////////////
+}
 
 // This sets data_ and size_, used on construct and resize.
 bool mmfile::map(size_t size)
