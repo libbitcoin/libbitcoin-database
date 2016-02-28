@@ -48,7 +48,7 @@ void disk_array<IndexType, ValueType>::create(IndexType size)
     auto serial = make_serializer(write_position);
     serial.write_little_endian(size);
 
-    for (IndexType i = 0; i < size; ++i)
+    for (IndexType index = 0; index < size; ++index)
         serial.write_little_endian(empty);
 }
 

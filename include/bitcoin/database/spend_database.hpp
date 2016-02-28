@@ -30,7 +30,7 @@
 namespace libbitcoin {
 namespace database {
 
-struct spend_statinfo
+struct BCD_API spend_statinfo
 {
     /// Number of buckets used in the hashtable.
     /// load factor = rows / buckets
@@ -92,13 +92,13 @@ public:
     spend_statinfo statinfo() const;
 
 private:
-    typedef htdb_record<hash_digest> map_type;
+    typedef htdb_record<hash_digest> record_map;
 
     /// The hashtable used for looking up inpoint spends by outpoint.
     mmfile file_;
     htdb_record_header header_;
     record_manager manager_;
-    map_type map_;
+    record_map map_;
 };
 
 } // namespace database

@@ -97,7 +97,7 @@ public:
     size_t gap(size_t start) const;
 
 private:
-    typedef htdb_slab<hash_digest> map_type;
+    typedef htdb_slab<hash_digest> slab_map;
 
     /// Write position of tx.
     void write_position(const file_offset position);
@@ -109,7 +109,7 @@ private:
     mmfile map_file_;
     htdb_slab_header header_;
     slab_manager manager_;
-    map_type map_;
+    slab_map map_;
 
     /// Table used for looking up blocks by height.
     /// Resolves to a position within the slab.

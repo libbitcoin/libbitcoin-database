@@ -105,21 +105,21 @@ public:
     history_statinfo statinfo() const;
 
 private:
-    typedef htdb_record<short_hash> map_type;
-    typedef multimap_records<short_hash> multimap_type;
+    typedef htdb_record<short_hash> record_map;
+    typedef multimap_records<short_hash> record_multimap;
 
     /// The hashtable used for looking up start index for a
     /// linked list by address hash.
     mmfile lookup_file_;
     htdb_record_header header_;
     record_manager manager_;
-    map_type start_lookup_;
+    record_map start_lookup_;
 
     mmfile rows_file_;
     record_manager rows_;
     linked_records linked_rows_;
 
-    multimap_type map_;
+    record_multimap map_;
 };
 
 } // namespace database

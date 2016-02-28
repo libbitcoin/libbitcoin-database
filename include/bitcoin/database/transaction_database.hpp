@@ -81,13 +81,13 @@ public:
     void sync();
 
 private:
-    typedef htdb_slab<hash_digest> map_type;
+    typedef htdb_slab<hash_digest> slab_map;
 
     /// The hashtable used for looking up txs by hash.
     mmfile map_file_;
     htdb_slab_header header_;
     slab_manager manager_;
-    map_type map_;
+    slab_map map_;
 };
 
 } // namespace database
