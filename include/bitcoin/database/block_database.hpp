@@ -23,7 +23,7 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/disk/mmfile.hpp>
+#include <bitcoin/database/disk/memory_map.hpp>
 #include <bitcoin/database/record/record_manager.hpp>
 #include <bitcoin/database/result/block_result.hpp>
 #include <bitcoin/database/slab/htdb_slab.hpp>
@@ -106,14 +106,14 @@ private:
     file_offset read_position(const array_index index) const;
 
     /// The hashtable used for looking up blocks by hash.
-    mmfile map_file_;
+    memory_map map_file_;
     htdb_slab_header header_;
     slab_manager manager_;
     slab_map map_;
 
     /// Table used for looking up blocks by height.
     /// Resolves to a position within the slab.
-    mmfile index_file_;
+    memory_map index_file_;
     record_manager index_;
 };
 

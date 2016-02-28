@@ -26,7 +26,7 @@ namespace libbitcoin {
 namespace database {
 
 template <typename IndexType, typename ValueType>
-disk_array<IndexType, ValueType>::disk_array(mmfile& file,
+disk_array<IndexType, ValueType>::disk_array(memory_map& file,
     file_offset sector_start)
   : file_(file), size_(0), sector_start_(sector_start)
 {

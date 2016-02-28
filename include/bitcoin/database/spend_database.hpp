@@ -24,7 +24,7 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/disk/mmfile.hpp>
+#include <bitcoin/database/disk/memory_map.hpp>
 #include <bitcoin/database/record/htdb_record.hpp>
 
 namespace libbitcoin {
@@ -95,7 +95,7 @@ private:
     typedef htdb_record<hash_digest> record_map;
 
     /// The hashtable used for looking up inpoint spends by outpoint.
-    mmfile file_;
+    memory_map file_;
     htdb_record_header header_;
     record_manager manager_;
     record_map map_;

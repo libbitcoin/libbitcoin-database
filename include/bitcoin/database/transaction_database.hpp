@@ -23,7 +23,7 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/disk/mmfile.hpp>
+#include <bitcoin/database/disk/memory_map.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
 #include <bitcoin/database/slab/htdb_slab.hpp>
 #include <bitcoin/database/slab/slab_manager.hpp>
@@ -84,7 +84,7 @@ private:
     typedef htdb_slab<hash_digest> slab_map;
 
     /// The hashtable used for looking up txs by hash.
-    mmfile map_file_;
+    memory_map map_file_;
     htdb_slab_header header_;
     slab_manager manager_;
     slab_map map_;

@@ -22,12 +22,12 @@
 #include <cstddef>
 #include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/database/disk/mmfile.hpp>
+#include <bitcoin/database/disk/memory_map.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-slab_manager::slab_manager(mmfile& file, file_offset sector_start)
+slab_manager::slab_manager(memory_map& file, file_offset sector_start)
   : file_(file), start_(sector_start), size_(0)
 {
 }

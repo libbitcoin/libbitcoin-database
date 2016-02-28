@@ -109,7 +109,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\data_base.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\disk_array.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\mmfile.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\memory_map.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\accessor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\allocator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\history_database.hpp" />
@@ -134,7 +134,7 @@
     <ClCompile Include="..\..\..\..\src\data_base.cpp" />
     <ClCompile Include="..\..\..\..\src\disk\accessor.cpp" />
     <ClCompile Include="..\..\..\..\src\disk\allocator.cpp" />
-    <ClCompile Include="..\..\..\..\src\disk\mmfile.cpp" />
+    <ClCompile Include="..\..\..\..\src\disk\memory_map.cpp" />
     <ClCompile Include="..\..\..\..\src\history_database.cpp" />
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c" />
     <ClCompile Include="..\..\..\..\src\record\linked_records.cpp" />

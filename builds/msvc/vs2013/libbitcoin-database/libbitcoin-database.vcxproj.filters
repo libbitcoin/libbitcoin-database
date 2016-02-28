@@ -25,9 +25,6 @@
     <ClCompile Include="..\..\..\..\src\record\multimap_records.cpp">
       <Filter>src\record</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\disk\mmfile.cpp">
-      <Filter>src\disk</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c">
       <Filter>src\mman-win32</Filter>
     </ClCompile>
@@ -52,6 +49,9 @@
     <ClCompile Include="..\..\..\..\src\disk\allocator.cpp">
       <Filter>src\disk</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\disk\memory_map.cpp">
+      <Filter>src\disk</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp">
@@ -59,9 +59,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\src\mman-win32\mman.h">
       <Filter>src\mman-win32</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\mmfile.hpp">
-      <Filter>include\bitcoin\database\disk</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\slab\htdb_slab.hpp">
       <Filter>include\bitcoin\database\slab</Filter>
@@ -125,6 +122,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_result.hpp">
       <Filter>include\bitcoin\database\result</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\memory_map.hpp">
+      <Filter>include\bitcoin\database\disk</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -27,7 +27,7 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/disk/disk_array.hpp>
-#include <bitcoin/database/disk/mmfile.hpp>
+#include <bitcoin/database/disk/memory_map.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -47,7 +47,7 @@ BC_CONSTFUNC size_t htdb_slab_header_fsize(size_t buckets)
 class BCD_API slab_manager
 {
 public:
-    slab_manager(mmfile& file, file_offset sector_start);
+    slab_manager(memory_map& file, file_offset sector_start);
 
     /// Create slab allocator.
     void create();
@@ -79,7 +79,7 @@ private:
     // Write the size of the data from the file.
     void write_size();
 
-    mmfile& file_;
+    memory_map& file_;
     const file_offset start_;
     std::atomic<file_offset> size_;
     mutable boost::shared_mutex mutex_;

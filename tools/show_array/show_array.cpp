@@ -8,7 +8,7 @@ using namespace bc::database;
 template <typename IndexType, typename ValueType>
 int show_array(const std::string& filename, file_offset offset)
 {
-    mmfile file(filename);
+    memory_map file(filename);
     if (!file.data())
     {
         std::cerr << "show_array: file failed to open." << std::endl;

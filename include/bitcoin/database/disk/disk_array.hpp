@@ -21,7 +21,7 @@
 #define LIBBITCOIN_DATABASE_DISK_ARRAY_HPP
 
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/database/disk/mmfile.hpp>
+#include <bitcoin/database/disk/memory_map.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -49,7 +49,7 @@ public:
     /**
      * sector_start represents the offset within the file.
      */
-    disk_array(mmfile& file, file_offset sector_start);
+    disk_array(memory_map& file, file_offset sector_start);
 
     /**
      * Initialize a new array. The file must have enough space.
@@ -82,7 +82,7 @@ private:
     // File offset of item.
     file_offset item_position(IndexType index) const;
 
-    mmfile& file_;
+    memory_map& file_;
     IndexType size_;
     const file_offset sector_start_;
 };

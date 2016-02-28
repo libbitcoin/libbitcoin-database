@@ -27,7 +27,7 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/disk/disk_array.hpp>
-#include <bitcoin/database/disk/mmfile.hpp>
+#include <bitcoin/database/disk/memory_map.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -47,7 +47,7 @@ BC_CONSTFUNC size_t htdb_record_header_fsize(size_t buckets)
 class BCD_API record_manager
 {
 public:
-    record_manager(mmfile& file, file_offset sector_start,
+    record_manager(memory_map& file, file_offset sector_start,
         size_t record_size);
 
     /// Create record allocator.
@@ -92,7 +92,7 @@ private:
     // Write the count of the records from the file.
     void write_count();
 
-    mmfile& file_;
+    memory_map& file_;
     const file_offset start_;
     std::atomic<array_index> count_;
     mutable boost::shared_mutex mutex_;

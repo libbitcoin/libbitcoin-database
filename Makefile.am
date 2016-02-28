@@ -44,7 +44,7 @@ src_libbitcoin_database_la_SOURCES = \
     src/transaction_database.cpp \
     src/disk/accessor.cpp \
     src/disk/allocator.cpp \
-    src/disk/mmfile.cpp \
+    src/disk/memory_map.cpp \
     src/mman-win32/mman.c \
     src/mman-win32/mman.h \
     src/record/linked_records.cpp \
@@ -288,7 +288,7 @@ include_bitcoin_database_disk_HEADERS = \
     include/bitcoin/database/disk/accessor.hpp \
     include/bitcoin/database/disk/allocator.hpp \
     include/bitcoin/database/disk/disk_array.hpp \
-    include/bitcoin/database/disk/mmfile.hpp
+    include/bitcoin/database/disk/memory_map.hpp
 
 include_bitcoin_database_impldir = ${includedir}/bitcoin/database/impl
 include_bitcoin_database_impl_HEADERS = \

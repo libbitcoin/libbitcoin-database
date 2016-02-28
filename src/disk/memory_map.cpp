@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/disk/mmfile.hpp>
+#include <bitcoin/database/disk/memory_map.hpp>
 
 #include <iostream>
 
@@ -44,7 +44,7 @@
 #include <boost/format.hpp>
 #include <bitcoin/bitcoin.hpp>
 
-// mmfile is be able to support 32 bit but because the database 
+// memory_map is be able to support 32 bit but because the database 
 // requires a larger file this is not validated or supported.
 static_assert(sizeof(void*) == sizeof(uint64_t), "Not a 64 bit system!");
 
@@ -56,7 +56,7 @@ using boost::filesystem::path;
 
 static constexpr size_t growth_factor = 3 / 2;
 
-size_t mmfile::file_size(int file_handle)
+size_t memory_map::file_size(int file_handle)
 {
     if (file_handle == -1)
         return 0;
@@ -84,7 +84,7 @@ size_t mmfile::file_size(int file_handle)
     return static_cast<size_t>(sbuf.st_size);
 }
 
-int mmfile::open_file(const path& filename)
+int memory_map::open_file(const path& filename)
 {
 #ifdef _WIN32
     int handle = _wopen(filename.wstring().c_str(), O_RDWR,
@@ -96,7 +96,7 @@ int mmfile::open_file(const path& filename)
     return handle;
 }
 
-void mmfile::handle_error(const char* context, const path& filename)
+void memory_map::handle_error(const char* context, const path& filename)
 {
     static const auto form = "The file failed to %1%: %2% error: %3%";
 #ifdef _WIN32
@@ -108,7 +108,7 @@ void mmfile::handle_error(const char* context, const path& filename)
     log::fatal(LOG_DATABASE) << message.str();
 }
 
-mmfile::mmfile(const path& filename)
+memory_map::memory_map(const path& filename)
   : filename_(filename),
     file_handle_(open_file(filename_)),
     size_(file_size(file_handle_)),
@@ -124,12 +124,12 @@ mmfile::mmfile(const path& filename)
         log::info(LOG_DATABASE) << "Mapping: " << filename_;
 }
 
-mmfile::~mmfile()
+memory_map::~memory_map()
 {
     stop();
 }
 
-bool mmfile::stop()
+bool memory_map::stop()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -165,7 +165,7 @@ bool mmfile::stop()
 }
 
 // This is thread safe but only useful on initialization.
-size_t mmfile::size() const
+size_t memory_map::size() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -176,21 +176,21 @@ size_t mmfile::size() const
 }
 
 // There is no guard against calling when stopped.
-void mmfile::resize(size_t size)
+void memory_map::resize(size_t size)
 {
     // This establishes a shared lock during this one line.
     /* allocator */ allocate(size);
 }
 
 // There is no guard against calling when stopped.
-accessor::ptr mmfile::access()
+accessor::ptr memory_map::access()
 {
     // This establishes a shared lock until disposed.
     return std::make_shared<accessor>(data_, mutex_);
 }
 
 // There is no guard against calling when stopped.
-allocator::ptr mmfile::allocate(size_t size)
+allocator::ptr memory_map::allocate(size_t size)
 {
     auto allocation = std::make_shared<allocator>(data_, mutex_);
 
@@ -206,7 +206,7 @@ allocator::ptr mmfile::allocate(size_t size)
 // This resizes the map under an upgraded lock and updates the accessor.
 // The upgrade will freeze if a shared lock is leaked This method cannot
 // reenter the mutex, making deadlock impossible.
-void mmfile::upgrade(size_t size, allocator::ptr allocation)
+void memory_map::upgrade(size_t size, allocator::ptr allocation)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -227,7 +227,7 @@ void mmfile::upgrade(size_t size, allocator::ptr allocation)
 }
 
 // This sets data_ and size_, used on construct and resize.
-bool mmfile::map(size_t size)
+bool memory_map::map(size_t size)
 {
     if (size == 0)
         return false;
@@ -239,7 +239,7 @@ bool mmfile::map(size_t size)
 }
 
 #ifdef MREMAP_MAYMOVE
-bool mmfile::remap(size_t new_size)
+bool memory_map::remap(size_t new_size)
 {
     data_ = static_cast<uint8_t*>(mremap(data_, size_, new_size,
         MREMAP_MAYMOVE));
@@ -248,7 +248,7 @@ bool mmfile::remap(size_t new_size)
 }
 #endif
 
-bool mmfile::unmap()
+bool memory_map::unmap()
 {
     bool success = (munmap(data_, size_) != -1);
     size_ = 0;
@@ -256,7 +256,7 @@ bool mmfile::unmap()
     return success;
 }
 
-bool mmfile::reserve(size_t size)
+bool memory_map::reserve(size_t size)
 {
     const size_t new_size = size * growth_factor;
 
@@ -278,7 +278,7 @@ bool mmfile::reserve(size_t size)
 #endif
 }
 
-bool mmfile::validate(size_t size)
+bool memory_map::validate(size_t size)
 {
     if (data_ == MAP_FAILED)
     {

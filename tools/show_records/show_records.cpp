@@ -18,7 +18,7 @@ int main(int argc, char** argv)
     file_offset offset = 0;
     if (argc == 4)
         offset = boost::lexical_cast<file_offset>(argv[3]);
-    mmfile file(filename);
+    memory_map file(filename);
     if (!file.data())
     {
         std::cerr << "show_records: file failed to open." << std::endl;

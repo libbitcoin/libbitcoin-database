@@ -19,7 +19,7 @@ void mmr_create(const size_t value_size,
     const auto header_fsize = htdb_record_header_fsize(buckets);
 
     data_base::touch_file(map_filename);
-    mmfile ht_file(map_filename);
+    memory_map ht_file(map_filename);
     BITCOIN_ASSERT(ht_file.data());
     ht_file.resize(header_fsize + min_records_fsize);
 
@@ -39,7 +39,7 @@ void mmr_create(const size_t value_size,
     htdb_record<hash_type> ht(header, alloc, "test");
 
     data_base::touch_file(rows_filename);
-    mmfile lrs_file(rows_filename);
+    memory_map lrs_file(rows_filename);
     BITCOIN_ASSERT(lrs_file.data());
     lrs_file.resize(min_records_fsize);
     const size_t lrs_record_size = linked_record_offset + value_size;

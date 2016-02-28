@@ -21,7 +21,7 @@ int mmr_add_row(
     BITCOIN_ASSERT(key.size() == key_data.size());
     std::copy(key_data.begin(), key_data.end(), key.begin());
 
-    mmfile ht_file(map_filename);
+    memory_map ht_file(map_filename);
     BITCOIN_ASSERT(ht_file.data());
 
     htdb_record_header header(ht_file, 0);
@@ -37,7 +37,7 @@ int mmr_add_row(
 
     htdb_record<hash_type> ht(header, alloc, "test");
 
-    mmfile lrs_file(rows_filename);
+    memory_map lrs_file(rows_filename);
     BITCOIN_ASSERT(lrs_file.data());
     const size_t lrs_record_size = linked_record_offset + value.size();
     record_manager recs(lrs_file, 0, lrs_record_size);

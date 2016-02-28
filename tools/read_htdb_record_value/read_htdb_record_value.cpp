@@ -40,7 +40,7 @@ int main(int argc, char** argv)
     if (argc == 5)
         offset = boost::lexical_cast<file_offset>(argv[4]);
 
-    mmfile file(filename);
+    memory_map file(filename);
     BITCOIN_ASSERT(file.data());
 
     htdb_record_header header(file, offset);

@@ -23,7 +23,7 @@
 #include <cstdint>
 #include <boost/filesystem.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/disk/mmfile.hpp>
+#include <bitcoin/database/disk/memory_map.hpp>
 #include <bitcoin/database/record/record_manager.hpp>
 
 namespace libbitcoin {
@@ -81,11 +81,11 @@ private:
 
     // Table used for jumping to rows by height.
     // Resolves to a index within the rows.
-    mmfile index_file_;
+    memory_map index_file_;
     record_manager index_;
 
     // Actual row entries containing stealth tx data.
-    mmfile rows_file_;
+    memory_map rows_file_;
     record_manager rows_;
 };
 

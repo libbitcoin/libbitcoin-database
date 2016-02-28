@@ -23,7 +23,7 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/disk/mmfile.hpp>
+#include <bitcoin/database/disk/memory_map.hpp>
 #include <bitcoin/database/record/multimap_records.hpp>
 
 namespace libbitcoin {
@@ -110,12 +110,12 @@ private:
 
     /// The hashtable used for looking up start index for a
     /// linked list by address hash.
-    mmfile lookup_file_;
+    memory_map lookup_file_;
     htdb_record_header header_;
     record_manager manager_;
     record_map start_lookup_;
 
-    mmfile rows_file_;
+    memory_map rows_file_;
     record_manager rows_;
     linked_records linked_rows_;
 

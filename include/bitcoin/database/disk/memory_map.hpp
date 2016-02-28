@@ -17,8 +17,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MMFILE_HPP
-#define LIBBITCOIN_DATABASE_MMFILE_HPP
+#ifndef LIBBITCOIN_DATABASE_MEMORY_MAP_HPP
+#define LIBBITCOIN_DATABASE_MEMORY_MAP_HPP
 
 #ifndef _WIN32
 #include <sys/mman.h>
@@ -37,15 +37,15 @@ namespace database {
 
 /// This class is thread safe, allowing concurent read and write.
 /// A change to the size of the memory map waits on and locks read and write.
-class BCD_API mmfile
+class BCD_API memory_map
 {
 public:
-    mmfile(const boost::filesystem::path& filename);
-    ~mmfile();
+    memory_map(const boost::filesystem::path& filename);
+    ~memory_map();
 
     /// This class is not copyable.
-    mmfile(const mmfile&) = delete;
-    void operator=(const mmfile&) = delete;
+    memory_map(const memory_map&) = delete;
+    void operator=(const memory_map&) = delete;
 
     /// These methods are thread safe.
     size_t size() const;

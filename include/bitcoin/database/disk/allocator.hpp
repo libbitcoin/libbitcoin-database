@@ -30,7 +30,7 @@ namespace database {
 
 /// This class provides remap safe write access to file-mapped memory.
 /// The memory size is unprotected and unmanaged.
-/// The mmfile class uses friend access to upgrade this lock during
+/// The memory_map class uses friend access to upgrade this lock during
 /// initialization in the case where a remap is required.
 class BCD_API allocator
 {
@@ -49,8 +49,8 @@ public:
 
 protected:
 
-    // Given mmfile public access to get_upgradeable and set_data.
-    friend class mmfile;
+    // Given memory_map public access to get_upgradeable and set_data.
+    friend class memory_map;
 
     // Get the lock, for the purpose of upgrading to unique.
     // The lock should be upgraded during the set data call.
