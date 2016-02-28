@@ -119,7 +119,7 @@ void record_manager::set_count(const array_index value)
     ///////////////////////////////////////////////////////////////////////////
     boost::unique_lock<boost::shared_mutex> unique_lock(mutex_);
 
-    BITCOIN_ASSERT(records <= count_.load());
+    BITCOIN_ASSERT(value <= count_.load());
 
     count_.store(value);
     ///////////////////////////////////////////////////////////////////////////

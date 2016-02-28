@@ -51,8 +51,8 @@ history_database::history_database(const path& lookup_filename,
     linked_rows_(rows_),
     map_(start_lookup_, linked_rows_, rows_filename.string())
 {
-    BITCOIN_ASSERT(lookup_file_.access().buffer() != nullptr);
-    BITCOIN_ASSERT(rows_file_.access().buffer() != nullptr);
+    BITCOIN_ASSERT(lookup_file_.access()->buffer() != nullptr);
+    BITCOIN_ASSERT(rows_file_.access()->buffer() != nullptr);
 }
 
 void history_database::create()

@@ -56,8 +56,8 @@ block_database::block_database(const path& map_filename,
     index_file_(index_filename),
     index_(index_file_, 0, sizeof(file_offset))
 {
-    BITCOIN_ASSERT(map_file_.access().buffer() != nullptr);
-    BITCOIN_ASSERT(index_file_.access().buffer() != nullptr);
+    BITCOIN_ASSERT(map_file_.access()->buffer() != nullptr);
+    BITCOIN_ASSERT(index_file_.access()->buffer() != nullptr);
 }
 
 void block_database::create()

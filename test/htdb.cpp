@@ -46,7 +46,7 @@ void write_data()
 
     data_base::touch_file("htdb_slabs");
     mmfile file("htdb_slabs");
-    BITCOIN_ASSERT(file.reader().buffer() != nullptr);
+    BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.resize(header_size + min_slab_fsize);
 
     htdb_slab_header header(file, 0);
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(htdb_slab_write_read)
     write_data();
 
     mmfile file("htdb_slabs");
-    BITCOIN_ASSERT(file.reader().buffer() != nullptr);
+    BITCOIN_ASSERT(file.access()->buffer() != nullptr);
 
     htdb_slab_header header(file, 0);
     header.start();
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(htdb_record_test_32)
 
     data_base::touch_file("htdb_records");
     mmfile file("htdb_records");
-    BITCOIN_ASSERT(file.reader().buffer() != nullptr);
+    BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.resize(header_size + min_records_fsize);
 
     htdb_record_header header(file, 0);
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(htdb_record_test_64)
 
     data_base::touch_file("htdb_records");
     mmfile file("htdb_records");
-    BITCOIN_ASSERT(file.reader().buffer() != nullptr);
+    BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.resize(header_size + min_records_fsize);
 
     htdb_record_header header(file, 0);

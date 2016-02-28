@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(slab)
 {
     data_base::touch_file("slabs");
     mmfile file("slabs");
-    BITCOIN_ASSERT(file.reader().buffer() != nullptr);
+    BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.resize(200);
     slab_manager data(file, 0);
     data.create();
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(array)
 {
     data_base::touch_file("array");
     mmfile file("array");
-    BITCOIN_ASSERT(file.reader().buffer() != nullptr);
+    BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.resize(4 + 4 * 10);
 
     disk_array<uint32_t, uint32_t> array(file, 0);
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(record)
 {
     data_base::touch_file("records");
     mmfile file("records");
-    BITCOIN_ASSERT(file.reader().buffer() != nullptr);
+    BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.resize(4);
     record_manager recs(file, 0, 10);
     recs.create();
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(linked_records_tst)
 {
     data_base::touch_file("lrs");
     mmfile file("lrs");
-    BITCOIN_ASSERT(file.reader().buffer() != nullptr);
+    BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.resize(4);
     BC_CONSTEXPR size_t record_size = linked_record_offset + 6;
     record_manager recs(file, 0, record_size);
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(htdb_slab_tst)
 {
     data_base::touch_file("htdb_slab");
     mmfile file("htdb_slab");
-    BITCOIN_ASSERT(file.reader().buffer() != nullptr);
+    BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.resize(4 + 8 * 100 + 8);
 
     htdb_slab_header header(file, 0);

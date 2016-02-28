@@ -41,7 +41,7 @@ transaction_database::transaction_database(
     manager_(map_file_, allocation_offset),
     map_(header_, manager_)
 {
-    BITCOIN_ASSERT(map_file_.access().buffer() != nullptr);
+    BITCOIN_ASSERT(map_file_.access()->buffer() != nullptr);
 }
 
 void transaction_database::create()

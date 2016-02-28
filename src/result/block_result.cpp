@@ -83,7 +83,7 @@ size_t block_result::transaction_count() const
 hash_digest block_result::transaction_hash(size_t index) const
 {
     BITCOIN_ASSERT(slab_ != nullptr);
-    BITCOIN_ASSERT(index < transactions_size());
+    BITCOIN_ASSERT(index < transaction_count());
     const auto offset = header_size + height_size + count_size;
     const uint8_t* first = slab_ + offset + index * hash_size;
     auto deserial = make_deserializer_unsafe(first);
