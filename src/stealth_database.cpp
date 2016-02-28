@@ -65,6 +65,8 @@ bool stealth_database::stop()
     return index_file_.stop() && rows_file_.stop();
 }
 
+// Stealth records are not indexed. The prefix is fixed at 32 bits, but the
+// filter is 0-32 bits, so the records cannot be indexed using a hash table.
 stealth stealth_database::scan(const binary& filter, size_t from_height) const
 {
     if (from_height >= index_.count())
