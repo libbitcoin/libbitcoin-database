@@ -43,14 +43,9 @@ namespace database {
 
 using namespace bc::chain;
 
-template <typename Iterator>
-header deserialize_header(const Iterator first)
-{
-    header header;
-    auto deserial = make_deserializer_unsafe(first);
-    header.from_data(deserial, false);
-    return header;
-}
+static constexpr size_t header_size = 80;
+static constexpr size_t height_size = sizeof(uint32_t);
+static constexpr size_t count_size = sizeof(uint32_t);
 
 block_result::block_result(const uint8_t* slab)
   : slab_(slab)
@@ -65,27 +60,32 @@ block_result::operator bool() const
 chain::header block_result::header() const
 {
     BITCOIN_ASSERT(slab_ != nullptr);
-    return deserialize_header(slab_);
+    chain::header header;
+    auto deserial = make_deserializer_unsafe(slab_);
+    header.from_data(deserial, false);
+    return header;
     //// return deserialize_header(slab_, size_limit_);
 }
 
 size_t block_result::height() const
 {
     BITCOIN_ASSERT(slab_ != nullptr);
-    return from_little_endian_unsafe<uint32_t>(slab_ + 80);
+    return from_little_endian_unsafe<uint32_t>(slab_ + header_size);
 }
 
 size_t block_result::transaction_count() const
 {
     BITCOIN_ASSERT(slab_ != nullptr);
-    return from_little_endian_unsafe<uint32_t>(slab_ + 80 + 4);
+    const auto offset = header_size + height_size;
+    return from_little_endian_unsafe<uint32_t>(slab_ + offset);
 }
 
 hash_digest block_result::transaction_hash(size_t index) const
 {
     BITCOIN_ASSERT(slab_ != nullptr);
     BITCOIN_ASSERT(index < transactions_size());
-    const uint8_t* first = slab_ + 80 + 4 + 4 + index * hash_size;
+    const auto offset = header_size + height_size + count_size;
+    const uint8_t* first = slab_ + offset + index * hash_size;
     auto deserial = make_deserializer_unsafe(first);
     return deserial.read_hash();
 }

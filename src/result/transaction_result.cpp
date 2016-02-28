@@ -28,6 +28,9 @@ namespace database {
 
 using namespace bc::chain;
 
+static constexpr size_t height_size = sizeof(uint32_t);
+static constexpr size_t index_size = sizeof(uint32_t);
+
 ////#include <boost/iostreams/stream.hpp>
 ////#include <bitcoin/database/pointer_array_source.hpp>
 ////chain::transaction deserialize_tx(const uint8_t* begin, uint64_t length)
@@ -71,13 +74,13 @@ size_t transaction_result::height() const
 size_t transaction_result::index() const
 {
     BITCOIN_ASSERT(slab_ != nullptr);
-    return from_little_endian_unsafe<uint32_t>(slab_ + 4);
+    return from_little_endian_unsafe<uint32_t>(slab_ + height_size);
 }
 
 chain::transaction transaction_result::transaction() const
 {
     BITCOIN_ASSERT(slab_ != nullptr);
-    return deserialize_tx(slab_ + 8);
+    return deserialize_tx(slab_ + height_size + index_size);
     //// return deserialize_tx(slab_ + 8, size_limit_ - 8);
 }
 } // namespace database
