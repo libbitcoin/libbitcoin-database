@@ -20,12 +20,12 @@
 #ifndef LIBBITCOIN_DATABASE_SPEND_DATABASE_HPP
 #define LIBBITCOIN_DATABASE_SPEND_DATABASE_HPP
 
+#include <cstddef>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/disk/mmfile.hpp>
 #include <bitcoin/database/record/htdb_record.hpp>
-#include <bitcoin/database/result/spend_result.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -67,7 +67,7 @@ public:
     /**
      * Get input spend of an output point.
      */
-    spend_result get(const chain::output_point& outpoint) const;
+    chain::spend get(const chain::output_point& outpoint) const;
 
     /**
      * Store a spend in the database.

@@ -47,32 +47,32 @@ BOOST_AUTO_TEST_CASE(spend_db_test)
     db.store(key3, value3);
 
     // Test fetch.
-    auto result1 = db.get(key1);
-    BOOST_REQUIRE(result1);
-    BOOST_REQUIRE(result1.hash() == value1.hash && result1.index() == value1.index);
+    auto spend1 = db.get(key1);
+    BOOST_REQUIRE(spend1.valid);
+    BOOST_REQUIRE(spend1.hash == value1.hash && spend1.index == value1.index);
 
-    auto result2 = db.get(key2);
-    BOOST_REQUIRE(result2);
-    BOOST_REQUIRE(result2.hash() == value2.hash && result2.index() == value2.index);
+    auto spend2 = db.get(key2);
+    BOOST_REQUIRE(spend2.valid);
+    BOOST_REQUIRE(spend2.hash == value2.hash && spend2.index == value2.index);
 
-    auto result3 = db.get(key3);
-    BOOST_REQUIRE(result3);
-    BOOST_REQUIRE(result3.hash() == value3.hash && result3.index() == value3.index);
+    auto spend3 = db.get(key3);
+    BOOST_REQUIRE(spend3.valid);
+    BOOST_REQUIRE(spend3.hash == value3.hash && spend3.index == value3.index);
 
     // Record shouldnt exist yet.
-    BOOST_REQUIRE(!db.get(key4));
+    BOOST_REQUIRE(!db.get(key4).valid);
 
     // Delete record.
     db.remove(key3);
-    BOOST_REQUIRE(!db.get(key3));
+    BOOST_REQUIRE(!db.get(key3).valid);
 
     // Add another record.
     db.store(key4, value4);
 
     // Fetch it.
-    auto result4 = db.get(key4);
-    BOOST_REQUIRE(result4);
-    BOOST_REQUIRE(result4.hash() == value4.hash && result4.index() == value4.index);
+    auto spend4 = db.get(key4);
+    BOOST_REQUIRE(spend4.valid);
+    BOOST_REQUIRE(spend4.hash == value4.hash && spend4.index == value4.index);
     db.sync();
 }
 

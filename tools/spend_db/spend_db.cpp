@@ -170,9 +170,9 @@ int main(int argc, char** argv)
             return -1;
 
         db.start();
-        spend_result result = db.get(outpoint);
+        const auto spend = db.get(outpoint);
 
-        if (!result)
+        if (!spend.valid)
         {
             std::cout << "Not found!" << std::endl;
             return -1;

@@ -76,9 +76,9 @@ void test_block_exists(const data_base& interface,
                 const auto& input = tx.inputs[j];
                 chain::input_point spend{ tx_hash, static_cast<uint32_t>(j) };
                 auto r0_spend = interface.spends.get(input.previous_output);
-                BOOST_REQUIRE(r0_spend);
-                BOOST_REQUIRE(r0_spend.hash() == spend.hash);
-                BOOST_REQUIRE(r0_spend.index() == spend.index);
+                BOOST_REQUIRE(r0_spend.valid);
+                BOOST_REQUIRE(r0_spend.hash == spend.hash);
+                BOOST_REQUIRE(r0_spend.index == spend.index);
 
                 const auto address = payment_address::extract(input.script);
                 if (!address)
@@ -152,7 +152,7 @@ void test_block_not_exists(const data_base& interface,
                 const auto& input = tx.inputs[j];
                 chain::input_point spend{ tx_hash, static_cast<uint32_t>(j) };
                 auto r0_spend = interface.spends.get(input.previous_output);
-                BOOST_REQUIRE(!r0_spend);
+                BOOST_REQUIRE(!r0_spend.valid);
 
                 const auto address = payment_address::extract(input.script);
                 if (!address)

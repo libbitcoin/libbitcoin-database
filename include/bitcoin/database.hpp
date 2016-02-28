@@ -34,7 +34,6 @@
 #include <bitcoin/database/record/multimap_records.hpp>
 #include <bitcoin/database/record/record_manager.hpp>
 #include <bitcoin/database/result/block_result.hpp>
-#include <bitcoin/database/result/spend_result.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
 #include <bitcoin/database/slab/htdb_slab.hpp>
 #include <bitcoin/database/slab/slab_manager.hpp>

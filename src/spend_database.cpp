@@ -19,11 +19,11 @@
  */
 #include <bitcoin/database/spend_database.hpp>
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/database/result/spend_result.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -82,11 +82,24 @@ bool spend_database::stop()
     return file_.stop();
 }
 
-spend_result spend_database::get(const output_point& outpoint) const
+spend spend_database::get(const output_point& outpoint) const
 {
     const auto key = output_to_hash(outpoint);
     const auto record = map_.get2(key);
-    return spend_result(record);
+
+    if (record == nullptr)
+        return { false, 0, {} };
+
+    hash_digest hash;
+    std::copy(record, record + hash_size, hash.begin());
+    const auto index = from_little_endian_unsafe<uint32_t>(record + hash_size);
+
+    return
+    {
+        true,
+        index,
+        hash
+    };
 }
 
 void spend_database::store(const chain::output_point& outpoint,

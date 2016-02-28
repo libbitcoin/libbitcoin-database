@@ -51,7 +51,6 @@ src_libbitcoin_database_la_SOURCES = \
     src/record/multimap_records.cpp \
     src/record/record_manager.cpp \
     src/result/block_result.cpp \
-    src/result/spend_result.cpp \
     src/result/transaction_result.cpp \
     src/slab/slab_manager.cpp
 
@@ -311,7 +310,6 @@ include_bitcoin_database_record_HEADERS = \
 include_bitcoin_database_resultdir = ${includedir}/bitcoin/database/result
 include_bitcoin_database_result_HEADERS = \
     include/bitcoin/database/result/block_result.hpp \
-    include/bitcoin/database/result/spend_result.hpp \
     include/bitcoin/database/result/transaction_result.hpp
 
 include_bitcoin_database_slabdir = ${includedir}/bitcoin/database/slab
