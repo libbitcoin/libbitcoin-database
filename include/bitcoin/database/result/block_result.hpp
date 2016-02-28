@@ -28,6 +28,7 @@
 namespace libbitcoin {
 namespace database {
 
+/// Deferred read block result.
 class BCD_API block_result
 {
 public:
@@ -43,7 +44,7 @@ public:
     size_t height() const;
 
     /// Read the number of transactions in this block.
-    size_t transactions_size() const;
+    size_t transaction_count() const;
 
     /// Read a transaction hash where index < transactions_size().
     hash_digest transaction_hash(size_t index) const;

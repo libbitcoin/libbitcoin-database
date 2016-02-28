@@ -53,8 +53,8 @@ void test_block_exists(const data_base& interface,
     BOOST_REQUIRE(r0_byhash.header().hash() == blk_hash);
     BOOST_REQUIRE(r0.height() == height);
     BOOST_REQUIRE(r0_byhash.height() == height);
-    BOOST_REQUIRE(r0.transactions_size() == block0.transactions.size());
-    BOOST_REQUIRE(r0_byhash.transactions_size() == block0.transactions.size());
+    BOOST_REQUIRE(r0.transaction_count() == block0.transactions.size());
+    BOOST_REQUIRE(r0_byhash.transaction_count() == block0.transactions.size());
 
     for (size_t i = 0; i < block0.transactions.size(); ++i)
     {

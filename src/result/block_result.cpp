@@ -75,7 +75,7 @@ size_t block_result::height() const
     return from_little_endian_unsafe<uint32_t>(slab_ + 80);
 }
 
-size_t block_result::transactions_size() const
+size_t block_result::transaction_count() const
 {
     BITCOIN_ASSERT(slab_ != nullptr);
     return from_little_endian_unsafe<uint32_t>(slab_ + 80 + 4);

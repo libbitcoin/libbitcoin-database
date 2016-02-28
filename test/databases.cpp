@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(block_db_test)
     BOOST_REQUIRE(res_h2);
     BOOST_REQUIRE(res_h2.header().hash() == h2);
 
-    for (size_t i = 0; i < res_h2.transactions_size(); ++i)
+    for (size_t i = 0; i < res_h2.transaction_count(); ++i)
         BOOST_REQUIRE(res_h2.transaction_hash(i) ==
             block2.transactions[i].hash());
 
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(block_db_test)
     BOOST_REQUIRE(res5b);
     BOOST_REQUIRE(res5b.header().hash() == h5b);
 
-    for (size_t i = 0; i < res5b.transactions_size(); ++i)
+    for (size_t i = 0; i < res5b.transaction_count(); ++i)
         BOOST_REQUIRE(res5b.transaction_hash(i) ==
             block5b.transactions[i].hash());
 

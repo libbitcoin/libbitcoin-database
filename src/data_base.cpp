@@ -376,7 +376,7 @@ chain::block data_base::pop()
     // Set result header.
     chain::block block;
     block.header = block_result.header();
-    const auto count = block_result.transactions_size();
+    const auto count = block_result.transaction_count();
 
     // TODO: unreverse the loop so we can avoid this.
     BITCOIN_ASSERT_MSG(count <= max_int64, "overflow");
