@@ -34,16 +34,16 @@ class BCD_API transaction_result
 public:
     transaction_result(const uint8_t* slab);
 
-    /// Test whether the result exists, return false otherwise.
+    /// True if this transaction result is valid (found).
     operator bool() const;
 
-    /// Height of the block which includes this transaction.
+    /// The height of the block which includes the transaction.
     size_t height() const;
 
-    /// Index of transaction within a block.
+    /// The position of the transaction within its block.
     size_t index() const;
 
-    /// Actual transaction itself.
+    /// The transaction.
     chain::transaction transaction() const;
 
 private:

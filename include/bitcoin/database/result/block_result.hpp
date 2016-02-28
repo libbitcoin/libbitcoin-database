@@ -34,19 +34,19 @@ class BCD_API block_result
 public:
     block_result(const uint8_t* slab);
 
-    /// Test whether the result exists, return false otherwise.
+    /// True if this block result is valid (found).
     operator bool() const;
 
-    /// Read block header.
+    /// The block header.
     chain::header header() const;
 
     /// The height of this block in the chain.
     size_t height() const;
 
-    /// Read the number of transactions in this block.
+    /// The number of transactions in this block.
     size_t transaction_count() const;
 
-    /// Read a transaction hash where index < transactions_size().
+    /// A transaction hash where index < transaction_count.
     hash_digest transaction_hash(size_t index) const;
 
 private:
