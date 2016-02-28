@@ -63,10 +63,10 @@ public:
     file_offset new_slab(size_t bytes_needed);
 
     /// Return a slab from its byte-wise position relative to start.
-    uint8_t* get_slab(file_offset position);
+    uint8_t* get0(file_offset position);
 
     /// Return a const slab memory address from its file offest.
-    const uint8_t* get_slab(file_offset position) const;
+    const uint8_t* get0(file_offset position) const;
 
 private:
 

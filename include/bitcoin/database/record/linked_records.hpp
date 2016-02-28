@@ -61,7 +61,7 @@ public:
     /**
      * Get underlying record data.
      */
-    uint8_t* get(array_index index) const; 
+    uint8_t* get1(array_index index) const; 
 
 private:
     record_manager& manager_;

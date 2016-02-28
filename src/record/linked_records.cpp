@@ -42,7 +42,7 @@ array_index linked_records::insert(array_index next)
 
     // Create new record.
     auto record = manager_.new_record();
-    const auto data = manager_.get_record(record);
+    const auto data = manager_.get0(record);
 
     // Write next value at first 4 bytes of record.
     auto serial = make_serializer(data);
@@ -54,13 +54,13 @@ array_index linked_records::insert(array_index next)
 
 array_index linked_records::next(array_index index) const
 {
-    const auto data = manager_.get_record(index);
+    const auto data = manager_.get0(index);
     return from_little_endian_unsafe<array_index>(data);
 }
 
-uint8_t* linked_records::get(array_index index) const
+uint8_t* linked_records::get1(array_index index) const
 {
-    return manager_.get_record(index) + sizeof(array_index);
+    return manager_.get0(index) + sizeof(array_index);
 }
 
 } // namespace database

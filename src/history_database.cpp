@@ -179,7 +179,7 @@ history history_database::get(const short_hash& key, size_t limit,
         if (limit && result.size() >= limit)
             break;
 
-        const auto data = linked_rows_.get(index);
+        const auto data = linked_rows_.get1(index);
 
         // Skip rows below from_height (if specified).
         if (from_height && read_height(data) < from_height)

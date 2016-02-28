@@ -81,7 +81,7 @@ file_offset slab_manager::new_slab(size_t bytes_needed)
 }
 
 // logical record access
-uint8_t* slab_manager::get_slab(file_offset position)
+uint8_t* slab_manager::get0(file_offset position)
 {
     BITCOIN_ASSERT_MSG(size_ > 0, "slab_manager::start() wasn't called.");
     BITCOIN_ASSERT(position < size_);
@@ -96,7 +96,7 @@ uint8_t* slab_manager::get_slab(file_offset position)
 }
 
 // const logical record access
-const uint8_t* slab_manager::get_slab(file_offset position) const
+const uint8_t* slab_manager::get0(file_offset position) const
 {
     BITCOIN_ASSERT_MSG(size_ > 0, "slab_manager::start() wasn't called.");
     BITCOIN_ASSERT(position < size_);

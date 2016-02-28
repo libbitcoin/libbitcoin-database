@@ -87,7 +87,7 @@ block_result block_database::get(const size_t height) const
         return block_result(nullptr);
 
     const auto position = read_position(height);
-    const auto slab = manager_.get_slab(position);
+    const auto slab = manager_.get0(position);
     return block_result(slab);
 }
 
@@ -158,7 +158,7 @@ bool block_database::top(size_t& out_height) const
 void block_database::write_position(const file_offset position)
 {
     const auto record = index_.new_record();
-    const auto data = index_.get_record(record);
+    const auto data = index_.get0(record);
     auto serial = make_serializer(data);
 
     // MUST BE ATOMIC
@@ -167,7 +167,7 @@ void block_database::write_position(const file_offset position)
 
 file_offset block_database::read_position(const array_index index) const
 {
-    const auto record = index_.get_record(index);
+    const auto record = index_.get0(index);
     return from_little_endian_unsafe<file_offset>(record);
 }
 

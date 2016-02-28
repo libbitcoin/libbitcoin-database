@@ -128,7 +128,7 @@ void htdb_slab_list_item<HashType>::write_next_position(file_offset next)
 template <typename HashType>
 uint8_t* htdb_slab_list_item<HashType>::raw_data(file_offset offset) const
 {
-    return manager_.get_slab(position_) + offset;
+    return manager_.get0(position_) + offset;
 }
 
 template <typename HashType>

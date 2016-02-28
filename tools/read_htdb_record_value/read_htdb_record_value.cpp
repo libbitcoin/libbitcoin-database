@@ -6,7 +6,7 @@ using namespace bc;
 using namespace bc::database;
 
 template <size_t N>
-record_byte_pointer get_record(htdb_record_header& header, record_manager& alloc,
+record_byte_pointer get0(htdb_record_header& header, record_manager& alloc,
     const data_chunk& key_data)
 {
     typedef byte_array<N> hash_type;
@@ -53,11 +53,11 @@ int main(int argc, char** argv)
     record_byte_pointer record = nullptr;
     if (key_data.size() == 32)
     {
-        record = get_record<32>(header, alloc, key_data);
+        record = get0<32>(header, alloc, key_data);
     }
     else if (key_data.size() == 4)
     {
-        record = get_record<4>(header, alloc, key_data);
+        record = get0<4>(header, alloc, key_data);
     }
     else
     {

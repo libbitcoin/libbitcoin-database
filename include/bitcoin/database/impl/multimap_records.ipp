@@ -84,7 +84,7 @@ void multimap_records<HashType>::add_to_list(uint8_t* start_info,
 {
     const auto old_begin = from_little_endian_unsafe<array_index>(start_info);
     const auto new_begin = linked_rows_.insert(old_begin);
-    auto record = linked_rows_.get(new_begin);
+    auto record = linked_rows_.get1(new_begin);
     write(record);
     auto serial = make_serializer(start_info);
 
@@ -97,7 +97,7 @@ void multimap_records<HashType>::create_new(const HashType& key,
     write_function write)
 {
     const auto first = linked_rows_.create();
-    auto record = linked_rows_.get(first);
+    auto record = linked_rows_.get1(first);
     write(record);
     const auto write_start_info = [first](uint8_t* data)
     {

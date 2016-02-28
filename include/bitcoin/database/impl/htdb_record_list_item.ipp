@@ -124,7 +124,7 @@ void htdb_record_list_item<HashType>::write_next_index(array_index next)
 template <typename HashType>
 uint8_t* htdb_record_list_item<HashType>::raw_data(file_offset offset) const
 {
-    return manager_.get_record(index_) + offset;
+    return manager_.get0(index_) + offset;
 }
 
 template <typename HashType>

@@ -80,7 +80,7 @@ array_index record_manager::new_record(/* size_t records=1 */)
 }
 
 // logical record access
-uint8_t* record_manager::get_record(array_index record)
+uint8_t* record_manager::get0(array_index record)
 {
     // The reader must remain in scope until the end of the block.
     const auto reader = file_.access();
@@ -92,7 +92,7 @@ uint8_t* record_manager::get_record(array_index record)
 }
 
 // const logical record access
-const uint8_t* record_manager::get_record(array_index record) const
+const uint8_t* record_manager::get0(array_index record) const
 {
     // The reader must remain in scope until the end of the block.
     const auto reader = file_.access();

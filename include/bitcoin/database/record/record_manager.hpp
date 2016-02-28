@@ -70,10 +70,10 @@ public:
     array_index new_record(/* size_t records=1 */);
 
     /// Return a record from its logical index.
-    uint8_t* get_record(array_index record);
+    uint8_t* get0(array_index record);
 
     /// Return a const record memory address from its logical index.
-    const uint8_t* get_record(array_index record) const;
+    const uint8_t* get0(array_index record) const;
 
 private:
 
