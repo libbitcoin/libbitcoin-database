@@ -90,11 +90,11 @@ public:
      */
     bool top(size_t& out_height) const;
 
-    /**
-     * First missing block by height after the specified start height.
-     * All previous block pointers from start to gap are validated.
-     */
-    size_t gap(size_t start) const;
+    /////**
+    //// * First missing block by height after the specified start height.
+    //// * All previous block pointers from start to gap are validated.
+    //// */
+    ////size_t gap(size_t start) const;
 
 private:
     typedef htdb_slab<hash_digest> slab_map;

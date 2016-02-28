@@ -147,14 +147,13 @@ bool block_database::top(size_t& out_height) const
     return true;
 }
 
-// TODO:
-size_t block_database::gap(size_t start) const
-{
-    for (int height = 0; height < max_size_t; height++)
-        const auto position = get(height);
-
-    return 0;
-}
+////size_t block_database::gap(size_t start) const
+////{
+////    for (int height = 0; height < max_size_t; height++)
+////        const auto position = get(height);
+////
+////    return 0;
+////}
 
 void block_database::write_position(const file_offset position)
 {
