@@ -160,7 +160,7 @@ history history_database::get(const short_hash& key, size_t limit,
             marker_to_kind(deserial.read_byte()),
 
             // point
-            chain::point::factory_from_data(deserial),
+            point::factory_from_data(deserial),
 
             // height
             deserial.read_4_bytes_little_endian(),
@@ -173,7 +173,7 @@ history history_database::get(const short_hash& key, size_t limit,
     // This result is defined in libbitcoin.
     history result;
     const auto start = map_.lookup(key);
-    for (const array_index index: multimap_iterable(linked_rows_, start))
+    for (const auto index: multimap_iterable(linked_rows_, start))
     {
         // Stop once we reach the limit (if specified).
         if (limit && result.size() >= limit)
