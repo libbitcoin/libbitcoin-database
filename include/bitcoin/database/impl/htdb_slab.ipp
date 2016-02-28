@@ -42,7 +42,7 @@ file_offset htdb_slab<HashType>::store(const HashType& key,
     const auto old_begin = read_bucket_value(key);
     htdb_slab_list_item<HashType> item(manager_, 0);
     const auto new_begin = item.create(key, value_size, old_begin);
-    write(item.data());
+    write(item.data1());
 
     // Link record to header.
     link(key, new_begin);
@@ -52,14 +52,10 @@ file_offset htdb_slab<HashType>::store(const HashType& key,
 }
 
 template <typename HashType>
-uint8_t* htdb_slab<HashType>::get(const HashType& key) const
+uint8_t* htdb_slab<HashType>::get2(const HashType& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
-
-    // For logging
-    size_t index = 0;
-    auto bucket = current;
 
     // Iterate through list...
     while (current != header_.empty)
@@ -68,7 +64,7 @@ uint8_t* htdb_slab<HashType>::get(const HashType& key) const
 
         // Found.
         if (item.compare(key))
-            return item.data();
+            return item.data1();
 
         const auto previous = current;
         current = item.next_position();
@@ -78,11 +74,8 @@ uint8_t* htdb_slab<HashType>::get(const HashType& key) const
         // So we must return gracefully vs. looping forever.
         if (previous == current)
             return nullptr;
-
-        ++index;
     }
 
-    // Not found.
     return nullptr;
 }
 
@@ -126,7 +119,6 @@ bool htdb_slab<HashType>::unlink(const HashType& key)
             return false;
     }
 
-    // Not found.
     return false;
 }
 

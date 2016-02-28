@@ -19,10 +19,17 @@
  */
 #include <bitcoin/database/spend_database.hpp>
 
+#include <cstddef>
+#include <cstdint>
 #include <boost/filesystem.hpp>
+#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/result/spend_result.hpp>
 
 namespace libbitcoin {
 namespace database {
+    
+using namespace bc::chain;
+using path = boost::filesystem::path;
 
 BC_CONSTEXPR size_t number_buckets = 228110589;
 BC_CONSTEXPR size_t header_size = htdb_record_header_fsize(number_buckets);
@@ -48,31 +55,7 @@ static hash_digest output_to_hash(const chain::output_point& output)
     return sha256_hash(point);
 }
 
-spend_result::spend_result(const uint8_t* record)
-  : record_(record)
-{
-}
-
-spend_result::operator bool() const
-{
-    return record_ != nullptr;
-}
-
-hash_digest spend_result::hash() const
-{
-    BITCOIN_ASSERT(record_ != nullptr);
-    hash_digest result;
-    std::copy(record_, record_ + hash_size, result.begin());
-    return result;
-}
-
-uint32_t spend_result::index() const
-{
-    BITCOIN_ASSERT(record_ != nullptr);
-    return from_little_endian_unsafe<uint32_t>(record_ + hash_size);
-}
-
-spend_database::spend_database(const boost::filesystem::path& filename)
+spend_database::spend_database(const path& filename)
   : file_(filename), 
     header_(file_, 0),
     manager_(file_, allocation_offset, record_size),
@@ -99,10 +82,10 @@ bool spend_database::stop()
     return file_.stop();
 }
 
-spend_result spend_database::get(const chain::output_point& outpoint) const
+spend_result spend_database::get(const output_point& outpoint) const
 {
     const auto key = output_to_hash(outpoint);
-    const auto record = map_.get(key);
+    const auto record = map_.get2(key);
     return spend_result(record);
 }
 
@@ -120,7 +103,7 @@ void spend_database::store(const chain::output_point& outpoint,
     map_.store(key, write);
 }
 
-void spend_database::remove(const chain::output_point& outpoint)
+void spend_database::remove(const output_point& outpoint)
 {
     const auto key = output_to_hash(outpoint);
     DEBUG_ONLY(bool success =) map_.unlink(key);

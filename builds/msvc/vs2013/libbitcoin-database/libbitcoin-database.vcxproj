@@ -118,6 +118,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\record\linked_records.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\record\multimap_records.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\record\record_manager.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\block_result.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\spend_result.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_result.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\slab\htdb_slab.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\slab\slab_manager.hpp" />
@@ -136,6 +139,9 @@
     <ClCompile Include="..\..\..\..\src\record\linked_records.cpp" />
     <ClCompile Include="..\..\..\..\src\record\multimap_records.cpp" />
     <ClCompile Include="..\..\..\..\src\record\record_manager.cpp" />
+    <ClCompile Include="..\..\..\..\src\result\block_result.cpp" />
+    <ClCompile Include="..\..\..\..\src\result\spend_result.cpp" />
+    <ClCompile Include="..\..\..\..\src\result\transaction_result.cpp" />
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
     <ClCompile Include="..\..\..\..\src\slab\slab_manager.cpp" />
     <ClCompile Include="..\..\..\..\src\spend_database.cpp" />

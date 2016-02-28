@@ -60,25 +60,19 @@ template <typename HashType>
 class htdb_record
 {
 public:
-    typedef std::function<void (uint8_t*)> write_function;
+    typedef std::function<void(uint8_t*)> write_function;
 
     htdb_record(htdb_record_header& header, record_manager& allocator,
         const std::string& name);
 
-    /**
-     * Store a value. The provided write() function must write the correct
-     * number of bytes (record_size - hash_size - sizeof(array_index)).
-     */
+    /// Store a value. The provided write() function must write the correct
+    /// number of bytes (record_size - hash_size - sizeof(array_index)).
     void store(const HashType& key, write_function write);
 
-    /**
-     * Return the record for a given hash.
-     */
-    uint8_t* get(const HashType& key) const;
+    /// Return the record for a given hash.
+    uint8_t* get2(const HashType& key) const;
 
-    /**
-     * Delete a key-value pair from the hashtable by unlinking the node.
-     */
+    /// Delete a key-value pair from the hashtable by unlinking the node.
     bool unlink(const HashType& key);
 
 private:

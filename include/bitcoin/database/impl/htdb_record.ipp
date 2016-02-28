@@ -43,14 +43,14 @@ void htdb_record<HashType>::store(const HashType& key,
     const auto old_begin = read_bucket_value(key);
     htdb_record_list_item<HashType> item(manager_, 0);
     const auto new_begin = item.create(key, old_begin);
-    write(item.data());
+    write(item.data1());
 
     // Link record to header.
     link(key, new_begin);
 }
 
 template <typename HashType>
-uint8_t* htdb_record<HashType>::get(const HashType& key) const
+uint8_t* htdb_record<HashType>::get2(const HashType& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -62,7 +62,7 @@ uint8_t* htdb_record<HashType>::get(const HashType& key) const
 
         // Found, return data.
         if (item.compare(key))
-            return item.data();
+            return item.data1();
 
         const auto previous = current;
         current = item.next_index();
@@ -74,7 +74,6 @@ uint8_t* htdb_record<HashType>::get(const HashType& key) const
             return nullptr;
     }
 
-    // Not found.
     return nullptr;
 }
 
@@ -91,10 +90,6 @@ bool htdb_record<HashType>::unlink(const HashType& key)
         link(key, begin_item.next_index());
         return true;
     }
-
-    // For logging
-    size_t index = 1;
-    auto bucket = begin;
 
     // Continue on...
     auto previous = begin;
@@ -120,11 +115,8 @@ bool htdb_record<HashType>::unlink(const HashType& key)
         // So we must return gracefully vs. looping forever.
         if (previous == current)
             return false;
-
-        ++index;
     }
 
-    // Not found.
     return false;
 }
 

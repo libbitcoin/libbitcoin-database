@@ -23,45 +23,13 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/disk/mmfile.hpp>
 #include <bitcoin/database/record/record_manager.hpp>
+#include <bitcoin/database/result/block_result.hpp>
 #include <bitcoin/database/slab/htdb_slab.hpp>
 
 namespace libbitcoin {
 namespace database {
-
-class BCD_API block_result
-{
-public:
-    block_result(const uint8_t* slab);
-
-    /**
-     * Test whether the result exists, return false otherwise.
-     */
-    operator bool() const;
-
-    /**
-     * Read block header.
-     */
-    chain::header header() const;
-
-    /**
-     * The height of this block in the chain.
-     */
-    size_t height() const;
-
-    /**
-     * Read the number of transactions in this block.
-     */
-    size_t transactions_size() const;
-
-    /**
-     * Read a transaction hash where i < transactions_size().
-     */
-    hash_digest transaction_hash(size_t i) const;
-
-private:
-    const uint8_t* slab_;
-};
 
 /**
  * Stores block_headers each with a list of transaction indexes.

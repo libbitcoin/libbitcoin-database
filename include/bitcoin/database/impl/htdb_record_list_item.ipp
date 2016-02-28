@@ -46,7 +46,7 @@ public:
     bool compare(const HashType& key) const;
 
     // The actual user data.
-    uint8_t* data() const;
+    uint8_t* data1() const;
 
     // Position of next item in the chained list.
     array_index next_index() const;
@@ -98,7 +98,7 @@ bool htdb_record_list_item<HashType>::compare(const HashType& key) const
 }
 
 template <typename HashType>
-uint8_t* htdb_record_list_item<HashType>::data() const
+uint8_t* htdb_record_list_item<HashType>::data1() const
 {
     // Value data is at the end.
     return raw_data(value_begin);

@@ -145,13 +145,13 @@ BOOST_AUTO_TEST_CASE(htdb_slab_tst)
         data[3] = 99;
     };
     ht.store(tiny_hash{ { 0xde, 0xad, 0xbe, 0xef } }, write, 8);
-    auto slab = ht.get(tiny_hash{ { 0xde, 0xad, 0xbe, 0xef } });
+    auto slab = ht.get2(tiny_hash{ { 0xde, 0xad, 0xbe, 0xef } });
     BOOST_REQUIRE(slab);
     BOOST_REQUIRE(slab[0] == 110);
     BOOST_REQUIRE(slab[1] == 110);
     BOOST_REQUIRE(slab[2] == 4);
     BOOST_REQUIRE(slab[3] == 99);
-    slab = ht.get(tiny_hash{ { 0xde, 0xad, 0xbe, 0xee } });
+    slab = ht.get2(tiny_hash{ { 0xde, 0xad, 0xbe, 0xee } });
     BOOST_REQUIRE(!slab);
 }
 

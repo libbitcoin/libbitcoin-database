@@ -50,26 +50,20 @@ template <typename HashType>
 class htdb_slab
 {
 public:
-    typedef std::function<void (uint8_t*)> write_function;
+    typedef std::function<void(uint8_t*)> write_function;
 
     htdb_slab(htdb_slab_header& header, slab_manager& allocator);
 
-    /**
-     * Store a value. value_size is the requested size for the value.
-     * The provided write() function must write exactly value_size bytes.
-     * Returns the position of the inserted value in the slab_manager.
-     */
+    /// Store a value. value_size is the requested size for the value.
+    /// The provided write() function must write exactly value_size bytes.
+    /// Returns the position of the inserted value in the slab_manager.
     file_offset store(const HashType& key, write_function write,
         const size_t value_size);
 
-    /**
-     * Return the slab for a given hash.
-     */
-    uint8_t* get(const HashType& key) const;
+    /// Return the slab for a given hash.
+    uint8_t* get2(const HashType& key) const;
 
-    /**
-     * Delete a key-value pair from the hashtable by unlinking the node.
-     */
+    /// Delete a key-value pair from the hashtable by unlinking the node.
     bool unlink(const HashType& key);
 
 private:

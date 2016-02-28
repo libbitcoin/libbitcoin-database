@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <boost/filesystem.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/disk/mmfile.hpp>
 #include <bitcoin/database/record/record_manager.hpp>
 
 namespace libbitcoin {

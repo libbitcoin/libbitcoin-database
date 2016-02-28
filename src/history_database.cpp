@@ -19,7 +19,10 @@
  */
 #include <bitcoin/database.hpp>
 
+#include <cstdint>
+#include <cstddef>
 #include <boost/filesystem.hpp>
+#include <bitcoin/bitcoin.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -75,8 +78,7 @@ bool history_database::stop()
 }
 
 void history_database::add_output(const short_hash& key,
-    const chain::output_point& outpoint, uint32_t output_height,
-    uint64_t value)
+    const output_point& outpoint, uint32_t output_height, uint64_t value)
 {
     auto write = [&](uint8_t* data)
     {
@@ -91,7 +93,7 @@ void history_database::add_output(const short_hash& key,
 }
 
 void history_database::add_spend(const short_hash& key,
-    const chain::output_point& previous, const chain::input_point& spend,
+    const output_point& previous, const input_point& spend,
     size_t spend_height)
 {
     auto write = [&](uint8_t* data)
@@ -168,6 +170,7 @@ history history_database::get(const short_hash& key, size_t limit,
         };
     };
 
+    // This result is defined in libbitcoin.
     history result;
     const auto start = map_.lookup(key);
     for (const array_index index: multimap_iterable(linked_rows_, start))

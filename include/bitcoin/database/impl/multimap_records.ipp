@@ -35,7 +35,7 @@ multimap_records<HashType>::multimap_records(htdb_type& map,
 template <typename HashType>
 array_index multimap_records<HashType>::lookup(const HashType& key) const
 {
-    const auto start_info = map_.get(key);
+    const auto start_info = map_.get2(key);
     if (!start_info)
         return linked_rows_.empty;
 
@@ -47,7 +47,7 @@ template <typename HashType>
 void multimap_records<HashType>::add_row(const HashType& key,
     write_function write)
 {
-    auto start_info = map_.get(key);
+    auto start_info = map_.get2(key);
     if (!start_info)
     {
         create_new(key, write);
@@ -60,7 +60,7 @@ void multimap_records<HashType>::add_row(const HashType& key,
 template <typename HashType>
 void multimap_records<HashType>::delete_last_row(const HashType& key)
 {
-    auto start_info = map_.get(key);
+    auto start_info = map_.get2(key);
     BITCOIN_ASSERT(start_info != nullptr);
     const auto old_begin = from_little_endian_unsafe<array_index>(start_info);
     BITCOIN_ASSERT(old_begin != linked_rows_.empty);

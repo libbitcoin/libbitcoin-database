@@ -40,6 +40,15 @@
     <ClCompile Include="..\..\..\..\src\slab\slab_manager.cpp">
       <Filter>src\slab</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\result\block_result.cpp">
+      <Filter>src\result</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\result\spend_result.cpp">
+      <Filter>src\result</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\result\transaction_result.cpp">
+      <Filter>src\result</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp">
@@ -108,6 +117,15 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\record\record_manager.hpp">
       <Filter>include\bitcoin\database\record</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\block_result.hpp">
+      <Filter>include\bitcoin\database\result</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\spend_result.hpp">
+      <Filter>include\bitcoin\database\result</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_result.hpp">
+      <Filter>include\bitcoin\database\result</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -169,6 +187,12 @@
     </Filter>
     <Filter Include="src\mman-win32">
       <UniqueIdentifier>{b35b8e0a-f340-4650-b6b6-defdeb9bc4bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\result">
+      <UniqueIdentifier>{3a7d4015-6c91-4309-8d12-c81ebc70e2d8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\result">
+      <UniqueIdentifier>{8bca51b7-ab0b-40b5-afd5-e8c79180aa84}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

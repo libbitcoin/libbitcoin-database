@@ -19,16 +19,19 @@
  */
 #include <bitcoin/database/block_database.hpp>
 
+#include <cstdint>
+#include <cstddef>
 #include <boost/filesystem.hpp>
-//#include <boost/iostreams/stream.hpp>
 #include <bitcoin/bitcoin.hpp>
-//#include <bitcoin/database/pointer_array_source.hpp>
-#include <bitcoin/database/slab/slab_manager.hpp>
+#include <bitcoin/database/result/block_result.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-constexpr size_t number_buckets = 600000;
+using namespace bc::chain;
+using path = boost::filesystem::path;
+
+BC_CONSTEXPR size_t number_buckets = 600000;
 BC_CONSTEXPR size_t header_size = htdb_slab_header_fsize(number_buckets);
 BC_CONSTEXPR size_t initial_map_file_size = header_size + min_slab_fsize;
 
@@ -44,68 +47,8 @@ BC_CONSTEXPR file_offset allocation_offset = header_size;
 //  [ [ tx_hash:32 ] ]
 //  [ [    ...     ] ]
 
-//chain::header deserialize_header(const uint8_t* begin, uint64_t length)
-//{
-//    boost::iostreams::stream<byte_pointer_array_source> istream(begin, length);
-//    istream.exceptions(std::ios_base::failbit);
-//    chain::header header;
-//    header.from_data(istream);
-//
-////    if (!istream)
-////        throw end_of_stream();
-//
-//    return header;
-//}
-
-template <typename Iterator>
-chain::header deserialize_header(const Iterator first)
-{
-    chain::header header;
-    auto deserial = make_deserializer_unsafe(first);
-    header.from_data(deserial, false);
-    return header;
-}
-
-block_result::block_result(const uint8_t* slab)
-  : slab_(slab)
-{
-}
-
-block_result::operator bool() const
-{
-    return slab_ != nullptr;
-}
-
-chain::header block_result::header() const
-{
-    BITCOIN_ASSERT(slab_ != nullptr);
-//    return deserialize_header(slab_, 80);
-    return deserialize_header(slab_);
-}
-
-size_t block_result::height() const
-{
-    BITCOIN_ASSERT(slab_ != nullptr);
-    return from_little_endian_unsafe<uint32_t>(slab_ + 80);
-}
-
-size_t block_result::transactions_size() const
-{
-    BITCOIN_ASSERT(slab_ != nullptr);
-    return from_little_endian_unsafe<uint32_t>(slab_ + 80 + 4);
-}
-
-hash_digest block_result::transaction_hash(size_t i) const
-{
-    BITCOIN_ASSERT(slab_ != nullptr);
-    BITCOIN_ASSERT(i < transactions_size());
-    const uint8_t* first = slab_ + 80 + 4 + 4 + i * hash_size;
-    auto deserial = make_deserializer_unsafe(first);
-    return deserial.read_hash();
-}
-
-block_database::block_database(const boost::filesystem::path& map_filename,
-    const boost::filesystem::path& index_filename)
+block_database::block_database(const path& map_filename,
+    const path& index_filename)
   : map_file_(map_filename), 
     header_(map_file_, 0),
     manager_(map_file_, allocation_offset),
@@ -150,7 +93,7 @@ block_result block_database::get(const size_t height) const
 
 block_result block_database::get(const hash_digest& hash) const
 {
-    const auto slab = map_.get(hash);
+    const auto slab = map_.get2(hash);
     return block_result(slab);
 }
 

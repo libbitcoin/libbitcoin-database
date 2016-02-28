@@ -19,8 +19,10 @@
  */
 #include <bitcoin/database/stealth_database.hpp>
 
+#include <cstddef>
 #include <cstdint>
 #include <boost/filesystem.hpp>
+#include <bitcoin/bitcoin.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -68,6 +70,7 @@ stealth stealth_database::scan(const binary& filter, size_t from_height) const
     if (from_height >= index_.count())
         return stealth();
 
+    // This result is defined in libbitcoin.
     stealth result;
     const auto start = read_index(from_height);
     for (auto index = start; index < rows_.count(); ++index)

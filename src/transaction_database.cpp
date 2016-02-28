@@ -19,10 +19,11 @@
  */
 #include <bitcoin/database/transaction_database.hpp>
 
+#include <cstddef>
+#include <cstdint>
 #include <boost/filesystem.hpp>
-//#include <boost/iostreams/stream.hpp>
 #include <bitcoin/bitcoin.hpp>
-//#include <bitcoin/database/pointer_array_source.hpp>
+#include <bitcoin/database/result/transaction_result.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -32,57 +33,6 @@ BC_CONSTEXPR size_t header_size = htdb_slab_header_fsize(number_buckets);
 BC_CONSTEXPR size_t initial_map_file_size = header_size + min_slab_fsize;
 
 BC_CONSTEXPR file_offset allocation_offset = header_size;
-
-//chain::transaction deserialize_tx(const uint8_t* begin, uint64_t length)
-//{
-//    boost::iostreams::stream<byte_pointer_array_source> istream(begin, length);
-//    istream.exceptions(std::ios_base::failbit);
-//    chain::transaction tx;
-//    tx.from_data(istream);
-//
-////    if (!istream)
-////        throw end_of_stream();
-//
-//    return tx;
-//}
-
-template <typename Iterator>
-chain::transaction deserialize_tx(const Iterator first)
-{
-    chain::transaction tx;
-    auto deserial = make_deserializer_unsafe(first);
-    tx.from_data(deserial);
-    return tx;
-}
-
-transaction_result::transaction_result(const uint8_t* slab)
-  : slab_(slab)
-{
-}
-
-transaction_result::operator bool() const
-{
-    return slab_ != nullptr;
-}
-
-size_t transaction_result::height() const
-{
-    BITCOIN_ASSERT(slab_ != nullptr);
-    return from_little_endian_unsafe<uint32_t>(slab_);
-}
-
-size_t transaction_result::index() const
-{
-    BITCOIN_ASSERT(slab_ != nullptr);
-    return from_little_endian_unsafe<uint32_t>(slab_ + 4);
-}
-
-chain::transaction transaction_result::transaction() const
-{
-    BITCOIN_ASSERT(slab_ != nullptr);
-//    return deserialize_tx(slab_ + 8, size_limit_ - 8);
-    return deserialize_tx(slab_ + 8);
-}
 
 transaction_database::transaction_database(
     const boost::filesystem::path& map_filename)
@@ -114,7 +64,7 @@ bool transaction_database::stop()
 
 transaction_result transaction_database::get(const hash_digest& hash) const
 {
-    const auto slab = map_.get(hash);
+    const auto slab = map_.get2(hash);
     return transaction_result(slab);
 }
 

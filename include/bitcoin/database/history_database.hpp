@@ -23,6 +23,7 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/disk/mmfile.hpp>
 #include <bitcoin/database/record/multimap_records.hpp>
 
 namespace libbitcoin {
@@ -33,8 +34,10 @@ struct BCD_API history_statinfo
     /// Number of buckets used in the hashtable.
     /// load factor = addrs / buckets
     const size_t buckets;
+
     /// Total number of unique addresses in the database.
     const size_t addrs;
+
     /// Total number of rows across all addresses.
     const size_t rows;
 };

@@ -23,40 +23,19 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/disk/mmfile.hpp>
 #include <bitcoin/database/record/htdb_record.hpp>
+#include <bitcoin/database/result/spend_result.hpp>
 
 namespace libbitcoin {
 namespace database {
-
-class BCD_API spend_result
-{
-public:
-    spend_result(const uint8_t* record);
-
-    /**
-     * Test whether the result exists, return false otherwise.
-     */
-    operator bool() const;
-
-    /**
-     * Transaction hash for spend.
-     */
-    hash_digest hash() const;
-
-    /**
-     * Index of input within transaction for spend.
-     */
-    uint32_t index() const;
-
-private:
-    const uint8_t* record_;
-};
 
 struct spend_statinfo
 {
     /// Number of buckets used in the hashtable.
     /// load factor = rows / buckets
     const size_t buckets;
+
     /// Total number of spend rows.
     const size_t rows;
 };

@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(htdb_slab_write_read)
     {
         const auto value = generate_random_bytes(engine, tx_size);
         const auto key = bitcoin_hash(value);
-        const auto slab = ht.get(key);
+        const auto slab = ht.get2(key);
 
         BOOST_REQUIRE(slab);
         BOOST_REQUIRE(std::equal(value.begin(), value.end(), slab));

@@ -23,40 +23,13 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/record/record_manager.hpp>
+#include <bitcoin/database/disk/mmfile.hpp>
+#include <bitcoin/database/result/transaction_result.hpp>
 #include <bitcoin/database/slab/htdb_slab.hpp>
+#include <bitcoin/database/slab/slab_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
-
-class BCD_API transaction_result
-{
-public:
-    transaction_result(const uint8_t* slab);
-
-    /**
-     * Test whether the result exists, return false otherwise.
-     */
-    operator bool() const;
-
-    /**
-     * Height of the block which includes this transaction.
-     */
-    size_t height() const;
-
-    /**
-     * Index of transaction within a block.
-     */
-    size_t index() const;
-
-    /**
-     * Actual transaction itself.
-     */
-    chain::transaction transaction() const;
-
-private:
-    const uint8_t* slab_;
-};
 
 /**
  * transaction_database enables lookups of transactions by hash.
