@@ -28,8 +28,6 @@ BC_CONSTEXPR size_t total_txs = 200;
 BC_CONSTEXPR size_t tx_size = 200;
 BC_CONSTEXPR size_t buckets = 100;
 
-BOOST_AUTO_TEST_SUITE(htdb)
-
 data_chunk generate_random_bytes(
 std::default_random_engine& engine, size_t size)
 {
@@ -76,7 +74,9 @@ void write_data()
     alloc.sync();
 }
 
-BOOST_AUTO_TEST_CASE(htdb_slab_write_read)
+BOOST_AUTO_TEST_SUITE(hash_table_tests)
+
+BOOST_AUTO_TEST_CASE(htdb_slab__write_read__test)
 {
     write_data();
 
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(htdb_slab_write_read)
     }
 }
 
-BOOST_AUTO_TEST_CASE(htdb_record_test_32)
+BOOST_AUTO_TEST_CASE(htdb_record__32bit__test)
 {
     BC_CONSTEXPR size_t rec_buckets = 2;
     BC_CONSTEXPR size_t header_size = htdb_record_header_fsize(rec_buckets);
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(htdb_record_test_32)
     BOOST_REQUIRE(!ht.unlink(invalid));
 }
 
-BOOST_AUTO_TEST_CASE(htdb_record_test_64)
+BOOST_AUTO_TEST_CASE(htdb_record__64bit__test)
 {
     BC_CONSTEXPR size_t rec_buckets = 2;
     BC_CONSTEXPR size_t header_size = htdb_record_header_fsize(rec_buckets);

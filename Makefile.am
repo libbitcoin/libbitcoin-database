@@ -64,11 +64,14 @@ check_PROGRAMS = test/libbitcoin_database_test
 test_libbitcoin_database_test_CPPFLAGS = -I${srcdir}/include ${bitcoin_CPPFLAGS}
 test_libbitcoin_database_test_LDADD = src/libbitcoin-database.la ${boost_unit_test_framework_LIBS} ${bitcoin_LIBS}
 test_libbitcoin_database_test_SOURCES = \
-    test/databases.cpp \
-    test/disk_objs.cpp \
-    test/htdb.cpp \
-    test/interface.cpp \
-    test/main.cpp
+    test/block_database.cpp \
+    test/data_base.cpp \
+    test/disk_object.cpp \
+    test/hash_table.cpp \
+    test/history_database.cpp \
+    test/main.cpp \
+    test/spend_database.cpp \
+    test/transaction_database.cpp
 
 endif WITH_TESTS
 
@@ -288,6 +291,7 @@ include_bitcoin_database_disk_HEADERS = \
     include/bitcoin/database/disk/accessor.hpp \
     include/bitcoin/database/disk/allocator.hpp \
     include/bitcoin/database/disk/disk_array.hpp \
+    include/bitcoin/database/disk/memory.hpp \
     include/bitcoin/database/disk/memory_map.hpp
 
 include_bitcoin_database_impldir = ${includedir}/bitcoin/database/impl

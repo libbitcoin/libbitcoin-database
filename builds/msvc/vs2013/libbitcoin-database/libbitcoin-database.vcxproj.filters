@@ -75,9 +75,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\record\multimap_records.hpp">
       <Filter>include\bitcoin\database\record</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\database.hpp">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\block_database.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
@@ -125,6 +122,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\memory_map.hpp">
       <Filter>include\bitcoin\database\disk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\pointer.hpp">
+      <Filter>include\bitcoin\database\disk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp">
+      <Filter>include\bitcoin</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

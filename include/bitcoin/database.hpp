@@ -28,6 +28,7 @@
 #include <bitcoin/database/disk/accessor.hpp>
 #include <bitcoin/database/disk/allocator.hpp>
 #include <bitcoin/database/disk/disk_array.hpp>
+#include <bitcoin/database/disk/memory.hpp>
 #include <bitcoin/database/disk/memory_map.hpp>
 #include <bitcoin/database/record/htdb_record.hpp>
 #include <bitcoin/database/record/linked_records.hpp>

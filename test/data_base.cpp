@@ -222,9 +222,9 @@ void compare_blocks(const chain::block& popped, const chain::block& original)
     }
 }
 
-BOOST_FIXTURE_TEST_SUITE(database_interface, low_thread_priority_fixture)
+BOOST_FIXTURE_TEST_SUITE(data_base_tests, low_thread_priority_fixture)
 
-BOOST_AUTO_TEST_CASE(pushpop_test)
+BOOST_AUTO_TEST_CASE(database__pushpop__test)
 {
     std::cout << "begin pushpop test" << std::endl;
 

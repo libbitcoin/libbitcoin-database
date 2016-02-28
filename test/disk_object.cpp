@@ -23,9 +23,9 @@
 using namespace bc;
 using namespace bc::database;
 
-BOOST_AUTO_TEST_SUITE(disk_objs)
+BOOST_AUTO_TEST_SUITE(disk_object_tests)
 
-BOOST_AUTO_TEST_CASE(slab)
+BOOST_AUTO_TEST_CASE(slab__test)
 {
     data_base::touch_file("slabs");
     memory_map file("slabs");
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(slab)
     BOOST_REQUIRE(file.size() >= 208);
 }
 
-BOOST_AUTO_TEST_CASE(array)
+BOOST_AUTO_TEST_CASE(array__test)
 {
     data_base::touch_file("array");
     memory_map file("array");
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(array)
     BOOST_REQUIRE(array.read(9) == 110);
 }
 
-BOOST_AUTO_TEST_CASE(record)
+BOOST_AUTO_TEST_CASE(record__test)
 {
     data_base::touch_file("records");
     memory_map file("records");
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(record)
     recs.sync();
 }
 
-BOOST_AUTO_TEST_CASE(linked_records_tst)
+BOOST_AUTO_TEST_CASE(linked_records__test)
 {
     data_base::touch_file("lrs");
     memory_map file("lrs");
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(linked_records_tst)
     recs.sync();
 }
 
-BOOST_AUTO_TEST_CASE(htdb_slab_tst)
+BOOST_AUTO_TEST_CASE(htdb_slab__test)
 {
     data_base::touch_file("htdb_slab");
     memory_map file("htdb_slab");
