@@ -133,6 +133,8 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\src\block_database.cpp" />
     <ClCompile Include="..\..\..\..\src\data_base.cpp" />
+    <ClCompile Include="..\..\..\..\src\disk\accessor.cpp" />
+    <ClCompile Include="..\..\..\..\src\disk\allocator.cpp" />
     <ClCompile Include="..\..\..\..\src\disk\mmfile.cpp" />
     <ClCompile Include="..\..\..\..\src\history_database.cpp" />
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c" />

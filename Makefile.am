@@ -42,6 +42,8 @@ src_libbitcoin_database_la_SOURCES = \
     src/spend_database.cpp \
     src/stealth_database.cpp \
     src/transaction_database.cpp \
+    src/disk/accessor.cpp \
+    src/disk/allocator.cpp \
     src/disk/mmfile.cpp \
     src/mman-win32/mman.c \
     src/mman-win32/mman.h \

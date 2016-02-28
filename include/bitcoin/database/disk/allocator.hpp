@@ -28,8 +28,8 @@
 namespace libbitcoin {
 namespace database {
 
-/// This class is thread safe and provides remap safe write access to
-/// file-mapped memory. The memory size is unprotected and unmanaged.
+/// This class provides remap safe write access to file-mapped memory.
+/// The memory size is unprotected and unmanaged.
 /// The mmfile class uses friend access to upgrade this lock during
 /// initialization in the case where a remap is required.
 class BCD_API allocator
@@ -38,29 +38,14 @@ public:
     typedef std::shared_ptr<allocator> ptr;
     typedef boost::upgrade_to_unique_lock<boost::shared_mutex> upgrade;
 
-    allocator(uint8_t* data, boost::shared_mutex& mutex)
-      : data_(data), mutex_(mutex), upgradeable_lock_(mutex_)
-    {
-        ///////////////////////////////////////////////////////////////////////
-        // Begin Critical Section
-        ///////////////////////////////////////////////////////////////////////
-    }
+    allocator(uint8_t* data, boost::shared_mutex& mutex);
+    ~allocator();
 
     /// This class is not copyable.
     allocator(const allocator& other) = delete;
 
     /// Access the allocated buffer.
-    uint8_t* buffer()
-    {
-        return data_;
-    }
-
-    ~allocator()
-    {
-        ///////////////////////////////////////////////////////////////////////
-        // End Critical Section
-        ///////////////////////////////////////////////////////////////////////
-    }
+    uint8_t* buffer();
 
 protected:
 
@@ -69,17 +54,11 @@ protected:
 
     // Get the lock, for the purpose of upgrading to unique.
     // The lock should be upgraded during the set data call.
-    boost::upgrade_lock<boost::shared_mutex>& get_upgradeable()
-    {
-        return upgradeable_lock_;
-    }
+    boost::upgrade_lock<boost::shared_mutex>& get_upgradeable();
 
-    // Modify the data member.
+    // Modify the data member, not thread safe.
     // This must not be used following initialization of the class.
-    void set_data(uint8_t* value)
-    {
-        data_ = value;
-    }
+    void set_data(uint8_t* value);
 
 private:
     uint8_t* data_;

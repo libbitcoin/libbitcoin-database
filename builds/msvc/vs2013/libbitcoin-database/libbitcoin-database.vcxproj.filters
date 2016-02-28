@@ -49,6 +49,12 @@
     <ClCompile Include="..\..\..\..\src\result\transaction_result.cpp">
       <Filter>src\result</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\disk\accessor.cpp">
+      <Filter>src\disk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\disk\allocator.cpp">
+      <Filter>src\disk</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp">

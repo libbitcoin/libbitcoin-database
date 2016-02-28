@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -17,40 +17,49 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_ACCESSOR_HPP
-#define LIBBITCOIN_DATABASE_ACCESSOR_HPP
+#include <bitcoin/database/disk/allocator.hpp>
 
 #include <cstdint>
-#include <memory>
 #include <boost/thread.hpp>
-#include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/// This class provides remap safe read access to file-mapped memory.
-/// The memory size is unprotected and unmanaged.
-class BCD_API accessor
+using namespace boost;
+
+allocator::allocator(uint8_t* data, shared_mutex& mutex)
+  : data_(data),
+    mutex_(mutex),
+    upgradeable_lock_(mutex_)
 {
-public:
-    typedef std::shared_ptr<accessor> ptr;
+    ///////////////////////////////////////////////////////////////////////
+    // Begin Critical Section
+    ///////////////////////////////////////////////////////////////////////
+}
 
-    accessor(uint8_t* data, boost::shared_mutex& mutex);
-    ~accessor();
+uint8_t* allocator::buffer()
+{
+    return data_;
+}
 
-    /// This class is not copyable.
-    accessor(const accessor& other) = delete;
+// protected/friend
+upgrade_lock<shared_mutex>& allocator::get_upgradeable()
+{
+    return upgradeable_lock_;
+}
 
-    /// Access the buffer.
-    uint8_t* buffer();
+// protected/friend
+void allocator::set_data(uint8_t* value)
+{
+    data_ = value;
+}
 
-private:
-    uint8_t* data_;
-    boost::shared_mutex& mutex_;
-    boost::shared_lock<boost::shared_mutex> shared_lock_;
-};
+allocator::~allocator()
+{
+    ///////////////////////////////////////////////////////////////////////
+    // End Critical Section
+    ///////////////////////////////////////////////////////////////////////
+}
 
 } // namespace database
 } // namespace libbitcoin
-
-#endif
