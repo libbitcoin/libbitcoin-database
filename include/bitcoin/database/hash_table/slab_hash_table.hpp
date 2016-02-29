@@ -20,11 +20,15 @@
 #ifndef LIBBITCOIN_DATABASE_SLAB_HASH_TABLE_HPP
 #define LIBBITCOIN_DATABASE_SLAB_HASH_TABLE_HPP
 
+#include <cstddef>
+#include <cstdint>
 #include <bitcoin/database/hash_table/hash_table.hpp>
 #include <bitcoin/database/hash_table/slab_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
+
+typedef hash_table<array_index, file_offset> slab_hash_table_header;
 
 /**
  * A hashtable mapping hashes to variable sized values (slabs).

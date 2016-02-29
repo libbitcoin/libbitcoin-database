@@ -22,7 +22,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <string>
 #include <tuple>
 #include <bitcoin/database/hash_table/hash_table.hpp>
 #include <bitcoin/database/hash_table/record_manager.hpp>
@@ -36,6 +35,8 @@ BC_CONSTFUNC size_t hash_table_record_size(size_t value_size)
     return std::tuple_size<HashType>::value + sizeof(array_index)
         + value_size;
 }
+
+typedef hash_table<array_index, array_index> record_hash_table_header;
 
 /**
  * A hashtable mapping hashes to fixed sized values (records).
