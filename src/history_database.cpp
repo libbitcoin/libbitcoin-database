@@ -32,14 +32,14 @@ using namespace bc::chain;
 using boost::filesystem::path;
 
 BC_CONSTEXPR size_t number_buckets = 97210744;
-BC_CONSTEXPR size_t header_size = htdb_record_header_fsize(number_buckets);
-BC_CONSTEXPR size_t initial_lookup_file_size = header_size + min_records_fsize;
+BC_CONSTEXPR size_t header_size = record_hash_table_header_size(number_buckets);
+BC_CONSTEXPR size_t initial_lookup_file_size = header_size + minimum_records_size;
 
 BC_CONSTEXPR file_offset allocation_offset = header_size;
-BC_CONSTEXPR size_t alloc_record_size = map_record_fsize_multimap<short_hash>();
+BC_CONSTEXPR size_t alloc_record_size = hash_table_multimap_record_size<short_hash>();
 
 BC_CONSTEXPR size_t value_size = 1 + 36 + 4 + 8;
-BC_CONSTEXPR size_t row_record_size = record_fsize_htdb<hash_digest>(value_size);
+BC_CONSTEXPR size_t row_record_size = hash_table_record_size<hash_digest>(value_size);
 
 history_database::history_database(const path& lookup_filename,
     const path& rows_filename)
@@ -62,7 +62,7 @@ void history_database::create()
     header_.create(number_buckets);
     manager_.create();
 
-    rows_file_.resize(min_records_fsize);
+    rows_file_.resize(minimum_records_size);
     rows_.create();
 }
 

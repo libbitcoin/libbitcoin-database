@@ -34,10 +34,10 @@ namespace database {
 
 typedef memory_array<array_index, array_index> htdb_record_header;
 
-BC_CONSTEXPR size_t min_records_fsize = sizeof(array_index);
-BC_CONSTFUNC size_t htdb_record_header_fsize(size_t buckets)
+BC_CONSTEXPR size_t minimum_records_size = sizeof(array_index);
+BC_CONSTFUNC size_t record_hash_table_header_size(size_t buckets)
 {
-    return sizeof(array_index) + min_records_fsize * buckets;
+    return sizeof(array_index) + minimum_records_size * buckets;
 }
 
 /// The record manager represents a collection of fixed size chunks of

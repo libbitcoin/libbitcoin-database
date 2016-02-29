@@ -29,8 +29,8 @@ namespace libbitcoin {
 namespace database {
 
 constexpr size_t number_buckets = 100000000;
-BC_CONSTEXPR size_t header_size = htdb_slab_header_fsize(number_buckets);
-BC_CONSTEXPR size_t initial_map_file_size = header_size + min_slab_fsize;
+BC_CONSTEXPR size_t header_size = slab_hash_table_header_size(number_buckets);
+BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_slabs_size;
 
 BC_CONSTEXPR file_offset allocation_offset = header_size;
 

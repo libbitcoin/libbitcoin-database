@@ -40,12 +40,12 @@ std::default_random_engine& engine, size_t size)
 
 void write_data()
 {
-    BC_CONSTEXPR size_t header_size = htdb_slab_header_fsize(buckets);
+    BC_CONSTEXPR size_t header_size = slab_hash_table_header_size(buckets);
 
     data_base::touch_file("htdb_slabs");
     memory_map file("htdb_slabs");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
-    file.resize(header_size + min_slab_fsize);
+    file.resize(header_size + minimum_slabs_size);
 
     htdb_slab_header header(file, 0);
     header.create(buckets);
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(htdb_slab__write_read__test)
 
     BOOST_REQUIRE(header.size() == buckets);
 
-    const auto slab_start = htdb_slab_header_fsize(buckets);
+    const auto slab_start = slab_hash_table_header_size(buckets);
 
     slab_manager alloc(file, slab_start);
     alloc.start();
@@ -110,19 +110,19 @@ BOOST_AUTO_TEST_CASE(htdb_slab__write_read__test)
 BOOST_AUTO_TEST_CASE(htdb_record__32bit__test)
 {
     BC_CONSTEXPR size_t rec_buckets = 2;
-    BC_CONSTEXPR size_t header_size = htdb_record_header_fsize(rec_buckets);
+    BC_CONSTEXPR size_t header_size = record_hash_table_header_size(rec_buckets);
 
     data_base::touch_file("htdb_records");
     memory_map file("htdb_records");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
-    file.resize(header_size + min_records_fsize);
+    file.resize(header_size + minimum_records_size);
 
     htdb_record_header header(file, 0);
     header.create(rec_buckets);
     header.start();
 
     typedef byte_array<4> tiny_hash;
-    BC_CONSTEXPR size_t record_size = record_fsize_htdb<tiny_hash>(4);
+    BC_CONSTEXPR size_t record_size = hash_table_record_size<tiny_hash>(4);
     const file_offset records_start = header_size;
 
     record_manager alloc(file, records_start, record_size);
@@ -182,19 +182,19 @@ BOOST_AUTO_TEST_CASE(htdb_record__32bit__test)
 BOOST_AUTO_TEST_CASE(htdb_record__64bit__test)
 {
     BC_CONSTEXPR size_t rec_buckets = 2;
-    BC_CONSTEXPR size_t header_size = htdb_record_header_fsize(rec_buckets);
+    BC_CONSTEXPR size_t header_size = record_hash_table_header_size(rec_buckets);
 
     data_base::touch_file("htdb_records");
     memory_map file("htdb_records");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
-    file.resize(header_size + min_records_fsize);
+    file.resize(header_size + minimum_records_size);
 
     htdb_record_header header(file, 0);
     header.create(rec_buckets);
     header.start();
 
     typedef byte_array<8> tiny_hash;
-    BC_CONSTEXPR size_t record_size = record_fsize_htdb<tiny_hash>(8);
+    BC_CONSTEXPR size_t record_size = hash_table_record_size<tiny_hash>(8);
     const file_offset records_start = header_size;
 
     record_manager alloc(file, records_start, record_size);

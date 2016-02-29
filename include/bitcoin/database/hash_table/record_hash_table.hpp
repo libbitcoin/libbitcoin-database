@@ -31,7 +31,7 @@ namespace libbitcoin {
 namespace database {
 
 template <typename HashType>
-BC_CONSTFUNC size_t record_fsize_htdb(size_t value_size)
+BC_CONSTFUNC size_t hash_table_record_size(size_t value_size)
 {
     return std::tuple_size<HashType>::value + sizeof(array_index)
         + value_size;

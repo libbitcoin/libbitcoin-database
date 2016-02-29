@@ -30,9 +30,9 @@ namespace libbitcoin {
 namespace database {
 
 template <typename HashType>
-BC_CONSTEXPR size_t map_record_fsize_multimap()
+BC_CONSTEXPR size_t hash_table_multimap_record_size()
 {
-    return record_fsize_htdb<HashType>(sizeof(array_index));
+    return hash_table_record_size<HashType>(sizeof(array_index));
 }
 
 /**

@@ -32,8 +32,8 @@ using namespace bc::chain;
 using path = boost::filesystem::path;
 
 BC_CONSTEXPR size_t number_buckets = 600000;
-BC_CONSTEXPR size_t header_size = htdb_slab_header_fsize(number_buckets);
-BC_CONSTEXPR size_t initial_map_file_size = header_size + min_slab_fsize;
+BC_CONSTEXPR size_t header_size = slab_hash_table_header_size(number_buckets);
+BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_slabs_size;
 
 BC_CONSTEXPR file_offset allocation_offset = header_size;
 
@@ -65,7 +65,7 @@ void block_database::create()
     map_file_.resize(initial_map_file_size);
     header_.create(number_buckets);
     manager_.create();
-    index_file_.resize(min_records_fsize);
+    index_file_.resize(minimum_records_size);
     index_.create();
 }
 

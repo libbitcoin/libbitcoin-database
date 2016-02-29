@@ -34,10 +34,10 @@ namespace database {
 
 typedef memory_array<array_index, file_offset> htdb_slab_header;
 
-BC_CONSTEXPR size_t min_slab_fsize = sizeof(file_offset);
-BC_CONSTFUNC size_t htdb_slab_header_fsize(size_t buckets)
+BC_CONSTEXPR size_t minimum_slabs_size = sizeof(file_offset);
+BC_CONSTFUNC size_t slab_hash_table_header_size(size_t buckets)
 {
-    return sizeof(file_offset) + min_slab_fsize * buckets;
+    return sizeof(file_offset) + minimum_slabs_size * buckets;
 }
 
 /// The slab manager represents a growing collection of various sized
