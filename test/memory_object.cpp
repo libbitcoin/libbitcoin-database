@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(linked_records__test)
     recs.sync();
 }
 
-BOOST_AUTO_TEST_CASE(htdb_slab__test)
+BOOST_AUTO_TEST_CASE(slab_hash_table__test)
 {
     data_base::touch_file("slab_hash_table");
     memory_map file("slab_hash_table");

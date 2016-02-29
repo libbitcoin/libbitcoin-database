@@ -42,8 +42,8 @@ void write_data()
 {
     BC_CONSTEXPR size_t header_size = slab_hash_table_header_size(buckets);
 
-    data_base::touch_file("htdb_slabs");
-    memory_map file("htdb_slabs");
+    data_base::touch_file("slab_hash_table");
+    memory_map file("slab_hash_table");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.resize(header_size + minimum_slabs_size);
 
@@ -76,11 +76,11 @@ void write_data()
 
 BOOST_AUTO_TEST_SUITE(hash_table_tests)
 
-BOOST_AUTO_TEST_CASE(htdb_slab__write_read__test)
+BOOST_AUTO_TEST_CASE(slab_hash_table__write_read__test)
 {
     write_data();
 
-    memory_map file("htdb_slabs");
+    memory_map file("slab_hash_table");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
 
     slab_hash_table_header header(file, 0);
@@ -107,13 +107,13 @@ BOOST_AUTO_TEST_CASE(htdb_slab__write_read__test)
     }
 }
 
-BOOST_AUTO_TEST_CASE(htdb_record__32bit__test)
+BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
 {
     BC_CONSTEXPR size_t rec_buckets = 2;
     BC_CONSTEXPR size_t header_size = record_hash_table_header_size(rec_buckets);
 
-    data_base::touch_file("htdb_records");
-    memory_map file("htdb_records");
+    data_base::touch_file("record_hash_table");
+    memory_map file("record_hash_table");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.resize(header_size + minimum_records_size);
 
@@ -179,13 +179,13 @@ BOOST_AUTO_TEST_CASE(htdb_record__32bit__test)
     BOOST_REQUIRE(!ht.unlink(invalid));
 }
 
-BOOST_AUTO_TEST_CASE(htdb_record__64bit__test)
+BOOST_AUTO_TEST_CASE(record_hash_table__64bit__test)
 {
     BC_CONSTEXPR size_t rec_buckets = 2;
     BC_CONSTEXPR size_t header_size = record_hash_table_header_size(rec_buckets);
 
-    data_base::touch_file("htdb_records");
-    memory_map file("htdb_records");
+    data_base::touch_file("record_hash_table");
+    memory_map file("record_hash_table");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.resize(header_size + minimum_records_size);
 
