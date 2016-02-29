@@ -22,6 +22,7 @@
 #include <cstddef>
 #include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/memory_map.hpp>
 
 namespace libbitcoin {
@@ -80,34 +81,14 @@ file_offset slab_manager::new_slab(size_t bytes_needed)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-// logical record access
-uint8_t* slab_manager::get0(file_offset position)
+const memory::ptr slab_manager::get(file_offset position) const
 {
     BITCOIN_ASSERT_MSG(size_ > 0, "slab_manager::start() wasn't called.");
     BITCOIN_ASSERT(position < size_);
 
-    // The reader must remain in scope until the end of the block.
     const auto reader = file_.access();
-    const auto offset = start_ + position;
-    auto read_position = reader->buffer() + offset;
-
-    // BUGBUG: unprotected pointer.
-    return read_position;
-}
-
-// const logical record access
-const uint8_t* slab_manager::get0(file_offset position) const
-{
-    BITCOIN_ASSERT_MSG(size_ > 0, "slab_manager::start() wasn't called.");
-    BITCOIN_ASSERT(position < size_);
-
-    // The reader must remain in scope until the end of the block.
-    const auto reader = file_.access();
-    const auto offset = start_ + position;
-    const auto read_position = reader->buffer() + offset;
-
-    // BUGBUG: unprotected pointer.
-    return read_position;
+    reader->increment(start_ + position);
+    return reader;
 }
 
 // privates

@@ -26,6 +26,7 @@
 #include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/memory_map.hpp>
 
 namespace libbitcoin {
@@ -55,15 +56,11 @@ public:
     /// Synchronise slab allocator to disk.
     void sync();
 
-    /// Allocate a slab.
-    /// Call sync() after writing the record.
+    /// Allocate a slab and return its logical offset, sync() after writing.
     file_offset new_slab(size_t bytes_needed);
 
-    /// Return a slab from its byte-wise position relative to start.
-    uint8_t* get0(file_offset position);
-
     /// Return a const slab memory address from its file offest.
-    const uint8_t* get0(file_offset position) const;
+    const memory::ptr get(file_offset position) const;
 
 private:
 

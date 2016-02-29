@@ -124,7 +124,8 @@ void record_row<HashType>::write_next_index(array_index next)
 template <typename HashType>
 uint8_t* record_row<HashType>::raw_data(file_offset offset) const
 {
-    return manager_.get0(index_) + offset;
+    const auto memory = manager_.get(index_);
+    return memory->buffer() + offset;
 }
 
 template <typename HashType>

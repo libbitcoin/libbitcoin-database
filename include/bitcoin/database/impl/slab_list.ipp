@@ -128,7 +128,8 @@ void slab_list<HashType>::write_next_position(file_offset next)
 template <typename HashType>
 uint8_t* slab_list<HashType>::raw_data(file_offset offset) const
 {
-    return manager_.get0(position_) + offset;
+    const auto memory = manager_.get(position_);
+    return memory->buffer() + offset;
 }
 
 template <typename HashType>

@@ -41,26 +41,27 @@ array_index record_list::insert(array_index next)
         "array_index incorrect size");
 
     // Create new record.
-    auto record = manager_.new_record();
-    const auto data = manager_.get0(record);
+    auto index = manager_.new_record();
+    const auto memory = manager_.get(index);
 
     // Write next value at first 4 bytes of record.
-    auto serial = make_serializer(data);
+    auto serial = make_serializer(memory->buffer());
 
     // MUST BE ATOMIC
     serial.write_4_bytes_little_endian(next);
-    return record;
+    return index;
 }
 
 array_index record_list::next(array_index index) const
 {
-    const auto data = manager_.get0(index);
-    return from_little_endian_unsafe<array_index>(data);
+    const auto memory = manager_.get(index);
+    return from_little_endian_unsafe<array_index>(memory->buffer());
 }
 
 uint8_t* record_list::get1(array_index index) const
 {
-    return manager_.get0(index) + sizeof(array_index);
+    const auto memory = manager_.get(index);
+    return memory->buffer() + sizeof(array_index);
 }
 
 } // namespace database

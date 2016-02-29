@@ -26,6 +26,7 @@
 #include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/memory_map.hpp>
 
 namespace libbitcoin {
@@ -59,18 +60,14 @@ public:
     /// The number of records in this container.
     array_index count() const;
 
-    /// Change the number of records of this container.
+    /// Change the number of records of this container (truncation).
     void set_count(const array_index value);
 
-    /// Allocate a record and return its logical index.
-    /// Call sync() after writing the record.
-    array_index new_record(/* size_t records=1 */);
+    /// Allocate a record and return its logical index, sync() after writing.
+    array_index new_record();
 
     /// Return a record from its logical index.
-    uint8_t* get0(array_index record);
-
-    /// Return a const record memory address from its logical index.
-    const uint8_t* get0(array_index record) const;
+    const memory::ptr get(array_index record) const;
 
 private:
 

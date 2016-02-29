@@ -78,13 +78,13 @@ stealth stealth_database::scan(const binary& filter, size_t from_height) const
     for (auto index = start; index < rows_.count(); ++index)
     {
         // see if prefix matches
-        const auto record = rows_.get0(index);
-        const auto field = from_little_endian_unsafe<uint32_t>(record);
+        const auto record = rows_.get(index);
+        const auto field = from_little_endian_unsafe<uint32_t>(record->buffer());
         if (!filter.is_prefix_of(field))
             continue;
 
         // Add row to results.
-        auto deserial = make_deserializer_unsafe(record + prefix_size);
+        auto deserial = make_deserializer_unsafe(record->buffer() + prefix_size);
         result.push_back(
         {
             deserial.read_hash(),
@@ -100,10 +100,10 @@ void stealth_database::store(uint32_t prefix, const stealth_row& row)
 {
     // Allocate new row.
     const auto index = rows_.new_record();
-    const auto data = rows_.get0(index);
+    const auto memory = rows_.get(index);
 
     // Write data.
-    auto serial = make_serializer(data);
+    auto serial = make_serializer(memory->buffer());
     serial.write_4_bytes_little_endian(prefix);
     serial.write_hash(row.ephemeral_key);
     serial.write_short_hash(row.address);
@@ -129,8 +129,8 @@ void stealth_database::write_index()
 {
     // Write index of first row into block lookup index.
     const auto index = index_.new_record();
-    const auto data = index_.get0(index);
-    auto serial = make_serializer(data);
+    const auto memory = index_.get(index);
+    auto serial = make_serializer(memory->buffer());
 
     // MUST BE ATOMIC
     serial.write_4_bytes_little_endian(block_start_);
@@ -145,8 +145,8 @@ void stealth_database::write_index()
 array_index stealth_database::read_index(size_t from_height) const
 {
     BITCOIN_ASSERT(from_height < index_.count());
-    const auto record = index_.get0(from_height);
-    return from_little_endian_unsafe<array_index>(record);
+    const auto record = index_.get(from_height);
+    return from_little_endian_unsafe<array_index>(record->buffer());
 }
 
 } // namespace database

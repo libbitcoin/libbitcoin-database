@@ -64,7 +64,6 @@ void record_manager::sync()
     ///////////////////////////////////////////////////////////////////////////
 }
 
-// new record allocation
 array_index record_manager::new_record(/* size_t records=1 */)
 {
     static constexpr size_t records = 1;
@@ -79,28 +78,11 @@ array_index record_manager::new_record(/* size_t records=1 */)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-// logical record access
-uint8_t* record_manager::get0(array_index record)
+const memory::ptr record_manager::get(array_index record) const
 {
-    // The reader must remain in scope until the end of the block.
     const auto reader = file_.access();
-    const auto offset = start_ + record_to_position(record);
-    auto read_position = reader->buffer() + offset;
-
-    // BUGBUG: unprotected pointer.
-    return read_position;
-}
-
-// const logical record access
-const uint8_t* record_manager::get0(array_index record) const
-{
-    // The reader must remain in scope until the end of the block.
-    const auto reader = file_.access();
-    const auto offset = start_ + record_to_position(record);
-    const auto read_position = reader->buffer() + offset;
-
-    // BUGBUG: unprotected pointer.
-    return read_position;
+    reader->increment(start_ + record_to_position(record));
+    return reader;
 }
 
 array_index record_manager::count() const
