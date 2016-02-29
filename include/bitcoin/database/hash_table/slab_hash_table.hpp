@@ -20,7 +20,7 @@
 #ifndef LIBBITCOIN_DATABASE_SLAB_HASH_TABLE_HPP
 #define LIBBITCOIN_DATABASE_SLAB_HASH_TABLE_HPP
 
-#include <bitcoin/database/memory/memory_array.hpp>
+#include <bitcoin/database/hash_table/hash_table.hpp>
 #include <bitcoin/database/hash_table/slab_manager.hpp>
 
 namespace libbitcoin {
@@ -28,9 +28,9 @@ namespace database {
 
 /**
  * A hashtable mapping hashes to variable sized values (slabs).
- * Uses a combination of the memory_array and slab_manager.
+ * Uses a combination of the hash_table and slab_manager.
  *
- * The memory_array is basically a bucket list containing the start
+ * The hash_table is basically a bucket list containing the start
  * value for the hashtable chain.
  *
  * The slab_manager is used to create linked chains. A header

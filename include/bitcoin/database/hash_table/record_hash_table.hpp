@@ -24,7 +24,7 @@
 #include <cstdint>
 #include <string>
 #include <tuple>
-#include <bitcoin/database/memory/memory_array.hpp>
+#include <bitcoin/database/hash_table/hash_table.hpp>
 #include <bitcoin/database/hash_table/record_manager.hpp>
 
 namespace libbitcoin {
@@ -39,9 +39,9 @@ BC_CONSTFUNC size_t hash_table_record_size(size_t value_size)
 
 /**
  * A hashtable mapping hashes to fixed sized values (records).
- * Uses a combination of the memory_array and record_manager.
+ * Uses a combination of the hash_table and record_manager.
  *
- * The memory_array is basically a bucket list containing the start
+ * The hash_table is basically a bucket list containing the start
  * value for the hashtable chain.
  *
  * The record_manager is used to create linked chains. A header

@@ -26,16 +26,16 @@ namespace libbitcoin {
 namespace database {
 
 template <typename IndexType, typename ValueType>
-memory_array<IndexType, ValueType>::memory_array(memory_map& file,
+hash_table<IndexType, ValueType>::hash_table(memory_map& file,
     file_offset sector_start)
   : file_(file), size_(0), sector_start_(sector_start)
 {
     static_assert(std::is_unsigned<ValueType>::value,
-        "memory_array only works with unsigned types");
+        "hash_table only works with unsigned types");
 }
 
 template <typename IndexType, typename ValueType>
-void memory_array<IndexType, ValueType>::create(IndexType size)
+void hash_table<IndexType, ValueType>::create(IndexType size)
 {
     // Calculate the minimum file size.
     const auto minimum_file_size = sector_start_ + item_position(size);
@@ -53,7 +53,7 @@ void memory_array<IndexType, ValueType>::create(IndexType size)
 }
 
 template <typename IndexType, typename ValueType>
-void memory_array<IndexType, ValueType>::start()
+void hash_table<IndexType, ValueType>::start()
 {
     BITCOIN_ASSERT(sizeof(IndexType) <= file_.size());
 
@@ -65,9 +65,9 @@ void memory_array<IndexType, ValueType>::start()
 }
 
 template <typename IndexType, typename ValueType>
-ValueType memory_array<IndexType, ValueType>::read(IndexType index) const
+ValueType hash_table<IndexType, ValueType>::read(IndexType index) const
 {
-    BITCOIN_ASSERT_MSG(size_ != 0, "memory_array::start() wasn't called.");
+    BITCOIN_ASSERT_MSG(size_ != 0, "hash_table::start() wasn't called.");
     BITCOIN_ASSERT(index < size_);
 
     // Find the item in the file.
@@ -82,9 +82,9 @@ ValueType memory_array<IndexType, ValueType>::read(IndexType index) const
 }
 
 template <typename IndexType, typename ValueType>
-void memory_array<IndexType, ValueType>::write(IndexType index, ValueType value)
+void hash_table<IndexType, ValueType>::write(IndexType index, ValueType value)
 {
-    BITCOIN_ASSERT_MSG(size_ > 0, "memory_array::start() wasn't called.");
+    BITCOIN_ASSERT_MSG(size_ > 0, "hash_table::start() wasn't called.");
     BITCOIN_ASSERT(index < size_);
 
     // Find the item in the file.
@@ -103,13 +103,13 @@ void memory_array<IndexType, ValueType>::write(IndexType index, ValueType value)
 }
 
 template <typename IndexType, typename ValueType>
-IndexType memory_array<IndexType, ValueType>::size() const
+IndexType hash_table<IndexType, ValueType>::size() const
 {
     return size_;
 }
 
 template <typename IndexType, typename ValueType>
-file_offset memory_array<IndexType, ValueType>::item_position(
+file_offset hash_table<IndexType, ValueType>::item_position(
     IndexType index) const
 {
     return sizeof(IndexType) + index * sizeof(ValueType);

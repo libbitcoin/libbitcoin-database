@@ -39,7 +39,7 @@ namespace database {
  * Empty items are represented by the value array.empty
  */
 template <typename IndexType, typename ValueType>
-class memory_array
+class hash_table
 {
 public:
     // This VC++ workaround is OK because ValueType must be unsigned. 
@@ -49,12 +49,12 @@ public:
     /**
      * sector_start represents the offset within the file.
      */
-    memory_array(memory_map& file, file_offset sector_start);
+    hash_table(memory_map& file, file_offset sector_start);
 
     /**
      * Initialize a new array. The file must have enough space.
      * The space needed is sizeof(IndexType) + size * sizeof(ValueType)
-     * Element items are initialised to memory_array::empty.
+     * Element items are initialised to hash_table::empty.
      */
     void create(IndexType size);
 
@@ -90,6 +90,6 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#include <bitcoin/database/impl/memory_array.ipp>
+#include <bitcoin/database/impl/hash_table.ipp>
 
 #endif

@@ -35,7 +35,7 @@
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/memory_accessor.hpp>
 #include <bitcoin/database/memory/memory_allocator.hpp>
-#include <bitcoin/database/memory/memory_array.hpp>
+#include <bitcoin/database/hash_table/hash_table.hpp>
 #include <bitcoin/database/memory/memory_map.hpp>
 #include <bitcoin/database/result/block_result.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>

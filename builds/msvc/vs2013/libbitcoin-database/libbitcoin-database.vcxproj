@@ -92,7 +92,7 @@
     <Linkage-libbitcoin-consensus>static</Linkage-libbitcoin-consensus>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\memory_array.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\hash_table.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_hash_table.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_row.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\slab_hash_table.ipp" />
@@ -108,6 +108,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\block_database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\data_base.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\hash_table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_list.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_multimap_iterable.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_multimap_iterator.hpp" />
@@ -121,7 +122,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_allocator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_map.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_array.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\block_result.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_result.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />

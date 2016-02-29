@@ -26,13 +26,13 @@
 #include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory_array.hpp>
+#include <bitcoin/database/hash_table/hash_table.hpp>
 #include <bitcoin/database/memory/memory_map.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-typedef memory_array<array_index, file_offset> slab_hash_table_header;
+typedef hash_table<array_index, file_offset> slab_hash_table_header;
 
 BC_CONSTEXPR size_t minimum_slabs_size = sizeof(file_offset);
 BC_CONSTFUNC size_t slab_hash_table_header_size(size_t buckets)

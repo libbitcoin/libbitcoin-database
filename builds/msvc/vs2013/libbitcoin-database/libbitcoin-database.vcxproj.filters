@@ -102,9 +102,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_map.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_array.hpp">
-      <Filter>include\bitcoin\database\memory</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_manager.hpp">
       <Filter>include\bitcoin\database\hash_table</Filter>
     </ClInclude>
@@ -135,13 +132,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_allocator.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\hash_table.hpp">
+      <Filter>include\bitcoin\database\hash_table</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\remainder.ipp">
-      <Filter>include\bitcoin\database\impl</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\memory_array.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_hash_table.ipp">
@@ -157,6 +154,9 @@
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_row.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\hash_table.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
   </ItemGroup>
