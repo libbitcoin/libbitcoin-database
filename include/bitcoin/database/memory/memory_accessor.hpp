@@ -24,6 +24,7 @@
 #include <memory>
 #include <boost/thread.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -31,18 +32,23 @@ namespace database {
 /// This class provides remap safe read access to file-mapped memory.
 /// The memory size is unprotected and unmanaged.
 class BCD_API memory_accessor
+  : public memory
 {
 public:
-    typedef std::shared_ptr<memory_accessor> ptr;
-
     memory_accessor(uint8_t* data, boost::shared_mutex& mutex);
     ~memory_accessor();
 
     /// This class is not copyable.
     memory_accessor(const memory_accessor& other) = delete;
 
-    /// Access the buffer.
-    uint8_t* buffer();
+    // ------------------------------------------------------------------------
+    // memory interface implementation
+
+    /// Get the address indicated by the pointer.
+    virtual uint8_t* buffer();
+
+    /// Increment the pointer the specified number of bytes within the record.
+    virtual void increment(size_t value);
 
 private:
     uint8_t* data_;

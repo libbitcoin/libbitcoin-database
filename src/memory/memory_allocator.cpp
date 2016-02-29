@@ -42,6 +42,12 @@ uint8_t* memory_allocator::buffer()
     return data_;
 }
 
+void memory_allocator::increment(size_t value)
+{
+    BITCOIN_ASSERT(data_ <= bc::max_size_t - value);
+    data_ += value;
+}
+
 // protected/friend
 upgrade_lock<shared_mutex>& memory_allocator::get_upgradeable()
 {

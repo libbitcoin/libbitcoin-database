@@ -22,6 +22,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -31,11 +32,13 @@ namespace database {
 class BCD_API memory
 {
 public:
+    typedef std::shared_ptr<memory> ptr;
+
     /// Get the address indicated by the pointer.
-    virtual uint8_t* buffer();
+    virtual uint8_t* buffer() = 0;
 
     /// Increment the pointer the specified number of bytes within the record.
-    void increment(size_t value);
+    virtual void increment(size_t value) = 0;
 };
 
 } // namespace database

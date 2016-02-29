@@ -42,6 +42,12 @@ uint8_t* memory_accessor::buffer()
     return data_;
 }
 
+void memory_accessor::increment(size_t value)
+{
+    BITCOIN_ASSERT(data_ <= bc::max_size_t - value);
+    data_ += value;
+}
+
 memory_accessor::~memory_accessor()
 {
     ///////////////////////////////////////////////////////////////////////////

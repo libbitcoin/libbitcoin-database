@@ -24,6 +24,7 @@
 #include <memory>
 #include <boost/thread.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -33,6 +34,7 @@ namespace database {
 /// The memory_map class uses friend access to upgrade this lock during
 /// initialization in the case where a remap is required.
 class BCD_API memory_allocator
+  : public memory
 {
 public:
     typedef std::shared_ptr<memory_allocator> ptr;
@@ -44,8 +46,14 @@ public:
     /// This class is not copyable.
     memory_allocator(const memory_allocator& other) = delete;
 
-    /// Access the allocated buffer.
-    uint8_t* buffer();
+    // ------------------------------------------------------------------------
+    // memory interface implementation
+
+    /// Get the address indicated by the pointer.
+    virtual uint8_t* buffer();
+
+    /// Increment the pointer the specified number of bytes within the record.
+    virtual void increment(size_t value);
 
 protected:
 
