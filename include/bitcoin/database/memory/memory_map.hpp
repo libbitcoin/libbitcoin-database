@@ -53,6 +53,7 @@ public:
     memory_accessor::ptr access();
     memory_allocator::ptr allocate(size_t size);
     bool stop();
+    bool stopped();
 
 private:
     static size_t file_size(int file_handle);

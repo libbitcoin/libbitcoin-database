@@ -129,6 +129,16 @@ memory_map::~memory_map()
     stop();
 }
 
+bool memory_map::stopped()
+{
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    boost::unique_lock<boost::shared_mutex> unique_lock(mutex_);
+
+    return stopped_;
+    ///////////////////////////////////////////////////////////////////////////
+}
+
 bool memory_map::stop()
 {
     // Critical Section
