@@ -111,7 +111,7 @@ private:
     /// The hashtable used for looking up start index for a
     /// linked list by address hash.
     memory_map lookup_file_;
-    htdb_record_header header_;
+    record_hash_table_header header_;
     record_manager manager_;
     record_map start_lookup_;
 

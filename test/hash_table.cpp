@@ -47,7 +47,7 @@ void write_data()
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.resize(header_size + minimum_slabs_size);
 
-    htdb_slab_header header(file, 0);
+    slab_hash_table_header header(file, 0);
     header.create(buckets);
     header.start();
 
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(htdb_slab__write_read__test)
     memory_map file("htdb_slabs");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
 
-    htdb_slab_header header(file, 0);
+    slab_hash_table_header header(file, 0);
     header.start();
 
     BOOST_REQUIRE(header.size() == buckets);
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(htdb_record__32bit__test)
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.resize(header_size + minimum_records_size);
 
-    htdb_record_header header(file, 0);
+    record_hash_table_header header(file, 0);
     header.create(rec_buckets);
     header.start();
 
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(htdb_record__64bit__test)
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.resize(header_size + minimum_records_size);
 
-    htdb_record_header header(file, 0);
+    record_hash_table_header header(file, 0);
     header.create(rec_buckets);
     header.start();
 

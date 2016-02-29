@@ -6,7 +6,7 @@ using namespace bc;
 using namespace bc::database;
 
 template <size_t N>
-slab_byte_pointer get0(htdb_slab_header& header, slab_manager& alloc,
+slab_byte_pointer get0(slab_hash_table_header& header, slab_manager& alloc,
     const data_chunk& key_data)
 {
     typedef byte_array<N> hash_type;
@@ -43,7 +43,7 @@ int main(int argc, char** argv)
     memory_map file(filename);
     BITCOIN_ASSERT(file.data());
 
-    htdb_slab_header header(file, offset);
+    slab_hash_table_header header(file, offset);
     header.start();
 
     slab_manager alloc(file, offset + 4 + 8 * header.size());

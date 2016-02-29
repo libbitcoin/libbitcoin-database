@@ -32,7 +32,7 @@
 namespace libbitcoin {
 namespace database {
 
-typedef memory_array<array_index, file_offset> htdb_slab_header;
+typedef memory_array<array_index, file_offset> slab_hash_table_header;
 
 BC_CONSTEXPR size_t minimum_slabs_size = sizeof(file_offset);
 BC_CONSTFUNC size_t slab_hash_table_header_size(size_t buckets)

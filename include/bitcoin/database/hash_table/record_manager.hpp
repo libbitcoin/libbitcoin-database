@@ -32,7 +32,7 @@
 namespace libbitcoin {
 namespace database {
 
-typedef memory_array<array_index, array_index> htdb_record_header;
+typedef memory_array<array_index, array_index> record_hash_table_header;
 
 BC_CONSTEXPR size_t minimum_records_size = sizeof(array_index);
 BC_CONSTFUNC size_t record_hash_table_header_size(size_t buckets)

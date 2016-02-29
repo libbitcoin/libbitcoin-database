@@ -29,7 +29,7 @@ namespace libbitcoin {
 namespace database {
 
 template <typename HashType>
-record_hash_table<HashType>::record_hash_table(htdb_record_header& header,
+record_hash_table<HashType>::record_hash_table(record_hash_table_header& header,
     record_manager& manager)
   : header_(header), manager_(manager)
 {

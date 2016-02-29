@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(htdb_slab__test)
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.resize(4 + 8 * 100 + 8);
 
-    htdb_slab_header header(file, 0);
+    slab_hash_table_header header(file, 0);
     header.create(100);
     header.start();
 

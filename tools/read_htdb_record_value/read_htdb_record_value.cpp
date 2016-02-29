@@ -6,7 +6,7 @@ using namespace bc;
 using namespace bc::database;
 
 template <size_t N>
-record_byte_pointer get0(htdb_record_header& header, record_manager& alloc,
+record_byte_pointer get0(record_hash_table_header& header, record_manager& alloc,
     const data_chunk& key_data)
 {
     typedef byte_array<N> hash_type;
@@ -43,7 +43,7 @@ int main(int argc, char** argv)
     memory_map file(filename);
     BITCOIN_ASSERT(file.data());
 
-    htdb_record_header header(file, offset);
+    record_hash_table_header header(file, offset);
     header.start();
 
     const size_t record_size = key_data.size() + 4 + value_size;

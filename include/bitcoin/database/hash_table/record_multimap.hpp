@@ -48,10 +48,10 @@ template <typename HashType>
 class record_multimap
 {
 public:
-    typedef record_hash_table<HashType> htdb_type;
+    typedef record_hash_table<HashType> record_hash_table_type;
     typedef std::function<void (uint8_t*)> write_function;
 
-    record_multimap(htdb_type& map, record_list& linked_rows);
+    record_multimap(record_hash_table_type& map, record_list& linked_rows);
 
     /**
      * Lookup a key, returning an iterable result with multiple values.
@@ -78,7 +78,7 @@ private:
     // Create new key with a single value.
     void create_new(const HashType& key, write_function write);
 
-    htdb_type& map_;
+    record_hash_table_type& map_;
     record_list& records_;
 };
 

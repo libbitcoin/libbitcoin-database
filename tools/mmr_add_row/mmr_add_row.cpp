@@ -24,7 +24,7 @@ int mmr_add_row(
     memory_map ht_file(map_filename);
     BITCOIN_ASSERT(ht_file.data());
 
-    htdb_record_header header(ht_file, 0);
+    record_hash_table_header header(ht_file, 0);
     header.start();
 
     const size_t record_size = hash_table_multimap_record_size<hash_type>();

@@ -28,7 +28,7 @@ namespace libbitcoin {
 namespace database {
 
 template <typename HashType>
-slab_hash_table<HashType>::slab_hash_table(htdb_slab_header& header,
+slab_hash_table<HashType>::slab_hash_table(slab_hash_table_header& header,
     slab_manager& manager)
   : header_(header), manager_(manager)
 {

@@ -107,7 +107,7 @@ private:
 
     /// The hashtable used for looking up blocks by hash.
     memory_map map_file_;
-    htdb_slab_header header_;
+    slab_hash_table_header header_;
     slab_manager manager_;
     slab_map map_;
 

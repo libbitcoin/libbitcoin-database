@@ -52,7 +52,7 @@ class slab_hash_table
 public:
     typedef std::function<void(uint8_t*)> write_function;
 
-    slab_hash_table(htdb_slab_header& header, slab_manager& manager);
+    slab_hash_table(slab_hash_table_header& header, slab_manager& manager);
 
     /// Store a value. value_size is the requested size for the value.
     /// The provided write() function must write exactly value_size bytes.
@@ -81,7 +81,7 @@ private:
     template <typename ListItem>
     void release(const ListItem& item, const file_offset previous);
 
-    htdb_slab_header& header_;
+    slab_hash_table_header& header_;
     slab_manager& manager_;
 };
 

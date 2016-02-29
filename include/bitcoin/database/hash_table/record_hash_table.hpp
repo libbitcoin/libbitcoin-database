@@ -62,7 +62,7 @@ class record_hash_table
 public:
     typedef std::function<void(uint8_t*)> write_function;
 
-    record_hash_table(htdb_record_header& header, record_manager& manager);
+    record_hash_table(record_hash_table_header& header, record_manager& manager);
 
     /// Store a value. The provided write() function must write the correct
     /// number of bytes (record_size - hash_size - sizeof(array_index)).
@@ -88,7 +88,7 @@ private:
     template <typename ListItem>
     void release(const ListItem& item, const file_offset previous);
 
-    htdb_record_header& header_;
+    record_hash_table_header& header_;
     record_manager& manager_;
 };
 

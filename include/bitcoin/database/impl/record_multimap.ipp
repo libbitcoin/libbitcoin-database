@@ -26,7 +26,7 @@ namespace libbitcoin {
 namespace database {
 
 template <typename HashType>
-record_multimap<HashType>::record_multimap(htdb_type& map,
+record_multimap<HashType>::record_multimap(record_hash_table_type& map,
     record_list& linked_rows)
   : map_(map), records_(linked_rows)
 {

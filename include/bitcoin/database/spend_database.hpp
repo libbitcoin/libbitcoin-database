@@ -96,7 +96,7 @@ private:
 
     /// The hashtable used for looking up inpoint spends by outpoint.
     memory_map file_;
-    htdb_record_header header_;
+    record_hash_table_header header_;
     record_manager manager_;
     record_map map_;
 };

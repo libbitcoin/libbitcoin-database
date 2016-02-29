@@ -23,7 +23,7 @@ void mmr_create(const size_t value_size,
     BITCOIN_ASSERT(ht_file.data());
     ht_file.resize(header_size + minimum_records_size);
 
-    htdb_record_header header(ht_file, 0);
+    record_hash_table_header header(ht_file, 0);
     header.create(buckets);
     header.start();
 
