@@ -30,8 +30,8 @@ namespace database {
 
 template <typename HashType>
 record_hash_table<HashType>::record_hash_table(htdb_record_header& header,
-    record_manager& allocator)
-  : header_(header), manager_(allocator)
+    record_manager& manager)
+  : header_(header), manager_(manager)
 {
 }
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -17,49 +17,40 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/memory/allocator.hpp>
+#ifndef LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_HPP
+#define LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_HPP
 
 #include <cstdint>
+#include <memory>
 #include <boost/thread.hpp>
+#include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-using namespace boost;
-
-allocator::allocator(uint8_t* data, shared_mutex& mutex)
-  : data_(data),
-    mutex_(mutex),
-    upgradeable_lock_(mutex_)
+/// This class provides remap safe read access to file-mapped memory.
+/// The memory size is unprotected and unmanaged.
+class BCD_API memory_accessor
 {
-    ///////////////////////////////////////////////////////////////////////
-    // Begin Critical Section
-    ///////////////////////////////////////////////////////////////////////
-}
+public:
+    typedef std::shared_ptr<memory_accessor> ptr;
 
-uint8_t* allocator::buffer()
-{
-    return data_;
-}
+    memory_accessor(uint8_t* data, boost::shared_mutex& mutex);
+    ~memory_accessor();
 
-// protected/friend
-upgrade_lock<shared_mutex>& allocator::get_upgradeable()
-{
-    return upgradeable_lock_;
-}
+    /// This class is not copyable.
+    memory_accessor(const memory_accessor& other) = delete;
 
-// protected/friend
-void allocator::set_data(uint8_t* value)
-{
-    data_ = value;
-}
+    /// Access the buffer.
+    uint8_t* buffer();
 
-allocator::~allocator()
-{
-    ///////////////////////////////////////////////////////////////////////
-    // End Critical Section
-    ///////////////////////////////////////////////////////////////////////
-}
+private:
+    uint8_t* data_;
+    boost::shared_mutex& mutex_;
+    boost::shared_lock<boost::shared_mutex> shared_lock_;
+};
 
 } // namespace database
 } // namespace libbitcoin
+
+#endif

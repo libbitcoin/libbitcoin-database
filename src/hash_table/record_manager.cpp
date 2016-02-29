@@ -162,7 +162,7 @@ void record_manager::write_count()
     serial.write_little_endian(count_.load());
 }
 
-// A record allocator is a slab allocator where the record size is fixed.
+// A record manager is a slab manager where the record size is fixed.
 // These methods convert from logical record position to byte-wise position
 // relative to start.
 //array_index record_manager::position_to_record(file_offset position) const

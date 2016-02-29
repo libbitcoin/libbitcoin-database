@@ -49,7 +49,7 @@ class BCD_API slab_manager
 public:
     slab_manager(memory_map& file, file_offset sector_start);
 
-    /// Create slab allocator.
+    /// Create slab manager.
     void create();
 
     /// Prepare manager for use.

@@ -38,7 +38,7 @@ public:
     static BC_CONSTEXPR size_t hash_size = std::tuple_size<HashType>::value;
     static BC_CONSTEXPR file_offset value_begin = hash_size + position_size;
 
-    slab_list(slab_manager& allocator, file_offset position);
+    slab_list(slab_manager& manager, file_offset position);
 
     file_offset create(const HashType& key, const size_t value_size,
         const file_offset next);

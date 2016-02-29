@@ -144,7 +144,7 @@ bool memory_map::stop()
         handle_error("unmap", filename_);
 
 #ifdef _WIN32
-    const auto handle = (HANDLE)_get_osfhandle(file_handle_);
+    const auto handle = reinterpret_cast<HANDLE>(_get_osfhandle(file_handle_));
     const auto flushed = FlushFileBuffers(handle) != FALSE;
 #else
     // Calling fsync() does not necessarily ensure that the entry in the 
@@ -183,16 +183,16 @@ void memory_map::resize(size_t size)
 }
 
 // There is no guard against calling when stopped.
-accessor::ptr memory_map::access()
+memory_accessor::ptr memory_map::access()
 {
     // This establishes a shared lock until disposed.
-    return std::make_shared<accessor>(data_, mutex_);
+    return std::make_shared<memory_accessor>(data_, mutex_);
 }
 
 // There is no guard against calling when stopped.
-allocator::ptr memory_map::allocate(size_t size)
+memory_allocator::ptr memory_map::allocate(size_t size)
 {
-    auto allocation = std::make_shared<allocator>(data_, mutex_);
+    auto allocation = std::make_shared<memory_allocator>(data_, mutex_);
 
     if (size > size_)
         upgrade(size, allocation);
@@ -206,11 +206,11 @@ allocator::ptr memory_map::allocate(size_t size)
 // This resizes the map under an upgraded lock and updates the accessor.
 // The upgrade will freeze if a shared lock is leaked This method cannot
 // reenter the mutex, making deadlock impossible.
-void memory_map::upgrade(size_t size, allocator::ptr allocation)
+void memory_map::upgrade(size_t size, memory_allocator::ptr allocation)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    allocator::upgrade unique_lock(allocation->get_upgradeable());
+    memory_allocator::upgrade unique_lock(allocation->get_upgradeable());
 
     // Must retest under the unique lock.
     if (size > size_)

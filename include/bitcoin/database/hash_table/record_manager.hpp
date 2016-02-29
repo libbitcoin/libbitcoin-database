@@ -50,7 +50,7 @@ public:
     record_manager(memory_map& file, file_offset sector_start,
         size_t record_size);
 
-    /// Create record allocator.
+    /// Create record manager.
     void create();
 
     /// Prepare manager for usage.

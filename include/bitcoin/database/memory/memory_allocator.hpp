@@ -17,8 +17,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_ALLOCATOR_HPP
-#define LIBBITCOIN_DATABASE_ALLOCATOR_HPP
+#ifndef LIBBITCOIN_DATABASE_MEMORY_ALLOCATOR_HPP
+#define LIBBITCOIN_DATABASE_MEMORY_ALLOCATOR_HPP
 
 #include <cstdint>
 #include <memory>
@@ -32,17 +32,17 @@ namespace database {
 /// The memory size is unprotected and unmanaged.
 /// The memory_map class uses friend access to upgrade this lock during
 /// initialization in the case where a remap is required.
-class BCD_API allocator
+class BCD_API memory_allocator
 {
 public:
-    typedef std::shared_ptr<allocator> ptr;
+    typedef std::shared_ptr<memory_allocator> ptr;
     typedef boost::upgrade_to_unique_lock<boost::shared_mutex> upgrade;
 
-    allocator(uint8_t* data, boost::shared_mutex& mutex);
-    ~allocator();
+    memory_allocator(uint8_t* data, boost::shared_mutex& mutex);
+    ~memory_allocator();
 
     /// This class is not copyable.
-    allocator(const allocator& other) = delete;
+    memory_allocator(const memory_allocator& other) = delete;
 
     /// Access the allocated buffer.
     uint8_t* buffer();

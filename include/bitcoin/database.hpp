@@ -32,9 +32,9 @@
 #include <bitcoin/database/hash_table/record_multimap_iterator.hpp>
 #include <bitcoin/database/hash_table/slab_hash_table.hpp>
 #include <bitcoin/database/hash_table/slab_manager.hpp>
-#include <bitcoin/database/memory/accessor.hpp>
-#include <bitcoin/database/memory/allocator.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/memory/memory_accessor.hpp>
+#include <bitcoin/database/memory/memory_allocator.hpp>
 #include <bitcoin/database/memory/memory_array.hpp>
 #include <bitcoin/database/memory/memory_map.hpp>
 #include <bitcoin/database/result/block_result.hpp>

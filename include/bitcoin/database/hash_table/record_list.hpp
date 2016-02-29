@@ -40,7 +40,7 @@ public:
     // std::numeric_limits<array_index>::max()
     static BC_CONSTEXPR array_index empty = bc::max_uint32;
 
-    record_list(record_manager& allocator);
+    record_list(record_manager& manager);
 
     /**
      * Create new list with a single record.

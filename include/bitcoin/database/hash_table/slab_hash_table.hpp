@@ -41,7 +41,7 @@ namespace database {
  *   [ next:8   ]
  *   [ value... ]
  *
- * If we run allocator.sync() before the link() step then we ensure
+ * If we run manager.sync() before the link() step then we ensure
  * data can be lost but the hashtable is never corrupted.
  * Instead we prefer speed and batch that operation. The user should
  * call allocator.sync() after a series of store() calls.
@@ -52,7 +52,7 @@ class slab_hash_table
 public:
     typedef std::function<void(uint8_t*)> write_function;
 
-    slab_hash_table(htdb_slab_header& header, slab_manager& allocator);
+    slab_hash_table(htdb_slab_header& header, slab_manager& manager);
 
     /// Store a value. value_size is the requested size for the value.
     /// The provided write() function must write exactly value_size bytes.

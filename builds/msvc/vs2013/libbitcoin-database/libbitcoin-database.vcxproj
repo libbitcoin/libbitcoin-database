@@ -117,8 +117,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\slab_hash_table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\slab_manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\history_database.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\allocator.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_accessor.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_allocator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_map.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_array.hpp" />
@@ -140,8 +140,8 @@
     <ClCompile Include="..\..\..\..\src\hash_table\record_manager.cpp" />
     <ClCompile Include="..\..\..\..\src\hash_table\slab_manager.cpp" />
     <ClCompile Include="..\..\..\..\src\history_database.cpp" />
-    <ClCompile Include="..\..\..\..\src\memory\accessor.cpp" />
-    <ClCompile Include="..\..\..\..\src\memory\allocator.cpp" />
+    <ClCompile Include="..\..\..\..\src\memory\memory_accessor.cpp" />
+    <ClCompile Include="..\..\..\..\src\memory\memory_allocator.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\memory_map.cpp" />
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c" />
     <ClCompile Include="..\..\..\..\src\result\block_result.cpp" />

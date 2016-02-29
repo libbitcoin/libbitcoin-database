@@ -38,7 +38,7 @@ public:
     static BC_CONSTEXPR size_t hash_size = std::tuple_size<HashType>::value;
     static BC_CONSTEXPR file_offset value_begin = hash_size + index_size;
 
-    record_row(record_manager& allocator, array_index index);
+    record_row(record_manager& manager, array_index index);
 
     array_index create(const HashType& key, const array_index next);
 
