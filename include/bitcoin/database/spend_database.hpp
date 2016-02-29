@@ -40,61 +40,43 @@ struct BCD_API spend_statinfo
     const size_t rows;
 };
 
-/**
- * spend_database enables you to lookup the spend of an output point,
- * returning the input point. It is a simple map.
- */
+/// This enables you to lookup the spend of an output point, returning
+/// the input point. It is a simple map.
 class BCD_API spend_database
 {
 public:
     spend_database(const boost::filesystem::path& filename);
 
-    /**
-     * Initialize a new spend database.
-     */
+    /// Initialize a new spend database.
     void create();
 
-    /**
-     * You must call start() before using the database.
-     */
+    /// Call before using the database.
     void start();
 
-    /**
-     * Call stop to unload the memory map.
-     */
+    /// Call stop to unload the memory map.
     bool stop();
 
-    /**
-     * Get input spend of an output point.
-     */
+    /// Get input spend of an output point.
     chain::spend get(const chain::output_point& outpoint) const;
 
-    /**
-     * Store a spend in the database.
-     */
+    /// Store a spend in the database.
     void store(const chain::output_point& outpoint,
         const chain::input_point& spend);
 
-    /**
-     * Delete outpoint spend item from database.
-     */
+    /// Delete outpoint spend item from database.
     void remove(const chain::output_point& outpoint);
 
-    /**
-     * Synchronise storage with disk so things are consistent.
-     * Should be done at the end of every block write.
-     */
+    /// Synchronise storage with disk so things are consistent.
+    /// Should be done at the end of every block write.
     void sync();
 
-    /**
-     * Return statistical info about the database.
-     */
+    /// Return statistical info about the database.
     spend_statinfo statinfo() const;
 
 private:
     typedef record_hash_table<hash_digest> record_map;
 
-    /// The hashtable used for looking up inpoint spends by outpoint.
+    // Hash table used for looking up inpoint spends by outpoint.
     memory_map file_;
     record_hash_table_header header_;
     record_manager manager_;

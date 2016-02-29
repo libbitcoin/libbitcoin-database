@@ -31,59 +31,43 @@
 namespace libbitcoin {
 namespace database {
 
-/**
- * transaction_database enables lookups of transactions by hash.
- * An alternative and faster method is lookup from a unique index
- * that is assigned upon storage.
- * This is so we can quickly reconstruct blocks given a list of tx indexes
- * belonging to that block. These are stored with the block.
- */
+/// This enables lookups of transactions by hash.
+/// An alternative and faster method is lookup from a unique index
+/// that is assigned upon storage.
+/// This is so we can quickly reconstruct blocks given a list of tx indexes
+/// belonging to that block. These are stored with the block.
 class BCD_API transaction_database
 {
 public:
     transaction_database(const boost::filesystem::path& map_filename);
 
-    /**
-     * Initialize a new transaction database.
-     */
+    /// Initialize a new transaction database.
     void create();
 
-    /**
-     * You must call start() before using the database.
-     */
+    /// Call before using the database.
     void start();
 
-    /**
-     * Call stop to unload the memory map.
-     */
+    /// Call stop to unload the memory map.
     bool stop();
 
-    /**
-     * Fetch transaction from its hash.
-     */
+    /// Fetch transaction from its hash.
     transaction_result get(const hash_digest& hash) const;
 
-    /**
-     * Store a transaction in the database. Returns a unique index
-     * which can be used to reference the transaction.
-     */
+    /// Store a transaction in the database. Returns a unique index
+    /// which can be used to reference the transaction.
     void store(size_t height, size_t index, const chain::transaction& tx);
 
-    /**
-     * Delete a transaction from database.
-     */
+    /// Delete a transaction from database.
     void remove(const hash_digest& hash);
 
-    /**
-     * Synchronise storage with disk so things are consistent.
-     * Should be done at the end of every block write.
-     */
+    /// Synchronise storage with disk so things are consistent.
+    /// Should be done at the end of every block write.
     void sync();
 
 private:
     typedef slab_hash_table<hash_digest> slab_map;
 
-    /// The hashtable used for looking up txs by hash.
+    // Hash table used for looking up txs by hash.
     memory_map map_file_;
     slab_hash_table_header header_;
     slab_manager manager_;

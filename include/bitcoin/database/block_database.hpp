@@ -31,70 +31,44 @@
 namespace libbitcoin {
 namespace database {
 
-/**
- * Stores block_headers each with a list of transaction indexes.
- * Lookup possible by hash or height.
- */
+/// Stores block_headers each with a list of transaction indexes.
+/// Lookup possible by hash or height.
 class BCD_API block_database
 {
 public:
     block_database(const boost::filesystem::path& map_filename,
         const boost::filesystem::path& index_filename);
 
-    /**
-     * Initialize a new transaction database.
-     */
+    /// Initialize a new transaction database.
     void create();
 
-    /**
-     * You must call start() before using the database.
-     */
+    /// Call before using the database.
     void start();
 
-    /**
-     * Call stop to unload the memory map.
-     */
+    /// Call stop to unload the memory map.
     bool stop();
 
-    /**
-     * Fetch block by height using the index table.
-     */
+    /// Fetch block by height using the index table.
     block_result get(const size_t height) const;
 
-    /**
-     * Fetch block by hash using the hashtable.
-     */
+    /// Fetch block by hash using the hashtable.
     block_result get(const hash_digest& hash) const;
 
-    /**
-     * Store a block in the database.
-     */
+    /// Store a block in the database.
     void store(const chain::block& block);
 
-    /**
-     * Unlink all blocks upwards from (and including) from_height.
-     */
+    /// Unlink all blocks upwards from (and including) from_height.
     void unlink(const size_t from_height);
 
-    /**
-     * Synchronise storage with disk so things are consistent.
-     * Should be done at the end of every block write.
-     */
+    /// Synchronise storage with disk so things are consistent.
+    /// Should be done at the end of every block write.
     void sync();
 
-    /**
-     * Latest block height in our chain. Returns false if no blocks exist.
-     * This is actually the count of blocks minus one and does not represent
-     * the logical top if there are gaps in the chain. Use gap to validate
-     * the top at startup.
-     */
+    /// Latest block height in our chain. Returns false if no blocks exist.
+    /// This is actually the count of blocks minus one and does not represent
+    /// the logical top if there are gaps in the chain. Use gap to validate
+    /// the top at startup
     bool top(size_t& out_height) const;
-
-    /////**
-    //// * First missing block by height after the specified start height.
-    //// * All previous block pointers from start to gap are validated.
-    //// */
-    ////size_t gap(size_t start) const;
 
 private:
     typedef slab_hash_table<hash_digest> slab_map;

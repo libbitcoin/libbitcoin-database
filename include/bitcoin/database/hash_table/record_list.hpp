@@ -26,14 +26,12 @@
 namespace libbitcoin {
 namespace database {
 
-// used by test
+// used by test and tools only.
 BC_CONSTEXPR size_t record_list_offset = sizeof(array_index);
 
-/**
- * This is a one-way linked list with a next value containing the index of the
- * subsequent record. Records can be dropped by forgetting an index, and
- * updating to the next value. We can think of this as a LIFO queue.
- */
+/// This is a one-way linked list with a next value containing the index of the
+/// subsequent record. Records can be dropped by forgetting an index, and
+/// updating to the next value. We can think of this as a LIFO queue.
 class BCD_API record_list
 {
 public:
@@ -42,24 +40,16 @@ public:
 
     record_list(record_manager& manager);
 
-    /**
-     * Create new list with a single record.
-     */
+    /// Create new list with a single record.
     array_index create();
 
-    /**
-     * Insert new record before index. Returns index of new record.
-     */
+    /// Insert new record before index. Returns index of new record.
     array_index insert(array_index next);
 
-    /**
-     * Read next index for record in list.
-     */
+    /// Read next index for record in list.
     array_index next(array_index index) const;
 
-    /**
-     * Get underlying record data.
-     */
+    /// Get underlying record data.
     uint8_t* get1(array_index index) const; 
 
 private:

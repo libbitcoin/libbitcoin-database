@@ -53,22 +53,16 @@ public:
 
     record_multimap(record_hash_table_type& map, record_list& linked_rows);
 
-    /**
-     * Lookup a key, returning an iterable result with multiple values.
-     */
+    /// Lookup a key, returning an iterable result with multiple values.
     array_index lookup(const HashType& key) const;
 
-    /**
-     * Add a new row for a key. If the key doesn't exist, it will be
-     * created. If it does exist, the value will be added at the start
-     * of the chain.
-     */
+    /// Add a new row for a key. If the key doesn't exist, it will be
+    /// created. If it does exist, the value will be added at the start
+    /// of the chain.
     void add_row(const HashType& key, write_function write);
 
-    /**
-     * Delete the last row entry that was added. This means when deleting
-     * blocks we must walk backwards and delete in reverse order.
-     */
+    /// Delete the last row entry that was added. This means when deleting
+    /// blocks we must walk backwards and delete in reverse order.
     void delete_last_row(const HashType& key);
 
 private:

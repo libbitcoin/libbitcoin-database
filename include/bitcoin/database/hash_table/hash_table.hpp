@@ -27,7 +27,7 @@ namespace libbitcoin {
 namespace database {
 
 /**
- * Implements on disk array with a fixed size.
+ * Implements contigious memory array with a fixed size elements.
  *
  * File format looks like:
  *
@@ -36,7 +36,7 @@ namespace database {
  *  [ [ item:ValueType ] ]
  *  [ [      ...       ] ]
  *
- * Empty items are represented by the value array.empty
+ * Empty elements are represented by the value array.empty
  */
 template <typename IndexType, typename ValueType>
 class hash_table
@@ -46,40 +46,29 @@ public:
     //static constexpr ValueType empty = std::numeric_limits<ValueType>::max();
     static BC_CONSTEXPR ValueType empty = (ValueType)bc::max_uint64;
 
-    /**
-     * sector_start represents the offset within the file.
-     */
+    /// sector_start represents an offset within the file.
     hash_table(memory_map& file, file_offset sector_start);
 
-    /**
-     * Initialize a new array. The file must have enough space.
-     * The space needed is sizeof(IndexType) + size * sizeof(ValueType)
-     * Element items are initialised to hash_table::empty.
-     */
+    /// Initialize a new array. The file must have enough space.
+    /// The space needed is sizeof(IndexType) + size * sizeof(ValueType)
+    /// Element items are initialised to hash_table::empty.
     void create(IndexType size);
 
-    /**
-     * Must be called before use. Loads the size from the file.
-     */
+    /// Must be called before use. Loads the size from the file.
     void start();
 
-    /**
-     * Read item's value.
-     */
+    /// Read item's value.
     ValueType read(IndexType index) const;
 
-    /**
-     * Write value to item.
-     */
+    /// Write value to item.
     void write(IndexType index, ValueType value);
 
-    /**
-     * The array's size.
-     */
+    /// The array's size.
     IndexType size() const;
 
 private:
-    // File offset of item.
+
+    // Locate the item in the memory map.
     file_offset item_position(IndexType index) const;
 
     memory_map& file_;
