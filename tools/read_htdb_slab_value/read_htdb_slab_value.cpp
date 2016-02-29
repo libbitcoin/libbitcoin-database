@@ -6,7 +6,7 @@ using namespace bc;
 using namespace bc::database;
 
 template <size_t N>
-slab_byte_pointer get0(slab_hash_table_header& header, slab_manager& alloc,
+uint8_t* get(slab_hash_table_header& header, slab_manager& alloc,
     const data_chunk& key_data)
 {
     typedef byte_array<N> hash_type;
@@ -14,7 +14,7 @@ slab_byte_pointer get0(slab_hash_table_header& header, slab_manager& alloc,
     hash_type key;
     BITCOIN_ASSERT(key.size() == key_data.size());
     std::copy(key_data.begin(), key_data.end(), key.begin());
-    return ht.get(key);
+    return ht.get2(key);
 }
 
 int main(int argc, char** argv)
@@ -49,14 +49,14 @@ int main(int argc, char** argv)
     slab_manager alloc(file, offset + 4 + 8 * header.size());
     alloc.start();
 
-    slab_byte_pointer slab = nullptr;
+    uint8_t* slab = nullptr;
     if (key_data.size() == 32)
     {
-        slab = get0<32>(header, alloc, key_data);
+        slab = get<32>(header, alloc, key_data);
     }
     else if (key_data.size() == 4)
     {
-        slab = get0<4>(header, alloc, key_data);
+        slab = get<4>(header, alloc, key_data);
     }
     else
     {

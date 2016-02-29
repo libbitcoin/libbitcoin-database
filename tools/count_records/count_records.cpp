@@ -19,7 +19,7 @@ int main(int argc, char** argv)
     if (argc == 4)
         offset = boost::lexical_cast<file_offset>(argv[3]);
     memory_map file(filename);
-    if (!file.data())
+    if (file.stopped())
     {
         std::cerr << "count_records: file failed to open." << std::endl;
         return -1;

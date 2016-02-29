@@ -178,8 +178,8 @@ int main(int argc, char** argv)
             return -1;
         }
 
-        std::cout << encode_hash(result.hash()) << ":"
-            << result.index() << std::endl;
+        std::cout << encode_hash(spend.hash) << ":" << spend.index
+            << std::endl;
     }
     else if (command == "store")
     {

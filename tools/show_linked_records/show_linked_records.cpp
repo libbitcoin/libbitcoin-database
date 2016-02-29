@@ -50,12 +50,12 @@ int main(int argc, char** argv)
     }
     const std::string filename = argv[1];
     size_t record_size = boost::lexical_cast<size_t>(argv[2]);
-    record_size += linked_record_offset;
+    record_size += record_list_offset;
     file_offset offset = 0;
     if (argc == 4)
         offset = boost::lexical_cast<file_offset>(argv[3]);
     memory_map file(filename);
-    if (!file.data())
+    if (file.stopped())
     {
         std::cerr << "show_records: file failed to open." << std::endl;
         return -1;
@@ -67,10 +67,11 @@ int main(int argc, char** argv)
     for (array_index rec_idx = 0; rec_idx < recs.count(); ++rec_idx)
     {
         BITCOIN_ASSERT(record_size >= 4);
-        const record_byte_pointer rec = recs.get(rec_idx);
-        auto deserial = make_deserializer(rec, rec + 4);
+        const auto memory = recs.get(rec_idx);
+        const auto buffer = memory->buffer();
+        auto deserial = make_deserializer(buffer, buffer + 4);
         const array_index prev_idx = deserial.read_4_bytes_little_endian();
-        const data_chunk data(rec + 4, rec + record_size);
+        const data_chunk data(buffer + 4, buffer + record_size);
         const chain_item new_item{rec_idx, data};
         if (prev_idx == record_list::empty)
         {

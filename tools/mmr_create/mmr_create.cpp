@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <boost/lexical_cast.hpp>
 #include <bitcoin/database.hpp>
 
@@ -12,8 +13,8 @@ void show_usage()
 }
 
 template <size_t KeySize>
-void mmr_create(const size_t value_size,
-    const std::string& map_filename, const std::string& rows_filename,
+void mmr_create(const size_t value_size, const std::string& map_filename,
+    const std::string& rows_filename,
     const array_index buckets)
 {
     const auto header_size = record_hash_table_header_size(buckets);
@@ -36,20 +37,20 @@ void mmr_create(const size_t value_size,
     alloc.create();
     alloc.start();
 
-    record_hash_table<hash_type> ht(header, alloc, "test");
+    record_hash_table<hash_type> ht(header, alloc);
 
     data_base::touch_file(rows_filename);
     memory_map lrs_file(rows_filename);
     BITCOIN_ASSERT(lrs_file.data());
     lrs_file.resize(minimum_records_size);
-    const size_t lrs_record_size = linked_record_offset + value_size;
+    const size_t lrs_record_size = record_list_offset + value_size;
     record_manager recs(lrs_file, 0, lrs_record_size);
     recs.create();
 
     recs.start();
     record_list lrs(recs);
 
-    record_multimap<hash_type> multimap(ht, lrs, "test");
+    record_multimap<hash_type> multimap(ht, lrs);
 }
 
 int main(int argc, char** argv)

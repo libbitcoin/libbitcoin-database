@@ -199,7 +199,7 @@ int main(int argc, char** argv)
         std::cout << "timestamp: " << blk_header.timestamp << std::endl;
         std::cout << "bits: " << blk_header.bits << std::endl;
         std::cout << "nonce: " << blk_header.nonce << std::endl;
-        const size_t txs_size = result->transactions_size();
+        const size_t txs_size = result->transaction_count();
         if (txs_size)
         {
             std::cout << "Transactions:" << std::endl;

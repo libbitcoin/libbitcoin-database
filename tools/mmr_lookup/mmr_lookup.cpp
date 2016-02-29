@@ -35,22 +35,23 @@ int mmr_lookup(
     record_manager alloc(ht_file, records_start, record_size);
     alloc.start();
 
-    record_hash_table<hash_type> ht(header, alloc, "test");
+    record_hash_table<hash_type> ht(header, alloc);
 
     memory_map lrs_file(rows_filename);
     BITCOIN_ASSERT(lrs_file.data());
-    const size_t lrs_record_size = linked_record_offset + value_size;
+    const size_t lrs_record_size = record_list_offset + value_size;
     record_manager recs(lrs_file, 0, lrs_record_size);
 
     recs.start();
     record_list lrs(recs);
 
-    record_multimap<hash_type> multimap(ht, lrs, "test");
+    record_multimap<hash_type> multimap(ht, lrs);
     record_multimap_iterable container(lrs, multimap.lookup(key));
     for (const array_index index: container)
     {
         std::cout << "Index: " << index << std::endl;
-        const record_byte_pointer record = recs.get(index) + linked_record_offset;
+        const auto memory = recs.get(index);
+        const auto record = memory->buffer() + record_list_offset;
         const data_chunk data(record, record + value_size);
         std::cout << encode_base16(data) << std::endl;
         std::cout << std::endl;

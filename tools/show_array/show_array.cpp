@@ -9,7 +9,7 @@ template <typename IndexType, typename ValueType>
 int show_array(const std::string& filename, file_offset offset)
 {
     memory_map file(filename);
-    if (!file.data())
+    if (file.stopped())
     {
         std::cerr << "show_array: file failed to open." << std::endl;
         return -1;

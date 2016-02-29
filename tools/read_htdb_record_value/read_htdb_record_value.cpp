@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <iostream>
 #include <boost/lexical_cast.hpp>
 #include <bitcoin/database.hpp>
@@ -6,15 +7,15 @@ using namespace bc;
 using namespace bc::database;
 
 template <size_t N>
-record_byte_pointer get0(record_hash_table_header& header, record_manager& alloc,
+uint8_t* get(record_hash_table_header& header, record_manager& alloc,
     const data_chunk& key_data)
 {
     typedef byte_array<N> hash_type;
-    record_hash_table<hash_type> ht(header, alloc, "test");
+    record_hash_table<hash_type> ht(header, alloc);
     hash_type key;
     BITCOIN_ASSERT(key.size() == key_data.size());
     std::copy(key_data.begin(), key_data.end(), key.begin());
-    return ht.get(key);
+    return ht.get2(key);
 }
 
 int main(int argc, char** argv)
@@ -50,14 +51,14 @@ int main(int argc, char** argv)
     record_manager alloc(file, offset + 4 + 4 * header.size(), record_size);
     alloc.start();
 
-    record_byte_pointer record = nullptr;
+    uint8_t* record = nullptr;
     if (key_data.size() == 32)
     {
-        record = get0<32>(header, alloc, key_data);
+        record = get<32>(header, alloc, key_data);
     }
     else if (key_data.size() == 4)
     {
-        record = get0<4>(header, alloc, key_data);
+        record = get<4>(header, alloc, key_data);
     }
     else
     {

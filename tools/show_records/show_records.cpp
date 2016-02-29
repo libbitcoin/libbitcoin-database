@@ -19,7 +19,7 @@ int main(int argc, char** argv)
     if (argc == 4)
         offset = boost::lexical_cast<file_offset>(argv[3]);
     memory_map file(filename);
-    if (!file.data())
+    if (file.stopped())
     {
         std::cerr << "show_records: file failed to open." << std::endl;
         return -1;
@@ -28,8 +28,9 @@ int main(int argc, char** argv)
     recs.start();
     for (array_index i = 0; i < recs.count(); ++i)
     {
-        record_byte_pointer rec = recs.get(i);
-        data_chunk data(rec, rec + record_size);
+        const auto memory = recs.get(i);
+        const auto buffer = memory->buffer();
+        data_chunk data(buffer, buffer + record_size);
         std::cout << i << ": " << encode_base16(data) << std::endl;
     }
     return 0;
