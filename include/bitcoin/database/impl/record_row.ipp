@@ -17,31 +17,30 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_HTDB_SLAB_LIST_ITEM_IPP
-#define LIBBITCOIN_DATABASE_HTDB_SLAB_LIST_ITEM_IPP
+#ifndef LIBBITCOIN_DATABASE_RECORD_ROW_IPP
+#define LIBBITCOIN_DATABASE_RECORD_ROW_IPP
 
 namespace libbitcoin {
 namespace database {
 
 /**
- * Item for htdb_slab. A chained list with the key included.
+ * Item for record_hash_table. A chained list with the key included.
  *
- * Stores the key, next position and user data.
+ * Stores the key, next index and user data.
  * With the starting item, we can iterate until the end using the
- * next_position() method.
+ * next_index() method.
  */
 template <typename HashType>
-class htdb_slab_list_item
+class record_row
 {
 public:
-    static BC_CONSTEXPR size_t position_size = sizeof(file_offset);
+    static BC_CONSTEXPR size_t index_size = sizeof(array_index);
     static BC_CONSTEXPR size_t hash_size = std::tuple_size<HashType>::value;
-    static BC_CONSTEXPR file_offset value_begin = hash_size + position_size;
+    static BC_CONSTEXPR file_offset value_begin = hash_size + index_size;
 
-    htdb_slab_list_item(slab_manager& allocator, file_offset position);
+    record_row(record_manager& allocator, array_index index);
 
-    file_offset create(const HashType& key, const size_t value_size,
-        const file_offset next);
+    array_index create(const HashType& key, const array_index next);
 
     // Does this match?
     bool compare(const HashType& key) const;
@@ -50,51 +49,48 @@ public:
     uint8_t* data1() const;
 
     // Position of next item in the chained list.
-    file_offset next_position() const;
+    array_index next_index() const;
 
-    // Write a new next position.
-    void write_next_position(file_offset next);
+    // Write a new next index.
+    void write_next_index(array_index next);
 
 private:
     uint8_t* raw_next_data() const;
     uint8_t* raw_data(file_offset offset) const;
 
-    file_offset position_;
-    slab_manager& manager_;
+    array_index index_;
+    record_manager& manager_;
 };
 
 template <typename HashType>
-htdb_slab_list_item<HashType>::htdb_slab_list_item(slab_manager& manager,
-    const file_offset position)
-  : manager_(manager), position_(position)
+record_row<HashType>::record_row(record_manager& manager,
+    const array_index index)
+  : manager_(manager), index_(index)
 {
-    static_assert(position_size == 8, "Invalid file_offset size.");
+    static_assert(index_size == 4, "Invalid array_index size.");
 }
 
 template <typename HashType>
-file_offset htdb_slab_list_item<HashType>::create(const HashType& key,
-    const size_t value_size, const file_offset next)
+array_index record_row<HashType>::create(const HashType& key,
+    const array_index next)
 {
-    const file_offset info_size = key.size() + position_size;
-
-    // Create new slab.
+    // Create new record.
     //   [ HashType ]
-    //   [ next:8   ]
+    //   [ next:4   ]
     //   [ value... ]
-    const size_t slab_size = info_size + value_size;
-    position_ = manager_.new_slab(slab_size);
+    index_ = manager_.new_record();
 
-    // Write to slab.
+    // Write record.
     auto serial = make_serializer(raw_data(0));
     serial.write_data(key);
 
     // MUST BE ATOMIC
-    serial.write_8_bytes_little_endian(next);
-    return position_;
+    serial.write_4_bytes_little_endian(next);
+    return index_;
 }
 
 template <typename HashType>
-bool htdb_slab_list_item<HashType>::compare(const HashType& key) const
+bool record_row<HashType>::compare(const HashType& key) const
 {
     // Key data is at the start.
     const auto key_data = raw_data(0);
@@ -102,37 +98,37 @@ bool htdb_slab_list_item<HashType>::compare(const HashType& key) const
 }
 
 template <typename HashType>
-uint8_t* htdb_slab_list_item<HashType>::data1() const
+uint8_t* record_row<HashType>::data1() const
 {
     // Value data is at the end.
     return raw_data(value_begin);
 }
 
 template <typename HashType>
-file_offset htdb_slab_list_item<HashType>::next_position() const
+array_index record_row<HashType>::next_index() const
 {
     const auto next_data = raw_next_data();
-    return from_little_endian_unsafe<file_offset>(next_data);
+    return from_little_endian_unsafe<array_index>(next_data);
 }
 
 template <typename HashType>
-void htdb_slab_list_item<HashType>::write_next_position(file_offset next)
+void record_row<HashType>::write_next_index(array_index next)
 {
-    auto next_data = raw_next_data();
+    const auto next_data = raw_next_data();
     auto serial = make_serializer(next_data);
 
     // MUST BE ATOMIC
-    serial.write_8_bytes_little_endian(next);
+    serial.write_4_bytes_little_endian(next);
 }
 
 template <typename HashType>
-uint8_t* htdb_slab_list_item<HashType>::raw_data(file_offset offset) const
+uint8_t* record_row<HashType>::raw_data(file_offset offset) const
 {
-    return manager_.get0(position_) + offset;
+    return manager_.get0(index_) + offset;
 }
 
 template <typename HashType>
-uint8_t* htdb_slab_list_item<HashType>::raw_next_data() const
+uint8_t* record_row<HashType>::raw_next_data() const
 {
     // Next position is after key data.
     return raw_data(hash_size);

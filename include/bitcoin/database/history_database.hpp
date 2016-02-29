@@ -23,8 +23,8 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/disk/memory_map.hpp>
-#include <bitcoin/database/record/multimap_records.hpp>
+#include <bitcoin/database/memory/memory_map.hpp>
+#include <bitcoin/database/hash_table/record_multimap.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -105,8 +105,8 @@ public:
     history_statinfo statinfo() const;
 
 private:
-    typedef htdb_record<short_hash> record_map;
-    typedef multimap_records<short_hash> record_multimap;
+    typedef record_hash_table<short_hash> record_map;
+    typedef record_multimap<short_hash> record_multimap;
 
     /// The hashtable used for looking up start index for a
     /// linked list by address hash.
@@ -117,7 +117,7 @@ private:
 
     memory_map rows_file_;
     record_manager rows_;
-    linked_records linked_rows_;
+    record_list records_;
 
     record_multimap map_;
 };

@@ -17,31 +17,30 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_LINKED_RECORDS_HPP
-#define LIBBITCOIN_DATABASE_LINKED_RECORDS_HPP
+#ifndef LIBBITCOIN_DATABASE_RECORD_LIST_HPP
+#define LIBBITCOIN_DATABASE_RECORD_LIST_HPP
 
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/record/record_manager.hpp>
+#include <bitcoin/database/hash_table/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 // used by test
-BC_CONSTEXPR size_t linked_record_offset = sizeof(array_index);
+BC_CONSTEXPR size_t record_list_offset = sizeof(array_index);
 
 /**
- * linked_records is a one-way linked list with a next value containing
- * the index of the next record.
- * Records can be dropped by forgetting an index, and updating to the next
- * value. We can think of this as a LIFO queue.
+ * This is a one-way linked list with a next value containing the index of the
+ * subsequent record. Records can be dropped by forgetting an index, and
+ * updating to the next value. We can think of this as a LIFO queue.
  */
-class BCD_API linked_records
+class BCD_API record_list
 {
 public:
     // std::numeric_limits<array_index>::max()
     static BC_CONSTEXPR array_index empty = bc::max_uint32;
 
-    linked_records(record_manager& allocator);
+    record_list(record_manager& allocator);
 
     /**
      * Create new list with a single record.

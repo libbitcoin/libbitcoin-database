@@ -17,86 +17,77 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_HTDB_RECORD_HPP
-#define LIBBITCOIN_DATABASE_HTDB_RECORD_HPP
+#ifndef LIBBITCOIN_DATABASE_SLAB_HASH_TABLE_HPP
+#define LIBBITCOIN_DATABASE_SLAB_HASH_TABLE_HPP
 
-#include <cstddef>
-#include <cstdint>
-#include <string>
-#include <tuple>
-#include <bitcoin/database/disk/disk_array.hpp>
-#include <bitcoin/database/record/record_manager.hpp>
+#include <bitcoin/database/memory/memory_array.hpp>
+#include <bitcoin/database/hash_table/slab_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-template <typename HashType>
-BC_CONSTFUNC size_t record_fsize_htdb(size_t value_size)
-{
-    return std::tuple_size<HashType>::value + sizeof(array_index)
-        + value_size;
-}
-
 /**
- * A hashtable mapping hashes to fixed sized values (records).
- * Uses a combination of the disk_array and record_manager.
+ * A hashtable mapping hashes to variable sized values (slabs).
+ * Uses a combination of the memory_array and slab_manager.
  *
- * The disk_array is basically a bucket list containing the start
+ * The memory_array is basically a bucket list containing the start
  * value for the hashtable chain.
  *
- * The record_manager is used to create linked chains. A header
+ * The slab_manager is used to create linked chains. A header
  * containing the hash of the item, and the next value is stored
- * with each record.
+ * with each slab.
  *
  *   [ HashType ]
- *   [ next:4   ]
- *   [ record   ]
+ *   [ next:8   ]
+ *   [ value... ]
  *
- * By using the record_manager instead of slabs, we can have smaller
- * indexes avoiding reading/writing extra bytes to the file.
- * Using fixed size records is therefore faster.
+ * If we run allocator.sync() before the link() step then we ensure
+ * data can be lost but the hashtable is never corrupted.
+ * Instead we prefer speed and batch that operation. The user should
+ * call allocator.sync() after a series of store() calls.
  */
 template <typename HashType>
-class htdb_record
+class slab_hash_table
 {
 public:
     typedef std::function<void(uint8_t*)> write_function;
 
-    htdb_record(htdb_record_header& header, record_manager& allocator,
-        const std::string& name);
+    slab_hash_table(htdb_slab_header& header, slab_manager& allocator);
 
-    /// Store a value. The provided write() function must write the correct
-    /// number of bytes (record_size - hash_size - sizeof(array_index)).
-    void store(const HashType& key, write_function write);
+    /// Store a value. value_size is the requested size for the value.
+    /// The provided write() function must write exactly value_size bytes.
+    /// Returns the position of the inserted value in the slab_manager.
+    file_offset store(const HashType& key, write_function write,
+        const size_t value_size);
 
-    /// Return the record for a given hash.
+    /// Return the slab for a given hash.
     uint8_t* get2(const HashType& key) const;
 
     /// Delete a key-value pair from the hashtable by unlinking the node.
     bool unlink(const HashType& key);
 
 private:
+
     // What is the bucket given a hash.
     array_index bucket_index(const HashType& key) const;
 
-    // What is the record start index for a chain.
-    array_index read_bucket_value(const HashType& key) const;
+    // What is the slab start position for a chain.
+    file_offset read_bucket_value(const HashType& key) const;
 
     // Link a new chain into the bucket header.
-    void link(const HashType& key, const array_index begin);
+    void link(const HashType& key, const file_offset begin);
 
     // Release node from linked chain.
     template <typename ListItem>
     void release(const ListItem& item, const file_offset previous);
 
-    const std::string name_;
-    htdb_record_header& header_;
-    record_manager& manager_;
+    htdb_slab_header& header_;
+    slab_manager& manager_;
 };
 
 } // namespace database
 } // namespace libbitcoin
 
-#include <bitcoin/database/impl/htdb_record.ipp>
+#include <bitcoin/database/impl/slab_hash_table.ipp>
 
 #endif

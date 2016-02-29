@@ -31,21 +31,6 @@ using namespace bc::chain;
 static constexpr size_t height_size = sizeof(uint32_t);
 static constexpr size_t index_size = sizeof(uint32_t);
 
-////#include <boost/iostreams/stream.hpp>
-////#include <bitcoin/database/pointer_array_source.hpp>
-////chain::transaction deserialize_tx(const uint8_t* begin, uint64_t length)
-////{
-////    boost::iostreams::stream<byte_pointer_array_source> istream(begin, length);
-////    istream.exceptions(std::ios_base::failbit);
-////    chain::transaction tx;
-////    tx.from_data(istream);
-////
-//////    if (!istream)
-//////        throw end_of_stream();
-////
-////    return tx;
-////}
-
 template <typename Iterator>
 chain::transaction deserialize_tx(const Iterator first)
 {

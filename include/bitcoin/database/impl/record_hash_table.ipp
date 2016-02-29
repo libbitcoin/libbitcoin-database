@@ -17,31 +17,31 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_HTDB_RECORD_IPP
-#define LIBBITCOIN_DATABASE_HTDB_RECORD_IPP
+#ifndef LIBBITCOIN_DATABASE_RECORD_HASH_TABLE_IPP
+#define LIBBITCOIN_DATABASE_RECORD_HASH_TABLE_IPP
 
 #include <string>
 #include <bitcoin/bitcoin.hpp>
-#include "../impl/htdb_record_list_item.ipp"
+#include "../impl/record_row.ipp"
 #include "../impl/remainder.ipp"
 
 namespace libbitcoin {
 namespace database {
 
 template <typename HashType>
-htdb_record<HashType>::htdb_record(htdb_record_header& header,
-    record_manager& allocator, const std::string& name)
-  : header_(header), manager_(allocator), name_(name)
+record_hash_table<HashType>::record_hash_table(htdb_record_header& header,
+    record_manager& allocator)
+  : header_(header), manager_(allocator)
 {
 }
 
 template <typename HashType>
-void htdb_record<HashType>::store(const HashType& key,
+void record_hash_table<HashType>::store(const HashType& key,
     const write_function write)
 {
     // Store current bucket value.
     const auto old_begin = read_bucket_value(key);
-    htdb_record_list_item<HashType> item(manager_, 0);
+    record_row<HashType> item(manager_, 0);
     const auto new_begin = item.create(key, old_begin);
     write(item.data1());
 
@@ -50,7 +50,7 @@ void htdb_record<HashType>::store(const HashType& key,
 }
 
 template <typename HashType>
-uint8_t* htdb_record<HashType>::get2(const HashType& key) const
+uint8_t* record_hash_table<HashType>::get2(const HashType& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -58,7 +58,7 @@ uint8_t* htdb_record<HashType>::get2(const HashType& key) const
     // Iterate through list...
     while (current != header_.empty)
     {
-        const htdb_record_list_item<HashType> item(manager_, current);
+        const record_row<HashType> item(manager_, current);
 
         // Found, return data.
         if (item.compare(key))
@@ -78,11 +78,11 @@ uint8_t* htdb_record<HashType>::get2(const HashType& key) const
 }
 
 template <typename HashType>
-bool htdb_record<HashType>::unlink(const HashType& key)
+bool record_hash_table<HashType>::unlink(const HashType& key)
 {
     // Find start item...
     const auto begin = read_bucket_value(key);
-    const htdb_record_list_item<HashType> begin_item(manager_, begin);
+    const record_row<HashType> begin_item(manager_, begin);
 
     // If start item has the key then unlink from buckets.
     if (begin_item.compare(key))
@@ -98,7 +98,7 @@ bool htdb_record<HashType>::unlink(const HashType& key)
     // Iterate through list...
     while (current != header_.empty)
     {
-        const htdb_record_list_item<HashType> item(manager_, current);
+        const record_row<HashType> item(manager_, current);
 
         // Found, unlink current item from previous.
         if (item.compare(key))
@@ -121,7 +121,8 @@ bool htdb_record<HashType>::unlink(const HashType& key)
 }
 
 template <typename HashType>
-array_index htdb_record<HashType>::bucket_index(const HashType& key) const
+array_index record_hash_table<HashType>::bucket_index(
+    const HashType& key) const
 {
     const auto bucket = remainder(key, header_.size());
     BITCOIN_ASSERT(bucket < header_.size());
@@ -129,7 +130,8 @@ array_index htdb_record<HashType>::bucket_index(const HashType& key) const
 }
 
 template <typename HashType>
-array_index htdb_record<HashType>::read_bucket_value(const HashType& key) const
+array_index record_hash_table<HashType>::read_bucket_value(
+    const HashType& key) const
 {
     auto value = header_.read(bucket_index(key));
     BITCOIN_ASSERT(sizeof(value) == sizeof(array_index));
@@ -137,14 +139,15 @@ array_index htdb_record<HashType>::read_bucket_value(const HashType& key) const
 }
 
 template <typename HashType>
-void htdb_record<HashType>::link(const HashType& key, const array_index begin)
+void record_hash_table<HashType>::link(const HashType& key,
+    const array_index begin)
 {
     header_.write(bucket_index(key), begin);
 }
 
 template <typename HashType>
 template <typename ListItem>
-void htdb_record<HashType>::release(const ListItem& item,
+void record_hash_table<HashType>::release(const ListItem& item,
     const file_offset previous)
 {
     ListItem previous_item(manager_, previous);

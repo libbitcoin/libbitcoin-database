@@ -17,8 +17,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MULTIMAP_RECORDS_IPP
-#define LIBBITCOIN_DATABASE_MULTIMAP_RECORDS_IPP
+#ifndef LIBBITCOIN_DATABASE_RECORD_MULTIMAP_IPP
+#define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_IPP
 
 #include <string>
 
@@ -26,25 +26,25 @@ namespace libbitcoin {
 namespace database {
 
 template <typename HashType>
-multimap_records<HashType>::multimap_records(htdb_type& map,
-    linked_records& linked_rows, const std::string& name)
-  : map_(map), linked_rows_(linked_rows), name_(name)
+record_multimap<HashType>::record_multimap(htdb_type& map,
+    record_list& linked_rows)
+  : map_(map), records_(linked_rows)
 {
 }
 
 template <typename HashType>
-array_index multimap_records<HashType>::lookup(const HashType& key) const
+array_index record_multimap<HashType>::lookup(const HashType& key) const
 {
     const auto start_info = map_.get2(key);
     if (!start_info)
-        return linked_rows_.empty;
+        return records_.empty;
 
     const auto first = from_little_endian_unsafe<array_index>(start_info);
     return first;
 }
 
 template <typename HashType>
-void multimap_records<HashType>::add_row(const HashType& key,
+void record_multimap<HashType>::add_row(const HashType& key,
     write_function write)
 {
     auto start_info = map_.get2(key);
@@ -58,14 +58,14 @@ void multimap_records<HashType>::add_row(const HashType& key,
 }
 
 template <typename HashType>
-void multimap_records<HashType>::delete_last_row(const HashType& key)
+void record_multimap<HashType>::delete_last_row(const HashType& key)
 {
     auto start_info = map_.get2(key);
     BITCOIN_ASSERT(start_info != nullptr);
     const auto old_begin = from_little_endian_unsafe<array_index>(start_info);
-    BITCOIN_ASSERT(old_begin != linked_rows_.empty);
-    const auto new_begin = linked_rows_.next(old_begin);
-    if (new_begin == linked_rows_.empty)
+    BITCOIN_ASSERT(old_begin != records_.empty);
+    const auto new_begin = records_.next(old_begin);
+    if (new_begin == records_.empty)
     {
         DEBUG_ONLY(bool success =) map_.unlink(key);
         BITCOIN_ASSERT(success);
@@ -79,12 +79,12 @@ void multimap_records<HashType>::delete_last_row(const HashType& key)
 }
 
 template <typename HashType>
-void multimap_records<HashType>::add_to_list(uint8_t* start_info,
+void record_multimap<HashType>::add_to_list(uint8_t* start_info,
     write_function write)
 {
     const auto old_begin = from_little_endian_unsafe<array_index>(start_info);
-    const auto new_begin = linked_rows_.insert(old_begin);
-    auto record = linked_rows_.get1(new_begin);
+    const auto new_begin = records_.insert(old_begin);
+    auto record = records_.get1(new_begin);
     write(record);
     auto serial = make_serializer(start_info);
 
@@ -93,11 +93,11 @@ void multimap_records<HashType>::add_to_list(uint8_t* start_info,
 }
 
 template <typename HashType>
-void multimap_records<HashType>::create_new(const HashType& key,
+void record_multimap<HashType>::create_new(const HashType& key,
     write_function write)
 {
-    const auto first = linked_rows_.create();
-    auto record = linked_rows_.get1(first);
+    const auto first = records_.create();
+    auto record = records_.get1(first);
     write(record);
     const auto write_start_info = [first](uint8_t* data)
     {

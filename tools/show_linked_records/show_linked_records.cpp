@@ -62,7 +62,7 @@ int main(int argc, char** argv)
     }
     record_manager recs(file, offset, record_size);
     recs.start();
-    linked_records lrs(recs);
+    record_list lrs(recs);
     chain_list chains;
     for (array_index rec_idx = 0; rec_idx < recs.count(); ++rec_idx)
     {
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
         const array_index prev_idx = deserial.read_4_bytes_little_endian();
         const data_chunk data(rec + 4, rec + record_size);
         const chain_item new_item{rec_idx, data};
-        if (prev_idx == linked_records::empty)
+        if (prev_idx == record_list::empty)
         {
             // Create new chain
             chain_type chain{{new_item}};

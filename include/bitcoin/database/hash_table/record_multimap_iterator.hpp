@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -17,37 +17,38 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/disk/accessor.hpp>
+#ifndef LIBBITCOIN_DATABASE_RECORD_MULTIMAP_ITERATOR_HPP
+#define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_ITERATOR_HPP
 
-#include <cstdint>
-#include <boost/thread.hpp>
+#include <bitcoin/database/define.hpp>
+#include <bitcoin/database/hash_table/record_list.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-using namespace boost;
-
-accessor::accessor(uint8_t* data, shared_mutex& mutex)
-  : data_(data),
-    mutex_(mutex),
-    shared_lock_(mutex_)
+/// Forward iterator for multimap record values.
+/// After performing key lookup iterate the multiple values in a for loop.
+class BCD_API record_multimap_iterator
 {
-    ///////////////////////////////////////////////////////////////////////////
-    // Begin Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-}
+public:
+    record_multimap_iterator(const record_list& records, array_index index);
 
-uint8_t* accessor::buffer()
-{
-    return data_;
-}
+    /// Next value in the chain.
+    void operator++();
 
-accessor::~accessor()
-{
-    ///////////////////////////////////////////////////////////////////////////
-    // End Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-}
+    /// The record index.
+    array_index operator*() const;
+
+    /// Comparison operators.
+    bool operator==(record_multimap_iterator other) const;
+    bool operator!=(record_multimap_iterator other) const;
+
+private:
+    array_index index_;
+    const record_list& records_;
+};
 
 } // namespace database
 } // namespace libbitcoin
+
+#endif

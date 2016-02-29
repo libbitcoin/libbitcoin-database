@@ -23,6 +23,7 @@
 #include <cstddef>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/hash_table/record_multimap_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -45,11 +46,11 @@ history_database::history_database(const path& lookup_filename,
   : lookup_file_(lookup_filename), 
     header_(lookup_file_, 0),
     manager_(lookup_file_, allocation_offset, alloc_record_size),
-    start_lookup_(header_, manager_, lookup_filename.string()),
+    start_lookup_(header_, manager_),
     rows_file_(rows_filename), 
     rows_(rows_file_, 0, row_record_size),
-    linked_rows_(rows_),
-    map_(start_lookup_, linked_rows_, rows_filename.string())
+    records_(rows_),
+    map_(start_lookup_, records_)
 {
     BITCOIN_ASSERT(lookup_file_.access()->buffer() != nullptr);
     BITCOIN_ASSERT(rows_file_.access()->buffer() != nullptr);
@@ -173,13 +174,13 @@ history history_database::get(const short_hash& key, size_t limit,
     // This result is defined in libbitcoin.
     history result;
     const auto start = map_.lookup(key);
-    for (const auto index: multimap_iterable(linked_rows_, start))
+    for (const auto index: record_multimap_iterable(records_, start))
     {
         // Stop once we reach the limit (if specified).
         if (limit && result.size() >= limit)
             break;
 
-        const auto data = linked_rows_.get1(index);
+        const auto data = records_.get1(index);
 
         // Skip rows below from_height (if specified).
         if (from_height && read_height(data) < from_height)

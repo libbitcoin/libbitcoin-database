@@ -92,12 +92,12 @@
     <Linkage-libbitcoin-consensus>static</Linkage-libbitcoin-consensus>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\disk_array.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\htdb_record.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\htdb_record_list_item.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\htdb_slab.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\htdb_slab_list_item.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\multimap_records.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory_array.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\record_hash_table.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\record_row.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\slab_hash_table.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\slab_list.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\record_multimap.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\remainder.ipp" />
     <None Include="packages.config">
       <FileType>Document</FileType>
@@ -108,22 +108,23 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\block_database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\data_base.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\disk_array.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\memory_map.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\accessor.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\allocator.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\pointer.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_list.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_multimap_iterable.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_multimap_iterator.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_multimap.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_hash_table.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_manager.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\slab_hash_table.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\slab_manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\history_database.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\pointer_array_source.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\record\htdb_record.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\record\linked_records.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\record\multimap_records.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\record\record_manager.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\allocator.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_map.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_array.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\block_result.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_result.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\slab\htdb_slab.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\slab\slab_manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\spend_database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\stealth_database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\transaction_database.hpp" />
@@ -133,18 +134,19 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\src\block_database.cpp" />
     <ClCompile Include="..\..\..\..\src\data_base.cpp" />
-    <ClCompile Include="..\..\..\..\src\disk\accessor.cpp" />
-    <ClCompile Include="..\..\..\..\src\disk\allocator.cpp" />
-    <ClCompile Include="..\..\..\..\src\disk\memory_map.cpp" />
+    <ClCompile Include="..\..\..\..\src\hash_table\record_list.cpp" />
+    <ClCompile Include="..\..\..\..\src\hash_table\record_multimap_iterable.cpp" />
+    <ClCompile Include="..\..\..\..\src\hash_table\record_multimap_iterator.cpp" />
+    <ClCompile Include="..\..\..\..\src\hash_table\record_manager.cpp" />
+    <ClCompile Include="..\..\..\..\src\hash_table\slab_manager.cpp" />
     <ClCompile Include="..\..\..\..\src\history_database.cpp" />
+    <ClCompile Include="..\..\..\..\src\memory\accessor.cpp" />
+    <ClCompile Include="..\..\..\..\src\memory\allocator.cpp" />
+    <ClCompile Include="..\..\..\..\src\memory\memory_map.cpp" />
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c" />
-    <ClCompile Include="..\..\..\..\src\record\linked_records.cpp" />
-    <ClCompile Include="..\..\..\..\src\record\multimap_records.cpp" />
-    <ClCompile Include="..\..\..\..\src\record\record_manager.cpp" />
     <ClCompile Include="..\..\..\..\src\result\block_result.cpp" />
     <ClCompile Include="..\..\..\..\src\result\transaction_result.cpp" />
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
-    <ClCompile Include="..\..\..\..\src\slab\slab_manager.cpp" />
     <ClCompile Include="..\..\..\..\src\spend_database.cpp" />
     <ClCompile Include="..\..\..\..\src\stealth_database.cpp" />
     <ClCompile Include="..\..\..\..\src\transaction_database.cpp" />

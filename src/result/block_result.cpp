@@ -26,21 +26,6 @@
 namespace libbitcoin {
 namespace database {
 
-////#include <boost/iostreams/stream.hpp>
-////#include <bitcoin/database/pointer_array_source.hpp>
-////chain::header deserialize_header(const uint8_t* begin, uint64_t length)
-////{
-////    boost::iostreams::stream<byte_pointer_array_source> istream(begin, length);
-////    istream.exceptions(std::ios_base::failbit);
-////    chain::header header;
-////    header.from_data(istream);
-////
-//////    if (!istream)
-//////        throw end_of_stream();
-////
-////    return header;
-////}
-
 using namespace bc::chain;
 
 static constexpr size_t header_size = 80;

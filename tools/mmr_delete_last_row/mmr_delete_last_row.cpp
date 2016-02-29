@@ -35,7 +35,7 @@ int mmr_lookup(
     record_manager alloc(ht_file, records_start, record_size);
     alloc.start();
 
-    htdb_record<hash_type> ht(header, alloc, "test");
+    record_hash_table<hash_type> ht(header, alloc, "test");
 
     memory_map lrs_file(rows_filename);
     BITCOIN_ASSERT(lrs_file.data());
@@ -43,9 +43,9 @@ int mmr_lookup(
     record_manager recs(lrs_file, 0, lrs_record_size);
 
     recs.start();
-    linked_records lrs(recs);
+    record_list lrs(recs);
 
-    multimap_records<hash_type> multimap(ht, lrs, "test");
+    record_multimap<hash_type> multimap(ht, lrs, "test");
     multimap.delete_last_row(key);
     return 0;
 }

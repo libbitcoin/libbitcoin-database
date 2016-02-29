@@ -23,7 +23,7 @@
 #include <stdexcept>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/database/disk/memory_map.hpp>
+#include <bitcoin/database/memory/memory_map.hpp>
 #include <bitcoin/database/settings.hpp>
 
 namespace libbitcoin {

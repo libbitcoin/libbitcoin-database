@@ -17,25 +17,25 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/record/linked_records.hpp>
+#include <bitcoin/database/hash_table/record_list.hpp>
 
 #include <bitcoin/bitcoin.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-linked_records::linked_records(record_manager& manager)
+record_list::record_list(record_manager& manager)
   : manager_(manager)
 {
 }
 
-array_index linked_records::create()
+array_index record_list::create()
 {
     // Insert new record with empty next value.
     return insert(empty);
 }
 
-array_index linked_records::insert(array_index next)
+array_index record_list::insert(array_index next)
 {
     static_assert(sizeof(array_index) == sizeof(uint32_t),
         "array_index incorrect size");
@@ -52,13 +52,13 @@ array_index linked_records::insert(array_index next)
     return record;
 }
 
-array_index linked_records::next(array_index index) const
+array_index record_list::next(array_index index) const
 {
     const auto data = manager_.get0(index);
     return from_little_endian_unsafe<array_index>(data);
 }
 
-uint8_t* linked_records::get1(array_index index) const
+uint8_t* record_list::get1(array_index index) const
 {
     return manager_.get0(index) + sizeof(array_index);
 }

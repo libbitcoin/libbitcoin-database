@@ -26,13 +26,13 @@
 #include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/disk/disk_array.hpp>
-#include <bitcoin/database/disk/memory_map.hpp>
+#include <bitcoin/database/memory/memory_array.hpp>
+#include <bitcoin/database/memory/memory_map.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-typedef disk_array<array_index, array_index> htdb_record_header;
+typedef memory_array<array_index, array_index> htdb_record_header;
 
 BC_CONSTEXPR size_t min_records_fsize = sizeof(array_index);
 BC_CONSTFUNC size_t htdb_record_header_fsize(size_t buckets)

@@ -19,10 +19,10 @@
     <ClCompile Include="..\..\..\..\test\hash_table.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\disk_object.cpp">
+    <ClCompile Include="..\..\..\..\test\history_database.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\history_database.cpp">
+    <ClCompile Include="..\..\..\..\test\memory_object.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

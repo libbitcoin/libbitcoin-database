@@ -19,23 +19,11 @@
     <ClCompile Include="..\..\..\..\src\transaction_database.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\record\linked_records.cpp">
-      <Filter>src\record</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\record\multimap_records.cpp">
-      <Filter>src\record</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c">
       <Filter>src\mman-win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\settings.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\record\record_manager.cpp">
-      <Filter>src\record</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\slab\slab_manager.cpp">
-      <Filter>src\slab</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\result\block_result.cpp">
       <Filter>src\result</Filter>
@@ -43,14 +31,29 @@
     <ClCompile Include="..\..\..\..\src\result\transaction_result.cpp">
       <Filter>src\result</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\disk\accessor.cpp">
-      <Filter>src\disk</Filter>
+    <ClCompile Include="..\..\..\..\src\memory\allocator.cpp">
+      <Filter>src\memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\disk\allocator.cpp">
-      <Filter>src\disk</Filter>
+    <ClCompile Include="..\..\..\..\src\memory\memory_map.cpp">
+      <Filter>src\memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\disk\memory_map.cpp">
-      <Filter>src\disk</Filter>
+    <ClCompile Include="..\..\..\..\src\memory\accessor.cpp">
+      <Filter>src\memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\hash_table\record_manager.cpp">
+      <Filter>src\hash_table</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\hash_table\slab_manager.cpp">
+      <Filter>src\hash_table</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\hash_table\record_list.cpp">
+      <Filter>src\hash_table</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\hash_table\record_multimap_iterator.cpp">
+      <Filter>src\hash_table</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\hash_table\record_multimap_iterable.cpp">
+      <Filter>src\hash_table</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -60,21 +63,6 @@
     <ClInclude Include="..\..\..\..\src\mman-win32\mman.h">
       <Filter>src\mman-win32</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\slab\htdb_slab.hpp">
-      <Filter>include\bitcoin\database\slab</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\record\htdb_record.hpp">
-      <Filter>include\bitcoin\database\record</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\record\linked_records.hpp">
-      <Filter>include\bitcoin\database\record</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\disk_array.hpp">
-      <Filter>include\bitcoin\database\disk</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\record\multimap_records.hpp">
-      <Filter>include\bitcoin\database\record</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\block_database.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
@@ -82,9 +70,6 @@
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\history_database.hpp">
-      <Filter>include\bitcoin\database</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\pointer_array_source.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp">
@@ -102,55 +87,76 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\accessor.hpp">
-      <Filter>include\bitcoin\database\disk</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\allocator.hpp">
-      <Filter>include\bitcoin\database\disk</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\slab\slab_manager.hpp">
-      <Filter>include\bitcoin\database\slab</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\record\record_manager.hpp">
-      <Filter>include\bitcoin\database\record</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\block_result.hpp">
       <Filter>include\bitcoin\database\result</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_result.hpp">
       <Filter>include\bitcoin\database\result</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\memory_map.hpp">
-      <Filter>include\bitcoin\database\disk</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\disk\pointer.hpp">
-      <Filter>include\bitcoin\database\disk</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp">
       <Filter>include\bitcoin</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp">
+      <Filter>include\bitcoin\database\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_map.hpp">
+      <Filter>include\bitcoin\database\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp">
+      <Filter>include\bitcoin\database\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\allocator.hpp">
+      <Filter>include\bitcoin\database\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_array.hpp">
+      <Filter>include\bitcoin\database\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_manager.hpp">
+      <Filter>include\bitcoin\database\hash_table</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\slab_hash_table.hpp">
+      <Filter>include\bitcoin\database\hash_table</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\slab_manager.hpp">
+      <Filter>include\bitcoin\database\hash_table</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_hash_table.hpp">
+      <Filter>include\bitcoin\database\hash_table</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_multimap.hpp">
+      <Filter>include\bitcoin\database\hash_table</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_list.hpp">
+      <Filter>include\bitcoin\database\hash_table</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_multimap_iterator.hpp">
+      <Filter>include\bitcoin\database\hash_table</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_multimap_iterable.hpp">
+      <Filter>include\bitcoin\database\hash_table</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\disk_array.ipp">
-      <Filter>include\bitcoin\database\impl</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\htdb_record.ipp">
-      <Filter>include\bitcoin\database\impl</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\htdb_record_list_item.ipp">
-      <Filter>include\bitcoin\database\impl</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\htdb_slab.ipp">
-      <Filter>include\bitcoin\database\impl</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\htdb_slab_list_item.ipp">
-      <Filter>include\bitcoin\database\impl</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\multimap_records.ipp">
-      <Filter>include\bitcoin\database\impl</Filter>
-    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\remainder.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory_array.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\record_hash_table.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\slab_hash_table.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\slab_list.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\record_multimap.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\record_row.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
   </ItemGroup>
@@ -167,26 +173,8 @@
     <Filter Include="include\bitcoin\database\impl">
       <UniqueIdentifier>{13dab59e-6461-4155-b441-720a884785bb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\database\disk">
-      <UniqueIdentifier>{db51571c-ae1d-4ef5-a01e-b06c550baa19}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\database\record">
-      <UniqueIdentifier>{fbf27321-beff-4f6d-a695-a3ee70ab923c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\database\slab">
-      <UniqueIdentifier>{1ef7bb1f-53c9-4ec4-94fb-50fc41d82478}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{60cb5d9d-8540-437e-bfa5-73e4c71c38a7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\disk">
-      <UniqueIdentifier>{4fa3b137-c924-4fe4-920a-cb68f7f10ca1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\record">
-      <UniqueIdentifier>{0ea18be7-b14f-4fe5-b910-ed9e73ba08a5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\slab">
-      <UniqueIdentifier>{2aa27da0-e313-4acc-9eb6-d210a08967db}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\mman-win32">
       <UniqueIdentifier>{b35b8e0a-f340-4650-b6b6-defdeb9bc4bc}</UniqueIdentifier>
@@ -196,6 +184,18 @@
     </Filter>
     <Filter Include="src\result">
       <UniqueIdentifier>{8bca51b7-ab0b-40b5-afd5-e8c79180aa84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\memory">
+      <UniqueIdentifier>{aba7a13a-b66c-4745-a2e3-1e5e331e8a73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\memory">
+      <UniqueIdentifier>{f9dd44e8-d8e1-49b3-9d78-0afc7df23d6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hash_table">
+      <UniqueIdentifier>{1f3ad9c3-8ddd-4744-8eda-3d650a4766a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\hash_table">
+      <UniqueIdentifier>{25411a96-f266-4ed8-a5bf-b9a2aff44666}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

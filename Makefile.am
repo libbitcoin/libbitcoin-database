@@ -42,17 +42,18 @@ src_libbitcoin_database_la_SOURCES = \
     src/spend_database.cpp \
     src/stealth_database.cpp \
     src/transaction_database.cpp \
-    src/disk/accessor.cpp \
-    src/disk/allocator.cpp \
-    src/disk/memory_map.cpp \
+    src/hash_table/record_list.cpp \
+    src/hash_table/record_manager.cpp \
+    src/hash_table/record_multimap_iterable.cpp \
+    src/hash_table/record_multimap_iterator.cpp \
+    src/hash_table/slab_manager.cpp \
+    src/memory/accessor.cpp \
+    src/memory/allocator.cpp \
+    src/memory/memory_map.cpp \
     src/mman-win32/mman.c \
     src/mman-win32/mman.h \
-    src/record/linked_records.cpp \
-    src/record/multimap_records.cpp \
-    src/record/record_manager.cpp \
     src/result/block_result.cpp \
-    src/result/transaction_result.cpp \
-    src/slab/slab_manager.cpp
+    src/result/transaction_result.cpp
 
 # local: test/libbitcoin_database_test
 #------------------------------------------------------------------------------
@@ -66,10 +67,10 @@ test_libbitcoin_database_test_LDADD = src/libbitcoin-database.la ${boost_unit_te
 test_libbitcoin_database_test_SOURCES = \
     test/block_database.cpp \
     test/data_base.cpp \
-    test/disk_object.cpp \
     test/hash_table.cpp \
     test/history_database.cpp \
     test/main.cpp \
+    test/memory_object.cpp \
     test/spend_database.cpp \
     test/transaction_database.cpp
 
@@ -279,47 +280,45 @@ include_bitcoin_database_HEADERS = \
     include/bitcoin/database/data_base.hpp \
     include/bitcoin/database/define.hpp \
     include/bitcoin/database/history_database.hpp \
-    include/bitcoin/database/pointer_array_source.hpp \
     include/bitcoin/database/settings.hpp \
     include/bitcoin/database/spend_database.hpp \
     include/bitcoin/database/stealth_database.hpp \
     include/bitcoin/database/transaction_database.hpp \
     include/bitcoin/database/version.hpp
 
-include_bitcoin_database_diskdir = ${includedir}/bitcoin/database/disk
-include_bitcoin_database_disk_HEADERS = \
-    include/bitcoin/database/disk/accessor.hpp \
-    include/bitcoin/database/disk/allocator.hpp \
-    include/bitcoin/database/disk/disk_array.hpp \
-    include/bitcoin/database/disk/memory.hpp \
-    include/bitcoin/database/disk/memory_map.hpp
+include_bitcoin_database_hash_tabledir = ${includedir}/bitcoin/database/hash_table
+include_bitcoin_database_hash_table_HEADERS = \
+    include/bitcoin/database/hash_table/record_hash_table.hpp \
+    include/bitcoin/database/hash_table/record_list.hpp \
+    include/bitcoin/database/hash_table/record_manager.hpp \
+    include/bitcoin/database/hash_table/record_multimap.hpp \
+    include/bitcoin/database/hash_table/record_multimap_iterable.hpp \
+    include/bitcoin/database/hash_table/record_multimap_iterator.hpp \
+    include/bitcoin/database/hash_table/slab_hash_table.hpp \
+    include/bitcoin/database/hash_table/slab_manager.hpp
 
 include_bitcoin_database_impldir = ${includedir}/bitcoin/database/impl
 include_bitcoin_database_impl_HEADERS = \
-    include/bitcoin/database/impl/disk_array.ipp \
-    include/bitcoin/database/impl/htdb_record.ipp \
-    include/bitcoin/database/impl/htdb_record_list_item.ipp \
-    include/bitcoin/database/impl/htdb_slab.ipp \
-    include/bitcoin/database/impl/htdb_slab_list_item.ipp \
-    include/bitcoin/database/impl/multimap_records.ipp \
-    include/bitcoin/database/impl/remainder.ipp
+    include/bitcoin/database/impl/memory_array.ipp \
+    include/bitcoin/database/impl/record_hash_table.ipp \
+    include/bitcoin/database/impl/record_multimap.ipp \
+    include/bitcoin/database/impl/record_row.ipp \
+    include/bitcoin/database/impl/remainder.ipp \
+    include/bitcoin/database/impl/slab_hash_table.ipp \
+    include/bitcoin/database/impl/slab_list.ipp
 
-include_bitcoin_database_recorddir = ${includedir}/bitcoin/database/record
-include_bitcoin_database_record_HEADERS = \
-    include/bitcoin/database/record/htdb_record.hpp \
-    include/bitcoin/database/record/linked_records.hpp \
-    include/bitcoin/database/record/multimap_records.hpp \
-    include/bitcoin/database/record/record_manager.hpp
+include_bitcoin_database_memorydir = ${includedir}/bitcoin/database/memory
+include_bitcoin_database_memory_HEADERS = \
+    include/bitcoin/database/memory/accessor.hpp \
+    include/bitcoin/database/memory/allocator.hpp \
+    include/bitcoin/database/memory/memory.hpp \
+    include/bitcoin/database/memory/memory_array.hpp \
+    include/bitcoin/database/memory/memory_map.hpp
 
 include_bitcoin_database_resultdir = ${includedir}/bitcoin/database/result
 include_bitcoin_database_result_HEADERS = \
     include/bitcoin/database/result/block_result.hpp \
     include/bitcoin/database/result/transaction_result.hpp
-
-include_bitcoin_database_slabdir = ${includedir}/bitcoin/database/slab
-include_bitcoin_database_slab_HEADERS = \
-    include/bitcoin/database/slab/htdb_slab.hpp \
-    include/bitcoin/database/slab/slab_manager.hpp
 
 
 # Custom make targets.

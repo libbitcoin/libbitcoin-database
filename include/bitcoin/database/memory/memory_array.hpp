@@ -17,11 +17,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_DISK_ARRAY_HPP
-#define LIBBITCOIN_DATABASE_DISK_ARRAY_HPP
+#ifndef LIBBITCOIN_DATABASE_MEMORY_ARRAY_HPP
+#define LIBBITCOIN_DATABASE_MEMORY_ARRAY_HPP
 
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/database/disk/memory_map.hpp>
+#include <bitcoin/database/memory/memory_map.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -39,7 +39,7 @@ namespace database {
  * Empty items are represented by the value array.empty
  */
 template <typename IndexType, typename ValueType>
-class disk_array
+class memory_array
 {
 public:
     // This VC++ workaround is OK because ValueType must be unsigned. 
@@ -49,12 +49,12 @@ public:
     /**
      * sector_start represents the offset within the file.
      */
-    disk_array(memory_map& file, file_offset sector_start);
+    memory_array(memory_map& file, file_offset sector_start);
 
     /**
      * Initialize a new array. The file must have enough space.
      * The space needed is sizeof(IndexType) + size * sizeof(ValueType)
-     * Element items are initialised to disk_array::empty.
+     * Element items are initialised to memory_array::empty.
      */
     void create(IndexType size);
 
@@ -90,6 +90,6 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#include <bitcoin/database/impl/disk_array.ipp>
+#include <bitcoin/database/impl/memory_array.ipp>
 
 #endif

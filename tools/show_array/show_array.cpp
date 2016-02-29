@@ -14,7 +14,7 @@ int show_array(const std::string& filename, file_offset offset)
         std::cerr << "show_array: file failed to open." << std::endl;
         return -1;
     }
-    disk_array<IndexType, ValueType> array(file, offset);
+    memory_array<IndexType, ValueType> array(file, offset);
     array.start();
     for (array_index i = 0; i < array.size(); ++i)
     {

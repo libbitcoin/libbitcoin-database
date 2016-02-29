@@ -17,30 +17,30 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_HTDB_SLAB_IPP
-#define LIBBITCOIN_DATABASE_HTDB_SLAB_IPP
+#ifndef LIBBITCOIN_DATABASE_SLAB_HASH_TABLE_IPP
+#define LIBBITCOIN_DATABASE_SLAB_HASH_TABLE_IPP
 
-#include <stdexcept>
 #include <bitcoin/bitcoin.hpp>
-#include "../impl/htdb_slab_list_item.ipp"
+#include "../impl/slab_list.ipp"
 #include "../impl/remainder.ipp"
 
 namespace libbitcoin {
 namespace database {
 
 template <typename HashType>
-htdb_slab<HashType>::htdb_slab(htdb_slab_header& header, slab_manager& manager)
+slab_hash_table<HashType>::slab_hash_table(htdb_slab_header& header,
+    slab_manager& manager)
   : header_(header), manager_(manager)
 {
 }
 
 template <typename HashType>
-file_offset htdb_slab<HashType>::store(const HashType& key,
+file_offset slab_hash_table<HashType>::store(const HashType& key,
     write_function write, const size_t value_size)
 {
     // Store current bucket value.
     const auto old_begin = read_bucket_value(key);
-    htdb_slab_list_item<HashType> item(manager_, 0);
+    slab_list<HashType> item(manager_, 0);
     const auto new_begin = item.create(key, value_size, old_begin);
     write(item.data1());
 
@@ -52,7 +52,7 @@ file_offset htdb_slab<HashType>::store(const HashType& key,
 }
 
 template <typename HashType>
-uint8_t* htdb_slab<HashType>::get2(const HashType& key) const
+uint8_t* slab_hash_table<HashType>::get2(const HashType& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -60,7 +60,7 @@ uint8_t* htdb_slab<HashType>::get2(const HashType& key) const
     // Iterate through list...
     while (current != header_.empty)
     {
-        const htdb_slab_list_item<HashType> item(manager_, current);
+        const slab_list<HashType> item(manager_, current);
 
         // Found.
         if (item.compare(key))
@@ -80,11 +80,11 @@ uint8_t* htdb_slab<HashType>::get2(const HashType& key) const
 }
 
 template <typename HashType>
-bool htdb_slab<HashType>::unlink(const HashType& key)
+bool slab_hash_table<HashType>::unlink(const HashType& key)
 {
     // Find start item...
     const auto begin = read_bucket_value(key);
-    const htdb_slab_list_item<HashType> begin_item(manager_, begin);
+    const slab_list<HashType> begin_item(manager_, begin);
 
     // If start item has the key then unlink from buckets.
     if (begin_item.compare(key))
@@ -100,7 +100,7 @@ bool htdb_slab<HashType>::unlink(const HashType& key)
     // Iterate through list...
     while (current != header_.empty)
     {
-        const htdb_slab_list_item<HashType> item(manager_, current);
+        const slab_list<HashType> item(manager_, current);
 
         // Found, unlink current item from previous.
         if (item.compare(key))
@@ -123,7 +123,7 @@ bool htdb_slab<HashType>::unlink(const HashType& key)
 }
 
 template <typename HashType>
-array_index htdb_slab<HashType>::bucket_index(const HashType& key) const
+array_index slab_hash_table<HashType>::bucket_index(const HashType& key) const
 {
     const auto bucket = remainder(key, static_cast<uint32_t>(header_.size()));
     BITCOIN_ASSERT(bucket < header_.size());
@@ -131,7 +131,8 @@ array_index htdb_slab<HashType>::bucket_index(const HashType& key) const
 }
 
 template <typename HashType>
-file_offset htdb_slab<HashType>::read_bucket_value(const HashType& key) const
+file_offset slab_hash_table<HashType>::read_bucket_value(
+    const HashType& key) const
 {
     auto value = header_.read(bucket_index(key));
     static_assert(sizeof(value) == sizeof(file_offset), "Invalid size");
@@ -139,14 +140,15 @@ file_offset htdb_slab<HashType>::read_bucket_value(const HashType& key) const
 }
 
 template <typename HashType>
-void htdb_slab<HashType>::link(const HashType& key, const file_offset begin)
+void slab_hash_table<HashType>::link(const HashType& key,
+    const file_offset begin)
 {
     header_.write(bucket_index(key), begin);
 }
 
 template <typename HashType>
 template <typename ListItem>
-void htdb_slab<HashType>::release(const ListItem& item,
+void slab_hash_table<HashType>::release(const ListItem& item,
     const file_offset previous)
 {
     ListItem previous_item(manager_, previous);

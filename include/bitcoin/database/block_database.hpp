@@ -23,10 +23,10 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/disk/memory_map.hpp>
-#include <bitcoin/database/record/record_manager.hpp>
+#include <bitcoin/database/memory/memory_map.hpp>
+#include <bitcoin/database/hash_table/record_manager.hpp>
 #include <bitcoin/database/result/block_result.hpp>
-#include <bitcoin/database/slab/htdb_slab.hpp>
+#include <bitcoin/database/hash_table/slab_hash_table.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -97,7 +97,7 @@ public:
     ////size_t gap(size_t start) const;
 
 private:
-    typedef htdb_slab<hash_digest> slab_map;
+    typedef slab_hash_table<hash_digest> slab_map;
 
     /// Write position of tx.
     void write_position(const file_offset position);

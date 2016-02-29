@@ -17,46 +17,32 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/record/multimap_records.hpp>
+#ifndef LIBBITCOIN_DATABASE_RECORD_MULTIMAP_ITERABLE_HPP
+#define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_ITERABLE_HPP
+
+#include <bitcoin/database/define.hpp>
+#include <bitcoin/database/hash_table/record_list.hpp>
+#include <bitcoin/database/hash_table/record_multimap_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-multimap_records_iterator::multimap_records_iterator(
-    const linked_records& linked_rows, array_index index)
-  : linked_rows_(linked_rows), index_(index)
+/// Result of a multimap database query. This is a container wrapper allowing
+/// the values to be iteratable.
+class BCD_API record_multimap_iterable
 {
-}
+public:
+    record_multimap_iterable(const record_list& records, array_index begin);
 
-void multimap_records_iterator::operator++()
-{
-    index_ = linked_rows_.next(index_);
-}
-array_index multimap_records_iterator::operator*() const
-{
-    return index_;
-}
+    record_multimap_iterator begin() const;
+    record_multimap_iterator end() const;
 
-multimap_iterable::multimap_iterable(
-    const linked_records& linked_rows, array_index begin_index)
-  : linked_rows_(linked_rows), begin_index_(begin_index)
-{
-}
-
-multimap_records_iterator multimap_iterable::begin() const
-{
-    return multimap_records_iterator(linked_rows_, begin_index_);
-}
-multimap_records_iterator multimap_iterable::end() const
-{
-    return multimap_records_iterator(linked_rows_, linked_rows_.empty);
-}
-
-bool operator!=(
-    multimap_records_iterator iter_a, multimap_records_iterator iter_b)
-{
-    return iter_a.index_ != iter_b.index_;
-}
+private:
+    array_index begin_;
+    const record_list& records_;
+};
 
 } // namespace database
 } // namespace libbitcoin
+
+#endif

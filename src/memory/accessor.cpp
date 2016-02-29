@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/disk/allocator.hpp>
+#include <bitcoin/database/memory/accessor.hpp>
 
 #include <cstdint>
 #include <boost/thread.hpp>
@@ -27,38 +27,26 @@ namespace database {
 
 using namespace boost;
 
-allocator::allocator(uint8_t* data, shared_mutex& mutex)
+accessor::accessor(uint8_t* data, shared_mutex& mutex)
   : data_(data),
     mutex_(mutex),
-    upgradeable_lock_(mutex_)
+    shared_lock_(mutex_)
 {
-    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     // Begin Critical Section
-    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
 }
 
-uint8_t* allocator::buffer()
+uint8_t* accessor::buffer()
 {
     return data_;
 }
 
-// protected/friend
-upgrade_lock<shared_mutex>& allocator::get_upgradeable()
+accessor::~accessor()
 {
-    return upgradeable_lock_;
-}
-
-// protected/friend
-void allocator::set_data(uint8_t* value)
-{
-    data_ = value;
-}
-
-allocator::~allocator()
-{
-    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     // End Critical Section
-    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 } // namespace database

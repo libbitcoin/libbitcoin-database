@@ -59,7 +59,7 @@ spend_database::spend_database(const path& filename)
   : file_(filename), 
     header_(file_, 0),
     manager_(file_, allocation_offset, record_size),
-    map_(header_, manager_, filename.string())
+    map_(header_, manager_)
 {
     BITCOIN_ASSERT(file_.access()->buffer() != nullptr);
 }

@@ -17,14 +17,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MULTIMAP_RECORDS_HPP
-#define LIBBITCOIN_DATABASE_MULTIMAP_RECORDS_HPP
+#ifndef LIBBITCOIN_DATABASE_RECORD_MULTIMAP_HPP
+#define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_HPP
 
 #include <string>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/record/linked_records.hpp>
-#include <bitcoin/database/record/htdb_record.hpp>
+#include <bitcoin/database/hash_table/record_list.hpp>
+#include <bitcoin/database/hash_table/record_hash_table.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -36,64 +36,6 @@ BC_CONSTEXPR size_t map_record_fsize_multimap()
 }
 
 /**
- * Forward iterator for multimap record values.
- * After performing a lookup of a key, we can iterate the
- * multiple values in a for loop.
- *
- * @code
- *  for (const array_index idx: multimap.lookup(key))
- *      const auto record = linked_recs.get(idx);
- * @endcode
- */
-class BCD_API multimap_records_iterator
-{
-public:
-    multimap_records_iterator(const linked_records& linked_rows,
-        array_index index);
-
-    /**
-     * Next value in the chain.
-     */
-    void operator++();
-
-    /**
-     * Dereference the record index.
-     */
-    array_index operator*() const;
-
-private:
-    friend bool operator!=(multimap_records_iterator iter_a,
-        multimap_records_iterator iter_b);
-
-    const linked_records& linked_rows_;
-    array_index index_;
-};
-
-/**
- * Compare too multimap value iterators for (lack of) equivalency.
- */
-BCD_API bool operator!=(multimap_records_iterator iter_a,
-    multimap_records_iterator iter_b);
-
-/**
- * Result of a multimap database query. This is a container wrapper
- * allowing the values to be iteratable.
- */
-class BCD_API multimap_iterable
-{
-public:
-    multimap_iterable(const linked_records& linked_rows,
-        array_index begin_index);
-
-    multimap_records_iterator begin() const;
-    multimap_records_iterator end() const;
-
-private:
-    const linked_records& linked_rows_;
-    array_index begin_index_;
-};
-
-/**
  * A multimap hashtable where each key maps to a set of fixed size
  * values.
  *
@@ -103,14 +45,13 @@ private:
  * given a start index.
  */
 template <typename HashType>
-class multimap_records
+class record_multimap
 {
 public:
-    typedef htdb_record<HashType> htdb_type;
+    typedef record_hash_table<HashType> htdb_type;
     typedef std::function<void (uint8_t*)> write_function;
 
-    multimap_records(htdb_type& map, linked_records& linked_rows, 
-        const std::string& name);
+    record_multimap(htdb_type& map, record_list& linked_rows);
 
     /**
      * Lookup a key, returning an iterable result with multiple values.
@@ -137,14 +78,13 @@ private:
     // Create new key with a single value.
     void create_new(const HashType& key, write_function write);
 
-    const std::string name_;
     htdb_type& map_;
-    linked_records& linked_rows_;
+    record_list& records_;
 };
 
 } // namespace database
 } // namespace libbitcoin
 
-#include <bitcoin/database/impl/multimap_records.ipp>
+#include <bitcoin/database/impl/record_multimap.ipp>
 
 #endif

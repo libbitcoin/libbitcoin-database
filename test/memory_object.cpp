@@ -23,7 +23,7 @@
 using namespace bc;
 using namespace bc::database;
 
-BOOST_AUTO_TEST_SUITE(disk_object_tests)
+BOOST_AUTO_TEST_SUITE(memory_object_tests)
 
 BOOST_AUTO_TEST_CASE(slab__test)
 {
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(array__test)
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.resize(4 + 4 * 10);
 
-    disk_array<uint32_t, uint32_t> array(file, 0);
+    memory_array<uint32_t, uint32_t> array(file, 0);
     array.create(10);
     array.start();
 
@@ -87,12 +87,12 @@ BOOST_AUTO_TEST_CASE(linked_records__test)
     memory_map file("lrs");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.resize(4);
-    BC_CONSTEXPR size_t record_size = linked_record_offset + 6;
+    BC_CONSTEXPR size_t record_size = record_list_offset + 6;
     record_manager recs(file, 0, record_size);
     recs.create();
 
     recs.start();
-    linked_records lrs(recs);
+    record_list lrs(recs);
 
     array_index idx = lrs.create();
     BOOST_REQUIRE(idx == 0);
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(linked_records__test)
 
     size_t count = 0;
     array_index valid = idx;
-    while (idx != linked_records::empty)
+    while (idx != record_list::empty)
     {
         valid = idx;
         idx = lrs.next(idx);
@@ -121,8 +121,8 @@ BOOST_AUTO_TEST_CASE(linked_records__test)
 
 BOOST_AUTO_TEST_CASE(htdb_slab__test)
 {
-    data_base::touch_file("htdb_slab");
-    memory_map file("htdb_slab");
+    data_base::touch_file("slab_hash_table");
+    memory_map file("slab_hash_table");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.resize(4 + 8 * 100 + 8);
 
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(htdb_slab__test)
     alloc.start();
 
     typedef byte_array<4> tiny_hash;
-    htdb_slab<tiny_hash> ht(header, alloc);
+    slab_hash_table<tiny_hash> ht(header, alloc);
 
     auto write = [](uint8_t* data)
     {

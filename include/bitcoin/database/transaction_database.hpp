@@ -23,10 +23,10 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/disk/memory_map.hpp>
+#include <bitcoin/database/memory/memory_map.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
-#include <bitcoin/database/slab/htdb_slab.hpp>
-#include <bitcoin/database/slab/slab_manager.hpp>
+#include <bitcoin/database/hash_table/slab_hash_table.hpp>
+#include <bitcoin/database/hash_table/slab_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -81,7 +81,7 @@ public:
     void sync();
 
 private:
-    typedef htdb_slab<hash_digest> slab_map;
+    typedef slab_hash_table<hash_digest> slab_map;
 
     /// The hashtable used for looking up txs by hash.
     memory_map map_file_;

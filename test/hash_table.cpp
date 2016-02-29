@@ -57,7 +57,7 @@ void write_data()
     alloc.create();
     alloc.start();
 
-    htdb_slab<hash_digest> ht(header, alloc);
+    slab_hash_table<hash_digest> ht(header, alloc);
 
     std::default_random_engine engine;
     for (size_t i = 0; i < total_txs; ++i)
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(htdb_slab__write_read__test)
     slab_manager alloc(file, slab_start);
     alloc.start();
 
-    htdb_slab<hash_digest> ht(header, alloc);
+    slab_hash_table<hash_digest> ht(header, alloc);
 
     std::default_random_engine engine;
     for (size_t i = 0; i < total_txs; ++i)
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(htdb_record__32bit__test)
     alloc.create();
     alloc.start();
 
-    htdb_record<tiny_hash> ht(header, alloc, "test");
+    record_hash_table<tiny_hash> ht(header, alloc);
 
     tiny_hash key{ { 0xde, 0xad, 0xbe, 0xef } };
     auto write = [](uint8_t* data)
@@ -158,16 +158,16 @@ BOOST_AUTO_TEST_CASE(htdb_record__32bit__test)
     BOOST_REQUIRE(header.read(0) == header.empty);
     BOOST_REQUIRE(header.read(1) == 3);
 
-    htdb_record_list_item<tiny_hash> item(alloc, 3);
+    record_row<tiny_hash> item(alloc, 3);
     BOOST_REQUIRE(item.next_index() == 2);
-    htdb_record_list_item<tiny_hash> item1(alloc, 2);
+    record_row<tiny_hash> item1(alloc, 2);
     BOOST_REQUIRE(item1.next_index() == 1);
 
     // Should unlink record 1
     BOOST_REQUIRE(ht.unlink(key));
 
     BOOST_REQUIRE(header.read(1) == 3);
-    htdb_record_list_item<tiny_hash> item2(alloc, 2);
+    record_row<tiny_hash> item2(alloc, 2);
     BOOST_REQUIRE(item2.next_index() == 0);
 
     // Should unlink record 3 from buckets
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(htdb_record__64bit__test)
     alloc.create();
     alloc.start();
 
-    htdb_record<tiny_hash> ht(header, alloc, "test");
+    record_hash_table<tiny_hash> ht(header, alloc);
 
     tiny_hash key{ { 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef } };
     auto write = [](uint8_t* data)
@@ -238,16 +238,16 @@ BOOST_AUTO_TEST_CASE(htdb_record__64bit__test)
     BOOST_REQUIRE(header.read(0) == header.empty);
     BOOST_REQUIRE(header.read(1) == 3);
 
-    htdb_record_list_item<tiny_hash> item(alloc, 3);
+    record_row<tiny_hash> item(alloc, 3);
     BOOST_REQUIRE(item.next_index() == 2);
-    htdb_record_list_item<tiny_hash> item1(alloc, 2);
+    record_row<tiny_hash> item1(alloc, 2);
     BOOST_REQUIRE(item1.next_index() == 1);
 
     // Should unlink record 1
     BOOST_REQUIRE(ht.unlink(key));
 
     BOOST_REQUIRE(header.read(1) == 3);
-    htdb_record_list_item<tiny_hash> item2(alloc, 2);
+    record_row<tiny_hash> item2(alloc, 2);
     BOOST_REQUIRE(item2.next_index() == 0);
 
     // Should unlink record 3 from buckets
