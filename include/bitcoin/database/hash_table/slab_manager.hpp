@@ -57,7 +57,7 @@ public:
     void sync();
 
     /// Allocate a slab and return its logical offset, sync() after writing.
-    file_offset new_slab(size_t bytes_needed);
+    file_offset new_slab(size_t size);
 
     /// Return a const slab memory address from its file offest.
     const memory::ptr get(file_offset position) const;

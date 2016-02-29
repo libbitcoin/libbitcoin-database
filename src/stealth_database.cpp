@@ -99,7 +99,7 @@ stealth stealth_database::scan(const binary& filter, size_t from_height) const
 void stealth_database::store(uint32_t prefix, const stealth_row& row)
 {
     // Allocate new row.
-    const auto index = rows_.new_record();
+    const auto index = rows_.new_records(1);
     const auto memory = rows_.get(index);
 
     // Write data.
@@ -128,7 +128,7 @@ void stealth_database::sync()
 void stealth_database::write_index()
 {
     // Write index of first row into block lookup index.
-    const auto index = index_.new_record();
+    const auto index = index_.new_records(1);
     const auto memory = index_.get(index);
     auto serial = make_serializer(memory->buffer());
 

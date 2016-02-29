@@ -157,7 +157,7 @@ bool block_database::top(size_t& out_height) const
 
 void block_database::write_position(const file_offset position)
 {
-    const auto index = index_.new_record();
+    const auto index = index_.new_records(1);
     const auto memory = index_.get(index);
     auto serial = make_serializer(memory->buffer());
 

@@ -64,7 +64,7 @@ public:
     void set_count(const array_index value);
 
     /// Allocate a record and return its logical index, sync() after writing.
-    array_index new_record();
+    array_index new_records(size_t count);
 
     /// Return a record from its logical index.
     const memory::ptr get(array_index record) const;

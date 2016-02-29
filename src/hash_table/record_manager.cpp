@@ -64,16 +64,14 @@ void record_manager::sync()
     ///////////////////////////////////////////////////////////////////////////
 }
 
-array_index record_manager::new_record(/* size_t records=1 */)
+array_index record_manager::new_records(size_t count)
 {
-    static constexpr size_t records = 1;
-
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     boost::unique_lock<boost::shared_mutex> unique_lock(mutex_);
 
     const auto record_index = count_.load();
-    reserve(records);
+    reserve(count);
     return record_index;
     ///////////////////////////////////////////////////////////////////////////
 }

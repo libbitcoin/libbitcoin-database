@@ -78,7 +78,7 @@ array_index record_row<HashType>::create(const HashType& key,
     //   [ HashType ]
     //   [ next:4   ]
     //   [ value... ]
-    index_ = manager_.new_record();
+    index_ = manager_.new_records(1);
 
     // Write record.
     auto serial = make_serializer(raw_data(0));

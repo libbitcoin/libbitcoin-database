@@ -67,7 +67,7 @@ void slab_manager::sync()
 }
 
 // new record allocation
-file_offset slab_manager::new_slab(size_t bytes_needed)
+file_offset slab_manager::new_slab(size_t size)
 {
     BITCOIN_ASSERT_MSG(size_ > 0, "slab_manager::start() wasn't called.");
 
@@ -76,7 +76,7 @@ file_offset slab_manager::new_slab(size_t bytes_needed)
     boost::unique_lock<boost::shared_mutex> unique_lock(mutex_);
 
     const auto slab_position = size_.load();
-    reserve(bytes_needed);
+    reserve(size);
     return slab_position;
     ///////////////////////////////////////////////////////////////////////////
 }

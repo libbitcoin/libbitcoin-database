@@ -41,7 +41,7 @@ array_index record_list::insert(array_index next)
         "array_index incorrect size");
 
     // Create new record.
-    auto index = manager_.new_record();
+    auto index = manager_.new_records(1);
     const auto memory = manager_.get(index);
 
     // Write next value at first 4 bytes of record.

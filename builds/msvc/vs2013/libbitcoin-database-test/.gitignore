@@ -6,7 +6,7 @@ history_db_lookup
 history_db_rows
 record_hash_table
 slab_hash_table
-lrs
+record_list
 records
 slabs
 spend_db

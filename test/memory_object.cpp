@@ -73,18 +73,18 @@ BOOST_AUTO_TEST_CASE(record__test)
 
     recs.start();
 
-    array_index idx = recs.new_record();
+    array_index idx = recs.new_records(1);
     BOOST_REQUIRE(idx == 0);
-    idx = recs.new_record();
+    idx = recs.new_records(1);
     BOOST_REQUIRE(idx == 1);
     BOOST_REQUIRE(file.size() >= 2 * 10 + 4);
     recs.sync();
 }
 
-BOOST_AUTO_TEST_CASE(linked_records__test)
+BOOST_AUTO_TEST_CASE(record_list__test)
 {
-    data_base::touch_file("lrs");
-    memory_map file("lrs");
+    data_base::touch_file("record_list");
+    memory_map file("record_list");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.resize(4);
     BC_CONSTEXPR size_t record_size = record_list_offset + 6;
