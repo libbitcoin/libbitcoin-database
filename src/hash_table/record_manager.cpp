@@ -80,9 +80,9 @@ array_index record_manager::new_record(/* size_t records=1 */)
 
 const memory::ptr record_manager::get(array_index record) const
 {
-    const auto reader = file_.access();
-    reader->increment(start_ + record_to_position(record));
-    return reader;
+    const auto memory = file_.access();
+    memory->increment(start_ + record_to_position(record));
+    return memory;
 }
 
 array_index record_manager::count() const

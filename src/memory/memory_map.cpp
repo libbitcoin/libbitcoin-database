@@ -192,13 +192,14 @@ memory_accessor::ptr memory_map::access()
 // There is no guard against calling when stopped.
 memory_allocator::ptr memory_map::allocate(size_t size)
 {
-    auto allocation = std::make_shared<memory_allocator>(data_, mutex_);
+    // This establishes a shared lock until disposed.
+    auto allocator = std::make_shared<memory_allocator>(data_, mutex_);
 
     if (size > size_)
-        upgrade(size, allocation);
+        upgrade(size, allocator);
 
     // This maintains a shared lock until disposed.
-    return allocation;
+    return allocator;
 }
 
 // privates
@@ -206,11 +207,11 @@ memory_allocator::ptr memory_map::allocate(size_t size)
 // This resizes the map under an upgraded lock and updates the accessor.
 // The upgrade will freeze if a shared lock is leaked This method cannot
 // reenter the mutex, making deadlock impossible.
-void memory_map::upgrade(size_t size, memory_allocator::ptr allocation)
+void memory_map::upgrade(size_t size, memory_allocator::ptr allocator)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    memory_allocator::upgrade unique_lock(allocation->get_upgradeable());
+    memory_allocator::upgrade unique_lock(allocator->get_upgradeable());
 
     // Must retest under the unique lock.
     if (size > size_)
@@ -221,7 +222,7 @@ void memory_map::upgrade(size_t size, memory_allocator::ptr allocation)
                 "The file could not be resized, disk space may be low.");
 
         // Update the accessor with the updated memory map pointer.
-        allocation->set_data(data_);
+        allocator->set_data(data_);
     }
     ///////////////////////////////////////////////////////////////////////////
 }

@@ -67,7 +67,7 @@ private:
     bool unmap();
     bool reserve(size_t size);
     bool validate(size_t size);
-    void upgrade(size_t size, memory_allocator::ptr accessor);
+    void upgrade(size_t size, memory_allocator::ptr allocator);
 
     mutable boost::shared_mutex mutex_;
     const boost::filesystem::path filename_;
