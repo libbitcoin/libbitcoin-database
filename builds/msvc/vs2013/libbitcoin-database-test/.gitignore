@@ -4,9 +4,8 @@ block_db_lookup
 block_db_rows
 history_db_lookup
 history_db_rows
-htdb_records
-htdb_slab
-htdb_slabs
+record_hash_table
+slab_hash_table
 lrs
 records
 slabs
