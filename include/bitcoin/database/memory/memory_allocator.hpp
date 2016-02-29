@@ -50,10 +50,10 @@ public:
     // memory interface implementation
 
     /// Get the address indicated by the pointer.
-    virtual uint8_t* buffer();
+    uint8_t* buffer();
 
     /// Increment the pointer the specified number of bytes within the record.
-    virtual void increment(size_t value);
+    void increment(size_t value);
 
 protected:
 
