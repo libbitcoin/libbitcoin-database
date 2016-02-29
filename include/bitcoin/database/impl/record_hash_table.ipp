@@ -22,6 +22,7 @@
 
 #include <string>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 #include "../impl/record_row.ipp"
 #include "../impl/remainder.ipp"
 
@@ -43,14 +44,15 @@ void record_hash_table<HashType>::store(const HashType& key,
     const auto old_begin = read_bucket_value(key);
     record_row<HashType> item(manager_, 0);
     const auto new_begin = item.create(key, old_begin);
-    write(item.data1());
+    const auto memory = item.data();
+    write(memory->buffer());
 
     // Link record to header.
     link(key, new_begin);
 }
 
 template <typename HashType>
-uint8_t* record_hash_table<HashType>::get2(const HashType& key) const
+const memory::ptr record_hash_table<HashType>::find(const HashType& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -62,7 +64,7 @@ uint8_t* record_hash_table<HashType>::get2(const HashType& key) const
 
         // Found, return data.
         if (item.compare(key))
-            return item.data1();
+            return item.data();
 
         const auto previous = current;
         current = item.next_index();

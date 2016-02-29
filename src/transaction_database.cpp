@@ -28,7 +28,7 @@
 namespace libbitcoin {
 namespace database {
 
-constexpr size_t number_buckets = 100000000;
+BC_CONSTEXPR size_t number_buckets = 100000000;
 BC_CONSTEXPR size_t header_size = slab_hash_table_header_size(number_buckets);
 BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_slabs_size;
 
@@ -64,8 +64,8 @@ bool transaction_database::stop()
 
 transaction_result transaction_database::get(const hash_digest& hash) const
 {
-    const auto slab = map_.get2(hash);
-    return transaction_result(slab);
+    const auto memory = map_.find(hash);
+    return transaction_result(memory);
 }
 
 void transaction_database::store(size_t height, size_t index,

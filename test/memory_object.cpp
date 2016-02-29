@@ -145,14 +145,17 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__test)
         data[3] = 99;
     };
     ht.store(tiny_hash{ { 0xde, 0xad, 0xbe, 0xef } }, write, 8);
-    auto slab = ht.get2(tiny_hash{ { 0xde, 0xad, 0xbe, 0xef } });
-    BOOST_REQUIRE(slab);
-    BOOST_REQUIRE(slab[0] == 110);
-    BOOST_REQUIRE(slab[1] == 110);
-    BOOST_REQUIRE(slab[2] == 4);
-    BOOST_REQUIRE(slab[3] == 99);
-    slab = ht.get2(tiny_hash{ { 0xde, 0xad, 0xbe, 0xee } });
-    BOOST_REQUIRE(!slab);
+    const auto memory1 = ht.find(tiny_hash{ { 0xde, 0xad, 0xbe, 0xef } });
+    const auto slab1 = memory1->buffer();
+    BOOST_REQUIRE(slab1);
+    BOOST_REQUIRE(slab1[0] == 110);
+    BOOST_REQUIRE(slab1[1] == 110);
+    BOOST_REQUIRE(slab1[2] == 4);
+    BOOST_REQUIRE(slab1[3] == 99);
+
+    const auto memory2 = ht.find(tiny_hash{ { 0xde, 0xad, 0xbe, 0xee } });
+    const auto slab2 = memory1->buffer();
+    BOOST_REQUIRE(slab2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

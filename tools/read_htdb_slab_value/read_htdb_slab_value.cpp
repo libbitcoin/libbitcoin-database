@@ -14,7 +14,8 @@ uint8_t* get(slab_hash_table_header& header, slab_manager& alloc,
     hash_type key;
     BITCOIN_ASSERT(key.size() == key_data.size());
     std::copy(key_data.begin(), key_data.end(), key.begin());
-    return ht.get2(key);
+    const auto memory = ht.get(key);
+    return memory->buffer();
 }
 
 int main(int argc, char** argv)

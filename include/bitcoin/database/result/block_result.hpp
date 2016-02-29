@@ -24,6 +24,7 @@
 #include <cstddef>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -32,7 +33,7 @@ namespace database {
 class BCD_API block_result
 {
 public:
-    block_result(const uint8_t* slab);
+    block_result(const memory::ptr slab);
 
     /// True if this block result is valid (found).
     operator bool() const;
@@ -50,7 +51,7 @@ public:
     hash_digest transaction_hash(size_t index) const;
 
 private:
-    const uint8_t* slab_;
+    const memory::ptr slab_;
 };
 
 } // namespace database

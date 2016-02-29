@@ -20,6 +20,8 @@
 #ifndef LIBBITCOIN_DATABASE_RECORD_ROW_IPP
 #define LIBBITCOIN_DATABASE_RECORD_ROW_IPP
 
+#include <bitcoin/database/memory/memory.hpp>
+
 namespace libbitcoin {
 namespace database {
 
@@ -42,21 +44,21 @@ public:
 
     array_index create(const HashType& key, const array_index next);
 
-    // Does this match?
+    /// Does this match?
     bool compare(const HashType& key) const;
 
-    // The actual user data.
-    uint8_t* data1() const;
+    /// The actual user data.
+    const memory::ptr data() const;
 
-    // Position of next item in the chained list.
+    /// Position of next item in the chained list.
     array_index next_index() const;
 
-    // Write a new next index.
+    /// Write a new next index.
     void write_next_index(array_index next);
 
 private:
-    uint8_t* raw_next_data() const;
-    uint8_t* raw_data(file_offset offset) const;
+    const memory::ptr raw_next_data() const;
+    const memory::ptr raw_data(file_offset offset) const;
 
     array_index index_;
     record_manager& manager_;
@@ -81,7 +83,9 @@ array_index record_row<HashType>::create(const HashType& key,
     index_ = manager_.new_records(1);
 
     // Write record.
-    auto serial = make_serializer(raw_data(0));
+    const auto memory = raw_data(0);
+    const auto record = memory->buffer();
+    auto serial = make_serializer(record);
     serial.write_data(key);
 
     // MUST BE ATOMIC
@@ -93,12 +97,13 @@ template <typename HashType>
 bool record_row<HashType>::compare(const HashType& key) const
 {
     // Key data is at the start.
-    const auto key_data = raw_data(0);
+    const auto memory = raw_data(0);
+    const auto key_data = memory->buffer();
     return std::equal(key.begin(), key.end(), key_data);
 }
 
 template <typename HashType>
-uint8_t* record_row<HashType>::data1() const
+const memory::ptr record_row<HashType>::data() const
 {
     // Value data is at the end.
     return raw_data(value_begin);
@@ -107,29 +112,30 @@ uint8_t* record_row<HashType>::data1() const
 template <typename HashType>
 array_index record_row<HashType>::next_index() const
 {
-    const auto next_data = raw_next_data();
-    return from_little_endian_unsafe<array_index>(next_data);
+    const auto memory = raw_next_data();
+    return from_little_endian_unsafe<array_index>(memory->buffer());
 }
 
 template <typename HashType>
 void record_row<HashType>::write_next_index(array_index next)
 {
-    const auto next_data = raw_next_data();
-    auto serial = make_serializer(next_data);
+    const auto memory = raw_next_data();
+    auto serial = make_serializer(memory->buffer());
 
     // MUST BE ATOMIC
     serial.write_4_bytes_little_endian(next);
 }
 
 template <typename HashType>
-uint8_t* record_row<HashType>::raw_data(file_offset offset) const
+const memory::ptr record_row<HashType>::raw_data(file_offset offset) const
 {
     const auto memory = manager_.get(index_);
-    return memory->buffer() + offset;
+    memory->increment(offset);
+    return memory;
 }
 
 template <typename HashType>
-uint8_t* record_row<HashType>::raw_next_data() const
+const memory::ptr record_row<HashType>::raw_next_data() const
 {
     // Next position is after key data.
     return raw_data(hash_size);

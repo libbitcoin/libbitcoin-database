@@ -132,28 +132,8 @@ history history_database::get(const short_hash& key, size_t limit,
     };
 
     // Read a row from the data for the history list.
-    const auto read_row = [](const uint8_t* data/*, std::streamsize length*/)
+    const auto read_row = [](const uint8_t* data)
     {
-//        boost::iostreams::stream<byte_pointer_array_source> istream(data, length);
-//        istream.exceptions(std::ios_base::failbit);
-//
-//        chain::history_row result
-//        {
-//            // output or spend?
-//            marker_to_id(read_byte(istream)),
-//            // point
-//            chain::point::manager_from_data(istream),
-//            // height
-//            read_4_bytes(istream),
-//            // value or checksum
-//            read_8_bytes(istream)
-//        };
-//
-////        if (!istream)
-////            throw end_of_stream();
-//
-//        return result;
-
         auto deserial = make_deserializer_unsafe(data);
         return history_row
         {
@@ -180,14 +160,15 @@ history history_database::get(const short_hash& key, size_t limit,
         if (limit && result.size() >= limit)
             break;
 
-        const auto data = records_.get1(index);
+        const auto memory = records_.get(index);
+        const auto data = memory->buffer();
 
         // Skip rows below from_height (if specified).
         if (from_height && read_height(data) < from_height)
             continue;
 
         // Read this row into the list.
-        result.emplace_back(read_row(data /*, value_size*/));
+        result.emplace_back(read_row(data));
     }
 
     return result;

@@ -24,6 +24,7 @@
 #include <cstdint>
 #include <bitcoin/database/hash_table/hash_table.hpp>
 #include <bitcoin/database/hash_table/slab_manager.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -64,8 +65,9 @@ public:
     file_offset store(const HashType& key, write_function write,
         const size_t value_size);
 
-    /// Return the slab for a given hash.
-    uint8_t* get2(const HashType& key) const;
+    /// Find the slab for a given hash.
+    /// Returns a null pointer if not found.
+    const memory::ptr find(const HashType& key) const;
 
     /// Delete a key-value pair from the hashtable by unlinking the node.
     bool unlink(const HashType& key);

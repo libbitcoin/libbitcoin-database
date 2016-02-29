@@ -88,13 +88,13 @@ block_result block_database::get(const size_t height) const
 
     const auto position = read_position(height);
     const auto memory = manager_.get(position);
-    return block_result(memory->buffer());
+    return block_result(memory);
 }
 
 block_result block_database::get(const hash_digest& hash) const
 {
-    const auto slab = map_.get2(hash);
-    return block_result(slab);
+    const auto memory = map_.find(hash);
+    return block_result(memory);
 }
 
 void block_database::store(const chain::block& block)
@@ -107,7 +107,7 @@ void block_database::store(const chain::block& block)
     const auto write = [&](uint8_t* data)
     {
         auto serial = make_serializer(data);
-        data_chunk header_data = block.header.to_data(false);
+        const auto header_data = block.header.to_data(false);
         serial.write_data(header_data);
         serial.write_4_bytes_little_endian(height);
         serial.write_4_bytes_little_endian(number_txs32);

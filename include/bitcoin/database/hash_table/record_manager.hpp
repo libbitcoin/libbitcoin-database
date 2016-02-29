@@ -63,7 +63,7 @@ public:
     /// Change the number of records of this container (truncation).
     void set_count(const array_index value);
 
-    /// Allocate a record and return its logical index, sync() after writing.
+    /// Allocate records and return first logical index, sync() after writing.
     array_index new_records(size_t count);
 
     /// Return memory object for the record at the specified index.

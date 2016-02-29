@@ -41,6 +41,25 @@ public:
     virtual void increment(size_t value) = 0;
 };
 
+/////// This interface defines remap safe unrestricted access to a memory map.
+////class BCD_API memory_undefined
+////  : public memory
+////{
+////public:
+////
+////    /// Get the address indicated by the pointer.
+////    uint8_t* buffer()
+////    {
+////        return nullptr;
+////    };
+////
+////    /// Increment the pointer the specified number of bytes within the record.
+////    void increment(size_t value)
+////    {
+////        BITCOIN_ASSERT(false);
+////    };
+////};
+
 } // namespace database
 } // namespace libbitcoin
 

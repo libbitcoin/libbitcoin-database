@@ -35,10 +35,12 @@ record_multimap<HashType>::record_multimap(record_hash_table_type& map,
 template <typename HashType>
 array_index record_multimap<HashType>::lookup(const HashType& key) const
 {
-    const auto start_info = map_.get2(key);
-    if (!start_info)
+    const auto memory = map_.find(key);
+
+    if (!memory)
         return records_.empty;
 
+    const auto start_info = memory->buffer();
     const auto first = from_little_endian_unsafe<array_index>(start_info);
     return first;
 }
@@ -47,24 +49,30 @@ template <typename HashType>
 void record_multimap<HashType>::add_row(const HashType& key,
     write_function write)
 {
-    auto start_info = map_.get2(key);
-    if (!start_info)
+    const auto memory = map_.find(key);
+
+    if (!memory)
     {
         create_new(key, write);
         return;
     }
 
+    const auto start_info = memory->buffer();
     add_to_list(start_info, write);
 }
 
 template <typename HashType>
 void record_multimap<HashType>::delete_last_row(const HashType& key)
 {
-    auto start_info = map_.get2(key);
-    BITCOIN_ASSERT(start_info != nullptr);
+    const auto memory = map_.find(key);
+    BITCOIN_ASSERT_MSG(memory, "The row to delete was not found.");
+
+    const auto start_info = memory->buffer();
     const auto old_begin = from_little_endian_unsafe<array_index>(start_info);
+
     BITCOIN_ASSERT(old_begin != records_.empty);
     const auto new_begin = records_.next(old_begin);
+
     if (new_begin == records_.empty)
     {
         DEBUG_ONLY(bool success =) map_.unlink(key);
@@ -72,9 +80,8 @@ void record_multimap<HashType>::delete_last_row(const HashType& key)
         return;
     }
 
-    auto serial = make_serializer(start_info);
-
     // MUST BE ATOMIC
+    auto serial = make_serializer(start_info);
     serial.write_4_bytes_little_endian(new_begin);
 }
 
@@ -84,8 +91,8 @@ void record_multimap<HashType>::add_to_list(uint8_t* start_info,
 {
     const auto old_begin = from_little_endian_unsafe<array_index>(start_info);
     const auto new_begin = records_.insert(old_begin);
-    auto record = records_.get1(new_begin);
-    write(record);
+    const auto memory = records_.get(new_begin);
+    write(memory->buffer());
     auto serial = make_serializer(start_info);
 
     // MUST BE ATOMIC
@@ -97,13 +104,12 @@ void record_multimap<HashType>::create_new(const HashType& key,
     write_function write)
 {
     const auto first = records_.create();
-    auto record = records_.get1(first);
-    write(record);
+    const auto memory = records_.get(first);
+    write(memory->buffer());
     const auto write_start_info = [first](uint8_t* data)
     {
-        auto serial = make_serializer(data);
-
         // MUST BE ATOMIC
+        auto serial = make_serializer(data);
         serial.write_4_bytes_little_endian(first);
     };
     map_.store(key, write_start_info);

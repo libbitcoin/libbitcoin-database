@@ -25,6 +25,7 @@
 #include <tuple>
 #include <bitcoin/database/hash_table/hash_table.hpp>
 #include <bitcoin/database/hash_table/record_manager.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -69,8 +70,9 @@ public:
     /// number of bytes (record_size - hash_size - sizeof(array_index)).
     void store(const HashType& key, write_function write);
 
-    /// Return the record for a given hash.
-    uint8_t* get2(const HashType& key) const;
+    /// Find the record for a given hash.
+    /// Returns a null pointer if not found.
+    const memory::ptr find(const HashType& key) const;
 
     /// Delete a key-value pair from the hashtable by unlinking the node.
     bool unlink(const HashType& key);

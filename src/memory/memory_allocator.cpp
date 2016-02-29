@@ -44,7 +44,7 @@ uint8_t* memory_allocator::buffer()
 
 void memory_allocator::increment(size_t value)
 {
-    BITCOIN_ASSERT(data_ <= bc::max_size_t - value);
+    BITCOIN_ASSERT((size_t)data_ <= bc::max_size_t - value);
     data_ += value;
 }
 

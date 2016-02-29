@@ -85,12 +85,13 @@ bool spend_database::stop()
 spend spend_database::get(const output_point& outpoint) const
 {
     const auto key = output_to_hash(outpoint);
-    const auto record = map_.get2(key);
+    const auto memory = map_.find(key);
 
-    if (record == nullptr)
+    if (!memory)
         return { false, 0, {} };
 
     hash_digest hash;
+    const auto record = memory->buffer();
     std::copy(record, record + hash_size, hash.begin());
     const auto index = from_little_endian_unsafe<uint32_t>(record + hash_size);
 

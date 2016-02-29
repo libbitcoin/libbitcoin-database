@@ -101,9 +101,10 @@ void stealth_database::store(uint32_t prefix, const stealth_row& row)
     // Allocate new row.
     const auto index = rows_.new_records(1);
     const auto memory = rows_.get(index);
+    const auto data = memory->buffer();
 
     // Write data.
-    auto serial = make_serializer(memory->buffer());
+    auto serial = make_serializer(data);
     serial.write_4_bytes_little_endian(prefix);
     serial.write_hash(row.ephemeral_key);
     serial.write_short_hash(row.address);

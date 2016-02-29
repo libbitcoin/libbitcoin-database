@@ -20,6 +20,8 @@
 #ifndef LIBBITCOIN_DATABASE_SLAB_LIST_IPP
 #define LIBBITCOIN_DATABASE_SLAB_LIST_IPP
 
+#include <bitcoin/database/memory/memory.hpp>
+
 namespace libbitcoin {
 namespace database {
 
@@ -43,21 +45,21 @@ public:
     file_offset create(const HashType& key, const size_t value_size,
         const file_offset next);
 
-    // Does this match?
+    /// Does this match?
     bool compare(const HashType& key) const;
 
-    // The actual user data.
-    uint8_t* data1() const;
+    /// The actual user data.
+    const memory::ptr data() const;
 
-    // Position of next item in the chained list.
+    /// Position of next item in the chained list.
     file_offset next_position() const;
 
-    // Write a new next position.
+    /// Write a new next position.
     void write_next_position(file_offset next);
 
 private:
-    uint8_t* raw_next_data() const;
-    uint8_t* raw_data(file_offset offset) const;
+    const memory::ptr raw_next_data() const;
+    const memory::ptr raw_data(file_offset offset) const;
 
     file_offset position_;
     slab_manager& manager_;
@@ -85,7 +87,9 @@ file_offset slab_list<HashType>::create(const HashType& key,
     position_ = manager_.new_slab(slab_size);
 
     // Write to slab.
-    auto serial = make_serializer(raw_data(0));
+    const auto memory = raw_data(0);
+    const auto key_data = memory->buffer();
+    auto serial = make_serializer(key_data);
     serial.write_data(key);
 
     // MUST BE ATOMIC
@@ -97,12 +101,13 @@ template <typename HashType>
 bool slab_list<HashType>::compare(const HashType& key) const
 {
     // Key data is at the start.
-    const auto key_data = raw_data(0);
+    const auto memory = raw_data(0);
+    const auto key_data = memory->buffer();
     return std::equal(key.begin(), key.end(), key_data);
 }
 
 template <typename HashType>
-uint8_t* slab_list<HashType>::data1() const
+const memory::ptr slab_list<HashType>::data() const
 {
     // Value data is at the end.
     return raw_data(value_begin);
@@ -111,29 +116,30 @@ uint8_t* slab_list<HashType>::data1() const
 template <typename HashType>
 file_offset slab_list<HashType>::next_position() const
 {
-    const auto next_data = raw_next_data();
-    return from_little_endian_unsafe<file_offset>(next_data);
+    const auto memory = raw_next_data();
+    return from_little_endian_unsafe<file_offset>(memory->buffer());
 }
 
 template <typename HashType>
 void slab_list<HashType>::write_next_position(file_offset next)
 {
-    auto next_data = raw_next_data();
-    auto serial = make_serializer(next_data);
+    const auto memory = raw_next_data();
+    auto serial = make_serializer(memory->buffer());
 
     // MUST BE ATOMIC
     serial.write_8_bytes_little_endian(next);
 }
 
 template <typename HashType>
-uint8_t* slab_list<HashType>::raw_data(file_offset offset) const
+const memory::ptr slab_list<HashType>::raw_data(file_offset offset) const
 {
     const auto memory = manager_.get(position_);
-    return memory->buffer() + offset;
+    memory->increment(offset);
+    return memory;
 }
 
 template <typename HashType>
-uint8_t* slab_list<HashType>::raw_next_data() const
+const memory::ptr slab_list<HashType>::raw_next_data() const
 {
     // Next position is after key data.
     return raw_data(hash_size);

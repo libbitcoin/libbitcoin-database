@@ -20,8 +20,10 @@
 #ifndef LIBBITCOIN_DATABASE_RECORD_LIST_HPP
 #define LIBBITCOIN_DATABASE_RECORD_LIST_HPP
 
+#include <cstdint>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/hash_table/record_manager.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -50,7 +52,7 @@ public:
     array_index next(array_index index) const;
 
     /// Get underlying record data.
-    uint8_t* get1(array_index index) const; 
+    const memory::ptr get(array_index index) const;
 
 private:
     record_manager& manager_;

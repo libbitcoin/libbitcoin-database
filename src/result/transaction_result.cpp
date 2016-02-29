@@ -40,33 +40,36 @@ chain::transaction deserialize_tx(const Iterator first)
     return tx;
 }
 
-transaction_result::transaction_result(const uint8_t* slab)
+transaction_result::transaction_result(const memory::ptr slab)
   : slab_(slab)
 {
 }
 
 transaction_result::operator bool() const
 {
-    return slab_ != nullptr;
+    return static_cast<bool>(slab_);
 }
 
 size_t transaction_result::height() const
 {
-    BITCOIN_ASSERT(slab_ != nullptr);
-    return from_little_endian_unsafe<uint32_t>(slab_);
+    BITCOIN_ASSERT(slab_);
+    const auto memory = slab_->buffer();
+    return from_little_endian_unsafe<uint32_t>(memory);
 }
 
 size_t transaction_result::index() const
 {
-    BITCOIN_ASSERT(slab_ != nullptr);
-    return from_little_endian_unsafe<uint32_t>(slab_ + height_size);
+    BITCOIN_ASSERT(slab_);
+    const auto memory = slab_->buffer();
+    return from_little_endian_unsafe<uint32_t>(memory + height_size);
 }
 
 chain::transaction transaction_result::transaction() const
 {
-    BITCOIN_ASSERT(slab_ != nullptr);
-    return deserialize_tx(slab_ + height_size + index_size);
-    //// return deserialize_tx(slab_ + 8, size_limit_ - 8);
+    BITCOIN_ASSERT(slab_);
+    const auto memory = slab_->buffer();
+    return deserialize_tx(memory + height_size + index_size);
+    //// return deserialize_tx(memory + 8, size_limit_ - 8);
 }
 } // namespace database
 } // namespace libbitcoin

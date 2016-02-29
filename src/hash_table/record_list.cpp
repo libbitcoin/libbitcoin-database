@@ -19,7 +19,9 @@
  */
 #include <bitcoin/database/hash_table/record_list.hpp>
 
+#include <cstdint>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -27,6 +29,8 @@ namespace database {
 record_list::record_list(record_manager& manager)
   : manager_(manager)
 {
+    static_assert(sizeof(array_index) == sizeof(uint32_t),
+        "array_index incorrect size");
 }
 
 array_index record_list::create()
@@ -37,9 +41,6 @@ array_index record_list::create()
 
 array_index record_list::insert(array_index next)
 {
-    static_assert(sizeof(array_index) == sizeof(uint32_t),
-        "array_index incorrect size");
-
     // Create new record.
     auto index = manager_.new_records(1);
     const auto memory = manager_.get(index);
@@ -58,10 +59,11 @@ array_index record_list::next(array_index index) const
     return from_little_endian_unsafe<array_index>(memory->buffer());
 }
 
-uint8_t* record_list::get1(array_index index) const
+const memory::ptr record_list::get(array_index index) const
 {
     const auto memory = manager_.get(index);
-    return memory->buffer() + sizeof(array_index);
+    memory->increment(sizeof(array_index));
+    return memory;
 }
 
 } // namespace database

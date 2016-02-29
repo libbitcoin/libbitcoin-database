@@ -21,6 +21,7 @@
 #define LIBBITCOIN_DATABASE_SLAB_HASH_TABLE_IPP
 
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 #include "../impl/slab_list.ipp"
 #include "../impl/remainder.ipp"
 
@@ -42,7 +43,8 @@ file_offset slab_hash_table<HashType>::store(const HashType& key,
     const auto old_begin = read_bucket_value(key);
     slab_list<HashType> item(manager_, 0);
     const auto new_begin = item.create(key, value_size, old_begin);
-    write(item.data1());
+    const auto memory = item.data();
+    write(memory->buffer());
 
     // Link record to header.
     link(key, new_begin);
@@ -52,7 +54,7 @@ file_offset slab_hash_table<HashType>::store(const HashType& key,
 }
 
 template <typename HashType>
-uint8_t* slab_hash_table<HashType>::get2(const HashType& key) const
+const memory::ptr slab_hash_table<HashType>::find(const HashType& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -64,7 +66,7 @@ uint8_t* slab_hash_table<HashType>::get2(const HashType& key) const
 
         // Found.
         if (item.compare(key))
-            return item.data1();
+            return item.data();
 
         const auto previous = current;
         current = item.next_position();
