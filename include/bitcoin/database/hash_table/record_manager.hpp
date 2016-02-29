@@ -66,7 +66,7 @@ public:
     /// Allocate a record and return its logical index, sync() after writing.
     array_index new_records(size_t count);
 
-    /// Return a record from its logical index.
+    /// Return memory object for the record at the specified index.
     const memory::ptr get(array_index record) const;
 
 private:

@@ -59,7 +59,7 @@ public:
     /// Allocate a slab and return its logical offset, sync() after writing.
     file_offset new_slab(size_t size);
 
-    /// Return a const slab memory address from its file offest.
+    /// Return memory object for the slab at the specified offset.
     const memory::ptr get(file_offset position) const;
 
 private:
