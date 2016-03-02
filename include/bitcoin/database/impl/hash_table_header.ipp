@@ -17,43 +17,44 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MEMORY_ARRAY_IPP
-#define LIBBITCOIN_DATABASE_MEMORY_ARRAY_IPP
+#ifndef LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_IPP
+#define LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_IPP
 
+////#include <cstring>
 #include <bitcoin/bitcoin.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 template <typename IndexType, typename ValueType>
-hash_table<IndexType, ValueType>::hash_table(memory_map& file,
-    file_offset header_size)
-  : file_(file), size_(0), header_size_(header_size)
+hash_table_header<IndexType, ValueType>::hash_table_header(memory_map& file)
+  : file_(file), size_(0)
 {
     static_assert(std::is_unsigned<ValueType>::value,
-        "hash_table only works with unsigned types");
+        "hash_table_header only works with unsigned types");
 }
 
 template <typename IndexType, typename ValueType>
-void hash_table<IndexType, ValueType>::create(IndexType size)
+void hash_table_header<IndexType, ValueType>::create(IndexType size)
 {
     // Calculate the minimum file size.
-    const auto minimum_file_size = header_size_ + item_position(size);
+    const auto minimum_file_size = item_position(size);
 
     // The memory object must remain in scope until the end of the block.
     const auto memory = file_.allocate(minimum_file_size);
-    const auto size_address = memory->buffer() + header_size_;
+    const auto size_address = memory->buffer();
 
-    // MUST BE ATOMIC
-    auto serial = make_serializer(size_address);
+    auto serial = make_serializer(memory->buffer());
     serial.write_little_endian(size);
 
+    //// optimization?
+    ////memset(size_address + sizeof(IndexType), 0xff, size * sizeof(ValueType));
     for (IndexType index = 0; index < size; ++index)
         serial.write_little_endian(empty);
 }
 
 template <typename IndexType, typename ValueType>
-void hash_table<IndexType, ValueType>::start()
+void hash_table_header<IndexType, ValueType>::start()
 {
     BITCOIN_ASSERT(sizeof(IndexType) <= file_.size());
 
@@ -65,13 +66,13 @@ void hash_table<IndexType, ValueType>::start()
 }
 
 template <typename IndexType, typename ValueType>
-ValueType hash_table<IndexType, ValueType>::read(IndexType index) const
+ValueType hash_table_header<IndexType, ValueType>::read(IndexType index) const
 {
-    BITCOIN_ASSERT_MSG(size_ != 0, "hash_table::start() wasn't called.");
+    BITCOIN_ASSERT_MSG(size_ != 0, "hash_table_header not started.");
     BITCOIN_ASSERT(index < size_);
 
     // Find the item in the file.
-    const auto offset = header_size_ + item_position(index);
+    const auto offset = item_position(index);
 
     // The memory accessor remain in scope until the end of the block.
     const auto memory = file_.access();
@@ -82,13 +83,14 @@ ValueType hash_table<IndexType, ValueType>::read(IndexType index) const
 }
 
 template <typename IndexType, typename ValueType>
-void hash_table<IndexType, ValueType>::write(IndexType index, ValueType value)
+void hash_table_header<IndexType, ValueType>::write(IndexType index,
+    ValueType value)
 {
-    BITCOIN_ASSERT_MSG(size_ > 0, "hash_table::start() wasn't called.");
+    BITCOIN_ASSERT_MSG(size_ > 0, "hash_table_header not started.");
     BITCOIN_ASSERT(index < size_);
 
     // Find the item in the file.
-    const auto position = header_size_ + item_position(index);
+    const auto position = item_position(index);
 
     // Calculate the minimum file size.
     const auto minimum_file_size = position + sizeof(value);
@@ -103,13 +105,13 @@ void hash_table<IndexType, ValueType>::write(IndexType index, ValueType value)
 }
 
 template <typename IndexType, typename ValueType>
-IndexType hash_table<IndexType, ValueType>::size() const
+IndexType hash_table_header<IndexType, ValueType>::size() const
 {
     return size_;
 }
 
 template <typename IndexType, typename ValueType>
-file_offset hash_table<IndexType, ValueType>::item_position(
+file_offset hash_table_header<IndexType, ValueType>::item_position(
     IndexType index) const
 {
     return sizeof(IndexType) + index * sizeof(ValueType);

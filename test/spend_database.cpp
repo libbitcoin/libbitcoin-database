@@ -18,13 +18,35 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
 #include <bitcoin/database.hpp>
 
+using namespace boost::system;
+using namespace boost::filesystem;
 using namespace bc;
 using namespace bc::chain;
 using namespace bc::database;
 
-BOOST_AUTO_TEST_SUITE(database_tests)
+#define DIRECTORY "spend_database"
+
+class spend_database_directory_setup_fixture
+{
+public:
+    spend_database_directory_setup_fixture()
+    {
+        error_code ec;
+        remove_all(DIRECTORY, ec);
+        BOOST_REQUIRE(create_directories(DIRECTORY, ec));
+    }
+
+    ////~spend_database_directory_setup_fixture()
+    ////{
+    ////    error_code ec;
+    ////    remove_all(DIRECTORY, ec);
+    ////}
+};
+
+BOOST_FIXTURE_TEST_SUITE(database_tests, spend_database_directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(spend_database__test)
 {
@@ -38,8 +60,8 @@ BOOST_AUTO_TEST_CASE(spend_database__test)
     chain::input_point value3{ hash_literal("3cc768bbaef30587c72c6eba8dbf6aeec4ef24172ae6fe357f2e24c2b0fa44d5"), 0 };
     chain::input_point value4{ hash_literal("4742b3eac32d35961f9da9d42d495ff13cc768bbaef30587c72c6eba8dbf6aee"), 0 };
 
-    data_base::touch_file("spend_db");
-    spend_database db("spend_db");
+    data_base::touch_file(DIRECTORY "/spend");
+    spend_database db(DIRECTORY "/spend");
     db.create();
     db.start();
     db.store(key1, value1);

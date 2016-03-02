@@ -23,6 +23,7 @@
 #include <stdexcept>
 #include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/memory_map.hpp>
 
 /// -- file --
@@ -63,10 +64,7 @@ void record_manager::create()
     if (record_count_ != 0)
         throw std::runtime_error("Existing file record count is nonzero.");
 
-    record_count_ = 0;
-
-    // We only allocate here so as to prevent the need to call on sync.
-    file_.allocate(header_size_ + sizeof(file_offset));
+    file_.allocate(header_size_ + record_to_position(record_count_));
 
     write_count();
     ///////////////////////////////////////////////////////////////////////////
@@ -81,8 +79,8 @@ void record_manager::start()
     read_count();
     const auto minimum = header_size_ + record_to_position(record_count_);
 
-    if (minimum > file_.size())
-        throw std::runtime_error("Records size exceeds file size.");
+    ////if (minimum > file_.size())
+    ////    throw std::runtime_error("Records size exceeds file size.");
     ///////////////////////////////////////////////////////////////////////////
 }
 

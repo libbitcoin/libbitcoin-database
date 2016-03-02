@@ -32,13 +32,11 @@ BC_CONSTEXPR size_t number_buckets = 100000000;
 BC_CONSTEXPR size_t header_size = slab_hash_table_header_size(number_buckets);
 BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_slabs_size;
 
-BC_CONSTEXPR file_offset allocation_offset = header_size;
-
 transaction_database::transaction_database(
     const boost::filesystem::path& map_filename)
   : map_file_(map_filename), 
-    header_(map_file_, 0),
-    manager_(map_file_, allocation_offset),
+    header_(map_file_),
+    manager_(map_file_, header_size),
     map_(header_, manager_)
 {
     BITCOIN_ASSERT(map_file_.access()->buffer() != nullptr);

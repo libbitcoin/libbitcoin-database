@@ -22,14 +22,14 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <bitcoin/database/hash_table/hash_table.hpp>
+#include <bitcoin/database/hash_table/hash_table_header.hpp>
 #include <bitcoin/database/hash_table/slab_manager.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-typedef hash_table<array_index, file_offset> slab_hash_table_header;
+typedef hash_table_header<array_index, file_offset> slab_hash_table_header;
 
 /**
  * A hashtable mapping hashes to variable sized values (slabs).

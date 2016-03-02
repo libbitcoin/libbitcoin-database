@@ -98,7 +98,7 @@
     <ClCompile Include="..\..\..\..\test\transaction_database.cpp" />
     <ClCompile Include="..\..\..\..\test\history_database.cpp" />
     <ClCompile Include="..\..\..\..\test\spend_database.cpp" />
-    <ClCompile Include="..\..\..\..\test\memory_object.cpp" />
+    <ClCompile Include="..\..\..\..\test\structure.cpp" />
     <ClCompile Include="..\..\..\..\test\hash_table.cpp" />
     <ClCompile Include="..\..\..\..\test\data_base.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />

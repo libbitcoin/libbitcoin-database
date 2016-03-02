@@ -35,8 +35,7 @@ BC_CONSTEXPR size_t number_buckets = 97210744;
 BC_CONSTEXPR size_t header_size = record_hash_table_header_size(number_buckets);
 BC_CONSTEXPR size_t initial_lookup_file_size = header_size + minimum_records_size;
 
-BC_CONSTEXPR file_offset allocation_offset = header_size;
-BC_CONSTEXPR size_t alloc_record_size = hash_table_multimap_record_size<short_hash>();
+BC_CONSTEXPR size_t record_size = hash_table_multimap_record_size<short_hash>();
 
 BC_CONSTEXPR size_t value_size = 1 + 36 + 4 + 8;
 BC_CONSTEXPR size_t row_record_size = hash_table_record_size<hash_digest>(value_size);
@@ -44,8 +43,8 @@ BC_CONSTEXPR size_t row_record_size = hash_table_record_size<hash_digest>(value_
 history_database::history_database(const path& lookup_filename,
     const path& rows_filename)
   : lookup_file_(lookup_filename), 
-    header_(lookup_file_, 0),
-    manager_(lookup_file_, allocation_offset, alloc_record_size),
+    header_(lookup_file_),
+    manager_(lookup_file_, header_size, record_size),
     start_lookup_(header_, manager_),
     rows_file_(rows_filename), 
     rows_(rows_file_, 0, row_record_size),

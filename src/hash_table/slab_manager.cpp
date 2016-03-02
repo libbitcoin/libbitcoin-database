@@ -49,7 +49,7 @@ namespace database {
 slab_manager::slab_manager(memory_map& file, file_offset header_size)
   : file_(file),
     header_size_(header_size),
-    payload_size_(0)
+    payload_size_(sizeof(file_offset))
 {
 }
 
@@ -59,14 +59,10 @@ void slab_manager::create()
     ///////////////////////////////////////////////////////////////////////////
     boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
-    if (payload_size_ != 0)
+    if (payload_size_ != sizeof(file_offset))
         throw std::runtime_error("Existing file slabs size is nonzero.");
 
-    // The payload size includes the bytes required for its own storage.
-    payload_size_ = sizeof(file_offset);
-
-    // We only allocate here so as to prevent the need to call on sync.
-    file_.allocate(header_size_ + sizeof(file_offset));
+    file_.allocate(header_size_ + payload_size_);
 
     write_size();
     ///////////////////////////////////////////////////////////////////////////
@@ -81,8 +77,8 @@ void slab_manager::start()
     read_size();
     const auto minimum = header_size_ + payload_size_;
 
-    if (minimum > file_.size())
-        throw std::runtime_error("Slabs size exceeds file size.");
+    ////if (minimum > file_.size())
+    ////    throw std::runtime_error("Slabs size exceeds file size.");
     ///////////////////////////////////////////////////////////////////////////
 }
 

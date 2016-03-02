@@ -47,7 +47,7 @@ src_libbitcoin_database_la_SOURCES = \
     src/hash_table/record_multimap_iterable.cpp \
     src/hash_table/record_multimap_iterator.cpp \
     src/hash_table/slab_manager.cpp \
-    src/memory/memory_accessor.cpp \
+    src/memory/memory.cpp \
     src/memory/memory_map.cpp \
     src/mman-win32/mman.c \
     src/mman-win32/mman.h \
@@ -69,8 +69,8 @@ test_libbitcoin_database_test_SOURCES = \
     test/hash_table.cpp \
     test/history_database.cpp \
     test/main.cpp \
-    test/memory_object.cpp \
     test/spend_database.cpp \
+    test/structure.cpp \
     test/transaction_database.cpp
 
 endif WITH_TESTS
@@ -287,7 +287,7 @@ include_bitcoin_database_HEADERS = \
 
 include_bitcoin_database_hash_tabledir = ${includedir}/bitcoin/database/hash_table
 include_bitcoin_database_hash_table_HEADERS = \
-    include/bitcoin/database/hash_table/hash_table.hpp \
+    include/bitcoin/database/hash_table/hash_table_header.hpp \
     include/bitcoin/database/hash_table/record_hash_table.hpp \
     include/bitcoin/database/hash_table/record_list.hpp \
     include/bitcoin/database/hash_table/record_manager.hpp \
@@ -299,7 +299,7 @@ include_bitcoin_database_hash_table_HEADERS = \
 
 include_bitcoin_database_impldir = ${includedir}/bitcoin/database/impl
 include_bitcoin_database_impl_HEADERS = \
-    include/bitcoin/database/impl/hash_table.ipp \
+    include/bitcoin/database/impl/hash_table_header.ipp \
     include/bitcoin/database/impl/record_hash_table.ipp \
     include/bitcoin/database/impl/record_multimap.ipp \
     include/bitcoin/database/impl/record_row.ipp \
@@ -310,7 +310,6 @@ include_bitcoin_database_impl_HEADERS = \
 include_bitcoin_database_memorydir = ${includedir}/bitcoin/database/memory
 include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/memory.hpp \
-    include/bitcoin/database/memory/memory_accessor.hpp \
     include/bitcoin/database/memory/memory_map.hpp
 
 include_bitcoin_database_resultdir = ${includedir}/bitcoin/database/result

@@ -54,7 +54,7 @@ namespace database {
 using boost::format;
 using boost::filesystem::path;
 
-static constexpr size_t growth_factor = 3 / 2;
+static constexpr float growth_factor = 3 / 2;
 
 size_t memory_map::file_size(int file_handle)
 {
@@ -96,7 +96,7 @@ int memory_map::open_file(const path& filename)
     return handle;
 }
 
-void memory_map::handle_error(const char* context, const path& filename)
+bool memory_map::handle_error(const char* context, const path& filename)
 {
     static const auto form = "The file failed to %1%: %2% error: %3%";
 #ifdef _WIN32
@@ -106,6 +106,7 @@ void memory_map::handle_error(const char* context, const path& filename)
 #endif
     const auto message = format(form) % context % filename % error;
     log::fatal(LOG_DATABASE) << message.str();
+    return false;
 }
 
 memory_map::memory_map(const path& filename)
@@ -129,7 +130,7 @@ memory_map::~memory_map()
     stop();
 }
 
-bool memory_map::stopped()
+bool memory_map::stopped() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -148,29 +149,19 @@ bool memory_map::stop()
     if (stopped_)
         return true;
 
-    log::info(LOG_DATABASE) << "Unmapping: " << filename_;
-    const auto unmapped = unmap();
-    if (!unmapped)
-        handle_error("unmap", filename_);
-
-#ifdef _WIN32
-    const auto handle = reinterpret_cast<HANDLE>(_get_osfhandle(file_handle_));
-    const auto flushed = FlushFileBuffers(handle) != FALSE;
-#else
-    // Calling fsync() does not necessarily ensure that the entry in the 
-    // directory containing the file has also reached disk. For that an
-    // explicit fsync() on a file descriptor for the directory is also needed.
-    const auto flushed = fsync(file_handle_) != -1;
-#endif
-    if (!flushed)
-        handle_error("flush", filename_);
-
-    const auto closed = close(file_handle_) != -1;
-    if (!closed)
-        handle_error("close", filename_);
-
     stopped_ = true;
-    return unmapped && flushed && closed;
+    log::info(LOG_DATABASE) << "Unmapping: " << filename_;
+
+    if (!unmap())
+        return handle_error("unmap", filename_);
+
+    if (fsync(file_handle_) == -1)
+        return handle_error("flush", filename_);
+
+    if (close(file_handle_) == -1)
+        return handle_error("close", filename_);
+
+    return true;
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -186,8 +177,13 @@ size_t memory_map::size() const
 
 memory::ptr memory_map::access()
 {
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
+
     // This establishes a shared lock until disposed.
     return std::make_shared<memory>(data_, mutex_);
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 memory::ptr memory_map::allocate(size_t size)
@@ -210,28 +206,6 @@ memory::ptr memory_map::allocate(size_t size)
 
 // privates
 
-// This sets data_ and size_, used on construct and resize.
-bool memory_map::map(size_t size)
-{
-    if (size == 0)
-        return false;
-
-    data_ = static_cast<uint8_t*>(mmap(0, size, PROT_READ | PROT_WRITE,
-        MAP_SHARED, file_handle_, 0));
-
-    return validate(size);
-}
-
-#ifdef MREMAP_MAYMOVE
-bool memory_map::remap(size_t new_size)
-{
-    data_ = static_cast<uint8_t*>(mremap(data_, size_, new_size,
-        MREMAP_MAYMOVE));
-
-    return validate(new_size);
-}
-#endif
-
 bool memory_map::unmap()
 {
     bool success = (munmap(data_, size_) != -1);
@@ -240,26 +214,52 @@ bool memory_map::unmap()
     return success;
 }
 
+bool memory_map::map(size_t size)
+{
+    if (size == 0)
+        return false;
+
+    data_ = reinterpret_cast<uint8_t*>(mmap(0, size, PROT_READ | PROT_WRITE,
+        MAP_SHARED, file_handle_, 0));
+
+    return validate(size);
+}
+
+bool memory_map::remap(size_t size)
+{
+#ifdef MREMAP_MAYMOVE
+    data_ = reinterpret_cast<uint8_t*>(mremap(data_, size_, size,
+        MREMAP_MAYMOVE));
+
+    return validate(size);
+#else
+    return unmap() && map(size);
+#endif
+}
+
 bool memory_map::reserve(size_t size)
 {
-    const size_t new_size = size * growth_factor;
+    const auto new_size = static_cast<size_t>(size * growth_factor);
 
-    // Resize underlying file.
+#ifndef MREMAP_MAYMOVE
+    if (!unmap())
+        return false;
+#endif
+
+    const auto message = format("Resizing: %1% [%2%]") % filename_ % new_size;
+    log::debug(LOG_DATABASE) << message.str();
+
     if (ftruncate(file_handle_, new_size) == -1)
     {
         handle_error("resize", filename_);
         return false;
     }
 
-    const auto message = format("Resizing: %1% [%2%]") % filename_ % new_size;
-    log::debug(LOG_DATABASE) << message.str();
-
-    // Readjust memory map.
-#ifdef MREMAP_MAYMOVE
-    return remap(new_size);
-#else
-    return (unmap() && map(new_size));
+#ifndef MREMAP_MAYMOVE
+    return map(new_size);
 #endif
+
+    return remap(new_size);
 }
 
 bool memory_map::validate(size_t size)

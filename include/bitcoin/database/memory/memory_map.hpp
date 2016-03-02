@@ -46,24 +46,21 @@ public:
     memory_map(const memory_map&) = delete;
     void operator=(const memory_map&) = delete;
 
-    /// These methods are thread safe.
+    bool stop();
+    bool stopped() const;
     size_t size() const;
     memory::ptr access();
     memory::ptr allocate(size_t size);
-    bool stop();
-    bool stopped();
 
 private:
     static size_t file_size(int file_handle);
     static int open_file(const boost::filesystem::path& filename);
-    static void handle_error(const char* context,
+    static bool handle_error(const char* context,
         const boost::filesystem::path& filename);
 
-    bool map(size_t size);
-#ifdef MREMAP_MAYMOVE
-    bool remap(size_t new_size);
-#endif
     bool unmap();
+    bool map(size_t size);
+    bool remap(size_t new_size);
     bool reserve(size_t size);
     bool validate(size_t size);
 

@@ -1,53 +1,57 @@
 /**
-* Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
-*
-* This file is part of libbitcoin.
-*
-* libbitcoin is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License with
-* additional permissions to the one published by the Free Software
-* Foundation, either version 3 of the License, or (at your option)
-* any later version. For more information see LICENSE.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program. If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
+ *
+ * This file is part of libbitcoin.
+ *
+ * libbitcoin is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License with
+ * additional permissions to the one published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option)
+ * any later version. For more information see LICENSE.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <random>
 #include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
 #include <bitcoin/database.hpp>
 
+using namespace boost::system;
+using namespace boost::filesystem;
 using namespace bc;
 using namespace bc::database;
 
 BC_CONSTEXPR size_t total_txs = 200;
 BC_CONSTEXPR size_t tx_size = 200;
 BC_CONSTEXPR size_t buckets = 100;
+#define DIRECTORY "hash_table"
 
-data_chunk generate_random_bytes(
-std::default_random_engine& engine, size_t size)
+data_chunk generate_random_bytes(std::default_random_engine& engine,
+    size_t size)
 {
     data_chunk result(size);
-    for (uint8_t& byte : result)
+    for (uint8_t& byte: result)
         byte = engine() % std::numeric_limits<uint8_t>::max();
 
     return result;
 }
 
-void write_data()
+void create_database_file()
 {
     BC_CONSTEXPR size_t header_size = slab_hash_table_header_size(buckets);
 
-    data_base::touch_file("slab_hash_table");
-    memory_map file("slab_hash_table");
+    data_base::touch_file(DIRECTORY "/slab_hash_table__write_read");
+    memory_map file(DIRECTORY "/slab_hash_table__write_read");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.allocate(header_size + minimum_slabs_size);
 
-    slab_hash_table_header header(file, 0);
+    slab_hash_table_header header(file);
     header.create(buckets);
     header.start();
 
@@ -74,16 +78,34 @@ void write_data()
     alloc.sync();
 }
 
-BOOST_AUTO_TEST_SUITE(hash_table_tests)
+class hash_table_directory_setup_fixture
+{
+public:
+    hash_table_directory_setup_fixture()
+    {
+        error_code ec;
+        remove_all(DIRECTORY, ec);
+        BOOST_REQUIRE(create_directories(DIRECTORY, ec));
+    }
+
+    ////~hash_table_directory_setup_fixture()
+    ////{
+    ////    error_code ec;
+    ////    remove_all(DIRECTORY, ec);
+    ////}
+};
+
+BOOST_FIXTURE_TEST_SUITE(hash_table_tests, hash_table_directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(slab_hash_table__write_read__test)
 {
-    write_data();
+    // Create the data file to be read below.
+    create_database_file();
 
-    memory_map file("slab_hash_table");
+    memory_map file(DIRECTORY "/slab_hash_table__write_read");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
 
-    slab_hash_table_header header(file, 0);
+    slab_hash_table_header header(file);
     header.start();
 
     BOOST_REQUIRE(header.size() == buckets);
@@ -108,91 +130,130 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__write_read__test)
     }
 }
 
-////BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
-////{
-////    BC_CONSTEXPR size_t rec_buckets = 2;
-////    BC_CONSTEXPR size_t header_size = record_hash_table_header_size(rec_buckets);
-////
-////    data_base::touch_file("record_hash_table");
-////    memory_map file("record_hash_table");
-////    const auto memory = file.access();
-////    BITCOIN_ASSERT(memory->buffer() != nullptr);
-////    file.resize(header_size + minimum_records_size);
-////
-////    record_hash_table_header header(file, 0);
-////    header.create(rec_buckets);
-////    header.start();
-////
-////    typedef byte_array<4> tiny_hash;
-////    BC_CONSTEXPR size_t record_size = hash_table_record_size<tiny_hash>(4);
-////    const file_offset records_start = header_size;
-////
-////    record_manager alloc(file, records_start, record_size);
-////    alloc.create();
-////    alloc.start();
-////
-////    record_hash_table<tiny_hash> ht(header, alloc);
-////
-////    tiny_hash key{ { 0xde, 0xad, 0xbe, 0xef } };
-////    auto write = [](uint8_t* data)
-////    {
-////        data[0] = 110;
-////        data[1] = 110;
-////        data[2] = 4;
-////        data[3] = 88;
-////    };
-////    ht.store(key, write);
-////
-////    tiny_hash key1{ { 0xb0, 0x0b, 0xb0, 0x0b } };
-////    auto write1 = [](uint8_t* data)
-////    {
-////        data[0] = 99;
-////        data[1] = 98;
-////        data[2] = 97;
-////        data[3] = 96;
-////    };
-////    ht.store(key, write);
-////    ht.store(key1, write1);
-////    ht.store(key1, write);
-////
-////    alloc.sync();
-////
-////    BOOST_REQUIRE(header.read(0) == header.empty);
-////    BOOST_REQUIRE(header.read(1) == 3);
-////
-////    record_row<tiny_hash> item(alloc, 3);
-////    BOOST_REQUIRE(item.next_index() == 2);
-////    record_row<tiny_hash> item1(alloc, 2);
-////    BOOST_REQUIRE(item1.next_index() == 1);
-////
-////    // Should unlink record 1
-////    BOOST_REQUIRE(ht.unlink(key));
-////
-////    BOOST_REQUIRE(header.read(1) == 3);
-////    record_row<tiny_hash> item2(alloc, 2);
-////    BOOST_REQUIRE(item2.next_index() == 0);
-////
-////    // Should unlink record 3 from buckets
-////    BOOST_REQUIRE(ht.unlink(key1));
-////
-////    BOOST_REQUIRE(header.read(1) == 2);
-////
-////    tiny_hash invalid{ { 0x00, 0x01, 0x02, 0x03 } };
-////    BOOST_REQUIRE(!ht.unlink(invalid));
-////}
+BOOST_AUTO_TEST_CASE(slab_hash_table__test)
+{
+    data_base::touch_file(DIRECTORY "/slab_hash_table");
+    memory_map file(DIRECTORY "/slab_hash_table");
+    BITCOIN_ASSERT(file.access()->buffer() != nullptr);
+    file.allocate(4 + 8 * 100 + 8);
 
-BOOST_AUTO_TEST_CASE(record_hash_table__64bit__test)
+    slab_hash_table_header header(file);
+    header.create(100);
+    header.start();
+
+    slab_manager alloc(file, 4 + 8 * 100);
+    alloc.create();
+    alloc.start();
+
+    typedef byte_array<4> tiny_hash;
+    slab_hash_table<tiny_hash> ht(header, alloc);
+
+    auto write = [](uint8_t* data)
+    {
+        data[0] = 110;
+        data[1] = 110;
+        data[2] = 4;
+        data[3] = 99;
+    };
+    ht.store(tiny_hash{ { 0xde, 0xad, 0xbe, 0xef } }, write, 8);
+    const auto memory1 = ht.find(tiny_hash{ { 0xde, 0xad, 0xbe, 0xef } });
+    const auto slab1 = memory1->buffer();
+    BOOST_REQUIRE(slab1);
+    BOOST_REQUIRE(slab1[0] == 110);
+    BOOST_REQUIRE(slab1[1] == 110);
+    BOOST_REQUIRE(slab1[2] == 4);
+    BOOST_REQUIRE(slab1[3] == 99);
+
+    const auto memory2 = ht.find(tiny_hash{ { 0xde, 0xad, 0xbe, 0xee } });
+    const auto slab2 = memory1->buffer();
+    BOOST_REQUIRE(slab2);
+}
+
+BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
 {
     BC_CONSTEXPR size_t rec_buckets = 2;
     BC_CONSTEXPR size_t header_size = record_hash_table_header_size(rec_buckets);
 
-    data_base::touch_file("record_hash_table");
-    memory_map file("record_hash_table");
+    data_base::touch_file(DIRECTORY "/record_hash_table__32bit");
+    memory_map file(DIRECTORY "/record_hash_table__32bit");
+    const auto memory = file.access();
+    BITCOIN_ASSERT(memory->buffer() != nullptr);
+    file.allocate(header_size + minimum_records_size);
+
+    record_hash_table_header header(file);
+    header.create(rec_buckets);
+    header.start();
+
+    typedef byte_array<4> tiny_hash;
+    BC_CONSTEXPR size_t record_size = hash_table_record_size<tiny_hash>(4);
+    const file_offset records_start = header_size;
+
+    record_manager alloc(file, records_start, record_size);
+    alloc.create();
+    alloc.start();
+
+    record_hash_table<tiny_hash> ht(header, alloc);
+
+    tiny_hash key{ { 0xde, 0xad, 0xbe, 0xef } };
+    auto write = [](uint8_t* data)
+    {
+        data[0] = 110;
+        data[1] = 110;
+        data[2] = 4;
+        data[3] = 88;
+    };
+    ht.store(key, write);
+
+    tiny_hash key1{ { 0xb0, 0x0b, 0xb0, 0x0b } };
+    auto write1 = [](uint8_t* data)
+    {
+        data[0] = 99;
+        data[1] = 98;
+        data[2] = 97;
+        data[3] = 96;
+    };
+    ht.store(key, write);
+    ht.store(key1, write1);
+    ht.store(key1, write);
+
+    alloc.sync();
+
+    BOOST_REQUIRE(header.read(0) == header.empty);
+    BOOST_REQUIRE(header.read(1) == 3);
+
+    record_row<tiny_hash> item(alloc, 3);
+    BOOST_REQUIRE(item.next_index() == 2);
+    record_row<tiny_hash> item1(alloc, 2);
+    BOOST_REQUIRE(item1.next_index() == 1);
+
+    // Should unlink record 1
+    BOOST_REQUIRE(ht.unlink(key));
+
+    BOOST_REQUIRE(header.read(1) == 3);
+    record_row<tiny_hash> item2(alloc, 2);
+    BOOST_REQUIRE(item2.next_index() == 0);
+
+    // Should unlink record 3 from buckets
+    BOOST_REQUIRE(ht.unlink(key1));
+
+    BOOST_REQUIRE(header.read(1) == 2);
+
+    tiny_hash invalid{ { 0x00, 0x01, 0x02, 0x03 } };
+    BOOST_REQUIRE(!ht.unlink(invalid));
+}
+
+BOOST_AUTO_TEST_CASE(record_hash_table_header__64bit__test)
+{
+    BC_CONSTEXPR size_t record_buckets = 2;
+    BC_CONSTEXPR size_t header_size = record_hash_table_header_size(record_buckets);
+
+    data_base::touch_file(DIRECTORY "/record_hash_table_64bit");
+    memory_map file(DIRECTORY "/record_hash_table_64bit");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.allocate(header_size + minimum_records_size);
 
-    record_hash_table_header header(file, 0);
-    header.create(rec_buckets);
+    record_hash_table_header header(file);
+    header.create(record_buckets);
     header.start();
 
     typedef byte_array<8> tiny_hash;

@@ -120,11 +120,11 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_multimap_iterable.hpp">
       <Filter>include\bitcoin\database\hash_table</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\hash_table.hpp">
-      <Filter>include\bitcoin\database\hash_table</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\hash_table_header.hpp">
+      <Filter>include\bitcoin\database\hash_table</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -147,7 +147,7 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_row.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\hash_table.ipp">
+    <None Include="..\..\..\..\include\bitcoin\database\impl\hash_table_header.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
   </ItemGroup>

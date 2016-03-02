@@ -1,44 +1,31 @@
 /**
-* Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
-*
-* This file is part of libbitcoin.
-*
-* libbitcoin is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License with
-* additional permissions to the one published by the Free Software
-* Foundation, either version 3 of the License, or (at your option)
-* any later version. For more information see LICENSE.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program. If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
+ *
+ * This file is part of libbitcoin.
+ *
+ * libbitcoin is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License with
+ * additional permissions to the one published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option)
+ * any later version. For more information see LICENSE.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <bitcoin/database.hpp>
 
+using namespace boost::system;
+using namespace boost::filesystem;
 using namespace bc;
 using namespace bc::database;
 using namespace bc::wallet;
-
-struct low_thread_priority_fixture
-{
-    low_thread_priority_fixture()
-    {
-        BOOST_TEST_MESSAGE("set thread_priority::lowest");
-        set_thread_priority(thread_priority::lowest);
-    }
-
-    ~low_thread_priority_fixture()
-    {
-        BOOST_TEST_MESSAGE("set thread_priority::normal");
-        set_thread_priority(thread_priority::normal);
-    }
-};
 
 void test_block_exists(const data_base& interface,
     const size_t height, const chain::block block0)
@@ -222,16 +209,36 @@ void compare_blocks(const chain::block& popped, const chain::block& original)
     }
 }
 
-BOOST_FIXTURE_TEST_SUITE(data_base_tests, low_thread_priority_fixture)
+#define DIRECTORY "data_base"
 
-BOOST_AUTO_TEST_CASE(database__pushpop__test)
+class data_base_directory_and_thread_priority_setup_fixture
 {
-    std::cout << "begin pushpop test" << std::endl;
+public:
+    data_base_directory_and_thread_priority_setup_fixture()
+    {
+        error_code ec;
+        remove_all(DIRECTORY, ec);
+        BOOST_REQUIRE(create_directories(DIRECTORY, ec));
+        set_thread_priority(thread_priority::lowest);
+    }
 
-    // This test causes Travis run failures for performance reasons.
+    ////~data_base_directory_and_thread_priority_setup_fixture()
+    ////{
+    ////    error_code ec;
+    ////    remove_all(DIRECTORY, ec);
+    ////    set_thread_priority(thread_priority::normal);
+    ////}
+};
+
+BOOST_FIXTURE_TEST_SUITE(data_base_tests, data_base_directory_and_thread_priority_setup_fixture)
+
+// TODO: parameterize bucket sizes to control test cost.
+BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
+{
+    std::cout << "begin data_base pushpop test" << std::endl;
 
     auto settings = database::settings::mainnet;
-    settings.directory = { "chain" };
+    settings.directory = { DIRECTORY };
 
     const auto block0 = chain::block::genesis_mainnet();
     boost::filesystem::create_directory(settings.directory);

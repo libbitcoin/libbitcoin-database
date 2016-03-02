@@ -18,13 +18,35 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
 #include <bitcoin/database.hpp>
 
+using namespace boost::system;
+using namespace boost::filesystem;
 using namespace bc;
 using namespace bc::chain;
 using namespace bc::database;
 
-BOOST_AUTO_TEST_SUITE(database_tests)
+#define DIRECTORY "history_database"
+
+class history_database_directory_setup_fixture
+{
+public:
+    history_database_directory_setup_fixture()
+    {
+        error_code ec;
+        remove_all(DIRECTORY, ec);
+        BOOST_REQUIRE(create_directories(DIRECTORY, ec));
+    }
+
+    ////~history_database_directory_setup_fixture()
+    ////{
+    ////    error_code ec;
+    ////    remove_all(DIRECTORY, ec);
+    ////}
+};
+
+BOOST_FIXTURE_TEST_SUITE(database_tests, history_database_directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(history_database__test)
 {
@@ -65,9 +87,9 @@ BOOST_AUTO_TEST_CASE(history_database__test)
     const uint32_t out_h41 = 74448;
     const uint64_t value41 = 990;
 
-    data_base::touch_file("history_db_lookup");
-    data_base::touch_file("history_db_rows");
-    history_database db("history_db_lookup", "history_db_rows");
+    data_base::touch_file(DIRECTORY "/lookup");
+    data_base::touch_file(DIRECTORY "/rows");
+    history_database db(DIRECTORY "/lookup", DIRECTORY "/rows");
     db.create();
     db.start();
     db.add_output(key1, out11, out_h11, value11);

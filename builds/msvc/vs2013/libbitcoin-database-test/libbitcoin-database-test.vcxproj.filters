@@ -22,7 +22,7 @@
     <ClCompile Include="..\..\..\..\test\history_database.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\memory_object.cpp">
+    <ClCompile Include="..\..\..\..\test\structure.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

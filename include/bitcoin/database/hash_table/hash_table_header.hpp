@@ -17,8 +17,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MEMORY_ARRAY_HPP
-#define LIBBITCOIN_DATABASE_MEMORY_ARRAY_HPP
+#ifndef LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_HPP
+#define LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_HPP
 
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory_map.hpp>
@@ -39,18 +39,18 @@ namespace database {
  * Empty elements are represented by the value array.empty
  */
 template <typename IndexType, typename ValueType>
-class hash_table
+class hash_table_header
 {
 public:
     // This VC++ workaround is OK because ValueType must be unsigned. 
     //static constexpr ValueType empty = std::numeric_limits<ValueType>::max();
     static BC_CONSTEXPR ValueType empty = (ValueType)bc::max_uint64;
 
-    hash_table(memory_map& file, file_offset header_size);
+    hash_table_header(memory_map& file);
 
     /// Initialize a new array. The file must have enough space.
     /// The space needed is sizeof(IndexType) + size * sizeof(ValueType)
-    /// Element items are initialised to hash_table::empty.
+    /// Element items are initialised to hash_table_header::empty.
     void create(IndexType size);
 
     /// Must be called before use. Loads the size from the file.
@@ -72,12 +72,11 @@ private:
 
     memory_map& file_;
     IndexType size_;
-    const file_offset header_size_;
 };
 
 } // namespace database
 } // namespace libbitcoin
 
-#include <bitcoin/database/impl/hash_table.ipp>
+#include <bitcoin/database/impl/hash_table_header.ipp>
 
 #endif

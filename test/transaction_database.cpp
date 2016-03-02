@@ -18,42 +18,68 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
 #include <bitcoin/database.hpp>
 
+using namespace boost::system;
+using namespace boost::filesystem;
 using namespace bc;
 using namespace bc::chain;
 using namespace bc::database;
 
-BOOST_AUTO_TEST_SUITE(database_tests)
+#define DIRECTORY "transaction_database"
+
+class transaction_database_directory_setup_fixture
+{
+public:
+    transaction_database_directory_setup_fixture()
+    {
+        error_code ec;
+        remove_all(DIRECTORY, ec);
+        BOOST_REQUIRE(create_directories(DIRECTORY, ec));
+    }
+
+    ////~transaction_database_directory_setup_fixture()
+    ////{
+    ////    error_code ec;
+    ////    remove_all(DIRECTORY, ec);
+    ////}
+};
+
+BOOST_FIXTURE_TEST_SUITE(database_tests, transaction_database_directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(transaction_database__test)
 {
     data_chunk raw_tx1;
     BOOST_REQUIRE(decode_base16(raw_tx1, "0100000001537c9d05b5f7d67b09e5108e3bd5e466909cc9403ddd98bc42973f366fe729410600000000ffffffff0163000000000000001976a914fe06e7b4c88a719e92373de489c08244aee4520b88ac00000000"));
 
-    chain::transaction tx1;
+    transaction tx1;
     BOOST_REQUIRE(tx1.from_data(raw_tx1));
 
-    const hash_digest h1 = tx1.hash();
+    const auto h1 = tx1.hash();
 
     data_chunk raw_tx2;
-    BOOST_REQUIRE(decode_base16(raw_tx2,"010000000147811c3fc0c0e750af5d0ea7343b16ea2d0c291c002e3db778669216eb689de80000000000ffffffff0118ddf505000000001976a914575c2f0ea88fcbad2389a372d942dea95addc25b88ac00000000"));
+    BOOST_REQUIRE(decode_base16(raw_tx2, "010000000147811c3fc0c0e750af5d0ea7343b16ea2d0c291c002e3db778669216eb689de80000000000ffffffff0118ddf505000000001976a914575c2f0ea88fcbad2389a372d942dea95addc25b88ac00000000"));
 
-    chain::transaction tx2;
+    transaction tx2;
     BOOST_REQUIRE(tx2.from_data(raw_tx2));
 
-    const hash_digest h2 = tx2.hash();
+    const auto h2 = tx2.hash();
 
-    data_base::touch_file("tx_db_map");
-    transaction_database db("tx_db_map");
+    data_base::touch_file(DIRECTORY "/transaction");
+    transaction_database db(DIRECTORY "/transaction");
     db.create();
     db.start();
+
     db.store(110, 88, tx1);
     db.store(4, 6, tx2);
-    auto result1 = db.get(h1);
+
+    const auto result1 = db.get(h1);
     BOOST_REQUIRE(result1.transaction().hash() == h1);
-    auto result2 = db.get(h2);
+
+    const auto result2 = db.get(h2);
     BOOST_REQUIRE(result2.transaction().hash() == h2);
+
     db.sync();
 }
 

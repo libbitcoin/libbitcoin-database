@@ -10,10 +10,13 @@
 #include <io.h>
 
 #ifndef FILE_MAP_EXECUTE
-    #define FILE_MAP_EXECUTE    0x0020
+    #define FILE_MAP_EXECUTE 0x0020
 #endif
 
-static int __map_mman_error(const DWORD err, const int deferr)
+// ----------------------------------------------------------------------------
+// private functions
+
+static int error(const DWORD err, const int deferr)
 {
     if (err == 0)
         return 0;
@@ -23,7 +26,7 @@ static int __map_mman_error(const DWORD err, const int deferr)
     return err;
 }
 
-static DWORD __map_mmap_prot_page(const int prot)
+static DWORD protect_page(const int prot)
 {
     DWORD protect = 0;
 
@@ -32,39 +35,42 @@ static DWORD __map_mmap_prot_page(const int prot)
 
     if ((prot & PROT_EXEC) != 0)
     {
-        protect = ((prot & PROT_WRITE) != 0) ?
-        PAGE_EXECUTE_READWRITE : PAGE_EXECUTE_READ;
+        protect = ((prot & PROT_WRITE) != 0) ? PAGE_EXECUTE_READWRITE :
+            PAGE_EXECUTE_READ;
     }
     else
     {
-        protect = ((prot & PROT_WRITE) != 0) ?
-        PAGE_READWRITE : PAGE_READONLY;
+        protect = ((prot & PROT_WRITE) != 0) ? PAGE_READWRITE : PAGE_READONLY;
     }
 
     return protect;
 }
 
-static DWORD __map_mmap_prot_file(const int prot)
+static DWORD protect_file(const int prot)
 {
-    DWORD desiredAccess = 0;
+    DWORD desired_access = 0;
 
     if (prot == PROT_NONE)
-        return desiredAccess;
+        return desired_access;
 
     if ((prot & PROT_READ) != 0)
-        desiredAccess |= FILE_MAP_READ;
-    if ((prot & PROT_WRITE) != 0)
-        desiredAccess |= FILE_MAP_WRITE;
-    if ((prot & PROT_EXEC) != 0)
-        desiredAccess |= FILE_MAP_EXECUTE;
+        desired_access |= FILE_MAP_READ;
 
-    return desiredAccess;
+    if ((prot & PROT_WRITE) != 0)
+        desired_access |= FILE_MAP_WRITE;
+
+    if ((prot & PROT_EXEC) != 0)
+        desired_access |= FILE_MAP_EXECUTE;
+
+    return desired_access;
 }
+
+// ----------------------------------------------------------------------------
+// public interface
 
 void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off)
 {
     HANDLE mapping, handle;
-
     void* map = MAP_FAILED;
 
 #ifdef _MSC_VER
@@ -72,16 +78,16 @@ void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off)
 #pragma warning(disable: 4293)
 #endif
 
-    const DWORD access  = __map_mmap_prot_file(prot);
-    const DWORD protect = __map_mmap_prot_page(prot);
+    const DWORD access  = protect_file(prot);
+    const DWORD protect = protect_page(prot);
 
     const oft__ max = off + (oft__)len;
     const int less = (sizeof(oft__) <= sizeof(DWORD));
 
-    const DWORD maxLow   = less ? (DWORD)max : (DWORD)((max      ) & MAXDWORD);
-    const DWORD maxHigh  = less ? (DWORD)0   : (DWORD)((max >> 32) & MAXDWORD);
-    const DWORD fileLow  = less ? (DWORD)off : (DWORD)((off      ) & MAXDWORD);
-    const DWORD fileHigh = less ? (DWORD)0   : (DWORD)((off >> 32) & MAXDWORD);
+    const DWORD max_lo  = less ? (DWORD)max : (DWORD)((max      ) & MAXDWORD);
+    const DWORD max_hi  = less ? (DWORD)0   : (DWORD)((max >> 32) & MAXDWORD);
+    const DWORD file_lo = less ? (DWORD)off : (DWORD)((off      ) & MAXDWORD);
+    const DWORD file_hi = less ? (DWORD)0   : (DWORD)((off >> 32) & MAXDWORD);
 
 #ifdef _MSC_VER
 #pragma warning(pop)
@@ -89,18 +95,14 @@ void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off)
 
     errno = 0;
 
-    if (len == 0
-        /* Unsupported flag combinations */
-        || (flags & MAP_FIXED) != 0
-        /* Usupported protection combinations */
-        || prot == PROT_EXEC)
+    if (len == 0 || (flags & MAP_FIXED) != 0 || prot == PROT_EXEC)
     {
         errno = EINVAL;
         return MAP_FAILED;
     }
 
-    handle = ((flags & MAP_ANONYMOUS) == 0) ?
-        (HANDLE)_get_osfhandle(fildes) : INVALID_HANDLE_VALUE;
+    handle = ((flags & MAP_ANONYMOUS) == 0) ? (HANDLE)_get_osfhandle(fildes) :
+        INVALID_HANDLE_VALUE;
 
     if ((flags & MAP_ANONYMOUS) == 0 && handle == INVALID_HANDLE_VALUE)
     {
@@ -108,21 +110,20 @@ void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off)
         return MAP_FAILED;
     }
 
-    mapping = CreateFileMapping(handle, NULL, protect, maxHigh, maxLow, NULL);
+    mapping = CreateFileMapping(handle, NULL, protect, max_hi, max_lo, NULL);
 
     if (mapping == NULL)
     {
-        errno = __map_mman_error(GetLastError(), EPERM);
+        errno = error(GetLastError(), EPERM);
         return MAP_FAILED;
     }
 
-    map = MapViewOfFile(mapping, access, fileHigh, fileLow, len);
+    map = MapViewOfFile(mapping, access, file_hi, file_lo, len);
 
-    CloseHandle(mapping);
-
-    if (map == NULL)
+    // TODO: verify the mapping handle may be closed here and then use the map.
+    if (map == NULL || CloseHandle(mapping) == FALSE)
     {
-        errno = __map_mman_error(GetLastError(), EPERM);
+        errno = error(GetLastError(), EPERM);
         return MAP_FAILED;
     }
 
@@ -131,54 +132,63 @@ void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off)
 
 int munmap(void* addr, size_t len)
 {
-    if (UnmapViewOfFile(addr))
+    if (UnmapViewOfFile(addr) != FALSE)
         return 0;
 
-    errno = __map_mman_error(GetLastError(), EPERM);
-
+    errno = error(GetLastError(), EPERM);
     return -1;
 }
 
 int mprotect(void* addr, size_t len, int prot)
 {
-    DWORD newProtect = __map_mmap_prot_page(prot);
-    DWORD oldProtect = 0;
+    DWORD old_protect = 0;
+    DWORD new_protect = protect_page(prot);
 
-    if (VirtualProtect(addr, len, newProtect, &oldProtect))
+    if (VirtualProtect(addr, len, new_protect, &old_protect) != FALSE)
         return 0;
 
-    errno = __map_mman_error(GetLastError(), EPERM);
-
+    errno = error(GetLastError(), EPERM);
     return -1;
 }
 
 int msync(void* addr, size_t len, int flags)
 {
-    if (FlushViewOfFile(addr, len))
+    if (FlushViewOfFile(addr, len) != FALSE)
         return 0;
 
-    errno = __map_mman_error(GetLastError(), EPERM);
-
+    errno = error(GetLastError(), EPERM);
     return -1;
 }
 
 int mlock(const void* addr, size_t len)
 {
-    if (VirtualLock((LPVOID)addr, len))
+    if (VirtualLock((LPVOID)addr, len) != FALSE)
         return 0;
 
-    errno = __map_mman_error(GetLastError(), EPERM);
-
+    errno = error(GetLastError(), EPERM);
     return -1;
 }
 
 int munlock(const void* addr, size_t len)
 {
-    if (VirtualUnlock((LPVOID)addr, len))
+    if (VirtualUnlock((LPVOID)addr, len) != FALSE)
         return 0;
 
-    errno = __map_mman_error(GetLastError(), EPERM);
+    errno = error(GetLastError(), EPERM);
+    return -1;
+}
 
+// Calling fsync() does not necessarily ensure that the entry in the directory
+// containing the file has also reached disk. For that an explicit fsync() on
+// a file descriptor for the directory is also needed.
+int fsync(int fd)
+{
+    HANDLE handle = (HANDLE)(_get_osfhandle(fd));
+
+    if (FlushFileBuffers(handle) != FALSE)
+        return 0;
+
+    errno = error(GetLastError(), EPERM);
     return -1;
 }
 
@@ -187,7 +197,7 @@ int ftruncate(int fd, oft__ size)
 {
     HANDLE handle;
     DWORD position;
-    LARGE_INTEGER li;
+    LARGE_INTEGER big;
 
     if (fd < 0)
         return -1;
@@ -197,13 +207,12 @@ int ftruncate(int fd, oft__ size)
         return -1;
 
     /* unsigned to signed, splits to high and low */
-    li.QuadPart = (LONGLONG)size;
+    big.QuadPart = (LONGLONG)size;
 
     handle = (HANDLE)_get_osfhandle(fd);
-    position = SetFilePointer(handle, li.LowPart, &li.HighPart, FILE_BEGIN);
+    position = SetFilePointer(handle, big.LowPart, &big.HighPart, FILE_BEGIN);
 
-    if (position == INVALID_SET_FILE_POINTER ||
-        SetEndOfFile(handle) == FALSE)
+    if (position == INVALID_SET_FILE_POINTER || SetEndOfFile(handle) == FALSE)
     {
         DWORD error = GetLastError();
 

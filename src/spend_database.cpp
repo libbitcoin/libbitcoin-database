@@ -35,7 +35,6 @@ BC_CONSTEXPR size_t number_buckets = 228110589;
 BC_CONSTEXPR size_t header_size = record_hash_table_header_size(number_buckets);
 BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_records_size;
 
-BC_CONSTEXPR file_offset allocation_offset = header_size;
 BC_CONSTEXPR size_t value_size = hash_size + 4;
 BC_CONSTEXPR size_t record_size = hash_table_record_size<hash_digest>(value_size);
 
@@ -57,8 +56,8 @@ static hash_digest output_to_hash(const chain::output_point& output)
 
 spend_database::spend_database(const path& filename)
   : file_(filename), 
-    header_(file_, 0),
-    manager_(file_, allocation_offset, record_size),
+    header_(file_),
+    manager_(file_, header_size, record_size),
     map_(header_, manager_)
 {
     BITCOIN_ASSERT(file_.access()->buffer() != nullptr);
