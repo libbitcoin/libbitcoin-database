@@ -49,10 +49,7 @@
     <ClCompile Include="..\..\..\..\src\hash_table\record_multimap_iterable.cpp">
       <Filter>src\hash_table</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\memory\memory_accessor.cpp">
-      <Filter>src\memory</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\memory\memory_allocator.cpp">
+    <ClCompile Include="..\..\..\..\src\memory\memory.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
   </ItemGroup>
@@ -96,9 +93,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp">
       <Filter>include\bitcoin</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp">
-      <Filter>include\bitcoin\database\memory</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_map.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
@@ -126,14 +120,11 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_multimap_iterable.hpp">
       <Filter>include\bitcoin\database\hash_table</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_accessor.hpp">
-      <Filter>include\bitcoin\database\memory</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_allocator.hpp">
-      <Filter>include\bitcoin\database\memory</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\hash_table.hpp">
       <Filter>include\bitcoin\database\hash_table</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp">
+      <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

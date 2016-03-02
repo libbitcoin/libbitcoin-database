@@ -23,42 +23,37 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <boost/thread.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/// This interface defines remap safe unrestricted access to a memory map.
+/// This class provides remap safe access to file-mapped memory.
+/// The memory size is unprotected and unmanaged.
 class BCD_API memory
 {
 public:
     typedef std::shared_ptr<memory> ptr;
 
+    memory(uint8_t* data, boost::shared_mutex& mutex);
+    ~memory();
+
+    /// This class is not copyable.
+    memory(const memory& other) = delete;
+
     /// Get the address indicated by the pointer.
-    virtual uint8_t* buffer() = 0;
+    uint8_t* buffer();
 
     /// Increment the pointer the specified number of bytes within the record.
-    virtual void increment(size_t value) = 0;
-};
+    void increment(size_t value);
 
-/////// This interface defines remap safe unrestricted access to a memory map.
-////class BCD_API memory_undefined
-////  : public memory
-////{
-////public:
-////
-////    /// Get the address indicated by the pointer.
-////    uint8_t* buffer()
-////    {
-////        return nullptr;
-////    };
-////
-////    /// Increment the pointer the specified number of bytes within the record.
-////    void increment(size_t value)
-////    {
-////        BITCOIN_ASSERT(false);
-////    };
-////};
+private:
+    uint8_t* data_;
+    boost::shared_mutex& mutex_;
+    boost::shared_lock<boost::shared_mutex> shared_lock_;
+};
 
 } // namespace database
 } // namespace libbitcoin

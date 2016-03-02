@@ -58,11 +58,11 @@ history_database::history_database(const path& lookup_filename,
 
 void history_database::create()
 {
-    lookup_file_.resize(initial_lookup_file_size);
+    lookup_file_.allocate(initial_lookup_file_size);
     header_.create(number_buckets);
     manager_.create();
 
-    rows_file_.resize(minimum_records_size);
+    rows_file_.allocate(minimum_records_size);
     rows_.create();
 }
 

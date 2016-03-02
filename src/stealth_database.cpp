@@ -47,9 +47,9 @@ stealth_database::stealth_database(const path& index_filename,
 
 void stealth_database::create()
 {
-    index_file_.resize(minimum_records_size);
+    index_file_.allocate(minimum_records_size);
     index_.create();
-    rows_file_.resize(minimum_records_size);
+    rows_file_.allocate(minimum_records_size);
     rows_.create();
 }
 

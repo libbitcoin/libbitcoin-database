@@ -46,8 +46,7 @@ public:
     //static constexpr ValueType empty = std::numeric_limits<ValueType>::max();
     static BC_CONSTEXPR ValueType empty = (ValueType)bc::max_uint64;
 
-    /// sector_start represents an offset within the file.
-    hash_table(memory_map& file, file_offset sector_start);
+    hash_table(memory_map& file, file_offset header_size);
 
     /// Initialize a new array. The file must have enough space.
     /// The space needed is sizeof(IndexType) + size * sizeof(ValueType)
@@ -73,7 +72,7 @@ private:
 
     memory_map& file_;
     IndexType size_;
-    const file_offset sector_start_;
+    const file_offset header_size_;
 };
 
 } // namespace database

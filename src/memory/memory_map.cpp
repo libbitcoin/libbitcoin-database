@@ -133,7 +133,7 @@ bool memory_map::stopped()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::unique_lock<boost::shared_mutex> unique_lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> shared_lock(mutex_);
 
     return stopped_;
     ///////////////////////////////////////////////////////////////////////////
@@ -174,7 +174,6 @@ bool memory_map::stop()
     ///////////////////////////////////////////////////////////////////////////
 }
 
-// This is thread safe but only useful on initialization.
 size_t memory_map::size() const
 {
     // Critical Section
@@ -185,57 +184,31 @@ size_t memory_map::size() const
     ///////////////////////////////////////////////////////////////////////////
 }
 
-// There is no guard against calling when stopped.
-void memory_map::resize(size_t size)
-{
-    // This establishes a shared lock during this one line.
-    /* allocator */ allocate(size);
-}
-
-// There is no guard against calling when stopped.
-memory_accessor::ptr memory_map::access()
+memory::ptr memory_map::access()
 {
     // This establishes a shared lock until disposed.
-    return std::make_shared<memory_accessor>(data_, mutex_);
+    return std::make_shared<memory>(data_, mutex_);
 }
 
-// There is no guard against calling when stopped.
-memory_allocator::ptr memory_map::allocate(size_t size)
-{
-    // This establishes a shared lock until disposed.
-    auto allocator = std::make_shared<memory_allocator>(data_, mutex_);
-
-    if (size > size_)
-        upgrade(size, allocator);
-
-    // This maintains a shared lock until disposed.
-    return allocator;
-}
-
-// privates
-
-// This resizes the map under an upgraded lock and updates the accessor.
-// The upgrade will freeze if a shared lock is leaked This method cannot
-// reenter the mutex, making deadlock impossible.
-void memory_map::upgrade(size_t size, memory_allocator::ptr allocator)
+memory::ptr memory_map::allocate(size_t size)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    memory_allocator::upgrade unique_lock(allocator->get_upgradeable());
+    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
-    // Must retest under the unique lock.
     if (size > size_)
     {
         // There is no way to recover from this.
         if (!reserve(size))
-            throw std::runtime_error(
-                "The file could not be resized, disk space may be low.");
-
-        // Update the accessor with the updated memory map pointer.
-        allocator->set_data(data_);
+            throw std::runtime_error("Resize failure, disk space may be low.");
     }
+
+    // This establishes a shared lock until disposed.
+    return std::make_shared<memory>(data_, mutex_);
     ///////////////////////////////////////////////////////////////////////////
 }
+
+// privates
 
 // This sets data_ and size_, used on construct and resize.
 bool memory_map::map(size_t size)

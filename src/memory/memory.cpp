@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/memory/memory_accessor.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 #include <cstdint>
 #include <boost/thread.hpp>
@@ -27,7 +27,7 @@ namespace database {
 
 using namespace boost;
 
-memory_accessor::memory_accessor(uint8_t* data, shared_mutex& mutex)
+memory::memory(uint8_t* data, shared_mutex& mutex)
   : data_(data),
     mutex_(mutex),
     shared_lock_(mutex_)
@@ -37,18 +37,18 @@ memory_accessor::memory_accessor(uint8_t* data, shared_mutex& mutex)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-uint8_t* memory_accessor::buffer()
+uint8_t* memory::buffer()
 {
     return data_;
 }
 
-void memory_accessor::increment(size_t value)
+void memory::increment(size_t value)
 {
     BITCOIN_ASSERT((size_t)data_ <= bc::max_size_t - value);
     data_ += value;
 }
 
-memory_accessor::~memory_accessor()
+memory::~memory()
 {
     ///////////////////////////////////////////////////////////////////////////
     // End Critical Section

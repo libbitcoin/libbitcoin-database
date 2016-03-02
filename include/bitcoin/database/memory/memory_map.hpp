@@ -29,8 +29,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory_accessor.hpp>
-#include <bitcoin/database/memory/memory_allocator.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -49,9 +48,8 @@ public:
 
     /// These methods are thread safe.
     size_t size() const;
-    void resize(size_t size);
-    memory_accessor::ptr access();
-    memory_allocator::ptr allocate(size_t size);
+    memory::ptr access();
+    memory::ptr allocate(size_t size);
     bool stop();
     bool stopped();
 
@@ -68,7 +66,6 @@ private:
     bool unmap();
     bool reserve(size_t size);
     bool validate(size_t size);
-    void upgrade(size_t size, memory_allocator::ptr allocator);
 
     mutable boost::shared_mutex mutex_;
     const boost::filesystem::path filename_;

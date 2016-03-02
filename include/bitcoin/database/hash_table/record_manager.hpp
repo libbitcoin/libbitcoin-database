@@ -45,7 +45,7 @@ BC_CONSTFUNC size_t record_hash_table_header_size(size_t buckets)
 class BCD_API record_manager
 {
 public:
-    record_manager(memory_map& file, file_offset sector_start,
+    record_manager(memory_map& file, file_offset header_size,
         size_t record_size);
 
     /// Create record manager.
@@ -71,11 +71,8 @@ public:
 
 private:
 
-    // Ensure bytes for a new record are available.
-    void reserve(size_t count);
-
-    //// The record index of a disk position.
-    ////array_index position_to_record(file_offset position) const;
+    // The record index of a disk position.
+    array_index position_to_record(file_offset position) const;
 
     // The disk position of a record index.
     file_offset record_to_position(array_index record) const;
@@ -86,10 +83,15 @@ private:
     // Write the count of the records from the file.
     void write_count();
 
+    // This class is thread and remap safe.
     memory_map& file_;
-    const file_offset start_;
-    std::atomic<array_index> count_;
+    const file_offset header_size_;
+
+    // Payload size is protected by mutex.
+    array_index record_count_;
     mutable boost::shared_mutex mutex_;
+
+    // Records are fixed size.
     const size_t record_size_;
 };
 

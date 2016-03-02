@@ -20,28 +20,54 @@
 #include <bitcoin/database/hash_table/slab_manager.hpp>
 
 #include <cstddef>
+#include <stdexcept>
 #include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/memory_map.hpp>
 
+/// -- file --
+/// [ header ]
+/// [ payload_size ] (includes self)
+/// [ payload ]
+
+/// -- header (hash table) --
+/// [ bucket ]
+/// ...
+/// [ bucket ]
+
+/// -- payload (variable size records) --
+/// [ slab ]
+/// ...
+/// [ slab ]
+
 namespace libbitcoin {
 namespace database {
 
-slab_manager::slab_manager(memory_map& file, file_offset sector_start)
-  : file_(file), start_(sector_start), size_(0)
+// TODO: guard against overflows.
+
+slab_manager::slab_manager(memory_map& file, file_offset header_size)
+  : file_(file),
+    header_size_(header_size),
+    payload_size_(0)
 {
 }
 
-// This method is not thread safe.
-// Write the byte size of the allocated space to the file.
 void slab_manager::create()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
-    size_.store(sizeof(file_offset));
+    if (payload_size_ != 0)
+        throw std::runtime_error("Existing file slabs size is nonzero.");
+
+    // The payload size includes the bytes required for its own storage.
+    payload_size_ = sizeof(file_offset);
+
+    // We only allocate here so as to prevent the need to call on sync.
+    file_.allocate(header_size_ + sizeof(file_offset));
+
     write_size();
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -53,79 +79,89 @@ void slab_manager::start()
     boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
     read_size();
+    const auto minimum = header_size_ + payload_size_;
+
+    if (minimum > file_.size())
+        throw std::runtime_error("Slabs size exceeds file size.");
     ///////////////////////////////////////////////////////////////////////////
 }
 
-void slab_manager::sync()
+void slab_manager::sync() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::unique_lock<boost::shared_mutex> unique_lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
     write_size();
     ///////////////////////////////////////////////////////////////////////////
 }
 
-// new record allocation
-file_offset slab_manager::new_slab(size_t size)
+// protected
+file_offset slab_manager::payload_size() const
 {
-    BITCOIN_ASSERT_MSG(size_ > 0, "slab_manager::start() wasn't called.");
-
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::unique_lock<boost::shared_mutex> unique_lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
 
-    const auto slab_position = size_.load();
-    reserve(size);
-    return slab_position;
+    return payload_size_;
     ///////////////////////////////////////////////////////////////////////////
 }
 
+// Return is offset by header but not size storage (embedded in data files).
+// The file is thread safe, the critical section is to protect payload_size_.
+file_offset slab_manager::new_slab(size_t size)
+{
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+
+    // Always write after the last slab.
+    const auto next_slab_position = payload_size_;
+
+    const size_t required_size = header_size_ + payload_size_ + size;
+    file_.allocate(required_size);
+    payload_size_ += size;
+
+    return next_slab_position;
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+// Position is offset by header but not size storage (embedded in data files).
 const memory::ptr slab_manager::get(file_offset position) const
 {
-    BITCOIN_ASSERT_MSG(size_ > 0, "slab_manager::start() wasn't called.");
-    BITCOIN_ASSERT(position < size_);
+    // Ensure requested position is within the file.
+    // We avoid a runtime error here to optimize out the payload_size lock.
+    BITCOIN_ASSERT_MSG(position < payload_size(), "Read past end of file.");
 
-    const auto reader = file_.access();
-    reader->increment(start_ + position);
-    return reader;
+    const auto memory = file_.access();
+    memory->increment(header_size_ + position);
+    return memory;
 }
 
 // privates
 
-void slab_manager::reserve(size_t bytes_needed)
-{
-    const size_t required_size = start_ + size_ + bytes_needed;
-    file_.resize(required_size);
-    size_ += bytes_needed;
-}
-
-// Read the size value from the first chunk of the file.
+// Read the size value from the first 64 bits of the file after the header.
 void slab_manager::read_size()
 {
-    BITCOIN_ASSERT(start_ + sizeof(file_offset) <= file_.size());
+    BITCOIN_ASSERT(header_size_ + sizeof(file_offset) <= file_.size());
 
-    // The reader must remain in scope until the end of the block.
-    const auto reader = file_.access();
-    const auto read_position = reader->buffer() + start_;
-
-    const auto size = from_little_endian_unsafe<file_offset>(read_position);
-    size_.store(size);
+    // The accessor must remain in scope until the end of the block.
+    const auto memory = file_.access();
+    const auto payload_size_address = memory->buffer() + header_size_;
+    payload_size_ = from_little_endian_unsafe<file_offset>(
+        payload_size_address);
 }
 
-// Write the size value to the first chunk of the file.
-void slab_manager::write_size()
+// Write the size value to the first 64 bits of the file after the header.
+void slab_manager::write_size() const
 {
-    BITCOIN_ASSERT(start_ + sizeof(file_offset) <= file_.size());
+    BITCOIN_ASSERT(header_size_ + sizeof(file_offset) <= file_.size());
 
-    const auto minimum_file_size = start_ + sizeof(file_offset);
-
-    // The writer must remain in scope until the end of the block.
-    auto allocated = file_.allocate(minimum_file_size);
-    auto write_position = allocated->buffer() + start_;
-
-    auto serial = make_serializer(write_position);
-    serial.write_little_endian(size_.load());
+    // The accessor must remain in scope until the end of the block.
+    const auto memory = file_.access();
+    const auto payload_size_address = memory->buffer() + header_size_;
+    auto serial = make_serializer(payload_size_address);
+    serial.write_little_endian(payload_size_);
 }
 
 } // namespace database

@@ -27,8 +27,8 @@ namespace database {
 
 template <typename IndexType, typename ValueType>
 hash_table<IndexType, ValueType>::hash_table(memory_map& file,
-    file_offset sector_start)
-  : file_(file), size_(0), sector_start_(sector_start)
+    file_offset header_size)
+  : file_(file), size_(0), header_size_(header_size)
 {
     static_assert(std::is_unsigned<ValueType>::value,
         "hash_table only works with unsigned types");
@@ -38,14 +38,14 @@ template <typename IndexType, typename ValueType>
 void hash_table<IndexType, ValueType>::create(IndexType size)
 {
     // Calculate the minimum file size.
-    const auto minimum_file_size = sector_start_ + item_position(size);
+    const auto minimum_file_size = header_size_ + item_position(size);
 
-    // The writer must remain in scope until the end of the block.
-    auto allocated = file_.allocate(minimum_file_size);
-    const auto write_position = allocated->buffer() + sector_start_;
+    // The memory object must remain in scope until the end of the block.
+    const auto memory = file_.allocate(minimum_file_size);
+    const auto size_address = memory->buffer() + header_size_;
 
     // MUST BE ATOMIC
-    auto serial = make_serializer(write_position);
+    auto serial = make_serializer(size_address);
     serial.write_little_endian(size);
 
     for (IndexType index = 0; index < size; ++index)
@@ -57,11 +57,11 @@ void hash_table<IndexType, ValueType>::start()
 {
     BITCOIN_ASSERT(sizeof(IndexType) <= file_.size());
 
-    // The reader must remain in scope until the end of the block.
-    const auto reader = file_.access();
-    const auto read_position = reader->buffer();
+    // The memory accessor remain in scope until the end of the block.
+    const auto memory = file_.access();
+    const auto size_address = memory->buffer();
 
-    size_ = from_little_endian_unsafe<IndexType>(read_position);
+    size_ = from_little_endian_unsafe<IndexType>(size_address);
 }
 
 template <typename IndexType, typename ValueType>
@@ -71,14 +71,14 @@ ValueType hash_table<IndexType, ValueType>::read(IndexType index) const
     BITCOIN_ASSERT(index < size_);
 
     // Find the item in the file.
-    const auto offset = sector_start_ + item_position(index);
+    const auto offset = header_size_ + item_position(index);
 
-    // The reader must remain in scope until the end of the block.
-    const auto reader = file_.access();
-    const auto read_position = reader->buffer() + offset;
+    // The memory accessor remain in scope until the end of the block.
+    const auto memory = file_.access();
+    const auto value_address = memory->buffer() + offset;
 
     // Deserialize value.
-    return from_little_endian_unsafe<ValueType>(read_position);
+    return from_little_endian_unsafe<ValueType>(value_address);
 }
 
 template <typename IndexType, typename ValueType>
@@ -88,17 +88,17 @@ void hash_table<IndexType, ValueType>::write(IndexType index, ValueType value)
     BITCOIN_ASSERT(index < size_);
 
     // Find the item in the file.
-    const auto position = sector_start_ + item_position(index);
+    const auto position = header_size_ + item_position(index);
 
     // Calculate the minimum file size.
     const auto minimum_file_size = position + sizeof(value);
 
-    // The writer must remain in scope until the end of the block.
-    auto allocated = file_.allocate(minimum_file_size);
-    auto write_position = allocated->buffer() + position;
+    // The memory object must remain in scope until the end of the block.
+    auto memory = file_.allocate(minimum_file_size);
+    auto value_position = memory->buffer() + position;
 
     // MUST BE ATOMIC
-    auto serial = make_serializer(write_position);
+    auto serial = make_serializer(value_position);
     serial.write_little_endian(value);
 }
 

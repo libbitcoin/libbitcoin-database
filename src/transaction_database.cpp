@@ -46,7 +46,7 @@ transaction_database::transaction_database(
 
 void transaction_database::create()
 {
-    map_file_.resize(initial_map_file_size);
+    map_file_.allocate(initial_map_file_size);
     header_.create(number_buckets);
     manager_.create();
 }

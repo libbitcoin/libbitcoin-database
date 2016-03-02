@@ -45,7 +45,7 @@ void write_data()
     data_base::touch_file("slab_hash_table");
     memory_map file("slab_hash_table");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
-    file.resize(header_size + minimum_slabs_size);
+    file.allocate(header_size + minimum_slabs_size);
 
     slab_hash_table_header header(file, 0);
     header.create(buckets);
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__64bit__test)
     data_base::touch_file("record_hash_table");
     memory_map file("record_hash_table");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
-    file.resize(header_size + minimum_records_size);
+    file.allocate(header_size + minimum_records_size);
 
     record_hash_table_header header(file, 0);
     header.create(rec_buckets);

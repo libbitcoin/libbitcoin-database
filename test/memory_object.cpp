@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(slab__test)
     data_base::touch_file("slabs");
     memory_map file("slabs");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
-    file.resize(200);
+    file.allocate(200);
     slab_manager data(file, 0);
     data.create();
 
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(array__test)
     data_base::touch_file("array");
     memory_map file("array");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
-    file.resize(4 + 4 * 10);
+    file.allocate(4 + 4 * 10);
 
     hash_table<uint32_t, uint32_t> array(file, 0);
     array.create(10);
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(record__test)
     data_base::touch_file("records");
     memory_map file("records");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
-    file.resize(4);
+    file.allocate(4);
     record_manager recs(file, 0, 10);
     recs.create();
 
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(record_list__test)
     data_base::touch_file("record_list");
     memory_map file("record_list");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
-    file.resize(4);
+    file.allocate(4);
     BC_CONSTEXPR size_t record_size = record_list_offset + 6;
     record_manager recs(file, 0, record_size);
     recs.create();
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__test)
     data_base::touch_file("slab_hash_table");
     memory_map file("slab_hash_table");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
-    file.resize(4 + 8 * 100 + 8);
+    file.allocate(4 + 8 * 100 + 8);
 
     slab_hash_table_header header(file, 0);
     header.create(100);

@@ -20,9 +20,7 @@
 #ifndef LIBBITCOIN_DATABASE_SLAB_MANAGER_HPP
 #define LIBBITCOIN_DATABASE_SLAB_MANAGER_HPP
 
-#include <atomic>
 #include <cstddef>
-#include <cstdint>
 #include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
@@ -41,11 +39,10 @@ BC_CONSTFUNC size_t slab_hash_table_header_size(size_t buckets)
 /// The slab manager represents a growing collection of various sized
 /// slabs of data on disk. It will resize the file accordingly and keep
 /// track of the current end pointer so new slabs can be allocated.
-/// It also provides logical slab mapping to the slab memory address.
 class BCD_API slab_manager
 {
 public:
-    slab_manager(memory_map& file, file_offset sector_start);
+    slab_manager(memory_map& file, file_offset header_size);
 
     /// Create slab manager.
     void create();
@@ -53,29 +50,34 @@ public:
     /// Prepare manager for use.
     void start();
 
-    /// Synchronise slab allocator to disk.
-    void sync();
+    /// Synchronise the payload size to disk.
+    void sync() const;
 
-    /// Allocate a slab and return its logical offset, sync() after writing.
+    /// Allocate a slab and return its position, sync() after writing.
     file_offset new_slab(size_t size);
 
-    /// Return memory object for the slab at the specified offset.
+    /// Return memory object for the slab at the specified position.
     const memory::ptr get(file_offset position) const;
 
-private:
+protected:
 
-    // Ensure bytes for a new record are available.
-    void reserve(size_t bytes_needed);
+    /// Get the size of all slabs and size prefix (excludes header).
+    file_offset payload_size() const;
+
+private:
 
     // Read the size of the data from the file.
     void read_size();
 
     // Write the size of the data from the file.
-    void write_size();
+    void write_size() const;
 
+    // This class is thread and remap safe.
     memory_map& file_;
-    const file_offset start_;
-    std::atomic<file_offset> size_;
+    const file_offset header_size_;
+
+    // Payload size is protected by mutex.
+    file_offset payload_size_;
     mutable boost::shared_mutex mutex_;
 };
 
