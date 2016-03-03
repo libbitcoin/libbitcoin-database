@@ -44,7 +44,7 @@ uint8_t* memory::buffer()
 
 void memory::increment(size_t value)
 {
-    BITCOIN_ASSERT(static_cast<size_t>(data_) <= bc::max_size_t - value);
+    BITCOIN_ASSERT((size_t)data_ <= bc::max_size_t - value);
     data_ += value;
 }
 

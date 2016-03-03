@@ -62,7 +62,7 @@ void slab_manager::create()
     if (payload_size_ != sizeof(file_offset))
         throw std::runtime_error("Existing file slabs size is nonzero.");
 
-    file_.allocate(header_size_ + payload_size_);
+    file_.resize(header_size_ + payload_size_);
 
     write_size();
     ///////////////////////////////////////////////////////////////////////////
@@ -115,7 +115,7 @@ file_offset slab_manager::new_slab(size_t size)
     const auto next_slab_position = payload_size_;
 
     const size_t required_size = header_size_ + payload_size_ + size;
-    file_.allocate(required_size);
+    file_.reserve(required_size);
     payload_size_ += size;
 
     return next_slab_position;

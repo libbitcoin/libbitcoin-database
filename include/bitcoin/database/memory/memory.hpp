@@ -52,7 +52,7 @@ public:
 private:
     uint8_t* data_;
     boost::shared_mutex& mutex_;
-    //boost::shared_lock<boost::shared_mutex> shared_lock_;
+    boost::shared_lock<boost::shared_mutex> shared_lock_;
 };
 
 ////#define REMAP_SAFETY

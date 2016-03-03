@@ -66,7 +66,7 @@ spend_database::spend_database(const path& filename)
 
 void spend_database::create()
 {
-    file_.allocate(initial_map_file_size);
+    file_.resize(initial_map_file_size);
     header_.create();
     manager_.create();
 }

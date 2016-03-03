@@ -50,7 +50,9 @@ public:
     bool stopped() const;
     size_t size() const;
     memory_ptr access();
-    memory_ptr allocate(size_t size);
+    memory_ptr resize(size_t size);
+    memory_ptr reserve(size_t size);
+    memory_ptr reserve(size_t size, size_t growth_ratio);
 
 private:
     static size_t file_size(int file_handle);
@@ -61,7 +63,7 @@ private:
     bool unmap();
     bool map(size_t size);
     bool remap(size_t new_size);
-    bool reserve(size_t size);
+    bool truncate(size_t size);
     bool validate(size_t size);
 
     mutable boost::shared_mutex mutex_;
@@ -69,9 +71,10 @@ private:
     const int file_handle_;
 
     // Protected by reader/writer locks.
-    size_t size_;
-    uint8_t* data_;
     bool stopped_;
+    uint8_t* data_;
+    size_t file_size_;
+    size_t logical_size_;
 };
 
 } // namespace database

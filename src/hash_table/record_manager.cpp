@@ -64,7 +64,7 @@ void record_manager::create()
     if (record_count_ != 0)
         throw std::runtime_error("Existing file record count is nonzero.");
 
-    file_.allocate(header_size_ + record_to_position(record_count_));
+    file_.resize(header_size_ + record_to_position(record_count_));
 
     write_count();
     ///////////////////////////////////////////////////////////////////////////
@@ -129,7 +129,7 @@ array_index record_manager::new_records(size_t count)
 
     const size_t position = record_to_position(record_count_ + count);
     const size_t required_size = header_size_ + position;
-    file_.allocate(required_size);
+    file_.reserve(required_size);
     record_count_ += count;
 
     return next_record_index;

@@ -54,7 +54,8 @@ namespace database {
 using boost::format;
 using boost::filesystem::path;
 
-#define GROWTH_FACTOR 3 / 2
+#define NO_EXPANSION 100
+#define EXPANSION_RATE 150
 
 size_t memory_map::file_size(int file_handle)
 {
@@ -111,13 +112,14 @@ bool memory_map::handle_error(const char* context, const path& filename)
 
 memory_map::memory_map(const path& filename)
   : filename_(filename),
-    file_handle_(open_file(filename_)),
-    size_(file_size(file_handle_)),
+    stopped_(false),
     data_(nullptr),
-    stopped_(false)
+    file_handle_(open_file(filename_)),
+    file_size_(file_size(file_handle_)),
+    logical_size_(file_size_)
 {
     // This initializes data_.
-    stopped_ = !map(size_);
+    stopped_ = !map(file_size_);
 
     if (stopped_)
         handle_error("map", filename_);
@@ -152,11 +154,14 @@ bool memory_map::stop()
     stopped_ = true;
     log::info(LOG_DATABASE) << "Unmapping: " << filename_;
 
-    if (!unmap())
-        return handle_error("unmap", filename_);
+    if (munmap(data_, file_size_) == -1)
+        return handle_error("munmap", filename_);
+
+    if (ftruncate(file_handle_, logical_size_) == -1)
+        return handle_error("ftruncate", filename_);
 
     if (fsync(file_handle_) == -1)
-        return handle_error("flush", filename_);
+        return handle_error("fsync", filename_);
 
     if (close(file_handle_) == -1)
         return handle_error("close", filename_);
@@ -171,7 +176,7 @@ size_t memory_map::size() const
     ///////////////////////////////////////////////////////////////////////////
     //boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
 
-    return size_;
+    return file_size_;
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -190,21 +195,33 @@ memory_ptr memory_map::access()
     ///////////////////////////////////////////////////////////////////////////
 }
 
-memory_ptr memory_map::allocate(size_t size)
+memory_ptr memory_map::resize(size_t size)
+{
+    return reserve(size, NO_EXPANSION);
+}
+
+memory_ptr memory_map::reserve(size_t size)
+{
+    return reserve(size, EXPANSION_RATE);
+}
+
+memory_ptr memory_map::reserve(size_t size, size_t expansion)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     //boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
-    if (size > size_)
+    if (size > file_size_)
     {
         // There is no way to recover from this.
-        if (!reserve(size))
+        if (!truncate(size * expansion / 100))
             throw std::runtime_error("Resize failure, disk space may be low.");
     }
 
-    // This establishes a shared lock until disposed.
+    logical_size_ = size;
+
 #ifdef REMAP_SAFETY
+    // This establishes a shared lock until disposed.
     return std::make_shared<memory>(data_, mutex_);
 #else
     return data_;
@@ -214,10 +231,11 @@ memory_ptr memory_map::allocate(size_t size)
 
 // privates
 
+
 bool memory_map::unmap()
 {
-    bool success = (munmap(data_, size_) != -1);
-    size_ = 0;
+    bool success = (munmap(data_, file_size_) != -1);
+    file_size_ = 0;
     data_ = nullptr;
     return success;
 }
@@ -245,41 +263,38 @@ bool memory_map::remap(size_t size)
 #endif
 }
 
-bool memory_map::reserve(size_t size)
+bool memory_map::truncate(size_t size)
 {
-    const auto new_size = size * GROWTH_FACTOR;
-
 #ifndef MREMAP_MAYMOVE
     if (!unmap())
         return false;
 #endif
 
-    const auto message = format("Resizing: %1% [%2%]") % filename_ % new_size;
+    const auto message = format("Resizing: %1% [%2%]") % filename_ % size;
     log::debug(LOG_DATABASE) << message.str();
 
-    if (ftruncate(file_handle_, new_size) == -1)
+    if (ftruncate(file_handle_, size) == -1)
     {
-        handle_error("resize", filename_);
+        handle_error("truncate", filename_);
         return false;
     }
 
 #ifndef MREMAP_MAYMOVE
-    return map(new_size);
+    return map(size);
 #endif
-
-    return remap(new_size);
+    return remap(size);
 }
 
 bool memory_map::validate(size_t size)
 {
     if (data_ == MAP_FAILED)
     {
-        size_ = 0;
+        file_size_ = 0;
         data_ = nullptr;
         return false;
     }
 
-    size_ = size;
+    file_size_ = size;
     return true;
 }
 

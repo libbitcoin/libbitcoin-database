@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__test)
     data_base::touch_file(DIRECTORY "/hash_table_header");
     memory_map file(DIRECTORY "/hash_table_header");
     BITCOIN_ASSERT(ADDRESS(file.access()) != nullptr);
-    file.allocate(4 + 4 * 10);
+    file.resize(4 + 4 * 10);
 
     hash_table_header<uint32_t, uint32_t> array(file, 10);
     array.create();
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(slab_manager__test)
     data_base::touch_file(DIRECTORY "/slab_manager");
     memory_map file(DIRECTORY "/slab_manager");
     BITCOIN_ASSERT(ADDRESS(file.access()) != nullptr);
-    file.allocate(200);
+    file.resize(200);
 
     slab_manager data(file, 0);
     data.create();
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(record_manager__test)
     data_base::touch_file(DIRECTORY "/record_manager");
     memory_map file(DIRECTORY "/record_manager");
     BITCOIN_ASSERT(ADDRESS(file.access()) != nullptr);
-    file.allocate(4);
+    file.resize(4);
 
     record_manager recs(file, 0, 10);
     recs.create();
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(record_list__test)
     data_base::touch_file(DIRECTORY "/record_list");
     memory_map file(DIRECTORY "/record_list");
     BITCOIN_ASSERT(ADDRESS(file.access()) != nullptr);
-    file.allocate(4);
+    file.resize(4);
 
     BC_CONSTEXPR size_t record_size = record_list_offset + 6;
     record_manager recs(file, 0, record_size);

@@ -61,10 +61,10 @@ block_database::block_database(const path& map_filename,
 
 void block_database::create()
 {
-    map_file_.allocate(initial_map_file_size);
+    map_file_.resize(initial_map_file_size);
     header_.create();
     manager_.create();
-    index_file_.allocate(minimum_records_size);
+    index_file_.resize(minimum_records_size);
     index_.create();
 }
 

@@ -49,7 +49,7 @@ void create_database_file()
     data_base::touch_file(DIRECTORY "/slab_hash_table__write_read");
     memory_map file(DIRECTORY "/slab_hash_table__write_read");
     BITCOIN_ASSERT(ADDRESS(file.access()) != nullptr);
-    file.allocate(header_size + minimum_slabs_size);
+    file.resize(header_size + minimum_slabs_size);
 
     slab_hash_table_header header(file, buckets);
     header.create();
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__test)
     data_base::touch_file(DIRECTORY "/slab_hash_table");
     memory_map file(DIRECTORY "/slab_hash_table");
     BITCOIN_ASSERT(ADDRESS(file.access()) != nullptr);
-    file.allocate(4 + 8 * 100 + 8);
+    file.resize(4 + 8 * 100 + 8);
 
     slab_hash_table_header header(file, 100);
     header.create();
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
     memory_map file(DIRECTORY "/record_hash_table__32bit");
     const auto memory = file.access();
     BITCOIN_ASSERT(ADDRESS(memory) != nullptr);
-    file.allocate(header_size + minimum_records_size);
+    file.resize(header_size + minimum_records_size);
 
     record_hash_table_header header(file, record_buckets);
     header.create();
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table_header__64bit__test)
     data_base::touch_file(DIRECTORY "/record_hash_table_64bit");
     memory_map file(DIRECTORY "/record_hash_table_64bit");
     BITCOIN_ASSERT(ADDRESS(file.access()) != nullptr);
-    file.allocate(header_size + minimum_records_size);
+    file.resize(header_size + minimum_records_size);
 
     record_hash_table_header header(file, record_buckets);
     header.create();

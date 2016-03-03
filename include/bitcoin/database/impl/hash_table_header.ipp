@@ -33,6 +33,9 @@ hash_table_header<IndexType, ValueType>::hash_table_header(memory_map& file,
     IndexType buckets)
   : file_(file), buckets_(buckets)
 {
+    static_assert(empty == (ValueType)0xffffffffffffffff,
+        "Unexpected value for empty sentinel.");
+
     static_assert(std::is_unsigned<ValueType>::value,
         "Hash table header requires unsigned type.");
 }
@@ -44,13 +47,12 @@ void hash_table_header<IndexType, ValueType>::create()
     const auto minimum_file_size = item_position(buckets_);
 
     // The accessor must remain in scope until the end of the block.
-    const auto memory = file_.allocate(minimum_file_size);
+    const auto memory = file_.resize(minimum_file_size);
     const auto buckets_address = ADDRESS(memory);
     auto serial = make_serializer(buckets_address);
     serial.write_little_endian(buckets_);
 
     // optimized fill implementation
-    BITCOIN_ASSERT(empty == static_cast<ValueType>(0xffffffff));
     const auto start = buckets_address + sizeof(IndexType);
     memset(start, 0xff, buckets_ * sizeof(ValueType));
 
