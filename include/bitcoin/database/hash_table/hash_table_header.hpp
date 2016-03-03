@@ -46,12 +46,10 @@ public:
     //static constexpr ValueType empty = std::numeric_limits<ValueType>::max();
     static BC_CONSTEXPR ValueType empty = (ValueType)bc::max_uint64;
 
-    hash_table_header(memory_map& file);
+    hash_table_header(memory_map& file, IndexType buckets);
 
-    /// Initialize a new array. The file must have enough space.
-    /// The space needed is sizeof(IndexType) + size * sizeof(ValueType)
-    /// Element items are initialised to hash_table_header::empty.
-    void create(IndexType size);
+    /// Allocate the hash table and populate with empty values.
+    void create();
 
     /// Must be called before use. Loads the size from the file.
     void start();
@@ -62,7 +60,7 @@ public:
     /// Write value to item.
     void write(IndexType index, ValueType value);
 
-    /// The array's size.
+    /// The hash table size (bucket count).
     IndexType size() const;
 
 private:
@@ -71,7 +69,7 @@ private:
     file_offset item_position(IndexType index) const;
 
     memory_map& file_;
-    IndexType size_;
+    IndexType buckets_;
 };
 
 } // namespace database

@@ -29,7 +29,7 @@ using namespace bc::database;
 
 chain::transaction random_tx(size_t fudge)
 {
-    const auto genesis = chain::block::genesis_mainnet();
+    static const auto genesis = block::genesis_mainnet();
     auto result = genesis.transactions[0];
     result.inputs[0].previous_output.index = fudge;
     return result;
@@ -61,18 +61,18 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     auto block0 = chain::block::genesis_mainnet();
     block0.transactions.push_back(random_tx(0));
     block0.transactions.push_back(random_tx(1));
-    //const hash_digest h0 = hash_block_header(block0.header);
+    //const auto h0 = block0.header.hash();
 
-    chain::block block1;
+    block block1;
     block1.header = block0.header;
     block1.header.nonce = 4;
     block1.transactions.push_back(random_tx(2));
     block1.transactions.push_back(random_tx(3));
     block1.transactions.push_back(random_tx(4));
     block1.transactions.push_back(random_tx(5));
-    //const hash_digest h1 = hash_block_header(block1.header);
+    //const auto h1 = block1.header.hash();
 
-    chain::block block2;
+    block block2;
     block2.header = block0.header;
     block2.header.nonce = 110;
     block2.transactions.push_back(random_tx(6));
@@ -80,25 +80,25 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     block2.transactions.push_back(random_tx(8));
     block2.transactions.push_back(random_tx(9));
     block2.transactions.push_back(random_tx(10));
-    const hash_digest h2 = block2.header.hash();
+    const auto h2 = block2.header.hash();
 
-    chain::block block3;
+    block block3;
     block3.header = block0.header;
     block3.header.nonce = 88;
     block3.transactions.push_back(random_tx(11));
     block3.transactions.push_back(random_tx(12));
     block3.transactions.push_back(random_tx(13));
-    //const hash_digest h3 = hash_block_header(block3.header);
+    //const auto h3 = block3.header.hash();
 
-    chain::block block4a;
+    block block4a;
     block4a.header = block0.header;
     block4a.header.nonce = 63;
     block4a.transactions.push_back(random_tx(14));
     block4a.transactions.push_back(random_tx(15));
     block4a.transactions.push_back(random_tx(16));
-    const hash_digest h4a = block4a.header.hash();
+    const auto h4a = block4a.header.hash();
 
-    chain::block block5a;
+    block block5a;
     block5a.header = block0.header;
     block5a.header.nonce = 99;
     block5a.transactions.push_back(random_tx(17));
@@ -106,17 +106,17 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     block5a.transactions.push_back(random_tx(19));
     block5a.transactions.push_back(random_tx(20));
     block5a.transactions.push_back(random_tx(21));
-    const hash_digest h5a = block5a.header.hash();
+    const auto h5a = block5a.header.hash();
 
-    chain::block block4b;
+    block block4b;
     block4b.header = block0.header;
     block4b.header.nonce = 633;
     block4b.transactions.push_back(random_tx(22));
     block4b.transactions.push_back(random_tx(23));
     block4b.transactions.push_back(random_tx(24));
-    const hash_digest h4b = block4b.header.hash();
+    const auto h4b = block4b.header.hash();
 
-    chain::block block5b;
+    block block5b;
     block5b.header = block0.header;
     block5b.header.nonce = 222;
     block5b.transactions.push_back(random_tx(25));
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     block5b.transactions.push_back(random_tx(27));
     block5b.transactions.push_back(random_tx(28));
     block5b.transactions.push_back(random_tx(29));
-    const hash_digest h5b = block5b.header.hash();
+    const auto h5b = block5b.header.hash();
 
     data_base::touch_file(DIRECTORY "/block_lookup");
     data_base::touch_file(DIRECTORY "/block_rows");
@@ -133,6 +133,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     db.start();
     size_t height;
     BOOST_REQUIRE(!db.top(height));
+
     db.store(block0);
     db.store(block1);
     db.store(block2);
@@ -147,8 +148,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
         BOOST_REQUIRE(res_h2.header().hash() == h2);
 
         for (size_t i = 0; i < res_h2.transaction_count(); ++i)
-            BOOST_REQUIRE(res_h2.transaction_hash(i) ==
-            block2.transactions[i].hash());
+            BOOST_REQUIRE(res_h2.transaction_hash(i) == block2.transactions[i].hash());
     }
 
     // Try a fork event.
@@ -202,8 +202,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
         BOOST_REQUIRE(res5b.header().hash() == h5b);
 
         for (size_t i = 0; i < res5b.transaction_count(); ++i)
-            BOOST_REQUIRE(res5b.transaction_hash(i) ==
-                block5b.transactions[i].hash());
+            BOOST_REQUIRE(res5b.transaction_hash(i) == block5b.transactions[i].hash());
     }
 
     // Test also fetch by hash.

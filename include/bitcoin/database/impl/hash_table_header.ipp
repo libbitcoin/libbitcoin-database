@@ -20,65 +20,69 @@
 #ifndef LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_IPP
 #define LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_IPP
 
-////#include <cstring>
+#include <cstring>
 #include <bitcoin/bitcoin.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 template <typename IndexType, typename ValueType>
-hash_table_header<IndexType, ValueType>::hash_table_header(memory_map& file)
-  : file_(file), size_(0)
+hash_table_header<IndexType, ValueType>::hash_table_header(memory_map& file,
+    IndexType buckets)
+    : file_(file), buckets_(buckets)
 {
     static_assert(std::is_unsigned<ValueType>::value,
-        "hash_table_header only works with unsigned types");
+        "Hash table header requires unsigned type.");
 }
 
 template <typename IndexType, typename ValueType>
-void hash_table_header<IndexType, ValueType>::create(IndexType size)
+void hash_table_header<IndexType, ValueType>::create()
 {
     // Calculate the minimum file size.
-    const auto minimum_file_size = item_position(size);
+    const auto minimum_file_size = item_position(buckets_);
 
-    // The memory object must remain in scope until the end of the block.
+    // The accessor must remain in scope until the end of the block.
     const auto memory = file_.allocate(minimum_file_size);
-    const auto size_address = memory->buffer();
+    const auto buckets_address = memory->buffer();
+    auto serial = make_serializer(buckets_address);
+    serial.write_little_endian(buckets_);
 
-    auto serial = make_serializer(memory->buffer());
-    serial.write_little_endian(size);
+    // optimized fill implementation
+    BITCOIN_ASSERT(empty == static_cast<ValueType>(0xffffffff));
+    const auto start = buckets_address + sizeof(IndexType);
+    memset(start, 0xff, buckets_ * sizeof(ValueType));
 
-    //// optimization?
-    ////memset(size_address + sizeof(IndexType), 0xff, size * sizeof(ValueType));
-    for (IndexType index = 0; index < size; ++index)
-        serial.write_little_endian(empty);
+    // rationalized fill implementation
+    ////for (IndexType index = 0; index < buckets_; ++index)
+    ////    serial.write_little_endian(empty);
 }
 
 template <typename IndexType, typename ValueType>
 void hash_table_header<IndexType, ValueType>::start()
 {
-    BITCOIN_ASSERT(sizeof(IndexType) <= file_.size());
+    const auto minimum_file_size = item_position(buckets_);
 
-    // The memory accessor remain in scope until the end of the block.
+    ////if (minimum_file_size > file_.size())
+    ////    throw std::runtime_error("Header file is too small.");
+
+    // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto size_address = memory->buffer();
+    const auto buckets_address = memory->buffer();
+    const auto buckets = from_little_endian_unsafe<IndexType>(buckets_address);
 
-    size_ = from_little_endian_unsafe<IndexType>(size_address);
+    if (buckets != buckets_)
+        throw std::runtime_error("Header file indicates incorrect size.");
 }
 
 template <typename IndexType, typename ValueType>
 ValueType hash_table_header<IndexType, ValueType>::read(IndexType index) const
 {
-    BITCOIN_ASSERT_MSG(size_ != 0, "hash_table_header not started.");
-    BITCOIN_ASSERT(index < size_);
-
-    // Find the item in the file.
-    const auto offset = item_position(index);
-
-    // The memory accessor remain in scope until the end of the block.
+    // This is not runtime safe but test is avoided as an optimization.
+    BITCOIN_ASSERT(index < buckets_);
+    
+    // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto value_address = memory->buffer() + offset;
-
-    // Deserialize value.
+    const auto value_address = memory->buffer() + item_position(index);
     return from_little_endian_unsafe<ValueType>(value_address);
 }
 
@@ -86,18 +90,12 @@ template <typename IndexType, typename ValueType>
 void hash_table_header<IndexType, ValueType>::write(IndexType index,
     ValueType value)
 {
-    BITCOIN_ASSERT_MSG(size_ > 0, "hash_table_header not started.");
-    BITCOIN_ASSERT(index < size_);
-
-    // Find the item in the file.
-    const auto position = item_position(index);
-
-    // Calculate the minimum file size.
-    const auto minimum_file_size = position + sizeof(value);
-
-    // The memory object must remain in scope until the end of the block.
-    auto memory = file_.allocate(minimum_file_size);
-    auto value_position = memory->buffer() + position;
+    // This is not runtime safe but test is avoided as an optimization.
+    BITCOIN_ASSERT(index < buckets_);
+    
+    // The accessor must remain in scope until the end of the block.
+    const auto memory = file_.access();
+    const auto value_position = memory->buffer() + item_position(index);
 
     // MUST BE ATOMIC
     auto serial = make_serializer(value_position);
@@ -107,7 +105,7 @@ void hash_table_header<IndexType, ValueType>::write(IndexType index,
 template <typename IndexType, typename ValueType>
 IndexType hash_table_header<IndexType, ValueType>::size() const
 {
-    return size_;
+    return buckets_;
 }
 
 template <typename IndexType, typename ValueType>

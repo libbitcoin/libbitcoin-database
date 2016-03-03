@@ -56,7 +56,7 @@ static hash_digest output_to_hash(const chain::output_point& output)
 
 spend_database::spend_database(const path& filename)
   : file_(filename), 
-    header_(file_),
+    header_(file_, number_buckets),
     manager_(file_, header_size, record_size),
     map_(header_, manager_)
 {
@@ -66,7 +66,7 @@ spend_database::spend_database(const path& filename)
 void spend_database::create()
 {
     file_.allocate(initial_map_file_size);
-    header_.create(number_buckets);
+    header_.create();
     manager_.create();
 }
 

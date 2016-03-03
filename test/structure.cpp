@@ -54,8 +54,8 @@ BOOST_AUTO_TEST_CASE(hash_table_header__test)
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.allocate(4 + 4 * 10);
 
-    hash_table_header<uint32_t, uint32_t> array(file);
-    array.create(10);
+    hash_table_header<uint32_t, uint32_t> array(file, 10);
+    array.create();
     array.start();
 
     array.write(9, 110);

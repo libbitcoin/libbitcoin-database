@@ -36,7 +36,7 @@ BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_slabs_size;
 
 transaction_database::transaction_database(const path& map_filename)
   : map_file_(map_filename), 
-    header_(map_file_),
+    header_(map_file_, number_buckets),
     manager_(map_file_, header_size),
     map_(header_, manager_)
 {
@@ -46,7 +46,7 @@ transaction_database::transaction_database(const path& map_filename)
 void transaction_database::create()
 {
     map_file_.allocate(initial_map_file_size);
-    header_.create(number_buckets);
+    header_.create();
     manager_.create();
 }
 

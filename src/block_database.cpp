@@ -48,7 +48,7 @@ BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_slabs_size;
 block_database::block_database(const path& map_filename,
     const path& index_filename)
   : map_file_(map_filename), 
-    header_(map_file_),
+    header_(map_file_, number_buckets),
     manager_(map_file_, header_size),
     map_(header_, manager_),
     index_file_(index_filename),
@@ -61,7 +61,7 @@ block_database::block_database(const path& map_filename,
 void block_database::create()
 {
     map_file_.allocate(initial_map_file_size);
-    header_.create(number_buckets);
+    header_.create();
     manager_.create();
     index_file_.allocate(minimum_records_size);
     index_.create();

@@ -43,7 +43,7 @@ BC_CONSTEXPR size_t row_record_size = hash_table_record_size<hash_digest>(value_
 history_database::history_database(const path& lookup_filename,
     const path& rows_filename)
   : lookup_file_(lookup_filename), 
-    header_(lookup_file_),
+    header_(lookup_file_, number_buckets),
     manager_(lookup_file_, header_size, record_size),
     start_lookup_(header_, manager_),
     rows_file_(rows_filename), 
@@ -58,7 +58,7 @@ history_database::history_database(const path& lookup_filename,
 void history_database::create()
 {
     lookup_file_.allocate(initial_lookup_file_size);
-    header_.create(number_buckets);
+    header_.create();
     manager_.create();
 
     rows_file_.allocate(minimum_records_size);

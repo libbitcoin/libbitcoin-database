@@ -51,8 +51,8 @@ void create_database_file()
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.allocate(header_size + minimum_slabs_size);
 
-    slab_hash_table_header header(file);
-    header.create(buckets);
+    slab_hash_table_header header(file, buckets);
+    header.create();
     header.start();
 
     const file_offset slab_start = header_size;
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__write_read__test)
     memory_map file(DIRECTORY "/slab_hash_table__write_read");
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
 
-    slab_hash_table_header header(file);
+    slab_hash_table_header header(file, buckets);
     header.start();
 
     BOOST_REQUIRE(header.size() == buckets);
@@ -137,8 +137,8 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__test)
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.allocate(4 + 8 * 100 + 8);
 
-    slab_hash_table_header header(file);
-    header.create(100);
+    slab_hash_table_header header(file, 100);
+    header.create();
     header.start();
 
     slab_manager alloc(file, 4 + 8 * 100);
@@ -171,8 +171,8 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__test)
 
 BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
 {
-    BC_CONSTEXPR size_t rec_buckets = 2;
-    BC_CONSTEXPR size_t header_size = record_hash_table_header_size(rec_buckets);
+    BC_CONSTEXPR size_t record_buckets = 2;
+    BC_CONSTEXPR size_t header_size = record_hash_table_header_size(record_buckets);
 
     data_base::touch_file(DIRECTORY "/record_hash_table__32bit");
     memory_map file(DIRECTORY "/record_hash_table__32bit");
@@ -180,8 +180,8 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
     BITCOIN_ASSERT(memory->buffer() != nullptr);
     file.allocate(header_size + minimum_records_size);
 
-    record_hash_table_header header(file);
-    header.create(rec_buckets);
+    record_hash_table_header header(file, record_buckets);
+    header.create();
     header.start();
 
     typedef byte_array<4> tiny_hash;
@@ -252,8 +252,8 @@ BOOST_AUTO_TEST_CASE(record_hash_table_header__64bit__test)
     BITCOIN_ASSERT(file.access()->buffer() != nullptr);
     file.allocate(header_size + minimum_records_size);
 
-    record_hash_table_header header(file);
-    header.create(record_buckets);
+    record_hash_table_header header(file, record_buckets);
+    header.create();
     header.start();
 
     typedef byte_array<8> tiny_hash;
