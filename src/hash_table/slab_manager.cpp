@@ -77,8 +77,8 @@ void slab_manager::start()
     read_size();
     const auto minimum = header_size_ + payload_size_;
 
-    ////if (minimum > file_.size())
-    ////    throw std::runtime_error("Slabs size exceeds file size.");
+    if (minimum > file_.size())
+        throw std::runtime_error("Slabs size exceeds file size.");
     ///////////////////////////////////////////////////////////////////////////
 }
 

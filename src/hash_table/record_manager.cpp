@@ -79,8 +79,8 @@ void record_manager::start()
     read_count();
     const auto minimum = header_size_ + record_to_position(record_count_);
 
-    ////if (minimum > file_.size())
-    ////    throw std::runtime_error("Records size exceeds file size.");
+    if (minimum > file_.size())
+        throw std::runtime_error("Records size exceeds file size.");
     ///////////////////////////////////////////////////////////////////////////
 }
 

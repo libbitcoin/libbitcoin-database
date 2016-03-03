@@ -21,6 +21,7 @@
 #define LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_IPP
 
 #include <cstring>
+#include <stdexcept>
 #include <bitcoin/bitcoin.hpp>
 
 namespace libbitcoin {
@@ -62,8 +63,8 @@ void hash_table_header<IndexType, ValueType>::start()
 {
     const auto minimum_file_size = item_position(buckets_);
 
-    ////if (minimum_file_size > file_.size())
-    ////    throw std::runtime_error("Header file is too small.");
+    if (minimum_file_size > file_.size())
+        throw std::runtime_error("Header file is too small.");
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
