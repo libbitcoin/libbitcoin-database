@@ -29,9 +29,9 @@
 namespace libbitcoin {
 namespace database {
 
+using namespace boost::filesystem;
 using namespace bc::chain;
 using namespace bc::wallet;
-using namespace boost::filesystem;
 
 // BIP30 exception blocks.
 // github.com/bitcoin/bips/blob/master/bip-0030.mediawiki#specification

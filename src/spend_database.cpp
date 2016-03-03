@@ -27,9 +27,9 @@
 
 namespace libbitcoin {
 namespace database {
-    
+
+using namespace boost::filesystem;
 using namespace bc::chain;
-using path = boost::filesystem::path;
 
 BC_CONSTEXPR size_t number_buckets = 228110589;
 BC_CONSTEXPR size_t header_size = record_hash_table_header_size(number_buckets);

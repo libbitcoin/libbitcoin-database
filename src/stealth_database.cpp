@@ -27,7 +27,7 @@
 namespace libbitcoin {
 namespace database {
 
-using path = boost::filesystem::path;
+using namespace boost::filesystem;
 using namespace bc::chain;
 
 // ephemkey is without sign byte and address is without version byte.
