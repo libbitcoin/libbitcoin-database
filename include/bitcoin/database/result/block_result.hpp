@@ -33,7 +33,7 @@ namespace database {
 class BCD_API block_result
 {
 public:
-    block_result(const memory::ptr slab);
+    block_result(const memory_ptr slab);
 
     /// True if this block result is valid (found).
     operator bool() const;
@@ -51,7 +51,7 @@ public:
     hash_digest transaction_hash(size_t index) const;
 
 private:
-    const memory::ptr slab_;
+    const memory_ptr slab_;
 };
 
 } // namespace database

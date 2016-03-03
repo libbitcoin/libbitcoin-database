@@ -44,7 +44,7 @@ file_offset slab_hash_table<HashType>::store(const HashType& key,
     slab_list<HashType> item(manager_, 0);
     const auto new_begin = item.create(key, value_size, old_begin);
     const auto memory = item.data();
-    write(memory->buffer());
+    write(ADDRESS(memory));
 
     // Link record to header.
     link(key, new_begin);
@@ -54,7 +54,7 @@ file_offset slab_hash_table<HashType>::store(const HashType& key,
 }
 
 template <typename HashType>
-const memory::ptr slab_hash_table<HashType>::find(const HashType& key) const
+const memory_ptr slab_hash_table<HashType>::find(const HashType& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);

@@ -52,7 +52,7 @@ public:
     array_index next(array_index index) const;
 
     /// Get underlying record data.
-    const memory::ptr get(array_index index) const;
+    const memory_ptr get(array_index index) const;
 
 private:
     record_manager& manager_;

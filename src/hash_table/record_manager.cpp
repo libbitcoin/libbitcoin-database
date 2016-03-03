@@ -136,14 +136,14 @@ array_index record_manager::new_records(size_t count)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-const memory::ptr record_manager::get(array_index record) const
+const memory_ptr record_manager::get(array_index record) const
 {
     // Ensure requested record is within the file.
     // We avoid a runtime error here to optimize out the count lock.
     BITCOIN_ASSERT_MSG(record < count(), "Read past end of file.");
 
-    const auto memory = file_.access();
-    memory->increment(header_size_ + record_to_position(record));
+    auto memory = file_.access();
+    INCREMENT(memory, header_size_ + record_to_position(record));
     return memory;
 }
 
@@ -156,7 +156,7 @@ void record_manager::read_count()
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto count_address = memory->buffer() + header_size_;
+    const auto count_address = ADDRESS(memory) + header_size_;
     record_count_ = from_little_endian_unsafe<array_index>(count_address);
 }
 
@@ -167,7 +167,7 @@ void record_manager::write_count()
 
     // The accessor must remain in scope until the end of the block.
     auto memory = file_.access();
-    auto payload_size_address = memory->buffer() + header_size_;
+    auto payload_size_address = ADDRESS(memory) + header_size_;
     auto serial = make_serializer(payload_size_address);
     serial.write_little_endian(record_count_);
 }

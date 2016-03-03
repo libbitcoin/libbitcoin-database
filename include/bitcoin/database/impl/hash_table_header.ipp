@@ -23,6 +23,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -30,7 +31,7 @@ namespace database {
 template <typename IndexType, typename ValueType>
 hash_table_header<IndexType, ValueType>::hash_table_header(memory_map& file,
     IndexType buckets)
-    : file_(file), buckets_(buckets)
+  : file_(file), buckets_(buckets)
 {
     static_assert(std::is_unsigned<ValueType>::value,
         "Hash table header requires unsigned type.");
@@ -44,7 +45,7 @@ void hash_table_header<IndexType, ValueType>::create()
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.allocate(minimum_file_size);
-    const auto buckets_address = memory->buffer();
+    const auto buckets_address = ADDRESS(memory);
     auto serial = make_serializer(buckets_address);
     serial.write_little_endian(buckets_);
 
@@ -68,7 +69,7 @@ void hash_table_header<IndexType, ValueType>::start()
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto buckets_address = memory->buffer();
+    const auto buckets_address = ADDRESS(memory);
     const auto buckets = from_little_endian_unsafe<IndexType>(buckets_address);
 
     if (buckets != buckets_)
@@ -83,7 +84,7 @@ ValueType hash_table_header<IndexType, ValueType>::read(IndexType index) const
     
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto value_address = memory->buffer() + item_position(index);
+    const auto value_address = ADDRESS(memory) + item_position(index);
     return from_little_endian_unsafe<ValueType>(value_address);
 }
 
@@ -96,7 +97,7 @@ void hash_table_header<IndexType, ValueType>::write(IndexType index,
     
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto value_position = memory->buffer() + item_position(index);
+    const auto value_position = ADDRESS(memory) + item_position(index);
 
     // MUST BE ATOMIC
     auto serial = make_serializer(value_position);

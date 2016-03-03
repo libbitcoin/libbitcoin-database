@@ -49,8 +49,8 @@ public:
     bool stop();
     bool stopped() const;
     size_t size() const;
-    memory::ptr access();
-    memory::ptr allocate(size_t size);
+    memory_ptr access();
+    memory_ptr allocate(size_t size);
 
 private:
     static size_t file_size(int file_handle);

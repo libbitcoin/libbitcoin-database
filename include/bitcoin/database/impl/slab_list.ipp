@@ -49,7 +49,7 @@ public:
     bool compare(const HashType& key) const;
 
     /// The actual user data.
-    const memory::ptr data() const;
+    const memory_ptr data() const;
 
     /// Position of next item in the chained list.
     file_offset next_position() const;
@@ -58,8 +58,8 @@ public:
     void write_next_position(file_offset next);
 
 private:
-    const memory::ptr raw_next_data() const;
-    const memory::ptr raw_data(file_offset offset) const;
+    const memory_ptr raw_next_data() const;
+    const memory_ptr raw_data(file_offset offset) const;
 
     file_offset position_;
     slab_manager& manager_;
@@ -88,7 +88,7 @@ file_offset slab_list<HashType>::create(const HashType& key,
 
     // Write to slab.
     const auto memory = raw_data(0);
-    const auto key_data = memory->buffer();
+    const auto key_data = ADDRESS(memory);
     auto serial = make_serializer(key_data);
     serial.write_data(key);
 
@@ -102,12 +102,12 @@ bool slab_list<HashType>::compare(const HashType& key) const
 {
     // Key data is at the start.
     const auto memory = raw_data(0);
-    const auto key_data = memory->buffer();
+    const auto key_data = ADDRESS(memory);
     return std::equal(key.begin(), key.end(), key_data);
 }
 
 template <typename HashType>
-const memory::ptr slab_list<HashType>::data() const
+const memory_ptr slab_list<HashType>::data() const
 {
     // Value data is at the end.
     return raw_data(value_begin);
@@ -117,29 +117,29 @@ template <typename HashType>
 file_offset slab_list<HashType>::next_position() const
 {
     const auto memory = raw_next_data();
-    return from_little_endian_unsafe<file_offset>(memory->buffer());
+    return from_little_endian_unsafe<file_offset>(ADDRESS(memory));
 }
 
 template <typename HashType>
 void slab_list<HashType>::write_next_position(file_offset next)
 {
     const auto memory = raw_next_data();
-    auto serial = make_serializer(memory->buffer());
+    auto serial = make_serializer(ADDRESS(memory));
 
     // MUST BE ATOMIC
     serial.write_8_bytes_little_endian(next);
 }
 
 template <typename HashType>
-const memory::ptr slab_list<HashType>::raw_data(file_offset offset) const
+const memory_ptr slab_list<HashType>::raw_data(file_offset offset) const
 {
-    const auto memory = manager_.get(position_);
-    memory->increment(offset);
+    auto memory = manager_.get(position_);
+    INCREMENT(memory, offset);
     return memory;
 }
 
 template <typename HashType>
-const memory::ptr slab_list<HashType>::raw_next_data() const
+const memory_ptr slab_list<HashType>::raw_next_data() const
 {
     // Next position is after key data.
     return raw_data(hash_size);

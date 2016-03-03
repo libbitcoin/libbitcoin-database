@@ -24,6 +24,7 @@
 #include <cstdint>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -60,7 +61,7 @@ spend_database::spend_database(const path& filename)
     manager_(file_, header_size, record_size),
     map_(header_, manager_)
 {
-    BITCOIN_ASSERT(file_.access()->buffer() != nullptr);
+    BITCOIN_ASSERT(ADDRESS(file_.access()) != nullptr);
 }
 
 void spend_database::create()
@@ -90,7 +91,7 @@ spend spend_database::get(const output_point& outpoint) const
         return { false, 0, {} };
 
     hash_digest hash;
-    const auto record = memory->buffer();
+    const auto record = ADDRESS(memory);
     std::copy(record, record + hash_size, hash.begin());
     const auto index = from_little_endian_unsafe<uint32_t>(record + hash_size);
 

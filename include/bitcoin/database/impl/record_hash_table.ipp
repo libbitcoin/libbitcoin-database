@@ -45,14 +45,14 @@ void record_hash_table<HashType>::store(const HashType& key,
     record_row<HashType> item(manager_, 0);
     const auto new_begin = item.create(key, old_begin);
     const auto memory = item.data();
-    write(memory->buffer());
+    write(ADDRESS(memory));
 
     // Link record to header.
     link(key, new_begin);
 }
 
 template <typename HashType>
-const memory::ptr record_hash_table<HashType>::find(const HashType& key) const
+const memory_ptr record_hash_table<HashType>::find(const HashType& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);

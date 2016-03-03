@@ -33,21 +33,21 @@ static constexpr size_t header_size = 80;
 static constexpr size_t height_size = sizeof(uint32_t);
 static constexpr size_t count_size = sizeof(uint32_t);
 
-block_result::block_result(const memory::ptr slab)
+block_result::block_result(const memory_ptr slab)
   : slab_(slab)
 {
 }
 
 block_result::operator bool() const
 {
-    return static_cast<bool>(slab_);
+    return slab_ != nullptr;
 }
 
 chain::header block_result::header() const
 {
     BITCOIN_ASSERT(slab_);
     chain::header header;
-    const auto memory = slab_->buffer();
+    const auto memory = ADDRESS(slab_);
     auto deserial = make_deserializer_unsafe(memory);
     header.from_data(deserial, false);
     return header;
@@ -57,14 +57,14 @@ chain::header block_result::header() const
 size_t block_result::height() const
 {
     BITCOIN_ASSERT(slab_);
-    const auto memory = slab_->buffer();
+    const auto memory = ADDRESS(slab_);
     return from_little_endian_unsafe<uint32_t>(memory + header_size);
 }
 
 size_t block_result::transaction_count() const
 {
     BITCOIN_ASSERT(slab_);
-    const auto memory = slab_->buffer();
+    const auto memory = ADDRESS(slab_);
     const auto offset = header_size + height_size;
     return from_little_endian_unsafe<uint32_t>(memory + offset);
 }
@@ -73,7 +73,7 @@ hash_digest block_result::transaction_hash(size_t index) const
 {
     BITCOIN_ASSERT(slab_);
     BITCOIN_ASSERT(index < transaction_count());
-    const auto memory = slab_->buffer();
+    const auto memory = ADDRESS(slab_);
     const auto offset = header_size + height_size + count_size;
     const uint8_t* first = memory + offset + index * hash_size;
     auto deserial = make_deserializer_unsafe(first);

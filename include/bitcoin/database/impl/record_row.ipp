@@ -48,7 +48,7 @@ public:
     bool compare(const HashType& key) const;
 
     /// The actual user data.
-    const memory::ptr data() const;
+    const memory_ptr data() const;
 
     /// Position of next item in the chained list.
     array_index next_index() const;
@@ -57,8 +57,8 @@ public:
     void write_next_index(array_index next);
 
 private:
-    const memory::ptr raw_next_data() const;
-    const memory::ptr raw_data(file_offset offset) const;
+    const memory_ptr raw_next_data() const;
+    const memory_ptr raw_data(file_offset offset) const;
 
     array_index index_;
     record_manager& manager_;
@@ -84,7 +84,7 @@ array_index record_row<HashType>::create(const HashType& key,
 
     // Write record.
     const auto memory = raw_data(0);
-    const auto record = memory->buffer();
+    const auto record = ADDRESS(memory);
     auto serial = make_serializer(record);
     serial.write_data(key);
 
@@ -98,12 +98,12 @@ bool record_row<HashType>::compare(const HashType& key) const
 {
     // Key data is at the start.
     const auto memory = raw_data(0);
-    const auto key_data = memory->buffer();
+    const auto key_data = ADDRESS(memory);
     return std::equal(key.begin(), key.end(), key_data);
 }
 
 template <typename HashType>
-const memory::ptr record_row<HashType>::data() const
+const memory_ptr record_row<HashType>::data() const
 {
     // Value data is at the end.
     return raw_data(value_begin);
@@ -113,29 +113,29 @@ template <typename HashType>
 array_index record_row<HashType>::next_index() const
 {
     const auto memory = raw_next_data();
-    return from_little_endian_unsafe<array_index>(memory->buffer());
+    return from_little_endian_unsafe<array_index>(ADDRESS(memory));
 }
 
 template <typename HashType>
 void record_row<HashType>::write_next_index(array_index next)
 {
     const auto memory = raw_next_data();
-    auto serial = make_serializer(memory->buffer());
+    auto serial = make_serializer(ADDRESS(memory));
 
     // MUST BE ATOMIC
     serial.write_4_bytes_little_endian(next);
 }
 
 template <typename HashType>
-const memory::ptr record_row<HashType>::raw_data(file_offset offset) const
+const memory_ptr record_row<HashType>::raw_data(file_offset offset) const
 {
-    const auto memory = manager_.get(index_);
-    memory->increment(offset);
+    auto memory = manager_.get(index_);
+    INCREMENT(memory, offset);
     return memory;
 }
 
 template <typename HashType>
-const memory::ptr record_row<HashType>::raw_next_data() const
+const memory_ptr record_row<HashType>::raw_next_data() const
 {
     // Next position is after key data.
     return raw_data(hash_size);

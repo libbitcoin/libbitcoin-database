@@ -57,7 +57,7 @@ public:
     file_offset new_slab(size_t size);
 
     /// Return memory object for the slab at the specified position.
-    const memory::ptr get(file_offset position) const;
+    const memory_ptr get(file_offset position) const;
 
 protected:
 

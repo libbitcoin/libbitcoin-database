@@ -123,14 +123,14 @@ file_offset slab_manager::new_slab(size_t size)
 }
 
 // Position is offset by header but not size storage (embedded in data files).
-const memory::ptr slab_manager::get(file_offset position) const
+const memory_ptr slab_manager::get(file_offset position) const
 {
     // Ensure requested position is within the file.
     // We avoid a runtime error here to optimize out the payload_size lock.
     BITCOIN_ASSERT_MSG(position < payload_size(), "Read past end of file.");
 
-    const auto memory = file_.access();
-    memory->increment(header_size_ + position);
+    auto memory = file_.access();
+    INCREMENT(memory, header_size_ + position);
     return memory;
 }
 
@@ -143,7 +143,7 @@ void slab_manager::read_size()
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto payload_size_address = memory->buffer() + header_size_;
+    const auto payload_size_address = ADDRESS(memory) + header_size_;
     payload_size_ = from_little_endian_unsafe<file_offset>(
         payload_size_address);
 }
@@ -155,7 +155,7 @@ void slab_manager::write_size() const
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto payload_size_address = memory->buffer() + header_size_;
+    const auto payload_size_address = ADDRESS(memory) + header_size_;
     auto serial = make_serializer(payload_size_address);
     serial.write_little_endian(payload_size_);
 }

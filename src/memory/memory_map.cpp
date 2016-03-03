@@ -175,18 +175,22 @@ size_t memory_map::size() const
     ///////////////////////////////////////////////////////////////////////////
 }
 
-memory::ptr memory_map::access()
+memory_ptr memory_map::access()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     //boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
 
     // This establishes a shared lock until disposed.
+#ifdef REMAP_SAFETY
     return std::make_shared<memory>(data_, mutex_);
+#else
+    return data_;
+#endif
     ///////////////////////////////////////////////////////////////////////////
 }
 
-memory::ptr memory_map::allocate(size_t size)
+memory_ptr memory_map::allocate(size_t size)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -200,7 +204,11 @@ memory::ptr memory_map::allocate(size_t size)
     }
 
     // This establishes a shared lock until disposed.
+#ifdef REMAP_SAFETY
     return std::make_shared<memory>(data_, mutex_);
+#else
+    return data_;
+#endif
     ///////////////////////////////////////////////////////////////////////////
 }
 

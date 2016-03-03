@@ -55,6 +55,18 @@ private:
     //boost::shared_lock<boost::shared_mutex> shared_lock_;
 };
 
+////#define REMAP_SAFETY
+
+#ifdef REMAP_SAFETY
+    typedef memory::ptr memory_ptr;
+    #define ADDRESS(pointer) pointer->buffer()
+    #define INCREMENT(pointer, offset) pointer->increment(offset)
+#else
+    typedef uint8_t* memory_ptr;
+    #define ADDRESS(pointer) pointer
+    #define INCREMENT(pointer, offset) pointer += (offset)
+#endif
+
 } // namespace database
 } // namespace libbitcoin
 

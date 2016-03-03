@@ -33,7 +33,7 @@ namespace database {
 class BCD_API transaction_result
 {
 public:
-    transaction_result(const memory::ptr slab);
+    transaction_result(const memory_ptr slab);
 
     /// True if this transaction result is valid (found).
     operator bool() const;
@@ -48,7 +48,7 @@ public:
     chain::transaction transaction() const;
 
 private:
-    const memory::ptr slab_;
+    const memory_ptr slab_;
 };
 
 } // namespace database

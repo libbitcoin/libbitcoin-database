@@ -67,7 +67,7 @@ public:
 
     /// Find the slab for a given hash.
     /// Returns a null pointer if not found.
-    const memory::ptr find(const HashType& key) const;
+    const memory_ptr find(const HashType& key) const;
 
     /// Delete a key-value pair from the hashtable by unlinking the node.
     bool unlink(const HashType& key);

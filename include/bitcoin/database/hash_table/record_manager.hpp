@@ -67,7 +67,7 @@ public:
     array_index new_records(size_t count);
 
     /// Return memory object for the record at the specified index.
-    const memory::ptr get(array_index record) const;
+    const memory_ptr get(array_index record) const;
 
 private:
 

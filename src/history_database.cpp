@@ -24,6 +24,7 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/hash_table/record_multimap_iterator.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -51,8 +52,8 @@ history_database::history_database(const path& lookup_filename,
     records_(rows_),
     map_(start_lookup_, records_)
 {
-    BITCOIN_ASSERT(lookup_file_.access()->buffer() != nullptr);
-    BITCOIN_ASSERT(rows_file_.access()->buffer() != nullptr);
+    BITCOIN_ASSERT(ADDRESS(lookup_file_.access()) != nullptr);
+    BITCOIN_ASSERT(ADDRESS(rows_file_.access()) != nullptr);
 }
 
 void history_database::create()
@@ -160,7 +161,7 @@ history history_database::get(const short_hash& key, size_t limit,
             break;
 
         const auto memory = records_.get(index);
-        const auto data = memory->buffer();
+        const auto data = ADDRESS(memory);
 
         // Skip rows below from_height (if specified).
         if (from_height && read_height(data) < from_height)

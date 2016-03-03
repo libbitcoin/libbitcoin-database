@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
 
 namespace libbitcoin {
@@ -40,7 +41,7 @@ transaction_database::transaction_database(const path& map_filename)
     manager_(map_file_, header_size),
     map_(header_, manager_)
 {
-    BITCOIN_ASSERT(map_file_.access()->buffer() != nullptr);
+    BITCOIN_ASSERT(ADDRESS(map_file_.access()) != nullptr);
 }
 
 void transaction_database::create()

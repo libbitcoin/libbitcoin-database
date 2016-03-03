@@ -22,6 +22,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -40,34 +41,34 @@ chain::transaction deserialize_tx(const Iterator first)
     return tx;
 }
 
-transaction_result::transaction_result(const memory::ptr slab)
+transaction_result::transaction_result(const memory_ptr slab)
   : slab_(slab)
 {
 }
 
 transaction_result::operator bool() const
 {
-    return static_cast<bool>(slab_);
+    return slab_ != nullptr;
 }
 
 size_t transaction_result::height() const
 {
     BITCOIN_ASSERT(slab_);
-    const auto memory = slab_->buffer();
+    const auto memory = ADDRESS(slab_);
     return from_little_endian_unsafe<uint32_t>(memory);
 }
 
 size_t transaction_result::index() const
 {
     BITCOIN_ASSERT(slab_);
-    const auto memory = slab_->buffer();
+    const auto memory = ADDRESS(slab_);
     return from_little_endian_unsafe<uint32_t>(memory + height_size);
 }
 
 chain::transaction transaction_result::transaction() const
 {
     BITCOIN_ASSERT(slab_);
-    const auto memory = slab_->buffer();
+    const auto memory = ADDRESS(slab_);
     return deserialize_tx(memory + height_size + index_size);
     //// return deserialize_tx(memory + 8, size_limit_ - 8);
 }
