@@ -59,7 +59,7 @@ void record_manager::create()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    //boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
     if (record_count_ != 0)
         throw std::runtime_error("Existing file record count is nonzero.");
@@ -74,7 +74,7 @@ void record_manager::start()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    //boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
     read_count();
     const auto minimum = header_size_ + record_to_position(record_count_);
@@ -88,7 +88,7 @@ void record_manager::sync()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    //boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
     write_count();
     ///////////////////////////////////////////////////////////////////////////
@@ -98,7 +98,7 @@ array_index record_manager::count() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    //boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
 
     return record_count_;
     ///////////////////////////////////////////////////////////////////////////
@@ -108,7 +108,7 @@ void record_manager::set_count(const array_index value)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    //boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
     BITCOIN_ASSERT(value <= record_count_);
 
@@ -122,7 +122,7 @@ array_index record_manager::new_records(size_t count)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    //boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
     // Always write after the last index.
     const auto next_record_index = record_count_;

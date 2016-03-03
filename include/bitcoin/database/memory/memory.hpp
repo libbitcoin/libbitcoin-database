@@ -55,7 +55,7 @@ private:
     boost::shared_lock<boost::shared_mutex> shared_lock_;
 };
 
-////#define REMAP_SAFETY
+#define REMAP_SAFETY
 
 #ifdef REMAP_SAFETY
     typedef memory::ptr memory_ptr;

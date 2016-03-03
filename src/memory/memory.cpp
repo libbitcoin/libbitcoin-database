@@ -29,8 +29,8 @@ using namespace boost;
 
 memory::memory(uint8_t* data, shared_mutex& mutex)
   : data_(data),
-    mutex_(mutex)/*,
-    shared_lock_(mutex_)*/
+    mutex_(mutex),
+    shared_lock_(mutex_)
 {
     ///////////////////////////////////////////////////////////////////////////
     // Begin Critical Section
