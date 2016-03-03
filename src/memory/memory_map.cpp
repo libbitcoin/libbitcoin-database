@@ -54,7 +54,7 @@ namespace database {
 using boost::format;
 using boost::filesystem::path;
 
-static constexpr float growth_factor = 3 / 2;
+#define GROWTH_FACTOR 3 / 2
 
 size_t memory_map::file_size(int file_handle)
 {
@@ -239,7 +239,7 @@ bool memory_map::remap(size_t size)
 
 bool memory_map::reserve(size_t size)
 {
-    const auto new_size = static_cast<size_t>(size * growth_factor);
+    const auto new_size = size * GROWTH_FACTOR;
 
 #ifndef MREMAP_MAYMOVE
     if (!unmap())
