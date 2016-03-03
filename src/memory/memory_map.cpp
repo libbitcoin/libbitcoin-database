@@ -134,7 +134,7 @@ bool memory_map::stopped() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::unique_lock<boost::shared_mutex> shared_lock(mutex_);
+    //boost::unique_lock<boost::shared_mutex> shared_lock(mutex_);
 
     return stopped_;
     ///////////////////////////////////////////////////////////////////////////
@@ -144,7 +144,7 @@ bool memory_map::stop()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::unique_lock<boost::shared_mutex> unique_lock(mutex_);
+    //boost::unique_lock<boost::shared_mutex> unique_lock(mutex_);
 
     if (stopped_)
         return true;
@@ -169,7 +169,7 @@ size_t memory_map::size() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
+    //boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
 
     return size_;
     ///////////////////////////////////////////////////////////////////////////
@@ -179,7 +179,7 @@ memory::ptr memory_map::access()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
+    //boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
 
     // This establishes a shared lock until disposed.
     return std::make_shared<memory>(data_, mutex_);
@@ -190,7 +190,7 @@ memory::ptr memory_map::allocate(size_t size)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    //boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
     if (size > size_)
     {

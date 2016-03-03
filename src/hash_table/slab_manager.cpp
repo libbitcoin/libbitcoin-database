@@ -57,7 +57,7 @@ void slab_manager::create()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    //boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
     if (payload_size_ != sizeof(file_offset))
         throw std::runtime_error("Existing file slabs size is nonzero.");
@@ -72,7 +72,7 @@ void slab_manager::start()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    //boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
     read_size();
     const auto minimum = header_size_ + payload_size_;
@@ -86,7 +86,7 @@ void slab_manager::sync() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    //boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
     write_size();
     ///////////////////////////////////////////////////////////////////////////
@@ -97,7 +97,7 @@ file_offset slab_manager::payload_size() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
+    //boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
 
     return payload_size_;
     ///////////////////////////////////////////////////////////////////////////
@@ -109,7 +109,7 @@ file_offset slab_manager::new_slab(size_t size)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    //boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
     // Always write after the last slab.
     const auto next_slab_position = payload_size_;

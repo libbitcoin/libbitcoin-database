@@ -29,8 +29,8 @@ using namespace boost;
 
 memory::memory(uint8_t* data, shared_mutex& mutex)
   : data_(data),
-    mutex_(mutex),
-    shared_lock_(mutex_)
+    mutex_(mutex)/*,
+    shared_lock_(mutex_)*/
 {
     ///////////////////////////////////////////////////////////////////////////
     // Begin Critical Section
@@ -44,7 +44,7 @@ uint8_t* memory::buffer()
 
 void memory::increment(size_t value)
 {
-    BITCOIN_ASSERT((size_t)data_ <= bc::max_size_t - value);
+    BITCOIN_ASSERT(static_cast<size_t>(data_) <= bc::max_size_t - value);
     data_ += value;
 }
 
