@@ -9,7 +9,7 @@
 # Define tests and options.
 #==============================================================================
 BOOST_UNIT_TEST_OPTIONS=\
-"--run_test=database_tests,structure_tests,hash_table_tests "\
+"--run_test=database_tests,hash_table_tests,structure_tests,data_base_tests "\
 "--show_progress=no "\
 "--detect_memory_leak=0 "\
 "--report_level=no "\

@@ -35,13 +35,14 @@
 #include <cstdint>
 #include <fcntl.h>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/memory/accessor.hpp>
+#include <bitcoin/database/memory/allocator.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
 // memory_map is be able to support 32 bit but because the database 
@@ -182,12 +183,7 @@ size_t memory_map::size() const
 
 memory_ptr memory_map::access()
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    REMAP_READ(mutex_);
-
-    return REMAP_SAFE(data_, mutex_);
-    ///////////////////////////////////////////////////////////////////////////
+    return REMAP_ACCESSOR(data_, mutex_);
 }
 
 memory_ptr memory_map::resize(size_t size)
@@ -204,22 +200,20 @@ memory_ptr memory_map::reserve(size_t size, size_t expansion)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    mutex_.unlock_upgrade();
+    const auto memory = REMAP_ALLOCATOR(mutex_);
 
     if (size > file_size_)
     {
-        if (!truncate(size * expansion / EXPANSION_DENOMINATOR))
+        const auto new_size = size * expansion / EXPANSION_DENOMINATOR;
+
+        if (!truncate(new_size))
             throw std::runtime_error("Resize failure, disk space may be low.");
     }
 
     logical_size_ = size;
-    
-    // Downgrade the shared lock so we can safely use data to create another.
-    mutex_.unlock_and_lock_shared();
+    REMAP_DOWNGRADE(memory, data_);
 
-    return REMAP_SAFE(data_, mutex_);
-
-    mutex_.unlock();
+    return memory;
     ///////////////////////////////////////////////////////////////////////////
 }
 

@@ -66,7 +66,7 @@ private:
     bool truncate(size_t size);
     bool validate(size_t size);
 
-    mutable upgrade_mutex mutex_;
+    mutable shared_mutex mutex_;
     const boost::filesystem::path filename_;
     const int file_handle_;
 

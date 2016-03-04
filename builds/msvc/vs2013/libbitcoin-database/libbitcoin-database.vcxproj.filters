@@ -49,7 +49,10 @@
     <ClCompile Include="..\..\..\..\src\hash_table\record_multimap_iterable.cpp">
       <Filter>src\hash_table</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\memory\memory.cpp">
+    <ClCompile Include="..\..\..\..\src\memory\accessor.cpp">
+      <Filter>src\memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\memory\allocator.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
   </ItemGroup>
@@ -125,6 +128,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\hash_table_header.hpp">
       <Filter>include\bitcoin\database\hash_table</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp">
+      <Filter>include\bitcoin\database\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\allocator.hpp">
+      <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

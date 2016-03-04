@@ -17,37 +17,46 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_DEFINE_HPP
-#define LIBBITCOIN_DATABASE_DEFINE_HPP
+#ifndef LIBBITCOIN_DATABASE_ACCESSOR_HPP
+#define LIBBITCOIN_DATABASE_ACCESSOR_HPP
 
+#include <cstddef>
 #include <cstdint>
-#include <vector>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/define.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
-// Now we use the generic helper definitions in libbitcoin to
-// define BCD_API and BCD_INTERNAL.
-// BCD_API is used for the public API symbols. It either DLL imports or
-// DLL exports (or does nothing for static build)
-// BCD_INTERNAL is used for non-api symbols.
+namespace libbitcoin {
+namespace database {
 
-#if defined BCD_STATIC
-    #define BCD_API
-    #define BCD_INTERNAL
-#elif defined BCD_DLL
-    #define BCD_API      BC_HELPER_DLL_EXPORT
-    #define BCD_INTERNAL BC_HELPER_DLL_LOCAL
-#else
-    #define BCD_API      BC_HELPER_DLL_IMPORT
-    #define BCD_INTERNAL BC_HELPER_DLL_LOCAL
-#endif
+#ifdef REMAP_SAFETY
 
-typedef uint32_t array_index;
-typedef uint64_t file_offset;
+/// This class provides shared remap safe access to file-mapped memory.
+/// The memory size is unprotected and unmanaged.
+class BCD_API accessor
+  : public memory
+{
+public:
+    accessor(shared_mutex& mutex, uint8_t*& data);
+    ~accessor();
 
-// Remap safety is required if the mmap file is not fully preallocated.
-#define REMAP_SAFETY
+    /// This class is not copyable.
+    accessor(const accessor& other) = delete;
 
-// Allocate safety is required for support of concurrent write operations.
-//#define ALLOCATE_SAFETY
+    /// Get the address indicated by the pointer.
+    uint8_t* buffer();
+
+    /// Increment the pointer the specified number of bytes.
+    void increment(size_t value);
+
+private:
+    shared_mutex& mutex_;
+    uint8_t* data_;
+};
+
+#endif // REMAP_SAFETY
+
+} // namespace database
+} // namespace libbitcoin
 
 #endif

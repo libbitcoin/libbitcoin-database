@@ -47,7 +47,8 @@ src_libbitcoin_database_la_SOURCES = \
     src/hash_table/record_multimap_iterable.cpp \
     src/hash_table/record_multimap_iterator.cpp \
     src/hash_table/slab_manager.cpp \
-    src/memory/memory.cpp \
+    src/memory/accessor.cpp \
+    src/memory/allocator.cpp \
     src/memory/memory_map.cpp \
     src/mman-win32/mman.c \
     src/mman-win32/mman.h \
@@ -309,6 +310,8 @@ include_bitcoin_database_impl_HEADERS = \
 
 include_bitcoin_database_memorydir = ${includedir}/bitcoin/database/memory
 include_bitcoin_database_memory_HEADERS = \
+    include/bitcoin/database/memory/accessor.hpp \
+    include/bitcoin/database/memory/allocator.hpp \
     include/bitcoin/database/memory/memory.hpp \
     include/bitcoin/database/memory/memory_map.hpp
 

@@ -27,7 +27,7 @@ using namespace bc;
 using namespace bc::chain;
 using namespace bc::database;
 
-chain::transaction random_tx(size_t fudge)
+transaction random_tx(size_t fudge)
 {
     static const auto genesis = block::genesis_mainnet();
     auto result = genesis.transactions[0];
@@ -58,7 +58,7 @@ BOOST_FIXTURE_TEST_SUITE(database_tests, block_database_directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(block_database__test)
 {
-    auto block0 = chain::block::genesis_mainnet();
+    auto block0 = block::genesis_mainnet();
     block0.transactions.push_back(random_tx(0));
     block0.transactions.push_back(random_tx(1));
     //const auto h0 = block0.header.hash();

@@ -17,9 +17,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/memory/allocator.hpp>
 
 #include <cstdint>
+#include <cstddef>
+#include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -27,30 +29,46 @@ namespace database {
 
 #ifdef REMAP_SAFETY
 
-memory::memory(uint8_t* data, shared_mutex& mutex)
-  : data_(data),
-    mutex_(mutex),
-    lock_(mutex_)
+allocator::allocator(shared_mutex& mutex)
+  : mutex_(mutex),
+    data_(nullptr)
 {
     ///////////////////////////////////////////////////////////////////////////
     // Begin Critical Section
-    ///////////////////////////////////////////////////////////////////////////
+
+    // Acquire exclusive downgradable lock.
+    mutex_.lock();
 }
 
-uint8_t* memory::buffer()
+uint8_t* allocator::buffer()
 {
+    BITCOIN_ASSERT_MSG(data_ != nullptr, "Downgrade must be called.");
     return data_;
 }
 
-void memory::increment(size_t value)
+void allocator::increment(size_t value)
 {
     BITCOIN_ASSERT((size_t)data_ <= bc::max_size_t - value);
     data_ += value;
 }
 
-memory::~memory()
+// protected/friend
+void allocator::downgrade(uint8_t* data)
 {
-    ///////////////////////////////////////////////////////////////////////////
+    BITCOIN_ASSERT_MSG(data != nullptr, "Invalid pointer value.");
+
+    // Downgrade the exclusive lock.
+    mutex_.unlock_and_lock_shared();
+
+    // Save protected pointer.
+    data_ = data;
+}
+
+allocator::~allocator()
+{
+    // Release downgraded (shared) lock.
+    mutex_.unlock_shared();
+
     // End Critical Section
     ///////////////////////////////////////////////////////////////////////////
 }

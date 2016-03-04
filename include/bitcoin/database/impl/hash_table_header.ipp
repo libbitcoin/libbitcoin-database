@@ -53,6 +53,7 @@ void hash_table_header<IndexType, ValueType>::create()
     serial.write_little_endian(buckets_);
 
     // optimized fill implementation
+    // This optimization makes it possible to debug full size headers.
     const auto start = buckets_address + sizeof(IndexType);
     memset(start, 0xff, buckets_ * sizeof(ValueType));
 
