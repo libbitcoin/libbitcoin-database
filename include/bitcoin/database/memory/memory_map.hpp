@@ -47,7 +47,6 @@ public:
     void operator=(const memory_map&) = delete;
 
     bool stop();
-    bool stopped() const;
     size_t size() const;
     memory_ptr access();
     memory_ptr resize(size_t size);

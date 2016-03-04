@@ -133,16 +133,6 @@ memory_map::~memory_map()
     stop();
 }
 
-bool memory_map::stopped() const
-{
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    REMAP_READ(mutex_);
-
-    return stopped_;
-    ///////////////////////////////////////////////////////////////////////////
-}
-
 bool memory_map::stop()
 {
     // Critical Section
