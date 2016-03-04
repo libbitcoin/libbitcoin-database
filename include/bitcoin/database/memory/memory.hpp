@@ -23,12 +23,14 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <boost/thread.hpp>
+#include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
+
+#ifdef REMAP_SAFETY
 
 /// This class provides remap safe access to file-mapped memory.
 /// The memory size is unprotected and unmanaged.
@@ -37,7 +39,7 @@ class BCD_API memory
 public:
     typedef std::shared_ptr<memory> ptr;
 
-    memory(uint8_t* data, boost::shared_mutex& mutex);
+    memory(uint8_t* data, shared_mutex& mutex);
     ~memory();
 
     /// This class is not copyable.
@@ -51,21 +53,35 @@ public:
 
 private:
     uint8_t* data_;
-    boost::shared_mutex& mutex_;
-    boost::shared_lock<boost::shared_mutex> shared_lock_;
+    shared_mutex& mutex_;
+    shared_lock lock_;
 };
 
-#define REMAP_SAFETY
+#endif // REMAP_SAFETY
 
 #ifdef REMAP_SAFETY
     typedef memory::ptr memory_ptr;
-    #define ADDRESS(pointer) pointer->buffer()
-    #define INCREMENT(pointer, offset) pointer->increment(offset)
+    #define REMAP_ADDRESS(pointer) pointer->buffer()
+    #define REMAP_INCREMENT(pointer, offset) pointer->increment(offset)
+    #define REMAP_SAFE(data, mutex) std::make_shared<memory>(data_, mutex_)
+    #define REMAP_READ(mutex) shared_lock lock(mutex)
+    #define REMAP_WRITE(mutex) unique_lock lock(mutex)
 #else
     typedef uint8_t* memory_ptr;
-    #define ADDRESS(pointer) pointer
-    #define INCREMENT(pointer, offset) pointer += (offset)
-#endif
+    #define REMAP_ADDRESS(pointer) pointer
+    #define REMAP_INCREMENT(pointer, offset) pointer += (offset)
+    #define REMAP_SAFE(data, mutex) data
+    #define REMAP_READ(mutex)
+    #define REMAP_WRITE(mutex)
+#endif // REMAP_SAFETY
+
+#ifdef ALLOCATE_SAFETY
+    #define ALLOCATE_READ(mutex) shared_lock lock(mutex)
+    #define ALLOCATE_WRITE(mutex) unique_lock lock(mutex)
+#else
+    #define ALLOCATE_READ(mutex)
+    #define ALLOCATE_WRITE(mutex)
+#endif // ALLOCATE_SAFETY
 
 } // namespace database
 } // namespace libbitcoin

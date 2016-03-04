@@ -40,9 +40,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <boost/filesystem.hpp>
-#include <boost/thread.hpp>
 #include <boost/format.hpp>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 // memory_map is be able to support 32 bit but because the database 
 // requires a larger file this is not validated or supported.
@@ -54,8 +54,8 @@ namespace database {
 using boost::format;
 using boost::filesystem::path;
 
-#define NO_EXPANSION 100
-#define EXPANSION_RATE 150
+#define EXPANSION_NUMERATOR 150
+#define EXPANSION_DENOMINATOR 100
 
 size_t memory_map::file_size(int file_handle)
 {
@@ -136,7 +136,7 @@ bool memory_map::stopped() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::unique_lock<boost::shared_mutex> shared_lock(mutex_);
+    REMAP_READ(mutex_);
 
     return stopped_;
     ///////////////////////////////////////////////////////////////////////////
@@ -146,7 +146,7 @@ bool memory_map::stop()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::unique_lock<boost::shared_mutex> unique_lock(mutex_);
+    REMAP_WRITE(mutex_);
 
     if (stopped_)
         return true;
@@ -174,7 +174,7 @@ size_t memory_map::size() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
+    REMAP_READ(mutex_);
 
     return file_size_;
     ///////////////////////////////////////////////////////////////////////////
@@ -184,53 +184,46 @@ memory_ptr memory_map::access()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
+    REMAP_READ(mutex_);
 
-    // This establishes a shared lock until disposed.
-#ifdef REMAP_SAFETY
-    return std::make_shared<memory>(data_, mutex_);
-#else
-    return data_;
-#endif
+    return REMAP_SAFE(data_, mutex_);
     ///////////////////////////////////////////////////////////////////////////
 }
 
 memory_ptr memory_map::resize(size_t size)
 {
-    return reserve(size, NO_EXPANSION);
+    return reserve(size, EXPANSION_DENOMINATOR);
 }
 
 memory_ptr memory_map::reserve(size_t size)
 {
-    return reserve(size, EXPANSION_RATE);
+    return reserve(size, EXPANSION_NUMERATOR);
 }
 
 memory_ptr memory_map::reserve(size_t size, size_t expansion)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    mutex_.unlock_upgrade();
 
     if (size > file_size_)
     {
-        // There is no way to recover from this.
-        if (!truncate(size * expansion / 100))
+        if (!truncate(size * expansion / EXPANSION_DENOMINATOR))
             throw std::runtime_error("Resize failure, disk space may be low.");
     }
 
     logical_size_ = size;
+    
+    // Downgrade the shared lock so we can safely use data to create another.
+    mutex_.unlock_and_lock_shared();
 
-#ifdef REMAP_SAFETY
-    // This establishes a shared lock until disposed.
-    return std::make_shared<memory>(data_, mutex_);
-#else
-    return data_;
-#endif
+    return REMAP_SAFE(data_, mutex_);
+
+    mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
 }
 
 // privates
-
 
 bool memory_map::unmap()
 {

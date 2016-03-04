@@ -47,7 +47,7 @@ chain::header block_result::header() const
 {
     BITCOIN_ASSERT(slab_);
     chain::header header;
-    const auto memory = ADDRESS(slab_);
+    const auto memory = REMAP_ADDRESS(slab_);
     auto deserial = make_deserializer_unsafe(memory);
     header.from_data(deserial, false);
     return header;
@@ -57,14 +57,14 @@ chain::header block_result::header() const
 size_t block_result::height() const
 {
     BITCOIN_ASSERT(slab_);
-    const auto memory = ADDRESS(slab_);
+    const auto memory = REMAP_ADDRESS(slab_);
     return from_little_endian_unsafe<uint32_t>(memory + header_size);
 }
 
 size_t block_result::transaction_count() const
 {
     BITCOIN_ASSERT(slab_);
-    const auto memory = ADDRESS(slab_);
+    const auto memory = REMAP_ADDRESS(slab_);
     const auto offset = header_size + height_size;
     return from_little_endian_unsafe<uint32_t>(memory + offset);
 }
@@ -73,7 +73,7 @@ hash_digest block_result::transaction_hash(size_t index) const
 {
     BITCOIN_ASSERT(slab_);
     BITCOIN_ASSERT(index < transaction_count());
-    const auto memory = ADDRESS(slab_);
+    const auto memory = REMAP_ADDRESS(slab_);
     const auto offset = header_size + height_size + count_size;
     const uint8_t* first = memory + offset + index * hash_size;
     auto deserial = make_deserializer_unsafe(first);

@@ -44,4 +44,10 @@
 typedef uint32_t array_index;
 typedef uint64_t file_offset;
 
+// Remap safety is required if the mmap file is not fully preallocated.
+#define REMAP_SAFETY
+
+// Allocate safety is required for support of concurrent write operations.
+#define ALLOCATE_SAFETY
+
 #endif

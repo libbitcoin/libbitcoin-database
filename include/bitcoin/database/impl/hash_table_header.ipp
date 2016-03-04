@@ -48,7 +48,7 @@ void hash_table_header<IndexType, ValueType>::create()
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.resize(minimum_file_size);
-    const auto buckets_address = ADDRESS(memory);
+    const auto buckets_address = REMAP_ADDRESS(memory);
     auto serial = make_serializer(buckets_address);
     serial.write_little_endian(buckets_);
 
@@ -71,7 +71,7 @@ void hash_table_header<IndexType, ValueType>::start()
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto buckets_address = ADDRESS(memory);
+    const auto buckets_address = REMAP_ADDRESS(memory);
     const auto buckets = from_little_endian_unsafe<IndexType>(buckets_address);
 
     if (buckets != buckets_)
@@ -86,7 +86,7 @@ ValueType hash_table_header<IndexType, ValueType>::read(IndexType index) const
     
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto value_address = ADDRESS(memory) + item_position(index);
+    const auto value_address = REMAP_ADDRESS(memory) + item_position(index);
     return from_little_endian_unsafe<ValueType>(value_address);
 }
 
@@ -99,7 +99,7 @@ void hash_table_header<IndexType, ValueType>::write(IndexType index,
     
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto value_position = ADDRESS(memory) + item_position(index);
+    const auto value_position = REMAP_ADDRESS(memory) + item_position(index);
 
     // MUST BE ATOMIC
     auto serial = make_serializer(value_position);

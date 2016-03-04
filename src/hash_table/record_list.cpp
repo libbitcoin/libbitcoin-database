@@ -46,7 +46,7 @@ array_index record_list::insert(array_index next)
     const auto memory = manager_.get(index);
 
     // Write next value at first 4 bytes of record.
-    auto serial = make_serializer(ADDRESS(memory));
+    auto serial = make_serializer(REMAP_ADDRESS(memory));
 
     // MUST BE ATOMIC
     serial.write_4_bytes_little_endian(next);
@@ -56,13 +56,13 @@ array_index record_list::insert(array_index next)
 array_index record_list::next(array_index index) const
 {
     const auto memory = manager_.get(index);
-    return from_little_endian_unsafe<array_index>(ADDRESS(memory));
+    return from_little_endian_unsafe<array_index>(REMAP_ADDRESS(memory));
 }
 
 const memory_ptr record_list::get(array_index index) const
 {
     auto memory = manager_.get(index);
-    INCREMENT(memory, sizeof(array_index));
+    REMAP_INCREMENT(memory, sizeof(array_index));
     return memory;
 }
 

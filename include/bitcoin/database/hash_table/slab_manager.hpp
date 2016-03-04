@@ -21,7 +21,6 @@
 #define LIBBITCOIN_DATABASE_SLAB_MANAGER_HPP
 
 #include <cstddef>
-#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -78,7 +77,7 @@ private:
 
     // Payload size is protected by mutex.
     file_offset payload_size_;
-    mutable boost::shared_mutex mutex_;
+    mutable shared_mutex mutex_;
 };
 
 } // namespace database

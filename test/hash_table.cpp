@@ -48,7 +48,7 @@ void create_database_file()
 
     data_base::touch_file(DIRECTORY "/slab_hash_table__write_read");
     memory_map file(DIRECTORY "/slab_hash_table__write_read");
-    BITCOIN_ASSERT(ADDRESS(file.access()) != nullptr);
+    BITCOIN_ASSERT(REMAP_ADDRESS(file.access()) != nullptr);
     file.resize(header_size + minimum_slabs_size);
 
     slab_hash_table_header header(file, buckets);
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__write_read__test)
     create_database_file();
 
     memory_map file(DIRECTORY "/slab_hash_table__write_read");
-    BITCOIN_ASSERT(ADDRESS(file.access()) != nullptr);
+    BITCOIN_ASSERT(REMAP_ADDRESS(file.access()) != nullptr);
 
     slab_hash_table_header header(file, buckets);
     header.start();
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__write_read__test)
         const auto value = generate_random_bytes(engine, tx_size);
         const auto key = bitcoin_hash(value);
         const auto memory = ht.find(key);
-        const auto slab = ADDRESS(memory);
+        const auto slab = REMAP_ADDRESS(memory);
 
         BOOST_REQUIRE(slab);
         BOOST_REQUIRE(std::equal(value.begin(), value.end(), slab));
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__test)
 {
     data_base::touch_file(DIRECTORY "/slab_hash_table");
     memory_map file(DIRECTORY "/slab_hash_table");
-    BITCOIN_ASSERT(ADDRESS(file.access()) != nullptr);
+    BITCOIN_ASSERT(REMAP_ADDRESS(file.access()) != nullptr);
     file.resize(4 + 8 * 100 + 8);
 
     slab_hash_table_header header(file, 100);
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__test)
     };
     ht.store(tiny_hash{ { 0xde, 0xad, 0xbe, 0xef } }, write, 8);
     const auto memory1 = ht.find(tiny_hash{ { 0xde, 0xad, 0xbe, 0xef } });
-    const auto slab1 = ADDRESS(memory1);
+    const auto slab1 = REMAP_ADDRESS(memory1);
     BOOST_REQUIRE(slab1);
     BOOST_REQUIRE(slab1[0] == 110);
     BOOST_REQUIRE(slab1[1] == 110);
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__test)
     BOOST_REQUIRE(slab1[3] == 99);
 
     const auto memory2 = ht.find(tiny_hash{ { 0xde, 0xad, 0xbe, 0xee } });
-    const auto slab2 = ADDRESS(memory1);
+    const auto slab2 = REMAP_ADDRESS(memory1);
     BOOST_REQUIRE(slab2);
 }
 
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
     data_base::touch_file(DIRECTORY "/record_hash_table__32bit");
     memory_map file(DIRECTORY "/record_hash_table__32bit");
     const auto memory = file.access();
-    BITCOIN_ASSERT(ADDRESS(memory) != nullptr);
+    BITCOIN_ASSERT(REMAP_ADDRESS(memory) != nullptr);
     file.resize(header_size + minimum_records_size);
 
     record_hash_table_header header(file, record_buckets);
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table_header__64bit__test)
 
     data_base::touch_file(DIRECTORY "/record_hash_table_64bit");
     memory_map file(DIRECTORY "/record_hash_table_64bit");
-    BITCOIN_ASSERT(ADDRESS(file.access()) != nullptr);
+    BITCOIN_ASSERT(REMAP_ADDRESS(file.access()) != nullptr);
     file.resize(header_size + minimum_records_size);
 
     record_hash_table_header header(file, record_buckets);

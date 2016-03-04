@@ -45,7 +45,7 @@ void record_hash_table<HashType>::store(const HashType& key,
     record_row<HashType> item(manager_, 0);
     const auto new_begin = item.create(key, old_begin);
     const auto memory = item.data();
-    write(ADDRESS(memory));
+    write(REMAP_ADDRESS(memory));
 
     // Link record to header.
     link(key, new_begin);

@@ -80,7 +80,7 @@ stealth stealth_database::scan(const binary& filter, size_t from_height) const
     {
         // see if prefix matches
         const auto memory = rows_.get(index);
-        const auto record = ADDRESS(memory);
+        const auto record = REMAP_ADDRESS(memory);
         const auto field = from_little_endian_unsafe<uint32_t>(record);
         if (!filter.is_prefix_of(field))
             continue;
@@ -103,7 +103,7 @@ void stealth_database::store(uint32_t prefix, const stealth_row& row)
     // Allocate new row.
     const auto index = rows_.new_records(1);
     const auto memory = rows_.get(index);
-    const auto data = ADDRESS(memory);
+    const auto data = REMAP_ADDRESS(memory);
 
     // Write data.
     auto serial = make_serializer(data);
@@ -133,7 +133,7 @@ void stealth_database::write_index()
     // Write index of first row into block lookup index.
     const auto index = index_.new_records(1);
     const auto memory = index_.get(index);
-    auto serial = make_serializer(ADDRESS(memory));
+    auto serial = make_serializer(REMAP_ADDRESS(memory));
 
     // MUST BE ATOMIC
     serial.write_4_bytes_little_endian(block_start_);
@@ -149,7 +149,7 @@ array_index stealth_database::read_index(size_t from_height) const
 {
     BITCOIN_ASSERT(from_height < index_.count());
     const auto memory = index_.get(from_height);
-    return from_little_endian_unsafe<array_index>(ADDRESS(memory));
+    return from_little_endian_unsafe<array_index>(REMAP_ADDRESS(memory));
 }
 
 } // namespace database

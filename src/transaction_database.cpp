@@ -41,7 +41,7 @@ transaction_database::transaction_database(const path& map_filename)
     manager_(map_file_, header_size),
     map_(header_, manager_)
 {
-    BITCOIN_ASSERT(ADDRESS(map_file_.access()) != nullptr);
+    BITCOIN_ASSERT(REMAP_ADDRESS(map_file_.access()) != nullptr);
 }
 
 void transaction_database::create()

@@ -55,8 +55,8 @@ block_database::block_database(const path& map_filename,
     index_file_(index_filename),
     index_(index_file_, 0, sizeof(file_offset))
 {
-    BITCOIN_ASSERT(ADDRESS(map_file_.access()) != nullptr);
-    BITCOIN_ASSERT(ADDRESS(index_file_.access()) != nullptr);
+    BITCOIN_ASSERT(REMAP_ADDRESS(map_file_.access()) != nullptr);
+    BITCOIN_ASSERT(REMAP_ADDRESS(index_file_.access()) != nullptr);
 }
 
 void block_database::create()
@@ -150,7 +150,7 @@ void block_database::write_position(const file_offset position)
 {
     const auto index = index_.new_records(1);
     const auto memory = index_.get(index);
-    auto serial = make_serializer(ADDRESS(memory));
+    auto serial = make_serializer(REMAP_ADDRESS(memory));
 
     // MUST BE ATOMIC
     serial.write_8_bytes_little_endian(position);
@@ -159,7 +159,7 @@ void block_database::write_position(const file_offset position)
 file_offset block_database::read_position(const array_index index) const
 {
     const auto memory = index_.get(index);
-    return from_little_endian_unsafe<file_offset>(ADDRESS(memory));
+    return from_little_endian_unsafe<file_offset>(REMAP_ADDRESS(memory));
 }
 
 } // namespace database

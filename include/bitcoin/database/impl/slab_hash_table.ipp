@@ -44,7 +44,7 @@ file_offset slab_hash_table<HashType>::store(const HashType& key,
     slab_list<HashType> item(manager_, 0);
     const auto new_begin = item.create(key, value_size, old_begin);
     const auto memory = item.data();
-    write(ADDRESS(memory));
+    write(REMAP_ADDRESS(memory));
 
     // Link record to header.
     link(key, new_begin);

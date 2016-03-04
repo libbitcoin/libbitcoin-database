@@ -84,7 +84,7 @@ array_index record_row<HashType>::create(const HashType& key,
 
     // Write record.
     const auto memory = raw_data(0);
-    const auto record = ADDRESS(memory);
+    const auto record = REMAP_ADDRESS(memory);
     auto serial = make_serializer(record);
     serial.write_data(key);
 
@@ -98,7 +98,7 @@ bool record_row<HashType>::compare(const HashType& key) const
 {
     // Key data is at the start.
     const auto memory = raw_data(0);
-    const auto key_data = ADDRESS(memory);
+    const auto key_data = REMAP_ADDRESS(memory);
     return std::equal(key.begin(), key.end(), key_data);
 }
 
@@ -113,14 +113,14 @@ template <typename HashType>
 array_index record_row<HashType>::next_index() const
 {
     const auto memory = raw_next_data();
-    return from_little_endian_unsafe<array_index>(ADDRESS(memory));
+    return from_little_endian_unsafe<array_index>(REMAP_ADDRESS(memory));
 }
 
 template <typename HashType>
 void record_row<HashType>::write_next_index(array_index next)
 {
     const auto memory = raw_next_data();
-    auto serial = make_serializer(ADDRESS(memory));
+    auto serial = make_serializer(REMAP_ADDRESS(memory));
 
     // MUST BE ATOMIC
     serial.write_4_bytes_little_endian(next);
@@ -130,7 +130,7 @@ template <typename HashType>
 const memory_ptr record_row<HashType>::raw_data(file_offset offset) const
 {
     auto memory = manager_.get(index_);
-    INCREMENT(memory, offset);
+    REMAP_INCREMENT(memory, offset);
     return memory;
 }
 

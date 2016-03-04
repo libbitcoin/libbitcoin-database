@@ -23,7 +23,6 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
-#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -89,7 +88,7 @@ private:
 
     // Payload size is protected by mutex.
     array_index record_count_;
-    mutable boost::shared_mutex mutex_;
+    mutable shared_mutex mutex_;
 
     // Records are fixed size.
     const size_t record_size_;

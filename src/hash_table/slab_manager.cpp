@@ -21,7 +21,6 @@
 
 #include <cstddef>
 #include <stdexcept>
-#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/memory_map.hpp>
@@ -57,7 +56,7 @@ void slab_manager::create()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    ALLOCATE_WRITE(mutex_);
 
     if (payload_size_ != sizeof(file_offset))
         throw std::runtime_error("Existing file slabs size is nonzero.");
@@ -72,7 +71,7 @@ void slab_manager::start()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    ALLOCATE_WRITE(mutex_);
 
     read_size();
     const auto minimum = header_size_ + payload_size_;
@@ -86,7 +85,7 @@ void slab_manager::sync() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    ALLOCATE_WRITE(mutex_);
 
     write_size();
     ///////////////////////////////////////////////////////////////////////////
@@ -97,7 +96,7 @@ file_offset slab_manager::payload_size() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
+    ALLOCATE_READ(mutex_);
 
     return payload_size_;
     ///////////////////////////////////////////////////////////////////////////
@@ -109,7 +108,7 @@ file_offset slab_manager::new_slab(size_t size)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    ALLOCATE_WRITE(mutex_);
 
     // Always write after the last slab.
     const auto next_slab_position = payload_size_;
@@ -130,7 +129,7 @@ const memory_ptr slab_manager::get(file_offset position) const
     BITCOIN_ASSERT_MSG(position < payload_size(), "Read past end of file.");
 
     auto memory = file_.access();
-    INCREMENT(memory, header_size_ + position);
+    REMAP_INCREMENT(memory, header_size_ + position);
     return memory;
 }
 
@@ -143,7 +142,7 @@ void slab_manager::read_size()
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto payload_size_address = ADDRESS(memory) + header_size_;
+    const auto payload_size_address = REMAP_ADDRESS(memory) + header_size_;
     payload_size_ = from_little_endian_unsafe<file_offset>(
         payload_size_address);
 }
@@ -155,7 +154,7 @@ void slab_manager::write_size() const
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto payload_size_address = ADDRESS(memory) + header_size_;
+    const auto payload_size_address = REMAP_ADDRESS(memory) + header_size_;
     auto serial = make_serializer(payload_size_address);
     serial.write_little_endian(payload_size_);
 }

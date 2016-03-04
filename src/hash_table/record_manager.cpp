@@ -21,7 +21,6 @@
 
 #include <cstddef>
 #include <stdexcept>
-#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/memory_map.hpp>
@@ -59,7 +58,7 @@ void record_manager::create()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    ALLOCATE_WRITE(mutex_);
 
     if (record_count_ != 0)
         throw std::runtime_error("Existing file record count is nonzero.");
@@ -74,7 +73,7 @@ void record_manager::start()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    ALLOCATE_WRITE(mutex_);
 
     read_count();
     const auto minimum = header_size_ + record_to_position(record_count_);
@@ -88,7 +87,7 @@ void record_manager::sync()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    ALLOCATE_WRITE(mutex_);
 
     write_count();
     ///////////////////////////////////////////////////////////////////////////
@@ -98,7 +97,7 @@ array_index record_manager::count() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
+    ALLOCATE_READ(mutex_);
 
     return record_count_;
     ///////////////////////////////////////////////////////////////////////////
@@ -108,7 +107,7 @@ void record_manager::set_count(const array_index value)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    ALLOCATE_WRITE(mutex_);
 
     BITCOIN_ASSERT(value <= record_count_);
 
@@ -122,7 +121,7 @@ array_index record_manager::new_records(size_t count)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+    ALLOCATE_WRITE(mutex_);
 
     // Always write after the last index.
     const auto next_record_index = record_count_;
@@ -143,7 +142,7 @@ const memory_ptr record_manager::get(array_index record) const
     BITCOIN_ASSERT_MSG(record < count(), "Read past end of file.");
 
     auto memory = file_.access();
-    INCREMENT(memory, header_size_ + record_to_position(record));
+    REMAP_INCREMENT(memory, header_size_ + record_to_position(record));
     return memory;
 }
 
@@ -156,7 +155,7 @@ void record_manager::read_count()
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto count_address = ADDRESS(memory) + header_size_;
+    const auto count_address = REMAP_ADDRESS(memory) + header_size_;
     record_count_ = from_little_endian_unsafe<array_index>(count_address);
 }
 
@@ -167,7 +166,7 @@ void record_manager::write_count()
 
     // The accessor must remain in scope until the end of the block.
     auto memory = file_.access();
-    auto payload_size_address = ADDRESS(memory) + header_size_;
+    auto payload_size_address = REMAP_ADDRESS(memory) + header_size_;
     auto serial = make_serializer(payload_size_address);
     serial.write_little_endian(record_count_);
 }

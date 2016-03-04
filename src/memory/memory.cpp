@@ -20,17 +20,17 @@
 #include <bitcoin/database/memory/memory.hpp>
 
 #include <cstdint>
-#include <boost/thread.hpp>
+#include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-using namespace boost;
+#ifdef REMAP_SAFETY
 
 memory::memory(uint8_t* data, shared_mutex& mutex)
   : data_(data),
     mutex_(mutex),
-    shared_lock_(mutex_)
+    lock_(mutex_)
 {
     ///////////////////////////////////////////////////////////////////////////
     // Begin Critical Section
@@ -54,6 +54,8 @@ memory::~memory()
     // End Critical Section
     ///////////////////////////////////////////////////////////////////////////
 }
+
+#endif // REMAP_SAFETY
 
 } // namespace database
 } // namespace libbitcoin

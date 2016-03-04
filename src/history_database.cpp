@@ -52,8 +52,8 @@ history_database::history_database(const path& lookup_filename,
     records_(rows_),
     map_(start_lookup_, records_)
 {
-    BITCOIN_ASSERT(ADDRESS(lookup_file_.access()) != nullptr);
-    BITCOIN_ASSERT(ADDRESS(rows_file_.access()) != nullptr);
+    BITCOIN_ASSERT(REMAP_ADDRESS(lookup_file_.access()) != nullptr);
+    BITCOIN_ASSERT(REMAP_ADDRESS(rows_file_.access()) != nullptr);
 }
 
 void history_database::create()
@@ -161,7 +161,7 @@ history history_database::get(const short_hash& key, size_t limit,
             break;
 
         const auto memory = records_.get(index);
-        const auto data = ADDRESS(memory);
+        const auto data = REMAP_ADDRESS(memory);
 
         // Skip rows below from_height (if specified).
         if (from_height && read_height(data) < from_height)

@@ -41,7 +41,7 @@ array_index record_multimap<HashType>::lookup(const HashType& key) const
     if (!memory)
         return records_.empty;
 
-    const auto start_info = ADDRESS(memory);
+    const auto start_info = REMAP_ADDRESS(memory);
     const auto first = from_little_endian_unsafe<array_index>(start_info);
     return first;
 }
@@ -58,7 +58,7 @@ void record_multimap<HashType>::add_row(const HashType& key,
         return;
     }
 
-    const auto start_info = ADDRESS(memory);
+    const auto start_info = REMAP_ADDRESS(memory);
     add_to_list(start_info, write);
 }
 
@@ -68,7 +68,7 @@ void record_multimap<HashType>::delete_last_row(const HashType& key)
     const auto memory = map_.find(key);
     BITCOIN_ASSERT_MSG(memory, "The row to delete was not found.");
 
-    const auto start_info = ADDRESS(memory);
+    const auto start_info = REMAP_ADDRESS(memory);
     const auto old_begin = from_little_endian_unsafe<array_index>(start_info);
 
     BITCOIN_ASSERT(old_begin != records_.empty);
@@ -93,7 +93,7 @@ void record_multimap<HashType>::add_to_list(uint8_t* start_info,
     const auto old_begin = from_little_endian_unsafe<array_index>(start_info);
     const auto new_begin = records_.insert(old_begin);
     const auto memory = records_.get(new_begin);
-    write(ADDRESS(memory));
+    write(REMAP_ADDRESS(memory));
     auto serial = make_serializer(start_info);
 
     // MUST BE ATOMIC
@@ -106,7 +106,7 @@ void record_multimap<HashType>::create_new(const HashType& key,
 {
     const auto first = records_.create();
     const auto memory = records_.get(first);
-    write(ADDRESS(memory));
+    write(REMAP_ADDRESS(memory));
     const auto write_start_info = [first](uint8_t* data)
     {
         // MUST BE ATOMIC

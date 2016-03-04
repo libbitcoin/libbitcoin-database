@@ -27,7 +27,7 @@
 #include <cstdint>
 #include <string>
 #include <boost/filesystem.hpp>
-#include <boost/thread.hpp>
+#include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
@@ -66,7 +66,7 @@ private:
     bool truncate(size_t size);
     bool validate(size_t size);
 
-    mutable boost::shared_mutex mutex_;
+    mutable upgrade_mutex mutex_;
     const boost::filesystem::path filename_;
     const int file_handle_;
 
