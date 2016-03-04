@@ -127,7 +127,7 @@ bool slab_hash_table<HashType>::unlink(const HashType& key)
 template <typename HashType>
 array_index slab_hash_table<HashType>::bucket_index(const HashType& key) const
 {
-    const auto bucket = remainder(key, static_cast<uint32_t>(header_.size()));
+    const auto bucket = remainder(key, header_.size());
     BITCOIN_ASSERT(bucket < header_.size());
     return bucket;
 }
