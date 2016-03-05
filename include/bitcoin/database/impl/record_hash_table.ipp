@@ -44,8 +44,7 @@ void record_hash_table<HashType>::store(const HashType& key,
     const auto old_begin = read_bucket_value(key);
     record_row<HashType> item(manager_, 0);
     const auto new_begin = item.create(key, old_begin);
-    const auto memory = item.data();
-    write(REMAP_ADDRESS(memory));
+    write(item.data());
 
     // Link record to header.
     link(key, new_begin);

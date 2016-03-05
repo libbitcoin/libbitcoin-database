@@ -74,9 +74,9 @@ void transaction_database::store(size_t height, size_t index,
     // Write block data.
     const hash_digest key = tx.hash();
     const size_t value_size = 4 + 4 + tx.serialized_size();
-    auto write = [&height, &index, &tx](uint8_t* data)
+    auto write = [&height, &index, &tx](memory_ptr data)
     {
-        auto serial = make_serializer(data);
+        auto serial = make_serializer(REMAP_ADDRESS(data));
         serial.write_4_bytes_little_endian(height);
         serial.write_4_bytes_little_endian(index);
         const auto tx_data = tx.to_data();

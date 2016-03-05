@@ -43,8 +43,7 @@ file_offset slab_hash_table<HashType>::store(const HashType& key,
     const auto old_begin = read_bucket_value(key);
     slab_list<HashType> item(manager_, 0);
     const auto new_begin = item.create(key, value_size, old_begin);
-    const auto memory = item.data();
-    write(REMAP_ADDRESS(memory));
+    write(item.data());
 
     // Link record to header.
     link(key, new_begin);

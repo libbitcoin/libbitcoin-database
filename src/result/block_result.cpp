@@ -75,7 +75,7 @@ hash_digest block_result::transaction_hash(size_t index) const
     BITCOIN_ASSERT(index < transaction_count());
     const auto memory = REMAP_ADDRESS(slab_);
     const auto offset = header_size + height_size + count_size;
-    const uint8_t* first = memory + offset + index * hash_size;
+    const auto first = memory + offset + index * hash_size;
     auto deserial = make_deserializer_unsafe(first);
     return deserial.read_hash();
 }

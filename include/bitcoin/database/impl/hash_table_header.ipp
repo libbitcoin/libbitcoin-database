@@ -100,10 +100,10 @@ void hash_table_header<IndexType, ValueType>::write(IndexType index,
     
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto value_position = REMAP_ADDRESS(memory) + item_position(index);
+    const auto value_address = REMAP_ADDRESS(memory) + item_position(index);
 
     // MUST BE ATOMIC
-    auto serial = make_serializer(value_position);
+    auto serial = make_serializer(value_address);
     serial.write_little_endian(value);
 }
 

@@ -98,8 +98,7 @@ bool record_row<HashType>::compare(const HashType& key) const
 {
     // Key data is at the start.
     const auto memory = raw_data(0);
-    const auto key_data = REMAP_ADDRESS(memory);
-    return std::equal(key.begin(), key.end(), key_data);
+    return std::equal(key.begin(), key.end(), REMAP_ADDRESS(memory));
 }
 
 template <typename HashType>

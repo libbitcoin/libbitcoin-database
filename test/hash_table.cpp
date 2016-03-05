@@ -68,9 +68,9 @@ void create_database_file()
     {
         data_chunk value = generate_random_bytes(engine, tx_size);
         hash_digest key = bitcoin_hash(value);
-        auto write = [&value](uint8_t* data)
+        auto write = [&value](memory_ptr data)
         {
-            std::copy(value.begin(), value.end(), data);
+            std::copy(value.begin(), value.end(), REMAP_ADDRESS(data));
         };
         ht.store(key, write, value.size());
     }
@@ -148,12 +148,13 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__test)
     typedef byte_array<4> tiny_hash;
     slab_hash_table<tiny_hash> ht(header, alloc);
 
-    auto write = [](uint8_t* data)
+    const auto write = [](memory_ptr data)
     {
-        data[0] = 110;
-        data[1] = 110;
-        data[2] = 4;
-        data[3] = 99;
+        const auto address = REMAP_ADDRESS(data);
+        address[0] = 110;
+        address[1] = 110;
+        address[2] = 4;
+        address[3] = 99;
     };
     ht.store(tiny_hash{ { 0xde, 0xad, 0xbe, 0xef } }, write, 8);
     const auto memory1 = ht.find(tiny_hash{ { 0xde, 0xad, 0xbe, 0xef } });
@@ -196,22 +197,24 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
     record_hash_table<tiny_hash> ht(header, alloc);
 
     tiny_hash key{ { 0xde, 0xad, 0xbe, 0xef } };
-    auto write = [](uint8_t* data)
+    const auto write = [](memory_ptr data)
     {
-        data[0] = 110;
-        data[1] = 110;
-        data[2] = 4;
-        data[3] = 88;
+        const auto address = REMAP_ADDRESS(data);
+        address[0] = 110;
+        address[1] = 110;
+        address[2] = 4;
+        address[3] = 88;
     };
     ht.store(key, write);
 
     tiny_hash key1{ { 0xb0, 0x0b, 0xb0, 0x0b } };
-    auto write1 = [](uint8_t* data)
+    const auto write1 = [](memory_ptr data)
     {
-        data[0] = 99;
-        data[1] = 98;
-        data[2] = 97;
-        data[3] = 96;
+        const auto address = REMAP_ADDRESS(data);
+        address[0] = 99;
+        address[1] = 98;
+        address[2] = 97;
+        address[3] = 96;
     };
     ht.store(key, write);
     ht.store(key1, write1);
@@ -270,30 +273,32 @@ BOOST_AUTO_TEST_CASE(record_hash_table_header__64bit__test)
     record_hash_table<tiny_hash> ht(header, alloc);
 
     tiny_hash key{ { 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef } };
-    auto write = [](uint8_t* data)
+    const auto write = [](memory_ptr data)
     {
-        data[0] = 110;
-        data[1] = 110;
-        data[2] = 4;
-        data[3] = 88;
-        data[4] = 110;
-        data[5] = 110;
-        data[6] = 4;
-        data[7] = 88;
+        const auto address = REMAP_ADDRESS(data);
+        address[0] = 110;
+        address[1] = 110;
+        address[2] = 4;
+        address[3] = 88;
+        address[4] = 110;
+        address[5] = 110;
+        address[6] = 4;
+        address[7] = 88;
     };
     ht.store(key, write);
 
     tiny_hash key1{ { 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b } };
-    auto write1 = [](uint8_t* data)
+    const auto write1 = [](memory_ptr data)
     {
-        data[0] = 99;
-        data[1] = 98;
-        data[2] = 97;
-        data[3] = 96;
-        data[4] = 95;
-        data[5] = 94;
-        data[6] = 93;
-        data[7] = 92;
+        const auto address = REMAP_ADDRESS(data);
+        address[0] = 99;
+        address[1] = 98;
+        address[2] = 97;
+        address[3] = 96;
+        address[4] = 95;
+        address[5] = 94;
+        address[6] = 93;
+        address[7] = 92;
     };
     ht.store(key, write);
     ht.store(key1, write1);

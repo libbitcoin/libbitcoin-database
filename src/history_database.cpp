@@ -81,9 +81,9 @@ bool history_database::stop()
 void history_database::add_output(const short_hash& key,
     const output_point& outpoint, uint32_t output_height, uint64_t value)
 {
-    auto write = [&](uint8_t* data)
+    auto write = [&](memory_ptr data)
     {
-        auto serial = make_serializer(data);
+        auto serial = make_serializer(REMAP_ADDRESS(data));
         serial.write_byte(0);
         auto raw_outpoint = outpoint.to_data();
         serial.write_data(raw_outpoint);
@@ -97,9 +97,9 @@ void history_database::add_spend(const short_hash& key,
     const output_point& previous, const input_point& spend,
     size_t spend_height)
 {
-    auto write = [&](uint8_t* data)
+    auto write = [&](memory_ptr data)
     {
-        auto serial = make_serializer(data);
+        auto serial = make_serializer(REMAP_ADDRESS(data));
         serial.write_byte(1);
         auto raw_spend = spend.to_data();
         serial.write_data(raw_spend);
@@ -125,16 +125,17 @@ history history_database::get(const short_hash& key, size_t limit,
     size_t from_height) const
 {
     // Read the height value from the row.
-    const auto read_height = [](const uint8_t* data)
+    const auto read_height = [](memory_ptr data)
     {
         static constexpr file_offset height_position = 1 + 36;
-        return from_little_endian_unsafe<uint32_t>(data + height_position);
+        const auto height_address = REMAP_ADDRESS(data) + height_position;
+        return from_little_endian_unsafe<uint32_t>(height_address);
     };
 
     // Read a row from the data for the history list.
-    const auto read_row = [](const uint8_t* data)
+    const auto read_row = [](memory_ptr data)
     {
-        auto deserial = make_deserializer_unsafe(data);
+        auto deserial = make_deserializer_unsafe(REMAP_ADDRESS(data));
         return history_row
         {
             // output or spend?
@@ -160,15 +161,14 @@ history history_database::get(const short_hash& key, size_t limit,
         if (limit && result.size() >= limit)
             break;
 
-        const auto memory = records_.get(index);
-        const auto data = REMAP_ADDRESS(memory);
+        const auto record = records_.get(index);
 
         // Skip rows below from_height (if specified).
-        if (from_height && read_height(data) < from_height)
+        if (from_height && read_height(record) < from_height)
             continue;
 
         // Read this row into the list.
-        result.emplace_back(read_row(data));
+        result.emplace_back(read_row(record));
     }
 
     return result;

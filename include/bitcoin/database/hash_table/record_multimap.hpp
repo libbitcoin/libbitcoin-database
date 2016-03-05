@@ -25,6 +25,7 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/hash_table/record_list.hpp>
 #include <bitcoin/database/hash_table/record_hash_table.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -49,7 +50,7 @@ class record_multimap
 {
 public:
     typedef record_hash_table<HashType> record_hash_table_type;
-    typedef std::function<void (uint8_t*)> write_function;
+    typedef std::function<void(memory_ptr)> write_function;
 
     record_multimap(record_hash_table_type& map, record_list& linked_rows);
 
@@ -67,7 +68,7 @@ public:
 
 private:
     // Add new value to existing key.
-    void add_to_list(uint8_t* start_info, write_function write);
+    void add_to_list(memory_ptr start_info, write_function write);
 
     // Create new key with a single value.
     void create_new(const HashType& key, write_function write);

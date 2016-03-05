@@ -62,7 +62,7 @@ template <typename HashType>
 class record_hash_table
 {
 public:
-    typedef std::function<void(uint8_t*)> write_function;
+    typedef std::function<void(memory_ptr)> write_function;
 
     record_hash_table(record_hash_table_header& header, record_manager& manager);
 

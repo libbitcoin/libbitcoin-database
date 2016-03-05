@@ -96,16 +96,16 @@ block_result block_database::get(const hash_digest& hash) const
     return block_result(memory);
 }
 
-void block_database::store(const chain::block& block)
+void block_database::store(const block& block)
 {
     const uint32_t height = index_.count();
     const auto number_txs = block.transactions.size();
     const uint32_t number_txs32 = static_cast<uint32_t>(number_txs);
 
     // Write block data.
-    const auto write = [&](uint8_t* data)
+    const auto write = [&](memory_ptr data)
     {
-        auto serial = make_serializer(data);
+        auto serial = make_serializer(REMAP_ADDRESS(data));
         const auto header_data = block.header.to_data(false);
         serial.write_data(header_data);
         serial.write_4_bytes_little_endian(height);

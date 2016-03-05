@@ -106,9 +106,9 @@ spend spend_database::get(const output_point& outpoint) const
 void spend_database::store(const chain::output_point& outpoint,
     const chain::input_point& spend)
 {
-    const auto write = [&spend](uint8_t* data)
+    const auto write = [&spend](memory_ptr data)
     {
-        auto serial = make_serializer(data);
+        auto serial = make_serializer(REMAP_ADDRESS(data));
         auto raw_spend = spend.to_data();
         serial.write_data(raw_spend);
     };

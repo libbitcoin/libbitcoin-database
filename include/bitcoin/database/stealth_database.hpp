@@ -23,8 +23,9 @@
 #include <cstdint>
 #include <boost/filesystem.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory_map.hpp>
 #include <bitcoin/database/hash_table/record_manager.hpp>
+#include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/memory/memory_map.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -32,7 +33,7 @@ namespace database {
 class BCD_API stealth_database
 {
 public:
-    typedef std::function<void (uint8_t*)> write_function;
+    typedef std::function<void(memory_ptr)> write_function;
 
     stealth_database(const boost::filesystem::path& index_filename,
         const boost::filesystem::path& rows_filename);
