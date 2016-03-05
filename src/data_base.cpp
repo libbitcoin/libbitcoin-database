@@ -244,6 +244,7 @@ void data_base::synchronize()
 
 void data_base::push(const block& block)
 {
+    // BUGBUG: unsafe unless block push is serialized.
     push(block, get_next_height(blocks));
 }
 

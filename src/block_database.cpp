@@ -98,7 +98,9 @@ block_result block_database::get(const hash_digest& hash) const
 
 void block_database::store(const block& block)
 {
+    // BUGBUG: unsafe unless block push is serialized.
     const uint32_t height = index_.count();
+
     const auto number_txs = block.transactions.size();
     const uint32_t number_txs32 = static_cast<uint32_t>(number_txs);
 
