@@ -48,6 +48,6 @@ typedef uint64_t file_offset;
 #define REMAP_SAFETY
 
 // Allocate safety is required for support of concurrent write operations.
-//#define ALLOCATE_SAFETY
+#define ALLOCATE_SAFETY
 
 #endif
