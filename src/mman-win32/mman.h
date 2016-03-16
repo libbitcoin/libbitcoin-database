@@ -36,14 +36,13 @@ extern "C" {
 #define MS_INVALIDATE   4
 
 void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off);
-int   munmap(void* addr, size_t len);
-int   mprotect(void* addr, size_t len, int prot);
-int   msync(void* addr, size_t len, int flags);
-int   mlock(const void* addr, size_t len);
-int   munlock(const void* addr, size_t len);
-
-/* www.gitorious.org/git-win32/mainline/source/9ae6b7513158e0b1523766c9ad4a1ad286a96e2c:win32/ftruncate.c */
-int   ftruncate(int fd, oft__ size);
+int munmap(void* addr, size_t len);
+int mprotect(void* addr, size_t len, int prot);
+int msync(void* addr, size_t len, int flags);
+int mlock(const void* addr, size_t len);
+int munlock(const void* addr, size_t len);
+int fsync(int fd);
+int ftruncate(int fd, oft__ size);
 
 #ifdef __cplusplus
 };

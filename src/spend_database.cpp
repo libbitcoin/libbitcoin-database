@@ -19,18 +19,25 @@
  */
 #include <bitcoin/database/spend_database.hpp>
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <boost/filesystem.hpp>
+#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-constexpr size_t number_buckets = 228110589;
-BC_CONSTEXPR size_t header_size = htdb_record_header_fsize(number_buckets);
-BC_CONSTEXPR size_t initial_map_file_size = header_size + min_records_fsize;
+using namespace boost::filesystem;
+using namespace bc::chain;
 
-BC_CONSTEXPR position_type allocator_offset = header_size;
+BC_CONSTEXPR size_t number_buckets = 228110589;
+BC_CONSTEXPR size_t header_size = record_hash_table_header_size(number_buckets);
+BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_records_size;
+
 BC_CONSTEXPR size_t value_size = hash_size + 4;
-BC_CONSTEXPR size_t record_size = record_fsize_htdb<hash_digest>(value_size);
+BC_CONSTEXPR size_t record_size = hash_table_record_size<hash_digest>(value_size);
 
 // Create a new hash from a hash + index (a point)
 // deterministically suitable for use in a hashtable.
@@ -48,50 +55,26 @@ static hash_digest output_to_hash(const chain::output_point& output)
     return sha256_hash(point);
 }
 
-spend_result::spend_result(const record_type record)
-  : record_(record)
-{
-}
-
-spend_result::operator bool() const
-{
-    return record_ != nullptr;
-}
-
-hash_digest spend_result::hash() const
-{
-    BITCOIN_ASSERT(record_ != nullptr);
-    hash_digest result;
-    std::copy(record_, record_ + hash_size, result.begin());
-    return result;
-}
-
-uint32_t spend_result::index() const
-{
-    BITCOIN_ASSERT(record_ != nullptr);
-    return from_little_endian_unsafe<uint32_t>(record_ + hash_size);
-}
-
-spend_database::spend_database(const boost::filesystem::path& filename)
+spend_database::spend_database(const path& filename)
   : file_(filename), 
-    header_(file_, 0),
-    allocator_(file_, allocator_offset, record_size),
-    map_(header_, allocator_, filename.string())
+    header_(file_, number_buckets),
+    manager_(file_, header_size, record_size),
+    map_(header_, manager_)
 {
-    BITCOIN_ASSERT(file_.data() != nullptr);
+    BITCOIN_ASSERT(REMAP_ADDRESS(file_.access()) != nullptr);
 }
 
 void spend_database::create()
 {
     file_.resize(initial_map_file_size);
-    header_.create(number_buckets);
-    allocator_.create();
+    header_.create();
+    manager_.create();
 }
 
 void spend_database::start()
 {
     header_.start();
-    allocator_.start();
+    manager_.start();
 }
 
 bool spend_database::stop()
@@ -99,20 +82,34 @@ bool spend_database::stop()
     return file_.stop();
 }
 
-spend_result spend_database::get(const chain::output_point& outpoint) const
+spend spend_database::get(const output_point& outpoint) const
 {
     const auto key = output_to_hash(outpoint);
-    const auto record = map_.get(key);
-    return spend_result(record);
+    const auto memory = map_.find(key);
+
+    if (!memory)
+        return { false, 0, {} };
+
+    hash_digest hash;
+    const auto record = REMAP_ADDRESS(memory);
+    std::copy(record, record + hash_size, hash.begin());
+    const auto index = from_little_endian_unsafe<uint32_t>(record + hash_size);
+
+    return
+    {
+        true,
+        index,
+        hash
+    };
 }
 
 void spend_database::store(const chain::output_point& outpoint,
     const chain::input_point& spend)
 {
-    const auto write = [&spend](uint8_t* data)
+    const auto write = [&spend](memory_ptr data)
     {
-        auto serial = make_serializer(data);
-        data_chunk raw_spend = spend.to_data();
+        auto serial = make_serializer(REMAP_ADDRESS(data));
+        auto raw_spend = spend.to_data();
         serial.write_data(raw_spend);
     };
 
@@ -120,7 +117,7 @@ void spend_database::store(const chain::output_point& outpoint,
     map_.store(key, write);
 }
 
-void spend_database::remove(const chain::output_point& outpoint)
+void spend_database::remove(const output_point& outpoint)
 {
     const auto key = output_to_hash(outpoint);
     DEBUG_ONLY(bool success =) map_.unlink(key);
@@ -129,7 +126,7 @@ void spend_database::remove(const chain::output_point& outpoint)
 
 void spend_database::sync()
 {
-    allocator_.sync();
+    manager_.sync();
 }
 
 spend_statinfo spend_database::statinfo() const
@@ -137,7 +134,7 @@ spend_statinfo spend_database::statinfo() const
     return
     {
         header_.size(),
-        allocator_.count()
+        manager_.count()
     };
 }
 

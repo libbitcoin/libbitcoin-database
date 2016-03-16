@@ -3,6 +3,7 @@
 #include <boost/lexical_cast.hpp>
 #include <bitcoin/database.hpp>
 
+using namespace boost;
 using namespace bc;
 using namespace bc::chain;
 using namespace bc::database;
@@ -12,16 +13,11 @@ void show_help()
     std::cout << "Usage: stealth_db COMMAND INDEX ROWS [ARGS]" << std::endl;
     std::cout << std::endl;
     std::cout << "The most commonly used block_db commands are:" << std::endl;
-    std::cout << "  initialize_new  "
-        << "Create a new stealth_database" << std::endl;
-    std::cout << "  scan            "
-        << "Scan entries" << std::endl;
-    std::cout << "  store           "
-        << "Store a stealth row" << std::endl;
-    std::cout << "  unlink          "
-        << "Delete all rows after from_height (inclusive)" << std::endl;
-    std::cout << "  help            "
-        << "Show help for commands" << std::endl;
+    std::cout << "  initialize_new  " << "Create a new stealth_database" << std::endl;
+    std::cout << "  scan            " << "Scan entries" << std::endl;
+    std::cout << "  store           " << "Store a stealth row" << std::endl;
+    std::cout << "  unlink          " << "Delete all rows after from_height (inclusive)" << std::endl;
+    std::cout << "  help            " << "Show help for commands" << std::endl;
 }
 
 void show_command_help(const std::string& command)
@@ -57,25 +53,29 @@ bool parse_uint(Uint& value, const std::string& arg)
 {
     try
     {
-        value = boost::lexical_cast<Uint>(arg);
+        value = lexical_cast<Uint>(arg);
     }
-    catch (const boost::bad_lexical_cast&)
+    catch (const bad_lexical_cast&)
     {
         std::cerr << "stealth_db: bad value provided." << std::endl;
         return false;
     }
+
     return true;
 }
 
 int main(int argc, char** argv)
 {
     typedef std::vector<std::string> string_list;
+
     if (argc < 2)
     {
         show_help();
         return -1;
     }
+
     const std::string command = argv[1];
+
     if (command == "help" || command == "-h" || command == "--help")
     {
         if (argc == 3)
@@ -83,29 +83,35 @@ int main(int argc, char** argv)
             show_command_help(argv[2]);
             return 0;
         }
+
         show_help();
         return 0;
     }
+
     if (argc < 4)
     {
         show_command_help(command);
         return -1;
     }
+
+    string_list args;
     const std::string index_filename = argv[2];
     const std::string rows_filename = argv[3];
-    string_list args;
+
     for (int i = 4; i < argc; ++i)
         args.push_back(argv[i]);
+
     if (command == "initialize_new")
     {
         data_base::touch_file(index_filename);
         data_base::touch_file(rows_filename);
     }
+
     stealth_database db(index_filename, rows_filename);
+
     if (command == "initialize_new")
     {
         db.create();
-        return 0;
     }
     else if (command == "scan")
     {
@@ -114,15 +120,15 @@ int main(int argc, char** argv)
             show_command_help(command);
             return -1;
         }
-        db.start();
-        std::string filter_str(args[0]);
-        binary filter(filter_str);
+
+        binary filter(args[0]);
         size_t from_height;
         if (!parse_uint(from_height, args[1]))
             return -1;
+
         db.start();
         const auto rows = db.scan(filter, from_height);
-        for (const auto row: rows)
+        for (const auto& row: rows)
         {
             std::cout << "Ephemeral key: "
                 << encode_base16(row.ephemeral_key) << std::endl;
@@ -140,29 +146,34 @@ int main(int argc, char** argv)
     ////        show_command_help(command);
     ////        return -1;
     ////    }
+    ////
     ////    // bitfield
     ////    std::string script_str(args[0]);
     ////    chain::script script;
     ////    script.from_string(script_str);
     ////    stealth_row row;
+    ////
     ////    // ephemkey
     ////    if (!decode_hash(row.ephemkey, args[1]))
     ////    {
     ////        std::cerr << "Unable to read ephemeral pubkey." << std::endl;
     ////        return -1;
     ////    }
+    ////
     ////    // address
     ////    if (!decode_base16(row.address, args[2]))
     ////    {
     ////        std::cerr << "Unable to read address hash." << std::endl;
     ////        return -1;
     ////    }
+    ////
     ////    // tx hash
     ////    if (!decode_hash(row.transaction_hash, args[3]))
     ////    {
     ////        std::cerr << "Unable to read transaction hash." << std::endl;
     ////        return -1;
     ////    }
+    ////
     ////    db.start();
     ////    db.store(script, row);
     ////    db.sync();
@@ -174,9 +185,11 @@ int main(int argc, char** argv)
             show_command_help(command);
             return -1;
         }
+
         size_t from_height = 0;
         if (!parse_uint(from_height, args[0]))
             return -1;
+
         db.start();
         db.unlink(from_height);
         db.sync();
@@ -188,6 +201,7 @@ int main(int argc, char** argv)
             << "See 'stealth_db --help'." << std::endl;
         return -1;
     }
+
     return 0;
 }
 

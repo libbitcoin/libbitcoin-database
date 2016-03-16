@@ -19,20 +19,22 @@
  */
 #include <bitcoin/database/block_database.hpp>
 
+#include <cstdint>
+#include <cstddef>
 #include <boost/filesystem.hpp>
-//#include <boost/iostreams/stream.hpp>
 #include <bitcoin/bitcoin.hpp>
-//#include <bitcoin/database/pointer_array_source.hpp>
-#include <bitcoin/database/slab/slab_allocator.hpp>
+#include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/result/block_result.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-constexpr size_t number_buckets = 600000;
-BC_CONSTEXPR size_t header_size = htdb_slab_header_fsize(number_buckets);
-BC_CONSTEXPR size_t initial_map_file_size = header_size + min_slab_fsize;
+using namespace boost::filesystem;
+using namespace bc::chain;
 
-BC_CONSTEXPR position_type allocator_offset = header_size;
+BC_CONSTEXPR size_t number_buckets = 600000;
+BC_CONSTEXPR size_t header_size = slab_hash_table_header_size(number_buckets);
+BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_slabs_size;
 
 // Record format:
 // main:
@@ -44,92 +46,32 @@ BC_CONSTEXPR position_type allocator_offset = header_size;
 //  [ [ tx_hash:32 ] ]
 //  [ [    ...     ] ]
 
-//chain::header deserialize_header(const slab_type begin, uint64_t length)
-//{
-//    boost::iostreams::stream<byte_pointer_array_source> istream(begin, length);
-//    istream.exceptions(std::ios_base::failbit);
-//    chain::header header;
-//    header.from_data(istream);
-//
-////    if (!istream)
-////        throw end_of_stream();
-//
-//    return header;
-//}
-
-template <typename Iterator>
-chain::header deserialize_header(const Iterator first)
-{
-    chain::header header;
-    auto deserial = make_deserializer_unsafe(first);
-    header.from_data(deserial, false);
-    return header;
-}
-
-block_result::block_result(const slab_type slab, uint64_t size_limit)
-  : slab_(slab), size_limit_(size_limit)
-{
-}
-
-block_result::operator bool() const
-{
-    return slab_ != nullptr;
-}
-
-chain::header block_result::header() const
-{
-    BITCOIN_ASSERT(slab_ != nullptr);
-//    return deserialize_header(slab_, size_limit_);
-    return deserialize_header(slab_);
-}
-
-size_t block_result::height() const
-{
-    BITCOIN_ASSERT(slab_ != nullptr);
-    return from_little_endian_unsafe<uint32_t>(slab_ + 80);
-}
-
-size_t block_result::transactions_size() const
-{
-    BITCOIN_ASSERT(slab_ != nullptr);
-    return from_little_endian_unsafe<uint32_t>(slab_ + 80 + 4);
-}
-
-hash_digest block_result::transaction_hash(size_t i) const
-{
-    BITCOIN_ASSERT(slab_ != nullptr);
-    BITCOIN_ASSERT(i < transactions_size());
-    const uint8_t* first = slab_ + 80 + 4 + 4 + i * hash_size;
-    auto deserial = make_deserializer_unsafe(first);
-    return deserial.read_hash();
-}
-
-block_database::block_database(const boost::filesystem::path& map_filename,
-    const boost::filesystem::path& index_filename)
+block_database::block_database(const path& map_filename,
+    const path& index_filename)
   : map_file_(map_filename), 
-    header_(map_file_, 0),
-    allocator_(map_file_, allocator_offset),
-    map_(header_, allocator_),
+    header_(map_file_, number_buckets),
+    manager_(map_file_, header_size),
+    map_(header_, manager_),
     index_file_(index_filename),
-    index_(index_file_, 0, sizeof(position_type))
+    index_(index_file_, 0, sizeof(file_offset))
 {
-    BITCOIN_ASSERT(map_file_.data() != nullptr);
-    BITCOIN_ASSERT(index_file_.data() != nullptr);
+    BITCOIN_ASSERT(REMAP_ADDRESS(map_file_.access()) != nullptr);
+    BITCOIN_ASSERT(REMAP_ADDRESS(index_file_.access()) != nullptr);
 }
 
 void block_database::create()
 {
     map_file_.resize(initial_map_file_size);
-    header_.create(number_buckets);
-    allocator_.create();
-    index_file_.resize(min_records_fsize);
+    header_.create();
+    manager_.create();
+    index_file_.resize(minimum_records_size);
     index_.create();
 }
 
 void block_database::start()
 {
     header_.start();
-    allocator_.start();
+    manager_.start();
     index_.start();
 }
 
@@ -141,30 +83,32 @@ bool block_database::stop()
 block_result block_database::get(const size_t height) const
 {
     if (height >= index_.count())
-        return block_result(nullptr, 0);
+        return block_result(nullptr);
 
     const auto position = read_position(height);
-    const auto slab = allocator_.get(position);
-    return block_result(slab, allocator_.to_eof(slab));
+    const auto memory = manager_.get(position);
+    return block_result(memory);
 }
 
 block_result block_database::get(const hash_digest& hash) const
 {
-    const auto slab = map_.get(hash);
-    return block_result(slab, allocator_.to_eof(slab));
+    const auto memory = map_.find(hash);
+    return block_result(memory);
 }
 
-void block_database::store(const chain::block& block)
+void block_database::store(const block& block)
 {
+    // BUGBUG: unsafe unless block push is serialized.
     const uint32_t height = index_.count();
+
     const auto number_txs = block.transactions.size();
     const uint32_t number_txs32 = static_cast<uint32_t>(number_txs);
 
     // Write block data.
-    const auto write = [&](uint8_t* data)
+    const auto write = [&](memory_ptr data)
     {
-        auto serial = make_serializer(data);
-        data_chunk header_data = block.header.to_data(false);
+        auto serial = make_serializer(REMAP_ADDRESS(data));
+        const auto header_data = block.header.to_data(false);
         serial.write_data(header_data);
         serial.write_4_bytes_little_endian(height);
         serial.write_4_bytes_little_endian(number_txs32);
@@ -186,12 +130,12 @@ void block_database::store(const chain::block& block)
 
 void block_database::unlink(const size_t from_height)
 {
-    index_.count(from_height);
+    index_.set_count(from_height);
 }
 
 void block_database::sync()
 {
-    allocator_.sync();
+    manager_.sync();
     index_.sync();
 }
 
@@ -204,29 +148,20 @@ bool block_database::top(size_t& out_height) const
     return true;
 }
 
-// TODO:
-size_t block_database::gap(size_t start) const
+void block_database::write_position(const file_offset position)
 {
-    for (int height = 0; height < max_size_t; height++)
-        const auto position = get(height);
+    const auto index = index_.new_records(1);
+    const auto memory = index_.get(index);
+    auto serial = make_serializer(REMAP_ADDRESS(memory));
 
-    return 0;
-}
-
-void block_database::write_position(const position_type position)
-{
-    const auto record = index_.allocate();
-    const auto data = index_.get(record);
-    auto serial = make_serializer(data);
-
-    // MUST BE ATOMIC ???
+    // MUST BE ATOMIC
     serial.write_8_bytes_little_endian(position);
 }
 
-position_type block_database::read_position(const index_type index) const
+file_offset block_database::read_position(const array_index index) const
 {
-    const auto record = index_.get(index);
-    return from_little_endian_unsafe<position_type>(record);
+    const auto memory = index_.get(index);
+    return from_little_endian_unsafe<file_offset>(REMAP_ADDRESS(memory));
 }
 
 } // namespace database

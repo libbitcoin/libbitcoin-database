@@ -23,131 +23,72 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/record/record_allocator.hpp>
-#include <bitcoin/database/slab/htdb_slab.hpp>
+#include <bitcoin/database/memory/memory_map.hpp>
+#include <bitcoin/database/hash_table/record_manager.hpp>
+#include <bitcoin/database/result/block_result.hpp>
+#include <bitcoin/database/hash_table/slab_hash_table.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-class BCD_API block_result
-{
-public:
-    block_result(const slab_type slab, uint64_t size_limit);
-
-    /**
-     * Test whether the result exists, return false otherwise.
-     */
-    operator bool() const;
-
-    /**
-     * Read block header.
-     */
-    chain::header header() const;
-
-    /**
-     * The height of this block in the chain.
-     */
-    size_t height() const;
-
-    /**
-     * Read the number of transactions in this block.
-     */
-    size_t transactions_size() const;
-
-    /**
-     * Read a transaction hash where i < transactions_size().
-     */
-    hash_digest transaction_hash(size_t i) const;
-
-private:
-    const slab_type slab_;
-    uint64_t size_limit_;
-};
-
-/**
- * Stores block_headers each with a list of transaction indexes.
- * Lookup possible by hash or height.
- */
+/// Stores block_headers each with a list of transaction indexes.
+/// Lookup possible by hash or height.
 class BCD_API block_database
 {
 public:
     block_database(const boost::filesystem::path& map_filename,
         const boost::filesystem::path& index_filename);
 
-    /**
-     * Initialize a new transaction database.
-     */
+    /// Initialize a new transaction database.
     void create();
 
-    /**
-     * You must call start() before using the database.
-     */
+    /// Call before using the database.
     void start();
 
-    /**
-     * Call stop to unload the memory map.
-     */
+    /// Call stop to unload the memory map.
     bool stop();
 
-    /**
-     * Fetch block by height using the index table.
-     */
+    /// Fetch block by height using the index table.
     block_result get(const size_t height) const;
 
-    /**
-     * Fetch block by hash using the hashtable.
-     */
+    /// Fetch block by hash using the hashtable.
     block_result get(const hash_digest& hash) const;
 
-    /**
-     * Store a block in the database.
-     */
+    /// Store a block in the database.
     void store(const chain::block& block);
 
-    /**
-     * Unlink all blocks upwards from (and including) from_height.
-     */
+    /// Unlink all blocks upwards from (and including) from_height.
     void unlink(const size_t from_height);
 
-    /**
-     * Synchronise storage with disk so things are consistent.
-     * Should be done at the end of every block write.
-     */
+    /// Synchronise storage with disk so things are consistent.
+    /// Should be done at the end of every block write.
     void sync();
 
-    /**
-     * Latest block height in our chain. Returns false if no blocks exist.
-     * This is actually the count of blocks minus one and does not represent
-     * the logical top if there are gaps in the chain. Use gap to validate
-     * the top at startup.
-     */
+    /// Latest block height in our chain. Returns false if no blocks exist.
+    /// This is actually the count of blocks minus one and does not represent
+    /// the logical top if there are gaps in the chain. Use gap to validate
+    /// the top at startup
     bool top(size_t& out_height) const;
 
-    /**
-     * First missing block by height after the specified start height.
-     * All previous block pointers from start to gap are validated.
-     */
-    size_t gap(size_t start) const;
-
 private:
-    typedef htdb_slab<hash_digest> map_type;
+    typedef slab_hash_table<hash_digest> slab_map;
 
     /// Write position of tx.
-    void write_position(const position_type position);
+    void write_position(const file_offset position);
 
     /// Use intermediate records table to find blk position from height.
-    position_type read_position(const index_type index) const;
+    file_offset read_position(const array_index index) const;
 
     /// The hashtable used for looking up blocks by hash.
-    mmfile map_file_;
-    htdb_slab_header header_;
-    slab_allocator allocator_;
-    map_type map_;
+    memory_map map_file_;
+    slab_hash_table_header header_;
+    slab_manager manager_;
+    slab_map map_;
 
     /// Table used for looking up blocks by height.
     /// Resolves to a position within the slab.
-    mmfile index_file_;
-    record_allocator index_;
+    memory_map index_file_;
+    record_manager index_;
 };
 
 } // namespace database

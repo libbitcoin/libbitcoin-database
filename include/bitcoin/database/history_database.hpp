@@ -23,7 +23,8 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/record/multimap_records.hpp>
+#include <bitcoin/database/memory/memory_map.hpp>
+#include <bitcoin/database/hash_table/record_multimap.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -33,90 +34,71 @@ struct BCD_API history_statinfo
     /// Number of buckets used in the hashtable.
     /// load factor = addrs / buckets
     const size_t buckets;
+
     /// Total number of unique addresses in the database.
     const size_t addrs;
+
     /// Total number of rows across all addresses.
     const size_t rows;
 };
 
-/**
- * history_database is a multimap where the key is the Bitcoin address hash,
- * which returns several rows giving the history for that address.
- */
+/// This is a multimap where the key is the Bitcoin address hash,
+/// which returns several rows giving the history for that address.
 class BCD_API history_database
 {
 public:
     history_database(const boost::filesystem::path& lookup_filename,
         const boost::filesystem::path& rows_filename);
 
-    /**
-     * Initialize a new history database.
-     */
+    /// Initialize a new history database.
     void create();
 
-    /**
-     * You must call start() before using the database.
-     */
+    /// Call before using the database.
     void start();
 
-    /**
-     * Call stop to unload the memory map.
-     */
+    /// Call stop to unload the memory map.
     bool stop();
 
-    /**
-     * Add another row value to the key. If key doesn't exist then
-     * it will be created.
-     */
+    /// Add another row value to the key. If key doesn't exist then
+    /// it will be created.
     void add_output(const short_hash& key, const chain::output_point& outpoint,
         const uint32_t output_height, uint64_t value);
 
-    /**
-     * Add another row value to the key. If key doesn't exist then
-     * it will be created.
-     */
+    /// Add another row value to the key. If key doesn't exist then
+    /// it will be created.
     void add_spend(const short_hash& key, const chain::output_point& previous,
         const chain::input_point& spend, size_t spend_height);
 
-    /**
-     * Delete the last row that was added to key.
-     */
+    /// Delete the last row that was added to key.
     void delete_last_row(const short_hash& key);
 
-    /**
-     * Gets the output points, output values, corresponding input point
-     * spends and the block heights associated with a Bitcoin address.
-     * The returned history is a list of rows and a stop index.
-     */
+    /// Gets the output points, output values, corresponding input point
+    /// spends and the block heights associated with a Bitcoin address.
+    /// The returned history is a list of rows and a stop index.
     chain::history get(const short_hash& key, size_t limit,
         size_t from_height) const;
 
-    /**
-     * Synchonise with disk.
-     */
+    /// Synchonise with disk.
     void sync();
 
-    /**
-     * Return statistical info about the database.
-     */
+    /// Return statistical info about the database.
     history_statinfo statinfo() const;
 
 private:
-    typedef htdb_record<short_hash> map_type;
-    typedef multimap_records<short_hash> multimap_type;
+    typedef record_hash_table<short_hash> record_map;
+    typedef record_multimap<short_hash> record_multiple_map;
 
-    /// The hashtable used for looking up start index for a
-    /// linked list by address hash.
-    mmfile lookup_file_;
-    htdb_record_header header_;
-    record_allocator allocator_;
-    map_type start_lookup_;
+    // Hash table used for start index lookup for linked list by address hash.
+    memory_map lookup_file_;
+    record_hash_table_header header_;
+    record_manager manager_;
+    record_map start_lookup_;
 
-    mmfile rows_file_;
-    record_allocator rows_;
-    linked_records linked_rows_;
+    memory_map rows_file_;
+    record_manager rows_;
+    record_list records_;
 
-    multimap_type map_;
+    record_multiple_map map_;
 };
 
 } // namespace database

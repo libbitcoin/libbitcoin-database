@@ -3,6 +3,7 @@
 #include <boost/lexical_cast.hpp>
 #include <bitcoin/database.hpp>
 
+using namespace boost;
 using namespace bc;
 using namespace bc::database;
 
@@ -11,18 +12,12 @@ void show_help()
     std::cout << "Usage: block_db COMMAND MAP ROWS [ARGS]" << std::endl;
     std::cout << std::endl;
     std::cout << "The most commonly used block_db commands are:" << std::endl;
-    std::cout << "  initialize_new  "
-        << "Create a new block_database" << std::endl;
-    std::cout << "  get             "
-        << "Fetch block by height or hash" << std::endl;
-    std::cout << "  store           "
-        << "Store a block" << std::endl;
-    std::cout << "  unlink          "
-        << "Unlink series of blocks from a height" << std::endl;
-    std::cout << "  last_height       "
-        << "Show last block height in current chain" << std::endl;
-    std::cout << "  help            "
-        << "Show help for commands" << std::endl;
+    std::cout << "  initialize_new  " << "Create a new block_database" << std::endl;
+    std::cout << "  get             " << "Fetch block by height or hash" << std::endl;
+    std::cout << "  store           " << "Store a block" << std::endl;
+    std::cout << "  unlink          " << "Unlink series of blocks from a height" << std::endl;
+    std::cout << "  last_height     " << "Show last block height in current chain" << std::endl;
+    std::cout << "  help            " << "Show help for commands" << std::endl;
 }
 
 void show_command_help(const std::string& command)
@@ -61,29 +56,33 @@ void show_command_help(const std::string& command)
 template <typename Point>
 bool parse_point(Point& point, const std::string& arg)
 {
-    std::vector<std::string> strs;
-    boost::split(strs, arg, boost::is_any_of(":"));
-    if (strs.size() != 2)
+    std::vector<std::string> tokens;
+    split(tokens, arg, is_any_of(":"));
+
+    if (tokens.size() != 2)
     {
         std::cerr << "block_db: bad point provided." << std::endl;
         return false;
     }
-    const std::string& hex_string = strs[0];
-    if (!decode_hash(point.hash, hex_string))
+
+    const std::string& hexadecimal = tokens[0];
+    if (!decode_hash(point.hash, hexadecimal))
     {
         std::cerr << "block_db: bad point provided." << std::endl;
         return false;
     }
-    const std::string& index_string = strs[1];
+
+    const std::string& index = tokens[1];
     try
     {
-        point.index = boost::lexical_cast<uint32_t>(index_string);
+        point.index = lexical_cast<uint32_t>(index);
     }
-    catch (const boost::bad_lexical_cast&)
+    catch (const bad_lexical_cast&)
     {
         std::cerr << "block_db: bad point provided." << std::endl;
         return false;
     }
+
     return true;
 }
 
@@ -106,25 +105,29 @@ bool parse_uint(Uint& value, const std::string& arg)
 {
     try
     {
-        value = boost::lexical_cast<Uint>(arg);
+        value = lexical_cast<Uint>(arg);
     }
-    catch (const boost::bad_lexical_cast&)
+    catch (const bad_lexical_cast&)
     {
         std::cerr << "block_db: bad value provided." << std::endl;
         return false;
     }
+
     return true;
 }
 
 int main(int argc, char** argv)
 {
     typedef std::vector<std::string> string_list;
+
     if (argc < 2)
     {
         show_help();
         return -1;
     }
+
     const std::string command = argv[1];
+
     if (command == "help" || command == "-h" || command == "--help")
     {
         if (argc == 3)
@@ -135,26 +138,31 @@ int main(int argc, char** argv)
         show_help();
         return 0;
     }
+
     if (argc < 4)
     {
         show_command_help(command);
         return -1;
     }
+
+    string_list args;
     const std::string map_filename = argv[2];
     const std::string rows_filename = argv[3];
-    string_list args;
+
     for (int i = 4; i < argc; ++i)
         args.push_back(argv[i]);
+
     if (command == "initialize_new")
     {
         data_base::touch_file(map_filename);
         data_base::touch_file(rows_filename);
     }
+
     block_database db(map_filename, rows_filename);
+
     if (command == "initialize_new")
     {
         db.create();
-        return 0;
     }
     else if (command == "get")
     {
@@ -163,14 +171,16 @@ int main(int argc, char** argv)
             show_command_help(command);
             return -1;
         }
+
         db.start();
-        block_result* result = nullptr;
+        std::shared_ptr<block_result> result;
+
         try
         {
-            size_t height = boost::lexical_cast<size_t>(args[0]);
-            result = new block_result(db.get(height));
+            size_t height = lexical_cast<size_t>(args[0]);
+            result = std::make_shared<block_result>(db.get(height));
         }
-        catch (const boost::bad_lexical_cast&)
+        catch (const bad_lexical_cast&)
         {
             hash_digest hash;
             if (!decode_hash(hash, args[0]))
@@ -178,31 +188,35 @@ int main(int argc, char** argv)
                 std::cerr << "Couldn't read index value." << std::endl;
                 return -1;
             }
-            result = new block_result(db.get(hash));
+
+            result = std::make_shared<block_result>(db.get(hash));
         }
-        if (!(*result))
+
+        if (!result)
         {
             std::cout << "Not found!" << std::endl;
-            delete result;
             return -1;
         }
-        const chain::header blk_header = result->header();
+
+        const auto block_header = result->header();
+        const auto txs_size = result->transaction_count();
+        const auto merkle = encode_hash(block_header.merkle);
+        const auto previous = encode_hash(block_header.previous_block_hash);
 
         // Show details.
         std::cout << "height: " << result->height() << std::endl;
-        std::cout << "hash: "
-            << encode_hash(blk_header.hash()) << std::endl;
-        std::cout << "version: " << blk_header.version << std::endl;
-        std::cout << "previous_block_hash: "
-            << encode_hash(blk_header.previous_block_hash) << std::endl;
-        std::cout << "merkle: " << encode_hash(blk_header.merkle) << std::endl;
-        std::cout << "timestamp: " << blk_header.timestamp << std::endl;
-        std::cout << "bits: " << blk_header.bits << std::endl;
-        std::cout << "nonce: " << blk_header.nonce << std::endl;
-        const size_t txs_size = result->transactions_size();
-        if (txs_size)
+        std::cout << "hash: " << encode_hash(block_header.hash()) << std::endl;
+        std::cout << "version: " << block_header.version << std::endl;
+        std::cout << "previous: " << previous << std::endl;
+        std::cout << "merkle: " << merkle << std::endl;
+        std::cout << "timestamp: " << block_header.timestamp << std::endl;
+        std::cout << "bits: " << block_header.bits << std::endl;
+        std::cout << "nonce: " << block_header.nonce << std::endl;
+
+        if (txs_size > 0)
         {
             std::cout << "Transactions:" << std::endl;
+
             for (size_t i = 0; i < txs_size; ++i)
                 std::cout << "  " << encode_hash(result->transaction_hash(i))
                     << std::endl;
@@ -211,7 +225,6 @@ int main(int argc, char** argv)
         {
             std::cout << "No transactions" << std::endl;
         }
-        delete result;
     }
     else if (command == "store")
     {
@@ -250,9 +263,11 @@ int main(int argc, char** argv)
             show_command_help(command);
             return -1;
         }
+
         size_t from_height = 0;
         if (!parse_uint(from_height, args[0]))
             return -1;
+
         db.start();
         db.unlink(from_height);
         db.sync();
@@ -261,11 +276,13 @@ int main(int argc, char** argv)
     {
         db.start();
         size_t height;
+
         if (!db.top(height))
         {
             std::cout << "No blocks exist." << std::endl;
             return -2;
         }
+
         std::cout << height << std::endl;
     }
     else
@@ -275,6 +292,7 @@ int main(int argc, char** argv)
             << "See 'block_db --help'." << std::endl;
         return -1;
     }
+
     return 0;
 }
 

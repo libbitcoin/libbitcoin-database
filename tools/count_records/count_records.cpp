@@ -2,31 +2,29 @@
 #include <boost/lexical_cast.hpp>
 #include <bitcoin/database.hpp>
 
+using namespace boost;
 using namespace bc;
 using namespace bc::database;
 
 int main(int argc, char** argv)
 {
-    if (argc != 3 && argc != 4)
+    if (argc != 4)
     {
-        std::cerr << "Usage: count_records FILENAME RECORD_SIZE [OFFSET]"
+        std::cerr << "Usage: count_records FILENAME RECORD_SIZE BUCKETS"
             << std::endl;
         return 0;
     }
+
     const std::string filename = argv[1];
-    const size_t record_size = boost::lexical_cast<size_t>(argv[2]);
-    position_type offset = 0;
-    if (argc == 4)
-        offset = boost::lexical_cast<position_type>(argv[3]);
-    mmfile file(filename);
-    if (!file.data())
-    {
-        std::cerr << "count_records: file failed to open." << std::endl;
-        return -1;
-    }
-    record_allocator recs(file, offset, record_size);
-    recs.start();
-    std::cout << recs.count() << std::endl;
+    const auto record_size = lexical_cast<size_t>(argv[2]);
+    const auto buckets = lexical_cast<file_offset>(argv[3]);
+
+    memory_map file(filename);
+    record_manager records(file, buckets, record_size);
+
+    records.start();
+    std::cout << records.count() << std::endl;
+
     return 0;
 }
 

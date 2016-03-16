@@ -3,6 +3,7 @@
 #include <boost/lexical_cast.hpp>
 #include <bitcoin/database.hpp>
 
+using namespace boost;
 using namespace bc;
 using namespace bc::database;
 
@@ -10,16 +11,11 @@ void show_help()
 {
     std::cout << "Usage: transaction_db COMMAND MAP [ARGS]" << std::endl;
     std::cout << std::endl;
-    std::cout << "The most commonly used transaction_db commands are:"
-        << std::endl;
-    std::cout << "  initialize_new  "
-        << "Create a new transaction_database" << std::endl;
-    std::cout << "  get             "
-        << "Fetch transaction by hash" << std::endl;
-    std::cout << "  store           "
-        << "Store a transaction" << std::endl;
-    std::cout << "  help            "
-        << "Show help for commands" << std::endl;
+    std::cout << "The most commonly used transaction_db commands are:" << std::endl;
+    std::cout << "  initialize_new  " << "Create a new transaction_database" << std::endl;
+    std::cout << "  get             " << "Fetch transaction by hash" << std::endl;
+    std::cout << "  store           " << "Store a transaction" << std::endl;
+    std::cout << "  help            " << "Show help for commands" << std::endl;
 }
 
 void show_command_help(const std::string& command)
@@ -55,9 +51,9 @@ bool parse_uint(Uint& value, const std::string& arg)
 {
     try
     {
-        value = boost::lexical_cast<Uint>(arg);
+        value = lexical_cast<Uint>(arg);
     }
-    catch (const boost::bad_lexical_cast&)
+    catch (const bad_lexical_cast&)
     {
         std::cerr << "transaaction_db: bad value provided." << std::endl;
         return false;
@@ -68,12 +64,15 @@ bool parse_uint(Uint& value, const std::string& arg)
 int main(int argc, char** argv)
 {
     typedef std::vector<std::string> string_list;
+
     if (argc < 2)
     {
         show_help();
         return -1;
     }
+
     const std::string command = argv[1];
+
     if (command == "help" || command == "-h" || command == "--help")
     {
         if (argc == 3)
@@ -81,27 +80,31 @@ int main(int argc, char** argv)
             show_command_help(argv[2]);
             return 0;
         }
+
         show_help();
         return 0;
     }
+
     if (argc < 3)
     {
         show_command_help(command);
         return -1;
     }
-    const std::string map_filename = argv[2];
+
     string_list args;
+    const std::string map_filename = argv[2];
+
     for (int i = 3; i < argc; ++i)
         args.push_back(argv[i]);
+
     if (command == "initialize_new")
-    {
         data_base::touch_file(map_filename);
-    }
+
     transaction_database db(map_filename);
+
     if (command == "initialize_new")
     {
         db.create();
-        return 0;
     }
     else if (command == "get")
     {
@@ -110,23 +113,26 @@ int main(int argc, char** argv)
             show_command_help(command);
             return -1;
         }
-        db.start();
+
         hash_digest hash;
         if (!decode_hash(hash, args[0]))
         {
             std::cerr << "Couldn't read transaction hash." << std::endl;
             return -1;
         }
+
+        db.start();
         auto result = db.get(hash);
         if (!result)
         {
             std::cout << "Not found!" << std::endl;
             return -1;
         }
+
+        const data_chunk data = result.transaction().to_data();
+
         std::cout << "height: " << result.height() << std::endl;
         std::cout << "index: " << result.index() << std::endl;
-        auto tx = result.transaction();
-        data_chunk data = tx.to_data();
         std::cout << "tx: " << encode_base16(data) << std::endl;
     }
     else if (command == "store")
@@ -136,10 +142,12 @@ int main(int argc, char** argv)
             show_command_help(command);
             return -1;
         }
+
         size_t height;
-        size_t index;
         if (!parse_uint(height, args[0]))
             return -1;
+
+        size_t index;
         if (!parse_uint(index, args[1]))
             return -1;
 
@@ -151,7 +159,6 @@ int main(int argc, char** argv)
         }
 
         chain::transaction tx;
-
         if (!tx.from_data(data))
             throw end_of_stream();
 
@@ -166,12 +173,14 @@ int main(int argc, char** argv)
             show_command_help(command);
             return -1;
         }
+
         hash_digest hash;
         if (!decode_hash(hash, args[0]))
         {
             std::cerr << "Couldn't read transaction hash." << std::endl;
             return -1;
         }
+
         db.start();
         db.remove(hash);
         db.sync();

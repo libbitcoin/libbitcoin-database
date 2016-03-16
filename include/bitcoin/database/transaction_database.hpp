@@ -23,100 +23,55 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/record/record_allocator.hpp>
-#include <bitcoin/database/slab/htdb_slab.hpp>
+#include <bitcoin/database/memory/memory_map.hpp>
+#include <bitcoin/database/result/transaction_result.hpp>
+#include <bitcoin/database/hash_table/slab_hash_table.hpp>
+#include <bitcoin/database/hash_table/slab_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-class BCD_API transaction_result
-{
-public:
-    transaction_result(const slab_type slab, uint64_t size_limit);
-
-    /**
-     * Test whether the result exists, return false otherwise.
-     */
-    operator bool() const;
-
-    /**
-     * Height of the block which includes this transaction.
-     */
-    size_t height() const;
-
-    /**
-     * Index of transaction within a block.
-     */
-    size_t index() const;
-
-    /**
-     * Actual transaction itself.
-     */
-    chain::transaction transaction() const;
-
-private:
-
-    const slab_type slab_;
-    uint64_t size_limit_;
-};
-
-/**
- * transaction_database enables lookups of transactions by hash.
- * An alternative and faster method is lookup from a unique index
- * that is assigned upon storage.
- * This is so we can quickly reconstruct blocks given a list of tx indexes
- * belonging to that block. These are stored with the block.
- */
+/// This enables lookups of transactions by hash.
+/// An alternative and faster method is lookup from a unique index
+/// that is assigned upon storage.
+/// This is so we can quickly reconstruct blocks given a list of tx indexes
+/// belonging to that block. These are stored with the block.
 class BCD_API transaction_database
 {
 public:
     transaction_database(const boost::filesystem::path& map_filename);
 
-    /**
-     * Initialize a new transaction database.
-     */
+    /// Initialize a new transaction database.
     void create();
 
-    /**
-     * You must call start() before using the database.
-     */
+    /// Call before using the database.
     void start();
 
-    /**
-     * Call stop to unload the memory map.
-     */
+    /// Call stop to unload the memory map.
     bool stop();
 
-    /**
-     * Fetch transaction from its hash.
-     */
+    /// Fetch transaction from its hash.
     transaction_result get(const hash_digest& hash) const;
 
-    /**
-     * Store a transaction in the database. Returns a unique index
-     * which can be used to reference the transaction.
-     */
+    /// Store a transaction in the database. Returns a unique index
+    /// which can be used to reference the transaction.
     void store(size_t height, size_t index, const chain::transaction& tx);
 
-    /**
-     * Delete a transaction from database.
-     */
+    /// Delete a transaction from database.
     void remove(const hash_digest& hash);
 
-    /**
-     * Synchronise storage with disk so things are consistent.
-     * Should be done at the end of every block write.
-     */
+    /// Synchronise storage with disk so things are consistent.
+    /// Should be done at the end of every block write.
     void sync();
 
 private:
-    typedef htdb_slab<hash_digest> map_type;
+    typedef slab_hash_table<hash_digest> slab_map;
 
-    /// The hashtable used for looking up txs by hash.
-    mmfile map_file_;
-    htdb_slab_header header_;
-    slab_allocator allocator_;
-    map_type map_;
+    // Hash table used for looking up txs by hash.
+    memory_map map_file_;
+    slab_hash_table_header header_;
+    slab_manager manager_;
+    slab_map map_;
 };
 
 } // namespace database

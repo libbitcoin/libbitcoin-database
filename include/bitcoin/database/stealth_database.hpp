@@ -23,7 +23,9 @@
 #include <cstdint>
 #include <boost/filesystem.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/record/record_allocator.hpp>
+#include <bitcoin/database/hash_table/record_manager.hpp>
+#include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/memory/memory_map.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -31,61 +33,47 @@ namespace database {
 class BCD_API stealth_database
 {
 public:
-    typedef std::function<void (uint8_t*)> write_function;
+    typedef std::function<void(memory_ptr)> write_function;
 
     stealth_database(const boost::filesystem::path& index_filename,
         const boost::filesystem::path& rows_filename);
 
-    /**
-     * Initialize a new stealth database.
-     */
+    /// Initialize a new stealth database.
     void create();
 
-    /**
-     * You must call start() before using the database.
-     */
+    /// Call before using the database.
     void start();
 
-    /**
-     * Call stop to unload the memory map.
-     */
+    /// Call stop to unload the memory map.
     bool stop();
 
-    /**
-     * Linearly scans all entries starting at from_height.
-     */
+    /// Linearly scan all entries starting at from_height.
     chain::stealth scan(const binary& filter, size_t from_height) const;
 
-    /**
-     * Add a stealth row to the database.
-     */
+    /// Add a stealth row to the database.
     void store(uint32_t prefix, const chain::stealth_row& row);
 
-    /**
-     * Delete all rows after and including from_height.
-     */
+    /// Delete all rows after and including from_height.
     void unlink(size_t from_height);
 
-    /**
-     * Synchronise storage with disk so things are consistent.
-     * Should be done at the end of every block write.
-     */
+    /// Synchronise storage with disk so things are consistent.
+    /// Should be done at the end of every block write.
     void sync();
 
 private:
     void write_index();
-    index_type read_index(size_t from_height) const;
+    array_index read_index(size_t from_height) const;
 
-    index_type block_start_;
+    array_index row_count_;
 
     // Table used for jumping to rows by height.
     // Resolves to a index within the rows.
-    mmfile index_file_;
-    record_allocator index_;
+    memory_map index_file_;
+    record_manager index_;
 
     // Actual row entries containing stealth tx data.
-    mmfile rows_file_;
-    record_allocator rows_;
+    memory_map rows_file_;
+    record_manager rows_;
 };
 
 } // namespace database

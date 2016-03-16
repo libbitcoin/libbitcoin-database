@@ -19,19 +19,25 @@
 #include <bitcoin/database/data_base.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/history_database.hpp>
-#include <bitcoin/database/pointer_array_source.hpp>
 #include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/spend_database.hpp>
 #include <bitcoin/database/stealth_database.hpp>
 #include <bitcoin/database/transaction_database.hpp>
 #include <bitcoin/database/version.hpp>
-#include <bitcoin/database/disk/disk_array.hpp>
-#include <bitcoin/database/disk/mmfile.hpp>
-#include <bitcoin/database/record/htdb_record.hpp>
-#include <bitcoin/database/record/linked_records.hpp>
-#include <bitcoin/database/record/multimap_records.hpp>
-#include <bitcoin/database/record/record_allocator.hpp>
-#include <bitcoin/database/slab/htdb_slab.hpp>
-#include <bitcoin/database/slab/slab_allocator.hpp>
+#include <bitcoin/database/hash_table/hash_table_header.hpp>
+#include <bitcoin/database/hash_table/record_hash_table.hpp>
+#include <bitcoin/database/hash_table/record_list.hpp>
+#include <bitcoin/database/hash_table/record_manager.hpp>
+#include <bitcoin/database/hash_table/record_multimap.hpp>
+#include <bitcoin/database/hash_table/record_multimap_iterable.hpp>
+#include <bitcoin/database/hash_table/record_multimap_iterator.hpp>
+#include <bitcoin/database/hash_table/slab_hash_table.hpp>
+#include <bitcoin/database/hash_table/slab_manager.hpp>
+#include <bitcoin/database/memory/accessor.hpp>
+#include <bitcoin/database/memory/allocator.hpp>
+#include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/memory/memory_map.hpp>
+#include <bitcoin/database/result/block_result.hpp>
+#include <bitcoin/database/result/transaction_result.hpp>
 
 #endif

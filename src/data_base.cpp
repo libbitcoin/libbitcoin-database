@@ -23,15 +23,15 @@
 #include <stdexcept>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/database/disk/mmfile.hpp>
+#include <bitcoin/database/memory/memory_map.hpp>
 #include <bitcoin/database/settings.hpp>
 
 namespace libbitcoin {
 namespace database {
 
+using namespace boost::filesystem;
 using namespace bc::chain;
 using namespace bc::wallet;
-using namespace boost::filesystem;
 
 // BIP30 exception blocks.
 // github.com/bitcoin/bips/blob/master/bip-0030.mediawiki#specification
@@ -162,7 +162,7 @@ bool data_base::start()
     if (!file_lock_.try_lock())
         return false;
 
-    const auto start_exclusive = start_write();
+    const auto start_exclusive = begin_write();
     blocks.start();
     spends.start();
     transactions.start();
@@ -174,7 +174,7 @@ bool data_base::start()
 
 bool data_base::stop()
 {
-    const auto start_exclusive = start_write();
+    const auto start_exclusive = begin_write();
     const auto result = blocks.stop() && spends.stop() &&
         transactions.stop() && history.stop() && stealth.stop();
     const auto end_exclusive = end_write();
@@ -184,14 +184,14 @@ bool data_base::stop()
 // ----------------------------------------------------------------------------
 // Locking.
 
-handle data_base::start_read()
+handle data_base::begin_read()
 {
     return sequential_lock_.load();
 }
 
 bool data_base::is_read_valid(handle value)
 {
-    return value == sequential_lock_;
+    return value == sequential_lock_.load();
 }
 
 bool data_base::is_write_locked(handle value)
@@ -199,7 +199,7 @@ bool data_base::is_write_locked(handle value)
     return (value % 2) == 1;
 }
 
-bool data_base::start_write()
+bool data_base::begin_write()
 {
     // slock is now odd.
     return is_write_locked(++sequential_lock_);
@@ -244,8 +244,12 @@ void data_base::synchronize()
 
 void data_base::push(const block& block)
 {
-    const auto height = get_next_height(blocks);
+    // BUGBUG: unsafe unless block push is serialized.
+    push(block, get_next_height(blocks));
+}
 
+void data_base::push(const block& block, uint64_t height)
+{
     for (size_t index = 0; index < block.transactions.size(); ++index)
     {
         // Skip BIP30 allowed duplicates (coinbase txs of excepted blocks).
@@ -368,12 +372,12 @@ chain::block data_base::pop()
     if (!blocks.top(height))
         throw std::runtime_error("The chain is empty.");
 
-    auto block_result = blocks.get(height);
+    const auto block_result = blocks.get(height);
 
     // Set result header.
     chain::block block;
     block.header = block_result.header();
-    const auto count = block_result.transactions_size();
+    const auto count = block_result.transaction_count();
 
     // TODO: unreverse the loop so we can avoid this.
     BITCOIN_ASSERT_MSG(count <= max_int64, "overflow");
@@ -383,7 +387,7 @@ chain::block data_base::pop()
     for (int64_t index = unsigned_count - 1; index >= 0; --index)
     {
         const auto tx_hash = block_result.transaction_hash(index);
-        auto tx_result = transactions.get(tx_hash);
+        const auto tx_result = transactions.get(tx_hash);
         BITCOIN_ASSERT(tx_result);
         BITCOIN_ASSERT(tx_result.height() == height);
         BITCOIN_ASSERT(tx_result.index() == static_cast<size_t>(index));
@@ -400,12 +404,11 @@ chain::block data_base::pop()
         if (!tx.is_coinbase())
             pop_inputs(tx.inputs, height);
 
-        // TODO: need to pop stealth, referencing deleted txs.
-
         // Add transaction to result
         block.transactions.push_back(tx);
     }
 
+    // TODO: confirm this is clearing stealth data.
     stealth.unlink(height);
     blocks.unlink(height);
 

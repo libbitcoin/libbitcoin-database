@@ -1,77 +1,90 @@
 #include <iostream>
+#include <string>
 #include <boost/lexical_cast.hpp>
 #include <bitcoin/database.hpp>
 
+using namespace boost;
 using namespace bc;
 using namespace bc::database;
 
 void show_usage()
 {
-    std::cerr << "Usage: mmr_create KEY_SIZE VALUE_SIZE "
-        "MAP_FILENAME ROWS_FILENAME [BUCKETS]" << std::endl;
+    std::cerr << "Usage: mmr_create KEY_SIZE VALUE_SIZE BUCKETS "
+        "MAP_FILENAME ROWS_FILENAME" << std::endl;
+}
+
+void show_key_size_error()
+{
+    std::cerr << "Invalid KEY_SIZE: use 4, 20 or 32." << std::endl;
 }
 
 template <size_t KeySize>
-void mmr_create(const size_t value_size,
-    const std::string& map_filename, const std::string& rows_filename,
-    const index_type buckets)
+void mmr_create(const size_t value_size, const std::string& map_filename,
+    const std::string& rows_filename,
+    const array_index buckets)
 {
-    const auto header_fsize = htdb_record_header_fsize(buckets);
+    const auto header_size = record_hash_table_header_size(buckets);
 
     data_base::touch_file(map_filename);
-    mmfile ht_file(map_filename);
-    BITCOIN_ASSERT(ht_file.data());
-    ht_file.resize(header_fsize + min_records_fsize);
+    memory_map ht_file(map_filename);
+    BITCOIN_ASSERT(!ht_file.stopped());
+    ht_file.resize(header_size + minimum_records_size);
 
-    htdb_record_header header(ht_file, 0);
-    header.create(buckets);
+    record_hash_table_header header(ht_file, buckets);
+    header.create();
     header.start();
 
     typedef byte_array<KeySize> hash_type;
-    const size_t record_fsize = map_record_fsize_multimap<hash_type>();
-    BITCOIN_ASSERT(record_fsize == KeySize + 4 + 4);
-    const position_type records_start = header_fsize;
+    const size_t record_size = hash_table_multimap_record_size<hash_type>();
+    BITCOIN_ASSERT(record_size == KeySize + 4 + 4);
+    const file_offset records_start = header_size;
 
-    record_allocator alloc(ht_file, records_start, record_fsize);
+    record_manager alloc(ht_file, records_start, record_size);
     alloc.create();
     alloc.start();
 
-    htdb_record<hash_type> ht(header, alloc, "test");
+    record_hash_table<hash_type> ht(header, alloc);
 
     data_base::touch_file(rows_filename);
-    mmfile lrs_file(rows_filename);
-    BITCOIN_ASSERT(lrs_file.data());
-    lrs_file.resize(min_records_fsize);
-    const size_t lrs_record_size = linked_record_offset + value_size;
-    record_allocator recs(lrs_file, 0, lrs_record_size);
+    memory_map lrs_file(rows_filename);
+    BITCOIN_ASSERT(!lrs_file.stopped());
+    lrs_file.resize(minimum_records_size);
+    const size_t lrs_record_size = record_list_offset + value_size;
+    record_manager recs(lrs_file, 0, lrs_record_size);
     recs.create();
 
     recs.start();
-    linked_records lrs(recs);
+    record_list lrs(recs);
 
-    multimap_records<hash_type> multimap(ht, lrs, "test");
+    record_multimap<hash_type> multimap(ht, lrs);
 }
 
 int main(int argc, char** argv)
 {
-    if (argc != 5 && argc != 6)
+    if (argc != 6)
     {
         show_usage();
         return -1;
     }
-    const size_t key_size = boost::lexical_cast<size_t>(argv[1]);
-    const size_t value_size = boost::lexical_cast<size_t>(argv[2]);
-    const std::string map_filename = argv[3];
-    const std::string rows_filename = argv[4];
-    index_type buckets = 100;
-    if (argc == 6)
-        buckets = boost::lexical_cast<index_type>(argv[5]);
+
+    const auto key_size = lexical_cast<size_t>(argv[1]);
+    const auto value_size = lexical_cast<size_t>(argv[2]);
+    const auto buckets = lexical_cast<array_index>(argv[3]);
+    const std::string map_filename = argv[4];
+    const std::string rows_filename = argv[5];
+
     if (key_size == 4)
         mmr_create<4>(value_size, map_filename, rows_filename, buckets);
     else if (key_size == 20)
         mmr_create<20>(value_size, map_filename, rows_filename, buckets);
     else if (key_size == 32)
         mmr_create<32>(value_size, map_filename, rows_filename, buckets);
+    else
+    {
+        show_key_size_error();
+        return -1;
+    }
+
     return 0;
 }
 

@@ -20,106 +20,67 @@
 #ifndef LIBBITCOIN_DATABASE_SPEND_DATABASE_HPP
 #define LIBBITCOIN_DATABASE_SPEND_DATABASE_HPP
 
+#include <cstddef>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/record/htdb_record.hpp>
+#include <bitcoin/database/memory/memory_map.hpp>
+#include <bitcoin/database/hash_table/record_hash_table.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-class BCD_API spend_result
-{
-public:
-    spend_result(const record_type record);
-
-    /**
-     * Test whether the result exists, return false otherwise.
-     */
-    operator bool() const;
-
-    /**
-     * Transaction hash for spend.
-     */
-    hash_digest hash() const;
-
-    /**
-     * Index of input within transaction for spend.
-     */
-    uint32_t index() const;
-
-private:
-    const record_type record_;
-};
-
-struct spend_statinfo
+struct BCD_API spend_statinfo
 {
     /// Number of buckets used in the hashtable.
     /// load factor = rows / buckets
     const size_t buckets;
+
     /// Total number of spend rows.
     const size_t rows;
 };
 
-/**
- * spend_database enables you to lookup the spend of an output point,
- * returning the input point. It is a simple map.
- */
+/// This enables you to lookup the spend of an output point, returning
+/// the input point. It is a simple map.
 class BCD_API spend_database
 {
 public:
     spend_database(const boost::filesystem::path& filename);
 
-    /**
-     * Initialize a new spend database.
-     */
+    /// Initialize a new spend database.
     void create();
 
-    /**
-     * You must call start() before using the database.
-     */
+    /// Call before using the database.
     void start();
 
-    /**
-     * Call stop to unload the memory map.
-     */
+    /// Call stop to unload the memory map.
     bool stop();
 
-    /**
-     * Get input spend of an output point.
-     */
-    spend_result get(const chain::output_point& outpoint) const;
+    /// Get input spend of an output point.
+    chain::spend get(const chain::output_point& outpoint) const;
 
-    /**
-     * Store a spend in the database.
-     */
+    /// Store a spend in the database.
     void store(const chain::output_point& outpoint,
         const chain::input_point& spend);
 
-    /**
-     * Delete outpoint spend item from database.
-     */
+    /// Delete outpoint spend item from database.
     void remove(const chain::output_point& outpoint);
 
-    /**
-     * Synchronise storage with disk so things are consistent.
-     * Should be done at the end of every block write.
-     */
+    /// Synchronise storage with disk so things are consistent.
+    /// Should be done at the end of every block write.
     void sync();
 
-    /**
-     * Return statistical info about the database.
-     */
+    /// Return statistical info about the database.
     spend_statinfo statinfo() const;
 
 private:
-    typedef htdb_record<hash_digest> map_type;
+    typedef record_hash_table<hash_digest> record_map;
 
-    /// The hashtable used for looking up inpoint spends by outpoint.
-    mmfile file_;
-    htdb_record_header header_;
-    record_allocator allocator_;
-    map_type map_;
+    // Hash table used for looking up inpoint spends by outpoint.
+    memory_map file_;
+    record_hash_table_header header_;
+    record_manager manager_;
+    record_map map_;
 };
 
 } // namespace database

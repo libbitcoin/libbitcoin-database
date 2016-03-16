@@ -19,53 +19,57 @@
  */
 #include <bitcoin/database.hpp>
 
+#include <cstdint>
+#include <cstddef>
 #include <boost/filesystem.hpp>
+#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/hash_table/record_multimap_iterator.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
-    
+
+using namespace boost::filesystem;
 using namespace bc::chain;
-using boost::filesystem::path;
 
 BC_CONSTEXPR size_t number_buckets = 97210744;
-BC_CONSTEXPR size_t header_size = htdb_record_header_fsize(number_buckets);
-BC_CONSTEXPR size_t initial_lookup_file_size = header_size + min_records_fsize;
+BC_CONSTEXPR size_t header_size = record_hash_table_header_size(number_buckets);
+BC_CONSTEXPR size_t initial_lookup_file_size = header_size + minimum_records_size;
 
-BC_CONSTEXPR position_type allocator_offset = header_size;
-BC_CONSTEXPR size_t alloc_record_size = map_record_fsize_multimap<short_hash>();
+BC_CONSTEXPR size_t record_size = hash_table_multimap_record_size<short_hash>();
 
 BC_CONSTEXPR size_t value_size = 1 + 36 + 4 + 8;
-BC_CONSTEXPR size_t row_record_size = record_fsize_htdb<hash_digest>(value_size);
+BC_CONSTEXPR size_t row_record_size = hash_table_record_size<hash_digest>(value_size);
 
 history_database::history_database(const path& lookup_filename,
     const path& rows_filename)
   : lookup_file_(lookup_filename), 
-    header_(lookup_file_, 0),
-    allocator_(lookup_file_, allocator_offset, alloc_record_size),
-    start_lookup_(header_, allocator_, lookup_filename.string()),
+    header_(lookup_file_, number_buckets),
+    manager_(lookup_file_, header_size, record_size),
+    start_lookup_(header_, manager_),
     rows_file_(rows_filename), 
     rows_(rows_file_, 0, row_record_size),
-    linked_rows_(rows_),
-    map_(start_lookup_, linked_rows_, rows_filename.string())
+    records_(rows_),
+    map_(start_lookup_, records_)
 {
-    BITCOIN_ASSERT(lookup_file_.data() != nullptr);
-    BITCOIN_ASSERT(rows_file_.data() != nullptr);
+    BITCOIN_ASSERT(REMAP_ADDRESS(lookup_file_.access()) != nullptr);
+    BITCOIN_ASSERT(REMAP_ADDRESS(rows_file_.access()) != nullptr);
 }
 
 void history_database::create()
 {
     lookup_file_.resize(initial_lookup_file_size);
-    header_.create(number_buckets);
-    allocator_.create();
+    header_.create();
+    manager_.create();
 
-    rows_file_.resize(min_records_fsize);
+    rows_file_.resize(minimum_records_size);
     rows_.create();
 }
 
 void history_database::start()
 {
     header_.start();
-    allocator_.start();
+    manager_.start();
     rows_.start();
 }
 
@@ -75,12 +79,11 @@ bool history_database::stop()
 }
 
 void history_database::add_output(const short_hash& key,
-    const chain::output_point& outpoint, uint32_t output_height,
-    uint64_t value)
+    const output_point& outpoint, uint32_t output_height, uint64_t value)
 {
-    auto write = [&](uint8_t* data)
+    auto write = [&](memory_ptr data)
     {
-        auto serial = make_serializer(data);
+        auto serial = make_serializer(REMAP_ADDRESS(data));
         serial.write_byte(0);
         auto raw_outpoint = outpoint.to_data();
         serial.write_data(raw_outpoint);
@@ -91,12 +94,12 @@ void history_database::add_output(const short_hash& key,
 }
 
 void history_database::add_spend(const short_hash& key,
-    const chain::output_point& previous, const chain::input_point& spend,
+    const output_point& previous, const input_point& spend,
     size_t spend_height)
 {
-    auto write = [&](uint8_t* data)
+    auto write = [&](memory_ptr data)
     {
-        auto serial = make_serializer(data);
+        auto serial = make_serializer(REMAP_ADDRESS(data));
         serial.write_byte(1);
         auto raw_spend = spend.to_data();
         serial.write_data(raw_spend);
@@ -122,43 +125,24 @@ history history_database::get(const short_hash& key, size_t limit,
     size_t from_height) const
 {
     // Read the height value from the row.
-    const auto read_height = [](const uint8_t* data)
+    const auto read_height = [](memory_ptr data)
     {
-        static constexpr position_type height_position = 1 + 36;
-        return from_little_endian_unsafe<uint32_t>(data + height_position);
+        static constexpr file_offset height_position = 1 + 36;
+        const auto height_address = REMAP_ADDRESS(data) + height_position;
+        return from_little_endian_unsafe<uint32_t>(height_address);
     };
 
     // Read a row from the data for the history list.
-    const auto read_row = [](const uint8_t* data/*, std::streamsize length*/)
+    const auto read_row = [](memory_ptr data)
     {
-//        boost::iostreams::stream<byte_pointer_array_source> istream(data, length);
-//        istream.exceptions(std::ios_base::failbit);
-//
-//        chain::history_row result
-//        {
-//            // output or spend?
-//            marker_to_id(read_byte(istream)),
-//            // point
-//            chain::point::factory_from_data(istream),
-//            // height
-//            read_4_bytes(istream),
-//            // value or checksum
-//            read_8_bytes(istream)
-//        };
-//
-////        if (!istream)
-////            throw end_of_stream();
-//
-//        return result;
-
-        auto deserial = make_deserializer_unsafe(data);
+        auto deserial = make_deserializer_unsafe(REMAP_ADDRESS(data));
         return history_row
         {
             // output or spend?
             marker_to_kind(deserial.read_byte()),
 
             // point
-            chain::point::factory_from_data(deserial),
+            point::factory_from_data(deserial),
 
             // height
             deserial.read_4_bytes_little_endian(),
@@ -168,22 +152,23 @@ history history_database::get(const short_hash& key, size_t limit,
         };
     };
 
+    // This result is defined in libbitcoin.
     history result;
     const auto start = map_.lookup(key);
-    for (const index_type index: multimap_iterable(linked_rows_, start))
+    for (const auto index: record_multimap_iterable(records_, start))
     {
         // Stop once we reach the limit (if specified).
         if (limit && result.size() >= limit)
             break;
 
-        const auto data = linked_rows_.get(index);
+        const auto record = records_.get(index);
 
         // Skip rows below from_height (if specified).
-        if (from_height && read_height(data) < from_height)
+        if (from_height && read_height(record) < from_height)
             continue;
 
         // Read this row into the list.
-        result.emplace_back(read_row(data /*, value_size*/));
+        result.emplace_back(read_row(record));
     }
 
     return result;
@@ -191,7 +176,7 @@ history history_database::get(const short_hash& key, size_t limit,
 
 void history_database::sync()
 {
-    allocator_.sync();
+    manager_.sync();
     rows_.sync();
 }
 
@@ -200,7 +185,7 @@ history_statinfo history_database::statinfo() const
     return
     {
         header_.size(),
-        allocator_.count(),
+        manager_.count(),
         rows_.count()
     };
 }
