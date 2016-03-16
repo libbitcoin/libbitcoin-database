@@ -58,7 +58,7 @@ void stealth_database::start()
 {
     index_.start();
     rows_.start();
-    block_start_ = rows_.count();
+    row_count_ = rows_.count();
 }
 
 bool stealth_database::stop()
@@ -126,6 +126,7 @@ void stealth_database::sync()
 {
     rows_.sync();
     write_index();
+    index_.sync();
 }
 
 void stealth_database::write_index()
@@ -136,13 +137,10 @@ void stealth_database::write_index()
     auto serial = make_serializer(REMAP_ADDRESS(memory));
 
     // MUST BE ATOMIC
-    serial.write_4_bytes_little_endian(block_start_);
-
-    // Synchronise data.
-    index_.sync();
+    serial.write_4_bytes_little_endian(row_count_);
 
     // Prepare for next block.
-    block_start_ = rows_.count();
+    row_count_ = rows_.count();
 }
 
 array_index stealth_database::read_index(size_t from_height) const
