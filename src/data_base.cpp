@@ -404,12 +404,11 @@ chain::block data_base::pop()
         if (!tx.is_coinbase())
             pop_inputs(tx.inputs, height);
 
-        // TODO: need to pop stealth, referencing deleted txs.
-
         // Add transaction to result
         block.transactions.push_back(tx);
     }
 
+    // TODO: confirm this is clearing stealth data.
     stealth.unlink(height);
     blocks.unlink(height);
 
