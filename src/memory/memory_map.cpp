@@ -252,7 +252,7 @@ bool memory_map::truncate(size_t size)
 
     if (ftruncate(file_handle_, size) == -1)
     {
-        handle_error("truncate", filename_);
+        handle_error("resize", filename_);
         return false;
     }
 
