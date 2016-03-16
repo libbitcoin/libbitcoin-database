@@ -3,6 +3,7 @@
 #include <boost/lexical_cast.hpp>
 #include <bitcoin/database.hpp>
 
+using namespace boost;
 using namespace bc;
 using namespace bc::chain;
 using namespace bc::database;
@@ -12,20 +13,13 @@ void show_help()
     std::cout << "Usage: history_db COMMAND LOOKUP ROWS [ARGS]" << std::endl;
     std::cout << std::endl;
     std::cout << "The most commonly used history_db commands are:" << std::endl;
-    std::cout << "  initialize_new  "
-        << "Create a new history_database" << std::endl;
-    std::cout << "  add_output         "
-        << "Add a row to a key" << std::endl;
-    std::cout << "  add_spend       "
-        << "Add a spend to a row" << std::endl;
-    std::cout << "  delete_last_row "
-        << "Delete last row that was added for a key" << std::endl;
-    std::cout << "  fetch           "
-        << "Fetch rows for a key" << std::endl;
-    std::cout << "  statinfo        "
-        << "Show statistical info for the database" << std::endl;
-    std::cout << "  help            "
-        << "Show help for commands" << std::endl;
+    std::cout << "  initialize_new  " << "Create a new history_database" << std::endl;
+    std::cout << "  add_output      " << "Add a row to a key" << std::endl;
+    std::cout << "  add_spend       " << "Add a spend to a row" << std::endl;
+    std::cout << "  delete_last_row " << "Delete last row that was added for a key" << std::endl;
+    std::cout << "  fetch           " << "Fetch rows for a key" << std::endl;
+    std::cout << "  statinfo        " << "Show statistical info for the database" << std::endl;
+    std::cout << "  help            " << "Show help for commands" << std::endl;
 }
 
 void show_command_help(const std::string& command)
@@ -69,31 +63,37 @@ void show_command_help(const std::string& command)
 template <typename Point>
 bool parse_point(Point& point, const std::string& arg)
 {
-    std::vector<std::string> strs;
-    boost::split(strs, arg, boost::is_any_of(":"));
-    if (strs.size() != 2)
+    std::vector<std::string> tokens;
+    split(tokens, arg, is_any_of(":"));
+
+    if (tokens.size() != 2)
     {
         std::cerr << "history_db: bad point provided." << std::endl;
         return false;
     }
-    const std::string& hex_string = strs[0];
+
+    const std::string& hexadecimal = tokens[0];
+
     hash_digest hash;
-    if (!decode_hash(hash, hex_string))
+    if (!decode_hash(hash, hexadecimal))
     {
         std::cerr << "history_db: bad point provided." << std::endl;
         return false;
     }
+
     point.hash = hash;
-    const std::string& index_string = strs[1];
+    const auto& index = tokens[1];
+
     try
     {
-        point.index = boost::lexical_cast<uint32_t>(index_string);
+        point.index = lexical_cast<uint32_t>(index);
     }
-    catch (const boost::bad_lexical_cast&)
+    catch (const bad_lexical_cast&)
     {
         std::cerr << "history_db: bad point provided." << std::endl;
         return false;
     }
+
     return true;
 }
 
@@ -135,6 +135,7 @@ int main(int argc, char** argv)
         show_help();
         return -1;
     }
+
     const std::string command = argv[1];
     if (command == "help" || command == "-h" || command == "--help")
     {
@@ -143,29 +144,35 @@ int main(int argc, char** argv)
             show_command_help(argv[2]);
             return 0;
         }
+
         show_help();
         return 0;
     }
+
     if (argc < 4)
     {
         show_command_help(command);
         return -1;
     }
+
+    string_list args;
     const std::string map_filename = argv[2];
     const std::string rows_filename = argv[3];
-    string_list args;
+
     for (int i = 4; i < argc; ++i)
         args.push_back(argv[i]);
+
     if (command == "initialize_new")
     {
         data_base::touch_file(map_filename);
         data_base::touch_file(rows_filename);
     }
+
     history_database db(map_filename, rows_filename);
+
     if (command == "initialize_new")
     {
         db.create();
-        return 0;
     }
     else if (command == "add_output")
     {
@@ -174,22 +181,26 @@ int main(int argc, char** argv)
             show_command_help(command);
             return -1;
         }
+
         short_hash key;
         if (!parse_key(key, args[0]))
             return -1;
+
         chain::output_point outpoint;
         if (!parse_point(outpoint, args[1]))
             return -1;
+
         uint32_t output_height;
         if (!parse_uint(output_height, args[2]))
             return -1;
+
         uint64_t value;
         if (!parse_uint(value, args[3]))
             return -1;
+
         db.start();
         db.add_output(key, outpoint, output_height, value);
         db.sync();
-        return 0;
     }
     else if (command == "add_spend")
     {
@@ -198,22 +209,26 @@ int main(int argc, char** argv)
             show_command_help(command);
             return -1;
         }
+
         short_hash key;
         if (!parse_key(key, args[0]))
             return -1;
+
         chain::output_point previous;
         if (!parse_point(previous, args[1]))
             return -1;
+
         chain::input_point spend;
         if (!parse_point(spend, args[2]))
             return -1;
+
         uint32_t spend_height;
         if (!parse_uint(spend_height, args[3]))
             return -1;
+
         db.start();
         db.add_spend(key, previous, spend, spend_height);
         db.sync();
-        return 0;
     }
     else if (command == "delete_last_row")
     {
@@ -222,13 +237,14 @@ int main(int argc, char** argv)
             show_command_help(command);
             return -1;
         }
+
         short_hash key;
         if (!parse_key(key, args[0]))
             return -1;
+
         db.start();
         db.delete_last_row(key);
         db.sync();
-        return 0;
     }
     else if (command == "fetch")
     {
@@ -237,19 +253,24 @@ int main(int argc, char** argv)
             show_command_help(command);
             return -1;
         }
+
         short_hash key;
         if (!parse_key(key, args[0]))
             return -1;
+
         size_t limit = 0;
         if (args.size() >= 2)
             if (!parse_uint(limit, args[1]))
                 return -1;
+
         size_t from_height = 0;
         if (args.size() >= 3)
             if (!parse_uint(from_height, args[2]))
                 return -1;
+
         db.start();
         auto history = db.get(key, limit, from_height);
+
         for (const auto& row: history)
         {
             if (row.kind == point_kind::output)
@@ -260,7 +281,6 @@ int main(int argc, char** argv)
                 << row.point.index << " " << row.height << " " << row.value
                 << std::endl;
         }
-        return 0;
     }
     else if (command == "statinfo")
     {
@@ -269,6 +289,7 @@ int main(int argc, char** argv)
             show_command_help(command);
             return -1;
         }
+
         db.start();
         auto info = db.statinfo();
         std::cout << "Buckets: " << info.buckets << std::endl;
@@ -282,6 +303,7 @@ int main(int argc, char** argv)
             << "See 'history_db --help'." << std::endl;
         return -1;
     }
+
     return 0;
 }
 

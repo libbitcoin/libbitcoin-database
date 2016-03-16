@@ -12,8 +12,7 @@ void show_usage()
 }
 
 template <size_t KeySize>
-int mmr_add_row(
-    const data_chunk& key_data, const data_chunk& value,
+int mmr_add_row(const data_chunk& key_data, const data_chunk& value,
     const std::string& map_filename, const std::string& rows_filename)
 {
     typedef byte_array<KeySize> hash_type;
@@ -22,9 +21,9 @@ int mmr_add_row(
     std::copy(key_data.begin(), key_data.end(), key.begin());
 
     memory_map ht_file(map_filename);
-    BITCOIN_ASSERT(ht_file.data());
+    BITCOIN_ASSERT(!ht_file.stopped());
 
-    record_hash_table_header header(ht_file, 0);
+    record_hash_table_header header(ht_file);
     header.start();
 
     const size_t record_size = hash_table_multimap_record_size<hash_type>();
@@ -38,7 +37,7 @@ int mmr_add_row(
     record_hash_table<hash_type> ht(header, alloc);
 
     memory_map lrs_file(rows_filename);
-    BITCOIN_ASSERT(lrs_file.data());
+    BITCOIN_ASSERT(!lrs_file.stopped());
     const size_t lrs_record_size = record_list_offset + value.size();
     record_manager recs(lrs_file, 0, lrs_record_size);
 
@@ -46,9 +45,9 @@ int mmr_add_row(
     record_list lrs(recs);
 
     record_multimap<hash_type> multimap(ht, lrs);
-    auto write = [&value](uint8_t* data)
+    auto write = [&value](memory_ptr data)
     {
-        std::copy(value.begin(), value.end(), data);
+        std::copy(value.begin(), value.end(), REMAP_ADDRESS(data));
     };
     multimap.add_row(key, write);
 

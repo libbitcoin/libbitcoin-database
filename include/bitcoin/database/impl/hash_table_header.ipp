@@ -28,6 +28,14 @@
 namespace libbitcoin {
 namespace database {
 
+static BC_CONSTEXPR size_t trust_file_bucket_count = 0;
+
+template <typename IndexType, typename ValueType>
+hash_table_header<IndexType, ValueType>::hash_table_header(memory_map& file)
+  : hash_table_header(file, trust_file_bucket_count)
+{
+}
+
 template <typename IndexType, typename ValueType>
 hash_table_header<IndexType, ValueType>::hash_table_header(memory_map& file,
     IndexType buckets)
@@ -43,6 +51,10 @@ hash_table_header<IndexType, ValueType>::hash_table_header(memory_map& file,
 template <typename IndexType, typename ValueType>
 void hash_table_header<IndexType, ValueType>::create()
 {
+    // If buckets_ == 0 we trust what is read from the file.
+    if (buckets_ == 0)
+        throw std::runtime_error("Cannot create zero-sized hash table.");
+
     // Calculate the minimum file size.
     const auto minimum_file_size = item_position(buckets_);
 
@@ -75,7 +87,8 @@ void hash_table_header<IndexType, ValueType>::start()
     const auto buckets_address = REMAP_ADDRESS(memory);
     const auto buckets = from_little_endian_unsafe<IndexType>(buckets_address);
 
-    if (buckets != buckets_)
+    // If buckets_ == 0 we trust what is read from the file.
+    if (buckets_ > 0 && buckets != buckets_)
         throw std::runtime_error("Header file indicates incorrect size.");
 }
 

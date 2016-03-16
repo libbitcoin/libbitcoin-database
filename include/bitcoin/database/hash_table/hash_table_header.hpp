@@ -46,6 +46,7 @@ public:
     //static constexpr ValueType empty = std::numeric_limits<ValueType>::max();
     static BC_CONSTEXPR ValueType empty = (ValueType)bc::max_uint64;
 
+    hash_table_header(memory_map& file);
     hash_table_header(memory_map& file, IndexType buckets);
 
     /// Allocate the hash table and populate with empty values.

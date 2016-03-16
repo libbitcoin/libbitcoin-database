@@ -86,7 +86,7 @@ public:
 
 private:
     typedef record_hash_table<short_hash> record_map;
-    typedef record_multimap<short_hash> record_multimap;
+    typedef record_multimap<short_hash> record_multiple_map;
 
     // Hash table used for start index lookup for linked list by address hash.
     memory_map lookup_file_;
@@ -98,7 +98,7 @@ private:
     record_manager rows_;
     record_list records_;
 
-    record_multimap map_;
+    record_multiple_map map_;
 };
 
 } // namespace database

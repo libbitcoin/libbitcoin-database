@@ -133,6 +133,16 @@ memory_map::~memory_map()
     stop();
 }
 
+bool memory_map::stopped() const
+{
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    REMAP_READ(mutex_);
+
+    return stopped_;
+    ///////////////////////////////////////////////////////////////////////////
+}
+
 bool memory_map::stop()
 {
     // Critical Section
@@ -231,7 +241,7 @@ bool memory_map::map(size_t size)
 bool memory_map::remap(size_t size)
 {
 #ifdef MREMAP_MAYMOVE
-    data_ = reinterpret_cast<uint8_t*>(mremap(data_, size_, size,
+    data_ = reinterpret_cast<uint8_t*>(mremap(data_, file_size_, size,
         MREMAP_MAYMOVE));
 
     return validate(size);

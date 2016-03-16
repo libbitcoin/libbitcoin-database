@@ -30,6 +30,7 @@
     "Failed to initialize database files.\n"
 
 using namespace bc;
+using namespace bc::chain;
 using namespace bc::database;
 using namespace boost::filesystem;
 using namespace boost::system;
@@ -43,10 +44,8 @@ int main(int argc, char** argv)
     if (argc > 1)
         prefix = argv[1];
 
-#ifndef NDEBUG
     if (argc > 2 && std::string("--clean") == argv[2])
-        boost::filesystem::remove_all(prefix);
-#endif
+        remove_all(prefix);
 
     error_code code;
     if (!create_directories(prefix, code))
@@ -54,12 +53,13 @@ int main(int argc, char** argv)
         if (code.value() == 0)
             std::cerr << format(BS_INITCHAIN_DIR_EXISTS) % prefix;
         else
-            std::cerr << format(BS_INITCHAIN_DIR_NEW) % prefix % code.message();
+            std::cerr << format(BS_INITCHAIN_DIR_NEW) % prefix %
+                code.message();
 
         return -1;
     }
 
-    if (!data_base::initialize(prefix, chain::block::genesis_mainnet()))
+    if (!data_base::initialize(prefix, block::genesis_mainnet()))
     {
         std::cerr << BS_INITCHAIN_FAIL;
         return -1;
