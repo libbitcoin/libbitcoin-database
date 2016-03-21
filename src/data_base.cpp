@@ -47,7 +47,7 @@ bool data_base::touch_file(const path& file_path)
         return false;
 
     // Write one byte so file is nonzero size.
-    file.write("H", 1);
+    file.write("X", 1);
     return true;
 }
 
@@ -70,21 +70,22 @@ bool data_base::initialize(const path& prefix, const chain::block& genesis)
 
 data_base::store::store(const path& prefix)
 {
-    // Hash-based loookup (hash tables).
-    blocks_lookup = prefix / "blocks_lookup";
-    history_lookup = prefix / "history_lookup";
-    spends_lookup = prefix / "spends_lookup";
-    txs_lookup = prefix / "txs_lookup";
+    // Hash-based lookup (hash tables).
+    blocks_lookup = prefix / "block_table";
+    history_lookup = prefix / "history_table";
+    spends_lookup = prefix / "spend_table";
+    transactions_lookup = prefix / "transaction_table";
 
     // Height-based (reverse) lookup.
-    blocks_index = prefix / "blocks_index";
+    blocks_index = prefix / "block_index";
     stealth_index = prefix / "stealth_index";
 
     // One (address) to many (rows).
     history_rows = prefix / "history_rows";
     stealth_rows = prefix / "stealth_rows";
 
-    db_lock = prefix / "db_lock";
+    // 
+    database_lock = prefix / "database_lock";
 }
 
 bool data_base::store::touch_all() const
@@ -97,7 +98,7 @@ bool data_base::store::touch_all() const
         touch_file(stealth_index) &&
         touch_file(stealth_rows) &&
         touch_file(spends_lookup) &&
-        touch_file(txs_lookup);
+        touch_file(transactions_lookup);
 }
 
 data_base::file_lock data_base::initialize_lock(const path& lock)
@@ -132,10 +133,10 @@ data_base::data_base(const store& paths, size_t history_height,
     history(paths.history_lookup, paths.history_rows),
     stealth(paths.stealth_index, paths.stealth_rows),
     spends(paths.spends_lookup),
-    transactions(paths.txs_lookup),
+    transactions(paths.transactions_lookup),
     history_height_(history_height),
     stealth_height_(stealth_height),
-    file_lock_(initialize_lock(paths.db_lock)),
+    file_lock_(initialize_lock(paths.database_lock)),
     sequential_lock_(0)
 {
 }

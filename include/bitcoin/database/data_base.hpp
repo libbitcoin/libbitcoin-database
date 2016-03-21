@@ -49,7 +49,7 @@ public:
         store(const path& prefix);
         bool touch_all() const;
 
-        path db_lock;
+        path database_lock;
         path blocks_lookup;
         path blocks_index;
         path history_lookup;
@@ -57,7 +57,7 @@ public:
         path stealth_index;
         path stealth_rows;
         path spends_lookup;
-        path txs_lookup;
+        path transactions_lookup;
     };
 
     /// Create a new database with a given path prefix and default paths.
