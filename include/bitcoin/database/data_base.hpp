@@ -51,13 +51,13 @@ public:
 
         path db_lock;
         path blocks_lookup;
-        path blocks_rows;
-        path spends;
-        path transactions;
+        path blocks_index;
         path history_lookup;
         path history_rows;
         path stealth_index;
         path stealth_rows;
+        path spends_lookup;
+        path txs_lookup;
     };
 
     /// Create a new database with a given path prefix and default paths.
@@ -66,15 +66,15 @@ public:
 
     data_base(const settings& settings);
 
-    // ------------------------------------------------------------------------
     // Startup and shutdown.
+    // ------------------------------------------------------------------------
 
     bool create();
     bool start();
     bool stop();
 
-    // ------------------------------------------------------------------------
     // Locking.
+    // ------------------------------------------------------------------------
 
     handle begin_read();
     bool begin_write();
@@ -82,8 +82,8 @@ public:
     bool is_read_valid(handle handle);
     bool is_write_locked(handle handle);
 
-    // ------------------------------------------------------------------------
     // Push and pop.
+    // ------------------------------------------------------------------------
 
     /// Commit block at next height with indexing and no duplicate protection.
     void push(const chain::block& block);
@@ -95,15 +95,15 @@ public:
     /// Throws if the chain is empty.
     chain::block pop();
 
-    // ------------------------------------------------------------------------
     // Query engines.
+    // ------------------------------------------------------------------------
 
     /// Individual database query engines.
     block_database blocks;
-    spend_database spends;
-    transaction_database transactions;
     history_database history;
+    spend_database spends;
     stealth_database stealth;
+    transaction_database transactions;
 
 protected:
     data_base(const store& paths, size_t history_height, size_t stealth_height);
