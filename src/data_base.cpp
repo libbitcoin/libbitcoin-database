@@ -70,17 +70,17 @@ bool data_base::initialize(const path& prefix, const chain::block& genesis)
 
 data_base::store::store(const path& prefix)
 {
-    // Hash tables.
+    // Hash-based loookup (hash tables).
     blocks_lookup = prefix / "blocks_lookup";
     history_lookup = prefix / "history_lookup";
     spends_lookup = prefix / "spends_lookup";
     txs_lookup = prefix / "txs_lookup";
 
-    // Arrays.
+    // Height-based (reverse) lookup.
     blocks_index = prefix / "blocks_index";
     stealth_index = prefix / "stealth_index";
 
-    // Lists.
+    // One (address) to many (rows).
     history_rows = prefix / "history_rows";
     stealth_rows = prefix / "stealth_rows";
 
