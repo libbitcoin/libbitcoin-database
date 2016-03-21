@@ -39,27 +39,24 @@ array_index record_list::create()
     return insert(empty);
 }
 
-array_index record_list::insert(array_index next)
+array_index record_list::insert(array_index index)
 {
-    // Create new record.
-    auto index = manager_.new_records(1);
-    const auto memory = manager_.get(index);
+    // Create new record and return its index.
+    auto new_index = manager_.new_records(1);
+    const auto memory = manager_.get(new_index);
     auto serial = make_serializer(REMAP_ADDRESS(memory));
-
-    // Write next index at first 4 bytes of the record preceding the insert.
     //*************************************************************************
-    serial.write_4_bytes_little_endian(next);
+    serial.write_little_endian<array_index>(index);
     //*************************************************************************
-
-    // Return the position of the new record.
-    return index;
+    return new_index;
 }
 
 array_index record_list::next(array_index index) const
 {
     const auto memory = manager_.get(index);
+    const auto next_address = REMAP_ADDRESS(memory);
     //*************************************************************************
-    return from_little_endian_unsafe<array_index>(REMAP_ADDRESS(memory));
+    return from_little_endian_unsafe<array_index>(next_address);
     //*************************************************************************
 }
 

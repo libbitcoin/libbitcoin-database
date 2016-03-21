@@ -84,7 +84,7 @@ bool spend_database::stop()
 
 spend spend_database::get(const output_point& outpoint) const
 {
-    spend result{ false, 0, {} };
+    spend result{ false };
 
     const auto key = output_to_hash(outpoint);
     const auto memory = lookup_map_.find(key);
@@ -92,7 +92,6 @@ spend spend_database::get(const output_point& outpoint) const
     if (!memory)
         return result;
 
-    hash_digest hash;
     const auto hash_start = REMAP_ADDRESS(memory);
     const auto index_start = hash_start + hash_size;
     std::copy(hash_start, index_start, result.hash.begin());

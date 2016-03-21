@@ -52,7 +52,7 @@ public:
     typedef record_hash_table<HashType> record_hash_table_type;
     typedef std::function<void(memory_ptr)> write_function;
 
-    record_multimap(record_hash_table_type& map, record_list& linked_rows);
+    record_multimap(record_hash_table_type& map, record_list& records);
 
     /// Lookup a key, returning an iterable result with multiple values.
     array_index lookup(const HashType& key) const;

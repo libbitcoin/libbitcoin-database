@@ -46,7 +46,7 @@ public:
     array_index create();
 
     /// Insert new record before index. Returns index of new record.
-    array_index insert(array_index next);
+    array_index insert(array_index index);
 
     /// Read next index for record in list.
     array_index next(array_index index) const;
