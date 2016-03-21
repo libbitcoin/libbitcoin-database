@@ -135,7 +135,7 @@ array_index record_hash_table<HashType>::read_bucket_value(
     const HashType& key) const
 {
     auto value = header_.read(bucket_index(key));
-    BITCOIN_ASSERT(sizeof(value) == sizeof(array_index));
+    static_assert(sizeof(value) == sizeof(array_index), "Invalid size");
     return value;
 }
 
