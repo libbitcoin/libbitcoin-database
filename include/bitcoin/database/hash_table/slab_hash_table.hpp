@@ -65,8 +65,7 @@ public:
     file_offset store(const HashType& key, write_function write,
         const size_t value_size);
 
-    /// Find the slab for a given hash.
-    /// Returns a null pointer if not found.
+    /// Find the slab for a given hash. Returns a null pointer if not found.
     const memory_ptr find(const HashType& key) const;
 
     /// Delete a key-value pair from the hashtable by unlinking the node.

@@ -57,9 +57,8 @@ public:
     /// Lookup a key, returning an iterable result with multiple values.
     array_index lookup(const HashType& key) const;
 
-    /// Add a new row for a key. If the key doesn't exist, it will be
-    /// created. If it does exist, the value will be added at the start
-    /// of the chain.
+    /// Add a new row for a key. If the key doesn't exist, it will be created.
+    /// If it does exist, the value will be added at the start of the chain.
     void add_row(const HashType& key, write_function write);
 
     /// Delete the last row entry that was added. This means when deleting
