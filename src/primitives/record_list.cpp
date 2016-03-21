@@ -46,7 +46,7 @@ array_index record_list::insert(array_index index)
     const auto memory = manager_.get(new_index);
     auto serial = make_serializer(REMAP_ADDRESS(memory));
     //*************************************************************************
-    serial.write_little_endian<array_index>(index);
+    serial.template write_little_endian<array_index>(index);
     //*************************************************************************
     return new_index;
 }

@@ -120,7 +120,7 @@ void hash_table_header<IndexType, ValueType>::write(IndexType index,
     const auto value_address = REMAP_ADDRESS(memory) + item_position(index);
     auto serial = make_serializer(value_address);
     //*************************************************************************
-    serial.write_little_endian<ValueType>(value);
+    serial.template write_little_endian<ValueType>(value);
     //*************************************************************************
 }
 

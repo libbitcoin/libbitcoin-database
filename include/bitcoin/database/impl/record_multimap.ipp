@@ -79,7 +79,7 @@ void record_multimap<HashType>::add_to_list(memory_ptr start_info,
 
     auto serial = make_serializer(address);
     //*************************************************************************
-    serial.write_little_endian<array_index>(new_begin);
+    serial.template write_little_endian<array_index>(new_begin);
     //*************************************************************************
 }
 
@@ -109,7 +109,7 @@ void record_multimap<HashType>::delete_last_row(const HashType& key)
 
     auto serial = make_serializer(address);
     //*************************************************************************
-    serial.write_little_endian<array_index>(new_begin);
+    serial.template write_little_endian<array_index>(new_begin);
     //*************************************************************************
 }
 
@@ -124,7 +124,7 @@ void record_multimap<HashType>::create_new(const HashType& key,
     {
         auto serial = make_serializer(REMAP_ADDRESS(data));
         //*********************************************************************
-        serial.write_little_endian<array_index>(first);
+        serial.template write_little_endian<array_index>(first);
         //*********************************************************************
     };
     map_.store(key, write_start_info);

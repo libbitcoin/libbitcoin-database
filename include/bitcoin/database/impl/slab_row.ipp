@@ -92,7 +92,7 @@ file_offset slab_row<HashType>::create(const HashType& key,
     auto serial = make_serializer(key_data);
     serial.write_data(key);
     //*************************************************************************
-    serial.write_little_endian<file_offset>(next);
+    serial.template write_little_endian<file_offset>(next);
     //*************************************************************************
     return position_;
 }
@@ -128,7 +128,7 @@ void slab_row<HashType>::write_next_position(file_offset next)
     const auto memory = raw_next_data();
     auto serial = make_serializer(REMAP_ADDRESS(memory));
     //*************************************************************************
-    serial.write_little_endian<file_offset>(next);
+    serial.template write_little_endian<file_offset>(next);
     //*************************************************************************
 }
 
