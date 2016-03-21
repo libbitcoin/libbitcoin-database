@@ -44,13 +44,13 @@ BC_CONSTEXPR size_t row_record_size = hash_table_record_size<hash_digest>(value_
 history_database::history_database(const path& lookup_filename,
     const path& rows_filename)
   : lookup_file_(lookup_filename), 
-    header_(lookup_file_, number_buckets),
-    manager_(lookup_file_, header_size, record_size),
-    start_lookup_(header_, manager_),
+    lookup_header_(lookup_file_, number_buckets),
+    lookup_manager_(lookup_file_, header_size, record_size),
+    lookup_map_(lookup_header_, lookup_manager_),
     rows_file_(rows_filename), 
-    rows_(rows_file_, 0, row_record_size),
-    records_(rows_),
-    map_(start_lookup_, records_)
+    rows_manager_(rows_file_, 0, row_record_size),
+    rows_list_(rows_manager_),
+    rows_multimap_(lookup_map_, rows_list_)
 {
     BITCOIN_ASSERT(REMAP_ADDRESS(lookup_file_.access()) != nullptr);
     BITCOIN_ASSERT(REMAP_ADDRESS(rows_file_.access()) != nullptr);
@@ -59,18 +59,18 @@ history_database::history_database(const path& lookup_filename,
 void history_database::create()
 {
     lookup_file_.resize(initial_lookup_file_size);
-    header_.create();
-    manager_.create();
+    lookup_header_.create();
+    lookup_manager_.create();
 
     rows_file_.resize(minimum_records_size);
-    rows_.create();
+    rows_manager_.create();
 }
 
 void history_database::start()
 {
-    header_.start();
-    manager_.start();
-    rows_.start();
+    lookup_header_.start();
+    lookup_manager_.start();
+    rows_manager_.start();
 }
 
 bool history_database::stop()
@@ -90,7 +90,7 @@ void history_database::add_output(const short_hash& key,
         serial.write_4_bytes_little_endian(output_height);
         serial.write_8_bytes_little_endian(value);
     };
-    map_.add_row(key, write);
+    rows_multimap_.add_row(key, write);
 }
 
 void history_database::add_spend(const short_hash& key,
@@ -106,12 +106,12 @@ void history_database::add_spend(const short_hash& key,
         serial.write_4_bytes_little_endian(spend_height);
         serial.write_8_bytes_little_endian(previous.checksum());
     };
-    map_.add_row(key, write);
+    rows_multimap_.add_row(key, write);
 }
 
 void history_database::delete_last_row(const short_hash& key)
 {
-    map_.delete_last_row(key);
+    rows_multimap_.delete_last_row(key);
 }
 
 // Each row contains a start byte which signals output or a spend.
@@ -125,17 +125,17 @@ history history_database::get(const short_hash& key, size_t limit,
     size_t from_height) const
 {
     // Read the height value from the row.
-    const auto read_height = [](memory_ptr data)
+    const auto read_height = [](uint8_t* data)
     {
         static constexpr file_offset height_position = 1 + 36;
-        const auto height_address = REMAP_ADDRESS(data) + height_position;
+        const auto height_address = data + height_position;
         return from_little_endian_unsafe<uint32_t>(height_address);
     };
 
     // Read a row from the data for the history list.
-    const auto read_row = [](memory_ptr data)
+    const auto read_row = [](uint8_t* data)
     {
-        auto deserial = make_deserializer_unsafe(REMAP_ADDRESS(data));
+        auto deserial = make_deserializer_unsafe(data);
         return history_row
         {
             // output or spend?
@@ -154,21 +154,23 @@ history history_database::get(const short_hash& key, size_t limit,
 
     // This result is defined in libbitcoin.
     history result;
-    const auto start = map_.lookup(key);
-    for (const auto index: record_multimap_iterable(records_, start))
+
+    const auto start = rows_multimap_.lookup(key);
+    const auto records = record_multimap_iterable(rows_list_, start);
+
+    for (const auto index: records)
     {
         // Stop once we reach the limit (if specified).
         if (limit && result.size() >= limit)
             break;
 
-        const auto record = records_.get(index);
+        // This obtains a remap safe address pointer against the rows file.
+        const auto record = rows_list_.get(index);
+        const auto address = REMAP_ADDRESS(record);
 
         // Skip rows below from_height (if specified).
-        if (from_height && read_height(record) < from_height)
-            continue;
-
-        // Read this row into the list.
-        result.emplace_back(read_row(record));
+        if (from_height == 0 || from_height <= read_height(address))
+            result.emplace_back(read_row(address));
     }
 
     return result;
@@ -176,17 +178,17 @@ history history_database::get(const short_hash& key, size_t limit,
 
 void history_database::sync()
 {
-    manager_.sync();
-    rows_.sync();
+    lookup_manager_.sync();
+    rows_manager_.sync();
 }
 
 history_statinfo history_database::statinfo() const
 {
     return
     {
-        header_.size(),
-        manager_.count(),
-        rows_.count()
+        lookup_header_.size(),
+        lookup_manager_.count(),
+        rows_manager_.count()
     };
 }
 

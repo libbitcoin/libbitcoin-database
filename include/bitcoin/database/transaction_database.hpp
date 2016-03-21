@@ -68,10 +68,10 @@ private:
     typedef slab_hash_table<hash_digest> slab_map;
 
     // Hash table used for looking up txs by hash.
-    memory_map map_file_;
-    slab_hash_table_header header_;
-    slab_manager manager_;
-    slab_map map_;
+    memory_map lookup_file_;
+    slab_hash_table_header lookup_header_;
+    slab_manager lookup_manager_;
+    slab_map lookup_map_;
 };
 
 } // namespace database

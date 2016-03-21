@@ -79,16 +79,16 @@ private:
     /// Use intermediate records table to find blk position from height.
     file_offset read_position(const array_index index) const;
 
-    /// The hashtable used for looking up blocks by hash.
-    memory_map map_file_;
-    slab_hash_table_header header_;
-    slab_manager manager_;
-    slab_map map_;
+    /// Hash table used for looking up blocks by hash.
+    memory_map lookup_file_;
+    slab_hash_table_header lookup_header_;
+    slab_manager lookup_manager_;
+    slab_map lookup_map_;
 
     /// Table used for looking up blocks by height.
     /// Resolves to a position within the slab.
     memory_map index_file_;
-    record_manager index_;
+    record_manager index_manager_;
 };
 
 } // namespace database

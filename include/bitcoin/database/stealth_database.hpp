@@ -69,11 +69,11 @@ private:
     // Table used for jumping to rows by height.
     // Resolves to a index within the rows.
     memory_map index_file_;
-    record_manager index_;
+    record_manager index_manager_;
 
     // Actual row entries containing stealth tx data.
     memory_map rows_file_;
-    record_manager rows_;
+    record_manager rows_manager_;
 };
 
 } // namespace database

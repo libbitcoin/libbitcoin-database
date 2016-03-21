@@ -77,10 +77,10 @@ private:
     typedef record_hash_table<hash_digest> record_map;
 
     // Hash table used for looking up inpoint spends by outpoint.
-    memory_map file_;
-    record_hash_table_header header_;
-    record_manager manager_;
-    record_map map_;
+    memory_map lookup_file_;
+    record_hash_table_header lookup_header_;
+    record_manager lookup_manager_;
+    record_map lookup_map_;
 };
 
 } // namespace database

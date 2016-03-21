@@ -1,22 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\src\block_database.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\data_base.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\history_database.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\spend_database.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\stealth_database.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\transaction_database.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c">
@@ -55,6 +40,21 @@
     <ClCompile Include="..\..\..\..\src\memory\allocator.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\block_database.cpp">
+      <Filter>src\databases</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\spend_database.cpp">
+      <Filter>src\databases</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\stealth_database.cpp">
+      <Filter>src\databases</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\transaction_database.cpp">
+      <Filter>src\databases</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\history_database.cpp">
+      <Filter>src\databases</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp">
@@ -63,25 +63,10 @@
     <ClInclude Include="..\..\..\..\src\mman-win32\mman.h">
       <Filter>src\mman-win32</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\block_database.hpp">
-      <Filter>include\bitcoin\database</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\data_base.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\history_database.hpp">
-      <Filter>include\bitcoin\database</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp">
-      <Filter>include\bitcoin\database</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\spend_database.hpp">
-      <Filter>include\bitcoin\database</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\stealth_database.hpp">
-      <Filter>include\bitcoin\database</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\transaction_database.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp">
@@ -134,6 +119,21 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\allocator.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\block_database.hpp">
+      <Filter>include\bitcoin\database\databases</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\history_database.hpp">
+      <Filter>include\bitcoin\database\databases</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\stealth_database.hpp">
+      <Filter>include\bitcoin\database\databases</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\spend_database.hpp">
+      <Filter>include\bitcoin\database\databases</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\transaction_database.hpp">
+      <Filter>include\bitcoin\database\databases</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -196,6 +196,12 @@
     </Filter>
     <Filter Include="include\bitcoin\database\hash_table">
       <UniqueIdentifier>{25411a96-f266-4ed8-a5bf-b9a2aff44666}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\databases">
+      <UniqueIdentifier>{0e13865b-34a1-478d-bd0a-c1cf2aee5e84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\databases">
+      <UniqueIdentifier>{fb6c9df6-04a6-48f2-960f-241bf39e0e86}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

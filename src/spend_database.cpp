@@ -56,36 +56,36 @@ static hash_digest output_to_hash(const chain::output_point& output)
 }
 
 spend_database::spend_database(const path& filename)
-  : file_(filename), 
-    header_(file_, number_buckets),
-    manager_(file_, header_size, record_size),
-    map_(header_, manager_)
+  : lookup_file_(filename), 
+    lookup_header_(lookup_file_, number_buckets),
+    lookup_manager_(lookup_file_, header_size, record_size),
+    lookup_map_(lookup_header_, lookup_manager_)
 {
-    BITCOIN_ASSERT(REMAP_ADDRESS(file_.access()) != nullptr);
+    BITCOIN_ASSERT(REMAP_ADDRESS(lookup_file_.access()) != nullptr);
 }
 
 void spend_database::create()
 {
-    file_.resize(initial_map_file_size);
-    header_.create();
-    manager_.create();
+    lookup_file_.resize(initial_map_file_size);
+    lookup_header_.create();
+    lookup_manager_.create();
 }
 
 void spend_database::start()
 {
-    header_.start();
-    manager_.start();
+    lookup_header_.start();
+    lookup_manager_.start();
 }
 
 bool spend_database::stop()
 {
-    return file_.stop();
+    return lookup_file_.stop();
 }
 
 spend spend_database::get(const output_point& outpoint) const
 {
     const auto key = output_to_hash(outpoint);
-    const auto memory = map_.find(key);
+    const auto memory = lookup_map_.find(key);
 
     if (!memory)
         return { false, 0, {} };
@@ -114,27 +114,27 @@ void spend_database::store(const chain::output_point& outpoint,
     };
 
     const auto key = output_to_hash(outpoint);
-    map_.store(key, write);
+    lookup_map_.store(key, write);
 }
 
 void spend_database::remove(const output_point& outpoint)
 {
     const auto key = output_to_hash(outpoint);
-    DEBUG_ONLY(bool success =) map_.unlink(key);
+    DEBUG_ONLY(bool success = ) lookup_map_.unlink(key);
     BITCOIN_ASSERT(success);
 }
 
 void spend_database::sync()
 {
-    manager_.sync();
+    lookup_manager_.sync();
 }
 
 spend_statinfo spend_database::statinfo() const
 {
     return
     {
-        header_.size(),
-        manager_.count()
+        lookup_header_.size(),
+        lookup_manager_.count()
     };
 }
 
