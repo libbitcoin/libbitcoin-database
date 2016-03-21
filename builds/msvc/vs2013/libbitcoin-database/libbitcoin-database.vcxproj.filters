@@ -147,9 +147,6 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\slab_hash_table.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\slab_list.ipp">
-      <Filter>include\bitcoin\database\impl</Filter>
-    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_multimap.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
@@ -157,6 +154,9 @@
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\hash_table_header.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\slab_row.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
   </ItemGroup>

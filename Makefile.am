@@ -297,7 +297,7 @@ include_bitcoin_database_impl_HEADERS = \
     include/bitcoin/database/impl/record_row.ipp \
     include/bitcoin/database/impl/remainder.ipp \
     include/bitcoin/database/impl/slab_hash_table.ipp \
-    include/bitcoin/database/impl/slab_list.ipp
+    include/bitcoin/database/impl/slab_row.ipp
 
 include_bitcoin_database_memorydir = ${includedir}/bitcoin/database/memory
 include_bitcoin_database_memory_HEADERS = \

@@ -96,7 +96,7 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_hash_table.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_row.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\slab_hash_table.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\slab_list.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\slab_row.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_multimap.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\remainder.ipp" />
     <None Include="packages.config">

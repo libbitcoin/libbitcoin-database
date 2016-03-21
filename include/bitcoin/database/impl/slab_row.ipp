@@ -33,14 +33,14 @@ namespace database {
  * next_position() method.
  */
 template <typename HashType>
-class slab_list
+class slab_row
 {
 public:
     static BC_CONSTEXPR size_t position_size = sizeof(file_offset);
     static BC_CONSTEXPR size_t hash_size = std::tuple_size<HashType>::value;
     static BC_CONSTEXPR file_offset value_begin = hash_size + position_size;
 
-    slab_list(slab_manager& manager, file_offset position);
+    slab_row(slab_manager& manager, file_offset position);
 
     file_offset create(const HashType& key, const size_t value_size,
         const file_offset next);
@@ -66,7 +66,7 @@ private:
 };
 
 template <typename HashType>
-slab_list<HashType>::slab_list(slab_manager& manager,
+slab_row<HashType>::slab_row(slab_manager& manager,
     const file_offset position)
   : manager_(manager), position_(position)
 {
@@ -74,7 +74,7 @@ slab_list<HashType>::slab_list(slab_manager& manager,
 }
 
 template <typename HashType>
-file_offset slab_list<HashType>::create(const HashType& key,
+file_offset slab_row<HashType>::create(const HashType& key,
     const size_t value_size, const file_offset next)
 {
     const file_offset info_size = key.size() + position_size;
@@ -98,7 +98,7 @@ file_offset slab_list<HashType>::create(const HashType& key,
 }
 
 template <typename HashType>
-bool slab_list<HashType>::compare(const HashType& key) const
+bool slab_row<HashType>::compare(const HashType& key) const
 {
     // Key data is at the start.
     const auto memory = raw_data(0);
@@ -106,14 +106,14 @@ bool slab_list<HashType>::compare(const HashType& key) const
 }
 
 template <typename HashType>
-const memory_ptr slab_list<HashType>::data() const
+const memory_ptr slab_row<HashType>::data() const
 {
     // Value data is at the end.
     return raw_data(value_begin);
 }
 
 template <typename HashType>
-file_offset slab_list<HashType>::next_position() const
+file_offset slab_row<HashType>::next_position() const
 {
     const auto memory = raw_next_data();
     const auto next_address = REMAP_ADDRESS(memory);
@@ -123,7 +123,7 @@ file_offset slab_list<HashType>::next_position() const
 }
 
 template <typename HashType>
-void slab_list<HashType>::write_next_position(file_offset next)
+void slab_row<HashType>::write_next_position(file_offset next)
 {
     const auto memory = raw_next_data();
     auto serial = make_serializer(REMAP_ADDRESS(memory));
@@ -133,7 +133,7 @@ void slab_list<HashType>::write_next_position(file_offset next)
 }
 
 template <typename HashType>
-const memory_ptr slab_list<HashType>::raw_data(file_offset offset) const
+const memory_ptr slab_row<HashType>::raw_data(file_offset offset) const
 {
     auto memory = manager_.get(position_);
     REMAP_INCREMENT(memory, offset);
@@ -141,7 +141,7 @@ const memory_ptr slab_list<HashType>::raw_data(file_offset offset) const
 }
 
 template <typename HashType>
-const memory_ptr slab_list<HashType>::raw_next_data() const
+const memory_ptr slab_row<HashType>::raw_next_data() const
 {
     // Next position is after key data.
     return raw_data(hash_size);
