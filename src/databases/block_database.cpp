@@ -98,8 +98,7 @@ block_result block_database::get(const hash_digest& hash) const
 
 void block_database::store(const block& block)
 {
-    const auto height = index_manager_.count();
-    store(block, height);
+    store(block, index_manager_.count());
 }
 
 void block_database::store(const block& block, size_t height)
