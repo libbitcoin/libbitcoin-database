@@ -36,7 +36,7 @@ typedef hash_table_header<array_index, file_offset> slab_hash_table_header;
  * Uses a combination of the hash_table and slab_manager.
  *
  * The hash_table is basically a bucket list containing the start
- * value for the hashtable chain.
+ * value for the slab_row.
  *
  * The slab_manager is used to create linked chains. A header
  * containing the hash of the item, and the next value is stored

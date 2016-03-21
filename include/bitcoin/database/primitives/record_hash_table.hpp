@@ -44,7 +44,7 @@ typedef hash_table_header<array_index, array_index> record_hash_table_header;
  * Uses a combination of the hash_table and record_manager.
  *
  * The hash_table is basically a bucket list containing the start
- * value for the hashtable chain.
+ * value for the record_row.
  *
  * The record_manager is used to create linked chains. A header
  * containing the hash of the item, and the next value is stored
