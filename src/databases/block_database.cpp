@@ -80,7 +80,7 @@ bool block_database::stop()
     return lookup_file_.stop() && index_file_.stop();
 }
 
-block_result block_database::get(const size_t height) const
+block_result block_database::get(size_t height) const
 {
     if (height >= index_manager_.count())
         return block_result(nullptr);
@@ -98,9 +98,17 @@ block_result block_database::get(const hash_digest& hash) const
 
 void block_database::store(const block& block)
 {
-    const uint32_t height = index_manager_.count();
+    const auto height = index_manager_.count();
+    store(block, height);
+}
 
+void block_database::store(const block& block, size_t height)
+{
+    BITCOIN_ASSERT(height <= max_uint32);
+    const auto height32 = static_cast<uint32_t>(height);
     const auto number_txs = block.transactions.size();
+
+    BITCOIN_ASSERT(number_txs <= max_uint32);
     const auto number_txs32 = static_cast<uint32_t>(number_txs);
 
     // Write block data.
@@ -109,7 +117,7 @@ void block_database::store(const block& block)
         auto serial = make_serializer(REMAP_ADDRESS(data));
         const auto header_data = block.header.to_data(false);
         serial.write_data(header_data);
-        serial.write_4_bytes_little_endian(height);
+        serial.write_4_bytes_little_endian(height32);
         serial.write_4_bytes_little_endian(number_txs32);
 
         for (const auto& tx: block.transactions)

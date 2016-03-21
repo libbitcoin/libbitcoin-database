@@ -250,7 +250,7 @@ void data_base::synchronize()
 
 void data_base::push(const block& block)
 {
-    // BUGBUG: unsafe unless block push is serialized.
+    // Height is unsafe unless database locked.
     push(block, get_next_height(blocks));
 }
 
@@ -281,7 +281,7 @@ void data_base::push(const block& block, uint64_t height)
     }
 
     // Add block itself.
-    blocks.store(block);
+    blocks.store(block, height);
 
     // Synchronise everything that was added.
     synchronize();

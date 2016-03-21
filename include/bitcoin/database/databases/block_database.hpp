@@ -49,13 +49,16 @@ public:
     bool stop();
 
     /// Fetch block by height using the index table.
-    block_result get(const size_t height) const;
+    block_result get(size_t height) const;
 
     /// Fetch block by hash using the hashtable.
     block_result get(const hash_digest& hash) const;
 
     /// Store a block in the database.
     void store(const chain::block& block);
+
+    /// Store a block in the database.
+    void store(const chain::block& block, size_t height);
 
     /// Unlink all blocks upwards from (and including) from_height.
     void unlink(const size_t from_height);
