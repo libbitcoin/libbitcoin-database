@@ -42,16 +42,16 @@ src_libbitcoin_database_la_SOURCES = \
     src/databases/spend_database.cpp \
     src/databases/stealth_database.cpp \
     src/databases/transaction_database.cpp \
-    src/hash_table/record_list.cpp \
-    src/hash_table/record_manager.cpp \
-    src/hash_table/record_multimap_iterable.cpp \
-    src/hash_table/record_multimap_iterator.cpp \
-    src/hash_table/slab_manager.cpp \
     src/memory/accessor.cpp \
     src/memory/allocator.cpp \
     src/memory/memory_map.cpp \
     src/mman-win32/mman.c \
     src/mman-win32/mman.h \
+    src/primitives/record_list.cpp \
+    src/primitives/record_manager.cpp \
+    src/primitives/record_multimap_iterable.cpp \
+    src/primitives/record_multimap_iterator.cpp \
+    src/primitives/slab_manager.cpp \
     src/result/block_result.cpp \
     src/result/transaction_result.cpp
 
@@ -289,18 +289,6 @@ include_bitcoin_database_databases_HEADERS = \
     include/bitcoin/database/databases/stealth_database.hpp \
     include/bitcoin/database/databases/transaction_database.hpp
 
-include_bitcoin_database_hash_tabledir = ${includedir}/bitcoin/database/hash_table
-include_bitcoin_database_hash_table_HEADERS = \
-    include/bitcoin/database/hash_table/hash_table_header.hpp \
-    include/bitcoin/database/hash_table/record_hash_table.hpp \
-    include/bitcoin/database/hash_table/record_list.hpp \
-    include/bitcoin/database/hash_table/record_manager.hpp \
-    include/bitcoin/database/hash_table/record_multimap.hpp \
-    include/bitcoin/database/hash_table/record_multimap_iterable.hpp \
-    include/bitcoin/database/hash_table/record_multimap_iterator.hpp \
-    include/bitcoin/database/hash_table/slab_hash_table.hpp \
-    include/bitcoin/database/hash_table/slab_manager.hpp
-
 include_bitcoin_database_impldir = ${includedir}/bitcoin/database/impl
 include_bitcoin_database_impl_HEADERS = \
     include/bitcoin/database/impl/hash_table_header.ipp \
@@ -317,6 +305,18 @@ include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/allocator.hpp \
     include/bitcoin/database/memory/memory.hpp \
     include/bitcoin/database/memory/memory_map.hpp
+
+include_bitcoin_database_primitivesdir = ${includedir}/bitcoin/database/primitives
+include_bitcoin_database_primitives_HEADERS = \
+    include/bitcoin/database/primitives/hash_table_header.hpp \
+    include/bitcoin/database/primitives/record_hash_table.hpp \
+    include/bitcoin/database/primitives/record_list.hpp \
+    include/bitcoin/database/primitives/record_manager.hpp \
+    include/bitcoin/database/primitives/record_multimap.hpp \
+    include/bitcoin/database/primitives/record_multimap_iterable.hpp \
+    include/bitcoin/database/primitives/record_multimap_iterator.hpp \
+    include/bitcoin/database/primitives/slab_hash_table.hpp \
+    include/bitcoin/database/primitives/slab_manager.hpp
 
 include_bitcoin_database_resultdir = ${includedir}/bitcoin/database/result
 include_bitcoin_database_result_HEADERS = \

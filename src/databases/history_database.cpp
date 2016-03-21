@@ -23,9 +23,9 @@
 #include <cstddef>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/database/hash_table/record_multimap_iterable.hpp>
-#include <bitcoin/database/hash_table/record_multimap_iterator.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/record_multimap_iterable.hpp>
+#include <bitcoin/database/primitives/record_multimap_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {

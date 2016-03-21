@@ -21,8 +21,8 @@
 #define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_ITERABLE_HPP
 
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/hash_table/record_list.hpp>
-#include <bitcoin/database/hash_table/record_multimap_iterator.hpp>
+#include <bitcoin/database/primitives/record_list.hpp>
+#include <bitcoin/database/primitives/record_multimap_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {

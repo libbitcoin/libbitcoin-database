@@ -87,9 +87,9 @@ array_index record_row<HashType>::create(const HashType& key,
     const auto record = REMAP_ADDRESS(memory);
     auto serial = make_serializer(record);
     serial.write_data(key);
-
-    // MUST BE ATOMIC
+    //*************************************************************************
     serial.write_4_bytes_little_endian(next);
+    //*************************************************************************
     return index_;
 }
 
@@ -112,7 +112,10 @@ template <typename HashType>
 array_index record_row<HashType>::next_index() const
 {
     const auto memory = raw_next_data();
-    return from_little_endian_unsafe<array_index>(REMAP_ADDRESS(memory));
+    const auto address = REMAP_ADDRESS(memory);
+    //*************************************************************************
+    return from_little_endian_unsafe<array_index>(address);
+    //*************************************************************************
 }
 
 template <typename HashType>
@@ -120,9 +123,9 @@ void record_row<HashType>::write_next_index(array_index next)
 {
     const auto memory = raw_next_data();
     auto serial = make_serializer(REMAP_ADDRESS(memory));
-
-    // MUST BE ATOMIC
+    //*************************************************************************
     serial.write_4_bytes_little_endian(next);
+    //*************************************************************************
 }
 
 template <typename HashType>

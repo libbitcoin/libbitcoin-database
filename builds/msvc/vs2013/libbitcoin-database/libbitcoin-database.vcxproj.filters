@@ -19,21 +19,6 @@
     <ClCompile Include="..\..\..\..\src\memory\memory_map.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\hash_table\record_manager.cpp">
-      <Filter>src\hash_table</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\hash_table\slab_manager.cpp">
-      <Filter>src\hash_table</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\hash_table\record_list.cpp">
-      <Filter>src\hash_table</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\hash_table\record_multimap_iterator.cpp">
-      <Filter>src\hash_table</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\hash_table\record_multimap_iterable.cpp">
-      <Filter>src\hash_table</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\memory\accessor.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
@@ -54,6 +39,21 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\databases\history_database.cpp">
       <Filter>src\databases</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\primitives\record_multimap_iterable.cpp">
+      <Filter>src\primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\primitives\record_multimap_iterator.cpp">
+      <Filter>src\primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\primitives\slab_manager.cpp">
+      <Filter>src\primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\primitives\record_list.cpp">
+      <Filter>src\primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\primitives\record_manager.cpp">
+      <Filter>src\primitives</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -84,35 +84,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_map.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_manager.hpp">
-      <Filter>include\bitcoin\database\hash_table</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\slab_hash_table.hpp">
-      <Filter>include\bitcoin\database\hash_table</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\slab_manager.hpp">
-      <Filter>include\bitcoin\database\hash_table</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_hash_table.hpp">
-      <Filter>include\bitcoin\database\hash_table</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_multimap.hpp">
-      <Filter>include\bitcoin\database\hash_table</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_list.hpp">
-      <Filter>include\bitcoin\database\hash_table</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_multimap_iterator.hpp">
-      <Filter>include\bitcoin\database\hash_table</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\record_multimap_iterable.hpp">
-      <Filter>include\bitcoin\database\hash_table</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\hash_table\hash_table_header.hpp">
-      <Filter>include\bitcoin\database\hash_table</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
@@ -134,6 +107,33 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\block_database.hpp">
       <Filter>include\bitcoin\database\databases</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_multimap_iterator.hpp">
+      <Filter>include\bitcoin\database\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_hash_table.hpp">
+      <Filter>include\bitcoin\database\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_manager.hpp">
+      <Filter>include\bitcoin\database\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table_header.hpp">
+      <Filter>include\bitcoin\database\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_hash_table.hpp">
+      <Filter>include\bitcoin\database\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_list.hpp">
+      <Filter>include\bitcoin\database\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_manager.hpp">
+      <Filter>include\bitcoin\database\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_multimap.hpp">
+      <Filter>include\bitcoin\database\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_multimap_iterable.hpp">
+      <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -191,17 +191,17 @@
     <Filter Include="src\memory">
       <UniqueIdentifier>{f9dd44e8-d8e1-49b3-9d78-0afc7df23d6d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\hash_table">
-      <UniqueIdentifier>{1f3ad9c3-8ddd-4744-8eda-3d650a4766a5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\database\hash_table">
-      <UniqueIdentifier>{25411a96-f266-4ed8-a5bf-b9a2aff44666}</UniqueIdentifier>
-    </Filter>
     <Filter Include="include\bitcoin\database\databases">
       <UniqueIdentifier>{0e13865b-34a1-478d-bd0a-c1cf2aee5e84}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\databases">
       <UniqueIdentifier>{fb6c9df6-04a6-48f2-960f-241bf39e0e86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\primitives">
+      <UniqueIdentifier>{ccda46dd-b31d-496c-8726-c6db21b9714c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\primitives">
+      <UniqueIdentifier>{b6900019-3e3e-4c97-a375-82775c9d287e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

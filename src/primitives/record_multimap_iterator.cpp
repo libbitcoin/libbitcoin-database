@@ -17,10 +17,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/hash_table/record_multimap_iterator.hpp>
+#include <bitcoin/database/primitives/record_multimap_iterator.hpp>
 
-#include <bitcoin/database/hash_table/record_list.hpp>
-#include <bitcoin/database/hash_table/record_multimap_iterable.hpp>
+#include <bitcoin/database/primitives/record_list.hpp>
+#include <bitcoin/database/primitives/record_multimap_iterable.hpp>
 
 namespace libbitcoin {
 namespace database {

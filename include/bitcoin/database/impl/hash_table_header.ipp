@@ -85,6 +85,8 @@ void hash_table_header<IndexType, ValueType>::start()
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     const auto buckets_address = REMAP_ADDRESS(memory);
+
+    // Does not require atomicity (no concurrency during start).
     const auto buckets = from_little_endian_unsafe<IndexType>(buckets_address);
 
     // If buckets_ == 0 we trust what is read from the file.
@@ -101,7 +103,9 @@ ValueType hash_table_header<IndexType, ValueType>::read(IndexType index) const
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     const auto value_address = REMAP_ADDRESS(memory) + item_position(index);
+    //*************************************************************************
     return from_little_endian_unsafe<ValueType>(value_address);
+    //*************************************************************************
 }
 
 template <typename IndexType, typename ValueType>
@@ -114,10 +118,10 @@ void hash_table_header<IndexType, ValueType>::write(IndexType index,
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     const auto value_address = REMAP_ADDRESS(memory) + item_position(index);
-
-    // MUST BE ATOMIC
     auto serial = make_serializer(value_address);
+    //*************************************************************************
     serial.write_little_endian(value);
+    //*************************************************************************
 }
 
 template <typename IndexType, typename ValueType>

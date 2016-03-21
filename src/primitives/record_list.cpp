@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/hash_table/record_list.hpp>
+#include <bitcoin/database/primitives/record_list.hpp>
 
 #include <cstdint>
 #include <bitcoin/bitcoin.hpp>
@@ -35,7 +35,7 @@ record_list::record_list(record_manager& manager)
 
 array_index record_list::create()
 {
-    // Insert new record with empty next value.
+    // Insert new record with null next value.
     return insert(empty);
 }
 
@@ -44,19 +44,23 @@ array_index record_list::insert(array_index next)
     // Create new record.
     auto index = manager_.new_records(1);
     const auto memory = manager_.get(index);
-
-    // Write next value at first 4 bytes of record.
     auto serial = make_serializer(REMAP_ADDRESS(memory));
 
-    // MUST BE ATOMIC
+    // Write next index at first 4 bytes of the record preceding the insert.
+    //*************************************************************************
     serial.write_4_bytes_little_endian(next);
+    //*************************************************************************
+
+    // Return the position of the new record.
     return index;
 }
 
 array_index record_list::next(array_index index) const
 {
     const auto memory = manager_.get(index);
+    //*************************************************************************
     return from_little_endian_unsafe<array_index>(REMAP_ADDRESS(memory));
+    //*************************************************************************
 }
 
 const memory_ptr record_list::get(array_index index) const

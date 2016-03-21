@@ -91,9 +91,9 @@ file_offset slab_list<HashType>::create(const HashType& key,
     const auto key_data = REMAP_ADDRESS(memory);
     auto serial = make_serializer(key_data);
     serial.write_data(key);
-
-    // MUST BE ATOMIC
+    //*************************************************************************
     serial.write_8_bytes_little_endian(next);
+    //*************************************************************************
     return position_;
 }
 
@@ -116,7 +116,10 @@ template <typename HashType>
 file_offset slab_list<HashType>::next_position() const
 {
     const auto memory = raw_next_data();
-    return from_little_endian_unsafe<file_offset>(REMAP_ADDRESS(memory));
+    const auto address = REMAP_ADDRESS(memory);
+    //*************************************************************************
+    return from_little_endian_unsafe<file_offset>(address);
+    //*************************************************************************
 }
 
 template <typename HashType>
@@ -124,9 +127,9 @@ void slab_list<HashType>::write_next_position(file_offset next)
 {
     const auto memory = raw_next_data();
     auto serial = make_serializer(REMAP_ADDRESS(memory));
-
-    // MUST BE ATOMIC
+    //*************************************************************************
     serial.write_8_bytes_little_endian(next);
+    //*************************************************************************
 }
 
 template <typename HashType>
