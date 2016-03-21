@@ -153,9 +153,7 @@ history history_database::get(const short_hash& key, size_t limit,
         };
     };
 
-    // This result is defined in libbitcoin.
     history result;
-
     const auto start = rows_multimap_.lookup(key);
     const auto records = record_multimap_iterable(rows_list_, start);
 
@@ -169,8 +167,8 @@ history history_database::get(const short_hash& key, size_t limit,
         const auto record = rows_list_.get(index);
         const auto address = REMAP_ADDRESS(record);
 
-        // Skip rows below from_height (if specified).
-        if (from_height == 0 || from_height <= read_height(address))
+        // Skip rows below from_height.
+        if (from_height == 0 || read_height(address) >= from_height)
             result.emplace_back(read_row(address));
     }
 

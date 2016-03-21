@@ -70,12 +70,13 @@ bool stealth_database::stop()
 // filter is 0-32 bits, so the records cannot be indexed using a hash table.
 stealth stealth_database::scan(const binary& filter, size_t from_height) const
 {
-    if (from_height >= index_manager_.count())
-        return stealth();
-
-    // This result is defined in libbitcoin.
     stealth result;
+
+    if (from_height >= index_manager_.count())
+        return result;
+
     const auto start = read_index(from_height);
+
     for (auto index = start; index < rows_manager_.count(); ++index)
     {
         // see if prefix matches
@@ -112,6 +113,8 @@ void stealth_database::store(uint32_t prefix, const stealth_row& row)
     serial.write_short_hash(row.address);
     serial.write_hash(row.transaction_hash);
 
+    write_index();
+
     BITCOIN_ASSERT(serial.iterator() == data + prefix_size + hash_size +
         short_hash_size + hash_size);
 }
@@ -125,21 +128,16 @@ void stealth_database::unlink(size_t from_height)
 void stealth_database::sync()
 {
     rows_manager_.sync();
-    write_index();
     index_manager_.sync();
 }
 
+// Read/write of this value protected by sync.
 void stealth_database::write_index()
 {
-    // Write index of first row into block lookup index.
     const auto index = index_manager_.new_records(1);
     const auto memory = index_manager_.get(index);
     auto serial = make_serializer(REMAP_ADDRESS(memory));
-
-    // MUST BE ATOMIC
     serial.write_4_bytes_little_endian(row_count_);
-
-    // Prepare for next block.
     row_count_ = rows_manager_.count();
 }
 
@@ -147,7 +145,8 @@ array_index stealth_database::read_index(size_t from_height) const
 {
     BITCOIN_ASSERT(from_height < index_manager_.count());
     const auto memory = index_manager_.get(from_height);
-    return from_little_endian_unsafe<array_index>(REMAP_ADDRESS(memory));
+    const auto address = REMAP_ADDRESS(memory);
+    return from_little_endian_unsafe<array_index>(address);
 }
 
 } // namespace database

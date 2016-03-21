@@ -72,22 +72,31 @@ void transaction_database::store(size_t height, size_t index,
     const chain::transaction& tx)
 {
     // Write block data.
-    const hash_digest key = tx.hash();
-    const size_t value_size = 4 + 4 + tx.serialized_size();
-    auto write = [&height, &index, &tx](memory_ptr data)
+    const auto key = tx.hash();
+    const auto tx_size = tx.serialized_size();
+
+    BITCOIN_ASSERT(height <= max_uint32);
+    const auto hight32 = static_cast<size_t>(height);
+
+    BITCOIN_ASSERT(index <= max_uint32);
+    const auto index32 = static_cast<size_t>(index);
+
+    BITCOIN_ASSERT(tx_size <= max_size_t - 4 - 4);
+    const auto value_size = 4 + 4 + static_cast<size_t>(tx_size);
+
+    auto write = [&hight32, &index32, &tx](memory_ptr data)
     {
         auto serial = make_serializer(REMAP_ADDRESS(data));
-        serial.write_4_bytes_little_endian(height);
-        serial.write_4_bytes_little_endian(index);
-        const auto tx_data = tx.to_data();
-        serial.write_data(tx_data);
+        serial.write_4_bytes_little_endian(hight32);
+        serial.write_4_bytes_little_endian(index32);
+        serial.write_data(tx.to_data());
     };
     lookup_map_.store(key, write, value_size);
 }
 
 void transaction_database::remove(const hash_digest& hash)
 {
-    DEBUG_ONLY(bool success = ) lookup_map_.unlink(hash);
+    DEBUG_ONLY(bool success =) lookup_map_.unlink(hash);
     BITCOIN_ASSERT(success);
 }
 

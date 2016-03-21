@@ -84,23 +84,21 @@ bool spend_database::stop()
 
 spend spend_database::get(const output_point& outpoint) const
 {
+    spend result{ false, 0, {} };
+
     const auto key = output_to_hash(outpoint);
     const auto memory = lookup_map_.find(key);
 
     if (!memory)
-        return { false, 0, {} };
+        return result;
 
     hash_digest hash;
-    const auto record = REMAP_ADDRESS(memory);
-    std::copy(record, record + hash_size, hash.begin());
-    const auto index = from_little_endian_unsafe<uint32_t>(record + hash_size);
-
-    return
-    {
-        true,
-        index,
-        hash
-    };
+    const auto hash_start = REMAP_ADDRESS(memory);
+    const auto index_start = hash_start + hash_size;
+    std::copy(hash_start, index_start, result.hash.begin());
+    result.index = from_little_endian_unsafe<uint32_t>(index_start);
+    result.valid = true;
+    return result;
 }
 
 void spend_database::store(const chain::output_point& outpoint,
@@ -120,7 +118,7 @@ void spend_database::store(const chain::output_point& outpoint,
 void spend_database::remove(const output_point& outpoint)
 {
     const auto key = output_to_hash(outpoint);
-    DEBUG_ONLY(bool success = ) lookup_map_.unlink(key);
+    DEBUG_ONLY(bool success =) lookup_map_.unlink(key);
     BITCOIN_ASSERT(success);
 }
 

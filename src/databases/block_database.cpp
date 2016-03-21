@@ -98,7 +98,6 @@ block_result block_database::get(const hash_digest& hash) const
 
 void block_database::store(const block& block)
 {
-    // BUGBUG: unsafe unless block push is serialized.
     const uint32_t height = index_manager_.count();
 
     const auto number_txs = block.transactions.size();
@@ -148,20 +147,20 @@ bool block_database::top(size_t& out_height) const
     return true;
 }
 
+// Read/write of this value protected by sync.
 void block_database::write_position(const file_offset position)
 {
     const auto index = index_manager_.new_records(1);
     const auto memory = index_manager_.get(index);
     auto serial = make_serializer(REMAP_ADDRESS(memory));
-
-    // MUST BE ATOMIC
     serial.write_8_bytes_little_endian(position);
 }
 
 file_offset block_database::read_position(const array_index index) const
 {
     const auto memory = index_manager_.get(index);
-    return from_little_endian_unsafe<file_offset>(REMAP_ADDRESS(memory));
+    const auto address = REMAP_ADDRESS(memory);
+    return from_little_endian_unsafe<file_offset>(address);
 }
 
 } // namespace database
