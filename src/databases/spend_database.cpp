@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/spend_database.hpp>
+#include <bitcoin/database/databases/spend_database.hpp>
 
 #include <algorithm>
 #include <cstddef>

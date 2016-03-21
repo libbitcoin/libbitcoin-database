@@ -17,12 +17,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database.hpp>
+#include <bitcoin/database/databases/history_database.hpp>
 
 #include <cstdint>
 #include <cstddef>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/hash_table/record_multimap_iterable.hpp>
 #include <bitcoin/database/hash_table/record_multimap_iterator.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 

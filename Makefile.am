@@ -35,13 +35,13 @@ lib_LTLIBRARIES = src/libbitcoin-database.la
 src_libbitcoin_database_la_CPPFLAGS = -I${srcdir}/include ${bitcoin_CPPFLAGS}
 src_libbitcoin_database_la_LIBADD = ${bitcoin_LIBS}
 src_libbitcoin_database_la_SOURCES = \
-    src/block_database.cpp \
     src/data_base.cpp \
-    src/history_database.cpp \
     src/settings.cpp \
-    src/spend_database.cpp \
-    src/stealth_database.cpp \
-    src/transaction_database.cpp \
+    src/databases/block_database.cpp \
+    src/databases/history_database.cpp \
+    src/databases/spend_database.cpp \
+    src/databases/stealth_database.cpp \
+    src/databases/transaction_database.cpp \
     src/hash_table/record_list.cpp \
     src/hash_table/record_manager.cpp \
     src/hash_table/record_multimap_iterable.cpp \
@@ -276,15 +276,18 @@ include_bitcoin_HEADERS = \
 
 include_bitcoin_databasedir = ${includedir}/bitcoin/database
 include_bitcoin_database_HEADERS = \
-    include/bitcoin/database/block_database.hpp \
     include/bitcoin/database/data_base.hpp \
     include/bitcoin/database/define.hpp \
-    include/bitcoin/database/history_database.hpp \
     include/bitcoin/database/settings.hpp \
-    include/bitcoin/database/spend_database.hpp \
-    include/bitcoin/database/stealth_database.hpp \
-    include/bitcoin/database/transaction_database.hpp \
     include/bitcoin/database/version.hpp
+
+include_bitcoin_database_databasesdir = ${includedir}/bitcoin/database/databases
+include_bitcoin_database_databases_HEADERS = \
+    include/bitcoin/database/databases/block_database.hpp \
+    include/bitcoin/database/databases/history_database.hpp \
+    include/bitcoin/database/databases/spend_database.hpp \
+    include/bitcoin/database/databases/stealth_database.hpp \
+    include/bitcoin/database/databases/transaction_database.hpp
 
 include_bitcoin_database_hash_tabledir = ${includedir}/bitcoin/database/hash_table
 include_bitcoin_database_hash_table_HEADERS = \

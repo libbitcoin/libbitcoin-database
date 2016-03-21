@@ -25,12 +25,12 @@
 #include <boost/filesystem.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/database/block_database.hpp>
+#include <bitcoin/database/databases/block_database.hpp>
+#include <bitcoin/database/databases/spend_database.hpp>
+#include <bitcoin/database/databases/transaction_database.hpp>
+#include <bitcoin/database/databases/history_database.hpp>
+#include <bitcoin/database/databases/stealth_database.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/spend_database.hpp>
-#include <bitcoin/database/transaction_database.hpp>
-#include <bitcoin/database/history_database.hpp>
-#include <bitcoin/database/stealth_database.hpp>
 #include <bitcoin/database/settings.hpp>
 
 namespace libbitcoin {

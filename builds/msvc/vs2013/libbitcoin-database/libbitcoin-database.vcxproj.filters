@@ -40,19 +40,19 @@
     <ClCompile Include="..\..\..\..\src\memory\allocator.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\block_database.cpp">
+    <ClCompile Include="..\..\..\..\src\databases\spend_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\spend_database.cpp">
+    <ClCompile Include="..\..\..\..\src\databases\stealth_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\stealth_database.cpp">
+    <ClCompile Include="..\..\..\..\src\databases\transaction_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\transaction_database.cpp">
+    <ClCompile Include="..\..\..\..\src\databases\block_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\history_database.cpp">
+    <ClCompile Include="..\..\..\..\src\databases\history_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
   </ItemGroup>
@@ -120,19 +120,19 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\allocator.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\block_database.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\history_database.hpp">
       <Filter>include\bitcoin\database\databases</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\history_database.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\spend_database.hpp">
       <Filter>include\bitcoin\database\databases</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\stealth_database.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\stealth_database.hpp">
       <Filter>include\bitcoin\database\databases</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\spend_database.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\transaction_database.hpp">
       <Filter>include\bitcoin\database\databases</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\transaction_database.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\block_database.hpp">
       <Filter>include\bitcoin\database\databases</Filter>
     </ClInclude>
   </ItemGroup>
