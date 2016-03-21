@@ -13,7 +13,7 @@ int show_array(const std::string& filename)
     hash_table_header<IndexType, ValueType> table(file);
     table.start();
 
-    for (ValueType i = 0; i < table.size(); ++i)
+    for (IndexType i = 0; i < table.size(); ++i)
     {
         std::string output;
         const auto value = table.read(i);

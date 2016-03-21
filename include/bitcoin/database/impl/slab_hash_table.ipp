@@ -22,8 +22,8 @@
 
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include "../impl/slab_list.ipp"
 #include "../impl/remainder.ipp"
+#include "../impl/slab_row.ipp"
 
 namespace libbitcoin {
 namespace database {
@@ -41,7 +41,7 @@ file_offset slab_hash_table<HashType>::store(const HashType& key,
 {
     // Store current bucket value.
     const auto old_begin = read_bucket_value(key);
-    slab_list<HashType> item(manager_, 0);
+    slab_row<HashType> item(manager_, 0);
     const auto new_begin = item.create(key, value_size, old_begin);
     write(item.data());
 
@@ -61,7 +61,7 @@ const memory_ptr slab_hash_table<HashType>::find(const HashType& key) const
     // Iterate through list...
     while (current != header_.empty)
     {
-        const slab_list<HashType> item(manager_, current);
+        const slab_row<HashType> item(manager_, current);
 
         // Found.
         if (item.compare(key))
@@ -85,7 +85,7 @@ bool slab_hash_table<HashType>::unlink(const HashType& key)
 {
     // Find start item...
     const auto begin = read_bucket_value(key);
-    const slab_list<HashType> begin_item(manager_, begin);
+    const slab_row<HashType> begin_item(manager_, begin);
 
     // If start item has the key then unlink from buckets.
     if (begin_item.compare(key))
@@ -101,7 +101,7 @@ bool slab_hash_table<HashType>::unlink(const HashType& key)
     // Iterate through list...
     while (current != header_.empty)
     {
-        const slab_list<HashType> item(manager_, current);
+        const slab_row<HashType> item(manager_, current);
 
         // Found, unlink current item from previous.
         if (item.compare(key))

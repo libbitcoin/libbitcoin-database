@@ -24,9 +24,9 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory_map.hpp>
-#include <bitcoin/database/hash_table/record_manager.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
+#include <bitcoin/database/primitives/slab_hash_table.hpp>
 #include <bitcoin/database/result/block_result.hpp>
-#include <bitcoin/database/hash_table/slab_hash_table.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -49,13 +49,16 @@ public:
     bool stop();
 
     /// Fetch block by height using the index table.
-    block_result get(const size_t height) const;
+    block_result get(size_t height) const;
 
     /// Fetch block by hash using the hashtable.
     block_result get(const hash_digest& hash) const;
 
     /// Store a block in the database.
     void store(const chain::block& block);
+
+    /// Store a block in the database.
+    void store(const chain::block& block, size_t height);
 
     /// Unlink all blocks upwards from (and including) from_height.
     void unlink(const size_t from_height);
@@ -79,16 +82,16 @@ private:
     /// Use intermediate records table to find blk position from height.
     file_offset read_position(const array_index index) const;
 
-    /// The hashtable used for looking up blocks by hash.
-    memory_map map_file_;
-    slab_hash_table_header header_;
-    slab_manager manager_;
-    slab_map map_;
+    /// Hash table used for looking up blocks by hash.
+    memory_map lookup_file_;
+    slab_hash_table_header lookup_header_;
+    slab_manager lookup_manager_;
+    slab_map lookup_map_;
 
     /// Table used for looking up blocks by height.
     /// Resolves to a position within the slab.
     memory_map index_file_;
-    record_manager index_;
+    record_manager index_manager_;
 };
 
 } // namespace database

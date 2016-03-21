@@ -28,22 +28,23 @@ namespace database {
 
 template <typename HashType>
 record_multimap<HashType>::record_multimap(record_hash_table_type& map,
-    record_list& linked_rows)
-  : map_(map), records_(linked_rows)
+    record_list& records)
+  : map_(map), records_(records)
 {
 }
 
 template <typename HashType>
 array_index record_multimap<HashType>::lookup(const HashType& key) const
 {
-    const auto memory = map_.find(key);
+    const auto start_info = map_.find(key);
 
-    if (!memory)
+    if (!start_info)
         return records_.empty;
 
-    const auto start_info = REMAP_ADDRESS(memory);
-    const auto first = from_little_endian_unsafe<array_index>(start_info);
-    return first;
+    const auto address = REMAP_ADDRESS(start_info);
+    //*************************************************************************
+    return from_little_endian_unsafe<array_index>(address);
+    //*************************************************************************
 }
 
 template <typename HashType>
@@ -63,45 +64,53 @@ void record_multimap<HashType>::add_row(const HashType& key,
 }
 
 template <typename HashType>
+void record_multimap<HashType>::add_to_list(memory_ptr start_info,
+    write_function write)
+{
+    const auto address = REMAP_ADDRESS(start_info);
+    //*************************************************************************
+    const auto old_begin = from_little_endian_unsafe<array_index>(address);
+    //*************************************************************************
+
+    const auto new_begin = records_.insert(old_begin);
+
+    // The records_ and start_info remap safe pointers are in distinct files.
+    write(records_.get(new_begin));
+
+    auto serial = make_serializer(address);
+    //*************************************************************************
+    serial.template write_little_endian<array_index>(new_begin);
+    //*************************************************************************
+}
+
+template <typename HashType>
 void record_multimap<HashType>::delete_last_row(const HashType& key)
 {
-    const auto memory = map_.find(key);
-    BITCOIN_ASSERT_MSG(memory, "The row to delete was not found.");
+    const auto start_info = map_.find(key);
+    BITCOIN_ASSERT_MSG(start_info, "The row to delete was not found.");
 
-    // MUST BE ATOMIC (index)
-    const auto start_info = REMAP_ADDRESS(memory);
-    const auto old_begin = from_little_endian_unsafe<array_index>(start_info);
+    auto address = REMAP_ADDRESS(start_info);
+    //*************************************************************************
+    const auto old_begin = from_little_endian_unsafe<array_index>(address);
+    //*************************************************************************
 
     BITCOIN_ASSERT(old_begin != records_.empty);
-
-    // BUGBUG: records_.next() may request memory from map_'s underlying file.
     const auto new_begin = records_.next(old_begin);
 
-    // BUGBUG: map_.unlink() may request memory from map_'s underlying file.
     if (new_begin == records_.empty)
     {
+        // Free existing remap pointer to prevent deadlock in map_.unlink.
+        address = nullptr;
+
         DEBUG_ONLY(bool success =) map_.unlink(key);
         BITCOIN_ASSERT(success);
         return;
     }
 
-    // MUST BE ATOMIC
-    auto serial = make_serializer(start_info);
-    serial.write_4_bytes_little_endian(new_begin);
-}
-
-template <typename HashType>
-void record_multimap<HashType>::add_to_list(memory_ptr start_info,
-    write_function write)
-{
-    const auto start = REMAP_ADDRESS(start_info);
-    const auto old_begin = from_little_endian_unsafe<array_index>(start);
-    const auto new_begin = records_.insert(old_begin);
-    write(records_.get(new_begin));
-
-    // MUST BE ATOMIC
-    auto serial = make_serializer(start);
-    serial.write_4_bytes_little_endian(new_begin);
+    auto serial = make_serializer(address);
+    //*************************************************************************
+    serial.template write_little_endian<array_index>(new_begin);
+    //*************************************************************************
 }
 
 template <typename HashType>
@@ -111,11 +120,12 @@ void record_multimap<HashType>::create_new(const HashType& key,
     const auto first = records_.create();
     write(records_.get(first));
 
-    // MUST BE ATOMIC
     const auto write_start_info = [first](memory_ptr data)
     {
         auto serial = make_serializer(REMAP_ADDRESS(data));
-        serial.write_4_bytes_little_endian(first);
+        //*********************************************************************
+        serial.template write_little_endian<array_index>(first);
+        //*********************************************************************
     };
     map_.store(key, write_start_info);
 }

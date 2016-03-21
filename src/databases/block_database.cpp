@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/block_database.hpp>
+#include <bitcoin/database/databases/block_database.hpp>
 
 #include <cstdint>
 #include <cstddef>
@@ -48,61 +48,68 @@ BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_slabs_size;
 
 block_database::block_database(const path& map_filename,
     const path& index_filename)
-  : map_file_(map_filename), 
-    header_(map_file_, number_buckets),
-    manager_(map_file_, header_size),
-    map_(header_, manager_),
+  : lookup_file_(map_filename), 
+    lookup_header_(lookup_file_, number_buckets),
+    lookup_manager_(lookup_file_, header_size),
+    lookup_map_(lookup_header_, lookup_manager_),
     index_file_(index_filename),
-    index_(index_file_, 0, sizeof(file_offset))
+    index_manager_(index_file_, 0, sizeof(file_offset))
 {
-    BITCOIN_ASSERT(REMAP_ADDRESS(map_file_.access()) != nullptr);
+    BITCOIN_ASSERT(REMAP_ADDRESS(lookup_file_.access()) != nullptr);
     BITCOIN_ASSERT(REMAP_ADDRESS(index_file_.access()) != nullptr);
 }
 
 void block_database::create()
 {
-    map_file_.resize(initial_map_file_size);
-    header_.create();
-    manager_.create();
+    lookup_file_.resize(initial_map_file_size);
+    lookup_header_.create();
+    lookup_manager_.create();
     index_file_.resize(minimum_records_size);
-    index_.create();
+    index_manager_.create();
 }
 
 void block_database::start()
 {
-    header_.start();
-    manager_.start();
-    index_.start();
+    lookup_header_.start();
+    lookup_manager_.start();
+    index_manager_.start();
 }
 
 bool block_database::stop()
 {
-    return map_file_.stop() && index_file_.stop();
+    return lookup_file_.stop() && index_file_.stop();
 }
 
-block_result block_database::get(const size_t height) const
+block_result block_database::get(size_t height) const
 {
-    if (height >= index_.count())
+    if (height >= index_manager_.count())
         return block_result(nullptr);
 
     const auto position = read_position(height);
-    const auto memory = manager_.get(position);
+    const auto memory = lookup_manager_.get(position);
     return block_result(memory);
 }
 
 block_result block_database::get(const hash_digest& hash) const
 {
-    const auto memory = map_.find(hash);
+    const auto memory = lookup_map_.find(hash);
     return block_result(memory);
 }
 
 void block_database::store(const block& block)
 {
-    // BUGBUG: unsafe unless block push is serialized.
-    const uint32_t height = index_.count();
+    const auto height = index_manager_.count();
+    store(block, height);
+}
 
+void block_database::store(const block& block, size_t height)
+{
+    BITCOIN_ASSERT(height <= max_uint32);
+    const auto height32 = static_cast<uint32_t>(height);
     const auto number_txs = block.transactions.size();
-    const uint32_t number_txs32 = static_cast<uint32_t>(number_txs);
+
+    BITCOIN_ASSERT(number_txs <= max_uint32);
+    const auto number_txs32 = static_cast<uint32_t>(number_txs);
 
     // Write block data.
     const auto write = [&](memory_ptr data)
@@ -110,7 +117,7 @@ void block_database::store(const block& block)
         auto serial = make_serializer(REMAP_ADDRESS(data));
         const auto header_data = block.header.to_data(false);
         serial.write_data(header_data);
-        serial.write_4_bytes_little_endian(height);
+        serial.write_4_bytes_little_endian(height32);
         serial.write_4_bytes_little_endian(number_txs32);
 
         for (const auto& tx: block.transactions)
@@ -122,7 +129,7 @@ void block_database::store(const block& block)
 
     const auto key = block.header.hash();
     const auto value_size = 80 + 4 + 4 + number_txs * hash_size;
-    const auto position = map_.store(key, write, value_size);
+    const auto position = lookup_map_.store(key, write, value_size);
 
     // Write height -> position mapping.
     write_position(position);
@@ -130,38 +137,38 @@ void block_database::store(const block& block)
 
 void block_database::unlink(const size_t from_height)
 {
-    index_.set_count(from_height);
+    index_manager_.set_count(from_height);
 }
 
 void block_database::sync()
 {
-    manager_.sync();
-    index_.sync();
+    lookup_manager_.sync();
+    index_manager_.sync();
 }
 
 bool block_database::top(size_t& out_height) const
 {
-    if (index_.count() == 0)
+    if (index_manager_.count() == 0)
         return false;
 
-    out_height = index_.count() - 1;
+    out_height = index_manager_.count() - 1;
     return true;
 }
 
+// Read/write of this value protected by sync.
 void block_database::write_position(const file_offset position)
 {
-    const auto index = index_.new_records(1);
-    const auto memory = index_.get(index);
+    const auto index = index_manager_.new_records(1);
+    const auto memory = index_manager_.get(index);
     auto serial = make_serializer(REMAP_ADDRESS(memory));
-
-    // MUST BE ATOMIC
     serial.write_8_bytes_little_endian(position);
 }
 
 file_offset block_database::read_position(const array_index index) const
 {
-    const auto memory = index_.get(index);
-    return from_little_endian_unsafe<file_offset>(REMAP_ADDRESS(memory));
+    const auto memory = index_manager_.get(index);
+    const auto address = REMAP_ADDRESS(memory);
+    return from_little_endian_unsafe<file_offset>(address);
 }
 
 } // namespace database

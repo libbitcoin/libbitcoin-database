@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/spend_database.hpp>
+#include <bitcoin/database/databases/spend_database.hpp>
 
 #include <algorithm>
 #include <cstddef>
@@ -56,51 +56,48 @@ static hash_digest output_to_hash(const chain::output_point& output)
 }
 
 spend_database::spend_database(const path& filename)
-  : file_(filename), 
-    header_(file_, number_buckets),
-    manager_(file_, header_size, record_size),
-    map_(header_, manager_)
+  : lookup_file_(filename), 
+    lookup_header_(lookup_file_, number_buckets),
+    lookup_manager_(lookup_file_, header_size, record_size),
+    lookup_map_(lookup_header_, lookup_manager_)
 {
-    BITCOIN_ASSERT(REMAP_ADDRESS(file_.access()) != nullptr);
+    BITCOIN_ASSERT(REMAP_ADDRESS(lookup_file_.access()) != nullptr);
 }
 
 void spend_database::create()
 {
-    file_.resize(initial_map_file_size);
-    header_.create();
-    manager_.create();
+    lookup_file_.resize(initial_map_file_size);
+    lookup_header_.create();
+    lookup_manager_.create();
 }
 
 void spend_database::start()
 {
-    header_.start();
-    manager_.start();
+    lookup_header_.start();
+    lookup_manager_.start();
 }
 
 bool spend_database::stop()
 {
-    return file_.stop();
+    return lookup_file_.stop();
 }
 
 spend spend_database::get(const output_point& outpoint) const
 {
+    spend result{ false };
+
     const auto key = output_to_hash(outpoint);
-    const auto memory = map_.find(key);
+    const auto memory = lookup_map_.find(key);
 
     if (!memory)
-        return { false, 0, {} };
+        return result;
 
-    hash_digest hash;
-    const auto record = REMAP_ADDRESS(memory);
-    std::copy(record, record + hash_size, hash.begin());
-    const auto index = from_little_endian_unsafe<uint32_t>(record + hash_size);
-
-    return
-    {
-        true,
-        index,
-        hash
-    };
+    const auto hash_start = REMAP_ADDRESS(memory);
+    const auto index_start = hash_start + hash_size;
+    std::copy(hash_start, index_start, result.hash.begin());
+    result.index = from_little_endian_unsafe<uint32_t>(index_start);
+    result.valid = true;
+    return result;
 }
 
 void spend_database::store(const chain::output_point& outpoint,
@@ -114,27 +111,27 @@ void spend_database::store(const chain::output_point& outpoint,
     };
 
     const auto key = output_to_hash(outpoint);
-    map_.store(key, write);
+    lookup_map_.store(key, write);
 }
 
 void spend_database::remove(const output_point& outpoint)
 {
     const auto key = output_to_hash(outpoint);
-    DEBUG_ONLY(bool success =) map_.unlink(key);
+    DEBUG_ONLY(bool success =) lookup_map_.unlink(key);
     BITCOIN_ASSERT(success);
 }
 
 void spend_database::sync()
 {
-    manager_.sync();
+    lookup_manager_.sync();
 }
 
 spend_statinfo spend_database::statinfo() const
 {
     return
     {
-        header_.size(),
-        manager_.count()
+        lookup_header_.size(),
+        lookup_manager_.count()
     };
 }
 

@@ -23,9 +23,9 @@
 #include <cstdint>
 #include <boost/filesystem.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/hash_table/record_manager.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/memory_map.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -69,11 +69,11 @@ private:
     // Table used for jumping to rows by height.
     // Resolves to a index within the rows.
     memory_map index_file_;
-    record_manager index_;
+    record_manager index_manager_;
 
     // Actual row entries containing stealth tx data.
     memory_map rows_file_;
-    record_manager rows_;
+    record_manager rows_manager_;
 };
 
 } // namespace database

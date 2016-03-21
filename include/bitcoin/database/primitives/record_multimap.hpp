@@ -23,9 +23,9 @@
 #include <string>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/hash_table/record_list.hpp>
-#include <bitcoin/database/hash_table/record_hash_table.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/record_list.hpp>
+#include <bitcoin/database/primitives/record_hash_table.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -52,14 +52,13 @@ public:
     typedef record_hash_table<HashType> record_hash_table_type;
     typedef std::function<void(memory_ptr)> write_function;
 
-    record_multimap(record_hash_table_type& map, record_list& linked_rows);
+    record_multimap(record_hash_table_type& map, record_list& records);
 
     /// Lookup a key, returning an iterable result with multiple values.
     array_index lookup(const HashType& key) const;
 
-    /// Add a new row for a key. If the key doesn't exist, it will be
-    /// created. If it does exist, the value will be added at the start
-    /// of the chain.
+    /// Add a new row for a key. If the key doesn't exist, it will be created.
+    /// If it does exist, the value will be added at the start of the chain.
     void add_row(const HashType& key, write_function write);
 
     /// Delete the last row entry that was added. This means when deleting

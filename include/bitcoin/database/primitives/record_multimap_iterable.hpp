@@ -17,34 +17,28 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_RECORD_MULTIMAP_ITERATOR_HPP
-#define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_ITERATOR_HPP
+#ifndef LIBBITCOIN_DATABASE_RECORD_MULTIMAP_ITERABLE_HPP
+#define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_ITERABLE_HPP
 
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/hash_table/record_list.hpp>
+#include <bitcoin/database/primitives/record_list.hpp>
+#include <bitcoin/database/primitives/record_multimap_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/// Forward iterator for multimap record values.
-/// After performing key lookup iterate the multiple values in a for loop.
-class BCD_API record_multimap_iterator
+/// Result of a multimap database query. This is a container wrapper allowing
+/// the values to be iterated.
+class BCD_API record_multimap_iterable
 {
 public:
-    record_multimap_iterator(const record_list& records, array_index index);
+    record_multimap_iterable(const record_list& records, array_index begin);
 
-    /// Next value in the chain.
-    void operator++();
-
-    /// The record index.
-    array_index operator*() const;
-
-    /// Comparison operators.
-    bool operator==(record_multimap_iterator other) const;
-    bool operator!=(record_multimap_iterator other) const;
+    record_multimap_iterator begin() const;
+    record_multimap_iterator end() const;
 
 private:
-    array_index index_;
+    array_index begin_;
     const record_list& records_;
 };
 

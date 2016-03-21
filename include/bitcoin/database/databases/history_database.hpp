@@ -24,7 +24,7 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory_map.hpp>
-#include <bitcoin/database/hash_table/record_multimap.hpp>
+#include <bitcoin/database/primitives/record_multimap.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -88,17 +88,17 @@ private:
     typedef record_hash_table<short_hash> record_map;
     typedef record_multimap<short_hash> record_multiple_map;
 
-    // Hash table used for start index lookup for linked list by address hash.
+    /// Hash table used for start index lookup for linked list by address hash.
     memory_map lookup_file_;
-    record_hash_table_header header_;
-    record_manager manager_;
-    record_map start_lookup_;
+    record_hash_table_header lookup_header_;
+    record_manager lookup_manager_;
+    record_map lookup_map_;
 
+    /// List of history rows.
     memory_map rows_file_;
-    record_manager rows_;
-    record_list records_;
-
-    record_multiple_map map_;
+    record_manager rows_manager_;
+    record_list rows_list_;
+    record_multiple_map rows_multimap_;
 };
 
 } // namespace database

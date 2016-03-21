@@ -22,8 +22,8 @@
 
 #include <cstdint>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/hash_table/record_manager.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -46,7 +46,7 @@ public:
     array_index create();
 
     /// Insert new record before index. Returns index of new record.
-    array_index insert(array_index next);
+    array_index insert(array_index index);
 
     /// Read next index for record in list.
     array_index next(array_index index) const;

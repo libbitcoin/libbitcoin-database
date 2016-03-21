@@ -70,14 +70,20 @@ bool data_base::initialize(const path& prefix, const chain::block& genesis)
 
 data_base::store::store(const path& prefix)
 {
+    // Hash tables.
     blocks_lookup = prefix / "blocks_lookup";
-    blocks_rows = prefix / "blocks_rows";
-    spends = prefix / "spends";
-    transactions = prefix / "txs";
     history_lookup = prefix / "history_lookup";
-    history_rows = prefix / "history_rows";
+    spends_lookup = prefix / "spends_lookup";
+    txs_lookup = prefix / "txs_lookup";
+
+    // Arrays.
+    blocks_index = prefix / "blocks_index";
     stealth_index = prefix / "stealth_index";
+
+    // Lists.
+    history_rows = prefix / "history_rows";
     stealth_rows = prefix / "stealth_rows";
+
     db_lock = prefix / "db_lock";
 }
 
@@ -85,13 +91,13 @@ bool data_base::store::touch_all() const
 {
     return
         touch_file(blocks_lookup) &&
-        touch_file(blocks_rows) &&
-        touch_file(spends) &&
-        touch_file(transactions) &&
+        touch_file(blocks_index) &&
         touch_file(history_lookup) &&
         touch_file(history_rows) &&
         touch_file(stealth_index) &&
-        touch_file(stealth_rows);
+        touch_file(stealth_rows) &&
+        touch_file(spends_lookup) &&
+        touch_file(txs_lookup);
 }
 
 data_base::file_lock data_base::initialize_lock(const path& lock)
@@ -122,11 +128,11 @@ data_base::data_base(const path& prefix, size_t history_height,
 
 data_base::data_base(const store& paths, size_t history_height,
     size_t stealth_height)
-  : blocks(paths.blocks_lookup, paths.blocks_rows),
-    spends(paths.spends),
-    transactions(paths.transactions),
+  : blocks(paths.blocks_lookup, paths.blocks_index),
     history(paths.history_lookup, paths.history_rows),
     stealth(paths.stealth_index, paths.stealth_rows),
+    spends(paths.spends_lookup),
+    transactions(paths.txs_lookup),
     history_height_(history_height),
     stealth_height_(stealth_height),
     file_lock_(initialize_lock(paths.db_lock)),
@@ -244,7 +250,7 @@ void data_base::synchronize()
 
 void data_base::push(const block& block)
 {
-    // BUGBUG: unsafe unless block push is serialized.
+    // Height is unsafe unless database locked.
     push(block, get_next_height(blocks));
 }
 
@@ -275,7 +281,7 @@ void data_base::push(const block& block, uint64_t height)
     }
 
     // Add block itself.
-    blocks.store(block);
+    blocks.store(block, height);
 
     // Synchronise everything that was added.
     synchronize();

@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/hash_table/record_list.hpp>
+#include <bitcoin/database/primitives/record_list.hpp>
 
 #include <cstdint>
 #include <bitcoin/bitcoin.hpp>
@@ -35,28 +35,29 @@ record_list::record_list(record_manager& manager)
 
 array_index record_list::create()
 {
-    // Insert new record with empty next value.
+    // Insert new record with null next value.
     return insert(empty);
 }
 
-array_index record_list::insert(array_index next)
+array_index record_list::insert(array_index index)
 {
-    // Create new record.
-    auto index = manager_.new_records(1);
-    const auto memory = manager_.get(index);
-
-    // Write next value at first 4 bytes of record.
+    // Create new record and return its index.
+    auto new_index = manager_.new_records(1);
+    const auto memory = manager_.get(new_index);
     auto serial = make_serializer(REMAP_ADDRESS(memory));
-
-    // MUST BE ATOMIC
-    serial.write_4_bytes_little_endian(next);
-    return index;
+    //*************************************************************************
+    serial.template write_little_endian<array_index>(index);
+    //*************************************************************************
+    return new_index;
 }
 
 array_index record_list::next(array_index index) const
 {
     const auto memory = manager_.get(index);
-    return from_little_endian_unsafe<array_index>(REMAP_ADDRESS(memory));
+    const auto next_address = REMAP_ADDRESS(memory);
+    //*************************************************************************
+    return from_little_endian_unsafe<array_index>(next_address);
+    //*************************************************************************
 }
 
 const memory_ptr record_list::get(array_index index) const

@@ -17,55 +17,60 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_SLAB_HASH_TABLE_HPP
-#define LIBBITCOIN_DATABASE_SLAB_HASH_TABLE_HPP
+#ifndef LIBBITCOIN_DATABASE_RECORD_HASH_TABLE_HPP
+#define LIBBITCOIN_DATABASE_RECORD_HASH_TABLE_HPP
 
 #include <cstddef>
 #include <cstdint>
-#include <bitcoin/database/hash_table/hash_table_header.hpp>
-#include <bitcoin/database/hash_table/slab_manager.hpp>
+#include <tuple>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/hash_table_header.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-typedef hash_table_header<array_index, file_offset> slab_hash_table_header;
+template <typename HashType>
+BC_CONSTFUNC size_t hash_table_record_size(size_t value_size)
+{
+    return std::tuple_size<HashType>::value + sizeof(array_index)
+        + value_size;
+}
+
+typedef hash_table_header<array_index, array_index> record_hash_table_header;
 
 /**
- * A hashtable mapping hashes to variable sized values (slabs).
- * Uses a combination of the hash_table and slab_manager.
+ * A hashtable mapping hashes to fixed sized values (records).
+ * Uses a combination of the hash_table and record_manager.
  *
  * The hash_table is basically a bucket list containing the start
- * value for the hashtable chain.
+ * value for the record_row.
  *
- * The slab_manager is used to create linked chains. A header
+ * The record_manager is used to create linked chains. A header
  * containing the hash of the item, and the next value is stored
- * with each slab.
+ * with each record.
  *
  *   [ HashType ]
- *   [ next:8   ]
- *   [ value... ]
+ *   [ next:4   ]
+ *   [ record   ]
  *
- * If we run manager.sync() before the link() step then we ensure
- * data can be lost but the hashtable is never corrupted.
- * Instead we prefer speed and batch that operation. The user should
- * call allocator.sync() after a series of store() calls.
+ * By using the record_manager instead of slabs, we can have smaller
+ * indexes avoiding reading/writing extra bytes to the file.
+ * Using fixed size records is therefore faster.
  */
 template <typename HashType>
-class slab_hash_table
+class record_hash_table
 {
 public:
     typedef std::function<void(memory_ptr)> write_function;
 
-    slab_hash_table(slab_hash_table_header& header, slab_manager& manager);
+    record_hash_table(record_hash_table_header& header, record_manager& manager);
 
-    /// Store a value. value_size is the requested size for the value.
-    /// The provided write() function must write exactly value_size bytes.
-    /// Returns the position of the inserted value in the slab_manager.
-    file_offset store(const HashType& key, write_function write,
-        const size_t value_size);
+    /// Store a value. The provided write() function must write the correct
+    /// number of bytes (record_size - hash_size - sizeof(array_index)).
+    void store(const HashType& key, write_function write);
 
-    /// Find the slab for a given hash.
+    /// Find the record for a given hash.
     /// Returns a null pointer if not found.
     const memory_ptr find(const HashType& key) const;
 
@@ -73,27 +78,26 @@ public:
     bool unlink(const HashType& key);
 
 private:
-
     // What is the bucket given a hash.
     array_index bucket_index(const HashType& key) const;
 
-    // What is the slab start position for a chain.
-    file_offset read_bucket_value(const HashType& key) const;
+    // What is the record start index for a chain.
+    array_index read_bucket_value(const HashType& key) const;
 
     // Link a new chain into the bucket header.
-    void link(const HashType& key, const file_offset begin);
+    void link(const HashType& key, const array_index begin);
 
     // Release node from linked chain.
     template <typename ListItem>
     void release(const ListItem& item, const file_offset previous);
 
-    slab_hash_table_header& header_;
-    slab_manager& manager_;
+    record_hash_table_header& header_;
+    record_manager& manager_;
 };
 
 } // namespace database
 } // namespace libbitcoin
 
-#include <bitcoin/database/impl/slab_hash_table.ipp>
+#include <bitcoin/database/impl/record_hash_table.ipp>
 
 #endif

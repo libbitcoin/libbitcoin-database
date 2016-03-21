@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/transaction_database.hpp>
+#include <bitcoin/database/databases/transaction_database.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -36,35 +36,35 @@ BC_CONSTEXPR size_t header_size = slab_hash_table_header_size(number_buckets);
 BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_slabs_size;
 
 transaction_database::transaction_database(const path& map_filename)
-  : map_file_(map_filename), 
-    header_(map_file_, number_buckets),
-    manager_(map_file_, header_size),
-    map_(header_, manager_)
+  : lookup_file_(map_filename), 
+    lookup_header_(lookup_file_, number_buckets),
+    lookup_manager_(lookup_file_, header_size),
+    lookup_map_(lookup_header_, lookup_manager_)
 {
-    BITCOIN_ASSERT(REMAP_ADDRESS(map_file_.access()) != nullptr);
+    BITCOIN_ASSERT(REMAP_ADDRESS(lookup_file_.access()) != nullptr);
 }
 
 void transaction_database::create()
 {
-    map_file_.resize(initial_map_file_size);
-    header_.create();
-    manager_.create();
+    lookup_file_.resize(initial_map_file_size);
+    lookup_header_.create();
+    lookup_manager_.create();
 }
 
 void transaction_database::start()
 {
-    header_.start();
-    manager_.start();
+    lookup_header_.start();
+    lookup_manager_.start();
 }
 
 bool transaction_database::stop()
 {
-    return map_file_.stop();
+    return lookup_file_.stop();
 }
 
 transaction_result transaction_database::get(const hash_digest& hash) const
 {
-    const auto memory = map_.find(hash);
+    const auto memory = lookup_map_.find(hash);
     return transaction_result(memory);
 }
 
@@ -72,28 +72,37 @@ void transaction_database::store(size_t height, size_t index,
     const chain::transaction& tx)
 {
     // Write block data.
-    const hash_digest key = tx.hash();
-    const size_t value_size = 4 + 4 + tx.serialized_size();
-    auto write = [&height, &index, &tx](memory_ptr data)
+    const auto key = tx.hash();
+    const auto tx_size = tx.serialized_size();
+
+    BITCOIN_ASSERT(height <= max_uint32);
+    const auto hight32 = static_cast<size_t>(height);
+
+    BITCOIN_ASSERT(index <= max_uint32);
+    const auto index32 = static_cast<size_t>(index);
+
+    BITCOIN_ASSERT(tx_size <= max_size_t - 4 - 4);
+    const auto value_size = 4 + 4 + static_cast<size_t>(tx_size);
+
+    auto write = [&hight32, &index32, &tx](memory_ptr data)
     {
         auto serial = make_serializer(REMAP_ADDRESS(data));
-        serial.write_4_bytes_little_endian(height);
-        serial.write_4_bytes_little_endian(index);
-        const auto tx_data = tx.to_data();
-        serial.write_data(tx_data);
+        serial.write_4_bytes_little_endian(hight32);
+        serial.write_4_bytes_little_endian(index32);
+        serial.write_data(tx.to_data());
     };
-    map_.store(key, write, value_size);
+    lookup_map_.store(key, write, value_size);
 }
 
 void transaction_database::remove(const hash_digest& hash)
 {
-    DEBUG_ONLY(bool success =) map_.unlink(hash);
+    DEBUG_ONLY(bool success =) lookup_map_.unlink(hash);
     BITCOIN_ASSERT(success);
 }
 
 void transaction_database::sync()
 {
-    manager_.sync();
+    lookup_manager_.sync();
 }
 
 } // namespace database
