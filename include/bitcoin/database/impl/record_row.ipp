@@ -62,6 +62,7 @@ private:
 
     array_index index_;
     record_manager& manager_;
+    mutable shared_mutex mutex_;
 };
 
 template <typename HashType>
@@ -87,10 +88,14 @@ array_index record_row<HashType>::create(const HashType& key,
     const auto record = REMAP_ADDRESS(memory);
     auto serial = make_serializer(record);
     serial.write_data(key);
-    //*************************************************************************
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock(mutex_);
     serial.template write_little_endian<array_index>(next);
-    //*************************************************************************
+
     return index_;
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 template <typename HashType>
@@ -113,9 +118,12 @@ array_index record_row<HashType>::next_index() const
 {
     const auto memory = raw_next_data();
     const auto next_address = REMAP_ADDRESS(memory);
-    //*************************************************************************
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    shared_lock(mutex_);
     return from_little_endian_unsafe<array_index>(next_address);
-    //*************************************************************************
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 template <typename HashType>
@@ -123,9 +131,12 @@ void record_row<HashType>::write_next_index(array_index next)
 {
     const auto memory = raw_next_data();
     auto serial = make_serializer(REMAP_ADDRESS(memory));
-    //*************************************************************************
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock(mutex_);
     serial.template write_little_endian<array_index>(next);
-    //*************************************************************************
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 template <typename HashType>

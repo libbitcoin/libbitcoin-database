@@ -74,6 +74,7 @@ private:
 
     record_hash_table_type& map_;
     record_list& records_;
+    mutable shared_mutex mutex_;
 };
 
 } // namespace database

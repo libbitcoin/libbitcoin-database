@@ -103,9 +103,12 @@ ValueType hash_table_header<IndexType, ValueType>::read(IndexType index) const
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     const auto value_address = REMAP_ADDRESS(memory) + item_position(index);
-    //*************************************************************************
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    shared_lock(mutex_);
     return from_little_endian_unsafe<ValueType>(value_address);
-    //*************************************************************************
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 template <typename IndexType, typename ValueType>
@@ -119,9 +122,12 @@ void hash_table_header<IndexType, ValueType>::write(IndexType index,
     const auto memory = file_.access();
     const auto value_address = REMAP_ADDRESS(memory) + item_position(index);
     auto serial = make_serializer(value_address);
-    //*************************************************************************
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock(mutex_);
     serial.template write_little_endian<ValueType>(value);
-    //*************************************************************************
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 template <typename IndexType, typename ValueType>

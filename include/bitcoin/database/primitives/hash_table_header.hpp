@@ -36,7 +36,7 @@ namespace database {
  *  [ [ item:ValueType ] ]
  *  [ [      ...       ] ]
  *
- * Empty elements are represented by the value array.empty
+ * Empty elements are represented by the value hash_table_header.empty
  */
 template <typename IndexType, typename ValueType>
 class hash_table_header
@@ -71,6 +71,7 @@ private:
 
     memory_map& file_;
     IndexType buckets_;
+    mutable shared_mutex mutex_;
 };
 
 } // namespace database
