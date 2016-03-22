@@ -437,7 +437,6 @@ chain::block data_base::pop()
         block.transactions.push_back(tx);
     }
 
-    // TODO: confirm this is clearing stealth data.
     stealth.unlink(height);
     blocks.unlink(height);
 
