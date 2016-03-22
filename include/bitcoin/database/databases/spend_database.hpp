@@ -21,6 +21,7 @@
 #define LIBBITCOIN_DATABASE_SPEND_DATABASE_HPP
 
 #include <cstddef>
+#include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
@@ -45,7 +46,8 @@ struct BCD_API spend_statinfo
 class BCD_API spend_database
 {
 public:
-    spend_database(const boost::filesystem::path& filename);
+    spend_database(const boost::filesystem::path& filename,
+        std::shared_ptr<shared_mutex> mutex=nullptr);
 
     /// Initialize a new spend database.
     void create();

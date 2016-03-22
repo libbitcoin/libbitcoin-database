@@ -128,6 +128,12 @@ memory_map::memory_map(const path& filename)
         log::info(LOG_DATABASE) << "Mapping: " << filename_;
 }
 
+memory_map::memory_map(const path& filename, mutex_ptr mutex)
+  : memory_map(filename)
+{
+    external_mutex_ = mutex;
+}
+
 memory_map::~memory_map()
 {
     stop();
@@ -135,9 +141,9 @@ memory_map::~memory_map()
 
 bool memory_map::stopped() const
 {
-    // Critical Section
+    // Critical Section (internal)
     ///////////////////////////////////////////////////////////////////////////
-    REMAP_READ(mutex_);
+    REMAP_READ(internal_mutex_);
 
     return stopped_;
     ///////////////////////////////////////////////////////////////////////////
@@ -145,9 +151,9 @@ bool memory_map::stopped() const
 
 bool memory_map::stop()
 {
-    // Critical Section
+    // Critical Section (internal)
     ///////////////////////////////////////////////////////////////////////////
-    REMAP_WRITE(mutex_);
+    REMAP_WRITE(internal_mutex_);
 
     if (stopped_)
         return true;
@@ -173,9 +179,9 @@ bool memory_map::stop()
 
 size_t memory_map::size() const
 {
-    // Critical Section
+    // Critical Section (internal)
     ///////////////////////////////////////////////////////////////////////////
-    REMAP_READ(mutex_);
+    REMAP_READ(internal_mutex_);
 
     return file_size_;
     ///////////////////////////////////////////////////////////////////////////
@@ -183,7 +189,7 @@ size_t memory_map::size() const
 
 memory_ptr memory_map::access()
 {
-    return REMAP_ACCESSOR(data_, mutex_);
+    return REMAP_ACCESSOR(data_, internal_mutex_);
 }
 
 memory_ptr memory_map::resize(size_t size)
@@ -198,16 +204,19 @@ memory_ptr memory_map::reserve(size_t size)
 
 memory_ptr memory_map::reserve(size_t size, size_t expansion)
 {
-    // Critical Section
+    // Critical Section (internal)
     ///////////////////////////////////////////////////////////////////////////
-    const auto memory = REMAP_ALLOCATOR(mutex_);
+    const auto memory = REMAP_ALLOCATOR(internal_mutex_);
 
     if (size > file_size_)
     {
         const auto new_size = size * expansion / EXPANSION_DENOMINATOR;
 
         if (!truncate(new_size))
+        {
+            handle_error("resize", filename_);
             throw std::runtime_error("Resize failure, disk space may be low.");
+        }
     }
 
     logical_size_ = size;
@@ -252,24 +261,26 @@ bool memory_map::remap(size_t size)
 
 bool memory_map::truncate(size_t size)
 {
+    const auto message = format("Resizing: %1% [%2%]") % filename_ % size;
+    log::debug(LOG_DATABASE) << message.str();
+
+    // Critical Section (conditional/external)
+    ///////////////////////////////////////////////////////////////////////////
+    conditional_lock lock(external_mutex_);
+
 #ifndef MREMAP_MAYMOVE
     if (!unmap())
         return false;
 #endif
 
-    const auto message = format("Resizing: %1% [%2%]") % filename_ % size;
-    log::debug(LOG_DATABASE) << message.str();
-
     if (ftruncate(file_handle_, size) == -1)
-    {
-        handle_error("resize", filename_);
         return false;
-    }
 
 #ifndef MREMAP_MAYMOVE
     return map(size);
 #endif
     return remap(size);
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 bool memory_map::validate(size_t size)

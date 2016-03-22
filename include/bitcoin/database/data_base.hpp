@@ -96,16 +96,6 @@ public:
     /// Throws if the chain is empty.
     chain::block pop();
 
-    // Query engines.
-    // ------------------------------------------------------------------------
-
-    /// Individual database query engines.
-    block_database blocks;
-    history_database history;
-    spend_database spends;
-    stealth_database stealth;
-    transaction_database transactions;
-
 protected:
     data_base(const store& paths, size_t history_height, size_t stealth_height);
     data_base(const path& prefix, size_t history_height, size_t stealth_height);
@@ -133,8 +123,23 @@ private:
     const size_t history_height_;
     const size_t stealth_height_;
 
+    // Atomic counter for implementing the sequential lock pattern.
     sequential_lock sequential_lock_;
+
+    // Allows us to restrict database access to our process (or fail).
     std::shared_ptr<file_lock> file_lock_;
+
+    // Cross-database mutext to prevent concurrent file remapping.
+    std::shared_ptr<shared_mutex> mutex_;
+
+public:
+
+    /// Individual database query engines.
+    block_database blocks;
+    history_database history;
+    spend_database spends;
+    stealth_database stealth;
+    transaction_database transactions;
 };
 
 } // namespace database

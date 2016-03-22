@@ -239,6 +239,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
 
     auto settings = database::settings::mainnet;
     settings.directory = { DIRECTORY };
+    settings.stealth_start_height = 0;
 
     const auto block0 = chain::block::genesis_mainnet();
     boost::filesystem::create_directory(settings.directory);

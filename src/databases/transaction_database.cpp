@@ -21,6 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -35,8 +36,9 @@ BC_CONSTEXPR size_t number_buckets = 100000000;
 BC_CONSTEXPR size_t header_size = slab_hash_table_header_size(number_buckets);
 BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_slabs_size;
 
-transaction_database::transaction_database(const path& map_filename)
-  : lookup_file_(map_filename), 
+transaction_database::transaction_database(const path& map_filename,
+    std::shared_ptr<shared_mutex> mutex)
+  : lookup_file_(map_filename, mutex), 
     lookup_header_(lookup_file_, number_buckets),
     lookup_manager_(lookup_file_, header_size),
     lookup_map_(lookup_header_, lookup_manager_)

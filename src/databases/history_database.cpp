@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -43,12 +44,12 @@ BC_CONSTEXPR size_t value_size = 1 + 36 + 4 + 8;
 BC_CONSTEXPR size_t row_record_size = hash_table_record_size<hash_digest>(value_size);
 
 history_database::history_database(const path& lookup_filename,
-    const path& rows_filename)
-  : lookup_file_(lookup_filename), 
+    const path& rows_filename, std::shared_ptr<shared_mutex> mutex)
+  : lookup_file_(lookup_filename, mutex), 
     lookup_header_(lookup_file_, number_buckets),
     lookup_manager_(lookup_file_, header_size, record_size),
     lookup_map_(lookup_header_, lookup_manager_),
-    rows_file_(rows_filename), 
+    rows_file_(rows_filename, mutex),
     rows_manager_(rows_file_, 0, row_record_size),
     rows_list_(rows_manager_),
     rows_multimap_(lookup_map_, rows_list_)

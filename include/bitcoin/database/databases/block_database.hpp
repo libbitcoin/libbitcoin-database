@@ -20,6 +20,7 @@
 #ifndef LIBBITCOIN_DATABASE_BLOCK_DATABASE_HPP
 #define LIBBITCOIN_DATABASE_BLOCK_DATABASE_HPP
 
+#include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
@@ -37,7 +38,8 @@ class BCD_API block_database
 {
 public:
     block_database(const boost::filesystem::path& map_filename,
-        const boost::filesystem::path& index_filename);
+        const boost::filesystem::path& index_filename,
+        std::shared_ptr<shared_mutex> mutex=nullptr);
 
     /// Initialize a new transaction database.
     void create();

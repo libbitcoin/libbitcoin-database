@@ -21,6 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -38,10 +39,10 @@ constexpr size_t prefix_size = sizeof(uint32_t);
 constexpr size_t row_size = prefix_size + 2 * hash_size + short_hash_size;
 
 stealth_database::stealth_database(const path& index_filename,
-    const path& rows_filename)
-  : index_file_(index_filename),
+    const path& rows_filename, std::shared_ptr<shared_mutex> mutex)
+  : index_file_(index_filename, mutex),
     index_manager_(index_file_, 0, sizeof(array_index)),
-    rows_file_(rows_filename),
+    rows_file_(rows_filename, mutex),
     rows_manager_(rows_file_, 0, row_size)
 {
 }
@@ -121,8 +122,8 @@ void stealth_database::store(uint32_t prefix, const stealth_row& row)
 
 void stealth_database::unlink(size_t from_height)
 {
-    BITCOIN_ASSERT(index_manager_.count() > from_height);
-    index_manager_.set_count(from_height);
+    if (index_manager_.count() > from_height)
+        index_manager_.set_count(from_height);
 }
 
 void stealth_database::sync()
