@@ -70,9 +70,6 @@ static DWORD protect_file(const int prot)
 
 void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off)
 {
-    HANDLE mapping, handle;
-    void* map = MAP_FAILED;
-
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable: 4293)
@@ -101,8 +98,8 @@ void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off)
         return MAP_FAILED;
     }
 
-    handle = ((flags & MAP_ANONYMOUS) == 0) ? (HANDLE)_get_osfhandle(fildes) :
-        INVALID_HANDLE_VALUE;
+    const HANDLE handle = ((flags & MAP_ANONYMOUS) == 0) ? 
+        (HANDLE)_get_osfhandle(fildes) : INVALID_HANDLE_VALUE;
 
     if ((flags & MAP_ANONYMOUS) == 0 && handle == INVALID_HANDLE_VALUE)
     {
@@ -110,7 +107,8 @@ void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off)
         return MAP_FAILED;
     }
 
-    mapping = CreateFileMapping(handle, NULL, protect, max_hi, max_lo, NULL);
+    const HANDLE mapping = CreateFileMapping(handle, NULL, protect, max_hi,
+        max_lo, NULL);
 
     if (mapping == NULL)
     {
@@ -118,7 +116,7 @@ void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off)
         return MAP_FAILED;
     }
 
-    map = MapViewOfFile(mapping, access, file_hi, file_lo, len);
+    const LPVOID map = MapViewOfFile(mapping, access, file_hi, file_lo, len);
 
     // TODO: verify the mapping handle may be closed here and then use the map.
     if (map == NULL || CloseHandle(mapping) == FALSE)
@@ -142,7 +140,7 @@ int munmap(void* addr, size_t len)
 int mprotect(void* addr, size_t len, int prot)
 {
     DWORD old_protect = 0;
-    DWORD new_protect = protect_page(prot);
+    const DWORD new_protect = protect_page(prot);
 
     if (VirtualProtect(addr, len, new_protect, &old_protect) != FALSE)
         return 0;
@@ -183,7 +181,7 @@ int munlock(const void* addr, size_t len)
 // a file descriptor for the directory is also needed.
 int fsync(int fd)
 {
-    HANDLE handle = (HANDLE)(_get_osfhandle(fd));
+    const HANDLE handle = (HANDLE)(_get_osfhandle(fd));
 
     if (FlushFileBuffers(handle) != FALSE)
         return 0;
@@ -195,26 +193,24 @@ int fsync(int fd)
 /* www.gitorious.org/git-win32/mainline/source/9ae6b7513158e0b1523766c9ad4a1ad286a96e2c:win32/ftruncate.c */
 int ftruncate(int fd, oft__ size)
 {
-    HANDLE handle;
-    DWORD position;
     LARGE_INTEGER big;
 
     if (fd < 0)
         return -1;
 
-    /* guard against overflow from unsigned to signed */
+    // guard against overflow from unsigned to signed
     if (size >= MAXINT64)
         return -1;
 
-    /* unsigned to signed, splits to high and low */
+    // unsigned to signed, splits to high and low
     big.QuadPart = (LONGLONG)size;
 
-    handle = (HANDLE)_get_osfhandle(fd);
-    position = SetFilePointer(handle, big.LowPart, &big.HighPart, FILE_BEGIN);
+    const HANDLE handle = (HANDLE)_get_osfhandle(fd);
+    const position = SetFilePointerEx(handle, big, NULL, FILE_BEGIN);
 
     if (position == INVALID_SET_FILE_POINTER || SetEndOfFile(handle) == FALSE)
     {
-        DWORD error = GetLastError();
+        const DWORD error = GetLastError();
 
         switch (error)
         {
