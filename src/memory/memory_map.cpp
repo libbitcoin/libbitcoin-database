@@ -278,8 +278,9 @@ bool memory_map::truncate(size_t size)
 
 #ifndef MREMAP_MAYMOVE
     return map(size);
-#endif
+#else
     return remap(size);
+#endif
     ///////////////////////////////////////////////////////////////////////////
 }
 
