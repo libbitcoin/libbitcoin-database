@@ -21,6 +21,7 @@
 #define LIBBITCOIN_DATABASE_STEALTH_DATABASE_HPP
 
 #include <cstdint>
+#include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -36,7 +37,8 @@ public:
     typedef std::function<void(memory_ptr)> write_function;
 
     stealth_database(const boost::filesystem::path& index_filename,
-        const boost::filesystem::path& rows_filename);
+        const boost::filesystem::path& rows_filename,
+        std::shared_ptr<shared_mutex> mutex=nullptr);
 
     /// Initialize a new stealth database.
     void create();

@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -47,12 +48,12 @@ BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_slabs_size;
 //  [ [    ...     ] ]
 
 block_database::block_database(const path& map_filename,
-    const path& index_filename)
-  : lookup_file_(map_filename), 
+    const path& index_filename, std::shared_ptr<shared_mutex> mutex)
+  : lookup_file_(map_filename, mutex), 
     lookup_header_(lookup_file_, number_buckets),
     lookup_manager_(lookup_file_, header_size),
     lookup_map_(lookup_header_, lookup_manager_),
-    index_file_(index_filename),
+    index_file_(index_filename, mutex),
     index_manager_(index_file_, 0, sizeof(file_offset))
 {
     BITCOIN_ASSERT(REMAP_ADDRESS(lookup_file_.access()) != nullptr);
@@ -133,7 +134,8 @@ void block_database::store(const block& block, size_t height)
 
 void block_database::unlink(const size_t from_height)
 {
-    index_manager_.set_count(from_height);
+    if (index_manager_.count() > from_height)
+        index_manager_.set_count(from_height);
 }
 
 void block_database::sync()

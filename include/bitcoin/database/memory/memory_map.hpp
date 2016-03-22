@@ -25,6 +25,7 @@
 #endif
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
@@ -39,7 +40,9 @@ namespace database {
 class BCD_API memory_map
 {
 public:
+    typedef std::shared_ptr<shared_mutex> mutex_ptr;
     memory_map(const boost::filesystem::path& filename);
+    memory_map(const boost::filesystem::path& filename, mutex_ptr mutex);
     ~memory_map();
 
     /// This class is not copyable.
@@ -66,7 +69,13 @@ private:
     bool truncate(size_t size);
     bool validate(size_t size);
 
-    mutable shared_mutex mutex_;
+    // Optionally guard against concurrent remap.
+    mutex_ptr external_mutex_;
+
+    // Guard against read/write during file remap.
+    mutable shared_mutex internal_mutex_;
+
+    // File system.
     const boost::filesystem::path filename_;
     const int file_handle_;
 

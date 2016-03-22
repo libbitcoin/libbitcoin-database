@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -55,8 +56,9 @@ static hash_digest output_to_hash(const chain::output_point& output)
     return sha256_hash(point);
 }
 
-spend_database::spend_database(const path& filename)
-  : lookup_file_(filename), 
+spend_database::spend_database(const path& filename,
+    std::shared_ptr<shared_mutex> mutex)
+  : lookup_file_(filename, mutex), 
     lookup_header_(lookup_file_, number_buckets),
     lookup_manager_(lookup_file_, header_size, record_size),
     lookup_map_(lookup_header_, lookup_manager_)

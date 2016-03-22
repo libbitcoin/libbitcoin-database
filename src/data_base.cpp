@@ -20,6 +20,8 @@
 #include <bitcoin/database/data_base.hpp>
 
 #include <cstdint>
+#include <cstddef>
+#include <memory>
 #include <stdexcept>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
@@ -84,8 +86,8 @@ data_base::store::store(const path& prefix)
     history_rows = prefix / "history_rows";
     stealth_rows = prefix / "stealth_rows";
 
-    // Exclusive database access resource and hard shutdown sentinel.
-    database_lock = prefix / "database_lock";
+    // Exclusive database access reserved by this process.
+    database_lock = prefix / "process_lock";
 }
 
 bool data_base::store::touch_all() const
@@ -134,15 +136,16 @@ data_base::data_base(const path& prefix, size_t history_height,
 
 data_base::data_base(const store& paths, size_t history_height,
     size_t stealth_height)
-  : blocks(paths.blocks_lookup, paths.blocks_index),
-    history(paths.history_lookup, paths.history_rows),
-    stealth(paths.stealth_index, paths.stealth_rows),
-    spends(paths.spends_lookup),
-    transactions(paths.transactions_lookup),
-    lock_file_path_(paths.database_lock),
+  : lock_file_path_(paths.database_lock),
     history_height_(history_height),
     stealth_height_(stealth_height),
-    sequential_lock_(0)
+    sequential_lock_(0),
+    mutex_(std::make_shared<shared_mutex>()),
+    blocks(paths.blocks_lookup, paths.blocks_index, mutex_),
+    history(paths.history_lookup, paths.history_rows, mutex_),
+    stealth(paths.stealth_index, paths.stealth_rows, mutex_),
+    transactions(paths.transactions_lookup, mutex_),
+    spends(paths.spends_lookup, mutex_)
 {
 }
 
@@ -154,15 +157,18 @@ data_base::data_base(const store& paths, size_t history_height,
 bool data_base::create()
 {
     blocks.create();
-    spends.create();
-    transactions.create();
     history.create();
+    spends.create();
     stealth.create();
+    transactions.create();
     return true;
 }
 
 bool data_base::start()
 {
+    // TODO: create a class to encapsulate the full file lock concept.
+    file_lock_ = std::make_shared<file_lock>(initialize_lock(lock_file_path_));
+
     // BOOST:
     // Effects: The calling thread tries to acquire exclusive ownership of the
     // mutex without waiting. If no other thread has exclusive, or sharable
@@ -171,26 +177,29 @@ bool data_base::start()
     // false. Throws: interprocess_exception on error. Note that a file lock
     // can't guarantee synchronization between threads of the same process so
     // just use file locks to synchronize threads from different processes.
-    file_lock_ = std::make_shared<file_lock>(initialize_lock(lock_file_path_));
-
     if (!file_lock_->try_lock())
         return false;
 
     const auto start_exclusive = begin_write();
     blocks.start();
-    spends.start();
-    transactions.start();
     history.start();
+    spends.start();
     stealth.start();
+    transactions.start();
     const auto end_exclusive = end_write();
+
     return start_exclusive && end_exclusive;
 }
 
 bool data_base::stop()
 {
     const auto start_exclusive = begin_write();
-    const auto result = blocks.stop() && spends.stop() &&
-        transactions.stop() && history.stop() && stealth.stop();
+    const auto result = 
+        blocks.stop() &&
+        history.stop() &&
+        spends.stop() &&
+        stealth.stop() &&
+        transactions.stop();
     const auto end_exclusive = end_write();
 
     // This should remove the lock file. This is not important for locking
@@ -220,12 +229,16 @@ bool data_base::is_write_locked(handle value)
     return (value % 2) == 1;
 }
 
+// TODO: drop a file as a write sentinel that we can use to detect uncontrolled
+// shutdown during write. Use a similar approach around initial block download.
+// Fail startup if the sentinel is detected. (file: write_lock).
 bool data_base::begin_write()
 {
     // slock is now odd.
     return is_write_locked(++sequential_lock_);
 }
 
+// TODO: clear the write sentinel.
 bool data_base::end_write()
 {
     // slock_ is now even again.
@@ -252,14 +265,9 @@ static bool is_allowed_duplicate(const header& head, size_t height)
 void data_base::synchronize()
 {
     spends.sync();
-    transactions.sync();
     history.sync();
     stealth.sync();
-
-    // ... do block header last so if there's a crash midway
-    // then on the next startup we'll try to redownload the
-    // last block and it will fail because database was left
-    // in an inconsistent state.
+    transactions.sync();
     blocks.sync();
 }
 
