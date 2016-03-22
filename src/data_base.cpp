@@ -47,7 +47,7 @@ bool data_base::touch_file(const path& file_path)
         return false;
 
     // Write one byte so file is nonzero size.
-    file.write("H", 1);
+    file.write("X", 1);
     return true;
 }
 
@@ -70,21 +70,22 @@ bool data_base::initialize(const path& prefix, const chain::block& genesis)
 
 data_base::store::store(const path& prefix)
 {
-    // Hash tables.
-    blocks_lookup = prefix / "blocks_lookup";
-    history_lookup = prefix / "history_lookup";
-    spends_lookup = prefix / "spends_lookup";
-    txs_lookup = prefix / "txs_lookup";
+    // Hash-based lookup (hash tables).
+    blocks_lookup = prefix / "block_table";
+    history_lookup = prefix / "history_table";
+    spends_lookup = prefix / "spend_table";
+    transactions_lookup = prefix / "transaction_table";
 
-    // Arrays.
-    blocks_index = prefix / "blocks_index";
+    // Height-based (reverse) lookup.
+    blocks_index = prefix / "block_index";
     stealth_index = prefix / "stealth_index";
 
-    // Lists.
+    // One (address) to many (rows).
     history_rows = prefix / "history_rows";
     stealth_rows = prefix / "stealth_rows";
 
-    db_lock = prefix / "db_lock";
+    // Exclusive database access resource and hard shutdown sentinel.
+    database_lock = prefix / "database_lock";
 }
 
 bool data_base::store::touch_all() const
@@ -97,7 +98,7 @@ bool data_base::store::touch_all() const
         touch_file(stealth_index) &&
         touch_file(stealth_rows) &&
         touch_file(spends_lookup) &&
-        touch_file(txs_lookup);
+        touch_file(transactions_lookup);
 }
 
 data_base::file_lock data_base::initialize_lock(const path& lock)
@@ -112,6 +113,11 @@ data_base::file_lock data_base::initialize_lock(const path& lock)
     // exist or there are no operating system resources. The file lock is
     // destroyed on its destruct and does not throw.
     return file_lock(lock_file_path.c_str());
+}
+
+void data_base::uninitialize_lock(const path& lock)
+{
+    boost::filesystem::remove(lock);
 }
 
 data_base::data_base(const settings& settings)
@@ -132,16 +138,16 @@ data_base::data_base(const store& paths, size_t history_height,
     history(paths.history_lookup, paths.history_rows),
     stealth(paths.stealth_index, paths.stealth_rows),
     spends(paths.spends_lookup),
-    transactions(paths.txs_lookup),
+    transactions(paths.transactions_lookup),
+    lock_file_path_(paths.database_lock),
     history_height_(history_height),
     stealth_height_(stealth_height),
-    file_lock_(initialize_lock(paths.db_lock)),
     sequential_lock_(0)
 {
 }
 
-// ----------------------------------------------------------------------------
 // Startup and shutdown.
+// ----------------------------------------------------------------------------
 
 // TODO: merge this with file creation (initialization above).
 // This is actually first initialization of existing files, not file creation.
@@ -165,7 +171,9 @@ bool data_base::start()
     // false. Throws: interprocess_exception on error. Note that a file lock
     // can't guarantee synchronization between threads of the same process so
     // just use file locks to synchronize threads from different processes.
-    if (!file_lock_.try_lock())
+    file_lock_ = std::make_shared<file_lock>(initialize_lock(lock_file_path_));
+
+    if (!file_lock_->try_lock())
         return false;
 
     const auto start_exclusive = begin_write();
@@ -184,11 +192,18 @@ bool data_base::stop()
     const auto result = blocks.stop() && spends.stop() &&
         transactions.stop() && history.stop() && stealth.stop();
     const auto end_exclusive = end_write();
+
+    // This should remove the lock file. This is not important for locking
+    // purposes, but it provides a sentinel to indicate hard shutdown.
+    file_lock_ = nullptr;
+    uninitialize_lock(lock_file_path_);
+
+    // Return the cumulative result of the database shutdowns.
     return start_exclusive && result && end_exclusive;
 }
 
-// ----------------------------------------------------------------------------
 // Locking.
+// ----------------------------------------------------------------------------
 
 handle data_base::begin_read()
 {
@@ -217,8 +232,8 @@ bool data_base::end_write()
     return !is_write_locked(++sequential_lock_);
 }
 
-// ----------------------------------------------------------------------------
 // Query engines.
+// ----------------------------------------------------------------------------
 
 static size_t get_next_height(const block_database& blocks)
 {

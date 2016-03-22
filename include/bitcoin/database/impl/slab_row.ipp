@@ -63,6 +63,7 @@ private:
 
     file_offset position_;
     slab_manager& manager_;
+    mutable shared_mutex mutex_;
 };
 
 template <typename HashType>
@@ -91,10 +92,14 @@ file_offset slab_row<HashType>::create(const HashType& key,
     const auto key_data = REMAP_ADDRESS(memory);
     auto serial = make_serializer(key_data);
     serial.write_data(key);
-    //*************************************************************************
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock(mutex_);
     serial.template write_little_endian<file_offset>(next);
-    //*************************************************************************
+
     return position_;
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 template <typename HashType>
@@ -117,9 +122,12 @@ file_offset slab_row<HashType>::next_position() const
 {
     const auto memory = raw_next_data();
     const auto next_address = REMAP_ADDRESS(memory);
-    //*************************************************************************
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    shared_lock(mutex_);
     return from_little_endian_unsafe<file_offset>(next_address);
-    //*************************************************************************
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 template <typename HashType>
@@ -127,9 +135,12 @@ void slab_row<HashType>::write_next_position(file_offset next)
 {
     const auto memory = raw_next_data();
     auto serial = make_serializer(REMAP_ADDRESS(memory));
-    //*************************************************************************
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock(mutex_);
     serial.template write_little_endian<file_offset>(next);
-    //*************************************************************************
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 template <typename HashType>

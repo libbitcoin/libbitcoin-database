@@ -22,6 +22,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <memory>
 #include <boost/filesystem.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
 #include <bitcoin/bitcoin.hpp>
@@ -49,7 +50,7 @@ public:
         store(const path& prefix);
         bool touch_all() const;
 
-        path db_lock;
+        path database_lock;
         path blocks_lookup;
         path blocks_index;
         path history_lookup;
@@ -57,7 +58,7 @@ public:
         path stealth_index;
         path stealth_rows;
         path spends_lookup;
-        path txs_lookup;
+        path transactions_lookup;
     };
 
     /// Create a new database with a given path prefix and default paths.
@@ -115,6 +116,7 @@ private:
     typedef std::atomic<size_t> sequential_lock;
     typedef boost::interprocess::file_lock file_lock;
 
+    static void uninitialize_lock(const path& lock);
     static file_lock initialize_lock(const path& lock);
 
     void synchronize();
@@ -127,11 +129,12 @@ private:
     void pop_inputs(const inputs& inputs, size_t height);
     void pop_outputs(const outputs& outputs, size_t height);
 
+    const path lock_file_path_;
     const size_t history_height_;
     const size_t stealth_height_;
 
-    file_lock file_lock_;
     sequential_lock sequential_lock_;
+    std::shared_ptr<file_lock> file_lock_;
 };
 
 } // namespace database

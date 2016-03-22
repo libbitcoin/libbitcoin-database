@@ -42,9 +42,12 @@ array_index record_multimap<HashType>::lookup(const HashType& key) const
         return records_.empty;
 
     const auto address = REMAP_ADDRESS(start_info);
-    //*************************************************************************
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock(mutex_);
     return from_little_endian_unsafe<array_index>(address);
-    //*************************************************************************
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 template <typename HashType>
@@ -68,9 +71,13 @@ void record_multimap<HashType>::add_to_list(memory_ptr start_info,
     write_function write)
 {
     const auto address = REMAP_ADDRESS(start_info);
-    //*************************************************************************
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    mutex_.lock_shared();
     const auto old_begin = from_little_endian_unsafe<array_index>(address);
-    //*************************************************************************
+    mutex_.unlock_shared();
+    ///////////////////////////////////////////////////////////////////////////
 
     const auto new_begin = records_.insert(old_begin);
 
@@ -78,9 +85,12 @@ void record_multimap<HashType>::add_to_list(memory_ptr start_info,
     write(records_.get(new_begin));
 
     auto serial = make_serializer(address);
-    //*************************************************************************
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock(mutex_);
     serial.template write_little_endian<array_index>(new_begin);
-    //*************************************************************************
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 template <typename HashType>
@@ -90,9 +100,13 @@ void record_multimap<HashType>::delete_last_row(const HashType& key)
     BITCOIN_ASSERT_MSG(start_info, "The row to delete was not found.");
 
     auto address = REMAP_ADDRESS(start_info);
-    //*************************************************************************
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    mutex_.lock_shared();
     const auto old_begin = from_little_endian_unsafe<array_index>(address);
-    //*************************************************************************
+    mutex_.unlock_shared();
+    ///////////////////////////////////////////////////////////////////////////
 
     BITCOIN_ASSERT(old_begin != records_.empty);
     const auto new_begin = records_.next(old_begin);
@@ -108,9 +122,12 @@ void record_multimap<HashType>::delete_last_row(const HashType& key)
     }
 
     auto serial = make_serializer(address);
-    //*************************************************************************
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock(mutex_);
     serial.template write_little_endian<array_index>(new_begin);
-    //*************************************************************************
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 template <typename HashType>
@@ -120,12 +137,15 @@ void record_multimap<HashType>::create_new(const HashType& key,
     const auto first = records_.create();
     write(records_.get(first));
 
-    const auto write_start_info = [first](memory_ptr data)
+    const auto write_start_info = [this, first](memory_ptr data)
     {
         auto serial = make_serializer(REMAP_ADDRESS(data));
-        //*********************************************************************
+
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////////
+        unique_lock(mutex_);
         serial.template write_little_endian<array_index>(first);
-        //*********************************************************************
+        ///////////////////////////////////////////////////////////////////////////
     };
     map_.store(key, write_start_info);
 }
