@@ -13,8 +13,7 @@
     #define FILE_MAP_EXECUTE 0x0020
 #endif
 
-// ----------------------------------------------------------------------------
-// private functions
+/* private functions */
 
 static int error(const DWORD err, const int deferr)
 {
@@ -65,8 +64,7 @@ static DWORD protect_file(const int prot)
     return desired_access;
 }
 
-// ----------------------------------------------------------------------------
-// public interface
+/* public interface */
 
 void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off)
 {
@@ -118,7 +116,7 @@ void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off)
 
     const LPVOID map = MapViewOfFile(mapping, access, file_hi, file_lo, len);
 
-    // TODO: verify the mapping handle may be closed here and then use the map.
+    /* TODO: verify mapping handle may be closed here and then use the map. */
     if (map == NULL || CloseHandle(mapping) == FALSE)
     {
         errno = error(GetLastError(), EPERM);
@@ -176,9 +174,9 @@ int munlock(const void* addr, size_t len)
     return -1;
 }
 
-// Calling fsync() does not necessarily ensure that the entry in the directory
-// containing the file has also reached disk. For that an explicit fsync() on
-// a file descriptor for the directory is also needed.
+/* Calling fsync() does not necessarily ensure that the entry in the directory
+   containing the file has also reached disk. For that an explicit fsync() on
+   a file descriptor for the directory is also needed. */
 int fsync(int fd)
 {
     const HANDLE handle = (HANDLE)(_get_osfhandle(fd));
@@ -198,11 +196,11 @@ int ftruncate(int fd, oft__ size)
     if (fd < 0)
         return -1;
 
-    // guard against overflow from unsigned to signed
+    /* guard against overflow from unsigned to signed */
     if (size >= MAXINT64)
         return -1;
 
-    // unsigned to signed, splits to high and low
+    /* unsigned to signed, splits to high and low */
     big.QuadPart = (LONGLONG)size;
 
     const HANDLE handle = (HANDLE)_get_osfhandle(fd);
