@@ -134,6 +134,9 @@ memory_map::memory_map(const path& filename, mutex_ptr mutex)
     external_mutex_ = mutex;
 }
 
+// The database must be kept in scope until all of its references are cleared.
+// To guard against this we should derive this from shared_from_base and
+// capture a shared_from_this reference in the memory instances.
 memory_map::~memory_map()
 {
     stop();
@@ -278,8 +281,9 @@ bool memory_map::truncate(size_t size)
 
 #ifndef MREMAP_MAYMOVE
     return map(size);
-#endif
+#else
     return remap(size);
+#endif
     ///////////////////////////////////////////////////////////////////////////
 }
 
