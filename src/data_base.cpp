@@ -287,17 +287,17 @@ void data_base::push(const block& block, uint64_t height)
             continue;
 
         const auto& tx = block.transactions[index];
-        const auto tx_hash = tx.hash();
+        ////const auto tx_hash = tx.hash();
 
-        // Add inputs
-        if (!tx.is_coinbase())
-            push_inputs(tx_hash, height, tx.inputs);
+        ////// Add inputs
+        ////if (!tx.is_coinbase())
+        ////    push_inputs(tx_hash, height, tx.inputs);
 
-        // Add outputs
-        push_outputs(tx_hash, height, tx.outputs);
+        ////// Add outputs
+        ////push_outputs(tx_hash, height, tx.outputs);
 
-        // Add stealth outputs
-        push_stealth(tx_hash, height, tx.outputs);
+        ////// Add stealth outputs
+        ////push_stealth(tx_hash, height, tx.outputs);
 
         // Add transaction
         transactions.store(height, index, tx);
