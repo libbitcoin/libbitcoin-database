@@ -27,12 +27,12 @@
 namespace libbitcoin {
 namespace database {
 
-/// Common database configuration settings, thread safe.
-struct BCD_API settings
+/// Common database configuration settings, properties not thread safe.
+class BCD_API settings
 {
-    /// Default instances.
-    static const settings mainnet;
-    static const settings testnet;
+public:
+    settings();
+    settings(bc::settings context);
 
     /// Properties.
     uint32_t history_start_height;

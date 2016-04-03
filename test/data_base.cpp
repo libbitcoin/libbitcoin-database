@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
 {
     std::cout << "begin data_base pushpop test" << std::endl;
 
-    auto settings = database::settings::mainnet;
+    database::settings settings;
     settings.directory = { DIRECTORY };
     settings.stealth_start_height = 0;
 

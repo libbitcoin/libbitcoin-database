@@ -26,25 +26,38 @@ namespace database {
 
 using namespace boost::filesystem;
 
-static const settings mainnet_defaults()
+settings::settings()
+  : history_start_height(0),
+    stealth_start_height(0),
+    directory("database")
 {
-    settings value;
-    value.history_start_height = 0;
-    value.stealth_start_height = 350000;
-    value.directory = { "mainnet" };
-    return value;
 }
 
-static const settings testnet_defaults()
+settings::settings(bc::settings context)
+  : settings()
 {
-    auto value = mainnet_defaults();
-    value.stealth_start_height = 500000;
-    value.directory = { "testnet" };
-    return value;
-}
+    switch (context)
+    {
+        case bc::settings::mainnet:
+        {
+            stealth_start_height = 350000;
+            directory = { "mainnet" };
+            break;
+        }
 
-const settings settings::mainnet = mainnet_defaults();
-const settings settings::testnet = testnet_defaults();
+        case bc::settings::testnet:
+        {
+            stealth_start_height = 500000;
+            directory = { "testnet" };
+            break;
+        }
+
+        default:
+        case bc::settings::none:
+        {
+        }
+    }
+}
 
 } // namespace database
 } // namespace libbitcoin
