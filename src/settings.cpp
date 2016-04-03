@@ -29,7 +29,7 @@ using namespace boost::filesystem;
 settings::settings()
   : history_start_height(0),
     stealth_start_height(0),
-    directory({ "database" })
+    directory("database")
 {
 }
 
