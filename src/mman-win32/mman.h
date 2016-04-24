@@ -35,8 +35,12 @@ extern "C" {
 #define MS_SYNC         2
 #define MS_INVALIDATE   4
 
+/* Flags for madvise (stub). */
+#define MADV_RANDOM     0
+
 void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off);
 int munmap(void* addr, size_t len);
+int madvise(void* addr, size_t len, int advice);
 int mprotect(void* addr, size_t len, int prot);
 int msync(void* addr, size_t len, int flags);
 int mlock(const void* addr, size_t len);

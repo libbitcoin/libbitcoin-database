@@ -39,7 +39,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <boost/filesystem.hpp>
-#include <boost/format.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/allocator.hpp>
@@ -52,7 +51,6 @@ static_assert(sizeof(void*) == sizeof(uint64_t), "Not a 64 bit system!");
 namespace libbitcoin {
 namespace database {
 
-using boost::format;
 using boost::filesystem::path;
 
 #define EXPANSION_NUMERATOR 150
@@ -100,17 +98,18 @@ int memory_map::open_file(const path& filename)
 
 bool memory_map::handle_error(const char* context, const path& filename)
 {
-    static const auto form = "The file failed to %1%: %2% error: %3%";
 #ifdef _WIN32
     const auto error = GetLastError();
 #else
     const auto error = errno;
 #endif
-    const auto message = format(form) % context % filename % error;
-    log::fatal(LOG_DATABASE) << message.str();
+    log::fatal(LOG_DATABASE)
+        << "The file failed to " << context << ": "
+        << filename << " : " << error;
     return false;
 }
 
+// mmap documentation: tinyurl.com/hnbw8t5
 memory_map::memory_map(const path& filename)
   : filename_(filename),
     stopped_(false),
@@ -124,8 +123,12 @@ memory_map::memory_map(const path& filename)
 
     if (stopped_)
         handle_error("map", filename_);
+    else if (madvise(data_, 0, MADV_RANDOM) == -1)
+        handle_error("advise", filename_);
     else
-        log::info(LOG_DATABASE) << "Mapping: " << filename_;
+        log::info(LOG_DATABASE)
+            << "Mapping: " << filename_ << " [" << file_size_ << "] ("
+            << page() << ")";
 }
 
 memory_map::memory_map(const path& filename, mutex_ptr mutex)
@@ -162,7 +165,11 @@ bool memory_map::stop()
         return true;
 
     stopped_ = true;
-    log::info(LOG_DATABASE) << "Unmapping: " << filename_;
+    log::info(LOG_DATABASE)
+        << "Unmapping: " << filename_ << " [" << logical_size_ << "]";
+
+    if (msync(data_, logical_size_, MS_SYNC) == -1)
+        return handle_error("msync", filename_);
 
     if (munmap(data_, file_size_) == -1)
         return handle_error("munmap", filename_);
@@ -231,9 +238,28 @@ memory_ptr memory_map::reserve(size_t size, size_t expansion)
 
 // privates
 
+size_t memory_map::page()
+{
+#ifdef _WIN32
+    SYSTEM_INFO configuration;
+    GetSystemInfo(&configuration);
+    return configuration.dwPageSize;
+#else
+    errno = 0;
+    const auto page_size = sysconf(_SC_PAGESIZE);
+
+    // -1 is both a return code and a potentially valid value, so use errno.
+    if (errno != 0)
+        handle_error("sysconf", filename_);
+
+    BITCOIN_ASSERT(page_size <= max_size_t);
+    return static_cast<size_t>(page_size == -1 ? 0 : page_size);
+#endif
+}
+
 bool memory_map::unmap()
 {
-    bool success = (munmap(data_, file_size_) != -1);
+    const auto success = (munmap(data_, file_size_) != -1);
     file_size_ = 0;
     data_ = nullptr;
     return success;
@@ -264,8 +290,8 @@ bool memory_map::remap(size_t size)
 
 bool memory_map::truncate(size_t size)
 {
-    const auto message = format("Resizing: %1% [%2%]") % filename_ % size;
-    log::debug(LOG_DATABASE) << message.str();
+    log::debug(LOG_DATABASE)
+        << "Resizing: " << filename_ << " [" << size << "]";
 
     // Critical Section (conditional/external)
     ///////////////////////////////////////////////////////////////////////////
