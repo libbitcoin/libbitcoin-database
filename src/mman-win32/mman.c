@@ -135,6 +135,12 @@ int munmap(void* addr, size_t len)
     return -1;
 }
 
+int madvise(void* addr, size_t len, int advice)
+{
+    /* Not implemented. */
+    return 0;
+}
+
 int mprotect(void* addr, size_t len, int prot)
 {
     DWORD old_protect = 0;

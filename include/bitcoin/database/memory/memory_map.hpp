@@ -63,6 +63,7 @@ private:
     static bool handle_error(const char* context,
         const boost::filesystem::path& filename);
 
+    size_t page();
     bool unmap();
     bool map(size_t size);
     bool remap(size_t new_size);
