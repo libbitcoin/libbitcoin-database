@@ -119,6 +119,7 @@ data_base::file_lock data_base::initialize_lock(const path& lock)
 
 void data_base::uninitialize_lock(const path& lock)
 {
+    // BUGBUG: Throws if the lock is not held (i.e. in error condition).
     boost::filesystem::remove(lock);
 }
 
