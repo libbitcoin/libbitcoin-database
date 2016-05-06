@@ -20,6 +20,8 @@
 #ifndef LIBBITCOIN_DATABASE_BLOCK_DATABASE_HPP
 #define LIBBITCOIN_DATABASE_BLOCK_DATABASE_HPP
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
@@ -78,10 +80,10 @@ public:
 private:
     typedef slab_hash_table<hash_digest> slab_map;
 
-    /// Write position of tx.
-    void write_position(const file_offset position);
+    /// Write block hash table position into the block index.
+    void write_position(const file_offset position, uint32_t height);
 
-    /// Use intermediate records table to find blk position from height.
+    /// Use block index to get block hasjh table position from height.
     file_offset read_position(const array_index index) const;
 
     /// Hash table used for looking up blocks by hash.

@@ -126,10 +126,12 @@ void block_database::store(const block& block, size_t height)
 
     const auto key = block.header.hash();
     const auto value_size = 80 + 4 + 4 + tx_count * hash_size;
+
+    // Write block header, height, tx count and hashes to hash table.
     const auto position = lookup_map_.store(key, write, value_size);
 
-    // Write height -> position mapping.
-    write_position(position);
+    // Write block height to hash table position mapping to block index.
+    write_position(position, height32);
 }
 
 void block_database::unlink(const size_t from_height)
@@ -144,19 +146,27 @@ void block_database::sync()
     index_manager_.sync();
 }
 
+// This reflects the index of the highest synchronized block.
 bool block_database::top(size_t& out_height) const
 {
-    if (index_manager_.count() == 0)
+    const auto count = index_manager_.count();
+    if (count == 0)
         return false;
 
-    out_height = index_manager_.count() - 1;
+    out_height = count - 1;
     return true;
 }
 
-// Read/write of this value protected by sync.
-void block_database::write_position(const file_offset position)
+// Atomicity of thw written value is protected by sync.
+void block_database::write_position(const file_offset position,
+    array_index index)
 {
-    const auto index = index_manager_.new_records(1);
+    const auto count = index_manager_.count();
+
+    // The return value is the first record, but we want the last (index).
+    if (index >= count)
+        /* array_index*/ index_manager_.new_records(index - count + 1);
+
     const auto memory = index_manager_.get(index);
     auto serial = make_serializer(REMAP_ADDRESS(memory));
     serial.write_8_bytes_little_endian(position);
