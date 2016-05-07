@@ -134,7 +134,7 @@ void block_database::store(const block& block, size_t height)
     write_position(position, height32);
 }
 
-void block_database::unlink(const size_t from_height)
+void block_database::unlink(size_t from_height)
 {
     if (index_manager_.count() > from_height)
         index_manager_.set_count(from_height);
@@ -146,6 +146,28 @@ void block_database::sync()
     index_manager_.sync();
 }
 
+// Atomicity of the written value is protected by sync.
+void block_database::write_position(file_offset position,
+    array_index height)
+{
+    const auto count = index_manager_.count();
+
+    // The return value is the first record, but we want the last (index).
+    if (height >= count)
+        /* array_index*/ index_manager_.new_records(height - count + 1);
+
+    const auto memory = index_manager_.get(height);
+    auto serial = make_serializer(REMAP_ADDRESS(memory));
+    serial.write_8_bytes_little_endian(position);
+}
+
+file_offset block_database::read_position(array_index height) const
+{
+    const auto memory = index_manager_.get(height);
+    const auto address = REMAP_ADDRESS(memory);
+    return from_little_endian_unsafe<file_offset>(address);
+}
+
 // This reflects the index of the highest synchronized block.
 bool block_database::top(size_t& out_height) const
 {
@@ -155,28 +177,6 @@ bool block_database::top(size_t& out_height) const
 
     out_height = count - 1;
     return true;
-}
-
-// Atomicity of thw written value is protected by sync.
-void block_database::write_position(const file_offset position,
-    array_index index)
-{
-    const auto count = index_manager_.count();
-
-    // The return value is the first record, but we want the last (index).
-    if (index >= count)
-        /* array_index*/ index_manager_.new_records(index - count + 1);
-
-    const auto memory = index_manager_.get(index);
-    auto serial = make_serializer(REMAP_ADDRESS(memory));
-    serial.write_8_bytes_little_endian(position);
-}
-
-file_offset block_database::read_position(const array_index index) const
-{
-    const auto memory = index_manager_.get(index);
-    const auto address = REMAP_ADDRESS(memory);
-    return from_little_endian_unsafe<file_offset>(address);
 }
 
 } // namespace database

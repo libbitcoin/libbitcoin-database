@@ -36,8 +36,7 @@ class BCD_API stealth_database
 public:
     typedef std::function<void(memory_ptr)> write_function;
 
-    stealth_database(const boost::filesystem::path& index_filename,
-        const boost::filesystem::path& rows_filename,
+    stealth_database(const boost::filesystem::path& rows_filename,
         std::shared_ptr<shared_mutex> mutex=nullptr);
 
     /// Initialize a new stealth database.
@@ -49,13 +48,14 @@ public:
     /// Call stop to unload the memory map.
     bool stop();
 
-    /// Linearly scan all entries starting at from_height.
+    /// Linearly scan all entries, discarding those after from_height.
     chain::stealth scan(const binary& filter, size_t from_height) const;
 
     /// Add a stealth row to the database.
-    void store(uint32_t prefix, const chain::stealth_row& row);
+    void store(uint32_t prefix, uint32_t height,
+        const chain::stealth_row& row);
 
-    /// Delete all rows after and including from_height.
+    /// Delete all rows after and including from_height (no implemented).
     void unlink(size_t from_height);
 
     /// Synchronise storage with disk so things are consistent.
@@ -66,14 +66,7 @@ private:
     void write_index();
     array_index read_index(size_t from_height) const;
 
-    array_index row_count_;
-
-    // Table used for jumping to rows by height.
-    // Resolves to a index within the rows.
-    memory_map index_file_;
-    record_manager index_manager_;
-
-    // Actual row entries containing stealth tx data.
+    // Row entries containing stealth tx data.
     memory_map rows_file_;
     record_manager rows_manager_;
 };

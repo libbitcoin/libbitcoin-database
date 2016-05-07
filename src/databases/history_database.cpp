@@ -173,6 +173,7 @@ history history_database::get(const short_hash& key, size_t limit,
             result.emplace_back(read_row(address));
     }
 
+    // TODO: we could sort result here.
     return result;
 }
 
