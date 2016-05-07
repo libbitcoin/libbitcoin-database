@@ -65,7 +65,7 @@ public:
     void store(const chain::block& block, size_t height);
 
     /// Unlink all blocks upwards from (and including) from_height.
-    void unlink(const size_t from_height);
+    void unlink(size_t from_height);
 
     /// Synchronise storage with disk so things are consistent.
     /// Should be done at the end of every block write.
@@ -81,10 +81,10 @@ private:
     typedef slab_hash_table<hash_digest> slab_map;
 
     /// Write block hash table position into the block index.
-    void write_position(const file_offset position, uint32_t height);
+    void write_position(file_offset position, array_index height);
 
-    /// Use block index to get block hasjh table position from height.
-    file_offset read_position(const array_index index) const;
+    /// Use block index to get block hash table position from height.
+    file_offset read_position(array_index height) const;
 
     /// Hash table used for looking up blocks by hash.
     memory_map lookup_file_;
