@@ -69,7 +69,7 @@ stealth stealth_database::scan(const binary& filter, size_t from_height) const
 {
     stealth result;
 
-    for (auto row = 0; row < rows_manager_.count(); ++row)
+    for (array_index row = 0; row < rows_manager_.count(); ++row)
     {
         const auto memory = rows_manager_.get(row);
         auto record = REMAP_ADDRESS(memory);
