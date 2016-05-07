@@ -55,7 +55,6 @@ public:
         path blocks_index;
         path history_lookup;
         path history_rows;
-        path stealth_index;
         path stealth_rows;
         path spends_lookup;
         path transactions_lookup;

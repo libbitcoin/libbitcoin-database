@@ -80,7 +80,6 @@ data_base::store::store(const path& prefix)
 
     // Height-based (reverse) lookup.
     blocks_index = prefix / "block_index";
-    stealth_index = prefix / "stealth_index";
 
     // One (address) to many (rows).
     history_rows = prefix / "history_rows";
@@ -97,7 +96,6 @@ bool data_base::store::touch_all() const
         touch_file(blocks_index) &&
         touch_file(history_lookup) &&
         touch_file(history_rows) &&
-        touch_file(stealth_index) &&
         touch_file(stealth_rows) &&
         touch_file(spends_lookup) &&
         touch_file(transactions_lookup);
@@ -144,9 +142,9 @@ data_base::data_base(const store& paths, size_t history_height,
     mutex_(std::make_shared<shared_mutex>()),
     blocks(paths.blocks_lookup, paths.blocks_index, mutex_),
     history(paths.history_lookup, paths.history_rows, mutex_),
-    stealth(paths.stealth_index, paths.stealth_rows, mutex_),
-    transactions(paths.transactions_lookup, mutex_),
-    spends(paths.spends_lookup, mutex_)
+    stealth(paths.stealth_rows, mutex_),
+    spends(paths.spends_lookup, mutex_),
+    transactions(paths.transactions_lookup, mutex_)
 {
 }
 
@@ -392,7 +390,7 @@ void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
             tx_hash
         };
 
-        stealth.store(prefix, row);
+        stealth.store(prefix, height, row);
     }
 }
 
@@ -438,6 +436,7 @@ chain::block data_base::pop()
         block.transactions.push_back(tx);
     }
 
+    // Stealth unlike is not implemented.
     stealth.unlink(height);
     blocks.unlink(height);
 
