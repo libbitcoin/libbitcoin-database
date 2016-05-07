@@ -61,13 +61,11 @@ public:
     /// Call stop to unload the memory map.
     bool stop();
 
-    /// Add another row value to the key. If key doesn't exist then
-    /// it will be created.
+    /// Add a row value to the key. If key doesn't exist it will be created.
     void add_output(const short_hash& key, const chain::output_point& outpoint,
         const uint32_t output_height, uint64_t value);
 
-    /// Add another row value to the key. If key doesn't exist then
-    /// it will be created.
+    /// Add a row value to the key. If key doesn't exist it will be created.
     void add_spend(const short_hash& key, const chain::output_point& previous,
         const chain::input_point& spend, size_t spend_height);
 
