@@ -80,13 +80,26 @@ bool history_database::stop()
     return lookup_file_.stop() && rows_file_.stop();
 }
 
+// Each row contains a start byte which signals output or input.
+inline uint8_t kind_to_marker(point_kind kind)
+{
+    return kind == point_kind::output ? 0 : 1;
+}
+
+// Each row contains a start byte which signals output or input.
+inline point_kind marker_to_kind(uint8_t marker)
+{
+    BITCOIN_ASSERT(marker == 0 || marker == 1);
+    return marker == 0 ? point_kind::output : point_kind::spend;
+}
+
 void history_database::add_output(const short_hash& key,
     const output_point& outpoint, uint32_t output_height, uint64_t value)
 {
     auto write = [&](memory_ptr data)
     {
         auto serial = make_serializer(REMAP_ADDRESS(data));
-        serial.write_byte(0);
+        serial.write_byte(kind_to_marker(point_kind::output));
         auto raw_outpoint = outpoint.to_data();
         serial.write_data(raw_outpoint);
         serial.write_4_bytes_little_endian(output_height);
@@ -95,17 +108,17 @@ void history_database::add_output(const short_hash& key,
     rows_multimap_.add_row(key, write);
 }
 
-void history_database::add_spend(const short_hash& key,
-    const output_point& previous, const input_point& spend,
-    size_t spend_height)
+void history_database::add_input(const short_hash& key,
+    const output_point& previous, const input_point& input,
+    size_t input_height)
 {
     auto write = [&](memory_ptr data)
     {
         auto serial = make_serializer(REMAP_ADDRESS(data));
-        serial.write_byte(1);
-        auto raw_spend = spend.to_data();
+        serial.write_byte(kind_to_marker(point_kind::spend));
+        auto raw_spend = input.to_data();
         serial.write_data(raw_spend);
-        serial.write_4_bytes_little_endian(spend_height);
+        serial.write_4_bytes_little_endian(input_height);
         serial.write_8_bytes_little_endian(previous.checksum());
     };
     rows_multimap_.add_row(key, write);
@@ -114,13 +127,6 @@ void history_database::add_spend(const short_hash& key,
 void history_database::delete_last_row(const short_hash& key)
 {
     rows_multimap_.delete_last_row(key);
-}
-
-// Each row contains a start byte which signals output or a spend.
-inline point_kind marker_to_kind(uint8_t marker)
-{
-    BITCOIN_ASSERT(marker == 0 || marker == 1);
-    return marker == 0 ? point_kind::output : point_kind::spend;
 }
 
 history history_database::get(const short_hash& key, size_t limit,

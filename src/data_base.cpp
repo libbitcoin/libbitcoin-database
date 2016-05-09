@@ -314,6 +314,7 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
 {
     for (uint32_t index = 0; index < inputs.size(); ++index)
     {
+        // We also push spends in the inputs loop.
         const auto& input = inputs[index];
         const chain::input_point spend{ tx_hash, index };
         spends.store(input.previous_output, spend);
@@ -326,8 +327,8 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
         if (!address)
             continue;
 
-        history.add_spend(address.hash(), input.previous_output, spend,
-            height);
+        const auto& output = input.previous_output;
+        history.add_input(address.hash(), output, spend, height);
     }
 }
 
@@ -347,8 +348,8 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
         if (!address)
             continue;
 
-        history.add_output(address.hash(), outpoint, height,
-            output.value);
+        const auto value = output.value;
+        history.add_output(address.hash(), outpoint, height, value);
     }
 }
 
