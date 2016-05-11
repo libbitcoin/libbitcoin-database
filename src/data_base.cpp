@@ -384,7 +384,7 @@ void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
         if (!address)
             continue;
 
-        const chain::stealth_row row
+        const chain::stealth_compact row
         {
             unsigned_ephemeral_key,
             address.hash(),

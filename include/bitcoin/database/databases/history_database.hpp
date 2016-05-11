@@ -72,10 +72,8 @@ public:
     /// Delete the last row that was added to key.
     void delete_last_row(const short_hash& key);
 
-    /// Gets the output points, output values, corresponding input point
-    /// spends and the block heights associated with a Bitcoin address.
-    /// The returned history is a list of rows and a stop index.
-    chain::history get(const short_hash& key, size_t limit,
+    /// Get the output and input points associated with the address hash.
+    chain::history_compact::list get(const short_hash& key, size_t limit,
         size_t from_height) const;
 
     /// Synchonise with disk.

@@ -108,8 +108,7 @@ void spend_database::store(const chain::output_point& outpoint,
     const auto write = [&spend](memory_ptr data)
     {
         auto serial = make_serializer(REMAP_ADDRESS(data));
-        auto raw_spend = spend.to_data();
-        serial.write_data(raw_spend);
+        serial.write_data(spend.to_data());
     };
 
     const auto key = output_to_hash(outpoint);

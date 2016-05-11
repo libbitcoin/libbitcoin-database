@@ -49,11 +49,12 @@ public:
     bool stop();
 
     /// Linearly scan all entries, discarding those after from_height.
-    chain::stealth scan(const binary& filter, size_t from_height) const;
+    chain::stealth_compact::list scan(const binary& filter,
+        size_t from_height) const;
 
     /// Add a stealth row to the database.
     void store(uint32_t prefix, uint32_t height,
-        const chain::stealth_row& row);
+        const chain::stealth_compact& row);
 
     /// Delete all rows after and including from_height (no implemented).
     void unlink(size_t from_height);

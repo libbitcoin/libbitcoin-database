@@ -80,28 +80,14 @@ bool history_database::stop()
     return lookup_file_.stop() && rows_file_.stop();
 }
 
-// Each row contains a start byte which signals output or input.
-inline uint8_t kind_to_marker(point_kind kind)
-{
-    return kind == point_kind::output ? 0 : 1;
-}
-
-// Each row contains a start byte which signals output or input.
-inline point_kind marker_to_kind(uint8_t marker)
-{
-    BITCOIN_ASSERT(marker == 0 || marker == 1);
-    return marker == 0 ? point_kind::output : point_kind::spend;
-}
-
 void history_database::add_output(const short_hash& key,
     const output_point& outpoint, uint32_t output_height, uint64_t value)
 {
     auto write = [&](memory_ptr data)
     {
         auto serial = make_serializer(REMAP_ADDRESS(data));
-        serial.write_byte(kind_to_marker(point_kind::output));
-        auto raw_outpoint = outpoint.to_data();
-        serial.write_data(raw_outpoint);
+        serial.write_byte(static_cast<uint8_t>(point_kind::output));
+        serial.write_data(outpoint.to_data());
         serial.write_4_bytes_little_endian(output_height);
         serial.write_8_bytes_little_endian(value);
     };
@@ -115,9 +101,8 @@ void history_database::add_input(const short_hash& key,
     auto write = [&](memory_ptr data)
     {
         auto serial = make_serializer(REMAP_ADDRESS(data));
-        serial.write_byte(kind_to_marker(point_kind::spend));
-        auto raw_spend = input.to_data();
-        serial.write_data(raw_spend);
+        serial.write_byte(static_cast<uint8_t>(point_kind::spend));
+        serial.write_data(input.to_data());
         serial.write_4_bytes_little_endian(input_height);
         serial.write_8_bytes_little_endian(previous.checksum());
     };
@@ -129,8 +114,8 @@ void history_database::delete_last_row(const short_hash& key)
     rows_multimap_.delete_last_row(key);
 }
 
-history history_database::get(const short_hash& key, size_t limit,
-    size_t from_height) const
+history_compact::list history_database::get(const short_hash& key,
+    size_t limit, size_t from_height) const
 {
     // Read the height value from the row.
     const auto read_height = [](uint8_t* data)
@@ -144,10 +129,10 @@ history history_database::get(const short_hash& key, size_t limit,
     const auto read_row = [](uint8_t* data)
     {
         auto deserial = make_deserializer_unsafe(data);
-        return history_row
+        return history_compact
         {
             // output or spend?
-            marker_to_kind(deserial.read_byte()),
+            static_cast<point_kind>(deserial.read_byte()),
 
             // point
             point::factory_from_data(deserial),
@@ -160,7 +145,7 @@ history history_database::get(const short_hash& key, size_t limit,
         };
     };
 
-    history result;
+    history_compact::list result;
     const auto start = rows_multimap_.lookup(key);
     const auto records = record_multimap_iterable(rows_list_, start);
 
