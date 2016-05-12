@@ -227,7 +227,7 @@ int main(int argc, char** argv)
             return -1;
 
         db.start();
-        db.add_spend(key, previous, spend, spend_height);
+        db.add_input(key, previous, spend, spend_height);
         db.sync();
     }
     else if (command == "delete_last_row")
