@@ -61,21 +61,19 @@ public:
     /// Call stop to unload the memory map.
     bool stop();
 
-    /// Add a row value to the key. If key doesn't exist it will be created.
+    /// Add an output row to the key. If key doesn't exist it will be created.
     void add_output(const short_hash& key, const chain::output_point& outpoint,
         const uint32_t output_height, uint64_t value);
 
-    /// Add a row value to the key. If key doesn't exist it will be created.
-    void add_spend(const short_hash& key, const chain::output_point& previous,
-        const chain::input_point& spend, size_t spend_height);
+    /// Add an input to the key. If key doesn't exist it will be created.
+    void add_input(const short_hash& key, const chain::output_point& previous,
+        const chain::input_point& input, size_t input_height);
 
     /// Delete the last row that was added to key.
     void delete_last_row(const short_hash& key);
 
-    /// Gets the output points, output values, corresponding input point
-    /// spends and the block heights associated with a Bitcoin address.
-    /// The returned history is a list of rows and a stop index.
-    chain::history get(const short_hash& key, size_t limit,
+    /// Get the output and input points associated with the address hash.
+    chain::history_compact::list get(const short_hash& key, size_t limit,
         size_t from_height) const;
 
     /// Synchonise with disk.

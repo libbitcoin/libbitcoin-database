@@ -127,11 +127,11 @@ int main(int argc, char** argv)
         const auto rows = db.scan(filter, from_height);
         for (const auto& row: rows)
         {
-            std::cout << "Ephemeral key: "
-                << encode_base16(row.ephemeral_key) << std::endl;
-            std::cout << "Address: "
-                << encode_base16(row.address) << std::endl;
-            std::cout << "Tx hash: "
+            std::cout << "Ephemeral public key hash: "
+                << encode_base16(row.ephemeral_public_key_hash) << std::endl;
+            std::cout << "Public key hash: "
+                << encode_base16(row.public_key_hash) << std::endl;
+            std::cout << "Transation hash: "
                 << encode_hash(row.transaction_hash) << std::endl;
             std::cout << std::endl;
         }

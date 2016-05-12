@@ -95,12 +95,12 @@ BOOST_AUTO_TEST_CASE(history_database__test)
     db.add_output(key1, out11, out_h11, value11);
     db.add_output(key1, out12, out_h12, value12);
     db.add_output(key1, out13, out_h13, value13);
-    db.add_spend(key1, out11, spend11, spend_h11);
-    db.add_spend(key1, out13, spend13, spend_h13);
+    db.add_input(key1, out11, spend11, spend_h11);
+    db.add_input(key1, out13, spend13, spend_h13);
     db.add_output(key2, out21, out_h21, value21);
     db.add_output(key2, out22, out_h22, value22);
 
-    auto fetch_s1 = [=](const history& history)
+    auto fetch_s1 = [=](const history_compact::list& history)
     {
         BOOST_REQUIRE(history.size() == 5);
 
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(history_database__test)
     };
     auto res_s1 = db.get(key1, 0, 0);
     fetch_s1(res_s1);
-    auto no_spend = [=](const history& history)
+    auto no_spend = [=](const history_compact::list& history)
     {
         BOOST_REQUIRE(history.size() == 2);
         BOOST_REQUIRE(history[0].kind == point_kind::output);
@@ -146,8 +146,8 @@ BOOST_AUTO_TEST_CASE(history_database__test)
     };
     auto res_ns = db.get(key2, 0, 0);
     no_spend(res_ns);
-    db.add_spend(key2, out22, spend22, spend_h22);
-    auto has_spend = [=](const history& history)
+    db.add_input(key2, out22, spend22, spend_h22);
+    auto has_spend = [=](const history_compact::list& history)
     {
         BOOST_REQUIRE(history.size() == 3);
 
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(history_database__test)
 
     db.add_output(key3, out31, out_h31, value31);
     db.add_output(key4, out31, out_h41, value41);
-    auto has_one_row = [=](const history& history)
+    auto has_one_row = [=](const history_compact::list& history)
     {
         BOOST_REQUIRE(history.size() == 1);
     };
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(history_database__test)
     has_one_row(res_1r1);
     auto res_1r2 = db.get(key4, 0, 0);
     has_one_row(res_1r2);
-    auto has_no_rows = [=](const history& history)
+    auto has_no_rows = [=](const history_compact::list& history)
     {
         BOOST_REQUIRE(history.empty());
     };

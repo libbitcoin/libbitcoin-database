@@ -65,9 +65,10 @@ bool stealth_database::stop()
 
 // The prefix is fixed at 32 bits, but the filter is 0-32 bits, so the records
 // cannot be indexed using a hash table. We also do not index by height.
-stealth stealth_database::scan(const binary& filter, size_t from_height) const
+stealth_compact::list stealth_database::scan(const binary& filter,
+    size_t from_height) const
 {
-    stealth result;
+    stealth_compact::list result;
 
     for (array_index row = 0; row < rows_manager_.count(); ++row)
     {
@@ -100,7 +101,7 @@ stealth stealth_database::scan(const binary& filter, size_t from_height) const
 }
 
 void stealth_database::store(uint32_t prefix, uint32_t height,
-    const stealth_row& row)
+    const stealth_compact& row)
 {
     // Allocate new row.
     const auto index = rows_manager_.new_records(1);
@@ -115,8 +116,8 @@ void stealth_database::store(uint32_t prefix, uint32_t height,
     serial.write_4_bytes_little_endian(height);
 
     // Stealth data.
-    serial.write_hash(row.ephemeral_key);
-    serial.write_short_hash(row.address);
+    serial.write_hash(row.ephemeral_public_key_hash);
+    serial.write_short_hash(row.public_key_hash);
     serial.write_hash(row.transaction_hash);
 }
 
