@@ -70,6 +70,10 @@ private:
     bool truncate(size_t size);
     bool validate(size_t size);
 
+    void log_mapping();
+    void log_resizing(size_t size);
+    void log_unmapping();
+
     // Optionally guard against concurrent remap.
     mutex_ptr external_mutex_;
 
