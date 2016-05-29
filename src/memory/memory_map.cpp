@@ -109,6 +109,33 @@ bool memory_map::handle_error(const char* context, const path& filename)
     return false;
 }
 
+void memory_map::log_mapping()
+{
+    log::info(LOG_DATABASE)
+#ifdef NDEBUG
+        << "Mapping: " << filename_;
+#else
+        << "Mapping: " << filename_ << " [" << file_size_
+        << "] (" << page() << ")";
+#endif
+}
+
+void memory_map::log_resizing(size_t size)
+{
+    log::debug(LOG_DATABASE)
+        << "Resizing: " << filename_ << " [" << size << "]";
+}
+
+void memory_map::log_unmapping()
+{
+    log::info(LOG_DATABASE)
+#ifdef NDEBUG
+        << "Unmapping: " << filename_;
+#else
+        << "Unmapping: " << filename_ << " [" << logical_size_ << "]";
+#endif
+}
+
 // mmap documentation: tinyurl.com/hnbw8t5
 memory_map::memory_map(const path& filename)
   : filename_(filename),
@@ -126,9 +153,7 @@ memory_map::memory_map(const path& filename)
     else if (madvise(data_, 0, MADV_RANDOM) == -1)
         handle_error("advise", filename_);
     else
-        log::info(LOG_DATABASE)
-            << "Mapping: " << filename_ << " [" << file_size_ << "] ("
-            << page() << ")";
+        log_mapping();
 }
 
 memory_map::memory_map(const path& filename, mutex_ptr mutex)
@@ -165,8 +190,7 @@ bool memory_map::stop()
         return true;
 
     stopped_ = true;
-    log::info(LOG_DATABASE)
-        << "Unmapping: " << filename_ << " [" << logical_size_ << "]";
+    log_unmapping();
 
     if (msync(data_, logical_size_, MS_SYNC) == -1)
         return handle_error("msync", filename_);
@@ -290,8 +314,7 @@ bool memory_map::remap(size_t size)
 
 bool memory_map::truncate(size_t size)
 {
-    log::debug(LOG_DATABASE)
-        << "Resizing: " << filename_ << " [" << size << "]";
+    log_resizing(size);
 
     // Critical Section (conditional/external)
     ///////////////////////////////////////////////////////////////////////////
