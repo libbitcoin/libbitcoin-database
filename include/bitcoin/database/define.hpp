@@ -41,13 +41,16 @@
     #define BCD_INTERNAL BC_HELPER_DLL_LOCAL
 #endif
 
-typedef uint32_t array_index;
-typedef uint64_t file_offset;
+// Log name.
+#define LOG_DATABASE "database"
 
 // Remap safety is required if the mmap file is not fully preallocated.
 #define REMAP_SAFETY
 
 // Allocate safety is required for support of concurrent write operations.
 #define ALLOCATE_SAFETY
+
+typedef uint32_t array_index;
+typedef uint64_t file_offset;
 
 #endif

@@ -111,13 +111,9 @@ bool memory_map::handle_error(const char* context, const path& filename)
 
 void memory_map::log_mapping()
 {
-    log::info(LOG_DATABASE)
-#ifdef NDEBUG
-        << "Mapping: " << filename_;
-#else
+    log::debug(LOG_DATABASE)
         << "Mapping: " << filename_ << " [" << file_size_
         << "] (" << page() << ")";
-#endif
 }
 
 void memory_map::log_resizing(size_t size)
@@ -128,12 +124,8 @@ void memory_map::log_resizing(size_t size)
 
 void memory_map::log_unmapping()
 {
-    log::info(LOG_DATABASE)
-#ifdef NDEBUG
-        << "Unmapping: " << filename_;
-#else
+    log::debug(LOG_DATABASE)
         << "Unmapping: " << filename_ << " [" << logical_size_ << "]";
-#endif
 }
 
 // mmap documentation: tinyurl.com/hnbw8t5
