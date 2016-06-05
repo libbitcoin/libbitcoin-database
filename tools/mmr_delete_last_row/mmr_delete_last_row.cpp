@@ -41,7 +41,7 @@ int mmr_lookup(
     const file_offset records_start = header_size;
 
     record_manager ht_manager(ht_file, records_start, record_size);
-    auto result = ht_manager.start();
+    result = ht_manager.start();
     BITCOIN_ASSERT(result);
 
     record_hash_table<hash_type> ht(header, ht_manager);

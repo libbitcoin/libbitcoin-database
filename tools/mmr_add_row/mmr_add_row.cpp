@@ -43,7 +43,7 @@ int mmr_add_row(const data_chunk& key_data, const data_chunk& value,
 
     const size_t lrs_record_size = record_list_offset + value.size();
     record_manager recs(lrs_file, 0, lrs_record_size);
-    const auto result = recs.start();
+    result = recs.start();
     BITCOIN_ASSERT(result);
 
     record_list lrs(recs);
