@@ -29,10 +29,11 @@ int mmr_lookup(
     std::copy(key_data.begin(), key_data.end(), key.begin());
 
     memory_map ht_file(map_filename);
-    BITCOIN_ASSERT(!ht_file.stopped());
+    auto result = ht_file.start();
+    BITCOIN_ASSERT(result);
 
     record_hash_table_header header(ht_file);
-    auto result = header.start();
+    result = header.start();
     BITCOIN_ASSERT(result);
 
     const auto record_size = hash_table_multimap_record_size<hash_type>();
@@ -46,7 +47,8 @@ int mmr_lookup(
 
     record_hash_table<hash_type> ht(header, ht_manager);
     memory_map lrs_file(rows_filename);
-    BITCOIN_ASSERT(!lrs_file.stopped());
+    result = lrs_file.start();
+    BITCOIN_ASSERT(result);
 
     const size_t lrs_record_size = record_list_offset + value_size;
     record_manager lrs_manger(lrs_file, 0, lrs_record_size);

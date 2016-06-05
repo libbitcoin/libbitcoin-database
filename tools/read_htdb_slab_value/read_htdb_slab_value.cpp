@@ -45,10 +45,11 @@ int main(int argc, char** argv)
         offset = lexical_cast<file_offset>(argv[5]);
 
     memory_map file(filename);
-    BITCOIN_ASSERT(!file.stopped());
+    auto result = file.start();
+    BITCOIN_ASSERT(result);
 
     slab_hash_table_header header(file, buckets);
-    auto result = header.start();
+    result = header.start();
     BITCOIN_ASSERT(result);
 
     slab_manager manager(file, offset + 4 + 8 * header.size());
