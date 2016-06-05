@@ -132,12 +132,13 @@ void memory_map::log_unmapped()
 
 // mmap documentation: tinyurl.com/hnbw8t5
 memory_map::memory_map(const path& filename)
-  : filename_(filename),
-    stopped_(true),
+  : file_handle_(open_file(filename)),
+    filename_(filename),
     data_(nullptr),
-    file_handle_(open_file(filename_)),
     file_size_(file_size(file_handle_)),
-    logical_size_(file_size_)
+    logical_size_(file_size_),
+    closed_(true),
+    stopped_(true)
 {
     // TODO: remove once all samples and perform explicit start.
     // The exception is necessary because otherwise the boolean failures
@@ -150,7 +151,7 @@ memory_map::memory_map(const path& filename)
 memory_map::memory_map(const path& filename, mutex_ptr mutex)
   : memory_map(filename)
 {
-    external_mutex_ = mutex;
+    remap_mutex_ = mutex;
 }
 
 // Database threads must be joined before close is called (or destruct).
@@ -167,17 +168,17 @@ bool memory_map::start()
 {
     // Critical Section (internal/unconditional)
     ///////////////////////////////////////////////////////////////////////////
-    internal_mutex_.lock_upgrade();
+    mutex_.lock_upgrade();
 
     if (!stopped_)
     {
-        internal_mutex_.unlock_upgrade();
+        mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
         // Start is not idempotent (should be called on single thread).
         return false;
     }
 
-    internal_mutex_.unlock_upgrade_and_lock();
+    mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     std::string error_name;
 
@@ -187,9 +188,12 @@ bool memory_map::start()
     else if (madvise(data_, 0, MADV_RANDOM) == -1)
         error_name = "madvise";
     else
+    {
+        closed_ = false;
         stopped_ = false;
+    }
 
-    internal_mutex_.unlock();
+    mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
 
     // Keep logging out of the critical section.
@@ -204,21 +208,21 @@ bool memory_map::stop()
 {
     // Critical Section (internal/unconditional)
     ///////////////////////////////////////////////////////////////////////////
-    internal_mutex_.lock_upgrade();
+    mutex_.lock_upgrade();
 
     if (stopped_)
     {
-        internal_mutex_.unlock_upgrade();
+        mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
         // Stop is idempotent (may be called from multiple threads).
         return true;
     }
 
-    internal_mutex_.unlock_upgrade_and_lock();
+    mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     stopped_ = true;
 
-    internal_mutex_.unlock();
+    mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
 
     return true;
@@ -231,18 +235,20 @@ bool memory_map::close()
 
     // Critical Section (internal/unconditional)
     ///////////////////////////////////////////////////////////////////////////
-    internal_mutex_.lock_upgrade();
+    mutex_.lock_upgrade();
 
-    if (stopped_)
+    if (closed_)
     {
-        internal_mutex_.unlock_upgrade();
+        mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
         // Close is idempotent (may be called from multiple threads).
         return true;
     }
 
-    internal_mutex_.unlock_upgrade_and_lock();
+    mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    closed_ = true;
 
     if (msync(data_, logical_size_, MS_SYNC) == -1)
         error_name = "msync";
@@ -255,7 +261,7 @@ bool memory_map::close()
     else if (::close(file_handle_) == -1)
         error_name = "close";
 
-    internal_mutex_.unlock();
+    mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
 
     // Keep logging out of the critical section.
@@ -270,19 +276,20 @@ bool memory_map::stopped() const
 {
     // Critical Section (internal/unconditional)
     ///////////////////////////////////////////////////////////////////////////
-    shared_lock lock(internal_mutex_);
+    shared_lock lock(mutex_);
 
     return stopped_;
     ///////////////////////////////////////////////////////////////////////////
 }
 
+// Operations.
 // ----------------------------------------------------------------------------
 
 size_t memory_map::size() const
 {
     // Critical Section (internal)
     ///////////////////////////////////////////////////////////////////////////
-    REMAP_READ(internal_mutex_);
+    REMAP_READ(mutex_);
 
     return file_size_;
     ///////////////////////////////////////////////////////////////////////////
@@ -291,7 +298,7 @@ size_t memory_map::size() const
 // throws runtime_error
 memory_ptr memory_map::access()
 {
-    return REMAP_ACCESSOR(data_, internal_mutex_);
+    return REMAP_ACCESSOR(data_, mutex_);
 }
 
 // throws runtime_error
@@ -316,7 +323,7 @@ memory_ptr memory_map::reserve(size_t size, size_t expansion)
 {
     // Critical Section (internal)
     ///////////////////////////////////////////////////////////////////////////
-    const auto memory = REMAP_ALLOCATOR(internal_mutex_);
+    const auto memory = REMAP_ALLOCATOR(mutex_);
 
     if (size > file_size_)
     {
@@ -337,6 +344,7 @@ memory_ptr memory_map::reserve(size_t size, size_t expansion)
 }
 
 // privates
+// ----------------------------------------------------------------------------
 
 size_t memory_map::page()
 {
@@ -394,7 +402,7 @@ bool memory_map::truncate(size_t size)
 
     // Critical Section (conditional/external)
     ///////////////////////////////////////////////////////////////////////////
-    conditional_lock lock(external_mutex_);
+    conditional_lock lock(remap_mutex_);
 
 #ifndef MREMAP_MAYMOVE
     if (!unmap())
