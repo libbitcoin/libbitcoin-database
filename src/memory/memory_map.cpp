@@ -35,6 +35,7 @@
 #include <cstdint>
 #include <fcntl.h>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -138,8 +139,12 @@ memory_map::memory_map(const path& filename)
     file_size_(file_size(file_handle_)),
     logical_size_(file_size_)
 {
-    // TODO: remove once all samples and test perform explicit start.
-    start();
+    // TODO: remove once all samples and perform explicit start.
+    // The exception is necessary because otherwise the boolean failures
+    // would go unnoticed by callers that don't make explicit start calls.
+    // This mimics previous behavior whereby construct failures always threw.
+    if (!start())
+        throw std::runtime_error(filename.string() + " failed to load.");
 }
 
 memory_map::memory_map(const path& filename, mutex_ptr mutex)
