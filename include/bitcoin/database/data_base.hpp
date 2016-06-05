@@ -65,6 +65,7 @@ public:
     static bool touch_file(const path& file_path);
 
     data_base(const settings& settings);
+    ~data_base();
 
     // Startup and shutdown.
     // ------------------------------------------------------------------------

@@ -65,6 +65,12 @@ spend_database::spend_database(const path& filename,
 {
 }
 
+// Close does not call stop because there is no way to detect thread join.
+spend_database::~spend_database()
+{
+    close();
+}
+
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 

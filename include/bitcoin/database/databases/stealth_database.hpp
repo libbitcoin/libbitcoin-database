@@ -39,6 +39,9 @@ public:
     stealth_database(const boost::filesystem::path& rows_filename,
         std::shared_ptr<shared_mutex> mutex=nullptr);
 
+    /// Close the database (all threads must first be stopped).
+    ~stealth_database();
+
     /// Initialize a new stealth database.
     bool create();
 

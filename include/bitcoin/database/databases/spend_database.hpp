@@ -49,6 +49,9 @@ public:
     spend_database(const boost::filesystem::path& filename,
         std::shared_ptr<shared_mutex> mutex=nullptr);
 
+    /// Close the database (all threads must first be stopped).
+    ~spend_database();
+
     /// Initialize a new spend database.
     bool create();
 

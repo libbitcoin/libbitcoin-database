@@ -47,6 +47,12 @@ stealth_database::stealth_database(const path& rows_filename,
 {
 }
 
+// Close does not call stop because there is no way to detect thread join.
+stealth_database::~stealth_database()
+{
+    close();
+}
+
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 

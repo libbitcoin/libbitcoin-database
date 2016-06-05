@@ -56,11 +56,18 @@ history_database::history_database(const path& lookup_filename,
 {
 }
 
+// Close does not call stop because there is no way to detect thread join.
+history_database::~history_database()
+{
+    close();
+}
+
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 
 bool history_database::create()
 {
+    // This will throw if insufficient disk space.
     lookup_file_.resize(initial_lookup_file_size);
 
     if (!lookup_header_.create() ||

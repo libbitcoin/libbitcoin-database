@@ -52,6 +52,9 @@ public:
         const boost::filesystem::path& rows_filename,
         std::shared_ptr<shared_mutex> mutex=nullptr);
 
+    /// Close the database (all threads must first be stopped).
+    ~history_database();
+
     /// Initialize a new history database.
     bool create();
 

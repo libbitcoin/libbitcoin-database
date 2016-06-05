@@ -149,6 +149,12 @@ data_base::data_base(const store& paths, size_t history_height,
 {
 }
 
+// Close does not call stop because there is no way to detect thread join.
+data_base::~data_base()
+{
+    close();
+}
+
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 
@@ -165,6 +171,8 @@ bool data_base::create()
         transactions.create();
 }
 
+// Start must be called before performing queries.
+// Start may be called after stop and/or after close in order to restart.
 bool data_base::start()
 {
     // TODO: create a class to encapsulate the full file lock concept.
@@ -195,6 +203,7 @@ bool data_base::start()
     return start_exclusive && start_result && end_exclusive;
 }
 
+// Stop only accelerates work termination, only required if restarting.
 bool data_base::stop()
 {
     const auto start_exclusive = begin_write();
@@ -221,6 +230,7 @@ bool data_base::stop()
         end_exclusive;
 }
 
+// Close is optional as the database will close on destruct.
 bool data_base::close()
 {
     const auto blocks_close = blocks.close();

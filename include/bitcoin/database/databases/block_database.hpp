@@ -43,6 +43,9 @@ public:
         const boost::filesystem::path& index_filename,
         std::shared_ptr<shared_mutex> mutex=nullptr);
 
+    /// Close the database (all threads must first be stopped).
+    ~block_database();
+
     /// Initialize a new transaction database.
     bool create();
 

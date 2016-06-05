@@ -45,6 +45,12 @@ transaction_database::transaction_database(const path& map_filename,
 {
 }
 
+// Close does not call stop because there is no way to detect thread join.
+transaction_database::~transaction_database()
+{
+    close();
+}
+
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 

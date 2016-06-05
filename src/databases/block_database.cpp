@@ -58,6 +58,12 @@ block_database::block_database(const path& map_filename,
 {
 }
 
+// Close does not call stop because there is no way to detect thread join.
+block_database::~block_database()
+{
+    close();
+}
+
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 
