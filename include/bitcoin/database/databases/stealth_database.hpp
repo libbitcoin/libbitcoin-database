@@ -40,13 +40,16 @@ public:
         std::shared_ptr<shared_mutex> mutex=nullptr);
 
     /// Initialize a new stealth database.
-    void create();
+    bool create();
 
     /// Call before using the database.
-    void start();
+    bool start();
 
-    /// Call stop to unload the memory map.
+    /// Call to signal a stop of current operations.
     bool stop();
+
+    /// Call to unload the memory map.
+    bool close();
 
     /// Linearly scan all entries, discarding those after from_height.
     chain::stealth_compact::list scan(const binary& filter,

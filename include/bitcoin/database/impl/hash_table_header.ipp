@@ -49,11 +49,12 @@ hash_table_header<IndexType, ValueType>::hash_table_header(memory_map& file,
 }
 
 template <typename IndexType, typename ValueType>
-void hash_table_header<IndexType, ValueType>::create()
+bool hash_table_header<IndexType, ValueType>::create()
 {
+    // Cannot create zero-sized hash table.
     // If buckets_ == 0 we trust what is read from the file.
     if (buckets_ == 0)
-        throw std::runtime_error("Cannot create zero-sized hash table.");
+        return false;
 
     // Calculate the minimum file size.
     const auto minimum_file_size = item_position(buckets_);
@@ -72,15 +73,18 @@ void hash_table_header<IndexType, ValueType>::create()
     // rationalized fill implementation
     ////for (IndexType index = 0; index < buckets_; ++index)
     ////    serial.write_little_endian(empty);
+    return true;
 }
 
+// If false header file indicates incorrect size.
 template <typename IndexType, typename ValueType>
-void hash_table_header<IndexType, ValueType>::start()
+bool hash_table_header<IndexType, ValueType>::start()
 {
     const auto minimum_file_size = item_position(buckets_);
 
+    // Header file is too small.
     if (minimum_file_size > file_.size())
-        throw std::runtime_error("Header file is too small.");
+        return false;
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
@@ -90,8 +94,7 @@ void hash_table_header<IndexType, ValueType>::start()
     const auto buckets = from_little_endian_unsafe<IndexType>(buckets_address);
 
     // If buckets_ == 0 we trust what is read from the file.
-    if (buckets_ > 0 && buckets != buckets_)
-        throw std::runtime_error("Header file indicates incorrect size.");
+    return buckets_ == 0 || buckets == buckets_;
 }
 
 template <typename IndexType, typename ValueType>

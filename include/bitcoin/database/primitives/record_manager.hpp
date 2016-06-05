@@ -48,10 +48,10 @@ public:
         size_t record_size);
 
     /// Create record manager.
-    void create();
+    bool create();
 
     /// Prepare manager for usage.
-    void start();
+    bool start();
 
     /// Synchronise to disk.
     void sync();

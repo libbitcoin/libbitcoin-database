@@ -72,6 +72,7 @@ public:
     bool create();
     bool start();
     bool stop();
+    bool close();
 
     // Locking.
     // ------------------------------------------------------------------------

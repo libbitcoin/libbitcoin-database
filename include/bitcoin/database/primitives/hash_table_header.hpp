@@ -50,10 +50,10 @@ public:
     hash_table_header(memory_map& file, IndexType buckets);
 
     /// Allocate the hash table and populate with empty values.
-    void create();
+    bool create();
 
     /// Must be called before use. Loads the size from the file.
-    void start();
+    bool start();
 
     /// Read item's value.
     ValueType read(IndexType index) const;

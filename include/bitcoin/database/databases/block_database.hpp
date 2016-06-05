@@ -44,13 +44,16 @@ public:
         std::shared_ptr<shared_mutex> mutex=nullptr);
 
     /// Initialize a new transaction database.
-    void create();
+    bool create();
 
     /// Call before using the database.
-    void start();
+    bool start();
 
-    /// Call stop to unload the memory map.
+    /// Call to signal a stop of current operations.
     bool stop();
+
+    /// Call to unload the memory map.
+    bool close();
 
     /// Fetch block by height using the index table.
     block_result get(size_t height) const;

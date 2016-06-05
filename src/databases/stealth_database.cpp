@@ -47,21 +47,33 @@ stealth_database::stealth_database(const path& rows_filename,
 {
 }
 
-void stealth_database::create()
+// Startup and shutdown.
+// ----------------------------------------------------------------------------
+
+bool stealth_database::create()
 {
+    // This will throw if insufficient disk space.
     rows_file_.resize(minimum_records_size);
-    rows_manager_.create();
+
+    return rows_manager_.create();
 }
 
-void stealth_database::start()
+bool stealth_database::start()
 {
-    rows_manager_.start();
+    return rows_manager_.start();
 }
 
 bool stealth_database::stop()
 {
     return rows_file_.stop();
 }
+
+bool stealth_database::close()
+{
+    return rows_file_.close();
+}
+
+// ----------------------------------------------------------------------------
 
 // The prefix is fixed at 32 bits, but the filter is 0-32 bits, so the records
 // cannot be indexed using a hash table. We also do not index by height.

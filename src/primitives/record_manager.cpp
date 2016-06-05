@@ -54,22 +54,25 @@ record_manager::record_manager(memory_map& file, file_offset header_size,
 {
 }
 
-void record_manager::create()
+bool record_manager::create()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     ALLOCATE_WRITE(mutex_);
 
+    // Existing file record count is nonzero.
     if (record_count_ != 0)
-        throw std::runtime_error("Existing file record count is nonzero.");
+        return false;
 
+    // This currently throws if there is insufficient space.
     file_.resize(header_size_ + record_to_position(record_count_));
 
     write_count();
+    return true;
     ///////////////////////////////////////////////////////////////////////////
 }
 
-void record_manager::start()
+bool record_manager::start()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -78,8 +81,8 @@ void record_manager::start()
     read_count();
     const auto minimum = header_size_ + record_to_position(record_count_);
 
-    if (minimum > file_.size())
-        throw std::runtime_error("Records size exceeds file size.");
+    // Records size exceeds file size.
+    return minimum <= file_.size();
     ///////////////////////////////////////////////////////////////////////////
 }
 

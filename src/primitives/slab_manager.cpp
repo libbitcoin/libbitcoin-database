@@ -52,22 +52,25 @@ slab_manager::slab_manager(memory_map& file, file_offset header_size)
 {
 }
 
-void slab_manager::create()
+bool slab_manager::create()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     ALLOCATE_WRITE(mutex_);
 
+    // Existing slabs size is incorrect for new file.
     if (payload_size_ != sizeof(file_offset))
-        throw std::runtime_error("Existing file slabs size is nonzero.");
+        return false;
 
+    // This currently throws if there is insufficient space.
     file_.resize(header_size_ + payload_size_);
 
     write_size();
+    return true;
     ///////////////////////////////////////////////////////////////////////////
 }
 
-void slab_manager::start()
+bool slab_manager::start()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -76,8 +79,8 @@ void slab_manager::start()
     read_size();
     const auto minimum = header_size_ + payload_size_;
 
-    if (minimum > file_.size())
-        throw std::runtime_error("Slabs size exceeds file size.");
+    // Slabs size exceeds file size.
+    return minimum <= file_.size();
     ///////////////////////////////////////////////////////////////////////////
 }
 

@@ -49,8 +49,11 @@ public:
     memory_map(const memory_map&) = delete;
     void operator=(const memory_map&) = delete;
 
+    bool start();
     bool stop();
+    bool close();
     bool stopped() const;
+
     size_t size() const;
     memory_ptr access();
     memory_ptr resize(size_t size);
@@ -60,7 +63,7 @@ public:
 private:
     static size_t file_size(int file_handle);
     static int open_file(const boost::filesystem::path& filename);
-    static bool handle_error(const char* context,
+    static bool handle_error(const std::string& context,
         const boost::filesystem::path& filename);
 
     size_t page();
@@ -72,13 +75,13 @@ private:
 
     void log_mapping();
     void log_resizing(size_t size);
-    void log_unmapping();
+    void log_unmapped();
 
     // Optionally guard against concurrent remap.
     mutex_ptr external_mutex_;
 
     // Guard against read/write during file remap.
-    mutable shared_mutex internal_mutex_;
+    mutable upgrade_mutex internal_mutex_;
 
     // File system.
     const boost::filesystem::path filename_;

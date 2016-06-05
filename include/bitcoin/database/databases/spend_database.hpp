@@ -50,13 +50,16 @@ public:
         std::shared_ptr<shared_mutex> mutex=nullptr);
 
     /// Initialize a new spend database.
-    void create();
+    bool create();
 
     /// Call before using the database.
-    void start();
+    bool start();
 
-    /// Call stop to unload the memory map.
+    /// Call to signal a stop of current operations.
     bool stop();
+
+    /// Call to unload the memory map.
+    bool close();
 
     /// Get input spend of an output point.
     chain::spend get(const chain::output_point& outpoint) const;

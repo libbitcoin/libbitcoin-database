@@ -63,26 +63,39 @@ spend_database::spend_database(const path& filename,
     lookup_manager_(lookup_file_, header_size, record_size),
     lookup_map_(lookup_header_, lookup_manager_)
 {
-    BITCOIN_ASSERT(REMAP_ADDRESS(lookup_file_.access()) != nullptr);
 }
 
-void spend_database::create()
+// Startup and shutdown.
+// ----------------------------------------------------------------------------
+
+bool spend_database::create()
 {
+    // This will throw if insufficient disk space.
     lookup_file_.resize(initial_map_file_size);
-    lookup_header_.create();
-    lookup_manager_.create();
+
+    return
+        lookup_header_.create() &&
+        lookup_manager_.create();
 }
 
-void spend_database::start()
+bool spend_database::start()
 {
-    lookup_header_.start();
-    lookup_manager_.start();
+    return
+        lookup_header_.start() &&
+        lookup_manager_.start();
 }
 
 bool spend_database::stop()
 {
     return lookup_file_.stop();
 }
+
+bool spend_database::close()
+{
+    return lookup_file_.close();
+}
+
+// ----------------------------------------------------------------------------
 
 spend spend_database::get(const output_point& outpoint) const
 {
