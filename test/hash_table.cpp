@@ -52,14 +52,14 @@ void create_database_file()
     file.resize(header_size + minimum_slabs_size);
 
     slab_hash_table_header header(file, buckets);
-    header.create();
-    header.start();
+    BOOST_REQUIRE(header.create());
+    BOOST_REQUIRE(header.start());
 
     const file_offset slab_start = header_size;
 
     slab_manager alloc(file, slab_start);
-    alloc.create();
-    alloc.start();
+    BOOST_REQUIRE(alloc.create());
+    BOOST_REQUIRE(alloc.start());
 
     slab_hash_table<hash_digest> ht(header, alloc);
 
@@ -106,14 +106,13 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__write_read__test)
     BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);
 
     slab_hash_table_header header(file, buckets);
-    header.start();
-
+    BOOST_REQUIRE(header.start());
     BOOST_REQUIRE(header.size() == buckets);
 
     const auto slab_start = slab_hash_table_header_size(buckets);
 
     slab_manager alloc(file, slab_start);
-    alloc.start();
+    BOOST_REQUIRE(alloc.start());
 
     slab_hash_table<hash_digest> ht(header, alloc);
 
@@ -138,12 +137,12 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__test)
     file.resize(4 + 8 * 100 + 8);
 
     slab_hash_table_header header(file, 100);
-    header.create();
-    header.start();
+    BOOST_REQUIRE(header.create());
+    BOOST_REQUIRE(header.start());
 
     slab_manager alloc(file, 4 + 8 * 100);
-    alloc.create();
-    alloc.start();
+    BOOST_REQUIRE(alloc.create());
+    BOOST_REQUIRE(alloc.start());
 
     typedef byte_array<4> tiny_hash;
     slab_hash_table<tiny_hash> ht(header, alloc);
@@ -183,16 +182,16 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
     file.resize(header_size + minimum_records_size);
 
     record_hash_table_header header(file, record_buckets);
-    header.create();
-    header.start();
+    BOOST_REQUIRE(header.create());
+    BOOST_REQUIRE(header.start());
 
     typedef byte_array<4> tiny_hash;
     BC_CONSTEXPR size_t record_size = hash_table_record_size<tiny_hash>(4);
     const file_offset records_start = header_size;
 
     record_manager alloc(file, records_start, record_size);
-    alloc.create();
-    alloc.start();
+    BOOST_REQUIRE(alloc.create());
+    BOOST_REQUIRE(alloc.start());
 
     record_hash_table<tiny_hash> ht(header, alloc);
 
@@ -259,16 +258,16 @@ BOOST_AUTO_TEST_CASE(record_hash_table_header__64bit__test)
     file.resize(header_size + minimum_records_size);
 
     record_hash_table_header header(file, record_buckets);
-    header.create();
-    header.start();
+    BOOST_REQUIRE(header.create());
+    BOOST_REQUIRE(header.start());
 
     typedef byte_array<8> tiny_hash;
     BC_CONSTEXPR size_t record_size = hash_table_record_size<tiny_hash>(8);
     const file_offset records_start = header_size;
 
     record_manager alloc(file, records_start, record_size);
-    alloc.create();
-    alloc.start();
+    BOOST_REQUIRE(alloc.create());
+    BOOST_REQUIRE(alloc.start());
 
     record_hash_table<tiny_hash> ht(header, alloc);
 

@@ -31,7 +31,8 @@ int mmr_lookup(const data_chunk& key_data, const size_t value_size,
     BITCOIN_ASSERT(!ht_file.stopped());
 
     record_hash_table_header header(ht_file);
-    header.start();
+    auto result = header.start();
+    BITCOIN_ASSERT(result);
 
     const auto record_size = hash_table_multimap_record_size<hash_type>();
     BITCOIN_ASSERT(record_size == KeySize + 4 + 4);
@@ -39,15 +40,18 @@ int mmr_lookup(const data_chunk& key_data, const size_t value_size,
     const file_offset records_start = header_size;
 
     record_manager ht_manager(ht_file, records_start, record_size);
-    ht_manager.start();
+    result = ht_manager.start();
+    BITCOIN_ASSERT(result);
 
     memory_map lrs_file(rows_filename);
     BITCOIN_ASSERT(!lrs_file.stopped());
+
     const auto lrs_record_size = record_list_offset + value_size;
     record_manager lrs_manager(lrs_file, 0, lrs_record_size);
-    lrs_manager.start();
-    record_list lrs(lrs_manager);
+    result = lrs_manager.start();
+    BITCOIN_ASSERT(result);
 
+    record_list lrs(lrs_manager);
     record_hash_table<hash_type> ht(header, ht_manager);
     record_multimap<hash_type> multimap(ht, lrs);
     record_multimap_iterable container(lrs, multimap.lookup(key));

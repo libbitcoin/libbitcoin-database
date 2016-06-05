@@ -46,11 +46,14 @@ int main(int argc, char** argv)
 
     memory_map file(filename);
     BITCOIN_ASSERT(!file.stopped());
+
     slab_hash_table_header header(file, buckets);
-    header.start();
+    auto result = header.start();
+    BITCOIN_ASSERT(result);
 
     slab_manager manager(file, offset + 4 + 8 * header.size());
-    manager.start();
+    result = manager.start();
+    BITCOIN_ASSERT(result);
 
     memory_ptr slab = nullptr;
     if (key_data.size() == 32)

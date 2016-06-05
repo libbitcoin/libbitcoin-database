@@ -164,7 +164,8 @@ int main(int argc, char** argv)
 
     if (command == "initialize_new")
     {
-        db.create();
+        const auto result = db.create();
+        BITCOIN_ASSERT(result);
     }
     else if (command == "get")
     {
@@ -179,7 +180,9 @@ int main(int argc, char** argv)
         if (!parse_point(outpoint, args[0]))
             return -1;
 
-        db.start();
+        const auto result = db.start();
+        BITCOIN_ASSERT(result);
+
         const auto spend = db.get(outpoint);
 
         if (!spend.valid)
@@ -209,7 +212,9 @@ int main(int argc, char** argv)
         if (!parse_point(spend, args[1]))
             return -1;
 
-        db.start();
+        const auto result = db.start();
+        BITCOIN_ASSERT(result);
+
         db.store(outpoint, spend);
         db.sync();
     }
@@ -226,7 +231,9 @@ int main(int argc, char** argv)
         if (!parse_point(outpoint, args[0]))
             return -1;
 
-        db.start();
+        const auto result = db.start();
+        BITCOIN_ASSERT(result);
+
         db.remove(outpoint);
         db.sync();
     }
@@ -238,7 +245,9 @@ int main(int argc, char** argv)
             return -1;
         }
 
-        db.start();
+        const auto result = db.start();
+        BITCOIN_ASSERT(result);
+
         auto info = db.statinfo();
         std::cout << "Buckets: " << info.buckets << std::endl;
         std::cout << "Total rows: " << info.rows << std::endl;

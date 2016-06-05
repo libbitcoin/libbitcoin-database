@@ -68,8 +68,8 @@ BOOST_AUTO_TEST_CASE(transaction_database__test)
 
     data_base::touch_file(DIRECTORY "/transaction");
     transaction_database db(DIRECTORY "/transaction");
-    db.create();
-    db.start();
+    BOOST_REQUIRE(db.create());
+    BOOST_REQUIRE(db.start());
 
     db.store(110, 88, tx1);
     db.store(4, 6, tx2);

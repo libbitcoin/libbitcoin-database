@@ -29,33 +29,42 @@ void mmr_create(const size_t value_size, const std::string& map_filename,
     memory_map ht_file(map_filename);
     BITCOIN_ASSERT(!ht_file.stopped());
     ht_file.resize(header_size + minimum_records_size);
-
     record_hash_table_header header(ht_file, buckets);
-    header.create();
-    header.start();
+
+    auto result = header.create();
+    BITCOIN_ASSERT(result);
+
+    result = header.start();
+    BITCOIN_ASSERT(result);
 
     typedef byte_array<KeySize> hash_type;
     const size_t record_size = hash_table_multimap_record_size<hash_type>();
     BITCOIN_ASSERT(record_size == KeySize + 4 + 4);
-    const file_offset records_start = header_size;
 
+    const file_offset records_start = header_size;
     record_manager alloc(ht_file, records_start, record_size);
-    alloc.create();
-    alloc.start();
+    result = alloc.create();
+    BITCOIN_ASSERT(result);
+
+    result = alloc.start();
+    BITCOIN_ASSERT(result);
 
     record_hash_table<hash_type> ht(header, alloc);
-
     data_base::touch_file(rows_filename);
     memory_map lrs_file(rows_filename);
     BITCOIN_ASSERT(!lrs_file.stopped());
+
     lrs_file.resize(minimum_records_size);
     const size_t lrs_record_size = record_list_offset + value_size;
     record_manager recs(lrs_file, 0, lrs_record_size);
-    recs.create();
 
-    recs.start();
+    result = recs.create();
+    BITCOIN_ASSERT(result);
+
+    result = recs.start();
+    BITCOIN_ASSERT(result);
+
     record_list lrs(recs);
-
     record_multimap<hash_type> multimap(ht, lrs);
 }
 

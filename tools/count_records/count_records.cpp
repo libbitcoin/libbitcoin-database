@@ -22,7 +22,9 @@ int main(int argc, char** argv)
     memory_map file(filename);
     record_manager records(file, buckets, record_size);
 
-    records.start();
+    const auto result = records.start();
+    BITCOIN_ASSERT(result);
+
     std::cout << records.count() << std::endl;
 
     return 0;

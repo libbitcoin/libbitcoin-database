@@ -11,7 +11,8 @@ int show_array(const std::string& filename)
 {
     memory_map file(filename);
     hash_table_header<IndexType, ValueType> table(file);
-    table.start();
+    const auto result = table.start();
+    BITCOIN_ASSERT(result);
 
     for (IndexType i = 0; i < table.size(); ++i)
     {

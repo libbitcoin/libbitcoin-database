@@ -52,7 +52,9 @@ int main(int argc, char** argv)
 
     memory_map file(filename);
     record_manager manager(file, offset, record_size);
-    manager.start();
+    const auto result = manager.start();
+    BITCOIN_ASSERT(result);
+
     record_list lrs(manager);
     chain_list chains;
 
