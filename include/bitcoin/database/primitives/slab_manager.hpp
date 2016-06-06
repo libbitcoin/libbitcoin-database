@@ -44,10 +44,10 @@ public:
     slab_manager(memory_map& file, file_offset header_size);
 
     /// Create slab manager.
-    void create();
+    bool create();
 
     /// Prepare manager for use.
-    void start();
+    bool start();
 
     /// Synchronise the payload size to disk.
     void sync() const;

@@ -62,8 +62,8 @@ BOOST_AUTO_TEST_CASE(spend_database__test)
 
     data_base::touch_file(DIRECTORY "/spend");
     spend_database db(DIRECTORY "/spend");
-    db.create();
-    db.start();
+    BOOST_REQUIRE(db.create());
+
     db.store(key1, value1);
     db.store(key2, value2);
     db.store(key3, value3);

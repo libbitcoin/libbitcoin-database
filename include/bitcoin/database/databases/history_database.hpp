@@ -48,18 +48,25 @@ struct BCD_API history_statinfo
 class BCD_API history_database
 {
 public:
+    /// Construct the database.
     history_database(const boost::filesystem::path& lookup_filename,
         const boost::filesystem::path& rows_filename,
         std::shared_ptr<shared_mutex> mutex=nullptr);
 
+    /// Close the database (all threads must first be stopped).
+    ~history_database();
+
     /// Initialize a new history database.
-    void create();
+    bool create();
 
     /// Call before using the database.
-    void start();
+    bool start();
 
-    /// Call stop to unload the memory map.
+    /// Call to signal a stop of current operations.
     bool stop();
+
+    /// Call to unload the memory map.
+    bool close();
 
     /// Add an output row to the key. If key doesn't exist it will be created.
     void add_output(const short_hash& key, const chain::output_point& outpoint,

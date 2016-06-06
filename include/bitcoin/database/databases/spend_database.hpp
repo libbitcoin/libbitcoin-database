@@ -46,17 +46,24 @@ struct BCD_API spend_statinfo
 class BCD_API spend_database
 {
 public:
+    /// Construct the database.
     spend_database(const boost::filesystem::path& filename,
         std::shared_ptr<shared_mutex> mutex=nullptr);
 
+    /// Close the database (all threads must first be stopped).
+    ~spend_database();
+
     /// Initialize a new spend database.
-    void create();
+    bool create();
 
     /// Call before using the database.
-    void start();
+    bool start();
 
-    /// Call stop to unload the memory map.
+    /// Call to signal a stop of current operations.
     bool stop();
+
+    /// Call to unload the memory map.
+    bool close();
 
     /// Get input spend of an output point.
     chain::spend get(const chain::output_point& outpoint) const;

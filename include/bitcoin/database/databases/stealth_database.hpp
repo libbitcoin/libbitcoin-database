@@ -36,17 +36,24 @@ class BCD_API stealth_database
 public:
     typedef std::function<void(memory_ptr)> write_function;
 
+    /// Construct the database.
     stealth_database(const boost::filesystem::path& rows_filename,
         std::shared_ptr<shared_mutex> mutex=nullptr);
 
+    /// Close the database (all threads must first be stopped).
+    ~stealth_database();
+
     /// Initialize a new stealth database.
-    void create();
+    bool create();
 
     /// Call before using the database.
-    void start();
+    bool start();
 
-    /// Call stop to unload the memory map.
+    /// Call to signal a stop of current operations.
     bool stop();
+
+    /// Call to unload the memory map.
+    bool close();
 
     /// Linearly scan all entries, discarding those after from_height.
     chain::stealth_compact::list scan(const binary& filter,

@@ -63,7 +63,7 @@ bool data_base::initialize(const path& prefix, const chain::block& genesis)
 
     data_base instance(paths, 0, 0);
 
-    if (!instance.create() || !instance.start())
+    if (!instance.create())
         return false;
 
     instance.push(genesis);
@@ -91,6 +91,7 @@ data_base::store::store(const path& prefix)
 
 bool data_base::store::touch_all() const
 {
+    // Return the result of the database file create.
     return
         touch_file(blocks_lookup) &&
         touch_file(blocks_index) &&
@@ -148,21 +149,32 @@ data_base::data_base(const store& paths, size_t history_height,
 {
 }
 
+// Close does not call stop because there is no way to detect thread join.
+data_base::~data_base()
+{
+    close();
+}
+
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 
+// Leaves database in started state.
+// Throws if there is insufficient disk space.
 // TODO: merge this with file creation (initialization above).
 // This is actually first initialization of existing files, not file creation.
 bool data_base::create()
 {
-    blocks.create();
-    history.create();
-    spends.create();
-    stealth.create();
-    transactions.create();
-    return true;
+    // Return the result of the database create.
+    return 
+        blocks.create() &&
+        history.create() &&
+        spends.create() &&
+        stealth.create() &&
+        transactions.create();
 }
 
+// Start must be called before performing queries.
+// Start may be called after stop and/or after close in order to restart.
 bool data_base::start()
 {
     // TODO: create a class to encapsulate the full file lock concept.
@@ -180,25 +192,27 @@ bool data_base::start()
         return false;
 
     const auto start_exclusive = begin_write();
-    blocks.start();
-    history.start();
-    spends.start();
-    stealth.start();
-    transactions.start();
+    const auto start_result =
+        blocks.start() &&
+        history.start() &&
+        spends.start() &&
+        stealth.start() &&
+        transactions.start();
     const auto end_exclusive = end_write();
 
-    return start_exclusive && end_exclusive;
+    // Return the result of the database start.
+    return start_exclusive && start_result && end_exclusive;
 }
 
+// Stop only accelerates work termination, only required if restarting.
 bool data_base::stop()
 {
     const auto start_exclusive = begin_write();
-    const auto result = 
-        blocks.stop() &&
-        history.stop() &&
-        spends.stop() &&
-        stealth.stop() &&
-        transactions.stop();
+    const auto blocks_stop = blocks.stop();
+    const auto history_stop = history.stop();
+    const auto spends_stop = spends.stop();
+    const auto stealth_stop = stealth.stop();
+    const auto transactions_stop = transactions.stop();
     const auto end_exclusive = end_write();
 
     // This should remove the lock file. This is not important for locking
@@ -207,7 +221,32 @@ bool data_base::stop()
     uninitialize_lock(lock_file_path_);
 
     // Return the cumulative result of the database shutdowns.
-    return start_exclusive && result && end_exclusive;
+    return
+        start_exclusive &&
+        blocks_stop &&
+        history_stop &&
+        spends_stop &&
+        stealth_stop &&
+        transactions_stop &&
+        end_exclusive;
+}
+
+// Close is optional as the database will close on destruct.
+bool data_base::close()
+{
+    const auto blocks_close = blocks.close();
+    const auto history_close = history.close();
+    const auto spends_close = spends.close();
+    const auto stealth_close = stealth.close();
+    const auto transactions_close = transactions.close();
+
+    // Return the cumulative result of the database closes.
+    return
+        blocks_close &&
+        history_close &&
+        spends_close &&
+        stealth_close &&
+        transactions_close;
 }
 
 // Locking.
@@ -398,8 +437,8 @@ void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
 chain::block data_base::pop()
 {
     size_t height;
-    if (!blocks.top(height))
-        throw std::runtime_error("The chain is empty.");
+    DEBUG_ONLY(const auto result =) blocks.top(height);
+    BITCOIN_ASSERT_MSG(result, "Pop on empty database.");
 
     const auto block_result = blocks.get(height);
 

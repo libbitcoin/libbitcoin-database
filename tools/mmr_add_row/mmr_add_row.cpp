@@ -21,10 +21,12 @@ int mmr_add_row(const data_chunk& key_data, const data_chunk& value,
     std::copy(key_data.begin(), key_data.end(), key.begin());
 
     memory_map ht_file(map_filename);
-    BITCOIN_ASSERT(!ht_file.stopped());
+    auto result = ht_file.start();
+    BITCOIN_ASSERT(result);
 
     record_hash_table_header header(ht_file);
-    header.start();
+    result = header.start();
+    BITCOIN_ASSERT(result);
 
     const size_t record_size = hash_table_multimap_record_size<hash_type>();
     BITCOIN_ASSERT(record_size == KeySize + 4 + 4);
@@ -32,18 +34,21 @@ int mmr_add_row(const data_chunk& key_data, const data_chunk& value,
     const file_offset records_start = header_size;
 
     record_manager alloc(ht_file, records_start, record_size);
-    alloc.start();
+    result = alloc.start();
+    BITCOIN_ASSERT(result);
 
     record_hash_table<hash_type> ht(header, alloc);
 
     memory_map lrs_file(rows_filename);
-    BITCOIN_ASSERT(!lrs_file.stopped());
+    result = lrs_file.start();
+    BITCOIN_ASSERT(result);
+
     const size_t lrs_record_size = record_list_offset + value.size();
     record_manager recs(lrs_file, 0, lrs_record_size);
+    result = recs.start();
+    BITCOIN_ASSERT(result);
 
-    recs.start();
     record_list lrs(recs);
-
     record_multimap<hash_type> multimap(ht, lrs);
     auto write = [&value](memory_ptr data)
     {

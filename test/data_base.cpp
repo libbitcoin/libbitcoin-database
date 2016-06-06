@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     BOOST_REQUIRE(data_base::initialize(settings.directory, block0));
 
     data_base instance(settings);
-    instance.start();
+    BOOST_REQUIRE(instance.start());
 
     size_t height = 42;
     BOOST_REQUIRE(instance.blocks.top(height));

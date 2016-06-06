@@ -45,13 +45,15 @@ int main(int argc, char** argv)
         offset = lexical_cast<file_offset>(argv[4]);
 
     memory_map file(filename);
-    BITCOIN_ASSERT(!file.stopped());
+    BITCOIN_ASSERT(file.start());
+
     record_hash_table_header header(file);
-    header.start();
+    BITCOIN_ASSERT(header.start());
 
     const auto record_size = key_data.size() + 4 + value_size;
     record_manager manager(file, offset + 4 + 4 * header.size(), record_size);
-    manager.start();
+    const auto result = manager.start();
+    BITCOIN_ASSERT(result);
 
     memory_ptr record = nullptr;
     if (key_data.size() == 32)

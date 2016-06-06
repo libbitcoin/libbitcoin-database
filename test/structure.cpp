@@ -51,27 +51,29 @@ BOOST_AUTO_TEST_CASE(hash_table_header__test)
 {
     data_base::touch_file(DIRECTORY "/hash_table_header");
     memory_map file(DIRECTORY "/hash_table_header");
+    BOOST_REQUIRE(file.start());
     BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);
     file.resize(4 + 4 * 10);
 
-    hash_table_header<uint32_t, uint32_t> array(file, 10);
-    array.create();
-    array.start();
+    hash_table_header<uint32_t, uint32_t> header(file, 10);
+    BOOST_REQUIRE(header.create());
+    BOOST_REQUIRE(header.start());
 
-    array.write(9, 110);
-    BOOST_REQUIRE(array.read(9) == 110);
+    header.write(9, 110);
+    BOOST_REQUIRE(header.read(9) == 110);
 }
 
 BOOST_AUTO_TEST_CASE(slab_manager__test)
 {
     data_base::touch_file(DIRECTORY "/slab_manager");
     memory_map file(DIRECTORY "/slab_manager");
+    BOOST_REQUIRE(file.start());
     BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);
     file.resize(200);
 
     slab_manager data(file, 0);
-    data.create();
-    data.start();
+    BOOST_REQUIRE(data.create());
+    BOOST_REQUIRE(data.start());
 
     file_offset position = data.new_slab(100);
     BOOST_REQUIRE(position == 8);
@@ -88,12 +90,13 @@ BOOST_AUTO_TEST_CASE(record_manager__test)
 {
     data_base::touch_file(DIRECTORY "/record_manager");
     memory_map file(DIRECTORY "/record_manager");
+    BOOST_REQUIRE(file.start());
     BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);
     file.resize(4);
 
     record_manager recs(file, 0, 10);
-    recs.create();
-    recs.start();
+    BOOST_REQUIRE(recs.create());
+    BOOST_REQUIRE(recs.start());
 
     array_index idx = recs.new_records(1);
     BOOST_REQUIRE(idx == 0);
@@ -107,24 +110,28 @@ BOOST_AUTO_TEST_CASE(record_list__test)
 {
     data_base::touch_file(DIRECTORY "/record_list");
     memory_map file(DIRECTORY "/record_list");
+    BOOST_REQUIRE(file.start());
     BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);
+
     file.resize(4);
-
-    BC_CONSTEXPR size_t record_size = record_list_offset + 6;
+    const size_t record_size = record_list_offset + 6;
     record_manager recs(file, 0, record_size);
-    recs.create();
-    recs.start();
-    record_list lrs(recs);
+    BOOST_REQUIRE(recs.create());
+    BOOST_REQUIRE(recs.start());
 
+    record_list lrs(recs);
     array_index idx = lrs.create();
     BOOST_REQUIRE(idx == 0);
+
     array_index idx1 = lrs.create();
     BOOST_REQUIRE(idx1 == 1);
+
     idx = lrs.create();
     BOOST_REQUIRE(idx == 2);
 
     idx = lrs.insert(idx1);
     BOOST_REQUIRE(idx == 3);
+
     idx = lrs.insert(idx);
     BOOST_REQUIRE(idx == 4);
 
@@ -136,6 +143,7 @@ BOOST_AUTO_TEST_CASE(record_list__test)
         idx = lrs.next(idx);
         ++count;
     }
+
     BOOST_REQUIRE(count == 3);
     BOOST_REQUIRE(valid == idx1);
     recs.sync();

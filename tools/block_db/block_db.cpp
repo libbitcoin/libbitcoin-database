@@ -162,7 +162,8 @@ int main(int argc, char** argv)
 
     if (command == "initialize_new")
     {
-        db.create();
+        const auto result = db.create();
+        BITCOIN_ASSERT(result);
     }
     else if (command == "get")
     {
@@ -172,13 +173,14 @@ int main(int argc, char** argv)
             return -1;
         }
 
-        db.start();
-        std::shared_ptr<block_result> result;
+        const auto result = db.start();
+        BITCOIN_ASSERT(result);
+        std::shared_ptr<block_result> block_data;
 
         try
         {
             size_t height = lexical_cast<size_t>(args[0]);
-            result = std::make_shared<block_result>(db.get(height));
+            block_data = std::make_shared<block_result>(db.get(height));
         }
         catch (const bad_lexical_cast&)
         {
@@ -189,22 +191,22 @@ int main(int argc, char** argv)
                 return -1;
             }
 
-            result = std::make_shared<block_result>(db.get(hash));
+            block_data = std::make_shared<block_result>(db.get(hash));
         }
 
-        if (!result)
+        if (!block_data)
         {
             std::cout << "Not found!" << std::endl;
             return -1;
         }
 
-        const auto block_header = result->header();
-        const auto txs_size = result->transaction_count();
+        const auto block_header = block_data->header();
+        const auto txs_size = block_data->transaction_count();
         const auto merkle = encode_hash(block_header.merkle);
         const auto previous = encode_hash(block_header.previous_block_hash);
 
         // Show details.
-        std::cout << "height: " << result->height() << std::endl;
+        std::cout << "height: " << block_data->height() << std::endl;
         std::cout << "hash: " << encode_hash(block_header.hash()) << std::endl;
         std::cout << "version: " << block_header.version << std::endl;
         std::cout << "previous: " << previous << std::endl;
@@ -218,7 +220,8 @@ int main(int argc, char** argv)
             std::cout << "Transactions:" << std::endl;
 
             for (size_t i = 0; i < txs_size; ++i)
-                std::cout << "  " << encode_hash(result->transaction_hash(i))
+                std::cout << "  "
+                    << encode_hash(block_data->transaction_hash(i))
                     << std::endl;
         }
         else
@@ -252,7 +255,9 @@ int main(int argc, char** argv)
         if (block.from_data(data))
             throw end_of_stream();
 
-        db.start();
+        const auto result = db.start();
+        BITCOIN_ASSERT(result);
+
         db.store(block);
         db.sync();
     }
@@ -268,13 +273,17 @@ int main(int argc, char** argv)
         if (!parse_uint(from_height, args[0]))
             return -1;
 
-        db.start();
+        const auto result = db.start();
+        BITCOIN_ASSERT(result);
+
         db.unlink(from_height);
         db.sync();
     }
     else if (command == "last_height")
     {
-        db.start();
+        const auto result = db.start();
+        BITCOIN_ASSERT(result);
+
         size_t height;
 
         if (!db.top(height))

@@ -60,18 +60,30 @@ public:
         path transactions_lookup;
     };
 
-    /// Create a new database with a given path prefix and default paths.
+    /// Create a new database file with a given path prefix and default paths.
     static bool initialize(const path& prefix, const chain::block& genesis);
     static bool touch_file(const path& file_path);
 
+    /// Construct all databases.
     data_base(const settings& settings);
+
+    /// Stop all databases (threads must be joined).
+    ~data_base();
 
     // Startup and shutdown.
     // ------------------------------------------------------------------------
 
+    /// Create and start all databases.
     bool create();
+
+    /// Start all databases.
     bool start();
+
+    /// Signal all databases to stop work.
     bool stop();
+
+    /// Stop all databases (threads must be joined).
+    bool close();
 
     // Locking.
     // ------------------------------------------------------------------------

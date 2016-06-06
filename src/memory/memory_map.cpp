@@ -35,6 +35,7 @@
 #include <cstdint>
 #include <fcntl.h>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -96,7 +97,8 @@ int memory_map::open_file(const path& filename)
     return handle;
 }
 
-bool memory_map::handle_error(const char* context, const path& filename)
+bool memory_map::handle_error(const std::string& context,
+    const path& filename)
 {
 #ifdef _WIN32
     const auto error = GetLastError();
@@ -122,123 +124,206 @@ void memory_map::log_resizing(size_t size)
         << "Resizing: " << filename_ << " [" << size << "]";
 }
 
-void memory_map::log_unmapping()
+void memory_map::log_unmapped()
 {
     log::debug(LOG_DATABASE)
-        << "Unmapping: " << filename_ << " [" << logical_size_ << "]";
+        << "Unmapped: " << filename_ << " [" << logical_size_ << "]";
 }
 
 // mmap documentation: tinyurl.com/hnbw8t5
 memory_map::memory_map(const path& filename)
-  : filename_(filename),
-    stopped_(false),
+  : file_handle_(open_file(filename)),
+    filename_(filename),
     data_(nullptr),
-    file_handle_(open_file(filename_)),
     file_size_(file_size(file_handle_)),
-    logical_size_(file_size_)
+    logical_size_(file_size_),
+    closed_(true),
+    stopped_(true)
 {
-    // This initializes data_.
-    stopped_ = !map(file_size_);
-
-    if (stopped_)
-        handle_error("map", filename_);
-    else if (madvise(data_, 0, MADV_RANDOM) == -1)
-        handle_error("advise", filename_);
-    else
-        log_mapping();
 }
 
 memory_map::memory_map(const path& filename, mutex_ptr mutex)
   : memory_map(filename)
 {
-    external_mutex_ = mutex;
+    remap_mutex_ = mutex;
 }
 
-// The database must be kept in scope until all of its references are cleared.
-// To guard against this we should derive this from shared_from_base and
-// capture a shared_from_this reference in the memory instances.
+// Database threads must be joined before close is called (or destruct).
 memory_map::~memory_map()
 {
-    stop();
+    close();
+}
+
+// Startup and shutdown.
+// ----------------------------------------------------------------------------
+
+// Map the database file and signal start.
+bool memory_map::start()
+{
+    // Critical Section (internal/unconditional)
+    ///////////////////////////////////////////////////////////////////////////
+    mutex_.lock_upgrade();
+
+    if (!stopped_)
+    {
+        mutex_.unlock_upgrade();
+        //---------------------------------------------------------------------
+        // Start is not idempotent (should be called on single thread).
+        return false;
+    }
+
+    mutex_.unlock_upgrade_and_lock();
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    std::string error_name;
+
+    // Initialize data_.
+    if (!map(file_size_))
+        error_name = "map";
+    else if (madvise(data_, 0, MADV_RANDOM) == -1)
+        error_name = "madvise";
+    else
+    {
+        closed_ = false;
+        stopped_ = false;
+    }
+
+    mutex_.unlock();
+    ///////////////////////////////////////////////////////////////////////////
+
+    // Keep logging out of the critical section.
+    if (!error_name.empty())
+        return handle_error(error_name, filename_);
+
+    log_mapping();
+    return true;
+}
+
+bool memory_map::stop()
+{
+    // Critical Section (internal/unconditional)
+    ///////////////////////////////////////////////////////////////////////////
+    mutex_.lock_upgrade();
+
+    if (stopped_)
+    {
+        mutex_.unlock_upgrade();
+        //---------------------------------------------------------------------
+        // Stop is idempotent (may be called from multiple threads).
+        return true;
+    }
+
+    mutex_.unlock_upgrade_and_lock();
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    stopped_ = true;
+
+    mutex_.unlock();
+    ///////////////////////////////////////////////////////////////////////////
+
+    return true;
+}
+
+// Close does not call stop because there is no way to detect thread join.
+bool memory_map::close()
+{
+    std::string error_name;
+
+    // Critical Section (internal/unconditional)
+    ///////////////////////////////////////////////////////////////////////////
+    mutex_.lock_upgrade();
+
+    if (closed_)
+    {
+        mutex_.unlock_upgrade();
+        //---------------------------------------------------------------------
+        // Close is idempotent (may be called from multiple threads).
+        return true;
+    }
+
+    mutex_.unlock_upgrade_and_lock();
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    closed_ = true;
+
+    if (msync(data_, logical_size_, MS_SYNC) == -1)
+        error_name = "msync";
+    else if (munmap(data_, file_size_) == -1)
+        error_name = "munmap";
+    else if (ftruncate(file_handle_, logical_size_) == -1)
+        error_name = "ftruncate";
+    else if (fsync(file_handle_) == -1)
+        error_name = "fsync";
+    else if (::close(file_handle_) == -1)
+        error_name = "close";
+
+    mutex_.unlock();
+    ///////////////////////////////////////////////////////////////////////////
+
+    // Keep logging out of the critical section.
+    if (!error_name.empty())
+        return handle_error(error_name, filename_);
+
+    log_unmapped();
+    return true;
 }
 
 bool memory_map::stopped() const
 {
-    // Critical Section (internal)
+    // Critical Section (internal/unconditional)
     ///////////////////////////////////////////////////////////////////////////
-    REMAP_READ(internal_mutex_);
+    shared_lock lock(mutex_);
 
     return stopped_;
     ///////////////////////////////////////////////////////////////////////////
 }
 
-bool memory_map::stop()
-{
-    // Critical Section (internal)
-    ///////////////////////////////////////////////////////////////////////////
-    REMAP_WRITE(internal_mutex_);
-
-    if (stopped_)
-        return true;
-
-    stopped_ = true;
-    log_unmapping();
-
-    if (msync(data_, logical_size_, MS_SYNC) == -1)
-        return handle_error("msync", filename_);
-
-    if (munmap(data_, file_size_) == -1)
-        return handle_error("munmap", filename_);
-
-    if (ftruncate(file_handle_, logical_size_) == -1)
-        return handle_error("ftruncate", filename_);
-
-    if (fsync(file_handle_) == -1)
-        return handle_error("fsync", filename_);
-
-    if (close(file_handle_) == -1)
-        return handle_error("close", filename_);
-
-    return true;
-    ///////////////////////////////////////////////////////////////////////////
-}
+// Operations.
+// ----------------------------------------------------------------------------
 
 size_t memory_map::size() const
 {
     // Critical Section (internal)
     ///////////////////////////////////////////////////////////////////////////
-    REMAP_READ(internal_mutex_);
+    REMAP_READ(mutex_);
 
     return file_size_;
     ///////////////////////////////////////////////////////////////////////////
 }
 
+// throws runtime_error
 memory_ptr memory_map::access()
 {
-    return REMAP_ACCESSOR(data_, internal_mutex_);
+    return REMAP_ACCESSOR(data_, mutex_);
 }
 
+// throws runtime_error
 memory_ptr memory_map::resize(size_t size)
 {
     return reserve(size, EXPANSION_DENOMINATOR);
 }
 
+// throws runtime_error
 memory_ptr memory_map::reserve(size_t size)
 {
     return reserve(size, EXPANSION_NUMERATOR);
 }
 
+// throws runtime_error
+// There is no way to gracefully recover from a resize failure because there
+// are integrity relationships across multiple database files. Stopping a write
+// in one would require rolling back preceding write operations in others.
+// To handle this situation without database corruption would require predicting
+// the required allocation and all resizing before writing a block.
 memory_ptr memory_map::reserve(size_t size, size_t expansion)
 {
     // Critical Section (internal)
     ///////////////////////////////////////////////////////////////////////////
-    const auto memory = REMAP_ALLOCATOR(internal_mutex_);
+    const auto memory = REMAP_ALLOCATOR(mutex_);
 
     if (size > file_size_)
     {
-        const auto new_size = size * expansion / EXPANSION_DENOMINATOR;
+        const auto target = size * expansion / EXPANSION_DENOMINATOR;
 
-        if (!truncate(new_size))
+        if (!truncate_mapped(target))
         {
             handle_error("resize", filename_);
             throw std::runtime_error("Resize failure, disk space may be low.");
@@ -253,6 +338,7 @@ memory_ptr memory_map::reserve(size_t size, size_t expansion)
 }
 
 // privates
+// ----------------------------------------------------------------------------
 
 size_t memory_map::page()
 {
@@ -306,18 +392,23 @@ bool memory_map::remap(size_t size)
 
 bool memory_map::truncate(size_t size)
 {
+    return ftruncate(file_handle_, size) != -1;
+}
+
+bool memory_map::truncate_mapped(size_t size)
+{
     log_resizing(size);
 
     // Critical Section (conditional/external)
     ///////////////////////////////////////////////////////////////////////////
-    conditional_lock lock(external_mutex_);
+    conditional_lock lock(remap_mutex_);
 
 #ifndef MREMAP_MAYMOVE
     if (!unmap())
         return false;
 #endif
 
-    if (ftruncate(file_handle_, size) == -1)
+    if (!truncate(size))
         return false;
 
 #ifndef MREMAP_MAYMOVE

@@ -56,30 +56,72 @@ block_database::block_database(const path& map_filename,
     index_file_(index_filename, mutex),
     index_manager_(index_file_, 0, sizeof(file_offset))
 {
-    BITCOIN_ASSERT(REMAP_ADDRESS(lookup_file_.access()) != nullptr);
-    BITCOIN_ASSERT(REMAP_ADDRESS(index_file_.access()) != nullptr);
 }
 
-void block_database::create()
+// Close does not call stop because there is no way to detect thread join.
+block_database::~block_database()
 {
+    close();
+}
+
+// Create.
+// ----------------------------------------------------------------------------
+
+// Initialize files and start.
+bool block_database::create()
+{
+    // Resize and create require a started file.
+    if (!lookup_file_.start() ||
+        !index_file_.start())
+        return false;
+
+    // These will throw if insufficient disk space.
     lookup_file_.resize(initial_map_file_size);
-    lookup_header_.create();
-    lookup_manager_.create();
     index_file_.resize(minimum_records_size);
-    index_manager_.create();
+
+    if (!lookup_header_.create() ||
+        !lookup_manager_.create() ||
+        !index_manager_.create())
+        return false;
+
+    // Should not call start after create, already started.
+    return
+        lookup_header_.start() &&
+        lookup_manager_.start() &&
+        index_manager_.start();
 }
 
-void block_database::start()
+// Startup and shutdown.
+// ----------------------------------------------------------------------------
+
+// Start files and primitives.
+bool block_database::start()
 {
-    lookup_header_.start();
-    lookup_manager_.start();
-    index_manager_.start();
+    return
+        lookup_file_.start() &&
+        index_file_.start() &&
+        lookup_header_.start() && 
+        lookup_manager_.start() &&
+        index_manager_.start();
 }
 
+// Stop files.
 bool block_database::stop()
 {
-    return lookup_file_.stop() && index_file_.stop();
+    return
+        lookup_file_.stop() &&
+        index_file_.stop();
 }
+
+// Close files.
+bool block_database::close()
+{
+    return
+        lookup_file_.close() &&
+        index_file_.close();
+}
+
+// ----------------------------------------------------------------------------
 
 block_result block_database::get(size_t height) const
 {
@@ -154,7 +196,7 @@ void block_database::write_position(file_offset position,
 
     // The return value is the first record, but we want the last (index).
     if (height >= count)
-        /* array_index*/ index_manager_.new_records(height - count + 1);
+        /* array_index */ index_manager_.new_records(height - count + 1);
 
     const auto memory = index_manager_.get(height);
     auto serial = make_serializer(REMAP_ADDRESS(memory));

@@ -47,21 +47,53 @@ stealth_database::stealth_database(const path& rows_filename,
 {
 }
 
-void stealth_database::create()
+// Close does not call stop because there is no way to detect thread join.
+stealth_database::~stealth_database()
 {
-    rows_file_.resize(minimum_records_size);
-    rows_manager_.create();
+    close();
 }
 
-void stealth_database::start()
+// Create.
+// ----------------------------------------------------------------------------
+
+// Initialize files and start.
+bool stealth_database::create()
 {
-    rows_manager_.start();
+    // Resize and create require a started file.
+    if (!rows_file_.start())
+        return false;
+
+    // This will throw if insufficient disk space.
+    rows_file_.resize(minimum_records_size);
+
+    if (!rows_manager_.create())
+        return false;
+
+    // Should not call start after create, already started.
+    return rows_manager_.start();
+}
+
+// Startup and shutdown.
+// ----------------------------------------------------------------------------
+
+bool stealth_database::start()
+{
+    return
+        rows_file_.start() &&
+        rows_manager_.start();
 }
 
 bool stealth_database::stop()
 {
     return rows_file_.stop();
 }
+
+bool stealth_database::close()
+{
+    return rows_file_.close();
+}
+
+// ----------------------------------------------------------------------------
 
 // The prefix is fixed at 32 bits, but the filter is 0-32 bits, so the records
 // cannot be indexed using a hash table. We also do not index by height.

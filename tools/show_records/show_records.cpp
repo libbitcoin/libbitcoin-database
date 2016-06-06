@@ -24,7 +24,8 @@ int main(int argc, char** argv)
 
     memory_map file(filename);
     record_manager manager(file, offset, record_size);
-    manager.start();
+    const auto result = manager.start();
+    BITCOIN_ASSERT(result);
 
     for (array_index i = 0; i < manager.count(); ++i)
     {

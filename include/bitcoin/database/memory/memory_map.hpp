@@ -23,6 +23,7 @@
 #ifndef _WIN32
 #include <sys/mman.h>
 #endif
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -41,16 +42,30 @@ class BCD_API memory_map
 {
 public:
     typedef std::shared_ptr<shared_mutex> mutex_ptr;
+
+    /// Construct a database (start is currently called, may throw).
     memory_map(const boost::filesystem::path& filename);
     memory_map(const boost::filesystem::path& filename, mutex_ptr mutex);
+
+    /// Close the database.
     ~memory_map();
 
     /// This class is not copyable.
     memory_map(const memory_map&) = delete;
     void operator=(const memory_map&) = delete;
 
+    /// Start or restart the database, mapping database files.
+    bool start();
+
+    /// Stop current work (optional, speeds shutdown with multiple threads).
     bool stop();
+
+    /// Unmap database files, can be restarted.
+    bool close();
+
+    /// True if stop has signaled the end of work.
     bool stopped() const;
+
     size_t size() const;
     memory_ptr access();
     memory_ptr resize(size_t size);
@@ -60,35 +75,35 @@ public:
 private:
     static size_t file_size(int file_handle);
     static int open_file(const boost::filesystem::path& filename);
-    static bool handle_error(const char* context,
+    static bool handle_error(const std::string& context,
         const boost::filesystem::path& filename);
 
     size_t page();
     bool unmap();
     bool map(size_t size);
-    bool remap(size_t new_size);
+    bool remap(size_t size);
     bool truncate(size_t size);
+    bool truncate_mapped(size_t size);
     bool validate(size_t size);
 
     void log_mapping();
     void log_resizing(size_t size);
-    void log_unmapping();
+    void log_unmapped();
 
     // Optionally guard against concurrent remap.
-    mutex_ptr external_mutex_;
-
-    // Guard against read/write during file remap.
-    mutable shared_mutex internal_mutex_;
+    mutex_ptr remap_mutex_;
 
     // File system.
-    const boost::filesystem::path filename_;
     const int file_handle_;
+    const boost::filesystem::path filename_;
 
-    // Protected by reader/writer locks.
-    bool stopped_;
+    // Protected by internal mutex.
     uint8_t* data_;
     size_t file_size_;
     size_t logical_size_;
+    std::atomic<bool> closed_;
+    std::atomic<bool> stopped_;
+    mutable upgrade_mutex mutex_;
 };
 
 } // namespace database

@@ -129,8 +129,8 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     data_base::touch_file(DIRECTORY "/block_lookup");
     data_base::touch_file(DIRECTORY "/block_rows");
     block_database db(DIRECTORY "/block_lookup", DIRECTORY "/block_rows");
-    db.create();
-    db.start();
+    BOOST_REQUIRE(db.create());
+
     size_t height;
     BOOST_REQUIRE(!db.top(height));
 

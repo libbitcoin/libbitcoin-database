@@ -40,17 +40,24 @@ namespace database {
 class BCD_API transaction_database
 {
 public:
+    /// Construct the database.
     transaction_database(const boost::filesystem::path& map_filename,
         std::shared_ptr<shared_mutex> mutex=nullptr);
 
+    /// Close the database (all threads must first be stopped).
+    ~transaction_database();
+
     /// Initialize a new transaction database.
-    void create();
+    bool create();
 
     /// Call before using the database.
-    void start();
+    bool start();
 
-    /// Call stop to unload the memory map.
+    /// Call to signal a stop of current operations.
     bool stop();
+
+    /// Call to unload the memory map.
+    bool close();
 
     /// Fetch transaction from its hash.
     transaction_result get(const hash_digest& hash) const;

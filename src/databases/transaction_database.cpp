@@ -43,26 +43,62 @@ transaction_database::transaction_database(const path& map_filename,
     lookup_manager_(lookup_file_, header_size),
     lookup_map_(lookup_header_, lookup_manager_)
 {
-    BITCOIN_ASSERT(REMAP_ADDRESS(lookup_file_.access()) != nullptr);
 }
 
-void transaction_database::create()
+// Close does not call stop because there is no way to detect thread join.
+transaction_database::~transaction_database()
 {
+    close();
+}
+
+// Create.
+// ----------------------------------------------------------------------------
+
+// Initialize files and start.
+bool transaction_database::create()
+{
+    // Resize and create require a started file.
+    if (!lookup_file_.start())
+        return false;
+
+    // This will throw if insufficient disk space.
     lookup_file_.resize(initial_map_file_size);
-    lookup_header_.create();
-    lookup_manager_.create();
+
+    if (!lookup_header_.create() ||
+        !lookup_manager_.create())
+        return false;
+
+    // Should not call start after create, already started.
+    return
+        lookup_header_.start() &&
+        lookup_manager_.start();
 }
 
-void transaction_database::start()
+// Startup and shutdown.
+// ----------------------------------------------------------------------------
+
+// Start files and primitives.
+bool transaction_database::start()
 {
-    lookup_header_.start();
-    lookup_manager_.start();
+    return
+        lookup_file_.start() &&
+        lookup_header_.start() &&
+        lookup_manager_.start();
 }
 
+// Stop files.
 bool transaction_database::stop()
 {
     return lookup_file_.stop();
 }
+
+// Close files.
+bool transaction_database::close()
+{
+    return lookup_file_.close();
+}
+
+// ----------------------------------------------------------------------------
 
 transaction_result transaction_database::get(const hash_digest& hash) const
 {

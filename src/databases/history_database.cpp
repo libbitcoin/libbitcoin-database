@@ -54,31 +54,69 @@ history_database::history_database(const path& lookup_filename,
     rows_list_(rows_manager_),
     rows_multimap_(lookup_map_, rows_list_)
 {
-    BITCOIN_ASSERT(REMAP_ADDRESS(lookup_file_.access()) != nullptr);
-    BITCOIN_ASSERT(REMAP_ADDRESS(rows_file_.access()) != nullptr);
 }
 
-void history_database::create()
+// Close does not call stop because there is no way to detect thread join.
+history_database::~history_database()
 {
+    close();
+}
+
+// Create.
+// ----------------------------------------------------------------------------
+
+// Initialize files and start.
+bool history_database::create()
+{
+    // Resize and create require a started file.
+    if (!lookup_file_.start() ||
+        !rows_file_.start())
+        return false;
+
+    // These will throw if insufficient disk space.
     lookup_file_.resize(initial_lookup_file_size);
-    lookup_header_.create();
-    lookup_manager_.create();
-
     rows_file_.resize(minimum_records_size);
-    rows_manager_.create();
+
+    if (!lookup_header_.create() ||
+        !lookup_manager_.create() ||
+        !rows_manager_.create())
+        return false;
+
+    // Should not call start after create, already started.
+    return
+        lookup_header_.start() &&
+        lookup_manager_.start() &&
+        rows_manager_.start();
 }
 
-void history_database::start()
+// Startup and shutdown.
+// ----------------------------------------------------------------------------
+
+bool history_database::start()
 {
-    lookup_header_.start();
-    lookup_manager_.start();
-    rows_manager_.start();
+    return
+        lookup_file_.start() &&
+        rows_file_.start() &&
+        lookup_header_.start() &&
+        lookup_manager_.start() &&
+        rows_manager_.start();
 }
 
 bool history_database::stop()
 {
-    return lookup_file_.stop() && rows_file_.stop();
+    return
+        lookup_file_.stop() &&
+        rows_file_.stop();
 }
+
+bool history_database::close()
+{
+    return
+        lookup_file_.close() &&
+        rows_file_.close();
+}
+
+// ----------------------------------------------------------------------------
 
 void history_database::add_output(const short_hash& key,
     const output_point& outpoint, uint32_t output_height, uint64_t value)

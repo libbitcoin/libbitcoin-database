@@ -108,7 +108,8 @@ int main(int argc, char** argv)
 
     if (command == "initialize_new")
     {
-        db.create();
+        const auto result = db.create();
+        BITCOIN_ASSERT(result);
     }
     else if (command == "scan")
     {
@@ -120,10 +121,13 @@ int main(int argc, char** argv)
 
         binary filter(args[0]);
         size_t from_height;
+
         if (!parse_uint(from_height, args[1]))
             return -1;
 
-        db.start();
+        const auto result = db.start();
+        BITCOIN_ASSERT(result);
+
         const auto rows = db.scan(filter, from_height);
         for (const auto& row: rows)
         {
@@ -171,7 +175,9 @@ int main(int argc, char** argv)
     ////        return -1;
     ////    }
     ////
-    ////    db.start();
+    ////    const auto result = db.start();
+    ////    BITCOIN_ASSERT(result);
+    ////
     ////    db.store(script, row);
     ////    db.sync();
     ////}
@@ -187,7 +193,9 @@ int main(int argc, char** argv)
         if (!parse_uint(from_height, args[0]))
             return -1;
 
-        db.start();
+        const auto result = db.start();
+        BITCOIN_ASSERT(result);
+
         db.unlink(from_height);
         db.sync();
     }
