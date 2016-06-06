@@ -140,12 +140,6 @@ memory_map::memory_map(const path& filename)
     closed_(true),
     stopped_(true)
 {
-    // TODO: remove once all samples and perform explicit start.
-    // The exception is necessary because otherwise the boolean failures
-    // would go unnoticed by callers that don't make explicit start calls.
-    // This mimics previous behavior whereby construct failures always threw.
-    if (!start())
-        throw std::runtime_error(filename.string() + " failed to load.");
 }
 
 memory_map::memory_map(const path& filename, mutex_ptr mutex)
@@ -327,9 +321,9 @@ memory_ptr memory_map::reserve(size_t size, size_t expansion)
 
     if (size > file_size_)
     {
-        const auto new_size = size * expansion / EXPANSION_DENOMINATOR;
+        const auto target = size * expansion / EXPANSION_DENOMINATOR;
 
-        if (!truncate(new_size))
+        if (!truncate_mapped(target))
         {
             handle_error("resize", filename_);
             throw std::runtime_error("Resize failure, disk space may be low.");
@@ -398,6 +392,11 @@ bool memory_map::remap(size_t size)
 
 bool memory_map::truncate(size_t size)
 {
+    return ftruncate(file_handle_, size) != -1;
+}
+
+bool memory_map::truncate_mapped(size_t size)
+{
     log_resizing(size);
 
     // Critical Section (conditional/external)
@@ -409,7 +408,7 @@ bool memory_map::truncate(size_t size)
         return false;
 #endif
 
-    if (ftruncate(file_handle_, size) == -1)
+    if (!truncate(size))
         return false;
 
 #ifndef MREMAP_MAYMOVE

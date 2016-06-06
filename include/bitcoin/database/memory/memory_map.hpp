@@ -81,8 +81,9 @@ private:
     size_t page();
     bool unmap();
     bool map(size_t size);
-    bool remap(size_t new_size);
+    bool remap(size_t size);
     bool truncate(size_t size);
+    bool truncate_mapped(size_t size);
     bool validate(size_t size);
 
     void log_mapping();
