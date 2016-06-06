@@ -158,6 +158,7 @@ data_base::~data_base()
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 
+// Throws if there is insufficient disk space.
 // TODO: merge this with file creation (initialization above).
 // This is actually first initialization of existing files, not file creation.
 bool data_base::create()
