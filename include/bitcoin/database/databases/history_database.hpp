@@ -48,6 +48,7 @@ struct BCD_API history_statinfo
 class BCD_API history_database
 {
 public:
+    /// Construct the database.
     history_database(const boost::filesystem::path& lookup_filename,
         const boost::filesystem::path& rows_filename,
         std::shared_ptr<shared_mutex> mutex=nullptr);

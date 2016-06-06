@@ -62,26 +62,41 @@ history_database::~history_database()
     close();
 }
 
-// Startup and shutdown.
+// Create.
 // ----------------------------------------------------------------------------
 
+// Initialize files and start.
 bool history_database::create()
 {
-    // This will throw if insufficient disk space.
-    lookup_file_.resize(initial_lookup_file_size);
-
-    if (!lookup_header_.create() ||
-        !lookup_manager_.create())
+    // Resize and create require a started file.
+    if (!lookup_file_.start() ||
+        !rows_file_.start())
         return false;
 
-    // This will throw if insufficient disk space.
+    // These will throw if insufficient disk space.
+    lookup_file_.resize(initial_lookup_file_size);
     rows_file_.resize(minimum_records_size);
-    return rows_manager_.create();
+
+    if (!lookup_header_.create() ||
+        !lookup_manager_.create() ||
+        !rows_manager_.create())
+        return false;
+
+    // Should not call start after create, already started.
+    return
+        lookup_header_.start() &&
+        lookup_manager_.start() &&
+        rows_manager_.start();
 }
+
+// Startup and shutdown.
+// ----------------------------------------------------------------------------
 
 bool history_database::start()
 {
     return
+        lookup_file_.start() &&
+        rows_file_.start() &&
         lookup_header_.start() &&
         lookup_manager_.start() &&
         rows_manager_.start();

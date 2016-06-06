@@ -53,20 +53,34 @@ stealth_database::~stealth_database()
     close();
 }
 
-// Startup and shutdown.
+// Create.
 // ----------------------------------------------------------------------------
 
+// Initialize files and start.
 bool stealth_database::create()
 {
+    // Resize and create require a started file.
+    if (!rows_file_.start())
+        return false;
+
     // This will throw if insufficient disk space.
     rows_file_.resize(minimum_records_size);
 
-    return rows_manager_.create();
+    if (!rows_manager_.create())
+        return false;
+
+    // Should not call start after create, already started.
+    return rows_manager_.start();
 }
+
+// Startup and shutdown.
+// ----------------------------------------------------------------------------
 
 bool stealth_database::start()
 {
-    return rows_manager_.start();
+    return
+        rows_file_.start() &&
+        rows_manager_.start();
 }
 
 bool stealth_database::stop()

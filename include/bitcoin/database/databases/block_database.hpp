@@ -39,6 +39,7 @@ namespace database {
 class BCD_API block_database
 {
 public:
+    /// Construct the database.
     block_database(const boost::filesystem::path& map_filename,
         const boost::filesystem::path& index_filename,
         std::shared_ptr<shared_mutex> mutex=nullptr);

@@ -63,7 +63,7 @@ bool data_base::initialize(const path& prefix, const chain::block& genesis)
 
     data_base instance(paths, 0, 0);
 
-    if (!instance.create() || !instance.start())
+    if (!instance.create())
         return false;
 
     instance.push(genesis);
@@ -158,6 +158,7 @@ data_base::~data_base()
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 
+// Leaves database in started state.
 // Throws if there is insufficient disk space.
 // TODO: merge this with file creation (initialization above).
 // This is actually first initialization of existing files, not file creation.
@@ -196,7 +197,6 @@ bool data_base::start()
         history.start() &&
         spends.start() &&
         stealth.start() &&
-        transactions.start() &&
         transactions.start();
     const auto end_exclusive = end_write();
 

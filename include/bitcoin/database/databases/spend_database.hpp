@@ -46,6 +46,7 @@ struct BCD_API spend_statinfo
 class BCD_API spend_database
 {
 public:
+    /// Construct the database.
     spend_database(const boost::filesystem::path& filename,
         std::shared_ptr<shared_mutex> mutex=nullptr);
 

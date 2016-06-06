@@ -36,6 +36,7 @@ class BCD_API stealth_database
 public:
     typedef std::function<void(memory_ptr)> write_function;
 
+    /// Construct the database.
     stealth_database(const boost::filesystem::path& rows_filename,
         std::shared_ptr<shared_mutex> mutex=nullptr);
 

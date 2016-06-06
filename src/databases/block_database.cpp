@@ -64,30 +64,48 @@ block_database::~block_database()
     close();
 }
 
+// Create.
+// ----------------------------------------------------------------------------
+
+// Initialize files and start.
+bool block_database::create()
+{
+    // Resize and create require a started file.
+    if (!lookup_file_.start() ||
+        !index_file_.start())
+        return false;
+
+    // These will throw if insufficient disk space.
+    lookup_file_.resize(initial_map_file_size);
+    index_file_.resize(minimum_records_size);
+
+    if (!lookup_header_.create() ||
+        !lookup_manager_.create() ||
+        !index_manager_.create())
+        return false;
+
+    // Should not call start after create, already started.
+    return
+        lookup_header_.start() &&
+        lookup_manager_.start() &&
+        index_manager_.start();
+}
+
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 
-bool block_database::create()
-{
-    // This will throw if insufficient disk space.
-    lookup_file_.resize(initial_map_file_size);
-
-    if (!lookup_header_.create() || !lookup_manager_.create())
-        return false;
-
-    // This will throw if insufficient disk space.
-    index_file_.resize(minimum_records_size);
-    return index_manager_.create();
-}
-
+// Start files and primitives.
 bool block_database::start()
 {
     return
+        lookup_file_.start() &&
+        index_file_.start() &&
         lookup_header_.start() && 
         lookup_manager_.start() &&
         index_manager_.start();
 }
 
+// Stop files.
 bool block_database::stop()
 {
     return
@@ -95,6 +113,7 @@ bool block_database::stop()
         index_file_.stop();
 }
 
+// Close files.
 bool block_database::close()
 {
     return

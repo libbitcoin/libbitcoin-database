@@ -40,6 +40,7 @@ namespace database {
 class BCD_API transaction_database
 {
 public:
+    /// Construct the database.
     transaction_database(const boost::filesystem::path& map_filename,
         std::shared_ptr<shared_mutex> mutex=nullptr);
 

@@ -91,7 +91,6 @@ BOOST_AUTO_TEST_CASE(history_database__test)
     data_base::touch_file(DIRECTORY "/rows");
     history_database db(DIRECTORY "/lookup", DIRECTORY "/rows");
     BOOST_REQUIRE(db.create());
-    BOOST_REQUIRE(db.start());
     db.add_output(key1, out11, out_h11, value11);
     db.add_output(key1, out12, out_h12, value12);
     db.add_output(key1, out13, out_h13, value13);
