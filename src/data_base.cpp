@@ -355,8 +355,8 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
     {
         // We also push spends in the inputs loop.
         const auto& input = inputs[index];
-        const chain::input_point spend{ tx_hash, index };
-        spends.store(input.previous_output, spend);
+        const chain::input_point point{ tx_hash, index };
+        spends.store(input.previous_output, point);
 
         if (height < history_height_)
             continue;
@@ -366,8 +366,8 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
         if (!address)
             continue;
 
-        const auto& output = input.previous_output;
-        history.add_input(address.hash(), output, spend, height);
+        const auto& previous = input.previous_output;
+        history.add_input(address.hash(), point, height, previous);
     }
 }
 
@@ -380,7 +380,7 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
     for (uint32_t index = 0; index < outputs.size(); ++index)
     {
         const auto& output = outputs[index];
-        const chain::output_point outpoint{ tx_hash, index };
+        const chain::output_point point{ tx_hash, index };
 
         // Try to extract an address.
         const auto address = payment_address::extract(output.script);
@@ -388,7 +388,7 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
             continue;
 
         const auto value = output.value;
-        history.add_output(address.hash(), outpoint, height, value);
+        history.add_output(address.hash(), point, height, value);
     }
 }
 
