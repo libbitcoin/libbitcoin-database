@@ -133,14 +133,14 @@ void history_database::add_output(const short_hash& key,
 }
 
 void history_database::add_input(const short_hash& key,
-    const output_point& previous, const input_point& input,
-    size_t input_height)
+    const output_point& inpoint, uint32_t input_height,
+    const input_point& previous)
 {
     auto write = [&](memory_ptr data)
     {
         auto serial = make_serializer(REMAP_ADDRESS(data));
         serial.write_byte(static_cast<uint8_t>(point_kind::spend));
-        serial.write_data(input.to_data());
+        serial.write_data(inpoint.to_data());
         serial.write_4_bytes_little_endian(input_height);
         serial.write_8_bytes_little_endian(previous.checksum());
     };

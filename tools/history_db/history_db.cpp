@@ -232,7 +232,7 @@ int main(int argc, char** argv)
         const auto result = db.start();
         BITCOIN_ASSERT(result);
 
-        db.add_input(key, previous, spend, spend_height);
+        db.add_input(key, spend, spend_height, previous);
         db.sync();
     }
     else if (command == "delete_last_row")

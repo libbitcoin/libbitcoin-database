@@ -94,8 +94,8 @@ BOOST_AUTO_TEST_CASE(history_database__test)
     db.add_output(key1, out11, out_h11, value11);
     db.add_output(key1, out12, out_h12, value12);
     db.add_output(key1, out13, out_h13, value13);
-    db.add_input(key1, out11, spend11, spend_h11);
-    db.add_input(key1, out13, spend13, spend_h13);
+    db.add_input(key1, spend11, spend_h11, out11);
+    db.add_input(key1, spend13, spend_h13, out13);
     db.add_output(key2, out21, out_h21, value21);
     db.add_output(key2, out22, out_h22, value22);
 
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(history_database__test)
     };
     auto res_ns = db.get(key2, 0, 0);
     no_spend(res_ns);
-    db.add_input(key2, out22, spend22, spend_h22);
+    db.add_input(key2, spend22, spend_h22, out22);
     auto has_spend = [=](const history_compact::list& history)
     {
         BOOST_REQUIRE(history.size() == 3);
