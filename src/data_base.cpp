@@ -395,34 +395,31 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
 void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
     const output::list& outputs)
 {
-    if (height < stealth_height_)
+    if (height < stealth_height_ || outputs.empty())
         return;
 
-    BITCOIN_ASSERT_MSG(outputs.size() <= max_int64, "overflow");
-    const auto outputs_size = static_cast<int64_t>(outputs.size());
-
-    // Stealth cannot be in last output because it is paired.
-    for (int64_t index = 0; index < (outputs_size - 1); ++index)
+    // Stealth outputs are paired by convention.
+    for (size_t index = 0; index < (outputs.size() - 1); ++index)
     {
         const auto& ephemeral_script = outputs[index].script;
         const auto& payment_script = outputs[index + 1].script;
 
-        // Try to extract an unsigned ephemeral key from the odd output.
+        // Try to extract an unsigned ephemeral key from the first output.
         hash_digest unsigned_ephemeral_key;
         if (!extract_ephemeral_key(unsigned_ephemeral_key, ephemeral_script))
             continue;
 
-        // Try to extract a stealth prefix from the odd output.
+        // Try to extract a stealth prefix from the first output.
         uint32_t prefix;
         if (!to_stealth_prefix(prefix, ephemeral_script))
             continue;
 
-        // Try to extract the payment address from the even output.
-        // The payment address versions are arbitrary and unused here.
+        // Try to extract the payment address from the second output.
         const auto address = payment_address::extract(payment_script);
         if (!address)
             continue;
 
+        // The payment address versions are arbitrary and unused here.
         const chain::stealth_compact row
         {
             unsigned_ephemeral_key,
