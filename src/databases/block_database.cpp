@@ -188,15 +188,30 @@ void block_database::sync()
     index_manager_.sync();
 }
 
-// Atomicity of the written value is protected by sync.
+// This is necessary for parallel import, as gaps are created.
+void block_database::zeroize(array_index first, array_index count)
+{
+    for (array_index index = first; index < (first + count); ++index)
+    {
+        const auto memory = index_manager_.get(index);
+        auto serial = make_serializer(REMAP_ADDRESS(memory));
+        serial.write_8_bytes_little_endian(empty);
+    }
+}
+
+// Atomicity of the written value is protected by sync
 void block_database::write_position(file_offset position,
     array_index height)
 {
-    const auto count = index_manager_.count();
+    const auto initial_count = index_manager_.count();
+    const auto new_count = height + 1;
 
-    // The return value is the first record, but we want the last (index).
-    if (height >= count)
-        /* array_index */ index_manager_.new_records(height - count + 1);
+    if (new_count > initial_count)
+    {
+        const auto create_count = new_count - initial_count;
+        index_manager_.new_records(create_count);
+        zeroize(initial_count, create_count - 1);
+    }
 
     const auto memory = index_manager_.get(height);
     auto serial = make_serializer(REMAP_ADDRESS(memory));
@@ -210,15 +225,32 @@ file_offset block_database::read_position(array_index height) const
     return from_little_endian_unsafe<file_offset>(address);
 }
 
-// This reflects the index of the highest synchronized block.
+// This returns the index of the highest synchronized block.
 bool block_database::top(size_t& out_height) const
 {
     const auto count = index_manager_.count();
+
     if (count == 0)
         return false;
 
     out_height = count - 1;
     return true;
+}
+
+bool block_database::gap(size_t& out_height, size_t start_height) const
+{
+    const auto count = index_manager_.count();
+
+    for (size_t height = start_height; height < count; ++height)
+    {
+        if (read_position(height) == empty)
+        {
+            out_height = height;
+            return true;
+        }
+    }
+
+    return false;
 }
 
 } // namespace database

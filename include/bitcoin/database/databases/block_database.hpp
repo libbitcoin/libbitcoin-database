@@ -39,6 +39,9 @@ namespace database {
 class BCD_API block_database
 {
 public:
+    // std::numeric_limits<file_offset>::max()
+    static BC_CONSTEXPR file_offset empty = bc::max_uint64;
+
     /// Construct the database.
     block_database(const boost::filesystem::path& map_filename,
         const boost::filesystem::path& index_filename,
@@ -79,13 +82,17 @@ public:
     void sync();
 
     /// Latest block height in our chain. Returns false if no blocks exist.
-    /// This is actually the count of blocks minus one and does not represent
-    /// the logical top if there are gaps in the chain. Use gap to validate
-    /// the top at startup
+    /// With gaps in the chain this is the greatest block height written.
     bool top(size_t& out_height) const;
+
+    /// Return the next chain gap at or after the specified start height.
+    bool gap(size_t& out_height, size_t start_height) const;
 
 private:
     typedef slab_hash_table<hash_digest> slab_map;
+
+    /// Zeroize the specfied index positions.
+    void zeroize(array_index first, array_index count);
 
     /// Write block hash table position into the block index.
     void write_position(file_offset position, array_index height);
