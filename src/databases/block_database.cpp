@@ -225,11 +225,12 @@ file_offset block_database::read_position(array_index height) const
     return from_little_endian_unsafe<file_offset>(address);
 }
 
-// This returns the index of the highest synchronized block.
+// The index of the highest existing block, independent of gaps.
 bool block_database::top(size_t& out_height) const
 {
     const auto count = index_manager_.count();
 
+    // Guard against no genesis block.
     if (count == 0)
         return false;
 
@@ -237,10 +238,16 @@ bool block_database::top(size_t& out_height) const
     return true;
 }
 
+// The index of the first missing block starting from given height.
 bool block_database::gap(size_t& out_height, size_t start_height) const
 {
     const auto count = index_manager_.count();
 
+    // Guard against no genesis block, terminate is starting after last gap.
+    if (count == 0 || start_height > count)
+        return false;
+
+    // Scan for first missing block and return its parent block height.
     for (size_t height = start_height; height < count; ++height)
     {
         if (read_position(height) == empty)
@@ -250,7 +257,9 @@ bool block_database::gap(size_t& out_height, size_t start_height) const
         }
     }
 
-    return false;
+    // There are no gaps in the chain, count is the last gap.
+    out_height = count;
+    return true;
 }
 
 } // namespace database
