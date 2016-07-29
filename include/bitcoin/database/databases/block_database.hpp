@@ -84,8 +84,11 @@ public:
     /// The index of the highest existing block, independent of gaps.
     bool top(size_t& out_height) const;
 
+    /// Return the first and last gaps in the blockchain, or false if none.
+    bool gap_range(size_t& out_first, size_t& out_last) const;
+
     /// The index of the first missing block starting from given height.
-    bool gap(size_t& out_height, size_t start_height) const;
+    bool next_gap(size_t& out_height, size_t start_height) const;
 
 private:
     typedef slab_hash_table<hash_digest> slab_map;

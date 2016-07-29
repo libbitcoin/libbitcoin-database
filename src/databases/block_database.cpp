@@ -238,8 +238,41 @@ bool block_database::top(size_t& out_height) const
     return true;
 }
 
-// The index of the first missing block starting from given height.
-bool block_database::gap(size_t& out_height, size_t start_height) const
+bool block_database::gap_range(size_t& out_first, size_t& out_last) const
+{
+    size_t first;
+    const auto count = index_manager_.count();
+
+    for (first = 0; first < count; ++first)
+    {
+        if (read_position(first) == empty)
+        {
+            // There is at least one gap.
+            out_first = first;
+            break;
+        }
+    }
+
+    // There are no gaps.
+    if (first == count)
+        return false;
+
+    for (size_t last = count - 1; last > first; --last)
+    {
+        if (read_position(last) == empty)
+        {
+            // There are at least two gaps.
+            out_last = last;
+            return true;
+        }
+    }
+
+    // There is only one gap.
+    out_last = first;
+    return true;
+}
+
+bool block_database::next_gap(size_t& out_height, size_t start_height) const
 {
     const auto count = index_manager_.count();
 
