@@ -199,13 +199,22 @@ void block_database::zeroize(array_index first, array_index count)
     }
 }
 
-// Atomicity of the written value is protected by sync
-void block_database::write_position(file_offset position,
-    array_index height)
+void block_database::write_position(file_offset position, array_index height)
 {
-    const auto initial_count = index_manager_.count();
+    BITCOIN_ASSERT(height < max_uint32);
     const auto new_count = height + 1;
 
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    mutex_.lock_upgrade();
+
+    // Guard index_manager to prevent interim count increase.
+    const auto initial_count = index_manager_.count();
+
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    mutex_.unlock_upgrade_and_lock();
+
+    // Guard write to prevent overwriting preceding height write.
     if (new_count > initial_count)
     {
         const auto create_count = new_count - initial_count;
@@ -213,9 +222,13 @@ void block_database::write_position(file_offset position,
         zeroize(initial_count, create_count - 1);
     }
 
+    // Guard write to prevent subsequent zeroize from erasing.
     const auto memory = index_manager_.get(height);
     auto serial = make_serializer(REMAP_ADDRESS(memory));
     serial.write_8_bytes_little_endian(position);
+
+    mutex_.unlock();
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 file_offset block_database::read_position(array_index height) const
