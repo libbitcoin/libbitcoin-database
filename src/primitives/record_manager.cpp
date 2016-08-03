@@ -140,9 +140,9 @@ array_index record_manager::new_records(size_t count)
 
 const memory_ptr record_manager::get(array_index record) const
 {
-    // Ensure requested record is within the file.
-    // We avoid a runtime error here to optimize out the count lock.
-    BITCOIN_ASSERT_MSG(record < count(), "Read past end of file.");
+    // If record >= count() then we should still be within the file. The
+    // condition implies a block has been popped between a guard and this read.
+    // The read will be invalidated and should not cause any other fault.
 
     auto memory = file_.access();
     REMAP_INCREMENT(memory, header_size_ + record_to_position(record));

@@ -112,6 +112,9 @@ private:
     /// Resolves to a position within the slab.
     memory_map index_file_;
     record_manager index_manager_;
+
+    // Guard against concurrent update of a range of block indexes.
+    upgrade_mutex mutex_;
 };
 
 } // namespace database
