@@ -438,69 +438,63 @@ chain::block data_base::pop()
     BITCOIN_ASSERT_MSG(result, "Pop on empty database.");
 
     const auto block_result = blocks.get(height);
-
-    // Set result header.
-    chain::block block;
-    block.header = block_result.header();
     const auto count = block_result.transaction_count();
 
-    // TODO: unreverse the loop so we can avoid this.
-    BITCOIN_ASSERT_MSG(count <= max_int64, "overflow");
-    const auto unsigned_count = static_cast<int64_t>(count);
+    // Build the block for return.
+    chain::block block;
+    block.header = block_result.header();
+    block.transactions.reserve(count);
+    auto& txs = block.transactions;
 
-    // Loop backwards (in reverse to how we added).
-    for (int64_t index = unsigned_count - 1; index >= 0; --index)
+    for (auto tx = 0; tx < count; ++tx)
     {
-        const auto tx_hash = block_result.transaction_hash(index);
+        const auto tx_hash = block_result.transaction_hash(tx);
         const auto tx_result = transactions.get(tx_hash);
+
         BITCOIN_ASSERT(tx_result);
         BITCOIN_ASSERT(tx_result.height() == height);
-        BITCOIN_ASSERT(tx_result.index() == static_cast<size_t>(index));
+        BITCOIN_ASSERT(tx_result.index() == static_cast<size_t>(tx));
 
-        const auto tx = tx_result.transaction();
-
-        // Do things in reverse so pop txs, then outputs, then inputs.
-        transactions.remove(tx_hash);
-
-        // Remove outputs
-        pop_outputs(tx.outputs, height);
-
-        // Remove inputs
-        if (!tx.is_coinbase())
-            pop_inputs(tx.inputs, height);
-
-        // Add transaction to result
-        block.transactions.push_back(tx);
+        // TODO: the deserialization should cache the hash on the tx.
+        // Deserialize the transaction and move it to the block.
+        block.transactions.emplace_back(tx_result.transaction());
     }
 
-    // Stealth unlike is not implemented.
+    // Loop txs backwards, the reverse of how they are added.
+    // Remove txs, then outputs, then inputs (also reverse order).
+    for (auto tx = txs.rbegin(); tx != txs.rend(); ++tx)
+    {
+        transactions.remove(tx->hash());
+        pop_outputs(tx->outputs, height);
+
+        if (!tx->is_coinbase())
+            pop_inputs(tx->inputs, height);
+    }
+
+    // Stealth unlink is not implemented.
     stealth.unlink(height);
     blocks.unlink(height);
 
     // Synchronise everything that was changed.
     synchronize();
 
-    // Reverse, since we looped backwards.
-    std::reverse(block.transactions.begin(), block.transactions.end());
+    // Return the block.
     return block;
 }
 
 void data_base::pop_inputs(const input::list& inputs, size_t height)
 {
-    BITCOIN_ASSERT_MSG(inputs.size() <= max_int64, "overflow");
-    const auto inputs_size = static_cast<int64_t>(inputs.size());
-
     // Loop in reverse.
-    for (int64_t index = inputs_size - 1; index >= 0; --index)
+    for (auto input = inputs.rbegin(); input != inputs.rend(); ++input)
     {
-        const auto& input = inputs[index];
-        spends.remove(input.previous_output);
+        spends.remove(input->previous_output);
 
         if (height < history_height_)
             continue;
 
         // Try to extract an address.
-        const auto address = payment_address::extract(input.script);
+        const auto address = payment_address::extract(input->script);
+
         if (address)
             history.delete_last_row(address.hash());
     }
@@ -511,16 +505,12 @@ void data_base::pop_outputs(const output::list& outputs, size_t height)
     if (height < history_height_)
         return;
 
-    BITCOIN_ASSERT_MSG(outputs.size() <= max_int64, "overflow");
-    const auto outputs_size = static_cast<int64_t>(outputs.size());
-
     // Loop in reverse.
-    for (int64_t index = outputs_size - 1; index >= 0; --index)
+    for (auto output = outputs.rbegin(); output != outputs.rend(); ++output)
     {
-        const auto& output = outputs[index];
-
         // Try to extract an address.
-        const auto address = payment_address::extract(output.script);
+        const auto address = payment_address::extract(output->script);
+
         if (address)
             history.delete_last_row(address.hash());
     }
