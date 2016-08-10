@@ -83,7 +83,7 @@ public:
     spend_statinfo statinfo() const;
 
 private:
-    typedef record_hash_table<hash_digest> record_map;
+    typedef record_hash_table<chain::point> record_map;
 
     // Hash table used for looking up inpoint spends by outpoint.
     memory_map lookup_file_;
