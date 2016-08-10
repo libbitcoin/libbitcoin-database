@@ -141,7 +141,7 @@ template <typename HashType>
 file_offset slab_hash_table<HashType>::read_bucket_value(
     const HashType& key) const
 {
-    auto value = header_.read(bucket_index(key));
+    const auto value = header_.read(bucket_index(key));
     static_assert(sizeof(value) == sizeof(file_offset), "Invalid size");
     return value;
 }
