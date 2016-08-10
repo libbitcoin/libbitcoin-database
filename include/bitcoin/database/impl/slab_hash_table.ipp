@@ -28,8 +28,8 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename HashType>
-slab_hash_table<HashType>::slab_hash_table(slab_hash_table_header& header,
+template <typename KeyType>
+slab_hash_table<KeyType>::slab_hash_table(slab_hash_table_header& header,
     slab_manager& manager)
   : header_(header), manager_(manager)
 {
@@ -39,13 +39,13 @@ slab_hash_table<HashType>::slab_hash_table(slab_hash_table_header& header,
 // are store then retrieval and unlinking will fail as these multiples cannot
 // be differentiated. Therefore the database is not currently able to support
 // multiple transactions with the same hash, as required by BIP30.
-template <typename HashType>
-file_offset slab_hash_table<HashType>::store(const HashType& key,
+template <typename KeyType>
+file_offset slab_hash_table<KeyType>::store(const KeyType& key,
     write_function write, const size_t value_size)
 {
     // Store current bucket value.
     const auto old_begin = read_bucket_value(key);
-    slab_row<HashType> item(manager_, 0);
+    slab_row<KeyType> item(manager_, 0);
     const auto new_begin = item.create(key, value_size, old_begin);
     write(item.data());
 
@@ -57,8 +57,8 @@ file_offset slab_hash_table<HashType>::store(const HashType& key,
 }
 
 // This is limited to returning the first of multiple matching key values.
-template <typename HashType>
-const memory_ptr slab_hash_table<HashType>::find(const HashType& key) const
+template <typename KeyType>
+const memory_ptr slab_hash_table<KeyType>::find(const KeyType& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -66,7 +66,7 @@ const memory_ptr slab_hash_table<HashType>::find(const HashType& key) const
     // Iterate through list...
     while (current != header_.empty)
     {
-        const slab_row<HashType> item(manager_, current);
+        const slab_row<KeyType> item(manager_, current);
 
         // Found.
         if (item.compare(key))
@@ -86,12 +86,12 @@ const memory_ptr slab_hash_table<HashType>::find(const HashType& key) const
 }
 
 // This is limited to unlinking the first of multiple matching key values.
-template <typename HashType>
-bool slab_hash_table<HashType>::unlink(const HashType& key)
+template <typename KeyType>
+bool slab_hash_table<KeyType>::unlink(const KeyType& key)
 {
     // Find start item...
     const auto begin = read_bucket_value(key);
-    const slab_row<HashType> begin_item(manager_, begin);
+    const slab_row<KeyType> begin_item(manager_, begin);
 
     // If start item has the key then unlink from buckets.
     if (begin_item.compare(key))
@@ -107,7 +107,7 @@ bool slab_hash_table<HashType>::unlink(const HashType& key)
     // Iterate through list...
     while (current != header_.empty)
     {
-        const slab_row<HashType> item(manager_, current);
+        const slab_row<KeyType> item(manager_, current);
 
         // Found, unlink current item from previous.
         if (item.compare(key))
@@ -129,33 +129,33 @@ bool slab_hash_table<HashType>::unlink(const HashType& key)
     return false;
 }
 
-template <typename HashType>
-array_index slab_hash_table<HashType>::bucket_index(const HashType& key) const
+template <typename KeyType>
+array_index slab_hash_table<KeyType>::bucket_index(const KeyType& key) const
 {
     const auto bucket = remainder(key, header_.size());
     BITCOIN_ASSERT(bucket < header_.size());
     return bucket;
 }
 
-template <typename HashType>
-file_offset slab_hash_table<HashType>::read_bucket_value(
-    const HashType& key) const
+template <typename KeyType>
+file_offset slab_hash_table<KeyType>::read_bucket_value(
+    const KeyType& key) const
 {
     const auto value = header_.read(bucket_index(key));
     static_assert(sizeof(value) == sizeof(file_offset), "Invalid size");
     return value;
 }
 
-template <typename HashType>
-void slab_hash_table<HashType>::link(const HashType& key,
+template <typename KeyType>
+void slab_hash_table<KeyType>::link(const KeyType& key,
     const file_offset begin)
 {
     header_.write(bucket_index(key), begin);
 }
 
-template <typename HashType>
+template <typename KeyType>
 template <typename ListItem>
-void slab_hash_table<HashType>::release(const ListItem& item,
+void slab_hash_table<KeyType>::release(const ListItem& item,
     const file_offset previous)
 {
     ListItem previous_item(manager_, previous);

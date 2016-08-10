@@ -30,10 +30,10 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename HashType>
+template <typename KeyType>
 BC_CONSTFUNC size_t hash_table_record_size(size_t value_size)
 {
-    return std::tuple_size<HashType>::value + sizeof(array_index)
+    return std::tuple_size<KeyType>::value + sizeof(array_index)
         + value_size;
 }
 
@@ -50,7 +50,7 @@ typedef hash_table_header<array_index, array_index> record_hash_table_header;
  * containing the hash of the item, and the next value is stored
  * with each record.
  *
- *   [ HashType ]
+ *   [ KeyType ]
  *   [ next:4   ]
  *   [ record   ]
  *
@@ -58,7 +58,7 @@ typedef hash_table_header<array_index, array_index> record_hash_table_header;
  * indexes avoiding reading/writing extra bytes to the file.
  * Using fixed size records is therefore faster.
  */
-template <typename HashType>
+template <typename KeyType>
 class record_hash_table
 {
 public:
@@ -68,24 +68,24 @@ public:
 
     /// Store a value. The provided write() function must write the correct
     /// number of bytes (record_size - key_size - sizeof(array_index)).
-    void store(const HashType& key, write_function write);
+    void store(const KeyType& key, write_function write);
 
     /// Find the record for a given hash.
     /// Returns a null pointer if not found.
-    const memory_ptr find(const HashType& key) const;
+    const memory_ptr find(const KeyType& key) const;
 
     /// Delete a key-value pair from the hashtable by unlinking the node.
-    bool unlink(const HashType& key);
+    bool unlink(const KeyType& key);
 
 private:
     // What is the bucket given a hash.
-    array_index bucket_index(const HashType& key) const;
+    array_index bucket_index(const KeyType& key) const;
 
     // What is the record start index for a chain.
-    array_index read_bucket_value(const HashType& key) const;
+    array_index read_bucket_value(const KeyType& key) const;
 
     // Link a new chain into the bucket header.
-    void link(const HashType& key, const array_index begin);
+    void link(const KeyType& key, const array_index begin);
 
     // Release node from linked chain.
     template <typename ListItem>

@@ -29,8 +29,8 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename HashType>
-record_hash_table<HashType>::record_hash_table(
+template <typename KeyType>
+record_hash_table<KeyType>::record_hash_table(
     record_hash_table_header& header, record_manager& manager)
   : header_(header), manager_(manager)
 {
@@ -39,13 +39,13 @@ record_hash_table<HashType>::record_hash_table(
 // This is not limited to storing unique key values. If duplicate keyed values
 // are store then retrieval and unlinking will fail as these multiples cannot
 // be differentiated.
-template <typename HashType>
-void record_hash_table<HashType>::store(const HashType& key,
+template <typename KeyType>
+void record_hash_table<KeyType>::store(const KeyType& key,
     const write_function write)
 {
     // Store current bucket value.
     const auto old_begin = read_bucket_value(key);
-    record_row<HashType> item(manager_, 0);
+    record_row<KeyType> item(manager_, 0);
     const auto new_begin = item.create(key, old_begin);
     write(item.data());
 
@@ -54,8 +54,8 @@ void record_hash_table<HashType>::store(const HashType& key,
 }
 
 // This is limited to returning the first of multiple matching key values.
-template <typename HashType>
-const memory_ptr record_hash_table<HashType>::find(const HashType& key) const
+template <typename KeyType>
+const memory_ptr record_hash_table<KeyType>::find(const KeyType& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -63,7 +63,7 @@ const memory_ptr record_hash_table<HashType>::find(const HashType& key) const
     // Iterate through list...
     while (current != header_.empty)
     {
-        const record_row<HashType> item(manager_, current);
+        const record_row<KeyType> item(manager_, current);
 
         // Found, return data.
         if (item.compare(key))
@@ -83,12 +83,12 @@ const memory_ptr record_hash_table<HashType>::find(const HashType& key) const
 }
 
 // This is limited to unlinking the first of multiple matching key values.
-template <typename HashType>
-bool record_hash_table<HashType>::unlink(const HashType& key)
+template <typename KeyType>
+bool record_hash_table<KeyType>::unlink(const KeyType& key)
 {
     // Find start item...
     const auto begin = read_bucket_value(key);
-    const record_row<HashType> begin_item(manager_, begin);
+    const record_row<KeyType> begin_item(manager_, begin);
 
     // If start item has the key then unlink from buckets.
     if (begin_item.compare(key))
@@ -104,7 +104,7 @@ bool record_hash_table<HashType>::unlink(const HashType& key)
     // Iterate through list...
     while (current != header_.empty)
     {
-        const record_row<HashType> item(manager_, current);
+        const record_row<KeyType> item(manager_, current);
 
         // Found, unlink current item from previous.
         if (item.compare(key))
@@ -126,34 +126,34 @@ bool record_hash_table<HashType>::unlink(const HashType& key)
     return false;
 }
 
-template <typename HashType>
-array_index record_hash_table<HashType>::bucket_index(
-    const HashType& key) const
+template <typename KeyType>
+array_index record_hash_table<KeyType>::bucket_index(
+    const KeyType& key) const
 {
     const auto bucket = remainder(key, header_.size());
     BITCOIN_ASSERT(bucket < header_.size());
     return bucket;
 }
 
-template <typename HashType>
-array_index record_hash_table<HashType>::read_bucket_value(
-    const HashType& key) const
+template <typename KeyType>
+array_index record_hash_table<KeyType>::read_bucket_value(
+    const KeyType& key) const
 {
     auto value = header_.read(bucket_index(key));
     static_assert(sizeof(value) == sizeof(array_index), "Invalid size");
     return value;
 }
 
-template <typename HashType>
-void record_hash_table<HashType>::link(const HashType& key,
+template <typename KeyType>
+void record_hash_table<KeyType>::link(const KeyType& key,
     const array_index begin)
 {
     header_.write(bucket_index(key), begin);
 }
 
-template <typename HashType>
+template <typename KeyType>
 template <typename ListItem>
-void record_hash_table<HashType>::release(const ListItem& item,
+void record_hash_table<KeyType>::release(const ListItem& item,
     const file_offset previous)
 {
     ListItem previous_item(manager_, previous);
