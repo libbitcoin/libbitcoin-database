@@ -190,7 +190,7 @@ history_compact::list history_database::get(const short_hash& key,
     for (const auto index: records)
     {
         // Stop once we reach the limit (if specified).
-        if (limit && result.size() >= limit)
+        if (limit > 0 && result.size() >= limit)
             break;
 
         // This obtains a remap safe address pointer against the rows file.
