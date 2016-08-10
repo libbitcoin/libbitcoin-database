@@ -36,6 +36,9 @@ record_hash_table<HashType>::record_hash_table(
 {
 }
 
+// This is not limited to storing unique key values. If duplicate keyed values
+// are store then retrieval and unlinking will fail as these multiples cannot
+// be differentiated.
 template <typename HashType>
 void record_hash_table<HashType>::store(const HashType& key,
     const write_function write)
@@ -50,6 +53,7 @@ void record_hash_table<HashType>::store(const HashType& key,
     link(key, new_begin);
 }
 
+// This is limited to returning the first of multiple matching key values.
 template <typename HashType>
 const memory_ptr record_hash_table<HashType>::find(const HashType& key) const
 {
@@ -78,6 +82,7 @@ const memory_ptr record_hash_table<HashType>::find(const HashType& key) const
     return nullptr;
 }
 
+// This is limited to unlinking the first of multiple matching key values.
 template <typename HashType>
 bool record_hash_table<HashType>::unlink(const HashType& key)
 {

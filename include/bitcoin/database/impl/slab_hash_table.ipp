@@ -35,6 +35,10 @@ slab_hash_table<HashType>::slab_hash_table(slab_hash_table_header& header,
 {
 }
 
+// This is not limited to storing unique key values. If duplicate keyed values
+// are store then retrieval and unlinking will fail as these multiples cannot
+// be differentiated. Therefore the database is not currently able to support
+// multiple transactions with the same hash, as required by BIP30.
 template <typename HashType>
 file_offset slab_hash_table<HashType>::store(const HashType& key,
     write_function write, const size_t value_size)
@@ -52,6 +56,7 @@ file_offset slab_hash_table<HashType>::store(const HashType& key,
     return new_begin + item.value_begin;
 }
 
+// This is limited to returning the first of multiple matching key values.
 template <typename HashType>
 const memory_ptr slab_hash_table<HashType>::find(const HashType& key) const
 {
@@ -80,6 +85,7 @@ const memory_ptr slab_hash_table<HashType>::find(const HashType& key) const
     return nullptr;
 }
 
+// This is limited to unlinking the first of multiple matching key values.
 template <typename HashType>
 bool slab_hash_table<HashType>::unlink(const HashType& key)
 {
