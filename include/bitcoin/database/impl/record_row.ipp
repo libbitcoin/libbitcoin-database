@@ -37,8 +37,8 @@ class record_row
 {
 public:
     static BC_CONSTEXPR size_t index_size = sizeof(array_index);
-    static BC_CONSTEXPR size_t hash_size = std::tuple_size<HashType>::value;
-    static BC_CONSTEXPR file_offset value_begin = hash_size + index_size;
+    static BC_CONSTEXPR size_t key_size = std::tuple_size<HashType>::value;
+    static BC_CONSTEXPR file_offset value_begin = key_size + index_size;
 
     record_row(record_manager& manager, array_index index);
 
@@ -151,7 +151,7 @@ template <typename HashType>
 const memory_ptr record_row<HashType>::raw_next_data() const
 {
     // Next position is after key data.
-    return raw_data(hash_size);
+    return raw_data(key_size);
 }
 
 } // namespace database

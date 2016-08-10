@@ -37,8 +37,8 @@ class slab_row
 {
 public:
     static BC_CONSTEXPR size_t position_size = sizeof(file_offset);
-    static BC_CONSTEXPR size_t hash_size = std::tuple_size<HashType>::value;
-    static BC_CONSTEXPR file_offset value_begin = hash_size + position_size;
+    static BC_CONSTEXPR size_t key_size = std::tuple_size<HashType>::value;
+    static BC_CONSTEXPR file_offset value_begin = key_size + position_size;
 
     slab_row(slab_manager& manager, file_offset position);
 
@@ -155,7 +155,7 @@ template <typename HashType>
 const memory_ptr slab_row<HashType>::raw_next_data() const
 {
     // Next position is after key data.
-    return raw_data(hash_size);
+    return raw_data(key_size);
 }
 
 } // namespace database

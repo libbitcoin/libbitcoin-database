@@ -67,7 +67,7 @@ public:
     record_hash_table(record_hash_table_header& header, record_manager& manager);
 
     /// Store a value. The provided write() function must write the correct
-    /// number of bytes (record_size - hash_size - sizeof(array_index)).
+    /// number of bytes (record_size - key_size - sizeof(array_index)).
     void store(const HashType& key, write_function write);
 
     /// Find the record for a given hash.
