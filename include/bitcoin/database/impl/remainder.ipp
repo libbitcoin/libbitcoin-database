@@ -27,10 +27,11 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename Hash, typename Divisor>
-Divisor remainder(const Hash& value, const Divisor divisor)
+/// Return a hash of the key reduced to the domain of the divisor.
+template <typename KeyType, typename Divisor>
+Divisor remainder(const KeyType& key, const Divisor divisor)
 {
-    return divisor == 0 ? 0 : std::hash<Hash>()(value) % divisor;
+    return divisor == 0 ? 0 : std::hash<KeyType>()(key) % divisor;
 }
 
 } // namespace database
