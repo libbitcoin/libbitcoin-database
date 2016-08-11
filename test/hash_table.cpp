@@ -390,50 +390,50 @@ BOOST_AUTO_TEST_CASE(record_hash_table_header__64bit__test)
     alloc.sync();
 
     // [e][0]
-    BOOST_CHECK_EQUAL(header.read(0), header.empty);
-    BOOST_CHECK_EQUAL(header.read(1), 0u);
+    BOOST_REQUIRE_EQUAL(header.read(0), header.empty);
+    BOOST_REQUIRE_EQUAL(header.read(1), 0u);
 
     ht.store(key, write);
     alloc.sync();
 
     // [e][1->0]
-    BOOST_CHECK_EQUAL(header.read(0), header.empty);
-    BOOST_CHECK_EQUAL(header.read(1), 1u);
+    BOOST_REQUIRE_EQUAL(header.read(0), header.empty);
+    BOOST_REQUIRE_EQUAL(header.read(1), 1u);
 
     ht.store(key1, write1);
     alloc.sync();
 
     // [2][1->0]
-    BOOST_CHECK_EQUAL(header.read(0), 2u);
-    BOOST_CHECK_EQUAL(header.read(1), 1u);
+    BOOST_REQUIRE_EQUAL(header.read(0), 2u);
+    BOOST_REQUIRE_EQUAL(header.read(1), 1u);
 
     ht.store(key1, write);
     alloc.sync();
 
     // [3->2][1->0]
-    BOOST_CHECK_EQUAL(header.read(0), 3u);
-    BOOST_CHECK_EQUAL(header.read(1), 1u);
+    BOOST_REQUIRE_EQUAL(header.read(0), 3u);
+    BOOST_REQUIRE_EQUAL(header.read(1), 1u);
 
     record_row<little_hash> item(alloc, 3);
-    BOOST_CHECK_EQUAL(item.next_index(), 2u);
+    BOOST_REQUIRE_EQUAL(item.next_index(), 2u);
 
     record_row<little_hash> item1(alloc, 2);
-    BOOST_CHECK_EQUAL(item1.next_index(), header.empty);
+    BOOST_REQUIRE_EQUAL(item1.next_index(), header.empty);
 
     // [3->2][X->0]
-    BOOST_CHECK(ht.unlink(key));
+    BOOST_REQUIRE(ht.unlink(key));
     alloc.sync();
 
-    BOOST_CHECK_EQUAL(header.read(1), 0u);
+    BOOST_REQUIRE_EQUAL(header.read(1), 0u);
 
     // [X->2][X->0]
-    BOOST_CHECK(ht.unlink(key1));
+    BOOST_REQUIRE(ht.unlink(key1));
     alloc.sync();
 
-    BOOST_CHECK_EQUAL(header.read(0), 2u);
+    BOOST_REQUIRE_EQUAL(header.read(0), 2u);
 
     little_hash invalid{ { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 } };
-    BOOST_CHECK(!ht.unlink(invalid));
+    BOOST_REQUIRE(!ht.unlink(invalid));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
