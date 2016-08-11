@@ -42,9 +42,7 @@ template <typename IndexType, typename ValueType>
 class hash_table_header
 {
 public:
-    // This VC++ workaround is OK because ValueType must be unsigned. 
-    //static constexpr ValueType empty = std::numeric_limits<ValueType>::max();
-    static BC_CONSTEXPR ValueType empty = (ValueType)bc::max_uint64;
+    static const ValueType empty;
 
     hash_table_header(memory_map& file);
     hash_table_header(memory_map& file, IndexType buckets);

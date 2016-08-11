@@ -39,8 +39,7 @@ namespace database {
 class BCD_API block_database
 {
 public:
-    // Valid file offsets should never be zero.
-    static BC_CONSTEXPR file_offset empty = 0;
+    static const file_offset empty;
 
     /// Construct the database.
     block_database(const boost::filesystem::path& map_filename,

@@ -26,6 +26,9 @@
 namespace libbitcoin {
 namespace database {
 
+// std::numeric_limits<array_index>::max()
+const array_index record_list::empty = bc::max_uint32;
+
 record_list::record_list(record_manager& manager)
   : manager_(manager)
 {
