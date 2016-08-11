@@ -42,7 +42,7 @@ typedef hash_table_header<array_index, file_offset> slab_hash_table_header;
  * containing the hash of the item, and the next value is stored
  * with each slab.
  *
- *   [ KeyType ]
+ *   [ KeyType  ]
  *   [ next:8   ]
  *   [ value... ]
  *

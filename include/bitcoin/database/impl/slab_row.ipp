@@ -81,7 +81,7 @@ file_offset slab_row<KeyType>::create(const KeyType& key,
     const file_offset info_size = key.size() + position_size;
 
     // Create new slab.
-    //   [ KeyType ]
+    //   [ KeyType  ]
     //   [ next:8   ]
     //   [ value... ]
     const size_t slab_size = info_size + value_size;

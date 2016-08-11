@@ -51,8 +51,8 @@ typedef hash_table_header<array_index, array_index> record_hash_table_header;
  * with each record.
  *
  *   [ KeyType ]
- *   [ next:4   ]
- *   [ record   ]
+ *   [ next:4  ]
+ *   [ record  ]
  *
  * By using the record_manager instead of slabs, we can have smaller
  * indexes avoiding reading/writing extra bytes to the file.

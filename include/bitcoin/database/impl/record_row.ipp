@@ -78,7 +78,7 @@ array_index record_row<KeyType>::create(const KeyType& key,
     const array_index next)
 {
     // Create new record.
-    //   [ KeyType ]
+    //   [ KeyType  ]
     //   [ next:4   ]
     //   [ value... ]
     index_ = manager_.new_records(1);
