@@ -26,15 +26,15 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename HashType>
-record_multimap<HashType>::record_multimap(record_hash_table_type& map,
+template <typename KeyType>
+record_multimap<KeyType>::record_multimap(record_hash_table_type& map,
     record_list& records)
   : map_(map), records_(records)
 {
 }
 
-template <typename HashType>
-array_index record_multimap<HashType>::lookup(const HashType& key) const
+template <typename KeyType>
+array_index record_multimap<KeyType>::lookup(const KeyType& key) const
 {
     const auto start_info = map_.find(key);
 
@@ -50,8 +50,8 @@ array_index record_multimap<HashType>::lookup(const HashType& key) const
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename HashType>
-void record_multimap<HashType>::add_row(const HashType& key,
+template <typename KeyType>
+void record_multimap<KeyType>::add_row(const KeyType& key,
     write_function write)
 {
     const auto start_info = map_.find(key);
@@ -66,8 +66,8 @@ void record_multimap<HashType>::add_row(const HashType& key,
     add_to_list(start_info, write);
 }
 
-template <typename HashType>
-void record_multimap<HashType>::add_to_list(memory_ptr start_info,
+template <typename KeyType>
+void record_multimap<KeyType>::add_to_list(memory_ptr start_info,
     write_function write)
 {
     const auto address = REMAP_ADDRESS(start_info);
@@ -93,8 +93,8 @@ void record_multimap<HashType>::add_to_list(memory_ptr start_info,
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename HashType>
-void record_multimap<HashType>::delete_last_row(const HashType& key)
+template <typename KeyType>
+void record_multimap<KeyType>::delete_last_row(const KeyType& key)
 {
     const auto start_info = map_.find(key);
     BITCOIN_ASSERT_MSG(start_info, "The row to delete was not found.");
@@ -130,8 +130,8 @@ void record_multimap<HashType>::delete_last_row(const HashType& key)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename HashType>
-void record_multimap<HashType>::create_new(const HashType& key,
+template <typename KeyType>
+void record_multimap<KeyType>::create_new(const KeyType& key,
     write_function write)
 {
     const auto first = records_.create();

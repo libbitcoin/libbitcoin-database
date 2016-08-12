@@ -37,6 +37,9 @@ BC_CONSTEXPR size_t number_buckets = 600000;
 BC_CONSTEXPR size_t header_size = slab_hash_table_header_size(number_buckets);
 BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_slabs_size;
 
+// Valid file offsets should never be zero.
+const file_offset block_database::empty = 0;
+
 // Record format:
 // main:
 //  [ header:80      ]

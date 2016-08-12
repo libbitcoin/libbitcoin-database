@@ -32,20 +32,20 @@ namespace database {
  * With the starting item, we can iterate until the end using the
  * next_index() method.
  */
-template <typename HashType>
+template <typename KeyType>
 class record_row
 {
 public:
     static BC_CONSTEXPR size_t index_size = sizeof(array_index);
-    static BC_CONSTEXPR size_t hash_size = std::tuple_size<HashType>::value;
-    static BC_CONSTEXPR file_offset value_begin = hash_size + index_size;
+    static BC_CONSTEXPR size_t key_size = std::tuple_size<KeyType>::value;
+    static BC_CONSTEXPR file_offset value_begin = key_size + index_size;
 
     record_row(record_manager& manager, array_index index);
 
-    array_index create(const HashType& key, const array_index next);
+    array_index create(const KeyType& key, const array_index next);
 
     /// Does this match?
-    bool compare(const HashType& key) const;
+    bool compare(const KeyType& key) const;
 
     /// The actual user data.
     const memory_ptr data() const;
@@ -65,20 +65,20 @@ private:
     mutable shared_mutex mutex_;
 };
 
-template <typename HashType>
-record_row<HashType>::record_row(record_manager& manager,
+template <typename KeyType>
+record_row<KeyType>::record_row(record_manager& manager,
     const array_index index)
   : manager_(manager), index_(index)
 {
     static_assert(index_size == 4, "Invalid array_index size.");
 }
 
-template <typename HashType>
-array_index record_row<HashType>::create(const HashType& key,
+template <typename KeyType>
+array_index record_row<KeyType>::create(const KeyType& key,
     const array_index next)
 {
     // Create new record.
-    //   [ HashType ]
+    //   [ KeyType  ]
     //   [ next:4   ]
     //   [ value... ]
     index_ = manager_.new_records(1);
@@ -98,23 +98,23 @@ array_index record_row<HashType>::create(const HashType& key,
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename HashType>
-bool record_row<HashType>::compare(const HashType& key) const
+template <typename KeyType>
+bool record_row<KeyType>::compare(const KeyType& key) const
 {
     // Key data is at the start.
     const auto memory = raw_data(0);
     return std::equal(key.begin(), key.end(), REMAP_ADDRESS(memory));
 }
 
-template <typename HashType>
-const memory_ptr record_row<HashType>::data() const
+template <typename KeyType>
+const memory_ptr record_row<KeyType>::data() const
 {
     // Value data is at the end.
     return raw_data(value_begin);
 }
 
-template <typename HashType>
-array_index record_row<HashType>::next_index() const
+template <typename KeyType>
+array_index record_row<KeyType>::next_index() const
 {
     const auto memory = raw_next_data();
     const auto next_address = REMAP_ADDRESS(memory);
@@ -126,8 +126,8 @@ array_index record_row<HashType>::next_index() const
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename HashType>
-void record_row<HashType>::write_next_index(array_index next)
+template <typename KeyType>
+void record_row<KeyType>::write_next_index(array_index next)
 {
     const auto memory = raw_next_data();
     auto serial = make_serializer(REMAP_ADDRESS(memory));
@@ -139,19 +139,19 @@ void record_row<HashType>::write_next_index(array_index next)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename HashType>
-const memory_ptr record_row<HashType>::raw_data(file_offset offset) const
+template <typename KeyType>
+const memory_ptr record_row<KeyType>::raw_data(file_offset offset) const
 {
     auto memory = manager_.get(index_);
     REMAP_INCREMENT(memory, offset);
     return memory;
 }
 
-template <typename HashType>
-const memory_ptr record_row<HashType>::raw_next_data() const
+template <typename KeyType>
+const memory_ptr record_row<KeyType>::raw_next_data() const
 {
     // Next position is after key data.
-    return raw_data(hash_size);
+    return raw_data(key_size);
 }
 
 } // namespace database

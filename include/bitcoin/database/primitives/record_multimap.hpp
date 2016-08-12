@@ -30,10 +30,10 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename HashType>
+template <typename KeyType>
 BC_CONSTEXPR size_t hash_table_multimap_record_size()
 {
-    return hash_table_record_size<HashType>(sizeof(array_index));
+    return hash_table_record_size<KeyType>(sizeof(array_index));
 }
 
 /**
@@ -45,32 +45,32 @@ BC_CONSTEXPR size_t hash_table_multimap_record_size()
  * The linked records are chains of records that can be iterated through
  * given a start index.
  */
-template <typename HashType>
+template <typename KeyType>
 class record_multimap
 {
 public:
-    typedef record_hash_table<HashType> record_hash_table_type;
+    typedef record_hash_table<KeyType> record_hash_table_type;
     typedef std::function<void(memory_ptr)> write_function;
 
     record_multimap(record_hash_table_type& map, record_list& records);
 
     /// Lookup a key, returning an iterable result with multiple values.
-    array_index lookup(const HashType& key) const;
+    array_index lookup(const KeyType& key) const;
 
     /// Add a new row for a key. If the key doesn't exist, it will be created.
     /// If it does exist, the value will be added at the start of the chain.
-    void add_row(const HashType& key, write_function write);
+    void add_row(const KeyType& key, write_function write);
 
     /// Delete the last row entry that was added. This means when deleting
     /// blocks we must walk backwards and delete in reverse order.
-    void delete_last_row(const HashType& key);
+    void delete_last_row(const KeyType& key);
 
 private:
     // Add new value to existing key.
     void add_to_list(memory_ptr start_info, write_function write);
 
     // Create new key with a single value.
-    void create_new(const HashType& key, write_function write);
+    void create_new(const KeyType& key, write_function write);
 
     record_hash_table_type& map_;
     record_list& records_;

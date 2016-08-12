@@ -55,10 +55,10 @@ BOOST_AUTO_TEST_CASE(spend_database__test)
     chain::output_point key3{ hash_literal("4129e76f363f9742bc98dd3d40c99c90eefa5d23968584be9d8d064bcf99c246"), 8 };
     chain::output_point key4{ hash_literal("80d9e7012b5b171bf78e75b52d2d149580d9e7012b5b171bf78e75b52d2d1495"), 9 };
 
-    chain::input_point value1{ hash_literal("4742b3eac32d35961f9da9d42d495ff1d90aba96944cac3e715047256f7016d1"), 0 };
-    chain::input_point value2{ hash_literal("d90aba96944cac3e715047256f7016d1d90aba96944cac3e715047256f7016d1"), 0 };
-    chain::input_point value3{ hash_literal("3cc768bbaef30587c72c6eba8dbf6aeec4ef24172ae6fe357f2e24c2b0fa44d5"), 0 };
-    chain::input_point value4{ hash_literal("4742b3eac32d35961f9da9d42d495ff13cc768bbaef30587c72c6eba8dbf6aee"), 0 };
+    chain::input_point value1{ hash_literal("4742b3eac32d35961f9da9d42d495ff1d90aba96944cac3e715047256f7016d1"), 1 };
+    chain::input_point value2{ hash_literal("d90aba96944cac3e715047256f7016d1d90aba96944cac3e715047256f7016d1"), 2 };
+    chain::input_point value3{ hash_literal("3cc768bbaef30587c72c6eba8dbf6aeec4ef24172ae6fe357f2e24c2b0fa44d5"), 3 };
+    chain::input_point value4{ hash_literal("4742b3eac32d35961f9da9d42d495ff13cc768bbaef30587c72c6eba8dbf6aee"), 4 };
 
     data_base::touch_file(DIRECTORY "/spend");
     spend_database db(DIRECTORY "/spend");
@@ -69,17 +69,20 @@ BOOST_AUTO_TEST_CASE(spend_database__test)
     db.store(key3, value3);
 
     // Test fetch.
-    auto spend1 = db.get(key1);
+    const auto spend1 = db.get(key1);
     BOOST_REQUIRE(spend1.valid);
-    BOOST_REQUIRE(spend1.hash == value1.hash && spend1.index == value1.index);
+    BOOST_REQUIRE(spend1.hash == value1.hash);
+    BOOST_REQUIRE_EQUAL(spend1.index, value1.index);
 
-    auto spend2 = db.get(key2);
+    const auto spend2 = db.get(key2);
     BOOST_REQUIRE(spend2.valid);
-    BOOST_REQUIRE(spend2.hash == value2.hash && spend2.index == value2.index);
+    BOOST_REQUIRE(spend2.hash == value2.hash);
+    BOOST_REQUIRE_EQUAL(spend2.index, value2.index);
 
-    auto spend3 = db.get(key3);
+    const auto spend3 = db.get(key3);
     BOOST_REQUIRE(spend3.valid);
-    BOOST_REQUIRE(spend3.hash == value3.hash && spend3.index == value3.index);
+    BOOST_REQUIRE(spend3.hash == value3.hash);
+    BOOST_REQUIRE_EQUAL(spend3.index, value3.index);
 
     // Record shouldnt exist yet.
     BOOST_REQUIRE(!db.get(key4).valid);
@@ -92,9 +95,10 @@ BOOST_AUTO_TEST_CASE(spend_database__test)
     db.store(key4, value4);
 
     // Fetch it.
-    auto spend4 = db.get(key4);
+    const auto spend4 = db.get(key4);
     BOOST_REQUIRE(spend4.valid);
-    BOOST_REQUIRE(spend4.hash == value4.hash && spend4.index == value4.index);
+    BOOST_REQUIRE(spend4.hash == value4.hash);
+    BOOST_REQUIRE_EQUAL(spend4.index, value4.index);
     db.sync();
 }
 

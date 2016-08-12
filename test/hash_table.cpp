@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include <random>
+#include <boost/functional/hash_fwd.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <bitcoin/database.hpp>
@@ -31,6 +32,33 @@ BC_CONSTEXPR size_t total_txs = 200;
 BC_CONSTEXPR size_t tx_size = 200;
 BC_CONSTEXPR size_t buckets = 100;
 #define DIRECTORY "hash_table"
+
+typedef byte_array<4> tiny_hash;
+typedef byte_array<8> little_hash;
+
+// Extend std namespace with tiny_hash wrapper.
+namespace std
+{
+
+template <>
+struct hash<tiny_hash>
+{
+    size_t operator()(const tiny_hash& value) const
+    {
+        return boost::hash_range(value.begin(), value.end());
+    }
+};
+
+template <>
+struct hash<little_hash>
+{
+    size_t operator()(const little_hash& value) const
+    {
+        return boost::hash_range(value.begin(), value.end());
+    }
+};
+
+} // namspace std
 
 data_chunk generate_random_bytes(std::default_random_engine& engine,
     size_t size)
@@ -147,9 +175,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__test)
     BOOST_REQUIRE(alloc.create());
     BOOST_REQUIRE(alloc.start());
 
-    typedef byte_array<4> tiny_hash;
     slab_hash_table<tiny_hash> ht(header, alloc);
-
     const auto write = [](memory_ptr data)
     {
         const auto address = REMAP_ADDRESS(data);
@@ -198,8 +224,9 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
     BOOST_REQUIRE(alloc.start());
 
     record_hash_table<tiny_hash> ht(header, alloc);
-
     tiny_hash key{ { 0xde, 0xad, 0xbe, 0xef } };
+    tiny_hash key1{ { 0xb0, 0x0b, 0xb0, 0x0b } };
+
     const auto write = [](memory_ptr data)
     {
         const auto address = REMAP_ADDRESS(data);
@@ -208,9 +235,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
         address[2] = 4;
         address[3] = 88;
     };
-    ht.store(key, write);
 
-    tiny_hash key1{ { 0xb0, 0x0b, 0xb0, 0x0b } };
     const auto write1 = [](memory_ptr data)
     {
         const auto address = REMAP_ADDRESS(data);
@@ -219,31 +244,87 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
         address[2] = 97;
         address[3] = 96;
     };
-    ht.store(key, write);
-    ht.store(key1, write1);
-    ht.store(key1, write);
 
+    // [e][e]
+    BOOST_REQUIRE_EQUAL(header.read(0), header.empty);
+    BOOST_REQUIRE_EQUAL(header.read(1), header.empty);
+
+    ht.store(key, write);
     alloc.sync();
 
-    BOOST_REQUIRE(header.read(0) == header.empty);
-    BOOST_REQUIRE(header.read(1) == 3);
+    // [0][e]
+    BOOST_REQUIRE_EQUAL(header.read(0), 0u);
+    BOOST_REQUIRE_EQUAL(header.read(1), header.empty);
 
-    record_row<tiny_hash> item(alloc, 3);
-    BOOST_REQUIRE(item.next_index() == 2);
-    record_row<tiny_hash> item1(alloc, 2);
-    BOOST_REQUIRE(item1.next_index() == 1);
+    ht.store(key, write);
+    alloc.sync();
 
-    // Should unlink record 1
-    BOOST_REQUIRE(ht.unlink(key));
+    // [1->0][e]
+    BOOST_REQUIRE_EQUAL(header.read(0), 1u);
 
-    BOOST_REQUIRE(header.read(1) == 3);
+    ht.store(key1, write1);
+    alloc.sync();
+
+    // [1->0][2]
+    BOOST_REQUIRE_EQUAL(header.read(0), 1u);
+    BOOST_REQUIRE_EQUAL(header.read(1), 2u);
+
+    ht.store(key1, write);
+    alloc.sync();
+
+    // [1->0][3->2]
+    BOOST_REQUIRE_EQUAL(header.read(0), 1u);
+    BOOST_REQUIRE_EQUAL(header.read(1), 3u);
+
+    // Verify 0->empty
+    record_row<tiny_hash> item0(alloc, 0);
+    BOOST_REQUIRE_EQUAL(item0.next_index(), header.empty);
+
+    // Verify 1->0
+    record_row<tiny_hash> item1(alloc, 1);
+    BOOST_REQUIRE_EQUAL(item1.next_index(), 0u);
+
+    // Verify 2->empty
     record_row<tiny_hash> item2(alloc, 2);
-    BOOST_REQUIRE(item2.next_index() == 0);
+    BOOST_REQUIRE_EQUAL(item2.next_index(), header.empty);
 
-    // Should unlink record 3 from buckets
+    // Verify 3->2
+    record_row<tiny_hash> item3(alloc, 3);
+    BOOST_REQUIRE_EQUAL(item3.next_index(), 2u);
+
+    // [X->0][3->2]
+    BOOST_REQUIRE(ht.unlink(key));
+    alloc.sync();
+
+    BOOST_REQUIRE_EQUAL(header.read(0), 0);
+    BOOST_REQUIRE_EQUAL(header.read(1), 3u);
+
+    // Verify 0->empty
+    record_row<tiny_hash> item0a(alloc, 0);
+    BOOST_REQUIRE_EQUAL(item0a.next_index(), header.empty);
+
+    // Verify 3->2
+    record_row<tiny_hash> item3a(alloc, 3);
+    BOOST_REQUIRE_EQUAL(item3a.next_index(), 2u);
+
+    // Verify 2->empty
+    record_row<tiny_hash> item2a(alloc, 2);
+    BOOST_REQUIRE_EQUAL(item2a.next_index(), header.empty);
+
+    // [0][X->2]
     BOOST_REQUIRE(ht.unlink(key1));
+    alloc.sync();
 
-    BOOST_REQUIRE(header.read(1) == 2);
+    BOOST_REQUIRE_EQUAL(header.read(0), 0u);
+    BOOST_REQUIRE_EQUAL(header.read(1), 2u);
+
+    // Verify 0->empty
+    record_row<tiny_hash> item0b(alloc, 0);
+    BOOST_REQUIRE_EQUAL(item0b.next_index(), header.empty);
+
+    // Verify 2->empty
+    record_row<tiny_hash> item2b(alloc, 2);
+    BOOST_REQUIRE_EQUAL(item2b.next_index(), header.empty);
 
     tiny_hash invalid{ { 0x00, 0x01, 0x02, 0x03 } };
     BOOST_REQUIRE(!ht.unlink(invalid));
@@ -266,17 +347,19 @@ BOOST_AUTO_TEST_CASE(record_hash_table_header__64bit__test)
     BOOST_REQUIRE(header.create());
     BOOST_REQUIRE(header.start());
 
-    typedef byte_array<8> tiny_hash;
-    BC_CONSTEXPR size_t record_size = hash_table_record_size<tiny_hash>(8);
+    typedef byte_array<8> little_hash;
+    BC_CONSTEXPR size_t record_size = hash_table_record_size<little_hash>(8);
     const file_offset records_start = header_size;
 
     record_manager alloc(file, records_start, record_size);
     BOOST_REQUIRE(alloc.create());
     BOOST_REQUIRE(alloc.start());
 
-    record_hash_table<tiny_hash> ht(header, alloc);
+    record_hash_table<little_hash> ht(header, alloc);
 
-    tiny_hash key{ { 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef } };
+    little_hash key{ { 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef } };
+    little_hash key1{ { 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b } };
+
     const auto write = [](memory_ptr data)
     {
         const auto address = REMAP_ADDRESS(data);
@@ -289,9 +372,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table_header__64bit__test)
         address[6] = 4;
         address[7] = 88;
     };
-    ht.store(key, write);
 
-    tiny_hash key1{ { 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b } };
     const auto write1 = [](memory_ptr data)
     {
         const auto address = REMAP_ADDRESS(data);
@@ -304,33 +385,54 @@ BOOST_AUTO_TEST_CASE(record_hash_table_header__64bit__test)
         address[6] = 93;
         address[7] = 92;
     };
-    ht.store(key, write);
-    ht.store(key1, write1);
-    ht.store(key1, write);
 
+    ht.store(key, write);
     alloc.sync();
 
-    BOOST_REQUIRE(header.read(0) == header.empty);
-    BOOST_REQUIRE(header.read(1) == 3);
+    // [e][0]
+    BOOST_REQUIRE_EQUAL(header.read(0), header.empty);
+    BOOST_REQUIRE_EQUAL(header.read(1), 0u);
 
-    record_row<tiny_hash> item(alloc, 3);
-    BOOST_REQUIRE(item.next_index() == 2);
-    record_row<tiny_hash> item1(alloc, 2);
-    BOOST_REQUIRE(item1.next_index() == 1);
+    ht.store(key, write);
+    alloc.sync();
 
-    // Should unlink record 1
+    // [e][1->0]
+    BOOST_REQUIRE_EQUAL(header.read(0), header.empty);
+    BOOST_REQUIRE_EQUAL(header.read(1), 1u);
+
+    ht.store(key1, write1);
+    alloc.sync();
+
+    // [2][1->0]
+    BOOST_REQUIRE_EQUAL(header.read(0), 2u);
+    BOOST_REQUIRE_EQUAL(header.read(1), 1u);
+
+    ht.store(key1, write);
+    alloc.sync();
+
+    // [3->2][1->0]
+    BOOST_REQUIRE_EQUAL(header.read(0), 3u);
+    BOOST_REQUIRE_EQUAL(header.read(1), 1u);
+
+    record_row<little_hash> item(alloc, 3);
+    BOOST_REQUIRE_EQUAL(item.next_index(), 2u);
+
+    record_row<little_hash> item1(alloc, 2);
+    BOOST_REQUIRE_EQUAL(item1.next_index(), header.empty);
+
+    // [3->2][X->0]
     BOOST_REQUIRE(ht.unlink(key));
+    alloc.sync();
 
-    BOOST_REQUIRE(header.read(1) == 3);
-    record_row<tiny_hash> item2(alloc, 2);
-    BOOST_REQUIRE(item2.next_index() == 0);
+    BOOST_REQUIRE_EQUAL(header.read(1), 0u);
 
-    // Should unlink record 3 from buckets
+    // [X->2][X->0]
     BOOST_REQUIRE(ht.unlink(key1));
+    alloc.sync();
 
-    BOOST_REQUIRE(header.read(1) == 2);
+    BOOST_REQUIRE_EQUAL(header.read(0), 2u);
 
-    tiny_hash invalid{ { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 } };
+    little_hash invalid{ { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 } };
     BOOST_REQUIRE(!ht.unlink(invalid));
 }
 

@@ -37,8 +37,7 @@ BC_CONSTEXPR size_t record_list_offset = sizeof(array_index);
 class BCD_API record_list
 {
 public:
-    // std::numeric_limits<array_index>::max()
-    static BC_CONSTEXPR array_index empty = bc::max_uint32;
+    static const array_index empty;
 
     record_list(record_manager& manager);
 

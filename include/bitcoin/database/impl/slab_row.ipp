@@ -32,21 +32,21 @@ namespace database {
  * With the starting item, we can iterate until the end using the
  * next_position() method.
  */
-template <typename HashType>
+template <typename KeyType>
 class slab_row
 {
 public:
     static BC_CONSTEXPR size_t position_size = sizeof(file_offset);
-    static BC_CONSTEXPR size_t hash_size = std::tuple_size<HashType>::value;
-    static BC_CONSTEXPR file_offset value_begin = hash_size + position_size;
+    static BC_CONSTEXPR size_t key_size = std::tuple_size<KeyType>::value;
+    static BC_CONSTEXPR file_offset value_begin = key_size + position_size;
 
     slab_row(slab_manager& manager, file_offset position);
 
-    file_offset create(const HashType& key, const size_t value_size,
+    file_offset create(const KeyType& key, const size_t value_size,
         const file_offset next);
 
     /// Does this match?
-    bool compare(const HashType& key) const;
+    bool compare(const KeyType& key) const;
 
     /// The actual user data.
     const memory_ptr data() const;
@@ -66,22 +66,22 @@ private:
     mutable shared_mutex mutex_;
 };
 
-template <typename HashType>
-slab_row<HashType>::slab_row(slab_manager& manager,
+template <typename KeyType>
+slab_row<KeyType>::slab_row(slab_manager& manager,
     const file_offset position)
   : manager_(manager), position_(position)
 {
     static_assert(position_size == 8, "Invalid file_offset size.");
 }
 
-template <typename HashType>
-file_offset slab_row<HashType>::create(const HashType& key,
+template <typename KeyType>
+file_offset slab_row<KeyType>::create(const KeyType& key,
     const size_t value_size, const file_offset next)
 {
     const file_offset info_size = key.size() + position_size;
 
     // Create new slab.
-    //   [ HashType ]
+    //   [ KeyType  ]
     //   [ next:8   ]
     //   [ value... ]
     const size_t slab_size = info_size + value_size;
@@ -102,23 +102,23 @@ file_offset slab_row<HashType>::create(const HashType& key,
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename HashType>
-bool slab_row<HashType>::compare(const HashType& key) const
+template <typename KeyType>
+bool slab_row<KeyType>::compare(const KeyType& key) const
 {
     // Key data is at the start.
     const auto memory = raw_data(0);
     return std::equal(key.begin(), key.end(), REMAP_ADDRESS(memory));
 }
 
-template <typename HashType>
-const memory_ptr slab_row<HashType>::data() const
+template <typename KeyType>
+const memory_ptr slab_row<KeyType>::data() const
 {
     // Value data is at the end.
     return raw_data(value_begin);
 }
 
-template <typename HashType>
-file_offset slab_row<HashType>::next_position() const
+template <typename KeyType>
+file_offset slab_row<KeyType>::next_position() const
 {
     const auto memory = raw_next_data();
     const auto next_address = REMAP_ADDRESS(memory);
@@ -130,8 +130,8 @@ file_offset slab_row<HashType>::next_position() const
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename HashType>
-void slab_row<HashType>::write_next_position(file_offset next)
+template <typename KeyType>
+void slab_row<KeyType>::write_next_position(file_offset next)
 {
     const auto memory = raw_next_data();
     auto serial = make_serializer(REMAP_ADDRESS(memory));
@@ -143,19 +143,19 @@ void slab_row<HashType>::write_next_position(file_offset next)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename HashType>
-const memory_ptr slab_row<HashType>::raw_data(file_offset offset) const
+template <typename KeyType>
+const memory_ptr slab_row<KeyType>::raw_data(file_offset offset) const
 {
     auto memory = manager_.get(position_);
     REMAP_INCREMENT(memory, offset);
     return memory;
 }
 
-template <typename HashType>
-const memory_ptr slab_row<HashType>::raw_next_data() const
+template <typename KeyType>
+const memory_ptr slab_row<KeyType>::raw_next_data() const
 {
     // Next position is after key data.
-    return raw_data(hash_size);
+    return raw_data(key_size);
 }
 
 } // namespace database

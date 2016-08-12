@@ -37,24 +37,8 @@ BC_CONSTEXPR size_t number_buckets = 228110589;
 BC_CONSTEXPR size_t header_size = record_hash_table_header_size(number_buckets);
 BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_records_size;
 
-BC_CONSTEXPR size_t value_size = hash_size + 4;
-BC_CONSTEXPR size_t record_size = hash_table_record_size<hash_digest>(value_size);
-
-// Create a new hash from a hash + index (a point)
-// deterministically suitable for use in a hashtable.
-// This technique could be replaced by simply using the output.hash.
-static hash_digest output_to_hash(const chain::output_point& output)
-{
-    data_chunk point(sizeof(output.index) + sizeof(output.hash));
-    const auto index = to_little_endian(output.index);
-    std::copy(output.hash.begin(), output.hash.end(), point.begin());
-    std::copy(index.begin(), index.end(), point.begin() + sizeof(output.hash));
-
-    // The index has a *very* low level of bit distribution evenness, 
-    // almost none, and we must preserve the presumed random bit distribution,
-    // so we need to re-hash here.
-    return sha256_hash(point);
-}
+BC_CONSTEXPR size_t value_size = std::tuple_size<chain::point>::value;
+BC_CONSTEXPR size_t record_size = hash_table_record_size<chain::point>(value_size);
 
 spend_database::spend_database(const path& filename,
     std::shared_ptr<shared_mutex> mutex)
@@ -120,9 +104,7 @@ bool spend_database::close()
 spend spend_database::get(const output_point& outpoint) const
 {
     spend result{ false };
-
-    const auto key = output_to_hash(outpoint);
-    const auto memory = lookup_map_.find(key);
+    const auto memory = lookup_map_.find(outpoint);
 
     if (!memory)
         return result;
@@ -144,14 +126,12 @@ void spend_database::store(const chain::output_point& outpoint,
         serial.write_data(spend.to_data());
     };
 
-    const auto key = output_to_hash(outpoint);
-    lookup_map_.store(key, write);
+    lookup_map_.store(outpoint, write);
 }
 
 void spend_database::remove(const output_point& outpoint)
 {
-    const auto key = output_to_hash(outpoint);
-    DEBUG_ONLY(bool success =) lookup_map_.unlink(key);
+    DEBUG_ONLY(bool success =) lookup_map_.unlink(outpoint);
     BITCOIN_ASSERT(success);
 }
 

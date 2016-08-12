@@ -21,31 +21,17 @@
 #define LIBBITCOIN_DATABASE_REMAINDER_IPP
 
 #include <cstdint>
+#include <functional>
 #include <bitcoin/bitcoin.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-template <typename HashType>
-uint32_t remainder(const HashType& value, const uint32_t divisor)
+/// Return a hash of the key reduced to the domain of the divisor.
+template <typename KeyType, typename Divisor>
+Divisor remainder(const KeyType& key, const Divisor divisor)
 {
-    static_assert(sizeof(HashType) >= sizeof(uint32_t), "HashType too small.");
-    if (divisor == 0)
-        return 0;
-
-    const auto hash32 = from_big_endian_unsafe<uint32_t>(value.begin());
-    return hash32 % divisor;
-}
-
-template <typename HashType>
-uint64_t remainder(const HashType& value, const uint64_t divisor)
-{
-    static_assert(sizeof(HashType) >= sizeof(uint64_t), "HashType too small.");
-    if (divisor == 0)
-        return 0;
-
-    const auto hash64 = from_big_endian_unsafe<uint64_t>(value.begin());
-    return hash64 % divisor;
+    return divisor == 0 ? 0 : std::hash<KeyType>()(key) % divisor;
 }
 
 } // namespace database

@@ -42,7 +42,7 @@ typedef hash_table_header<array_index, file_offset> slab_hash_table_header;
  * containing the hash of the item, and the next value is stored
  * with each slab.
  *
- *   [ HashType ]
+ *   [ KeyType  ]
  *   [ next:8   ]
  *   [ value... ]
  *
@@ -51,7 +51,7 @@ typedef hash_table_header<array_index, file_offset> slab_hash_table_header;
  * Instead we prefer speed and batch that operation. The user should
  * call allocator.sync() after a series of store() calls.
  */
-template <typename HashType>
+template <typename KeyType>
 class slab_hash_table
 {
 public:
@@ -62,25 +62,25 @@ public:
     /// Store a value. value_size is the requested size for the value.
     /// The provided write() function must write exactly value_size bytes.
     /// Returns the position of the inserted value in the slab_manager.
-    file_offset store(const HashType& key, write_function write,
+    file_offset store(const KeyType& key, write_function write,
         const size_t value_size);
 
     /// Find the slab for a given hash. Returns a null pointer if not found.
-    const memory_ptr find(const HashType& key) const;
+    const memory_ptr find(const KeyType& key) const;
 
     /// Delete a key-value pair from the hashtable by unlinking the node.
-    bool unlink(const HashType& key);
+    bool unlink(const KeyType& key);
 
 private:
 
     // What is the bucket given a hash.
-    array_index bucket_index(const HashType& key) const;
+    array_index bucket_index(const KeyType& key) const;
 
     // What is the slab start position for a chain.
-    file_offset read_bucket_value(const HashType& key) const;
+    file_offset read_bucket_value(const KeyType& key) const;
 
     // Link a new chain into the bucket header.
-    void link(const HashType& key, const file_offset begin);
+    void link(const KeyType& key, const file_offset begin);
 
     // Release node from linked chain.
     template <typename ListItem>
