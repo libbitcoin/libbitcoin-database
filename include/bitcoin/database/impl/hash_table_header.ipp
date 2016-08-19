@@ -118,7 +118,7 @@ ValueType hash_table_header<IndexType, ValueType>::read(IndexType index) const
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    shared_lock(mutex_);
+    shared_lock lock(mutex_);
     return from_little_endian_unsafe<ValueType>(value_address);
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -137,7 +137,7 @@ void hash_table_header<IndexType, ValueType>::write(IndexType index,
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock(mutex_);
+    unique_lock lock(mutex_);
     serial.template write_little_endian<ValueType>(value);
     ///////////////////////////////////////////////////////////////////////////
 }

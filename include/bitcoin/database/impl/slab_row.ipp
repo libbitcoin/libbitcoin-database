@@ -95,7 +95,7 @@ file_offset slab_row<KeyType>::create(const KeyType& key,
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock(mutex_);
+    unique_lock lock(mutex_);
     serial.template write_little_endian<file_offset>(next);
 
     return position_;
@@ -125,7 +125,7 @@ file_offset slab_row<KeyType>::next_position() const
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    shared_lock(mutex_);
+    shared_lock lock(mutex_);
     return from_little_endian_unsafe<file_offset>(next_address);
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -138,7 +138,7 @@ void slab_row<KeyType>::write_next_position(file_offset next)
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock(mutex_);
+    unique_lock lock(mutex_);
     serial.template write_little_endian<file_offset>(next);
     ///////////////////////////////////////////////////////////////////////////
 }

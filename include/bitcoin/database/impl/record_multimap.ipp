@@ -45,7 +45,7 @@ array_index record_multimap<KeyType>::lookup(const KeyType& key) const
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock(mutex_);
+    unique_lock lock(mutex_);
     return from_little_endian_unsafe<array_index>(address);
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -88,7 +88,7 @@ void record_multimap<KeyType>::add_to_list(memory_ptr start_info,
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock(mutex_);
+    unique_lock lock(mutex_);
     serial.template write_little_endian<array_index>(new_begin);
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -125,7 +125,7 @@ void record_multimap<KeyType>::delete_last_row(const KeyType& key)
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock(mutex_);
+    unique_lock lock(mutex_);
     serial.template write_little_endian<array_index>(new_begin);
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -143,7 +143,7 @@ void record_multimap<KeyType>::create_new(const KeyType& key,
 
         // Critical Section
         ///////////////////////////////////////////////////////////////////////////
-        unique_lock(mutex_);
+        unique_lock lock(mutex_);
         serial.template write_little_endian<array_index>(first);
         ///////////////////////////////////////////////////////////////////////////
     };

@@ -91,7 +91,7 @@ array_index record_row<KeyType>::create(const KeyType& key,
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock(mutex_);
+    unique_lock lock(mutex_);
     serial.template write_little_endian<array_index>(next);
 
     return index_;
@@ -121,7 +121,7 @@ array_index record_row<KeyType>::next_index() const
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    shared_lock(mutex_);
+    shared_lock lock(mutex_);
     return from_little_endian_unsafe<array_index>(next_address);
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -134,7 +134,7 @@ void record_row<KeyType>::write_next_index(array_index next)
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock(mutex_);
+    unique_lock lock(mutex_);
     serial.template write_little_endian<array_index>(next);
     ///////////////////////////////////////////////////////////////////////////
 }
