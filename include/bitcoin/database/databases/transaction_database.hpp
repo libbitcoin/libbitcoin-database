@@ -20,6 +20,7 @@
 #ifndef LIBBITCOIN_DATABASE_TRANSACTION_DATABASE_HPP
 #define LIBBITCOIN_DATABASE_TRANSACTION_DATABASE_HPP
 
+#include <cstddef>
 #include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
@@ -61,6 +62,9 @@ public:
 
     /// Fetch transaction from its hash.
     transaction_result get(const hash_digest& hash) const;
+
+    /// Denormalization to optimize utxo lookup.
+    bool get_height(size_t& height, const hash_digest& hash) const;
 
     /// Store a transaction in the database. Returns a unique index
     /// which can be used to reference the transaction.
