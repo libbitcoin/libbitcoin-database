@@ -51,7 +51,6 @@ chain::header block_result::header() const
     auto deserial = make_deserializer_unsafe(memory);
     header.from_data(deserial, false);
     return header;
-    //// return deserialize_header(memory, size_limit_);
 }
 
 size_t block_result::height() const
