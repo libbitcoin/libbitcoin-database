@@ -60,6 +60,9 @@ public:
         path transactions_lookup;
     };
 
+    // Determine if the given handle is a write-locked handle.
+    static bool is_write_locked(handle handle);
+
     /// Create a new database file with a given path prefix and default paths.
     static bool initialize(const path& prefix, const chain::block& genesis);
     static bool touch_file(const path& file_path);
@@ -88,11 +91,11 @@ public:
     // Locking.
     // ------------------------------------------------------------------------
 
-    handle begin_read();
+    handle begin_read() const;
+    bool is_read_valid(handle handle) const;
+
     bool begin_write();
     bool end_write();
-    bool is_read_valid(handle handle);
-    bool is_write_locked(handle handle);
 
     // Push and pop.
     // ------------------------------------------------------------------------

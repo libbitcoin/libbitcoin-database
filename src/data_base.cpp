@@ -252,16 +252,17 @@ bool data_base::close()
 // Locking.
 // ----------------------------------------------------------------------------
 
-handle data_base::begin_read()
+handle data_base::begin_read() const
 {
     return sequential_lock_.load();
 }
 
-bool data_base::is_read_valid(handle value)
+bool data_base::is_read_valid(handle value) const
 {
     return value == sequential_lock_.load();
 }
 
+// static
 bool data_base::is_write_locked(handle value)
 {
     return (value % 2) == 1;
