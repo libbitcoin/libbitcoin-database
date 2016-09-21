@@ -66,9 +66,8 @@ public:
     /// Denormalization to optimize utxo lookup.
     bool get_height(size_t& height, const hash_digest& hash) const;
 
-    /// Store a transaction in the database. Returns a unique index
-    /// which can be used to reference the transaction.
-    void store(size_t height, size_t index, const chain::transaction& tx);
+    /// Store a transaction in the database.
+    void store(size_t height, size_t position, const chain::transaction& tx);
 
     /// Delete a transaction from database.
     void remove(const hash_digest& hash);

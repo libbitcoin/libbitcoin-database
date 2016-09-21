@@ -41,8 +41,11 @@ public:
     /// The height of the block which includes the transaction.
     size_t height() const;
 
-    /// The position of the transaction within its block.
-    size_t index() const;
+    /// The ordinal position of the transaction within its block.
+    size_t position() const;
+
+    /// The output at the specified index within this transaction.
+    chain::output output(uint32_t index) const;
 
     /// The transaction.
     chain::transaction transaction() const;

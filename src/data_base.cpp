@@ -454,7 +454,7 @@ chain::block data_base::pop()
 
         BITCOIN_ASSERT(tx_result);
         BITCOIN_ASSERT(tx_result.height() == height);
-        BITCOIN_ASSERT(tx_result.index() == static_cast<size_t>(tx));
+        BITCOIN_ASSERT(tx_result.position() == static_cast<size_t>(tx));
 
         // TODO: the deserialization should cache the hash on the tx.
         // Deserialize the transaction and move it to the block.

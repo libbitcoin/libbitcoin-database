@@ -185,7 +185,7 @@ int main(int argc, char** argv)
 
         const auto spend = db.get(outpoint);
 
-        if (!spend.valid)
+        if (!spend.is_valid())
         {
             std::cout << "Not found!" << std::endl;
             return -1;

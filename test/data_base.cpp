@@ -54,7 +54,7 @@ void test_block_exists(const data_base& interface,
         BOOST_REQUIRE(r0_byhash);
         BOOST_REQUIRE(r0_tx.transaction().hash() == tx_hash);
         BOOST_REQUIRE_EQUAL(r0_tx.height(), height);
-        BOOST_REQUIRE_EQUAL(r0_tx.index(), i);
+        BOOST_REQUIRE_EQUAL(r0_tx.position(), i);
 
         if (!tx.is_coinbase())
         {
@@ -66,7 +66,7 @@ void test_block_exists(const data_base& interface,
                 BOOST_REQUIRE_EQUAL(spend.index, j);
 
                 auto r0_spend = interface.spends.get(input.previous_output);
-                BOOST_REQUIRE(r0_spend.valid);
+                BOOST_REQUIRE(r0_spend.is_valid());
                 BOOST_REQUIRE(r0_spend.hash == spend.hash);
                 BOOST_REQUIRE_EQUAL(r0_spend.index, spend.index);
 
@@ -107,8 +107,7 @@ void test_block_exists(const data_base& interface,
 
             for (const auto& row: history)
             {
-                bool is_valid = row.point.is_valid();
-                BOOST_REQUIRE(is_valid);
+                BOOST_REQUIRE(row.point.is_valid());
 
                 if (row.point.hash == outpoint.hash &&
                     row.point.index == outpoint.index)
@@ -143,7 +142,7 @@ void test_block_not_exists(const data_base& interface,
                 const auto& input = tx.inputs[j];
                 chain::input_point spend{ tx_hash, static_cast<uint32_t>(j) };
                 auto r0_spend = interface.spends.get(input.previous_output);
-                BOOST_REQUIRE(!r0_spend.valid);
+                BOOST_REQUIRE(!r0_spend.is_valid());
 
                 const auto address = payment_address::extract(input.script);
                 if (!address)
