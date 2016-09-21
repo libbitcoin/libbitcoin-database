@@ -103,8 +103,8 @@ bool spend_database::close()
 
 input_point spend_database::get(const output_point& outpoint) const
 {
-    // TODO: set not_found in input_point ctor and remove parameterization.
-    input_point point{ null_hash, point::null_index };
+    // TODO: set null_hash in input_point ctor and remove parameterization.
+    input_point point{ null_hash, 0 };
 
     const auto memory = lookup_map_.find(outpoint);
 

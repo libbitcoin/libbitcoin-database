@@ -87,9 +87,12 @@ chain::output transaction_result::output(uint32_t index) const
     const auto outputs = serial.read_variable_uint_little_endian();
     BITCOIN_ASSERT(outputs <= max_uint32);
 
+    // TODO: set not_found in output ctor and remove this parameterization.
+    chain::output output{ chain::output::not_found, chain::script{} };
+
     // The caller requested an output that does not exist in the transaction.
     if (index >= outputs)
-        return{};
+        return output;
 
     // Skip outputs until the target output.
     for (uint32_t output = 0; output < index; ++output)
@@ -100,7 +103,6 @@ chain::output transaction_result::output(uint32_t index) const
         serial.skip_bytes(static_cast<size_t>(script_size));
     }
 
-    chain::output output;
     output.from_data(serial);
     return output;
 }
