@@ -119,7 +119,7 @@ bool transaction_database::get_height(size_t& height,
     return true;
 }
 
-void transaction_database::store(size_t height, size_t index,
+void transaction_database::store(size_t height, size_t position,
     const chain::transaction& tx)
 {
     // Write block data.
@@ -129,17 +129,17 @@ void transaction_database::store(size_t height, size_t index,
     BITCOIN_ASSERT(height <= max_uint32);
     const auto hight32 = static_cast<size_t>(height);
 
-    BITCOIN_ASSERT(index <= max_uint32);
-    const auto index32 = static_cast<size_t>(index);
+    BITCOIN_ASSERT(position <= max_uint32);
+    const auto position32 = static_cast<size_t>(position);
 
     BITCOIN_ASSERT(tx_size <= max_size_t - 4 - 4);
     const auto value_size = 4 + 4 + static_cast<size_t>(tx_size);
 
-    auto write = [&hight32, &index32, &tx](memory_ptr data)
+    auto write = [&hight32, &position32, &tx](memory_ptr data)
     {
         auto serial = make_serializer(REMAP_ADDRESS(data));
         serial.write_4_bytes_little_endian(hight32);
-        serial.write_4_bytes_little_endian(index32);
+        serial.write_4_bytes_little_endian(position32);
         serial.write_data(tx.to_data());
     };
     lookup_map_.store(key, write, value_size);
