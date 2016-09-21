@@ -65,8 +65,8 @@ public:
     /// Call to unload the memory map.
     bool close();
 
-    /// Get input spend of an output point.
-    chain::spend get(const chain::output_point& outpoint) const;
+    /// Get inpoint that spent the given outpoint.
+    chain::input_point get(const chain::output_point& outpoint) const;
 
     /// Store a spend in the database.
     void store(const chain::output_point& outpoint,

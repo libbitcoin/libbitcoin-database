@@ -101,20 +101,21 @@ bool spend_database::close()
 
 // ----------------------------------------------------------------------------
 
-spend spend_database::get(const output_point& outpoint) const
+input_point spend_database::get(const output_point& outpoint) const
 {
-    spend result{ false };
+    // TODO: set not_found in input_point ctor and remove parameterization.
+    input_point point{ null_hash, point::null_index };
+
     const auto memory = lookup_map_.find(outpoint);
 
     if (!memory)
-        return result;
+        return point;
 
-    const auto hash_start = REMAP_ADDRESS(memory);
-    const auto index_start = hash_start + hash_size;
-    std::copy(hash_start, index_start, result.hash.begin());
-    result.index = from_little_endian_unsafe<uint32_t>(index_start);
-    result.valid = true;
-    return result;
+    // The order of properties in this serialization was reversed in v3.
+    // Previously it was { index, hash }, which was inconsistent with wire.
+    auto deserial = make_deserializer_unsafe(REMAP_ADDRESS(memory));
+    point.from_data(deserial);
+    return point;
 }
 
 void spend_database::store(const chain::output_point& outpoint,
