@@ -133,7 +133,7 @@ int main(int argc, char** argv)
         const data_chunk data = result.transaction().to_data();
 
         std::cout << "height: " << result.height() << std::endl;
-        std::cout << "positon: " << result.positon() << std::endl;
+        std::cout << "position: " << result.position() << std::endl;
         std::cout << "tx: " << encode_base16(data) << std::endl;
     }
     else if (command == "store")
