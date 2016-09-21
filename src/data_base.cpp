@@ -66,7 +66,7 @@ bool data_base::initialize(const path& prefix, const chain::block& genesis)
     if (!instance.create())
         return false;
 
-    instance.push(genesis);
+    instance.push(genesis, 0);
     return instance.stop();
 }
 
@@ -310,16 +310,33 @@ void data_base::synchronize()
     blocks.sync();
 }
 
-void data_base::push(const block& block)
+bool data_base::push(const block& block, size_t height)
 {
-    // Height is unsafe unless database locked.
-    push(block, get_next_height(blocks));
+    if (get_next_height(blocks) != height)
+        return false;
+    
+    emplace(block, height);
+    return true;
 }
 
-void data_base::push(const block& block, uint64_t height)
+bool data_base::insert(const block& block, size_t height)
 {
+    if (blocks.exists(height))
+        return false;
+    
+    emplace(block, height);
+    return true;
+}
+
+void data_base::emplace(const block& block, size_t height)
+{
+    // This is a safe test given that height has been validated.
+    BITCOIN_ASSERT(height == 0 || block.header.previous_block_hash ==
+        blocks.get(height - 1).header()->hash());
+
     for (size_t index = 0; index < block.transactions.size(); ++index)
     {
+        // TODO: allow duplicate tx hashes.
         // Skip BIP30 allowed duplicates (coinbase txs of excepted blocks).
         // We handle here because this is the lowest public level exposed.
         if (index == 0 && is_allowed_duplicate(block.header, height))

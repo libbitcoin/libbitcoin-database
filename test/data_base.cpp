@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
         "48a6909a5cb2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643"
         "f656b412a3ac00000000");
     test_block_not_exists(instance, block1);
-    instance.push(block1);
+    instance.push(block1, 1);
     test_block_exists(instance, 1, block1);
 
     BOOST_REQUIRE(instance.blocks.top(height));
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
         "48a6909a5cb2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643"
         "f656b412a3ac00000000");
     test_block_not_exists(instance, block2);
-    instance.push(block2);
+    instance.push(block2, 2);
     test_block_exists(instance, 2, block2);
 
     BOOST_REQUIRE(instance.blocks.top(height));
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
         "6b760c5ed3152388eeeadd4a073e621f741eb157e6a62e3547c8e939abbd6a51"
         "3bf3a1fbe28f9ea85a4e64c526702435d726f7ff14da40bae4ac00000000");
     test_block_not_exists(instance, block3);
-    instance.push(block3);
+    instance.push(block3, 3);
     test_block_exists(instance, 3, block3);
 
     std::cout << "pushpop: cleanup tests" << std::endl;
