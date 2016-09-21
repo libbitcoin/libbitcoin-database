@@ -44,6 +44,15 @@ public:
     /// The height of this block in the chain.
     size_t height() const;
 
+    /// The header.bits of this block.
+    uint32_t bits() const;
+
+    /// The header.timestamp of this block.
+    uint32_t timestamp() const;
+
+    /// The header.version of this block.
+    uint32_t version() const;
+
     /// The number of transactions in this block.
     size_t transaction_count() const;
 
