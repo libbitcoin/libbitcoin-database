@@ -140,7 +140,9 @@ void transaction_database::store(size_t height, size_t position,
         auto serial = make_serializer(REMAP_ADDRESS(data));
         serial.write_4_bytes_little_endian(hight32);
         serial.write_4_bytes_little_endian(position32);
-        serial.write_data(tx.to_data());
+
+        // Use database serialization, not satoshi (wire protocol).
+        serial.write_data(tx.to_data(false));
     };
     lookup_map_.store(key, write, value_size);
 }
