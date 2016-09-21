@@ -29,9 +29,21 @@ namespace database {
 
 using namespace bc::chain;
 
-static constexpr size_t header_size = 80;
+static constexpr size_t version_size = sizeof(uint32_t);
+static constexpr size_t previous_size = hash_size;
+static constexpr size_t merkle_size = hash_size;
+static constexpr size_t time_size = sizeof(uint32_t);
+static constexpr size_t bits_size = sizeof(uint32_t);
+static constexpr size_t nonce_size = sizeof(uint32_t);
 static constexpr size_t height_size = sizeof(uint32_t);
 static constexpr size_t count_size = sizeof(uint32_t);
+
+static constexpr auto version_offset = size_t(0);
+static constexpr auto time_offset = version_size + previous_size + merkle_size;
+static constexpr auto bits_offset = time_offset + time_size;
+static constexpr auto height_offset = bits_offset + bits_size + nonce_size;
+static constexpr auto count_offset = height_offset + height_size;
+static constexpr auto first_hash_offset = count_offset + count_size;
 
 block_result::block_result(const memory_ptr slab)
   : slab_(slab)
@@ -57,15 +69,35 @@ size_t block_result::height() const
 {
     BITCOIN_ASSERT(slab_);
     const auto memory = REMAP_ADDRESS(slab_);
-    return from_little_endian_unsafe<uint32_t>(memory + header_size);
+    return from_little_endian_unsafe<uint32_t>(memory + height_offset);
+}
+
+uint32_t block_result::bits() const
+{
+    BITCOIN_ASSERT(slab_);
+    const auto memory = REMAP_ADDRESS(slab_);
+    return from_little_endian_unsafe<uint32_t>(memory + bits_offset);
+}
+
+uint32_t block_result::timestamp() const
+{
+    BITCOIN_ASSERT(slab_);
+    const auto memory = REMAP_ADDRESS(slab_);
+    return from_little_endian_unsafe<uint32_t>(memory + time_offset);
+}
+
+uint32_t block_result::version() const
+{
+    BITCOIN_ASSERT(slab_);
+    const auto memory = REMAP_ADDRESS(slab_);
+    return from_little_endian_unsafe<uint32_t>(memory + version_offset);
 }
 
 size_t block_result::transaction_count() const
 {
     BITCOIN_ASSERT(slab_);
     const auto memory = REMAP_ADDRESS(slab_);
-    const auto offset = header_size + height_size;
-    return from_little_endian_unsafe<uint32_t>(memory + offset);
+    return from_little_endian_unsafe<uint32_t>(memory + count_offset);
 }
 
 hash_digest block_result::transaction_hash(size_t index) const
@@ -73,8 +105,7 @@ hash_digest block_result::transaction_hash(size_t index) const
     BITCOIN_ASSERT(slab_);
     BITCOIN_ASSERT(index < transaction_count());
     const auto memory = REMAP_ADDRESS(slab_);
-    const auto offset = header_size + height_size + count_size;
-    const auto first = memory + offset + index * hash_size;
+    const auto first = memory + first_hash_offset + index * hash_size;
     auto deserial = make_deserializer_unsafe(first);
     return deserial.read_hash();
 }
