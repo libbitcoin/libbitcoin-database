@@ -332,7 +332,7 @@ void data_base::emplace(const block& block, size_t height)
 {
     // This is a safe test given that height has been validated.
     BITCOIN_ASSERT(height == 0 || block.header.previous_block_hash ==
-        blocks.get(height - 1).header()->hash());
+        blocks.get(height - 1).header().hash());
 
     for (size_t index = 0; index < block.transactions.size(); ++index)
     {
