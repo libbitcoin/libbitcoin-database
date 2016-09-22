@@ -294,6 +294,12 @@ static size_t get_next_height(const block_database& blocks)
     return empty_chain ? 0 : current_height + 1;
 }
 
+static const hash_digest get_previous_hash(const block_database& blocks,
+    const block& block, size_t height)
+{
+    return height == 0 ? null_hash : blocks.get(height - 1).header().hash();
+}
+
 static bool is_allowed_duplicate(const header& head, size_t height)
 {
     return
@@ -313,7 +319,19 @@ void data_base::synchronize()
 bool data_base::push(const block& block, size_t height)
 {
     if (get_next_height(blocks) != height)
+    {
+        log::error(LOG_DATABASE)
+            << "The block is out of order at height [" << height << "].";
         return false;
+    }
+
+    if (block.header.previous_block_hash !=
+        get_previous_hash(blocks, block, height))
+    {
+        log::error(LOG_DATABASE)
+            << "The block has incorrect parent for height [" << height << "].";
+        return false;
+    }
     
     emplace(block, height);
     return true;
@@ -330,10 +348,6 @@ bool data_base::insert(const block& block, size_t height)
 
 void data_base::emplace(const block& block, size_t height)
 {
-    // This is a safe test given that height has been validated.
-    BITCOIN_ASSERT(height == 0 || block.header.previous_block_hash ==
-        blocks.get(height - 1).header().hash());
-
     for (size_t index = 0; index < block.transactions.size(); ++index)
     {
         // TODO: allow duplicate tx hashes.
