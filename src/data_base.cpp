@@ -294,8 +294,7 @@ static size_t get_next_height(const block_database& blocks)
     return empty_chain ? 0 : current_height + 1;
 }
 
-static const hash_digest get_previous_hash(const block_database& blocks,
-    const block& block, size_t height)
+static hash_digest get_previous_hash(const block_database& blocks, size_t height)
 {
     return height == 0 ? null_hash : blocks.get(height - 1).header().hash();
 }
@@ -325,8 +324,7 @@ bool data_base::push(const block& block, size_t height)
         return false;
     }
 
-    if (block.header.previous_block_hash !=
-        get_previous_hash(blocks, block, height))
+    if (block.header.previous_block_hash != get_previous_hash(blocks, height))
     {
         log::error(LOG_DATABASE)
             << "The block has incorrect parent for height [" << height << "].";
