@@ -126,6 +126,11 @@ bool block_database::close()
 
 // ----------------------------------------------------------------------------
 
+bool block_database::exists(size_t height) const
+{
+    return height < index_manager_.count() && read_position(height) != empty;
+}
+
 block_result block_database::get(size_t height) const
 {
     if (height >= index_manager_.count())

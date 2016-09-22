@@ -61,6 +61,9 @@ public:
     /// Call to unload the memory map.
     bool close();
 
+    /// Determine if a block exists at athe given height.
+    bool exists(size_t height) const;
+
     /// Fetch block by height using the index table.
     block_result get(size_t height) const;
 

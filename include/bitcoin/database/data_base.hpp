@@ -97,15 +97,15 @@ public:
     bool begin_write();
     bool end_write();
 
-    // Push and pop.
+    // Add and remove blocks.
     // ------------------------------------------------------------------------
 
-    /// Commit block at next height with indexing and no duplicate protection.
-    void push(const chain::block& block);
+    /// Returns false if a block already exists at height.
+    bool insert(const chain::block& block, size_t height);
 
-    /// Commit block at given height with indexing and no duplicate protection.
-    /// If height is not count + 1 then the count will not equal top height.
-    void push(const chain::block& block, uint64_t height);
+    /// Returns false if height is not the current top + 1.
+    bool push(const chain::block& block, size_t height);
+
 
     /// Throws if the chain is empty.
     chain::block pop();
@@ -113,6 +113,7 @@ public:
 protected:
     data_base(const store& paths, size_t history_height, size_t stealth_height);
     data_base(const path& prefix, size_t history_height, size_t stealth_height);
+
 
 private:
     typedef chain::input::list inputs;
@@ -124,6 +125,7 @@ private:
     static file_lock initialize_lock(const path& lock);
 
     void synchronize();
+    void emplace(const chain::block& block, size_t height);
     void push_inputs(const hash_digest& tx_hash, size_t height,
         const inputs& inputs);
     void push_outputs(const hash_digest& tx_hash, size_t height,
