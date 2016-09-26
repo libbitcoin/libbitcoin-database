@@ -95,6 +95,7 @@ bool stealth_database::close()
 
 // ----------------------------------------------------------------------------
 
+// TODO: add serialization to stealth_compact.
 // The prefix is fixed at 32 bits, but the filter is 0-32 bits, so the records
 // cannot be indexed using a hash table. We also do not index by height.
 stealth_compact::list stealth_database::scan(const binary& filter,
@@ -132,6 +133,7 @@ stealth_compact::list stealth_database::scan(const binary& filter,
     return result;
 }
 
+// TODO: add serialization to stealth_compact.
 void stealth_database::store(uint32_t prefix, uint32_t height,
     const stealth_compact& row)
 {

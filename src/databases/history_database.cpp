@@ -121,6 +121,7 @@ bool history_database::close()
 void history_database::add_output(const short_hash& key,
     const output_point& outpoint, uint32_t output_height, uint64_t value)
 {
+    // TODO: use output_point serialization.
     auto write = [&](memory_ptr data)
     {
         auto serial = make_serializer(REMAP_ADDRESS(data));
@@ -136,6 +137,7 @@ void history_database::add_input(const short_hash& key,
     const output_point& inpoint, uint32_t input_height,
     const input_point& previous)
 {
+    // TODO: use input_point serialization.
     auto write = [&](memory_ptr data)
     {
         auto serial = make_serializer(REMAP_ADDRESS(data));
@@ -163,6 +165,7 @@ history_compact::list history_database::get(const short_hash& key,
         return from_little_endian_unsafe<uint32_t>(height_address);
     };
 
+    // TODO: add serialization to history_compact.
     // Read a row from the data for the history list.
     const auto read_row = [](uint8_t* data)
     {
@@ -199,7 +202,7 @@ history_compact::list history_database::get(const short_hash& key,
 
         // Skip rows below from_height.
         if (from_height == 0 || read_height(address) >= from_height)
-            result.emplace_back(read_row(address));
+            result.push_back(read_row(address));
     }
 
     // TODO: we could sort result here.

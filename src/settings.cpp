@@ -33,19 +33,19 @@ settings::settings()
 {
 }
 
-settings::settings(bc::settings context)
+settings::settings(config::settings context)
   : settings()
 {
     switch (context)
     {
-        case bc::settings::mainnet:
+        case config::settings::mainnet:
         {
             stealth_start_height = 350000;
             directory = { "mainnet" };
             break;
         }
 
-        case bc::settings::testnet:
+        case config::settings::testnet:
         {
             stealth_start_height = 500000;
             directory = { "testnet" };
@@ -53,7 +53,7 @@ settings::settings(bc::settings context)
         }
 
         default:
-        case bc::settings::none:
+        case config::settings::none:
         {
         }
     }
