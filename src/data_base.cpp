@@ -476,7 +476,7 @@ chain::block data_base::pop()
     block.transactions.reserve(count);
     auto& txs = block.transactions;
 
-    for (auto tx = 0; tx < count; ++tx)
+    for (size_t tx = 0; tx < count; ++tx)
     {
         const auto tx_hash = block_result.transaction_hash(tx);
         const auto tx_result = transactions.get(tx_hash);
