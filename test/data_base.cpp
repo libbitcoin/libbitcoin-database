@@ -235,10 +235,16 @@ public:
 
 BOOST_FIXTURE_TEST_SUITE(data_base_tests, data_base_directory_and_thread_priority_setup_fixture)
 
+#define MAINNET_BLOCK1 "010000006fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000982051fd1e4ba744bbbe680e1fee14677ba1a3c3540bf7b1cdb606e857233e0e61bc6649ffff001d01e362990101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0704ffff001d0104ffffffff0100f2052a0100000043410496b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52da7589379515d4e0a604f8141781e62294721166bf621e73a82cbf2342c858eeac00000000"
+#define MAINNET_BLOCK2 "010000004860eb18bf1b1620e37e9490fc8a427514416fd75159ab86688e9a8300000000d5fdcc541e25de1c7a5addedf24858b8bb665c9f36ef744ee42c316022c90f9bb0bc6649ffff001d08d2bd610101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0704ffff001d010bffffffff0100f2052a010000004341047211a824f55b505228e4c3d5194c1fcfaa15a456abdf37f9b9d97a4040afc073dee6c89064984f03385237d92167c13e236446b417ab79a0fcae412ae3316b77ac00000000"
+#define MAINNET_BLOCK3 "01000000bddd99ccfda39da1b108ce1a5d70038d0a967bacb68b6b63065f626a0000000044f672226090d85db9a9f2fbfe5f0f9609b387af7be5b7fbb7a1767c831c9e995dbe6649ffff001d05e0ed6d0101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0704ffff001d010effffffff0100f2052a0100000043410494b9d3e76c5b1629ecf97fff95d7a4bbdac87cc26099ada28066c6ff1eb9191223cd897194a08d0c2726c5747f1db49e8cf90e75dc3e3550ae9b30086f3cd5aaac00000000"
+////#define MAINNET_BLOCK4 "010000004944469562ae1c2c74d9a535e00b6f3e40ffbad4f2fda3895501b582000000007a06ea98cd40ba2e3288262b28638cec5337c1456aaf5eedc8e9e5a20f062bdf8cc16649ffff001d2bfee0a90101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0704ffff001d011affffffff0100f2052a01000000434104184f32b212815c6e522e66686324030ff7e5bf08efb21f8b00614fb7690e19131dd31304c54f37baa40db231c918106bb9fd43373e37ae31a0befc6ecaefb867ac00000000"
+////#define MAINNET_BLOCK5 "0100000085144a84488ea88d221c8bd6c059da090e88f8a2c99690ee55dbba4e00000000e11c48fecdd9e72510ca84f023370c9a38bf91ac5cae88019bee94d24528526344c36649ffff001d1d03e4770101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0704ffff001d0120ffffffff0100f2052a0100000043410456579536d150fbce94ee62b47db2ca43af0a730a0467ba55c79e2a7ec9ce4ad297e35cdbb8e42a4643a60eef7c9abee2f5822f86b1da242d9c2301c431facfd8ac00000000"
+
 // TODO: parameterize bucket sizes to control test cost.
 BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
 {
-    ////std::cout << "begin data_base pushpop test" << std::endl;
+    std::cout << "begin data_base pushpop test" << std::endl;
 
     database::settings settings;
     settings.directory = { DIRECTORY };
@@ -257,109 +263,62 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
 
     test_block_exists(instance, 0, block0);
 
-    ////std::cout << "pushpop: block 179" << std::endl;
+    std::cout << "pushpop: block #1" << std::endl;
 
-    // Block #179
-    chain::block block1 = read_block(
-        "01000000f2c8a8d2af43a9cd05142654e56f41d159ce0274d9cabe15a20eefb5"
-        "00000000366c2a0915f05db4b450c050ce7165acd55f823fee51430a8c993e0b"
-        "dbb192ede5dc6a49ffff001d192d3f2f02010000000100000000000000000000"
-        "00000000000000000000000000000000000000000000ffffffff0704ffff001d"
-        "0128ffffffff0100f2052a0100000043410435f0d8366085f73906a483097281"
-        "55532f24293ea59fe0b33a245c4b8d75f82c3e70804457b7f49322aa822196a7"
-        "521e4931f809d7e489bccb4ff14758d170e5ac000000000100000001169e1e83"
-        "e930853391bc6f35f605c6754cfead57cf8387639d3b4096c54f18f401000000"
-        "48473044022027542a94d6646c51240f23a76d33088d3dd8815b25e9ea18cac6"
-        "7d1171a3212e02203baf203c6e7b80ebd3e588628466ea28be572fe1aaa3f309"
-        "47da4763dd3b3d2b01ffffffff0200ca9a3b00000000434104b5abd412d4341b"
-        "45056d3e376cd446eca43fa871b51961330deebd84423e740daa520690e1d9e0"
-        "74654c59ff87b408db903649623e86f1ca5412786f61ade2bfac005ed0b20000"
-        "000043410411db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b1"
-        "48a6909a5cb2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643"
-        "f656b412a3ac00000000");
+    // Block #1
+    chain::block block1 = read_block(MAINNET_BLOCK1);
     test_block_not_exists(instance, block1);
+    BOOST_REQUIRE(instance.push(block1, 1));
 
-    // TODO: REPLACE TEST VECTORS WITH FIRST CONNECTED BLOCKS!
-    BOOST_REQUIRE(!instance.push(block1, 1));
+    test_block_exists(instance, 1, block1);
+    BOOST_REQUIRE(instance.blocks.top(height));
+    BOOST_REQUIRE_EQUAL(height, 1u);
 
-    ////test_block_exists(instance, 1, block1);
-    ////BOOST_REQUIRE(instance.blocks.top(height));
-    ////BOOST_REQUIRE_EQUAL(height, 1u);
+    std::cout << "pushpop: block #2" << std::endl;
 
-    ////std::cout << "pushpop: block 181" << std::endl;
+    // Block #2
+    chain::block block2 = read_block(MAINNET_BLOCK2);
+    test_block_not_exists(instance, block2);
+    instance.push(block2, 2);
+    test_block_exists(instance, 2, block2);
 
-    ////// Block #181
-    ////chain::block block2 = read_block(
-    ////    "01000000e5c6af65c46bd826723a83c1c29d9efa189320458dc5298a0c8655dc"
-    ////    "0000000030c2a0d34bfb4a10d35e8166e0f5a37bce02fc1b85ff983739a19119"
-    ////    "7f010f2f40df6a49ffff001d2ce7ac9e02010000000100000000000000000000"
-    ////    "00000000000000000000000000000000000000000000ffffffff0704ffff001d"
-    ////    "0129ffffffff0100f2052a01000000434104b10dd882c04204481116bd4b4151"
-    ////    "0e98c05a869af51376807341fc7e3892c9034835954782295784bfc763d9736e"
-    ////    "d4122c8bb13d6e02c0882cb7502ce1ae8287ac000000000100000001be141eb4"
-    ////    "42fbc446218b708f40caeb7507affe8acff58ed992eb5ddde43c6fa101000000"
-    ////    "4847304402201f27e51caeb9a0988a1e50799ff0af94a3902403c3ad4068b063"
-    ////    "e7b4d1b0a76702206713f69bd344058b0dee55a9798759092d0916dbbc3e592f"
-    ////    "ee43060005ddc17401ffffffff0200e1f5050000000043410401518fa1d1e1e3"
-    ////    "e162852d68d9be1c0abad5e3d6297ec95f1f91b909dc1afe616d6876f9291845"
-    ////    "1ca387c4387609ae1a895007096195a824baf9c38ea98c09c3ac007ddaac0000"
-    ////    "000043410411db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b1"
-    ////    "48a6909a5cb2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643"
-    ////    "f656b412a3ac00000000");
-    ////test_block_not_exists(instance, block2);
-    ////instance.push(block2, 2);
-    ////test_block_exists(instance, 2, block2);
+    BOOST_REQUIRE(instance.blocks.top(height));
+    BOOST_REQUIRE_EQUAL(height, 2u);
 
-    ////BOOST_REQUIRE(instance.blocks.top(height));
-    ////BOOST_REQUIRE_EQUAL(height, 2u);
+    std::cout << "pushpop: block #3" << std::endl;
 
-    ////std::cout << "pushpop: block 183" << std::endl;
+    // Block #183
+    chain::block block3 = read_block(MAINNET_BLOCK3);
+    test_block_not_exists(instance, block3);
+    instance.push(block3, 3);
+    test_block_exists(instance, 3, block3);
 
-    ////// Block #183
-    ////chain::block block3 = read_block(
-    ////    "01000000bed482ccb42bf5c20d00a5bb9f7d688e97b94c622a7f42f3aaf23f8b"
-    ////    "000000001cafcb3e4cad2b4eed7fb7fcb7e49887d740d66082eb45981194c532"
-    ////    "b58d475258ee6a49ffff001d1bc0e23202010000000100000000000000000000"
-    ////    "00000000000000000000000000000000000000000000ffffffff0704ffff001d"
-    ////    "011affffffff0100f2052a0100000043410435d66d6cef63a3461110c810975b"
-    ////    "8816308372b58274d88436a974b478d98d8d972f7233ea8a5242d151de9d4b1a"
-    ////    "c11a6f7f8460e8f9b146d97c7bad980cc5ceac000000000100000001ba91c1d5"
-    ////    "e55a9e2fab4e41f55b862a73b24719aad13a527d169c1fad3b63b51200000000"
-    ////    "48473044022041d56d649e3ca8a06ffc10dbc6ba37cb958d1177cc8a155e83d0"
-    ////    "646cd5852634022047fd6a02e26b00de9f60fb61326856e66d7a0d5e2bc9d01f"
-    ////    "b95f689fc705c04b01ffffffff0100e1f50500000000434104fe1b9ccf732e1f"
-    ////    "6b760c5ed3152388eeeadd4a073e621f741eb157e6a62e3547c8e939abbd6a51"
-    ////    "3bf3a1fbe28f9ea85a4e64c526702435d726f7ff14da40bae4ac00000000");
-    ////test_block_not_exists(instance, block3);
-    ////instance.push(block3, 3);
-    ////test_block_exists(instance, 3, block3);
+    std::cout << "pushpop: cleanup tests" << std::endl;
 
-    ////std::cout << "pushpop: cleanup tests" << std::endl;
+    BOOST_REQUIRE(instance.blocks.top(height));
+    BOOST_REQUIRE_EQUAL(height, 3u);
 
-    ////BOOST_REQUIRE(instance.blocks.top(height));
-    ////BOOST_REQUIRE_EQUAL(height, 3u);
+    chain::block block3_popped = instance.pop();
+    BOOST_REQUIRE(instance.blocks.top(height));
+    BOOST_REQUIRE_EQUAL(height, 2u);
+    compare_blocks(block3_popped, block3);
 
-    ////chain::block block3_popped = instance.pop();
-    ////BOOST_REQUIRE(instance.blocks.top(height));
-    ////BOOST_REQUIRE_EQUAL(height, 2u);
-    ////compare_blocks(block3_popped, block3);
+    test_block_not_exists(instance, block3);
+    test_block_exists(instance, 2, block2);
+    test_block_exists(instance, 1, block1);
+    test_block_exists(instance, 0, block0);
 
-    ////test_block_not_exists(instance, block3);
-    ////test_block_exists(instance, 2, block2);
-    ////test_block_exists(instance, 1, block1);
-    ////test_block_exists(instance, 0, block0);
+    chain::block block2_popped = instance.pop();
+    BOOST_REQUIRE(instance.blocks.top(height));
+    BOOST_REQUIRE_EQUAL(height, 1u);
+    compare_blocks(block2_popped, block2);
 
-    ////chain::block block2_popped = instance.pop();
-    ////BOOST_REQUIRE(instance.blocks.top(height));
-    ////BOOST_REQUIRE_EQUAL(height, 1u);
-    ////compare_blocks(block2_popped, block2);
+    test_block_not_exists(instance, block3);
+    test_block_not_exists(instance, block2);
+    test_block_exists(instance, 1, block1);
+    test_block_exists(instance, 0, block0);
 
-    ////test_block_not_exists(instance, block3);
-    ////test_block_not_exists(instance, block2);
-    ////test_block_exists(instance, 1, block1);
-    ////test_block_exists(instance, 0, block0);
-
-    ////std::cout << "end pushpop test" << std::endl;
+    std::cout << "end pushpop test" << std::endl;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
