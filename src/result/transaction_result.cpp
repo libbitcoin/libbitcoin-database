@@ -75,9 +75,7 @@ chain::output transaction_result::output(uint32_t index) const
     // Read the number of outputs (variable, but point-limited to max_uint32).
     const auto outputs = serial.read_variable_uint_little_endian();
     BITCOIN_ASSERT(outputs <= max_uint32);
-
-    // TODO: set not_found in output ctor and remove this parameterization.
-    chain::output output{ chain::output::not_found, chain::script{} };
+    chain::output output;
 
     // The caller requested an output that does not exist in the transaction.
     if (index >= outputs)
