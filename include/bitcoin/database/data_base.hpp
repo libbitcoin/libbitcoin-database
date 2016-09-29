@@ -33,6 +33,7 @@
 #include <bitcoin/database/databases/stealth_database.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/settings.hpp>
+#include <bitcoin/database/unicode/file_lock.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -119,7 +120,7 @@ private:
     typedef chain::input::list inputs;
     typedef chain::output::list outputs;
     typedef std::atomic<size_t> sequential_lock;
-    typedef boost::interprocess::file_lock file_lock;
+    typedef bc::database::file_lock file_lock;
 
     static void uninitialize_lock(const path& lock);
     static file_lock initialize_lock(const path& lock);

@@ -103,9 +103,7 @@ bool spend_database::close()
 
 input_point spend_database::get(const output_point& outpoint) const
 {
-    // TODO: set null_hash in input_point ctor and remove parameterization.
-    input_point point{ null_hash, 0 };
-
+    input_point point;
     const auto memory = lookup_map_.find(outpoint);
 
     if (!memory)

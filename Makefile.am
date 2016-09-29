@@ -323,6 +323,10 @@ include_bitcoin_database_result_HEADERS = \
     include/bitcoin/database/result/block_result.hpp \
     include/bitcoin/database/result/transaction_result.hpp
 
+include_bitcoin_database_unicodedir = ${includedir}/bitcoin/database/unicode
+include_bitcoin_database_unicode_HEADERS = \
+    include/bitcoin/database/unicode/file_lock.hpp
+
 
 # Custom make targets.
 #==============================================================================
