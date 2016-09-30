@@ -202,18 +202,18 @@ int main(int argc, char** argv)
 
         const auto block_header = block_data->header();
         const auto txs_size = block_data->transaction_count();
-        const auto merkle = encode_hash(block_header.merkle);
-        const auto previous = encode_hash(block_header.previous_block_hash);
+        const auto merkle = encode_hash(block_header.merkle());
+        const auto previous = encode_hash(block_header.previous_block_hash());
 
         // Show details.
         std::cout << "height: " << block_data->height() << std::endl;
         std::cout << "hash: " << encode_hash(block_header.hash()) << std::endl;
-        std::cout << "version: " << block_header.version << std::endl;
+        std::cout << "version: " << block_header.version() << std::endl;
         std::cout << "previous: " << previous << std::endl;
         std::cout << "merkle: " << merkle << std::endl;
-        std::cout << "timestamp: " << block_header.timestamp << std::endl;
-        std::cout << "bits: " << block_header.bits << std::endl;
-        std::cout << "nonce: " << block_header.nonce << std::endl;
+        std::cout << "timestamp: " << block_header.timestamp() << std::endl;
+        std::cout << "bits: " << block_header.bits() << std::endl;
+        std::cout << "nonce: " << block_header.nonce() << std::endl;
 
         if (txs_size > 0)
         {

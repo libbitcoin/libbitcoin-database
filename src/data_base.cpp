@@ -324,7 +324,7 @@ bool data_base::push(const block& block, size_t height)
         return false;
     }
 
-    if (block.header.previous_block_hash != get_previous_hash(blocks, height))
+    if (block.header().previous_block_hash() != get_previous_hash(blocks, height))
     {
         log::error(LOG_DATABASE)
             << "The block has incorrect parent for height [" << height << "].";
@@ -346,26 +346,26 @@ bool data_base::insert(const block& block, size_t height)
 
 void data_base::emplace(const block& block, size_t height)
 {
-    for (size_t index = 0; index < block.transactions.size(); ++index)
+    for (size_t index = 0; index < block.transactions().size(); ++index)
     {
         // TODO: allow duplicate tx hashes.
         // Skip BIP30 allowed duplicates (coinbase txs of excepted blocks).
         // We handle here because this is the lowest public level exposed.
-        if (index == 0 && is_allowed_duplicate(block.header, height))
+        if (index == 0 && is_allowed_duplicate(block.header(), height))
             continue;
 
-        const auto& tx = block.transactions[index];
+        const auto& tx = block.transactions()[index];
         const auto tx_hash = tx.hash();
 
         // Add inputs
         if (!tx.is_coinbase())
-            push_inputs(tx_hash, height, tx.inputs);
+            push_inputs(tx_hash, height, tx.inputs());
 
         // Add outputs
-        push_outputs(tx_hash, height, tx.outputs);
+        push_outputs(tx_hash, height, tx.outputs());
 
         // Add stealth outputs
-        push_stealth(tx_hash, height, tx.outputs);
+        push_stealth(tx_hash, height, tx.outputs());
 
         // Add transaction
         transactions.store(height, index, tx);
@@ -386,17 +386,17 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
         // We also push spends in the inputs loop.
         const auto& input = inputs[index];
         const chain::input_point point{ tx_hash, index };
-        spends.store(input.previous_output, point);
+        spends.store(input.previous_output(), point);
 
         if (height < history_height_)
             continue;
 
         // Try to extract an address.
-        const auto address = payment_address::extract(input.script);
+        const auto address = payment_address::extract(input.script());
         if (!address)
             continue;
 
-        const auto& previous = input.previous_output;
+        const auto& previous = input.previous_output();
         history.add_input(address.hash(), point, height, previous);
     }
 }
@@ -413,11 +413,11 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
         const chain::output_point point{ tx_hash, index };
 
         // Try to extract an address.
-        const auto address = payment_address::extract(output.script);
+        const auto address = payment_address::extract(output.script());
         if (!address)
             continue;
 
-        const auto value = output.value;
+        const auto value = output.value();
         history.add_output(address.hash(), point, height, value);
     }
 }
@@ -431,8 +431,8 @@ void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
     // Stealth outputs are paired by convention.
     for (size_t index = 0; index < (outputs.size() - 1); ++index)
     {
-        const auto& ephemeral_script = outputs[index].script;
-        const auto& payment_script = outputs[index + 1].script;
+        const auto& ephemeral_script = outputs[index].script();
+        const auto& payment_script = outputs[index + 1].script();
 
         // Try to extract an unsigned ephemeral key from the first output.
         hash_digest unsigned_ephemeral_key;
@@ -471,10 +471,8 @@ chain::block data_base::pop()
     const auto count = block_result.transaction_count();
 
     // Build the block for return.
-    chain::block block;
-    block.header = block_result.header();
-    block.transactions.reserve(count);
-    auto& txs = block.transactions;
+    chain::transaction::list txs;
+    txs.reserve(count);
 
     for (size_t tx = 0; tx < count; ++tx)
     {
@@ -487,7 +485,7 @@ chain::block data_base::pop()
 
         // TODO: the deserialization should cache the hash on the tx.
         // Deserialize the transaction and move it to the block.
-        block.transactions.emplace_back(tx_result.transaction());
+        txs.emplace_back(tx_result.transaction());
     }
 
     // Loop txs backwards, the reverse of how they are added.
@@ -495,10 +493,10 @@ chain::block data_base::pop()
     for (auto tx = txs.rbegin(); tx != txs.rend(); ++tx)
     {
         transactions.remove(tx->hash());
-        pop_outputs(tx->outputs, height);
+        pop_outputs(tx->outputs(), height);
 
         if (!tx->is_coinbase())
-            pop_inputs(tx->inputs, height);
+            pop_inputs(tx->inputs(), height);
     }
 
     // Stealth unlink is not implemented.
@@ -509,7 +507,7 @@ chain::block data_base::pop()
     synchronize();
 
     // Return the block.
-    return block;
+    return chain::block(block_result.header(), txs);
 }
 
 void data_base::pop_inputs(const input::list& inputs, size_t height)
@@ -517,13 +515,13 @@ void data_base::pop_inputs(const input::list& inputs, size_t height)
     // Loop in reverse.
     for (auto input = inputs.rbegin(); input != inputs.rend(); ++input)
     {
-        spends.remove(input->previous_output);
+        spends.remove(input->previous_output());
 
         if (height < history_height_)
             continue;
 
         // Try to extract an address.
-        const auto address = payment_address::extract(input->script);
+        const auto address = payment_address::extract(input->script());
 
         if (address)
             history.delete_last_row(address.hash());
@@ -539,7 +537,7 @@ void data_base::pop_outputs(const output::list& outputs, size_t height)
     for (auto output = outputs.rbegin(); output != outputs.rend(); ++output)
     {
         // Try to extract an address.
-        const auto address = payment_address::extract(output->script);
+        const auto address = payment_address::extract(output->script());
 
         if (address)
             history.delete_last_row(address.hash());

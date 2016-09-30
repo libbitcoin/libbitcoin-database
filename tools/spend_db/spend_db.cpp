@@ -75,12 +75,12 @@ bool parse_point(Point& point, const std::string& arg)
         return false;
     }
 
-    point.hash = hash;
+    point.set_hash(hash);
     const auto& index_string = tokens[1];
 
     try
     {
-        point.index = lexical_cast<uint32_t>(index_string);
+        point.set_index(lexical_cast<uint32_t>(index_string));
     }
     catch (const bad_lexical_cast&)
     {
@@ -191,7 +191,7 @@ int main(int argc, char** argv)
             return -1;
         }
 
-        std::cout << encode_hash(spend.hash) << ":" << spend.index
+        std::cout << encode_hash(spend.hash()) << ":" << spend.index()
             << std::endl;
     }
     else if (command == "store")
