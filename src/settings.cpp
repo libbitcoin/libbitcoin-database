@@ -41,14 +41,14 @@ settings::settings(config::settings context)
         case config::settings::mainnet:
         {
             stealth_start_height = 350000;
-            directory = { "mainnet" };
+            directory = "mainnet";
             break;
         }
 
         case config::settings::testnet:
         {
             stealth_start_height = 500000;
-            directory = { "testnet" };
+            directory = "testnet";
             break;
         }
 
