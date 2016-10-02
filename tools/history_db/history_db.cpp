@@ -81,12 +81,12 @@ bool parse_point(Point& point, const std::string& arg)
         return false;
     }
 
-    point.hash = hash;
+    point.set_hash(hash);
     const auto& index = tokens[1];
 
     try
     {
-        point.index = lexical_cast<uint32_t>(index);
+        point.set_index(lexical_cast<uint32_t>(index));
     }
     catch (const bad_lexical_cast&)
     {
@@ -286,8 +286,8 @@ int main(int argc, char** argv)
                 std::cout << "OUTPUT: ";
             else //if (row.id == point_ident::spend)
                 std::cout << "SPEND:  ";
-            std::cout << encode_hash(row.point.hash) << ":"
-                << row.point.index << " " << row.height << " " << row.value
+            std::cout << encode_hash(row.point.hash()) << ":"
+                << row.point.index() << " " << row.height << " " << row.value
                 << std::endl;
         }
     }

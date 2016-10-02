@@ -156,7 +156,7 @@ void block_database::store(const block& block, size_t height)
 {
     BITCOIN_ASSERT(height <= max_uint32);
     const auto height32 = static_cast<uint32_t>(height);
-    const auto tx_count = block.transactions.size();
+    const auto tx_count = block.transactions().size();
 
     BITCOIN_ASSERT(tx_count <= max_uint32);
     const auto tx_count32 = static_cast<uint32_t>(tx_count);
@@ -165,16 +165,16 @@ void block_database::store(const block& block, size_t height)
     const auto write = [&](memory_ptr data)
     {
         auto serial = make_serializer(REMAP_ADDRESS(data));
-        const auto header_data = block.header.to_data(false);
+        const auto header_data = block.header().to_data(false);
         serial.write_data(header_data);
         serial.write_4_bytes_little_endian(height32);
         serial.write_4_bytes_little_endian(tx_count32);
 
-        for (const auto& tx: block.transactions)
+        for (const auto& tx: block.transactions())
             serial.write_hash(tx.hash());
     };
 
-    const auto key = block.header.hash();
+    const auto key = block.header().hash();
     const auto value_size = 80 + 4 + 4 + tx_count * hash_size;
 
     // Write block header, height, tx count and hashes to hash table.

@@ -71,18 +71,18 @@ BOOST_AUTO_TEST_CASE(spend_database__test)
     // Test fetch.
     const auto spend1 = db.get(key1);
     BOOST_REQUIRE(spend1.is_valid());
-    BOOST_REQUIRE(spend1.hash == value1.hash);
-    BOOST_REQUIRE_EQUAL(spend1.index, value1.index);
+    BOOST_REQUIRE(spend1.hash() == value1.hash());
+    BOOST_REQUIRE_EQUAL(spend1.index(), value1.index());
 
     const auto spend2 = db.get(key2);
     BOOST_REQUIRE(spend2.is_valid());
-    BOOST_REQUIRE(spend2.hash == value2.hash);
-    BOOST_REQUIRE_EQUAL(spend2.index, value2.index);
+    BOOST_REQUIRE(spend2.hash() == value2.hash());
+    BOOST_REQUIRE_EQUAL(spend2.index(), value2.index());
 
     const auto spend3 = db.get(key3);
     BOOST_REQUIRE(spend3.is_valid());
-    BOOST_REQUIRE(spend3.hash == value3.hash);
-    BOOST_REQUIRE_EQUAL(spend3.index, value3.index);
+    BOOST_REQUIRE(spend3.hash() == value3.hash());
+    BOOST_REQUIRE_EQUAL(spend3.index(), value3.index());
 
     // Record shouldnt exist yet.
     BOOST_REQUIRE(!db.get(key4).is_valid());
@@ -97,8 +97,8 @@ BOOST_AUTO_TEST_CASE(spend_database__test)
     // Fetch it.
     const auto spend4 = db.get(key4);
     BOOST_REQUIRE(spend4.is_valid());
-    BOOST_REQUIRE(spend4.hash == value4.hash);
-    BOOST_REQUIRE_EQUAL(spend4.index, value4.index);
+    BOOST_REQUIRE(spend4.hash() == value4.hash());
+    BOOST_REQUIRE_EQUAL(spend4.index(), value4.index());
     db.sync();
 }
 
