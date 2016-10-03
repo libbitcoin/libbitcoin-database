@@ -485,7 +485,7 @@ chain::block data_base::pop()
 
         // TODO: the deserialization should cache the hash on the tx.
         // Deserialize the transaction and move it to the block.
-        txs.emplace_back(tx_result.transaction());
+        txs.emplace_back(tx_result.transaction(), tx_hash);
     }
 
     // Loop txs backwards, the reverse of how they are added.
