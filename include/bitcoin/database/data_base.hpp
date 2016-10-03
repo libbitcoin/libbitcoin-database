@@ -102,8 +102,11 @@ public:
     /// Returns false if a block already exists at height.
     bool insert(const chain::block& block, size_t height);
 
-    /// Returns false if height is not the current top + 1.
+    /// Returns false if height is not the current top + 1 or not linked.
     bool push(const chain::block& block, size_t height);
+
+    /// Returns false if first_height is not the current top + 1 or not linked.
+    bool push(const chain::block::list& blocks, size_t first_height);
 
     /// Pop the set of blocks above the given hash.
     /// Returns true with empty list if height is empty.

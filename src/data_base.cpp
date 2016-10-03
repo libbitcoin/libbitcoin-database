@@ -293,6 +293,17 @@ void data_base::synchronize()
     blocks.sync();
 }
 
+bool data_base::push(const block::list& blocks, size_t first_height)
+{
+    auto height = first_height;
+
+    for (const auto block: blocks)
+        if (!push(block, height++))
+            return false;
+
+    return true;
+}
+
 bool data_base::push(const block& block, size_t height)
 {
     if (get_next_height(blocks) != height)
@@ -463,13 +474,17 @@ bool data_base::pop_above(chain::block::list& out_blocks,
     out_blocks.reserve(size);
 
     // Enqueue blocks so .front() is fork + 1 and .back() is top.
-    for (size_t index = top; index > fork; --index)
+    for (size_t height = top; height > fork; --height)
     {
         // DON'T MAKE BLOCK CONST, INVALIDATES THE MOVE.
         auto block = pop();
 
         if (!block.is_valid())
             return false;
+
+        // Mark the blocks as validated for their respective heights.
+        block.validation.height = height;
+        block.validation.result = error::success;
 
         // Move the block as an r-value into the list (no copy).
         out_blocks.insert(out_blocks.begin(), std::move(block));

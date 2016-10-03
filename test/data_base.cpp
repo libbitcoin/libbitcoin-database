@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     // Block #3
     chain::block block3 = read_block(MAINNET_BLOCK3);
     test_block_not_exists(instance, block3);
-    instance.push(block3, 3);
+    instance.push(chain::block::list{ block3 }, 3);
     test_block_exists(instance, 3, block3);
 
     std::cout << "pushpop: cleanup tests" << std::endl;
