@@ -54,17 +54,14 @@ public:
     memory_map(const memory_map&) = delete;
     void operator=(const memory_map&) = delete;
 
-    /// Start or restart the database, mapping database files.
-    bool start();
+    /// Open and map database files.
+    bool open();
 
-    /// Stop current work (optional, speeds shutdown with multiple threads).
-    bool stop();
-
-    /// Unmap database files, can be restarted.
+    /// Unmap and release database files, can be restarted.
     bool close();
 
-    /// True if stop has signaled the end of work.
-    bool stopped() const;
+    /// Determine if the database is closed.
+    bool closed() const;
 
     size_t size() const;
     memory_ptr access();
@@ -102,7 +99,6 @@ private:
     size_t file_size_;
     size_t logical_size_;
     std::atomic<bool> closed_;
-    std::atomic<bool> stopped_;
     mutable upgrade_mutex mutex_;
 };
 

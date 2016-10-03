@@ -70,12 +70,12 @@ block_database::~block_database()
 // Create.
 // ----------------------------------------------------------------------------
 
-// Initialize files and start.
+// Initialize files and open.
 bool block_database::create()
 {
     // Resize and create require a started file.
-    if (!lookup_file_.start() ||
-        !index_file_.start())
+    if (!lookup_file_.open() ||
+        !index_file_.open())
         return false;
 
     // These will throw if insufficient disk space.
@@ -98,22 +98,14 @@ bool block_database::create()
 // ----------------------------------------------------------------------------
 
 // Start files and primitives.
-bool block_database::start()
+bool block_database::open()
 {
     return
-        lookup_file_.start() &&
-        index_file_.start() &&
-        lookup_header_.start() && 
+        lookup_file_.open() &&
+        index_file_.open() &&
+        lookup_header_.start() &&
         lookup_manager_.start() &&
         index_manager_.start();
-}
-
-// Stop files.
-bool block_database::stop()
-{
-    return
-        lookup_file_.stop() &&
-        index_file_.stop();
 }
 
 // Close files.

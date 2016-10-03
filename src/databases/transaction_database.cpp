@@ -58,7 +58,7 @@ transaction_database::~transaction_database()
 bool transaction_database::create()
 {
     // Resize and create require a started file.
-    if (!lookup_file_.start())
+    if (!lookup_file_.open())
         return false;
 
     // This will throw if insufficient disk space.
@@ -78,18 +78,12 @@ bool transaction_database::create()
 // ----------------------------------------------------------------------------
 
 // Start files and primitives.
-bool transaction_database::start()
+bool transaction_database::open()
 {
     return
-        lookup_file_.start() &&
+        lookup_file_.open() &&
         lookup_header_.start() &&
         lookup_manager_.start();
-}
-
-// Stop files.
-bool transaction_database::stop()
-{
-    return lookup_file_.stop();
 }
 
 // Close files.

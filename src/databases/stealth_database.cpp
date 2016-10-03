@@ -60,7 +60,7 @@ stealth_database::~stealth_database()
 bool stealth_database::create()
 {
     // Resize and create require a started file.
-    if (!rows_file_.start())
+    if (!rows_file_.open())
         return false;
 
     // This will throw if insufficient disk space.
@@ -76,16 +76,11 @@ bool stealth_database::create()
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 
-bool stealth_database::start()
+bool stealth_database::open()
 {
     return
-        rows_file_.start() &&
+        rows_file_.open() &&
         rows_manager_.start();
-}
-
-bool stealth_database::stop()
-{
-    return rows_file_.stop();
 }
 
 bool stealth_database::close()

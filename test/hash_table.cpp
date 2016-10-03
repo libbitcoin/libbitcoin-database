@@ -76,7 +76,7 @@ void create_database_file()
 
     data_base::touch_file(DIRECTORY "/slab_hash_table__write_read");
     memory_map file(DIRECTORY "/slab_hash_table__write_read");
-    BOOST_REQUIRE(file.start());
+    BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);
     file.resize(header_size + minimum_slabs_size);
 
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__write_read__test)
     create_database_file();
 
     memory_map file(DIRECTORY "/slab_hash_table__write_read");
-    BOOST_REQUIRE(file.start());
+    BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);
 
     slab_hash_table_header header(file, buckets);
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__test)
 {
     data_base::touch_file(DIRECTORY "/slab_hash_table");
     memory_map file(DIRECTORY "/slab_hash_table");
-    BOOST_REQUIRE(file.start());
+    BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);
     file.resize(4 + 8 * 100 + 8);
 
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
 
     data_base::touch_file(DIRECTORY "/record_hash_table__32bit");
     memory_map file(DIRECTORY "/record_hash_table__32bit");
-    BOOST_REQUIRE(file.start());
+    BOOST_REQUIRE(file.open());
 
     // Cannot hold an address reference because of following resize operation.
     BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table_header__64bit__test)
 
     data_base::touch_file(DIRECTORY "/record_hash_table_64bit");
     memory_map file(DIRECTORY "/record_hash_table_64bit");
-    BOOST_REQUIRE(file.start());
+    BOOST_REQUIRE(file.open());
 
     // Cannot hold an address reference because of following resize operation.
     BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);

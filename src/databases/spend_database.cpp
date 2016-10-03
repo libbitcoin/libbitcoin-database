@@ -62,7 +62,7 @@ spend_database::~spend_database()
 bool spend_database::create()
 {
     // Resize and create require a started file.
-    if (!lookup_file_.start())
+    if (!lookup_file_.open())
         return false;
 
     // This will throw if insufficient disk space.
@@ -81,17 +81,12 @@ bool spend_database::create()
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 
-bool spend_database::start()
+bool spend_database::open()
 {
     return
-        lookup_file_.start() &&
+        lookup_file_.open() &&
         lookup_header_.start() &&
         lookup_manager_.start();
-}
-
-bool spend_database::stop()
-{
-    return lookup_file_.stop();
 }
 
 bool spend_database::close()

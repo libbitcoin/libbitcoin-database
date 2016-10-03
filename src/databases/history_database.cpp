@@ -69,8 +69,8 @@ history_database::~history_database()
 bool history_database::create()
 {
     // Resize and create require a started file.
-    if (!lookup_file_.start() ||
-        !rows_file_.start())
+    if (!lookup_file_.open() ||
+        !rows_file_.open())
         return false;
 
     // These will throw if insufficient disk space.
@@ -92,21 +92,14 @@ bool history_database::create()
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 
-bool history_database::start()
+bool history_database::open()
 {
     return
-        lookup_file_.start() &&
-        rows_file_.start() &&
+        lookup_file_.open() &&
+        rows_file_.open() &&
         lookup_header_.start() &&
         lookup_manager_.start() &&
         rows_manager_.start();
-}
-
-bool history_database::stop()
-{
-    return
-        lookup_file_.stop() &&
-        rows_file_.stop();
 }
 
 bool history_database::close()

@@ -40,6 +40,7 @@ namespace database {
 
 typedef uint64_t handle;
 
+/// This class is thread safe and implements the sequential locking pattern.
 class BCD_API data_base
 {
 public:
@@ -74,22 +75,19 @@ public:
     /// Stop all databases (threads must be joined).
     ~data_base();
 
-    // Startup and shutdown.
+    // Open and close.
     // ------------------------------------------------------------------------
 
-    /// Create and start all databases.
+    /// Create and open all databases.
     bool create();
 
-    /// Start all databases.
-    bool start();
+    /// Open all databases.
+    bool open();
 
-    /// Signal all databases to stop work.
-    bool stop();
-
-    /// Stop all databases (threads must be joined).
+    /// Close all databases.
     bool close();
 
-    // Locking.
+    // Sequential locking.
     // ------------------------------------------------------------------------
 
     handle begin_read() const;
@@ -107,9 +105,12 @@ public:
     /// Returns false if height is not the current top + 1.
     bool push(const chain::block& block, size_t height);
 
-
-    /// Throws if the chain is empty.
-    chain::block pop();
+    /// Pop the set of blocks above the given hash.
+    /// Returns true with empty list if height is empty.
+    /// Returns false if the database is corrupt or the hash doesn't exit.
+    /// Any blocks returned were successfully popped prior to any failure.
+    bool pop_above(chain::block::list& out_blocks,
+        const hash_digest& fork_hash);
 
 protected:
     data_base(const store& paths, size_t history_height, size_t stealth_height);
@@ -125,7 +126,6 @@ private:
     static void uninitialize_lock(const path& lock);
     static file_lock initialize_lock(const path& lock);
 
-    void synchronize();
     void emplace(const chain::block& block, size_t height);
     void push_inputs(const hash_digest& tx_hash, size_t height,
         const inputs& inputs);
@@ -133,8 +133,12 @@ private:
         const outputs& outputs);
     void push_stealth(const hash_digest& tx_hash, size_t height,
         const outputs& outputs);
+
+    chain::block pop();
     void pop_inputs(const inputs& inputs, size_t height);
     void pop_outputs(const outputs& outputs, size_t height);
+
+    void synchronize();
 
     const path lock_file_path_;
     const size_t history_height_;

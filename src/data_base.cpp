@@ -67,7 +67,7 @@ bool data_base::initialize(const path& prefix, const chain::block& genesis)
         return false;
 
     instance.push(genesis, 0);
-    return instance.stop();
+    return instance.close();
 }
 
 data_base::store::store(const path& prefix)
@@ -173,9 +173,9 @@ bool data_base::create()
         transactions.create();
 }
 
-// Start must be called before performing queries.
-// Start may be called after stop and/or after close in order to restart.
-bool data_base::start()
+// Open must be called before performing queries.
+// Open may be called after stop and/or after close in order to reopen.
+bool data_base::open()
 {
     // TODO: create a class to encapsulate the full file lock concept.
     file_lock_ = std::make_shared<file_lock>(initialize_lock(lock_file_path_));
@@ -193,42 +193,15 @@ bool data_base::start()
 
     const auto start_exclusive = begin_write();
     const auto start_result =
-        blocks.start() &&
-        history.start() &&
-        spends.start() &&
-        stealth.start() &&
-        transactions.start();
+        blocks.open() &&
+        history.open() &&
+        spends.open() &&
+        stealth.open() &&
+        transactions.open();
     const auto end_exclusive = end_write();
 
     // Return the result of the database start.
     return start_exclusive && start_result && end_exclusive;
-}
-
-// Stop only accelerates work termination, only required if restarting.
-bool data_base::stop()
-{
-    const auto start_exclusive = begin_write();
-    const auto blocks_stop = blocks.stop();
-    const auto history_stop = history.stop();
-    const auto spends_stop = spends.stop();
-    const auto stealth_stop = stealth.stop();
-    const auto transactions_stop = transactions.stop();
-    const auto end_exclusive = end_write();
-
-    // This should remove the lock file. This is not important for locking
-    // purposes, but it provides a sentinel to indicate hard shutdown.
-    file_lock_ = nullptr;
-    uninitialize_lock(lock_file_path_);
-
-    // Return the cumulative result of the database shutdowns.
-    return
-        start_exclusive &&
-        blocks_stop &&
-        history_stop &&
-        spends_stop &&
-        stealth_stop &&
-        transactions_stop &&
-        end_exclusive;
 }
 
 // Close is optional as the database will close on destruct.
@@ -239,6 +212,11 @@ bool data_base::close()
     const auto spends_close = spends.close();
     const auto stealth_close = stealth.close();
     const auto transactions_close = transactions.close();
+
+    // This should remove the lock file. This is not important for locking
+    // purposes, but it provides a sentinel to indicate hard shutdown.
+    file_lock_ = nullptr;
+    uninitialize_lock(lock_file_path_);
 
     // Return the cumulative result of the database closes.
     return
@@ -461,27 +439,72 @@ void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
     }
 }
 
+// This precludes popping the genesis block.
+// Returns true with empty list if for is at the top.
+bool data_base::pop_above(chain::block::list& out_blocks,
+    const hash_digest& fork_hash)
+{
+    size_t top;
+    out_blocks.clear();
+    const auto result = blocks.get(fork_hash);
+
+    // The fork point does not exist or failed to get it or the top, fail.
+    if (!result || !blocks.top(top))
+        return false;
+
+    const auto fork = result.height();
+    const auto size = top - fork;
+
+    // The fork is at the top of the chain, nothing to pop.
+    if (size == 0)
+        return true;
+
+    // If the fork is at the top there is one block to pop, and so on.
+    out_blocks.reserve(size);
+
+    // Enqueue blocks so .front() is fork + 1 and .back() is top.
+    for (size_t index = top; index > fork; --index)
+    {
+        // DON'T MAKE BLOCK CONST, INVALIDATES THE MOVE.
+        auto block = pop();
+
+        if (!block.is_valid())
+            return false;
+
+        // Move the block as an r-value into the list (no copy).
+        out_blocks.insert(out_blocks.begin(), std::move(block));
+    }
+
+    return true;
+}
+
 chain::block data_base::pop()
 {
     size_t height;
-    DEBUG_ONLY(const auto result =) blocks.top(height);
-    BITCOIN_ASSERT_MSG(result, "Pop on empty database.");
+
+    // The blockchain is empty (nothing to pop, not even genesis).
+    if (!blocks.top(height))
+        return{};
 
     const auto block_result = blocks.get(height);
-    const auto count = block_result.transaction_count();
 
-    // Build the block for return.
-    chain::transaction::list txs;
+    // The height is invalid (should not happen if locked).
+    if (!block_result)
+        return{};
+
+    chain::block block;
+    auto txs = block.transactions();
     txs.reserve(count);
 
-    for (size_t tx = 0; tx < count; ++tx)
+    for (size_t tx = 0; tx < block_result.transaction_count(); ++tx)
     {
+        // TODO: the deserialization should cache tx_hash on the tx.
         const auto tx_hash = block_result.transaction_hash(tx);
         const auto tx_result = transactions.get(tx_hash);
 
-        BITCOIN_ASSERT(tx_result);
-        BITCOIN_ASSERT(tx_result.height() == height);
-        BITCOIN_ASSERT(tx_result.position() == static_cast<size_t>(tx));
+        if (!tx_result || tx_result.height() != height ||
+            tx_result.position() != tx)
+            return{};
 
         // TODO: the deserialization should cache the hash on the tx.
         // Deserialize the transaction and move it to the block.
