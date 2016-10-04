@@ -122,7 +122,7 @@ int main(int argc, char** argv)
             return -1;
         }
 
-        db.start();
+        db.open();
         auto result = db.get(hash);
         if (!result)
         {
@@ -163,7 +163,7 @@ int main(int argc, char** argv)
         if (!tx.from_data(data))
             throw end_of_stream();
 
-        const auto result = db.start();
+        const auto result = db.open();
         BITCOIN_ASSERT(result);
 
         db.store(height, index, tx);
@@ -184,7 +184,7 @@ int main(int argc, char** argv)
             return -1;
         }
 
-        const auto result = db.start();
+        const auto result = db.open();
         BITCOIN_ASSERT(result);
 
         db.remove(hash);

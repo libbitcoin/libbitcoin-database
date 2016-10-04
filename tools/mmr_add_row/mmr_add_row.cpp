@@ -21,7 +21,7 @@ int mmr_add_row(const data_chunk& key_data, const data_chunk& value,
     std::copy(key_data.begin(), key_data.end(), key.begin());
 
     memory_map ht_file(map_filename);
-    auto result = ht_file.start();
+    auto result = ht_file.open();
     BITCOIN_ASSERT(result);
 
     record_hash_table_header header(ht_file);
@@ -40,7 +40,7 @@ int mmr_add_row(const data_chunk& key_data, const data_chunk& value,
     record_hash_table<hash_type> ht(header, alloc);
 
     memory_map lrs_file(rows_filename);
-    result = lrs_file.start();
+    result = lrs_file.open();
     BITCOIN_ASSERT(result);
 
     const size_t lrs_record_size = record_list_offset + value.size();

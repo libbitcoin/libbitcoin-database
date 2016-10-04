@@ -180,7 +180,7 @@ int main(int argc, char** argv)
         if (!parse_point(outpoint, args[0]))
             return -1;
 
-        const auto result = db.start();
+        const auto result = db.open();
         BITCOIN_ASSERT(result);
 
         const auto spend = db.get(outpoint);
@@ -212,7 +212,7 @@ int main(int argc, char** argv)
         if (!parse_point(spend, args[1]))
             return -1;
 
-        const auto result = db.start();
+        const auto result = db.open();
         BITCOIN_ASSERT(result);
 
         db.store(outpoint, spend);
@@ -231,7 +231,7 @@ int main(int argc, char** argv)
         if (!parse_point(outpoint, args[0]))
             return -1;
 
-        const auto result = db.start();
+        const auto result = db.open();
         BITCOIN_ASSERT(result);
 
         db.remove(outpoint);
@@ -245,7 +245,7 @@ int main(int argc, char** argv)
             return -1;
         }
 
-        const auto result = db.start();
+        const auto result = db.open();
         BITCOIN_ASSERT(result);
 
         auto info = db.statinfo();

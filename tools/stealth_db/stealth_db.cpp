@@ -125,7 +125,7 @@ int main(int argc, char** argv)
         if (!parse_uint(from_height, args[1]))
             return -1;
 
-        const auto result = db.start();
+        const auto result = db.open();
         BITCOIN_ASSERT(result);
 
         const auto rows = db.scan(filter, from_height);
@@ -175,7 +175,7 @@ int main(int argc, char** argv)
     ////        return -1;
     ////    }
     ////
-    ////    const auto result = db.start();
+    ////    const auto result = db.open();
     ////    BITCOIN_ASSERT(result);
     ////
     ////    db.store(script, row);
@@ -193,7 +193,7 @@ int main(int argc, char** argv)
         if (!parse_uint(from_height, args[0]))
             return -1;
 
-        const auto result = db.start();
+        const auto result = db.open();
         BITCOIN_ASSERT(result);
 
         db.unlink(from_height);

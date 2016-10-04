@@ -27,7 +27,7 @@ void mmr_create(const size_t value_size, const std::string& map_filename,
 
     data_base::touch_file(map_filename);
     memory_map ht_file(map_filename);
-    auto result = ht_file.start();
+    auto result = ht_file.open();
     BITCOIN_ASSERT(result);
 
     ht_file.resize(header_size + minimum_records_size);
@@ -54,7 +54,7 @@ void mmr_create(const size_t value_size, const std::string& map_filename,
     record_hash_table<hash_type> ht(header, alloc);
     data_base::touch_file(rows_filename);
     memory_map lrs_file(rows_filename);
-    result = lrs_file.start();
+    result = lrs_file.open();
     BITCOIN_ASSERT(result);
 
     lrs_file.resize(minimum_records_size);

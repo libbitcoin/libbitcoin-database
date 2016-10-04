@@ -199,7 +199,7 @@ int main(int argc, char** argv)
         if (!parse_uint(value, args[3]))
             return -1;
 
-        const auto result = db.start();
+        const auto result = db.open();
         BITCOIN_ASSERT(result);
 
         db.add_output(key, outpoint, output_height, value);
@@ -229,7 +229,7 @@ int main(int argc, char** argv)
         if (!parse_uint(spend_height, args[3]))
             return -1;
 
-        const auto result = db.start();
+        const auto result = db.open();
         BITCOIN_ASSERT(result);
 
         db.add_input(key, spend, spend_height, previous);
@@ -247,7 +247,7 @@ int main(int argc, char** argv)
         if (!parse_key(key, args[0]))
             return -1;
 
-        const auto result = db.start();
+        const auto result = db.open();
         BITCOIN_ASSERT(result);
 
         db.delete_last_row(key);
@@ -275,7 +275,7 @@ int main(int argc, char** argv)
             if (!parse_uint(from_height, args[2]))
                 return -1;
 
-        const auto result = db.start();
+        const auto result = db.open();
         BITCOIN_ASSERT(result);
 
         auto history = db.get(key, limit, from_height);
@@ -299,7 +299,7 @@ int main(int argc, char** argv)
             return -1;
         }
 
-        const auto result = db.start();
+        const auto result = db.open();
         BITCOIN_ASSERT(result);
 
         auto info = db.statinfo();
