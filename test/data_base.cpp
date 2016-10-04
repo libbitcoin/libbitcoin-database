@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     chain::block::list block3_popped;
     BOOST_REQUIRE(instance.blocks.top(height));
     BOOST_REQUIRE_EQUAL(height, 3u);
-    BOOST_REQUIRE(instance.pop_above(block3_popped, block3.header.previous_block_hash));
+    BOOST_REQUIRE(instance.pop_above(block3_popped, block3.header().previous_block_hash()));
     BOOST_REQUIRE(instance.blocks.top(height));
     BOOST_REQUIRE_EQUAL(height, 2u);
 
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     test_block_exists(instance, 0, block0);
 
     chain::block::list block2_popped;
-    BOOST_REQUIRE(instance.pop_above(block2_popped, block2.header.previous_block_hash));
+    BOOST_REQUIRE(instance.pop_above(block2_popped, block2.header().previous_block_hash()));
     BOOST_REQUIRE(instance.blocks.top(height));
     BOOST_REQUIRE_EQUAL(height, 1u);
 

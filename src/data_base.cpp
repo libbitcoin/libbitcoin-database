@@ -508,12 +508,10 @@ chain::block data_base::pop()
         return{};
 
     chain::block block;
-    auto txs = block.transactions();
-    txs.reserve(count);
+    auto& txs = block.transactions();
 
     for (size_t tx = 0; tx < block_result.transaction_count(); ++tx)
     {
-        // TODO: the deserialization should cache tx_hash on the tx.
         const auto tx_hash = block_result.transaction_hash(tx);
         const auto tx_result = transactions.get(tx_hash);
 
@@ -521,9 +519,8 @@ chain::block data_base::pop()
             tx_result.position() != tx)
             return{};
 
-        // TODO: the deserialization should cache the hash on the tx.
-        // Deserialize the transaction and move it to the block.
-        txs.emplace_back(tx_result.transaction(), tx_hash);
+        // Deserialize transaction and move it and cached hash to the block.
+        txs.emplace_back(tx_result.transaction(), std::move(tx_hash));
     }
 
     // Loop txs backwards, the reverse of how they are added.
