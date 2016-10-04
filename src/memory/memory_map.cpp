@@ -91,7 +91,7 @@ int memory_map::open_file(const path& filename)
     int handle = _wopen(filename.wstring().c_str(), O_RDWR,
         FILE_OPEN_PERMISSIONS);
 #else
-    int handle = open(filename.string().c_str(), O_RDWR,
+    int handle = ::open(filename.string().c_str(), O_RDWR,
         FILE_OPEN_PERMISSIONS);
 #endif
     return handle;
@@ -137,8 +137,7 @@ memory_map::memory_map(const path& filename)
     data_(nullptr),
     file_size_(file_size(file_handle_)),
     logical_size_(file_size_),
-    closed_(true),
-    stopped_(true)
+    closed_(true)
 {
 }
 
@@ -158,17 +157,17 @@ memory_map::~memory_map()
 // ----------------------------------------------------------------------------
 
 // Map the database file and signal start.
-bool memory_map::start()
+bool memory_map::open()
 {
     // Critical Section (internal/unconditional)
     ///////////////////////////////////////////////////////////////////////////
     mutex_.lock_upgrade();
 
-    if (!stopped_)
+    if (!closed_)
     {
         mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
-        // Start is not idempotent (should be called on single thread).
+        // Open is not idempotent (should be called on single thread).
         return false;
     }
 
@@ -182,10 +181,7 @@ bool memory_map::start()
     else if (madvise(data_, 0, MADV_RANDOM) == -1)
         error_name = "madvise";
     else
-    {
         closed_ = false;
-        stopped_ = false;
-    }
 
     mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
@@ -195,30 +191,6 @@ bool memory_map::start()
         return handle_error(error_name, filename_);
 
     log_mapping();
-    return true;
-}
-
-bool memory_map::stop()
-{
-    // Critical Section (internal/unconditional)
-    ///////////////////////////////////////////////////////////////////////////
-    mutex_.lock_upgrade();
-
-    if (stopped_)
-    {
-        mutex_.unlock_upgrade();
-        //---------------------------------------------------------------------
-        // Stop is idempotent (may be called from multiple threads).
-        return true;
-    }
-
-    mutex_.unlock_upgrade_and_lock();
-    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    stopped_ = true;
-
-    mutex_.unlock();
-    ///////////////////////////////////////////////////////////////////////////
-
     return true;
 }
 
@@ -266,13 +238,13 @@ bool memory_map::close()
     return true;
 }
 
-bool memory_map::stopped() const
+bool memory_map::closed() const
 {
     // Critical Section (internal/unconditional)
     ///////////////////////////////////////////////////////////////////////////
     shared_lock lock(mutex_);
 
-    return stopped_;
+    return closed_;
     ///////////////////////////////////////////////////////////////////////////
 }
 

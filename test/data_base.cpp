@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     BOOST_REQUIRE(data_base::initialize(settings.directory, block0));
 
     data_base instance(settings);
-    BOOST_REQUIRE(instance.start());
+    BOOST_REQUIRE(instance.open());
 
     size_t height = 42;
     BOOST_REQUIRE(instance.blocks.top(height));
@@ -287,32 +287,33 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
 
     std::cout << "pushpop: block #3" << std::endl;
 
-    // Block #183
+    // Block #3
     chain::block block3 = read_block(MAINNET_BLOCK3);
     test_block_not_exists(instance, block3);
-    instance.push(block3, 3);
+    instance.push(chain::block::list{ block3 }, 3);
     test_block_exists(instance, 3, block3);
 
     std::cout << "pushpop: cleanup tests" << std::endl;
 
+    chain::block::list block3_popped;
     BOOST_REQUIRE(instance.blocks.top(height));
     BOOST_REQUIRE_EQUAL(height, 3u);
-
-    chain::block block3_popped = instance.pop();
+    BOOST_REQUIRE(instance.pop_above(block3_popped, block3.header().previous_block_hash()));
     BOOST_REQUIRE(instance.blocks.top(height));
     BOOST_REQUIRE_EQUAL(height, 2u);
-    compare_blocks(block3_popped, block3);
 
+    compare_blocks(block3_popped.front(), block3);
     test_block_not_exists(instance, block3);
     test_block_exists(instance, 2, block2);
     test_block_exists(instance, 1, block1);
     test_block_exists(instance, 0, block0);
 
-    chain::block block2_popped = instance.pop();
+    chain::block::list block2_popped;
+    BOOST_REQUIRE(instance.pop_above(block2_popped, block2.header().previous_block_hash()));
     BOOST_REQUIRE(instance.blocks.top(height));
     BOOST_REQUIRE_EQUAL(height, 1u);
-    compare_blocks(block2_popped, block2);
 
+    compare_blocks(block2_popped.front(), block2);
     test_block_not_exists(instance, block3);
     test_block_not_exists(instance, block2);
     test_block_exists(instance, 1, block1);

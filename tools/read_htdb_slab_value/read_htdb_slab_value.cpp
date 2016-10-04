@@ -45,7 +45,7 @@ int main(int argc, char** argv)
         offset = lexical_cast<file_offset>(argv[5]);
 
     memory_map file(filename);
-    auto result = file.start();
+    auto result = file.open();
     BITCOIN_ASSERT(result);
 
     slab_hash_table_header header(file, buckets);

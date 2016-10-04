@@ -45,7 +45,7 @@ int main(int argc, char** argv)
         offset = lexical_cast<file_offset>(argv[4]);
 
     memory_map file(filename);
-    BITCOIN_ASSERT(file.start());
+    BITCOIN_ASSERT(file.open());
 
     record_hash_table_header header(file);
     BITCOIN_ASSERT(header.start());

@@ -173,7 +173,7 @@ int main(int argc, char** argv)
             return -1;
         }
 
-        const auto result = db.start();
+        const auto result = db.open();
         BITCOIN_ASSERT(result);
         std::shared_ptr<block_result> block_data;
 
@@ -255,7 +255,7 @@ int main(int argc, char** argv)
         if (block.from_data(data))
             throw end_of_stream();
 
-        const auto result = db.start();
+        const auto result = db.open();
         BITCOIN_ASSERT(result);
 
         db.store(block);
@@ -273,7 +273,7 @@ int main(int argc, char** argv)
         if (!parse_uint(from_height, args[0]))
             return -1;
 
-        const auto result = db.start();
+        const auto result = db.open();
         BITCOIN_ASSERT(result);
 
         db.unlink(from_height);
@@ -281,7 +281,7 @@ int main(int argc, char** argv)
     }
     else if (command == "last_height")
     {
-        const auto result = db.start();
+        const auto result = db.open();
         BITCOIN_ASSERT(result);
 
         size_t height;

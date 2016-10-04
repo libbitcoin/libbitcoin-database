@@ -60,10 +60,7 @@ public:
     bool create();
 
     /// Call before using the database.
-    bool start();
-
-    /// Call to signal a stop of current operations.
-    bool stop();
+    bool open();
 
     /// Call to unload the memory map.
     bool close();
