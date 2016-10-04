@@ -91,7 +91,7 @@ int memory_map::open_file(const path& filename)
     int handle = _wopen(filename.wstring().c_str(), O_RDWR,
         FILE_OPEN_PERMISSIONS);
 #else
-    int handle = open(filename.string().c_str(), O_RDWR,
+    int handle = ::open(filename.string().c_str(), O_RDWR,
         FILE_OPEN_PERMISSIONS);
 #endif
     return handle;
