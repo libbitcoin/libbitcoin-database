@@ -58,7 +58,7 @@ public:
     /// Call to unload the memory map.
     bool close();
 
-    /// Determine if a block exists at athe given height.
+    /// Determine if a block exists at the given height.
     bool exists(size_t height) const;
 
     /// Fetch block by height using the index table.
@@ -83,7 +83,7 @@ public:
     /// The index of the highest existing block, independent of gaps.
     bool top(size_t& out_height) const;
 
-    /// Return the first and last gaps in the blockchain, or false if none.
+    /// The first and last gaps in the blockchain, false if none.
     bool gap_range(size_t& out_first, size_t& out_last) const;
 
     /// The index of the first missing block starting from given height.
