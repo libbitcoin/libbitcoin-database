@@ -527,16 +527,14 @@ chain::block data_base::pop()
     // Remove txs, then outputs, then inputs (also reverse order).
     for (auto tx = txs.rbegin(); tx != txs.rend(); ++tx)
     {
-        transactions.remove(tx->hash());
+        /* bool */ transactions.unlink(tx->hash());
         pop_outputs(tx->outputs(), height);
 
         if (!tx->is_coinbase())
             pop_inputs(tx->inputs(), height);
     }
 
-    // Stealth unlink is not implemented.
-    stealth.unlink(height);
-    blocks.unlink(height);
+    /* bool */ blocks.unlink(height);
 
     // Synchronise everything that was changed.
     synchronize();
@@ -550,7 +548,7 @@ void data_base::pop_inputs(const input::list& inputs, size_t height)
     // Loop in reverse.
     for (auto input = inputs.rbegin(); input != inputs.rend(); ++input)
     {
-        spends.remove(input->previous_output());
+        /* bool */ spends.unlink(input->previous_output());
 
         if (height < history_height_)
             continue;
@@ -559,7 +557,7 @@ void data_base::pop_inputs(const input::list& inputs, size_t height)
         const auto address = payment_address::extract(input->script());
 
         if (address)
-            history.delete_last_row(address.hash());
+            /* bool */ history.delete_last_row(address.hash());
     }
 }
 
@@ -575,7 +573,12 @@ void data_base::pop_outputs(const output::list& outputs, size_t height)
         const auto address = payment_address::extract(output->script());
 
         if (address)
-            history.delete_last_row(address.hash());
+            /* bool */ history.delete_last_row(address.hash());
+
+
+        // TODO: try to extract a stealth info and if found unlink index.
+        // Stealth unlink is not implemented.
+        /* bool */ stealth.unlink();
     }
 }
 

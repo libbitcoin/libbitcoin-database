@@ -187,7 +187,7 @@ int main(int argc, char** argv)
         const auto result = db.open();
         BITCOIN_ASSERT(result);
 
-        db.remove(hash);
+        db.unlink(hash);
         db.sync();
     }
     else

@@ -141,10 +141,9 @@ void transaction_database::store(size_t height, size_t position,
     lookup_map_.store(key, write, value_size);
 }
 
-void transaction_database::remove(const hash_digest& hash)
+bool transaction_database::unlink(const hash_digest& hash)
 {
-    DEBUG_ONLY(bool success =) lookup_map_.unlink(hash);
-    BITCOIN_ASSERT(success);
+    return lookup_map_.unlink(hash);
 }
 
 void transaction_database::sync()

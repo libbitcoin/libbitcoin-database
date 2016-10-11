@@ -94,7 +94,7 @@ void record_multimap<KeyType>::add_to_list(memory_ptr start_info,
 }
 
 template <typename KeyType>
-void record_multimap<KeyType>::delete_last_row(const KeyType& key)
+bool record_multimap<KeyType>::delete_last_row(const KeyType& key)
 {
     const auto start_info = map_.find(key);
     BITCOIN_ASSERT_MSG(start_info, "The row to delete was not found.");
@@ -116,9 +116,7 @@ void record_multimap<KeyType>::delete_last_row(const KeyType& key)
         // Free existing remap pointer to prevent deadlock in map_.unlink.
         address = nullptr;
 
-        DEBUG_ONLY(bool success =) map_.unlink(key);
-        BITCOIN_ASSERT(success);
-        return;
+        return map_.unlink(key);
     }
 
     auto serial = make_serializer(address);
@@ -127,6 +125,7 @@ void record_multimap<KeyType>::delete_last_row(const KeyType& key)
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(mutex_);
     serial.template write_little_endian<array_index>(new_begin);
+    return true;
     ///////////////////////////////////////////////////////////////////////////
 }
 

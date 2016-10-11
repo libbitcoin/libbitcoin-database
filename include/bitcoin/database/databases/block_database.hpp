@@ -74,7 +74,7 @@ public:
     void store(const chain::block& block, size_t height);
 
     /// Unlink all blocks upwards from (and including) from_height.
-    void unlink(size_t from_height);
+    bool unlink(size_t from_height);
 
     /// Synchronise storage with disk so things are consistent.
     /// Should be done at the end of every block write.

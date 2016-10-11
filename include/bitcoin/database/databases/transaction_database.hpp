@@ -67,7 +67,7 @@ public:
     void store(size_t height, size_t position, const chain::transaction& tx);
 
     /// Delete a transaction from database.
-    void remove(const hash_digest& hash);
+    bool unlink(const hash_digest& hash);
 
     /// Synchronise storage with disk so things are consistent.
     /// Should be done at the end of every block write.

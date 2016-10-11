@@ -123,10 +123,9 @@ void spend_database::store(const chain::output_point& outpoint,
     lookup_map_.store(outpoint, write);
 }
 
-void spend_database::remove(const output_point& outpoint)
+bool spend_database::unlink(const output_point& outpoint)
 {
-    DEBUG_ONLY(bool success =) lookup_map_.unlink(outpoint);
-    BITCOIN_ASSERT(success);
+    return lookup_map_.unlink(outpoint);
 }
 
 void spend_database::sync()

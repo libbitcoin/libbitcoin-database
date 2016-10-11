@@ -60,8 +60,8 @@ public:
     void store(uint32_t prefix, uint32_t height,
         const chain::stealth_compact& row);
 
-    /// Delete all rows after and including from_height (no implemented).
-    void unlink(size_t from_height);
+    /// Delete stealth row (not implemented.
+    bool unlink();
 
     /// Synchronise storage with disk so things are consistent.
     /// Should be done at the end of every block write.

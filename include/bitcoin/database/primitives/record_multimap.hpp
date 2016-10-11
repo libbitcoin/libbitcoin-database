@@ -63,7 +63,7 @@ public:
 
     /// Delete the last row entry that was added. This means when deleting
     /// blocks we must walk backwards and delete in reverse order.
-    void delete_last_row(const KeyType& key);
+    bool delete_last_row(const KeyType& key);
 
 private:
     // Add new value to existing key.

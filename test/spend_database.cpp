@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(spend_database__test)
     BOOST_REQUIRE(!db.get(key4).is_valid());
 
     // Delete record.
-    db.remove(key3);
+    db.unlink(key3);
     BOOST_REQUIRE(!db.get(key3).is_valid());
 
     // Add another record.

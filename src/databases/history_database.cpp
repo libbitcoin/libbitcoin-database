@@ -142,9 +142,10 @@ void history_database::add_input(const short_hash& key,
     rows_multimap_.add_row(key, write);
 }
 
-void history_database::delete_last_row(const short_hash& key)
+// This is the history unlink.
+bool history_database::delete_last_row(const short_hash& key)
 {
-    rows_multimap_.delete_last_row(key);
+    return rows_multimap_.delete_last_row(key);
 }
 
 history_compact::list history_database::get(const short_hash& key,
