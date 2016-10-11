@@ -23,6 +23,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <tuple>
+#include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
@@ -93,6 +94,8 @@ private:
 
     record_hash_table_header& header_;
     record_manager& manager_;
+    shared_mutex mutex_;
+
 };
 
 } // namespace database
