@@ -483,7 +483,7 @@ bool data_base::pop_above(chain::block::list& out_blocks,
             return false;
 
         // Mark the blocks as validated for their respective heights.
-        block.validation.height = height;
+        block.header().validation.height = height;
         block.validation.result = error::success;
 
         // Move the block as an r-value into the list (no copy).
