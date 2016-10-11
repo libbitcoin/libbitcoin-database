@@ -97,7 +97,9 @@ template <typename KeyType>
 bool record_multimap<KeyType>::delete_last_row(const KeyType& key)
 {
     const auto start_info = map_.find(key);
-    BITCOIN_ASSERT_MSG(start_info, "The row to delete was not found.");
+
+    if (!start_info)
+        return false;
 
     auto address = REMAP_ADDRESS(start_info);
 
