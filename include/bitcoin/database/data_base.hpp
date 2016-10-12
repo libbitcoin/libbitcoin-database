@@ -107,8 +107,8 @@ public:
     /// Returns false if a block already exists at height.
     bool stub(const chain::header& header, size_t tx_count, size_t height);
 
-    /// Store transactions of a stub block in the database.
-    bool fill(const chain::block& block);
+    /// Store transactions of a stub block in the database, verify height.
+    bool fill(const chain::block& block, size_t height);
 
     /// Returns false if height is not the current top + 1 or not linked.
     bool push(const chain::block& block, size_t height);

@@ -75,8 +75,8 @@ public:
     void stub(const chain::header& header, size_t tx_count, size_t height);
 
     /// Store transactions of a stub block in the database.
-    /// Returns false if unexpected tx count or block hash not found.
-    bool fill(size_t& out_height, const chain::block& block);
+    /// Returns false if unexpected tx count, height or block hash not found.
+    bool fill(const chain::block& block, size_t height);
 
     /// Unlink all blocks upwards from (and including) from_height.
     bool unlink(size_t from_height);

@@ -164,7 +164,7 @@ void block_database::insert(const block& block, size_t height)
     const auto value_size = 80 + 4 + 4 + tx_count * hash_size;
     const auto position = lookup_map_.store(key, write, value_size);
 
-    // Write height to index.
+    // Write position to index.
     write_position(position, height32);
 }
 
@@ -193,27 +193,26 @@ void block_database::stub(const header& header, size_t tx_count, size_t height)
     const auto value_size = 80 + 4 + 4 + tx_count * hash_size;
     /* file_offset */ lookup_map_.store(key, write, value_size);
 
-    // Write empty height to index.
+    // Write empty position to index.
     write_position(empty, height32);
 }
 
-bool block_database::fill(size_t& out_height, const block& block)
+bool block_database::fill(const chain::block& block, size_t height)
 {
-    bool expected_size = false;
+    auto expected = false;
+    const auto count = block.transactions().size();
 
     // Write transactions data.
-    const auto write = [&out_height, &block, &expected_size](memory_ptr data)
+    const auto write = [&](memory_ptr data)
     {
         const auto buffer = REMAP_ADDRESS(data);
         auto reader = make_deserializer_unsafe(buffer + 80);
         const auto tx_count = reader.read_4_bytes_little_endian();
-        expected_size = tx_count == block.transactions().size();
+        const auto block_height = reader.read_4_bytes_little_endian();
+        expected = tx_count == count && block_height == height;
 
-        if (expected_size)
+        if (expected)
         {
-            // Return height for index and transactions push.
-            out_height = reader.read_4_bytes_little_endian();
-
             auto serial = make_serializer(buffer + 80 + 4 + 4);
 
             // Overwrite placeholder hashes with actuals.
@@ -225,11 +224,11 @@ bool block_database::fill(size_t& out_height, const block& block)
     const auto key = block.header().hash();
     const auto position = lookup_map_.update(key, write);
 
-    if (!expected_size)
+    if (!expected)
         return false;
 
-    // Write height to index.
-    write_position(position, out_height);
+    // Write position to index.
+    write_position(position, height);
     return true;
 }
 

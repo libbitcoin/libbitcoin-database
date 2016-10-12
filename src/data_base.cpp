@@ -317,13 +317,12 @@ bool data_base::stub(const header& header, size_t tx_count, size_t height)
 }
 
 // Add transactions and height index to existing stub block entry.
-bool data_base::fill(const block& block)
+bool data_base::fill(const block& block, size_t height)
 {
-    size_t out_height;
-    if (!blocks.fill(out_height, block))
+    if (!blocks.fill(block, height))
         return false;
 
-    push_transactions(block, out_height);
+    push_transactions(block, height);
     synchronize();
     return true;
 }
