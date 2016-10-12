@@ -277,12 +277,12 @@ static hash_digest get_previous_hash(const block_database& blocks, size_t height
     return height == 0 ? null_hash : blocks.get(height - 1).header().hash();
 }
 
-static bool is_allowed_duplicate(const header& head, size_t height)
-{
-    return
-        (height == exception1.height() && head.hash() == exception1.hash()) ||
-        (height == exception2.height() && head.hash() == exception2.hash());
-}
+////static bool is_allowed_duplicate(const header& head, size_t height)
+////{
+////    return
+////        (height == exception1.height() && head.hash() == exception1.hash()) ||
+////        (height == exception2.height() && head.hash() == exception2.hash());
+////}
 
 void data_base::synchronize()
 {
@@ -293,6 +293,41 @@ void data_base::synchronize()
     blocks.sync();
 }
 
+// Add block to the database at the given height.
+bool data_base::insert(const chain::block& block, size_t height)
+{
+    if (blocks.exists(height))
+        return false;
+
+    push_transactions(block, height);
+    blocks.insert(block, height);
+    synchronize();
+    return true;
+}
+
+// Add stub block at the given height with empty transactions and index.
+bool data_base::stub(const header& header, size_t tx_count, size_t height)
+{
+    if (blocks.exists(height))
+        return false;
+
+    blocks.stub(header, tx_count, height);
+    blocks.sync();
+    return true;
+}
+
+// Add transactions and height index to existing stub block entry.
+bool data_base::fill(const block& block, size_t height)
+{
+    if (!blocks.fill(block, height))
+        return false;
+
+    push_transactions(block, height);
+    synchronize();
+    return true;
+}
+
+// Add a list of blocks in order.
 bool data_base::push(const block::list& blocks, size_t first_height)
 {
     auto height = first_height;
@@ -304,6 +339,7 @@ bool data_base::push(const block::list& blocks, size_t first_height)
     return true;
 }
 
+// Add a block in order.
 bool data_base::push(const block& block, size_t height)
 {
     if (get_next_height(blocks) != height)
@@ -319,29 +355,22 @@ bool data_base::push(const block& block, size_t height)
             << "The block has incorrect parent for height [" << height << "].";
         return false;
     }
-    
-    emplace(block, height);
+
+    push_transactions(block, height);
+    blocks.insert(block, height);
+    synchronize();
     return true;
 }
 
-bool data_base::insert(const block& block, size_t height)
-{
-    if (blocks.exists(height))
-        return false;
-    
-    emplace(block, height);
-    return true;
-}
-
-void data_base::emplace(const block& block, size_t height)
+// Add transactions and related indexing for a given block.
+void data_base::push_transactions(const block& block, size_t height)
 {
     for (size_t index = 0; index < block.transactions().size(); ++index)
     {
-        // TODO: allow duplicate tx hashes.
-        // Skip BIP30 allowed duplicates (coinbase txs of excepted blocks).
-        // We handle here because this is the lowest public level exposed.
-        if (index == 0 && is_allowed_duplicate(block.header(), height))
-            continue;
+        ////// Skip BIP30 allowed duplicates (coinbase txs of excepted blocks).
+        ////// We handle here because this is the lowest public level exposed.
+        ////if (index == 0 && is_allowed_duplicate(block.header(), height))
+        ////    continue;
 
         const auto& tx = block.transactions()[index];
         const auto tx_hash = tx.hash();
@@ -359,12 +388,6 @@ void data_base::emplace(const block& block, size_t height)
         // Add transaction
         transactions.store(height, index, tx);
     }
-
-    // Add block itself.
-    blocks.store(block, height);
-
-    // Synchronise everything that was added.
-    synchronize();
 }
 
 void data_base::push_inputs(const hash_digest& tx_hash, size_t height,

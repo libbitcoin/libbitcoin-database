@@ -68,10 +68,15 @@ public:
     block_result get(const hash_digest& hash) const;
 
     /// Store a block in the database.
-    void store(const chain::block& block);
+    void insert(const chain::block& block, size_t height);
 
-    /// Store a block in the database.
-    void store(const chain::block& block, size_t height);
+    /// Stub a block header in the database.
+    /// This leaves the corresponding height index entry empty.
+    void stub(const chain::header& header, size_t tx_count, size_t height);
+
+    /// Store transactions of a stub block in the database.
+    /// Returns false if unexpected tx count, height or block hash not found.
+    bool fill(const chain::block& block, size_t height);
 
     /// Unlink all blocks upwards from (and including) from_height.
     bool unlink(size_t from_height);

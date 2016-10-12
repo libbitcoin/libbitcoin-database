@@ -67,11 +67,11 @@ public:
 
     record_hash_table(record_hash_table_header& header, record_manager& manager);
 
-    /// Store a value. The provided write() function must write the correct
+    /// Execute a write. The provided write() function must write the correct
     /// number of bytes (record_size - key_size - sizeof(array_index)).
     void store(const KeyType& key, write_function write);
 
-    /// Find the record for a given hash.
+    /// Find the record for a given key.
     /// Returns a null pointer if not found.
     const memory_ptr find(const KeyType& key) const;
 
