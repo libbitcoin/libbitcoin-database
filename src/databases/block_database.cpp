@@ -139,12 +139,7 @@ block_result block_database::get(const hash_digest& hash) const
     return block_result(memory);
 }
 
-void block_database::store(const block& block)
-{
-    store(block, index_manager_.count());
-}
-
-void block_database::store(const block& block, size_t height)
+void block_database::insert(const block& block, size_t height)
 {
     BITCOIN_ASSERT(height <= max_uint32);
     const auto height32 = static_cast<uint32_t>(height);
@@ -157,8 +152,7 @@ void block_database::store(const block& block, size_t height)
     const auto write = [&](memory_ptr data)
     {
         auto serial = make_serializer(REMAP_ADDRESS(data));
-        const auto header_data = block.header().to_data(false);
-        serial.write_data(header_data);
+        serial.write_data(block.header().to_data(false));
         serial.write_4_bytes_little_endian(height32);
         serial.write_4_bytes_little_endian(tx_count32);
 
@@ -168,12 +162,75 @@ void block_database::store(const block& block, size_t height)
 
     const auto key = block.header().hash();
     const auto value_size = 80 + 4 + 4 + tx_count * hash_size;
-
-    // Write block header, height, tx count and hashes to hash table.
     const auto position = lookup_map_.store(key, write, value_size);
 
-    // Write block height to hash table position mapping to block index.
+    // Write height to index.
     write_position(position, height32);
+}
+
+void block_database::stub(const header& header, size_t tx_count, size_t height)
+{
+    BITCOIN_ASSERT(height <= max_uint32);
+    const auto height32 = static_cast<uint32_t>(height);
+
+    BITCOIN_ASSERT(tx_count <= max_uint32);
+    const auto tx_count32 = static_cast<uint32_t>(tx_count);
+
+    // Write block stub.
+    const auto write = [&](memory_ptr data)
+    {
+        auto serial = make_serializer(REMAP_ADDRESS(data));
+        serial.write_data(header.to_data(false));
+        serial.write_4_bytes_little_endian(height32);
+        serial.write_4_bytes_little_endian(tx_count32);
+
+        // Write placeholder hashes.
+        for (size_t tx = 0; tx < tx_count; ++tx)
+            serial.write_hash(null_hash);
+    };
+
+    const auto key = header.hash();
+    const auto value_size = 80 + 4 + 4 + tx_count * hash_size;
+    /* file_offset */ lookup_map_.store(key, write, value_size);
+
+    // Write empty height to index.
+    write_position(empty, height32);
+}
+
+bool block_database::fill(size_t& out_height, const block& block)
+{
+    bool expected_size = false;
+
+    // Write transactions data.
+    const auto write = [&out_height, &block, &expected_size](memory_ptr data)
+    {
+        const auto buffer = REMAP_ADDRESS(data);
+        auto reader = make_deserializer_unsafe(buffer + 80);
+        const auto tx_count = reader.read_4_bytes_little_endian();
+        expected_size = tx_count == block.transactions().size();
+
+        if (expected_size)
+        {
+            // Return height for index and transactions push.
+            out_height = reader.read_4_bytes_little_endian();
+
+            auto serial = make_serializer(buffer + 80 + 4 + 4);
+
+            // Overwrite placeholder hashes with actuals.
+            for (const auto& tx: block.transactions())
+                serial.write_hash(tx.hash());
+        }
+    };
+
+    const auto key = block.header().hash();
+    const auto position = lookup_map_.update(key, write);
+
+    if (!expected_size)
+        return false;
+
+    // Write height to index.
+    write_position(position, out_height);
+    return true;
 }
 
 bool block_database::unlink(size_t from_height)
@@ -204,6 +261,7 @@ void block_database::zeroize(array_index first, array_index count)
     }
 }
 
+// TODO: could relax the guards if only writing empty (headers).
 void block_database::write_position(file_offset position, array_index height)
 {
     BITCOIN_ASSERT(height < max_uint32);
