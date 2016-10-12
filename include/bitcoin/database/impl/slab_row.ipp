@@ -38,7 +38,7 @@ class slab_row
 public:
     static BC_CONSTEXPR size_t position_size = sizeof(file_offset);
     static BC_CONSTEXPR size_t key_size = std::tuple_size<KeyType>::value;
-    static BC_CONSTEXPR file_offset value_begin = key_size + position_size;
+    static BC_CONSTEXPR file_offset prefix_size = key_size + position_size;
 
     slab_row(slab_manager& manager, file_offset position);
 
@@ -50,6 +50,9 @@ public:
 
     /// The actual user data.
     const memory_ptr data() const;
+
+    /// The file offset of the user data.
+    const file_offset offset() const;
 
     /// Position of next item in the chained list.
     file_offset next_position() const;
@@ -67,8 +70,7 @@ private:
 };
 
 template <typename KeyType>
-slab_row<KeyType>::slab_row(slab_manager& manager,
-    const file_offset position)
+slab_row<KeyType>::slab_row(slab_manager& manager, const file_offset position)
   : manager_(manager), position_(position)
 {
     static_assert(position_size == 8, "Invalid file_offset size.");
@@ -78,13 +80,11 @@ template <typename KeyType>
 file_offset slab_row<KeyType>::create(const KeyType& key,
     const size_t value_size, const file_offset next)
 {
-    const file_offset info_size = key.size() + position_size;
-
     // Create new slab.
     //   [ KeyType  ]
     //   [ next:8   ]
     //   [ value... ]
-    const size_t slab_size = info_size + value_size;
+    const size_t slab_size = prefix_size + value_size;
     position_ = manager_.new_slab(slab_size);
 
     // Write to slab.
@@ -114,7 +114,14 @@ template <typename KeyType>
 const memory_ptr slab_row<KeyType>::data() const
 {
     // Value data is at the end.
-    return raw_data(value_begin);
+    return raw_data(prefix_size);
+}
+
+template <typename KeyType>
+const file_offset slab_row<KeyType>::offset() const
+{
+    // Value data is at the end.
+    return position_ + prefix_size;
 }
 
 template <typename KeyType>

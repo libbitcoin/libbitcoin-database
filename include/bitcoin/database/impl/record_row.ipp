@@ -38,7 +38,7 @@ class record_row
 public:
     static BC_CONSTEXPR size_t index_size = sizeof(array_index);
     static BC_CONSTEXPR size_t key_size = std::tuple_size<KeyType>::value;
-    static BC_CONSTEXPR file_offset value_begin = key_size + index_size;
+    static BC_CONSTEXPR file_offset prefix_size = key_size + index_size;
 
     record_row(record_manager& manager, array_index index);
 
@@ -49,6 +49,9 @@ public:
 
     /// The actual user data.
     const memory_ptr data() const;
+
+    /// The file offset of the user data.
+    const file_offset offset() const;
 
     /// Position of next item in the chained list.
     array_index next_index() const;
@@ -110,7 +113,14 @@ template <typename KeyType>
 const memory_ptr record_row<KeyType>::data() const
 {
     // Value data is at the end.
-    return raw_data(value_begin);
+    return raw_data(prefix_size);
+}
+
+template <typename KeyType>
+const file_offset record_row<KeyType>::offset() const
+{
+    // Value data is at the end.
+    return position_ + prefix_size;
 }
 
 template <typename KeyType>
