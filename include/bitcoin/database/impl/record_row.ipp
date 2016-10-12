@@ -48,10 +48,10 @@ public:
     bool compare(const KeyType& key) const;
 
     /// The actual user data.
-    const memory_ptr data() const;
+    memory_ptr data() const;
 
     /// The file offset of the user data.
-    const file_offset offset() const;
+    file_offset offset() const;
 
     /// Position of next item in the chained list.
     array_index next_index() const;
@@ -60,8 +60,8 @@ public:
     void write_next_index(array_index next);
 
 private:
-    const memory_ptr raw_next_data() const;
-    const memory_ptr raw_data(file_offset offset) const;
+    memory_ptr raw_next_data() const;
+    memory_ptr raw_data(file_offset offset) const;
 
     array_index index_;
     record_manager& manager_;
@@ -110,17 +110,17 @@ bool record_row<KeyType>::compare(const KeyType& key) const
 }
 
 template <typename KeyType>
-const memory_ptr record_row<KeyType>::data() const
+memory_ptr record_row<KeyType>::data() const
 {
     // Value data is at the end.
     return raw_data(prefix_size);
 }
 
 template <typename KeyType>
-const file_offset record_row<KeyType>::offset() const
+file_offset record_row<KeyType>::offset() const
 {
     // Value data is at the end.
-    return position_ + prefix_size;
+    return index_ + prefix_size;
 }
 
 template <typename KeyType>
@@ -150,7 +150,7 @@ void record_row<KeyType>::write_next_index(array_index next)
 }
 
 template <typename KeyType>
-const memory_ptr record_row<KeyType>::raw_data(file_offset offset) const
+memory_ptr record_row<KeyType>::raw_data(file_offset offset) const
 {
     auto memory = manager_.get(index_);
     REMAP_INCREMENT(memory, offset);
@@ -158,7 +158,7 @@ const memory_ptr record_row<KeyType>::raw_data(file_offset offset) const
 }
 
 template <typename KeyType>
-const memory_ptr record_row<KeyType>::raw_next_data() const
+memory_ptr record_row<KeyType>::raw_next_data() const
 {
     // Next position is after key data.
     return raw_data(key_size);

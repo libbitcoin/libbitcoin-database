@@ -49,10 +49,10 @@ public:
     bool compare(const KeyType& key) const;
 
     /// The actual user data.
-    const memory_ptr data() const;
+    memory_ptr data() const;
 
     /// The file offset of the user data.
-    const file_offset offset() const;
+    file_offset offset() const;
 
     /// Position of next item in the chained list.
     file_offset next_position() const;
@@ -111,14 +111,14 @@ bool slab_row<KeyType>::compare(const KeyType& key) const
 }
 
 template <typename KeyType>
-const memory_ptr slab_row<KeyType>::data() const
+memory_ptr slab_row<KeyType>::data() const
 {
     // Value data is at the end.
     return raw_data(prefix_size);
 }
 
 template <typename KeyType>
-const file_offset slab_row<KeyType>::offset() const
+file_offset slab_row<KeyType>::offset() const
 {
     // Value data is at the end.
     return position_ + prefix_size;
