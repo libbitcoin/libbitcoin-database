@@ -176,10 +176,15 @@ void block_database::store(const block& block, size_t height)
     write_position(position, height32);
 }
 
-void block_database::unlink(size_t from_height)
+bool block_database::unlink(size_t from_height)
 {
     if (index_manager_.count() > from_height)
+    {
         index_manager_.set_count(from_height);
+        return true;
+    }
+
+    return false;
 }
 
 void block_database::sync()

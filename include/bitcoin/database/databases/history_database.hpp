@@ -74,7 +74,7 @@ public:
         uint32_t input_height, const chain::input_point& previous);
 
     /// Delete the last row that was added to key.
-    void delete_last_row(const short_hash& key);
+    bool delete_last_row(const short_hash& key);
 
     /// Get the output and input points associated with the address hash.
     chain::history_compact::list get(const short_hash& key, size_t limit,

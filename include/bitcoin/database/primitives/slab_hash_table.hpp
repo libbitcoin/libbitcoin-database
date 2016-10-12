@@ -22,6 +22,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
@@ -88,6 +89,7 @@ private:
 
     slab_hash_table_header& header_;
     slab_manager& manager_;
+    shared_mutex mutex_;
 };
 
 } // namespace database

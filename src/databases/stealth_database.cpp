@@ -150,9 +150,10 @@ void stealth_database::store(uint32_t prefix, uint32_t height,
     serial.write_hash(row.transaction_hash);
 }
 
-void stealth_database::unlink(size_t /* from_height */)
+bool stealth_database::unlink()
 {
-    // TODO: scan by height and mark as deleted.
+    // TODO: mark as deleted (not implemented).
+    return false;
 }
 
 void stealth_database::sync()

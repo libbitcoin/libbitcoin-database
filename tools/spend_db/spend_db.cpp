@@ -234,7 +234,7 @@ int main(int argc, char** argv)
         const auto result = db.open();
         BITCOIN_ASSERT(result);
 
-        db.remove(outpoint);
+        db.unlink(outpoint);
         db.sync();
     }
     else if (command == "statinfo")

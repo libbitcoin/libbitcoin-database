@@ -15,8 +15,8 @@ void show_help()
     std::cout << "The most commonly used block_db commands are:" << std::endl;
     std::cout << "  initialize_new  " << "Create a new stealth_database" << std::endl;
     std::cout << "  scan            " << "Scan entries" << std::endl;
-    std::cout << "  store           " << "Store a stealth row" << std::endl;
-    std::cout << "  unlink          " << "Delete all rows after from_height (inclusive)" << std::endl;
+    ////std::cout << "  store           " << "Store a stealth row" << std::endl;
+    ////std::cout << "  unlink          " << "Delete all rows after from_height (inclusive)" << std::endl;
     std::cout << "  help            " << "Show help for commands" << std::endl;
 }
 
@@ -32,16 +32,16 @@ void show_command_help(const std::string& command)
         std::cout << "Usage: stealth_db " << command << " INDEX ROWS "
             << "PREFIX FROM_HEIGHT" << std::endl;
     }
-    else if (command == "store")
-    {
-        std::cout << "Usage: stealth_db " << command << " INDEX ROWS "
-            << "SCRIPT EPHEMKEY ADDRESS TXHASH" << std::endl;
-    }
-    else if (command == "unlink")
-    {
-        std::cout << "Usage: stealth_db " << command << " INDEX ROWS "
-            << "FROM_HEIGHT" << std::endl;
-    }
+    ////else if (command == "store")
+    ////{
+    ////    std::cout << "Usage: stealth_db " << command << " INDEX ROWS "
+    ////        << "SCRIPT EPHEMKEY ADDRESS TXHASH" << std::endl;
+    ////}
+    ////else if (command == "unlink")
+    ////{
+    ////    std::cout << "Usage: stealth_db " << command << " INDEX ROWS "
+    ////        << "FROM_HEIGHT" << std::endl;
+    ////}
     else
     {
         std::cout << "No help available for " << command << std::endl;
@@ -181,24 +181,26 @@ int main(int argc, char** argv)
     ////    db.store(script, row);
     ////    db.sync();
     ////}
-    else if (command == "unlink")
-    {
-        if (args.size() != 1)
-        {
-            show_command_help(command);
-            return -1;
-        }
+    ////else if (command == "unlink")
+    ////{
+    ////    if (args.size() != 1)
+    ////    {
+    ////        show_command_help(command);
+    ////        return -1;
+    ////    }
 
-        size_t from_height = 0;
-        if (!parse_uint(from_height, args[0]))
-            return -1;
+    ////    size_t from_height = 0;
+    ////    if (!parse_uint(from_height, args[0]))
+    ////        return -1;
 
-        const auto result = db.open();
-        BITCOIN_ASSERT(result);
+    ////    const auto result = db.open();
+    ////    BITCOIN_ASSERT(result);
 
-        db.unlink(from_height);
-        db.sync();
-    }
+    ////    // NOT IMPLEMENTED:
+    ////    db.unlink();
+
+    ////    db.sync();
+    ////}
     else
     {
         std::cout << "stealth_db: '" << command

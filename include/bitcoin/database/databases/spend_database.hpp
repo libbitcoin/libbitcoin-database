@@ -70,7 +70,7 @@ public:
         const chain::input_point& spend);
 
     /// Delete outpoint spend item from database.
-    void remove(const chain::output_point& outpoint);
+    bool unlink(const chain::output_point& outpoint);
 
     /// Synchronise storage with disk so things are consistent.
     /// Should be done at the end of every block write.

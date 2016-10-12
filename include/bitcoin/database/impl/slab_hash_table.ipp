@@ -37,13 +37,23 @@ slab_hash_table<KeyType>::slab_hash_table(slab_hash_table_header& header,
 
 // This is not limited to storing unique key values. If duplicate keyed values
 // are store then retrieval and unlinking will fail as these multiples cannot
-// be differentiated. Therefore the database is not currently able to support
-// multiple transactions with the same hash, as required by BIP30.
+// be differentiated except in the order written (used by bip30).
 template <typename KeyType>
 file_offset slab_hash_table<KeyType>::store(const KeyType& key,
     write_function write, const size_t value_size)
 {
     // Store current bucket value.
+
+    // For a given key in this hash table new item creation must be atomic from
+    // read of the old value to write of the new. Otherwise concurrent write of
+    // hash table conflicts will corrupt the key's record row. Unfortunmately
+    // there is no efficient way to lock a given bucket, so we lock across
+    // all buckets. But given that this protection is required for concurrent
+    // write but not for read-while-write (slock) we need not lock read.
+    ///////////////////////////////////////////////////////////////////////////
+    // Critical Section.
+    mutex_.lock();
+
     const auto old_begin = read_bucket_value(key);
     slab_row<KeyType> item(manager_, 0);
     const auto new_begin = item.create(key, value_size, old_begin);
@@ -51,6 +61,9 @@ file_offset slab_hash_table<KeyType>::store(const KeyType& key,
 
     // Link record to header.
     link(key, new_begin);
+
+    mutex_.unlock();
+    ///////////////////////////////////////////////////////////////////////////
 
     // Return position,
     return new_begin + item.value_begin;

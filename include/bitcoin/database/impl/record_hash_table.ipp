@@ -38,12 +38,23 @@ record_hash_table<KeyType>::record_hash_table(
 
 // This is not limited to storing unique key values. If duplicate keyed values
 // are store then retrieval and unlinking will fail as these multiples cannot
-// be differentiated.
+// be differentiated except in the order written.
 template <typename KeyType>
 void record_hash_table<KeyType>::store(const KeyType& key,
     const write_function write)
 {
     // Store current bucket value.
+
+    // For a given key in this hash table new item creation must be atomic from
+    // read of the old value to write of the new. Otherwise concurrent write of
+    // hash table conflicts will corrupt the key's record row. Unfortunmately
+    // there is no efficient way to lock a given bucket, so we lock across
+    // all buckets. But given that this protection is required for concurrent
+    // write but not for read-while-write (slock) we need not lock read.
+    ///////////////////////////////////////////////////////////////////////////
+    // Critical Section.
+    mutex_.lock();
+
     const auto old_begin = read_bucket_value(key);
     record_row<KeyType> item(manager_, 0);
     const auto new_begin = item.create(key, old_begin);
@@ -51,6 +62,9 @@ void record_hash_table<KeyType>::store(const KeyType& key,
 
     // Link record to header.
     link(key, new_begin);
+
+    mutex_.unlock();
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 // This is limited to returning the first of multiple matching key values.
