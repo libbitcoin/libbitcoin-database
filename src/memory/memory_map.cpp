@@ -105,7 +105,7 @@ bool memory_map::handle_error(const std::string& context,
 #else
     const auto error = errno;
 #endif
-    log::fatal(LOG_DATABASE)
+    LOG_FATAL(LOG_DATABASE)
         << "The file failed to " << context << ": "
         << filename << " : " << error;
     return false;
@@ -113,20 +113,20 @@ bool memory_map::handle_error(const std::string& context,
 
 void memory_map::log_mapping()
 {
-    log::debug(LOG_DATABASE)
+    LOG_DEBUG(LOG_DATABASE)
         << "Mapping: " << filename_ << " [" << file_size_
         << "] (" << page() << ")";
 }
 
 void memory_map::log_resizing(size_t size)
 {
-    log::debug(LOG_DATABASE)
+    LOG_DEBUG(LOG_DATABASE)
         << "Resizing: " << filename_ << " [" << size << "]";
 }
 
 void memory_map::log_unmapped()
 {
-    log::debug(LOG_DATABASE)
+    LOG_DEBUG(LOG_DATABASE)
         << "Unmapped: " << filename_ << " [" << logical_size_ << "]";
 }
 

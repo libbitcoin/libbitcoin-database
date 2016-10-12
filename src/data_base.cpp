@@ -344,14 +344,14 @@ bool data_base::push(const block& block, size_t height)
 {
     if (get_next_height(blocks) != height)
     {
-        log::error(LOG_DATABASE)
+        LOG_ERROR(LOG_DATABASE)
             << "The block is out of order at height [" << height << "].";
         return false;
     }
 
     if (block.header().previous_block_hash() != get_previous_hash(blocks, height))
     {
-        log::error(LOG_DATABASE)
+        LOG_ERROR(LOG_DATABASE)
             << "The block has incorrect parent for height [" << height << "].";
         return false;
     }
