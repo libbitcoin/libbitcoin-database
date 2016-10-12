@@ -65,13 +65,47 @@ file_offset slab_hash_table<KeyType>::store(const KeyType& key,
     mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
 
-    // Return position,
-    return new_begin + item.value_begin;
+    // Return the file offset of the slab data segment.
+    return new_begin + slab_row<KeyType>::prefix_size;
+}
+
+// Execute a writer against a key's buffer if the key is found.
+// Return the file offset of the found value (or zero).
+template <typename KeyType>
+file_offset slab_hash_table<KeyType>::update(const KeyType& key,
+    write_function write)
+{
+    // Find start item...
+    auto current = read_bucket_value(key);
+
+    // Iterate through list...
+    while (current != header_.empty)
+    {
+        const slab_row<KeyType> item(manager_, current);
+
+        // Found.
+        if (item.compare(key))
+        {
+            write(item.data());
+            return item.offset();
+        }
+
+        const auto previous = current;
+        current = item.next_position();
+
+        // This may otherwise produce an infinite loop here.
+        // It indicates that a write operation has interceded.
+        // So we must return gracefully vs. looping forever.
+        if (previous == current)
+            return 0;
+    }
+
+    return 0;
 }
 
 // This is limited to returning the first of multiple matching key values.
 template <typename KeyType>
-const memory_ptr slab_hash_table<KeyType>::find(const KeyType& key) const
+memory_ptr slab_hash_table<KeyType>::find(const KeyType& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);

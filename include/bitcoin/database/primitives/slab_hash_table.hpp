@@ -60,14 +60,17 @@ public:
 
     slab_hash_table(slab_hash_table_header& header, slab_manager& manager);
 
-    /// Store a value. value_size is the requested size for the value.
-    /// The provided write() function must write exactly value_size bytes.
-    /// Returns the position of the inserted value in the slab_manager.
+    /// Execute a write. value_size is the required size of the buffer.
+    /// Returns the file offset of the new value.
     file_offset store(const KeyType& key, write_function write,
         const size_t value_size);
 
-    /// Find the slab for a given hash. Returns a null pointer if not found.
-    const memory_ptr find(const KeyType& key) const;
+    /// Execute a writer against a key's buffer if the key is found.
+    /// Returns the file offset of the found value (or zero).
+    file_offset update(const KeyType& key, write_function write);
+
+    /// Find the slab for a given key. Returns a null pointer if not found.
+    memory_ptr find(const KeyType& key) const;
 
     /// Delete a key-value pair from the hashtable by unlinking the node.
     bool unlink(const KeyType& key);
