@@ -542,8 +542,8 @@ chain::block data_base::pop()
             tx_result.position() != tx)
             return{};
 
-        // Deserialize transaction and move it and cached hash to the block.
-        txs.emplace_back(tx_result.transaction(), std::move(tx_hash));
+        // Deserialize transaction and move it to the block.
+        txs.emplace_back(tx_result.transaction());
     }
 
     // Loop txs backwards, the reverse of how they are added.

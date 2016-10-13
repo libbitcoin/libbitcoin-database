@@ -97,7 +97,7 @@ bool transaction_database::close()
 transaction_result transaction_database::get(const hash_digest& hash) const
 {
     const auto memory = lookup_map_.find(hash);
-    return transaction_result(memory);
+    return transaction_result(memory, hash);
 }
 
 bool transaction_database::get_height(size_t& height,

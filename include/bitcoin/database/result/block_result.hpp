@@ -34,9 +34,14 @@ class BCD_API block_result
 {
 public:
     block_result(const memory_ptr slab);
+    block_result(const memory_ptr slab, hash_digest&& hash);
+    block_result(const memory_ptr slab, const hash_digest& hash);
 
     /// True if this block result is valid (found).
     operator bool() const;
+
+    /// The block header hash (from cache).
+    const hash_digest& hash() const;
 
     /// The block header.
     chain::header header() const;
@@ -61,6 +66,7 @@ public:
 
 private:
     const memory_ptr slab_;
+    const hash_digest hash_;
 };
 
 } // namespace database

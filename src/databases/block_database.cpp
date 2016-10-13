@@ -130,13 +130,21 @@ block_result block_database::get(size_t height) const
 
     const auto position = read_position(height);
     const auto memory = lookup_manager_.get(position);
-    return block_result(memory);
+
+    //*************************************************************************
+    // HACK: back up into the slab to obtain the key (optimization).
+    static const auto prefix_size = slab_row<hash_digest>::prefix_size;
+    const auto buffer = REMAP_ADDRESS(memory);
+    auto reader = make_deserializer_unsafe(buffer - prefix_size);
+    //*************************************************************************
+
+    return block_result(memory, std::move(reader.read_hash()));
 }
 
 block_result block_database::get(const hash_digest& hash) const
 {
     const auto memory = lookup_map_.find(hash);
-    return block_result(memory);
+    return block_result(memory, hash);
 }
 
 void block_database::insert(const block& block, size_t height)
