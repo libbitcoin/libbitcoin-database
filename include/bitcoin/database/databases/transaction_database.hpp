@@ -60,9 +60,6 @@ public:
     /// Fetch transaction from its hash.
     transaction_result get(const hash_digest& hash) const;
 
-    /// Denormalization to optimize utxo lookup.
-    bool get_height(size_t& height, const hash_digest& hash) const;
-
     /// Store a transaction in the database.
     void store(size_t height, size_t position, const chain::transaction& tx);
 

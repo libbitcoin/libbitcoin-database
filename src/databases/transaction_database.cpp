@@ -100,19 +100,6 @@ transaction_result transaction_database::get(const hash_digest& hash) const
     return transaction_result(memory, hash);
 }
 
-bool transaction_database::get_height(size_t& height,
-    const hash_digest& hash) const
-{
-    const auto memory = lookup_map_.find(hash);
-
-    if (!memory)
-        return false;
-
-    const auto data = REMAP_ADDRESS(memory);
-    height = from_little_endian_unsafe<uint32_t>(data);
-    return true;
-}
-
 void transaction_database::store(size_t height, size_t position,
     const chain::transaction& tx)
 {
