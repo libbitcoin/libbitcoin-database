@@ -176,67 +176,14 @@ void block_database::insert(const block& block, size_t height)
     write_position(position, height32);
 }
 
-void block_database::stub(const header& header, size_t tx_count, size_t height)
+bool block_database::gaps(heights& out_gaps) const
 {
-    BITCOIN_ASSERT(height <= max_uint32);
-    const auto height32 = static_cast<uint32_t>(height);
+    const auto count = index_manager_.count();
 
-    BITCOIN_ASSERT(tx_count <= max_uint32);
-    const auto tx_count32 = static_cast<uint32_t>(tx_count);
+    for (size_t height = 0; height < count; ++height)
+        if (read_position(height) == empty)
+            out_gaps.push_back(height);
 
-    // Write block stub.
-    const auto write = [&](memory_ptr data)
-    {
-        auto serial = make_serializer(REMAP_ADDRESS(data));
-        serial.write_data(header.to_data(false));
-        serial.write_4_bytes_little_endian(height32);
-        serial.write_4_bytes_little_endian(tx_count32);
-
-        // Write placeholder hashes.
-        for (size_t tx = 0; tx < tx_count; ++tx)
-            serial.write_hash(null_hash);
-    };
-
-    const auto key = header.hash();
-    const auto value_size = 80 + 4 + 4 + tx_count * hash_size;
-    /* file_offset */ lookup_map_.store(key, write, value_size);
-
-    // Write empty position to index.
-    write_position(empty, height32);
-}
-
-bool block_database::fill(const chain::block& block, size_t height)
-{
-    auto expected = false;
-    const auto count = block.transactions().size();
-
-    // Write transactions data.
-    const auto write = [&](memory_ptr data)
-    {
-        const auto buffer = REMAP_ADDRESS(data);
-        auto reader = make_deserializer_unsafe(buffer + 80);
-        const auto tx_count = reader.read_4_bytes_little_endian();
-        const auto block_height = reader.read_4_bytes_little_endian();
-        expected = tx_count == count && block_height == height;
-
-        if (expected)
-        {
-            auto serial = make_serializer(buffer + 80 + 4 + 4);
-
-            // Overwrite placeholder hashes with actuals.
-            for (const auto& tx: block.transactions())
-                serial.write_hash(tx.hash());
-        }
-    };
-
-    const auto key = block.header().hash();
-    const auto position = lookup_map_.update(key, write);
-
-    if (!expected)
-        return false;
-
-    // Write position to index.
-    write_position(position, height);
     return true;
 }
 
@@ -318,63 +265,6 @@ bool block_database::top(size_t& out_height) const
         return false;
 
     out_height = count - 1;
-    return true;
-}
-
-bool block_database::gap_range(size_t& out_first, size_t& out_last) const
-{
-    size_t first;
-    const auto count = index_manager_.count();
-
-    for (first = 0; first < count; ++first)
-    {
-        if (read_position(first) == empty)
-        {
-            // There is at least one gap.
-            out_first = first;
-            break;
-        }
-    }
-
-    // There are no gaps.
-    if (first == count)
-        return false;
-
-    for (size_t last = count - 1; last > first; --last)
-    {
-        if (read_position(last) == empty)
-        {
-            // There are at least two gaps.
-            out_last = last;
-            return true;
-        }
-    }
-
-    // There is only one gap.
-    out_last = first;
-    return true;
-}
-
-bool block_database::next_gap(size_t& out_height, size_t start_height) const
-{
-    const auto count = index_manager_.count();
-
-    // Guard against no genesis block, terminate is starting after last gap.
-    if (count == 0 || start_height > count)
-        return false;
-
-    // Scan for first missing block and return its parent block height.
-    for (size_t height = start_height; height < count; ++height)
-    {
-        if (read_position(height) == empty)
-        {
-            out_height = height;
-            return true;
-        }
-    }
-
-    // There are no gaps in the chain, count is the last gap.
-    out_height = count;
     return true;
 }
 
