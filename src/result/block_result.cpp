@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <utility>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
@@ -46,13 +47,28 @@ static constexpr auto count_offset = height_offset + height_size;
 static constexpr auto first_hash_offset = count_offset + count_size;
 
 block_result::block_result(const memory_ptr slab)
-  : slab_(slab)
+  : slab_(slab), hash_(null_hash)
+{
+}
+
+block_result::block_result(const memory_ptr slab, hash_digest&& hash)
+  : slab_(slab), hash_(std::move(hash))
+{
+}
+
+block_result::block_result(const memory_ptr slab, const hash_digest& hash)
+  : slab_(slab), hash_(hash)
 {
 }
 
 block_result::operator bool() const
 {
     return slab_ != nullptr;
+}
+
+const hash_digest& block_result::hash() const
+{
+    return hash_;
 }
 
 chain::header block_result::header() const
@@ -62,7 +78,9 @@ chain::header block_result::header() const
     const auto memory = REMAP_ADDRESS(slab_);
     auto deserial = make_deserializer_unsafe(memory);
     header.from_data(deserial, false);
-    return header;
+
+    // TODO: add hash param to deserialization to eliminate this move.
+    return chain::header(std::move(header), hash_);
 }
 
 size_t block_result::height() const

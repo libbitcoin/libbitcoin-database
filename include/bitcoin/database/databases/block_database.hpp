@@ -21,8 +21,9 @@
 #define LIBBITCOIN_DATABASE_BLOCK_DATABASE_HPP
 
 #include <cstddef>
-#include <cstdint>
 #include <memory>
+#include <utility>
+#include <vector>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
@@ -39,6 +40,8 @@ namespace database {
 class BCD_API block_database
 {
 public:
+    typedef std::vector<size_t> heights;
+
     static const file_offset empty;
 
     /// Construct the database.
@@ -70,13 +73,8 @@ public:
     /// Store a block in the database.
     void insert(const chain::block& block, size_t height);
 
-    /// Stub a block header in the database.
-    /// This leaves the corresponding height index entry empty.
-    void stub(const chain::header& header, size_t tx_count, size_t height);
-
-    /// Store transactions of a stub block in the database.
-    /// Returns false if unexpected tx count, height or block hash not found.
-    bool fill(const chain::block& block, size_t height);
+    /// The list of heights representing all chain gaps.
+    bool gaps(heights& out_gaps) const;
 
     /// Unlink all blocks upwards from (and including) from_height.
     bool unlink(size_t from_height);
@@ -87,12 +85,6 @@ public:
 
     /// The index of the highest existing block, independent of gaps.
     bool top(size_t& out_height) const;
-
-    /// The first and last gaps in the blockchain, false if none.
-    bool gap_range(size_t& out_first, size_t& out_last) const;
-
-    /// The index of the first missing block starting from given height.
-    bool next_gap(size_t& out_height, size_t start_height) const;
 
 private:
     typedef slab_hash_table<hash_digest> slab_map;

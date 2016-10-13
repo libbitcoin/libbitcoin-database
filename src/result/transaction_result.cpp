@@ -21,6 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <utility>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
@@ -36,13 +37,30 @@ static constexpr size_t locktime_size = sizeof(uint32_t);
 static constexpr size_t position_size = sizeof(uint32_t);
 
 transaction_result::transaction_result(const memory_ptr slab)
-  : slab_(slab)
+  : slab_(slab), hash_(null_hash)
+{
+}
+
+transaction_result::transaction_result(const memory_ptr slab,
+    hash_digest&& hash)
+  : slab_(slab), hash_(std::move(hash))
+{
+}
+
+transaction_result::transaction_result(const memory_ptr slab,
+    const hash_digest& hash)
+  : slab_(slab), hash_(hash)
 {
 }
 
 transaction_result::operator bool() const
 {
     return slab_ != nullptr;
+}
+
+const hash_digest& transaction_result::hash() const
+{
+    return hash_;
 }
 
 size_t transaction_result::height() const
@@ -104,7 +122,9 @@ chain::transaction transaction_result::transaction() const
 
     // Use database serialization, not satoshi (wire protocol).
     tx.from_data(deserial, false);
-    return tx;
+
+    // TODO: add hash param to deserialization to eliminate this move.
+    return chain::transaction(std::move(tx), hash_);
 }
 } // namespace database
 } // namespace libbitcoin

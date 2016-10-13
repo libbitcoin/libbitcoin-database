@@ -277,13 +277,6 @@ static hash_digest get_previous_hash(const block_database& blocks, size_t height
     return height == 0 ? null_hash : blocks.get(height - 1).header().hash();
 }
 
-////static bool is_allowed_duplicate(const header& head, size_t height)
-////{
-////    return
-////        (height == exception1.height() && head.hash() == exception1.hash()) ||
-////        (height == exception2.height() && head.hash() == exception2.hash());
-////}
-
 void data_base::synchronize()
 {
     spends.sync();
@@ -301,28 +294,6 @@ bool data_base::insert(const chain::block& block, size_t height)
 
     push_transactions(block, height);
     blocks.insert(block, height);
-    synchronize();
-    return true;
-}
-
-// Add stub block at the given height with empty transactions and index.
-bool data_base::stub(const header& header, size_t tx_count, size_t height)
-{
-    if (blocks.exists(height))
-        return false;
-
-    blocks.stub(header, tx_count, height);
-    blocks.sync();
-    return true;
-}
-
-// Add transactions and height index to existing stub block entry.
-bool data_base::fill(const block& block, size_t height)
-{
-    if (!blocks.fill(block, height))
-        return false;
-
-    push_transactions(block, height);
     synchronize();
     return true;
 }
@@ -367,11 +338,6 @@ void data_base::push_transactions(const block& block, size_t height)
 {
     for (size_t index = 0; index < block.transactions().size(); ++index)
     {
-        ////// Skip BIP30 allowed duplicates (coinbase txs of excepted blocks).
-        ////// We handle here because this is the lowest public level exposed.
-        ////if (index == 0 && is_allowed_duplicate(block.header(), height))
-        ////    continue;
-
         const auto& tx = block.transactions()[index];
         const auto tx_hash = tx.hash();
 
@@ -542,8 +508,8 @@ chain::block data_base::pop()
             tx_result.position() != tx)
             return{};
 
-        // Deserialize transaction and move it and cached hash to the block.
-        txs.emplace_back(tx_result.transaction(), std::move(tx_hash));
+        // Deserialize transaction and move it to the block.
+        txs.emplace_back(tx_result.transaction());
     }
 
     // Loop txs backwards, the reverse of how they are added.

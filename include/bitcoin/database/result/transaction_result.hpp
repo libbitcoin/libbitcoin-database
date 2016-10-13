@@ -34,9 +34,14 @@ class BCD_API transaction_result
 {
 public:
     transaction_result(const memory_ptr slab);
+    transaction_result(const memory_ptr slab, hash_digest&& hash);
+    transaction_result(const memory_ptr slab, const hash_digest& hash);
 
     /// True if this transaction result is valid (found).
     operator bool() const;
+
+    /// The transaction hash (from cache).
+    const hash_digest& hash() const;
 
     /// The height of the block which includes the transaction.
     size_t height() const;
@@ -52,6 +57,7 @@ public:
 
 private:
     const memory_ptr slab_;
+    const hash_digest hash_;
 };
 
 } // namespace database
