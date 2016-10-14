@@ -160,7 +160,7 @@ void block_database::insert(const block& block, size_t height)
     const auto write = [&](memory_ptr data)
     {
         auto serial = make_serializer(REMAP_ADDRESS(data));
-        serial.write_data(block.header().to_data(false));
+        serial.write_data(block.header().to_data());
         serial.write_4_bytes_little_endian(height32);
         serial.write_4_bytes_little_endian(tx_count32);
 
