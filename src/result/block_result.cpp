@@ -77,7 +77,7 @@ chain::header block_result::header() const
     chain::header header;
     const auto memory = REMAP_ADDRESS(slab_);
     auto deserial = make_deserializer_unsafe(memory);
-    header.from_data(deserial, false);
+    header.from_data(deserial);
 
     // TODO: add hash param to deserialization to eliminate this move.
     return chain::header(std::move(header), hash_);
