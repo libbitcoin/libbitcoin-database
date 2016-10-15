@@ -76,7 +76,7 @@ chain::header block_result::header() const
     BITCOIN_ASSERT(slab_);
     chain::header header;
     const auto memory = REMAP_ADDRESS(slab_);
-    auto deserial = make_deserializer_unsafe(memory);
+    auto deserial = make_unsafe_deserializer(memory);
     header.from_data(deserial);
 
     // TODO: add hash param to deserialization to eliminate this move.
@@ -124,7 +124,7 @@ hash_digest block_result::transaction_hash(size_t index) const
     BITCOIN_ASSERT(index < transaction_count());
     const auto memory = REMAP_ADDRESS(slab_);
     const auto first = memory + first_hash_offset + index * hash_size;
-    auto deserial = make_deserializer_unsafe(first);
+    auto deserial = make_unsafe_deserializer(first);
     return deserial.read_hash();
 }
 

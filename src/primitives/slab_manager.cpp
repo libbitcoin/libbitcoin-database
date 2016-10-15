@@ -158,7 +158,7 @@ void slab_manager::write_size() const
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     const auto payload_size_address = REMAP_ADDRESS(memory) + header_size_;
-    auto serial = make_serializer(payload_size_address);
+    auto serial = make_unsafe_serializer(payload_size_address);
     serial.write_little_endian(payload_size_);
 }
 

@@ -83,16 +83,16 @@ chain::output transaction_result::output(uint32_t index) const
     BITCOIN_ASSERT(slab_);
     const auto memory = REMAP_ADDRESS(slab_);
     const auto tx_start = memory + height_size + position_size;
-    auto serial = make_deserializer_unsafe(tx_start);
+    auto serial = make_unsafe_deserializer(tx_start);
 
     // THIS ASSUMES DATABASE SERIALIZATION OF TRANSACTIONS (OUTPUTS FORWARD).
 
     // Skip the transaction version and locktime.
-    serial.skip_bytes(version_size + locktime_size);
+    serial.skip(version_size + locktime_size);
 
     // Read the number of outputs (variable, but point-limited to max_uint32).
-    const auto outputs = serial.read_variable_uint_little_endian();
-    BITCOIN_ASSERT(outputs <= max_uint32);
+    const auto outputs = serial.read_size_little_endian();
+    BITCOIN_ASSERT(serial);
     chain::output output;
 
     // The caller requested an output that does not exist in the transaction.
@@ -102,10 +102,9 @@ chain::output transaction_result::output(uint32_t index) const
     // Skip outputs until the target output.
     for (uint32_t output = 0; output < index; ++output)
     {
-        serial.skip_bytes(value_size);
-        const auto script_size = serial.read_variable_uint_little_endian();
-        BITCOIN_ASSERT(script_size <= max_size_t);
-        serial.skip_bytes(static_cast<size_t>(script_size));
+        serial.skip(value_size);
+        serial.skip(serial.read_size_little_endian());
+        BITCOIN_ASSERT(serial);
     }
 
     output.from_data(serial);
@@ -117,7 +116,7 @@ chain::transaction transaction_result::transaction() const
     BITCOIN_ASSERT(slab_);
     const auto memory = REMAP_ADDRESS(slab_);
     const auto tx_start = memory + height_size + position_size;
-    auto deserial = make_deserializer_unsafe(tx_start);
+    auto deserial = make_unsafe_deserializer(tx_start);
     chain::transaction tx;
 
     // Use database serialization, not satoshi (wire protocol).

@@ -90,8 +90,8 @@ file_offset slab_row<KeyType>::create(const KeyType& key,
     // Write to slab.
     const auto memory = raw_data(0);
     const auto key_data = REMAP_ADDRESS(memory);
-    auto serial = make_serializer(key_data);
-    serial.write_data(key);
+    auto serial = make_unsafe_serializer(key_data);
+    serial.write_forward(key);
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -141,7 +141,7 @@ template <typename KeyType>
 void slab_row<KeyType>::write_next_position(file_offset next)
 {
     const auto memory = raw_next_data();
-    auto serial = make_serializer(REMAP_ADDRESS(memory));
+    auto serial = make_unsafe_serializer(REMAP_ADDRESS(memory));
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////

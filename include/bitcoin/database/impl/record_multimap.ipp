@@ -84,7 +84,7 @@ void record_multimap<KeyType>::add_to_list(memory_ptr start_info,
     // The records_ and start_info remap safe pointers are in distinct files.
     write(records_.get(new_begin));
 
-    auto serial = make_serializer(address);
+    auto serial = make_unsafe_serializer(address);
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -121,7 +121,7 @@ bool record_multimap<KeyType>::delete_last_row(const KeyType& key)
         return map_.unlink(key);
     }
 
-    auto serial = make_serializer(address);
+    auto serial = make_unsafe_serializer(address);
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -140,7 +140,7 @@ void record_multimap<KeyType>::create_new(const KeyType& key,
 
     const auto write_start_info = [this, first](memory_ptr data)
     {
-        auto serial = make_serializer(REMAP_ADDRESS(data));
+        auto serial = make_unsafe_serializer(REMAP_ADDRESS(data));
 
         // Critical Section
         ///////////////////////////////////////////////////////////////////////////
