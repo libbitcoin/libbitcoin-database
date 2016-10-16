@@ -47,7 +47,7 @@ array_index record_list::insert(array_index index)
     // Create new record and return its index.
     auto new_index = manager_.new_records(1);
     const auto memory = manager_.get(new_index);
-    auto serial = make_serializer(REMAP_ADDRESS(memory));
+    auto serial = make_unsafe_serializer(REMAP_ADDRESS(memory));
     //*************************************************************************
     serial.template write_little_endian<array_index>(index);
     //*************************************************************************

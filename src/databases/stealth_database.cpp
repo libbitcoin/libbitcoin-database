@@ -115,7 +115,7 @@ stealth_compact::list stealth_database::scan(const binary& filter,
             continue;
 
         // Add row to results.
-        auto deserial = make_deserializer_unsafe(record + height_size);
+        auto deserial = make_unsafe_deserializer(record + height_size);
         result.push_back(
         {
             deserial.read_hash(),
@@ -138,7 +138,7 @@ void stealth_database::store(uint32_t prefix, uint32_t height,
     const auto data = REMAP_ADDRESS(memory);
 
     // Write data.
-    auto serial = make_serializer(data);
+    auto serial = make_unsafe_serializer(data);
 
     // Dual key.
     serial.write_4_bytes_little_endian(prefix);

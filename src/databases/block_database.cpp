@@ -135,7 +135,7 @@ block_result block_database::get(size_t height) const
     // HACK: back up into the slab to obtain the key (optimization).
     static const auto prefix_size = slab_row<hash_digest>::prefix_size;
     const auto buffer = REMAP_ADDRESS(memory);
-    auto reader = make_deserializer_unsafe(buffer - prefix_size);
+    auto reader = make_unsafe_deserializer(buffer - prefix_size);
     //*************************************************************************
 
     return block_result(memory, std::move(reader.read_hash()));
@@ -159,8 +159,8 @@ void block_database::insert(const block& block, size_t height)
     // Write block data.
     const auto write = [&](memory_ptr data)
     {
-        auto serial = make_serializer(REMAP_ADDRESS(data));
-        serial.write_data(block.header().to_data());
+        auto serial = make_unsafe_serializer(REMAP_ADDRESS(data));
+        serial.write_bytes(block.header().to_data());
         serial.write_4_bytes_little_endian(height32);
         serial.write_4_bytes_little_endian(tx_count32);
 
@@ -210,7 +210,7 @@ void block_database::zeroize(array_index first, array_index count)
     for (array_index index = first; index < (first + count); ++index)
     {
         const auto memory = index_manager_.get(index);
-        auto serial = make_serializer(REMAP_ADDRESS(memory));
+        auto serial = make_unsafe_serializer(REMAP_ADDRESS(memory));
         serial.write_8_bytes_little_endian(empty);
     }
 }
@@ -241,7 +241,7 @@ void block_database::write_position(file_offset position, array_index height)
 
     // Guard write to prevent subsequent zeroize from erasing.
     const auto memory = index_manager_.get(height);
-    auto serial = make_serializer(REMAP_ADDRESS(memory));
+    auto serial = make_unsafe_serializer(REMAP_ADDRESS(memory));
     serial.write_8_bytes_little_endian(position);
 
     mutex_.unlock();

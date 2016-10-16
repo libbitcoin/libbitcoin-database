@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <iostream>
+#include <cstdint>
 #include <boost/lexical_cast.hpp>
 #include <bitcoin/database.hpp>
 
@@ -63,9 +63,7 @@ int main(int argc, char** argv)
         BITCOIN_ASSERT(record_size >= 4);
         const auto memory = manager.get(index);
         const auto buffer = REMAP_ADDRESS(memory);
-        auto deserial = make_deserializer(buffer, buffer + 4);
-
-        const auto previous_index = deserial.read_4_bytes_little_endian();
+        const auto previous_index = from_little_endian_unsafe<uint32_t>(buffer);
         const data_chunk data(buffer + 4, buffer + record_size);
         const chain_item new_item{ index, data };
 

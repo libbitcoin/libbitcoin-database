@@ -71,7 +71,7 @@ bool hash_table_header<IndexType, ValueType>::create()
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.resize(minimum_file_size);
     const auto buckets_address = REMAP_ADDRESS(memory);
-    auto serial = make_serializer(buckets_address);
+    auto serial = make_unsafe_serializer(buckets_address);
     serial.write_little_endian(buckets_);
 
     // optimized fill implementation
@@ -133,7 +133,7 @@ void hash_table_header<IndexType, ValueType>::write(IndexType index,
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     const auto value_address = REMAP_ADDRESS(memory) + item_position(index);
-    auto serial = make_serializer(value_address);
+    auto serial = make_unsafe_serializer(value_address);
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////

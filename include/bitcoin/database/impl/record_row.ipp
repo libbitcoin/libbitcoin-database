@@ -89,8 +89,8 @@ array_index record_row<KeyType>::create(const KeyType& key,
     // Write record.
     const auto memory = raw_data(0);
     const auto record = REMAP_ADDRESS(memory);
-    auto serial = make_serializer(record);
-    serial.write_data(key);
+    auto serial = make_unsafe_serializer(record);
+    serial.write_forward(key);
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -140,7 +140,7 @@ template <typename KeyType>
 void record_row<KeyType>::write_next_index(array_index next)
 {
     const auto memory = raw_next_data();
-    auto serial = make_serializer(REMAP_ADDRESS(memory));
+    auto serial = make_unsafe_serializer(REMAP_ADDRESS(memory));
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////

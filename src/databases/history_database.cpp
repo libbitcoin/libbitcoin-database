@@ -117,9 +117,9 @@ void history_database::add_output(const short_hash& key,
     // TODO: use output_point serialization.
     auto write = [&](memory_ptr data)
     {
-        auto serial = make_serializer(REMAP_ADDRESS(data));
+        auto serial = make_unsafe_serializer(REMAP_ADDRESS(data));
         serial.write_byte(static_cast<uint8_t>(point_kind::output));
-        serial.write_data(outpoint.to_data());
+        serial.write_bytes(outpoint.to_data());
         serial.write_4_bytes_little_endian(output_height);
         serial.write_8_bytes_little_endian(value);
     };
@@ -133,9 +133,9 @@ void history_database::add_input(const short_hash& key,
     // TODO: use input_point serialization.
     auto write = [&](memory_ptr data)
     {
-        auto serial = make_serializer(REMAP_ADDRESS(data));
+        auto serial = make_unsafe_serializer(REMAP_ADDRESS(data));
         serial.write_byte(static_cast<uint8_t>(point_kind::spend));
-        serial.write_data(inpoint.to_data());
+        serial.write_bytes(inpoint.to_data());
         serial.write_4_bytes_little_endian(input_height);
         serial.write_8_bytes_little_endian(previous.checksum());
     };
@@ -163,7 +163,7 @@ history_compact::list history_database::get(const short_hash& key,
     // Read a row from the data for the history list.
     const auto read_row = [](uint8_t* data)
     {
-        auto deserial = make_deserializer_unsafe(data);
+        auto deserial = make_unsafe_deserializer(data);
         return history_compact
         {
             // output or spend?
