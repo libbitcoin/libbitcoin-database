@@ -63,7 +63,7 @@ int main(int argc, char** argv)
         BITCOIN_ASSERT(record_size >= 4);
         const auto memory = manager.get(index);
         const auto buffer = REMAP_ADDRESS(memory);
-        const auto previous_index = from_little_endian<uint32_t>(buffer.begin());
+        const auto previous_index = from_little_endian_unsafe<uint32_t>(buffer);
         const data_chunk data(buffer + 4, buffer + record_size);
         const chain_item new_item{ index, data };
 
