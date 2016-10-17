@@ -77,28 +77,19 @@ size_t transaction_result::position() const
     return from_little_endian_unsafe<uint32_t>(memory + height_size);
 }
 
-// If index is out of range this returns an invalid output (.value not_found).
+// If index is out of range returns invalid output (.value not_found).
 chain::output transaction_result::output(uint32_t index) const
 {
     BITCOIN_ASSERT(slab_);
     const auto memory = REMAP_ADDRESS(slab_);
     const auto tx_start = memory + height_size + position_size;
     auto serial = make_unsafe_deserializer(tx_start);
-
-    // THIS ASSUMES DATABASE SERIALIZATION OF TRANSACTIONS (OUTPUTS FORWARD).
-
-    // Skip the transaction version and locktime.
     serial.skip(version_size + locktime_size);
-
-    // Read the number of outputs (variable, but point-limited to max_uint32).
     const auto outputs = serial.read_size_little_endian();
-
     BITCOIN_ASSERT(serial);
-    chain::output output;
 
-    // The caller requested an output that does not exist in the transaction.
     if (index >= outputs)
-        return output;
+        return{};
 
     // Skip outputs until the target output.
     for (uint32_t output = 0; output < index; ++output)
@@ -108,8 +99,10 @@ chain::output transaction_result::output(uint32_t index) const
         BITCOIN_ASSERT(serial);
     }
 
-    output.from_data(serial);
-    return output;
+    // Read and return the target output.
+    chain::output out;
+    out.from_data(serial);
+    return out;
 }
 
 chain::transaction transaction_result::transaction() const
@@ -118,13 +111,13 @@ chain::transaction transaction_result::transaction() const
     const auto memory = REMAP_ADDRESS(slab_);
     const auto tx_start = memory + height_size + position_size;
     auto deserial = make_unsafe_deserializer(tx_start);
-    chain::transaction tx;
 
-    // Use database serialization, not satoshi (wire protocol).
+    // READ THE TX
+    chain::transaction tx;
     tx.from_data(deserial, false);
 
-    // TODO: add hash param to deserialization to eliminate this move.
-    return chain::transaction(std::move(tx), hash_);
+    // TODO: add hash param to deserialization to eliminate this construction.
+    return chain::transaction(std::move(tx), hash_digest(hash_));
 }
 } // namespace database
 } // namespace libbitcoin

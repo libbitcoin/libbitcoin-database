@@ -72,13 +72,15 @@ const hash_digest& block_result::hash() const
 chain::header block_result::header() const
 {
     BITCOIN_ASSERT(slab_);
-    chain::header header;
     const auto memory = REMAP_ADDRESS(slab_);
     auto deserial = make_unsafe_deserializer(memory);
+
+    // READ THE HEADER
+    chain::header header;
     header.from_data(deserial);
 
     // TODO: add hash param to deserialization to eliminate this move.
-    return chain::header(std::move(header), hash_);
+    return chain::header(std::move(header), hash_digest(hash_));
 }
 
 size_t block_result::height() const
