@@ -71,7 +71,7 @@ public:
     block_result get(const hash_digest& hash) const;
 
     /// Store a block in the database.
-    void insert(const chain::block& block, size_t height);
+    void store(const chain::block& block, size_t height);
 
     /// The list of heights representing all chain gaps.
     bool gaps(heights& out_gaps) const;

@@ -293,7 +293,7 @@ bool data_base::insert(const chain::block& block, size_t height)
         return false;
 
     push_transactions(block, height);
-    blocks.insert(block, height);
+    blocks.store(block, height);
     synchronize();
     return true;
 }
@@ -328,7 +328,7 @@ bool data_base::push(const block& block, size_t height)
     }
 
     push_transactions(block, height);
-    blocks.insert(block, height);
+    blocks.store(block, height);
     synchronize();
     return true;
 }

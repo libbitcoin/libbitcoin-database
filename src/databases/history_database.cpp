@@ -56,7 +56,6 @@ history_database::history_database(const path& lookup_filename,
 {
 }
 
-// Close does not call stop because there is no way to detect thread join.
 history_database::~history_database()
 {
     close();
@@ -109,6 +108,7 @@ bool history_database::close()
         rows_file_.close();
 }
 
+// Queries.
 // ----------------------------------------------------------------------------
 
 void history_database::add_output(const short_hash& key,

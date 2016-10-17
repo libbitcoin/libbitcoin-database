@@ -49,7 +49,6 @@ transaction_database::transaction_database(const path& map_filename,
 {
 }
 
-// Close does not call stop because there is no way to detect thread join.
 transaction_database::~transaction_database()
 {
     close();
@@ -96,6 +95,7 @@ bool transaction_database::close()
     return lookup_file_.close();
 }
 
+// Queries.
 // ----------------------------------------------------------------------------
 
 transaction_result transaction_database::get(const hash_digest& hash) const
@@ -126,7 +126,7 @@ void transaction_database::store(size_t height, size_t position,
         serial.write_4_bytes_little_endian(hight32);
         serial.write_4_bytes_little_endian(position32);
 
-        // Use database serialization, not satoshi (wire protocol).
+        // WRITE THE TX
         serial.write_bytes(tx.to_data(false));
     };
 

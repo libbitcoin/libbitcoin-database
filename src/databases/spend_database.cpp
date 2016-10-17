@@ -49,7 +49,6 @@ spend_database::spend_database(const path& filename,
 {
 }
 
-// Close does not call stop because there is no way to detect thread join.
 spend_database::~spend_database()
 {
     close();
@@ -94,6 +93,7 @@ bool spend_database::close()
     return lookup_file_.close();
 }
 
+// Queries.
 // ----------------------------------------------------------------------------
 
 input_point spend_database::get(const output_point& outpoint) const

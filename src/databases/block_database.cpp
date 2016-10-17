@@ -44,7 +44,7 @@ const file_offset block_database::empty = 0;
 // main:
 //  [ header:80      ]
 //  [ height:4       ]
-//  [ number_txs:4   ]
+//  [ number_txs:1-8 ]
 // hashes:
 //  [ [    ...     ] ]
 //  [ [ tx_hash:32 ] ]
@@ -61,7 +61,6 @@ block_database::block_database(const path& map_filename,
 {
 }
 
-// Close does not call stop because there is no way to detect thread join.
 block_database::~block_database()
 {
     close();
@@ -116,6 +115,7 @@ bool block_database::close()
         index_file_.close();
 }
 
+// Queries.
 // ----------------------------------------------------------------------------
 
 bool block_database::exists(size_t height) const
@@ -147,7 +147,7 @@ block_result block_database::get(const hash_digest& hash) const
     return block_result(memory, hash);
 }
 
-void block_database::insert(const block& block, size_t height)
+void block_database::store(const block& block, size_t height)
 {
     BITCOIN_ASSERT(height <= max_uint32);
     const auto height32 = static_cast<uint32_t>(height);
