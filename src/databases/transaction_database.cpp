@@ -32,6 +32,10 @@ namespace database {
 
 using namespace boost::filesystem;
 
+static constexpr size_t version_size = sizeof(uint32_t);
+static constexpr size_t locktime_size = sizeof(uint32_t);
+static constexpr size_t version_lock_size = version_size + locktime_size;
+
 BC_CONSTEXPR size_t number_buckets = 100000000;
 BC_CONSTEXPR size_t header_size = slab_hash_table_header_size(number_buckets);
 BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_slabs_size;
@@ -113,8 +117,8 @@ void transaction_database::store(size_t height, size_t position,
     BITCOIN_ASSERT(position <= max_uint32);
     const auto position32 = static_cast<size_t>(position);
 
-    BITCOIN_ASSERT(tx_size <= max_size_t - 4 - 4);
-    const auto value_size = 4 + 4 + static_cast<size_t>(tx_size);
+    BITCOIN_ASSERT(tx_size <= max_size_t - version_lock_size);
+    const auto value_size = version_lock_size + static_cast<size_t>(tx_size);
 
     auto write = [&hight32, &position32, &tx](memory_ptr data)
     {
@@ -125,6 +129,7 @@ void transaction_database::store(size_t height, size_t position,
         // Use database serialization, not satoshi (wire protocol).
         serial.write_bytes(tx.to_data(false));
     };
+
     lookup_map_.store(key, write, value_size);
 }
 

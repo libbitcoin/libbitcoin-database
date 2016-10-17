@@ -159,7 +159,7 @@ void block_database::insert(const block& block, size_t height)
         auto serial = make_unsafe_serializer(REMAP_ADDRESS(data));
         serial.write_bytes(block.header().to_data());
         serial.write_4_bytes_little_endian(height32);
-        serial.write_variable_little_endian(tx_count);
+        serial.write_size_little_endian(tx_count);
 
         for (const auto& tx: block.transactions())
             serial.write_hash(tx.hash());

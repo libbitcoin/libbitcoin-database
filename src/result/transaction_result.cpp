@@ -92,6 +92,7 @@ chain::output transaction_result::output(uint32_t index) const
 
     // Read the number of outputs (variable, but point-limited to max_uint32).
     const auto outputs = serial.read_size_little_endian();
+
     BITCOIN_ASSERT(serial);
     chain::output output;
 

@@ -114,7 +114,7 @@ size_t block_result::transaction_count() const
     BITCOIN_ASSERT(slab_);
     const auto memory = REMAP_ADDRESS(slab_);
     auto deserial = make_unsafe_deserializer(memory + count_offset);
-    return deserial.read_variable_little_endian();
+    return deserial.read_size_little_endian();
 }
 
 hash_digest block_result::transaction_hash(size_t index) const
@@ -122,7 +122,7 @@ hash_digest block_result::transaction_hash(size_t index) const
     BITCOIN_ASSERT(slab_);
     const auto memory = REMAP_ADDRESS(slab_);
     auto deserial = make_unsafe_deserializer(memory + count_offset);
-    const auto tx_count = deserial.read_variable_little_endian();
+    const auto tx_count = deserial.read_size_little_endian();
 
     BITCOIN_ASSERT(index < tx_count);
     deserial.skip(index * hash_size);

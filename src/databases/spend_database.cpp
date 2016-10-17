@@ -104,7 +104,7 @@ input_point spend_database::get(const output_point& outpoint) const
     if (!memory)
         return point;
 
-    // The order of properties in this serialization was reversed in v3.
+    // The order of properties in this serialization was changed in v3.
     // Previously it was { index, hash }, which was inconsistent with wire.
     auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(memory));
     point.from_data(deserial);
