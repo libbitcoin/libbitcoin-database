@@ -153,24 +153,23 @@ void block_database::insert(const block& block, size_t height)
     const auto height32 = static_cast<uint32_t>(height);
     const auto tx_count = block.transactions().size();
 
-    BITCOIN_ASSERT(tx_count <= max_uint32);
-    const auto tx_count32 = static_cast<uint32_t>(tx_count);
-
     // Write block data.
     const auto write = [&](memory_ptr data)
     {
         auto serial = make_unsafe_serializer(REMAP_ADDRESS(data));
         serial.write_bytes(block.header().to_data());
         serial.write_4_bytes_little_endian(height32);
-        serial.write_4_bytes_little_endian(tx_count32);
+        serial.write_variable_little_endian(tx_count);
 
         for (const auto& tx: block.transactions())
             serial.write_hash(tx.hash());
     };
 
     const auto key = block.header().hash();
-    const auto value_size = 80 + 4 + 4 + tx_count * hash_size;
-    const auto position = lookup_map_.store(key, write, value_size);
+    const auto size = header::satoshi_fixed_size() + sizeof(height32) +
+        variable_uint_size(tx_count) + (tx_count * hash_size);
+
+    const auto position = lookup_map_.store(key, write, size);
 
     // Write position to index.
     write_position(position, height32);
