@@ -134,10 +134,10 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     size_t height;
     BOOST_REQUIRE(!db.top(height));
 
-    db.insert(block0, 0);
-    db.insert(block1, 1);
-    db.insert(block2, 2);
-    db.insert(block3, 3);
+    db.store(block0, 0);
+    db.store(block1, 1);
+    db.store(block2, 2);
+    db.store(block3, 3);
     BOOST_REQUIRE(db.top(height));
     BOOST_REQUIRE_EQUAL(height, 3u);
 
@@ -154,8 +154,8 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     }
 
     // Try a fork event.
-    db.insert(block4a, 4);
-    db.insert(block5a, 5);
+    db.store(block4a, 4);
+    db.store(block5a, 5);
 
     // Fetch blocks.
     {
@@ -189,8 +189,8 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     }
 
     // Add new blocks.
-    db.insert(block4b, 4);
-    db.insert(block5b, 5);
+    db.store(block4b, 4);
+    db.store(block5b, 5);
     BOOST_REQUIRE(db.top(height));
     BOOST_REQUIRE_EQUAL(height, 5u);
 
