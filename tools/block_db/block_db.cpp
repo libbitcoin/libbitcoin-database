@@ -258,7 +258,6 @@ int main(int argc, char** argv)
         const auto result = db.open();
         BITCOIN_ASSERT(result);
 
-
         size_t top;
         /* bool */ db.top(top);
 
