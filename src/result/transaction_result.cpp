@@ -30,11 +30,13 @@ namespace database {
 
 using namespace bc::chain;
 
+static const auto use_wire_encoding = false;
 static constexpr size_t value_size = sizeof(uint64_t);
 static constexpr size_t height_size = sizeof(uint32_t);
 static constexpr size_t version_size = sizeof(uint32_t);
 static constexpr size_t locktime_size = sizeof(uint32_t);
 static constexpr size_t position_size = sizeof(uint32_t);
+static constexpr size_t spender_height_size = sizeof(uint32_t);
 
 transaction_result::transaction_result(const memory_ptr slab)
   : slab_(slab), hash_(null_hash)
@@ -94,6 +96,7 @@ chain::output transaction_result::output(uint32_t index) const
     // Skip outputs until the target output.
     for (uint32_t output = 0; output < index; ++output)
     {
+        serial.skip(spender_height_size);
         serial.skip(value_size);
         serial.skip(serial.read_size_little_endian());
         BITCOIN_ASSERT(serial);
@@ -101,7 +104,7 @@ chain::output transaction_result::output(uint32_t index) const
 
     // Read and return the target output.
     chain::output out;
-    out.from_data(serial);
+    out.from_data(serial, use_wire_encoding);
     return out;
 }
 
@@ -114,7 +117,7 @@ chain::transaction transaction_result::transaction() const
 
     // READ THE TX
     chain::transaction tx;
-    tx.from_data(deserial, false);
+    tx.from_data(deserial, use_wire_encoding);
 
     // TODO: add hash param to deserialization to eliminate this construction.
     return chain::transaction(std::move(tx), hash_digest(hash_));

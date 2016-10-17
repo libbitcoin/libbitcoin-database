@@ -32,6 +32,7 @@ namespace database {
 
 using namespace boost::filesystem;
 
+static const auto use_wire_encoding = false;
 static constexpr size_t version_size = sizeof(uint32_t);
 static constexpr size_t locktime_size = sizeof(uint32_t);
 static constexpr size_t version_lock_size = version_size + locktime_size;
@@ -109,7 +110,7 @@ void transaction_database::store(size_t height, size_t position,
 {
     // Write block data.
     const auto key = tx.hash();
-    const auto tx_size = tx.serialized_size();
+    const auto tx_size = tx.serialized_size(false);
 
     BITCOIN_ASSERT(height <= max_uint32);
     const auto hight32 = static_cast<size_t>(height);
@@ -127,7 +128,7 @@ void transaction_database::store(size_t height, size_t position,
         serial.write_4_bytes_little_endian(position32);
 
         // WRITE THE TX
-        serial.write_bytes(tx.to_data(false));
+        serial.write_bytes(tx.to_data(use_wire_encoding));
     };
 
     lookup_map_.store(key, write, value_size);
