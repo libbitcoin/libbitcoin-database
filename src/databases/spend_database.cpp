@@ -49,7 +49,6 @@ spend_database::spend_database(const path& filename,
 {
 }
 
-// Close does not call stop because there is no way to detect thread join.
 spend_database::~spend_database()
 {
     close();
@@ -94,6 +93,7 @@ bool spend_database::close()
     return lookup_file_.close();
 }
 
+// Queries.
 // ----------------------------------------------------------------------------
 
 input_point spend_database::get(const output_point& outpoint) const
@@ -104,7 +104,7 @@ input_point spend_database::get(const output_point& outpoint) const
     if (!memory)
         return point;
 
-    // The order of properties in this serialization was reversed in v3.
+    // The order of properties in this serialization was changed in v3.
     // Previously it was { index, hash }, which was inconsistent with wire.
     auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(memory));
     point.from_data(deserial);

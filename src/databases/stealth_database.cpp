@@ -47,7 +47,6 @@ stealth_database::stealth_database(const path& rows_filename,
 {
 }
 
-// Close does not call stop because there is no way to detect thread join.
 stealth_database::~stealth_database()
 {
     close();
@@ -88,6 +87,7 @@ bool stealth_database::close()
     return rows_file_.close();
 }
 
+// Queries.
 // ----------------------------------------------------------------------------
 
 // TODO: add serialization to stealth_compact.

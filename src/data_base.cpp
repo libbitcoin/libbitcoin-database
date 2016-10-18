@@ -293,7 +293,7 @@ bool data_base::insert(const chain::block& block, size_t height)
         return false;
 
     push_transactions(block, height);
-    blocks.insert(block, height);
+    blocks.store(block, height);
     synchronize();
     return true;
 }
@@ -328,7 +328,7 @@ bool data_base::push(const block& block, size_t height)
     }
 
     push_transactions(block, height);
-    blocks.insert(block, height);
+    blocks.store(block, height);
     synchronize();
     return true;
 }
@@ -361,9 +361,10 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
 {
     for (uint32_t index = 0; index < inputs.size(); ++index)
     {
-        // We also push spends in the inputs loop.
         const auto& input = inputs[index];
-        const chain::input_point point{ tx_hash, index };
+        const input_point point{ tx_hash, index };
+
+        /* bool */ transactions.update(input.previous_output(), height);
         spends.store(input.previous_output(), point);
 
         if (height < history_height_)
@@ -388,7 +389,7 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
     for (uint32_t index = 0; index < outputs.size(); ++index)
     {
         const auto& output = outputs[index];
-        const chain::output_point point{ tx_hash, index };
+        const output_point point{ tx_hash, index };
 
         // Try to extract an address.
         const auto address = payment_address::extract(output.script());
@@ -428,7 +429,7 @@ void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
             continue;
 
         // The payment address versions are arbitrary and unused here.
-        const chain::stealth_compact row
+        const stealth_compact row
         {
             unsigned_ephemeral_key,
             address.hash(),
@@ -441,7 +442,7 @@ void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
 
 // This precludes popping the genesis block.
 // Returns true with empty list if for is at the top.
-bool data_base::pop_above(chain::block::list& out_blocks,
+bool data_base::pop_above(block::list& out_blocks,
     const hash_digest& fork_hash)
 {
     size_t top;
@@ -482,7 +483,7 @@ bool data_base::pop_above(chain::block::list& out_blocks,
     return true;
 }
 
-chain::block data_base::pop()
+block data_base::pop()
 {
     size_t height;
 
@@ -502,7 +503,9 @@ chain::block data_base::pop()
     for (size_t tx = 0; tx < block_result.transaction_count(); ++tx)
     {
         const auto tx_hash = block_result.transaction_hash(tx);
-        const auto tx_result = transactions.get(tx_hash);
+
+        // We want the highest tx with this hash (allow max height).
+        const auto tx_result = transactions.get(tx_hash, max_size_t);
 
         if (!tx_result || tx_result.height() != height ||
             tx_result.position() != tx)
@@ -534,9 +537,12 @@ chain::block data_base::pop()
 
 void data_base::pop_inputs(const input::list& inputs, size_t height)
 {
+    static const auto not_spent = output::validation::not_spent;
+
     // Loop in reverse.
     for (auto input = inputs.rbegin(); input != inputs.rend(); ++input)
     {
+        /* bool */ transactions.update(input->previous_output(), not_spent);
         /* bool */ spends.unlink(input->previous_output());
 
         if (height < history_height_)

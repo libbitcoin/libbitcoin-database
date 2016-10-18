@@ -73,10 +73,10 @@ BOOST_AUTO_TEST_CASE(transaction_database__test)
     db.store(110, 88, tx1);
     db.store(4, 6, tx2);
 
-    const auto result1 = db.get(h1);
+    const auto result1 = db.get(h1, max_size_t);
     BOOST_REQUIRE(result1.transaction().hash() == h1);
 
-    const auto result2 = db.get(h2);
+    const auto result2 = db.get(h2, max_size_t);
     BOOST_REQUIRE(result2.transaction().hash() == h2);
 
     db.sync();

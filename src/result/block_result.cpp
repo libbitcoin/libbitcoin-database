@@ -37,14 +37,12 @@ static constexpr size_t time_size = sizeof(uint32_t);
 static constexpr size_t bits_size = sizeof(uint32_t);
 static constexpr size_t nonce_size = sizeof(uint32_t);
 static constexpr size_t height_size = sizeof(uint32_t);
-static constexpr size_t count_size = sizeof(uint32_t);
 
 static constexpr auto version_offset = size_t(0);
 static constexpr auto time_offset = version_size + previous_size + merkle_size;
 static constexpr auto bits_offset = time_offset + time_size;
 static constexpr auto height_offset = bits_offset + bits_size + nonce_size;
 static constexpr auto count_offset = height_offset + height_size;
-static constexpr auto first_hash_offset = count_offset + count_size;
 
 block_result::block_result(const memory_ptr slab)
   : slab_(slab), hash_(null_hash)
@@ -74,13 +72,15 @@ const hash_digest& block_result::hash() const
 chain::header block_result::header() const
 {
     BITCOIN_ASSERT(slab_);
-    chain::header header;
     const auto memory = REMAP_ADDRESS(slab_);
     auto deserial = make_unsafe_deserializer(memory);
+
+    // READ THE HEADER
+    chain::header header;
     header.from_data(deserial);
 
     // TODO: add hash param to deserialization to eliminate this move.
-    return chain::header(std::move(header), hash_);
+    return chain::header(std::move(header), hash_digest(hash_));
 }
 
 size_t block_result::height() const
@@ -115,16 +115,19 @@ size_t block_result::transaction_count() const
 {
     BITCOIN_ASSERT(slab_);
     const auto memory = REMAP_ADDRESS(slab_);
-    return from_little_endian_unsafe<uint32_t>(memory + count_offset);
+    auto deserial = make_unsafe_deserializer(memory + count_offset);
+    return deserial.read_size_little_endian();
 }
 
 hash_digest block_result::transaction_hash(size_t index) const
 {
     BITCOIN_ASSERT(slab_);
-    BITCOIN_ASSERT(index < transaction_count());
     const auto memory = REMAP_ADDRESS(slab_);
-    const auto first = memory + first_hash_offset + index * hash_size;
-    auto deserial = make_unsafe_deserializer(first);
+    auto deserial = make_unsafe_deserializer(memory + count_offset);
+    const auto tx_count = deserial.read_size_little_endian();
+
+    BITCOIN_ASSERT(index < tx_count);
+    deserial.skip(index * hash_size);
     return deserial.read_hash();
 }
 

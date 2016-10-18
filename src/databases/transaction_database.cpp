@@ -30,7 +30,16 @@
 namespace libbitcoin {
 namespace database {
 
+using namespace bc::chain;
 using namespace boost::filesystem;
+
+static const auto use_wire_encoding = false;
+static constexpr size_t value_size = sizeof(uint64_t);
+static constexpr size_t height_size = sizeof(uint32_t);
+static constexpr size_t version_size = sizeof(uint32_t);
+static constexpr size_t locktime_size = sizeof(uint32_t);
+static constexpr size_t position_size = sizeof(uint32_t);
+static constexpr size_t version_lock_size = version_size + locktime_size;
 
 BC_CONSTEXPR size_t number_buckets = 100000000;
 BC_CONSTEXPR size_t header_size = slab_hash_table_header_size(number_buckets);
@@ -45,7 +54,6 @@ transaction_database::transaction_database(const path& map_filename,
 {
 }
 
-// Close does not call stop because there is no way to detect thread join.
 transaction_database::~transaction_database()
 {
     close();
@@ -92,12 +100,44 @@ bool transaction_database::close()
     return lookup_file_.close();
 }
 
+// Queries.
 // ----------------------------------------------------------------------------
 
-transaction_result transaction_database::get(const hash_digest& hash) const
+transaction_result transaction_database::get(const hash_digest& hash,
+    size_t /* fork_height */) const
 {
+    // TODO: use lookup_map_ to search a set of transactions in height order,
+    // returning the highest that is at or below the specified fork height.
     const auto memory = lookup_map_.find(hash);
     return transaction_result(memory, hash);
+}
+
+bool transaction_database::update(const output_point& point,
+    size_t spender_height)
+{
+    const auto slab = lookup_map_.find(point.hash());
+    const auto memory = REMAP_ADDRESS(slab);
+    const auto tx_start = memory + height_size + position_size;
+    auto serial = make_unsafe_serializer(tx_start);
+    serial.skip(version_size + locktime_size);
+    const auto outputs = serial.read_size_little_endian();
+    BITCOIN_ASSERT(serial);
+
+    if (point.index() >= outputs)
+        return false;
+
+    // Skip outputs until the target output.
+    for (uint32_t output = 0; output < point.index(); ++output)
+    {
+        serial.skip(height_size);
+        serial.skip(value_size);
+        serial.skip(serial.read_size_little_endian());
+        BITCOIN_ASSERT(serial);
+    }
+
+    // Write the spender height to the first word of the target output.
+    serial.write_4_bytes_little_endian(spender_height);
+    return true;
 }
 
 void transaction_database::store(size_t height, size_t position,
@@ -105,7 +145,7 @@ void transaction_database::store(size_t height, size_t position,
 {
     // Write block data.
     const auto key = tx.hash();
-    const auto tx_size = tx.serialized_size();
+    const auto tx_size = tx.serialized_size(false);
 
     BITCOIN_ASSERT(height <= max_uint32);
     const auto hight32 = static_cast<size_t>(height);
@@ -113,18 +153,19 @@ void transaction_database::store(size_t height, size_t position,
     BITCOIN_ASSERT(position <= max_uint32);
     const auto position32 = static_cast<size_t>(position);
 
-    BITCOIN_ASSERT(tx_size <= max_size_t - 4 - 4);
-    const auto value_size = 4 + 4 + static_cast<size_t>(tx_size);
+    BITCOIN_ASSERT(tx_size <= max_size_t - version_lock_size);
+    const auto value_size = version_lock_size + static_cast<size_t>(tx_size);
 
-    auto write = [&hight32, &position32, &tx](memory_ptr data)
+    const auto write = [&hight32, &position32, &tx](memory_ptr data)
     {
         auto serial = make_unsafe_serializer(REMAP_ADDRESS(data));
         serial.write_4_bytes_little_endian(hight32);
         serial.write_4_bytes_little_endian(position32);
 
-        // Use database serialization, not satoshi (wire protocol).
-        serial.write_bytes(tx.to_data(false));
+        // WRITE THE TX
+        serial.write_bytes(tx.to_data(use_wire_encoding));
     };
+
     lookup_map_.store(key, write, value_size);
 }
 

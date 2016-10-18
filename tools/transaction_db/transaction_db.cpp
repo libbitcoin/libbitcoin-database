@@ -123,7 +123,7 @@ int main(int argc, char** argv)
         }
 
         db.open();
-        auto result = db.get(hash);
+        auto result = db.get(hash, max_size_t);
         if (!result)
         {
             std::cout << "Not found!" << std::endl;

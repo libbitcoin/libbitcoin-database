@@ -258,11 +258,10 @@ int main(int argc, char** argv)
         const auto result = db.open();
         BITCOIN_ASSERT(result);
 
-
         size_t top;
         /* bool */ db.top(top);
 
-        db.insert(block, top);
+        db.store(block, top);
         db.sync();
     }
     else if (command == "unlink")
