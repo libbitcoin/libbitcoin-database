@@ -138,7 +138,6 @@ data_base::data_base(const store& paths, size_t index_start_height)
 {
 }
 
-// Close does not call stop because there is no way to detect thread join.
 data_base::~data_base()
 {
     close();
