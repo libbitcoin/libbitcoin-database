@@ -27,8 +27,7 @@ namespace database {
 using namespace boost::filesystem;
 
 settings::settings()
-  : history_start_height(0),
-    stealth_start_height(0),
+  : index_start_height(0),
     directory("database")
 {
 }
@@ -40,14 +39,12 @@ settings::settings(config::settings context)
     {
         case config::settings::mainnet:
         {
-            stealth_start_height = 350000;
             directory = "mainnet";
             break;
         }
 
         case config::settings::testnet:
         {
-            stealth_start_height = 500000;
             directory = "testnet";
             break;
         }

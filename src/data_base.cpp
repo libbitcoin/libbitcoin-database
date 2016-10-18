@@ -35,13 +35,6 @@ using namespace boost::filesystem;
 using namespace bc::chain;
 using namespace bc::wallet;
 
-// BIP30 exception blocks.
-// github.com/bitcoin/bips/blob/master/bip-0030.mediawiki#specification
-static const config::checkpoint exception1 =
-{ "00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec", 91842 };
-static const config::checkpoint exception2 =
-{ "00000000000743f190a18c5577a3c2d2a1f610ae9601ac046a38084ccb7cd721", 91880 };
-
 bool data_base::touch_file(const path& file_path)
 {
     bc::ofstream file(file_path.string());
@@ -61,7 +54,7 @@ bool data_base::initialize(const path& prefix, const chain::block& genesis)
     if (!paths.touch_all())
         return false;
 
-    data_base instance(paths, 0, 0);
+    data_base instance(paths, 0);
 
     if (!instance.create())
         return false;
@@ -123,22 +116,18 @@ void data_base::uninitialize_lock(const path& lock)
 }
 
 data_base::data_base(const settings& settings)
-  : data_base(settings.directory, settings.history_start_height,
-        settings.stealth_start_height)
+  : data_base(settings.directory, settings.index_start_height)
 {
 }
 
-data_base::data_base(const path& prefix, size_t history_height,
-    size_t stealth_height)
-  : data_base(store(prefix), history_height, stealth_height)
+data_base::data_base(const path& prefix, size_t index_start_height)
+  : data_base(store(prefix), index_start_height)
 {
 }
 
-data_base::data_base(const store& paths, size_t history_height,
-    size_t stealth_height)
+data_base::data_base(const store& paths, size_t index_start_height)
   : lock_file_path_(paths.database_lock),
-    history_height_(history_height),
-    stealth_height_(stealth_height),
+    index_start_height_(index_start_height),
     sequential_lock_(0),
     mutex_(std::make_shared<shared_mutex>()),
     blocks(paths.blocks_lookup, paths.blocks_index, mutex_),
@@ -365,10 +354,11 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
         const input_point point{ tx_hash, index };
 
         /* bool */ transactions.update(input.previous_output(), height);
-        spends.store(input.previous_output(), point);
 
-        if (height < history_height_)
+        if (height < index_start_height_)
             continue;
+
+        spends.store(input.previous_output(), point);
 
         // Try to extract an address.
         const auto address = payment_address::extract(input.script());
@@ -383,7 +373,7 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
 void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
     const output::list& outputs)
 {
-    if (height < history_height_)
+    if (height < index_start_height_)
         return;
 
     for (uint32_t index = 0; index < outputs.size(); ++index)
@@ -404,7 +394,7 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
 void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
     const output::list& outputs)
 {
-    if (height < stealth_height_ || outputs.empty())
+    if (height < index_start_height_ || outputs.empty())
         return;
 
     // Stealth outputs are paired by convention.
@@ -543,10 +533,11 @@ void data_base::pop_inputs(const input::list& inputs, size_t height)
     for (auto input = inputs.rbegin(); input != inputs.rend(); ++input)
     {
         /* bool */ transactions.update(input->previous_output(), not_spent);
-        /* bool */ spends.unlink(input->previous_output());
 
-        if (height < history_height_)
+        if (height < index_start_height_)
             continue;
+
+        /* bool */ spends.unlink(input->previous_output());
 
         // Try to extract an address.
         const auto address = payment_address::extract(input->script());
@@ -558,7 +549,7 @@ void data_base::pop_inputs(const input::list& inputs, size_t height)
 
 void data_base::pop_outputs(const output::list& outputs, size_t height)
 {
-    if (height < history_height_)
+    if (height < index_start_height_)
         return;
 
     // Loop in reverse.
@@ -569,7 +560,6 @@ void data_base::pop_outputs(const output::list& outputs, size_t height)
 
         if (address)
             /* bool */ history.delete_last_row(address.hash());
-
 
         // TODO: try to extract a stealth info and if found unlink index.
         // Stealth unlink is not implemented.
