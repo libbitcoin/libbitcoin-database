@@ -63,6 +63,9 @@ public:
     /// Store a transaction in the database.
     void store(size_t height, size_t position, const chain::transaction& tx);
 
+    /// Update the spender height of the output in the tx store.
+    bool update(const chain::output_point& point, size_t spender_height);
+
     /// Delete a transaction from database.
     bool unlink(const hash_digest& hash);
 

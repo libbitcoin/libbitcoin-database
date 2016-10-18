@@ -36,7 +36,6 @@ static constexpr size_t height_size = sizeof(uint32_t);
 static constexpr size_t version_size = sizeof(uint32_t);
 static constexpr size_t locktime_size = sizeof(uint32_t);
 static constexpr size_t position_size = sizeof(uint32_t);
-static constexpr size_t spender_height_size = sizeof(uint32_t);
 
 transaction_result::transaction_result(const memory_ptr slab)
   : slab_(slab), hash_(null_hash)
@@ -79,16 +78,16 @@ size_t transaction_result::position() const
     return from_little_endian_unsafe<uint32_t>(memory + height_size);
 }
 
-// If index is out of range returns invalid output (.value not_found).
+// If index is out of range returns default/invalid output (.value not_found).
 chain::output transaction_result::output(uint32_t index) const
 {
     BITCOIN_ASSERT(slab_);
     const auto memory = REMAP_ADDRESS(slab_);
     const auto tx_start = memory + height_size + position_size;
-    auto serial = make_unsafe_deserializer(tx_start);
-    serial.skip(version_size + locktime_size);
-    const auto outputs = serial.read_size_little_endian();
-    BITCOIN_ASSERT(serial);
+    auto deserial = make_unsafe_deserializer(tx_start);
+    deserial.skip(version_size + locktime_size);
+    const auto outputs = deserial.read_size_little_endian();
+    BITCOIN_ASSERT(deserial);
 
     if (index >= outputs)
         return{};
@@ -96,15 +95,15 @@ chain::output transaction_result::output(uint32_t index) const
     // Skip outputs until the target output.
     for (uint32_t output = 0; output < index; ++output)
     {
-        serial.skip(spender_height_size);
-        serial.skip(value_size);
-        serial.skip(serial.read_size_little_endian());
+        deserial.skip(height_size);
+        deserial.skip(value_size);
+        deserial.skip(deserial.read_size_little_endian());
         BITCOIN_ASSERT(serial);
     }
 
     // Read and return the target output.
     chain::output out;
-    out.from_data(serial, use_wire_encoding);
+    out.from_data(deserial, use_wire_encoding);
     return out;
 }
 

@@ -30,11 +30,15 @@
 namespace libbitcoin {
 namespace database {
 
+using namespace bc::chain;
 using namespace boost::filesystem;
 
 static const auto use_wire_encoding = false;
+static constexpr size_t value_size = sizeof(uint64_t);
+static constexpr size_t height_size = sizeof(uint32_t);
 static constexpr size_t version_size = sizeof(uint32_t);
 static constexpr size_t locktime_size = sizeof(uint32_t);
+static constexpr size_t position_size = sizeof(uint32_t);
 static constexpr size_t version_lock_size = version_size + locktime_size;
 
 BC_CONSTEXPR size_t number_buckets = 100000000;
@@ -105,6 +109,34 @@ transaction_result transaction_database::get(const hash_digest& hash) const
     return transaction_result(memory, hash);
 }
 
+bool transaction_database::update(const output_point& point,
+    size_t spender_height)
+{
+    const auto slab = lookup_map_.find(point.hash());
+    const auto memory = REMAP_ADDRESS(slab);
+    const auto tx_start = memory + height_size + position_size;
+    auto serial = make_unsafe_serializer(tx_start);
+    serial.skip(version_size + locktime_size);
+    const auto outputs = serial.read_size_little_endian();
+    BITCOIN_ASSERT(serial);
+
+    if (point.index() >= outputs)
+        return false;
+
+    // Skip outputs until the target output.
+    for (uint32_t output = 0; output < point.index(); ++output)
+    {
+        serial.skip(height_size);
+        serial.skip(value_size);
+        serial.skip(serial.read_size_little_endian());
+        BITCOIN_ASSERT(serial);
+    }
+
+    // Write the spender height to the first word of the target output.
+    serial.write_4_bytes_little_endian(spender_height);
+    return true;
+}
+
 void transaction_database::store(size_t height, size_t position,
     const chain::transaction& tx)
 {
@@ -121,7 +153,7 @@ void transaction_database::store(size_t height, size_t position,
     BITCOIN_ASSERT(tx_size <= max_size_t - version_lock_size);
     const auto value_size = version_lock_size + static_cast<size_t>(tx_size);
 
-    auto write = [&hight32, &position32, &tx](memory_ptr data)
+    const auto write = [&hight32, &position32, &tx](memory_ptr data)
     {
         auto serial = make_unsafe_serializer(REMAP_ADDRESS(data));
         serial.write_4_bytes_little_endian(hight32);
