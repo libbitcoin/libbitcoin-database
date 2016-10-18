@@ -117,8 +117,8 @@ public:
         const hash_digest& fork_hash);
 
 protected:
-    data_base(const store& paths, size_t history_height, size_t stealth_height);
-    data_base(const path& prefix, size_t history_height, size_t stealth_height);
+    data_base(const store& paths, size_t index_start_height);
+    data_base(const path& prefix, size_t index_start_height);
 
 private:
     typedef chain::input::list inputs;
@@ -144,8 +144,7 @@ private:
     void synchronize();
 
     const path lock_file_path_;
-    const size_t history_height_;
-    const size_t stealth_height_;
+    const size_t index_start_height_;
 
     // Atomic counter for implementing the sequential lock pattern.
     sequential_lock sequential_lock_;
