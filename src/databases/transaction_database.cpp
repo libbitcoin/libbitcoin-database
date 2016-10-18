@@ -103,8 +103,11 @@ bool transaction_database::close()
 // Queries.
 // ----------------------------------------------------------------------------
 
-transaction_result transaction_database::get(const hash_digest& hash) const
+transaction_result transaction_database::get(const hash_digest& hash,
+    size_t /* fork_height */) const
 {
+    // TODO: use lookup_map_ to search a set of transactions in height order,
+    // returning the highest that is at or below the specified fork height.
     const auto memory = lookup_map_.find(hash);
     return transaction_result(memory, hash);
 }

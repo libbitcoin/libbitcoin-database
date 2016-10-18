@@ -364,7 +364,7 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
         const auto& input = inputs[index];
         const input_point point{ tx_hash, index };
 
-        /* bool */ transactions.update(point, height);
+        /* bool */ transactions.update(input.previous_output(), height);
         spends.store(input.previous_output(), point);
 
         if (height < history_height_)
@@ -503,7 +503,9 @@ block data_base::pop()
     for (size_t tx = 0; tx < block_result.transaction_count(); ++tx)
     {
         const auto tx_hash = block_result.transaction_hash(tx);
-        const auto tx_result = transactions.get(tx_hash);
+
+        // We want the highest tx with this hash (allow max height).
+        const auto tx_result = transactions.get(tx_hash, max_size_t);
 
         if (!tx_result || tx_result.height() != height ||
             tx_result.position() != tx)

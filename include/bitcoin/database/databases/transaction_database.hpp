@@ -58,7 +58,7 @@ public:
     bool close();
 
     /// Fetch transaction from its hash.
-    transaction_result get(const hash_digest& hash) const;
+    transaction_result get(const hash_digest& hash, size_t fork_height) const;
 
     /// Store a transaction in the database.
     void store(size_t height, size_t position, const chain::transaction& tx);

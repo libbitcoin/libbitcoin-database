@@ -49,7 +49,7 @@ void test_block_exists(const data_base& interface,
         const hash_digest tx_hash = tx.hash();
         BOOST_REQUIRE(r0.transaction_hash(i) == tx_hash);
         BOOST_REQUIRE(r0_byhash.transaction_hash(i) == tx_hash);
-        auto r0_tx = interface.transactions.get(tx_hash);
+        auto r0_tx = interface.transactions.get(tx_hash, max_size_t);
         BOOST_REQUIRE(r0_tx);
         BOOST_REQUIRE(r0_byhash);
         BOOST_REQUIRE(r0_tx.transaction().hash() == tx_hash);

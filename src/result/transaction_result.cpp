@@ -78,6 +78,37 @@ size_t transaction_result::position() const
     return from_little_endian_unsafe<uint32_t>(memory + height_size);
 }
 
+bool transaction_result::is_spent(size_t fork_height) const
+{
+    static const auto not_spent = output::validation::not_spent;
+
+    BITCOIN_ASSERT(slab_);
+    const auto memory = REMAP_ADDRESS(slab_);
+    const auto tx_start = memory + height_size + position_size;
+    auto deserial = make_unsafe_deserializer(tx_start);
+    deserial.skip(version_size + locktime_size);
+    const auto outputs = deserial.read_size_little_endian();
+    BITCOIN_ASSERT(deserial);
+
+    // Search all outputs for an unspent indication.
+    for (uint32_t output = 0; output < outputs; ++output)
+    {
+        const auto spender_height = deserial.read_4_bytes_little_endian();
+        BITCOIN_ASSERT(deserial);
+
+        // A spend from above the fork height is not considered a spend.
+        // There cannot also be a spend below the fork height, so it's unspent.
+        if (spender_height == not_spent || spender_height > fork_height)
+            return false;
+
+        deserial.skip(value_size);
+        deserial.skip(deserial.read_size_little_endian());
+        BITCOIN_ASSERT(deserial);
+    }
+
+    return true;
+}
+
 // If index is out of range returns default/invalid output (.value not_found).
 chain::output transaction_result::output(uint32_t index) const
 {
@@ -98,7 +129,7 @@ chain::output transaction_result::output(uint32_t index) const
         deserial.skip(height_size);
         deserial.skip(value_size);
         deserial.skip(deserial.read_size_little_endian());
-        BITCOIN_ASSERT(serial);
+        BITCOIN_ASSERT(deserial);
     }
 
     // Read and return the target output.
