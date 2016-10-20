@@ -44,13 +44,13 @@ public:
     ~stealth_database();
 
     /// Initialize a new stealth database.
-    bool create();
+    bool create(bool enabled=true);
 
     /// Call before using the database.
-    bool open();
+    bool open(bool enabled=true);
 
     /// Call to unload the memory map.
-    bool close();
+    bool close(bool enabled=true);
 
     /// Linearly scan all entries, discarding those after from_height.
     chain::stealth_compact::list scan(const binary& filter,

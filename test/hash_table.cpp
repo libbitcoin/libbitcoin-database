@@ -74,7 +74,7 @@ void create_database_file()
 {
     BC_CONSTEXPR size_t header_size = slab_hash_table_header_size(buckets);
 
-    data_base::touch_file(DIRECTORY "/slab_hash_table__write_read");
+    store::create(DIRECTORY "/slab_hash_table__write_read");
     memory_map file(DIRECTORY "/slab_hash_table__write_read");
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__write_read__test)
 
 BOOST_AUTO_TEST_CASE(slab_hash_table__test)
 {
-    data_base::touch_file(DIRECTORY "/slab_hash_table");
+    store::create(DIRECTORY "/slab_hash_table");
     memory_map file(DIRECTORY "/slab_hash_table");
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
     BC_CONSTEXPR size_t record_buckets = 2;
     BC_CONSTEXPR size_t header_size = record_hash_table_header_size(record_buckets);
 
-    data_base::touch_file(DIRECTORY "/record_hash_table__32bit");
+    store::create(DIRECTORY "/record_hash_table__32bit");
     memory_map file(DIRECTORY "/record_hash_table__32bit");
     BOOST_REQUIRE(file.open());
 
@@ -335,7 +335,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table_header__64bit__test)
     BC_CONSTEXPR size_t record_buckets = 2;
     BC_CONSTEXPR size_t header_size = record_hash_table_header_size(record_buckets);
 
-    data_base::touch_file(DIRECTORY "/record_hash_table_64bit");
+    store::create(DIRECTORY "/record_hash_table_64bit");
     memory_map file(DIRECTORY "/record_hash_table_64bit");
     BOOST_REQUIRE(file.open());
 

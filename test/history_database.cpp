@@ -87,8 +87,8 @@ BOOST_AUTO_TEST_CASE(history_database__test)
     const uint32_t out_h41 = 74448;
     const uint64_t value41 = 990;
 
-    data_base::touch_file(DIRECTORY "/lookup");
-    data_base::touch_file(DIRECTORY "/rows");
+    store::create(DIRECTORY "/lookup");
+    store::create(DIRECTORY "/rows");
     history_database db(DIRECTORY "/lookup", DIRECTORY "/rows");
     BOOST_REQUIRE(db.create());
     db.add_output(key1, out11, out_h11, value11);

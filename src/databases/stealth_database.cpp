@@ -56,8 +56,11 @@ stealth_database::~stealth_database()
 // ----------------------------------------------------------------------------
 
 // Initialize files and start.
-bool stealth_database::create()
+bool stealth_database::create(bool enabled)
 {
+    if (!enabled)
+        return true;
+
     // Resize and create require a started file.
     if (!rows_file_.open())
         return false;
@@ -75,15 +78,21 @@ bool stealth_database::create()
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 
-bool stealth_database::open()
+bool stealth_database::open(bool enabled)
 {
+    if (!enabled)
+        return true;
+
     return
         rows_file_.open() &&
         rows_manager_.start();
 }
 
-bool stealth_database::close()
+bool stealth_database::close(bool enabled)
 {
+    if (!enabled)
+        return true;
+
     return rows_file_.close();
 }
 

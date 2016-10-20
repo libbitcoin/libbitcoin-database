@@ -59,7 +59,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    if (!data_base::initialize(prefix, block::genesis_mainnet()))
+    if (!data_base(prefix, true).create(block::genesis_mainnet()))
     {
         std::cerr << BS_INITCHAIN_FAIL;
         return -1;

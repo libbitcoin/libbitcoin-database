@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(spend_database__test)
     chain::input_point value3{ hash_literal("3cc768bbaef30587c72c6eba8dbf6aeec4ef24172ae6fe357f2e24c2b0fa44d5"), 3 };
     chain::input_point value4{ hash_literal("4742b3eac32d35961f9da9d42d495ff13cc768bbaef30587c72c6eba8dbf6aee"), 4 };
 
-    data_base::touch_file(DIRECTORY "/spend");
+    store::create(DIRECTORY "/spend");
     spend_database db(DIRECTORY "/spend");
     BOOST_REQUIRE(db.create());
 

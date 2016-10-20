@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__test)
 
     const auto h2 = tx2.hash();
 
-    data_base::touch_file(DIRECTORY "/transaction");
+    store::create(DIRECTORY "/transaction");
     transaction_database db(DIRECTORY "/transaction");
     BOOST_REQUIRE(db.create());
 

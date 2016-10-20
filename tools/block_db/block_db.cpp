@@ -154,8 +154,8 @@ int main(int argc, char** argv)
 
     if (command == "initialize_new")
     {
-        data_base::touch_file(map_filename);
-        data_base::touch_file(rows_filename);
+        store::create(map_filename);
+        store::create(rows_filename);
     }
 
     block_database db(map_filename, rows_filename);
