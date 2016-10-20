@@ -39,9 +39,6 @@ public:
     /// Create a single file with one byte of arbitrary data.
     static bool create(const path& file_path);
 
-    /// Delete the file with the given path.
-    static bool destroy(const path& file_path);
-
     // Construct.
     // ------------------------------------------------------------------------
 

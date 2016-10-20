@@ -29,7 +29,18 @@ namespace database {
 using namespace bc::chain;
 using namespace bc::database;
 
-// The sentinel max_uint32 is used to align with fixed-width config settings,
+// Database file names.
+#define CRASH_LOCK "start_lock"
+#define EXCLUSIVE_LOCK "exclusive_lock"
+#define BLOCK_TABLE "block_table"
+#define BLOCK_INDEX "block_index"
+#define TRANSACTION_TABLE "transaction_table"
+#define SPEND_TABLE "spend_table"
+#define HISTORY_TABLE "history_table"
+#define HISTORY_ROWS "history_rows"
+#define STEALTH_ROWS "stealth_rows"
+
+// The threashold max_uint32 is used to align with fixed-width config settings,
 // and size_t is used to align with the database height domain.
 const size_t store::without_indexes = max_uint32;
 
@@ -41,7 +52,7 @@ bool store::create(const path& file_path)
     if (file.bad())
         return false;
 
-    // Write one byte so file is nonzero size.
+    // Write one byte so file is nonzero size (for memory map validation).
     file.put('x');
     return true;
 }
@@ -51,19 +62,19 @@ bool store::create(const path& file_path)
 
 store::store(const path& prefix, bool with_indexes)
   : use_indexes(with_indexes),
-    crash_lock_(prefix / "start_lock"),
-    exclusive_lock_(prefix / "exclusive_lock"),
+    crash_lock_(prefix / CRASH_LOCK),
+    exclusive_lock_(prefix / EXCLUSIVE_LOCK),
 
     // Content store.
-    block_table(prefix / "block_table"),
-    block_index(prefix / "block_index"),
-    transaction_table(prefix / "transaction_table"),
+    block_table(prefix / BLOCK_TABLE),
+    block_index(prefix / BLOCK_INDEX),
+    transaction_table(prefix / TRANSACTION_TABLE),
 
     // Optional indexes.
-    spend_table(prefix / "spend_table"),
-    history_table(prefix / "history_table"),
-    history_rows(prefix / "history_rows"),
-    stealth_rows(prefix / "stealth_rows")
+    spend_table(prefix / SPEND_TABLE),
+    history_table(prefix / HISTORY_TABLE),
+    history_rows(prefix / HISTORY_ROWS),
+    stealth_rows(prefix / STEALTH_ROWS)
 {
 }
 
