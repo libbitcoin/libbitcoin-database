@@ -48,6 +48,12 @@ bool store::create(const path& file_path)
     return true;
 }
 
+// static
+bool store::destroy(const path& file_path)
+{
+    return boost::filesystem::remove(file_path);
+}
+
 // Construct.
 // ------------------------------------------------------------------------
 
@@ -75,24 +81,24 @@ store::store(const path& prefix, bool with_indexes)
 // Create files.
 bool store::create() const
 {
-    const auto created_content =
+    const auto created =
         create(block_table) &&
         create(block_index) &&
         create(transaction_table);
 
-    const auto create_indexes = [this]()
-    {
-        return
-            create(spend_table) &&
-            create(history_table) &&
-            create(history_rows) &&
-            create(stealth_rows);
-    };
+    if (!with_indexes_)
+        return created;
 
-    return created_content && (!with_indexes_ || create_indexes());
+    return
+        created &&
+        create(spend_table) &&
+        create(history_table) &&
+        create(history_rows) &&
+        create(stealth_rows);
 }
 
 // Lock file access.
+// If no other process has exclusive, or sharable ownership this succeeds.
 bool store::open()
 {
     // Create the file lock resource (file).
@@ -102,8 +108,8 @@ bool store::open()
     // Create the file lock instance.
     process_lock_ = std::make_shared<file_lock>(lock_file_.string());
 
-    // Attempt to acquire the lock (without waiting).
-    // If no other process has exclusive, or sharable ownership this succeeds.
+    //PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+    // Start process lock.
     return process_lock_->try_lock();
 }
 
@@ -115,7 +121,11 @@ bool store::close()
         return false;
 
     process_lock_.reset();
-    return boost::filesystem::remove(lock_file_);
+    // End process lock.
+    //PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+
+    // Delete the file lock resource (clean-up, not strictly requried).
+    return destroy(lock_file_);
 }
 
 // Sequential locking.
@@ -123,12 +133,16 @@ bool store::close()
 
 store::handle store::begin_read() const
 {
+    //RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+    // Start read lock.
     return sequential_lock_.load();
 }
 
 bool store::is_read_valid(handle value) const
 {
     return value == sequential_lock_.load();
+    // Test read lock.
+    //RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
 }
 
 // TODO: drop a file as a write sentinel that we can use to detect uncontrolled
@@ -136,17 +150,17 @@ bool store::is_read_valid(handle value) const
 // Fail startup if the sentinel is detected. (file: write_lock).
 bool store::begin_write()
 {
-    ///////////////////////////////////////////////////////////////////////////
-    // slock is now odd.
+    //WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+    // Start write lock.
     return is_write_locked(++sequential_lock_);
 }
 
 // TODO: clear the write sentinel.
 bool store::end_write()
 {
-    // slock_ is now even again.
     return !is_write_locked(++sequential_lock_);
-    ///////////////////////////////////////////////////////////////////////////
+    // End write lock.
+    //WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
 }
 
 } // namespace data_base
