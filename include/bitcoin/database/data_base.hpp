@@ -101,7 +101,6 @@ public:
     bool pop_above(chain::block::list& out_blocks,
         const hash_digest& fork_hash);
 
-
 private:
     typedef chain::input::list inputs;
     typedef chain::output::list outputs;
