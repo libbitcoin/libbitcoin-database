@@ -194,7 +194,28 @@ bool memory_map::open()
     return true;
 }
 
-// Close does not call stop because there is no way to detect thread join.
+bool memory_map::flush()
+{
+    std::string error_name;
+
+    // Critical Section (internal/unconditional)
+    ///////////////////////////////////////////////////////////////////////////
+    mutex_.lock_upgrade();
+
+    if (msync(data_, logical_size_, MS_SYNC) == -1)
+        error_name = "flush";
+
+    mutex_.unlock();
+    ///////////////////////////////////////////////////////////////////////////
+
+    // Keep logging out of the critical section.
+    if (!error_name.empty())
+        return handle_error(error_name, filename_);
+
+    ////log_flushed();
+    return true;
+}
+
 bool memory_map::close()
 {
     std::string error_name;

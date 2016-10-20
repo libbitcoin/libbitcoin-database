@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__test)
     const auto result2 = db.get(h2, max_size_t);
     BOOST_REQUIRE(result2.transaction().hash() == h2);
 
-    db.sync();
+    db.synchronize();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

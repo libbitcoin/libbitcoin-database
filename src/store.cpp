@@ -51,8 +51,8 @@ bool store::create(const path& file_path)
 
 store::store(const path& prefix, bool with_indexes)
   : use_indexes(with_indexes),
-    write_lock_(prefix / "write_lock", false),
-    store_lock_(prefix / "store_lock", true),
+    crash_lock_(prefix / "start_lock"),
+    exclusive_lock_(prefix / "exclusive_lock"),
 
     // Content store.
     block_table(prefix / "block_table"),
@@ -91,12 +91,47 @@ bool store::create() const
 
 bool store::open()
 {
-    return store_lock_.try_lock();
+    return crash_lock_.try_lock() && exclusive_lock_.lock();
 }
 
 bool store::close()
 {
-    return store_lock_.unlock();
+    return exclusive_lock_.unlock();
+}
+
+store::handle store::begin_read() const
+{
+    return sequential_lock_.begin_read();
+}
+
+bool store::is_read_valid(handle value) const
+{
+    return sequential_lock_.is_read_valid(value);
+}
+
+bool store::is_write_locked(handle value) const
+{
+    return sequential_lock_.is_write_locked(value);
+}
+
+bool store::begin_write(bool lock)
+{
+    return (!lock || crash_lock()) && sequential_lock_.begin_write();
+}
+
+bool store::end_write(bool unlock)
+{
+    return sequential_lock_.end_write() && (!unlock || crash_unlock());
+}
+
+bool store::crash_lock()
+{
+    return crash_lock_.lock_shared();
+}
+
+bool store::crash_unlock()
+{
+    return flush() && crash_lock_.unlock_shared();
 }
 
 } // namespace data_base

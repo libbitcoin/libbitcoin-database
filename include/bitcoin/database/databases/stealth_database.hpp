@@ -63,9 +63,11 @@ public:
     /// Delete stealth row (not implemented.
     bool unlink();
 
-    /// Synchronise storage with disk so things are consistent.
-    /// Should be done at the end of every block write.
-    void sync();
+    /// Commit latest inserts.
+    void synchronize();
+
+    /// Flush the memory map to disk.
+    bool flush();
 
 private:
     void write_index();

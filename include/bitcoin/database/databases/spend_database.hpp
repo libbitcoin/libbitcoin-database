@@ -72,9 +72,11 @@ public:
     /// Delete outpoint spend item from database.
     bool unlink(const chain::output_point& outpoint);
 
-    /// Synchronise storage with disk so things are consistent.
-    /// Should be done at the end of every block write.
-    void sync();
+    /// Commit latest inserts.
+    void synchronize();
+
+    /// Flush the memory map to disk.
+    bool flush();
 
     /// Return statistical info about the database.
     spend_statinfo statinfo() const;

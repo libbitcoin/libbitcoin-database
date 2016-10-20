@@ -102,6 +102,18 @@ bool spend_database::close(bool enabled)
     return lookup_file_.close();
 }
 
+// Commit latest inserts.
+void spend_database::synchronize()
+{
+    lookup_manager_.sync();
+}
+
+// Flush the memory map to disk.
+bool spend_database::flush()
+{
+    return lookup_file_.flush();
+}
+
 // Queries.
 // ----------------------------------------------------------------------------
 
@@ -136,12 +148,6 @@ bool spend_database::unlink(const output_point& outpoint)
 {
     return lookup_map_.unlink(outpoint);
 }
-
-void spend_database::sync()
-{
-    lookup_manager_.sync();
-}
-
 spend_statinfo spend_database::statinfo() const
 {
     return

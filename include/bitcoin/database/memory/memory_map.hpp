@@ -57,6 +57,9 @@ public:
     /// Open and map database files.
     bool open();
 
+    /// Flush the memory map to disk.
+    bool flush();
+
     /// Unmap and release database files, can be restarted.
     bool close();
 

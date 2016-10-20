@@ -117,6 +117,21 @@ bool history_database::close(bool enabled)
         rows_file_.close();
 }
 
+// Commit latest inserts.
+void history_database::synchronize()
+{
+    lookup_manager_.sync();
+    rows_manager_.sync();
+}
+
+// Flush the memory maps to disk.
+bool history_database::flush()
+{
+    return
+        lookup_file_.flush() &&
+        rows_file_.flush();
+}
+
 // Queries.
 // ----------------------------------------------------------------------------
 
@@ -210,12 +225,6 @@ history_compact::list history_database::get(const short_hash& key,
 
     // TODO: we could sort result here.
     return result;
-}
-
-void history_database::sync()
-{
-    lookup_manager_.sync();
-    rows_manager_.sync();
 }
 
 history_statinfo history_database::statinfo() const
