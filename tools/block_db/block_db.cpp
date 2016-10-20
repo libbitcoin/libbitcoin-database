@@ -262,7 +262,7 @@ int main(int argc, char** argv)
         /* bool */ db.top(top);
 
         db.store(block, top);
-        db.sync();
+        db.synchronize();
     }
     else if (command == "unlink")
     {
@@ -280,7 +280,7 @@ int main(int argc, char** argv)
         BITCOIN_ASSERT(result);
 
         db.unlink(from_height);
-        db.sync();
+        db.synchronize();
     }
     else if (command == "last_height")
     {

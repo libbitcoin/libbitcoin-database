@@ -203,7 +203,7 @@ int main(int argc, char** argv)
         BITCOIN_ASSERT(result);
 
         db.add_output(key, outpoint, output_height, value);
-        db.sync();
+        db.synchronize();
     }
     else if (command == "add_spend")
     {
@@ -233,7 +233,7 @@ int main(int argc, char** argv)
         BITCOIN_ASSERT(result);
 
         db.add_input(key, spend, spend_height, previous);
-        db.sync();
+        db.synchronize();
     }
     else if (command == "delete_last_row")
     {
@@ -251,7 +251,7 @@ int main(int argc, char** argv)
         BITCOIN_ASSERT(result);
 
         db.delete_last_row(key);
-        db.sync();
+        db.synchronize();
     }
     else if (command == "fetch")
     {
