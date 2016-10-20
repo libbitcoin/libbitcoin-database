@@ -202,6 +202,16 @@ bool memory_map::flush()
     ///////////////////////////////////////////////////////////////////////////
     mutex_.lock_upgrade();
 
+    if (closed_)
+    {
+        mutex_.unlock_upgrade();
+        //---------------------------------------------------------------------
+        return true;
+    }
+
+    mutex_.unlock_upgrade_and_lock();
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
     if (msync(data_, logical_size_, MS_SYNC) == -1)
         error_name = "flush";
 
@@ -216,6 +226,7 @@ bool memory_map::flush()
     return true;
 }
 
+// Close is idempotent and thread safe.
 bool memory_map::close()
 {
     std::string error_name;
@@ -228,7 +239,6 @@ bool memory_map::close()
     {
         mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
-        // Close is idempotent (may be called from multiple threads).
         return true;
     }
 
