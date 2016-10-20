@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
         auto res_h5b = db.get(h5b);
         BOOST_REQUIRE(res_h5b);
         BOOST_REQUIRE(res_h5b.header().hash() == h5b);
-        db.sync();
+        db.synchronize();
     }
 }
 

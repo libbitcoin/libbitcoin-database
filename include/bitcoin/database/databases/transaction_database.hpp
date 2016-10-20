@@ -69,9 +69,11 @@ public:
     /// Delete a transaction from database.
     bool unlink(const hash_digest& hash);
 
-    /// Synchronise storage with disk so things are consistent.
-    /// Should be done at the end of every block write.
-    void sync();
+    /// Commit latest inserts.
+    void synchronize();
+
+    /// Flush the memory map to disk.
+    bool flush();
 
 private:
     typedef slab_hash_table<hash_digest> slab_map;

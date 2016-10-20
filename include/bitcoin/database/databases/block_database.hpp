@@ -79,9 +79,11 @@ public:
     /// Unlink all blocks upwards from (and including) from_height.
     bool unlink(size_t from_height);
 
-    /// Synchronise storage with disk so things are consistent.
-    /// Should be done at the end of every block write.
-    void sync();
+    /// Commit latest inserts.
+    void synchronize();
+
+    /// Flush the memory maps to disk.
+    bool flush();
 
     /// The index of the highest existing block, independent of gaps.
     bool top(size_t& out_height) const;

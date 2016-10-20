@@ -29,19 +29,15 @@ namespace libbitcoin {
 namespace database {
 
 class BCD_API store
-  : public sequential_lock
 {
 public:
-    typedef size_t handle;
     typedef boost::filesystem::path path;
+    typedef sequential_lock::handle handle;
 
     static const size_t without_indexes;
 
     /// Create a single file with one byte of arbitrary data.
     static bool create(const path& file_path);
-
-    /// Delete the file with the given path.
-    static bool destroy(const path& file_path);
 
     // Construct.
     // ------------------------------------------------------------------------
@@ -60,6 +56,30 @@ public:
     /// Release exclusive access.
     virtual bool close();
 
+    // Write with crash detection.
+    // ------------------------------------------------------------------------
+
+    /// Start the read.
+    handle begin_read() const;
+
+    /// Check the read result.
+    bool is_read_valid(handle handle) const;
+
+    /// Check the write state.
+    bool is_write_locked(handle handle) const;
+
+    /// Start writing with optional crash lock.
+    bool begin_write(bool lock=true);
+
+    /// Start writing with optional crash unlock.
+    bool end_write(bool unlock=true);
+
+    /// Begin crash lock scope.
+    bool crash_lock();
+
+    /// End crash lock scope.
+    bool crash_unlock();
+
     // File names.
     // ------------------------------------------------------------------------
 
@@ -75,11 +95,14 @@ public:
     const path stealth_rows;
 
 protected:
+    virtual bool flush() = 0;
+
     const bool use_indexes;
 
 private:
-    interprocess_lock write_lock_;
-    interprocess_lock store_lock_;
+    bc::crash_lock crash_lock_;
+    interprocess_lock exclusive_lock_;
+    sequential_lock sequential_lock_;
 };
 
 } // namespace database

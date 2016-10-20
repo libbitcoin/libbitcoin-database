@@ -100,6 +100,18 @@ bool transaction_database::close()
     return lookup_file_.close();
 }
 
+// Commit latest inserts.
+void transaction_database::synchronize()
+{
+    lookup_manager_.sync();
+}
+
+// Flush the memory map to disk.
+bool transaction_database::flush()
+{
+    return lookup_file_.flush();
+}
+
 // Queries.
 // ----------------------------------------------------------------------------
 
@@ -172,11 +184,6 @@ void transaction_database::store(size_t height, size_t position,
 bool transaction_database::unlink(const hash_digest& hash)
 {
     return lookup_map_.unlink(hash);
-}
-
-void transaction_database::sync()
-{
-    lookup_manager_.sync();
 }
 
 } // namespace database

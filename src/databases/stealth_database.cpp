@@ -96,6 +96,18 @@ bool stealth_database::close(bool enabled)
     return rows_file_.close();
 }
 
+// Commit latest inserts.
+void stealth_database::synchronize()
+{
+    rows_manager_.sync();
+}
+
+// Flush the memory map to disk.
+bool stealth_database::flush()
+{
+    return rows_file_.flush();
+}
+
 // Queries.
 // ----------------------------------------------------------------------------
 
@@ -163,11 +175,6 @@ bool stealth_database::unlink()
 {
     // TODO: mark as deleted (not implemented).
     return false;
-}
-
-void stealth_database::sync()
-{
-    rows_manager_.sync();
 }
 
 } // namespace database

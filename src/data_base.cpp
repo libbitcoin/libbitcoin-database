@@ -50,6 +50,11 @@ data_base::data_base(const path& prefix, size_t index_start_height)
 {
 }
 
+data_base::~data_base()
+{
+    close();
+}
+
 // Open and close.
 // ----------------------------------------------------------------------------
 
@@ -128,12 +133,7 @@ bool data_base::close()
     return closed && store_closed;
 }
 
-data_base::~data_base()
-{
-    close();
-}
-
-// private
+// protected
 void data_base::load_databases()
 {
     const auto& tx = transaction_table;
@@ -151,7 +151,7 @@ void data_base::load_databases()
     stealth_ = std::make_shared<stealth_database>(stealth_rows, mutex_);
 }
 
-// private
+// protected
 void data_base::unload_databases()
 {
     blocks_.reset();
@@ -163,6 +163,36 @@ void data_base::unload_databases()
     spends_.reset();
     history_.reset();
     stealth_.reset();
+}
+
+// protected
+void data_base::synchronize()
+{
+    if (use_indexes)
+    {
+        spends_->synchronize();
+        history_->synchronize();
+        stealth_->synchronize();
+    }
+
+    transactions_->synchronize();
+    blocks_->synchronize();
+}
+
+// protected
+bool data_base::flush()
+{
+    const auto flushed =
+        blocks_->flush() &&
+        transactions_->flush();
+
+    if (!use_indexes)
+        return flushed;
+
+    return flushed &&
+        spends_->flush() &&
+        history_->flush() &&
+        stealth_->flush();
 }
 
 // Readers.
@@ -210,19 +240,6 @@ static hash_digest get_previous_hash(const block_database& blocks,
     size_t height)
 {
     return height == 0 ? null_hash : blocks.get(height - 1).header().hash();
-}
-
-void data_base::synchronize()
-{
-    if (use_indexes)
-    {
-        spends_->sync();
-        history_->sync();
-        stealth_->sync();
-    }
-
-    transactions_->sync();
-    blocks_->sync();
 }
 
 // Add block to the database at the given height.

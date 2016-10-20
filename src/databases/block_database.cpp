@@ -115,6 +115,21 @@ bool block_database::close()
         index_file_.close();
 }
 
+// Commit latest inserts.
+void block_database::synchronize()
+{
+    lookup_manager_.sync();
+    index_manager_.sync();
+}
+
+// Flush the memory maps to disk.
+bool block_database::flush()
+{
+    return
+        lookup_file_.flush() &&
+        index_file_.flush();
+}
+
 // Queries.
 // ----------------------------------------------------------------------------
 
@@ -195,12 +210,6 @@ bool block_database::unlink(size_t from_height)
     }
 
     return false;
-}
-
-void block_database::sync()
-{
-    lookup_manager_.sync();
-    index_manager_.sync();
 }
 
 // This is necessary for parallel import, as gaps are created.

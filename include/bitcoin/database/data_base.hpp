@@ -101,12 +101,21 @@ public:
     bool pop_above(chain::block::list& out_blocks,
         const hash_digest& fork_hash);
 
+protected:
+    void load_databases();
+    void unload_databases();
+    void synchronize();
+    virtual bool flush();
+
+    std::shared_ptr<block_database> blocks_;
+    std::shared_ptr<transaction_database> transactions_;
+    std::shared_ptr<spend_database> spends_;
+    std::shared_ptr<history_database> history_;
+    std::shared_ptr<stealth_database> stealth_;
+
 private:
     typedef chain::input::list inputs;
     typedef chain::output::list outputs;
-
-    void load_databases();
-    void unload_databases();
 
     void push_transactions(const chain::block& block, size_t height);
     void push_inputs(const hash_digest& tx_hash, size_t height,
@@ -120,20 +129,12 @@ private:
     void pop_inputs(const inputs& inputs, size_t height);
     void pop_outputs(const outputs& outputs, size_t height);
 
-    void synchronize();
-
     // Start writing index data above this height.
     // Indexes are created if this is < store::without_indexes.
     const size_t index_start_height_;
 
     // Cross-database mutext to prevent concurrent file remapping.
     std::shared_ptr<shared_mutex> mutex_;
-
-    std::shared_ptr<block_database> blocks_;
-    std::shared_ptr<transaction_database> transactions_;
-    std::shared_ptr<spend_database> spends_;
-    std::shared_ptr<history_database> history_;
-    std::shared_ptr<stealth_database> stealth_;
 };
 
 } // namespace database

@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(spend_database__test)
     BOOST_REQUIRE(spend4.is_valid());
     BOOST_REQUIRE(spend4.hash() == value4.hash());
     BOOST_REQUIRE_EQUAL(spend4.index(), value4.index());
-    db.sync();
+    db.synchronize();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
