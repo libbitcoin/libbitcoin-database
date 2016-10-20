@@ -158,7 +158,7 @@ int main(int argc, char** argv)
         args.push_back(argv[i]);
 
     if (command == "initialize_new")
-        data_base::touch_file(filename);
+        store::create(filename);
 
     spend_database db(filename);
 

@@ -37,6 +37,7 @@ src_libbitcoin_database_la_LIBADD = ${bitcoin_LIBS}
 src_libbitcoin_database_la_SOURCES = \
     src/data_base.cpp \
     src/settings.cpp \
+    src/store.cpp \
     src/databases/block_database.cpp \
     src/databases/history_database.cpp \
     src/databases/spend_database.cpp \
@@ -279,6 +280,7 @@ include_bitcoin_database_HEADERS = \
     include/bitcoin/database/data_base.hpp \
     include/bitcoin/database/define.hpp \
     include/bitcoin/database/settings.hpp \
+    include/bitcoin/database/store.hpp \
     include/bitcoin/database/version.hpp
 
 include_bitcoin_database_databasesdir = ${includedir}/bitcoin/database/databases

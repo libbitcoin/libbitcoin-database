@@ -126,8 +126,8 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     block5b.transactions().push_back(random_tx(29));
     const auto h5b = block5b.header().hash();
 
-    data_base::touch_file(DIRECTORY "/block_lookup");
-    data_base::touch_file(DIRECTORY "/block_rows");
+    store::create(DIRECTORY "/block_lookup");
+    store::create(DIRECTORY "/block_rows");
     block_database db(DIRECTORY "/block_lookup", DIRECTORY "/block_rows");
     BOOST_REQUIRE(db.create());
 

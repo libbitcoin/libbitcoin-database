@@ -22,11 +22,11 @@
 #include <cstdint>
 #include <cstddef>
 #include <memory>
-#include <stdexcept>
+#include <utility>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/database/memory/memory_map.hpp>
 #include <bitcoin/database/settings.hpp>
+#include <bitcoin/database/store.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -35,85 +35,8 @@ using namespace boost::filesystem;
 using namespace bc::chain;
 using namespace bc::wallet;
 
-bool data_base::touch_file(const path& file_path)
-{
-    bc::ofstream file(file_path.string());
-    if (file.bad())
-        return false;
-
-    // Write one byte so file is nonzero size.
-    file.write("X", 1);
-    return true;
-}
-
-bool data_base::initialize(const path& prefix, const chain::block& genesis)
-{
-    // Create paths.
-    const store paths(prefix);
-
-    if (!paths.touch_all())
-        return false;
-
-    data_base instance(paths, 0);
-
-    if (!instance.create())
-        return false;
-
-    instance.push(genesis, 0);
-    return instance.close();
-}
-
-data_base::store::store(const path& prefix)
-{
-    // Hash-based lookup (hash tables).
-    blocks_lookup = prefix / "block_table";
-    history_lookup = prefix / "history_table";
-    spends_lookup = prefix / "spend_table";
-    transactions_lookup = prefix / "transaction_table";
-
-    // Height-based (reverse) lookup.
-    blocks_index = prefix / "block_index";
-
-    // One (address) to many (rows).
-    history_rows = prefix / "history_rows";
-    stealth_rows = prefix / "stealth_rows";
-
-    // Exclusive database access reserved by this process.
-    database_lock = prefix / "process_lock";
-}
-
-bool data_base::store::touch_all() const
-{
-    // Return the result of the database file create.
-    return
-        touch_file(blocks_lookup) &&
-        touch_file(blocks_index) &&
-        touch_file(history_lookup) &&
-        touch_file(history_rows) &&
-        touch_file(stealth_rows) &&
-        touch_file(spends_lookup) &&
-        touch_file(transactions_lookup);
-}
-
-data_base::file_lock data_base::initialize_lock(const path& lock)
-{
-    // Touch the lock file to ensure its existence.
-    const auto lock_file_path = lock.string();
-    bc::ofstream file(lock_file_path, std::ios::app);
-    file.close();
-
-    // BOOST:
-    // Opens a file lock. Throws interprocess_exception if the file does not
-    // exist or there are no operating system resources. The file lock is
-    // destroyed on its destruct and does not throw.
-    return file_lock(lock_file_path.c_str());
-}
-
-void data_base::uninitialize_lock(const path& lock)
-{
-    // BUGBUG: Throws if the lock is not held (i.e. in error condition).
-    boost::filesystem::remove(lock);
-}
+// Construct.
+// ----------------------------------------------------------------------------
 
 data_base::data_base(const settings& settings)
   : data_base(settings.directory, settings.index_start_height)
@@ -121,21 +44,88 @@ data_base::data_base(const settings& settings)
 }
 
 data_base::data_base(const path& prefix, size_t index_start_height)
-  : data_base(store(prefix), index_start_height)
+  : index_start_height_(index_start_height),
+    mutex_(std::make_shared<shared_mutex>()),
+    store(prefix, index_start_height < store::without_indexes)
 {
 }
 
-data_base::data_base(const store& paths, size_t index_start_height)
-  : lock_file_path_(paths.database_lock),
-    index_start_height_(index_start_height),
-    sequential_lock_(0),
-    mutex_(std::make_shared<shared_mutex>()),
-    blocks(paths.blocks_lookup, paths.blocks_index, mutex_),
-    history(paths.history_lookup, paths.history_rows, mutex_),
-    stealth(paths.stealth_rows, mutex_),
-    spends(paths.spends_lookup, mutex_),
-    transactions(paths.transactions_lookup, mutex_)
+// Open and close.
+// ----------------------------------------------------------------------------
+
+// Throws if there is insufficient disk space, not idempotent.
+bool data_base::create(const block& genesis)
 {
+    ///////////////////////////////////////////////////////////////////////////
+    // Lock file access.
+    if (!store::open())
+        return false;
+
+    // Create files.
+    if (!store::create())
+        return false;
+
+    // There is currently no feedback from this call.
+    load_databases();
+
+    // These leave the databases open, so we retain the lock until closed.
+    const auto created =
+        blocks_->create() &&
+        transactions_->create() &&
+        spends_->create(with_indexes_) &&
+        history_->create(with_indexes_) &&
+        stealth_->create(with_indexes_);
+
+    if (!created)
+        return false;
+
+    // Store the first block.
+    push(genesis, 0);
+    return true;
+}
+
+// Must be called before performing queries, not idempotent.
+// May be called after stop and/or after close in order to reopen.
+bool data_base::open()
+{
+    ///////////////////////////////////////////////////////////////////////////
+    // Lock file access.
+    if (!store::open())
+        return false;
+
+    // There is currently no feedback from this call.
+    load_databases();
+
+    return
+        blocks_->open() &&
+        transactions_->open() &&
+        spends_->open(with_indexes_) &&
+        history_->open(with_indexes_) &&
+        stealth_->open(with_indexes_);
+}
+
+// Optional as the database will close and free on destruct.
+bool data_base::close()
+{
+    // Close is idempotent (though not thread safe).
+    if (!blocks_)
+        return true;
+
+    const auto closed =
+        blocks_->close() &&
+        transactions_->close() &&
+        spends_->close(with_indexes_) &&
+        history_->close(with_indexes_) &&
+        stealth_->close(with_indexes_);
+
+    // There is currently no feedback from this call.
+    unload_databases();
+
+    // Unlock file access.
+    const auto store_closed = store::close();
+    ///////////////////////////////////////////////////////////////////////////
+
+    return closed && store_closed;
 }
 
 data_base::~data_base()
@@ -143,114 +133,70 @@ data_base::~data_base()
     close();
 }
 
-// Startup and shutdown.
+// private
+void data_base::load_databases()
+{
+    const auto& tx = transaction_table;
+    const auto& block = block_table;
+    const auto& table = history_table;
+
+    blocks_ = std::make_shared<block_database>(block, block_index, mutex_);
+    transactions_ = std::make_shared<transaction_database>(tx, mutex_);
+
+    if (!with_indexes_)
+        return;
+
+    spends_ = std::make_shared<spend_database>(spend_table, mutex_);
+    history_ = std::make_shared<history_database>(table, history_rows, mutex_);
+    stealth_ = std::make_shared<stealth_database>(stealth_rows, mutex_);
+}
+
+// private
+void data_base::unload_databases()
+{
+    blocks_.reset();
+    transactions_.reset();
+
+    if (!with_indexes_)
+        return;
+
+    spends_.reset();
+    history_.reset();
+    stealth_.reset();
+}
+
+// Readers.
 // ----------------------------------------------------------------------------
 
-// Leaves database in started state.
-// Throws if there is insufficient disk space.
-// TODO: merge this with file creation (initialization above).
-// This is actually first initialization of existing files, not file creation.
-bool data_base::create()
+const block_database& data_base::blocks() const
 {
-    // Return the result of the database create.
-    return 
-        blocks.create() &&
-        history.create() &&
-        spends.create() &&
-        stealth.create() &&
-        transactions.create();
+    return *blocks_;
 }
 
-// Open must be called before performing queries.
-// Open may be called after stop and/or after close in order to reopen.
-bool data_base::open()
+const transaction_database& data_base::transactions() const
 {
-    // TODO: create a class to encapsulate the full file lock concept.
-    file_lock_ = std::make_shared<file_lock>(initialize_lock(lock_file_path_));
-
-    // BOOST:
-    // Effects: The calling thread tries to acquire exclusive ownership of the
-    // mutex without waiting. If no other thread has exclusive, or sharable
-    // ownership of the mutex this succeeds. Returns: If it can acquire
-    // exclusive ownership immediately returns true. If it has to wait, returns
-    // false. Throws: interprocess_exception on error. Note that a file lock
-    // can't guarantee synchronization between threads of the same process so
-    // just use file locks to synchronize threads from different processes.
-    if (!file_lock_->try_lock())
-        return false;
-
-    const auto start_exclusive = begin_write();
-    const auto start_result =
-        blocks.open() &&
-        history.open() &&
-        spends.open() &&
-        stealth.open() &&
-        transactions.open();
-    const auto end_exclusive = end_write();
-
-    // Return the result of the database start.
-    return start_exclusive && start_result && end_exclusive;
+    return *transactions_;
 }
 
-// Close is optional as the database will close on destruct.
-bool data_base::close()
+// Invalid if indexes not initialized.
+const spend_database& data_base::spends() const
 {
-    const auto blocks_close = blocks.close();
-    const auto history_close = history.close();
-    const auto spends_close = spends.close();
-    const auto stealth_close = stealth.close();
-    const auto transactions_close = transactions.close();
-
-    // This should remove the lock file. This is not important for locking
-    // purposes, but it provides a sentinel to indicate hard shutdown.
-    file_lock_ = nullptr;
-    uninitialize_lock(lock_file_path_);
-
-    // Return the cumulative result of the database closes.
-    return
-        blocks_close &&
-        history_close &&
-        spends_close &&
-        stealth_close &&
-        transactions_close;
+    return *spends_;
 }
 
-// Locking.
-// ----------------------------------------------------------------------------
-
-handle data_base::begin_read() const
+// Invalid if indexes not initialized.
+const history_database& data_base::history() const
 {
-    return sequential_lock_.load();
+    return *history_;
 }
 
-bool data_base::is_read_valid(handle value) const
+// Invalid if indexes not initialized.
+const stealth_database& data_base::stealth() const
 {
-    return value == sequential_lock_.load();
+    return *stealth_;
 }
 
-// static
-bool data_base::is_write_locked(handle value)
-{
-    return (value % 2) == 1;
-}
-
-// TODO: drop a file as a write sentinel that we can use to detect uncontrolled
-// shutdown during write. Use a similar approach around initial block download.
-// Fail startup if the sentinel is detected. (file: write_lock).
-bool data_base::begin_write()
-{
-    // slock is now odd.
-    return is_write_locked(++sequential_lock_);
-}
-
-// TODO: clear the write sentinel.
-bool data_base::end_write()
-{
-    // slock_ is now even again.
-    return !is_write_locked(++sequential_lock_);
-}
-
-// Query engines.
+// Writers.
 // ----------------------------------------------------------------------------
 
 static size_t get_next_height(const block_database& blocks)
@@ -260,28 +206,33 @@ static size_t get_next_height(const block_database& blocks)
     return empty_chain ? 0 : current_height + 1;
 }
 
-static hash_digest get_previous_hash(const block_database& blocks, size_t height)
+static hash_digest get_previous_hash(const block_database& blocks,
+    size_t height)
 {
     return height == 0 ? null_hash : blocks.get(height - 1).header().hash();
 }
 
 void data_base::synchronize()
 {
-    spends.sync();
-    history.sync();
-    stealth.sync();
-    transactions.sync();
-    blocks.sync();
+    if (with_indexes_)
+    {
+        spends_->sync();
+        history_->sync();
+        stealth_->sync();
+    }
+
+    transactions_->sync();
+    blocks_->sync();
 }
 
 // Add block to the database at the given height.
 bool data_base::insert(const chain::block& block, size_t height)
 {
-    if (blocks.exists(height))
+    if (blocks_->exists(height))
         return false;
 
     push_transactions(block, height);
-    blocks.store(block, height);
+    blocks_->store(block, height);
     synchronize();
     return true;
 }
@@ -301,14 +252,15 @@ bool data_base::push(const block::list& blocks, size_t first_height)
 // Add a block in order.
 bool data_base::push(const block& block, size_t height)
 {
-    if (get_next_height(blocks) != height)
+    if (get_next_height(blocks()) != height)
     {
         LOG_ERROR(LOG_DATABASE)
             << "The block is out of order at height [" << height << "].";
         return false;
     }
 
-    if (block.header().previous_block_hash() != get_previous_hash(blocks, height))
+    if (block.header().previous_block_hash() != 
+        get_previous_hash(blocks(), height))
     {
         LOG_ERROR(LOG_DATABASE)
             << "The block has incorrect parent for height [" << height << "].";
@@ -316,7 +268,7 @@ bool data_base::push(const block& block, size_t height)
     }
 
     push_transactions(block, height);
-    blocks.store(block, height);
+    blocks_->store(block, height);
     synchronize();
     return true;
 }
@@ -340,7 +292,7 @@ void data_base::push_transactions(const block& block, size_t height)
         push_stealth(tx_hash, height, tx.outputs());
 
         // Add transaction
-        transactions.store(height, index, tx);
+        transactions_->store(height, index, tx);
     }
 }
 
@@ -352,12 +304,12 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
         const auto& input = inputs[index];
         const input_point point{ tx_hash, index };
 
-        /* bool */ transactions.update(input.previous_output(), height);
+        /* bool */ transactions_->update(input.previous_output(), height);
 
         if (height < index_start_height_)
             continue;
 
-        spends.store(input.previous_output(), point);
+        spends_->store(input.previous_output(), point);
 
         // Try to extract an address.
         const auto address = payment_address::extract(input.script());
@@ -365,7 +317,7 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
             continue;
 
         const auto& previous = input.previous_output();
-        history.add_input(address.hash(), point, height, previous);
+        history_->add_input(address.hash(), point, height, previous);
     }
 }
 
@@ -386,7 +338,7 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
             continue;
 
         const auto value = output.value();
-        history.add_output(address.hash(), point, height, value);
+        history_->add_output(address.hash(), point, height, value);
     }
 }
 
@@ -425,7 +377,7 @@ void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
             tx_hash
         };
 
-        stealth.store(prefix, height, row);
+        stealth_->store(prefix, height, row);
     }
 }
 
@@ -436,10 +388,10 @@ bool data_base::pop_above(block::list& out_blocks,
 {
     size_t top;
     out_blocks.clear();
-    const auto result = blocks.get(fork_hash);
+    const auto result = blocks_->get(fork_hash);
 
     // The fork point does not exist or failed to get it or the top, fail.
-    if (!result || !blocks.top(top))
+    if (!result || !blocks_->top(top))
         return false;
 
     const auto fork = result.height();
@@ -477,10 +429,10 @@ block data_base::pop()
     size_t height;
 
     // The blockchain is empty (nothing to pop, not even genesis).
-    if (!blocks.top(height))
+    if (!blocks_->top(height))
         return{};
 
-    const auto block_result = blocks.get(height);
+    const auto block_result = blocks_->get(height);
 
     // The height is invalid (should not happen if locked).
     if (!block_result)
@@ -494,7 +446,7 @@ block data_base::pop()
         const auto tx_hash = block_result.transaction_hash(tx);
 
         // We want the highest tx with this hash (allow max height).
-        const auto tx_result = transactions.get(tx_hash, max_size_t);
+        const auto tx_result = transactions_->get(tx_hash, max_size_t);
 
         if (!tx_result || tx_result.height() != height ||
             tx_result.position() != tx)
@@ -508,14 +460,14 @@ block data_base::pop()
     // Remove txs, then outputs, then inputs (also reverse order).
     for (auto tx = txs.rbegin(); tx != txs.rend(); ++tx)
     {
-        /* bool */ transactions.unlink(tx->hash());
+        /* bool */ transactions_->unlink(tx->hash());
         pop_outputs(tx->outputs(), height);
 
         if (!tx->is_coinbase())
             pop_inputs(tx->inputs(), height);
     }
 
-    /* bool */ blocks.unlink(height);
+    /* bool */ blocks_->unlink(height);
 
     // Synchronise everything that was changed.
     synchronize();
@@ -531,18 +483,18 @@ void data_base::pop_inputs(const input::list& inputs, size_t height)
     // Loop in reverse.
     for (auto input = inputs.rbegin(); input != inputs.rend(); ++input)
     {
-        /* bool */ transactions.update(input->previous_output(), not_spent);
+        /* bool */ transactions_->update(input->previous_output(), not_spent);
 
         if (height < index_start_height_)
             continue;
 
-        /* bool */ spends.unlink(input->previous_output());
+        /* bool */ spends_->unlink(input->previous_output());
 
         // Try to extract an address.
         const auto address = payment_address::extract(input->script());
 
         if (address)
-            /* bool */ history.delete_last_row(address.hash());
+            /* bool */ history_->delete_last_row(address.hash());
     }
 }
 
@@ -558,11 +510,11 @@ void data_base::pop_outputs(const output::list& outputs, size_t height)
         const auto address = payment_address::extract(output->script());
 
         if (address)
-            /* bool */ history.delete_last_row(address.hash());
+            /* bool */ history_->delete_last_row(address.hash());
 
         // TODO: try to extract a stealth info and if found unlink index.
         // Stealth unlink is not implemented.
-        /* bool */ stealth.unlink();
+        /* bool */ stealth_->unlink();
     }
 }
 

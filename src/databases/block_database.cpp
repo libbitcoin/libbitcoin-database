@@ -86,7 +86,7 @@ bool block_database::create()
         !index_manager_.create())
         return false;
 
-    // Should not call start after create, already started.
+    // Should not call open after create, already started.
     return
         lookup_header_.start() &&
         lookup_manager_.start() &&

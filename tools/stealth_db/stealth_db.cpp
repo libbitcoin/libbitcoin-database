@@ -102,7 +102,7 @@ int main(int argc, char** argv)
         args.push_back(argv[i]);
 
     if (command == "initialize_new")
-        data_base::touch_file(rows_filename);
+        store::create(rows_filename);
 
     stealth_database db(rows_filename);
 

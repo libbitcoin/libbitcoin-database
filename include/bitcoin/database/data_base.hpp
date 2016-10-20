@@ -20,11 +20,9 @@
 #ifndef LIBBITCOIN_DATABASE_DATA_BASE_HPP
 #define LIBBITCOIN_DATABASE_DATA_BASE_HPP
 
-#include <atomic>
 #include <cstddef>
 #include <memory>
 #include <boost/filesystem.hpp>
-#include <boost/interprocess/sync/file_lock.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/databases/block_database.hpp>
 #include <bitcoin/database/databases/spend_database.hpp>
@@ -33,70 +31,57 @@
 #include <bitcoin/database/databases/stealth_database.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/settings.hpp>
-#include <bitcoin/database/unicode/file_lock.hpp>
+#include <bitcoin/database/store.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-typedef uint64_t handle;
-
 /// This class is thread safe and implements the sequential locking pattern.
 class BCD_API data_base
+  : public store
 {
 public:
+    typedef store::handle handle;
     typedef boost::filesystem::path path;
 
-    class store
-    {
-    public:
-        store(const path& prefix);
-        bool touch_all() const;
+    // Construct.
+    // ----------------------------------------------------------------------------
 
-        path database_lock;
-        path blocks_lookup;
-        path blocks_index;
-        path history_lookup;
-        path history_rows;
-        path stealth_rows;
-        path spends_lookup;
-        path transactions_lookup;
-    };
-
-    // Determine if the given handle is a write-locked handle.
-    static bool is_write_locked(handle handle);
-
-    /// Create a new database file with a given path prefix and default paths.
-    static bool initialize(const path& prefix, const chain::block& genesis);
-    static bool touch_file(const path& file_path);
-
-    /// Construct all databases.
     data_base(const settings& settings);
-
-    /// Stop all databases (threads must be joined).
-    ~data_base();
+    data_base(const path& prefix, size_t index_start_height);
 
     // Open and close.
     // ------------------------------------------------------------------------
 
     /// Create and open all databases.
-    bool create();
+    bool create(const chain::block& genesis);
 
     /// Open all databases.
-    bool open();
+    bool open() override;
 
     /// Close all databases.
-    bool close();
+    bool close() override;
 
-    // Sequential locking.
+    /// Call close on destruct.
+    ~data_base();
+
+    // Readers.
     // ------------------------------------------------------------------------
 
-    handle begin_read() const;
-    bool is_read_valid(handle handle) const;
+    const block_database& blocks() const;
 
-    bool begin_write();
-    bool end_write();
+    const transaction_database& transactions() const;
 
-    // Add and remove blocks.
+    /// Invalid if indexes not initialized.
+    const spend_database& spends() const;
+
+    /// Invalid if indexes not initialized.
+    const history_database& history() const;
+
+    /// Invalid if indexes not initialized.
+    const stealth_database& stealth() const;
+
+    // Writers.
     // ------------------------------------------------------------------------
 
     /// Store a block in the database.
@@ -116,18 +101,13 @@ public:
     bool pop_above(chain::block::list& out_blocks,
         const hash_digest& fork_hash);
 
-protected:
-    data_base(const store& paths, size_t index_start_height);
-    data_base(const path& prefix, size_t index_start_height);
 
 private:
     typedef chain::input::list inputs;
     typedef chain::output::list outputs;
-    typedef std::atomic<size_t> sequential_lock;
-    typedef bc::database::file_lock file_lock;
 
-    static void uninitialize_lock(const path& lock);
-    static file_lock initialize_lock(const path& lock);
+    void load_databases();
+    void unload_databases();
 
     void push_transactions(const chain::block& block, size_t height);
     void push_inputs(const hash_digest& tx_hash, size_t height,
@@ -143,26 +123,18 @@ private:
 
     void synchronize();
 
-    const path lock_file_path_;
+    // Start writing index data above this height.
+    // Indexes are created if this is < store::without_indexes.
     const size_t index_start_height_;
-
-    // Atomic counter for implementing the sequential lock pattern.
-    sequential_lock sequential_lock_;
-
-    // Allows us to restrict database access to our process (or fail).
-    std::shared_ptr<file_lock> file_lock_;
 
     // Cross-database mutext to prevent concurrent file remapping.
     std::shared_ptr<shared_mutex> mutex_;
 
-public:
-
-    /// Individual database query engines.
-    block_database blocks;
-    history_database history;
-    spend_database spends;
-    stealth_database stealth;
-    transaction_database transactions;
+    std::shared_ptr<block_database> blocks_;
+    std::shared_ptr<transaction_database> transactions_;
+    std::shared_ptr<spend_database> spends_;
+    std::shared_ptr<history_database> history_;
+    std::shared_ptr<stealth_database> stealth_;
 };
 
 } // namespace database

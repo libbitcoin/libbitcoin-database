@@ -57,13 +57,13 @@ public:
     ~history_database();
 
     /// Initialize a new history database.
-    bool create();
+    bool create(bool enabled=true);
 
     /// Call before using the database.
-    bool open();
+    bool open(bool enabled=true);
 
     /// Call to unload the memory map.
-    bool close();
+    bool close(bool enabled=true);
 
     /// Add an output row to the key. If key doesn't exist it will be created.
     void add_output(const short_hash& key, const chain::output_point& outpoint,
