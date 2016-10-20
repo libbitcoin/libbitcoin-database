@@ -129,7 +129,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_result.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\store.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\unicode\file_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp" />
     <ClInclude Include="..\..\..\..\src\mman-win32\mman.h" />
   </ItemGroup>

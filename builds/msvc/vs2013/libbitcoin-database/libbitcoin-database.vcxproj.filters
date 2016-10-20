@@ -138,9 +138,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_multimap_iterable.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\unicode\file_lock.hpp">
-      <Filter>include\bitcoin\database\unicode</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\store.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
@@ -211,9 +208,6 @@
     </Filter>
     <Filter Include="include\bitcoin\database\primitives">
       <UniqueIdentifier>{b6900019-3e3e-4c97-a375-82775c9d287e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\database\unicode">
-      <UniqueIdentifier>{12745b2e-457d-4cdf-a395-7a966b7b73d1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

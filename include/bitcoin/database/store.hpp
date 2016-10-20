@@ -20,21 +20,19 @@
 #ifndef LIBBITCOIN_DATABASE_STORE_HPP
 #define LIBBITCOIN_DATABASE_STORE_HPP
 
-#include <atomic>
-#include <cstddef>
 #include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/unicode/file_lock.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 class BCD_API store
+  : public sequential_lock
 {
 public:
-    typedef uint64_t handle;
+    typedef size_t handle;
     typedef boost::filesystem::path path;
 
     static const size_t without_indexes;
@@ -42,11 +40,8 @@ public:
     /// Create a single file with one byte of arbitrary data.
     static bool create(const path& file_path);
 
-    /// Determine if the given handle is a write-locked handle.
-    static inline bool is_write_locked(handle value)
-    {
-        return (value % 2) == 1;
-    }
+    /// Delete the file with the given path.
+    static bool destroy(const path& file_path);
 
     // Construct.
     // ------------------------------------------------------------------------
@@ -65,44 +60,26 @@ public:
     /// Release exclusive access.
     virtual bool close();
 
-    // Sequential locking.
-    // ------------------------------------------------------------------------
-
-    handle begin_read() const;
-    bool is_read_valid(handle handle) const;
-
-    bool begin_write();
-    bool end_write();
-
     // File names.
     // ------------------------------------------------------------------------
 
-    // Content store.
+    /// Content store.
     const path block_table;
     const path block_index;
     const path transaction_table;
 
-    // Optional indexes.
+    /// Optional indexes.
     const path spend_table;
     const path history_table;
     const path history_rows;
     const path stealth_rows;
 
 protected:
-
-    // Create spend, history and stealth indexes.
-    const bool with_indexes_;
+    const bool use_indexes;
 
 private:
-    typedef std::atomic<size_t> sequential_lock;
-    typedef std::shared_ptr<database::file_lock> process_lock;
-
-    // Atomic counter for implementing the sequential lock pattern.
-    sequential_lock sequential_lock_;
-
-    // Used to restrict database access to this process.
-    const path lock_file_;
-    process_lock process_lock_;
+    interprocess_lock write_lock_;
+    interprocess_lock store_lock_;
 };
 
 } // namespace database

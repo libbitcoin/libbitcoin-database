@@ -72,9 +72,9 @@ bool data_base::create(const block& genesis)
     const auto created =
         blocks_->create() &&
         transactions_->create() &&
-        spends_->create(with_indexes_) &&
-        history_->create(with_indexes_) &&
-        stealth_->create(with_indexes_);
+        spends_->create(use_indexes) &&
+        history_->create(use_indexes) &&
+        stealth_->create(use_indexes);
 
     if (!created)
         return false;
@@ -99,9 +99,9 @@ bool data_base::open()
     return
         blocks_->open() &&
         transactions_->open() &&
-        spends_->open(with_indexes_) &&
-        history_->open(with_indexes_) &&
-        stealth_->open(with_indexes_);
+        spends_->open(use_indexes) &&
+        history_->open(use_indexes) &&
+        stealth_->open(use_indexes);
 }
 
 // Optional as the database will close and free on destruct.
@@ -114,9 +114,9 @@ bool data_base::close()
     const auto closed =
         blocks_->close() &&
         transactions_->close() &&
-        spends_->close(with_indexes_) &&
-        history_->close(with_indexes_) &&
-        stealth_->close(with_indexes_);
+        spends_->close(use_indexes) &&
+        history_->close(use_indexes) &&
+        stealth_->close(use_indexes);
 
     // There is currently no feedback from this call.
     unload_databases();
@@ -143,7 +143,7 @@ void data_base::load_databases()
     blocks_ = std::make_shared<block_database>(block, block_index, mutex_);
     transactions_ = std::make_shared<transaction_database>(tx, mutex_);
 
-    if (!with_indexes_)
+    if (!use_indexes)
         return;
 
     spends_ = std::make_shared<spend_database>(spend_table, mutex_);
@@ -157,7 +157,7 @@ void data_base::unload_databases()
     blocks_.reset();
     transactions_.reset();
 
-    if (!with_indexes_)
+    if (!use_indexes)
         return;
 
     spends_.reset();
@@ -214,7 +214,7 @@ static hash_digest get_previous_hash(const block_database& blocks,
 
 void data_base::synchronize()
 {
-    if (with_indexes_)
+    if (use_indexes)
     {
         spends_->sync();
         history_->sync();
