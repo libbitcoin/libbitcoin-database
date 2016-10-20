@@ -21,7 +21,6 @@
 
 #include <cstddef>
 #include <memory>
-#include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 
 namespace libbitcoin {
@@ -29,7 +28,6 @@ namespace database {
 
 using namespace bc::chain;
 using namespace bc::database;
-using path = boost::filesystem::path;
 
 // The sentinel max_uint32 is used to align with fixed-width config settings,
 // and size_t is used to align with the database height domain.
@@ -48,19 +46,13 @@ bool store::create(const path& file_path)
     return true;
 }
 
-// static
-bool store::destroy(const path& file_path)
-{
-    return boost::filesystem::remove(file_path);
-}
-
 // Construct.
 // ------------------------------------------------------------------------
 
 store::store(const path& prefix, bool with_indexes)
-  : with_indexes_(with_indexes),
-    sequential_lock_(0),
-    lock_file_(prefix / "process_lock"),
+  : use_indexes(with_indexes),
+    write_lock_(prefix / "write_lock", false),
+    store_lock_(prefix / "store_lock", true),
 
     // Content store.
     block_table(prefix / "block_table"),
@@ -86,7 +78,7 @@ bool store::create() const
         create(block_index) &&
         create(transaction_table);
 
-    if (!with_indexes_)
+    if (!use_indexes)
         return created;
 
     return
@@ -97,70 +89,14 @@ bool store::create() const
         create(stealth_rows);
 }
 
-// Lock file access.
-// If no other process has exclusive, or sharable ownership this succeeds.
 bool store::open()
 {
-    // Create the file lock resource (file).
-    if (!create(lock_file_))
-        return false;
-
-    // Create the file lock instance.
-    process_lock_ = std::make_shared<file_lock>(lock_file_.string());
-
-    //PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
-    // Start process lock.
-    return process_lock_->try_lock();
+    return store_lock_.try_lock();
 }
 
-// Unlock file access.
 bool store::close()
 {
-    // This may leave the lock file behind, which is not a problem.
-    if (!process_lock_)
-        return false;
-
-    process_lock_.reset();
-    // End process lock.
-    //PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
-
-    // Delete the file lock resource (clean-up, not strictly requried).
-    return destroy(lock_file_);
-}
-
-// Sequential locking.
-// ----------------------------------------------------------------------------
-
-store::handle store::begin_read() const
-{
-    //RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
-    // Start read lock.
-    return sequential_lock_.load();
-}
-
-bool store::is_read_valid(handle value) const
-{
-    return value == sequential_lock_.load();
-    // Test read lock.
-    //RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
-}
-
-// TODO: drop a file as a write sentinel that we can use to detect uncontrolled
-// shutdown during write. Use a similar approach around initial block download.
-// Fail startup if the sentinel is detected. (file: write_lock).
-bool store::begin_write()
-{
-    //WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
-    // Start write lock.
-    return is_write_locked(++sequential_lock_);
-}
-
-// TODO: clear the write sentinel.
-bool store::end_write()
-{
-    return !is_write_locked(++sequential_lock_);
-    // End write lock.
-    //WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+    return store_lock_.unlock();
 }
 
 } // namespace data_base
