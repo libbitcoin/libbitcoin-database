@@ -30,7 +30,7 @@ using namespace bc::chain;
 using namespace bc::database;
 
 // Database file names.
-#define CRASH_LOCK "start_lock"
+#define CRASH_LOCK "restart_lock"
 #define EXCLUSIVE_LOCK "exclusive_lock"
 #define BLOCK_TABLE "block_table"
 #define BLOCK_INDEX "block_index"
