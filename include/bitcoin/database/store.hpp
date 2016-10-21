@@ -56,7 +56,7 @@ public:
     /// Release exclusive access.
     virtual bool close();
 
-    // Write with crash detection.
+    // Write with flush detection.
     // ------------------------------------------------------------------------
 
     /// Start the read.
@@ -68,17 +68,17 @@ public:
     /// Check the write state.
     bool is_write_locked(handle handle) const;
 
-    /// Start writing with optional crash lock.
+    /// Start writing with optional flush lock.
     bool begin_write(bool lock=true);
 
-    /// Start writing with optional crash unlock.
+    /// Start writing with optional flush unlock.
     bool end_write(bool unlock=true);
 
-    /// Begin crash lock scope.
-    bool crash_lock();
+    /// Begin flush lock scope.
+    bool flush_lock();
 
-    /// End crash lock scope.
-    bool crash_unlock();
+    /// End flush lock scope.
+    bool flush_unlock();
 
     // File names.
     // ------------------------------------------------------------------------
@@ -100,7 +100,7 @@ protected:
     const bool use_indexes;
 
 private:
-    bc::crash_lock crash_lock_;
+    bc::flush_lock flush_lock_;
     interprocess_lock exclusive_lock_;
     sequential_lock sequential_lock_;
 };
