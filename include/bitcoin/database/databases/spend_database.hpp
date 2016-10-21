@@ -54,13 +54,13 @@ public:
     ~spend_database();
 
     /// Initialize a new spend database.
-    bool create(bool enabled=true);
+    bool create();
 
     /// Call before using the database.
-    bool open(bool enabled=true);
+    bool open();
 
     /// Call to unload the memory map.
-    bool close(bool enabled=true);
+    bool close();
 
     /// Get inpoint that spent the given outpoint.
     chain::input_point get(const chain::output_point& outpoint) const;

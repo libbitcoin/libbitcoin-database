@@ -65,11 +65,8 @@ history_database::~history_database()
 // ----------------------------------------------------------------------------
 
 // Initialize files and start.
-bool history_database::create(bool enabled)
+bool history_database::create()
 {
-    if (!enabled)
-        return true;
-
     // Resize and create require a started file.
     if (!lookup_file_.open() ||
         !rows_file_.open())
@@ -94,11 +91,8 @@ bool history_database::create(bool enabled)
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 
-bool history_database::open(bool enabled)
+bool history_database::open()
 {
-    if (!enabled)
-        return true;
-
     return
         lookup_file_.open() &&
         rows_file_.open() &&
@@ -107,11 +101,8 @@ bool history_database::open(bool enabled)
         rows_manager_.start();
 }
 
-bool history_database::close(bool enabled)
+bool history_database::close()
 {
-    if (!enabled)
-        return true;
-
     return
         lookup_file_.close() &&
         rows_file_.close();
