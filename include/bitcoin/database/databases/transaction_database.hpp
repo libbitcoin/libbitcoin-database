@@ -57,7 +57,10 @@ public:
     /// Call to unload the memory map.
     bool close();
 
-    /// Fetch transaction from its hash.
+    /// Fetch transaction by its hash.
+    transaction_result get(const hash_digest& hash) const;
+
+    /// Fetch transaction by its hash, at or below the specified block height.
     transaction_result get(const hash_digest& hash, size_t fork_height) const;
 
     /// Store a transaction in the database.
