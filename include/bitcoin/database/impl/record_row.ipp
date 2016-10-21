@@ -73,7 +73,6 @@ record_row<KeyType>::record_row(record_manager& manager,
     const array_index index)
   : manager_(manager), index_(index)
 {
-    static_assert(index_size == 4, "Invalid array_index size.");
 }
 
 template <typename KeyType>
