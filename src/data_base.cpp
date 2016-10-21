@@ -35,6 +35,8 @@ using namespace boost::filesystem;
 using namespace bc::chain;
 using namespace bc::wallet;
 
+#define MAKE_SHARED(data) std::make_shared<data##_database>
+
 // Construct.
 // ----------------------------------------------------------------------------
 
@@ -44,7 +46,8 @@ data_base::data_base(const settings& settings)
 }
 
 data_base::data_base(const path& prefix, size_t index_start_height)
-  : index_start_height_(index_start_height),
+  : closed_(true),
+    index_start_height_(index_start_height),
     mutex_(std::make_shared<shared_mutex>()),
     store(prefix, index_start_height < store::without_indexes)
 {
@@ -62,7 +65,7 @@ data_base::~data_base()
 bool data_base::create(const block& genesis)
 {
     ///////////////////////////////////////////////////////////////////////////
-    // Lock file access.
+    // Lock exclusive file access.
     if (!store::open())
         return false;
 
@@ -70,22 +73,25 @@ bool data_base::create(const block& genesis)
     if (!store::create())
         return false;
 
-    // There is currently no feedback from this call.
-    load_databases();
+    start();
 
-    // These leave the databases open, so we retain the lock until closed.
-    const auto created =
+    // These leave the databases open.
+    auto created =
         blocks_->create() &&
-        transactions_->create() &&
-        spends_->create(use_indexes) &&
-        history_->create(use_indexes) &&
-        stealth_->create(use_indexes);
+        transactions_->create();
+    
+    if (use_indexes)
+        created &=
+            spends_->create() &&
+            history_->create() &&
+            stealth_->create();
 
     if (!created)
         return false;
 
     // Store the first block.
     push(genesis, 0);
+    closed_ = false;
     return true;
 }
 
@@ -94,75 +100,82 @@ bool data_base::create(const block& genesis)
 bool data_base::open()
 {
     ///////////////////////////////////////////////////////////////////////////
-    // Lock file access.
+    // Lock exclusive file access.
     if (!store::open())
         return false;
 
-    // There is currently no feedback from this call.
-    load_databases();
+    start();
 
-    return
+    auto opened = 
         blocks_->open() &&
-        transactions_->open() &&
-        spends_->open(use_indexes) &&
-        history_->open(use_indexes) &&
-        stealth_->open(use_indexes);
+        transactions_->open();
+    
+    if (use_indexes)
+        opened &=
+            spends_->open() &&
+            history_->open() &&
+            stealth_->open();
+
+
+    closed_ = false;
+    return opened;
 }
 
-// Optional as the database will close and free on destruct.
+// Close is idempotent and thread safe.
+// Optional as the database will close on destruct.
 bool data_base::close()
 {
-    // Close is idempotent (though not thread safe).
-    if (!blocks_)
+    if (closed_)
         return true;
 
-    const auto closed =
+    closed_ = true;
+
+    auto closed = 
         blocks_->close() &&
-        transactions_->close() &&
-        spends_->close(use_indexes) &&
-        history_->close(use_indexes) &&
-        stealth_->close(use_indexes);
+        transactions_->close();
+    
+    if (use_indexes)
+        closed &=
+            spends_->close() &&
+            history_->close() &&
+            stealth_->close();
 
-    // There is currently no feedback from this call.
-    unload_databases();
-
-    // Unlock file access.
-    const auto store_closed = store::close();
+    return closed && store::close();
+    // Unlocked exclusive file access.
     ///////////////////////////////////////////////////////////////////////////
-
-    return closed && store_closed;
 }
 
 // protected
-void data_base::load_databases()
+void data_base::start()
 {
-    const auto& tx = transaction_table;
-    const auto& block = block_table;
-    const auto& table = history_table;
+    blocks_ = MAKE_SHARED(block)(block_table, block_index, mutex_);
+    transactions_ = MAKE_SHARED(transaction)(transaction_table, mutex_);
 
-    blocks_ = std::make_shared<block_database>(block, block_index, mutex_);
-    transactions_ = std::make_shared<transaction_database>(tx, mutex_);
-
-    if (!use_indexes)
-        return;
-
-    spends_ = std::make_shared<spend_database>(spend_table, mutex_);
-    history_ = std::make_shared<history_database>(table, history_rows, mutex_);
-    stealth_ = std::make_shared<stealth_database>(stealth_rows, mutex_);
+    if (use_indexes)
+    {
+        spends_ = MAKE_SHARED(spend)(spend_table, mutex_);
+        history_ = MAKE_SHARED(history)(history_table, history_rows, mutex_);
+        stealth_ = MAKE_SHARED(stealth)(stealth_rows, mutex_);
+    }
 }
 
 // protected
-void data_base::unload_databases()
+bool data_base::flush()
 {
-    blocks_.reset();
-    transactions_.reset();
+    if (closed_)
+        return true;
 
-    if (!use_indexes)
-        return;
+    auto flushed =
+        blocks_->flush() &&
+        transactions_->flush();
 
-    spends_.reset();
-    history_.reset();
-    stealth_.reset();
+    if (use_indexes)
+        flushed &=
+            spends_->flush() &&
+            history_->flush() &&
+            stealth_->flush();
+
+    return flushed;
 }
 
 // protected
@@ -177,22 +190,6 @@ void data_base::synchronize()
 
     transactions_->synchronize();
     blocks_->synchronize();
-}
-
-// protected
-bool data_base::flush()
-{
-    const auto flushed =
-        blocks_->flush() &&
-        transactions_->flush();
-
-    if (!use_indexes)
-        return flushed;
-
-    return flushed &&
-        spends_->flush() &&
-        history_->flush() &&
-        stealth_->flush();
 }
 
 // Readers.

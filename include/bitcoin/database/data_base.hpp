@@ -20,6 +20,7 @@
 #ifndef LIBBITCOIN_DATABASE_DATA_BASE_HPP
 #define LIBBITCOIN_DATABASE_DATA_BASE_HPP
 
+#include <atomic>
 #include <cstddef>
 #include <memory>
 #include <boost/filesystem.hpp>
@@ -102,8 +103,7 @@ public:
         const hash_digest& fork_hash);
 
 protected:
-    void load_databases();
-    void unload_databases();
+    void start();
     void synchronize();
     virtual bool flush();
 
@@ -129,8 +129,9 @@ private:
     void pop_inputs(const inputs& inputs, size_t height);
     void pop_outputs(const outputs& outputs, size_t height);
 
-    // Start writing index data above this height.
-    // Indexes are created if this is < store::without_indexes.
+    std::atomic<bool> closed_;
+
+    // Indexes not loaded if this is equal to or greater than without_indexes.
     const size_t index_start_height_;
 
     // Cross-database mutext to prevent concurrent file remapping.

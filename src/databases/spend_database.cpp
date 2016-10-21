@@ -58,11 +58,8 @@ spend_database::~spend_database()
 // ----------------------------------------------------------------------------
 
 // Initialize files and start.
-bool spend_database::create(bool enabled)
+bool spend_database::create()
 {
-    if (!enabled)
-        return true;
-
     // Resize and create require a started file.
     if (!lookup_file_.open())
         return false;
@@ -83,22 +80,16 @@ bool spend_database::create(bool enabled)
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 
-bool spend_database::open(bool enabled)
+bool spend_database::open()
 {
-    if (!enabled)
-        return true;
-
     return
         lookup_file_.open() &&
         lookup_header_.start() &&
         lookup_manager_.start();
 }
 
-bool spend_database::close(bool enabled)
+bool spend_database::close()
 {
-    if (!enabled)
-        return true;
-
     return lookup_file_.close();
 }
 
