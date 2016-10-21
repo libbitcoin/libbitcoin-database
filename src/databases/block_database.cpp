@@ -172,6 +172,8 @@ void block_database::store(const block& block, size_t height)
     const auto write = [&](memory_ptr data)
     {
         auto serial = make_unsafe_serializer(REMAP_ADDRESS(data));
+
+        // WRITE THE HEADER
         serial.write_bytes(block.header().to_data());
         serial.write_4_bytes_little_endian(height32);
         serial.write_size_little_endian(tx_count);
