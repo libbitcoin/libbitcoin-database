@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
 
     store::create(DIRECTORY "/block_lookup");
     store::create(DIRECTORY "/block_rows");
-    block_database db(DIRECTORY "/block_lookup", DIRECTORY "/block_rows");
+    block_database db(DIRECTORY "/block_lookup", DIRECTORY "/block_rows", 1000, 50);
     BOOST_REQUIRE(db.create());
 
     size_t height;

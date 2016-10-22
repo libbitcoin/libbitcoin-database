@@ -21,8 +21,6 @@
 
 #include <cstdint>
 #include <cstddef>
-#include <memory>
-#include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/record_multimap_iterable.hpp>
@@ -31,32 +29,38 @@
 namespace libbitcoin {
 namespace database {
 
-using namespace boost::filesystem;
 using namespace bc::chain;
 
-BC_CONSTEXPR size_t number_buckets = 97210744;
-BC_CONSTEXPR size_t header_size = record_hash_table_header_size(number_buckets);
-BC_CONSTEXPR size_t initial_lookup_file_size = header_size + minimum_records_size;
+static constexpr auto rows_header_size = 0u;
 
-BC_CONSTEXPR size_t flag_size = sizeof(uint8_t);
-BC_CONSTEXPR size_t point_size = hash_size + sizeof(uint32_t);
-BC_CONSTEXPR size_t height_position = flag_size + point_size;
+static constexpr auto flag_size = sizeof(uint8_t);
+static constexpr auto point_size = hash_size + sizeof(uint32_t);
+static constexpr auto height_position = flag_size + point_size;
+static constexpr auto height_size = sizeof(uint32_t);
+static constexpr auto checksum_size = sizeof(uint64_t);
+static constexpr auto value_size = flag_size + point_size + height_size +
+    checksum_size;
 
-BC_CONSTEXPR size_t height_size = sizeof(uint32_t);
-BC_CONSTEXPR size_t checksum_size = sizeof(uint64_t);
-BC_CONSTEXPR size_t value_size = flag_size + point_size + height_size + checksum_size;
+static BC_CONSTEXPR auto record_size = 
+    hash_table_multimap_record_size<short_hash>();
+static BC_CONSTEXPR auto row_record_size = 
+    hash_table_record_size<hash_digest>(value_size);
 
-BC_CONSTEXPR size_t record_size = hash_table_multimap_record_size<short_hash>();
-BC_CONSTEXPR size_t row_record_size = hash_table_record_size<hash_digest>(value_size);
-
+// History uses a hash table index, O(1).
 history_database::history_database(const path& lookup_filename,
-    const path& rows_filename, std::shared_ptr<shared_mutex> mutex)
-  : lookup_file_(lookup_filename, mutex), 
-    lookup_header_(lookup_file_, number_buckets),
-    lookup_manager_(lookup_file_, header_size, record_size),
+    const path& rows_filename, size_t buckets, size_t expansion,
+    mutex_ptr mutex)
+  : initial_map_file_size_(record_hash_table_header_size(buckets) +
+        minimum_records_size),
+
+    lookup_file_(lookup_filename, mutex, expansion), 
+    lookup_header_(lookup_file_, buckets),
+    lookup_manager_(lookup_file_, record_hash_table_header_size(buckets),
+        record_size),
     lookup_map_(lookup_header_, lookup_manager_),
-    rows_file_(rows_filename, mutex),
-    rows_manager_(rows_file_, 0, row_record_size),
+
+    rows_file_(rows_filename, mutex, expansion),
+    rows_manager_(rows_file_, rows_header_size, row_record_size),
     rows_list_(rows_manager_),
     rows_multimap_(lookup_map_, rows_list_)
 {
@@ -79,7 +83,7 @@ bool history_database::create()
         return false;
 
     // These will throw if insufficient disk space.
-    lookup_file_.resize(initial_lookup_file_size);
+    lookup_file_.resize(initial_map_file_size_);
     rows_file_.resize(minimum_records_size);
 
     if (!lookup_header_.create() ||

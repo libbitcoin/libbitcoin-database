@@ -21,8 +21,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <memory>
-#include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
@@ -31,25 +29,24 @@ namespace libbitcoin {
 namespace database {
 
 using namespace bc::chain;
-using namespace boost::filesystem;
 
 static const auto use_wire_encoding = false;
-static constexpr size_t value_size = sizeof(uint64_t);
-static constexpr size_t height_size = sizeof(uint32_t);
-static constexpr size_t version_size = sizeof(uint32_t);
-static constexpr size_t locktime_size = sizeof(uint32_t);
-static constexpr size_t position_size = sizeof(uint32_t);
-static constexpr size_t version_lock_size = version_size + locktime_size;
+static constexpr auto value_size = sizeof(uint64_t);
+static constexpr auto height_size = sizeof(uint32_t);
+static constexpr auto version_size = sizeof(uint32_t);
+static constexpr auto locktime_size = sizeof(uint32_t);
+static constexpr auto position_size = sizeof(uint32_t);
+static constexpr auto version_lock_size = version_size + locktime_size;
 
-BC_CONSTEXPR size_t number_buckets = 100000000;
-BC_CONSTEXPR size_t header_size = slab_hash_table_header_size(number_buckets);
-BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_slabs_size;
-
+// Transactions uses a hash table index, O(1).
 transaction_database::transaction_database(const path& map_filename,
-    std::shared_ptr<shared_mutex> mutex)
-  : lookup_file_(map_filename, mutex), 
-    lookup_header_(lookup_file_, number_buckets),
-    lookup_manager_(lookup_file_, header_size),
+    size_t buckets, size_t expansion, mutex_ptr mutex)
+  : initial_map_file_size_(slab_hash_table_header_size(buckets) +
+        minimum_slabs_size),
+
+    lookup_file_(map_filename, mutex, expansion),
+    lookup_header_(lookup_file_, buckets),
+    lookup_manager_(lookup_file_, slab_hash_table_header_size(buckets)),
     lookup_map_(lookup_header_, lookup_manager_)
 {
 }
@@ -70,7 +67,7 @@ bool transaction_database::create()
         return false;
 
     // This will throw if insufficient disk space.
-    lookup_file_.resize(initial_map_file_size);
+    lookup_file_.resize(initial_map_file_size_);
 
     if (!lookup_header_.create() ||
         !lookup_manager_.create())

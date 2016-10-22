@@ -22,29 +22,27 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <memory>
-#include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-using namespace boost::filesystem;
 using namespace bc::chain;
 
-BC_CONSTEXPR size_t number_buckets = 228110589;
-BC_CONSTEXPR size_t header_size = record_hash_table_header_size(number_buckets);
-BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_records_size;
+static constexpr auto value_size = std::tuple_size<point>::value;
+static BC_CONSTEXPR auto record_size = hash_table_record_size<point>(value_size);
 
-BC_CONSTEXPR size_t value_size = std::tuple_size<chain::point>::value;
-BC_CONSTEXPR size_t record_size = hash_table_record_size<chain::point>(value_size);
-
-spend_database::spend_database(const path& filename,
-    std::shared_ptr<shared_mutex> mutex)
-  : lookup_file_(filename, mutex), 
-    lookup_header_(lookup_file_, number_buckets),
-    lookup_manager_(lookup_file_, header_size, record_size),
+// Spends use a hash table index, O(1).
+spend_database::spend_database(const path& filename, size_t buckets,
+    size_t expansion, mutex_ptr mutex)
+  : initial_map_file_size_(record_hash_table_header_size(buckets) + 
+        minimum_records_size),
+  
+    lookup_file_(filename, mutex, expansion),
+    lookup_header_(lookup_file_, buckets),
+    lookup_manager_(lookup_file_, record_hash_table_header_size(buckets),
+        record_size),
     lookup_map_(lookup_header_, lookup_manager_)
 {
 }
@@ -65,7 +63,7 @@ bool spend_database::create()
         return false;
 
     // This will throw if insufficient disk space.
-    lookup_file_.resize(initial_map_file_size);
+    lookup_file_.resize(initial_map_file_size_);
 
     if (!lookup_header_.create() ||
         !lookup_manager_.create())

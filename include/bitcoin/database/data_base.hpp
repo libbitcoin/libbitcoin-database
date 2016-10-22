@@ -49,7 +49,6 @@ public:
     // ----------------------------------------------------------------------------
 
     data_base(const settings& settings);
-    data_base(const path& prefix, size_t index_start_height);
 
     // Open and close.
     // ------------------------------------------------------------------------
@@ -130,9 +129,7 @@ private:
     void pop_outputs(const outputs& outputs, size_t height);
 
     std::atomic<bool> closed_;
-
-    // Indexes not loaded if this is equal to or greater than without_indexes.
-    const size_t index_start_height_;
+    const settings& settings_;
 
     // Cross-database mutext to prevent concurrent file remapping.
     std::shared_ptr<shared_mutex> mutex_;

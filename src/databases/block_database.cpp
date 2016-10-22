@@ -21,8 +21,6 @@
 
 #include <cstdint>
 #include <cstddef>
-#include <memory>
-#include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/result/block_result.hpp>
@@ -30,15 +28,13 @@
 namespace libbitcoin {
 namespace database {
 
-using namespace boost::filesystem;
 using namespace bc::chain;
-
-BC_CONSTEXPR size_t number_buckets = 600000;
-BC_CONSTEXPR size_t header_size = slab_hash_table_header_size(number_buckets);
-BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_slabs_size;
 
 // Valid file offsets should never be zero.
 const file_offset block_database::empty = 0;
+
+static constexpr auto index_header_size = 0u;
+static constexpr auto index_record_size = sizeof(file_offset);
 
 // Record format:
 // main:
@@ -50,14 +46,20 @@ const file_offset block_database::empty = 0;
 //  [ [ tx_hash:32 ] ]
 //  [ [    ...     ] ]
 
+// Blocks uses a hash table and an array index, both O(1).
 block_database::block_database(const path& map_filename,
-    const path& index_filename, std::shared_ptr<shared_mutex> mutex)
-  : lookup_file_(map_filename, mutex), 
-    lookup_header_(lookup_file_, number_buckets),
-    lookup_manager_(lookup_file_, header_size),
+    const path& index_filename, size_t buckets, size_t expansion,
+    mutex_ptr mutex)
+  : initial_map_file_size_(slab_hash_table_header_size(buckets) +
+        minimum_slabs_size),
+    
+    lookup_file_(map_filename, mutex, expansion), 
+    lookup_header_(lookup_file_, buckets),
+    lookup_manager_(lookup_file_, slab_hash_table_header_size(buckets)),
     lookup_map_(lookup_header_, lookup_manager_),
-    index_file_(index_filename, mutex),
-    index_manager_(index_file_, 0, sizeof(file_offset))
+
+    index_file_(index_filename, mutex, expansion),
+    index_manager_(index_file_, index_header_size, index_record_size)
 {
 }
 
@@ -78,7 +80,7 @@ bool block_database::create()
         return false;
 
     // These will throw if insufficient disk space.
-    lookup_file_.resize(initial_map_file_size);
+    lookup_file_.resize(initial_map_file_size_);
     index_file_.resize(minimum_records_size);
 
     if (!lookup_header_.create() ||

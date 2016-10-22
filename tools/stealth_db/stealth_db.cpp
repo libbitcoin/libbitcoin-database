@@ -104,7 +104,7 @@ int main(int argc, char** argv)
     if (command == "initialize_new")
         store::create(rows_filename);
 
-    stealth_database db(rows_filename);
+    stealth_database db(rows_filename, 50);
 
     if (command == "initialize_new")
     {

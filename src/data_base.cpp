@@ -35,21 +35,14 @@ using namespace boost::filesystem;
 using namespace bc::chain;
 using namespace bc::wallet;
 
-#define MAKE_SHARED(data) std::make_shared<data##_database>
-
 // Construct.
 // ----------------------------------------------------------------------------
 
 data_base::data_base(const settings& settings)
-  : data_base(settings.directory, settings.index_start_height)
-{
-}
-
-data_base::data_base(const path& prefix, size_t index_start_height)
   : closed_(true),
-    index_start_height_(index_start_height),
+    settings_(settings),
     mutex_(std::make_shared<shared_mutex>()),
-    store(prefix, index_start_height < store::without_indexes)
+    store(settings.directory, settings.index_start_height < without_indexes)
 {
 }
 
@@ -148,14 +141,17 @@ bool data_base::close()
 // protected
 void data_base::start()
 {
-    blocks_ = MAKE_SHARED(block)(block_table, block_index, mutex_);
-    transactions_ = MAKE_SHARED(transaction)(transaction_table, mutex_);
+    // TODO: populate constructors using new configuration setting values.
+    // TODO: parameterize initial file sizes as record count or slab bytes?
+
+    blocks_ = std::make_shared<block_database>(block_table, block_index, 600000, 50, mutex_);
+    transactions_ = std::make_shared<transaction_database>(transaction_table, 100000000, 50, mutex_);
 
     if (use_indexes)
     {
-        spends_ = MAKE_SHARED(spend)(spend_table, mutex_);
-        history_ = MAKE_SHARED(history)(history_table, history_rows, mutex_);
-        stealth_ = MAKE_SHARED(stealth)(stealth_rows, mutex_);
+        spends_ = std::make_shared<spend_database>(spend_table, 228110589, 50, mutex_);
+        history_ = std::make_shared<history_database>(history_table, history_rows, 97210744, 50, mutex_);
+        stealth_ = std::make_shared<stealth_database>(stealth_rows, 50, mutex_);
     }
 }
 
@@ -320,7 +316,7 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
 
         /* bool */ transactions_->update(input.previous_output(), height);
 
-        if (height < index_start_height_)
+        if (height < settings_.index_start_height)
             continue;
 
         spends_->store(input.previous_output(), point);
@@ -338,7 +334,7 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
 void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
     const output::list& outputs)
 {
-    if (height < index_start_height_)
+    if (height < settings_.index_start_height)
         return;
 
     for (uint32_t index = 0; index < outputs.size(); ++index)
@@ -359,7 +355,7 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
 void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
     const output::list& outputs)
 {
-    if (height < index_start_height_ || outputs.empty())
+    if (height < settings_.index_start_height || outputs.empty())
         return;
 
     // Stealth outputs are paired by convention.
@@ -499,7 +495,7 @@ void data_base::pop_inputs(const input::list& inputs, size_t height)
     {
         /* bool */ transactions_->update(input->previous_output(), not_spent);
 
-        if (height < index_start_height_)
+        if (height < settings_.index_start_height)
             continue;
 
         /* bool */ spends_->unlink(input->previous_output());
@@ -514,7 +510,7 @@ void data_base::pop_inputs(const input::list& inputs, size_t height)
 
 void data_base::pop_outputs(const output::list& outputs, size_t height)
 {
-    if (height < index_start_height_)
+    if (height < settings_.index_start_height)
         return;
 
     // Loop in reverse.

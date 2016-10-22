@@ -46,9 +46,12 @@ struct BCD_API spend_statinfo
 class BCD_API spend_database
 {
 public:
+    typedef boost::filesystem::path path;
+    typedef std::shared_ptr<shared_mutex> mutex_ptr;
+
     /// Construct the database.
-    spend_database(const boost::filesystem::path& filename,
-        std::shared_ptr<shared_mutex> mutex=nullptr);
+    spend_database(const path& filename, size_t buckets, size_t expansion,
+        mutex_ptr mutex=nullptr);
 
     /// Close the database (all threads must first be stopped).
     ~spend_database();
@@ -83,6 +86,9 @@ public:
 
 private:
     typedef record_hash_table<chain::point> record_map;
+
+    // The starting size of the hash table, used by create.
+    const size_t initial_map_file_size_;
 
     // Hash table used for looking up inpoint spends by outpoint.
     memory_map lookup_file_;

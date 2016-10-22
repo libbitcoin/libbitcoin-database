@@ -21,14 +21,15 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/database.hpp>
 
-using namespace boost::system;
-using namespace boost::filesystem;
 using namespace bc;
+using namespace bc::chain;
 using namespace bc::database;
 using namespace bc::wallet;
+using namespace boost::system;
+using namespace boost::filesystem;
 
 void test_block_exists(const data_base& interface,
-    const size_t height, const chain::block block0, bool indexed)
+    const size_t height, const block block0, bool indexed)
 {
     const hash_digest blk_hash = block0.header().hash();
     auto r0 = interface.blocks().get(height);
@@ -45,7 +46,7 @@ void test_block_exists(const data_base& interface,
 
     for (size_t i = 0; i < block0.transactions().size(); ++i)
     {
-        const chain::transaction& tx = block0.transactions()[i];
+        const transaction& tx = block0.transactions()[i];
         const hash_digest tx_hash = tx.hash();
         BOOST_REQUIRE(r0.transaction_hash(i) == tx_hash);
         BOOST_REQUIRE(r0_byhash.transaction_hash(i) == tx_hash);
@@ -62,7 +63,7 @@ void test_block_exists(const data_base& interface,
             for (uint32_t j = 0; j < tx.inputs().size(); ++j)
             {
                 const auto& input = tx.inputs()[j];
-                chain::input_point spend{ tx_hash, j };
+                input_point spend{ tx_hash, j };
                 BOOST_REQUIRE_EQUAL(spend.index(), j);
 
                 auto r0_spend = interface.spends().get(input.previous_output());
@@ -102,7 +103,7 @@ void test_block_exists(const data_base& interface,
         for (size_t j = 0; j < tx.outputs().size(); ++j)
         {
             const auto& output = tx.outputs()[j];
-            chain::output_point outpoint{ tx_hash, static_cast<uint32_t>(j) };
+            output_point outpoint{ tx_hash, static_cast<uint32_t>(j) };
             const auto address = payment_address::extract(output.script());
 
             if (!address)
@@ -131,14 +132,14 @@ void test_block_exists(const data_base& interface,
 }
 
 void test_block_not_exists(const data_base& interface,
-    const chain::block block0, bool indexed)
+    const block block0, bool indexed)
 {
     ////const hash_digest blk_hash = hash_block_header(block0.header);
     ////auto r0_byhash = interface.blocks().get(blk_hash);
     ////BOOST_REQUIRE(!r0_byhash);
     for (size_t i = 0; i < block0.transactions().size(); ++i)
     {
-        const chain::transaction& tx = block0.transactions()[i];
+        const transaction& tx = block0.transactions()[i];
         const hash_digest tx_hash = tx.hash();
 
         if (!tx.is_coinbase())
@@ -146,7 +147,7 @@ void test_block_not_exists(const data_base& interface,
             for (size_t j = 0; j < tx.inputs().size(); ++j)
             {
                 const auto& input = tx.inputs()[j];
-                chain::input_point spend{ tx_hash, static_cast<uint32_t>(j) };
+                input_point spend{ tx_hash, static_cast<uint32_t>(j) };
                 auto r0_spend = interface.spends().get(input.previous_output());
                 BOOST_REQUIRE(!r0_spend.is_valid());
 
@@ -181,7 +182,7 @@ void test_block_not_exists(const data_base& interface,
         for (size_t j = 0; j < tx.outputs().size(); ++j)
         {
             const auto& output = tx.outputs()[j];
-            chain::output_point outpoint{ tx_hash, static_cast<uint32_t>(j) };
+            output_point outpoint{ tx_hash, static_cast<uint32_t>(j) };
             const auto address = payment_address::extract(output.script());
 
             if (!address)
@@ -205,16 +206,16 @@ void test_block_not_exists(const data_base& interface,
     }
 }
 
-chain::block read_block(const std::string hex)
+block read_block(const std::string hex)
 {
     data_chunk data;
     BOOST_REQUIRE(decode_base16(data, hex));
-    chain::block result;
+    block result;
     BOOST_REQUIRE(result.from_data(data));
     return result;
 }
 
-void compare_blocks(const chain::block& popped, const chain::block& original)
+void compare_blocks(const block& popped, const block& original)
 {
     BOOST_REQUIRE(popped.header().hash() == original.header().hash());
     BOOST_REQUIRE(popped.transactions().size() == original.transactions().size());
@@ -278,28 +279,30 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
 {
     std::cout << "begin data_base pushpop test" << std::endl;
 
-    // If this is set to anything other than 0 or max it can cause false
-    // negatives since it excludes entries below the specified height
-    const auto index_height = 0;
-    ////const auto index_height = store::without_indexes;
+    create_directory(DIRECTORY);
+    const auto block0 = block::genesis_mainnet();
 
-    boost::filesystem::create_directory(DIRECTORY);
-    const auto block0 = chain::block::genesis_mainnet();
+    // TODO: parameterize tables.
+    settings configuration;
+    configuration.directory = DIRECTORY;
+    configuration.index_start_height = 0;
 
-    data_base instance(DIRECTORY, index_height);
+    // If index_height is set to anything other than 0 or max it can cause
+    // false negatives since it excludes entries below the specified height.
+    auto indexed = configuration.index_start_height < store::without_indexes;
+
+    data_base instance(configuration);
     BOOST_REQUIRE(instance.create(block0));
 
     size_t height = 42;
     BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 0);
-
-    const auto indexed = index_height < store::without_indexes;
     test_block_exists(instance, 0, block0, indexed);
 
     std::cout << "pushpop: block #1" << std::endl;
 
     // Block #1
-    chain::block block1 = read_block(MAINNET_BLOCK1);
+    block block1 = read_block(MAINNET_BLOCK1);
     test_block_not_exists(instance, block1, indexed);
     BOOST_REQUIRE(instance.push(block1, 1));
 
@@ -310,7 +313,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     std::cout << "pushpop: block #2" << std::endl;
 
     // Block #2
-    chain::block block2 = read_block(MAINNET_BLOCK2);
+    block block2 = read_block(MAINNET_BLOCK2);
     test_block_not_exists(instance, block2, indexed);
     instance.push(block2, 2);
     test_block_exists(instance, 2, block2, indexed);
@@ -321,14 +324,14 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     std::cout << "pushpop: block #3" << std::endl;
 
     // Block #3
-    chain::block block3 = read_block(MAINNET_BLOCK3);
+    block block3 = read_block(MAINNET_BLOCK3);
     test_block_not_exists(instance, block3, indexed);
-    instance.push(chain::block::list{ block3 }, 3);
+    instance.push(block::list{ block3 }, 3);
     test_block_exists(instance, 3, block3, indexed);
 
     std::cout << "pushpop: cleanup tests" << std::endl;
 
-    chain::block::list block3_popped;
+    block::list block3_popped;
     BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 3u);
     const auto& previous3 = block3.header().previous_block_hash();
@@ -342,7 +345,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     test_block_exists(instance, 1, block1, indexed);
     test_block_exists(instance, 0, block0, indexed);
 
-    chain::block::list block2_popped;
+    block::list block2_popped;
     const auto& previous2 = block2.header().previous_block_hash();
     BOOST_REQUIRE(instance.pop_above(block2_popped, previous2));
     BOOST_REQUIRE(instance.blocks().top(height));
