@@ -38,9 +38,15 @@ BC_CONSTEXPR size_t number_buckets = 97210744;
 BC_CONSTEXPR size_t header_size = record_hash_table_header_size(number_buckets);
 BC_CONSTEXPR size_t initial_lookup_file_size = header_size + minimum_records_size;
 
-BC_CONSTEXPR size_t record_size = hash_table_multimap_record_size<short_hash>();
+BC_CONSTEXPR size_t flag_size = sizeof(uint8_t);
+BC_CONSTEXPR size_t point_size = hash_size + sizeof(uint32_t);
+BC_CONSTEXPR size_t height_position = flag_size + point_size;
 
-BC_CONSTEXPR size_t value_size = 1 + 36 + 4 + 8;
+BC_CONSTEXPR size_t height_size = sizeof(uint32_t);
+BC_CONSTEXPR size_t checksum_size = sizeof(uint64_t);
+BC_CONSTEXPR size_t value_size = flag_size + point_size + height_size + checksum_size;
+
+BC_CONSTEXPR size_t record_size = hash_table_multimap_record_size<short_hash>();
 BC_CONSTEXPR size_t row_record_size = hash_table_record_size<hash_digest>(value_size);
 
 history_database::history_database(const path& lookup_filename,
@@ -169,9 +175,7 @@ history_compact::list history_database::get(const short_hash& key,
     // Read the height value from the row.
     const auto read_height = [](uint8_t* data)
     {
-        static constexpr file_offset height_position = 1 + 36;
-        const auto height_address = data + height_position;
-        return from_little_endian_unsafe<uint32_t>(height_address);
+        return from_little_endian_unsafe<uint32_t>(data + height_position);
     };
 
     // TODO: add serialization to history_compact.
