@@ -160,7 +160,7 @@ int main(int argc, char** argv)
     if (command == "initialize_new")
         store::create(filename);
 
-    spend_database db(filename);
+    spend_database db(filename, 1000, 50);
 
     if (command == "initialize_new")
     {

@@ -51,34 +51,34 @@ BOOST_FIXTURE_TEST_SUITE(database_tests, history_database_directory_setup_fixtur
 BOOST_AUTO_TEST_CASE(history_database__test)
 {
     const short_hash key1 = base16_literal("a006500b7ddfd568e2b036c65a4f4d6aaa0cbd9b");
-    chain::output_point out11{ hash_literal("4129e76f363f9742bc98dd3d40c99c9066e4d53b8e10e5097bd6f7b5059d7c53"), 110 };
+    output_point out11{ hash_literal("4129e76f363f9742bc98dd3d40c99c9066e4d53b8e10e5097bd6f7b5059d7c53"), 110 };
     const uint32_t out_h11 = 110;
     const uint64_t value11 = 4;
-    chain::output_point out12{ hash_literal("eefa5d23968584be9d8d064bcf99c24666e4d53b8e10e5097bd6f7b5059d7c53"), 4 };
+    output_point out12{ hash_literal("eefa5d23968584be9d8d064bcf99c24666e4d53b8e10e5097bd6f7b5059d7c53"), 4 };
     const uint32_t out_h12 = 120;
     const uint64_t value12 = 8;
-    chain::output_point out13{ hash_literal("4129e76f363f9742bc98dd3d40c99c90eefa5d23968584be9d8d064bcf99c246"), 8 };
+    output_point out13{ hash_literal("4129e76f363f9742bc98dd3d40c99c90eefa5d23968584be9d8d064bcf99c246"), 8 };
     const uint32_t out_h13 = 222;
     const uint64_t value13 = 6;
 
-    chain::input_point spend11{ hash_literal("4742b3eac32d35961f9da9d42d495ff1d90aba96944cac3e715047256f7016d1"), 0 };
+    input_point spend11{ hash_literal("4742b3eac32d35961f9da9d42d495ff1d90aba96944cac3e715047256f7016d1"), 0 };
     const uint32_t spend_h11 = 115;
-    chain::input_point spend13{ hash_literal("3cc768bbaef30587c72c6eba8dbf6aeec4ef24172ae6fe357f2e24c2b0fa44d5"), 0 };
+    input_point spend13{ hash_literal("3cc768bbaef30587c72c6eba8dbf6aeec4ef24172ae6fe357f2e24c2b0fa44d5"), 0 };
     const uint32_t spend_h13 = 320;
 
     const short_hash key2 = base16_literal("9c6b3bdaa612ceab88d49d4431ed58f26e69b90d");
-    chain::output_point out21{ hash_literal("80d9e7012b5b171bf78e75b52d2d149580d9e7012b5b171bf78e75b52d2d1495"), 9 };
+    output_point out21{ hash_literal("80d9e7012b5b171bf78e75b52d2d149580d9e7012b5b171bf78e75b52d2d1495"), 9 };
     const uint32_t out_h21 = 3982;
     const uint64_t value21 = 65;
-    chain::output_point out22{ hash_literal("4742b3eac32d35961f9da9d42d495ff13cc768bbaef30587c72c6eba8dbf6aee"), 0 };
+    output_point out22{ hash_literal("4742b3eac32d35961f9da9d42d495ff13cc768bbaef30587c72c6eba8dbf6aee"), 0 };
     const uint32_t out_h22 = 78;
     const uint64_t value22 = 9;
 
-    chain::input_point spend22{ hash_literal("3cc768bbaef30587c72c6eba8dbfffffc4ef24172ae6fe357f2e24c2b0fa44d5"), 0 };
+    input_point spend22{ hash_literal("3cc768bbaef30587c72c6eba8dbfffffc4ef24172ae6fe357f2e24c2b0fa44d5"), 0 };
     const uint32_t spend_h22 = 900;
 
     const short_hash key3 = base16_literal("3eb84f6a98478e516325b70fecf9903e1ce7528b");
-    chain::output_point out31{ hash_literal("d90aba96944cac3e715047256f7016d1d90aba96944cac3e715047256f7016d1"), 0 };
+    output_point out31{ hash_literal("d90aba96944cac3e715047256f7016d1d90aba96944cac3e715047256f7016d1"), 0 };
     const uint32_t out_h31 = 378;
     const uint64_t value31 = 34;
 
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(history_database__test)
 
     store::create(DIRECTORY "/lookup");
     store::create(DIRECTORY "/rows");
-    history_database db(DIRECTORY "/lookup", DIRECTORY "/rows");
+    history_database db(DIRECTORY "/lookup", DIRECTORY "/rows", 1000, 50);
     BOOST_REQUIRE(db.create());
     db.add_output(key1, out11, out_h11, value11);
     db.add_output(key1, out12, out_h12, value12);

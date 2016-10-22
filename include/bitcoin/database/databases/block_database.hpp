@@ -22,8 +22,6 @@
 
 #include <cstddef>
 #include <memory>
-#include <utility>
-#include <vector>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
@@ -41,13 +39,14 @@ class BCD_API block_database
 {
 public:
     typedef std::vector<size_t> heights;
+    typedef boost::filesystem::path path;
+    typedef std::shared_ptr<shared_mutex> mutex_ptr;
 
     static const file_offset empty;
 
     /// Construct the database.
-    block_database(const boost::filesystem::path& map_filename,
-        const boost::filesystem::path& index_filename,
-        std::shared_ptr<shared_mutex> mutex=nullptr);
+    block_database(const path& map_filename, const path& index_filename,
+        size_t buckets, size_t expansion, mutex_ptr mutex=nullptr);
 
     /// Close the database (all threads must first be stopped).
     ~block_database();
@@ -99,6 +98,9 @@ private:
 
     /// Use block index to get block hash table position from height.
     file_offset read_position(array_index height) const;
+
+    // The starting size of the hash table, used by create.
+    const size_t initial_map_file_size_;
 
     /// Hash table used for looking up blocks by hash.
     memory_map lookup_file_;

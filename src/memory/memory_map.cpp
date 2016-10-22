@@ -52,12 +52,11 @@ static_assert(sizeof(void*) == sizeof(uint64_t), "Not a 64 bit system!");
 namespace libbitcoin {
 namespace database {
 
-using boost::filesystem::path;
-
 #define FAIL -1
 #define INVALID_HANDLE -1
-#define EXPANSION_NUMERATOR 150
-#define EXPANSION_DENOMINATOR 100
+
+// The percentage increase, e.g. 50 is 150% of the target size.
+const size_t memory_map::default_expansion = 50;
 
 size_t memory_map::file_size(int file_handle)
 {
@@ -132,21 +131,27 @@ void memory_map::log_unmapped()
         << "Unmapped: " << filename_ << " [" << logical_size_ << "]";
 }
 
-// mmap documentation: tinyurl.com/hnbw8t5
 memory_map::memory_map(const path& filename)
-  : file_handle_(open_file(filename)),
-    filename_(filename),
-    data_(nullptr),
-    file_size_(file_size(file_handle_)),
-    logical_size_(file_size_),
-    closed_(true)
+  : memory_map(filename, nullptr, default_expansion)
 {
 }
 
 memory_map::memory_map(const path& filename, mutex_ptr mutex)
-  : memory_map(filename)
+  : memory_map(filename, mutex, default_expansion)
 {
-    remap_mutex_ = mutex;
+}
+
+// mmap documentation: tinyurl.com/hnbw8t5
+memory_map::memory_map(const path& filename, mutex_ptr mutex, size_t expansion)
+  : file_handle_(open_file(filename)),
+    expansion_(expansion),
+    filename_(filename),
+    data_(nullptr),
+    file_size_(file_size(file_handle_)),
+    logical_size_(file_size_),
+    closed_(true),
+    remap_mutex_(mutex)
+{
 }
 
 // Database threads must be joined before close is called (or destruct).
@@ -303,13 +308,13 @@ memory_ptr memory_map::access()
 // throws runtime_error
 memory_ptr memory_map::resize(size_t size)
 {
-    return reserve(size, EXPANSION_DENOMINATOR);
+    return reserve(size, 0);
 }
 
 // throws runtime_error
 memory_ptr memory_map::reserve(size_t size)
 {
-    return reserve(size, EXPANSION_NUMERATOR);
+    return reserve(size, expansion_);
 }
 
 // throws runtime_error
@@ -326,7 +331,9 @@ memory_ptr memory_map::reserve(size_t size, size_t expansion)
 
     if (size > file_size_)
     {
-        const auto target = size * expansion / EXPANSION_DENOMINATOR;
+        // TODO: manage overflow (requires ceiling_multiply).
+        // Expansion is an integral number that represents a real number factor.
+        const auto target = size * ((expansion + 100) / 100);
 
         if (!truncate_mapped(target))
         {

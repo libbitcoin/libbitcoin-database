@@ -59,7 +59,10 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    if (!data_base(prefix, true).create(block::genesis_mainnet()))
+    // This creates default configuration database only!
+    const settings configuration;
+
+    if (!data_base(configuration).create(block::genesis_mainnet()))
     {
         std::cerr << BS_INITCHAIN_FAIL;
         return -1;

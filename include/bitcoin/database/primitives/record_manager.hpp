@@ -31,7 +31,7 @@
 namespace libbitcoin {
 namespace database {
 
-BC_CONSTEXPR size_t minimum_records_size = sizeof(array_index);
+static BC_CONSTEXPR auto minimum_records_size = sizeof(array_index);
 BC_CONSTFUNC size_t record_hash_table_header_size(size_t buckets)
 {
     return sizeof(array_index) + minimum_records_size * buckets;

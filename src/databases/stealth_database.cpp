@@ -21,29 +21,29 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <memory>
-#include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-using namespace boost::filesystem;
 using namespace bc::chain;
 
-constexpr size_t height_size = sizeof(uint32_t);
-constexpr size_t prefix_size = sizeof(uint32_t);
+static constexpr auto rows_header_size = 0u;
+
+static constexpr auto height_size = sizeof(uint32_t);
+static constexpr auto prefix_size = sizeof(uint32_t);
 
 // ephemkey is without sign byte and address is without version byte.
 // [ prefix_bitfield:4 ][ height:32 ][ ephemkey:32 ][ address:20 ][ tx_id:32 ]
-constexpr size_t row_size = prefix_size + height_size + hash_size +
+static constexpr auto row_size = prefix_size + height_size + hash_size +
     short_hash_size + hash_size;
 
-stealth_database::stealth_database(const path& rows_filename,
-    std::shared_ptr<shared_mutex> mutex)
-  : rows_file_(rows_filename, mutex),
-    rows_manager_(rows_file_, 0, row_size)
+// Stealth uses an unindexed array, requiring linear search, (O(n)).
+stealth_database::stealth_database(const path& rows_filename, size_t expansion,
+    mutex_ptr mutex)
+  : rows_file_(rows_filename, mutex, expansion),
+    rows_manager_(rows_file_, rows_header_size, row_size)
 {
 }
 
@@ -114,15 +114,16 @@ stealth_compact::list stealth_database::scan(const binary& filter,
     {
         const auto memory = rows_manager_.get(row);
         auto record = REMAP_ADDRESS(memory);
+        const auto field = from_little_endian_unsafe<uint32_t>(record);
 
         // Skip if prefix doesn't match.
-        const auto field = from_little_endian_unsafe<uint32_t>(record);
         if (!filter.is_prefix_of(field))
             continue;
 
-        // Skip if height is too low.
         record += prefix_size;
         const auto height = from_little_endian_unsafe<uint32_t>(record);
+
+        // Skip if height is too low.
         if (height < from_height)
             continue;
 

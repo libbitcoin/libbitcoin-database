@@ -48,10 +48,12 @@ struct BCD_API history_statinfo
 class BCD_API history_database
 {
 public:
+    typedef boost::filesystem::path path;
+    typedef std::shared_ptr<shared_mutex> mutex_ptr;
+
     /// Construct the database.
-    history_database(const boost::filesystem::path& lookup_filename,
-        const boost::filesystem::path& rows_filename,
-        std::shared_ptr<shared_mutex> mutex=nullptr);
+    history_database(const path& lookup_filename, const path& rows_filename,
+        size_t buckets, size_t expansion, mutex_ptr mutex=nullptr);
 
     /// Close the database (all threads must first be stopped).
     ~history_database();
@@ -92,6 +94,9 @@ public:
 private:
     typedef record_hash_table<short_hash> record_map;
     typedef record_multimap<short_hash> record_multiple_map;
+
+    // The starting size of the hash table, used by create.
+    const size_t initial_map_file_size_;
 
     /// Hash table used for start index lookup for linked list by address hash.
     memory_map lookup_file_;

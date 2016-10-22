@@ -158,7 +158,7 @@ int main(int argc, char** argv)
         store::create(rows_filename);
     }
 
-    block_database db(map_filename, rows_filename);
+    block_database db(map_filename, rows_filename, 1000, 50);
 
     if (command == "initialize_new")
     {

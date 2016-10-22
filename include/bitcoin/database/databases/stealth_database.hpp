@@ -34,11 +34,14 @@ namespace database {
 class BCD_API stealth_database
 {
 public:
+    typedef chain::stealth_compact::list list;
     typedef std::function<void(memory_ptr)> write_function;
+    typedef boost::filesystem::path path;
+    typedef std::shared_ptr<shared_mutex> mutex_ptr;
 
     /// Construct the database.
-    stealth_database(const boost::filesystem::path& rows_filename,
-        std::shared_ptr<shared_mutex> mutex=nullptr);
+    stealth_database(const path& rows_filename, size_t expansion,
+        mutex_ptr mutex=nullptr);
 
     /// Close the database (all threads must first be stopped).
     ~stealth_database();
@@ -53,8 +56,7 @@ public:
     bool close();
 
     /// Linearly scan all entries, discarding those after from_height.
-    chain::stealth_compact::list scan(const binary& filter,
-        size_t from_height) const;
+    list scan(const binary& filter, size_t from_height) const;
 
     /// Add a stealth row to the database.
     void store(uint32_t prefix, uint32_t height,

@@ -41,9 +41,12 @@ namespace database {
 class BCD_API transaction_database
 {
 public:
+    typedef boost::filesystem::path path;
+    typedef std::shared_ptr<shared_mutex> mutex_ptr;
+
     /// Construct the database.
-    transaction_database(const boost::filesystem::path& map_filename,
-        std::shared_ptr<shared_mutex> mutex=nullptr);
+    transaction_database(const path& map_filename, size_t buckets,
+        size_t expansion, mutex_ptr mutex = nullptr);
 
     /// Close the database (all threads must first be stopped).
     ~transaction_database();
@@ -80,6 +83,9 @@ public:
 
 private:
     typedef slab_hash_table<hash_digest> slab_map;
+
+    // The starting size of the hash table, used by create.
+    const size_t initial_map_file_size_;
 
     // Hash table used for looking up txs by hash.
     memory_map lookup_file_;
