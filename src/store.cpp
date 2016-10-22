@@ -30,7 +30,7 @@ using namespace bc::chain;
 using namespace bc::database;
 
 // Database file names.
-#define CRASH_LOCK "restart_lock"
+#define FLUSH_LOCK "flush_lock"
 #define EXCLUSIVE_LOCK "exclusive_lock"
 #define BLOCK_TABLE "block_table"
 #define BLOCK_INDEX "block_index"
@@ -62,7 +62,7 @@ bool store::create(const path& file_path)
 
 store::store(const path& prefix, bool with_indexes)
   : use_indexes(with_indexes),
-    crash_lock_(prefix / CRASH_LOCK),
+    flush_lock_(prefix / FLUSH_LOCK),
     exclusive_lock_(prefix / EXCLUSIVE_LOCK),
 
     // Content store.
@@ -102,7 +102,7 @@ bool store::create() const
 
 bool store::open()
 {
-    return crash_lock_.try_lock() && exclusive_lock_.lock();
+    return flush_lock_.try_lock() && exclusive_lock_.lock();
 }
 
 bool store::close()
@@ -127,22 +127,22 @@ bool store::is_write_locked(handle value) const
 
 bool store::begin_write(bool lock)
 {
-    return (!lock || crash_lock()) && sequential_lock_.begin_write();
+    return (!lock || flush_lock()) && sequential_lock_.begin_write();
 }
 
 bool store::end_write(bool unlock)
 {
-    return sequential_lock_.end_write() && (!unlock || crash_unlock());
+    return sequential_lock_.end_write() && (!unlock || flush_unlock());
 }
 
-bool store::crash_lock()
+bool store::flush_lock()
 {
-    return crash_lock_.lock_shared();
+    return flush_lock_.lock_shared();
 }
 
-bool store::crash_unlock()
+bool store::flush_unlock()
 {
-    return flush() && crash_lock_.unlock_shared();
+    return flush() && flush_lock_.unlock_shared();
 }
 
 } // namespace data_base

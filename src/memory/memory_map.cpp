@@ -54,12 +54,14 @@ namespace database {
 
 using boost::filesystem::path;
 
+#define FAIL -1
+#define INVALID_HANDLE -1
 #define EXPANSION_NUMERATOR 150
 #define EXPANSION_DENOMINATOR 100
 
 size_t memory_map::file_size(int file_handle)
 {
-    if (file_handle == -1)
+    if (file_handle == INVALID_HANDLE)
         return 0;
 
     // This is required because off_t is defined as long, whcih is 32 bits in
@@ -67,16 +69,16 @@ size_t memory_map::file_size(int file_handle)
 #ifdef _WIN32
 #ifdef _WIN64
     struct _stat64 sbuf;
-    if (_fstat64(file_handle, &sbuf) == -1)
+    if (_fstat64(file_handle, &sbuf) == FAIL)
         return 0;
 #else
     struct _stat32 sbuf;
-    if (_fstat32(file_handle, &sbuf) == -1)
+    if (_fstat32(file_handle, &sbuf) == FAIL)
         return 0;
 #endif
 #else
     struct stat sbuf;
-    if (fstat(file_handle, &sbuf) == -1)
+    if (fstat(file_handle, &sbuf) == FAIL)
         return 0;
 #endif
 
@@ -178,7 +180,7 @@ bool memory_map::open()
     // Initialize data_.
     if (!map(file_size_))
         error_name = "map";
-    else if (madvise(data_, 0, MADV_RANDOM) == -1)
+    else if (madvise(data_, 0, MADV_RANDOM) == FAIL)
         error_name = "madvise";
     else
         closed_ = false;
@@ -212,7 +214,7 @@ bool memory_map::flush()
     mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    if (msync(data_, logical_size_, MS_SYNC) == -1)
+    if (msync(data_, logical_size_, MS_SYNC) == FAIL)
         error_name = "flush";
 
     mutex_.unlock();
@@ -247,15 +249,15 @@ bool memory_map::close()
 
     closed_ = true;
 
-    if (msync(data_, logical_size_, MS_SYNC) == -1)
+    if (msync(data_, logical_size_, MS_SYNC) == FAIL)
         error_name = "msync";
-    else if (munmap(data_, file_size_) == -1)
+    else if (munmap(data_, file_size_) == FAIL)
         error_name = "munmap";
-    else if (ftruncate(file_handle_, logical_size_) == -1)
+    else if (ftruncate(file_handle_, logical_size_) == FAIL)
         error_name = "ftruncate";
-    else if (fsync(file_handle_) == -1)
+    else if (fsync(file_handle_) == FAIL)
         error_name = "fsync";
-    else if (::close(file_handle_) == -1)
+    else if (::close(file_handle_) == FAIL)
         error_name = "close";
 
     mutex_.unlock();
@@ -364,7 +366,7 @@ size_t memory_map::page()
 
 bool memory_map::unmap()
 {
-    const auto success = (munmap(data_, file_size_) != -1);
+    const auto success = (munmap(data_, file_size_) != FAIL);
     file_size_ = 0;
     data_ = nullptr;
     return success;
@@ -395,7 +397,7 @@ bool memory_map::remap(size_t size)
 
 bool memory_map::truncate(size_t size)
 {
-    return ftruncate(file_handle_, size) != -1;
+    return ftruncate(file_handle_, size) != FAIL;
 }
 
 bool memory_map::truncate_mapped(size_t size)

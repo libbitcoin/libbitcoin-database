@@ -34,8 +34,7 @@ namespace database {
 template <typename KeyType>
 BC_CONSTFUNC size_t hash_table_record_size(size_t value_size)
 {
-    return std::tuple_size<KeyType>::value + sizeof(array_index)
-        + value_size;
+    return std::tuple_size<KeyType>::value + sizeof(array_index) + value_size;
 }
 
 typedef hash_table_header<array_index, array_index> record_hash_table_header;
