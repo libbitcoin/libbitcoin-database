@@ -27,8 +27,16 @@ namespace database {
 using namespace boost::filesystem;
 
 settings::settings()
-  : index_start_height(0),
-    directory("database")
+  : file_growth_rate(50),
+    index_start_height(0),
+
+    // Hash table sizes (must be configured).
+    block_table_buckets(0),
+    transaction_table_buckets(0),
+    spend_table_buckets(0),
+    history_table_buckets(0),
+
+    directory("blockchain")
 {
 }
 
@@ -39,13 +47,20 @@ settings::settings(config::settings context)
     {
         case config::settings::mainnet:
         {
-            directory = "mainnet";
+            block_table_buckets = 650000;
+            transaction_table_buckets = 110000000;
+            spend_table_buckets = 250000000;
+            history_table_buckets = 107000000;
             break;
         }
 
         case config::settings::testnet:
         {
-            directory = "testnet";
+            // TODO: optimize for testnet.
+            block_table_buckets = 650000;
+            transaction_table_buckets = 110000000;
+            spend_table_buckets = 250000000;
+            history_table_buckets = 107000000;
             break;
         }
 
