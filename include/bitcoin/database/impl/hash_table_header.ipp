@@ -28,29 +28,21 @@
 namespace libbitcoin {
 namespace database {
 
-// If the bucket count is zero we trust what is read from the file.
-static BC_CONSTEXPR size_t trust_file_bucket_count = 0;
+static BC_CONSTEXPR uint64_t empty_fill = 0xffffffffffffffff;
+static BC_CONSTEXPR uint8_t empty_byte = (uint8_t)empty_fill;
 
 // This VC++ workaround is OK because ValueType must be unsigned. 
 //static constexpr ValueType empty = std::numeric_limits<ValueType>::max();
 template <typename IndexType, typename ValueType>
 const ValueType hash_table_header<IndexType, ValueType>::empty =
-    (ValueType)bc::max_uint64;
-
-template <typename IndexType, typename ValueType>
-hash_table_header<IndexType, ValueType>::hash_table_header(memory_map& file)
-  : hash_table_header(file, trust_file_bucket_count)
-{
-}
+    (ValueType)empty_fill;
 
 template <typename IndexType, typename ValueType>
 hash_table_header<IndexType, ValueType>::hash_table_header(memory_map& file,
     IndexType buckets)
   : file_(file), buckets_(buckets)
 {
-    ////static_assert(empty == (ValueType)0xffffffffffffffff,
-    ////    "Unexpected value for empty sentinel.");
-    BITCOIN_ASSERT_MSG(empty == (ValueType)0xffffffffffffffff,
+    BITCOIN_ASSERT_MSG(empty == (ValueType)empty_fill,
         "Unexpected value for empty sentinel.");
 
     static_assert(std::is_unsigned<ValueType>::value,
@@ -61,7 +53,6 @@ template <typename IndexType, typename ValueType>
 bool hash_table_header<IndexType, ValueType>::create()
 {
     // Cannot create zero-sized hash table.
-    // If buckets_ == 0 we trust what is read from the file.
     if (buckets_ == 0)
         return false;
 
@@ -77,7 +68,7 @@ bool hash_table_header<IndexType, ValueType>::create()
     // optimized fill implementation
     // This optimization makes it possible to debug full size headers.
     const auto start = buckets_address + sizeof(IndexType);
-    memset(start, 0xff, buckets_ * sizeof(ValueType));
+    memset(start, empty_byte, buckets_ * sizeof(ValueType));
 
     // rationalized fill implementation
     ////for (IndexType index = 0; index < buckets_; ++index)
