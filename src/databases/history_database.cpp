@@ -77,7 +77,7 @@ history_database::~history_database()
 // Initialize files and start.
 bool history_database::create()
 {
-    // Resize and create require a started file.
+    // Resize and create require an opened file.
     if (!lookup_file_.open() ||
         !rows_file_.open())
         return false;

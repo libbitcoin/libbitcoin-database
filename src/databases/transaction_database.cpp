@@ -62,7 +62,7 @@ transaction_database::~transaction_database()
 // Initialize files and start.
 bool transaction_database::create()
 {
-    // Resize and create require a started file.
+    // Resize and create require an opened file.
     if (!lookup_file_.open())
         return false;
 

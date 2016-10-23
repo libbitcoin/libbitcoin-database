@@ -58,7 +58,7 @@ spend_database::~spend_database()
 // Initialize files and start.
 bool spend_database::create()
 {
-    // Resize and create require a started file.
+    // Resize and create require an opened file.
     if (!lookup_file_.open())
         return false;
 
