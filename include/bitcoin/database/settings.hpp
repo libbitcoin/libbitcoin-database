@@ -35,7 +35,12 @@ public:
     settings(config::settings context);
 
     /// Properties.
+    uint16_t file_growth_rate;
     uint32_t index_start_height;
+    uint32_t block_table_buckets;
+    uint32_t transaction_table_buckets;
+    uint32_t spend_table_buckets;
+    uint32_t history_table_buckets;
     boost::filesystem::path directory;
 };
 

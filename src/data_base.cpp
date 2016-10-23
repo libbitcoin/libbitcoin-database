@@ -44,6 +44,12 @@ data_base::data_base(const settings& settings)
     mutex_(std::make_shared<shared_mutex>()),
     store(settings.directory, settings.index_start_height < without_indexes)
 {
+    LOG_DEBUG(LOG_DATABASE)
+        << "Buckets: "
+        << "block [" << settings.block_table_buckets << "], "
+        << "transaction [" << settings.transaction_table_buckets << "], "
+        << "spend [" << settings.spend_table_buckets << "], "
+        << "history [" << settings.history_table_buckets << "]";
 }
 
 data_base::~data_base()
@@ -141,17 +147,27 @@ bool data_base::close()
 // protected
 void data_base::start()
 {
-    // TODO: populate constructors using new configuration setting values.
     // TODO: parameterize initial file sizes as record count or slab bytes?
 
-    blocks_ = std::make_shared<block_database>(block_table, block_index, 600000, 50, mutex_);
-    transactions_ = std::make_shared<transaction_database>(transaction_table, 100000000, 50, mutex_);
+    blocks_ = std::make_shared<block_database>(block_table, block_index,
+        settings_.block_table_buckets, settings_.file_growth_rate, mutex_);
+
+    transactions_ = std::make_shared<transaction_database>(transaction_table,
+        settings_.transaction_table_buckets, settings_.file_growth_rate,
+        mutex_);
 
     if (use_indexes)
     {
-        spends_ = std::make_shared<spend_database>(spend_table, 228110589, 50, mutex_);
-        history_ = std::make_shared<history_database>(history_table, history_rows, 97210744, 50, mutex_);
-        stealth_ = std::make_shared<stealth_database>(stealth_rows, 50, mutex_);
+        spends_ = std::make_shared<spend_database>(spend_table,
+            settings_.spend_table_buckets, settings_.file_growth_rate,
+            mutex_);
+
+        history_ = std::make_shared<history_database>(history_table,
+            history_rows, settings_.history_table_buckets,
+            settings_.file_growth_rate, mutex_);
+
+        stealth_ = std::make_shared<stealth_database>(stealth_rows,
+            settings_.file_growth_rate, mutex_);
     }
 }
 

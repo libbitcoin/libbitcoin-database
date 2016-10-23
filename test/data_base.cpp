@@ -282,10 +282,15 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     create_directory(DIRECTORY);
     const auto block0 = block::genesis_mainnet();
 
-    // TODO: parameterize tables.
     settings configuration;
+
     configuration.directory = DIRECTORY;
+    configuration.file_growth_rate = 42;
     configuration.index_start_height = 0;
+    configuration.block_table_buckets = 42;
+    configuration.transaction_table_buckets = 42;
+    configuration.spend_table_buckets = 42;
+    configuration.history_table_buckets = 42;
 
     // If index_height is set to anything other than 0 or max it can cause
     // false negatives since it excludes entries below the specified height.
