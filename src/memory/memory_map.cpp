@@ -333,7 +333,7 @@ memory_ptr memory_map::reserve(size_t size, size_t expansion)
     {
         // TODO: manage overflow (requires ceiling_multiply).
         // Expansion is an integral number that represents a real number factor.
-        const auto target = size * ((expansion + 100) / 100);
+        const size_t target = size * ((expansion + 100.0) / 100.0);
 
         if (!truncate_mapped(target))
         {
