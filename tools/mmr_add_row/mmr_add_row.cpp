@@ -5,6 +5,8 @@
 using namespace bc;
 using namespace bc::database;
 
+static const size_t buckets = 1000;
+
 void show_usage()
 {
     std::cerr << "Usage: mmr_add_row KEY VALUE "
@@ -24,7 +26,7 @@ int mmr_add_row(const data_chunk& key_data, const data_chunk& value,
     auto result = ht_file.open();
     BITCOIN_ASSERT(result);
 
-    record_hash_table_header header(ht_file);
+    record_hash_table_header header(ht_file, buckets);
     result = header.start();
     BITCOIN_ASSERT(result);
 
