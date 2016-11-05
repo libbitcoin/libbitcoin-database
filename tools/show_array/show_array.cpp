@@ -6,11 +6,13 @@ using namespace boost;
 using namespace bc;
 using namespace bc::database;
 
+static const size_t buckets = 1000;
+
 template <typename IndexType, typename ValueType>
 int show_array(const std::string& filename)
 {
     memory_map file(filename);
-    hash_table_header<IndexType, ValueType> table(file);
+    hash_table_header<IndexType, ValueType> table(file, buckets);
     const auto result = table.start();
     BITCOIN_ASSERT(result);
 

@@ -74,7 +74,7 @@ block_database::~block_database()
 // Initialize files and open.
 bool block_database::create()
 {
-    // Resize and create require a started file.
+    // Resize and create require an opened file.
     if (!lookup_file_.open() ||
         !index_file_.open())
         return false;

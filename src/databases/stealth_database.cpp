@@ -58,7 +58,7 @@ stealth_database::~stealth_database()
 // Initialize files and start.
 bool stealth_database::create()
 {
-    // Resize and create require a started file.
+    // Resize and create require an opened file.
     if (!rows_file_.open())
         return false;
 

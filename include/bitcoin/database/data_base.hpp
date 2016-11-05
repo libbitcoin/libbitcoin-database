@@ -104,7 +104,7 @@ public:
 protected:
     void start();
     void synchronize();
-    virtual bool flush();
+    bool flush() override;
 
     std::shared_ptr<block_database> blocks_;
     std::shared_ptr<transaction_database> transactions_;

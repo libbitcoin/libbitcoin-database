@@ -7,6 +7,8 @@ using namespace boost;
 using namespace bc;
 using namespace bc::database;
 
+static const size_t buckets = 1000;
+
 template <size_t N>
 memory_ptr get(record_hash_table_header& header, record_manager& alloc,
     const data_chunk& key_data)
@@ -47,7 +49,7 @@ int main(int argc, char** argv)
     memory_map file(filename);
     BITCOIN_ASSERT(file.open());
 
-    record_hash_table_header header(file);
+    record_hash_table_header header(file, buckets);
     BITCOIN_ASSERT(header.start());
 
     const auto record_size = key_data.size() + 4 + value_size;

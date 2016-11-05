@@ -62,7 +62,7 @@ transaction_database::~transaction_database()
 // Initialize files and start.
 bool transaction_database::create()
 {
-    // Resize and create require a started file.
+    // Resize and create require an opened file.
     if (!lookup_file_.open())
         return false;
 
@@ -118,12 +118,12 @@ transaction_result transaction_database::get(const hash_digest& hash) const
 }
 
 transaction_result transaction_database::get(const hash_digest& hash,
-    size_t DEBUG_ONLY(fork_height)) const
+    size_t /*DEBUG_ONLY(fork_height)*/) const
 {
     // TODO: use lookup_map_ to search a set of transactions in height order,
     // returning the highest that is at or below the specified fork height.
     // Short-circuit the search if fork_height is max_size_t (just get first).
-    BITCOIN_ASSERT_MSG(fork_height == max_size_t, "not implemented");
+    ////BITCOIN_ASSERT_MSG(fork_height == max_size_t, "not implemented");
 
     const auto memory = lookup_map_.find(hash);
     return transaction_result(memory, hash);

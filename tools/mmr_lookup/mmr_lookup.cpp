@@ -6,6 +6,8 @@ using namespace boost;
 using namespace bc;
 using namespace bc::database;
 
+static const size_t buckets = 1000;
+
 void show_usage()
 {
     std::cerr << "Usage: mmr_lookup KEY VALUE_SIZE "
@@ -30,7 +32,7 @@ int mmr_lookup(const data_chunk& key_data, const size_t value_size,
     memory_map ht_file(map_filename);
     BITCOIN_ASSERT(ht_file.open());
 
-    record_hash_table_header header(ht_file);
+    record_hash_table_header header(ht_file, buckets);
     auto result = header.start();
     BITCOIN_ASSERT(result);
 
