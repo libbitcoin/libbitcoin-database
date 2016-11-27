@@ -186,7 +186,7 @@ void block_database::store(const block& block, size_t height)
 
     const auto key = block.header().hash();
     const auto size = header::satoshi_fixed_size() + sizeof(height32) +
-        variable_uint_size(tx_count) + (tx_count * hash_size);
+        message::variable_uint_size(tx_count) + (tx_count * hash_size);
 
     const auto position = lookup_map_.store(key, write, size);
 
