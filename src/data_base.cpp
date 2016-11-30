@@ -464,10 +464,12 @@ block data_base::pop()
     if (!block_result)
         return{};
 
-    chain::block block;
-    auto& txs = block.transactions();
+    const auto count = block_result.transaction_count();
 
-    for (size_t tx = 0; tx < block_result.transaction_count(); ++tx)
+    transaction::list transactions;
+    transactions.reserve(count);
+
+    for (size_t tx = 0; tx < count; ++tx)
     {
         const auto tx_hash = block_result.transaction_hash(tx);
 
@@ -479,12 +481,12 @@ block data_base::pop()
             return{};
 
         // Deserialize transaction and move it to the block.
-        txs.emplace_back(tx_result.transaction());
+        transactions.emplace_back(tx_result.transaction());
     }
 
     // Loop txs backwards, the reverse of how they are added.
     // Remove txs, then outputs, then inputs (also reverse order).
-    for (auto tx = txs.rbegin(); tx != txs.rend(); ++tx)
+    for (auto tx = transactions.rbegin(); tx != transactions.rend(); ++tx)
     {
         /* bool */ transactions_->unlink(tx->hash());
         pop_outputs(tx->outputs(), height);
@@ -499,7 +501,7 @@ block data_base::pop()
     synchronize();
 
     // Return the block.
-    return chain::block(block_result.header(), txs);
+    return chain::block(block_result.header(), std::move(transactions));
 }
 
 void data_base::pop_inputs(const input::list& inputs, size_t height)
