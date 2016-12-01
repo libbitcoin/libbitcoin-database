@@ -146,8 +146,7 @@ bool transaction_database::update(const output_point& point,
     // Skip outputs until the target output.
     for (uint32_t output = 0; output < point.index(); ++output)
     {
-        serial.skip(height_size);
-        serial.skip(value_size);
+        serial.skip(height_size + value_size);
         serial.skip(serial.read_size_little_endian());
         BITCOIN_ASSERT(serial);
     }
