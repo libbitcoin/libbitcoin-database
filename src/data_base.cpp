@@ -235,68 +235,103 @@ const stealth_database& data_base::stealth() const
     return *stealth_;
 }
 
-// Writers.
+// Synchronous writers.
 // ----------------------------------------------------------------------------
 
-static size_t get_next_height(const block_database& blocks)
+static inline size_t get_next_height(const block_database& blocks)
 {
     size_t current_height;
     const auto empty_chain = !blocks.top(current_height);
     return empty_chain ? 0 : current_height + 1;
 }
 
-static hash_digest get_previous_hash(const block_database& blocks,
+static inline hash_digest get_previous_hash(const block_database& blocks,
     size_t height)
 {
     return height == 0 ? null_hash : blocks.get(height - 1).header().hash();
 }
 
-// Add block to the database at the given height.
-bool data_base::insert(const chain::block& block, size_t height)
-{
-    if (blocks_->exists(height))
-        return false;
-
-    push_transactions(block, height);
-    blocks_->store(block, height);
-    synchronize();
-    return true;
-}
-
-// Add a list of blocks in order.
-bool data_base::push(const block::list& blocks, size_t first_height)
-{
-    auto height = first_height;
-
-    for (const auto block: blocks)
-        if (!push(block, height++))
-            return false;
-
-    return true;
-}
-
-// Add a block in order.
-bool data_base::push(const block& block, size_t height)
+code data_base::verify(const block& block, size_t height)
 {
     if (get_next_height(blocks()) != height)
-    {
-        LOG_ERROR(LOG_DATABASE)
-            << "The block is out of order at height [" << height << "].";
-        return false;
-    }
+        return error::store_block_invalid_height;
 
     if (block.header().previous_block_hash() != 
         get_previous_hash(blocks(), height))
-    {
-        LOG_ERROR(LOG_DATABASE)
-            << "The block has incorrect parent for height [" << height << "].";
-        return false;
-    }
+        return error::store_block_missing_parent;
+
+    return error::success;
+}
+
+// Add block to the database at the given height.
+code data_base::insert(const chain::block& block, size_t height)
+{
+    if (blocks_->exists(height))
+        return error::store_block_duplicate;
 
     push_transactions(block, height);
     blocks_->store(block, height);
     synchronize();
-    return true;
+
+    return error::success;
+}
+
+// Add a block in order.
+code data_base::push(const block& block, size_t height)
+{
+    const auto ec = verify(block, height);
+
+    if (ec)
+        return ec;
+
+    push_transactions(block, height);
+    blocks_->store(block, height);
+    synchronize();
+
+    return error::success;
+}
+
+// Asynchronous writers.
+// ------------------------------------------------------------------------
+
+// Add a block in order.
+void data_base::push(const block& block, size_t height, dispatcher& dispatch,
+    result_handler handler)
+{
+    const auto ec = verify(block, height);
+
+    if (ec)
+    {
+        dispatch.concurrent(handler, ec);
+        return;
+    }
+
+    // TODO: parallelize push of transactions within the block.
+    push_transactions(block, height);
+
+    blocks_->store(block, height);
+    synchronize();
+
+    dispatch.concurrent(handler, error::success);
+}
+
+// Add a list of blocks in order.
+void data_base::push_all(const block_const_ptr_list& in_blocks,
+    size_t first_height, dispatcher& dispatch, result_handler handler)
+{
+    auto height = first_height;
+
+    // TODO: parallelize push of transactions within each block.
+    for (const auto block: in_blocks)
+    {
+        if (push(*block, height++) != error::success)
+        {
+            dispatch.concurrent(handler, error::operation_failed);
+            return;
+        }
+    }
+
+    dispatch.concurrent(handler, error::success);
 }
 
 // Add transactions and related indexing for a given block.
@@ -408,9 +443,9 @@ void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
 }
 
 // This precludes popping the genesis block.
-// Returns true with empty list if for is at the top.
-bool data_base::pop_above(block::list& out_blocks,
-    const hash_digest& fork_hash)
+// Returns true with empty list if fork is at the top.
+void data_base::pop_above(block_const_ptr_list& out_blocks,
+    const hash_digest& fork_hash, dispatcher& dispatch, result_handler handler)
 {
     size_t top;
     out_blocks.clear();
@@ -418,14 +453,20 @@ bool data_base::pop_above(block::list& out_blocks,
 
     // The fork point does not exist or failed to get it or the top, fail.
     if (!result || !blocks_->top(top))
-        return false;
+    {
+        dispatch.concurrent(handler, error::operation_failed);
+        return;
+    }
 
     const auto fork = result.height();
     const auto size = top - fork;
 
     // The fork is at the top of the chain, nothing to pop.
     if (size == 0)
-        return true;
+    {
+        dispatch.concurrent(handler, error::success);
+        return;
+    }
 
     // If the fork is at the top there is one block to pop, and so on.
     out_blocks.reserve(size);
@@ -433,21 +474,22 @@ bool data_base::pop_above(block::list& out_blocks,
     // Enqueue blocks so .front() is fork + 1 and .back() is top.
     for (size_t height = top; height > fork; --height)
     {
-        // DON'T MAKE BLOCK CONST, INVALIDATES THE MOVE.
-        auto block = pop();
+        // TODO: parallelize pop of transactions within each block.
+        const auto block = std::make_shared<message::block>(pop());
 
-        if (!block.is_valid())
-            return false;
+        if (!block->is_valid())
+        {
+            dispatch.concurrent(handler, error::operation_failed);
+            return;
+        }
 
         // Mark the blocks as validated for their respective heights.
-        block.header().validation.height = height;
-        block.validation.result = error::success;
-
-        // Move the block as an r-value into the list (no copy).
-        out_blocks.insert(out_blocks.begin(), std::move(block));
+        block->header().validation.height = height;
+        block->validation.result = error::success;
+        out_blocks.insert(out_blocks.begin(), block);
     }
 
-    return true;
+    dispatch.concurrent(handler, error::success);
 }
 
 block data_base::pop()

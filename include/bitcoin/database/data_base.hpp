@@ -43,7 +43,9 @@ class BCD_API data_base
 {
 public:
     typedef store::handle handle;
+    typedef handle0 result_handler;
     typedef boost::filesystem::path path;
+    typedef message::block::const_ptr_list block_const_ptr_list;
 
     // Construct.
     // ----------------------------------------------------------------------------
@@ -81,25 +83,33 @@ public:
     /// Invalid if indexes not initialized.
     const stealth_database& stealth() const;
 
-    // Writers.
+    // Synchronous writers.
     // ------------------------------------------------------------------------
 
     /// Store a block in the database.
     /// Returns false if a block already exists at height.
-    bool insert(const chain::block& block, size_t height);
+    code insert(const chain::block& block, size_t height);
 
     /// Returns false if height is not the current top + 1 or not linked.
-    bool push(const chain::block& block, size_t height);
+    code push(const chain::block& block, size_t height);
 
-    /// Returns false if first_height is not the current top + 1 or not linked.
-    bool push(const chain::block::list& blocks, size_t first_height);
+    // Asynchronous writers.
+    // ------------------------------------------------------------------------
+
+    /// Sets error if height is not the current top + 1 or not linked.
+    void push(const chain::block& block, size_t height,
+        dispatcher& dispatch, result_handler handler);
+
+    /// Sets error if first_height is not the current top + 1 or not linked.
+    void push_all(const block_const_ptr_list& in_blocks, size_t first_height,
+        dispatcher& dispatch, result_handler handler);
 
     /// Pop the set of blocks above the given hash.
-    /// Returns true with empty list if height is empty.
-    /// Returns false if the database is corrupt or the hash doesn't exit.
+    /// Sets error if the database is corrupt or the hash doesn't exit.
     /// Any blocks returned were successfully popped prior to any failure.
-    bool pop_above(chain::block::list& out_blocks,
-        const hash_digest& fork_hash);
+    void pop_above(block_const_ptr_list& out_blocks,
+        const hash_digest& fork_hash, dispatcher& dispatch,
+        result_handler handler);
 
 protected:
     void start();
@@ -127,6 +137,7 @@ private:
     chain::block pop();
     void pop_inputs(const inputs& inputs, size_t height);
     void pop_outputs(const outputs& outputs, size_t height);
+    code verify(const chain::block& block, size_t height);
 
     std::atomic<bool> closed_;
     const settings& settings_;
