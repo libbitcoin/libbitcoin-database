@@ -130,7 +130,8 @@ private:
     // ------------------------------------------------------------------------
     void push_transactions(const chain::block& block, size_t height,
         size_t bucket=0, size_t buckets=1);
-    void push_updates(const chain::transaction& tx, size_t height);
+    void push_updates(const chain::transaction& tx, size_t height,
+        bool coinbase);
     void push_heights(size_t height, const chain::input::list& inputs);
     void push_inputs(const hash_digest& tx_hash, size_t height,
         const inputs& inputs);

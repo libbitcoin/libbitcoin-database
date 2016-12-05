@@ -311,19 +311,21 @@ void data_base::push_transactions(const chain::block& block, size_t height,
     transactions_->synchronize();
 
     for (auto position = bucket; position < count; position += buckets)
-        push_updates(txs[position], height);
+        push_updates(txs[position], height, position == 0);
 }
 
-void data_base::push_updates(const transaction& tx, size_t height)
+void data_base::push_updates(const transaction& tx, size_t height,
+    bool coinbase)
 {
-    push_heights(height, tx.inputs());
+    if (!coinbase)
+        push_heights(height, tx.inputs());
 
     if (height < settings_.index_start_height)
         return;
 
     const auto tx_hash = tx.hash();
 
-    if (!tx.is_coinbase())
+    if (!coinbase)
         push_inputs(tx_hash, height, tx.inputs());
 
     push_outputs(tx_hash, height, tx.outputs());
