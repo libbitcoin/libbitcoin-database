@@ -308,6 +308,8 @@ void data_base::push_transactions(const chain::block& block, size_t height,
         transactions_->store(height, position, txs[position]);
 
     // Push updates only after all transactions for the block are written.
+    transactions_->synchronize();
+
     for (auto position = bucket; position < count; position += buckets)
         push_updates(txs[position], height);
 }
