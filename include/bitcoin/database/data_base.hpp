@@ -45,7 +45,11 @@ public:
     typedef store::handle handle;
     typedef handle0 result_handler;
     typedef boost::filesystem::path path;
+    typedef message::block::const_ptr block_const_ptr;
     typedef message::block::const_ptr_list block_const_ptr_list;
+    typedef message::block::const_ptr_list_ptr block_const_ptr_list_ptr;
+    typedef message::block::const_ptr_list_const_ptr 
+        block_const_ptr_list_const_ptr;
 
     // Construct.
     // ----------------------------------------------------------------------------
@@ -96,18 +100,14 @@ public:
     // Asynchronous writers.
     // ------------------------------------------------------------------------
 
-    /// Sets error if height is not the current top + 1 or not linked.
-    void push(const chain::block& block, size_t height,
-        dispatcher& dispatch, result_handler handler);
-
     /// Sets error if first_height is not the current top + 1 or not linked.
-    void push_all(const block_const_ptr_list& in_blocks, size_t first_height,
-        dispatcher& dispatch, result_handler handler);
+    void push_all(block_const_ptr_list_const_ptr in_blocks,
+        size_t first_height, dispatcher& dispatch, result_handler handler);
 
     /// Pop the set of blocks above the given hash.
     /// Sets error if the database is corrupt or the hash doesn't exit.
     /// Any blocks returned were successfully popped prior to any failure.
-    void pop_above(block_const_ptr_list& out_blocks,
+    void pop_above(block_const_ptr_list_ptr out_blocks,
         const hash_digest& fork_hash, dispatcher& dispatch,
         result_handler handler);
 
@@ -126,7 +126,10 @@ private:
     typedef chain::input::list inputs;
     typedef chain::output::list outputs;
 
-    void push_transactions(const chain::block& block, size_t height);
+    // Synchronous writers.
+    // ------------------------------------------------------------------------
+    void push_transactions(const chain::block& block, size_t height,
+        size_t bucket=0, size_t buckets=1);
     void push_inputs(const hash_digest& tx_hash, size_t height,
         const inputs& inputs);
     void push_outputs(const hash_digest& tx_hash, size_t height,
@@ -138,6 +141,21 @@ private:
     void pop_inputs(const inputs& inputs, size_t height);
     void pop_outputs(const outputs& outputs, size_t height);
     code verify(const chain::block& block, size_t height);
+
+    // Asynchronous writers.
+    // ------------------------------------------------------------------------
+
+    void do_push_next(const code& ec, block_const_ptr_list_const_ptr blocks,
+        size_t index, size_t height, dispatcher& dispatch,
+        result_handler handler);
+    void do_push(block_const_ptr block, size_t height, dispatcher& dispatch,
+        result_handler handler);
+    void do_push_block(block_const_ptr block, size_t height,
+        dispatcher& dispatch, result_handler handler);
+    void do_push_transactions(block_const_ptr block, size_t height,
+        size_t bucket, size_t buckets, result_handler handler);
+    void handle_push_complete(const code& ec, block_const_ptr block,
+        size_t height, result_handler handler);
 
     std::atomic<bool> closed_;
     const settings& settings_;
