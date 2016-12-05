@@ -296,33 +296,42 @@ code data_base::push(const block& block, size_t height)
     return error::success;
 }
 
+// To push in order call with bucket = 0 and buckets = 1 (defaults).
 void data_base::push_transactions(const chain::block& block, size_t height,
     size_t bucket, size_t buckets)
 {
     BITCOIN_ASSERT(bucket < buckets);
     const auto& txs = block.transactions();
+    const auto count = txs.size();
 
-    for (size_t position = bucket; position < txs.size(); position += buckets)
-    {
-        if (position % buckets != bucket)
-            continue;
+    for (auto position = bucket; position < count; position += buckets)
+        transactions_->store(height, position, txs[position]);
 
-        const auto& tx = txs[position];
-        const auto tx_hash = tx.hash();
+    // Push updates only after all transactions for the block are written.
+    for (auto position = bucket; position < count; position += buckets)
+        push_updates(txs[position], height);
+}
 
-        // Add inputs
-        if (!tx.is_coinbase())
-            push_inputs(tx_hash, height, tx.inputs());
+void data_base::push_updates(const transaction& tx, size_t height)
+{
+    push_heights(height, tx.inputs());
 
-        // Add outputs
-        push_outputs(tx_hash, height, tx.outputs());
+    if (height < settings_.index_start_height)
+        return;
 
-        // Add stealth outputs
-        push_stealth(tx_hash, height, tx.outputs());
+    const auto tx_hash = tx.hash();
 
-        // Add transaction
-        transactions_->store(height, position, tx);
-    }
+    if (!tx.is_coinbase())
+        push_inputs(tx_hash, height, tx.inputs());
+
+    push_outputs(tx_hash, height, tx.outputs());
+    push_stealth(tx_hash, height, tx.outputs());
+}
+
+void data_base::push_heights(size_t height, const input::list& inputs)
+{
+    for (uint32_t index = 0; index < inputs.size(); ++index)
+        transactions_->update(inputs[index].previous_output(), height);
 }
 
 void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
@@ -332,12 +341,6 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
     {
         const auto& input = inputs[index];
         const input_point point{ tx_hash, index };
-
-        /* bool */ transactions_->update(input.previous_output(), height);
-
-        if (height < settings_.index_start_height)
-            continue;
-
         spends_->store(input.previous_output(), point);
 
         // Try to extract an address.
@@ -353,13 +356,9 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
 void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
     const output::list& outputs)
 {
-    if (height < settings_.index_start_height)
-        return;
-
     for (uint32_t index = 0; index < outputs.size(); ++index)
     {
         const auto& output = outputs[index];
-        const output_point point{ tx_hash, index };
 
         // Try to extract an address.
         const auto address = payment_address::extract(output.script());
@@ -367,6 +366,7 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
             continue;
 
         const auto value = output.value();
+        const output_point point{ tx_hash, index };
         history_->add_output(address.hash(), point, height, value);
     }
 }
@@ -374,7 +374,7 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
 void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
     const output::list& outputs)
 {
-    if (height < settings_.index_start_height || outputs.empty())
+    if (outputs.empty())
         return;
 
     // Stealth outputs are paired by convention.
