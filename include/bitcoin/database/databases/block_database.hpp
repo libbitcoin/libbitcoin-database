@@ -114,7 +114,7 @@ private:
     record_manager index_manager_;
 
     // Guard against concurrent update of a range of block indexes.
-    upgrade_mutex mutex_;
+    mutable upgrade_mutex mutex_;
 };
 
 } // namespace database

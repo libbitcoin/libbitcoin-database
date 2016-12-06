@@ -19,8 +19,10 @@
  */
 #include <bitcoin/database/data_base.hpp>
 
+#include <algorithm>
 #include <cstdint>
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <utility>
 #include <boost/filesystem.hpp>
@@ -31,9 +33,12 @@
 namespace libbitcoin {
 namespace database {
 
+using namespace std::placeholders;
 using namespace boost::filesystem;
 using namespace bc::chain;
 using namespace bc::wallet;
+
+#define NAME "data_base"
 
 // Construct.
 // ----------------------------------------------------------------------------
@@ -260,6 +265,9 @@ code data_base::verify(const block& block, size_t height)
         get_previous_hash(blocks(), height))
         return error::store_block_missing_parent;
 
+    if (block.transactions().empty())
+        return error::empty_block;
+
     return error::success;
 }
 
@@ -270,6 +278,7 @@ code data_base::insert(const chain::block& block, size_t height)
         return error::store_block_duplicate;
 
     push_transactions(block, height);
+    push_updates(block, height);
     blocks_->store(block, height);
     synchronize();
 
@@ -285,76 +294,61 @@ code data_base::push(const block& block, size_t height)
         return ec;
 
     push_transactions(block, height);
+    push_updates(block, height);
     blocks_->store(block, height);
     synchronize();
 
     return error::success;
 }
 
-// Asynchronous writers.
-// ------------------------------------------------------------------------
-
-// Add a block in order.
-void data_base::push(const block& block, size_t height, dispatcher& dispatch,
-    result_handler handler)
+// To push in order call with bucket = 0 and buckets = 1 (defaults).
+void data_base::push_transactions(const chain::block& block, size_t height,
+    size_t bucket, size_t buckets)
 {
-    const auto ec = verify(block, height);
+    BITCOIN_ASSERT(bucket < buckets);
+    const auto& txs = block.transactions();
+    const auto count = txs.size();
 
-    if (ec)
-    {
-        dispatch.concurrent(handler, ec);
-        return;
-    }
+    for (auto position = bucket; position < count; position += buckets)
+        transactions_->store(height, position, txs[position]);
 
-    // TODO: parallelize push of transactions within the block.
-    push_transactions(block, height);
-
-    blocks_->store(block, height);
-    synchronize();
-
-    dispatch.concurrent(handler, error::success);
+    // Updates must be applied only after all transactions are written.
+    // Otherwise any tx that spends another in the block may fail to find it.
+    transactions_->synchronize();
 }
 
-// Add a list of blocks in order.
-void data_base::push_all(const block_const_ptr_list& in_blocks,
-    size_t first_height, dispatcher& dispatch, result_handler handler)
+// To push in order call with bucket = 0 and buckets = 1 (defaults).
+void data_base::push_updates(const chain::block& block, size_t height,
+    size_t bucket, size_t buckets)
 {
-    auto height = first_height;
+    BITCOIN_ASSERT(bucket < buckets);
+    const auto& txs = block.transactions();
+    const auto count = txs.size();
 
-    // TODO: parallelize push of transactions within each block.
-    for (const auto block: in_blocks)
+    for (auto position = bucket; position < count; position += buckets)
     {
-        if (push(*block, height++) != error::success)
-        {
-            dispatch.concurrent(handler, error::operation_failed);
+        const auto& tx = txs[position];
+
+        if (position != 0)
+            push_heights(height, tx.inputs());
+
+        if (height < settings_.index_start_height)
             return;
-        }
-    }
 
-    dispatch.concurrent(handler, error::success);
-}
-
-// Add transactions and related indexing for a given block.
-void data_base::push_transactions(const block& block, size_t height)
-{
-    for (size_t index = 0; index < block.transactions().size(); ++index)
-    {
-        const auto& tx = block.transactions()[index];
         const auto tx_hash = tx.hash();
 
-        // Add inputs
-        if (!tx.is_coinbase())
+        if (position != 0)
             push_inputs(tx_hash, height, tx.inputs());
 
-        // Add outputs
         push_outputs(tx_hash, height, tx.outputs());
-
-        // Add stealth outputs
         push_stealth(tx_hash, height, tx.outputs());
-
-        // Add transaction
-        transactions_->store(height, index, tx);
     }
+}
+
+void data_base::push_heights(size_t height, const input::list& inputs)
+{
+    for (uint32_t index = 0; index < inputs.size(); ++index)
+        transactions_->update(inputs[index].previous_output(), height);
 }
 
 void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
@@ -364,12 +358,6 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
     {
         const auto& input = inputs[index];
         const input_point point{ tx_hash, index };
-
-        /* bool */ transactions_->update(input.previous_output(), height);
-
-        if (height < settings_.index_start_height)
-            continue;
-
         spends_->store(input.previous_output(), point);
 
         // Try to extract an address.
@@ -385,13 +373,9 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
 void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
     const output::list& outputs)
 {
-    if (height < settings_.index_start_height)
-        return;
-
     for (uint32_t index = 0; index < outputs.size(); ++index)
     {
         const auto& output = outputs[index];
-        const output_point point{ tx_hash, index };
 
         // Try to extract an address.
         const auto address = payment_address::extract(output.script());
@@ -399,6 +383,7 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
             continue;
 
         const auto value = output.value();
+        const output_point point{ tx_hash, index };
         history_->add_output(address.hash(), point, height, value);
     }
 }
@@ -406,7 +391,7 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
 void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
     const output::list& outputs)
 {
-    if (height < settings_.index_start_height || outputs.empty())
+    if (outputs.empty())
         return;
 
     // Stealth outputs are paired by convention.
@@ -440,56 +425,6 @@ void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
 
         stealth_->store(prefix, height, row);
     }
-}
-
-// This precludes popping the genesis block.
-// Returns true with empty list if fork is at the top.
-void data_base::pop_above(block_const_ptr_list& out_blocks,
-    const hash_digest& fork_hash, dispatcher& dispatch, result_handler handler)
-{
-    size_t top;
-    out_blocks.clear();
-    const auto result = blocks_->get(fork_hash);
-
-    // The fork point does not exist or failed to get it or the top, fail.
-    if (!result || !blocks_->top(top))
-    {
-        dispatch.concurrent(handler, error::operation_failed);
-        return;
-    }
-
-    const auto fork = result.height();
-    const auto size = top - fork;
-
-    // The fork is at the top of the chain, nothing to pop.
-    if (size == 0)
-    {
-        dispatch.concurrent(handler, error::success);
-        return;
-    }
-
-    // If the fork is at the top there is one block to pop, and so on.
-    out_blocks.reserve(size);
-
-    // Enqueue blocks so .front() is fork + 1 and .back() is top.
-    for (size_t height = top; height > fork; --height)
-    {
-        // TODO: parallelize pop of transactions within each block.
-        const auto block = std::make_shared<message::block>(pop());
-
-        if (!block->is_valid())
-        {
-            dispatch.concurrent(handler, error::operation_failed);
-            return;
-        }
-
-        // Mark the blocks as validated for their respective heights.
-        block->header().validation.height = height;
-        block->validation.result = error::success;
-        out_blocks.insert(out_blocks.begin(), block);
-    }
-
-    dispatch.concurrent(handler, error::success);
 }
 
 block data_base::pop()
@@ -586,6 +521,166 @@ void data_base::pop_outputs(const output::list& outputs, size_t height)
         // Stealth unlink is not implemented.
         /* bool */ stealth_->unlink();
     }
+}
+
+// Asynchronous writers.
+// ----------------------------------------------------------------------------
+
+// Add a list of blocks in order.
+void data_base::push_all(block_const_ptr_list_const_ptr in_blocks,
+    size_t first_height, dispatcher& dispatch, result_handler handler)
+{
+    // This is the beginning of the blocks sequence.
+    DEBUG_ONLY(safe_add(in_blocks->size(), first_height));
+    do_push_next(error::success, in_blocks, 0, first_height, dispatch, handler);
+}
+
+void data_base::do_push_next(const code& ec,
+    block_const_ptr_list_const_ptr blocks, size_t index, size_t height,
+    dispatcher& dispatch, result_handler handler)
+{
+    if (ec || index >= blocks->size())
+    {
+        // This is the end of the blocks sequence.
+        handler(ec);
+        return;
+    }
+
+    const result_handler next =
+        std::bind(&data_base::do_push_next,
+            this, _1, blocks, index + 1, height + 1, std::ref(dispatch),
+                handler);
+
+    // This is the beginning of the block sub-sequence.
+    dispatch.concurrent(&data_base::do_push,
+        this, (*blocks)[index], height, std::ref(dispatch), next);
+}
+
+void data_base::do_push(block_const_ptr block, size_t height,
+    dispatcher& dispatch, result_handler handler)
+{
+    const result_handler complete =
+        std::bind(&data_base::handle_push_complete,
+            this, _1, block, height, handler);
+
+    // This ensures linkage and that the there is at least one tx.
+    const auto ec = verify(*block, height);
+
+    if (ec)
+    {
+        complete(ec);
+        return;
+    }
+
+    const auto count = block->transactions().size();
+    const auto threads = std::min(dispatch.size(), count);
+    do_push_block1(block, height, dispatch, threads, complete);
+}
+
+void data_base::do_push_block1(block_const_ptr block, size_t height,
+    dispatcher& dispatch, size_t threads, result_handler handler)
+{
+    result_handler complete =
+        std::bind(&data_base::do_push_block2,
+            this, _1, block, height, std::ref(dispatch), threads, handler);
+
+    const auto join_handler = bc::synchronize(std::move(complete), threads,
+        NAME "_do_push_block1");
+
+    for (size_t bucket = 0; bucket < threads; ++bucket)
+        dispatch.concurrent(&data_base::do_push_transactions,
+            this, block, height, bucket, threads, join_handler);
+}
+
+void data_base::do_push_transactions(block_const_ptr block, size_t height,
+    size_t bucket, size_t buckets, result_handler handler)
+{
+    push_transactions(*block, height, bucket, buckets);
+    handler(error::success);
+}
+
+void data_base::do_push_block2(const code&, block_const_ptr block,
+    size_t height, dispatcher& dispatch, size_t threads,
+    result_handler handler)
+{
+    const auto join_handler = bc::synchronize(handler, threads,
+        NAME "_do_push_block2");
+
+    for (size_t bucket = 0; bucket < threads; ++bucket)
+        dispatch.concurrent(&data_base::do_push_transactions,
+            this, block, height, bucket, threads, join_handler);
+}
+
+void data_base::do_push_updates(block_const_ptr block, size_t height,
+    size_t bucket, size_t buckets, result_handler handler)
+{
+    push_updates(*block, height, bucket, buckets);
+    handler(error::success);
+}
+
+void data_base::handle_push_complete(const code& ec, block_const_ptr block,
+    size_t height, result_handler handler)
+{
+    if (!ec)
+    {
+        // Push the block header and synchronize to complete the block.
+        blocks_->store(*block, height);
+        synchronize();
+    }
+
+    // This is the end of the block sub-sequence.
+    handler(ec);
+}
+
+// TODO: implement async and concurrent.
+// This precludes popping the genesis block.
+// Returns true with empty list if fork is at the top.
+void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
+    const hash_digest& fork_hash, dispatcher&, result_handler handler)
+{
+    size_t top;
+    out_blocks->clear();
+    const auto result = blocks_->get(fork_hash);
+
+    // The fork point does not exist or failed to get it or the top, fail.
+    if (!result || !blocks_->top(top))
+    {
+        handler(error::operation_failed);
+        return;
+    }
+
+    const auto fork = result.height();
+    const auto size = top - fork;
+
+    // The fork is at the top of the chain, nothing to pop.
+    if (size == 0)
+    {
+        handler(error::success);
+        return;
+    }
+
+    // If the fork is at the top there is one block to pop, and so on.
+    out_blocks->reserve(size);
+
+    // Enqueue blocks so .front() is fork + 1 and .back() is top.
+    for (size_t height = top; height > fork; --height)
+    {
+        // TODO: parallelize pop of transactions within each block.
+        const auto block = std::make_shared<message::block>(pop());
+
+        if (!block->is_valid())
+        {
+            handler(error::operation_failed);
+            return;
+        }
+
+        // Mark the blocks as validated for their respective heights.
+        block->header().validation.height = height;
+        block->validation.result = error::success;
+        out_blocks->insert(out_blocks->begin(), block);
+    }
+
+    handler(error::success);
 }
 
 } // namespace data_base
