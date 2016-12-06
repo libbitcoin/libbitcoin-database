@@ -128,6 +128,7 @@ private:
 
     // Synchronous writers.
     // ------------------------------------------------------------------------
+
     void push_transactions(const chain::block& block, size_t height,
         size_t bucket=0, size_t buckets=1);
     void push_updates(const chain::block& block, size_t height,
