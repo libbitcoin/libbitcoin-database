@@ -130,8 +130,8 @@ private:
     // ------------------------------------------------------------------------
     void push_transactions(const chain::block& block, size_t height,
         size_t bucket=0, size_t buckets=1);
-    void push_updates(const chain::transaction& tx, size_t height,
-        bool coinbase);
+    void push_updates(const chain::block& block, size_t height,
+        size_t bucket=0, size_t buckets=1);
     void push_heights(size_t height, const chain::input::list& inputs);
     void push_inputs(const hash_digest& tx_hash, size_t height,
         const inputs& inputs);
@@ -153,9 +153,13 @@ private:
         result_handler handler);
     void do_push(block_const_ptr block, size_t height, dispatcher& dispatch,
         result_handler handler);
-    void do_push_block(block_const_ptr block, size_t height,
-        dispatcher& dispatch, result_handler handler);
+    void do_push_block1(block_const_ptr block, size_t height,
+        dispatcher& dispatch, size_t threads, result_handler handler);
+    void do_push_block2(const code&, block_const_ptr block, size_t height,
+        dispatcher& dispatch, size_t threads, result_handler handler);
     void do_push_transactions(block_const_ptr block, size_t height,
+        size_t bucket, size_t buckets, result_handler handler);
+    void do_push_updates(block_const_ptr block, size_t height,
         size_t bucket, size_t buckets, result_handler handler);
     void handle_push_complete(const code& ec, block_const_ptr block,
         size_t height, result_handler handler);
