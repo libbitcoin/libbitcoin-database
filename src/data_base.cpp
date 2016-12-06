@@ -311,10 +311,6 @@ void data_base::push_transactions(const chain::block& block, size_t height,
 
     for (auto position = bucket; position < count; position += buckets)
         transactions_->store(height, position, txs[position]);
-
-    // Updates must be applied only after all transactions are written.
-    // Otherwise any tx that spends another in the block may fail to find it.
-    transactions_->synchronize();
 }
 
 // To push in order call with bucket = 0 and buckets = 1 (defaults).
@@ -603,6 +599,10 @@ void data_base::do_push_block2(const code&, block_const_ptr block,
     size_t height, dispatcher& dispatch, size_t threads,
     result_handler handler)
 {
+    // Updates must be applied only after all transactions are written.
+    // Otherwise any tx that spends another in the block may fail to find it.
+    transactions_->synchronize();
+
     const auto join_handler = bc::synchronize(handler, threads,
         NAME "_do_push_block2");
 
@@ -625,6 +625,8 @@ void data_base::handle_push_complete(const code& ec, block_const_ptr block,
     {
         // Push the block header and synchronize to complete the block.
         blocks_->store(*block, height);
+
+        // Synchronize tx updates, indexes and block.
         synchronize();
     }
 
