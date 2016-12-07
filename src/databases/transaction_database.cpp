@@ -134,9 +134,9 @@ bool transaction_database::update(const output_point& point,
 {
     const auto slab = lookup_map_.find(point.hash());
 
-    // The transaction does not exist.
+    // The transaction does not exist, assume the spender is already set.
     if (slab == nullptr)
-        return false;
+        return true;
 
     const auto memory = REMAP_ADDRESS(slab);
     const auto tx_start = memory + height_size + position_size;
