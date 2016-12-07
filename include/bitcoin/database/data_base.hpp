@@ -131,9 +131,8 @@ private:
 
     void push_transactions(const chain::block& block, size_t height,
         size_t bucket=0, size_t buckets=1);
-    void push_updates(const chain::block& block, size_t height,
+    bool push_heights(const chain::block& block, size_t height,
         size_t bucket=0, size_t buckets=1);
-    void push_heights(size_t height, const chain::input::list& inputs);
     void push_inputs(const hash_digest& tx_hash, size_t height,
         const inputs& inputs);
     void push_outputs(const hash_digest& tx_hash, size_t height,
@@ -149,18 +148,16 @@ private:
     // Asynchronous writers.
     // ------------------------------------------------------------------------
 
-    void do_push_next(const code& ec, block_const_ptr_list_const_ptr blocks,
+    void push_next(const code& ec, block_const_ptr_list_const_ptr blocks,
         size_t index, size_t height, dispatcher& dispatch,
         result_handler handler);
     void do_push(block_const_ptr block, size_t height, dispatcher& dispatch,
         result_handler handler);
-    void do_push_block1(block_const_ptr block, size_t height,
-        dispatcher& dispatch, size_t threads, result_handler handler);
-    void do_push_block2(const code&, block_const_ptr block, size_t height,
-        dispatcher& dispatch, size_t threads, result_handler handler);
+    void push_updates(const code& ec, block_const_ptr block, size_t height,
+        dispatcher& dispatch, result_handler handler);
     void do_push_transactions(block_const_ptr block, size_t height,
         size_t bucket, size_t buckets, result_handler handler);
-    void do_push_updates(block_const_ptr block, size_t height,
+    void do_push_heights(block_const_ptr block, size_t height,
         size_t bucket, size_t buckets, result_handler handler);
     void handle_push_complete(const code& ec, block_const_ptr block,
         size_t height, result_handler handler);

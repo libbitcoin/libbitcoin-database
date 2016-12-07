@@ -133,6 +133,11 @@ bool transaction_database::update(const output_point& point,
     size_t spender_height)
 {
     const auto slab = lookup_map_.find(point.hash());
+
+    // The transaction does not exist.
+    if (slab == nullptr)
+        return false;
+
     const auto memory = REMAP_ADDRESS(slab);
     const auto tx_start = memory + height_size + position_size;
     auto serial = make_unsafe_serializer(tx_start);
@@ -140,6 +145,7 @@ bool transaction_database::update(const output_point& point,
     const auto outputs = serial.read_size_little_endian();
     BITCOIN_ASSERT(serial);
 
+    // The index is not in the transaction.
     if (point.index() >= outputs)
         return false;
 
