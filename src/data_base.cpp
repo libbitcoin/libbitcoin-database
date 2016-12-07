@@ -282,30 +282,6 @@ code data_base::verify_push(const block& block, size_t height)
     return error::success;
 }
 
-// For any output spent by any tx in the block, set the spender height.
-void data_base::set_internal_spenders(const chain::block& block, size_t height)
-{
-    const auto& txs = block.transactions();
-
-    const auto set_spender = [&txs, height](const transaction& tx)
-    {
-        const auto inner = [&txs, height](const input& input)
-        {
-            const auto exists = [&input](const transaction& tx)
-            {
-                return input.previous_output().hash() == tx.hash();
-            };
-
-            if (std::find_if(txs.begin(), txs.end(), exists) != txs.end())
-                input.previous_output().validation.height = height;
-        };
-
-        std::for_each(tx.inputs().begin(), tx.inputs().end(), inner);
-    };
-
-    // Skip the coinbase as it cannot be spent internally (maturity rule).
-    std::for_each(txs.begin() + 1, txs.end(), set_spender);
-}
 
 // Add block to the database at the given height.
 code data_base::insert(const chain::block& block, size_t height)
@@ -315,10 +291,7 @@ code data_base::insert(const chain::block& block, size_t height)
     if (ec)
         return ec;
 
-    // Populate internal spenders to metadata as an optimization.
-    set_internal_spenders(block, height);
-
-    if (!push_transactions(block, height))
+    if (!push_transactions(block, height) || !push_heights(block, height))
         return error::operation_failed;
 
     blocks_->store(block, height);
@@ -334,10 +307,7 @@ code data_base::push(const block& block, size_t height)
     if (ec)
         return ec;
 
-    // Populate internal spenders to metadata as an optimization.
-    set_internal_spenders(block, height);
-
-    if (!push_transactions(block, height))
+    if (!push_transactions(block, height) || !push_heights(block, height))
         return error::operation_failed;
 
     blocks_->store(block, height);
@@ -357,14 +327,7 @@ bool data_base::push_transactions(const chain::block& block, size_t height,
     {
         const auto& tx = txs[position];
 
-        // This will store all spender heights arising from txs in this block.
-        // This assumes spender heights are set for all txs spent in the block.
         transactions_->store(height, position, tx);
-
-        // This will not fail on (not found) spends of txs in this block.
-        // These are not found because they aren't/can't be committed yet.
-        if (position != 0 && !push_heights(tx, height))
-            return false;
 
         if (height < settings_.index_start_height)
             continue;
@@ -381,14 +344,16 @@ bool data_base::push_transactions(const chain::block& block, size_t height,
     return true;
 }
 
-bool data_base::push_heights(const transaction& tx, size_t height)
+bool data_base::push_heights(const chain::block& block, size_t height)
 {
-    // This automtically incorporates spender-height as specified in metadata.
-    // This will not fail if the prevout transction is not found/committed.
-    // This assumes the tx is validated and the spender is set via metadata.
-    for (const auto input: tx.inputs())
-        if (!transactions_->update(input.previous_output(), height))
-            return false;
+    transactions_->synchronize();
+    const auto& txs = block.transactions();
+
+    // Skip coinbase as it has no previous output.
+    for (auto tx = txs.begin() + 1; tx != txs.end(); ++tx)
+        for (const auto& input: tx->inputs())
+            if (!transactions_->update(input.previous_output(), height))
+                return false;
 
     return true;
 }
@@ -608,9 +573,6 @@ void data_base::do_push(block_const_ptr block, size_t height,
     // This ensures linkage and that the there is at least one tx.
     const auto ec = verify_push(*block, height);
 
-    // Populate internal spenders to metadata as an optimization.
-    set_internal_spenders(*block, height);
-
     if (ec)
     {
         block_complete(ec);
@@ -637,17 +599,26 @@ void data_base::do_push_transactions(block_const_ptr block, size_t height,
 void data_base::handle_push_complete(const code& ec, block_const_ptr block,
     size_t height, result_handler handler)
 {
-    if (!ec)
+    if (ec)
     {
-        // Push the block header and synchronize to complete the block.
-        blocks_->store(*block, height);
-
-        // Synchronize tx updates, indexes and block.
-        synchronize();
+        handler(ec);
+        return;
     }
 
+    if (!push_heights(*block, height))
+    {
+        handler(error::operation_failed);
+        return;
+    }
+
+    // Push the block header and synchronize to complete the block.
+    blocks_->store(*block, height);
+
+    // Synchronize tx updates, indexes and block.
+    synchronize();
+
     // This is the end of the block sub-sequence.
-    handler(ec);
+    handler(error::success);
 }
 
 // TODO: implement async and concurrent.

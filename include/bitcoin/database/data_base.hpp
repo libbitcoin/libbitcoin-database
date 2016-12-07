@@ -131,7 +131,7 @@ private:
 
     bool push_transactions(const chain::block& block, size_t height,
         size_t bucket=0, size_t buckets=1);
-    bool push_heights(const chain::transaction& tx, size_t height);
+    bool push_heights(const chain::block& block, size_t height);
     void push_inputs(const hash_digest& tx_hash, size_t height,
         const inputs& inputs);
     void push_outputs(const hash_digest& tx_hash, size_t height,
@@ -144,7 +144,6 @@ private:
     void pop_outputs(const outputs& outputs, size_t height);
     code verify_insert(const chain::block& block, size_t height);
     code verify_push(const chain::block& block, size_t height);
-    void set_internal_spenders(const chain::block& block, size_t height);
 
     // Asynchronous writers.
     // ------------------------------------------------------------------------
