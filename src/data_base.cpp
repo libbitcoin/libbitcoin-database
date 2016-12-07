@@ -256,30 +256,42 @@ static inline hash_digest get_previous_hash(const block_database& blocks,
     return height == 0 ? null_hash : blocks.get(height - 1).header().hash();
 }
 
-code data_base::verify(const block& block, size_t height)
+code data_base::verify_insert(const block& block, size_t height)
 {
-    if (get_next_height(blocks()) != height)
-        return error::store_block_invalid_height;
-
-    if (block.header().previous_block_hash() != 
-        get_previous_hash(blocks(), height))
-        return error::store_block_missing_parent;
-
     if (block.transactions().empty())
         return error::empty_block;
+
+    if (blocks_->exists(height))
+        return error::store_block_duplicate;
 
     return error::success;
 }
 
+code data_base::verify_push(const block& block, size_t height)
+{
+    if (block.transactions().empty())
+        return error::empty_block;
+
+    if (get_next_height(blocks()) != height)
+        return error::store_block_invalid_height;
+
+    if (block.header().previous_block_hash() !=
+        get_previous_hash(blocks(), height))
+        return error::store_block_missing_parent;
+
+    return error::success;
+}
+
+
 // Add block to the database at the given height.
 code data_base::insert(const chain::block& block, size_t height)
 {
-    if (blocks_->exists(height))
-        return error::store_block_duplicate;
+    const auto ec = verify_insert(block, height);
 
-    push_transactions(block, height);
-    transactions_->synchronize();
-    if (!push_heights(block, height))
+    if (ec)
+        return ec;
+
+    if (!push_transactions(block, height) || !push_heights(block, height))
         return error::operation_failed;
 
     blocks_->store(block, height);
@@ -290,14 +302,12 @@ code data_base::insert(const chain::block& block, size_t height)
 // Add a block in order.
 code data_base::push(const block& block, size_t height)
 {
-    const auto ec = verify(block, height);
+    const auto ec = verify_push(block, height);
 
     if (ec)
         return ec;
 
-    push_transactions(block, height);
-    transactions_->synchronize();
-    if (!push_heights(block, height))
+    if (!push_transactions(block, height) || !push_heights(block, height))
         return error::operation_failed;
 
     blocks_->store(block, height);
@@ -306,7 +316,7 @@ code data_base::push(const block& block, size_t height)
 }
 
 // To push in order call with bucket = 0 and buckets = 1 (defaults).
-void data_base::push_transactions(const chain::block& block, size_t height,
+bool data_base::push_transactions(const chain::block& block, size_t height,
     size_t bucket, size_t buckets)
 {
     BITCOIN_ASSERT(bucket < buckets);
@@ -330,33 +340,20 @@ void data_base::push_transactions(const chain::block& block, size_t height,
         push_outputs(tx_hash, height, tx.outputs());
         push_stealth(tx_hash, height, tx.outputs());
     }
+
+    return true;
 }
 
-// To push in order call with bucket = 0 and buckets = 1 (defaults).
-bool data_base::push_heights(const chain::block& block, size_t height,
-    size_t bucket, size_t buckets)
+bool data_base::push_heights(const chain::block& block, size_t height)
 {
-    BITCOIN_ASSERT(bucket < buckets);
+    transactions_->synchronize();
     const auto& txs = block.transactions();
-    size_t position = 0;
 
-    // Must skip coinbase here as it is already accounted for.
+    // Skip coinbase as it has no previous output.
     for (auto tx = txs.begin() + 1; tx != txs.end(); ++tx)
-    {
-        const auto& inputs = tx->inputs();
-
-        // TODO: eliminate the wasteful iterations by using smart step.
-        for (size_t input_index = 0; input_index < inputs.size();
-            ++input_index, ++position)
-        {
-            if (position % buckets != bucket)
-                continue;
-
-            const auto& prevout = inputs[input_index].previous_output();
-            if (!transactions_->update(prevout, height))
+        for (const auto& input: tx->inputs())
+            if (!transactions_->update(input.previous_output(), height))
                 return false;
-        }
-    }
 
     return true;
 }
@@ -569,12 +566,12 @@ void data_base::push_next(const code& ec,
 void data_base::do_push(block_const_ptr block, size_t height,
     dispatcher& dispatch, result_handler handler)
 {
-    const result_handler block_complete =
+    result_handler block_complete =
         std::bind(&data_base::handle_push_complete,
             this, _1, block, height, handler);
 
     // This ensures linkage and that the there is at least one tx.
-    const auto ec = verify(*block, height);
+    const auto ec = verify_push(*block, height);
 
     if (ec)
     {
@@ -584,12 +581,7 @@ void data_base::do_push(block_const_ptr block, size_t height,
 
     const auto threads = dispatch.size();
     const auto buckets = std::min(threads, block->transactions().size());
-
-    result_handler transactions_complete =
-        std::bind(&data_base::push_updates,
-            this, _1, block, height, std::ref(dispatch), block_complete);
-
-    const auto join_handler = bc::synchronize(std::move(transactions_complete),
+    const auto join_handler = bc::synchronize(std::move(block_complete),
         buckets, NAME "_do_push");
 
     for (size_t bucket = 0; bucket < buckets; ++bucket)
@@ -600,12 +592,12 @@ void data_base::do_push(block_const_ptr block, size_t height,
 void data_base::do_push_transactions(block_const_ptr block, size_t height,
     size_t bucket, size_t buckets, result_handler handler)
 {
-    push_transactions(*block, height, bucket, buckets);
-    handler(error::success);
+    const auto result = push_transactions(*block, height, bucket, buckets);
+    handler(result ? error::success : error::operation_failed);
 }
 
-void data_base::push_updates(const code& ec, block_const_ptr block,
-    size_t height, dispatcher& dispatch, result_handler handler)
+void data_base::handle_push_complete(const code& ec, block_const_ptr block,
+    size_t height, result_handler handler)
 {
     if (ec)
     {
@@ -613,49 +605,20 @@ void data_base::push_updates(const code& ec, block_const_ptr block,
         return;
     }
 
-    const auto non_coinbase_inputs = block->total_inputs(false);
-
-    // Return if there are no non-coinbase inputs to validate.
-    // Block synchronize calls transaction synchronize so it won't be missed.
-    if (non_coinbase_inputs == 0)
+    if (!push_heights(*block, height))
     {
-        handler(error::success);
+        handler(error::operation_failed);
         return;
     }
 
-    // Updates can be applied only after all transactions are synchronized.
-    transactions_->synchronize();
+    // Push the block header and synchronize to complete the block.
+    blocks_->store(*block, height);
 
-    const auto buckets = std::min(dispatch.size(), non_coinbase_inputs);
-    const auto join_handler = bc::synchronize(handler, buckets,
-        NAME "_push_updates");
-
-    for (size_t bucket = 0; bucket < buckets; ++bucket)
-        dispatch.concurrent(&data_base::do_push_heights,
-            this, block, height, bucket, buckets, join_handler);
-}
-
-void data_base::do_push_heights(block_const_ptr block, size_t height,
-    size_t bucket, size_t buckets, result_handler handler)
-{
-    const auto result = push_heights(*block, height, bucket, buckets);
-    handler(result ? error::success : error::operation_failed);
-}
-
-void data_base::handle_push_complete(const code& ec, block_const_ptr block,
-    size_t height, result_handler handler)
-{
-    if (!ec)
-    {
-        // Push the block header and synchronize to complete the block.
-        blocks_->store(*block, height);
-
-        // Synchronize tx updates, indexes and block.
-        synchronize();
-    }
+    // Synchronize tx updates, indexes and block.
+    synchronize();
 
     // This is the end of the block sub-sequence.
-    handler(ec);
+    handler(error::success);
 }
 
 // TODO: implement async and concurrent.
