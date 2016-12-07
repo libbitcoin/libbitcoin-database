@@ -126,8 +126,7 @@ chain::output transaction_result::output(uint32_t index) const
     // Skip outputs until the target output.
     for (uint32_t output = 0; output < index; ++output)
     {
-        deserial.skip(height_size);
-        deserial.skip(value_size);
+        deserial.skip(height_size + value_size);
         deserial.skip(deserial.read_size_little_endian());
         BITCOIN_ASSERT(deserial);
     }
