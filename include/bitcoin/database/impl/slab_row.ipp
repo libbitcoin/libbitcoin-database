@@ -61,8 +61,8 @@ public:
     void write_next_position(file_offset next);
 
 private:
-    const memory_ptr raw_next_data() const;
-    const memory_ptr raw_data(file_offset offset) const;
+    memory_ptr raw_next_data() const;
+    memory_ptr raw_data(file_offset offset) const;
 
     file_offset position_;
     slab_manager& manager_;
@@ -151,7 +151,7 @@ void slab_row<KeyType>::write_next_position(file_offset next)
 }
 
 template <typename KeyType>
-const memory_ptr slab_row<KeyType>::raw_data(file_offset offset) const
+memory_ptr slab_row<KeyType>::raw_data(file_offset offset) const
 {
     auto memory = manager_.get(position_);
     REMAP_INCREMENT(memory, offset);
@@ -159,7 +159,7 @@ const memory_ptr slab_row<KeyType>::raw_data(file_offset offset) const
 }
 
 template <typename KeyType>
-const memory_ptr slab_row<KeyType>::raw_next_data() const
+memory_ptr slab_row<KeyType>::raw_next_data() const
 {
     // Next position is after key data.
     return raw_data(key_size);

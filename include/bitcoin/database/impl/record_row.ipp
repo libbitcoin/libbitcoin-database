@@ -42,7 +42,7 @@ public:
 
     record_row(record_manager& manager, array_index index);
 
-    array_index create(const KeyType& key, const array_index next);
+    array_index create(const KeyType& key, array_index next);
 
     /// Does this match?
     bool compare(const KeyType& key) const;
@@ -69,15 +69,13 @@ private:
 };
 
 template <typename KeyType>
-record_row<KeyType>::record_row(record_manager& manager,
-    const array_index index)
+record_row<KeyType>::record_row(record_manager& manager, array_index index)
   : manager_(manager), index_(index)
 {
 }
 
 template <typename KeyType>
-array_index record_row<KeyType>::create(const KeyType& key,
-    const array_index next)
+array_index record_row<KeyType>::create(const KeyType& key, array_index next)
 {
     // Create new record.
     //   [ KeyType  ]
