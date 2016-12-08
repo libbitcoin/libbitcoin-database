@@ -553,6 +553,11 @@ void data_base::push_next(const code& ec,
         return;
     }
 
+    const auto block = (*blocks)[index];
+
+    // Set push start time for the block.
+    block->validation.start_push = asio::steady_clock::now();
+
     const result_handler next =
         std::bind(&data_base::push_next,
             this, _1, blocks, index + 1, height + 1, std::ref(dispatch),
@@ -560,15 +565,12 @@ void data_base::push_next(const code& ec,
 
     // This is the beginning of the block sub-sequence.
     dispatch.concurrent(&data_base::do_push,
-        this, (*blocks)[index], height, std::ref(dispatch), next);
+        this, block, height, std::ref(dispatch), next);
 }
 
 void data_base::do_push(block_const_ptr block, size_t height,
     dispatcher& dispatch, result_handler handler)
 {
-    // Set push start time for each block.
-    block->validation.start_push = asio::steady_clock::now();
-
     result_handler block_complete =
         std::bind(&data_base::handle_push_complete,
             this, _1, block, height, handler);
@@ -619,6 +621,9 @@ void data_base::handle_push_complete(const code& ec, block_const_ptr block,
 
     // Synchronize tx updates, indexes and block.
     synchronize();
+
+    // Set push end time for the block.
+    block->validation.end_push = asio::steady_clock::now();
 
     // This is the end of the block sub-sequence.
     handler(error::success);
