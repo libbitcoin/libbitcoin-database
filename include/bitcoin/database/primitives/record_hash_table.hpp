@@ -72,7 +72,7 @@ public:
 
     /// Find the record for a given key.
     /// Returns a null pointer if not found.
-    const memory_ptr find(const KeyType& key) const;
+    memory_ptr find(const KeyType& key) const;
 
     /// Delete a key-value pair from the hashtable by unlinking the node.
     bool unlink(const KeyType& key);
@@ -85,11 +85,11 @@ private:
     array_index read_bucket_value(const KeyType& key) const;
 
     // Link a new chain into the bucket header.
-    void link(const KeyType& key, const array_index begin);
+    void link(const KeyType& key, array_index begin);
 
     // Release node from linked chain.
     template <typename ListItem>
-    void release(const ListItem& item, const file_offset previous);
+    void release(const ListItem& item, file_offset previous);
 
     record_hash_table_header& header_;
     record_manager& manager_;

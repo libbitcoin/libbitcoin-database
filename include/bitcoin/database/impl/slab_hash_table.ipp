@@ -40,7 +40,7 @@ slab_hash_table<KeyType>::slab_hash_table(slab_hash_table_header& header,
 // be differentiated except in the order written (used by bip30).
 template <typename KeyType>
 file_offset slab_hash_table<KeyType>::store(const KeyType& key,
-    write_function write, const size_t value_size)
+    write_function write, size_t value_size)
 {
     // Store current bucket value.
 
@@ -57,13 +57,14 @@ file_offset slab_hash_table<KeyType>::store(const KeyType& key,
     const auto old_begin = read_bucket_value(key);
     slab_row<KeyType> item(manager_, 0);
     const auto new_begin = item.create(key, value_size, old_begin);
-    write(item.data());
 
     // Link record to header.
     link(key, new_begin);
 
     mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
+
+    write(item.data());
 
     // Return the file offset of the slab data segment.
     return new_begin + slab_row<KeyType>::prefix_size;
@@ -194,8 +195,7 @@ file_offset slab_hash_table<KeyType>::read_bucket_value(
 }
 
 template <typename KeyType>
-void slab_hash_table<KeyType>::link(const KeyType& key,
-    const file_offset begin)
+void slab_hash_table<KeyType>::link(const KeyType& key, file_offset begin)
 {
     header_.write(bucket_index(key), begin);
 }
@@ -203,7 +203,7 @@ void slab_hash_table<KeyType>::link(const KeyType& key,
 template <typename KeyType>
 template <typename ListItem>
 void slab_hash_table<KeyType>::release(const ListItem& item,
-    const file_offset previous)
+    file_offset previous)
 {
     ListItem previous_item(manager_, previous);
     previous_item.write_next_position(item.next_position());
