@@ -44,6 +44,11 @@ file_offset slab_hash_table<KeyType>::store(const KeyType& key,
 {
     // Store current bucket value.
 
+    // TODO: separate creation from linkage, create and populate first, then
+    // link under critical section. This will remove creation from the critical
+    // section and eliminate record data read-write concurrency.
+    // TODO: protect unlink from pop concurrency when implemented.
+
     // For a given key in this hash table new item creation must be atomic from
     // read of the old value to write of the new. Otherwise concurrent write of
     // hash table conflicts will corrupt the key's record row. Unfortunmately
