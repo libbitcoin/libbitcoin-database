@@ -63,7 +63,7 @@ public:
     /// Execute a write. value_size is the required size of the buffer.
     /// Returns the file offset of the new value.
     file_offset store(const KeyType& key, write_function write,
-        const size_t value_size);
+        size_t value_size);
 
     /// Execute a writer against a key's buffer if the key is found.
     /// Returns the file offset of the found value (or zero).
@@ -84,11 +84,11 @@ private:
     file_offset read_bucket_value(const KeyType& key) const;
 
     // Link a new chain into the bucket header.
-    void link(const KeyType& key, const file_offset begin);
+    void link(const KeyType& key, file_offset begin);
 
     // Release node from linked chain.
     template <typename ListItem>
-    void release(const ListItem& item, const file_offset previous);
+    void release(const ListItem& item, file_offset previous);
 
     slab_hash_table_header& header_;
     slab_manager& manager_;

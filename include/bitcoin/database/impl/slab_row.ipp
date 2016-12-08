@@ -42,8 +42,8 @@ public:
 
     slab_row(slab_manager& manager, file_offset position);
 
-    file_offset create(const KeyType& key, const size_t value_size,
-        const file_offset next);
+    file_offset create(const KeyType& key, size_t value_size,
+        file_offset next);
 
     /// Does this match?
     bool compare(const KeyType& key) const;
@@ -70,15 +70,15 @@ private:
 };
 
 template <typename KeyType>
-slab_row<KeyType>::slab_row(slab_manager& manager, const file_offset position)
+slab_row<KeyType>::slab_row(slab_manager& manager, file_offset position)
   : manager_(manager), position_(position)
 {
     static_assert(position_size == 8, "Invalid file_offset size.");
 }
 
 template <typename KeyType>
-file_offset slab_row<KeyType>::create(const KeyType& key,
-    const size_t value_size, const file_offset next)
+file_offset slab_row<KeyType>::create(const KeyType& key, size_t value_size,
+    file_offset next)
 {
     // Create new slab.
     //   [ KeyType  ]

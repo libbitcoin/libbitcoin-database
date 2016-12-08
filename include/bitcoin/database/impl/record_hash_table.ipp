@@ -41,9 +41,14 @@ record_hash_table<KeyType>::record_hash_table(
 // be differentiated except in the order written.
 template <typename KeyType>
 void record_hash_table<KeyType>::store(const KeyType& key,
-    const write_function write)
+    write_function write)
 {
     // Store current bucket value.
+
+    // TODO: separate creation from linkage, create and populate first, then
+    // link under critical section. This will remove creation from the critical
+    // section and eliminate slab data read-write concurrency.
+    // TODO: protect unlink from pop concurrency when implemented.
 
     // For a given key in this hash table new item creation must be atomic from
     // read of the old value to write of the new. Otherwise concurrent write of
@@ -58,18 +63,19 @@ void record_hash_table<KeyType>::store(const KeyType& key,
     const auto old_begin = read_bucket_value(key);
     record_row<KeyType> item(manager_, 0);
     const auto new_begin = item.create(key, old_begin);
-    write(item.data());
 
     // Link record to header.
     link(key, new_begin);
 
     mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
+
+    write(item.data());
 }
 
 // This is limited to returning the first of multiple matching key values.
 template <typename KeyType>
-const memory_ptr record_hash_table<KeyType>::find(const KeyType& key) const
+memory_ptr record_hash_table<KeyType>::find(const KeyType& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -141,8 +147,7 @@ bool record_hash_table<KeyType>::unlink(const KeyType& key)
 }
 
 template <typename KeyType>
-array_index record_hash_table<KeyType>::bucket_index(
-    const KeyType& key) const
+array_index record_hash_table<KeyType>::bucket_index(const KeyType& key) const
 {
     const auto bucket = remainder(key, header_.size());
     BITCOIN_ASSERT(bucket < header_.size());
@@ -159,8 +164,7 @@ array_index record_hash_table<KeyType>::read_bucket_value(
 }
 
 template <typename KeyType>
-void record_hash_table<KeyType>::link(const KeyType& key,
-    const array_index begin)
+void record_hash_table<KeyType>::link(const KeyType& key, array_index begin)
 {
     header_.write(bucket_index(key), begin);
 }
@@ -168,7 +172,7 @@ void record_hash_table<KeyType>::link(const KeyType& key,
 template <typename KeyType>
 template <typename ListItem>
 void record_hash_table<KeyType>::release(const ListItem& item,
-    const file_offset previous)
+    file_offset previous)
 {
     ListItem previous_item(manager_, previous);
     previous_item.write_next_index(item.next_index());
