@@ -178,7 +178,7 @@ void transaction_database::store(size_t height, size_t position,
     BITCOIN_ASSERT(tx_size <= max_size_t - version_lock_size);
     const auto value_size = version_lock_size + static_cast<size_t>(tx_size);
 
-    const auto write = [&hight32, &position32, &tx](memory_ptr data)
+    const auto write = [&](memory_ptr data)
     {
         auto serial = make_unsafe_serializer(REMAP_ADDRESS(data));
         serial.write_4_bytes_little_endian(hight32);
