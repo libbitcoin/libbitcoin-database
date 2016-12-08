@@ -566,6 +566,9 @@ void data_base::push_next(const code& ec,
 void data_base::do_push(block_const_ptr block, size_t height,
     dispatcher& dispatch, result_handler handler)
 {
+    // Set push start time for each block.
+    block->validation.start_push = asio::steady_clock::now();
+
     result_handler block_complete =
         std::bind(&data_base::handle_push_complete,
             this, _1, block, height, handler);
@@ -654,6 +657,8 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
     // Enqueue blocks so .front() is fork + 1 and .back() is top.
     for (size_t height = top; height > fork; --height)
     {
+        const auto start_time = asio::steady_clock::now();
+
         // TODO: parallelize pop of transactions within each block.
         const auto block = std::make_shared<message::block>(pop());
 
@@ -666,6 +671,7 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
         // Mark the blocks as validated for their respective heights.
         block->header().validation.height = height;
         block->validation.result = error::success;
+        block->validation.start_pop = start_time;
         out_blocks->insert(out_blocks->begin(), block);
     }
 
