@@ -282,7 +282,6 @@ code data_base::verify_push(const block& block, size_t height)
     return error::success;
 }
 
-
 // Add block to the database at the given height.
 code data_base::insert(const chain::block& block, size_t height)
 {
