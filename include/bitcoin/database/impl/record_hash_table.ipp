@@ -61,7 +61,7 @@ void record_hash_table<KeyType>::store(const KeyType& key,
     mutex_.lock();
 
     const auto old_begin = read_bucket_value(key);
-    record_row<KeyType> item(manager_, 0);
+    record_row<KeyType> item(manager_);
     const auto new_begin = item.create(key, old_begin);
 
     // Link record to header.

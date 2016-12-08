@@ -40,7 +40,7 @@ public:
     static BC_CONSTEXPR size_t key_size = std::tuple_size<KeyType>::value;
     static BC_CONSTEXPR file_offset prefix_size = key_size + index_size;
 
-    record_row(record_manager& manager, array_index index);
+    record_row(record_manager& manager, array_index index=0);
 
     array_index create(const KeyType& key, array_index next);
 
@@ -77,6 +77,8 @@ record_row<KeyType>::record_row(record_manager& manager, array_index index)
 template <typename KeyType>
 array_index record_row<KeyType>::create(const KeyType& key, array_index next)
 {
+    BITCOIN_ASSERT(index_ == 0);
+
     // Create new record.
     //   [ KeyType  ]
     //   [ next:4   ]

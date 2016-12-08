@@ -60,7 +60,7 @@ file_offset slab_hash_table<KeyType>::store(const KeyType& key,
     mutex_.lock();
 
     const auto old_begin = read_bucket_value(key);
-    slab_row<KeyType> item(manager_, 0);
+    slab_row<KeyType> item(manager_);
     const auto new_begin = item.create(key, value_size, old_begin);
 
     // Link record to header.

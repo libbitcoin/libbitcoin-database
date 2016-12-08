@@ -40,7 +40,7 @@ public:
     static BC_CONSTEXPR size_t key_size = std::tuple_size<KeyType>::value;
     static BC_CONSTEXPR file_offset prefix_size = key_size + position_size;
 
-    slab_row(slab_manager& manager, file_offset position);
+    slab_row(slab_manager& manager, file_offset position=0);
 
     file_offset create(const KeyType& key, size_t value_size,
         file_offset next);
@@ -80,6 +80,8 @@ template <typename KeyType>
 file_offset slab_row<KeyType>::create(const KeyType& key, size_t value_size,
     file_offset next)
 {
+    BITCOIN_ASSERT(position_ == 0);
+
     // Create new slab.
     //   [ KeyType  ]
     //   [ next:8   ]
