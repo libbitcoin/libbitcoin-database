@@ -95,13 +95,9 @@ file_offset slab_row<KeyType>::create(const KeyType& key, size_t value_size,
     auto serial = make_unsafe_serializer(key_data);
     serial.write_forward(key);
 
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    // This does not require protection as the creted slab is not yet linked.
     serial.template write_little_endian<file_offset>(next);
-
     return position_;
-    ///////////////////////////////////////////////////////////////////////////
 }
 
 template <typename KeyType>

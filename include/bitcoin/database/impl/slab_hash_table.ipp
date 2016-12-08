@@ -48,6 +48,7 @@ file_offset slab_hash_table<KeyType>::store(const KeyType& key,
     // link under critical section. This will remove creation from the critical
     // section and eliminate record data read-write concurrency.
     // TODO: protect unlink from pop concurrency when implemented.
+    slab_row<KeyType> item(manager_);
 
     // For a given key in this hash table new item creation must be atomic from
     // read of the old value to write of the new. Otherwise concurrent write of
@@ -60,7 +61,6 @@ file_offset slab_hash_table<KeyType>::store(const KeyType& key,
     mutex_.lock();
 
     const auto old_begin = read_bucket_value(key);
-    slab_row<KeyType> item(manager_);
     const auto new_begin = item.create(key, value_size, old_begin);
 
     // Link record to header.

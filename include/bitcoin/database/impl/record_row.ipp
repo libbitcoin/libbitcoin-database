@@ -91,13 +91,9 @@ array_index record_row<KeyType>::create(const KeyType& key, array_index next)
     auto serial = make_unsafe_serializer(record);
     serial.write_forward(key);
 
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    // This does not require protection as the creted record is not yet linked.
     serial.template write_little_endian<array_index>(next);
-
     return index_;
-    ///////////////////////////////////////////////////////////////////////////
 }
 
 template <typename KeyType>
