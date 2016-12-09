@@ -43,13 +43,9 @@ template <typename KeyType>
 void record_hash_table<KeyType>::store(const KeyType& key,
     write_function write)
 {
-    // Store current bucket value.
-
-    // TODO: separate creation from linkage, create and populate first, then
-    // link under critical section. This will remove creation from the critical
-    // section and eliminate slab data read-write concurrency.
-    // TODO: protect unlink from pop concurrency when implemented.
-    record_row<KeyType> item(manager_);
+    // Allocate and populate new unlinked record.
+    record_row<KeyType> record(manager_);
+    const auto position = record.create(key, write);
 
     // For a given key in this hash table new item creation must be atomic from
     // read of the old value to write of the new. Otherwise concurrent write of
@@ -61,16 +57,14 @@ void record_hash_table<KeyType>::store(const KeyType& key,
     // Critical Section.
     mutex_.lock();
 
-    const auto old_begin = read_bucket_value(key);
-    const auto new_begin = item.create(key, old_begin);
+    // Link new record.next to current first record.
+    record.link(read_bucket_value(key));
 
-    // Link record to header.
-    link(key, new_begin);
+    // Link header to new record as the new first.
+    link(key, position);
 
     mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
-
-    write(item.data());
 }
 
 // This is limited to returning the first of multiple matching key values.

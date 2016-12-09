@@ -152,10 +152,10 @@ block_result block_database::get(size_t height) const
     // HACK: back up into the slab to obtain the key (optimization).
     static const auto prefix_size = slab_row<hash_digest>::prefix_size;
     const auto buffer = REMAP_ADDRESS(memory);
-    auto reader = make_unsafe_deserializer(buffer - prefix_size);
+    auto deserial = make_unsafe_deserializer(buffer - prefix_size);
     //*************************************************************************
 
-    return block_result(memory, std::move(reader.read_hash()));
+    return block_result(memory, std::move(deserial.read_hash()));
 }
 
 block_result block_database::get(const hash_digest& hash) const
@@ -171,12 +171,10 @@ void block_database::store(const block& block, size_t height)
     const auto tx_count = block.transactions().size();
 
     // Write block data.
-    const auto write = [&](memory_ptr data)
+    const auto write = [&](serializer<uint8_t*>& serial)
     {
-        auto serial = make_unsafe_serializer(REMAP_ADDRESS(data));
-
-        // WRITE THE HEADER
-        serial.write_bytes(block.header().to_data());
+        // WRITE THE BLOCK HEADER AND TX HASHES
+        block.header().to_data(serial);
         serial.write_4_bytes_little_endian(height32);
         serial.write_size_little_endian(tx_count);
 

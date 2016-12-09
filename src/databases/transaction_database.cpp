@@ -178,14 +178,13 @@ void transaction_database::store(size_t height, size_t position,
     BITCOIN_ASSERT(tx_size <= max_size_t - version_lock_size);
     const auto value_size = version_lock_size + static_cast<size_t>(tx_size);
 
-    const auto write = [&](memory_ptr data)
+    const auto write = [&](serializer<uint8_t*>& serial)
     {
-        auto serial = make_unsafe_serializer(REMAP_ADDRESS(data));
         serial.write_4_bytes_little_endian(hight32);
         serial.write_4_bytes_little_endian(position32);
 
         // WRITE THE TX
-        serial.write_bytes(tx.to_data(use_wire_encoding));
+        tx.to_data(serial, use_wire_encoding);
     };
 
     lookup_map_.store(key, write, value_size);

@@ -56,7 +56,7 @@ template <typename KeyType>
 class slab_hash_table
 {
 public:
-    typedef std::function<void(memory_ptr)> write_function;
+    typedef serializer<uint8_t*>::functor write_function;
 
     slab_hash_table(slab_hash_table_header& header, slab_manager& manager);
 
