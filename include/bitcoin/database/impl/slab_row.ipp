@@ -20,6 +20,8 @@
 #ifndef LIBBITCOIN_DATABASE_SLAB_LIST_IPP
 #define LIBBITCOIN_DATABASE_SLAB_LIST_IPP
 
+#include <cstddef>
+#include <cstdint>
 #include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
@@ -37,13 +39,20 @@ class slab_row
 {
 public:
     static BC_CONSTEXPR size_t position_size = sizeof(file_offset);
+    static BC_CONSTEXPR size_t key_start = 0;
     static BC_CONSTEXPR size_t key_size = std::tuple_size<KeyType>::value;
     static BC_CONSTEXPR file_offset prefix_size = key_size + position_size;
 
-    slab_row(slab_manager& manager, file_offset position);
+    typedef serializer<uint8_t*>::functor write_function;
 
-    file_offset create(const KeyType& key, size_t value_size,
-        file_offset next);
+    slab_row(slab_manager& manager, file_offset position=0);
+
+    /// Allocate unlinked item for the given key.
+    file_offset create(const KeyType& key, write_function write,
+        size_t value_size);
+
+    /// Link allocated/populated item.
+    void link(file_offset next);
 
     /// Does this match?
     bool compare(const KeyType& key) const;
@@ -61,8 +70,7 @@ public:
     void write_next_position(file_offset next);
 
 private:
-    const memory_ptr raw_next_data() const;
-    const memory_ptr raw_data(file_offset offset) const;
+    memory_ptr raw_data(file_offset offset) const;
 
     file_offset position_;
     slab_manager& manager_;
@@ -77,42 +85,61 @@ slab_row<KeyType>::slab_row(slab_manager& manager, file_offset position)
 }
 
 template <typename KeyType>
-file_offset slab_row<KeyType>::create(const KeyType& key, size_t value_size,
-    file_offset next)
+file_offset slab_row<KeyType>::create(const KeyType& key, write_function write,
+    size_t value_size)
 {
-    // Create new slab.
-    //   [ KeyType  ]
+    BITCOIN_ASSERT(position_ == 0);
+
+    // Create new slab and populate its key.
+    //   [ KeyType  ] <==
     //   [ next:8   ]
     //   [ value... ]
     const size_t slab_size = prefix_size + value_size;
     position_ = manager_.new_slab(slab_size);
 
-    // Write to slab.
-    const auto memory = raw_data(0);
+    const auto memory = raw_data(key_start);
     const auto key_data = REMAP_ADDRESS(memory);
     auto serial = make_unsafe_serializer(key_data);
     serial.write_forward(key);
-
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
-    serial.template write_little_endian<file_offset>(next);
+    serial.skip(position_size);
+    serial.write_delegated(write);
 
     return position_;
-    ///////////////////////////////////////////////////////////////////////////
+}
+
+template <typename KeyType>
+void slab_row<KeyType>::link(file_offset next)
+{
+    // Populate next pointer value.
+    //   [ KeyType  ]
+    //   [ next:8   ] <==
+    //   [ value... ]
+
+    // Write next pointer after the key.
+    const auto memory = raw_data(key_size);
+    const auto next_data = REMAP_ADDRESS(memory);
+    auto serial = make_unsafe_serializer(next_data);
+
+    //*************************************************************************
+    serial.template write_little_endian<file_offset>(next);
+    //*************************************************************************
 }
 
 template <typename KeyType>
 bool slab_row<KeyType>::compare(const KeyType& key) const
 {
-    // Key data is at the start.
-    const auto memory = raw_data(0);
+    const auto memory = raw_data(key_start);
     return std::equal(key.begin(), key.end(), REMAP_ADDRESS(memory));
 }
 
 template <typename KeyType>
 memory_ptr slab_row<KeyType>::data() const
 {
+    // Get value pointer.
+    //   [ KeyType  ]
+    //   [ next:8   ]
+    //   [ value... ] <==
+
     // Value data is at the end.
     return raw_data(prefix_size);
 }
@@ -127,7 +154,7 @@ file_offset slab_row<KeyType>::offset() const
 template <typename KeyType>
 file_offset slab_row<KeyType>::next_position() const
 {
-    const auto memory = raw_next_data();
+    const auto memory = raw_data(key_size);
     const auto next_address = REMAP_ADDRESS(memory);
 
     // Critical Section
@@ -140,7 +167,7 @@ file_offset slab_row<KeyType>::next_position() const
 template <typename KeyType>
 void slab_row<KeyType>::write_next_position(file_offset next)
 {
-    const auto memory = raw_next_data();
+    const auto memory = raw_data(key_size);
     auto serial = make_unsafe_serializer(REMAP_ADDRESS(memory));
 
     // Critical Section
@@ -151,18 +178,11 @@ void slab_row<KeyType>::write_next_position(file_offset next)
 }
 
 template <typename KeyType>
-const memory_ptr slab_row<KeyType>::raw_data(file_offset offset) const
+memory_ptr slab_row<KeyType>::raw_data(file_offset offset) const
 {
     auto memory = manager_.get(position_);
     REMAP_INCREMENT(memory, offset);
     return memory;
-}
-
-template <typename KeyType>
-const memory_ptr slab_row<KeyType>::raw_next_data() const
-{
-    // Next position is after key data.
-    return raw_data(key_size);
 }
 
 } // namespace database

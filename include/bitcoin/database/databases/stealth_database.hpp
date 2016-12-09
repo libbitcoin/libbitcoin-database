@@ -35,7 +35,6 @@ class BCD_API stealth_database
 {
 public:
     typedef chain::stealth_compact::list list;
-    typedef std::function<void(memory_ptr)> write_function;
     typedef boost::filesystem::path path;
     typedef std::shared_ptr<shared_mutex> mutex_ptr;
 

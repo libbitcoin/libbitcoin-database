@@ -139,15 +139,14 @@ bool history_database::flush()
 void history_database::add_output(const short_hash& key,
     const output_point& outpoint, uint32_t output_height, uint64_t value)
 {
-    // TODO: use output_point serialization.
-    auto write = [&](memory_ptr data)
+    const auto write = [&](serializer<uint8_t*>& serial)
     {
-        auto serial = make_unsafe_serializer(REMAP_ADDRESS(data));
         serial.write_byte(static_cast<uint8_t>(point_kind::output));
-        serial.write_bytes(outpoint.to_data());
+        outpoint.to_data(serial);
         serial.write_4_bytes_little_endian(output_height);
         serial.write_8_bytes_little_endian(value);
     };
+
     rows_multimap_.add_row(key, write);
 }
 
@@ -155,15 +154,14 @@ void history_database::add_input(const short_hash& key,
     const output_point& inpoint, uint32_t input_height,
     const input_point& previous)
 {
-    // TODO: use input_point serialization.
-    auto write = [&](memory_ptr data)
+    const auto write = [&](serializer<uint8_t*>& serial)
     {
-        auto serial = make_unsafe_serializer(REMAP_ADDRESS(data));
         serial.write_byte(static_cast<uint8_t>(point_kind::spend));
-        serial.write_bytes(inpoint.to_data());
+        inpoint.to_data(serial);
         serial.write_4_bytes_little_endian(input_height);
         serial.write_8_bytes_little_endian(previous.checksum());
     };
+
     rows_multimap_.add_row(key, write);
 }
 

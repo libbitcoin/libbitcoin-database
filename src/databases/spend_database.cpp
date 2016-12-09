@@ -124,10 +124,9 @@ input_point spend_database::get(const output_point& outpoint) const
 void spend_database::store(const chain::output_point& outpoint,
     const chain::input_point& spend)
 {
-    const auto write = [&spend](memory_ptr data)
+    const auto write = [&](serializer<uint8_t*>& serial)
     {
-        auto serial = make_unsafe_serializer(REMAP_ADDRESS(data));
-        serial.write_bytes(spend.to_data());
+        spend.to_data(serial);
     };
 
     lookup_map_.store(outpoint, write);

@@ -62,7 +62,7 @@ template <typename KeyType>
 class record_hash_table
 {
 public:
-    typedef std::function<void(memory_ptr)> write_function;
+    typedef serializer<uint8_t*>::functor write_function;
 
     record_hash_table(record_hash_table_header& header, record_manager& manager);
 

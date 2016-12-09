@@ -20,6 +20,7 @@
 #ifndef LIBBITCOIN_DATABASE_RECORD_MULTIMAP_HPP
 #define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_HPP
 
+#include <cstdint>
 #include <string>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
@@ -50,7 +51,7 @@ class record_multimap
 {
 public:
     typedef record_hash_table<KeyType> record_hash_table_type;
-    typedef std::function<void(memory_ptr)> write_function;
+    typedef serializer<uint8_t*>::functor write_function;
 
     record_multimap(record_hash_table_type& map, record_list& records);
 
