@@ -58,6 +58,9 @@
     <ClCompile Include="..\..\..\..\src\store.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\outputs_cache.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp">
@@ -139,6 +142,9 @@
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\store.hpp">
+      <Filter>include\bitcoin\database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\outputs_cache.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
   </ItemGroup>

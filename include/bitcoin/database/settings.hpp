@@ -41,6 +41,7 @@ public:
     uint32_t transaction_table_buckets;
     uint32_t spend_table_buckets;
     uint32_t history_table_buckets;
+    uint32_t cache_capacity;
     boost::filesystem::path directory;
 };
 
