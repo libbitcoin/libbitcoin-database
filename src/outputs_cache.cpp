@@ -24,12 +24,23 @@
 namespace libbitcoin {
 namespace database {
 
+using namespace bc::chain;
+
 outputs_cache::outputs_cache()
 {
 }
 
-outputs_cache::~outputs_cache()
+void outputs_cache::add(const output_point& key, const output& value)
 {
+}
+
+void outputs_cache::remove(const output_point& key)
+{
+}
+
+bool outputs_cache::find(const output_point& key)
+{
+    return false;
 }
 
 } // namespace database

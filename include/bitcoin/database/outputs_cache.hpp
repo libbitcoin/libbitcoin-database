@@ -27,16 +27,28 @@
 namespace libbitcoin {
 namespace database {
 
-/// This class is not thread safe.
+/// This class is thread safe.
+/// A circular-by-age hash table of [point, output].
+/// Coinbase outputs are not cached, this precludes need for height.
+/// Outputs store value and unparsed script (for load speed and compactness).
 class BCD_API outputs_cache
 {
 public:
     typedef std::shared_ptr<outputs_cache> ptr;
 
     outputs_cache();
-    ~outputs_cache();
+
+    /// Add an output to the cache (purges older entries).
+    void add(const chain::output_point& key, const chain::output& value);
+
+    /// Remove an output from the cache (has been spent).
+    void remove(const chain::output_point& output);
+
+    /// Determine if the output is unspent (otherwise fall back to the store).
+    bool find(const chain::output_point& output);
 
 private:
+    mutable upgrade_mutex mutex_;
 };
 
 } // namespace database
