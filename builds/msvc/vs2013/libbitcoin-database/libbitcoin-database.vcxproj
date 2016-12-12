@@ -116,6 +116,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\allocator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_map.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\outputs_cache.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table_header.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_hash_table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_list.hpp" />
@@ -143,6 +144,7 @@
     <ClCompile Include="..\..\..\..\src\memory\allocator.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\memory_map.cpp" />
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c" />
+    <ClCompile Include="..\..\..\..\src\outputs_cache.cpp" />
     <ClCompile Include="..\..\..\..\src\primitives\record_list.cpp" />
     <ClCompile Include="..\..\..\..\src\primitives\record_manager.cpp" />
     <ClCompile Include="..\..\..\..\src\primitives\record_multimap_iterable.cpp" />

@@ -35,6 +35,7 @@ settings::settings()
     transaction_table_buckets(0),
     spend_table_buckets(0),
     history_table_buckets(0),
+    cache_capacity(0),
 
     directory("blockchain")
 {
