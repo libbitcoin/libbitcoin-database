@@ -367,7 +367,7 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
         spends_->store(input.previous_output(), point);
 
         // Try to extract an address.
-        const auto address = payment_address::extract(input.script());
+        const auto address = input.address();
         if (!address)
             continue;
 
@@ -384,7 +384,7 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
         const auto& output = outputs[index];
 
         // Try to extract an address.
-        const auto address = payment_address::extract(output.script());
+        const auto address = output.address();
         if (!address)
             continue;
 
@@ -404,7 +404,12 @@ void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
     for (size_t index = 0; index < (outputs.size() - 1); ++index)
     {
         const auto& ephemeral_script = outputs[index].script();
-        const auto& payment_script = outputs[index + 1].script();
+        const auto& payment_output = outputs[index + 1];
+
+        // Try to extract the payment address from the second output.
+        const auto address = payment_output.address();
+        if (!address)
+            continue;
 
         // Try to extract an unsigned ephemeral key from the first output.
         hash_digest unsigned_ephemeral_key;
@@ -414,11 +419,6 @@ void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
         // Try to extract a stealth prefix from the first output.
         uint32_t prefix;
         if (!to_stealth_prefix(prefix, ephemeral_script))
-            continue;
-
-        // Try to extract the payment address from the second output.
-        const auto address = payment_address::extract(payment_script);
-        if (!address)
             continue;
 
         // The payment address versions are arbitrary and unused here.
