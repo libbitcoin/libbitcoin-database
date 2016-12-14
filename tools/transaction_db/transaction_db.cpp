@@ -100,7 +100,7 @@ int main(int argc, char** argv)
     if (command == "initialize_new")
         store::create(map_filename);
 
-    transaction_database db(map_filename, 1000, 50);
+    transaction_database db(map_filename, 1000, 50, 0);
 
     if (command == "initialize_new")
     {

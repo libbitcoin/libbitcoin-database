@@ -58,7 +58,10 @@
     <ClCompile Include="..\..\..\..\src\store.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\outputs_cache.cpp">
+    <ClCompile Include="..\..\..\..\src\unspent_transaction.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\unspent_outputs.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -144,7 +147,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\store.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\outputs_cache.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\unspent_transaction.hpp">
+      <Filter>include\bitcoin\database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\unspent_outputs.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
   </ItemGroup>

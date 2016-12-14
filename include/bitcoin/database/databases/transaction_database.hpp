@@ -29,6 +29,7 @@
 #include <bitcoin/database/result/transaction_result.hpp>
 #include <bitcoin/database/primitives/slab_hash_table.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
+#include <bitcoin/database/unspent_outputs.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -46,7 +47,7 @@ public:
 
     /// Construct the database.
     transaction_database(const path& map_filename, size_t buckets,
-        size_t expansion, mutex_ptr mutex = nullptr);
+        size_t expansion, size_t cache_capacity, mutex_ptr mutex=nullptr);
 
     /// Close the database (all threads must first be stopped).
     ~transaction_database();
@@ -65,6 +66,11 @@ public:
 
     /// Fetch transaction by its hash, at or below the specified block height.
     transaction_result get(const hash_digest& hash, size_t fork_height) const;
+
+    /// Get the output at the specified index within the transaction.
+    bool get_output(chain::output& out_output, size_t& out_height,
+        bool& out_coinbase, const chain::output_point& point,
+        size_t fork_height) const;
 
     /// Store a transaction in the database.
     void store(size_t height, size_t position, const chain::transaction& tx);
@@ -92,6 +98,9 @@ private:
     slab_hash_table_header lookup_header_;
     slab_manager lookup_manager_;
     slab_map lookup_map_;
+
+    // This is thread safe, and as a cache is mutable.
+    mutable unspent_outputs cache_;
 };
 
 } // namespace database
