@@ -215,7 +215,10 @@ void transaction_database::store(size_t height, size_t position,
     lookup_map_.store(key, write, value_size);
     cache_.add(tx, height);
 
-    LOG_INFO(LOG_DATABASE) << "Cache hit rate: " << cache_.hit_rate();
+    if (position == 0 && ((height % 100) == 0))
+        LOG_DEBUG(LOG_DATABASE)
+            << "Cache hit rate: " << cache_.hit_rate() << ", size: "
+            << cache_.size();
 }
 
 bool transaction_database::unlink(const hash_digest& hash)
