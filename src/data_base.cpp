@@ -159,7 +159,7 @@ void data_base::start()
 
     transactions_ = std::make_shared<transaction_database>(transaction_table,
         settings_.transaction_table_buckets, settings_.file_growth_rate,
-        mutex_);
+        settings_.cache_capacity, mutex_);
 
     if (use_indexes)
     {

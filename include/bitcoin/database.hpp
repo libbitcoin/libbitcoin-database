@@ -17,9 +17,10 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/data_base.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/outputs_cache.hpp>
 #include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/store.hpp>
+#include <bitcoin/database/unspent_outputs.hpp>
+#include <bitcoin/database/unspent_transaction.hpp>
 #include <bitcoin/database/version.hpp>
 #include <bitcoin/database/databases/block_database.hpp>
 #include <bitcoin/database/databases/history_database.hpp>
