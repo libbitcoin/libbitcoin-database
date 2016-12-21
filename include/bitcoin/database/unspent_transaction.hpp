@@ -81,7 +81,7 @@ private:
 namespace boost
 {
 
-// Extend boost namespace with our unspent output wrapper.
+// Extend boost namespace with our unspent output wrapper hash function.
 template <>
 struct hash<bc::database::unspent_transaction>
 {

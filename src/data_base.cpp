@@ -322,7 +322,8 @@ bool data_base::push_transactions(const chain::block& block, size_t height,
     const auto& txs = block.transactions();
     const auto count = txs.size();
 
-    for (auto position = bucket; position < count; position += buckets)
+    for (auto position = bucket; position < count;
+        position = ceiling_add(position, buckets))
     {
         const auto& tx = txs[position];
 
@@ -674,8 +675,10 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
 
         // Mark the blocks as validated for their respective heights.
         block->header().validation.height = height;
-        block->validation.result = error::success;
+        block->validation.error = error::success;
         block->validation.start_pop = start_time;
+
+        // TODO: optimize.
         out_blocks->insert(out_blocks->begin(), block);
     }
 

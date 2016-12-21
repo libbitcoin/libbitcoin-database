@@ -27,6 +27,7 @@ namespace database {
 
 using namespace bc::chain;
 
+// Because of BIP30 it is safe to use tx hashes as identifiers here.
 unspent_outputs::unspent_outputs(size_t capacity)
   : capacity_(capacity), hits_(1), queries_(1), sequence_(0)
 {
@@ -34,12 +35,22 @@ unspent_outputs::unspent_outputs(size_t capacity)
 
 size_t unspent_outputs::empty() const
 {
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    shared_lock lock(mutex_);
+
     return unspent_.empty();
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 size_t unspent_outputs::size() const
 {
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    shared_lock lock(mutex_);
+
     return unspent_.size();
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 float unspent_outputs::hit_rate() const
@@ -78,15 +89,27 @@ void unspent_outputs::remove(const hash_digest& tx_hash)
     if (capacity_ == 0)
         return;
 
+    const unspent_transaction key{ tx_hash };
+
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    mutex_.lock_upgrade();
 
-    const unspent_transaction key{ tx_hash };
+    // Find the unspent tx entry.
     const auto tx = unspent_.left.find(key);
 
-    if (tx != unspent_.left.end())
-        unspent_.left.erase(tx);
+    if (tx == unspent_.left.end())
+    {
+        mutex_.unlock_upgrade();
+        //---------------------------------------------------------------------
+        return;
+    }
+
+    mutex_.unlock_upgrade_and_lock();
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    unspent_.left.erase(tx);
+
+    mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -95,22 +118,34 @@ void unspent_outputs::remove(const output_point& point)
     if (capacity_ == 0)
         return;
 
+    const unspent_transaction key{ point };
+
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    mutex_.lock_upgrade();
 
-    const unspent_transaction key{ point };
+    // Find the unspent tx entry that may contain the output.
     auto tx = unspent_.left.find(key);
 
     if (tx == unspent_.left.end())
+    {
+        mutex_.unlock_upgrade();
+        //---------------------------------------------------------------------
         return;
+    }
+
+    const auto outputs = tx->first.outputs();
+    mutex_.unlock_upgrade_and_lock();
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     // Erase the output if found at the specified index for the found tx.
-    const auto outputs = tx->first.outputs();
     outputs->erase(point.index());
 
+    // Erase the unspent transaction if it is now fully spent.
     if (outputs->empty())
         unspent_.left.erase(tx);
+
+    mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -120,29 +155,31 @@ bool unspent_outputs::get(output& out_output, size_t& out_height,
     if (capacity_ == 0)
         return false;
 
+    ++queries_;
+    const unspent_transaction key{ point };
+
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     shared_lock lock(mutex_);
 
-    ++queries_;
-    const unspent_transaction key{ point };
+    // Find the unspent tx entry.
     const auto tx = unspent_.left.find(key);
 
     if (tx == unspent_.left.end())
         return false;
 
-    // Find the output at the specified index for the found tx.
+    // Find the output at the specified index for the found unspent tx.
     const auto outputs = tx->first.outputs();
     const auto output = outputs->find(point.index());
 
     if (output == outputs->end())
         return false;
 
+    // Determine if the cached unspent tx is above specified fork_height.
+    // Since the hash table does not allow duplicates there are no others.
     const auto& unspent = tx->first;
     const auto height = tx->first.height();
 
-    // The cache entry is newer than specified.
-    // Since the hash table does not allow duplicates there are no others.
     if (height > fork_height)
         return false;
 
