@@ -392,14 +392,14 @@ bool memory_map::map(size_t size)
 
 bool memory_map::remap(size_t size)
 {
-////#ifdef MREMAP_MAYMOVE
-////    data_ = reinterpret_cast<uint8_t*>(mremap(data_, file_size_, size,
-////        MREMAP_MAYMOVE));
-////
-////    return validate(size);
-////#else
+#ifdef MREMAP_MAYMOVE
+    data_ = reinterpret_cast<uint8_t*>(mremap(data_, file_size_, size,
+        MREMAP_MAYMOVE));
+
+    return validate(size);
+#else
     return unmap() && map(size);
-////#endif
+#endif
 }
 
 bool memory_map::truncate(size_t size)
@@ -415,19 +415,19 @@ bool memory_map::truncate_mapped(size_t size)
     ///////////////////////////////////////////////////////////////////////////
     conditional_lock lock(remap_mutex_);
 
-////#ifndef MREMAP_MAYMOVE
+#ifndef MREMAP_MAYMOVE
     if (!unmap())
         return false;
-////#endif
+#endif
 
     if (!truncate(size))
         return false;
 
-/////#ifndef MREMAP_MAYMOVE
+#ifndef MREMAP_MAYMOVE
     return map(size);
-////#else
-////    return remap(size);
-////#endif
+#else
+    return remap(size);
+#endif
     ///////////////////////////////////////////////////////////////////////////
 }
 

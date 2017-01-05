@@ -39,7 +39,7 @@ class BCD_API unspent_outputs
   : noncopyable
 {
 public:
-    // Construct a cache with the specified transaction size limit.
+    // Construct a cache with the specified transaction count limit.
     unspent_outputs(size_t capacity);
 
     /// The cache has no elements.
