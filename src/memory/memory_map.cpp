@@ -125,6 +125,12 @@ void memory_map::log_resizing(size_t size)
         << "Resizing: " << filename_ << " [" << size << "]";
 }
 
+void memory_map::log_flushed()
+{
+    LOG_DEBUG(LOG_DATABASE)
+        << "Flushed: " << filename_ << " [" << logical_size_ << "]";
+}
+
 void memory_map::log_unmapped()
 {
     LOG_DEBUG(LOG_DATABASE)
@@ -229,7 +235,7 @@ bool memory_map::flush()
     if (!error_name.empty())
         return handle_error(error_name, filename_);
 
-    ////log_flushed();
+    log_flushed();
     return true;
 }
 

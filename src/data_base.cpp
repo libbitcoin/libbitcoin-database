@@ -179,8 +179,12 @@ void data_base::start()
 // protected
 bool data_base::flush()
 {
-    if (closed_)
-        return true;
+    // Avoid a race between flush and close whereby flush is skipped because
+    // close is true and therefore the flush lock file is deleted before close
+    // fails. This would leave the database corrupted and undetected. The flush
+    // call must execute and successfully flush or the lock must remain.
+    ////if (closed_)
+    ////    return true;
 
     auto flushed =
         blocks_->flush() &&
