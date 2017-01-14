@@ -92,6 +92,7 @@ private:
 
     void log_mapping();
     void log_resizing(size_t size);
+    void log_flushed();
     void log_unmapped();
 
     // Optionally guard against concurrent remap.
