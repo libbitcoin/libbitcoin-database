@@ -25,6 +25,7 @@
 #include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/databases/block_database.hpp>
 #include <bitcoin/database/databases/spend_database.hpp>
 #include <bitcoin/database/databases/transaction_database.hpp>
@@ -39,17 +40,12 @@ namespace database {
 
 /// This class is thread safe and implements the sequential locking pattern.
 class BCD_API data_base
-  : public store
+  : public store, noncopyable
 {
 public:
     typedef store::handle handle;
     typedef handle0 result_handler;
     typedef boost::filesystem::path path;
-    typedef message::block::const_ptr block_const_ptr;
-    typedef message::block::const_ptr_list block_const_ptr_list;
-    typedef message::block::const_ptr_list_ptr block_const_ptr_list_ptr;
-    typedef message::block::const_ptr_list_const_ptr 
-        block_const_ptr_list_const_ptr;
 
     // Construct.
     // ----------------------------------------------------------------------------
@@ -91,10 +87,11 @@ public:
     // ------------------------------------------------------------------------
 
     /// Store a block in the database.
-    /// Returns false if a block already exists at height.
+    /// Returns store_block_duplicate if a block already exists at height.
     code insert(const chain::block& block, size_t height);
 
-    /// Returns false if height is not the current top + 1 or not linked.
+    /// Returns store_block_missing_parent if not linked.
+    /// Returns store_block_invalid_height if height is not the current top + 1.
     code push(const chain::block& block, size_t height);
 
     // Asynchronous writers.
@@ -105,7 +102,7 @@ public:
         size_t first_height, dispatcher& dispatch, result_handler handler);
 
     /// Pop the set of blocks above the given hash.
-    /// Sets error if the database is corrupt or the hash doesn't exit.
+    /// Sets error if the database is corrupt or the hash doesn't exist.
     /// Any blocks returned were successfully popped prior to any failure.
     void pop_above(block_const_ptr_list_ptr out_blocks,
         const hash_digest& fork_hash, dispatcher& dispatch,
