@@ -18,6 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include <boost/test/unit_test.hpp>
+
+#include <future>
+#include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/database.hpp>
 
@@ -273,17 +276,39 @@ BOOST_FIXTURE_TEST_SUITE(data_base_tests, data_base_directory_and_thread_priorit
 "00000000000ffffffff0704ffff001d010effffffff0100f2052a0100000043410494b9d3e7" \
 "6c5b1629ecf97fff95d7a4bbdac87cc26099ada28066c6ff1eb9191223cd897194a08d0c272" \
 "6c5747f1db49e8cf90e75dc3e3550ae9b30086f3cd5aaac00000000"
+
+static int push_all_result(data_base& instance,
+    block_const_ptr_list_const_ptr in_blocks, size_t first_height,
+    dispatcher& dispatch)
+{
+    std::promise<code> promise;
+    const auto handler = [&promise](code ec)
+    {
+        promise.set_value(ec);
+    };
+    instance.push_all(in_blocks, first_height, dispatch, handler);
+    return promise.get_future().get().value();
+}
+
+static int pop_above_result(data_base& instance,
+    block_const_ptr_list_ptr out_blocks, const hash_digest& fork_hash,
+    dispatcher& dispatch)
+{
+    std::promise<code> promise;
+    const auto handler = [&promise](code ec)
+    {
+        promise.set_value(ec);
+    };
+    instance.pop_above(out_blocks, fork_hash, dispatch, handler);
+    return promise.get_future().get().value();
+}
  
-// TODO: parameterize bucket sizes to control test cost.
 BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
 {
-    std::cout << "begin data_base pushpop test" << std::endl;
+    std::cout << "begin data_base push/pop test" << std::endl;
 
     create_directory(DIRECTORY);
-    const auto block0 = block::genesis_mainnet();
-
     settings configuration;
-
     configuration.directory = DIRECTORY;
     configuration.file_growth_rate = 42;
     configuration.index_start_height = 0;
@@ -294,75 +319,79 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
 
     // If index_height is set to anything other than 0 or max it can cause
     // false negatives since it excludes entries below the specified height.
-    auto indexed = configuration.index_start_height < store::without_indexes;
+    const auto indexed = configuration.index_start_height < store::without_indexes;
 
+    size_t height;
+    threadpool pool(1);
+    dispatcher dispatch(pool, "test");
     data_base instance(configuration);
+    const auto block0 = block::genesis_mainnet();
     BOOST_REQUIRE(instance.create(block0));
-
-    size_t height = 42;
     BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 0);
     test_block_exists(instance, 0, block0, indexed);
 
-    std::cout << "pushpop: block #1" << std::endl;
+    std::cout << "push block #1 (store_block_missing_parent)" << std::endl;
+    auto invalid_block1 = read_block(MAINNET_BLOCK1);
+    invalid_block1.set_header(chain::header{});
+    BOOST_REQUIRE_EQUAL(instance.push(invalid_block1, 1), error::store_block_missing_parent);
 
-    // Block #1
-    block block1 = read_block(MAINNET_BLOCK1);
+    std::cout << "push block #1" << std::endl;
+    const auto block1 = read_block(MAINNET_BLOCK1);
     test_block_not_exists(instance, block1, indexed);
     BOOST_REQUIRE_EQUAL(instance.push(block1, 1), error::success);
-
-    test_block_exists(instance, 1, block1, indexed);
     BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 1u);
+    test_block_exists(instance, 1, block1, indexed);
 
-    std::cout << "pushpop: block #2" << std::endl;
+    std::cout << "push_all blocks #2 & #3" << std::endl;
+    const auto block2_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK2));
+    const auto block3_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK3));
+    const auto blocks_push_ptr = std::make_shared<const block_const_ptr_list>(block_const_ptr_list{ block2_ptr, block3_ptr });
+    test_block_not_exists(instance, *block2_ptr, indexed);
+    test_block_not_exists(instance, *block3_ptr, indexed);
+    BOOST_REQUIRE(!push_all_result(instance, blocks_push_ptr, 2, dispatch));
+    BOOST_REQUIRE(instance.blocks().top(height));
+    BOOST_REQUIRE_EQUAL(height, 3u);
+    test_block_exists(instance, 2, *block2_ptr, indexed);
+    test_block_exists(instance, 3, *block3_ptr, indexed);
 
-    // Block #2
-    block block2 = read_block(MAINNET_BLOCK2);
-    test_block_not_exists(instance, block2, indexed);
-    instance.push(block2, 2);
-    test_block_exists(instance, 2, block2, indexed);
+    std::cout << "insert block #2 (store_block_duplicate)" << std::endl;
+    BOOST_REQUIRE_EQUAL(instance.insert(*block2_ptr, 2), error::store_block_duplicate);
 
+    std::cout << "pop_above block 1 (blocks #2 & #3)" << std::endl;
+    const auto blocks_popped_ptr = std::make_shared<block_const_ptr_list>();
+    BOOST_REQUIRE(!pop_above_result(instance, blocks_popped_ptr, block1.hash(), dispatch));
+    BOOST_REQUIRE(instance.blocks().top(height));
+    BOOST_REQUIRE_EQUAL(height, 1u);
+    BOOST_REQUIRE_EQUAL(blocks_popped_ptr->size(), 2u);
+    compare_blocks(*(*blocks_popped_ptr)[0], *block2_ptr);
+    compare_blocks(*(*blocks_popped_ptr)[1], *block3_ptr);
+    test_block_not_exists(instance, *block3_ptr, indexed);
+    test_block_not_exists(instance, *block2_ptr, indexed);
+    test_block_exists(instance, 1, block1, indexed);
+    test_block_exists(instance, 0, block0, indexed);
+
+    std::cout << "push block #3 (store_block_invalid_height)" << std::endl;
+    BOOST_REQUIRE_EQUAL(instance.push(*block3_ptr, 3), error::store_block_invalid_height);
+
+    std::cout << "insert block #2" << std::endl;
+    BOOST_REQUIRE_EQUAL(instance.insert(*block2_ptr, 2), error::success);
     BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 2u);
 
-    std::cout << "pushpop: block #3" << std::endl;
+    std::cout << "pop_above block 0 (block #1 & #2)" << std::endl;
+    blocks_popped_ptr->clear();
+    BOOST_REQUIRE(!pop_above_result(instance, blocks_popped_ptr, block0.hash(), dispatch));
+    BOOST_REQUIRE(instance.blocks().top(height));
+    BOOST_REQUIRE_EQUAL(height, 0u);
+    compare_blocks(*(*blocks_popped_ptr)[0], block1);
+    compare_blocks(*(*blocks_popped_ptr)[1], *block2_ptr);
+    test_block_not_exists(instance, block1, indexed);
+    test_block_not_exists(instance, *block2_ptr, indexed);
+    test_block_exists(instance, 0, block0, indexed);
 
-    ////// Block #3
-    ////block block3 = read_block(MAINNET_BLOCK3);
-    ////test_block_not_exists(instance, block3, indexed);
-    ////instance.push(block::list{ block3 }, 3);
-    ////test_block_exists(instance, 3, block3, indexed);
-
-    ////std::cout << "pushpop: cleanup tests" << std::endl;
-
-    ////block::list block3_popped;
-    ////BOOST_REQUIRE(instance.blocks().top(height));
-    ////BOOST_REQUIRE_EQUAL(height, 3u);
-    ////const auto& previous3 = block3.header().previous_block_hash();
-    ////BOOST_REQUIRE(instance.pop_above(block3_popped, previous3));
-    ////BOOST_REQUIRE(instance.blocks().top(height));
-    ////BOOST_REQUIRE_EQUAL(height, 2u);
-
-    ////compare_blocks(block3_popped.front(), block3);
-    ////test_block_not_exists(instance, block3, indexed);
-    ////test_block_exists(instance, 2, block2, indexed);
-    ////test_block_exists(instance, 1, block1, indexed);
-    ////test_block_exists(instance, 0, block0, indexed);
-
-    ////block::list block2_popped;
-    ////const auto& previous2 = block2.header().previous_block_hash();
-    ////BOOST_REQUIRE(instance.pop_above(block2_popped, previous2));
-    ////BOOST_REQUIRE(instance.blocks().top(height));
-    ////BOOST_REQUIRE_EQUAL(height, 1u);
-
-    ////compare_blocks(block2_popped.front(), block2);
-    ////test_block_not_exists(instance, block3, indexed);
-    ////test_block_not_exists(instance, block2, indexed);
-    ////test_block_exists(instance, 1, block1, indexed);
-    ////test_block_exists(instance, 0, block0, indexed);
-
-    std::cout << "end pushpop test" << std::endl;
+    std::cout << "end push/pop test" << std::endl;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
