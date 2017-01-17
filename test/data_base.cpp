@@ -218,18 +218,6 @@ block read_block(const std::string hex)
     return result;
 }
 
-void compare_blocks(const block& popped, const block& original)
-{
-    BOOST_REQUIRE(popped.header().hash() == original.header().hash());
-    BOOST_REQUIRE(popped.transactions().size() == original.transactions().size());
-
-    for (size_t i = 0; i < popped.transactions().size(); ++i)
-    {
-        BOOST_REQUIRE(popped.transactions()[i].hash() ==
-            original.transactions()[i].hash());
-    }
-}
-
 #define DIRECTORY "data_base"
 
 class data_base_directory_and_thread_priority_setup_fixture
@@ -365,8 +353,8 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 1u);
     BOOST_REQUIRE_EQUAL(blocks_popped_ptr->size(), 2u);
-    compare_blocks(*(*blocks_popped_ptr)[0], *block2_ptr);
-    compare_blocks(*(*blocks_popped_ptr)[1], *block3_ptr);
+    BOOST_REQUIRE(*(*blocks_popped_ptr)[0] == *block2_ptr);
+    BOOST_REQUIRE(*(*blocks_popped_ptr)[1] == *block3_ptr);
     test_block_not_exists(instance, *block3_ptr, indexed);
     test_block_not_exists(instance, *block2_ptr, indexed);
     test_block_exists(instance, 1, block1, indexed);
@@ -385,8 +373,8 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     BOOST_REQUIRE(!pop_above_result(instance, blocks_popped_ptr, block0.hash(), dispatch));
     BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 0u);
-    compare_blocks(*(*blocks_popped_ptr)[0], block1);
-    compare_blocks(*(*blocks_popped_ptr)[1], *block2_ptr);
+    BOOST_REQUIRE(*(*blocks_popped_ptr)[0] == block1);
+    BOOST_REQUIRE(*(*blocks_popped_ptr)[1] == *block2_ptr);
     test_block_not_exists(instance, block1, indexed);
     test_block_not_exists(instance, *block2_ptr, indexed);
     test_block_exists(instance, 0, block0, indexed);
