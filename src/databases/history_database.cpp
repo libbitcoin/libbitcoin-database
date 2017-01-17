@@ -137,13 +137,15 @@ bool history_database::flush()
 // ----------------------------------------------------------------------------
 
 void history_database::add_output(const short_hash& key,
-    const output_point& outpoint, uint32_t output_height, uint64_t value)
+    const output_point& outpoint, size_t output_height, uint64_t value)
 {
+    const auto output_height32 = safe_unsigned<uint32_t>(output_height);
+
     const auto write = [&](serializer<uint8_t*>& serial)
     {
         serial.write_byte(static_cast<uint8_t>(point_kind::output));
         outpoint.to_data(serial);
-        serial.write_4_bytes_little_endian(output_height);
+        serial.write_4_bytes_little_endian(output_height32);
         serial.write_8_bytes_little_endian(value);
     };
 
@@ -151,14 +153,16 @@ void history_database::add_output(const short_hash& key,
 }
 
 void history_database::add_input(const short_hash& key,
-    const output_point& inpoint, uint32_t input_height,
+    const output_point& inpoint, size_t input_height,
     const input_point& previous)
 {
+    const auto input_height32 = safe_unsigned<uint32_t>(input_height);
+
     const auto write = [&](serializer<uint8_t*>& serial)
     {
         serial.write_byte(static_cast<uint8_t>(point_kind::spend));
         inpoint.to_data(serial);
-        serial.write_4_bytes_little_endian(input_height);
+        serial.write_4_bytes_little_endian(input_height32);
         serial.write_8_bytes_little_endian(previous.checksum());
     };
 
