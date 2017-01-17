@@ -69,11 +69,11 @@ public:
 
     /// Add an output row to the key. If key doesn't exist it will be created.
     void add_output(const short_hash& key, const chain::output_point& outpoint,
-        uint32_t output_height, uint64_t value);
+        size_t output_height, uint64_t value);
 
     /// Add an input to the key. If key doesn't exist it will be created.
     void add_input(const short_hash& key, const chain::output_point& inpoint,
-        uint32_t input_height, const chain::input_point& previous);
+        size_t input_height, const chain::input_point& previous);
 
     /// Delete the last row that was added to key.
     bool delete_last_row(const short_hash& key);
