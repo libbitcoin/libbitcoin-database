@@ -40,6 +40,9 @@ public:
     /// True if this block result is valid (found).
     operator bool() const;
 
+    /// Reset the slab pointer so that no lock is held.
+    void reset();
+
     /// The block header hash (from cache).
     const hash_digest& hash() const;
 
@@ -65,7 +68,7 @@ public:
     hash_digest transaction_hash(size_t index) const;
 
 private:
-    const memory_ptr slab_;
+    memory_ptr slab_;
     const hash_digest hash_;
 };
 

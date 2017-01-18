@@ -59,6 +59,11 @@ transaction_result::operator bool() const
     return slab_ != nullptr;
 }
 
+void transaction_result::reset()
+{
+    slab_.reset();
+}
+
 const hash_digest& transaction_result::hash() const
 {
     return hash_;
