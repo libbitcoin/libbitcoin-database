@@ -40,6 +40,9 @@ public:
     /// True if this transaction result is valid (found).
     operator bool() const;
 
+    /// Reset the slab pointer so that no lock is held.
+    void reset();
+
     /// The transaction hash (from cache).
     const hash_digest& hash() const;
 
@@ -59,7 +62,7 @@ public:
     chain::transaction transaction() const;
 
 private:
-    const memory_ptr slab_;
+    memory_ptr slab_;
     const hash_digest hash_;
 };
 

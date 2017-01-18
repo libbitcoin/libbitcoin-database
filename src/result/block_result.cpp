@@ -64,6 +64,11 @@ block_result::operator bool() const
     return slab_ != nullptr;
 }
 
+void block_result::reset()
+{
+    slab_.reset();
+}
+
 const hash_digest& block_result::hash() const
 {
     return hash_;
