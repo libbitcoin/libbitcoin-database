@@ -121,7 +121,6 @@ bool data_base::open()
             history_->open() &&
             stealth_->open();
 
-
     closed_ = false;
     return opened;
 }
