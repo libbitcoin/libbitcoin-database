@@ -220,26 +220,18 @@ block read_block(const std::string hex)
 
 #define DIRECTORY "data_base"
 
-class data_base_directory_and_thread_priority_setup_fixture
+class data_base_setup_fixture
 {
 public:
-    data_base_directory_and_thread_priority_setup_fixture()
+    data_base_setup_fixture()
     {
         error_code ec;
         remove_all(DIRECTORY, ec);
         BOOST_REQUIRE(create_directories(DIRECTORY, ec));
-        set_thread_priority(thread_priority::lowest);
     }
-
-    ////~data_base_directory_and_thread_priority_setup_fixture()
-    ////{
-    ////    error_code ec;
-    ////    remove_all(DIRECTORY, ec);
-    ////    set_thread_priority(thread_priority::normal);
-    ////}
 };
 
-BOOST_FIXTURE_TEST_SUITE(data_base_tests, data_base_directory_and_thread_priority_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(data_base_tests, data_base_setup_fixture)
 
 #define MAINNET_BLOCK1 \
 "010000006fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000982" \
@@ -296,23 +288,23 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     std::cout << "begin data_base push/pop test" << std::endl;
 
     create_directory(DIRECTORY);
-    settings configuration;
-    configuration.directory = DIRECTORY;
-    configuration.file_growth_rate = 42;
-    configuration.index_start_height = 0;
-    configuration.block_table_buckets = 42;
-    configuration.transaction_table_buckets = 42;
-    configuration.spend_table_buckets = 42;
-    configuration.history_table_buckets = 42;
+    database::settings settings;
+    settings.directory = DIRECTORY;
+    settings.file_growth_rate = 42;
+    settings.index_start_height = 0;
+    settings.block_table_buckets = 42;
+    settings.transaction_table_buckets = 42;
+    settings.spend_table_buckets = 42;
+    settings.history_table_buckets = 42;
 
     // If index_height is set to anything other than 0 or max it can cause
     // false negatives since it excludes entries below the specified height.
-    const auto indexed = configuration.index_start_height < store::without_indexes;
+    const auto indexed = settings.index_start_height < store::without_indexes;
 
     size_t height;
     threadpool pool(1);
     dispatcher dispatch(pool, "test");
-    data_base instance(configuration);
+    data_base instance(settings);
     const auto block0 = block::genesis_mainnet();
     BOOST_REQUIRE(instance.create(block0));
     BOOST_REQUIRE(instance.blocks().top(height));

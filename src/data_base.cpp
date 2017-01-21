@@ -121,7 +121,6 @@ bool data_base::open()
             history_->open() &&
             stealth_->open();
 
-
     closed_ = false;
     return opened;
 }
@@ -569,6 +568,8 @@ void data_base::push_next(const code& ec,
                 handler);
 
     // This is the beginning of the block sub-sequence.
+    // If the dispatch threadpool is shut down when this is called the handler
+    // will never be invoked, resulting in a threadpool.join indefinite hang.
     dispatch.concurrent(&data_base::do_push,
         this, block, height, std::ref(dispatch), next);
 }
@@ -594,6 +595,8 @@ void data_base::do_push(block_const_ptr block, size_t height,
     const auto join_handler = bc::synchronize(std::move(block_complete),
         buckets, NAME "_do_push");
 
+    // If the dispatch threadpool is shut down when this is called the handler
+    // will never be invoked, resulting in a threadpool.join indefinite hang.
     for (size_t bucket = 0; bucket < buckets; ++bucket)
         dispatch.concurrent(&data_base::do_push_transactions,
             this, block, height, bucket, buckets, join_handler);

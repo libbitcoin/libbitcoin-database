@@ -37,8 +37,8 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
@@ -63,7 +63,7 @@ size_t memory_map::file_size(int file_handle)
     if (file_handle == INVALID_HANDLE)
         return 0;
 
-    // This is required because off_t is defined as long, whcih is 32 bits in
+    // This is required because off_t is defined as long, which is 32 bits in
     // msvc and 64 bits in linux/osx, and stat contains off_t.
 #ifdef _WIN32
 #ifdef _WIN64
@@ -331,6 +331,9 @@ memory_ptr memory_map::reserve(size_t size)
 // the required allocation and all resizing before writing a block.
 memory_ptr memory_map::reserve(size_t size, size_t expansion)
 {
+    // Internally preventing resize during close is not possible because of
+    // cross-file integrity. So we must coalesce all threads before closing.
+
     // Critical Section (internal)
     ///////////////////////////////////////////////////////////////////////////
     const auto memory = REMAP_ALLOCATOR(mutex_);
