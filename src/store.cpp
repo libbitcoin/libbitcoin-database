@@ -127,22 +127,22 @@ bool store::is_write_locked(handle value) const
 
 bool store::begin_write(bool lock)
 {
-    return (!lock || flush_lock()) && sequential_lock_.begin_write();
+    return flush_lock(lock) && sequential_lock_.begin_write();
 }
 
 bool store::end_write(bool unlock)
 {
-    return sequential_lock_.end_write() && (!unlock || flush_unlock());
+    return sequential_lock_.end_write() && flush_unlock(unlock);
 }
 
-bool store::flush_lock()
+bool store::flush_lock(bool lock)
 {
-    return flush_lock_.lock_shared();
+    return !lock || flush_lock_.lock_shared();
 }
 
-bool store::flush_unlock()
+bool store::flush_unlock(bool unlock)
 {
-    return flush() && flush_lock_.unlock_shared();
+    return !unlock || (flush() && flush_lock_.unlock_shared());
 }
 
 } // namespace data_base

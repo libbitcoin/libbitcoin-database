@@ -59,26 +59,26 @@ public:
     // Write with flush detection.
     // ------------------------------------------------------------------------
 
-    /// Start the read.
+    /// Start a read sequence and obtain its handle.
     handle begin_read() const;
 
-    /// Check the read result.
+    /// Check read sequence result of the handle.
     bool is_read_valid(handle handle) const;
 
-    /// Check the write state.
+    /// Check the write state of the handle.
     bool is_write_locked(handle handle) const;
 
-    /// Start writing with optional flush lock.
-    bool begin_write(bool lock=true);
+    /// Start sequence write with optional flush lock.
+    bool begin_write(bool lock);
 
-    /// Start writing with optional flush unlock.
-    bool end_write(bool unlock=true);
+    /// End sequence write with optional flush unlock.
+    bool end_write(bool unlock);
 
-    /// Begin flush lock scope.
-    bool flush_lock();
+    /// Optionally begin flush lock scope.
+    bool flush_lock(bool lock);
 
-    /// End flush lock scope.
-    bool flush_unlock();
+    /// Optionally end flush lock scope.
+    bool flush_unlock(bool unlock);
 
     // File names.
     // ------------------------------------------------------------------------
