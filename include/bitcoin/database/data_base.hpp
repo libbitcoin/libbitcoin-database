@@ -154,12 +154,16 @@ private:
         size_t bucket, size_t buckets, result_handler handler);
     void handle_push_complete(const code& ec, block_const_ptr block,
         size_t height, result_handler handler);
+    void unlock(const code& ec, result_handler handler) const;
 
     std::atomic<bool> closed_;
     const settings& settings_;
 
-    // Cross-database mutext to prevent concurrent file remapping.
-    std::shared_ptr<shared_mutex> mutex_;
+    // Used to prevent concurrent unsafe writes.
+    mutable shared_mutex write_mutex_;
+
+    // Used to prevent concurrent file remapping.
+    std::shared_ptr<shared_mutex> remap_mutex_;
 };
 
 } // namespace database

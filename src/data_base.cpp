@@ -47,7 +47,7 @@ using namespace bc::wallet;
 data_base::data_base(const settings& settings)
   : closed_(true),
     settings_(settings),
-    mutex_(std::make_shared<shared_mutex>()),
+    remap_mutex_(std::make_shared<shared_mutex>()),
     store(settings.directory, settings.index_start_height < without_indexes)
 {
     LOG_DEBUG(LOG_DATABASE)
@@ -155,24 +155,25 @@ void data_base::start()
     // TODO: parameterize initial file sizes as record count or slab bytes?
 
     blocks_ = std::make_shared<block_database>(block_table, block_index,
-        settings_.block_table_buckets, settings_.file_growth_rate, mutex_);
+        settings_.block_table_buckets, settings_.file_growth_rate,
+        remap_mutex_);
 
     transactions_ = std::make_shared<transaction_database>(transaction_table,
         settings_.transaction_table_buckets, settings_.file_growth_rate,
-        settings_.cache_capacity, mutex_);
+        settings_.cache_capacity, remap_mutex_);
 
     if (use_indexes)
     {
         spends_ = std::make_shared<spend_database>(spend_table,
             settings_.spend_table_buckets, settings_.file_growth_rate,
-            mutex_);
+            remap_mutex_);
 
         history_ = std::make_shared<history_database>(history_table,
             history_rows, settings_.history_table_buckets,
-            settings_.file_growth_rate, mutex_);
+            settings_.file_growth_rate, remap_mutex_);
 
         stealth_ = std::make_shared<stealth_database>(stealth_rows,
-            settings_.file_growth_rate, mutex_);
+            settings_.file_growth_rate, remap_mutex_);
     }
 }
 
@@ -287,8 +288,14 @@ code data_base::verify_push(const block& block, size_t height)
 }
 
 // Add block to the database at the given height.
+// This is designed for write concurrency but only with itself.
+// This also generally requires read exclusivity, but that is not enforced.
 code data_base::insert(const chain::block& block, size_t height)
 {
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    shared_lock share(write_mutex_);
+
     const auto ec = verify_insert(block, height);
 
     if (ec)
@@ -300,11 +307,17 @@ code data_base::insert(const chain::block& block, size_t height)
     blocks_->store(block, height);
     synchronize();
     return error::success;
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 // Add a block in order.
+// This is designed for write exclusivity and read concurrency.
 code data_base::push(const block& block, size_t height)
 {
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock lock(write_mutex_);
+
     const auto ec = verify_push(block, height);
 
     if (ec)
@@ -316,6 +329,7 @@ code data_base::push(const block& block, size_t height)
     blocks_->store(block, height);
     synchronize();
     return error::success;
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 // To push in order call with bucket = 0 and buckets = 1 (defaults).
@@ -538,12 +552,22 @@ void data_base::pop_outputs(const output::list& outputs, size_t height)
 // ----------------------------------------------------------------------------
 
 // Add a list of blocks in order.
+// This is designed for write exclusivity and read concurrency.
 void data_base::push_all(block_const_ptr_list_const_ptr in_blocks,
     size_t first_height, dispatcher& dispatch, result_handler handler)
 {
-    // This is the beginning of the blocks sequence.
     DEBUG_ONLY(safe_add(in_blocks->size(), first_height));
-    push_next(error::success, in_blocks, 0, first_height, dispatch, handler);
+
+    // Critical Section.
+    ///////////////////////////////////////////////////////////////////////////
+    write_mutex_.lock();
+
+    const result_handler unlock =
+        std::bind(&data_base::unlock,
+            this, _1, handler);
+
+    // This is the beginning of the push_all sequence.
+    push_next(error::success, in_blocks, 0, first_height, dispatch, unlock);
 }
 
 void data_base::push_next(const code& ec,
@@ -552,7 +576,7 @@ void data_base::push_next(const code& ec,
 {
     if (ec || index >= blocks->size())
     {
-        // This is the end of the blocks sequence.
+        // This ends the loop.
         handler(ec);
         return;
     }
@@ -640,17 +664,27 @@ void data_base::handle_push_complete(const code& ec, block_const_ptr block,
 // TODO: implement async and concurrent.
 // This precludes popping the genesis block.
 // Returns true with empty list if fork is at the top.
+// This is designed for write exclusivity and read concurrency.
 void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
     const hash_digest& fork_hash, dispatcher&, result_handler handler)
 {
     size_t top;
     out_blocks->clear();
+
+    // Critical Section.
+    ///////////////////////////////////////////////////////////////////////////
+    write_mutex_.lock();
+
+    const result_handler unlock =
+        std::bind(&data_base::unlock,
+            this, _1, handler);
+
     const auto result = blocks_->get(fork_hash);
 
     // The fork point does not exist or failed to get it or the top, fail.
     if (!result || !blocks_->top(top))
     {
-        handler(error::operation_failed);
+        unlock(error::operation_failed);
         return;
     }
 
@@ -660,7 +694,7 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
     // The fork is at the top of the chain, nothing to pop.
     if (size == 0)
     {
-        handler(error::success);
+        unlock(error::success);
         return;
     }
 
@@ -677,7 +711,7 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
 
         if (!block->is_valid())
         {
-            handler(error::operation_failed);
+            unlock(error::operation_failed);
             return;
         }
 
@@ -690,7 +724,19 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
         out_blocks->insert(out_blocks->begin(), block);
     }
 
-    handler(error::success);
+    unlock(error::success);
+}
+
+// This is used by both push_all and pop_above.
+// This prevents us from executing the caller's completion handler under lock.
+void data_base::unlock(const code& ec, result_handler handler) const
+{
+    write_mutex_.unlock();
+    // End Critical Section.
+    ///////////////////////////////////////////////////////////////////////////
+
+    // This is the end of the push_all sequence.
+    handler(ec);
 }
 
 } // namespace data_base
