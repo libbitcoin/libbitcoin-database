@@ -60,8 +60,9 @@ bool store::create(const path& file_path)
 // Construct.
 // ------------------------------------------------------------------------
 
-store::store(const path& prefix, bool with_indexes)
+store::store(const path& prefix, bool with_indexes, bool flush_each_write)
   : use_indexes(with_indexes),
+    flush_each_write_(flush_each_write),
     flush_lock_(prefix / FLUSH_LOCK),
     exclusive_lock_(prefix / EXCLUSIVE_LOCK),
 
@@ -82,7 +83,7 @@ store::store(const path& prefix, bool with_indexes)
 // ------------------------------------------------------------------------
 
 // Create files.
-bool store::create() const
+bool store::create()
 {
     const auto created =
         create(block_table) &&
@@ -102,12 +103,14 @@ bool store::create() const
 
 bool store::open()
 {
-    return flush_lock_.try_lock() && exclusive_lock_.lock();
+    return exclusive_lock_.lock() && flush_lock_.try_lock() &&
+        (!flush_each_write_ || flush_lock_.lock_shared());
 }
 
 bool store::close()
 {
-    return exclusive_lock_.unlock();
+    return (!flush_each_write_ || flush_lock_.lock_shared()) &&
+        exclusive_lock_.unlock();
 }
 
 store::handle store::begin_read() const
@@ -125,24 +128,24 @@ bool store::is_write_locked(handle value) const
     return sequential_lock_.is_write_locked(value);
 }
 
-bool store::begin_write(bool lock)
+bool store::begin_write() const
 {
-    return flush_lock(lock) && sequential_lock_.begin_write();
+    return flush_lock() && sequential_lock_.begin_write();
 }
 
-bool store::end_write(bool unlock)
+bool store::end_write() const
 {
-    return sequential_lock_.end_write() && flush_unlock(unlock);
+    return sequential_lock_.end_write() && flush_unlock();
 }
 
-bool store::flush_lock(bool lock)
+bool store::flush_lock() const
 {
-    return !lock || flush_lock_.lock_shared();
+    return !flush_each_write_ || flush_lock_.lock_shared();
 }
 
-bool store::flush_unlock(bool unlock)
+bool store::flush_unlock() const
 {
-    return !unlock || (flush() && flush_lock_.unlock_shared());
+    return !flush_each_write_ || (flush() && flush_lock_.unlock_shared());
 }
 
 } // namespace data_base
