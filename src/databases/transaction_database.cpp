@@ -30,7 +30,6 @@ namespace database {
 
 using namespace bc::chain;
 
-static const auto use_wire_encoding = false;
 static constexpr auto value_size = sizeof(uint64_t);
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto version_size = sizeof(uint32_t);
@@ -113,31 +112,46 @@ bool transaction_database::flush() const
 // Queries.
 // ----------------------------------------------------------------------------
 
+///////////////////////////////////////////////////////////////////////////////
+// TODO: add parameter to specify if confirmed tx is required.
+///////////////////////////////////////////////////////////////////////////////
 transaction_result transaction_database::get(const hash_digest& hash) const
 {
     return get(hash, max_size_t);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// TODO: add parameter to specify if confirmed tx is required.
+///////////////////////////////////////////////////////////////////////////////
 transaction_result transaction_database::get(const hash_digest& hash,
     size_t fork_height) const
 {
+    ///////////////////////////////////////////////////////////////////////////
+    // TODO: search the set of transactions by hash in height order,
+    // returning the highest that is at or below fork_height (and remove test).
+    ///////////////////////////////////////////////////////////////////////////
     const auto memory = lookup_map_.find(hash);
     const auto result = transaction_result(memory, hash);
 
     if (!result)
         return result;
 
-    // BUGBUG: use lookup_map_ to search a set of transactions in height order,
-    // returning the highest that is at or below the specified fork height.
+    // TODO: remove after above fix.
     if (result.height() > fork_height)
         return{ nullptr };
 
     return result;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// TODO: add parameter to specify if confirmed tx is required.
+///////////////////////////////////////////////////////////////////////////////
 bool transaction_database::get_output(output& out_output, size_t& out_height,
     bool& out_coinbase, const output_point& point, size_t fork_height) const
 {
+    ///////////////////////////////////////////////////////////////////////////
+    // TODO: add cache parameter to specify if confirmed tx is required.
+    ///////////////////////////////////////////////////////////////////////////
     if (cache_.get(out_output, out_height, out_coinbase, point, fork_height))
         return true;
 
@@ -153,9 +167,15 @@ bool transaction_database::get_output(output& out_output, size_t& out_height,
     return true;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// TODO: update only the most recent *confirmed* tx of prevout hash.
+///////////////////////////////////////////////////////////////////////////////
 bool transaction_database::update(const output_point& point,
     size_t spender_height)
 {
+    ///////////////////////////////////////////////////////////////////////////
+    // TODO: add cache parameter to specify if confirmed tx is required.
+    ///////////////////////////////////////////////////////////////////////////
     cache_.remove(point);
     const auto slab = lookup_map_.find(point.hash());
 
@@ -187,6 +207,9 @@ bool transaction_database::update(const output_point& point,
     return true;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// TODO: create position sentinel for unconfirmed (with height as forks used).
+///////////////////////////////////////////////////////////////////////////////
 void transaction_database::store(size_t height, size_t position,
     const chain::transaction& tx)
 {
@@ -209,20 +232,35 @@ void transaction_database::store(size_t height, size_t position,
         serial.write_4_bytes_little_endian(position32);
 
         // WRITE THE TX
-        tx.to_data(serial, use_wire_encoding);
+        tx.to_data(serial, false);
     };
 
     lookup_map_.store(key, write, value_size);
     cache_.add(tx, height);
 
     if (position == 0 && ((height % 100) == 0))
+    {
         LOG_DEBUG(LOG_DATABASE)
             << "Cache hit rate: " << cache_.hit_rate() << ", size: "
             << cache_.size();
+    }
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// TODO: never unlink a tx, instead set height to unverified (forks) and set
+// position to the unconfirmed (tx pool) sentinel.
+// However we do unlink spend and history information. Since stealth is neither
+// indexed, precise nor unlinked, it remains unchanged. So in the event of a
+// reorg we lose the unlinked indexing and may append it again later.
+// Unconfirmed transactions are never indexed, we do not support tx pool query.
+///////////////////////////////////////////////////////////////////////////////
+// TODO: set position sentinel (unconfirmed) and height to unverified forks.
+///////////////////////////////////////////////////////////////////////////////
 bool transaction_database::unlink(const hash_digest& hash)
 {
+    ///////////////////////////////////////////////////////////////////////////
+    // TODO: modify cache from confirmed to unconfirmed and set unverified.
+    ///////////////////////////////////////////////////////////////////////////
     cache_.remove(hash);
     return lookup_map_.unlink(hash);
 }

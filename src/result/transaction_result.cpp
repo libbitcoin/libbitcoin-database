@@ -30,7 +30,6 @@ namespace database {
 
 using namespace bc::chain;
 
-static const auto use_wire_encoding = false;
 static constexpr size_t value_size = sizeof(uint64_t);
 static constexpr size_t height_size = sizeof(uint32_t);
 static constexpr size_t version_size = sizeof(uint32_t);
@@ -138,7 +137,7 @@ chain::output transaction_result::output(uint32_t index) const
 
     // Read and return the target output.
     chain::output out;
-    out.from_data(deserial, use_wire_encoding);
+    out.from_data(deserial, false);
     return out;
 }
 
@@ -151,7 +150,7 @@ chain::transaction transaction_result::transaction() const
 
     // READ THE TX
     chain::transaction tx;
-    tx.from_data(deserial, use_wire_encoding);
+    tx.from_data(deserial, false);
 
     // TODO: add hash param to deserialization to eliminate this construction.
     return chain::transaction(std::move(tx), hash_digest(hash_));

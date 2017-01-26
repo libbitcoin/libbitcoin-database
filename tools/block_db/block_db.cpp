@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdexcept>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <bitcoin/database.hpp>
@@ -259,7 +260,8 @@ int main(int argc, char** argv)
         BITCOIN_ASSERT(result);
 
         size_t top;
-        /* bool */ db.top(top);
+        if (!db.top(top))
+            throw std::runtime_error("store has no genesis block");
 
         db.store(block, top);
         db.synchronize();

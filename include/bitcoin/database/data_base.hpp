@@ -148,9 +148,9 @@ private:
     void push_stealth(const hash_digest& tx_hash, size_t height,
         const outputs& outputs);
 
-    chain::block pop();
-    void pop_inputs(const inputs& inputs, size_t height);
-    void pop_outputs(const outputs& outputs, size_t height);
+    bool pop(chain::block& out_block);
+    bool pop_inputs(const inputs& inputs, size_t height);
+    bool pop_outputs(const outputs& outputs, size_t height);
     code verify_insert(const chain::block& block, size_t height);
     code verify_push(const chain::block& block, size_t height);
 

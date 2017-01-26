@@ -486,86 +486,106 @@ void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
     }
 }
 
-block data_base::pop()
+// A false return implies store corruption.
+bool data_base::pop(block& out_block)
 {
     size_t height;
 
     // The blockchain is empty (nothing to pop, not even genesis).
     if (!blocks_->top(height))
-        return{};
+        return false;
 
-    const auto block_result = blocks_->get(height);
+    // This should never become invalid if this call is protected.
+    const auto block = blocks_->get(height);
+    if (!block)
+        return false;
 
-    // The height is invalid (should not happen if locked).
-    if (!block_result)
-        return{};
-
-    const auto count = block_result.transaction_count();
-
+    const auto count = block.transaction_count();
     transaction::list transactions;
     transactions.reserve(count);
 
-    for (size_t tx = 0; tx < count; ++tx)
+    for (size_t position = 0; position < count; ++position)
     {
-        const auto tx_hash = block_result.transaction_hash(tx);
+        const auto tx_hash = block.transaction_hash(position);
 
-        // We want the highest tx with this hash (allow max height).
-        const auto tx_result = transactions_->get(tx_hash, max_size_t);
+        ///////////////////////////////////////////////////////////////////////
+        // TODO: get highest *confirmed* tx only.
+        // We want the highest confirmed tx with this hash (allow max height).
+        const auto tx = transactions_->get(tx_hash, max_size_t);
+        ///////////////////////////////////////////////////////////////////////
 
-        if (!tx_result || tx_result.height() != height ||
-            tx_result.position() != tx)
-            return{};
+        if (!tx || (tx.height() != height) || (tx.position() != position))
+            return false;
 
         // Deserialize transaction and move it to the block.
-        transactions.emplace_back(tx_result.transaction());
+        transactions.emplace_back(tx.transaction());
     }
 
-    // Loop txs backwards, the reverse of how they are added.
+    // Loop txs backwards, the reverse of how they were added.
     // Remove txs, then outputs, then inputs (also reverse order).
     for (auto tx = transactions.rbegin(); tx != transactions.rend(); ++tx)
     {
-        /* bool */ transactions_->unlink(tx->hash());
-        pop_outputs(tx->outputs(), height);
+        ///////////////////////////////////////////////////////////////////////
+        // TODO: convert transaction to unconfirmed.
+        if (!transactions_->unlink(tx->hash()))
+            return false;
+        ///////////////////////////////////////////////////////////////////////
 
-        if (!tx->is_coinbase())
-            pop_inputs(tx->inputs(), height);
+        if (!pop_outputs(tx->outputs(), height))
+            return false;
+
+        if (!tx->is_coinbase() && !pop_inputs(tx->inputs(), height))
+            return false;
     }
 
-    /* bool */ blocks_->unlink(height);
+    if (!blocks_->unlink(height))
+        return false;
 
     // Synchronise everything that was changed.
     synchronize();
 
     // Return the block.
-    return chain::block(block_result.header(), std::move(transactions));
+    out_block = chain::block(block.header(), std::move(transactions));
+    return true;
 }
 
-void data_base::pop_inputs(const input::list& inputs, size_t height)
+// A false return implies store corruption.
+bool data_base::pop_inputs(const input::list& inputs, size_t height)
 {
     static const auto not_spent = output::validation::not_spent;
 
     // Loop in reverse.
     for (auto input = inputs.rbegin(); input != inputs.rend(); ++input)
     {
-        /* bool */ transactions_->update(input->previous_output(), not_spent);
+        ///////////////////////////////////////////////////////////////////////
+        // TODO: update only the most recent *confirmed* tx of prevout hash.
+        if (!transactions_->update(input->previous_output(), not_spent))
+            return false;
+        ///////////////////////////////////////////////////////////////////////
 
         if (height < settings_.index_start_height)
             continue;
 
-        /* bool */ spends_->unlink(input->previous_output());
+        // All spends are confirmed.
+        if (!spends_->unlink(input->previous_output()))
+            return false;
 
         // Try to extract an address.
         const auto address = payment_address::extract(input->script());
 
-        if (address)
-            /* bool */ history_->delete_last_row(address.hash());
+        // All history entries are confirmed.
+        if (address && !history_->delete_last_row(address.hash()))
+            return false;
     }
+
+    return true;
 }
 
-void data_base::pop_outputs(const output::list& outputs, size_t height)
+// A false return implies store corruption.
+bool data_base::pop_outputs(const output::list& outputs, size_t height)
 {
     if (height < settings_.index_start_height)
-        return;
+        return false;
 
     // Loop in reverse.
     for (auto output = outputs.rbegin(); output != outputs.rend(); ++output)
@@ -573,13 +593,17 @@ void data_base::pop_outputs(const output::list& outputs, size_t height)
         // Try to extract an address.
         const auto address = payment_address::extract(output->script());
 
-        if (address)
-            /* bool */ history_->delete_last_row(address.hash());
+        // All history entries are confirmed.
+        if (address && !history_->delete_last_row(address.hash()))
+            return false;
 
-        // TODO: try to extract a stealth info and if found unlink index.
-        // Stealth unlink is not implemented.
-        /* bool */ stealth_->unlink();
+        // All stealth entries are confirmed.
+        // Stealth unlink is not implemented as there is no way to correlate.
+        ////if (!stealth_->unlink())
+        ////    return false;
     }
+
+    return true;
 }
 
 // Asynchronous writers.
@@ -718,16 +742,18 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
     // Enqueue blocks so .front() is fork + 1 and .back() is top.
     for (size_t height = top; height > fork; --height)
     {
+        chain::block next;
         const auto start_time = asio::steady_clock::now();
 
         // TODO: parallelize pop of transactions within each block.
-        const auto block = std::make_shared<message::block>(pop());
-
-        if (!block->is_valid())
+        if (!pop(next))
         {
             handler(error::operation_failed);
             return;
         }
+
+        BITCOIN_ASSERT(next);
+        auto block = std::make_shared<const message::block>(std::move(next));
 
         // Mark the blocks as validated for their respective heights.
         block->header().validation.height = height;
