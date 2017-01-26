@@ -42,13 +42,13 @@ public:
     // Construct.
     // ------------------------------------------------------------------------
 
-    store(const path& prefix, bool with_indexes);
+    store(const path& prefix, bool with_indexes, bool flush_each_write=false);
 
     // Open and close.
     // ------------------------------------------------------------------------
 
     /// Create database files.
-    virtual bool create() const;
+    virtual bool create();
 
     /// Acquire exclusive access.
     virtual bool open();
@@ -69,16 +69,16 @@ public:
     bool is_write_locked(handle handle) const;
 
     /// Start sequence write with optional flush lock.
-    bool begin_write(bool lock);
+    bool begin_write() const;
 
     /// End sequence write with optional flush unlock.
-    bool end_write(bool unlock);
+    bool end_write() const;
 
     /// Optionally begin flush lock scope.
-    bool flush_lock(bool lock);
+    bool flush_lock() const;
 
     /// Optionally end flush lock scope.
-    bool flush_unlock(bool unlock);
+    bool flush_unlock() const;
 
     // File names.
     // ------------------------------------------------------------------------
@@ -95,14 +95,15 @@ public:
     const path stealth_rows;
 
 protected:
-    virtual bool flush() = 0;
+    virtual bool flush() const = 0;
 
     const bool use_indexes;
 
 private:
-    bc::flush_lock flush_lock_;
-    interprocess_lock exclusive_lock_;
-    sequential_lock sequential_lock_;
+    const bool flush_each_write_;
+    mutable bc::flush_lock flush_lock_;
+    mutable interprocess_lock exclusive_lock_;
+    mutable sequential_lock sequential_lock_;
 };
 
 } // namespace database

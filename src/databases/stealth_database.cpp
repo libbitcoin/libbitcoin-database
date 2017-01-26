@@ -94,7 +94,7 @@ void stealth_database::synchronize()
 }
 
 // Flush the memory map to disk.
-bool stealth_database::flush()
+bool stealth_database::flush() const
 {
     return rows_file_.flush();
 }

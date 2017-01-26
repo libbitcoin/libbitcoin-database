@@ -112,26 +112,26 @@ bool memory_map::handle_error(const std::string& context,
     return false;
 }
 
-void memory_map::log_mapping()
+void memory_map::log_mapping() const
 {
     LOG_DEBUG(LOG_DATABASE)
         << "Mapping: " << filename_ << " [" << file_size_
         << "] (" << page() << ")";
 }
 
-void memory_map::log_resizing(size_t size)
+void memory_map::log_resizing(size_t size) const
 {
     LOG_DEBUG(LOG_DATABASE)
         << "Resizing: " << filename_ << " [" << size << "]";
 }
 
-void memory_map::log_flushed()
+void memory_map::log_flushed() const
 {
     LOG_DEBUG(LOG_DATABASE)
         << "Flushed: " << filename_ << " [" << logical_size_ << "]";
 }
 
-void memory_map::log_unmapped()
+void memory_map::log_unmapped() const
 {
     LOG_DEBUG(LOG_DATABASE)
         << "Unmapped: " << filename_ << " [" << logical_size_ << "]";
@@ -207,7 +207,7 @@ bool memory_map::open()
     return true;
 }
 
-bool memory_map::flush()
+bool memory_map::flush() const
 {
     std::string error_name;
 
@@ -361,7 +361,7 @@ memory_ptr memory_map::reserve(size_t size, size_t expansion)
 // privates
 // ----------------------------------------------------------------------------
 
-size_t memory_map::page()
+size_t memory_map::page() const
 {
 #ifdef _WIN32
     SYSTEM_INFO configuration;

@@ -86,6 +86,12 @@ public:
     // Synchronous writers.
     // ------------------------------------------------------------------------
 
+    /// Create flush lock if flush_writes is true, and set sequential lock.
+    bool begin_insert() const;
+
+    /// Clear flush lock if flush_writes is true, and clear sequential lock.
+    bool end_insert() const;
+
     /// Store a block in the database.
     /// Returns store_block_duplicate if a block already exists at height.
     code insert(const chain::block& block, size_t height);
@@ -97,21 +103,27 @@ public:
     // Asynchronous writers.
     // ------------------------------------------------------------------------
 
-    /// Sets error if first_height is not the current top + 1 or not linked.
-    void push_all(block_const_ptr_list_const_ptr in_blocks,
-        size_t first_height, dispatcher& dispatch, result_handler handler);
-
-    /// Pop the set of blocks above the given hash.
-    /// Sets error if the database is corrupt or the hash doesn't exist.
-    /// Any blocks returned were successfully popped prior to any failure.
-    void pop_above(block_const_ptr_list_ptr out_blocks,
-        const hash_digest& fork_hash, dispatcher& dispatch,
+    /// Invoke pop_all and then push_all under a common lock.
+    void reorganize(const config::checkpoint& fork_point,
+        block_const_ptr_list_const_ptr incoming_blocks,
+        block_const_ptr_list_ptr outgoing_blocks, dispatcher& dispatch,
         result_handler handler);
 
 protected:
     void start();
     void synchronize();
-    bool flush() override;
+    bool flush() const override;
+
+    // Sets error if first_height is not the current top + 1 or not linked.
+    void push_all(block_const_ptr_list_const_ptr in_blocks,
+        size_t first_height, dispatcher& dispatch, result_handler handler);
+
+    // Pop the set of blocks above the given hash.
+    // Sets error if the database is corrupt or the hash doesn't exist.
+    // Any blocks returned were successfully popped prior to any failure.
+    void pop_above(block_const_ptr_list_ptr out_blocks,
+        const hash_digest& fork_hash, dispatcher& dispatch,
+        result_handler handler);
 
     std::shared_ptr<block_database> blocks_;
     std::shared_ptr<transaction_database> transactions_;
@@ -152,9 +164,13 @@ private:
         result_handler handler);
     void do_push_transactions(block_const_ptr block, size_t height,
         size_t bucket, size_t buckets, result_handler handler);
-    void handle_push_complete(const code& ec, block_const_ptr block,
+    void handle_push_transactions(const code& ec, block_const_ptr block,
         size_t height, result_handler handler);
-    void unlock(const code& ec, result_handler handler) const;
+
+    void handle_pop(const code& ec,
+        block_const_ptr_list_const_ptr incoming_blocks,
+        size_t first_height, dispatcher& dispatch, result_handler handler);
+    void handle_push(const code& ec, result_handler handler) const;
 
     std::atomic<bool> closed_;
     const settings& settings_;

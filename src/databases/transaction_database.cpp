@@ -105,7 +105,7 @@ void transaction_database::synchronize()
 }
 
 // Flush the memory map to disk.
-bool transaction_database::flush()
+bool transaction_database::flush() const
 {
     return lookup_file_.flush();
 }

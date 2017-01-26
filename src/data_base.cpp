@@ -37,6 +37,7 @@ namespace database {
 using namespace std::placeholders;
 using namespace boost::filesystem;
 using namespace bc::chain;
+using namespace bc::config;
 using namespace bc::wallet;
 
 #define NAME "data_base"
@@ -105,7 +106,7 @@ bool data_base::create(const block& genesis)
 bool data_base::open()
 {
     ///////////////////////////////////////////////////////////////////////////
-    // Lock exclusive file access.
+    // Lock exclusive file access and conditionally the global flush lock.
     if (!store::open())
         return false;
 
@@ -114,7 +115,7 @@ bool data_base::open()
     auto opened = 
         blocks_->open() &&
         transactions_->open();
-    
+
     if (use_indexes)
         opened &=
             spends_->open() &&
@@ -137,7 +138,7 @@ bool data_base::close()
     auto closed = 
         blocks_->close() &&
         transactions_->close();
-    
+
     if (use_indexes)
         closed &=
             spends_->close() &&
@@ -145,7 +146,7 @@ bool data_base::close()
             stealth_->close();
 
     return closed && store::close();
-    // Unlocked exclusive file access.
+    // Unlock exclusive file access and conditionally the global flush lock.
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -178,7 +179,7 @@ void data_base::start()
 }
 
 // protected
-bool data_base::flush()
+bool data_base::flush() const
 {
     // Avoid a race between flush and close whereby flush is skipped because
     // close is true and therefore the flush lock file is deleted before close
@@ -287,15 +288,34 @@ code data_base::verify_push(const block& block, size_t height)
     return error::success;
 }
 
-// Add block to the database at the given height.
-// This is designed for write concurrency but only with itself.
-// This also generally requires read exclusivity, but that is not enforced.
-code data_base::insert(const chain::block& block, size_t height)
+bool data_base::begin_insert() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    shared_lock share(write_mutex_);
+    write_mutex_.lock();
 
+    return begin_write();
+}
+
+bool data_base::end_insert() const
+{
+    write_mutex_.unlock();
+    // End Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+
+    // A failure after begin_write is returned without calling end_write.
+    // This purposely leaves the local flush lock (as enabled) and inverts the
+    // sequence lock. The former prevents usagage after restart and the latter
+    // prevents continuation of reads and writes while running. Ideally we
+    // want to exit without clearing the global flush lock (as enabled).
+    // The write mutex is always cleared (assuming this is called).
+    return end_write();
+}
+
+// Add block to the database at the given height (gaps allowed/created).
+// This is designed for write concurrency but only with itself.
+code data_base::insert(const chain::block& block, size_t height)
+{
     const auto ec = verify_insert(block, height);
 
     if (ec)
@@ -307,10 +327,9 @@ code data_base::insert(const chain::block& block, size_t height)
     blocks_->store(block, height);
     synchronize();
     return error::success;
-    ///////////////////////////////////////////////////////////////////////////
 }
 
-// Add a block in order.
+// Add a block in order (creates no gaps, must be at top).
 // This is designed for write exclusivity and read concurrency.
 code data_base::push(const block& block, size_t height)
 {
@@ -323,12 +342,27 @@ code data_base::push(const block& block, size_t height)
     if (ec)
         return ec;
 
+    // Begin Flush Lock and Sequential Lock
+    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    if (!begin_write())
+        return error::operation_failed;
+
     if (!push_transactions(block, height) || !push_heights(block, height))
         return error::operation_failed;
 
     blocks_->store(block, height);
     synchronize();
-    return error::success;
+
+    // A failure after begin_write is returned without calling end_write.
+    // This purposely leaves the local flush lock (as enabled) and inverts the
+    // sequence lock. The former prevents usagage after restart and the latter
+    // prevents continuation of reads and writes while running. Ideally we
+    // want to exit without clearing the global flush lock (as enabled).
+    // The write mutex is always cleared.
+
+    return end_write() ? error::success : error::operation_failed;
+    // End Sequential Lock and Flush Lock
+    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -550,24 +584,14 @@ void data_base::pop_outputs(const output::list& outputs, size_t height)
 
 // Asynchronous writers.
 // ----------------------------------------------------------------------------
-
 // Add a list of blocks in order.
-// This is designed for write exclusivity and read concurrency.
 void data_base::push_all(block_const_ptr_list_const_ptr in_blocks,
     size_t first_height, dispatcher& dispatch, result_handler handler)
 {
     DEBUG_ONLY(safe_add(in_blocks->size(), first_height));
 
-    // Critical Section.
-    ///////////////////////////////////////////////////////////////////////////
-    write_mutex_.lock();
-
-    const result_handler unlock =
-        std::bind(&data_base::unlock,
-            this, _1, handler);
-
     // This is the beginning of the push_all sequence.
-    push_next(error::success, in_blocks, 0, first_height, dispatch, unlock);
+    push_next(error::success, in_blocks, 0, first_height, dispatch, handler);
 }
 
 void data_base::push_next(const code& ec,
@@ -602,7 +626,7 @@ void data_base::do_push(block_const_ptr block, size_t height,
     dispatcher& dispatch, result_handler handler)
 {
     result_handler block_complete =
-        std::bind(&data_base::handle_push_complete,
+        std::bind(&data_base::handle_push_transactions,
             this, _1, block, height, handler);
 
     // This ensures linkage and that the there is at least one tx.
@@ -633,7 +657,7 @@ void data_base::do_push_transactions(block_const_ptr block, size_t height,
     handler(result ? error::success : error::operation_failed);
 }
 
-void data_base::handle_push_complete(const code& ec, block_const_ptr block,
+void data_base::handle_push_transactions(const code& ec, block_const_ptr block,
     size_t height, result_handler handler)
 {
     if (ec)
@@ -661,30 +685,20 @@ void data_base::handle_push_complete(const code& ec, block_const_ptr block,
     handler(error::success);
 }
 
-// TODO: implement async and concurrent.
+// TODO: make async and concurrency as appropriate.
 // This precludes popping the genesis block.
-// Returns true with empty list if fork is at the top.
-// This is designed for write exclusivity and read concurrency.
 void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
     const hash_digest& fork_hash, dispatcher&, result_handler handler)
 {
     size_t top;
     out_blocks->clear();
 
-    // Critical Section.
-    ///////////////////////////////////////////////////////////////////////////
-    write_mutex_.lock();
-
-    const result_handler unlock =
-        std::bind(&data_base::unlock,
-            this, _1, handler);
-
     const auto result = blocks_->get(fork_hash);
 
     // The fork point does not exist or failed to get it or the top, fail.
     if (!result || !blocks_->top(top))
     {
-        unlock(error::operation_failed);
+        handler(error::operation_failed);
         return;
     }
 
@@ -694,7 +708,7 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
     // The fork is at the top of the chain, nothing to pop.
     if (size == 0)
     {
-        unlock(error::success);
+        handler(error::success);
         return;
     }
 
@@ -711,7 +725,7 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
 
         if (!block->is_valid())
         {
-            unlock(error::operation_failed);
+            handler(error::operation_failed);
             return;
         }
 
@@ -724,19 +738,78 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
         out_blocks->insert(out_blocks->begin(), block);
     }
 
-    unlock(error::success);
+    handler(error::success);
 }
 
-// This is used by both push_all and pop_above.
-// This prevents us from executing the caller's completion handler under lock.
-void data_base::unlock(const code& ec, result_handler handler) const
+// This is designed for write exclusivity and read concurrency.
+void data_base::reorganize(const checkpoint& fork_point,
+    block_const_ptr_list_const_ptr incoming_blocks,
+    block_const_ptr_list_ptr outgoing_blocks, dispatcher& dispatch,
+    result_handler handler)
+{
+    const auto next_height = safe_add(fork_point.height(), size_t(1));
+
+    const result_handler pop_handler =
+        std::bind(&data_base::handle_pop,
+            this, _1, incoming_blocks, next_height, std::ref(dispatch),
+                handler);
+
+    // Critical Section.
+    ///////////////////////////////////////////////////////////////////////////
+    write_mutex_.lock();
+
+    // Begin Flush Lock and Sequential Lock
+    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    if (!begin_write())
+    {
+        pop_handler(error::operation_failed);
+        return;
+    }
+
+    pop_above(outgoing_blocks, fork_point.hash(), dispatch, pop_handler);
+}
+
+void data_base::handle_pop(const code& ec,
+    block_const_ptr_list_const_ptr incoming_blocks,
+    size_t first_height, dispatcher& dispatch, result_handler handler)
+{
+    const result_handler push_handler =
+        std::bind(&data_base::handle_push,
+            this, _1, handler);
+
+    if (ec)
+    {
+        push_handler(ec);
+        return;
+    }
+
+    push_all(incoming_blocks, first_height, std::ref(dispatch), push_handler);
+}
+
+// We never invoke the caller's handler under the mutex, we never fail to clear
+// the mutex, and we always invoke the caller's handler exactly once.
+void data_base::handle_push(const code& ec, result_handler handler) const
 {
     write_mutex_.unlock();
     // End Critical Section.
     ///////////////////////////////////////////////////////////////////////////
 
-    // This is the end of the push_all sequence.
-    handler(ec);
+    // A failure after begin_write is returned without calling end_write.
+    // This purposely leaves the local flush lock (as enabled) and inverts the
+    // sequence lock. The former prevents usagage after restart and the latter
+    // prevents continuation of reads and writes while running. Ideally we
+    // want to exit without clearing the global flush lock (as enabled).
+    // The write mutex is always cleared.
+
+    if (ec)
+    {
+        handler(ec);
+        return;
+    }
+
+    handler(end_write() ? error::success : error::operation_failed);
+    // End Sequential Lock and Flush Lock
+    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 }
 
 } // namespace data_base

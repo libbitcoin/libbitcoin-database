@@ -79,7 +79,7 @@ public:
     void synchronize();
 
     /// Flush the memory map to disk.
-    bool flush();
+    bool flush() const;
 
     /// Return statistical info about the database.
     spend_statinfo statinfo() const;

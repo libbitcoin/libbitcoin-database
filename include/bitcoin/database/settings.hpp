@@ -35,6 +35,8 @@ public:
     settings(config::settings context);
 
     /// Properties.
+    boost::filesystem::path directory;
+    bool flush_writes;
     uint16_t file_growth_rate;
     uint32_t index_start_height;
     uint32_t block_table_buckets;
@@ -42,7 +44,6 @@ public:
     uint32_t spend_table_buckets;
     uint32_t history_table_buckets;
     uint32_t cache_capacity;
-    boost::filesystem::path directory;
 };
 
 } // namespace database

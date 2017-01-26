@@ -126,7 +126,7 @@ void history_database::synchronize()
 }
 
 // Flush the memory maps to disk.
-bool history_database::flush()
+bool history_database::flush() const
 {
     return
         lookup_file_.flush() &&

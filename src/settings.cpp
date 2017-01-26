@@ -27,7 +27,10 @@ namespace database {
 using namespace boost::filesystem;
 
 settings::settings()
-  : file_growth_rate(50),
+  : directory("blockchain"),
+
+    flush_writes(false),
+    file_growth_rate(50),
     index_start_height(0),
 
     // Hash table sizes (must be configured).
@@ -35,9 +38,7 @@ settings::settings()
     transaction_table_buckets(0),
     spend_table_buckets(0),
     history_table_buckets(0),
-    cache_capacity(0),
-
-    directory("blockchain")
+    cache_capacity(0)
 {
 }
 
