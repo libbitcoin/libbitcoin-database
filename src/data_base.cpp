@@ -49,7 +49,8 @@ data_base::data_base(const settings& settings)
   : closed_(true),
     settings_(settings),
     remap_mutex_(std::make_shared<shared_mutex>()),
-    store(settings.directory, settings.index_start_height < without_indexes)
+    store(settings.directory, settings.index_start_height < without_indexes,
+        settings.flush_writes)
 {
     LOG_DEBUG(LOG_DATABASE)
         << "Buckets: "
