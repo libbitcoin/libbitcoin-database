@@ -742,7 +742,7 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
     // Enqueue blocks so .front() is fork + 1 and .back() is top.
     for (size_t height = top; height > fork; --height)
     {
-        chain::block next;
+        message::block next;
         const auto start_time = asio::steady_clock::now();
 
         // TODO: parallelize pop of transactions within each block.
@@ -752,7 +752,7 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
             return;
         }
 
-        BITCOIN_ASSERT(next);
+        BITCOIN_ASSERT(next.is_valid());
         auto block = std::make_shared<const message::block>(std::move(next));
 
         // Mark the blocks as validated for their respective heights.
