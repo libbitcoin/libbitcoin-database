@@ -257,7 +257,30 @@ BOOST_FIXTURE_TEST_SUITE(data_base_tests, data_base_setup_fixture)
 "6c5b1629ecf97fff95d7a4bbdac87cc26099ada28066c6ff1eb9191223cd897194a08d0c272" \
 "6c5747f1db49e8cf90e75dc3e3550ae9b30086f3cd5aaac00000000"
 
-static int push_all_result(data_base& instance,
+class data_base_accessor
+  : public data_base
+{
+public:
+    data_base_accessor(const settings& settings)
+      : data_base(settings)
+    {
+    }
+
+    void push_all(block_const_ptr_list_const_ptr in_blocks,
+        size_t first_height, dispatcher& dispatch, result_handler handler)
+    {
+        data_base::push_all(in_blocks, first_height, dispatch, handler);
+    }
+
+    void pop_above(block_const_ptr_list_ptr out_blocks,
+        const hash_digest& fork_hash, dispatcher& dispatch,
+        result_handler handler)
+    {
+        data_base::pop_above(out_blocks, fork_hash, dispatch, handler);
+    }
+};
+
+static int push_all_result(data_base_accessor& instance,
     block_const_ptr_list_const_ptr in_blocks, size_t first_height,
     dispatcher& dispatch)
 {
@@ -270,7 +293,7 @@ static int push_all_result(data_base& instance,
     return promise.get_future().get().value();
 }
 
-static int pop_above_result(data_base& instance,
+static int pop_above_result(data_base_accessor& instance,
     block_const_ptr_list_ptr out_blocks, const hash_digest& fork_hash,
     dispatcher& dispatch)
 {
@@ -290,6 +313,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     create_directory(DIRECTORY);
     database::settings settings;
     settings.directory = DIRECTORY;
+    settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.index_start_height = 0;
     settings.block_table_buckets = 42;
@@ -304,13 +328,15 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     size_t height;
     threadpool pool(1);
     dispatcher dispatch(pool, "test");
-    data_base instance(settings);
+    data_base_accessor instance(settings);
     const auto block0 = block::genesis_mainnet();
     BOOST_REQUIRE(instance.create(block0));
     BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 0);
     test_block_exists(instance, 0, block0, indexed);
 
+    // This tests a missing parent, not a database failure.
+    // A database failure would prevent subsequent read/write operations.
     std::cout << "push block #1 (store_block_missing_parent)" << std::endl;
     auto invalid_block1 = read_block(MAINNET_BLOCK1);
     invalid_block1.set_header(chain::header{});
