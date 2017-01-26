@@ -61,8 +61,8 @@ public:
     void store(uint32_t prefix, uint32_t height,
         const chain::stealth_compact& row);
 
-    /// Delete stealth row (not implemented.
-    bool unlink();
+    /////// Delete stealth row (not implemented).
+    ////bool unlink();
 
     /// Commit latest inserts.
     void synchronize();

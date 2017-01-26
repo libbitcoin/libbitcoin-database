@@ -163,11 +163,11 @@ void stealth_database::store(uint32_t prefix, uint32_t height,
     serial.write_hash(row.transaction_hash);
 }
 
-bool stealth_database::unlink()
-{
-    // TODO: mark as deleted (not implemented).
-    return false;
-}
+////bool stealth_database::unlink()
+////{
+////    // TODO: mark as deleted (not implemented).
+////    return false;
+////}
 
 } // namespace database
 } // namespace libbitcoin
