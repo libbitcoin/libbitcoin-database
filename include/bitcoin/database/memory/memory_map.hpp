@@ -62,7 +62,7 @@ public:
     bool open();
 
     /// Flush the memory map to disk.
-    bool flush();
+    bool flush() const;
 
     /// Unmap and release database files, can be restarted.
     bool close();
@@ -82,7 +82,7 @@ private:
     static bool handle_error(const std::string& context,
         const boost::filesystem::path& filename);
 
-    size_t page();
+    size_t page() const;
     bool unmap();
     bool map(size_t size);
     bool remap(size_t size);
@@ -90,10 +90,10 @@ private:
     bool truncate_mapped(size_t size);
     bool validate(size_t size);
 
-    void log_mapping();
-    void log_resizing(size_t size);
-    void log_flushed();
-    void log_unmapped();
+    void log_mapping() const;
+    void log_resizing(size_t size) const;
+    void log_flushed() const;
+    void log_unmapped() const;
 
     // Optionally guard against concurrent remap.
     mutex_ptr remap_mutex_;
