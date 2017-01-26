@@ -125,7 +125,7 @@ void block_database::synchronize()
 }
 
 // Flush the memory maps to disk.
-bool block_database::flush()
+bool block_database::flush() const
 {
     return
         lookup_file_.flush() &&

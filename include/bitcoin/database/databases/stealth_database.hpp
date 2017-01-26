@@ -68,7 +68,7 @@ public:
     void synchronize();
 
     /// Flush the memory map to disk.
-    bool flush();
+    bool flush() const;
 
 private:
     void write_index();

@@ -82,7 +82,7 @@ public:
     void synchronize();
 
     /// Flush the memory maps to disk.
-    bool flush();
+    bool flush() const;
 
     /// The index of the highest existing block, independent of gaps.
     bool top(size_t& out_height) const;

@@ -98,7 +98,7 @@ void spend_database::synchronize()
 }
 
 // Flush the memory map to disk.
-bool spend_database::flush()
+bool spend_database::flush() const
 {
     return lookup_file_.flush();
 }
