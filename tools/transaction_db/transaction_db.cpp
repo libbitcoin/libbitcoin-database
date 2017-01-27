@@ -166,7 +166,7 @@ int main(int argc, char** argv)
         const auto result = db.open();
         BITCOIN_ASSERT(result);
 
-        db.store(height, index, tx);
+        db.store(tx, height, index);
         db.synchronize();
     }
     else if (command == "remove")
