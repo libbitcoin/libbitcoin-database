@@ -96,6 +96,10 @@ public:
     /// Returns store_block_duplicate if a block already exists at height.
     code insert(const chain::block& block, size_t height);
 
+    /// Add an unconfirmed tx to the store (without indexing).
+    /// Returns unspent_duplicate if existing unspent hash duplicate exists.
+    code push(const chain::transaction& tx, uint32_t forks);
+
     /// Returns store_block_missing_parent if not linked.
     /// Returns store_block_invalid_height if height is not the current top + 1.
     code push(const chain::block& block, size_t height);

@@ -70,8 +70,8 @@ BOOST_AUTO_TEST_CASE(transaction_database__test)
     transaction_database db(DIRECTORY "/transaction", 1000, 50, 0);
     BOOST_REQUIRE(db.create());
 
-    db.store(110, 88, tx1);
-    db.store(4, 6, tx2);
+    db.store(tx1, 110, 88);
+    db.store(tx2, 4, 6);
 
     const auto result1 = db.get(h1, max_size_t);
     BOOST_REQUIRE(result1.transaction().hash() == h1);

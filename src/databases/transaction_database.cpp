@@ -168,6 +168,45 @@ bool transaction_database::get_output(output& out_output, size_t& out_height,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// TODO: create position sentinel for unconfirmed (with height as forks used).
+///////////////////////////////////////////////////////////////////////////////
+void transaction_database::store(const chain::transaction& tx,
+    size_t height, size_t position)
+{
+    // Write block data.
+    const auto key = tx.hash();
+    const auto tx_size = tx.serialized_size(false);
+
+    BITCOIN_ASSERT(height <= max_uint32);
+    const auto hight32 = static_cast<size_t>(height);
+
+    BITCOIN_ASSERT(position <= max_uint32);
+    const auto position32 = static_cast<size_t>(position);
+
+    BITCOIN_ASSERT(tx_size <= max_size_t - version_lock_size);
+    const auto value_size = version_lock_size + static_cast<size_t>(tx_size);
+
+    const auto write = [&](serializer<uint8_t*>& serial)
+    {
+        serial.write_4_bytes_little_endian(hight32);
+        serial.write_4_bytes_little_endian(position32);
+
+        // WRITE THE TX
+        tx.to_data(serial, false);
+    };
+
+    lookup_map_.store(key, write, value_size);
+    cache_.add(tx, height);
+
+    if (position == 0 && ((height % 100) == 0))
+    {
+        LOG_DEBUG(LOG_DATABASE)
+            << "Cache hit rate: " << cache_.hit_rate() << ", size: "
+            << cache_.size();
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // TODO: update only the most recent *confirmed* tx of prevout hash.
 ///////////////////////////////////////////////////////////////////////////////
 bool transaction_database::update(const output_point& point,
@@ -207,46 +246,21 @@ bool transaction_database::update(const output_point& point,
     return true;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// TODO: create position sentinel for unconfirmed (with height as forks used).
-///////////////////////////////////////////////////////////////////////////////
-void transaction_database::store(size_t height, size_t position,
-    const chain::transaction& tx)
+bool transaction_database::update(const hash_digest& hash, size_t height,
+    size_t position)
 {
-    // Write block data.
-    const auto key = tx.hash();
-    const auto tx_size = tx.serialized_size(false);
-
-    BITCOIN_ASSERT(height <= max_uint32);
-    const auto hight32 = static_cast<size_t>(height);
-
-    BITCOIN_ASSERT(position <= max_uint32);
-    const auto position32 = static_cast<size_t>(position);
-
-    BITCOIN_ASSERT(tx_size <= max_size_t - version_lock_size);
-    const auto value_size = version_lock_size + static_cast<size_t>(tx_size);
-
-    const auto write = [&](serializer<uint8_t*>& serial)
-    {
-        serial.write_4_bytes_little_endian(hight32);
-        serial.write_4_bytes_little_endian(position32);
-
-        // WRITE THE TX
-        tx.to_data(serial, false);
-    };
-
-    lookup_map_.store(key, write, value_size);
-    cache_.add(tx, height);
-
-    if (position == 0 && ((height % 100) == 0))
-    {
-        LOG_DEBUG(LOG_DATABASE)
-            << "Cache hit rate: " << cache_.hit_rate() << ", size: "
-            << cache_.size();
-    }
+    ///////////////////////////////////////////////////////////////////////////
+    // TODO: Promote an unconfirmed tx (and index, as configured).
+    // This is called from data_base.push(block, height) for any tx marked
+    // as existing (unconfirmed). If forks did not match then tx was verified
+    // and confirmed under new forks, so this update is safe. Caller ensures
+    // that no other writes intervene (block validation/update is sequential).
+    ///////////////////////////////////////////////////////////////////////////
+    return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// TODO: set position sentinel (unconfirmed) and height to unverified forks.
 // TODO: never unlink a tx, instead set height to unverified (forks) and set
 // position to the unconfirmed (tx pool) sentinel.
 // However we do unlink spend and history information. Since stealth is neither
@@ -254,13 +268,13 @@ void transaction_database::store(size_t height, size_t position,
 // reorg we lose the unlinked indexing and may append it again later.
 // Unconfirmed transactions are never indexed, we do not support tx pool query.
 ///////////////////////////////////////////////////////////////////////////////
-// TODO: set position sentinel (unconfirmed) and height to unverified forks.
-///////////////////////////////////////////////////////////////////////////////
 bool transaction_database::unlink(const hash_digest& hash)
 {
     ///////////////////////////////////////////////////////////////////////////
-    // TODO: modify cache from confirmed to unconfirmed and set unverified.
+    // TODO: remove and just call directly from data_base.pop(block).
     ///////////////////////////////////////////////////////////////////////////
+    ////return update(hash, forks, unconfirmed);
+
     cache_.remove(hash);
     return lookup_map_.unlink(hash);
 }
