@@ -330,6 +330,19 @@ code data_base::insert(const chain::block& block, size_t height)
     return error::success;
 }
 
+// This is designed for write exclusivity and read concurrency.
+code data_base::push(const chain::transaction& tx, uint32_t forks)
+{
+    ///////////////////////////////////////////////////////////////////////////
+    // TODO: return error::unspent_duplicate if an unspent tx with hash exists.
+    // Use upgrade write lock to test for the existing and upgrade to push.
+    // Use begin_write/end_write inside of write lock. Readers are unblocked.
+    // The problem is in blocking the block write, however the mining interface
+    // can send notification before the write, though this may prevent replies.
+    ///////////////////////////////////////////////////////////////////////////
+    return error::success;
+}
+
 // Add a block in order (creates no gaps, must be at top).
 // This is designed for write exclusivity and read concurrency.
 code data_base::push(const block& block, size_t height)
@@ -380,7 +393,7 @@ bool data_base::push_transactions(const chain::block& block, size_t height,
     {
         const auto& tx = txs[position];
 
-        transactions_->store(height, position, tx);
+        transactions_->store(tx, height, position);
 
         if (height < settings_.index_start_height)
             continue;

@@ -73,10 +73,13 @@ public:
         size_t fork_height) const;
 
     /// Store a transaction in the database.
-    void store(size_t height, size_t position, const chain::transaction& tx);
+    void store(const chain::transaction& tx, size_t height, size_t position);
 
     /// Update the spender height of the output in the tx store.
     bool update(const chain::output_point& point, size_t spender_height);
+
+    /// Promote an unconfirmed tx (and index, as configured).
+    bool update(const hash_digest& hash, size_t height, size_t position);
 
     /// Delete a transaction from database.
     bool unlink(const hash_digest& hash);
