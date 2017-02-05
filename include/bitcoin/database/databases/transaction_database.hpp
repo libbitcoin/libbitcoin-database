@@ -94,6 +94,9 @@ public:
     /// Flush the memory map to disk.
     bool flush() const;
 
+    /// The confirmation cache hit rate.
+    float hit_rate() const;
+
 private:
     typedef slab_hash_table<hash_digest> slab_map;
 
@@ -108,6 +111,9 @@ private:
     slab_hash_table_header lookup_header_;
     slab_manager lookup_manager_;
     slab_map lookup_map_;
+
+    size_t hits_;
+    size_t queries_;
 
     // This is thread safe, and as a cache is mutable.
     mutable unspent_outputs cache_;

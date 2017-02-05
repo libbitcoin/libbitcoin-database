@@ -50,6 +50,8 @@ transaction_database::transaction_database(const path& map_filename,
     lookup_header_(lookup_file_, buckets),
     lookup_manager_(lookup_file_, slab_hash_table_header_size(buckets)),
     lookup_map_(lookup_header_, lookup_manager_),
+    hits_(1),
+    queries_(1),
     cache_(cache_capacity)
 {
 }
@@ -110,6 +112,12 @@ void transaction_database::synchronize()
 bool transaction_database::flush() const
 {
     return lookup_file_.flush();
+}
+
+float transaction_database::hit_rate() const
+{
+    // These values could overflow or divide by zero, but that's okay.
+    return hits_ * 1.0f / queries_;
 }
 
 // Queries.
@@ -186,11 +194,17 @@ void transaction_database::store(const chain::transaction& tx,
     // If is block tx previously identified as pooled then update the tx.
     // If confirm returns false the tx did not exist so create the tx.
     // A false pooled flag saves the cost of predictable confirm failure.
-    if (position != unconfirmed && tx.validation.pooled &&
-        confirm(hash, height, position))
+    if (position != unconfirmed && tx.validation.pooled)
     {
-        cache_.add(tx, height, true);
-        return;
+        if (confirm(hash, height, position))
+        {
+            cache_.add(tx, height, true);
+            return;
+        }
+
+        // No terminate here as this is only a cache and there is no fail mode.
+        // Instead this falls through and creates a new transaction.
+        BITCOIN_ASSERT_MSG(false, "pooled transaction not found");
     }
 
     // Create the transaction.
@@ -219,7 +233,7 @@ void transaction_database::store(const chain::transaction& tx,
     if (!cache_.disabled() && position == 0 /*&& ((height % 100) == 0)*/)
     {
         LOG_DEBUG(LOG_DATABASE)
-            << "Cache hit rate: " << cache_.hit_rate() << ", size: "
+            << "Output cache hit rate: " << cache_.hit_rate() << ", size: "
             << cache_.size();
     }
 }
@@ -273,12 +287,22 @@ bool transaction_database::unspend(const output_point& point)
 bool transaction_database::confirm(const hash_digest& hash, size_t height,
     size_t position)
 {
+    ++queries_;
     const auto slab = find(hash, height, false);
+
+    // Pop hits should be 100% but push hit rates vary.
+    const auto text = (position == unconfirmed) ? "pop" : "push";
 
     // The transaction does not exist at or below the height.
     if (slab == nullptr)
+    {
+        LOG_DEBUG(LOG_DATABASE)
+            << "Transaction " << text << " miss [" << encode_hash(hash)
+            << "]: " << hit_rate();
         return false;
+    }
 
+    ++hits_;
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(position <= max_uint32);
 
@@ -286,6 +310,10 @@ bool transaction_database::confirm(const hash_digest& hash, size_t height,
     auto serial = make_unsafe_serializer(memory);
     serial.write_4_bytes_little_endian(static_cast<size_t>(height));
     serial.write_4_bytes_little_endian(static_cast<size_t>(position));
+
+    LOG_DEBUG(LOG_DATABASE)
+        << "Transaction " << text << " hit [" << encode_hash(hash)
+        << "]: " << hit_rate();
     return true;
 }
 
