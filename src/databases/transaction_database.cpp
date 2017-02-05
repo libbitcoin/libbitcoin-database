@@ -132,7 +132,7 @@ memory_ptr transaction_database::find(const hash_digest& hash,
     //*************************************************************************
     const auto slab = lookup_map_.find(hash /*, height_limit, require_confirmed*/);
 
-    if (slab == nullptr)
+    if (slab == nullptr || !require_confirmed)
         return slab;
 
     const auto memory = REMAP_ADDRESS(slab);
