@@ -157,6 +157,7 @@ private:
     bool pop_outputs(const outputs& outputs, size_t height);
     code verify_insert(const chain::block& block, size_t height);
     code verify_push(const chain::block& block, size_t height);
+    code verify_push(const chain::transaction& tx);
 
     // Asynchronous writers.
     // ------------------------------------------------------------------------

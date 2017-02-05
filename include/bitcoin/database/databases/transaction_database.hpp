@@ -45,6 +45,9 @@ public:
     typedef boost::filesystem::path path;
     typedef std::shared_ptr<shared_mutex> mutex_ptr;
 
+    /// Sentinel for use in tx position to indicate unconfirmed.
+    static const size_t unconfirmed;
+
     /// Construct the database.
     transaction_database(const path& map_filename, size_t buckets,
         size_t expansion, size_t cache_capacity, mutex_ptr mutex=nullptr);
@@ -61,28 +64,29 @@ public:
     /// Call to unload the memory map.
     bool close();
 
-    /// Fetch transaction by its hash.
-    transaction_result get(const hash_digest& hash) const;
-
     /// Fetch transaction by its hash, at or below the specified block height.
-    transaction_result get(const hash_digest& hash, size_t fork_height) const;
+    transaction_result get(const hash_digest& hash, size_t fork_height,
+        bool require_confirmed) const;
 
     /// Get the output at the specified index within the transaction.
     bool get_output(chain::output& out_output, size_t& out_height,
         bool& out_coinbase, const chain::output_point& point,
-        size_t fork_height) const;
+        size_t fork_height, bool require_confirmed) const;
 
     /// Store a transaction in the database.
     void store(const chain::transaction& tx, size_t height, size_t position);
 
     /// Update the spender height of the output in the tx store.
-    bool update(const chain::output_point& point, size_t spender_height);
+    bool spend(const chain::output_point& point, size_t spender_height);
 
-    /// Promote an unconfirmed tx (and index, as configured).
-    bool update(const hash_digest& hash, size_t height, size_t position);
+    /// Update the spender height of the output in the tx store.
+    bool unspend(const chain::output_point& point);
 
-    /// Delete a transaction from database.
-    bool unlink(const hash_digest& hash);
+    /// Promote an unconfirmed tx (not including its indexes).
+    bool confirm(const hash_digest& hash, size_t height, size_t position);
+
+    /// Demote the transaction (not including its indexes).
+    bool unconfirm(const hash_digest& hash);
 
     /// Commit latest inserts.
     void synchronize();
@@ -92,6 +96,9 @@ public:
 
 private:
     typedef slab_hash_table<hash_digest> slab_map;
+
+    memory_ptr find(const hash_digest& hash, size_t maximum_height,
+        bool require_confirmed) const;
 
     // The starting size of the hash table, used by create.
     const size_t initial_map_file_size_;

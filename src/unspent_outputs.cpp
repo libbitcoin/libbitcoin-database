@@ -59,7 +59,8 @@ float unspent_outputs::hit_rate() const
     return hits_ * 1.0f / queries_;
 }
 
-void unspent_outputs::add(const transaction& transaction, size_t height)
+void unspent_outputs::add(const transaction& transaction, size_t height,
+    bool confirmed)
 {
     if (capacity_ == 0 || transaction.outputs().empty())
         return;
@@ -78,12 +79,14 @@ void unspent_outputs::add(const transaction& transaction, size_t height)
 
     unspent_.insert(
     {
-        unspent_transaction{ transaction, height },
+        unspent_transaction{ transaction, height, confirmed },
         ++sequence_
     });
     ///////////////////////////////////////////////////////////////////////////
 }
 
+// This is confirmation-independent, since the conflict is extrememly rare and
+// the difference is simply an optimization. This avoids dual key indexing.
 void unspent_outputs::remove(const hash_digest& tx_hash)
 {
     if (capacity_ == 0)
@@ -150,13 +153,18 @@ void unspent_outputs::remove(const output_point& point)
 }
 
 bool unspent_outputs::get(output& out_output, size_t& out_height,
-    bool& out_coinbase, const output_point& point, size_t fork_height) const
+    bool& out_coinbase, const output_point& point, size_t fork_height,
+    bool require_confirmed) const
 {
     if (capacity_ == 0)
         return false;
 
     ++queries_;
     const unspent_transaction key{ point };
+
+    // TODO: rearrange parameterization so this isn't necessary.
+    BITCOIN_ASSERT(require_confirmed || fork_height == max_size_t);
+    const auto height_limit = require_confirmed ? fork_height : max_size_t;
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -165,7 +173,8 @@ bool unspent_outputs::get(output& out_output, size_t& out_height,
     // Find the unspent tx entry.
     const auto tx = unspent_.left.find(key);
 
-    if (tx == unspent_.left.end())
+    if (tx == unspent_.left.end() ||
+        (require_confirmed && !tx->first.is_confirmed()))
         return false;
 
     // Find the output at the specified index for the found unspent tx.
@@ -178,9 +187,9 @@ bool unspent_outputs::get(output& out_output, size_t& out_height,
     // Determine if the cached unspent tx is above specified fork_height.
     // Since the hash table does not allow duplicates there are no others.
     const auto& unspent = tx->first;
-    const auto height = tx->first.height();
+    const auto height = unspent.height();
 
-    if (height > fork_height)
+    if (height > height_limit)
         return false;
 
     ++hits_;

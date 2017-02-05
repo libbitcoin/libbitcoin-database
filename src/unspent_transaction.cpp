@@ -32,6 +32,7 @@ using namespace bc::chain;
 unspent_transaction::unspent_transaction(unspent_transaction&& other)
   : height_(other.height_),
     is_coinbase_(other.is_coinbase_),
+    is_confirmed_(other.is_confirmed_),
     hash_(std::move(other.hash_)),
     outputs_(other.outputs_)
 {
@@ -40,6 +41,7 @@ unspent_transaction::unspent_transaction(unspent_transaction&& other)
 unspent_transaction::unspent_transaction(const unspent_transaction& other)
   : height_(other.height_),
     is_coinbase_(other.is_coinbase_),
+    is_confirmed_(other.is_confirmed_),
     hash_(other.hash_),
     outputs_(other.outputs_)
 {
@@ -48,6 +50,7 @@ unspent_transaction::unspent_transaction(const unspent_transaction& other)
 unspent_transaction::unspent_transaction(const hash_digest& hash)
   : height_(0),
     is_coinbase_(false),
+    is_confirmed_(false),
     hash_(hash),
     outputs_(std::make_shared<output_map>())
 {
@@ -59,9 +62,10 @@ unspent_transaction::unspent_transaction(const output_point& point)
 }
 
 unspent_transaction::unspent_transaction(const chain::transaction& tx,
-    size_t height)
+    size_t height, bool confirmed)
   : height_(height),
     is_coinbase_(tx.is_coinbase()),
+    is_confirmed_(confirmed),
     hash_(tx.hash()),
     outputs_(std::make_shared<output_map>())
 {
@@ -87,6 +91,11 @@ size_t unspent_transaction::height() const
 bool unspent_transaction::is_coinbase() const
 {
     return is_coinbase_;
+}
+
+bool unspent_transaction::is_confirmed() const
+{
+    return is_confirmed_;
 }
 
 unspent_transaction::output_map_ptr unspent_transaction::outputs() const

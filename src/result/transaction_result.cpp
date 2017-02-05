@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <utility>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
@@ -82,14 +83,25 @@ size_t transaction_result::position() const
     return from_little_endian_unsafe<uint32_t>(memory + height_size);
 }
 
+bool transaction_result::is_confirmed() const
+{
+    return position() != transaction_database::unconfirmed;
+}
+
 bool transaction_result::is_spent(size_t fork_height) const
 {
     static const auto not_spent = output::validation::not_spent;
 
     BITCOIN_ASSERT(slab_);
     const auto memory = REMAP_ADDRESS(slab_);
-    const auto tx_start = memory + height_size + position_size;
-    auto deserial = make_unsafe_deserializer(tx_start);
+    const auto position_start = memory + height_size;
+    auto deserial = make_unsafe_deserializer(position_start);
+    const auto position = deserial.read_4_bytes_little_endian();
+
+    // Cannot be spent if unconfirmed.
+    if (position == transaction_database::unconfirmed)
+        return false;
+
     deserial.skip(version_size + locktime_size);
     const auto outputs = deserial.read_size_little_endian();
     BITCOIN_ASSERT(deserial);
@@ -118,9 +130,9 @@ chain::output transaction_result::output(uint32_t index) const
 {
     BITCOIN_ASSERT(slab_);
     const auto memory = REMAP_ADDRESS(slab_);
-    const auto tx_start = memory + height_size + position_size;
-    auto deserial = make_unsafe_deserializer(tx_start);
-    deserial.skip(version_size + locktime_size);
+    const auto outputs_start = memory + height_size + position_size +
+        version_size + locktime_size;
+    auto deserial = make_unsafe_deserializer(outputs_start);
     const auto outputs = deserial.read_size_little_endian();
     BITCOIN_ASSERT(deserial);
 
@@ -135,7 +147,7 @@ chain::output transaction_result::output(uint32_t index) const
         BITCOIN_ASSERT(deserial);
     }
 
-    // Read and return the target output.
+    // Read and return the target output (including spender height).
     chain::output out;
     out.from_data(deserial, false);
     return out;

@@ -29,6 +29,7 @@ namespace libbitcoin {
 namespace database {
 
 using namespace bc::chain;
+using namespace bc::machine;
 
 static constexpr auto value_size = sizeof(uint64_t);
 static constexpr auto height_size = sizeof(uint32_t);
@@ -36,6 +37,8 @@ static constexpr auto version_size = sizeof(uint32_t);
 static constexpr auto locktime_size = sizeof(uint32_t);
 static constexpr auto position_size = sizeof(uint32_t);
 static constexpr auto version_lock_size = version_size + locktime_size;
+
+const size_t transaction_database::unconfirmed = max_uint32;
 
 // Transactions uses a hash table index, O(1).
 transaction_database::transaction_database(const path& map_filename,
@@ -112,91 +115,105 @@ bool transaction_database::flush() const
 // Queries.
 // ----------------------------------------------------------------------------
 
-///////////////////////////////////////////////////////////////////////////////
-// TODO: add parameter to specify if confirmed tx is required.
-///////////////////////////////////////////////////////////////////////////////
-transaction_result transaction_database::get(const hash_digest& hash) const
+memory_ptr transaction_database::find(const hash_digest& hash,
+    size_t maximum_height, bool require_confirmed) const
 {
-    return get(hash, max_size_t);
+    // TODO: rearrange parameterization so this isn't necessary.
+    BITCOIN_ASSERT(require_confirmed || maximum_height == max_size_t);
+    const auto height_limit = require_confirmed ? maximum_height : max_size_t;
+
+    //*************************************************************************
+    // CONSENSUS: This simplified implementation does not allow the possibility
+    // of a matching tx hash above the fork height or the existence of both
+    // unconfirmed and confirmed transactions with the same hash. This is an
+    // assumption of the impossibility of hash collisions, which is incorrect
+    // but consistent with the current satoshi implementation. This method
+    // encapsulates that assumption which can therefore be fixed in one place.
+    //*************************************************************************
+    const auto slab = lookup_map_.find(hash /*, height_limit, require_confirmed*/);
+
+    if (slab == nullptr)
+        return slab;
+
+    const auto memory = REMAP_ADDRESS(slab);
+    auto deserial = make_unsafe_deserializer(memory);
+    const size_t height = deserial.read_4_bytes_little_endian();
+    const size_t position = deserial.read_4_bytes_little_endian();
+    const auto match = (height <= height_limit) &&
+        (!require_confirmed || position != unconfirmed);
+
+    return match ? slab : nullptr;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// TODO: add parameter to specify if confirmed tx is required.
-///////////////////////////////////////////////////////////////////////////////
 transaction_result transaction_database::get(const hash_digest& hash,
-    size_t fork_height) const
+    size_t fork_height, bool require_confirmed) const
 {
-    ///////////////////////////////////////////////////////////////////////////
-    // TODO: search the set of transactions by hash in height order,
-    // returning the highest that is at or below fork_height (and remove test).
-    ///////////////////////////////////////////////////////////////////////////
-    const auto memory = lookup_map_.find(hash);
-    const auto result = transaction_result(memory, hash);
+    // Limit search to confirmed transactions at or below the fork height.
+    // Caller should set fork height to max_size_t for unconfirmed search.
+    const auto slab = find(hash, fork_height, require_confirmed);
 
-    if (!result)
-        return result;
-
-    // TODO: remove after above fix.
-    if (result.height() > fork_height)
-        return{ nullptr };
-
-    return result;
+    // Returns an invalid result if not found.
+    return transaction_result(slab, hash);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// TODO: add parameter to specify if confirmed tx is required.
-///////////////////////////////////////////////////////////////////////////////
 bool transaction_database::get_output(output& out_output, size_t& out_height,
-    bool& out_coinbase, const output_point& point, size_t fork_height) const
+    bool& out_coinbase, const output_point& point, size_t fork_height,
+    bool require_confirmed) const
 {
-    ///////////////////////////////////////////////////////////////////////////
-    // TODO: add cache parameter to specify if confirmed tx is required.
-    ///////////////////////////////////////////////////////////////////////////
-    if (cache_.get(out_output, out_height, out_coinbase, point, fork_height))
+    if (cache_.get(out_output, out_height, out_coinbase, point, fork_height,
+        require_confirmed))
         return true;
 
-    const auto result = get(point.hash(), fork_height);
+    const auto hash = point.hash();
+    const auto slab = find(hash, fork_height, require_confirmed);
 
-    // The transaction does not exist.
-    if (!result)
+    // The transaction does not exist at/below fork with matching confirmation.
+    if (!slab)
         return false;
 
+    transaction_result result (slab, hash);
     out_height = result.height();
     out_coinbase = result.position() == 0;
     out_output = result.output(point.index());
     return true;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// TODO: create position sentinel for unconfirmed (with height as forks used).
-///////////////////////////////////////////////////////////////////////////////
 void transaction_database::store(const chain::transaction& tx,
     size_t height, size_t position)
 {
-    // Write block data.
-    const auto key = tx.hash();
-    const auto tx_size = tx.serialized_size(false);
+    const auto hash = tx.hash();
 
+    // If is block tx previously identified as pooled then update the tx.
+    // If confirm returns false the tx did not exist so create the tx.
+    // A false pooled flag saves the cost of predictable confirm failure.
+    if (position != unconfirmed && tx.validation.pooled &&
+        confirm(hash, height, position))
+    {
+        cache_.add(tx, height, true);
+        return;
+    }
+
+    // Create the transaction.
     BITCOIN_ASSERT(height <= max_uint32);
-    const auto hight32 = static_cast<size_t>(height);
-
     BITCOIN_ASSERT(position <= max_uint32);
-    const auto position32 = static_cast<size_t>(position);
 
-    BITCOIN_ASSERT(tx_size <= max_size_t - version_lock_size);
-    const auto value_size = version_lock_size + static_cast<size_t>(tx_size);
-
+    // Unconfirmed txs: position is unconfirmed and height is validation forks.
     const auto write = [&](serializer<uint8_t*>& serial)
     {
-        serial.write_4_bytes_little_endian(hight32);
-        serial.write_4_bytes_little_endian(position32);
+        serial.write_4_bytes_little_endian(static_cast<size_t>(height));
+        serial.write_4_bytes_little_endian(static_cast<size_t>(position));
 
         // WRITE THE TX
         tx.to_data(serial, false);
     };
 
-    lookup_map_.store(key, write, value_size);
-    cache_.add(tx, height);
+    const auto tx_size = tx.serialized_size(false);
+    BITCOIN_ASSERT(tx_size <= max_size_t - version_lock_size);
+    const auto value_size = version_lock_size + static_cast<size_t>(tx_size);
+
+    // Create slab for the new tx instance.
+    lookup_map_.store(hash, write, value_size);
+    cache_.add(tx, height, position != unconfirmed);
 
     if (position == 0 && ((height % 100) == 0))
     {
@@ -206,17 +223,18 @@ void transaction_database::store(const chain::transaction& tx,
     }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// TODO: update only the most recent *confirmed* tx of prevout hash.
-///////////////////////////////////////////////////////////////////////////////
-bool transaction_database::update(const output_point& point,
+bool transaction_database::spend(const output_point& point,
     size_t spender_height)
 {
-    ///////////////////////////////////////////////////////////////////////////
-    // TODO: add cache parameter to specify if confirmed tx is required.
-    ///////////////////////////////////////////////////////////////////////////
-    cache_.remove(point);
-    const auto slab = lookup_map_.find(point.hash());
+    // If unspent we could restore the spend to the cache, but not worth it.
+    if (spender_height != output::validation::not_spent)
+        cache_.remove(point);
+
+    // Limit search to confirmed transactions at or below the spender height,
+    // since a spender cannot spend above its own height.
+    // Transactions are not marked as spent unless the spender is confirmed.
+    // This is consistent with support for unconfirmed double spends. 
+    const auto slab = find(point.hash(), spender_height, true);
 
     // The transaction does not exist.
     if (slab == nullptr)
@@ -246,37 +264,36 @@ bool transaction_database::update(const output_point& point,
     return true;
 }
 
-bool transaction_database::update(const hash_digest& hash, size_t height,
+bool transaction_database::unspend(const output_point& point)
+{
+    return spend(point, output::validation::not_spent);
+}
+
+bool transaction_database::confirm(const hash_digest& hash, size_t height,
     size_t position)
 {
-    ///////////////////////////////////////////////////////////////////////////
-    // TODO: Promote an unconfirmed tx (and index, as configured).
-    // This is called from data_base.push(block, height) for any tx marked
-    // as existing (unconfirmed). If forks did not match then tx was verified
-    // and confirmed under new forks, so this update is safe. Caller ensures
-    // that no other writes intervene (block validation/update is sequential).
-    ///////////////////////////////////////////////////////////////////////////
+    const auto slab = find(hash, height, false);
+
+    // The transaction does not exist.
+    if (slab == nullptr)
+        return false;
+
+    BITCOIN_ASSERT(height <= max_uint32);
+    BITCOIN_ASSERT(position <= max_uint32);
+
+    const auto memory = REMAP_ADDRESS(slab);
+    auto serial = make_unsafe_serializer(memory);
+    serial.write_4_bytes_little_endian(static_cast<size_t>(height));
+    serial.write_4_bytes_little_endian(static_cast<size_t>(position));
     return true;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// TODO: set position sentinel (unconfirmed) and height to unverified forks.
-// TODO: never unlink a tx, instead set height to unverified (forks) and set
-// position to the unconfirmed (tx pool) sentinel.
-// However we do unlink spend and history information. Since stealth is neither
-// indexed, precise nor unlinked, it remains unchanged. So in the event of a
-// reorg we lose the unlinked indexing and may append it again later.
-// Unconfirmed transactions are never indexed, we do not support tx pool query.
-///////////////////////////////////////////////////////////////////////////////
-bool transaction_database::unlink(const hash_digest& hash)
+bool transaction_database::unconfirm(const hash_digest& hash)
 {
-    ///////////////////////////////////////////////////////////////////////////
-    // TODO: remove and just call directly from data_base.pop(block).
-    ///////////////////////////////////////////////////////////////////////////
-    ////return update(hash, forks, unconfirmed);
-
-    cache_.remove(hash);
-    return lookup_map_.unlink(hash);
+    // The transaction was verified under an unknown chain state, so we set the
+    // verification forks to unverified. This will compel re-validation of the
+    // unconfirmed transaction before acceptance into mempool/template queries.
+    return confirm(hash, rule_fork::unverified, unconfirmed);
 }
 
 } // namespace database
