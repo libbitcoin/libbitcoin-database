@@ -50,8 +50,6 @@ transaction_database::transaction_database(const path& map_filename,
     lookup_header_(lookup_file_, buckets),
     lookup_manager_(lookup_file_, slab_hash_table_header_size(buckets)),
     lookup_map_(lookup_header_, lookup_manager_),
-    hits_(1),
-    queries_(1),
     cache_(cache_capacity)
 {
 }
@@ -114,21 +112,12 @@ bool transaction_database::flush() const
     return lookup_file_.flush();
 }
 
-float transaction_database::hit_rate() const
-{
-    // These values could overflow or divide by zero, but that's okay.
-    return hits_ * 1.0f / queries_;
-}
-
 // Queries.
 // ----------------------------------------------------------------------------
 
 memory_ptr transaction_database::find(const hash_digest& hash,
     size_t fork_height, bool require_confirmed) const
 {
-    BITCOIN_ASSERT(require_confirmed || fork_height == max_size_t);
-    const auto limit = require_confirmed ? fork_height : max_size_t;
-
     //*************************************************************************
     // CONSENSUS: This simplified implementation does not allow the possibility
     // of a matching tx hash above the fork height or the existence of both
@@ -137,7 +126,7 @@ memory_ptr transaction_database::find(const hash_digest& hash,
     // but consistent with the current satoshi implementation. This method
     // encapsulates that assumption which can therefore be fixed in one place.
     //*************************************************************************
-    const auto slab = lookup_map_.find(hash /*, limit, require_confirmed*/);
+    auto slab = lookup_map_.find(hash /*, fork_height, require_confirmed*/);
 
     if (slab == nullptr || !require_confirmed)
         return slab;
@@ -149,7 +138,9 @@ memory_ptr transaction_database::find(const hash_digest& hash,
     // If position is unconfirmed then height is the forks used for validation.
     const size_t height = deserial.read_4_bytes_little_endian();
     const size_t position = deserial.read_4_bytes_little_endian();
-    return (height > limit) || (require_confirmed && position == unconfirmed) ?
+
+    return (height > fork_height) || 
+        (require_confirmed && position == unconfirmed) ?
         nullptr : slab;
 }
 
@@ -194,7 +185,7 @@ void transaction_database::store(const chain::transaction& tx,
     // If is block tx previously identified as pooled then update the tx.
     // If confirm returns false the tx did not exist so create the tx.
     // A false pooled flag saves the cost of predictable confirm failure.
-    if (position != unconfirmed && tx.validation.pooled)
+    if (position != unconfirmed && position != 0 && tx.validation.pooled)
     {
         if (confirm(hash, height, position))
         {
@@ -229,8 +220,8 @@ void transaction_database::store(const chain::transaction& tx,
     lookup_map_.store(hash, write, value_size);
     cache_.add(tx, height, position != unconfirmed);
 
-    // We report this here because its a steady interval (block announce).
-    if (!cache_.disabled() && position == 0 /*&& ((height % 100) == 0)*/)
+    // We report theis here because its a steady interval (block announce).
+    if (!cache_.disabled() && position == 0)
     {
         LOG_DEBUG(LOG_DATABASE)
             << "Output cache hit rate: " << cache_.hit_rate() << ", size: "
@@ -287,22 +278,12 @@ bool transaction_database::unspend(const output_point& point)
 bool transaction_database::confirm(const hash_digest& hash, size_t height,
     size_t position)
 {
-    ++queries_;
     const auto slab = find(hash, height, false);
-
-    // Pop hits should be 100% but push hit rates vary.
-    const auto text = (position == unconfirmed) ? "pop" : "push";
 
     // The transaction does not exist at or below the height.
     if (slab == nullptr)
-    {
-        LOG_DEBUG(LOG_DATABASE)
-            << "Transaction " << text << " miss [" << encode_hash(hash)
-            << "]: " << hit_rate();
         return false;
-    }
 
-    ++hits_;
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(position <= max_uint32);
 
@@ -310,10 +291,6 @@ bool transaction_database::confirm(const hash_digest& hash, size_t height,
     auto serial = make_unsafe_serializer(memory);
     serial.write_4_bytes_little_endian(static_cast<size_t>(height));
     serial.write_4_bytes_little_endian(static_cast<size_t>(position));
-
-    LOG_DEBUG(LOG_DATABASE)
-        << "Transaction " << text << " hit [" << encode_hash(hash)
-        << "]: " << hit_rate();
     return true;
 }
 

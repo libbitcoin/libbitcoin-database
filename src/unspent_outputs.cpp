@@ -167,9 +167,6 @@ bool unspent_outputs::get(output& out_output, size_t& out_height,
     ++queries_;
     const unspent_transaction key{ point };
 
-    BITCOIN_ASSERT(require_confirmed || fork_height == max_size_t);
-    const auto limit = require_confirmed ? fork_height : max_size_t;
-
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     shared_lock lock(mutex_);
@@ -193,7 +190,7 @@ bool unspent_outputs::get(output& out_output, size_t& out_height,
     const auto& unspent = tx->first;
     const auto height = unspent.height();
 
-    if (height > limit)
+    if (height > fork_height)
         return false;
 
     ++hits_;
