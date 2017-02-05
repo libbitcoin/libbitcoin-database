@@ -52,9 +52,6 @@ public:
     /// The ordinal position of the transaction within its block.
     size_t position() const;
 
-    /// True if the transaction belongs to a block.
-    bool is_confirmed() const;
-
     /// True if all transaction outputs are spent at or below fork_height.
     bool is_spent(size_t fork_height) const;
 

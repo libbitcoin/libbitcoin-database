@@ -83,11 +83,6 @@ size_t transaction_result::position() const
     return from_little_endian_unsafe<uint32_t>(memory + height_size);
 }
 
-bool transaction_result::is_confirmed() const
-{
-    return position() != transaction_database::unconfirmed;
-}
-
 bool transaction_result::is_spent(size_t fork_height) const
 {
     static const auto not_spent = output::validation::not_spent;
@@ -112,8 +107,7 @@ bool transaction_result::is_spent(size_t fork_height) const
         const auto spender_height = deserial.read_4_bytes_little_endian();
         BITCOIN_ASSERT(deserial);
 
-        // A spend from above the fork height is not considered a spend.
-        // There cannot also be a spend below the fork height, so it's unspent.
+        // A spend from above the fork height is not an actual spend.
         if (spender_height == not_spent || spender_height > fork_height)
             return false;
 
