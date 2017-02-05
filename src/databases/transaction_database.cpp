@@ -116,11 +116,10 @@ bool transaction_database::flush() const
 // ----------------------------------------------------------------------------
 
 memory_ptr transaction_database::find(const hash_digest& hash,
-    size_t maximum_height, bool require_confirmed) const
+    size_t fork_height, bool require_confirmed) const
 {
-    // TODO: rearrange parameterization so this isn't necessary.
-    BITCOIN_ASSERT(require_confirmed || maximum_height == max_size_t);
-    const auto height_limit = require_confirmed ? maximum_height : max_size_t;
+    BITCOIN_ASSERT(require_confirmed || fork_height == max_size_t);
+    const auto limit = require_confirmed ? fork_height : max_size_t;
 
     //*************************************************************************
     // CONSENSUS: This simplified implementation does not allow the possibility
@@ -130,19 +129,20 @@ memory_ptr transaction_database::find(const hash_digest& hash,
     // but consistent with the current satoshi implementation. This method
     // encapsulates that assumption which can therefore be fixed in one place.
     //*************************************************************************
-    const auto slab = lookup_map_.find(hash /*, height_limit, require_confirmed*/);
+    const auto slab = lookup_map_.find(hash /*, limit, require_confirmed*/);
 
     if (slab == nullptr || !require_confirmed)
         return slab;
 
     const auto memory = REMAP_ADDRESS(slab);
     auto deserial = make_unsafe_deserializer(memory);
+
+    // Read the height and position.
+    // If position is unconfirmed then height is the forks used for validation.
     const size_t height = deserial.read_4_bytes_little_endian();
     const size_t position = deserial.read_4_bytes_little_endian();
-    const auto match = (height <= height_limit) &&
-        (!require_confirmed || position != unconfirmed);
-
-    return match ? slab : nullptr;
+    return (height > limit) || (require_confirmed && position == unconfirmed) ?
+        nullptr : slab;
 }
 
 transaction_result transaction_database::get(const hash_digest& hash,
@@ -215,7 +215,8 @@ void transaction_database::store(const chain::transaction& tx,
     lookup_map_.store(hash, write, value_size);
     cache_.add(tx, height, position != unconfirmed);
 
-    if (position == 0 && ((height % 100) == 0))
+    // We report this here because its a steady interval (block announce).
+    if (!cache_.disabled() && position == 0 /*&& ((height % 100) == 0)*/)
     {
         LOG_DEBUG(LOG_DATABASE)
             << "Cache hit rate: " << cache_.hit_rate() << ", size: "
@@ -236,7 +237,7 @@ bool transaction_database::spend(const output_point& point,
     // This is consistent with support for unconfirmed double spends. 
     const auto slab = find(point.hash(), spender_height, true);
 
-    // The transaction does not exist.
+    // The transaction is not exist as confirmed at or below the height.
     if (slab == nullptr)
         return false;
 
@@ -274,7 +275,7 @@ bool transaction_database::confirm(const hash_digest& hash, size_t height,
 {
     const auto slab = find(hash, height, false);
 
-    // The transaction does not exist.
+    // The transaction does not exist at or below the height.
     if (slab == nullptr)
         return false;
 
