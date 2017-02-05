@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <utility>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
@@ -88,8 +89,14 @@ bool transaction_result::is_spent(size_t fork_height) const
 
     BITCOIN_ASSERT(slab_);
     const auto memory = REMAP_ADDRESS(slab_);
-    const auto tx_start = memory + height_size + position_size;
-    auto deserial = make_unsafe_deserializer(tx_start);
+    const auto position_start = memory + height_size;
+    auto deserial = make_unsafe_deserializer(position_start);
+    const auto position = deserial.read_4_bytes_little_endian();
+
+    // Cannot be spent if unconfirmed.
+    if (position == transaction_database::unconfirmed)
+        return false;
+
     deserial.skip(version_size + locktime_size);
     const auto outputs = deserial.read_size_little_endian();
     BITCOIN_ASSERT(deserial);
@@ -100,8 +107,7 @@ bool transaction_result::is_spent(size_t fork_height) const
         const auto spender_height = deserial.read_4_bytes_little_endian();
         BITCOIN_ASSERT(deserial);
 
-        // A spend from above the fork height is not considered a spend.
-        // There cannot also be a spend below the fork height, so it's unspent.
+        // A spend from above the fork height is not an actual spend.
         if (spender_height == not_spent || spender_height > fork_height)
             return false;
 
@@ -118,9 +124,9 @@ chain::output transaction_result::output(uint32_t index) const
 {
     BITCOIN_ASSERT(slab_);
     const auto memory = REMAP_ADDRESS(slab_);
-    const auto tx_start = memory + height_size + position_size;
-    auto deserial = make_unsafe_deserializer(tx_start);
-    deserial.skip(version_size + locktime_size);
+    const auto outputs_start = memory + height_size + position_size +
+        version_size + locktime_size;
+    auto deserial = make_unsafe_deserializer(outputs_start);
     const auto outputs = deserial.read_size_little_endian();
     BITCOIN_ASSERT(deserial);
 
@@ -135,7 +141,7 @@ chain::output transaction_result::output(uint32_t index) const
         BITCOIN_ASSERT(deserial);
     }
 
-    // Read and return the target output.
+    // Read and return the target output (including spender height).
     chain::output out;
     out.from_data(deserial, false);
     return out;

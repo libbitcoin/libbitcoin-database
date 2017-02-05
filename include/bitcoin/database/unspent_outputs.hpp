@@ -42,6 +42,9 @@ public:
     // Construct a cache with the specified transaction count limit.
     unspent_outputs(size_t capacity);
 
+    /// The cache capacity is zero.
+    bool disabled() const;
+
     /// The cache has no elements.
     size_t empty() const;
 
@@ -52,7 +55,8 @@ public:
     float hit_rate() const;
 
     /// Add a set of outputs to the cache (purges older entry).
-    void add(const chain::transaction& transaction, size_t height);
+    void add(const chain::transaction& transaction, size_t height,
+        bool confirmed);
 
     /// Remove a set of outputs from the cache (has been reorganized out).
     void remove(const hash_digest& tx_hash);
@@ -62,7 +66,8 @@ public:
 
     /// Determine if the output is unspent (otherwise fall back to the store).
     bool get(chain::output& out_output, size_t& out_height, bool& out_coinbase,
-        const chain::output_point& point, size_t fork_height) const;
+        const chain::output_point& point, size_t fork_height,
+        bool require_confirmed) const;
 
 private:
     // A bidirection map is used for efficient output and position retrieval.

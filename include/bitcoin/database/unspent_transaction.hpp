@@ -45,11 +45,13 @@ public:
     /// Constructors.
     explicit unspent_transaction(const hash_digest& hash);
     explicit unspent_transaction(const chain::output_point& point);
-    explicit unspent_transaction(const chain::transaction& tx, size_t height);
+    explicit unspent_transaction(const chain::transaction& tx, size_t height,
+        bool confirmed);
 
     /// Properties.
     size_t height() const;
     bool is_coinbase() const;
+    bool is_confirmed() const;
     const hash_digest& hash() const;
 
     /// Access to outputs is mutable and unprotected (not thread safe).
@@ -65,6 +67,7 @@ private:
     // These are thread safe (non-const only for assignment operator).
     size_t height_;
     bool is_coinbase_;
+    bool is_confirmed_;
     hash_digest hash_;
 
     // This is not thead safe and is publicly reachable.

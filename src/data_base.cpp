@@ -42,6 +42,12 @@ using namespace bc::wallet;
 
 #define NAME "data_base"
 
+// A failure after begin_write is returned without calling end_write.
+// This purposely leaves the local flush lock (as enabled) and inverts the
+// sequence lock. The former prevents usagage after restart and the latter
+// prevents continuation of reads and writes while running. Ideally we
+// want to exit without clearing the global flush lock (as enabled).
+
 // Construct.
 // ----------------------------------------------------------------------------
 
@@ -289,6 +295,13 @@ code data_base::verify_push(const block& block, size_t height)
     return error::success;
 }
 
+code data_base::verify_push(const transaction& tx)
+{
+    const auto result = transactions_->get(tx.hash(), max_size_t, false);
+    return result && !result.is_spent(max_size_t) ? error::unspent_duplicate :
+        error::success;
+}
+
 bool data_base::begin_insert() const
 {
     // Critical Section
@@ -304,12 +317,6 @@ bool data_base::end_insert() const
     // End Critical Section
     ///////////////////////////////////////////////////////////////////////////
 
-    // A failure after begin_write is returned without calling end_write.
-    // This purposely leaves the local flush lock (as enabled) and inverts the
-    // sequence lock. The former prevents usagage after restart and the latter
-    // prevents continuation of reads and writes while running. Ideally we
-    // want to exit without clearing the global flush lock (as enabled).
-    // The write mutex is always cleared (assuming this is called).
     return end_write();
 }
 
@@ -333,14 +340,29 @@ code data_base::insert(const chain::block& block, size_t height)
 // This is designed for write exclusivity and read concurrency.
 code data_base::push(const chain::transaction& tx, uint32_t forks)
 {
+    // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    // TODO: return error::unspent_duplicate if an unspent tx with hash exists.
-    // Use upgrade write lock to test for the existing and upgrade to push.
-    // Use begin_write/end_write inside of write lock. Readers are unblocked.
-    // The problem is in blocking the block write, however the mining interface
-    // can send notification before the write, though this may prevent replies.
+    unique_lock lock(write_mutex_);
+
+    // Returns error::unspent_duplicate if an unspent tx with same hash exists.
+    const auto ec = verify_push(tx);
+
+    if (ec)
+        return ec;
+
+    // Begin Flush Lock and Sequential Lock
+    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    if (!begin_write())
+        return error::operation_failed;
+
+    // When position is unconfirmed, height is used to store validation forks.
+    transactions_->store(tx, forks, transaction_database::unconfirmed);
+    transactions_->synchronize();
+
+    return end_write() ? error::success : error::operation_failed;
+    // End Sequential Lock and Flush Lock
+    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     ///////////////////////////////////////////////////////////////////////////
-    return error::success;
 }
 
 // Add a block in order (creates no gaps, must be at top).
@@ -367,13 +389,6 @@ code data_base::push(const block& block, size_t height)
     blocks_->store(block, height);
     synchronize();
 
-    // A failure after begin_write is returned without calling end_write.
-    // This purposely leaves the local flush lock (as enabled) and inverts the
-    // sequence lock. The former prevents usagage after restart and the latter
-    // prevents continuation of reads and writes while running. Ideally we
-    // want to exit without clearing the global flush lock (as enabled).
-    // The write mutex is always cleared.
-
     return end_write() ? error::success : error::operation_failed;
     // End Sequential Lock and Flush Lock
     //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -392,7 +407,6 @@ bool data_base::push_transactions(const chain::block& block, size_t height,
         position = ceiling_add(position, buckets))
     {
         const auto& tx = txs[position];
-
         transactions_->store(tx, height, position);
 
         if (height < settings_.index_start_height)
@@ -418,7 +432,7 @@ bool data_base::push_heights(const chain::block& block, size_t height)
     // Skip coinbase as it has no previous output.
     for (auto tx = txs.begin() + 1; tx != txs.end(); ++tx)
         for (const auto& input: tx->inputs())
-            if (!transactions_->update(input.previous_output(), height))
+            if (!transactions_->spend(input.previous_output(), height))
                 return false;
 
     return true;
@@ -521,12 +535,7 @@ bool data_base::pop(block& out_block)
     for (size_t position = 0; position < count; ++position)
     {
         const auto tx_hash = block.transaction_hash(position);
-
-        ///////////////////////////////////////////////////////////////////////
-        // TODO: get highest *confirmed* tx only.
-        // We want the highest confirmed tx with this hash (allow max height).
-        const auto tx = transactions_->get(tx_hash, max_size_t);
-        ///////////////////////////////////////////////////////////////////////
+        const auto tx = transactions_->get(tx_hash, height, true);
 
         if (!tx || (tx.height() != height) || (tx.position() != position))
             return false;
@@ -539,11 +548,8 @@ bool data_base::pop(block& out_block)
     // Remove txs, then outputs, then inputs (also reverse order).
     for (auto tx = transactions.rbegin(); tx != transactions.rend(); ++tx)
     {
-        ///////////////////////////////////////////////////////////////////////
-        // TODO: convert transaction to unconfirmed.
-        if (!transactions_->unlink(tx->hash()))
+        if (!transactions_->unconfirm(tx->hash()))
             return false;
-        ///////////////////////////////////////////////////////////////////////
 
         if (!pop_outputs(tx->outputs(), height))
             return false;
@@ -566,16 +572,11 @@ bool data_base::pop(block& out_block)
 // A false return implies store corruption.
 bool data_base::pop_inputs(const input::list& inputs, size_t height)
 {
-    static const auto not_spent = output::validation::not_spent;
-
     // Loop in reverse.
     for (auto input = inputs.rbegin(); input != inputs.rend(); ++input)
     {
-        ///////////////////////////////////////////////////////////////////////
-        // TODO: update only the most recent *confirmed* tx of prevout hash.
-        if (!transactions_->update(input->previous_output(), not_spent))
+        if (!transactions_->unspend(input->previous_output()))
             return false;
-        ///////////////////////////////////////////////////////////////////////
 
         if (height < settings_.index_start_height)
             continue;
@@ -623,6 +624,8 @@ bool data_base::pop_outputs(const output::list& outputs, size_t height)
 // Asynchronous writers.
 // ----------------------------------------------------------------------------
 // Add a list of blocks in order.
+// If the dispatch threadpool is shut down when this is running the handler
+// will never be invoked, resulting in a threadpool.join indefinite hang.
 void data_base::push_all(block_const_ptr_list_const_ptr in_blocks,
     size_t first_height, dispatcher& dispatch, result_handler handler)
 {
@@ -654,8 +657,6 @@ void data_base::push_next(const code& ec,
                 handler);
 
     // This is the beginning of the block sub-sequence.
-    // If the dispatch threadpool is shut down when this is called the handler
-    // will never be invoked, resulting in a threadpool.join indefinite hang.
     dispatch.concurrent(&data_base::do_push,
         this, block, height, std::ref(dispatch), next);
 }
@@ -681,8 +682,6 @@ void data_base::do_push(block_const_ptr block, size_t height,
     const auto join_handler = bc::synchronize(std::move(block_complete),
         buckets, NAME "_do_push");
 
-    // If the dispatch threadpool is shut down when this is called the handler
-    // will never be invoked, resulting in a threadpool.join indefinite hang.
     for (size_t bucket = 0; bucket < buckets; ++bucket)
         dispatch.concurrent(&data_base::do_push_transactions,
             this, block, height, bucket, buckets, join_handler);
@@ -833,13 +832,6 @@ void data_base::handle_push(const code& ec, result_handler handler) const
     write_mutex_.unlock();
     // End Critical Section.
     ///////////////////////////////////////////////////////////////////////////
-
-    // A failure after begin_write is returned without calling end_write.
-    // This purposely leaves the local flush lock (as enabled) and inverts the
-    // sequence lock. The former prevents usagage after restart and the latter
-    // prevents continuation of reads and writes while running. Ideally we
-    // want to exit without clearing the global flush lock (as enabled).
-    // The write mutex is always cleared.
 
     if (ec)
     {

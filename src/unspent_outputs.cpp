@@ -33,6 +33,11 @@ unspent_outputs::unspent_outputs(size_t capacity)
 {
 }
 
+bool unspent_outputs::disabled() const
+{
+    return capacity_ == 0;
+}
+
 size_t unspent_outputs::empty() const
 {
     // Critical Section
@@ -59,9 +64,10 @@ float unspent_outputs::hit_rate() const
     return hits_ * 1.0f / queries_;
 }
 
-void unspent_outputs::add(const transaction& transaction, size_t height)
+void unspent_outputs::add(const transaction& transaction, size_t height,
+    bool confirmed)
 {
-    if (capacity_ == 0 || transaction.outputs().empty())
+    if (disabled() || transaction.outputs().empty())
         return;
 
     // Critical Section
@@ -78,15 +84,17 @@ void unspent_outputs::add(const transaction& transaction, size_t height)
 
     unspent_.insert(
     {
-        unspent_transaction{ transaction, height },
+        unspent_transaction{ transaction, height, confirmed },
         ++sequence_
     });
     ///////////////////////////////////////////////////////////////////////////
 }
 
+// This is confirmation-independent, since the conflict is extrememly rare and
+// the difference is simply an optimization. This avoids dual key indexing.
 void unspent_outputs::remove(const hash_digest& tx_hash)
 {
-    if (capacity_ == 0)
+    if (disabled())
         return;
 
     const unspent_transaction key{ tx_hash };
@@ -115,7 +123,7 @@ void unspent_outputs::remove(const hash_digest& tx_hash)
 
 void unspent_outputs::remove(const output_point& point)
 {
-    if (capacity_ == 0)
+    if (disabled())
         return;
 
     const unspent_transaction key{ point };
@@ -150,9 +158,10 @@ void unspent_outputs::remove(const output_point& point)
 }
 
 bool unspent_outputs::get(output& out_output, size_t& out_height,
-    bool& out_coinbase, const output_point& point, size_t fork_height) const
+    bool& out_coinbase, const output_point& point, size_t fork_height,
+    bool require_confirmed) const
 {
-    if (capacity_ == 0)
+    if (disabled())
         return false;
 
     ++queries_;
@@ -165,7 +174,8 @@ bool unspent_outputs::get(output& out_output, size_t& out_height,
     // Find the unspent tx entry.
     const auto tx = unspent_.left.find(key);
 
-    if (tx == unspent_.left.end())
+    if (tx == unspent_.left.end() ||
+        (require_confirmed && !tx->first.is_confirmed()))
         return false;
 
     // Find the output at the specified index for the found unspent tx.
@@ -178,7 +188,7 @@ bool unspent_outputs::get(output& out_output, size_t& out_height,
     // Determine if the cached unspent tx is above specified fork_height.
     // Since the hash table does not allow duplicates there are no others.
     const auto& unspent = tx->first;
-    const auto height = tx->first.height();
+    const auto height = unspent.height();
 
     if (height > fork_height)
         return false;
