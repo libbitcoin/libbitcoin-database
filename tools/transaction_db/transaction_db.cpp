@@ -123,7 +123,7 @@ int main(int argc, char** argv)
         }
 
         db.open();
-        auto result = db.get(hash, max_size_t);
+        auto result = db.get(hash, max_size_t, true);
         if (!result)
         {
             std::cout << "Not found!" << std::endl;
@@ -187,7 +187,7 @@ int main(int argc, char** argv)
         const auto result = db.open();
         BITCOIN_ASSERT(result);
 
-        db.unlink(hash);
+        db.unconfirm(hash);
         db.synchronize();
     }
     else
