@@ -42,6 +42,9 @@ public:
     // Construct a cache with the specified transaction count limit.
     unspent_outputs(size_t capacity);
 
+    /// The cache capacity is zero.
+    bool disabled() const;
+
     /// The cache has no elements.
     size_t empty() const;
 

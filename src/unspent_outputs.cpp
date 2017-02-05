@@ -33,6 +33,11 @@ unspent_outputs::unspent_outputs(size_t capacity)
 {
 }
 
+bool unspent_outputs::disabled() const
+{
+    return capacity_ == 0;
+}
+
 size_t unspent_outputs::empty() const
 {
     // Critical Section
@@ -62,7 +67,7 @@ float unspent_outputs::hit_rate() const
 void unspent_outputs::add(const transaction& transaction, size_t height,
     bool confirmed)
 {
-    if (capacity_ == 0 || transaction.outputs().empty())
+    if (disabled() || transaction.outputs().empty())
         return;
 
     // Critical Section
@@ -89,7 +94,7 @@ void unspent_outputs::add(const transaction& transaction, size_t height,
 // the difference is simply an optimization. This avoids dual key indexing.
 void unspent_outputs::remove(const hash_digest& tx_hash)
 {
-    if (capacity_ == 0)
+    if (disabled())
         return;
 
     const unspent_transaction key{ tx_hash };
@@ -118,7 +123,7 @@ void unspent_outputs::remove(const hash_digest& tx_hash)
 
 void unspent_outputs::remove(const output_point& point)
 {
-    if (capacity_ == 0)
+    if (disabled())
         return;
 
     const unspent_transaction key{ point };
@@ -156,15 +161,14 @@ bool unspent_outputs::get(output& out_output, size_t& out_height,
     bool& out_coinbase, const output_point& point, size_t fork_height,
     bool require_confirmed) const
 {
-    if (capacity_ == 0)
+    if (disabled())
         return false;
 
     ++queries_;
     const unspent_transaction key{ point };
 
-    // TODO: rearrange parameterization so this isn't necessary.
     BITCOIN_ASSERT(require_confirmed || fork_height == max_size_t);
-    const auto height_limit = require_confirmed ? fork_height : max_size_t;
+    const auto limit = require_confirmed ? fork_height : max_size_t;
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -189,7 +193,7 @@ bool unspent_outputs::get(output& out_output, size_t& out_height,
     const auto& unspent = tx->first;
     const auto height = unspent.height();
 
-    if (height > height_limit)
+    if (height > limit)
         return false;
 
     ++hits_;

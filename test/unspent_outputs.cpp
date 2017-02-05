@@ -29,6 +29,18 @@ using namespace bc::database;
 
 BOOST_AUTO_TEST_SUITE(unspent_outputs_tests)
 
+BOOST_AUTO_TEST_CASE(unspent_outputs__construct__capacity_0__disabled)
+{
+    const unspent_outputs cache(0);
+    BOOST_REQUIRE(cache.disabled());
+}
+
+BOOST_AUTO_TEST_CASE(unspent_outputs__construct__capacity_42__not_disabled)
+{
+    const unspent_outputs cache(42);
+    BOOST_REQUIRE(!cache.disabled());
+}
+
 BOOST_AUTO_TEST_CASE(unspent_outputs__construct__capacity_0__size_0)
 {
     const unspent_outputs cache(0);
