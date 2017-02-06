@@ -92,7 +92,7 @@ bool data_base::create(const block& genesis)
     auto created =
         blocks_->create() &&
         transactions_->create();
-    
+
     if (use_indexes)
         created = created &&
             spends_->create() &&
