@@ -94,7 +94,7 @@ bool data_base::create(const block& genesis)
         transactions_->create();
     
     if (use_indexes)
-        created &=
+        created = created &&
             spends_->create() &&
             history_->create() &&
             stealth_->create();
@@ -124,7 +124,7 @@ bool data_base::open()
         transactions_->open();
 
     if (use_indexes)
-        opened &=
+        opened = opened &&
             spends_->open() &&
             history_->open() &&
             stealth_->open();
@@ -147,7 +147,7 @@ bool data_base::close()
         transactions_->close();
 
     if (use_indexes)
-        closed &=
+        closed = closed &&
             spends_->close() &&
             history_->close() &&
             stealth_->close();
@@ -200,7 +200,7 @@ bool data_base::flush() const
         transactions_->flush();
 
     if (use_indexes)
-        flushed &=
+        flushed = flushed &&
             spends_->flush() &&
             history_->flush() &&
             stealth_->flush();
