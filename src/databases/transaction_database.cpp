@@ -1,13 +1,12 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2017 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
- * libbitcoin is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License with
- * additional permissions to the one published by the Free Software
- * Foundation, either version 3 of the License, or (at your option)
- * any later version. For more information see LICENSE.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,7 +14,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <bitcoin/database/databases/transaction_database.hpp>
 
@@ -139,7 +138,7 @@ memory_ptr transaction_database::find(const hash_digest& hash,
     const size_t height = deserial.read_4_bytes_little_endian();
     const size_t position = deserial.read_4_bytes_little_endian();
 
-    return (height > fork_height) || 
+    return (height > fork_height) ||
         (require_confirmed && position == unconfirmed) ?
         nullptr : slab;
 }
@@ -239,7 +238,7 @@ bool transaction_database::spend(const output_point& point,
     // Limit search to confirmed transactions at or below the spender height,
     // since a spender cannot spend above its own height.
     // Transactions are not marked as spent unless the spender is confirmed.
-    // This is consistent with support for unconfirmed double spends. 
+    // This is consistent with support for unconfirmed double spends.
     const auto slab = find(point.hash(), spender_height, true);
 
     // The transaction is not exist as confirmed at or below the height.
