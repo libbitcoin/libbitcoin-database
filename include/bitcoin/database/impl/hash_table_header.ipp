@@ -1,13 +1,12 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2017 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
- * libbitcoin is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License with
- * additional permissions to the one published by the Free Software
- * Foundation, either version 3 of the License, or (at your option)
- * any later version. For more information see LICENSE.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,7 +14,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_IPP
 #define LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_IPP
@@ -31,7 +30,7 @@ namespace database {
 static BC_CONSTEXPR uint64_t empty_fill = 0xffffffffffffffff;
 static BC_CONSTEXPR uint8_t empty_byte = (uint8_t)empty_fill;
 
-// This VC++ workaround is OK because ValueType must be unsigned. 
+// This VC++ workaround is OK because ValueType must be unsigned.
 //static constexpr ValueType empty = std::numeric_limits<ValueType>::max();
 template <typename IndexType, typename ValueType>
 const ValueType hash_table_header<IndexType, ValueType>::empty =
@@ -102,7 +101,7 @@ ValueType hash_table_header<IndexType, ValueType>::read(IndexType index) const
 {
     // This is not runtime safe but test is avoided as an optimization.
     BITCOIN_ASSERT(index < buckets_);
-    
+
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     const auto value_address = REMAP_ADDRESS(memory) + item_position(index);
@@ -120,7 +119,7 @@ void hash_table_header<IndexType, ValueType>::write(IndexType index,
 {
     // This is not runtime safe but test is avoided as an optimization.
     BITCOIN_ASSERT(index < buckets_);
-    
+
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     const auto value_address = REMAP_ADDRESS(memory) + item_position(index);
