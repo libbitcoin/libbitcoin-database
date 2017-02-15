@@ -92,6 +92,7 @@ private:
     void log_mapping() const;
     void log_resizing(size_t size) const;
     void log_flushed() const;
+    void log_unmapping() const;
     void log_unmapped() const;
 
     // Optionally guard against concurrent remap.

@@ -130,6 +130,12 @@ void memory_map::log_flushed() const
         << "Flushed: " << filename_ << " [" << logical_size_ << "]";
 }
 
+void memory_map::log_unmapping() const
+{
+    LOG_DEBUG(LOG_DATABASE)
+        << "Unmapping: " << filename_ << " [" << logical_size_ << "]";
+}
+
 void memory_map::log_unmapped() const
 {
     LOG_DEBUG(LOG_DATABASE)
@@ -169,6 +175,7 @@ memory_map::~memory_map()
 // ----------------------------------------------------------------------------
 
 // Map the database file and signal start.
+// Open is not idempotent (should be called on single thread).
 bool memory_map::open()
 {
     // Critical Section (internal/unconditional)
@@ -179,7 +186,6 @@ bool memory_map::open()
     {
         mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
-        // Open is not idempotent (should be called on single thread).
         return false;
     }
 
@@ -242,6 +248,9 @@ bool memory_map::flush() const
 bool memory_map::close()
 {
     std::string error_name;
+
+    ////if (!closed_)
+    ////    log_unmapping();
 
     // Critical Section (internal/unconditional)
     ///////////////////////////////////////////////////////////////////////////
@@ -336,6 +345,10 @@ memory_ptr memory_map::reserve(size_t size, size_t expansion)
     // Critical Section (internal)
     ///////////////////////////////////////////////////////////////////////////
     const auto memory = REMAP_ALLOCATOR(mutex_);
+
+    // The store should only have been closed after all threads terminated.
+    if (closed_)
+        throw std::runtime_error("Resize failure, store already closed.");
 
     if (size > file_size_)
     {
