@@ -599,7 +599,7 @@ bool data_base::pop_inputs(const input::list& inputs, size_t height)
 bool data_base::pop_outputs(const output::list& outputs, size_t height)
 {
     if (height < settings_.index_start_height)
-        return false;
+        return true;
 
     // Loop in reverse.
     for (auto output = outputs.rbegin(); output != outputs.rend(); ++output)
