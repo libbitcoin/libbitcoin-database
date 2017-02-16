@@ -20,9 +20,9 @@ IF NOT EXIST "%nuget_pkg_path%" (
   )
 )
 
-call :init libbitcoin libbitcoin master
+call :init libbitcoin libbitcoin version3
 IF %ERRORLEVEL% NEQ 0 (
-  call :failure "Initializing repository libbitcoin libbitcoin master failed."
+  call :failure "Initializing repository libbitcoin libbitcoin version3 failed."
   exit /b 1
 )
 call :bld_repo libbitcoin-database
