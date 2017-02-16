@@ -49,7 +49,7 @@ public:
 #ifdef REMAP_SAFETY
     typedef memory::ptr memory_ptr;
     #define REMAP_ADDRESS(ptr) ptr->buffer()
-    #define REMAP_DOWNGRADE(ptr, data) ptr->downgrade(data)
+    #define REMAP_ASSIGN(ptr, data) ptr->assign(data)
     #define REMAP_INCREMENT(ptr, offset) ptr->increment(offset)
     #define REMAP_ACCESSOR(ptr, mutex) std::make_shared<accessor>(mutex, ptr)
     #define REMAP_ALLOCATOR(mutex) std::make_shared<allocator>(mutex)
@@ -58,7 +58,7 @@ public:
 #else
     typedef uint8_t* memory_ptr;
     #define REMAP_ADDRESS(ptr) ptr
-    #define REMAP_DOWNGRADE(ptr, data)
+    #define REMAP_ASSIGN(ptr, data)
     #define REMAP_INCREMENT(ptr, offset) ptr += (offset)
     #define REMAP_ACCESSOR(ptr, mutex)
     #define REMAP_ALLOCATOR(mutex)

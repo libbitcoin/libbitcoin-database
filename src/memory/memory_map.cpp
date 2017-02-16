@@ -294,7 +294,7 @@ bool memory_map::closed() const
 {
     // Critical Section (internal/unconditional)
     ///////////////////////////////////////////////////////////////////////////
-    shared_lock lock(mutex_);
+    REMAP_READ(mutex_);
 
     return closed_;
     ///////////////////////////////////////////////////////////////////////////
@@ -313,7 +313,6 @@ size_t memory_map::size() const
     ///////////////////////////////////////////////////////////////////////////
 }
 
-// throws runtime_error
 memory_ptr memory_map::access()
 {
     return REMAP_ACCESSOR(data_, mutex_);
@@ -356,16 +355,25 @@ memory_ptr memory_map::reserve(size_t size, size_t expansion)
         // Expansion is an integral number that represents a real number factor.
         const size_t target = size * ((expansion + 100.0) / 100.0);
 
+        mutex_.unlock_upgrade_and_lock();
+        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        // All existing database pointers are invalidated by this call.
         if (!truncate_mapped(target))
         {
             handle_error("resize", filename_);
             throw std::runtime_error("Resize failure, disk space may be low.");
         }
+
+        //---------------------------------------------------------------------
+        mutex_.unlock_and_lock_upgrade();
     }
 
     logical_size_ = size;
-    REMAP_DOWNGRADE(memory, data_);
+    REMAP_ASSIGN(memory, data_);
 
+    // Always return in shared lock state.
+    // The critical section does not end until this shared pointer is freed.
     return memory;
     ///////////////////////////////////////////////////////////////////////////
 }
