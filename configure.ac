@@ -13,7 +13,7 @@
 AC_PREREQ([2.65])
 
 # Process command-line arguments and perform initialization and verification.
-AC_INIT([libbitcoin-database], [4.0.0], [eric@voskuil.org])
+AC_INIT([libbitcoin-database], [3.0.0], [eric@voskuil.org])
 
 # Do compilation tests.
 AC_LANG(C++)
@@ -133,10 +133,10 @@ AS_CASE([${with_tests}], [yes],
      AC_MSG_NOTICE([boost_unit_test_framework_LIBS : ${boost_unit_test_framework_LIBS}])],
     [AC_SUBST([boost_unit_test_framework_LIBS], [])])
 
-# Require bitcoin of at least version 4.0.0 and output ${bitcoin_CPPFLAGS/LIBS/PKG}.
+# Require bitcoin of at least version 3.0.0 and output ${bitcoin_CPPFLAGS/LIBS/PKG}.
 #------------------------------------------------------------------------------
-PKG_CHECK_MODULES([bitcoin], [libbitcoin >= 4.0.0])
-AC_SUBST([bitcoin_PKG], ['libbitcoin >= 4.0.0'])
+PKG_CHECK_MODULES([bitcoin], [libbitcoin >= 3.0.0])
+AC_SUBST([bitcoin_PKG], ['libbitcoin >= 3.0.0'])
 AC_SUBST([bitcoin_CPPFLAGS], [${bitcoin_CFLAGS}])
 AC_MSG_NOTICE([bitcoin_CPPFLAGS : ${bitcoin_CPPFLAGS}])
 AC_MSG_NOTICE([bitcoin_LIBS : ${bitcoin_LIBS}])
