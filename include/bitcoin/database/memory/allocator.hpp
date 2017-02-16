@@ -30,29 +30,26 @@ namespace database {
 
 #ifdef REMAP_SAFETY
 
-/// This class provides downgradable remap safe access to file-mapped memory.
+/// This class provides remap safe access to file-mapped memory.
 /// The memory size is unprotected and unmanaged.
 class BCD_API allocator
-  : public memory
+  : public memory, noncopyable
 {
 public:
     allocator(shared_mutex& mutex);
     ~allocator();
 
-    /// This class is not copyable.
-    allocator(const allocator& other) = delete;
-
     /// Get the address indicated by the pointer.
     uint8_t* buffer();
 
-    /// Increment the pointer the specified number of bytes.
+    /// Advance the pointer the specified number of bytes.
     void increment(size_t value);
 
 protected:
     friend class memory_map;
 
-    /// Set the data member and downgrade the lock.
-    void downgrade(uint8_t* data);
+    /// Set the pointer.
+    void assign(uint8_t* data);
 
 private:
     shared_mutex& mutex_;
