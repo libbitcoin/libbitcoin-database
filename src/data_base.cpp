@@ -581,15 +581,20 @@ bool data_base::pop_inputs(const input::list& inputs, size_t height)
             continue;
 
         // All spends are confirmed.
-        if (!spends_->unlink(input->previous_output()))
-            return false;
+        // This can fail if index start has been changed between restarts.
+        // So ignore the error here and succeeed even if not found.
+        /* bool */ spends_->unlink(input->previous_output());
 
         // Try to extract an address.
         const auto address = payment_address::extract(input->script());
 
         // All history entries are confirmed.
-        if (address && !history_->delete_last_row(address.hash()))
-            return false;
+        if (address)
+        {
+            // This can fail if index start has been changed between restarts.
+            // So ignore the error here and succeeed even if not found.
+            /* bool */ history_->delete_last_row(address.hash());
+        }
     }
 
     return true;
@@ -608,13 +613,15 @@ bool data_base::pop_outputs(const output::list& outputs, size_t height)
         const auto address = payment_address::extract(output->script());
 
         // All history entries are confirmed.
-        if (address && !history_->delete_last_row(address.hash()))
-            return false;
+        if (address)
+        {
+            // This can fail if index start has been changed between restarts.
+            // So ignore the error here and succeeed even if not found.
+            /* bool */ history_->delete_last_row(address.hash());
+        }
 
         // All stealth entries are confirmed.
         // Stealth unlink is not implemented as there is no way to correlate.
-        ////if (!stealth_->unlink())
-        ////    return false;
     }
 
     return true;

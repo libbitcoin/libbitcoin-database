@@ -133,8 +133,16 @@ void spend_database::store(const chain::output_point& outpoint,
 
 bool spend_database::unlink(const output_point& outpoint)
 {
+    // Spends are optional so do not assume present (otherwise will segfault).
+    auto memory = lookup_map_.find(outpoint);
+    if (memory == nullptr)
+        return false;
+
+    // Release lock.
+    memory = nullptr;
     return lookup_map_.unlink(outpoint);
 }
+
 spend_statinfo spend_database::statinfo() const
 {
     return
