@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
     BOOST_REQUIRE(!ht.unlink(invalid));
 }
 
-BOOST_AUTO_TEST_CASE(record_hash_table_header__64bit__test)
+BOOST_AUTO_TEST_CASE(record_hash_table__64bit__test)
 {
     BC_CONSTEXPR size_t record_buckets = 2;
     BC_CONSTEXPR size_t header_size = record_hash_table_header_size(record_buckets);
