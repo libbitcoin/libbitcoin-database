@@ -36,14 +36,11 @@ static constexpr auto index_header_size = 0u;
 static constexpr auto index_record_size = sizeof(file_offset);
 
 // Record format:
-// main:
-//  [ header:80      ]
-//  [ height:4       ]
-//  [ number_txs:1-8 ]
-// hashes:
-//  [ [    ...     ] ]
-//  [ [ tx_hash:32 ] ]
-//  [ [    ...     ] ]
+//  [ header:80 ]
+//  [ height:4 ]
+//  TODO: [ checksum:4 ] (store all zeros if not computed).
+//  [ tx_count:1-2 ]
+//  [ [ tx_hash:32 ]... ]
 
 // Blocks uses a hash table and an array index, both O(1).
 block_database::block_database(const path& map_filename,
