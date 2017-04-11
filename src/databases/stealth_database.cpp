@@ -33,8 +33,12 @@ static constexpr auto rows_header_size = 0u;
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto prefix_size = sizeof(uint32_t);
 
+// [ prefix:4 ]
+// [ height:4 ]
+// [ ephemkey:32 ]
+// [ address:20 ]
+// [ tx_hash:32 ]
 // ephemkey is without sign byte and address is without version byte.
-// [ prefix_bitfield:4 ][ height:32 ][ ephemkey:32 ][ address:20 ][ tx_id:32 ]
 static constexpr auto row_size = prefix_size + height_size + hash_size +
     short_hash_size + hash_size;
 

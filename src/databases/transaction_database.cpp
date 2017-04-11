@@ -34,10 +34,10 @@ static constexpr auto value_size = sizeof(uint64_t);
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto version_size = sizeof(uint32_t);
 static constexpr auto locktime_size = sizeof(uint32_t);
-static constexpr auto position_size = sizeof(uint32_t);
+static constexpr auto position_size = sizeof(uint16_t);
 static constexpr auto version_lock_size = version_size + locktime_size;
 
-const size_t transaction_database::unconfirmed = max_uint32;
+const size_t transaction_database::unconfirmed = max_uint16;
 
 // Transactions uses a hash table index, O(1).
 transaction_database::transaction_database(const path& map_filename,
@@ -136,7 +136,7 @@ memory_ptr transaction_database::find(const hash_digest& hash,
     // Read the height and position.
     // If position is unconfirmed then height is the forks used for validation.
     const size_t height = deserial.read_4_bytes_little_endian();
-    const size_t position = deserial.read_4_bytes_little_endian();
+    const size_t position = deserial.read_2_bytes_little_endian();
 
     return (height > fork_height) ||
         (require_confirmed && position == unconfirmed) ?
@@ -199,13 +199,13 @@ void transaction_database::store(const chain::transaction& tx,
 
     // Create the transaction.
     BITCOIN_ASSERT(height <= max_uint32);
-    BITCOIN_ASSERT(position <= max_uint32);
+    BITCOIN_ASSERT(position <= max_uint16);
 
     // Unconfirmed txs: position is unconfirmed and height is validation forks.
     const auto write = [&](serializer<uint8_t*>& serial)
     {
-        serial.write_4_bytes_little_endian(static_cast<size_t>(height));
-        serial.write_4_bytes_little_endian(static_cast<size_t>(position));
+        serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
+        serial.write_2_bytes_little_endian(static_cast<uint16_t>(position));
 
         // WRITE THE TX
         tx.to_data(serial, false);
@@ -284,12 +284,12 @@ bool transaction_database::confirm(const hash_digest& hash, size_t height,
         return false;
 
     BITCOIN_ASSERT(height <= max_uint32);
-    BITCOIN_ASSERT(position <= max_uint32);
+    BITCOIN_ASSERT(position <= max_uint16);
 
     const auto memory = REMAP_ADDRESS(slab);
     auto serial = make_unsafe_serializer(memory);
-    serial.write_4_bytes_little_endian(static_cast<size_t>(height));
-    serial.write_4_bytes_little_endian(static_cast<size_t>(position));
+    serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
+    serial.write_2_bytes_little_endian(static_cast<uint16_t>(position));
     return true;
 }
 
