@@ -32,10 +32,8 @@ using namespace bc::machine;
 
 static constexpr auto value_size = sizeof(uint64_t);
 static constexpr auto height_size = sizeof(uint32_t);
-static constexpr auto version_size = sizeof(uint32_t);
-static constexpr auto locktime_size = sizeof(uint32_t);
 static constexpr auto position_size = sizeof(uint16_t);
-static constexpr auto version_lock_size = version_size + locktime_size;
+static constexpr auto height_position_size = height_size + position_size;
 
 const size_t transaction_database::unconfirmed = max_uint16;
 
@@ -169,7 +167,7 @@ bool transaction_database::get_output(output& out_output, size_t& out_height,
     if (!slab)
         return false;
 
-    transaction_result result (slab, hash);
+    transaction_result result(slab, hash);
     out_height = result.height();
     out_coinbase = result.position() == 0;
     out_output = result.output(point.index());
@@ -212,14 +210,14 @@ void transaction_database::store(const chain::transaction& tx,
     };
 
     const auto tx_size = tx.serialized_size(false);
-    BITCOIN_ASSERT(tx_size <= max_size_t - version_lock_size);
-    const auto value_size = version_lock_size + static_cast<size_t>(tx_size);
+    BITCOIN_ASSERT(tx_size <= max_size_t - height_position_size);
+    const auto total_size = height_position_size + static_cast<size_t>(tx_size);
 
     // Create slab for the new tx instance.
-    lookup_map_.store(hash, write, value_size);
+    lookup_map_.store(hash, write, total_size);
     cache_.add(tx, height, position != unconfirmed);
 
-    // We report theis here because its a steady interval (block announce).
+    // We report this here because its a steady interval (block announce).
     if (!cache_.disabled() && position == 0)
     {
         LOG_DEBUG(LOG_DATABASE)
@@ -246,9 +244,8 @@ bool transaction_database::spend(const output_point& point,
         return false;
 
     const auto memory = REMAP_ADDRESS(slab);
-    const auto tx_start = memory + height_size + position_size;
+    const auto tx_start = memory + height_position_size;
     auto serial = make_unsafe_serializer(tx_start);
-    serial.skip(version_size + locktime_size);
     const auto outputs = serial.read_size_little_endian();
     BITCOIN_ASSERT(serial);
 

@@ -116,7 +116,7 @@ input_point spend_database::get(const output_point& outpoint) const
     // The order of properties in this serialization was changed in v3.
     // Previously it was { index, hash }, which was inconsistent with wire.
     auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(memory));
-    point.from_data(deserial);
+    point.from_data(deserial, false);
     return point;
 }
 
@@ -125,7 +125,7 @@ void spend_database::store(const chain::output_point& outpoint,
 {
     const auto write = [&](serializer<uint8_t*>& serial)
     {
-        spend.to_data(serial);
+        spend.to_data(serial, false);
     };
 
     lookup_map_.store(outpoint, write);

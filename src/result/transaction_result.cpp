@@ -32,8 +32,6 @@ using namespace bc::chain;
 
 static constexpr size_t value_size = sizeof(uint64_t);
 static constexpr size_t height_size = sizeof(uint32_t);
-static constexpr size_t version_size = sizeof(uint32_t);
-static constexpr size_t locktime_size = sizeof(uint32_t);
 static constexpr size_t position_size = sizeof(uint16_t);
 
 transaction_result::transaction_result(const memory_ptr slab)
@@ -96,7 +94,6 @@ bool transaction_result::is_spent(size_t fork_height) const
     if (position == transaction_database::unconfirmed)
         return false;
 
-    deserial.skip(version_size + locktime_size);
     const auto outputs = deserial.read_size_little_endian();
     BITCOIN_ASSERT(deserial);
 
@@ -123,9 +120,8 @@ chain::output transaction_result::output(uint32_t index) const
 {
     BITCOIN_ASSERT(slab_);
     const auto memory = REMAP_ADDRESS(slab_);
-    const auto outputs_start = memory + height_size + position_size +
-        version_size + locktime_size;
-    auto deserial = make_unsafe_deserializer(outputs_start);
+    const auto tx_start = memory + height_size + position_size;
+    auto deserial = make_unsafe_deserializer(tx_start);
     const auto outputs = deserial.read_size_little_endian();
     BITCOIN_ASSERT(deserial);
 
