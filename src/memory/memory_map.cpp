@@ -241,7 +241,7 @@ bool memory_map::flush() const
     if (!error_name.empty())
         return handle_error(error_name, filename_);
 
-    log_flushed();
+    ////log_flushed();
     return true;
 }
 
