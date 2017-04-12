@@ -106,16 +106,16 @@ bool memory_map::handle_error(const std::string& context,
     const auto error = errno;
 #endif
     LOG_FATAL(LOG_DATABASE)
-        << "The file failed to " << context << ": "
-        << filename << " : " << error;
+        << "The file failed to " << context << ": " << filename << " : "
+        << error;
     return false;
 }
 
 void memory_map::log_mapping() const
 {
     LOG_DEBUG(LOG_DATABASE)
-        << "Mapping: " << filename_ << " [" << file_size_
-        << "] (" << page() << ")";
+        << "Mapping: " << filename_ << " [" << file_size_ << "] ("
+        << page() << ")";
 }
 
 void memory_map::log_resizing(size_t size) const
@@ -139,7 +139,8 @@ void memory_map::log_unmapping() const
 void memory_map::log_unmapped() const
 {
     LOG_DEBUG(LOG_DATABASE)
-        << "Unmapped: " << filename_ << " [" << logical_size_ << "]";
+        << "Unmapped: " << filename_ << " [" << logical_size_ << ", "
+        << file_size_ << "]";
 }
 
 memory_map::memory_map(const path& filename)
@@ -268,7 +269,9 @@ bool memory_map::close()
 
     closed_ = true;
 
-    if (msync(data_, logical_size_, MS_SYNC) == FAIL)
+    if (logical_size_ > file_size_)
+        error_name = "fit";
+    else if (msync(data_, logical_size_, MS_SYNC) == FAIL)
         error_name = "msync";
     else if (munmap(data_, file_size_) == FAIL)
         error_name = "munmap";
