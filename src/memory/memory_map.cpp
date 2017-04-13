@@ -23,12 +23,10 @@
 #ifdef _WIN32
     #include <io.h>
     #include "../mman-win32/mman.h"
-    #define FILE_OPEN_PERMISSIONS _S_IREAD | _S_IWRITE
 #else
     #include <unistd.h>
     #include <stddef.h>
     #include <sys/mman.h>
-    #define FILE_OPEN_PERMISSIONS S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH
 #endif
 #include <cstddef>
 #include <cstdint>
@@ -75,6 +73,7 @@ size_t memory_map::file_size(int file_handle)
         return 0;
 #endif
 #else
+    // Limited to 32 bit files on 32 bit systems, see linux.die.net/man/2/open
     struct stat sbuf;
     if (fstat(file_handle, &sbuf) == FAIL)
         return 0;
@@ -88,11 +87,11 @@ size_t memory_map::file_size(int file_handle)
 int memory_map::open_file(const path& filename)
 {
 #ifdef _WIN32
-    int handle = _wopen(filename.wstring().c_str(), O_RDWR,
-        FILE_OPEN_PERMISSIONS);
+    int handle = _wopen(filename.wstring().c_str(),
+        (O_RDWR | _O_BINARY | _O_RANDOM), (_S_IREAD | _S_IWRITE));
 #else
-    int handle = ::open(filename.string().c_str(), O_RDWR,
-        FILE_OPEN_PERMISSIONS);
+    int handle = ::open(filename.string().c_str(),
+        (O_RDWR), (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH));
 #endif
     return handle;
 }
