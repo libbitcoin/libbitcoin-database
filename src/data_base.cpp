@@ -204,6 +204,12 @@ bool data_base::flush() const
             history_->flush() &&
             stealth_->flush();
 
+    // Just for the log.
+    code ec(flushed ? error::success : error::operation_failed);
+
+    LOG_DEBUG(LOG_DATABASE)
+        << "Write flushed to disk: " << ec.message();
+
     return flushed;
 }
 
