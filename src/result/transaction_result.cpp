@@ -142,6 +142,17 @@ chain::output transaction_result::output(uint32_t index) const
     return out;
 }
 
+// [ height:4 ]
+// [ position:2 ]
+// ----------------------------------------------------------------------------
+// [ output_count:varint ]
+// [ [ spender_height:4 ][ value:8 ][ script:varint ]... ]
+// [ input_count:varint ]
+// [ [ hash:4 ][ index:2 ][ script:varint ][ sequence:4 ]... ]
+// [ locktime:varint ]
+// [ version:varint ]
+// ----------------------------------------------------------------------------
+
 chain::transaction transaction_result::transaction() const
 {
     BITCOIN_ASSERT(slab_);
