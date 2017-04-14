@@ -279,7 +279,7 @@ public:
     }
 };
 
-static int push_all_result(data_base_accessor& instance,
+static code push_all_result(data_base_accessor& instance,
     block_const_ptr_list_const_ptr in_blocks, size_t first_height,
     dispatcher& dispatch)
 {
@@ -289,10 +289,10 @@ static int push_all_result(data_base_accessor& instance,
         promise.set_value(ec);
     };
     instance.push_all(in_blocks, first_height, dispatch, handler);
-    return promise.get_future().get().value();
+    return promise.get_future().get();
 }
 
-static int pop_above_result(data_base_accessor& instance,
+static code pop_above_result(data_base_accessor& instance,
     block_const_ptr_list_ptr out_blocks, const hash_digest& fork_hash,
     dispatcher& dispatch)
 {
@@ -302,7 +302,7 @@ static int pop_above_result(data_base_accessor& instance,
         promise.set_value(ec);
     };
     instance.pop_above(out_blocks, fork_hash, dispatch, handler);
-    return promise.get_future().get().value();
+    return promise.get_future().get();
 }
 
 BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     const auto blocks_push_ptr = std::make_shared<const block_const_ptr_list>(block_const_ptr_list{ block2_ptr, block3_ptr });
     test_block_not_exists(instance, *block2_ptr, indexed);
     test_block_not_exists(instance, *block3_ptr, indexed);
-    BOOST_REQUIRE(!push_all_result(instance, blocks_push_ptr, 2, dispatch));
+    BOOST_REQUIRE_EQUAL(push_all_result(instance, blocks_push_ptr, 2, dispatch), error::success);
     BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 3u);
     test_block_exists(instance, 2, *block2_ptr, indexed);
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
 
     std::cout << "pop_above block 1 (blocks #2 & #3)" << std::endl;
     const auto blocks_popped_ptr = std::make_shared<block_const_ptr_list>();
-    BOOST_REQUIRE(!pop_above_result(instance, blocks_popped_ptr, block1.hash(), dispatch));
+    BOOST_REQUIRE_EQUAL(pop_above_result(instance, blocks_popped_ptr, block1.hash(), dispatch), error::success);
     BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 1u);
     BOOST_REQUIRE_EQUAL(blocks_popped_ptr->size(), 2u);
@@ -387,7 +387,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
 
     std::cout << "pop_above block 0 (block #1 & #2)" << std::endl;
     blocks_popped_ptr->clear();
-    BOOST_REQUIRE(!pop_above_result(instance, blocks_popped_ptr, block0.hash(), dispatch));
+    BOOST_REQUIRE_EQUAL(pop_above_result(instance, blocks_popped_ptr, block0.hash(), dispatch), error::success);
     BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 0u);
     BOOST_REQUIRE(*(*blocks_popped_ptr)[0] == block1);
