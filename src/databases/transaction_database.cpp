@@ -34,6 +34,7 @@ static constexpr auto value_size = sizeof(uint64_t);
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto position_size = sizeof(uint16_t);
 static constexpr auto height_position_size = height_size + position_size;
+static constexpr auto spender_height_value_size = height_size + value_size;
 
 const size_t transaction_database::unconfirmed = max_uint16;
 
@@ -174,6 +175,17 @@ bool transaction_database::get_output(output& out_output, size_t& out_height,
     return true;
 }
 
+// [ height:4 ]
+// [ position:2 ]
+// ----------------------------------------------------------------------------
+// [ output_count:varint ]
+// [ [ spender_height:4 ][ value:8 ][ script:varint ]... ]
+// [ input_count:varint ]
+// [ [ hash:4 ][ index:2 ][ script:varint ][ sequence:4 ]... ]
+// [ locktime:varint ]
+// [ version:varint ]
+// ----------------------------------------------------------------------------
+
 void transaction_database::store(const chain::transaction& tx,
     size_t height, size_t position)
 {
@@ -256,7 +268,7 @@ bool transaction_database::spend(const output_point& point,
     // Skip outputs until the target output.
     for (uint32_t output = 0; output < point.index(); ++output)
     {
-        serial.skip(height_size + value_size);
+        serial.skip(spender_height_value_size);
         serial.skip(serial.read_size_little_endian());
         BITCOIN_ASSERT(serial);
     }
