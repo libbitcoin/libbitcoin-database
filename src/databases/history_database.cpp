@@ -33,7 +33,7 @@ using namespace bc::chain;
 static constexpr auto rows_header_size = 0u;
 
 static constexpr auto flag_size = sizeof(uint8_t);
-static constexpr auto point_size = hash_size + sizeof(uint32_t);
+static constexpr auto point_size = std::tuple_size<point>::value;
 static constexpr auto height_position = flag_size + point_size;
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto checksum_size = sizeof(uint64_t);
