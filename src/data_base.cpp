@@ -539,14 +539,15 @@ bool data_base::pop(block& out_block)
 
     for (size_t position = 0; position < count; ++position)
     {
-        const auto tx_hash = block.transaction_hash(position);
+        auto tx_hash = block.transaction_hash(position);
         const auto tx = transactions_->get(tx_hash, height, true);
 
         if (!tx || (tx.height() != height) || (tx.position() != position))
             return false;
 
         // Deserialize transaction and move it to the block.
-        transactions.emplace_back(tx.transaction());
+        // The tx move/copy constructors do not currently transfer cache.
+        transactions.emplace_back(tx.transaction(), std::move(tx_hash));
     }
 
     // Loop txs backwards, the reverse of how they were added.
