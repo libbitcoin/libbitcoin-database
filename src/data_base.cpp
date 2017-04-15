@@ -692,6 +692,8 @@ void data_base::do_push(block_const_ptr block, size_t height,
 
     const auto threads = dispatch.size();
     const auto buckets = std::min(threads, block->transactions().size());
+    BITCOIN_ASSERT(buckets != 0);
+
     const auto join_handler = bc::synchronize(std::move(block_complete),
         buckets, NAME "_do_push");
 
