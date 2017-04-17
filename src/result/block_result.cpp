@@ -123,6 +123,7 @@ size_t block_result::transaction_count() const
     return deserial.read_size_little_endian();
 }
 
+// TODO: add method to read the full set of tx hashes in one call.
 hash_digest block_result::transaction_hash(size_t index) const
 {
     BITCOIN_ASSERT(slab_);

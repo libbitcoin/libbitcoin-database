@@ -32,12 +32,11 @@ using namespace bc::machine;
 
 static constexpr auto value_size = sizeof(uint64_t);
 static constexpr auto height_size = sizeof(uint32_t);
-static constexpr auto version_size = sizeof(uint32_t);
-static constexpr auto locktime_size = sizeof(uint32_t);
-static constexpr auto position_size = sizeof(uint32_t);
-static constexpr auto version_lock_size = version_size + locktime_size;
+static constexpr auto position_size = sizeof(uint16_t);
+static constexpr auto height_position_size = height_size + position_size;
+static constexpr auto spender_height_value_size = height_size + value_size;
 
-const size_t transaction_database::unconfirmed = max_uint32;
+const size_t transaction_database::unconfirmed = max_uint16;
 
 // Transactions uses a hash table index, O(1).
 transaction_database::transaction_database(const path& map_filename,
@@ -136,7 +135,7 @@ memory_ptr transaction_database::find(const hash_digest& hash,
     // Read the height and position.
     // If position is unconfirmed then height is the forks used for validation.
     const size_t height = deserial.read_4_bytes_little_endian();
-    const size_t position = deserial.read_4_bytes_little_endian();
+    const size_t position = deserial.read_2_bytes_little_endian();
 
     return (height > fork_height) ||
         (require_confirmed && position == unconfirmed) ?
@@ -169,12 +168,23 @@ bool transaction_database::get_output(output& out_output, size_t& out_height,
     if (!slab)
         return false;
 
-    transaction_result result (slab, hash);
+    transaction_result result(slab, hash);
     out_height = result.height();
     out_coinbase = result.position() == 0;
     out_output = result.output(point.index());
     return true;
 }
+
+// [ height:4 ]
+// [ position:2 ]
+// ----------------------------------------------------------------------------
+// [ output_count:varint ]
+// [ [ spender_height:4 ][ value:8 ][ script:varint ]... ]
+// [ input_count:varint ]
+// [ [ hash:4 ][ index:2 ][ script:varint ][ sequence:4 ]... ]
+// [ locktime:varint ]
+// [ version:varint ]
+// ----------------------------------------------------------------------------
 
 void transaction_database::store(const chain::transaction& tx,
     size_t height, size_t position)
@@ -199,27 +209,27 @@ void transaction_database::store(const chain::transaction& tx,
 
     // Create the transaction.
     BITCOIN_ASSERT(height <= max_uint32);
-    BITCOIN_ASSERT(position <= max_uint32);
+    BITCOIN_ASSERT(position <= max_uint16);
 
     // Unconfirmed txs: position is unconfirmed and height is validation forks.
     const auto write = [&](serializer<uint8_t*>& serial)
     {
-        serial.write_4_bytes_little_endian(static_cast<size_t>(height));
-        serial.write_4_bytes_little_endian(static_cast<size_t>(position));
+        serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
+        serial.write_2_bytes_little_endian(static_cast<uint16_t>(position));
 
         // WRITE THE TX
         tx.to_data(serial, false);
     };
 
     const auto tx_size = tx.serialized_size(false);
-    BITCOIN_ASSERT(tx_size <= max_size_t - version_lock_size);
-    const auto value_size = version_lock_size + static_cast<size_t>(tx_size);
+    BITCOIN_ASSERT(tx_size <= max_size_t - height_position_size);
+    const auto total_size = height_position_size + static_cast<size_t>(tx_size);
 
     // Create slab for the new tx instance.
-    lookup_map_.store(hash, write, value_size);
+    lookup_map_.store(hash, write, total_size);
     cache_.add(tx, height, position != unconfirmed);
 
-    // We report theis here because its a steady interval (block announce).
+    // We report this here because its a steady interval (block announce).
     if (!cache_.disabled() && position == 0)
     {
         LOG_DEBUG(LOG_DATABASE)
@@ -246,9 +256,8 @@ bool transaction_database::spend(const output_point& point,
         return false;
 
     const auto memory = REMAP_ADDRESS(slab);
-    const auto tx_start = memory + height_size + position_size;
+    const auto tx_start = memory + height_position_size;
     auto serial = make_unsafe_serializer(tx_start);
-    serial.skip(version_size + locktime_size);
     const auto outputs = serial.read_size_little_endian();
     BITCOIN_ASSERT(serial);
 
@@ -259,7 +268,7 @@ bool transaction_database::spend(const output_point& point,
     // Skip outputs until the target output.
     for (uint32_t output = 0; output < point.index(); ++output)
     {
-        serial.skip(height_size + value_size);
+        serial.skip(spender_height_value_size);
         serial.skip(serial.read_size_little_endian());
         BITCOIN_ASSERT(serial);
     }
@@ -284,12 +293,12 @@ bool transaction_database::confirm(const hash_digest& hash, size_t height,
         return false;
 
     BITCOIN_ASSERT(height <= max_uint32);
-    BITCOIN_ASSERT(position <= max_uint32);
+    BITCOIN_ASSERT(position <= max_uint16);
 
     const auto memory = REMAP_ADDRESS(slab);
     auto serial = make_unsafe_serializer(memory);
-    serial.write_4_bytes_little_endian(static_cast<size_t>(height));
-    serial.write_4_bytes_little_endian(static_cast<size_t>(position));
+    serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
+    serial.write_2_bytes_little_endian(static_cast<uint16_t>(position));
     return true;
 }
 

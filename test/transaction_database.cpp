@@ -49,19 +49,19 @@ BOOST_FIXTURE_TEST_SUITE(database_tests, transaction_database_directory_setup_fi
 
 BOOST_AUTO_TEST_CASE(transaction_database__test)
 {
-    data_chunk raw_tx1;
-    BOOST_REQUIRE(decode_base16(raw_tx1, "0100000001537c9d05b5f7d67b09e5108e3bd5e466909cc9403ddd98bc42973f366fe729410600000000ffffffff0163000000000000001976a914fe06e7b4c88a719e92373de489c08244aee4520b88ac00000000"));
+    data_chunk wire_tx1;
+    BOOST_REQUIRE(decode_base16(wire_tx1, "0100000001537c9d05b5f7d67b09e5108e3bd5e466909cc9403ddd98bc42973f366fe729410600000000ffffffff0163000000000000001976a914fe06e7b4c88a719e92373de489c08244aee4520b88ac00000000"));
 
     transaction tx1;
-    BOOST_REQUIRE(tx1.from_data(raw_tx1));
+    BOOST_REQUIRE(tx1.from_data(wire_tx1, true));
 
     const auto h1 = tx1.hash();
 
-    data_chunk raw_tx2;
-    BOOST_REQUIRE(decode_base16(raw_tx2, "010000000147811c3fc0c0e750af5d0ea7343b16ea2d0c291c002e3db778669216eb689de80000000000ffffffff0118ddf505000000001976a914575c2f0ea88fcbad2389a372d942dea95addc25b88ac00000000"));
+    data_chunk wire_tx2;
+    BOOST_REQUIRE(decode_base16(wire_tx2, "010000000147811c3fc0c0e750af5d0ea7343b16ea2d0c291c002e3db778669216eb689de80000000000ffffffff0118ddf505000000001976a914575c2f0ea88fcbad2389a372d942dea95addc25b88ac00000000"));
 
     transaction tx2;
-    BOOST_REQUIRE(tx2.from_data(raw_tx2));
+    BOOST_REQUIRE(tx2.from_data(wire_tx2, true));
 
     const auto h2 = tx2.hash();
 

@@ -33,7 +33,7 @@ using namespace bc::chain;
 static constexpr auto rows_header_size = 0u;
 
 static constexpr auto flag_size = sizeof(uint8_t);
-static constexpr auto point_size = hash_size + sizeof(uint32_t);
+static constexpr auto point_size = std::tuple_size<point>::value;
 static constexpr auto height_position = flag_size + point_size;
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto checksum_size = sizeof(uint64_t);
@@ -143,7 +143,7 @@ void history_database::add_output(const short_hash& key,
     const auto write = [&](serializer<uint8_t*>& serial)
     {
         serial.write_byte(static_cast<uint8_t>(point_kind::output));
-        outpoint.to_data(serial);
+        outpoint.to_data(serial, false);
         serial.write_4_bytes_little_endian(output_height32);
         serial.write_8_bytes_little_endian(value);
     };
@@ -160,7 +160,7 @@ void history_database::add_input(const short_hash& key,
     const auto write = [&](serializer<uint8_t*>& serial)
     {
         serial.write_byte(static_cast<uint8_t>(point_kind::spend));
-        inpoint.to_data(serial);
+        inpoint.to_data(serial, false);
         serial.write_4_bytes_little_endian(input_height32);
         serial.write_8_bytes_little_endian(previous.checksum());
     };
@@ -194,7 +194,7 @@ history_compact::list history_database::get(const short_hash& key,
             static_cast<point_kind>(deserial.read_byte()),
 
             // point
-            point::factory_from_data(deserial),
+            point::factory_from_data(deserial, false),
 
             // height
             deserial.read_4_bytes_little_endian(),

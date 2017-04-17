@@ -23,12 +23,10 @@
 #ifdef _WIN32
     #include <io.h>
     #include "../mman-win32/mman.h"
-    #define FILE_OPEN_PERMISSIONS _S_IREAD | _S_IWRITE
 #else
     #include <unistd.h>
     #include <stddef.h>
     #include <sys/mman.h>
-    #define FILE_OPEN_PERMISSIONS S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH
 #endif
 #include <cstddef>
 #include <cstdint>
@@ -44,8 +42,8 @@
 #include <bitcoin/database/memory/allocator.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
-// memory_map is be able to support 32 bit but because the database
-// requires a larger file this is not validated or supported.
+// memory_map is able to support 32 bit, but because the database
+// requires a larger file this is neither validated nor supported.
 static_assert(sizeof(void*) == sizeof(uint64_t), "Not a 64 bit system!");
 
 namespace libbitcoin {
@@ -75,6 +73,7 @@ size_t memory_map::file_size(int file_handle)
         return 0;
 #endif
 #else
+    // Limited to 32 bit files on 32 bit systems, see linux.die.net/man/2/open
     struct stat sbuf;
     if (fstat(file_handle, &sbuf) == FAIL)
         return 0;
@@ -88,11 +87,11 @@ size_t memory_map::file_size(int file_handle)
 int memory_map::open_file(const path& filename)
 {
 #ifdef _WIN32
-    int handle = _wopen(filename.wstring().c_str(), O_RDWR,
-        FILE_OPEN_PERMISSIONS);
+    int handle = _wopen(filename.wstring().c_str(),
+        (O_RDWR | _O_BINARY | _O_RANDOM), (_S_IREAD | _S_IWRITE));
 #else
-    int handle = ::open(filename.string().c_str(), O_RDWR,
-        FILE_OPEN_PERMISSIONS);
+    int handle = ::open(filename.string().c_str(),
+        (O_RDWR), (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH));
 #endif
     return handle;
 }
@@ -106,16 +105,16 @@ bool memory_map::handle_error(const std::string& context,
     const auto error = errno;
 #endif
     LOG_FATAL(LOG_DATABASE)
-        << "The file failed to " << context << ": "
-        << filename << " : " << error;
+        << "The file failed to " << context << ": " << filename << " : "
+        << error;
     return false;
 }
 
 void memory_map::log_mapping() const
 {
     LOG_DEBUG(LOG_DATABASE)
-        << "Mapping: " << filename_ << " [" << file_size_
-        << "] (" << page() << ")";
+        << "Mapping: " << filename_ << " [" << file_size_ << "] ("
+        << page() << ")";
 }
 
 void memory_map::log_resizing(size_t size) const
@@ -139,7 +138,8 @@ void memory_map::log_unmapping() const
 void memory_map::log_unmapped() const
 {
     LOG_DEBUG(LOG_DATABASE)
-        << "Unmapped: " << filename_ << " [" << logical_size_ << "]";
+        << "Unmapped: " << filename_ << " [" << logical_size_ << ", "
+        << file_size_ << "]";
 }
 
 memory_map::memory_map(const path& filename)
@@ -240,7 +240,7 @@ bool memory_map::flush() const
     if (!error_name.empty())
         return handle_error(error_name, filename_);
 
-    log_flushed();
+    ////log_flushed();
     return true;
 }
 
@@ -268,7 +268,9 @@ bool memory_map::close()
 
     closed_ = true;
 
-    if (msync(data_, logical_size_, MS_SYNC) == FAIL)
+    if (logical_size_ > file_size_)
+        error_name = "fit";
+    else if (msync(data_, logical_size_, MS_SYNC) == FAIL)
         error_name = "msync";
     else if (munmap(data_, file_size_) == FAIL)
         error_name = "munmap";

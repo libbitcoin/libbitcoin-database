@@ -32,9 +32,7 @@ using namespace bc::chain;
 
 static constexpr size_t value_size = sizeof(uint64_t);
 static constexpr size_t height_size = sizeof(uint32_t);
-static constexpr size_t version_size = sizeof(uint32_t);
-static constexpr size_t locktime_size = sizeof(uint32_t);
-static constexpr size_t position_size = sizeof(uint32_t);
+static constexpr size_t position_size = sizeof(uint16_t);
 
 transaction_result::transaction_result(const memory_ptr slab)
   : slab_(slab), hash_(null_hash)
@@ -79,7 +77,7 @@ size_t transaction_result::position() const
 {
     BITCOIN_ASSERT(slab_);
     const auto memory = REMAP_ADDRESS(slab_);
-    return from_little_endian_unsafe<uint32_t>(memory + height_size);
+    return from_little_endian_unsafe<uint16_t>(memory + height_size);
 }
 
 bool transaction_result::is_spent(size_t fork_height) const
@@ -90,13 +88,12 @@ bool transaction_result::is_spent(size_t fork_height) const
     const auto memory = REMAP_ADDRESS(slab_);
     const auto position_start = memory + height_size;
     auto deserial = make_unsafe_deserializer(position_start);
-    const auto position = deserial.read_4_bytes_little_endian();
+    const auto position = deserial.read_2_bytes_little_endian();
 
     // Cannot be spent if unconfirmed.
     if (position == transaction_database::unconfirmed)
         return false;
 
-    deserial.skip(version_size + locktime_size);
     const auto outputs = deserial.read_size_little_endian();
     BITCOIN_ASSERT(deserial);
 
@@ -123,9 +120,8 @@ chain::output transaction_result::output(uint32_t index) const
 {
     BITCOIN_ASSERT(slab_);
     const auto memory = REMAP_ADDRESS(slab_);
-    const auto outputs_start = memory + height_size + position_size +
-        version_size + locktime_size;
-    auto deserial = make_unsafe_deserializer(outputs_start);
+    const auto tx_start = memory + height_size + position_size;
+    auto deserial = make_unsafe_deserializer(tx_start);
     const auto outputs = deserial.read_size_little_endian();
     BITCOIN_ASSERT(deserial);
 
@@ -145,6 +141,17 @@ chain::output transaction_result::output(uint32_t index) const
     out.from_data(deserial, false);
     return out;
 }
+
+// [ height:4 ]
+// [ position:2 ]
+// ----------------------------------------------------------------------------
+// [ output_count:varint ]
+// [ [ spender_height:4 ][ value:8 ][ script:varint ]... ]
+// [ input_count:varint ]
+// [ [ hash:4 ][ index:2 ][ script:varint ][ sequence:4 ]... ]
+// [ locktime:varint ]
+// [ version:varint ]
+// ----------------------------------------------------------------------------
 
 chain::transaction transaction_result::transaction() const
 {
