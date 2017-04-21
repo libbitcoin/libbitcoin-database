@@ -123,7 +123,6 @@ size_t block_result::transaction_count() const
     return deserial.read_size_little_endian();
 }
 
-// TODO: add method to read the full set of tx hashes in one call.
 hash_digest block_result::transaction_hash(size_t index) const
 {
     BITCOIN_ASSERT(slab_);
@@ -134,6 +133,20 @@ hash_digest block_result::transaction_hash(size_t index) const
     BITCOIN_ASSERT(index < tx_count);
     deserial.skip(index * hash_size);
     return deserial.read_hash();
+}
+
+hash_list block_result::transaction_hashes() const
+{
+    BITCOIN_ASSERT(slab_);
+    const auto memory = REMAP_ADDRESS(slab_);
+    auto deserial = make_unsafe_deserializer(memory + count_offset);
+    const auto tx_count = deserial.read_size_little_endian();
+    hash_list hashes;
+
+    for (size_t position = 0; position < tx_count; ++position)
+        hashes.push_back(deserial.read_hash());
+
+    return hashes;
 }
 
 } // namespace database
