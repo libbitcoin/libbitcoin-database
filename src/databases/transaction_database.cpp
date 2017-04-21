@@ -134,6 +134,7 @@ memory_ptr transaction_database::find(const hash_digest& hash,
 
     // Read the height and position.
     // If position is unconfirmed then height is the forks used for validation.
+    // These values are unguarded and will be inconsistent during write.
     const size_t height = deserial.read_4_bytes_little_endian();
     const size_t position = deserial.read_2_bytes_little_endian();
 
