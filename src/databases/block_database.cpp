@@ -113,7 +113,7 @@ bool block_database::close()
         index_file_.close();
 }
 
-// Commit latest inserts.
+// Update logical file sizes.
 void block_database::synchronize()
 {
     lookup_manager_.sync();
