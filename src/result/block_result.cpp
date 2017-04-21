@@ -87,6 +87,7 @@ chain::header block_result::header() const
     return chain::header(std::move(header), hash_digest(hash_));
 }
 
+// TODO: block height is unguarded and will be inconsistent during write.
 size_t block_result::height() const
 {
     BITCOIN_ASSERT(slab_);
