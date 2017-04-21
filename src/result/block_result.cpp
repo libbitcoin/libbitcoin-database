@@ -149,6 +149,7 @@ hash_list block_result::transaction_hashes() const
     auto deserial = make_unsafe_deserializer(memory + count_offset);
     const auto tx_count = deserial.read_size_little_endian();
     hash_list hashes;
+    hashes.reserve(tx_count);
 
     for (size_t position = 0; position < tx_count; ++position)
         hashes.push_back(deserial.read_hash());
