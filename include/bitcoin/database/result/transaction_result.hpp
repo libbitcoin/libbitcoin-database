@@ -32,9 +32,12 @@ namespace database {
 class BCD_API transaction_result
 {
 public:
+    transaction_result();
     transaction_result(const memory_ptr slab);
-    transaction_result(const memory_ptr slab, hash_digest&& hash);
-    transaction_result(const memory_ptr slab, const hash_digest& hash);
+    transaction_result(const memory_ptr slab, hash_digest&& hash,
+        uint32_t height, uint16_t position);
+    transaction_result(const memory_ptr slab, const hash_digest& hash,
+        uint32_t height, uint16_t position);
 
     /// True if this transaction result is valid (found).
     operator bool() const;
@@ -62,6 +65,8 @@ public:
 
 private:
     memory_ptr slab_;
+    const uint32_t height_;
+    const uint16_t position_;
     const hash_digest hash_;
 };
 

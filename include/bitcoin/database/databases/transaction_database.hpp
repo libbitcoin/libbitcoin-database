@@ -110,6 +110,9 @@ private:
 
     // This is thread safe, and as a cache is mutable.
     mutable unspent_outputs cache_;
+
+    // This provides atomicity for height and position.
+    mutable shared_mutex mutex_;
 };
 
 } // namespace database
