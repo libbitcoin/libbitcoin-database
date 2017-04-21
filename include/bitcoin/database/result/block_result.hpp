@@ -66,6 +66,9 @@ public:
     /// A transaction hash where index < transaction_count.
     hash_digest transaction_hash(size_t index) const;
 
+    /// An ordered set of all transaction hashes in the block.
+    hash_list transaction_hashes() const;
+
 private:
     memory_ptr slab_;
     const hash_digest hash_;
