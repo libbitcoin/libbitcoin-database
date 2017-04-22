@@ -115,23 +115,23 @@ stealth_compact::list stealth_database::scan(const binary& filter,
 
     for (array_index row = 0; row < rows_manager_.count(); ++row)
     {
-        const auto memory = rows_manager_.get(row);
-        auto record = REMAP_ADDRESS(memory);
-        const auto field = from_little_endian_unsafe<uint32_t>(record);
+        const auto record = rows_manager_.get(row);
+        auto memory = REMAP_ADDRESS(record);
+        const auto field = from_little_endian_unsafe<uint32_t>(memory);
 
         // Skip if prefix doesn't match.
         if (!filter.is_prefix_of(field))
             continue;
 
-        record += prefix_size;
-        const auto height = from_little_endian_unsafe<uint32_t>(record);
+        memory += prefix_size;
+        const auto height = from_little_endian_unsafe<uint32_t>(memory);
 
         // Skip if height is too low.
         if (height < from_height)
             continue;
 
         // Add row to results.
-        auto deserial = make_unsafe_deserializer(record + height_size);
+        auto deserial = make_unsafe_deserializer(memory + height_size);
         result.push_back(
         {
             deserial.read_hash(),
@@ -150,11 +150,11 @@ void stealth_database::store(uint32_t prefix, uint32_t height,
 {
     // Allocate new row.
     const auto index = rows_manager_.new_records(1);
-    const auto memory = rows_manager_.get(index);
-    const auto data = REMAP_ADDRESS(memory);
+    const auto record = rows_manager_.get(index);
+    const auto memory = REMAP_ADDRESS(record);
 
     // Write data.
-    auto serial = make_unsafe_serializer(data);
+    auto serial = make_unsafe_serializer(memory);
 
     // Dual key.
     serial.write_4_bytes_little_endian(prefix);

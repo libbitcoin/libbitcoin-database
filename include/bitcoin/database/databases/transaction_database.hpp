@@ -112,7 +112,7 @@ private:
     mutable unspent_outputs cache_;
 
     // This provides atomicity for height and position.
-    mutable shared_mutex mutex_;
+    mutable shared_mutex metadata_mutex_;
 };
 
 } // namespace database

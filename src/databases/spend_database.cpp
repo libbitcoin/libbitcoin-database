@@ -109,14 +109,14 @@ bool spend_database::flush() const
 input_point spend_database::get(const output_point& outpoint) const
 {
     input_point spend;
-    const auto memory = lookup_map_.find(outpoint);
+    const auto slab = lookup_map_.find(outpoint);
 
-    if (!memory)
+    if (!slab)
         return spend;
 
     // The order of properties in this serialization was changed in v3.
     // Previously it was { index, hash }, which was inconsistent with wire.
-    auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(memory));
+    auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(slab));
     spend.from_data(deserial, false);
     return spend;
 }
