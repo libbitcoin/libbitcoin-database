@@ -37,24 +37,31 @@ static constexpr size_t bits_size = sizeof(uint32_t);
 static constexpr size_t nonce_size = sizeof(uint32_t);
 static constexpr size_t height_size = sizeof(uint32_t);
 
-static constexpr auto version_offset = size_t(0);
+static constexpr auto version_offset = 0u;
 static constexpr auto time_offset = version_size + previous_size + merkle_size;
 static constexpr auto bits_offset = time_offset + time_size;
 static constexpr auto height_offset = bits_offset + bits_size + nonce_size;
 static constexpr auto count_offset = height_offset + height_size;
 
+block_result::block_result()
+  : block_result(nullptr)
+{
+}
+
 block_result::block_result(const memory_ptr slab)
-  : slab_(slab), hash_(null_hash)
+  : slab_(slab), height_(0), hash_(null_hash)
 {
 }
 
-block_result::block_result(const memory_ptr slab, hash_digest&& hash)
-  : slab_(slab), hash_(std::move(hash))
+block_result::block_result(const memory_ptr slab, hash_digest&& hash,
+    uint32_t height)
+  : slab_(slab), height_(height), hash_(std::move(hash))
 {
 }
 
-block_result::block_result(const memory_ptr slab, const hash_digest& hash)
-  : slab_(slab), hash_(hash)
+block_result::block_result(const memory_ptr slab, const hash_digest& hash,
+    uint32_t height)
+  : slab_(slab), height_(height), hash_(hash)
 {
 }
 
@@ -91,8 +98,7 @@ chain::header block_result::header() const
 size_t block_result::height() const
 {
     BITCOIN_ASSERT(slab_);
-    const auto memory = REMAP_ADDRESS(slab_);
-    return from_little_endian_unsafe<uint32_t>(memory + height_offset);
+    return height_;
 }
 
 uint32_t block_result::bits() const
@@ -143,6 +149,7 @@ hash_list block_result::transaction_hashes() const
     auto deserial = make_unsafe_deserializer(memory + count_offset);
     const auto tx_count = deserial.read_size_little_endian();
     hash_list hashes;
+    hashes.reserve(tx_count);
 
     for (size_t position = 0; position < tx_count; ++position)
         hashes.push_back(deserial.read_hash());

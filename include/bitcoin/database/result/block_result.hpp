@@ -32,9 +32,11 @@ namespace database {
 class BCD_API block_result
 {
 public:
+    block_result();
     block_result(const memory_ptr slab);
-    block_result(const memory_ptr slab, hash_digest&& hash);
-    block_result(const memory_ptr slab, const hash_digest& hash);
+    block_result(const memory_ptr slab, hash_digest&& hash, uint32_t height);
+    block_result(const memory_ptr slab, const hash_digest& hash,
+        uint32_t height);
 
     /// True if this block result is valid (found).
     operator bool() const;
@@ -71,6 +73,7 @@ public:
 
 private:
     memory_ptr slab_;
+    const uint32_t height_;
     const hash_digest hash_;
 };
 

@@ -129,18 +129,21 @@ memory_ptr transaction_database::find(const hash_digest& hash,
     if (slab == nullptr || !require_confirmed)
         return slab;
 
+    // Read the height and position.
+    // If position is unconfirmed then height is the forks used for validation.
     const auto memory = REMAP_ADDRESS(slab);
     auto deserial = make_unsafe_deserializer(memory);
 
-    // Read the height and position.
-    // If position is unconfirmed then height is the forks used for validation.
-    // These values are unguarded and will be inconsistent during write.
+    ///////////////////////////////////////////////////////////////////////////
+    // Critical Section
+    mutex_.lock_shared();
     const size_t height = deserial.read_4_bytes_little_endian();
     const size_t position = deserial.read_2_bytes_little_endian();
+    mutex_.unlock_shared();
+    ///////////////////////////////////////////////////////////////////////////
 
-    return (height > fork_height) ||
-        (require_confirmed && position == unconfirmed) ?
-        nullptr : slab;
+    return (height > fork_height) || (require_confirmed &&
+        position == unconfirmed) ? nullptr : slab;
 }
 
 transaction_result transaction_database::get(const hash_digest& hash,
@@ -150,8 +153,21 @@ transaction_result transaction_database::get(const hash_digest& hash,
     // Caller should set fork height to max_size_t for unconfirmed search.
     const auto slab = find(hash, fork_height, require_confirmed);
 
-    // Returns an invalid result if not found.
-    return transaction_result(slab, hash);
+    if (slab)
+    {
+        ///////////////////////////////////////////////////////////////////////
+        mutex_.lock_shared();
+        auto memory = REMAP_ADDRESS(slab);
+        auto deserial = make_unsafe_deserializer(memory);
+        const auto height = deserial.read_4_bytes_little_endian();
+        const auto position = deserial.read_4_bytes_little_endian();
+        mutex_.unlock_shared();
+        ///////////////////////////////////////////////////////////////////////
+
+        return transaction_result(slab, hash, height, position);
+    }
+
+    return{};
 }
 
 bool transaction_database::get_output(output& out_output, size_t& out_height,
@@ -162,18 +178,28 @@ bool transaction_database::get_output(output& out_output, size_t& out_height,
         require_confirmed))
         return true;
 
-    const auto hash = point.hash();
-    const auto slab = find(hash, fork_height, require_confirmed);
-
     // The transaction does not exist at/below fork with matching confirmation.
-    if (!slab)
-        return false;
+    const auto slab = find(point.hash(), fork_height, require_confirmed);
 
-    transaction_result result(slab, hash);
-    out_height = result.height();
-    out_coinbase = result.position() == 0;
-    out_output = result.output(point.index());
-    return true;
+    if (slab)
+    {
+        ///////////////////////////////////////////////////////////////////////
+        mutex_.lock_shared();
+        auto memory = REMAP_ADDRESS(slab);
+        auto deserial = make_unsafe_deserializer(memory);
+        const auto height = deserial.read_4_bytes_little_endian();
+        const auto position = deserial.read_4_bytes_little_endian();
+        mutex_.unlock_shared();
+        ///////////////////////////////////////////////////////////////////////
+
+        transaction_result result(slab, point.hash(), height, position);
+        out_height = result.height();
+        out_coinbase = result.position() == 0;
+        out_output = result.output(point.index());
+        return true;
+    }
+
+    return false;
 }
 
 // [ height:4 ]
@@ -215,8 +241,13 @@ void transaction_database::store(const chain::transaction& tx,
     // Unconfirmed txs: position is unconfirmed and height is validation forks.
     const auto write = [&](serializer<uint8_t*>& serial)
     {
+        ///////////////////////////////////////////////////////////////////////
+        // Critical Section
+        mutex_.lock();
         serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(position));
+        mutex_.unlock();
+        ///////////////////////////////////////////////////////////////////////
 
         // WRITE THE TX
         tx.to_data(serial, false);
@@ -298,8 +329,14 @@ bool transaction_database::confirm(const hash_digest& hash, size_t height,
 
     const auto memory = REMAP_ADDRESS(slab);
     auto serial = make_unsafe_serializer(memory);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Critical Section
+    mutex_.lock();
     serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
     serial.write_2_bytes_little_endian(static_cast<uint16_t>(position));
+    mutex_.unlock();
+    ///////////////////////////////////////////////////////////////////////////
     return true;
 }
 
