@@ -142,8 +142,9 @@ bool block_database::exists(size_t height) const
 block_result block_database::get(size_t height) const
 {
     if (height >= index_manager_.count())
-        return block_result(nullptr);
+        return{};
 
+    // No need to read height here since it's the key.
     const auto position = read_position(height);
     const auto slab = lookup_manager_.get(position);
 
@@ -160,10 +161,20 @@ block_result block_database::get(size_t height) const
 block_result block_database::get(const hash_digest& hash) const
 {
     const auto slab = lookup_map_.find(hash);
-    const auto memory = REMAP_ADDRESS(slab);
-    const auto height = from_little_endian_unsafe<uint32_t>(memory + height_offset);
 
-    return block_result(slab, hash, height);
+    if (slab)
+    {
+        ///////////////////////////////////////////////////////////////////////
+        metadata_mutex_.lock_shared();
+        const auto height_start = REMAP_ADDRESS(slab) + height_offset;
+        const auto height = from_little_endian_unsafe<uint32_t>(height_start);
+        metadata_mutex_.unlock_shared();
+        ///////////////////////////////////////////////////////////////////////
+
+        return block_result(slab, hash, height);
+    }
+
+    return{};
 }
 
 void block_database::store(const block& block, size_t height)
@@ -177,9 +188,16 @@ void block_database::store(const block& block, size_t height)
     {
         // WRITE THE BLOCK HEADER AND TX HASHES
         block.header().to_data(serial);
+
+        ///////////////////////////////////////////////////////////////////////
+        // Critical Section
+        metadata_mutex_.lock();
         serial.write_4_bytes_little_endian(height32);
         serial.write_size_little_endian(tx_count);
+        metadata_mutex_.unlock();
+        ///////////////////////////////////////////////////////////////////////
 
+        // WRITE THE TX HASHES
         for (const auto& tx: block.transactions())
             serial.write_hash(tx.hash());
     };
@@ -227,7 +245,6 @@ void block_database::zeroize(array_index first, array_index count)
     }
 }
 
-// TODO: could relax the guards if only writing empty (headers).
 void block_database::write_position(file_offset position, array_index height)
 {
     BITCOIN_ASSERT(height < max_uint32);
@@ -263,8 +280,7 @@ void block_database::write_position(file_offset position, array_index height)
 file_offset block_database::read_position(array_index height) const
 {
     const auto slab = index_manager_.get(height);
-    const auto memory = REMAP_ADDRESS(slab);
-    return from_little_endian_unsafe<file_offset>(memory);
+    return from_little_endian_unsafe<file_offset>(REMAP_ADDRESS(slab));
 }
 
 // The index of the highest existing block, independent of gaps.

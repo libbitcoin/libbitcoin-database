@@ -84,7 +84,7 @@ chain::header block_result::header() const
 {
     BITCOIN_ASSERT(slab_);
     const auto memory = REMAP_ADDRESS(slab_);
-    auto deserial = make_unsafe_deserializer(memory);
+    auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(slab_));
 
     // READ THE HEADER
     chain::header header;
