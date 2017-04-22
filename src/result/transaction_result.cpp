@@ -93,8 +93,7 @@ bool transaction_result::is_spent(size_t fork_height) const
         return false;
 
     BITCOIN_ASSERT(slab_);
-    const auto memory = REMAP_ADDRESS(slab_);
-    const auto tx_start = memory + height_size + position_size;
+    const auto tx_start = REMAP_ADDRESS(slab_) + height_size + position_size;
     auto deserial = make_unsafe_deserializer(tx_start);
     const auto outputs = deserial.read_size_little_endian();
     BITCOIN_ASSERT(deserial);
@@ -123,8 +122,7 @@ bool transaction_result::is_spent(size_t fork_height) const
 chain::output transaction_result::output(uint32_t index) const
 {
     BITCOIN_ASSERT(slab_);
-    const auto memory = REMAP_ADDRESS(slab_);
-    const auto tx_start = memory + height_size + position_size;
+    const auto tx_start = REMAP_ADDRESS(slab_) + height_size + position_size;
     auto deserial = make_unsafe_deserializer(tx_start);
     const auto outputs = deserial.read_size_little_endian();
     BITCOIN_ASSERT(deserial);
@@ -161,8 +159,7 @@ chain::output transaction_result::output(uint32_t index) const
 chain::transaction transaction_result::transaction() const
 {
     BITCOIN_ASSERT(slab_);
-    const auto memory = REMAP_ADDRESS(slab_);
-    const auto tx_start = memory + height_size + position_size;
+    const auto tx_start = REMAP_ADDRESS(slab_) + height_size + position_size;
     auto deserial = make_unsafe_deserializer(tx_start);
 
     // READ THE TX

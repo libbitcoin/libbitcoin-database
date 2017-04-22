@@ -131,15 +131,14 @@ memory_ptr transaction_database::find(const hash_digest& hash,
 
     // Read the height and position.
     // If position is unconfirmed then height is the forks used for validation.
-    const auto memory = REMAP_ADDRESS(slab);
-    auto deserial = make_unsafe_deserializer(memory);
+    auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(slab));
 
     ///////////////////////////////////////////////////////////////////////////
     // Critical Section
-    mutex_.lock_shared();
+    metadata_mutex_.lock_shared();
     const size_t height = deserial.read_4_bytes_little_endian();
     const size_t position = deserial.read_2_bytes_little_endian();
-    mutex_.unlock_shared();
+    metadata_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 
     return (height > fork_height) || (require_confirmed &&
@@ -156,12 +155,11 @@ transaction_result transaction_database::get(const hash_digest& hash,
     if (slab)
     {
         ///////////////////////////////////////////////////////////////////////
-        mutex_.lock_shared();
-        auto memory = REMAP_ADDRESS(slab);
-        auto deserial = make_unsafe_deserializer(memory);
+        metadata_mutex_.lock_shared();
+        auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(slab));
         const auto height = deserial.read_4_bytes_little_endian();
         const auto position = deserial.read_4_bytes_little_endian();
-        mutex_.unlock_shared();
+        metadata_mutex_.unlock_shared();
         ///////////////////////////////////////////////////////////////////////
 
         return transaction_result(slab, hash, height, position);
@@ -184,12 +182,11 @@ bool transaction_database::get_output(output& out_output, size_t& out_height,
     if (slab)
     {
         ///////////////////////////////////////////////////////////////////////
-        mutex_.lock_shared();
-        auto memory = REMAP_ADDRESS(slab);
-        auto deserial = make_unsafe_deserializer(memory);
+        metadata_mutex_.lock_shared();
+        auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(slab));
         const auto height = deserial.read_4_bytes_little_endian();
         const auto position = deserial.read_4_bytes_little_endian();
-        mutex_.unlock_shared();
+        metadata_mutex_.unlock_shared();
         ///////////////////////////////////////////////////////////////////////
 
         transaction_result result(slab, point.hash(), height, position);
@@ -243,10 +240,10 @@ void transaction_database::store(const chain::transaction& tx,
     {
         ///////////////////////////////////////////////////////////////////////
         // Critical Section
-        mutex_.lock();
+        metadata_mutex_.lock();
         serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(position));
-        mutex_.unlock();
+        metadata_mutex_.unlock();
         ///////////////////////////////////////////////////////////////////////
 
         // WRITE THE TX
@@ -287,8 +284,7 @@ bool transaction_database::spend(const output_point& point,
     if (slab == nullptr)
         return false;
 
-    const auto memory = REMAP_ADDRESS(slab);
-    const auto tx_start = memory + height_position_size;
+    const auto tx_start = REMAP_ADDRESS(slab) + height_position_size;
     auto serial = make_unsafe_serializer(tx_start);
     const auto outputs = serial.read_size_little_endian();
     BITCOIN_ASSERT(serial);
@@ -326,16 +322,14 @@ bool transaction_database::confirm(const hash_digest& hash, size_t height,
 
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(position <= max_uint16);
-
-    const auto memory = REMAP_ADDRESS(slab);
-    auto serial = make_unsafe_serializer(memory);
+    auto serial = make_unsafe_serializer(REMAP_ADDRESS(slab));
 
     ///////////////////////////////////////////////////////////////////////////
     // Critical Section
-    mutex_.lock();
+    metadata_mutex_.lock();
     serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
     serial.write_2_bytes_little_endian(static_cast<uint16_t>(position));
-    mutex_.unlock();
+    metadata_mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
     return true;
 }

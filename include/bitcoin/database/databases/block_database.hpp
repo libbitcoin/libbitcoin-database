@@ -114,6 +114,9 @@ private:
 
     // Guard against concurrent update of a range of block indexes.
     mutable upgrade_mutex mutex_;
+
+    // This provides atomicity for height.
+    mutable shared_mutex metadata_mutex_;
 };
 
 } // namespace database

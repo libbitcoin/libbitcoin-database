@@ -143,6 +143,7 @@ const memory_ptr record_manager::get(array_index record) const
     // condition implies a block has been popped between a guard and this read.
     // The read will be invalidated and should not cause any other fault.
 
+    // The accessor must remain in scope until the end of the block.
     auto memory = file_.access();
     REMAP_INCREMENT(memory, header_size_ + record_to_position(record));
     return memory;

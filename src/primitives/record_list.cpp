@@ -45,8 +45,8 @@ array_index record_list::insert(array_index index)
 {
     // Create new record and return its index.
     auto new_index = manager_.new_records(1);
-    const auto memory = manager_.get(new_index);
-    auto serial = make_unsafe_serializer(REMAP_ADDRESS(memory));
+    const auto record = manager_.get(new_index);
+    auto serial = make_unsafe_serializer(REMAP_ADDRESS(record));
     //*************************************************************************
     serial.template write_little_endian<array_index>(index);
     //*************************************************************************
@@ -55,18 +55,18 @@ array_index record_list::insert(array_index index)
 
 array_index record_list::next(array_index index) const
 {
-    const auto memory = manager_.get(index);
-    const auto next_address = REMAP_ADDRESS(memory);
+    const auto record = manager_.get(index);
+    const auto memory = REMAP_ADDRESS(record);
     //*************************************************************************
-    return from_little_endian_unsafe<array_index>(next_address);
+    return from_little_endian_unsafe<array_index>(memory);
     //*************************************************************************
 }
 
 const memory_ptr record_list::get(array_index index) const
 {
-    auto memory = manager_.get(index);
-    REMAP_INCREMENT(memory, sizeof(array_index));
-    return memory;
+    auto record = manager_.get(index);
+    REMAP_INCREMENT(record, sizeof(array_index));
+    return record;
 }
 
 } // namespace database
