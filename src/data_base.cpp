@@ -452,7 +452,7 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
         const input_point point{ tx_hash, index };
         spends_->store(input.previous_output(), point);
 
-        // Try to extract an address.
+        // TODO: use a vector result to extract sign_multisig.
         const auto address = input.address();
         if (!address)
             continue;
@@ -469,7 +469,7 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
     {
         const auto& output = outputs[index];
 
-        // Try to extract an address.
+        // TODO: use a vector result to extract pay_multisig.
         const auto address = output.address();
         if (!address)
             continue;
