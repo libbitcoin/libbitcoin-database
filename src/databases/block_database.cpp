@@ -42,6 +42,9 @@ static constexpr auto index_record_size = sizeof(file_offset);
 //  [ tx_count:1-2 ]
 //  [ [ tx_hash:32 ]... ]
 
+// See block result.cpp.
+static constexpr auto height_offset = 80u;
+
 // Blocks uses a hash table and an array index, both O(1).
 block_database::block_database(const path& map_filename,
     const path& index_filename, size_t buckets, size_t expansion,
@@ -113,7 +116,7 @@ bool block_database::close()
         index_file_.close();
 }
 
-// Commit latest inserts.
+// Update logical file sizes.
 void block_database::synchronize()
 {
     lookup_manager_.sync();
@@ -139,25 +142,39 @@ bool block_database::exists(size_t height) const
 block_result block_database::get(size_t height) const
 {
     if (height >= index_manager_.count())
-        return block_result(nullptr);
+        return{};
 
+    // No need to read height here since it's the key.
     const auto position = read_position(height);
-    const auto memory = lookup_manager_.get(position);
+    const auto slab = lookup_manager_.get(position);
 
     //*************************************************************************
     // HACK: back up into the slab to obtain the key (optimization).
     static const auto prefix_size = slab_row<hash_digest>::prefix_size;
-    const auto buffer = REMAP_ADDRESS(memory);
-    auto deserial = make_unsafe_deserializer(buffer - prefix_size);
+    const auto memory = REMAP_ADDRESS(slab);
+    auto deserial = make_unsafe_deserializer(memory - prefix_size);
     //*************************************************************************
 
-    return block_result(memory, std::move(deserial.read_hash()));
+    return block_result(slab, deserial.read_hash(), height);
 }
 
 block_result block_database::get(const hash_digest& hash) const
 {
-    const auto memory = lookup_map_.find(hash);
-    return block_result(memory, hash);
+    const auto slab = lookup_map_.find(hash);
+
+    if (slab)
+    {
+        ///////////////////////////////////////////////////////////////////////
+        metadata_mutex_.lock_shared();
+        const auto height_start = REMAP_ADDRESS(slab) + height_offset;
+        const auto height = from_little_endian_unsafe<uint32_t>(height_start);
+        metadata_mutex_.unlock_shared();
+        ///////////////////////////////////////////////////////////////////////
+
+        return block_result(slab, hash, height);
+    }
+
+    return{};
 }
 
 void block_database::store(const block& block, size_t height)
@@ -171,9 +188,16 @@ void block_database::store(const block& block, size_t height)
     {
         // WRITE THE BLOCK HEADER AND TX HASHES
         block.header().to_data(serial);
+
+        ///////////////////////////////////////////////////////////////////////
+        // Critical Section
+        metadata_mutex_.lock();
         serial.write_4_bytes_little_endian(height32);
         serial.write_size_little_endian(tx_count);
+        metadata_mutex_.unlock();
+        ///////////////////////////////////////////////////////////////////////
 
+        // WRITE THE TX HASHES
         for (const auto& tx: block.transactions())
             serial.write_hash(tx.hash());
     };
@@ -215,13 +239,12 @@ void block_database::zeroize(array_index first, array_index count)
 {
     for (auto index = first; index < (first + count); ++index)
     {
-        const auto memory = index_manager_.get(index);
-        auto serial = make_unsafe_serializer(REMAP_ADDRESS(memory));
+        const auto slab = index_manager_.get(index);
+        auto serial = make_unsafe_serializer(REMAP_ADDRESS(slab));
         serial.write_8_bytes_little_endian(empty);
     }
 }
 
-// TODO: could relax the guards if only writing empty (headers).
 void block_database::write_position(file_offset position, array_index height)
 {
     BITCOIN_ASSERT(height < max_uint32);
@@ -246,8 +269,8 @@ void block_database::write_position(file_offset position, array_index height)
     }
 
     // Guard write to prevent subsequent zeroize from erasing.
-    const auto memory = index_manager_.get(height);
-    auto serial = make_unsafe_serializer(REMAP_ADDRESS(memory));
+    const auto slab = index_manager_.get(height);
+    auto serial = make_unsafe_serializer(REMAP_ADDRESS(slab));
     serial.write_8_bytes_little_endian(position);
 
     mutex_.unlock();
@@ -256,9 +279,8 @@ void block_database::write_position(file_offset position, array_index height)
 
 file_offset block_database::read_position(array_index height) const
 {
-    const auto memory = index_manager_.get(height);
-    const auto address = REMAP_ADDRESS(memory);
-    return from_little_endian_unsafe<file_offset>(address);
+    const auto slab = index_manager_.get(height);
+    return from_little_endian_unsafe<file_offset>(REMAP_ADDRESS(slab));
 }
 
 // The index of the highest existing block, independent of gaps.

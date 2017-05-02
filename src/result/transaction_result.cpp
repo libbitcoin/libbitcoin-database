@@ -34,20 +34,25 @@ static constexpr size_t value_size = sizeof(uint64_t);
 static constexpr size_t height_size = sizeof(uint32_t);
 static constexpr size_t position_size = sizeof(uint16_t);
 
+transaction_result::transaction_result()
+  : transaction_result(nullptr)
+{
+}
+
 transaction_result::transaction_result(const memory_ptr slab)
-  : slab_(slab), hash_(null_hash)
+  : slab_(slab), height_(0), position_(0), hash_(null_hash)
 {
 }
 
 transaction_result::transaction_result(const memory_ptr slab,
-    hash_digest&& hash)
-  : slab_(slab), hash_(std::move(hash))
+    hash_digest&& hash, uint32_t height, uint16_t position)
+  : slab_(slab), height_(height), position_(position), hash_(std::move(hash))
 {
 }
 
 transaction_result::transaction_result(const memory_ptr slab,
-    const hash_digest& hash)
-  : slab_(slab), hash_(hash)
+    const hash_digest& hash, uint32_t height, uint16_t position)
+  : slab_(slab), height_(height), position_(position), hash_(hash)
 {
 }
 
@@ -66,34 +71,30 @@ const hash_digest& transaction_result::hash() const
     return hash_;
 }
 
+// Height is unguarded and will be inconsistent during write.
 size_t transaction_result::height() const
 {
     BITCOIN_ASSERT(slab_);
-    const auto memory = REMAP_ADDRESS(slab_);
-    return from_little_endian_unsafe<uint32_t>(memory);
+    return height_;
 }
 
+// Position is unguarded and will be inconsistent during write.
 size_t transaction_result::position() const
 {
     BITCOIN_ASSERT(slab_);
-    const auto memory = REMAP_ADDRESS(slab_);
-    return from_little_endian_unsafe<uint16_t>(memory + height_size);
+    return position_;
 }
 
+// Spentness is unguarded and will be inconsistent during write.
 bool transaction_result::is_spent(size_t fork_height) const
 {
-    static const auto not_spent = output::validation::not_spent;
-
-    BITCOIN_ASSERT(slab_);
-    const auto memory = REMAP_ADDRESS(slab_);
-    const auto position_start = memory + height_size;
-    auto deserial = make_unsafe_deserializer(position_start);
-    const auto position = deserial.read_2_bytes_little_endian();
-
     // Cannot be spent if unconfirmed.
-    if (position == transaction_database::unconfirmed)
+    if (position_ == transaction_database::unconfirmed)
         return false;
 
+    BITCOIN_ASSERT(slab_);
+    const auto tx_start = REMAP_ADDRESS(slab_) + height_size + position_size;
+    auto deserial = make_unsafe_deserializer(tx_start);
     const auto outputs = deserial.read_size_little_endian();
     BITCOIN_ASSERT(deserial);
 
@@ -104,7 +105,8 @@ bool transaction_result::is_spent(size_t fork_height) const
         BITCOIN_ASSERT(deserial);
 
         // A spend from above the fork height is not an actual spend.
-        if (spender_height == not_spent || spender_height > fork_height)
+        if (spender_height == output::validation::not_spent ||
+            spender_height > fork_height)
             return false;
 
         deserial.skip(value_size);
@@ -115,12 +117,12 @@ bool transaction_result::is_spent(size_t fork_height) const
     return true;
 }
 
+// spender_heights are unguarded and will be inconsistent during write.
 // If index is out of range returns default/invalid output (.value not_found).
 chain::output transaction_result::output(uint32_t index) const
 {
     BITCOIN_ASSERT(slab_);
-    const auto memory = REMAP_ADDRESS(slab_);
-    const auto tx_start = memory + height_size + position_size;
+    const auto tx_start = REMAP_ADDRESS(slab_) + height_size + position_size;
     auto deserial = make_unsafe_deserializer(tx_start);
     const auto outputs = deserial.read_size_little_endian();
     BITCOIN_ASSERT(deserial);
@@ -153,11 +155,11 @@ chain::output transaction_result::output(uint32_t index) const
 // [ version:varint ]
 // ----------------------------------------------------------------------------
 
+// spender_heights are unguarded and will be inconsistent during write.
 chain::transaction transaction_result::transaction() const
 {
     BITCOIN_ASSERT(slab_);
-    const auto memory = REMAP_ADDRESS(slab_);
-    const auto tx_start = memory + height_size + position_size;
+    const auto tx_start = REMAP_ADDRESS(slab_) + height_size + position_size;
     auto deserial = make_unsafe_deserializer(tx_start);
 
     // READ THE TX
