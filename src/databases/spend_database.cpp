@@ -114,8 +114,6 @@ input_point spend_database::get(const output_point& outpoint) const
     if (!slab)
         return spend;
 
-    // The order of properties in this serialization was changed in v3.
-    // Previously it was { index, hash }, which was inconsistent with wire.
     auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(slab));
     spend.from_data(deserial, false);
     return spend;

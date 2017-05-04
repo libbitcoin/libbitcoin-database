@@ -71,14 +71,12 @@ const hash_digest& transaction_result::hash() const
     return hash_;
 }
 
-// Height is unguarded and will be inconsistent during write.
 size_t transaction_result::height() const
 {
     BITCOIN_ASSERT(slab_);
     return height_;
 }
 
-// Position is unguarded and will be inconsistent during write.
 size_t transaction_result::position() const
 {
     BITCOIN_ASSERT(slab_);
@@ -117,7 +115,7 @@ bool transaction_result::is_spent(size_t fork_height) const
     return true;
 }
 
-// spender_heights are unguarded and will be inconsistent during write.
+// Spentness is unguarded and will be inconsistent during write.
 // If index is out of range returns default/invalid output (.value not_found).
 chain::output transaction_result::output(uint32_t index) const
 {
@@ -155,7 +153,7 @@ chain::output transaction_result::output(uint32_t index) const
 // [ version:varint ]
 // ----------------------------------------------------------------------------
 
-// spender_heights are unguarded and will be inconsistent during write.
+// Spentness is unguarded and will be inconsistent during write.
 chain::transaction transaction_result::transaction() const
 {
     BITCOIN_ASSERT(slab_);
