@@ -81,7 +81,6 @@ template <typename KeyType>
 slab_row<KeyType>::slab_row(slab_manager& manager, file_offset position)
   : manager_(manager), position_(position)
 {
-    static_assert(position_size == 8, "Invalid file_offset size.");
 }
 
 template <typename KeyType>

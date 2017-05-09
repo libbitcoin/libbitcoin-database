@@ -39,7 +39,7 @@ using namespace bc::database;
 #define HISTORY_ROWS "history_rows"
 #define STEALTH_ROWS "stealth_rows"
 
-// The threashold max_uint32 is used to align with fixed-width config settings,
+// The threshold max_uint32 is used to align with fixed-width config settings,
 // and size_t is used to align with the database height domain.
 const size_t store::without_indexes = max_uint32;
 
