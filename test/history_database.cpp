@@ -86,9 +86,9 @@ BOOST_AUTO_TEST_CASE(history_database__test)
     const size_t out_h41 = 74448;
     const uint64_t value41 = 990;
 
-    store::create(DIRECTORY "/lookup");
-    store::create(DIRECTORY "/rows");
-    history_database db(DIRECTORY "/lookup", DIRECTORY "/rows", 1000, 50);
+    store::create(DIRECTORY "/history_table");
+    store::create(DIRECTORY "/history_rows");
+    history_database db(DIRECTORY "/history_table", DIRECTORY "/history_rows", 1000, 50);
     BOOST_REQUIRE(db.create());
     db.add_output(key1, out11, out_h11, value11);
     db.add_output(key1, out12, out_h12, value12);

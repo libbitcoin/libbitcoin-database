@@ -65,8 +65,8 @@ BOOST_AUTO_TEST_CASE(transaction_database__test)
 
     const auto h2 = tx2.hash();
 
-    store::create(DIRECTORY "/transaction");
-    transaction_database db(DIRECTORY "/transaction", 1000, 50, 0);
+    store::create(DIRECTORY "/tx_table");
+    transaction_database db(DIRECTORY "/tx_table", 1000, 50, 0);
     BOOST_REQUIRE(db.create());
 
     db.store(tx1, 110, 88);
