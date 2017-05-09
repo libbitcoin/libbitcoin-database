@@ -28,6 +28,9 @@
 namespace libbitcoin {
 namespace database {
 
+////template <typename KeyType>
+////const array_index record_hash_table<KeyType>::not_found = 0;
+
 template <typename KeyType>
 record_hash_table<KeyType>::record_hash_table(
     record_hash_table_header& header, record_manager& manager)
@@ -39,7 +42,7 @@ record_hash_table<KeyType>::record_hash_table(
 // are store then retrieval and unlinking will fail as these multiples cannot
 // be differentiated except in the order written.
 template <typename KeyType>
-void record_hash_table<KeyType>::store(const KeyType& key,
+array_index record_hash_table<KeyType>::store(const KeyType& key,
     write_function write)
 {
     // Allocate and populate new unlinked record.
@@ -47,11 +50,7 @@ void record_hash_table<KeyType>::store(const KeyType& key,
     const auto position = record.create(key, write);
 
     // For a given key in this hash table new item creation must be atomic from
-    // read of the old value to write of the new. Otherwise concurrent write of
-    // hash table conflicts will corrupt the key's record row. Unfortunmately
-    // there is no efficient way to lock a given bucket, so we lock across
-    // all buckets. But given that this protection is required for concurrent
-    // write but not for read-while-write (slock) we need not lock read.
+    // read of the old value to write of the new.
     ///////////////////////////////////////////////////////////////////////////
     // Critical Section.
     mutex_.lock();
@@ -64,6 +63,10 @@ void record_hash_table<KeyType>::store(const KeyType& key,
 
     mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
+
+    // TODO: untested.
+    // Return the file offset of the record data segment.
+    return position + record_row<KeyType>::prefix_size;
 }
 
 // This is limited to returning the first of multiple matching key values.
@@ -85,6 +88,7 @@ memory_ptr record_hash_table<KeyType>::find(const KeyType& key) const
         const auto previous = current;
         current = item.next_index();
 
+        // TODO: this guard should no longer be necessary due to atomicity.
         // This may otherwise produce an infinite loop here.
         // It indicates that a write operation has interceded.
         // So we must return gracefully vs. looping forever.
@@ -130,6 +134,7 @@ bool record_hash_table<KeyType>::unlink(const KeyType& key)
         previous = current;
         current = item.next_index();
 
+        // TODO: this guard should no longer be necessary due to atomicity.
         // This may otherwise produce an infinite loop here.
         // So we must return gracefully vs. looping forever.
         // Another write should not interceded here, so this is a hard fail.

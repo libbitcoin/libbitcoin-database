@@ -28,6 +28,9 @@ namespace libbitcoin {
 namespace database {
 
 template <typename KeyType>
+const file_offset slab_hash_table<KeyType>::not_found = 0;
+
+template <typename KeyType>
 slab_hash_table<KeyType>::slab_hash_table(slab_hash_table_header& header,
     slab_manager& manager)
   : header_(header), manager_(manager)
@@ -41,21 +44,13 @@ template <typename KeyType>
 file_offset slab_hash_table<KeyType>::store(const KeyType& key,
     write_function write, size_t value_size)
 {
-    // Store current bucket value.
-
-    // TODO: separate creation from linkage, create and populate first, then
-    // link under critical section. This will remove creation from the critical
-    // section and eliminate record data read-write concurrency.
-    // TODO: protect unlink from pop concurrency when implemented.
+    // Allocate and populate new unlinked slab.
     slab_row<KeyType> slab(manager_);
     const auto position = slab.create(key, write, value_size);
 
     // For a given key in this hash table new item creation must be atomic from
     // read of the old value to write of the new. Otherwise concurrent write of
-    // hash table conflicts will corrupt the key's record row. Unfortunmately
-    // there is no efficient way to lock a given bucket, so we lock across
-    // all buckets. But given that this protection is required for concurrent
-    // write but not for read-while-write (slock) we need not lock read.
+    // hash table conflicts will corrupt the key's record row.
     ///////////////////////////////////////////////////////////////////////////
     // Critical Section.
     mutex_.lock();
@@ -90,21 +85,24 @@ file_offset slab_hash_table<KeyType>::update(const KeyType& key,
         // Found.
         if (item.compare(key))
         {
-            write(item.data());
+            const auto data = REMAP_ADDRESS(item.data());
+            auto serial = make_unsafe_serializer(data);
+            write(serial);
             return item.offset();
         }
 
         const auto previous = current;
         current = item.next_position();
 
+        // TODO: this guard should no longer be necessary due to atomicity.
         // This may otherwise produce an infinite loop here.
         // It indicates that a write operation has interceded.
         // So we must return gracefully vs. looping forever.
         if (previous == current)
-            return 0;
+            return not_found;
     }
 
-    return 0;
+    return not_found;
 }
 
 // This is limited to returning the first of multiple matching key values.
@@ -126,6 +124,7 @@ memory_ptr slab_hash_table<KeyType>::find(const KeyType& key) const
         const auto previous = current;
         current = item.next_position();
 
+        // TODO: this guard should no longer be necessary due to atomicity.
         // This may otherwise produce an infinite loop here.
         // It indicates that a write operation has interceded.
         // So we must return gracefully vs. looping forever.

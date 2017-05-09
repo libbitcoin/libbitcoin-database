@@ -37,6 +37,7 @@ template <typename KeyType>
 class record_row
 {
 public:
+    typedef KeyType key_type;
     static BC_CONSTEXPR size_t index_size = sizeof(array_index);
     static BC_CONSTEXPR size_t key_start = 0;
     static BC_CONSTEXPR size_t key_size = std::tuple_size<KeyType>::value;
@@ -87,10 +88,10 @@ array_index record_row<KeyType>::create(const KeyType& key,
 {
     BITCOIN_ASSERT(index_ == 0);
 
-    // Create new record and populate its key.
+    // Create new record and populate its key and data.
     //   [ KeyType  ] <==
     //   [ next:4   ]
-    //   [ value... ]
+    //   [ value... ] <==
     index_ = manager_.new_records(1);
 
     const auto memory = raw_data(key_start);
@@ -135,7 +136,7 @@ memory_ptr record_row<KeyType>::data() const
     // Get value pointer.
     //   [ KeyType  ]
     //   [ next:4   ]
-    //   [ value... ] <==
+    //   [ value... ] ==>
 
     // Value data is at the end.
     return raw_data(prefix_size);

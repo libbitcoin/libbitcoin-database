@@ -61,13 +61,16 @@ template <typename KeyType>
 class record_hash_table
 {
 public:
+    typedef KeyType key_type;
     typedef serializer<uint8_t*>::functor write_function;
+
+    ////static const array_index not_found;
 
     record_hash_table(record_hash_table_header& header, record_manager& manager);
 
     /// Execute a write. The provided write() function must write the correct
     /// number of bytes (record_size - key_size - sizeof(array_index)).
-    void store(const KeyType& key, write_function write);
+    array_index store(const KeyType& key, write_function write);
 
     /// Find the record for a given key.
     /// Returns a null pointer if not found.

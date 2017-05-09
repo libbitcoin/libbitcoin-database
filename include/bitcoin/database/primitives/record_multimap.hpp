@@ -49,6 +49,7 @@ template <typename KeyType>
 class record_multimap
 {
 public:
+    typedef KeyType key_type;
     typedef record_hash_table<KeyType> record_hash_table_type;
     typedef serializer<uint8_t*>::functor write_function;
 
