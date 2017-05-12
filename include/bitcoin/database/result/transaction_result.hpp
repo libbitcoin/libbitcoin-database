@@ -34,12 +34,12 @@ class BCD_API transaction_result
 public:
     transaction_result();
 
-    transaction_result(const memory_ptr slab);
+    transaction_result(memory_ptr slab);
 
-    transaction_result(const memory_ptr slab, hash_digest&& hash,
-        uint32_t height, uint16_t position);
+    transaction_result(memory_ptr slab, hash_digest&& hash, uint32_t height,
+        uint16_t position);
 
-    transaction_result(const memory_ptr slab, const hash_digest& hash,
+    transaction_result(memory_ptr slab, const hash_digest& hash,
         uint32_t height, uint16_t position);
 
     /// True if this transaction result is valid (found).

@@ -39,7 +39,7 @@ transaction_result::transaction_result()
 {
 }
 
-transaction_result::transaction_result(const memory_ptr slab)
+transaction_result::transaction_result(memory_ptr slab)
   : slab_(nullptr),
     height_(0),
     position_(0),
@@ -47,8 +47,8 @@ transaction_result::transaction_result(const memory_ptr slab)
 {
 }
 
-transaction_result::transaction_result(const memory_ptr slab,
-    hash_digest&& hash, uint32_t height, uint16_t position)
+transaction_result::transaction_result(memory_ptr slab, hash_digest&& hash,
+    uint32_t height, uint16_t position)
   : slab_(slab),
     height_(height),
     position_(position),
@@ -56,7 +56,7 @@ transaction_result::transaction_result(const memory_ptr slab,
 {
 }
 
-transaction_result::transaction_result(const memory_ptr slab,
+transaction_result::transaction_result(memory_ptr slab,
     const hash_digest& hash, uint32_t height, uint16_t position)
   : slab_(slab),
     height_(height),
