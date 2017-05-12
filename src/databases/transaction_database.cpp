@@ -42,7 +42,7 @@ using namespace bc::machine;
 // [ locktime:varint     - fixed  ]
 // [ version:varint      - fixed  ]
 
-static const auto prefix_size = slab_row<hash_digest>::prefix_size;
+static BC_CONSTEXPR auto prefix_size = slab_row<hash_digest>::prefix_size;
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto position_size = sizeof(uint16_t);
 static constexpr auto value_size = sizeof(uint64_t);
@@ -176,7 +176,7 @@ transaction_result transaction_database::get(file_offset offset) const
     // HACK: back up into the slab to obtain the hash/key (optimization).
     auto reader = make_unsafe_deserializer(memory - prefix_size);
 
-    // Reads are not deferred for updateable values as atomicity is required.
+    // Reads are not deferred for updatable values as atomicity is required.
     return{ slab, reader.read_hash(), height, position };
 }
 
@@ -199,7 +199,7 @@ transaction_result transaction_database::get(const hash_digest& hash,
     metadata_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 
-    // Reads are not deferred for updateable values as atomicity is required.
+    // Reads are not deferred for updatable values as atomicity is required.
     return{ slab, hash, height, position };
 }
 
@@ -227,7 +227,7 @@ bool transaction_database::get_output(output& out_output, size_t& out_height,
     metadata_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 
-    // Reads are not deferred for updateable values as atomicity is required.
+    // Reads are not deferred for updatable values as atomicity is required.
     transaction_result result(slab, point.hash(), height, position);
     out_height = result.height();
     out_coinbase = result.position() == 0;
