@@ -40,19 +40,28 @@ transaction_result::transaction_result()
 }
 
 transaction_result::transaction_result(const memory_ptr slab)
-  : slab_(slab), height_(0), position_(0), hash_(null_hash)
+  : slab_(nullptr),
+    height_(0),
+    position_(0),
+    hash_(null_hash)
 {
 }
 
 transaction_result::transaction_result(const memory_ptr slab,
     hash_digest&& hash, uint32_t height, uint16_t position)
-  : slab_(slab), height_(height), position_(position), hash_(std::move(hash))
+  : slab_(slab),
+    height_(height),
+    position_(position),
+    hash_(std::move(hash))
 {
 }
 
 transaction_result::transaction_result(const memory_ptr slab,
     const hash_digest& hash, uint32_t height, uint16_t position)
-  : slab_(slab), height_(height), position_(position), hash_(hash)
+  : slab_(slab),
+    height_(height),
+    position_(position),
+    hash_(hash)
 {
 }
 
@@ -66,28 +75,31 @@ void transaction_result::reset()
     slab_.reset();
 }
 
-const hash_digest& transaction_result::hash() const
+bool transaction_result::confirmed() const
 {
-    return hash_;
-}
-
-size_t transaction_result::height() const
-{
-    BITCOIN_ASSERT(slab_);
-    return height_;
+    return position_ != transaction_database::unconfirmed;
 }
 
 size_t transaction_result::position() const
 {
-    BITCOIN_ASSERT(slab_);
     return position_;
+}
+
+size_t transaction_result::height() const
+{
+    return height_;
+}
+
+const hash_digest& transaction_result::hash() const
+{
+    return hash_;
 }
 
 // Spentness is unguarded and will be inconsistent during write.
 bool transaction_result::is_spent(size_t fork_height) const
 {
     // Cannot be spent if unconfirmed.
-    if (position_ == transaction_database::unconfirmed)
+    if (!confirmed())
         return false;
 
     BITCOIN_ASSERT(slab_);
@@ -137,21 +149,8 @@ chain::output transaction_result::output(uint32_t index) const
     }
 
     // Read and return the target output (including spender height).
-    chain::output out;
-    out.from_data(deserial, false);
-    return out;
+    return chain::output::factory_from_data(deserial, false);
 }
-
-// [ height:4 ]
-// [ position:2 ]
-// ----------------------------------------------------------------------------
-// [ output_count:varint ]
-// [ [ spender_height:4 ][ value:8 ][ script:varint ]... ]
-// [ input_count:varint ]
-// [ [ hash:4 ][ index:2 ][ script:varint ][ sequence:4 ]... ]
-// [ locktime:varint ]
-// [ version:varint ]
-// ----------------------------------------------------------------------------
 
 // Spentness is unguarded and will be inconsistent during write.
 chain::transaction transaction_result::transaction() const
@@ -159,13 +158,8 @@ chain::transaction transaction_result::transaction() const
     BITCOIN_ASSERT(slab_);
     const auto tx_start = REMAP_ADDRESS(slab_) + height_size + position_size;
     auto deserial = make_unsafe_deserializer(tx_start);
-
-    // READ THE TX
-    chain::transaction tx;
-    tx.from_data(deserial, false);
-
-    // TODO: add hash param to deserialization to eliminate this construction.
-    return chain::transaction(std::move(tx), hash_digest(hash_));
+    return transaction::factory_from_data(deserial, hash_);
 }
+
 } // namespace database
 } // namespace libbitcoin

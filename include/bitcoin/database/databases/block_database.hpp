@@ -27,6 +27,7 @@
 #include <bitcoin/database/memory/memory_map.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 #include <bitcoin/database/primitives/slab_hash_table.hpp>
+#include <bitcoin/database/primitives/slab_manager.hpp>
 #include <bitcoin/database/result/block_result.hpp>
 
 namespace libbitcoin {
@@ -44,8 +45,9 @@ public:
     static const file_offset empty;
 
     /// Construct the database.
-    block_database(const path& map_filename, const path& index_filename,
-        size_t buckets, size_t expansion, mutex_ptr mutex=nullptr);
+    block_database(const path& map_filename, const path& block_index_filename,
+        const path& tx_index_filename, size_t buckets, size_t expansion,
+        mutex_ptr mutex=nullptr);
 
     /// Close the database (all threads must first be stopped).
     ~block_database();
@@ -62,20 +64,45 @@ public:
     /// Determine if a block exists at the given height.
     bool exists(size_t height) const;
 
+    /// The list of heights representing all chain gaps.
+    bool gaps(heights& out_gaps) const;
+
     /// Fetch block by height using the index table.
     block_result get(size_t height) const;
 
     /// Fetch block by hash using the hashtable.
-    block_result get(const hash_digest& hash) const;
+    block_result get(const hash_digest& hash, bool require_confirmed) const;
 
-    /// Store a block in the database.
-    void store(const chain::block& block, size_t height);
+    /// This is ordered, but block parallelism may leave confirmation gaps.
+    /// Store an unconfirmed header with no transactions.
+    void store(const chain::header& header, size_t height);
 
-    /// The list of heights representing all chain gaps.
-    bool gaps(heights& out_gaps) const;
+    /// This is optimized by storing tx file offsets in metadata.
+    /// Store a header and associate transactions (false if any missing).
+    void store(const chain::block& block, size_t height, bool confirmed);
 
-    /// Unlink all blocks upwards from (and including) from_height.
-    bool unlink(size_t from_height);
+    /// TODO: optimize by storing tx file offsets in metadata.
+    /// This may come from the wire or be generated via the mining interface.
+    /// Store a header and associate transactions (false if any missing).
+    void store(const message::compact_block& compact, size_t height,
+        bool confirmed);
+
+    /// Update an existing block's transactions association.
+    bool update(const chain::block& block, size_t height, bool confirmed);
+
+    /// Update an existing block's transactions association.
+    bool update(const message::compact_block& compact, size_t height,
+        bool confirmed);
+
+    /// Promote the block and all ancestors up to the fork point.
+    /// This does not promote the block's transactions or their spends, which
+    /// must be confirmed before this call.
+    bool confirm(const hash_digest& hash, bool confirm=true);
+
+    /// Demote all blocks at and above the given height.
+    /// This does not demote the blocks' transactions or their spends, which
+    /// must be unconfirmed before this call. Should always be the top block.
+    bool unconfirm(size_t from_height);
 
     /// Commit latest inserts.
     void synchronize();
@@ -89,33 +116,48 @@ public:
 private:
     typedef slab_hash_table<hash_digest> slab_map;
 
-    /// Zeroize the specfied index positions.
+    // Associate an array of transactions for a block.
+    array_index associate(const chain::transaction::list& transactions);
+    array_index associate(const message::compact_block::short_id_list& ids);
+
+    void store(const chain::header& header, size_t height, uint32_t checksum,
+        array_index tx_start, size_t tx_count, bool confirmed);
+
+    bool update(const hash_digest& hash, size_t height, uint32_t checksum,
+        array_index tx_start, size_t tx_count, bool confirmed);
+
+    // Zeroize the specfied index offsets.
     void zeroize(array_index first, array_index count);
 
-    /// Write block hash table position into the block index.
-    void write_position(file_offset position, array_index height);
+    // Write block hash table offset into the block index.
+    void write_offset(file_offset offset, array_index height);
 
-    /// Use block index to get block hash table position from height.
-    file_offset read_position(array_index height) const;
+    /// Use block index to get block hash table offset from height.
+    file_offset get_offset(array_index height) const;
 
     // The starting size of the hash table, used by create.
     const size_t initial_map_file_size_;
 
-    /// Hash table used for looking up blocks by hash.
+    // Hash table used for looking up blocks by hash.
     memory_map lookup_file_;
     slab_hash_table_header lookup_header_;
     slab_manager lookup_manager_;
     slab_map lookup_map_;
 
-    /// Table used for looking up blocks by height.
-    /// Resolves to a position within the slab.
-    memory_map index_file_;
-    record_manager index_manager_;
+    // Table used for looking up blocks by height.
+    // Each record resolves to a slab via file_offset.
+    memory_map block_index_file_;
+    record_manager block_index_manager_;
+
+    // Association table between blocks and their contained transactions.
+    // Each record resolves to a slab via file_offset.
+    memory_map tx_index_file_;
+    record_manager tx_index_manager_;
 
     // Guard against concurrent update of a range of block indexes.
-    mutable upgrade_mutex mutex_;
+    mutable upgrade_mutex index_mutex_;
 
-    // This provides atomicity for height.
+    // This provides atomicity for checksum, tx_start, tx_count, confirmed.
     mutable shared_mutex metadata_mutex_;
 };
 

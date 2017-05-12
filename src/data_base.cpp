@@ -162,8 +162,8 @@ void data_base::start()
     // TODO: parameterize initial file sizes as record count or slab bytes?
 
     blocks_ = std::make_shared<block_database>(block_table, block_index,
-        settings_.block_table_buckets, settings_.file_growth_rate,
-        remap_mutex_);
+        transaction_index, settings_.block_table_buckets,
+        settings_.file_growth_rate, remap_mutex_);
 
     transactions_ = std::make_shared<transaction_database>(transaction_table,
         settings_.transaction_table_buckets, settings_.file_growth_rate,
@@ -271,7 +271,7 @@ static inline size_t get_next_height(const block_database& blocks)
 static inline hash_digest get_previous_hash(const block_database& blocks,
     size_t height)
 {
-    return height == 0 ? null_hash : blocks.get(height - 1).header().hash();
+    return height == 0 ? null_hash : blocks.get(height - 1).hash();
 }
 
 code data_base::verify_insert(const block& block, size_t height)
@@ -337,7 +337,7 @@ code data_base::insert(const chain::block& block, size_t height)
     if (!push_transactions(block, height) || !push_heights(block, height))
         return error::operation_failed;
 
-    blocks_->store(block, height);
+    blocks_->store(block, height, true);
     synchronize();
     return error::success;
 }
@@ -391,7 +391,7 @@ code data_base::push(const block& block, size_t height)
     if (!push_transactions(block, height) || !push_heights(block, height))
         return error::operation_failed;
 
-    blocks_->store(block, height);
+    blocks_->store(block, height, true);
     synchronize();
 
     return end_write() ? error::success : error::operation_failed;
@@ -412,7 +412,7 @@ bool data_base::push_transactions(const chain::block& block, size_t height,
         position = ceiling_add(position, buckets))
     {
         const auto& tx = txs[position];
-        transactions_->store(tx, height, position);
+        tx.validation.offset = transactions_->store(tx, height, position);
 
         if (height < settings_.index_start_height)
             continue;
@@ -533,21 +533,20 @@ bool data_base::pop(block& out_block)
     if (!block)
         return false;
 
-    const auto count = block.transaction_count();
     transaction::list transactions;
-    transactions.reserve(count);
+    transactions.reserve(block.transaction_count());
+    const auto offsets = block.transaction_offsets();
+    size_t position = 0;
 
-    for (size_t position = 0; position < count; ++position)
+    for (const auto offset: block.transaction_offsets())
     {
-        auto tx_hash = block.transaction_hash(position);
-        const auto tx = transactions_->get(tx_hash, height, true);
+        const auto tx = transactions_->get(offset);
 
-        if (!tx || (tx.height() != height) || (tx.position() != position))
+        // All transactions should be confirmed.
+        if (!tx || (tx.height() != height) || (tx.position() != position++))
             return false;
 
-        // Deserialize transaction and move it to the block.
-        // The tx move/copy constructors do not currently transfer cache.
-        transactions.emplace_back(tx.transaction(), std::move(tx_hash));
+        transactions.push_back(tx.transaction());
     }
 
     // Loop txs backwards, the reverse of how they were added.
@@ -564,7 +563,7 @@ bool data_base::pop(block& out_block)
             return false;
     }
 
-    if (!blocks_->unlink(height))
+    if (!blocks_->unconfirm(height))
         return false;
 
     // Synchronise everything that was changed.
@@ -724,10 +723,10 @@ void data_base::handle_push_transactions(const code& ec, block_const_ptr block,
         return;
     }
 
-    // Push the block header and synchronize to complete the block.
-    blocks_->store(*block, height);
+    // Store the block as confirmed.
+    blocks_->store(*block, height, true);
 
-    // Synchronize tx updates, indexes and block.
+    // Synchronize table and index updates.
     synchronize();
 
     // Set push end time for the block.
@@ -745,7 +744,7 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
     size_t top;
     out_blocks->clear();
 
-    const auto result = blocks_->get(fork_hash);
+    const auto result = blocks_->get(fork_hash, true);
 
     // The fork point does not exist or failed to get it or the top, fail.
     if (!result || !blocks_->top(top))

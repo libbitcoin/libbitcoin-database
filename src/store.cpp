@@ -31,8 +31,9 @@ using namespace bc::database;
 // Database file names.
 #define FLUSH_LOCK "flush_lock"
 #define EXCLUSIVE_LOCK "exclusive_lock"
-#define BLOCK_TABLE "block_table"
 #define BLOCK_INDEX "block_index"
+#define BLOCK_TABLE "block_table"
+#define TRANSACTION_INDEX "transaction_index"
 #define TRANSACTION_TABLE "transaction_table"
 #define SPEND_TABLE "spend_table"
 #define HISTORY_TABLE "history_table"
@@ -66,14 +67,15 @@ store::store(const path& prefix, bool with_indexes, bool flush_each_write)
     exclusive_lock_(prefix / EXCLUSIVE_LOCK),
 
     // Content store.
-    block_table(prefix / BLOCK_TABLE),
     block_index(prefix / BLOCK_INDEX),
+    block_table(prefix / BLOCK_TABLE),
+    transaction_index(prefix / TRANSACTION_INDEX),
     transaction_table(prefix / TRANSACTION_TABLE),
 
     // Optional indexes.
-    spend_table(prefix / SPEND_TABLE),
-    history_table(prefix / HISTORY_TABLE),
     history_rows(prefix / HISTORY_ROWS),
+    history_table(prefix / HISTORY_TABLE),
+    spend_table(prefix / SPEND_TABLE),
     stealth_rows(prefix / STEALTH_ROWS)
 {
 }
@@ -87,7 +89,8 @@ bool store::create()
     const auto created =
         create(block_table) &&
         create(block_index) &&
-        create(transaction_table);
+        create(transaction_table) &&
+        create(transaction_index);
 
     if (!use_indexes)
         return created;

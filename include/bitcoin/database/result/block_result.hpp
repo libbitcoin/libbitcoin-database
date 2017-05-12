@@ -24,34 +24,44 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/// Deferred read block result.
+/// Partially-deferred read block result.
+/// Values subject to change are not read-deferred.
+/// Transaction values are either empty or permanent.
 class BCD_API block_result
 {
 public:
-    block_result();
-    block_result(const memory_ptr slab);
-    block_result(const memory_ptr slab, hash_digest&& hash, uint32_t height);
-    block_result(const memory_ptr slab, const hash_digest& hash,
-        uint32_t height);
+    block_result(const record_manager& index_manager);
 
-    /// True if this block result is valid (found).
+    block_result(const record_manager& index_manager, const memory_ptr slab,
+        hash_digest&& hash, uint32_t height, uint32_t checksum,
+        array_index tx_start, size_t tx_count, bool confirmed);
+
+    block_result(const record_manager& index_manager, const memory_ptr slab,
+        const hash_digest& hash, uint32_t height, uint32_t checksum,
+        array_index tx_start, size_t tx_count, bool confirmed);
+
+    /// True if the requested block exists.
     operator bool() const;
 
     /// Reset the slab pointer so that no lock is held.
     void reset();
+
+    /// True if the block is presently in the strong chain.
+    bool confirmed() const;
+
+    /// The height of the block in its chain.
+    size_t height() const;
 
     /// The block header hash (from cache).
     const hash_digest& hash() const;
 
     /// The block header.
     chain::header header() const;
-
-    /// The height of this block in the chain.
-    size_t height() const;
 
     /// The header.bits of this block.
     uint32_t bits() const;
@@ -62,19 +72,24 @@ public:
     /// The header.version of this block.
     uint32_t version() const;
 
-    /// The number of transactions in this block.
+    /// The full block p2p message checksum (presumed invalid if zero).
+    uint32_t checksum() const;
+
+    /// The number of transactions in this block (may be zero).
     size_t transaction_count() const;
 
-    /// A transaction hash where index < transaction_count.
-    hash_digest transaction_hash(size_t index) const;
-
-    /// An ordered set of all transaction hashes in the block.
-    hash_list transaction_hashes() const;
+    /// Get the set of transaction offsets into the tx table for the block.
+    offset_list transaction_offsets() const;
 
 private:
     memory_ptr slab_;
-    const uint32_t height_;
     const hash_digest hash_;
+    const uint32_t height_;
+    const uint32_t checksum_;
+    const array_index tx_start_;
+    const size_t tx_count_;
+    const bool confirmed_;
+    const record_manager& index_manager_;
 };
 
 } // namespace database
