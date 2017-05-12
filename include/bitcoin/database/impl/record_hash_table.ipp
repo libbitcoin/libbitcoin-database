@@ -28,8 +28,9 @@
 namespace libbitcoin {
 namespace database {
 
-////template <typename KeyType>
-////const array_index record_hash_table<KeyType>::not_found = 0;
+// Valid block indexes must not reach max_uint32.
+template <typename KeyType>
+const array_index record_hash_table<KeyType>::not_found = max_uint32;
 
 template <typename KeyType>
 record_hash_table<KeyType>::record_hash_table(
@@ -47,7 +48,7 @@ array_index record_hash_table<KeyType>::store(const KeyType& key,
 {
     // Allocate and populate new unlinked record.
     record_row<KeyType> record(manager_);
-    const auto position = record.create(key, write);
+    const auto index = record.create(key, write);
 
     // For a given key in this hash table new item creation must be atomic from
     // read of the old value to write of the new.
@@ -59,14 +60,44 @@ array_index record_hash_table<KeyType>::store(const KeyType& key,
     record.link(read_bucket_value(key));
 
     // Link header to new record as the new first.
-    link(key, position);
+    link(key, index);
 
     mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
 
-    // TODO: untested.
-    // Return the file offset of the record data segment.
-    return position + record_row<KeyType>::prefix_size;
+    // Return the array index of the new record (starts at key, not value).
+    return index;
+}
+
+// Execute a writer against a key's buffer if the key is found.
+// Return the array index of the found value (or zero).
+template <typename KeyType>
+array_index record_hash_table<KeyType>::update(const KeyType& key,
+    write_function write)
+{
+    // Find start item...
+    auto current = read_bucket_value(key);
+
+    // Iterate through list...
+    while (current != header_.empty)
+    {
+        const record_row<KeyType> item(manager_, current);
+
+        // Found.
+        if (item.compare(key))
+        {
+            const auto data = REMAP_ADDRESS(item.data());
+            auto serial = make_unsafe_serializer(data);
+            write(serial);
+            return current;
+        }
+
+        const auto previous = current;
+        current = item.next_index();
+        BITCOIN_ASSERT(previous != current);
+    }
+
+    return not_found;
 }
 
 // This is limited to returning the first of multiple matching key values.

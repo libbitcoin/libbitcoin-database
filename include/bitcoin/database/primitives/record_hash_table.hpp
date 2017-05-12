@@ -64,13 +64,17 @@ public:
     typedef KeyType key_type;
     typedef serializer<uint8_t*>::functor write_function;
 
-    ////static const array_index not_found;
+    static const array_index not_found;
 
     record_hash_table(record_hash_table_header& header, record_manager& manager);
 
     /// Execute a write. The provided write() function must write the correct
     /// number of bytes (record_size - key_size - sizeof(array_index)).
     array_index store(const KeyType& key, write_function write);
+
+    /// Execute a writer against a key's buffer if the key is found.
+    /// Returns the array index of the found value (or zero).
+    array_index update(const KeyType& key, write_function write);
 
     /// Find the record for a given key.
     /// Returns a null pointer if not found.
