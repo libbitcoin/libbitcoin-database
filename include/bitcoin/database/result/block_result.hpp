@@ -37,18 +37,18 @@ class BCD_API block_result
 public:
     block_result(const record_manager& index_manager);
 
-    block_result(const record_manager& index_manager, const memory_ptr slab,
+    block_result(const record_manager& index_manager, memory_ptr record,
         hash_digest&& hash, uint32_t height, uint32_t checksum,
         array_index tx_start, size_t tx_count, bool confirmed);
 
-    block_result(const record_manager& index_manager, const memory_ptr slab,
+    block_result(const record_manager& index_manager, memory_ptr record,
         const hash_digest& hash, uint32_t height, uint32_t checksum,
         array_index tx_start, size_t tx_count, bool confirmed);
 
     /// True if the requested block exists.
     operator bool() const;
 
-    /// Reset the slab pointer so that no lock is held.
+    /// Reset the record pointer so that no lock is held.
     void reset();
 
     /// True if the block is presently in the strong chain.
@@ -82,7 +82,7 @@ public:
     offset_list transaction_offsets() const;
 
 private:
-    memory_ptr slab_;
+    memory_ptr record_;
     const hash_digest hash_;
     const uint32_t height_;
     const uint32_t checksum_;

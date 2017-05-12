@@ -40,7 +40,7 @@ static constexpr auto time_offset = version_size + previous_size + merkle_size;
 static constexpr auto bits_offset = time_offset + time_size;
 
 block_result::block_result(const record_manager& index_manager)
-  : slab_(nullptr),
+  : record_(nullptr),
     hash_(null_hash),
     height_(0),
     checksum_(0),
@@ -52,9 +52,9 @@ block_result::block_result(const record_manager& index_manager)
 }
 
 block_result::block_result(const record_manager& index_manager,
-    const memory_ptr slab, hash_digest&& hash, uint32_t height,
+    memory_ptr record, hash_digest&& hash, uint32_t height,
     uint32_t checksum, array_index tx_start, size_t tx_count, bool confirmed)
-  : slab_(slab),
+  : record_(record),
     hash_(std::move(hash)),
     height_(height),
     checksum_(checksum),
@@ -66,9 +66,9 @@ block_result::block_result(const record_manager& index_manager,
 }
 
 block_result::block_result(const record_manager& index_manager,
-    const memory_ptr slab, const hash_digest& hash, uint32_t height,
+    memory_ptr record, const hash_digest& hash, uint32_t height,
     uint32_t checksum, array_index tx_start, size_t tx_count, bool confirmed)
-  : slab_(slab),
+  : record_(record),
     hash_(hash),
     height_(height),
     checksum_(checksum),
@@ -81,12 +81,12 @@ block_result::block_result(const record_manager& index_manager,
 
 block_result::operator bool() const
 {
-    return slab_ != nullptr;
+    return record_ != nullptr;
 }
 
 void block_result::reset()
 {
-    slab_.reset();
+    record_.reset();
 }
 
 bool block_result::confirmed() const
@@ -106,29 +106,29 @@ const hash_digest& block_result::hash() const
 
 chain::header block_result::header() const
 {
-    BITCOIN_ASSERT(slab_);
-    auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(slab_));
+    BITCOIN_ASSERT(record_);
+    auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(record_));
     return header::factory_from_data(deserial, hash_);
 }
 
 uint32_t block_result::bits() const
 {
-    BITCOIN_ASSERT(slab_);
-    const auto memory = REMAP_ADDRESS(slab_);
+    BITCOIN_ASSERT(record_);
+    const auto memory = REMAP_ADDRESS(record_);
     return from_little_endian_unsafe<uint32_t>(memory + bits_offset);
 }
 
 uint32_t block_result::timestamp() const
 {
-    BITCOIN_ASSERT(slab_);
-    const auto memory = REMAP_ADDRESS(slab_);
+    BITCOIN_ASSERT(record_);
+    const auto memory = REMAP_ADDRESS(record_);
     return from_little_endian_unsafe<uint32_t>(memory + time_offset);
 }
 
 uint32_t block_result::version() const
 {
-    BITCOIN_ASSERT(slab_);
-    const auto memory = REMAP_ADDRESS(slab_);
+    BITCOIN_ASSERT(record_);
+    const auto memory = REMAP_ADDRESS(record_);
     return from_little_endian_unsafe<uint32_t>(memory + version_offset);
 }
 
@@ -148,13 +148,13 @@ offset_list block_result::transaction_offsets() const
     if (end > index_manager_.count())
         return{};
 
-    const auto slab = index_manager_.get(tx_start_);
-    if (!slab)
+    const auto records = index_manager_.get(tx_start_);
+    if (!records)
         return{};
 
     offset_list value;
     value.reserve(tx_count_);
-    auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(slab));
+    auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(records));
 
     for (size_t index = 0; index < tx_count_; ++index)
         value.push_back(deserial.read_8_bytes_little_endian());

@@ -43,6 +43,7 @@ class BCD_API transaction_database
 {
 public:
     typedef boost::filesystem::path path;
+    typedef slab_hash_table<hash_digest> slab_map;
     typedef std::shared_ptr<shared_mutex> mutex_ptr;
 
     /// Sentinel for use in tx position to indicate unconfirmed.
@@ -103,8 +104,6 @@ public:
     bool flush() const;
 
 private:
-    typedef slab_hash_table<hash_digest> slab_map;
-
     memory_ptr find(const hash_digest& hash, size_t maximum_height,
         bool require_confirmed) const;
 

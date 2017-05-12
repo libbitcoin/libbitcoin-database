@@ -22,6 +22,7 @@
 #include <cstddef>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/result/block_result.hpp>
@@ -47,45 +48,53 @@ using namespace bc::chain;
 //  [ tx_count:2  - atomic ] (atomic with start, both zeroed if empty)
 //  [ confirmed:1 - atomic ] (zero if not in main branch)
 
-static const auto prefix_size = slab_row<hash_digest>::prefix_size;
-static const auto header_size = header::satoshi_fixed_size();
+static BC_CONSTEXPR auto prefix_size = record_row<hash_digest>::prefix_size;
+static BC_CONSTEXPR auto header_size = header::satoshi_fixed_size();
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto checksum_size = sizeof(uint32_t);
 static constexpr auto tx_start_size = sizeof(uint32_t);
 static constexpr auto tx_count_size = sizeof(uint16_t);
 static constexpr auto confirmed_size = sizeof(uint8_t);
-static const auto block_size = header_size + height_size + checksum_size +
-    tx_start_size + tx_count_size + confirmed_size;
+static BC_CONSTEXPR auto block_size = header_size + height_size +
+    checksum_size + tx_start_size + tx_count_size + confirmed_size;
 
 static constexpr auto no_checksum = 0u;
 static constexpr auto confirmed_value = 1u;
 static constexpr auto unconfirmed_value = 0u;
 
-// These are used for both block and tx index.
-static constexpr auto index_header_size = 0u;
-static constexpr auto index_record_size = sizeof(file_offset);
+static constexpr auto block_index_header_size = 0u;
+static constexpr auto block_index_record_size = sizeof(array_index);
 
-// Valid file offsets should never be zero.
-const file_offset block_database::empty = 0;
+static constexpr auto tx_index_header_size = 0u;
+static constexpr auto tx_index_record_size = sizeof(file_offset);
+
+// The block database keys off of block hash and has block value.
+static BC_CONSTEXPR auto record_size = hash_table_record_size<hash_digest>(
+    block_size);
+
+// Valid block indexes must not reach max_uint32.
+const array_index block_database::empty = max_uint32;
 
 // Blocks uses a hash table and two array indexes, all O(1).
 block_database::block_database(const path& map_filename,
     const path& block_index_filename, const path& tx_index_filename,
     size_t buckets, size_t expansion, mutex_ptr mutex)
-  : initial_map_file_size_(slab_hash_table_header_size(buckets) +
-        minimum_slabs_size),
+  : initial_map_file_size_(record_hash_table_header_size(buckets) +
+        minimum_records_size),
 
     lookup_file_(map_filename, mutex, expansion),
     lookup_header_(lookup_file_, buckets),
-    lookup_manager_(lookup_file_, slab_hash_table_header_size(buckets)),
+    lookup_manager_(lookup_file_, record_hash_table_header_size(buckets),
+        record_size),
     lookup_map_(lookup_header_, lookup_manager_),
 
     block_index_file_(block_index_filename, mutex, expansion),
-    block_index_manager_(block_index_file_, index_header_size,
-        index_record_size),
+    block_index_manager_(block_index_file_, block_index_header_size,
+        block_index_record_size),
 
     tx_index_file_(tx_index_filename, mutex, expansion),
-    tx_index_manager_(tx_index_file_, index_header_size, index_record_size)
+    tx_index_manager_(tx_index_file_, tx_index_header_size,
+        tx_index_record_size)
 {
 }
 
@@ -176,12 +185,15 @@ block_result block_database::get(size_t height) const
         return{ tx_index_manager_ };
 
     const auto height32 = static_cast<uint32_t>(height);
-    const auto slab = lookup_manager_.get(get_offset(height));
-    const auto memory = REMAP_ADDRESS(slab);
+    auto record = lookup_manager_.get(get_index(height));
+    const auto prefix = REMAP_ADDRESS(record);
+
+    // Advance the record row entry past the key and link to the record data.
+    REMAP_INCREMENT(record, prefix_size);
+    auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(record));
 
     // The header and height never change after the block is reachable.
-    auto deserial = make_unsafe_deserializer(memory + header_size +
-        height_size);
+    deserial.skip(header_size + height_size);
 
     ///////////////////////////////////////////////////////////////////////////
     metadata_mutex_.lock_shared();
@@ -192,23 +204,25 @@ block_result block_database::get(size_t height) const
     metadata_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 
-    // HACK: back up into the slab to obtain the hash/key (optimization).
-    auto reader = make_unsafe_deserializer(memory - prefix_size);
+    // HACK: back up into the record to obtain the hash/key (optimization).
+    auto reader = make_unsafe_deserializer(prefix);
 
-    // Reads are not deferred for updateable values as atomicity is required.
-    return{ tx_index_manager_, slab, reader.read_hash(), height32, checksum,
+    // Reads are not deferred for updatable values as atomicity is required.
+    return{ tx_index_manager_, record, reader.read_hash(), height32, checksum,
         tx_start, tx_count, confirmed };
 }
 
 block_result block_database::get(const hash_digest& hash,
     bool require_confirmed) const
 {
-    const auto slab = lookup_map_.find(hash);
+    // This is offset to the data section of the record row entry.
+    const auto record = lookup_map_.find(hash);
 
-    if (!slab)
+    if (!record)
         return{ tx_index_manager_ };
 
-    const auto memory = REMAP_ADDRESS(slab);
+    const auto memory = REMAP_ADDRESS(record);
+    ////const auto prefix_start = memory - prefix_size;
 
     // The header and height never change after the block is reachable.
     auto deserial = make_unsafe_deserializer(memory + header_size);
@@ -226,8 +240,8 @@ block_result block_database::get(const hash_digest& hash,
     if (require_confirmed && !confirmed)
         return{ tx_index_manager_ };
 
-    // Reads are not deferred for updateable values as atomicity is required.
-    return{ tx_index_manager_, slab, hash, height, checksum, tx_start,
+    // Reads are not deferred for updatable values as atomicity is required.
+    return{ tx_index_manager_, record, hash, height, checksum, tx_start,
         tx_count, confirmed };
 }
 
@@ -245,8 +259,9 @@ array_index block_database::associate(const transaction::list& transactions)
 
     for (const auto& tx: transactions)
     {
-        BITCOIN_ASSERT(tx.validation.offset != slab_map::not_found);
-        serial.write_8_bytes_little_endian(tx.validation.offset);
+        const auto offset = tx.validation.offset;
+        BITCOIN_ASSERT(offset != transaction_database::slab_map::not_found);
+        serial.write_8_bytes_little_endian(offset);
     }
 
     return start;
@@ -254,8 +269,7 @@ array_index block_database::associate(const transaction::list& transactions)
 
 // Save each transaction offset into the transaction_index and return the index
 // of the first entry. Offsets must be cached in short_id metadata.
-array_index block_database::associate(
-    const message::compact_block::short_id_list& ids)
+array_index block_database::associate(const short_id_list& ids)
 {
     BITCOIN_ASSERT_MSG(false, "not implemented");
 
@@ -269,8 +283,9 @@ array_index block_database::associate(
     for (const auto& id: ids)
     {
         // TODO: create and employ short_id type with offset metadata.
-        ////BITCOIN_ASSERT(id.validation.offset != slab_map::not_found);
-        ////serial.write_8_bytes_little_endian(id.validation.offset);
+        ////const auto offset = id.validation.offset;
+        ////BITCOIN_ASSERT(offset != transaction_database::slab_map::not_found);
+        ////serial.write_8_bytes_little_endian(offset);
     }
 
     return start;
@@ -301,13 +316,13 @@ void block_database::store(const chain::header& header, size_t height,
         serial.write_byte(confirmed ? confirmed_value : unconfirmed_value);
     };
 
-    const auto offset = lookup_map_.store(header.hash(), write, block_size);
+    const auto index = lookup_map_.store(header.hash(), write);
 
     if (!confirmed)
         return;
 
-    // TODO: consider returning the offset vs. setting it here.
-    write_offset(offset, height32);
+    // TODO: consider returning the index vs. setting it here.
+    write_index(index, height32);
 }
 
 void block_database::store(const chain::header& header, size_t height)
@@ -363,16 +378,16 @@ bool block_database::update(const hash_digest& hash, size_t height,
         ///////////////////////////////////////////////////////////////////////
     };
 
-    const auto offset = lookup_map_.update(hash, update);
+    const auto index = lookup_map_.update(hash, update);
 
-    if (offset == slab_map::not_found)
+    if (index == record_map::not_found)
         return false;
 
     if (!confirmed)
         return true;
 
-    // TODO: consider returning the offset vs. setting it here.
-    write_offset(offset, height32);
+    // TODO: consider returning the index vs. setting it here.
+    write_index(index, height32);
     return true;
 }
 
@@ -381,6 +396,7 @@ bool block_database::update(const chain::block& block, size_t height,
 {
     // TODO: cache block.checksum() from message.
     const auto checksum = no_checksum;
+
     const auto& txs = block.transactions();
     return update(block.hash(), height, checksum, associate(txs), txs.size(),
         confirmed);
@@ -410,7 +426,7 @@ bool block_database::confirm(const hash_digest& hash, bool confirm)
         ///////////////////////////////////////////////////////////////////////
     };
 
-    return lookup_map_.update(hash, update) != slab_map::not_found;
+    return lookup_map_.update(hash, update) != record_map::not_found;
 }
 
 bool block_database::unconfirm(size_t from_height)
@@ -442,8 +458,7 @@ bool block_database::unconfirm(size_t from_height)
 // Safe for parallel write.
 bool block_database::exists(size_t height) const
 {
-    return height < block_index_manager_.count() &&
-        get_offset(height) != empty;
+    return height < block_index_manager_.count() && get_index(height) != empty;
 }
 
 // Check for gaps following parallel write (i.e. restart).
@@ -452,7 +467,7 @@ bool block_database::gaps(heights& out_gaps) const
     const auto count = block_index_manager_.count();
 
     for (size_t height = 0; height < count; ++height)
-        if (get_offset(height) == empty)
+        if (get_index(height) == empty)
             out_gaps.push_back(height);
 
     return true;
@@ -463,14 +478,14 @@ void block_database::zeroize(array_index first, array_index count)
 {
     for (auto index = first; index < (first + count); ++index)
     {
-        const auto slab = block_index_manager_.get(index);
-        auto serial = make_unsafe_serializer(REMAP_ADDRESS(slab));
-        serial.write_8_bytes_little_endian(empty);
+        const auto record = block_index_manager_.get(index);
+        auto serial = make_unsafe_serializer(REMAP_ADDRESS(record));
+        serial.write_4_bytes_little_endian(empty);
     }
 }
 
 // The lock is necessary for parallel import and otherwise inconsequential.
-void block_database::write_offset(file_offset offset, array_index height)
+void block_database::write_index(array_index index, array_index height)
 {
     BITCOIN_ASSERT(height < max_uint32);
     const auto new_count = height + 1;
@@ -494,18 +509,18 @@ void block_database::write_offset(file_offset offset, array_index height)
     }
 
     // Guard write to prevent subsequent zeroize from erasing.
-    const auto slab = block_index_manager_.get(height);
-    auto serial = make_unsafe_serializer(REMAP_ADDRESS(slab));
-    serial.write_8_bytes_little_endian(offset);
+    const auto record = block_index_manager_.get(height);
+    auto serial = make_unsafe_serializer(REMAP_ADDRESS(record));
+    serial.write_4_bytes_little_endian(index);
 
     index_mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
 }
 
-file_offset block_database::get_offset(array_index height) const
+array_index block_database::get_index(array_index height) const
 {
-    const auto slab = block_index_manager_.get(height);
-    return from_little_endian_unsafe<file_offset>(REMAP_ADDRESS(slab));
+    const auto record = block_index_manager_.get(height);
+    return from_little_endian_unsafe<array_index>(REMAP_ADDRESS(record));
 }
 
 // The index of the highest existing block, independent of gaps.
