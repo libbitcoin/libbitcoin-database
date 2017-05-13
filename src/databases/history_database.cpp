@@ -194,7 +194,7 @@ history_compact::list history_database::get(const short_hash& key,
             static_cast<point_kind>(deserial.read_byte()),
 
             // point
-            point::factory_from_data(deserial, false),
+            point::factory(deserial, false),
 
             // height
             deserial.read_4_bytes_little_endian(),

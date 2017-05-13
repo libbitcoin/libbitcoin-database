@@ -149,7 +149,7 @@ chain::output transaction_result::output(uint32_t index) const
     }
 
     // Read and return the target output (including spender height).
-    return chain::output::factory_from_data(deserial, false);
+    return chain::output::factory(deserial, false);
 }
 
 // Spentness is unguarded and will be inconsistent during write.
@@ -158,7 +158,7 @@ chain::transaction transaction_result::transaction() const
     BITCOIN_ASSERT(slab_);
     const auto tx_start = REMAP_ADDRESS(slab_) + height_size + position_size;
     auto deserial = make_unsafe_deserializer(tx_start);
-    return transaction::factory_from_data(deserial, hash_);
+    return transaction::factory(deserial, hash_);
 }
 
 } // namespace database

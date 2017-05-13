@@ -108,7 +108,7 @@ chain::header block_result::header() const
 {
     BITCOIN_ASSERT(record_);
     auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(record_));
-    return header::factory_from_data(deserial, hash_);
+    return header::factory(deserial, hash_);
 }
 
 uint32_t block_result::bits() const
