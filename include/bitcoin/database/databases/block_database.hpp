@@ -132,7 +132,7 @@ private:
     // Write block hash table index into the block index.
     void write_index(array_index index, array_index height);
 
-    /// Use block index to get block hash table index from height.
+    // Use block index to get block hash table index from height.
     array_index get_index(array_index height) const;
 
     // The starting size of the hash table, used by create.
