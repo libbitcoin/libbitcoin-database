@@ -58,71 +58,95 @@ BOOST_FIXTURE_TEST_SUITE(database_tests, block_database_directory_setup_fixture)
 BOOST_AUTO_TEST_CASE(block_database__test)
 {
     auto block0 = block::genesis_mainnet();
-    block0.transactions().push_back(random_tx(0));
-    block0.transactions().push_back(random_tx(1));
+    block0.set_transactions(
+    {
+        random_tx(0),
+        random_tx(1)
+    });
     //const auto h0 = block0.header.hash();
 
     block block1;
-    block1.set_header(header(block0.header()));
+    block1.set_header(block0.header());
     block1.header().set_nonce(4);
-    block1.transactions().push_back(random_tx(2));
-    block1.transactions().push_back(random_tx(3));
-    block1.transactions().push_back(random_tx(4));
-    block1.transactions().push_back(random_tx(5));
+    block1.set_transactions(
+    {
+        random_tx(2),
+        random_tx(3),
+        random_tx(4),
+        random_tx(5)
+    });
     //const auto h1 = block1.header.hash();
 
     block block2;
-    block2.set_header(header(block0.header()));
+    block2.set_header(block0.header());
     block2.header().set_nonce(110);
-    block2.transactions().push_back(random_tx(6));
-    block2.transactions().push_back(random_tx(7));
-    block2.transactions().push_back(random_tx(8));
-    block2.transactions().push_back(random_tx(9));
-    block2.transactions().push_back(random_tx(10));
+    block2.set_transactions(
+    {
+        random_tx(6),
+        random_tx(7),
+        random_tx(8),
+        random_tx(9),
+        random_tx(10)
+    });
     const auto h2 = block2.hash();
 
     block block3;
-    block3.set_header(header(block0.header()));
+    block3.set_header(block0.header());
     block3.header().set_nonce(88);
-    block3.transactions().push_back(random_tx(11));
-    block3.transactions().push_back(random_tx(12));
-    block3.transactions().push_back(random_tx(13));
+    block3.set_transactions(
+    {
+        random_tx(11),
+        random_tx(12),
+        random_tx(13)
+    });
     //const auto h3 = block3.hash();
 
     block block4a;
-    block4a.set_header(header(block0.header()));
+    block4a.set_header(block0.header());
     block4a.header().set_nonce(63);
-    block4a.transactions().push_back(random_tx(14));
-    block4a.transactions().push_back(random_tx(15));
-    block4a.transactions().push_back(random_tx(16));
+    block4a.set_transactions(
+    {
+        random_tx(14),
+        random_tx(15),
+        random_tx(16)
+    });
     const auto h4a = block4a.hash();
 
     block block5a;
     block5a.set_header(header(block0.header()));
     block5a.header().set_nonce(99);
-    block5a.transactions().push_back(random_tx(17));
-    block5a.transactions().push_back(random_tx(18));
-    block5a.transactions().push_back(random_tx(19));
-    block5a.transactions().push_back(random_tx(20));
-    block5a.transactions().push_back(random_tx(21));
+    block2.set_transactions(
+    {
+        random_tx(17),
+        random_tx(18),
+        random_tx(19),
+        random_tx(20),
+        random_tx(21)
+    });
     const auto h5a = block5a.hash();
 
     block block4b;
-    block4b.set_header(header(block0.header()));
+    block4b.set_header(block0.header());
     block4b.header().set_nonce(633);
-    block4b.transactions().push_back(random_tx(22));
-    block4b.transactions().push_back(random_tx(23));
-    block4b.transactions().push_back(random_tx(24));
+    block2.set_transactions(
+    {
+        random_tx(22),
+        random_tx(23),
+        random_tx(24)
+    });
     const auto h4b = block4b.hash();
 
     block block5b;
-    block5b.set_header(header(block0.header()));
+    block5b.set_header(block0.header());
     block5b.header().set_nonce(222);
-    block5b.transactions().push_back(random_tx(25));
-    block5b.transactions().push_back(random_tx(26));
-    block5b.transactions().push_back(random_tx(27));
-    block5b.transactions().push_back(random_tx(28));
-    block5b.transactions().push_back(random_tx(29));
+    block2.set_transactions(
+    {
+        random_tx(25),
+        random_tx(26),
+        random_tx(27),
+        random_tx(28),
+        random_tx(29)
+    });
     const auto h5b = block5b.hash();
 
     store::create(DIRECTORY "/block_index");
@@ -146,6 +170,8 @@ BOOST_AUTO_TEST_CASE(block_database__test)
         auto res_h2 = db.get(h2, true);
         BOOST_REQUIRE(res_h2);
         BOOST_REQUIRE(res_h2.hash() == h2);
+
+        // TODO: set tx association into metadata and validate here.
         ////BOOST_REQUIRE(res_h2.transaction_hash(0) == block2.transactions()[0].hash());
         ////BOOST_REQUIRE(res_h2.transaction_hash(1) == block2.transactions()[1].hash());
         ////BOOST_REQUIRE(res_h2.transaction_hash(2) == block2.transactions()[2].hash());
@@ -202,6 +228,8 @@ BOOST_AUTO_TEST_CASE(block_database__test)
         auto res5b = db.get(5);
         BOOST_REQUIRE(res5b);
         BOOST_REQUIRE(res5b.hash() == h5b);
+
+        // TODO: set tx association into metadata and validate here.
         ////BOOST_REQUIRE(res5b.transaction_hash(0) == block5b.transactions()[0].hash());
         ////BOOST_REQUIRE(res5b.transaction_hash(1) == block5b.transactions()[1].hash());
         ////BOOST_REQUIRE(res5b.transaction_hash(2) == block5b.transactions()[2].hash());
