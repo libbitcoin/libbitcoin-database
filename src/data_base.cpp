@@ -42,10 +42,7 @@ using namespace bc::wallet;
 #define NAME "data_base"
 
 // A failure after begin_write is returned without calling end_write.
-// This purposely leaves the local flush lock (as enabled) and inverts the
-// sequence lock. The former prevents usagage after restart and the latter
-// prevents continuation of reads and writes while running. Ideally we
-// want to exit without clearing the global flush lock (as enabled).
+// This leaves the local flush lock enabled, preventing usage after restart.
 
 // Construct.
 // ----------------------------------------------------------------------------
@@ -159,8 +156,6 @@ bool data_base::close()
 // protected
 void data_base::start()
 {
-    // TODO: parameterize initial file sizes as record count or slab bytes?
-
     blocks_ = std::make_shared<block_database>(block_table, block_index,
         transaction_index, settings_.block_table_buckets,
         settings_.file_growth_rate, remap_mutex_);
@@ -204,11 +199,9 @@ bool data_base::flush() const
             history_->flush() &&
             stealth_->flush();
 
-    // Just for the log.
-    code ec(flushed ? error::success : error::operation_failed);
-
     LOG_DEBUG(LOG_DATABASE)
-        << "Write flushed to disk: " << ec.message();
+        << "Write flushed to disk: "
+        << code(flushed ? error::success : error::operation_failed).message();
 
     return flushed;
 }
@@ -274,6 +267,7 @@ static inline hash_digest get_previous_hash(const block_database& blocks,
     return height == 0 ? null_hash : blocks.get(height - 1).hash();
 }
 
+// This store-level check is a failsafe for blockchain behavior.
 code data_base::verify_insert(const block& block, size_t height)
 {
     if (block.transactions().empty())
@@ -285,6 +279,7 @@ code data_base::verify_insert(const block& block, size_t height)
     return error::success;
 }
 
+// This store-level check is a failsafe for blockchain behavior.
 code data_base::verify_push(const block& block, size_t height)
 {
     if (block.transactions().empty())
@@ -300,6 +295,7 @@ code data_base::verify_push(const block& block, size_t height)
     return error::success;
 }
 
+// This store-level check is a failsafe for blockchain behavior.
 code data_base::verify_push(const transaction& tx)
 {
     const auto result = transactions_->get(tx.hash(), max_size_t, false);
@@ -355,7 +351,7 @@ code data_base::push(const chain::transaction& tx, uint32_t forks)
     if (ec)
         return ec;
 
-    // Begin Flush Lock and Sequential Lock
+    // Begin Flush Lock
     //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     if (!begin_write())
         return error::operation_failed;
@@ -365,7 +361,7 @@ code data_base::push(const chain::transaction& tx, uint32_t forks)
     transactions_->synchronize();
 
     return end_write() ? error::success : error::operation_failed;
-    // End Sequential Lock and Flush Lock
+    // End Flush Lock
     //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -383,7 +379,7 @@ code data_base::push(const block& block, size_t height)
     if (ec)
         return ec;
 
-    // Begin Flush Lock and Sequential Lock
+    // Begin Flush Lock
     //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     if (!begin_write())
         return error::operation_failed;
@@ -395,7 +391,7 @@ code data_base::push(const block& block, size_t height)
     synchronize();
 
     return end_write() ? error::success : error::operation_failed;
-    // End Sequential Lock and Flush Lock
+    // End Flush Lock
     //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -450,15 +446,24 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
     {
         const auto& input = inputs[index];
         const input_point point{ tx_hash, index };
-        spends_->store(input.previous_output(), point);
+        const auto& prevout = input.previous_output();
+        spends_->store(prevout, point);
 
-        // TODO: use a vector result to extract sign_multisig.
-        const auto address = input.address();
-        if (!address)
-            continue;
+        // If the prevout can be required here then this is better than input
+        // extraction because we get pay_multisig and pay_public_key spends.
+        ////BITCOIN_ASSERT(prevout.validation);
+        ////BITCOIN_ASSERT(prevout.validation.cache.is_valid());
+        ////for (const auto& address: prevout.validation.cache.addresses())
+        ////{
+        ////    const auto& previous = input.previous_output();
+        ////    history_->add_input(address.hash(), point, height, previous);
+        ////}
 
-        const auto& previous = input.previous_output();
-        history_->add_input(address.hash(), point, height, previous);
+        for (const auto& address: input.addresses())
+        {
+            const auto& prevout = input.previous_output();
+            history_->add_input(address.hash(), point, height, prevout);
+        }
     }
 }
 
@@ -469,14 +474,12 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
     {
         const auto& output = outputs[index];
 
-        // TODO: use a vector result to extract pay_multisig.
-        const auto address = output.address();
-        if (!address)
-            continue;
-
-        const auto value = output.value();
-        const output_point point{ tx_hash, index };
-        history_->add_output(address.hash(), point, height, value);
+        for (const auto& address: output.addresses())
+        {
+            const auto value = output.value();
+            const output_point point{ tx_hash, index };
+            history_->add_output(address.hash(), point, height, value);
+        }
     }
 }
 
@@ -577,7 +580,6 @@ bool data_base::pop(block& out_block)
 // A false return implies store corruption.
 bool data_base::pop_inputs(const input::list& inputs, size_t height)
 {
-    // Loop in reverse.
     for (auto input = inputs.rbegin(); input != inputs.rend(); ++input)
     {
         if (!transactions_->unspend(input->previous_output()))
@@ -586,48 +588,29 @@ bool data_base::pop_inputs(const input::list& inputs, size_t height)
         if (height < settings_.index_start_height)
             continue;
 
-        // All spends are confirmed.
         // This can fail if index start has been changed between restarts.
-        // So ignore the error here and succeeed even if not found.
         /* bool */ spends_->unlink(input->previous_output());
 
-        // Try to extract an address.
-        const auto address = payment_address::extract(input->script());
-
-        // All history entries are confirmed.
-        if (address)
-        {
-            // This can fail if index start has been changed between restarts.
-            // So ignore the error here and succeeed even if not found.
+        // Delete can fail if index start has been changed between restarts.
+        for (const auto& address: input->addresses())
             /* bool */ history_->delete_last_row(address.hash());
-        }
     }
 
     return true;
 }
 
 // A false return implies store corruption.
+// Stealth unlink is not implemented as there is no way to correlate.
 bool data_base::pop_outputs(const output::list& outputs, size_t height)
 {
     if (height < settings_.index_start_height)
         return true;
 
-    // Loop in reverse.
     for (auto output = outputs.rbegin(); output != outputs.rend(); ++output)
     {
-        // Try to extract an address.
-        const auto address = payment_address::extract(output->script());
-
-        // All history entries are confirmed.
-        if (address)
-        {
-            // This can fail if index start has been changed between restarts.
-            // So ignore the error here and succeeed even if not found.
+        // Delete can fail if index start has been changed between restarts.
+        for (const auto& address: output->addresses())
             /* bool */ history_->delete_last_row(address.hash());
-        }
-
-        // All stealth entries are confirmed.
-        // Stealth unlink is not implemented as there is no way to correlate.
     }
 
     return true;
@@ -736,7 +719,6 @@ void data_base::handle_push_transactions(const code& ec, block_const_ptr block,
     handler(error::success);
 }
 
-// TODO: make async and concurrency as appropriate.
 // This precludes popping the genesis block.
 void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
     const hash_digest& fork_hash, dispatcher&, result_handler handler)
@@ -746,7 +728,7 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
 
     const auto result = blocks_->get(fork_hash, true);
 
-    // The fork point does not exist or failed to get it or the top, fail.
+    // The fork point does not exist or failed to get it or the top.
     if (!result || !blocks_->top(top))
     {
         handler(error::operation_failed);
@@ -772,7 +754,6 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
         message::block next;
         const auto start_time = asio::steady_clock::now();
 
-        // TODO: parallelize pop of transactions within each block.
         if (!pop(next))
         {
             handler(error::operation_failed);
@@ -786,8 +767,6 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
         block->header().validation.height = height;
         block->validation.error = error::success;
         block->validation.start_pop = start_time;
-
-        // TODO: optimize.
         out_blocks->insert(out_blocks->begin(), block);
     }
 
@@ -811,7 +790,7 @@ void data_base::reorganize(const checkpoint& fork_point,
     ///////////////////////////////////////////////////////////////////////////
     write_mutex_.lock();
 
-    // Begin Flush Lock and Sequential Lock
+    // Begin Flush Lock
     //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     if (!begin_write())
     {
@@ -854,7 +833,7 @@ void data_base::handle_push(const code& ec, result_handler handler) const
     }
 
     handler(end_write() ? error::success : error::operation_failed);
-    // End Sequential Lock and Flush Lock
+    // End Flush Lock
     //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 }
 

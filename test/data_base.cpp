@@ -33,14 +33,15 @@ using namespace boost::filesystem;
 void test_block_exists(const data_base& interface, size_t height,
     const block& block0, bool indexed)
 {
-    const auto blk_hash = block0.hash();
+    const auto& history_store = interface.history();
+    const auto block_hash = block0.hash();
     auto r0 = interface.blocks().get(height);
-    auto r0_byhash = interface.blocks().get(blk_hash, true);
+    auto r0_byhash = interface.blocks().get(block_hash, true);
 
     BOOST_REQUIRE(r0);
     BOOST_REQUIRE(r0_byhash);
-    BOOST_REQUIRE(r0.hash() == blk_hash);
-    BOOST_REQUIRE(r0_byhash.hash() == blk_hash);
+    BOOST_REQUIRE(r0.hash() == block_hash);
+    BOOST_REQUIRE(r0_byhash.hash() == block_hash);
     BOOST_REQUIRE_EQUAL(r0.height(), height);
     BOOST_REQUIRE_EQUAL(r0_byhash.height(), height);
     BOOST_REQUIRE_EQUAL(r0.transaction_count(), block0.transactions().size());
@@ -78,26 +79,27 @@ void test_block_exists(const data_base& interface, size_t height,
                 if (!indexed)
                     continue;
 
-                const auto address = payment_address::extract(input.script());
+                const auto addresses = input.addresses();
+                ////const auto& prevout = input.previous_output();
+                ////const auto address = prevout.validation.cache.addresses();
 
-                if (!address)
-                    continue;
-
-                auto history = interface.history().get(address.hash(), 0, 0);
-                auto found = false;
-
-                for (const auto& row: history)
+                for (const auto& address: addresses)
                 {
-                    if (row.point.hash() == spend.hash() &&
-                        row.point.index() == spend.index())
-                    {
-                        BOOST_REQUIRE_EQUAL(row.height, height);
-                        found = true;
-                        break;
-                    }
-                }
+                    auto history = history_store.get(address.hash(), 0, 0);
+                    auto found = false;
 
-                BOOST_REQUIRE(found);
+                    for (const auto& row: history)
+                    {
+                        if (row.point == spend)
+                        {
+                            BOOST_REQUIRE_EQUAL(row.height, height);
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    BOOST_REQUIRE(found);
+                }
             }
         }
 
@@ -108,29 +110,28 @@ void test_block_exists(const data_base& interface, size_t height,
         {
             const auto& output = tx.outputs()[j];
             output_point outpoint{ tx_hash, static_cast<uint32_t>(j) };
-            const auto address = payment_address::extract(output.script());
+            const auto addresses = output.addresses();
 
-            if (!address)
-                continue;
-
-            auto history = interface.history().get(address.hash(), 0, 0);
-            auto found = false;
-
-            for (const auto& row: history)
+            for (const auto& address: addresses)
             {
-                BOOST_REQUIRE(row.point.is_valid());
+                auto history = history_store.get(address.hash(), 0, 0);
+                auto found = false;
 
-                if (row.point.hash() == outpoint.hash() &&
-                    row.point.index() == outpoint.index())
+                for (const auto& row: history)
                 {
-                    BOOST_REQUIRE_EQUAL(row.height, height);
-                    BOOST_REQUIRE_EQUAL(row.value, output.value());
-                    found = true;
-                    break;
-                }
-            }
+                    BOOST_REQUIRE(row.point.is_valid());
 
-            BOOST_REQUIRE(found);
+                    if (row.point == outpoint)
+                    {
+                        BOOST_REQUIRE_EQUAL(row.height, height);
+                        BOOST_REQUIRE_EQUAL(row.value, output.value());
+                        found = true;
+                        break;
+                    }
+                }
+
+                BOOST_REQUIRE(found);
+            }
         }
     }
 }
@@ -138,9 +139,13 @@ void test_block_exists(const data_base& interface, size_t height,
 void test_block_not_exists(const data_base& interface, const block& block0,
     bool indexed)
 {
-    ////const hash_digest blk_hash = hash_block_header(block0.header);
-    ////auto r0_byhash = interface.blocks().get(blk_hash);
-    ////BOOST_REQUIRE(!r0_byhash);
+    const auto& history_store = interface.history();
+
+    // Popped blocks still exist in the block hash table, but not confirmed.
+    const auto block_hash = block0.hash();
+    const auto r0_confirmed = interface.blocks().get(block_hash, true);
+    BOOST_REQUIRE(!r0_confirmed);
+
     for (size_t i = 0; i < block0.transactions().size(); ++i)
     {
         const auto& tx = block0.transactions()[i];
@@ -158,25 +163,26 @@ void test_block_not_exists(const data_base& interface, const block& block0,
                 if (!indexed)
                     continue;
 
-                const auto address = payment_address::extract(input.script());
+                const auto addresses = input.addresses();
+                ////const auto& prevout = input.previous_output();
+                ////const auto address = prevout.validation.cache.addresses();
 
-                if (!address)
-                    continue;
-
-                auto history = interface.history().get(address.hash(), 0, 0);
-                auto found = false;
-
-                for (const auto& row: history)
+                for (const auto& address: addresses)
                 {
-                    if (row.point.hash() == spend.hash() &&
-                        row.point.index() == spend.index())
-                    {
-                        found = true;
-                        break;
-                    }
-                }
+                    auto history = history_store.get(address.hash(), 0, 0);
+                    auto found = false;
 
-                BOOST_REQUIRE(!found);
+                    for (const auto& row: history)
+                    {
+                        if (row.point == spend)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    BOOST_REQUIRE(!found);
+                }
             }
         }
 
@@ -187,25 +193,24 @@ void test_block_not_exists(const data_base& interface, const block& block0,
         {
             const auto& output = tx.outputs()[j];
             output_point outpoint{ tx_hash, static_cast<uint32_t>(j) };
-            const auto address = payment_address::extract(output.script());
+            const auto addresses = output.addresses();
 
-            if (!address)
-                continue;
-
-            auto history = interface.history().get(address.hash(), 0, 0);
-            auto found = false;
-
-            for (const auto& row: history)
+            for (const auto& address: addresses)
             {
-                if (row.point.hash() == outpoint.hash() &&
-                    row.point.index() == outpoint.index())
-                {
-                    found = true;
-                    break;
-                }
-            }
+                auto history = history_store.get(address.hash(), 0, 0);
+                auto found = false;
 
-            BOOST_REQUIRE(!found);
+                for (const auto& row: history)
+                {
+                    if (row.point == outpoint)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                BOOST_REQUIRE(!found);
+            }
         }
     }
 }
