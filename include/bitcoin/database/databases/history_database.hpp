@@ -36,7 +36,7 @@ struct BCD_API history_statinfo
     const size_t buckets;
 
     /// Total number of unique addresses in the database.
-    const size_t addrs;
+    const size_t addresses;
 
     /// Total number of rows across all addresses.
     const size_t rows;

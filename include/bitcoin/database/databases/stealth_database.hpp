@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_STEALTH_DATABASE_HPP
 
 #include <cstdint>
+#include <cstddef>
 #include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/database/define.hpp>
@@ -29,6 +30,12 @@
 
 namespace libbitcoin {
 namespace database {
+
+struct BCD_API stealth_statinfo
+{
+    /// Total number of rows (stealth is linear search).
+    const size_t rows;
+};
 
 class BCD_API stealth_database
 {
@@ -68,6 +75,9 @@ public:
 
     /// Flush the memory map to disk.
     bool flush() const;
+
+    /// Return statistical info about the database.
+    stealth_statinfo statinfo() const;
 
 private:
     void write_index();

@@ -172,5 +172,13 @@ void stealth_database::store(uint32_t prefix, uint32_t height,
 ////    return false;
 ////}
 
+stealth_statinfo stealth_database::statinfo() const
+{
+    return
+    {
+        rows_manager_.count()
+    };
+}
+
 } // namespace database
 } // namespace libbitcoin
