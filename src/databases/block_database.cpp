@@ -436,7 +436,7 @@ bool block_database::unconfirm(size_t from_height)
     if (from_height >= count)
         return false;
 
-    for (size_t height = from_height; height < count; ++height)
+    for (auto height = from_height; height < count; ++height)
         if (!confirm(get(height).hash(), false))
             return false;
 
