@@ -140,26 +140,29 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    if (argc < 4)
+    if (argc < 5)
     {
         show_command_help(command);
         return -1;
     }
 
     string_list args;
-    const std::string map_filename = argv[2];
-    const std::string rows_filename = argv[3];
+    const std::string block_index_filename = argv[2];
+    const std::string block_table_filename = argv[3];
+    const std::string tx_index_filename = argv[4];
 
-    for (int i = 4; i < argc; ++i)
+    for (int i = 5; i < argc; ++i)
         args.push_back(argv[i]);
 
     if (command == "initialize_new")
     {
-        store::create(map_filename);
-        store::create(rows_filename);
+        store::create(block_index_filename);
+        store::create(block_table_filename);
+        store::create(tx_index_filename);
     }
 
-    block_database db(map_filename, rows_filename, 1000, 50);
+    block_database db(block_index_filename, block_table_filename,
+        tx_index_filename, 1000, 50);
 
     if (command == "initialize_new")
     {
@@ -192,7 +195,7 @@ int main(int argc, char** argv)
                 return -1;
             }
 
-            block_data = std::make_shared<block_result>(db.get(hash));
+            block_data = std::make_shared<block_result>(db.get(hash, false));
         }
 
         if (!block_data)
@@ -218,12 +221,10 @@ int main(int argc, char** argv)
 
         if (txs_size > 0)
         {
-            std::cout << "Transactions:" << std::endl;
+            std::cout << "Transaction offsets:" << std::endl;
 
-            for (size_t i = 0; i < txs_size; ++i)
-                std::cout << "  "
-                    << encode_hash(block_data->transaction_hash(i))
-                    << std::endl;
+            for (const auto offset: block_data->transaction_offsets())
+                std::cout << "  " << offset << std::endl;
         }
         else
         {
@@ -263,7 +264,7 @@ int main(int argc, char** argv)
         if (!db.top(top))
             throw std::runtime_error("store has no genesis block");
 
-        db.store(block, top);
+        db.store(block, top, true);
         db.synchronize();
     }
     else if (command == "unlink")
@@ -281,7 +282,7 @@ int main(int argc, char** argv)
         const auto result = db.open();
         BITCOIN_ASSERT(result);
 
-        db.unlink(from_height);
+        db.unconfirm(from_height);
         db.synchronize();
     }
     else if (command == "last_height")
