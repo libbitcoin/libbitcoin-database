@@ -137,8 +137,6 @@ stealth_database::list stealth_database::get(const binary& filter,
 
 void stealth_database::store(const stealth_record& stealth)
 {
-    BITCOIN_ASSERT(height <= max_uint32);
-
     // Allocate new row and write data.
     const auto index = rows_manager_.new_records(1);
     const auto record = rows_manager_.get(index);
