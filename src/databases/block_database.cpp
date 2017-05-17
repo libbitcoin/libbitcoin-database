@@ -258,7 +258,6 @@ block_result block_database::get(const hash_digest& hash,
         tx_count, confirmed };
 }
 
-
 // Save each transaction offset into the transaction_index and return the index
 // of the first entry. Offsets must be cached in tx metadata.
 array_index block_database::associate(const transaction::list& transactions)
@@ -273,7 +272,7 @@ array_index block_database::associate(const transaction::list& transactions)
     for (const auto& tx: transactions)
     {
         const auto offset = tx.validation.offset;
-        BITCOIN_ASSERT(offset != transaction_database::slab_map::not_found);
+        BITCOIN_ASSERT(offset != record_map::not_found);
         serial.write_8_bytes_little_endian(offset);
     }
 
@@ -297,7 +296,7 @@ array_index block_database::associate(const short_id_list& ids)
     {
         // TODO: create and employ short_id type with offset metadata.
         ////const auto offset = id.validation.offset;
-        ////BITCOIN_ASSERT(offset != transaction_database::slab_map::not_found);
+        ////BITCOIN_ASSERT(offset != record_map::not_found);
         ////serial.write_8_bytes_little_endian(offset);
     }
 
@@ -533,10 +532,15 @@ void block_database::write_index(array_index index, array_index height)
 array_index block_database::get_index(array_index height) const
 {
     const auto record = block_index_manager_.get(height);
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    shared_lock lock(index_mutex_);
     return from_little_endian_unsafe<array_index>(REMAP_ADDRESS(record));
+    ///////////////////////////////////////////////////////////////////////////
 }
 
-// The index of the highest existing block, independent of gaps.
+// The height of the highest existing block, independent of gaps.
 bool block_database::top(size_t& out_height) const
 {
     const auto count = block_index_manager_.count();
