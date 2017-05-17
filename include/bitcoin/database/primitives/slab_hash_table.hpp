@@ -56,7 +56,7 @@ class slab_hash_table
 {
 public:
     typedef KeyType key_type;
-    typedef serializer<uint8_t*>::functor write_function;
+    typedef byte_serializer::functor write_function;
 
     static const file_offset not_found;
 

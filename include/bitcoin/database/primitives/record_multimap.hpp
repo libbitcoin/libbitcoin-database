@@ -51,7 +51,7 @@ class record_multimap
 public:
     typedef KeyType key_type;
     typedef record_hash_table<KeyType> record_hash_table_type;
-    typedef serializer<uint8_t*>::functor write_function;
+    typedef byte_serializer::functor write_function;
 
     record_multimap(record_hash_table_type& map, record_list& records);
 

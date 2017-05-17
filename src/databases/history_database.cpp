@@ -25,6 +25,22 @@
 #include <bitcoin/database/primitives/record_multimap_iterable.hpp>
 #include <bitcoin/database/primitives/record_multimap_iterator.hpp>
 
+// Record format (v4) [47 bytes]:
+// ----------------------------------------------------------------------------
+// [ height:4      - const] (may short-circuit sequential read after height)
+// [ kind:1        - const]
+// [ point-hash:32 - const]
+// [ point-index:2 - const]
+// [ data:8        - const]
+
+// Record format (v3) [47 bytes]:
+// ----------------------------------------------------------------------------
+// [ kind:1        - const]
+// [ point-hash:32 - const]
+// [ point-index:2 - const]
+// [ height:4      - const]
+// [ data:8        - const]
+
 namespace libbitcoin {
 namespace database {
 
@@ -123,14 +139,12 @@ bool history_database::close()
         rows_file_.close();
 }
 
-// Commit latest inserts.
 void history_database::synchronize()
 {
     lookup_manager_.sync();
     rows_manager_.sync();
 }
 
-// Flush the memory maps to disk.
 bool history_database::flush() const
 {
     return
@@ -146,7 +160,6 @@ history_database::list history_database::get(const short_hash& key,
 {
     list result;
     payment_record payment;
-
     const auto start = rows_multimap_.lookup(key);
     const auto records = record_multimap_iterable(rows_list_, start);
 
@@ -169,7 +182,7 @@ history_database::list history_database::get(const short_hash& key,
 void history_database::store(const short_hash& key,
     const payment_record& payment)
 {
-    const auto write = [&](serializer<uint8_t*>& serial)
+    const auto write = [&](byte_serializer& serial)
     {
         payment.to_data(serial, false);
     };
@@ -177,8 +190,7 @@ void history_database::store(const short_hash& key,
     rows_multimap_.add_row(key, write);
 }
 
-// This is the history unlink.
-bool history_database::delete_last_row(const short_hash& key)
+bool history_database::unlink_last_row(const short_hash& key)
 {
     return rows_multimap_.delete_last_row(key);
 }

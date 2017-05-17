@@ -33,14 +33,14 @@ using namespace bc::machine;
 
 // Record format (v3/v4):
 // ----------------------------------------------------------------------------
-// [ height:4            - atomic ]
+// [ height:4            - atomic ] (atomic with position)
 // [ position:2          - atomic ] (atomic with height)
-// [ output_count:varint - fixed  ]
-// [ [ spender_height:4  - atomic ][ value:8 ][ script:varint ]... ]
-// [ input_count:varint  - fixed  ]
-// [ [ hash:4 ][ index:2 ][ script:varint ][ sequence:4 ]... ]
-// [ locktime:varint     - fixed  ]
-// [ version:varint      - fixed  ]
+// [ output_count:varint - const  ]
+// [ [ spender_height:4  - atomic ] [ value:8 ][ script:varint ] ... - const ]
+// [ input_count:varint  - const  ]
+// [ [ hash:32 ][ index:2 ][ script:varint ][ sequence:4 ] ... - const ]
+// [ locktime:varint     - const  ]
+// [ version:varint      - const  ]
 
 static BC_CONSTEXPR auto prefix_size = slab_row<hash_digest>::prefix_size;
 static constexpr auto height_size = sizeof(uint32_t);
@@ -96,7 +96,6 @@ bool transaction_database::create()
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 
-// Start files and primitives.
 bool transaction_database::open()
 {
     return
@@ -105,19 +104,16 @@ bool transaction_database::open()
         lookup_manager_.start();
 }
 
-// Close files.
 bool transaction_database::close()
 {
     return lookup_file_.close();
 }
 
-// Commit latest inserts.
 void transaction_database::synchronize()
 {
     lookup_manager_.sync();
 }
 
-// Flush the memory map to disk.
 bool transaction_database::flush() const
 {
     return lookup_file_.flush();
@@ -222,7 +218,6 @@ bool transaction_database::get_output(output& out_output, size_t& out_height,
     ///////////////////////////////////////////////////////////////////////////
     metadata_mutex_.lock_shared();
     const auto height = deserial.read_4_bytes_little_endian();
-    // *** BUGBUG: v3.2 this was 4 bytes (always safe, correct, and wrong). ***
     const auto position = deserial.read_2_bytes_little_endian();
     metadata_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
@@ -262,7 +257,7 @@ file_offset transaction_database::store(const chain::transaction& tx,
     BITCOIN_ASSERT(position <= max_uint16);
 
     // If position is unconfirmed then height is validation forks.
-    const auto write = [&](serializer<uint8_t*>& serial)
+    const auto write = [&](byte_serializer& serial)
     {
         serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(position));
@@ -288,7 +283,6 @@ file_offset transaction_database::store(const chain::transaction& tx,
     return offset;
 }
 
-// TODO: look into using lookup_map_.update() here.
 bool transaction_database::spend(const output_point& point,
     size_t spender_height)
 {
@@ -340,7 +334,7 @@ file_offset transaction_database::confirm(const hash_digest& hash,
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(position <= max_uint16);
 
-    const auto update = [&](serializer<uint8_t*>& serial)
+    const auto update = [&](byte_serializer& serial)
     {
         ///////////////////////////////////////////////////////////////////////
         // Critical Section

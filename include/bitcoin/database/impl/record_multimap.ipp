@@ -142,7 +142,7 @@ void record_multimap<KeyType>::create_new(const KeyType& key,
     auto serial_record = make_unsafe_serializer(data);
     serial_record.write_delegated(write);
 
-    const auto write_start_info = [&](serializer<uint8_t*>& serial)
+    const auto write_start_info = [&](byte_serializer& serial)
     {
         //*********************************************************************
         serial.template write_little_endian<array_index>(first);

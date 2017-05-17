@@ -27,26 +27,29 @@
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/result/block_result.hpp>
 
-namespace libbitcoin {
-namespace database {
-
-using namespace bc::chain;
-
-// Record format (v3):
-// ----------------------------------------------------------------------------
-//  [ header:80         - fixed ]
-//  [ height:4          - fixed ]
-//  [ tx_count:1-2      - fixed ]
-//  [ [ tx_hash:32 ]... - fixed ]
-
 // Record format (v4) [95 bytes]:
+// Below excludes block height and tx hash indexes (arrays).
 // ----------------------------------------------------------------------------
-//  [ header:80   - fixed  ]
-//  [ height:4    - fixed  ] (in any branch)
+//  [ header:80   - const  ]
+//  [ height:4    - const  ] (in any branch)
 //  [ checksum:4  - atomic ] (zero if not cached)
 //  [ tx_start:4  - atomic ] (an array index into the transaction_index)
 //  [ tx_count:2  - atomic ] (atomic with start, both zeroed if empty)
 //  [ confirmed:1 - atomic ] (zero if not in main branch)
+
+// Record format (v3) [variable bytes]:
+// Below excludes block height index (array).
+// ----------------------------------------------------------------------------
+//  [ header:80         - const ]
+//  [ height:4          - const ]
+//  [ tx_count:1-2      - const ]
+//  [ [ tx_hash:32 ]... - const ]
+
+
+namespace libbitcoin {
+namespace database {
+
+using namespace bc::chain;
 
 static BC_CONSTEXPR auto prefix_size = record_row<hash_digest>::prefix_size;
 static const auto header_size = header::satoshi_fixed_size();
@@ -59,8 +62,6 @@ static const auto block_size = header_size + height_size + checksum_size +
     tx_start_size + tx_count_size + confirmed_size;
 
 static constexpr auto no_checksum = 0u;
-static constexpr auto confirmed_value = 1u;
-static constexpr auto unconfirmed_value = 0u;
 
 static constexpr auto block_index_header_size = 0u;
 static constexpr auto block_index_record_size = sizeof(array_index);
@@ -73,6 +74,23 @@ static const auto record_size = hash_table_record_size<hash_digest>(block_size);
 
 // Valid block indexes must not reach max_uint32.
 const array_index block_database::empty = max_uint32;
+
+enum class status : uint8_t
+{
+    unconfirmed = 0,
+    confirmed = 1
+};
+
+inline uint8_t to_status(bool confirmed)
+{
+    return static_cast<uint8_t>(confirmed ? status::confirmed :
+        status::unconfirmed);
+}
+
+inline bool is_confirmed(uint8_t value)
+{
+    return static_cast<status>(value) == status::confirmed;
+}
 
 // Blocks uses a hash table and two array indexes, all O(1).
 block_database::block_database(const path& map_filename,
@@ -136,7 +154,6 @@ bool block_database::create()
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 
-// Start files and primitives.
 bool block_database::open()
 {
     return
@@ -149,7 +166,6 @@ bool block_database::open()
         tx_index_manager_.start();
 }
 
-// Close files.
 bool block_database::close()
 {
     return
@@ -158,7 +174,6 @@ bool block_database::close()
         tx_index_file_.close();
 }
 
-// Update logical file sizes.
 void block_database::synchronize()
 {
     lookup_manager_.sync();
@@ -166,7 +181,6 @@ void block_database::synchronize()
     tx_index_manager_.sync();
 }
 
-// Flush the memory maps to disk.
 bool block_database::flush() const
 {
     return
@@ -199,7 +213,7 @@ block_result block_database::get(size_t height) const
     const auto checksum = deserial.read_4_bytes_little_endian();
     const auto tx_start = deserial.read_4_bytes_little_endian();
     const auto tx_count = deserial.read_2_bytes_little_endian();
-    const auto confirmed = deserial.read_byte() != 0;
+    const auto confirmed = is_confirmed(deserial.read_byte());
     metadata_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 
@@ -305,14 +319,14 @@ void block_database::store(const chain::header& header, size_t height,
     const auto tx_count16 = static_cast<uint16_t>(tx_count);
 
     // Store creates new entry, and supports parallel, so no locking.
-    const auto write = [&](serializer<uint8_t*>& serial)
+    const auto write = [&](byte_serializer& serial)
     {
         header.to_data(serial);
         serial.write_4_bytes_little_endian(height32);
         serial.write_4_bytes_little_endian(checksum);
         serial.write_4_bytes_little_endian(tx_start32);
         serial.write_2_bytes_little_endian(tx_count16);
-        serial.write_byte(confirmed ? confirmed_value : unconfirmed_value);
+        serial.write_byte(to_status(confirmed));
     };
 
     const auto index = lookup_map_.store(header.hash(), write);
@@ -363,7 +377,7 @@ bool block_database::update(const hash_digest& hash, size_t height,
     const auto tx_count16 = static_cast<uint16_t>(tx_count);
 
     // Update modifies metadata, requiring lock for atomicity.
-    const auto update = [&](serializer<uint8_t*>& serial)
+    const auto update = [&](byte_serializer& serial)
     {
         serial.skip(header_size + height_size);
 
@@ -373,7 +387,7 @@ bool block_database::update(const hash_digest& hash, size_t height,
         serial.write_4_bytes_little_endian(checksum);
         serial.write_4_bytes_little_endian(tx_start32);
         serial.write_2_bytes_little_endian(tx_count16);
-        serial.write_byte(confirmed ? confirmed_value : unconfirmed_value);
+        serial.write_byte(to_status(confirmed));
         ///////////////////////////////////////////////////////////////////////
     };
 
@@ -414,14 +428,14 @@ bool block_database::update(const message::compact_block& compact,
 
 bool block_database::confirm(const hash_digest& hash, bool confirm)
 {
-    const auto update = [&](serializer<uint8_t*>& serial)
+    const auto update = [&](byte_serializer& serial)
     {
         serial.skip(block_size - confirmed_size);
 
         ///////////////////////////////////////////////////////////////////////
         // Critical Section
         unique_lock lock(metadata_mutex_);
-        serial.write_byte(confirm ? confirmed_value : unconfirmed_value);
+        serial.write_byte(to_status(confirm));
         ///////////////////////////////////////////////////////////////////////
     };
 

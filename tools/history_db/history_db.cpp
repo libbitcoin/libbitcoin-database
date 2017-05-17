@@ -16,7 +16,7 @@ void show_help()
     std::cout << "  initialize_new  " << "Create a new history_database" << std::endl;
     std::cout << "  add_output      " << "Add a row to a key" << std::endl;
     std::cout << "  add_spend       " << "Add a spend to a row" << std::endl;
-    std::cout << "  delete_last_row " << "Delete last row that was added for a key" << std::endl;
+    std::cout << "  unlink_last_row " << "Unlink last row that was added for a key" << std::endl;
     std::cout << "  fetch           " << "Fetch rows for a key" << std::endl;
     std::cout << "  statinfo        " << "Show statistical info for the database" << std::endl;
     std::cout << "  help            " << "Show help for commands" << std::endl;
@@ -39,7 +39,7 @@ void show_command_help(const std::string& command)
         std::cout << "Usage: history_db " << command << " LOOKUP ROWS "
             << "KEY PREVIOUS SPEND HEIGHT" << std::endl;
     }
-    else if (command == "delete_last_row")
+    else if (command == "unlink_last_row")
     {
         std::cout << "Usage: history_db " << command << " LOOKUP ROWS "
             << "KEY" << std::endl;
@@ -235,7 +235,7 @@ int main(int argc, char** argv)
         db.add_input(key, spend, spend_height, previous);
         db.synchronize();
     }
-    else if (command == "delete_last_row")
+    else if (command == "unlink_last_row")
     {
         if (args.size() != 1)
         {
@@ -250,7 +250,7 @@ int main(int argc, char** argv)
         const auto result = db.open();
         BITCOIN_ASSERT(result);
 
-        db.delete_last_row(key);
+        db.unlink_last_row(key);
         db.synchronize();
     }
     else if (command == "fetch")

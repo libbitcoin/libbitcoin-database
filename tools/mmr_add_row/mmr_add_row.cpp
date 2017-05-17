@@ -52,7 +52,7 @@ int mmr_add_row(const data_chunk& key_data, const data_chunk& value,
 
     record_list lrs(recs);
     record_multimap<hash_type> multimap(ht, lrs);
-    auto write = [&value](serializer<uint8_t*>& serial)
+    auto write = [&value](byte_serializer& serial)
     {
         serial.write_forward(value);
     };

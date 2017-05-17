@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(history_database__test)
     };
     auto res_has_sp = db.get(key2, 0, 0);
     has_spend(res_has_sp);
-    db.delete_last_row(key2);
+    db.unlink_last_row(key2);
     auto res_no_sp = db.get(key2, 0, 0);
     no_spend(res_no_sp);
 
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(history_database__test)
     {
         BOOST_REQUIRE(history.empty());
     };
-    db.delete_last_row(key3);
+    db.unlink_last_row(key3);
     auto res_1nr1 = db.get(key3, 0, 0);
     has_no_rows(res_1nr1);
     auto res_1nr2 = db.get(key4, 0, 0);

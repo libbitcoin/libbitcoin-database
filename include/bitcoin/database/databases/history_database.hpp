@@ -73,8 +73,8 @@ public:
     /// Add a row for the key. If key doesn't exist it will be created.
     void store(const short_hash& key, const chain::payment_record& payment);
 
-    /// Delete the last row that was added to key.
-    bool delete_last_row(const short_hash& key);
+    /// Logically delete the last row that was added to key.
+    bool unlink_last_row(const short_hash& key);
 
     /// Commit latest inserts.
     void synchronize();

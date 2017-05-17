@@ -45,7 +45,7 @@ public:
     static BC_CONSTEXPR size_t key_size = std::tuple_size<KeyType>::value;
     static BC_CONSTEXPR file_offset prefix_size = key_size + position_size;
 
-    typedef serializer<uint8_t*>::functor write_function;
+    typedef byte_serializer::functor write_function;
 
     slab_row(slab_manager& manager, file_offset position=0);
 

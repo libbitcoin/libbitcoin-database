@@ -96,7 +96,7 @@ void create_database_file()
     {
         data_chunk value = generate_random_bytes(engine, tx_size);
         hash_digest key = bitcoin_hash(value);
-        auto write = [&value](serializer<uint8_t*>& serial)
+        auto write = [&value](byte_serializer& serial)
         {
             serial.write_forward(value);
         };
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__test)
     BOOST_REQUIRE(alloc.start());
 
     slab_hash_table<tiny_hash> ht(header, alloc);
-    const auto write = [](serializer<uint8_t*>& serial)
+    const auto write = [](byte_serializer& serial)
     {
         serial.write_byte(110);
         serial.write_byte(110);
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
     tiny_hash key{ { 0xde, 0xad, 0xbe, 0xef } };
     tiny_hash key1{ { 0xb0, 0x0b, 0xb0, 0x0b } };
 
-    const auto write = [](serializer<uint8_t*>& serial)
+    const auto write = [](byte_serializer& serial)
     {
         serial.write_byte(110);
         serial.write_byte(110);
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
         serial.write_byte(88);
     };
 
-    const auto write1 = [](serializer<uint8_t*>& serial)
+    const auto write1 = [](byte_serializer& serial)
     {
         serial.write_byte(99);
         serial.write_byte(98);
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__64bit__test)
     little_hash key{ { 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef } };
     little_hash key1{ { 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b } };
 
-    const auto write = [](serializer<uint8_t*>& serial)
+    const auto write = [](byte_serializer& serial)
     {
         serial.write_byte(110);
         serial.write_byte(110);
@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__64bit__test)
         serial.write_byte(88);
     };
 
-    const auto write1 = [](serializer<uint8_t*>& serial)
+    const auto write1 = [](byte_serializer& serial)
     {
         serial.write_byte(99);
         serial.write_byte(98);

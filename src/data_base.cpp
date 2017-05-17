@@ -585,7 +585,7 @@ bool data_base::pop_inputs(const input::list& inputs, size_t height)
 
         // Delete can fail if index start has been changed between restarts.
         for (const auto& address: input->addresses())
-            /* bool */ history_->delete_last_row(address.hash());
+            /* bool */ history_->unlink_last_row(address.hash());
     }
 
     return true;
@@ -602,7 +602,7 @@ bool data_base::pop_outputs(const output::list& outputs, size_t height)
     {
         // Delete can fail if index start has been changed between restarts.
         for (const auto& address: output->addresses())
-            /* bool */ history_->delete_last_row(address.hash());
+            /* bool */ history_->unlink_last_row(address.hash());
     }
 
     return true;

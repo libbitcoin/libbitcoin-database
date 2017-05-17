@@ -45,7 +45,7 @@ public:
     static BC_CONSTEXPR size_t key_size = std::tuple_size<KeyType>::value;
     static BC_CONSTEXPR file_offset prefix_size = key_size + index_size;
 
-    typedef serializer<uint8_t*>::functor write_function;
+    typedef byte_serializer::functor write_function;
 
     record_row(record_manager& manager, array_index index=0);
 

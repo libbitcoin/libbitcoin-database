@@ -23,6 +23,22 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
+// Record format (v4):
+// ----------------------------------------------------------------------------
+// [ height:4    - const ] (first short-circuit sequential read after height)
+// [ prefix:4    - const ] (second short-circuit sequential read after prefix)
+// [ ephemkey:32 - const ]
+// [ address:20  - const ]
+// [ tx_hash:32  - const ]
+
+// Record format (v3):
+// ----------------------------------------------------------------------------
+// [ prefix:4    - const ]
+// [ height:4    - const ]
+// [ ephemkey:32 - const ]
+// [ address:20  - const ]
+// [ tx_hash:32  - const ]
+
 namespace libbitcoin {
 namespace database {
 
@@ -33,11 +49,6 @@ static constexpr auto rows_header_size = 0u;
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto prefix_size = sizeof(uint32_t);
 
-// [ prefix:4 ]
-// [ height:4 ]
-// [ ephemkey:32 ]
-// [ address:20 ]
-// [ tx_hash:32 ]
 // ephemkey is without sign byte and address is without version byte.
 static constexpr auto row_size = prefix_size + height_size + hash_size +
     short_hash_size + hash_size;
@@ -90,13 +101,11 @@ bool stealth_database::close()
     return rows_file_.close();
 }
 
-// Commit latest inserts.
 void stealth_database::synchronize()
 {
     rows_manager_.sync();
 }
 
-// Flush the memory map to disk.
 bool stealth_database::flush() const
 {
     return rows_file_.flush();
@@ -137,12 +146,6 @@ void stealth_database::store(const stealth_record& stealth)
     auto serial = make_unsafe_serializer(memory);
     stealth.to_data(serial, false);
 }
-
-////bool stealth_database::unlink()
-////{
-////    // TODO: mark as deleted (not implemented).
-////    return false;
-////}
 
 stealth_statinfo stealth_database::statinfo() const
 {
