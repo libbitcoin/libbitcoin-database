@@ -444,9 +444,11 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
 {
     for (uint32_t index = 0; index < inputs.size(); ++index)
     {
-        const auto& input = inputs[index];
         const input_point point{ tx_hash, index };
+        const auto& input = inputs[index];
         const auto& prevout = input.previous_output();
+        const auto checksum = prevout.checksum();
+
         spends_->store(prevout, point);
 
         // If the prevout can be required here then this is better than input
@@ -454,16 +456,8 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
         ////BITCOIN_ASSERT(prevout.validation);
         ////BITCOIN_ASSERT(prevout.validation.cache.is_valid());
         ////for (const auto& address: prevout.validation.cache.addresses())
-        ////{
-        ////    const auto& previous = input.previous_output();
-        ////    history_->add_input(address.hash(), point, height, previous);
-        ////}
-
         for (const auto& address: input.addresses())
-        {
-            const auto& prevout = input.previous_output();
-            history_->add_input(address.hash(), point, height, prevout);
-        }
+            history_->store(address.hash(), { height, point, checksum });
     }
 }
 
@@ -472,14 +466,12 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
 {
     for (uint32_t index = 0; index < outputs.size(); ++index)
     {
+        const auto point = output_point{ tx_hash, index };
         const auto& output = outputs[index];
+        const auto value = output.value();
 
         for (const auto& address: output.addresses())
-        {
-            const auto value = output.value();
-            const output_point point{ tx_hash, index };
-            history_->add_output(address.hash(), point, height, value);
-        }
+            history_->store(address.hash(), { height, point, value });
     }
 }
 
@@ -496,7 +488,7 @@ void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
         const auto& payment_output = outputs[index + 1];
 
         // Try to extract the payment address from the second output.
-        const auto address = payment_output.address();
+        auto address = payment_output.address();
         if (!address)
             continue;
 
@@ -511,14 +503,14 @@ void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
             continue;
 
         // The payment address versions are arbitrary and unused here.
-        const stealth_compact row
+        stealth_->store(
         {
+            height,
+            prefix,
             unsigned_ephemeral_key,
             address.hash(),
             tx_hash
-        };
-
-        stealth_->store(prefix, height, row);
+        });
     }
 }
 

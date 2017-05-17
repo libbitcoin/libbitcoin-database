@@ -90,9 +90,9 @@ void test_block_exists(const data_base& interface, size_t height,
 
                     for (const auto& row: history)
                     {
-                        if (row.point == spend)
+                        if (row.point() == spend)
                         {
-                            BOOST_REQUIRE_EQUAL(row.height, height);
+                            BOOST_REQUIRE_EQUAL(row.height(), height);
                             found = true;
                             break;
                         }
@@ -119,12 +119,12 @@ void test_block_exists(const data_base& interface, size_t height,
 
                 for (const auto& row: history)
                 {
-                    BOOST_REQUIRE(row.point.is_valid());
+                    BOOST_REQUIRE(row.is_valid());
 
-                    if (row.point == outpoint)
+                    if (row.point() == outpoint)
                     {
-                        BOOST_REQUIRE_EQUAL(row.height, height);
-                        BOOST_REQUIRE_EQUAL(row.value, output.value());
+                        BOOST_REQUIRE_EQUAL(row.height(), height);
+                        BOOST_REQUIRE_EQUAL(row.data(), output.value());
                         found = true;
                         break;
                     }
@@ -174,7 +174,7 @@ void test_block_not_exists(const data_base& interface, const block& block0,
 
                     for (const auto& row: history)
                     {
-                        if (row.point == spend)
+                        if (row.point() == spend)
                         {
                             found = true;
                             break;
@@ -202,7 +202,7 @@ void test_block_not_exists(const data_base& interface, const block& block0,
 
                 for (const auto& row: history)
                 {
-                    if (row.point == outpoint)
+                    if (row.point() == outpoint)
                     {
                         found = true;
                         break;

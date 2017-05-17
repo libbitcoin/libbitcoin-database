@@ -45,6 +45,12 @@ static BC_CONSTEXPR auto record_size =
 static BC_CONSTEXPR auto row_record_size =
     hash_table_record_size<hash_digest>(value_size);
 
+enum class point_kind : uint8_t
+{
+    output = 0,
+    input = 1
+};
+
 // History uses a hash table index, O(1).
 history_database::history_database(const path& lookup_filename,
     const path& rows_filename, size_t buckets, size_t expansion,
@@ -135,34 +141,37 @@ bool history_database::flush() const
 // Queries.
 // ----------------------------------------------------------------------------
 
-void history_database::add_output(const short_hash& key,
-    const output_point& outpoint, size_t output_height, uint64_t value)
+history_database::list history_database::get(const short_hash& key,
+    size_t limit, size_t from_height) const
 {
-    const auto output_height32 = safe_unsigned<uint32_t>(output_height);
+    list result;
+    payment_record payment;
 
-    const auto write = [&](serializer<uint8_t*>& serial)
+    const auto start = rows_multimap_.lookup(key);
+    const auto records = record_multimap_iterable(rows_list_, start);
+
+    for (const auto index: records)
     {
-        serial.write_byte(static_cast<uint8_t>(point_kind::output));
-        outpoint.to_data(serial, false);
-        serial.write_4_bytes_little_endian(output_height32);
-        serial.write_8_bytes_little_endian(value);
-    };
+        if (limit > 0 && result.size() >= limit)
+            break;
 
-    rows_multimap_.add_row(key, write);
+        const auto record = rows_list_.get(index);
+        auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(record));
+
+        // Failed reads are conflated with skipped returns.
+        if (payment.from_data(deserial, from_height))
+            result.push_back(payment);
+    }
+
+    return result;
 }
 
-void history_database::add_input(const short_hash& key,
-    const output_point& inpoint, size_t input_height,
-    const input_point& previous)
+void history_database::store(const short_hash& key,
+    const payment_record& payment)
 {
-    const auto input_height32 = safe_unsigned<uint32_t>(input_height);
-
     const auto write = [&](serializer<uint8_t*>& serial)
     {
-        serial.write_byte(static_cast<uint8_t>(point_kind::spend));
-        inpoint.to_data(serial, false);
-        serial.write_4_bytes_little_endian(input_height32);
-        serial.write_8_bytes_little_endian(previous.checksum());
+        payment.to_data(serial, false);
     };
 
     rows_multimap_.add_row(key, write);
@@ -172,59 +181,6 @@ void history_database::add_input(const short_hash& key,
 bool history_database::delete_last_row(const short_hash& key)
 {
     return rows_multimap_.delete_last_row(key);
-}
-
-history_compact::list history_database::get(const short_hash& key,
-    size_t limit, size_t from_height) const
-{
-    // Read the height value from the row.
-    const auto read_height = [](uint8_t* data)
-    {
-        return from_little_endian_unsafe<uint32_t>(data + height_position);
-    };
-
-    // TODO: add serialization to history_compact.
-    // Read a row from the data for the history list.
-    const auto read_row = [](uint8_t* data)
-    {
-        auto deserial = make_unsafe_deserializer(data);
-        return history_compact
-        {
-            // output or spend?
-            static_cast<point_kind>(deserial.read_byte()),
-
-            // point
-            point::factory(deserial, false),
-
-            // height
-            deserial.read_4_bytes_little_endian(),
-
-            // value or checksum
-            { deserial.read_8_bytes_little_endian() }
-        };
-    };
-
-    history_compact::list result;
-    const auto start = rows_multimap_.lookup(key);
-    const auto records = record_multimap_iterable(rows_list_, start);
-
-    for (const auto index: records)
-    {
-        // Stop once we reach the limit (if specified).
-        if (limit > 0 && result.size() >= limit)
-            break;
-
-        // This obtains a remap safe address pointer against the rows file.
-        const auto record = rows_list_.get(index);
-        const auto address = REMAP_ADDRESS(record);
-
-        // Skip rows below from_height.
-        if (from_height == 0 || read_height(address) >= from_height)
-            result.push_back(read_row(address));
-    }
-
-    // TODO: we could sort result here.
-    return result;
 }
 
 history_statinfo history_database::statinfo() const

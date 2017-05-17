@@ -40,8 +40,8 @@ struct BCD_API stealth_statinfo
 class BCD_API stealth_database
 {
 public:
-    typedef chain::stealth_compact::list list;
     typedef boost::filesystem::path path;
+    typedef chain::stealth_record::list list;
     typedef std::shared_ptr<shared_mutex> mutex_ptr;
 
     /// Construct the database.
@@ -61,11 +61,10 @@ public:
     bool close();
 
     /// Linearly scan all entries, discarding those after from_height.
-    list scan(const binary& filter, size_t from_height) const;
+    list get(const binary& filter, size_t from_height) const;
 
     /// Add a stealth row to the database.
-    void store(uint32_t prefix, uint32_t height,
-        const chain::stealth_compact& row);
+    void store(const chain::stealth_record& stealth);
 
     /////// Delete stealth row (not implemented).
     ////bool unlink();

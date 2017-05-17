@@ -48,6 +48,7 @@ class BCD_API history_database
 {
 public:
     typedef boost::filesystem::path path;
+    typedef chain::payment_record::list list;
     typedef std::shared_ptr<shared_mutex> mutex_ptr;
 
     /// Construct the database.
@@ -66,20 +67,14 @@ public:
     /// Call to unload the memory map.
     bool close();
 
-    /// Add an output row to the key. If key doesn't exist it will be created.
-    void add_output(const short_hash& key, const chain::output_point& outpoint,
-        size_t output_height, uint64_t value);
+    /// Get the output and input points associated with the address hash.
+    list get(const short_hash& key, size_t limit, size_t from_height) const;
 
-    /// Add an input to the key. If key doesn't exist it will be created.
-    void add_input(const short_hash& key, const chain::output_point& inpoint,
-        size_t input_height, const chain::input_point& previous);
+    /// Add a row for the key. If key doesn't exist it will be created.
+    void store(const short_hash& key, const chain::payment_record& payment);
 
     /// Delete the last row that was added to key.
     bool delete_last_row(const short_hash& key);
-
-    /// Get the output and input points associated with the address hash.
-    chain::history_compact::list get(const short_hash& key, size_t limit,
-        size_t from_height) const;
 
     /// Commit latest inserts.
     void synchronize();

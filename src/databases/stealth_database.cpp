@@ -105,65 +105,37 @@ bool stealth_database::flush() const
 // Queries.
 // ----------------------------------------------------------------------------
 
-// TODO: add serialization to stealth_compact.
 // The prefix is fixed at 32 bits, but the filter is 0-32 bits, so the records
-// cannot be indexed using a hash table. We also do not index by height.
-stealth_compact::list stealth_database::scan(const binary& filter,
+// cannot be indexed using a hash table, and are not indexed by height.
+stealth_database::list stealth_database::get(const binary& filter,
     size_t from_height) const
 {
-    stealth_compact::list result;
+    list result;
+    stealth_record stealth;
 
     for (array_index row = 0; row < rows_manager_.count(); ++row)
     {
         const auto record = rows_manager_.get(row);
-        auto memory = REMAP_ADDRESS(record);
-        const auto field = from_little_endian_unsafe<uint32_t>(memory);
+        auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(record));
 
-        // Skip if prefix doesn't match.
-        if (!filter.is_prefix_of(field))
-            continue;
-
-        memory += prefix_size;
-        const auto height = from_little_endian_unsafe<uint32_t>(memory);
-
-        // Skip if height is too low.
-        if (height < from_height)
-            continue;
-
-        // Add row to results.
-        auto deserial = make_unsafe_deserializer(memory + height_size);
-        result.push_back(
-        {
-            deserial.read_hash(),
-            deserial.read_short_hash(),
-            deserial.read_hash()
-        });
+        // Failed reads are conflated with skipped returns.
+        if (stealth.from_data(deserial, from_height, filter))
+            result.push_back(stealth);
     }
 
-    // TODO: we could sort result here.
     return result;
 }
 
-// TODO: add serialization to stealth_compact.
-void stealth_database::store(uint32_t prefix, uint32_t height,
-    const stealth_compact& row)
+void stealth_database::store(const stealth_record& stealth)
 {
-    // Allocate new row.
+    BITCOIN_ASSERT(height <= max_uint32);
+
+    // Allocate new row and write data.
     const auto index = rows_manager_.new_records(1);
     const auto record = rows_manager_.get(index);
     const auto memory = REMAP_ADDRESS(record);
-
-    // Write data.
     auto serial = make_unsafe_serializer(memory);
-
-    // Dual key.
-    serial.write_4_bytes_little_endian(prefix);
-    serial.write_4_bytes_little_endian(height);
-
-    // Stealth data.
-    serial.write_hash(row.ephemeral_public_key_hash);
-    serial.write_short_hash(row.public_key_hash);
-    serial.write_hash(row.transaction_hash);
+    stealth.to_data(serial, false);
 }
 
 ////bool stealth_database::unlink()

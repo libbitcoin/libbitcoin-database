@@ -49,14 +49,14 @@ using namespace bc::chain;
 //  [ confirmed:1 - atomic ] (zero if not in main branch)
 
 static BC_CONSTEXPR auto prefix_size = record_row<hash_digest>::prefix_size;
-static BC_CONSTEXPR auto header_size = header::satoshi_fixed_size();
+static const auto header_size = header::satoshi_fixed_size();
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto checksum_size = sizeof(uint32_t);
 static constexpr auto tx_start_size = sizeof(uint32_t);
 static constexpr auto tx_count_size = sizeof(uint16_t);
 static constexpr auto confirmed_size = sizeof(uint8_t);
-static BC_CONSTEXPR auto block_size = header_size + height_size +
-    checksum_size + tx_start_size + tx_count_size + confirmed_size;
+static const auto block_size = header_size + height_size + checksum_size +
+    tx_start_size + tx_count_size + confirmed_size;
 
 static constexpr auto no_checksum = 0u;
 static constexpr auto confirmed_value = 1u;
@@ -69,8 +69,7 @@ static constexpr auto tx_index_header_size = 0u;
 static constexpr auto tx_index_record_size = sizeof(file_offset);
 
 // The block database keys off of block hash and has block value.
-static BC_CONSTEXPR auto record_size = hash_table_record_size<hash_digest>(
-    block_size);
+static const auto record_size = hash_table_record_size<hash_digest>(block_size);
 
 // Valid block indexes must not reach max_uint32.
 const array_index block_database::empty = max_uint32;
