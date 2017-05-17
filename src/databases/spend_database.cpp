@@ -24,6 +24,11 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
+// Record format (v3):
+// ----------------------------------------------------------------------------
+// [ point-hash:32 - const]
+// [ point-index:2 - const]
+
 namespace libbitcoin {
 namespace database {
 
@@ -91,13 +96,11 @@ bool spend_database::close()
     return lookup_file_.close();
 }
 
-// Commit latest inserts.
 void spend_database::synchronize()
 {
     lookup_manager_.sync();
 }
 
-// Flush the memory map to disk.
 bool spend_database::flush() const
 {
     return lookup_file_.flush();
@@ -122,7 +125,7 @@ input_point spend_database::get(const output_point& outpoint) const
 void spend_database::store(const chain::output_point& outpoint,
     const chain::input_point& spend)
 {
-    const auto write = [&](serializer<uint8_t*>& serial)
+    const auto write = [&](byte_serializer& serial)
     {
         spend.to_data(serial, false);
     };
@@ -132,12 +135,13 @@ void spend_database::store(const chain::output_point& outpoint,
 
 bool spend_database::unlink(const output_point& outpoint)
 {
-    // Spends are optional so do not assume present (otherwise will segfault).
     auto memory = lookup_map_.find(outpoint);
+
+    // Spends are optional so do not assume presence.
     if (memory == nullptr)
         return false;
 
-    // Release lock.
+    // Release lock before unlinking.
     memory = nullptr;
     return lookup_map_.unlink(outpoint);
 }

@@ -55,7 +55,10 @@ template <typename KeyType>
 class slab_hash_table
 {
 public:
-    typedef serializer<uint8_t*>::functor write_function;
+    typedef KeyType key_type;
+    typedef byte_serializer::functor write_function;
+
+    static const file_offset not_found;
 
     slab_hash_table(slab_hash_table_header& header, slab_manager& manager);
 

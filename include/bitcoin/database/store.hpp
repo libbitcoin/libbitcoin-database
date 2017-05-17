@@ -83,14 +83,15 @@ public:
     // ------------------------------------------------------------------------
 
     /// Content store.
-    const path block_table;
     const path block_index;
+    const path block_table;
     const path transaction_table;
+    const path transaction_index;
 
     /// Optional indexes.
-    const path spend_table;
-    const path history_table;
     const path history_rows;
+    const path history_table;
+    const path spend_table;
     const path stealth_rows;
 
 protected:

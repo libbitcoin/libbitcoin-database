@@ -57,7 +57,7 @@ int main(int argc, char** argv)
     const auto result = manager.start();
     BITCOIN_ASSERT(result);
 
-    memory_ptr record = nullptr;
+    memory_ptr record;
     if (key_data.size() == 32)
     {
         record = get<32>(header, manager, key_data);

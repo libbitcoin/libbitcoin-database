@@ -54,6 +54,8 @@ namespace database {
 
 typedef uint32_t array_index;
 typedef uint64_t file_offset;
+typedef std::vector<file_offset> offset_list;
+typedef bc::serializer<uint8_t*> byte_serializer;
 
 } // namespace database
 } // namespace libbitcoin

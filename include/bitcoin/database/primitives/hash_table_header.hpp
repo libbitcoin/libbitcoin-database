@@ -41,6 +41,8 @@ template <typename IndexType, typename ValueType>
 class hash_table_header
 {
 public:
+    typedef IndexType index_type;
+    typedef ValueType value_type;
     static const ValueType empty;
 
     hash_table_header(memory_map& file, IndexType buckets);

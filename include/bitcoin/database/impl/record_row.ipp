@@ -21,7 +21,9 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -37,12 +39,13 @@ template <typename KeyType>
 class record_row
 {
 public:
+    typedef KeyType key_type;
     static BC_CONSTEXPR size_t index_size = sizeof(array_index);
     static BC_CONSTEXPR size_t key_start = 0;
     static BC_CONSTEXPR size_t key_size = std::tuple_size<KeyType>::value;
     static BC_CONSTEXPR file_offset prefix_size = key_size + index_size;
 
-    typedef serializer<uint8_t*>::functor write_function;
+    typedef byte_serializer::functor write_function;
 
     record_row(record_manager& manager, array_index index=0);
 
@@ -87,10 +90,10 @@ array_index record_row<KeyType>::create(const KeyType& key,
 {
     BITCOIN_ASSERT(index_ == 0);
 
-    // Create new record and populate its key.
+    // Create new record and populate its key and data.
     //   [ KeyType  ] <==
     //   [ next:4   ]
-    //   [ value... ]
+    //   [ value... ] <==
     index_ = manager_.new_records(1);
 
     const auto memory = raw_data(key_start);
@@ -135,7 +138,7 @@ memory_ptr record_row<KeyType>::data() const
     // Get value pointer.
     //   [ KeyType  ]
     //   [ next:4   ]
-    //   [ value... ] <==
+    //   [ value... ] ==>
 
     // Value data is at the end.
     return raw_data(prefix_size);

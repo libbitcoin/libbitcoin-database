@@ -30,28 +30,31 @@ using namespace bc::wallet;
 using namespace boost::system;
 using namespace boost::filesystem;
 
-void test_block_exists(const data_base& interface,
-    const size_t height, const block block0, bool indexed)
+void test_block_exists(const data_base& interface, size_t height,
+    const block& block0, bool indexed)
 {
-    const hash_digest blk_hash = block0.header().hash();
+    const auto& history_store = interface.history();
+    const auto block_hash = block0.hash();
     auto r0 = interface.blocks().get(height);
-    auto r0_byhash = interface.blocks().get(blk_hash);
+    auto r0_byhash = interface.blocks().get(block_hash, true);
 
     BOOST_REQUIRE(r0);
     BOOST_REQUIRE(r0_byhash);
-    BOOST_REQUIRE(r0.header().hash() == blk_hash);
-    BOOST_REQUIRE(r0_byhash.header().hash() == blk_hash);
+    BOOST_REQUIRE(r0.hash() == block_hash);
+    BOOST_REQUIRE(r0_byhash.hash() == block_hash);
     BOOST_REQUIRE_EQUAL(r0.height(), height);
     BOOST_REQUIRE_EQUAL(r0_byhash.height(), height);
     BOOST_REQUIRE_EQUAL(r0.transaction_count(), block0.transactions().size());
     BOOST_REQUIRE_EQUAL(r0_byhash.transaction_count(), block0.transactions().size());
 
+    // TODO: test tx hashes.
+
     for (size_t i = 0; i < block0.transactions().size(); ++i)
     {
-        const transaction& tx = block0.transactions()[i];
-        const hash_digest tx_hash = tx.hash();
-        BOOST_REQUIRE(r0.transaction_hash(i) == tx_hash);
-        BOOST_REQUIRE(r0_byhash.transaction_hash(i) == tx_hash);
+        const auto& tx = block0.transactions()[i];
+        const auto tx_hash = tx.hash();
+        ////BOOST_REQUIRE(r0.transaction_hash(i) == tx_hash);
+        ////BOOST_REQUIRE(r0_byhash.transaction_hash(i) == tx_hash);
 
         auto r0_tx = interface.transactions().get(tx_hash, max_size_t, false);
         BOOST_REQUIRE(r0_tx);
@@ -76,26 +79,27 @@ void test_block_exists(const data_base& interface,
                 if (!indexed)
                     continue;
 
-                const auto address = payment_address::extract(input.script());
+                const auto addresses = input.addresses();
+                ////const auto& prevout = input.previous_output();
+                ////const auto address = prevout.validation.cache.addresses();
 
-                if (!address)
-                    continue;
-
-                auto history = interface.history().get(address.hash(), 0, 0);
-                auto found = false;
-
-                for (const auto& row: history)
+                for (const auto& address: addresses)
                 {
-                    if (row.point.hash() == spend.hash() &&
-                        row.point.index() == spend.index())
-                    {
-                        BOOST_REQUIRE_EQUAL(row.height, height);
-                        found = true;
-                        break;
-                    }
-                }
+                    auto history = history_store.get(address.hash(), 0, 0);
+                    auto found = false;
 
-                BOOST_REQUIRE(found);
+                    for (const auto& row: history)
+                    {
+                        if (row.point() == spend)
+                        {
+                            BOOST_REQUIRE_EQUAL(row.height(), height);
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    BOOST_REQUIRE(found);
+                }
             }
         }
 
@@ -106,43 +110,46 @@ void test_block_exists(const data_base& interface,
         {
             const auto& output = tx.outputs()[j];
             output_point outpoint{ tx_hash, static_cast<uint32_t>(j) };
-            const auto address = payment_address::extract(output.script());
+            const auto addresses = output.addresses();
 
-            if (!address)
-                continue;
-
-            auto history = interface.history().get(address.hash(), 0, 0);
-            auto found = false;
-
-            for (const auto& row: history)
+            for (const auto& address: addresses)
             {
-                BOOST_REQUIRE(row.point.is_valid());
+                auto history = history_store.get(address.hash(), 0, 0);
+                auto found = false;
 
-                if (row.point.hash() == outpoint.hash() &&
-                    row.point.index() == outpoint.index())
+                for (const auto& row: history)
                 {
-                    BOOST_REQUIRE_EQUAL(row.height, height);
-                    BOOST_REQUIRE_EQUAL(row.value, output.value());
-                    found = true;
-                    break;
-                }
-            }
+                    BOOST_REQUIRE(row.is_valid());
 
-            BOOST_REQUIRE(found);
+                    if (row.point() == outpoint)
+                    {
+                        BOOST_REQUIRE_EQUAL(row.height(), height);
+                        BOOST_REQUIRE_EQUAL(row.data(), output.value());
+                        found = true;
+                        break;
+                    }
+                }
+
+                BOOST_REQUIRE(found);
+            }
         }
     }
 }
 
-void test_block_not_exists(const data_base& interface,
-    const block block0, bool indexed)
+void test_block_not_exists(const data_base& interface, const block& block0,
+    bool indexed)
 {
-    ////const hash_digest blk_hash = hash_block_header(block0.header);
-    ////auto r0_byhash = interface.blocks().get(blk_hash);
-    ////BOOST_REQUIRE(!r0_byhash);
+    const auto& history_store = interface.history();
+
+    // Popped blocks still exist in the block hash table, but not confirmed.
+    const auto block_hash = block0.hash();
+    const auto r0_confirmed = interface.blocks().get(block_hash, true);
+    BOOST_REQUIRE(!r0_confirmed);
+
     for (size_t i = 0; i < block0.transactions().size(); ++i)
     {
-        const transaction& tx = block0.transactions()[i];
-        const hash_digest tx_hash = tx.hash();
+        const auto& tx = block0.transactions()[i];
+        const auto tx_hash = tx.hash();
 
         if (!tx.is_coinbase())
         {
@@ -156,25 +163,26 @@ void test_block_not_exists(const data_base& interface,
                 if (!indexed)
                     continue;
 
-                const auto address = payment_address::extract(input.script());
+                const auto addresses = input.addresses();
+                ////const auto& prevout = input.previous_output();
+                ////const auto address = prevout.validation.cache.addresses();
 
-                if (!address)
-                    continue;
-
-                auto history = interface.history().get(address.hash(), 0, 0);
-                auto found = false;
-
-                for (const auto& row: history)
+                for (const auto& address: addresses)
                 {
-                    if (row.point.hash() == spend.hash() &&
-                        row.point.index() == spend.index())
-                    {
-                        found = true;
-                        break;
-                    }
-                }
+                    auto history = history_store.get(address.hash(), 0, 0);
+                    auto found = false;
 
-                BOOST_REQUIRE(!found);
+                    for (const auto& row: history)
+                    {
+                        if (row.point() == spend)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    BOOST_REQUIRE(!found);
+                }
             }
         }
 
@@ -185,25 +193,24 @@ void test_block_not_exists(const data_base& interface,
         {
             const auto& output = tx.outputs()[j];
             output_point outpoint{ tx_hash, static_cast<uint32_t>(j) };
-            const auto address = payment_address::extract(output.script());
+            const auto addresses = output.addresses();
 
-            if (!address)
-                continue;
-
-            auto history = interface.history().get(address.hash(), 0, 0);
-            auto found = false;
-
-            for (const auto& row: history)
+            for (const auto& address: addresses)
             {
-                if (row.point.hash() == outpoint.hash() &&
-                    row.point.index() == outpoint.index())
-                {
-                    found = true;
-                    break;
-                }
-            }
+                auto history = history_store.get(address.hash(), 0, 0);
+                auto found = false;
 
-            BOOST_REQUIRE(!found);
+                for (const auto& row: history)
+                {
+                    if (row.point() == outpoint)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                BOOST_REQUIRE(!found);
+            }
         }
     }
 }
@@ -330,9 +337,9 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     data_base_accessor instance(settings);
     const auto block0 = block::genesis_mainnet();
     BOOST_REQUIRE(instance.create(block0));
+    test_block_exists(instance, 0, block0, indexed);
     BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 0);
-    test_block_exists(instance, 0, block0, indexed);
 
     // This tests a missing parent, not a database failure.
     // A database failure would prevent subsequent read/write operations.
@@ -345,6 +352,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     const auto block1 = read_block(MAINNET_BLOCK1);
     test_block_not_exists(instance, block1, indexed);
     BOOST_REQUIRE_EQUAL(instance.push(block1, 1), error::success);
+    test_block_exists(instance, 0, block0, indexed);
     BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 1u);
     test_block_exists(instance, 1, block1, indexed);
@@ -356,10 +364,11 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     test_block_not_exists(instance, *block2_ptr, indexed);
     test_block_not_exists(instance, *block3_ptr, indexed);
     BOOST_REQUIRE_EQUAL(push_all_result(instance, blocks_push_ptr, 2, dispatch), error::success);
+    test_block_exists(instance, 1, block1, indexed);
     BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 3u);
-    test_block_exists(instance, 2, *block2_ptr, indexed);
     test_block_exists(instance, 3, *block3_ptr, indexed);
+    test_block_exists(instance, 2, *block2_ptr, indexed);
 
     std::cout << "insert block #2 (store_block_duplicate)" << std::endl;
     BOOST_REQUIRE_EQUAL(instance.insert(*block2_ptr, 2), error::store_block_duplicate);

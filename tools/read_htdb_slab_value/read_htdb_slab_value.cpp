@@ -56,7 +56,7 @@ int main(int argc, char** argv)
     result = manager.start();
     BITCOIN_ASSERT(result);
 
-    memory_ptr slab = nullptr;
+    memory_ptr slab;
     if (key_data.size() == 32)
     {
         slab = get<32>(header, manager, key_data);

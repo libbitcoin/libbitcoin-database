@@ -23,6 +23,22 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
+// Record format (v4):
+// ----------------------------------------------------------------------------
+// [ height:4    - const ] (first short-circuit sequential read after height)
+// [ prefix:4    - const ] (second short-circuit sequential read after prefix)
+// [ ephemkey:32 - const ]
+// [ address:20  - const ]
+// [ tx_hash:32  - const ]
+
+// Record format (v3):
+// ----------------------------------------------------------------------------
+// [ prefix:4    - const ]
+// [ height:4    - const ]
+// [ ephemkey:32 - const ]
+// [ address:20  - const ]
+// [ tx_hash:32  - const ]
+
 namespace libbitcoin {
 namespace database {
 
@@ -33,11 +49,6 @@ static constexpr auto rows_header_size = 0u;
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto prefix_size = sizeof(uint32_t);
 
-// [ prefix:4 ]
-// [ height:4 ]
-// [ ephemkey:32 ]
-// [ address:20 ]
-// [ tx_hash:32 ]
 // ephemkey is without sign byte and address is without version byte.
 static constexpr auto row_size = prefix_size + height_size + hash_size +
     short_hash_size + hash_size;
@@ -90,13 +101,11 @@ bool stealth_database::close()
     return rows_file_.close();
 }
 
-// Commit latest inserts.
 void stealth_database::synchronize()
 {
     rows_manager_.sync();
 }
 
-// Flush the memory map to disk.
 bool stealth_database::flush() const
 {
     return rows_file_.flush();
@@ -105,72 +114,44 @@ bool stealth_database::flush() const
 // Queries.
 // ----------------------------------------------------------------------------
 
-// TODO: add serialization to stealth_compact.
 // The prefix is fixed at 32 bits, but the filter is 0-32 bits, so the records
-// cannot be indexed using a hash table. We also do not index by height.
-stealth_compact::list stealth_database::scan(const binary& filter,
+// cannot be indexed using a hash table, and are not indexed by height.
+stealth_database::list stealth_database::get(const binary& filter,
     size_t from_height) const
 {
-    stealth_compact::list result;
+    list result;
+    stealth_record stealth;
 
     for (array_index row = 0; row < rows_manager_.count(); ++row)
     {
         const auto record = rows_manager_.get(row);
-        auto memory = REMAP_ADDRESS(record);
-        const auto field = from_little_endian_unsafe<uint32_t>(memory);
+        auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(record));
 
-        // Skip if prefix doesn't match.
-        if (!filter.is_prefix_of(field))
-            continue;
-
-        memory += prefix_size;
-        const auto height = from_little_endian_unsafe<uint32_t>(memory);
-
-        // Skip if height is too low.
-        if (height < from_height)
-            continue;
-
-        // Add row to results.
-        auto deserial = make_unsafe_deserializer(memory + height_size);
-        result.push_back(
-        {
-            deserial.read_hash(),
-            deserial.read_short_hash(),
-            deserial.read_hash()
-        });
+        // Failed reads are conflated with skipped returns.
+        if (stealth.from_data(deserial, from_height, filter))
+            result.push_back(stealth);
     }
 
-    // TODO: we could sort result here.
     return result;
 }
 
-// TODO: add serialization to stealth_compact.
-void stealth_database::store(uint32_t prefix, uint32_t height,
-    const stealth_compact& row)
+void stealth_database::store(const stealth_record& stealth)
 {
-    // Allocate new row.
+    // Allocate new row and write data.
     const auto index = rows_manager_.new_records(1);
     const auto record = rows_manager_.get(index);
     const auto memory = REMAP_ADDRESS(record);
-
-    // Write data.
     auto serial = make_unsafe_serializer(memory);
-
-    // Dual key.
-    serial.write_4_bytes_little_endian(prefix);
-    serial.write_4_bytes_little_endian(height);
-
-    // Stealth data.
-    serial.write_hash(row.ephemeral_public_key_hash);
-    serial.write_short_hash(row.public_key_hash);
-    serial.write_hash(row.transaction_hash);
+    stealth.to_data(serial, false);
 }
 
-////bool stealth_database::unlink()
-////{
-////    // TODO: mark as deleted (not implemented).
-////    return false;
-////}
+stealth_statinfo stealth_database::statinfo() const
+{
+    return
+    {
+        rows_manager_.count()
+    };
+}
 
 } // namespace database
 } // namespace libbitcoin

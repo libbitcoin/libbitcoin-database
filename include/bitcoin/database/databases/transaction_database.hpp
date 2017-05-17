@@ -28,6 +28,7 @@
 #include <bitcoin/database/result/transaction_result.hpp>
 #include <bitcoin/database/primitives/slab_hash_table.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
+#include <bitcoin/database/result/transaction_result.hpp>
 #include <bitcoin/database/unspent_outputs.hpp>
 
 namespace libbitcoin {
@@ -42,6 +43,7 @@ class BCD_API transaction_database
 {
 public:
     typedef boost::filesystem::path path;
+    typedef slab_hash_table<hash_digest> slab_map;
     typedef std::shared_ptr<shared_mutex> mutex_ptr;
 
     /// Sentinel for use in tx position to indicate unconfirmed.
@@ -63,6 +65,9 @@ public:
     /// Call to unload the memory map.
     bool close();
 
+    /// Fetch transaction by file offset.
+    transaction_result get(file_offset hash) const;
+
     /// Fetch transaction by its hash, at or below the specified block height.
     transaction_result get(const hash_digest& hash, size_t fork_height,
         bool require_confirmed) const;
@@ -72,8 +77,12 @@ public:
         bool& out_coinbase, const chain::output_point& point,
         size_t fork_height, bool require_confirmed) const;
 
-    /// Store a transaction in the database.
-    void store(const chain::transaction& tx, size_t height, size_t position);
+    /// Store a set of transactions presumed to be associated to a block.
+    file_offset associate(const chain::transaction::list& transactions);
+
+    /// Store a transaction in the database, returning the slab file offset.
+    file_offset store(const chain::transaction& tx, size_t height,
+        size_t position);
 
     /// Update the spender height of the output in the tx store.
     bool spend(const chain::output_point& point, size_t spender_height);
@@ -81,10 +90,11 @@ public:
     /// Update the spender height of the output in the tx store.
     bool unspend(const chain::output_point& point);
 
-    /// Promote an unconfirmed tx (not including its indexes).
-    bool confirm(const hash_digest& hash, size_t height, size_t position);
+    /// Promote an unconfirmed tx.
+    file_offset confirm(const hash_digest& hash, size_t height,
+        size_t position);
 
-    /// Demote the transaction (not including its indexes).
+    /// Demote the transaction.
     bool unconfirm(const hash_digest& hash);
 
     /// Commit latest inserts.
@@ -94,8 +104,6 @@ public:
     bool flush() const;
 
 private:
-    typedef slab_hash_table<hash_digest> slab_map;
-
     memory_ptr find(const hash_digest& hash, size_t maximum_height,
         bool require_confirmed) const;
 
