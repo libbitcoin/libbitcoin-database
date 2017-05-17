@@ -280,7 +280,12 @@ void block_database::write_position(file_offset position, array_index height)
 file_offset block_database::read_position(array_index height) const
 {
     const auto slab = index_manager_.get(height);
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    shared_lock lock(mutex_);
     return from_little_endian_unsafe<file_offset>(REMAP_ADDRESS(slab));
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 // The index of the highest existing block, independent of gaps.
