@@ -48,8 +48,8 @@ record_manager::record_manager(memory_map& file, file_offset header_size,
     size_t record_size)
   : file_(file),
     header_size_(header_size),
-    record_count_(0),
-    record_size_(record_size)
+    record_size_(record_size),
+    record_count_(0)
 {
 }
 

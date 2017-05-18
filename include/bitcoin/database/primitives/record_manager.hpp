@@ -84,13 +84,11 @@ private:
     // This class is thread and remap safe.
     memory_map& file_;
     const file_offset header_size_;
+    const size_t record_size_;
 
-    // Payload size is protected by mutex.
+    // Record count is protected by mutex.
     array_index record_count_;
     mutable shared_mutex mutex_;
-
-    // Records are fixed size.
-    const size_t record_size_;
 };
 
 } // namespace database

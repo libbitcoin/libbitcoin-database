@@ -33,14 +33,14 @@ using namespace bc::machine;
 
 // Record format (v3/v4):
 // ----------------------------------------------------------------------------
-// [ height:4            - atomic ] (atomic with position)
-// [ position:2          - atomic ] (atomic with height)
-// [ output_count:varint - const  ]
-// [ [ spender_height:4  - atomic ] [ value:8 ][ script:varint ] ... - const ]
-// [ input_count:varint  - const  ]
+// [ height/forks:4       - atomic ] (atomic with position)
+// [ position/confirmed:2 - atomic ] (atomic with height)
+// [ output_count:varint  - const  ]
+// [ [ spender_height:4   - atomic ] [ value:8 ][ script:varint ] ... - const ]
+// [ input_count:varint   - const  ]
 // [ [ hash:32 ][ index:2 ][ script:varint ][ sequence:4 ] ... - const ]
-// [ locktime:varint     - const  ]
-// [ version:varint      - const  ]
+// [ locktime:varint      - const  ]
+// [ version:varint       - const  ]
 
 static BC_CONSTEXPR auto prefix_size = slab_row<hash_digest>::prefix_size;
 static constexpr auto value_size = sizeof(uint64_t);

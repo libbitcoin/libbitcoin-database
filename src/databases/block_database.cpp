@@ -30,12 +30,12 @@
 // Record format (v4) [95 bytes]:
 // Below excludes block height and tx hash indexes (arrays).
 // ----------------------------------------------------------------------------
-//  [ header:80   - const  ]
-//  [ height:4    - const  ] (in any branch)
-//  [ checksum:4  - atomic ] (zero if not cached)
-//  [ tx_start:4  - atomic ] (an array index into the transaction_index)
-//  [ tx_count:2  - atomic ] (atomic with start, both zeroed if empty)
-//  [ confirmed:1 - atomic ] (zero if not in main branch)
+//  [ header:80  - const  ]
+//  [ height:4   - const  ] (in any branch)
+//  [ checksum:4 - atomic ] (optional, zero if not cached)
+//  [ tx_start:4 - atomic ] (array index into the transaction_index, or zero)
+//  [ tx_count:2 - atomic ] (atomic with start, zero if block unpopulated)
+//  [ status:1   - atomic ] (unpopulated, unconfirmed - weak branch, validated)
 
 // Record format (v3) [variable bytes] (median_time_past added in v3.3):
 // Below excludes block height index (array).
@@ -45,7 +45,6 @@
 //  [ height:4           - const ]
 //  [ tx_count:1-2       - const ]
 //  [ [ tx_hash:32 ]...  - const ]
-
 
 namespace libbitcoin {
 namespace database {
@@ -459,6 +458,7 @@ bool block_database::unconfirm(size_t from_height)
         if (!confirm(get(height).hash(), false))
             return false;
 
+    // This is the only place where the logical index is reduced in length.
     // This will remove from the index all references at and above from_height.
     block_index_manager_.set_count(from_height);
     return true;
@@ -466,13 +466,6 @@ bool block_database::unconfirm(size_t from_height)
 
 // Parallel.
 // ----------------------------------------------------------------------------
-// TODO: consider updating indexes only when have contiguous confirmed blocks.
-// This would allow us to update in parallel while supporting query against any
-// block or transaction regardless of gaps. So we drop blocks as they arrive
-// under a milestone, and as the current next top arrives we index it and all
-// blocks that exist after it in the header chain.
-// How do we find them? Use the block index and limit top to contiguous.
-// This solves the parallel import problem of spend updating!
 
 // Safe for parallel write.
 bool block_database::exists(size_t height) const
