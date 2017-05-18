@@ -136,8 +136,8 @@ memory_ptr transaction_database::find(const hash_digest& hash,
     ///////////////////////////////////////////////////////////////////////////
     // Critical Section
     metadata_mutex_.lock_shared();
-    const size_t height = deserial.read_4_bytes_little_endian();
-    const size_t position = deserial.read_2_bytes_little_endian();
+    const auto height = deserial.read_4_bytes_little_endian();
+    const auto position = deserial.read_2_bytes_little_endian();
     metadata_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 
@@ -158,7 +158,7 @@ transaction_result transaction_database::get(const hash_digest& hash,
         metadata_mutex_.lock_shared();
         auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(slab));
         const auto height = deserial.read_4_bytes_little_endian();
-        const auto position = deserial.read_4_bytes_little_endian();
+        const auto position = deserial.read_2_bytes_little_endian();
         metadata_mutex_.unlock_shared();
         ///////////////////////////////////////////////////////////////////////
 
@@ -185,7 +185,7 @@ bool transaction_database::get_output(output& out_output, size_t& out_height,
         metadata_mutex_.lock_shared();
         auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(slab));
         const auto height = deserial.read_4_bytes_little_endian();
-        const auto position = deserial.read_4_bytes_little_endian();
+        const auto position = deserial.read_2_bytes_little_endian();
         metadata_mutex_.unlock_shared();
         ///////////////////////////////////////////////////////////////////////
 
