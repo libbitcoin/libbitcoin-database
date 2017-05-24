@@ -83,6 +83,7 @@ public:
     // ------------------------------------------------------------------------
 
     /// Content store.
+    const path header_index;
     const path block_index;
     const path block_table;
     const path transaction_table;

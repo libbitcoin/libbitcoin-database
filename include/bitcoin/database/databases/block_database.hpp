@@ -44,9 +44,9 @@ public:
     static const array_index empty;
 
     /// Construct the database.
-    block_database(const path& map_filename, const path& block_index_filename,
-        const path& tx_index_filename, size_t buckets, size_t expansion,
-        mutex_ptr mutex=nullptr);
+    block_database(const path& map_filename, const path& header_index_filename,
+        const path& block_index_filename, const path& tx_index_filename,
+        size_t buckets, size_t expansion, mutex_ptr mutex=nullptr);
 
     /// Close the database (all threads must first be stopped).
     ~block_database();
@@ -146,6 +146,11 @@ private:
     record_hash_table_header lookup_header_;
     record_manager lookup_manager_;
     record_map lookup_map_;
+
+    // Table used for looking up headers by height.
+    // Each record resolves to a record via array_index.
+    memory_map header_index_file_;
+    record_manager header_index_manager_;
 
     // Table used for looking up blocks by height.
     // Each record resolves to a record via array_index.

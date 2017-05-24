@@ -144,10 +144,16 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     });
     const auto h5b = block5b.hash();
 
-    store::create(DIRECTORY "/block_index");
-    store::create(DIRECTORY "/block_table");
-    store::create(DIRECTORY "/tx_index");
-    block_database db(DIRECTORY "/block_index", DIRECTORY "/block_table", DIRECTORY "/tx_index", 1000, 50);
+    const auto block_table = DIRECTORY "/block_table";
+    const auto header_index = DIRECTORY "/header_index";
+    const auto block_index = DIRECTORY "/block_index";
+    const auto tx_index = DIRECTORY "/tx_index";
+
+    store::create(block_table);
+    store::create(header_index);
+    store::create(block_index);
+    store::create(tx_index);
+    block_database db(block_table, header_index, block_index, tx_index, 1000, 50);
     BOOST_REQUIRE(db.create());
 
     size_t height;

@@ -68,6 +68,9 @@ static const auto block_size = header_size + median_time_past_size +
 
 static constexpr auto no_checksum = 0u;
 
+static constexpr auto header_index_header_size = 0u;
+static constexpr auto header_index_record_size = sizeof(array_index);
+
 static constexpr auto block_index_header_size = 0u;
 static constexpr auto block_index_record_size = sizeof(array_index);
 
@@ -99,8 +102,9 @@ inline bool is_confirmed(uint8_t value)
 
 // Blocks uses a hash table and two array indexes, all O(1).
 block_database::block_database(const path& map_filename,
-    const path& block_index_filename, const path& tx_index_filename,
-    size_t buckets, size_t expansion, mutex_ptr mutex)
+    const path& header_index_filename, const path& block_index_filename,
+    const path& tx_index_filename, size_t buckets, size_t expansion,
+    mutex_ptr mutex)
   : initial_map_file_size_(record_hash_table_header_size(buckets) +
         minimum_records_size),
 
@@ -109,6 +113,10 @@ block_database::block_database(const path& map_filename,
     lookup_manager_(lookup_file_, record_hash_table_header_size(buckets),
         record_size),
     lookup_map_(lookup_header_, lookup_manager_),
+
+    header_index_file_(header_index_filename, mutex, expansion),
+    header_index_manager_(header_index_file_, header_index_header_size,
+        block_index_record_size),
 
     block_index_file_(block_index_filename, mutex, expansion),
     block_index_manager_(block_index_file_, block_index_header_size,
@@ -133,17 +141,20 @@ bool block_database::create()
 {
     // Resize and create require an opened file.
     if (!lookup_file_.open() ||
+        !header_index_file_.open() ||
         !block_index_file_.open() ||
         !tx_index_file_.open())
         return false;
 
     // These will throw if insufficient disk space.
     lookup_file_.resize(initial_map_file_size_);
+    header_index_file_.resize(minimum_records_size);
     block_index_file_.resize(minimum_records_size);
     tx_index_file_.resize(minimum_records_size);
 
     if (!lookup_header_.create() ||
         !lookup_manager_.create() ||
+        !header_index_manager_.create() ||
         !block_index_manager_.create() ||
         !tx_index_manager_.create())
         return false;
@@ -152,6 +163,7 @@ bool block_database::create()
     return
         lookup_header_.start() &&
         lookup_manager_.start() &&
+        header_index_manager_.start() &&
         block_index_manager_.start() &&
         tx_index_manager_.start();
 }
@@ -163,10 +175,12 @@ bool block_database::open()
 {
     return
         lookup_file_.open() &&
+        header_index_file_.open() &&
         block_index_file_.open() &&
         tx_index_file_.open() &&
         lookup_header_.start() &&
         lookup_manager_.start() &&
+        header_index_manager_.start() &&
         block_index_manager_.start() &&
         tx_index_manager_.start();
 }
@@ -175,6 +189,7 @@ bool block_database::close()
 {
     return
         lookup_file_.close() &&
+        header_index_file_.close() &&
         block_index_file_.close() &&
         tx_index_file_.close();
 }
@@ -182,6 +197,7 @@ bool block_database::close()
 void block_database::synchronize()
 {
     lookup_manager_.sync();
+    header_index_manager_.sync();
     block_index_manager_.sync();
     tx_index_manager_.sync();
 }
@@ -190,6 +206,7 @@ bool block_database::flush() const
 {
     return
         lookup_file_.flush() &&
+        header_index_file_.flush() &&
         block_index_file_.flush() &&
         tx_index_file_.flush();
 }

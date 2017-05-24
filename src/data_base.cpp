@@ -155,8 +155,8 @@ bool data_base::close()
 // protected
 void data_base::start()
 {
-    blocks_ = std::make_shared<block_database>(block_table, block_index,
-        transaction_index, settings_.block_table_buckets,
+    blocks_ = std::make_shared<block_database>(block_table, header_index,
+        block_index, transaction_index, settings_.block_table_buckets,
         settings_.file_growth_rate, remap_mutex_);
 
     transactions_ = std::make_shared<transaction_database>(transaction_table,

@@ -31,6 +31,7 @@ using namespace bc::database;
 // Database file names.
 #define FLUSH_LOCK "flush_lock"
 #define EXCLUSIVE_LOCK "exclusive_lock"
+#define HEADER_INDEX "header_index"
 #define BLOCK_INDEX "block_index"
 #define BLOCK_TABLE "block_table"
 #define TRANSACTION_INDEX "transaction_index"
@@ -67,6 +68,7 @@ store::store(const path& prefix, bool with_indexes, bool flush_each_write)
     exclusive_lock_(prefix / EXCLUSIVE_LOCK),
 
     // Content store.
+    header_index(prefix / HEADER_INDEX),
     block_index(prefix / BLOCK_INDEX),
     block_table(prefix / BLOCK_TABLE),
     transaction_index(prefix / TRANSACTION_INDEX),
@@ -87,6 +89,7 @@ store::store(const path& prefix, bool with_indexes, bool flush_each_write)
 bool store::create()
 {
     const auto created =
+        create(header_index) &&
         create(block_table) &&
         create(block_index) &&
         create(transaction_table) &&
