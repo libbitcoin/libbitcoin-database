@@ -60,6 +60,15 @@ public:
     /// Call to unload the memory map.
     bool close();
 
+    /// Commit latest inserts.
+    void synchronize();
+
+    /// Flush the memory maps to disk.
+    bool flush() const;
+
+    // Queries.
+    //-------------------------------------------------------------------------
+
     /// Determine if a block exists at the given height.
     bool exists(size_t height) const;
 
@@ -102,12 +111,6 @@ public:
     /// This does not demote the blocks' transactions or their spends, which
     /// must be unconfirmed before this call. Should always be the top block.
     bool unconfirm(size_t from_height);
-
-    /// Commit latest inserts.
-    void synchronize();
-
-    /// Flush the memory maps to disk.
-    bool flush() const;
 
     /// The index of the highest existing block, independent of gaps.
     bool top(size_t& out_height) const;

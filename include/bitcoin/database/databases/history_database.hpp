@@ -67,6 +67,15 @@ public:
     /// Call to unload the memory map.
     bool close();
 
+    /// Commit latest inserts.
+    void synchronize();
+
+    /// Flush the memory maps to disk.
+    bool flush() const;
+
+    // Queries.
+    //-------------------------------------------------------------------------
+
     /// Get the output and input points associated with the address hash.
     list get(const short_hash& key, size_t limit, size_t from_height) const;
 
@@ -75,12 +84,6 @@ public:
 
     /// Logically delete the last row that was added to key.
     bool unlink_last_row(const short_hash& key);
-
-    /// Commit latest inserts.
-    void synchronize();
-
-    /// Flush the memory maps to disk.
-    bool flush() const;
 
     /// Return statistical info about the database.
     history_statinfo statinfo() const;

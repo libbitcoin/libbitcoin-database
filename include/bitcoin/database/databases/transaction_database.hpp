@@ -65,6 +65,15 @@ public:
     /// Call to unload the memory map.
     bool close();
 
+    /// Commit latest inserts.
+    void synchronize();
+
+    /// Flush the memory map to disk.
+    bool flush() const;
+
+    // Queries.
+    //-------------------------------------------------------------------------
+
     /// Fetch transaction by file offset.
     transaction_result get(file_offset hash) const;
 
@@ -97,12 +106,6 @@ public:
 
     /// Demote the transaction.
     bool unconfirm(const hash_digest& hash);
-
-    /// Commit latest inserts.
-    void synchronize();
-
-    /// Flush the memory map to disk.
-    bool flush() const;
 
 private:
     memory_ptr find(const hash_digest& hash, size_t maximum_height,

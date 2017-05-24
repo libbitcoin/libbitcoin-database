@@ -65,6 +65,15 @@ public:
     /// Call to unload the memory map.
     bool close();
 
+    /// Commit latest inserts.
+    void synchronize();
+
+    /// Flush the memory map to disk.
+    bool flush() const;
+
+    // Queries.
+    //-------------------------------------------------------------------------
+
     /// Get inpoint that spent the given outpoint.
     chain::input_point get(const chain::output_point& outpoint) const;
 
@@ -74,12 +83,6 @@ public:
 
     /// Delete outpoint spend item from database.
     bool unlink(const chain::output_point& outpoint);
-
-    /// Commit latest inserts.
-    void synchronize();
-
-    /// Flush the memory map to disk.
-    bool flush() const;
 
     /// Return statistical info about the database.
     spend_statinfo statinfo() const;

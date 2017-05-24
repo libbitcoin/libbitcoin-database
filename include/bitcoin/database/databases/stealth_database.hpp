@@ -60,6 +60,15 @@ public:
     /// Call to unload the memory map.
     bool close();
 
+    /// Commit latest inserts.
+    void synchronize();
+
+    /// Flush the memory map to disk.
+    bool flush() const;
+
+    // Queries.
+    //-------------------------------------------------------------------------
+
     /// Linearly scan all entries, discarding those after from_height.
     list get(const binary& filter, size_t from_height) const;
 
@@ -68,12 +77,6 @@ public:
 
     /////// Delete stealth row (not implemented).
     ////bool unlink();
-
-    /// Commit latest inserts.
-    void synchronize();
-
-    /// Flush the memory map to disk.
-    bool flush() const;
 
     /// Return statistical info about the database.
     stealth_statinfo statinfo() const;
