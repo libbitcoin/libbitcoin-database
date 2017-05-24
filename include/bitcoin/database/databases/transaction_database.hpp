@@ -87,10 +87,7 @@ public:
         const chain::output_point& point, size_t fork_height,
         bool require_confirmed) const;
 
-    /// Store a set of transactions presumed to be associated to a block.
-    file_offset associate(const chain::transaction::list& transactions);
-
-    /// Store a transaction in the database.
+    /// Store a transaction in the database, returning the slab file offset.
     file_offset store(const chain::transaction& tx, size_t height,
         uint32_t median_time_past, size_t position);
 
