@@ -108,8 +108,8 @@ public:
 
     /// Invoke pop_all and then push_all under a common lock.
     void reorganize(const config::checkpoint& fork_point,
-        block_const_ptr_list_const_ptr incoming_blocks,
-        block_const_ptr_list_ptr outgoing_blocks, dispatcher& dispatch,
+        header_const_ptr_list_const_ptr incoming,
+        header_const_ptr_list_ptr outgoing, dispatcher& dispatch,
         result_handler handler);
 
 protected:

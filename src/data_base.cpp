@@ -786,30 +786,30 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
 
 // This is designed for write exclusivity and read concurrency.
 void data_base::reorganize(const config::checkpoint& fork_point,
-    block_const_ptr_list_const_ptr incoming_blocks,
-    block_const_ptr_list_ptr outgoing_blocks, dispatcher& dispatch,
+    header_const_ptr_list_const_ptr incoming,
+    header_const_ptr_list_ptr outgoing, dispatcher& dispatch,
     result_handler handler)
 {
-    const auto next_height = safe_add(fork_point.height(), size_t(1));
+    ////const auto next_height = safe_add(fork_point.height(), size_t(1));
 
-    const result_handler pop_handler =
-        std::bind(&data_base::handle_pop,
-            this, _1, incoming_blocks, next_height, std::ref(dispatch),
-                handler);
+    ////const result_handler pop_handler =
+    ////    std::bind(&data_base::handle_pop,
+    ////        this, _1, incoming, next_height, std::ref(dispatch),
+    ////            handler);
 
-    // Critical Section.
-    ///////////////////////////////////////////////////////////////////////////
-    write_mutex_.lock();
+    ////// Critical Section.
+    ///////////////////////////////////////////////////////////////////////////////
+    ////write_mutex_.lock();
 
-    // Begin Flush Lock
-    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    if (!begin_write())
-    {
-        pop_handler(error::operation_failed);
-        return;
-    }
+    ////// Begin Flush Lock
+    //////vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    ////if (!begin_write())
+    ////{
+    ////    pop_handler(error::operation_failed);
+    ////    return;
+    ////}
 
-    pop_above(outgoing_blocks, fork_point.hash(), dispatch, pop_handler);
+    ////pop_above(outgoing, fork_point.hash(), dispatch, pop_handler);
 }
 
 void data_base::handle_pop(const code& ec,
