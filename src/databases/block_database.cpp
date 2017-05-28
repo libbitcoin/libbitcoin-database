@@ -487,11 +487,6 @@ bool block_database::unconfirm(size_t from_height)
 // Index.
 // ----------------------------------------------------------------------------
 
-bool block_database::exists(size_t height) const
-{
-    return height < block_index_manager_.count();
-}
-
 void block_database::write_index(array_index index, array_index height)
 {
     BITCOIN_ASSERT(height < max_uint32);

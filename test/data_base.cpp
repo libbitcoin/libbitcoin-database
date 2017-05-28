@@ -370,8 +370,8 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     test_block_exists(instance, 3, *block3_ptr, indexed);
     test_block_exists(instance, 2, *block2_ptr, indexed);
 
-    std::cout << "insert block #2 (store_block_duplicate)" << std::endl;
-    BOOST_REQUIRE_EQUAL(instance.insert(*block2_ptr, 2), error::store_block_duplicate);
+    std::cout << "insert block #2 (store_block_invalid_height)" << std::endl;
+    BOOST_REQUIRE_EQUAL(instance.insert(*block2_ptr, 2), error::store_block_invalid_height);
 
     std::cout << "pop_above block 1 (blocks #2 & #3)" << std::endl;
     const auto blocks_popped_ptr = std::make_shared<block_const_ptr_list>();

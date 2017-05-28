@@ -93,9 +93,6 @@ public:
     // Queries.
     //-------------------------------------------------------------------------
 
-    /// Determine if a block exists at the given height.
-    bool exists(size_t height) const;
-
     /// The index of the highest existing block.
     bool top(size_t& out_height) const;
 
