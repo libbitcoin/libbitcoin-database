@@ -34,6 +34,30 @@
 namespace libbitcoin {
 namespace database {
 
+// Stored txs are verified or protected by valid header PoW, states are:
+// TODO: compress into position using flag for indexed and sentinal for pool.
+enum class transaction_state : uint8_t
+{
+    /// Interface only (not stored).
+    not_found = 0,
+
+    /// If the tx can become valid via soft fork, set "stored" instead.
+    /// Retain for reject, height/position unused (is this usable?).
+    invalid = 1,
+
+    /// Valid via header PoW only, height/position unused.
+    stored = 2,
+
+    /// Valid via pool|popped block, height is forks, position unused.
+    pooled = 3,
+
+    /// Valid, header-indexed, height is forks, position unused.
+    indexed = 4,
+
+    /// Valid, block-indexed, height is height, position position.
+    confirmed = 5
+};
+
 /// This enables lookups of transactions by hash.
 /// An alternative and faster method is lookup from a unique index
 /// that is assigned upon storage.
@@ -87,9 +111,16 @@ public:
         const chain::output_point& point, size_t fork_height,
         bool require_confirmed) const;
 
-    /// Store a transaction in the database, returning the slab file offset.
+    // Store.
+    // ------------------------------------------------------------------------
+
+    /// Height and position may be sentinels or otherwise.
+    /// Store a transaction in the database, returning slab file offset.
     file_offset store(const chain::transaction& tx, size_t height,
         uint32_t median_time_past, size_t position);
+
+    // Update.
+    //-------------------------------------------------------------------------
 
     /// Update the spender height of the output in the tx store.
     bool spend(const chain::output_point& point, size_t spender_height);
@@ -105,6 +136,12 @@ public:
     bool unconfirm(const hash_digest& hash);
 
 private:
+    static bool is_confirmed(transaction_state status);
+    static bool is_indexed(transaction_state status);
+    static bool is_pooled(transaction_state status);
+    static bool is_valid(transaction_state position);
+    static transaction_state to_status(bool confirmed);
+
     memory_ptr find(const hash_digest& hash, size_t maximum_height,
         bool require_confirmed) const;
 

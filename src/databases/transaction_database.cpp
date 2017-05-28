@@ -31,16 +31,38 @@ namespace database {
 using namespace bc::chain;
 using namespace bc::machine;
 
-// Record format (v3/v4):
+// Record format (v4):
 // ----------------------------------------------------------------------------
-// [ height/forks:4       - atomic ] (atomic with position)
-// [ position/confirmed:2 - atomic ] (atomic with height)
-// [ output_count:varint  - const  ]
-// [ [ spender_height:4   - atomic ] [ value:8 ][ script:varint ] ... - const ]
-// [ input_count:varint   - const  ]
-// [ [ hash:32 ][ index:2 ][ script:varint ][ sequence:4 ] ... - const ]
-// [ locktime:varint      - const  ]
-// [ version:varint       - const  ]
+// [ state:1              - atomic1 ] (invalid, stored, pooled, indexed, confirmed)
+// [ height/forks:4       - atomic1 ] (atomic with position, code if invalid)
+// [ position:2           - atomic1 ] (atomic with height, could store state)
+// [ output_count:varint  - const   ]
+// [
+//   [ index_spend:1    - atomic2 ]
+//   [ spender_height:4 - atomic2 ] (could store index_spend in high bit)
+//   [ value:8          - const   ]
+//   [ script:varint    - const   ]
+// ]...
+// [ input_count:varint   - const   ]
+// [
+//   [ hash:32           - const  ]
+//   [ index:2           - const  ]
+//   [ script:varint     - const  ]
+//   [ sequence:4        - const  ]
+// ]...
+// [ locktime:varint      - const   ]
+// [ version:varint       - const   ]
+
+// Record format (v3):
+// ----------------------------------------------------------------------------
+// [ height/forks:4         - atomic ] (atomic with position)
+// [ position/unconfirmed:2 - atomic ] (atomic with height)
+// [ output_count:varint    - const  ]
+// [ [ spender_height:4 - atomic ][ value:8 ][ script:varint ] ]...
+// [ input_count:varint     - const  ]
+// [ [ hash:32 ][ index:2 ][ script:varint ][ sequence:4 ] ]...
+// [ locktime:varint        - const  ]
+// [ version:varint         - const  ]
 
 static BC_CONSTEXPR auto prefix_size = slab_row<hash_digest>::prefix_size;
 static constexpr auto value_size = sizeof(uint64_t);
@@ -51,8 +73,38 @@ static constexpr auto spender_height_value_size = height_size + value_size;
 static constexpr auto metadata_size = height_size + position_size +
     median_time_past_size;
 
+// TODO: add indexed spender flag to each output (cache?).
+
 // Valid tx position should never reach 2^16.
 const size_t transaction_database::unconfirmed = max_uint16;
+
+bool transaction_database::is_confirmed(transaction_state status)
+{
+    return status == transaction_state::confirmed;
+}
+
+bool transaction_database::is_indexed(transaction_state status)
+{
+    return status == transaction_state::indexed;
+}
+
+bool transaction_database::is_pooled(transaction_state status)
+{
+    return status == transaction_state::pooled ||
+        status == transaction_state::indexed;
+}
+
+bool transaction_database::is_valid(transaction_state position)
+{
+    return is_confirmed(position) || is_indexed(position) ||
+        is_pooled(position);
+}
+
+transaction_state transaction_database::to_status(bool confirmed)
+{
+    return confirmed ? transaction_state::confirmed :
+        transaction_state::pooled;
+}
 
 // Transactions uses a hash table index, O(1).
 transaction_database::transaction_database(const path& map_filename,
@@ -126,15 +178,11 @@ bool transaction_database::flush() const
 // Queries.
 // ----------------------------------------------------------------------------
 
+// private
 memory_ptr transaction_database::find(const hash_digest& hash,
     size_t fork_height, bool require_confirmed) const
 {
-    //*************************************************************************
-    // CONSENSUS: This simplified implementation does not allow the possibility
-    // of a matching tx hash above the fork height or the existence of both
-    // unconfirmed and confirmed transactions with the same hash. This is
-    // consistent with the current satoshi implementation.
-    //*************************************************************************
+    // HACK: this implementation assumes tx hash collisions cannot happen.
     auto slab = lookup_map_.find(hash /*, fork_height, require_confirmed*/);
 
     if (slab == nullptr || !require_confirmed)
@@ -207,6 +255,7 @@ transaction_result transaction_database::get(const hash_digest& hash,
     return{ slab, hash, height, median_time_past, position };
 }
 
+// TODO: fork_height is block index only.
 bool transaction_database::get_output(output& out_output, size_t& out_height,
     uint32_t& out_median_time_past, bool& out_coinbase,
     const output_point& point, size_t fork_height,
@@ -216,7 +265,6 @@ bool transaction_database::get_output(output& out_output, size_t& out_height,
         point, fork_height, require_confirmed))
         return true;
 
-    // The transaction does not exist at/below fork with matching confirmation.
     const auto slab = find(point.hash(), fork_height, require_confirmed);
 
     if (!slab)
@@ -234,9 +282,18 @@ bool transaction_database::get_output(output& out_output, size_t& out_height,
 
     // Result is used only to parse the output.
     transaction_result result(slab, point.hash(), 0, 0, 0);
+
+    // TODO: add serialized spent flag to chain::output (vs. metadata)?
+    // TODO: should be able to clear spender height if spent above fork point.
+    // TODO: this would simplify calling by allowing for a boolean return.
+    // TODO: this would allow merging the spent by header index flag to result.
+    // TODO: merge header index for require_confired and ignore otherwise.
     out_output = result.output(point.index());
     return true;
 }
+
+// Store.
+// ----------------------------------------------------------------------------
 
 file_offset transaction_database::store(const chain::transaction& tx,
     size_t height, uint32_t median_time_past, size_t position)
@@ -290,6 +347,9 @@ file_offset transaction_database::store(const chain::transaction& tx,
 
     return offset;
 }
+
+// Update.
+// ----------------------------------------------------------------------------
 
 bool transaction_database::spend(const output_point& point,
     size_t spender_height)
