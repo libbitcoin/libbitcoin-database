@@ -96,12 +96,7 @@ bool stealth_database::open()
         rows_manager_.start();
 }
 
-bool stealth_database::close()
-{
-    return rows_file_.close();
-}
-
-void stealth_database::synchronize()
+void stealth_database::commit()
 {
     rows_manager_.sync();
 }
@@ -109,6 +104,11 @@ void stealth_database::synchronize()
 bool stealth_database::flush() const
 {
     return rows_file_.flush();
+}
+
+bool stealth_database::close()
+{
+    return rows_file_.close();
 }
 
 // Queries.

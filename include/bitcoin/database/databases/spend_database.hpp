@@ -62,14 +62,14 @@ public:
     /// Call before using the database.
     bool open();
 
-    /// Call to unload the memory map.
-    bool close();
-
     /// Commit latest inserts.
-    void synchronize();
+    void commit();
 
     /// Flush the memory map to disk.
     bool flush() const;
+
+    /// Call to unload the memory map.
+    bool close();
 
     // Queries.
     //-------------------------------------------------------------------------

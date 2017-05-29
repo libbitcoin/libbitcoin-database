@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(history_database__test)
     auto res_1nr2 = db.get(key4, 0, 0);
     has_one_row(res_1nr2);
 
-    db.synchronize();
+    db.commit();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

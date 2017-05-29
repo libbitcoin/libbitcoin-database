@@ -128,30 +128,6 @@ bool data_base::open()
     return opened;
 }
 
-// Close is idempotent and thread safe.
-// Optional as the database will close on destruct.
-bool data_base::close()
-{
-    if (closed_)
-        return true;
-
-    closed_ = true;
-
-    auto closed =
-        blocks_->close() &&
-        transactions_->close();
-
-    if (use_indexes)
-        closed = closed &&
-            spends_->close() &&
-            history_->close() &&
-            stealth_->close();
-
-    return closed && store::close();
-    // Unlock exclusive file access and conditionally the global flush lock.
-    ///////////////////////////////////////////////////////////////////////////
-}
-
 // protected
 void data_base::start()
 {
@@ -176,6 +152,20 @@ void data_base::start()
         stealth_ = std::make_shared<stealth_database>(stealth_rows,
             settings_.file_growth_rate, remap_mutex_);
     }
+}
+
+// protected
+void data_base::commit()
+{
+    if (use_indexes)
+    {
+        spends_->commit();
+        history_->commit();
+        stealth_->commit();
+    }
+
+    transactions_->commit();
+    blocks_->commit();
 }
 
 // protected
@@ -205,18 +195,28 @@ bool data_base::flush() const
     return flushed;
 }
 
-// protected
-void data_base::synchronize()
+// Close is idempotent and thread safe.
+// Optional as the database will close on destruct.
+bool data_base::close()
 {
-    if (use_indexes)
-    {
-        spends_->synchronize();
-        history_->synchronize();
-        stealth_->synchronize();
-    }
+    if (closed_)
+        return true;
 
-    transactions_->synchronize();
-    blocks_->synchronize();
+    closed_ = true;
+
+    auto closed =
+        blocks_->close() &&
+        transactions_->close();
+
+    if (use_indexes)
+        closed = closed &&
+        spends_->close() &&
+        history_->close() &&
+        stealth_->close();
+
+    return closed && store::close();
+    // Unlock exclusive file access and conditionally the global flush lock.
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 // Readers.
@@ -324,7 +324,7 @@ code data_base::push(const chain::transaction& tx, uint32_t forks)
     // When position is unconfirmed, height is used to store validation forks.
     transactions_->store(tx, forks, median_time_past,
         transaction_database::unconfirmed);
-    transactions_->synchronize();
+    transactions_->commit();
 
     return end_write() ? error::success : error::operation_failed;
     // End Flush Lock
@@ -350,8 +350,8 @@ code data_base::push(const header& header, size_t height)
         return error::operation_failed;
 
     // TODO: implement block store header with header indexing.
-    ////blocks_->store(header, height, true);
-    synchronize();
+    ////blocks_->store(header, height);
+    commit();
 
     return end_write() ? error::success : error::operation_failed;
     // End Flush Lock
@@ -383,7 +383,7 @@ code data_base::push(const block& block, size_t height)
         return error::operation_failed;
 
     blocks_->store(block, height, true);
-    synchronize();
+    commit();
 
     return end_write() ? error::success : error::operation_failed;
     // End Flush Lock
@@ -423,7 +423,7 @@ bool data_base::push_transactions(const chain::block& block, size_t height,
 
 bool data_base::push_spends(const chain::block& block, size_t height)
 {
-    transactions_->synchronize();
+    transactions_->commit();
     const auto& txs = block.transactions();
 
     // Skip coinbase as it has no previous output.
@@ -570,7 +570,7 @@ bool data_base::pop(block& out_block)
         return false;
 
     // Synchronise everything that was changed.
-    synchronize();
+    commit();
 
     // Return the block (with header/block metadata and pop start time).
     out_block = chain::block(block.header(), std::move(transactions));
@@ -717,7 +717,7 @@ void data_base::handle_push_transactions(const code& ec, block_const_ptr block,
     blocks_->store(*block, height, true);
 
     // Synchronize table and index updates.
-    synchronize();
+    commit();
 
     // Set push end time for the block.
     block->validation.end_push = asio::steady_clock::now();

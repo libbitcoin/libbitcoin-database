@@ -91,12 +91,7 @@ bool spend_database::open()
         lookup_manager_.start();
 }
 
-bool spend_database::close()
-{
-    return lookup_file_.close();
-}
-
-void spend_database::synchronize()
+void spend_database::commit()
 {
     lookup_manager_.sync();
 }
@@ -104,6 +99,11 @@ void spend_database::synchronize()
 bool spend_database::flush() const
 {
     return lookup_file_.flush();
+}
+
+bool spend_database::close()
+{
+    return lookup_file_.close();
 }
 
 // Queries.

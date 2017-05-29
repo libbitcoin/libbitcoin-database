@@ -160,12 +160,7 @@ bool transaction_database::open()
         lookup_manager_.start();
 }
 
-bool transaction_database::close()
-{
-    return lookup_file_.close();
-}
-
-void transaction_database::synchronize()
+void transaction_database::commit()
 {
     lookup_manager_.sync();
 }
@@ -173,6 +168,11 @@ void transaction_database::synchronize()
 bool transaction_database::flush() const
 {
     return lookup_file_.flush();
+}
+
+bool transaction_database::close()
+{
+    return lookup_file_.close();
 }
 
 // Queries.

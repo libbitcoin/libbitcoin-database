@@ -106,7 +106,7 @@ public:
 
 protected:
     void start();
-    void synchronize();
+    void commit();
     bool flush() const override;
 
     // Sets error if first_height is not the current top + 1 or not linked.

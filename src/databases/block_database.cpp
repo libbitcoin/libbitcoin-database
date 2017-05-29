@@ -190,16 +190,7 @@ bool block_database::open()
         tx_index_manager_.start();
 }
 
-bool block_database::close()
-{
-    return
-        lookup_file_.close() &&
-        header_index_file_.close() &&
-        block_index_file_.close() &&
-        tx_index_file_.close();
-}
-
-void block_database::synchronize()
+void block_database::commit()
 {
     lookup_manager_.sync();
     header_index_manager_.sync();
@@ -214,6 +205,15 @@ bool block_database::flush() const
         header_index_file_.flush() &&
         block_index_file_.flush() &&
         tx_index_file_.flush();
+}
+
+bool block_database::close()
+{
+    return
+        lookup_file_.close() &&
+        header_index_file_.close() &&
+        block_index_file_.close() &&
+        tx_index_file_.close();
 }
 
 // Queries.
