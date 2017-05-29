@@ -213,18 +213,24 @@ bool block_database::close()
 // Queries.
 // ----------------------------------------------------------------------------
 
-// TODO: review.
-// The height of the highest confirmed block.
-bool block_database::top(size_t& out_height) const
+static bool top(size_t& out_height, size_t count)
 {
-    const auto count = block_index_manager_.count();
-
     // Guard against no genesis block.
     if (count == 0)
         return false;
 
     out_height = count - 1;
     return true;
+}
+
+bool block_database::top_block(size_t& out_height) const
+{
+    return top(out_height, block_index_manager_.count());
+}
+
+bool block_database::top_header(size_t& out_height) const
+{
+    return top(out_height, header_index_manager_.count());
 }
 
 // TODO: review.

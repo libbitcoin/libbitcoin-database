@@ -96,9 +96,11 @@ public:
     // Queries.
     //-------------------------------------------------------------------------
 
-    // TODO: review.
-    /// The index of the highest existing block.
-    bool top(size_t& out_height) const;
+    /// The height of the highest indexed block.
+    bool top_block(size_t& out_height) const;
+
+    /// The height of the highest indexed header.
+    bool top_header(size_t& out_height) const;
 
     // TODO: review.
     /// Fetch block by height (always confirmed).

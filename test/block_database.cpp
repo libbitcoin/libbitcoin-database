@@ -157,13 +157,13 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     BOOST_REQUIRE(db.create());
 
     size_t height;
-    BOOST_REQUIRE(!db.top(height));
+    BOOST_REQUIRE(!db.top_block(height));
 
     db.store(block0, 0, true);
     db.store(block1, 1, true);
     db.store(block2, 2, true);
     db.store(block3, 3, true);
-    BOOST_REQUIRE(db.top(height));
+    BOOST_REQUIRE(db.top_block(height));
     BOOST_REQUIRE_EQUAL(height, 3u);
 
     // Fetch block 2 by hash.
@@ -195,10 +195,10 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     }
 
     // Unlink old chain.
-    BOOST_REQUIRE(db.top(height));
+    BOOST_REQUIRE(db.top_block(height));
     BOOST_REQUIRE_EQUAL(height, 5u);
     db.unconfirm(4);
-    BOOST_REQUIRE(db.top(height));
+    BOOST_REQUIRE(db.top_block(height));
     BOOST_REQUIRE_EQUAL(height, 3u);
 
     // Block 3 exists.
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     // Add new blocks.
     db.store(block4b, 4, true);
     db.store(block5b, 5, true);
-    BOOST_REQUIRE(db.top(height));
+    BOOST_REQUIRE(db.top_block(height));
     BOOST_REQUIRE_EQUAL(height, 5u);
 
     // Fetch blocks.

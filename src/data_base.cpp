@@ -261,26 +261,41 @@ const stealth_database& data_base::stealth() const
 // Synchronous writers.
 // ----------------------------------------------------------------------------
 
-static inline size_t get_next_height(const block_database& blocks)
+static size_t get_next_block(const block_database& blocks)
 {
     size_t current_height;
-    const auto empty_chain = !blocks.top(current_height);
+    const auto empty_chain = !blocks.top_block(current_height);
     return empty_chain ? 0 : current_height + 1;
 }
 
-static inline hash_digest get_previous_hash(const block_database& blocks,
+static size_t get_next_header(const block_database& blocks)
+{
+    size_t current_height;
+    const auto empty_chain = !blocks.top_header(current_height);
+    return empty_chain ? 0 : current_height + 1;
+}
+
+static hash_digest get_previous_block(const block_database& blocks,
     size_t height)
 {
+    // TODO: parameterize get() for block height.
+    return height == 0 ? null_hash : blocks.get(height - 1).hash();
+}
+
+static hash_digest get_previous_header(const block_database& blocks,
+    size_t height)
+{
+    // TODO: parameterize get() for header height.
     return height == 0 ? null_hash : blocks.get(height - 1).hash();
 }
 
 // This store-level check is a failsafe for blockchain behavior.
 code data_base::verify_push(const header& header, size_t height)
 {
-    if (get_next_height(blocks()) != height)
+    if (get_next_header(blocks()) != height)
         return error::store_block_invalid_height;
 
-    if (get_previous_hash(blocks(), height) != header.previous_block_hash())
+    if (get_previous_header(blocks(), height) != header.previous_block_hash())
         return error::store_block_missing_parent;
 
     return error::success;
@@ -292,7 +307,14 @@ code data_base::verify_push(const block& block, size_t height)
     if (block.transactions().empty())
         return error::empty_block;
 
-    return verify_push(block.header(), height);
+    if (get_next_block(blocks()) != height)
+        return error::store_block_invalid_height;
+
+    if (get_previous_block(blocks(), height) !=
+        block.header().previous_block_hash())
+        return error::store_block_missing_parent;
+
+    return error::success;
 }
 
 // This store-level check is a failsafe for blockchain behavior.
@@ -532,7 +554,7 @@ bool data_base::pop(block& out_block)
     const auto start_time = asio::steady_clock::now();
 
     // The blockchain is empty (nothing to pop, not even genesis).
-    if (!blocks_->top(height))
+    if (!blocks_->top_block(height))
         return false;
 
     // This should never become invalid if this call is protected.
@@ -735,12 +757,10 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
     const hash_digest& fork_hash, dispatcher&, result_handler handler)
 {
     size_t top;
-    out_blocks->clear();
-
     const auto result = blocks_->get(fork_hash, true);
 
     // The fork point does not exist or failed to get it or the top.
-    if (!result || !blocks_->top(top))
+    if (!result || !blocks_->top_block(top))
     {
         handler(error::operation_failed);
         return;
@@ -757,6 +777,7 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
     }
 
     // If the fork is at the top there is one block to pop, and so on.
+    BITCOIN_ASSERT(out_blocks->empty());
     out_blocks->reserve(size);
 
     // Enqueue blocks so .front() is fork + 1 and .back() is top.

@@ -338,7 +338,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     const auto block0 = block::genesis_mainnet();
     BOOST_REQUIRE(instance.create(block0));
     test_block_exists(instance, 0, block0, indexed);
-    BOOST_REQUIRE(instance.blocks().top(height));
+    BOOST_REQUIRE(instance.blocks().top_block(height));
     BOOST_REQUIRE_EQUAL(height, 0);
 
     // This tests a missing parent, not a database failure.
@@ -353,7 +353,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     test_block_not_exists(instance, block1, indexed);
     BOOST_REQUIRE_EQUAL(instance.push(block1, 1), error::success);
     test_block_exists(instance, 0, block0, indexed);
-    BOOST_REQUIRE(instance.blocks().top(height));
+    BOOST_REQUIRE(instance.blocks().top_block(height));
     BOOST_REQUIRE_EQUAL(height, 1u);
     test_block_exists(instance, 1, block1, indexed);
 
@@ -365,7 +365,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     test_block_not_exists(instance, *block3_ptr, indexed);
     BOOST_REQUIRE_EQUAL(push_all_result(instance, blocks_push_ptr, 2, dispatch), error::success);
     test_block_exists(instance, 1, block1, indexed);
-    BOOST_REQUIRE(instance.blocks().top(height));
+    BOOST_REQUIRE(instance.blocks().top_block(height));
     BOOST_REQUIRE_EQUAL(height, 3u);
     test_block_exists(instance, 3, *block3_ptr, indexed);
     test_block_exists(instance, 2, *block2_ptr, indexed);
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     std::cout << "pop_above block 1 (blocks #2 & #3)" << std::endl;
     const auto blocks_popped_ptr = std::make_shared<block_const_ptr_list>();
     BOOST_REQUIRE_EQUAL(pop_above_result(instance, blocks_popped_ptr, block1.hash(), dispatch), error::success);
-    BOOST_REQUIRE(instance.blocks().top(height));
+    BOOST_REQUIRE(instance.blocks().top_block(height));
     BOOST_REQUIRE_EQUAL(height, 1u);
     BOOST_REQUIRE_EQUAL(blocks_popped_ptr->size(), 2u);
     BOOST_REQUIRE(*(*blocks_popped_ptr)[0] == *block2_ptr);
@@ -391,13 +391,13 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
 
     std::cout << "insert block #2" << std::endl;
     BOOST_REQUIRE_EQUAL(instance.push(*block2_ptr, 2), error::success);
-    BOOST_REQUIRE(instance.blocks().top(height));
+    BOOST_REQUIRE(instance.blocks().top_block(height));
     BOOST_REQUIRE_EQUAL(height, 2u);
 
     std::cout << "pop_above block 0 (block #1 & #2)" << std::endl;
     blocks_popped_ptr->clear();
     BOOST_REQUIRE_EQUAL(pop_above_result(instance, blocks_popped_ptr, block0.hash(), dispatch), error::success);
-    BOOST_REQUIRE(instance.blocks().top(height));
+    BOOST_REQUIRE(instance.blocks().top_block(height));
     BOOST_REQUIRE_EQUAL(height, 0u);
     BOOST_REQUIRE(*(*blocks_popped_ptr)[0] == block1);
     BOOST_REQUIRE(*(*blocks_popped_ptr)[1] == *block2_ptr);
