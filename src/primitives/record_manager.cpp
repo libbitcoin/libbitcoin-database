@@ -130,7 +130,12 @@ array_index record_manager::new_records(size_t count)
 
     const size_t position = record_to_position(record_count_ + count);
     const size_t required_size = header_size_ + position;
-    file_.reserve(required_size);
+
+    if (!file_.reserve(required_size))
+    {
+        // TODO: return failure sentinel.
+    }
+
     record_count_ += count;
 
     return next_record_index;

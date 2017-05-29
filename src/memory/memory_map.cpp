@@ -360,6 +360,7 @@ memory_ptr memory_map::reserve(size_t size, size_t expansion)
         mutex_.unlock_upgrade_and_lock();
         //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+        // TODO: isolate cause and if recoverable (disk size) return nullptr.
         // All existing database pointers are invalidated by this call.
         if (!truncate_mapped(target))
         {

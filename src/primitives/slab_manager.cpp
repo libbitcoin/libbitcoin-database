@@ -116,7 +116,12 @@ file_offset slab_manager::new_slab(size_t size)
     const auto next_slab_position = payload_size_;
 
     const size_t required_size = header_size_ + payload_size_ + size;
-    file_.reserve(required_size);
+
+    if (!file_.reserve(required_size))
+    {
+        // TODO: return failure sentinel.
+    }
+
     payload_size_ += size;
 
     return next_slab_position;
