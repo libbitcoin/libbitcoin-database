@@ -66,10 +66,9 @@ stealth_database::~stealth_database()
     close();
 }
 
-// Create.
+// Startup and shutdown.
 // ----------------------------------------------------------------------------
 
-// Initialize files and start.
 bool stealth_database::create()
 {
     // Resize and create require an opened file.
@@ -85,9 +84,6 @@ bool stealth_database::create()
     // Should not call start after create, already started.
     return rows_manager_.start();
 }
-
-// Startup and shutdown.
-// ----------------------------------------------------------------------------
 
 bool stealth_database::open()
 {
@@ -135,6 +131,17 @@ stealth_database::list stealth_database::get(const binary& filter,
     return result;
 }
 
+stealth_statinfo stealth_database::statinfo() const
+{
+    return
+    {
+        rows_manager_.count()
+    };
+}
+
+// Store.
+// ----------------------------------------------------------------------------
+
 void stealth_database::store(const stealth_record& stealth)
 {
     // Allocate new row and write data.
@@ -143,14 +150,6 @@ void stealth_database::store(const stealth_record& stealth)
     const auto memory = REMAP_ADDRESS(record);
     auto serial = make_unsafe_serializer(memory);
     stealth.to_data(serial, false);
-}
-
-stealth_statinfo stealth_database::statinfo() const
-{
-    return
-    {
-        rows_manager_.count()
-    };
 }
 
 } // namespace database

@@ -57,10 +57,9 @@ spend_database::~spend_database()
     close();
 }
 
-// Create.
+// Startup and shutdown.
 // ----------------------------------------------------------------------------
 
-// Initialize files and start.
 bool spend_database::create()
 {
     // Resize and create require an opened file.
@@ -79,9 +78,6 @@ bool spend_database::create()
         lookup_header_.start() &&
         lookup_manager_.start();
 }
-
-// Startup and shutdown.
-// ----------------------------------------------------------------------------
 
 bool spend_database::open()
 {
@@ -122,6 +118,18 @@ input_point spend_database::get(const output_point& outpoint) const
     return spend;
 }
 
+spend_statinfo spend_database::statinfo() const
+{
+    return
+    {
+        lookup_header_.size(),
+        lookup_manager_.count()
+    };
+}
+
+// Store.
+// ----------------------------------------------------------------------------
+
 void spend_database::store(const chain::output_point& outpoint,
     const chain::input_point& spend)
 {
@@ -132,6 +140,9 @@ void spend_database::store(const chain::output_point& outpoint,
 
     lookup_map_.store(outpoint, write);
 }
+
+// Update.
+// ----------------------------------------------------------------------------
 
 bool spend_database::unlink(const output_point& outpoint)
 {
@@ -144,15 +155,6 @@ bool spend_database::unlink(const output_point& outpoint)
     // Release lock before unlinking.
     memory = nullptr;
     return lookup_map_.unlink(outpoint);
-}
-
-spend_statinfo spend_database::statinfo() const
-{
-    return
-    {
-        lookup_header_.size(),
-        lookup_manager_.count()
-    };
 }
 
 } // namespace database

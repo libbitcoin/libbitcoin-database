@@ -40,6 +40,14 @@ using namespace bc::wallet;
 
 #define NAME "data_base"
 
+// TODO: remove spends store, replace with complex query, output gets inpoint:
+// (1) transactions_.get(outpoint, require_confirmed)->spender_height.
+// (2) blocks_.get(spender_height)->transactions().
+// (3) (transactions()->inputs()->previous_output() == outpoint)->inpoint.
+// This has the same average cost as 1 output-query + 1/2 block-query.
+// This will reduce server indexing by 29% (address/stealth indexing only).
+// Could make index optional, redirecting queries if not present.
+
 // A failure after begin_write is returned without calling end_write.
 // This leaves the local flush lock enabled, preventing usage after restart.
 
@@ -269,13 +277,11 @@ static inline hash_digest get_previous_hash(const block_database& blocks,
 // This store-level check is a failsafe for blockchain behavior.
 code data_base::verify_push(const header& header, size_t height)
 {
-////#ifndef NDEBUG
     if (get_next_height(blocks()) != height)
         return error::store_block_invalid_height;
 
     if (get_previous_hash(blocks(), height) != header.previous_block_hash())
         return error::store_block_missing_parent;
-////#endif
 
     return error::success;
 }
@@ -292,12 +298,11 @@ code data_base::verify_push(const block& block, size_t height)
 // This store-level check is a failsafe for blockchain behavior.
 code data_base::verify_push(const transaction& tx)
 {
-////#ifndef NDEBUG
     const auto result = transactions_->get(tx.hash());
 
+    // This is an expensive re-check, but only if a duplicate exists.
     if (result && !result.is_spent())
         return error::unspent_duplicate;
-////#endif
 
     return error::success;
 }
@@ -349,9 +354,8 @@ code data_base::push(const header& header, size_t height)
     if (!begin_write())
         return error::operation_failed;
 
-    // TODO: implement block store header with header indexing.
-    ////blocks_->store(header, height);
-    commit();
+    blocks_->store(header, height);
+    blocks_->commit();
 
     return end_write() ? error::success : error::operation_failed;
     // End Flush Lock

@@ -75,6 +75,9 @@ public:
     /// Close the database (all threads must first be stopped).
     ~block_database();
 
+    // Startup and shutdown.
+    // ----------------------------------------------------------------------------
+
     /// Initialize a new transaction database.
     bool create();
 
@@ -93,24 +96,30 @@ public:
     // Queries.
     //-------------------------------------------------------------------------
 
+    // TODO: review.
     /// The index of the highest existing block.
     bool top(size_t& out_height) const;
 
+    // TODO: review.
     /// Fetch block by height (always confirmed).
     block_result get(size_t height) const;
 
+    // TODO: review.
     /// Fetch block by hash (optionally confirmed).
     block_result get(const hash_digest& hash, bool require_confirmed) const;
 
     // Store.
     // ----------------------------------------------------------------------------
 
+    // TODO: review.
     /// Store a header with no transactions.
     void store(const chain::header& header, size_t height);
 
+    // TODO: review.
     /// Store a header and associate transactions (false if any missing).
     void store(const chain::block& block, size_t height, bool confirmed);
 
+    // TODO: review.
     /// Store a header and associate transactions (false if any missing).
     void store(const message::compact_block& compact, size_t height,
         bool confirmed);
@@ -118,17 +127,21 @@ public:
     // Update.
     // ----------------------------------------------------------------------------
 
+    // TODO: review.
     /////// Update an existing block's transactions association and state.
     ////bool update(const chain::block& block, bool validated);
 
+    // TODO: review.
     /////// Update an existing block's transactions association.
     ////bool update(const message::compact_block& compact, bool validated);
 
+    // TODO: review.
     /// Promote (to confirmed) block and all ancestors up to the block hash.
     /// This does not promote the block's transactions or their spends, which
     /// must be confirmed before this call.
     bool confirm(const hash_digest& hash, bool confirm=true);
 
+    // TODO: review.
     /// Demote (to valid) all blocks at and above the given height.
     /// This does not demote the blocks' transactions or their spends, which
     /// must be demoted before this call. Should always be the top block.
@@ -148,15 +161,18 @@ private:
     array_index associate(const chain::transaction::list& transactions);
     array_index associate(const short_id_list& ids);
 
+    // TODO: review.
     void store(const chain::header& header, size_t height, uint32_t checksum,
         array_index tx_start, size_t tx_count, block_state status);
 
     ////bool update(const hash_digest& hash, uint32_t checksum,
     ////    array_index tx_start, size_t tx_count, uint8_t status);
 
+    // TODO: review.
     // Write block hash table index into the block index.
     void write_index(array_index index, array_index height);
 
+    // TODO: review.
     // Use block index to get block hash table index from height.
     array_index get_index(array_index height) const;
 

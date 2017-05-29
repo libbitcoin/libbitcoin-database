@@ -80,6 +80,9 @@ public:
     /// Close the database (all threads must first be stopped).
     ~transaction_database();
 
+    // Startup and shutdown.
+    // ------------------------------------------------------------------------
+
     /// Initialize a new transaction database.
     bool create();
 

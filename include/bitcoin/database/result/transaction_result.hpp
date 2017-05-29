@@ -34,8 +34,12 @@ class BCD_API transaction_result
 public:
     transaction_result();
     transaction_result(memory_ptr slab);
-    transaction_result(memory_ptr slab, hash_digest&& hash,
-        uint32_t height, uint32_t median_time_past, uint16_t position);
+
+    // TODO: review.
+    transaction_result(memory_ptr slab, hash_digest&& hash, uint32_t height,
+        uint32_t median_time_past, uint16_t position);
+
+    // TODO: review.
     transaction_result(memory_ptr slab, const hash_digest& hash,
         uint32_t height, uint32_t median_time_past, uint16_t position);
 
@@ -45,12 +49,14 @@ public:
     /// Reset the slab pointer so that no lock is held.
     void reset();
 
+    // TODO: review.
     /// True if the transaction is presently in a strong chain block.
     bool confirmed() const;
 
     /// The ordinal position of the transaction within its block.
     size_t position() const;
 
+    // TODO: review.
     /// The height of the block which includes the transaction.
     size_t height() const;
 
@@ -60,6 +66,7 @@ public:
     /// The median time past of the block which includes the transaction.
     uint32_t median_time_past() const;
 
+    // TODO: review.
     /// True if all transaction outputs are spent at or below fork_height.
     bool is_spent(size_t fork_height=max_size_t) const;
 

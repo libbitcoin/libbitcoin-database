@@ -56,6 +56,9 @@ public:
     /// Close the database (all threads must first be stopped).
     ~spend_database();
 
+    // Startup and shutdown.
+    // ------------------------------------------------------------------------
+
     /// Initialize a new spend database.
     bool create();
 
@@ -77,15 +80,21 @@ public:
     /// Get inpoint that spent the given outpoint.
     chain::input_point get(const chain::output_point& outpoint) const;
 
+    /// Return statistical info about the database.
+    spend_statinfo statinfo() const;
+
+    // Store.
+    //-------------------------------------------------------------------------
+
     /// Store a spend in the database.
     void store(const chain::output_point& outpoint,
         const chain::input_point& spend);
 
+    // Update.
+    //-------------------------------------------------------------------------
+
     /// Delete outpoint spend item from database.
     bool unlink(const chain::output_point& outpoint);
-
-    /// Return statistical info about the database.
-    spend_statinfo statinfo() const;
 
 private:
     typedef record_hash_table<chain::point> record_map;

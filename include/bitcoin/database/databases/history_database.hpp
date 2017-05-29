@@ -58,6 +58,9 @@ public:
     /// Close the database (all threads must first be stopped).
     ~history_database();
 
+    // Startup and shutdown.
+    // ----------------------------------------------------------------------------
+
     /// Initialize a new history database.
     bool create();
 
@@ -79,14 +82,20 @@ public:
     /// Get the output and input points associated with the address hash.
     list get(const short_hash& key, size_t limit, size_t from_height) const;
 
+    /// Return statistical info about the database.
+    history_statinfo statinfo() const;
+
+    // Store.
+    //-------------------------------------------------------------------------
+
     /// Add a row for the key. If key doesn't exist it will be created.
     void store(const short_hash& key, const chain::payment_record& payment);
 
+    // Update.
+    //-------------------------------------------------------------------------
+
     /// Logically delete the last row that was added to key.
     bool unlink_last_row(const short_hash& key);
-
-    /// Return statistical info about the database.
-    history_statinfo statinfo() const;
 
 private:
     typedef record_hash_table<short_hash> record_map;

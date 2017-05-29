@@ -37,10 +37,12 @@ class BCD_API block_result
 public:
     block_result(const record_manager& index_manager);
 
+    // TODO: review.
     block_result(const record_manager& index_manager, memory_ptr record,
         hash_digest&& hash, uint32_t height, uint32_t checksum,
         array_index tx_start, size_t tx_count, bool confirmed);
 
+    // TODO: review.
     block_result(const record_manager& index_manager, memory_ptr record,
         const hash_digest& hash, uint32_t height, uint32_t checksum,
         array_index tx_start, size_t tx_count, bool confirmed);
@@ -51,9 +53,11 @@ public:
     /// Reset the record pointer so that no lock is held.
     void reset();
 
+    // TODO: review.
     /// True if the block is presently in the strong chain.
     bool confirmed() const;
 
+    // TODO: review.
     /// The height of the block in its chain.
     size_t height() const;
 

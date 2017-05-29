@@ -51,6 +51,9 @@ public:
     /// Close the database (all threads must first be stopped).
     ~stealth_database();
 
+    // Startup and shutdown.
+    // ------------------------------------------------------------------------
+
     /// Initialize a new stealth database.
     bool create();
 
@@ -72,14 +75,20 @@ public:
     /// Linearly scan all entries, discarding those after from_height.
     list get(const binary& filter, size_t from_height) const;
 
+    /// Return statistical info about the database.
+    stealth_statinfo statinfo() const;
+
+    // Store.
+    //-------------------------------------------------------------------------
+
     /// Add a stealth row to the database.
     void store(const chain::stealth_record& stealth);
 
+    // Update.
+    //-------------------------------------------------------------------------
+
     /////// Delete stealth row (not implemented).
     ////bool unlink();
-
-    /// Return statistical info about the database.
-    stealth_statinfo statinfo() const;
 
 private:
     void write_index();

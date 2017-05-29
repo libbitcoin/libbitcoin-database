@@ -46,9 +46,6 @@ public:
     typedef handle0 result_handler;
     typedef boost::filesystem::path path;
 
-    // Construct.
-    // ----------------------------------------------------------------------------
-
     data_base(const settings& settings);
 
     // Open and close.

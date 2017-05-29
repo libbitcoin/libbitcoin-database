@@ -70,10 +70,8 @@ static constexpr auto no_checksum = 0u;
 
 static constexpr auto header_index_header_size = 0u;
 static constexpr auto header_index_record_size = sizeof(array_index);
-
 static constexpr auto block_index_header_size = 0u;
 static constexpr auto block_index_record_size = sizeof(array_index);
-
 static constexpr auto tx_index_header_size = 0u;
 static constexpr auto tx_index_record_size = sizeof(file_offset);
 
@@ -138,10 +136,9 @@ block_database::~block_database()
     close();
 }
 
-// Create.
+// Startup and shutdown.
 // ----------------------------------------------------------------------------
 
-// Initialize files and open.
 bool block_database::create()
 {
     // Resize and create require an opened file.
@@ -172,9 +169,6 @@ bool block_database::create()
         block_index_manager_.start() &&
         tx_index_manager_.start();
 }
-
-// Startup and shutdown.
-// ----------------------------------------------------------------------------
 
 bool block_database::open()
 {
@@ -219,6 +213,21 @@ bool block_database::close()
 // Queries.
 // ----------------------------------------------------------------------------
 
+// TODO: review.
+// The height of the highest confirmed block.
+bool block_database::top(size_t& out_height) const
+{
+    const auto count = block_index_manager_.count();
+
+    // Guard against no genesis block.
+    if (count == 0)
+        return false;
+
+    out_height = count - 1;
+    return true;
+}
+
+// TODO: review.
 block_result block_database::get(size_t height) const
 {
     if (height >= block_index_manager_.count())
@@ -255,6 +264,7 @@ block_result block_database::get(size_t height) const
         tx_start, tx_count, true };
 }
 
+// TODO: review.
 block_result block_database::get(const hash_digest& hash,
     bool require_confirmed) const
 {
@@ -341,6 +351,7 @@ array_index block_database::associate(const short_id_list& ids)
 // Store.
 // ----------------------------------------------------------------------------
 
+// TODO: review.
 // private
 void block_database::store(const chain::header& header, size_t height,
     uint32_t checksum, array_index tx_start, size_t tx_count,
@@ -371,6 +382,7 @@ void block_database::store(const chain::header& header, size_t height,
     write_index(index, height32);
 }
 
+// TODO: review.
 // This assumes the header does not exist and has no knowledge of required txs.
 void block_database::store(const chain::header& header, size_t height)
 {
@@ -378,6 +390,7 @@ void block_database::store(const chain::header& header, size_t height)
     store(header, height, no_checksum, 0, tx_count, block_state::empty);
 }
 
+// TODO: review.
 // This assumes the header does not exist and requires tx association metadata.
 void block_database::store(const chain::block& block, size_t height,
     bool confirmed)
@@ -390,6 +403,7 @@ void block_database::store(const chain::block& block, size_t height,
         to_status(confirmed));
 }
 
+// TODO: review.
 // This assumes the header does not exist and requires tx association metadata.
 void block_database::store(const message::compact_block& compact,
     size_t height, bool confirmed)
@@ -448,9 +462,7 @@ void block_database::store(const message::compact_block& compact,
 ////        ids.size(), to_status(confirmed));
 ////}
 
-// Confirm.
-// ----------------------------------------------------------------------------
-
+// TODO: review.
 bool block_database::confirm(const hash_digest& hash, bool confirm)
 {
     const auto update = [&](byte_serializer& serial)
@@ -467,6 +479,7 @@ bool block_database::confirm(const hash_digest& hash, bool confirm)
     return lookup_map_.update(hash, update) != record_map::not_found;
 }
 
+// TODO: review.
 bool block_database::unconfirm(size_t from_height)
 {
     const auto count = block_index_manager_.count();
@@ -484,9 +497,10 @@ bool block_database::unconfirm(size_t from_height)
     return true;
 }
 
-// Index.
+// Utility.
 // ----------------------------------------------------------------------------
 
+// TODO: review.
 void block_database::write_index(array_index index, array_index height)
 {
     BITCOIN_ASSERT(height < max_uint32);
@@ -498,23 +512,11 @@ void block_database::write_index(array_index index, array_index height)
     serial.write_4_bytes_little_endian(index);
 }
 
+// TODO: review.
 array_index block_database::get_index(array_index height) const
 {
     const auto record = block_index_manager_.get(height);
     return from_little_endian_unsafe<array_index>(REMAP_ADDRESS(record));
-}
-
-// The height of the highest confirmed block.
-bool block_database::top(size_t& out_height) const
-{
-    const auto count = block_index_manager_.count();
-
-    // Guard against no genesis block.
-    if (count == 0)
-        return false;
-
-    out_height = count - 1;
-    return true;
 }
 
 } // namespace database
