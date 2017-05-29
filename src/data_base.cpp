@@ -266,6 +266,7 @@ static inline hash_digest get_previous_hash(const block_database& blocks,
     return height == 0 ? null_hash : blocks.get(height - 1).hash();
 }
 
+// TODO: make debug only.
 // This store-level check is a failsafe for blockchain behavior.
 code data_base::verify_insert(const block& block, size_t height)
 {
@@ -278,6 +279,7 @@ code data_base::verify_insert(const block& block, size_t height)
     return error::success;
 }
 
+// TODO: make debug only.
 // This store-level check is a failsafe for blockchain behavior.
 code data_base::verify_push(const block& block, size_t height)
 {
@@ -294,6 +296,7 @@ code data_base::verify_push(const block& block, size_t height)
     return error::success;
 }
 
+// TODO: make debug only.
 // This store-level check is a failsafe for blockchain behavior.
 code data_base::verify_push(const transaction& tx)
 {
@@ -321,7 +324,6 @@ bool data_base::end_insert() const
 }
 
 // Add block to the database at the given height.
-// This is designed for write concurrency but only with itself.
 code data_base::insert(const chain::block& block, size_t height)
 {
     const auto ec = verify_insert(block, height);
