@@ -113,6 +113,7 @@ unspent_transaction& unspent_transaction::operator=(
 {
     height_ = other.height_;
     is_coinbase_ = other.is_coinbase_;
+    is_confirmed_ = other.is_confirmed_;
     hash_ = std::move(other.hash_);
     outputs_ = other.outputs_;
     return *this;
@@ -123,6 +124,7 @@ unspent_transaction& unspent_transaction::operator=(
 {
     height_ = other.height_;
     is_coinbase_ = other.is_coinbase_;
+    is_confirmed_ = other.is_confirmed_;
     hash_ = other.hash_;
     outputs_ = other.outputs_;
     return *this;
