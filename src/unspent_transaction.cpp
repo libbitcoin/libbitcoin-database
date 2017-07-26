@@ -30,6 +30,7 @@ using namespace bc::chain;
 
 unspent_transaction::unspent_transaction(unspent_transaction&& other)
   : height_(other.height_),
+    median_time_past_(other.median_time_past_),
     is_coinbase_(other.is_coinbase_),
     is_confirmed_(other.is_confirmed_),
     hash_(std::move(other.hash_)),
@@ -39,6 +40,7 @@ unspent_transaction::unspent_transaction(unspent_transaction&& other)
 
 unspent_transaction::unspent_transaction(const unspent_transaction& other)
   : height_(other.height_),
+    median_time_past_(other.median_time_past_),
     is_coinbase_(other.is_coinbase_),
     is_confirmed_(other.is_confirmed_),
     hash_(other.hash_),
@@ -48,6 +50,7 @@ unspent_transaction::unspent_transaction(const unspent_transaction& other)
 
 unspent_transaction::unspent_transaction(const hash_digest& hash)
   : height_(0),
+    median_time_past_(0),
     is_coinbase_(false),
     is_confirmed_(false),
     hash_(hash),
@@ -61,8 +64,9 @@ unspent_transaction::unspent_transaction(const output_point& point)
 }
 
 unspent_transaction::unspent_transaction(const chain::transaction& tx,
-    size_t height, bool confirmed)
+    size_t height, uint32_t median_time_past, bool confirmed)
   : height_(height),
+    median_time_past_(median_time_past),
     is_coinbase_(tx.is_coinbase()),
     is_confirmed_(confirmed),
     hash_(tx.hash()),
@@ -85,6 +89,11 @@ const hash_digest& unspent_transaction::hash() const
 size_t unspent_transaction::height() const
 {
     return height_;
+}
+
+uint32_t unspent_transaction::median_time_past() const
+{
+    return median_time_past_;
 }
 
 bool unspent_transaction::is_coinbase() const
@@ -112,7 +121,9 @@ unspent_transaction& unspent_transaction::operator=(
     unspent_transaction&& other)
 {
     height_ = other.height_;
+    median_time_past_ = other.median_time_past_;
     is_coinbase_ = other.is_coinbase_;
+    is_confirmed_ = other.is_confirmed_;
     hash_ = std::move(other.hash_);
     outputs_ = other.outputs_;
     return *this;
@@ -122,7 +133,9 @@ unspent_transaction& unspent_transaction::operator=(
     const unspent_transaction& other)
 {
     height_ = other.height_;
+    median_time_past_ = other.median_time_past_;
     is_coinbase_ = other.is_coinbase_;
+    is_confirmed_ = other.is_confirmed_;
     hash_ = other.hash_;
     outputs_ = other.outputs_;
     return *this;

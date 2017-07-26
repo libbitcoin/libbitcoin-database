@@ -64,7 +64,7 @@ float unspent_outputs::hit_rate() const
 }
 
 void unspent_outputs::add(const transaction& transaction, size_t height,
-    bool confirmed)
+    uint32_t median_time_past, bool confirmed)
 {
     if (disabled() || transaction.outputs().empty())
         return;
@@ -83,7 +83,7 @@ void unspent_outputs::add(const transaction& transaction, size_t height,
 
     unspent_.insert(
     {
-        unspent_transaction{ transaction, height, confirmed },
+        unspent_transaction{ transaction, height, median_time_past, confirmed },
         ++sequence_
     });
     ///////////////////////////////////////////////////////////////////////////
@@ -157,7 +157,8 @@ void unspent_outputs::remove(const output_point& point)
 }
 
 bool unspent_outputs::get(output& out_output, size_t& out_height,
-    bool& out_coinbase, const output_point& point, size_t fork_height,
+    uint32_t& out_median_time_past, bool& out_coinbase,
+    const output_point& point, size_t fork_height,
     bool require_confirmed) const
 {
     if (disabled())
@@ -194,6 +195,7 @@ bool unspent_outputs::get(output& out_output, size_t& out_height,
 
     ++hits_;
     out_height = height;
+    out_median_time_past = unspent.median_time_past();
     out_coinbase = unspent.is_coinbase();
     out_output = output->second;
     return true;

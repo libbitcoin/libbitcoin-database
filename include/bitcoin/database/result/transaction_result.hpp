@@ -35,9 +35,9 @@ public:
     transaction_result();
     transaction_result(const memory_ptr slab);
     transaction_result(const memory_ptr slab, hash_digest&& hash,
-        uint32_t height, uint16_t position);
+        uint32_t height, uint32_t median_time_past, uint16_t position);
     transaction_result(const memory_ptr slab, const hash_digest& hash,
-        uint32_t height, uint16_t position);
+        uint32_t height, uint32_t median_time_past, uint16_t position);
 
     /// True if this transaction result is valid (found).
     operator bool() const;
@@ -54,6 +54,9 @@ public:
     /// The ordinal position of the transaction within its block.
     size_t position() const;
 
+    /// The median time past of the block which includes the transaction.
+    uint32_t median_time_past() const;
+
     /// True if all transaction outputs are spent at or below fork_height.
     bool is_spent(size_t fork_height) const;
 
@@ -66,6 +69,7 @@ public:
 private:
     memory_ptr slab_;
     const uint32_t height_;
+    const uint32_t median_time_past_;
     const uint16_t position_;
     const hash_digest hash_;
 };

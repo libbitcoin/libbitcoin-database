@@ -69,11 +69,13 @@ public:
 
     /// Get the output at the specified index within the transaction.
     bool get_output(chain::output& out_output, size_t& out_height,
-        bool& out_coinbase, const chain::output_point& point,
-        size_t fork_height, bool require_confirmed) const;
+        uint32_t& out_median_time_past, bool& out_coinbase,
+        const chain::output_point& point, size_t fork_height,
+        bool require_confirmed) const;
 
     /// Store a transaction in the database.
-    void store(const chain::transaction& tx, size_t height, size_t position);
+    void store(const chain::transaction& tx, size_t height,
+        uint32_t median_time_past, size_t position);
 
     /// Update the spender height of the output in the tx store.
     bool spend(const chain::output_point& point, size_t spender_height);
@@ -82,7 +84,8 @@ public:
     bool unspend(const chain::output_point& point);
 
     /// Promote an unconfirmed tx (not including its indexes).
-    bool confirm(const hash_digest& hash, size_t height, size_t position);
+    bool confirm(const hash_digest& hash, size_t height,
+        uint32_t median_time_past, size_t position);
 
     /// Demote the transaction (not including its indexes).
     bool unconfirm(const hash_digest& hash);
