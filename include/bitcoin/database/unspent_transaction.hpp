@@ -45,10 +45,11 @@ public:
     explicit unspent_transaction(const hash_digest& hash);
     explicit unspent_transaction(const chain::output_point& point);
     explicit unspent_transaction(const chain::transaction& tx, size_t height,
-        bool confirmed);
+        uint32_t median_time_past, bool confirmed);
 
     /// Properties.
     size_t height() const;
+    uint32_t median_time_past() const;
     bool is_coinbase() const;
     bool is_confirmed() const;
     const hash_digest& hash() const;
@@ -65,6 +66,7 @@ private:
 
     // These are thread safe (non-const only for assignment operator).
     size_t height_;
+    uint32_t median_time_past_;
     bool is_coinbase_;
     bool is_confirmed_;
     hash_digest hash_;

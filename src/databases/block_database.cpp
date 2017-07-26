@@ -35,15 +35,17 @@ const file_offset block_database::empty = 0;
 static constexpr auto index_header_size = 0u;
 static constexpr auto index_record_size = sizeof(file_offset);
 
-// Record format:
+// Record format (median_time_past added in v3.3):
 //  [ header:80 ]
+//  [ median_time_past:4 ]
 //  [ height:4 ]
 //  TODO: [ checksum:4 ] (store all zeros if not computed).
 //  [ tx_count:1-2 ]
 //  [ [ tx_hash:32 ]... ]
 
 // See block result.cpp.
-static constexpr auto height_offset = 80u;
+static constexpr auto median_time_past_size = sizeof(uint32_t);
+static constexpr auto height_offset = 80u + median_time_past_size;
 
 // Blocks uses a hash table and an array index, both O(1).
 block_database::block_database(const path& map_filename,
@@ -186,8 +188,8 @@ void block_database::store(const block& block, size_t height)
     // Write block data.
     const auto write = [&](serializer<uint8_t*>& serial)
     {
-        // WRITE THE BLOCK HEADER AND TX HASHES
-        block.header().to_data(serial);
+        // WRITE THE BLOCK HEADER (including median_time_past metadata).
+        block.header().to_data(serial, false);
 
         ///////////////////////////////////////////////////////////////////////
         // Critical Section
@@ -202,8 +204,9 @@ void block_database::store(const block& block, size_t height)
             serial.write_hash(tx.hash());
     };
 
-    const auto key = block.header().hash();
-    const auto size = header::satoshi_fixed_size() + sizeof(height32) +
+    const auto& header = block.header();
+    const auto key = header.hash();
+    const auto size = header.serialized_size(false) + sizeof(height32) +
         message::variable_uint_size(tx_count) + (tx_count * hash_size);
 
     const auto position = lookup_map_.store(key, write, size);

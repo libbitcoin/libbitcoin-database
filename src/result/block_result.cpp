@@ -35,12 +35,14 @@ static constexpr size_t merkle_size = hash_size;
 static constexpr size_t time_size = sizeof(uint32_t);
 static constexpr size_t bits_size = sizeof(uint32_t);
 static constexpr size_t nonce_size = sizeof(uint32_t);
+static constexpr size_t median_time_past_size = sizeof(uint32_t);
 static constexpr size_t height_size = sizeof(uint32_t);
 
 static constexpr auto version_offset = 0u;
 static constexpr auto time_offset = version_size + previous_size + merkle_size;
 static constexpr auto bits_offset = time_offset + time_size;
-static constexpr auto height_offset = bits_offset + bits_size + nonce_size;
+static constexpr auto height_offset = bits_offset + bits_size + nonce_size +
+    median_time_past_size;
 static constexpr auto count_offset = height_offset + height_size;
 
 block_result::block_result()
@@ -86,9 +88,10 @@ chain::header block_result::header() const
     const auto memory = REMAP_ADDRESS(slab_);
     auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(slab_));
 
-    // READ THE HEADER
+    // READ THE HEADER (including median_time_past metadata).
     chain::header header;
-    header.from_data(deserial);
+    header.from_data(deserial, false);
+    header.validation.height = height_;
 
     // TODO: add hash param to deserialization to eliminate this move.
     return chain::header(std::move(header), hash_digest(hash_));
