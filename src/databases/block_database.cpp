@@ -37,13 +37,14 @@
 //  [ tx_count:2  - atomic ] (atomic with start, both zeroed if empty)
 //  [ confirmed:1 - atomic ] (zero if not in main branch)
 
-// Record format (v3) [variable bytes]:
+// Record format (v3) [variable bytes] (median_time_past added in v3.3):
 // Below excludes block height index (array).
 // ----------------------------------------------------------------------------
-//  [ header:80         - const ]
-//  [ height:4          - const ]
-//  [ tx_count:1-2      - const ]
-//  [ [ tx_hash:32 ]... - const ]
+//  [ header:80          - const ]
+//  [ median_time_past:4 - const ]
+//  [ height:4           - const ]
+//  [ tx_count:1-2       - const ]
+//  [ [ tx_hash:32 ]...  - const ]
 
 
 namespace libbitcoin {
@@ -52,14 +53,19 @@ namespace database {
 using namespace bc::chain;
 
 static BC_CONSTEXPR auto prefix_size = record_row<hash_digest>::prefix_size;
+
 static const auto header_size = header::satoshi_fixed_size();
+static constexpr auto median_time_past_size = sizeof(uint32_t);
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto checksum_size = sizeof(uint32_t);
 static constexpr auto tx_start_size = sizeof(uint32_t);
 static constexpr auto tx_count_size = sizeof(uint16_t);
 static constexpr auto confirmed_size = sizeof(uint8_t);
-static const auto block_size = header_size + height_size + checksum_size +
-    tx_start_size + tx_count_size + confirmed_size;
+static const auto height_offset = header_size + median_time_past_size;
+static const auto checksum_offset = height_offset + checksum_size;
+static const auto block_size = header_size + median_time_past_size +
+    height_size + checksum_size + tx_start_size + tx_count_size +
+    confirmed_size;
 
 static constexpr auto no_checksum = 0u;
 
@@ -206,7 +212,7 @@ block_result block_database::get(size_t height) const
     auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(record));
 
     // The header and height never change after the block is reachable.
-    deserial.skip(header_size + height_size);
+    deserial.skip(checksum_offset);
 
     ///////////////////////////////////////////////////////////////////////////
     metadata_mutex_.lock_shared();
@@ -238,7 +244,7 @@ block_result block_database::get(const hash_digest& hash,
     ////const auto prefix_start = memory - prefix_size;
 
     // The header and height never change after the block is reachable.
-    auto deserial = make_unsafe_deserializer(memory + header_size);
+    auto deserial = make_unsafe_deserializer(memory + height_offset);
     const auto height = deserial.read_4_bytes_little_endian();
 
     ///////////////////////////////////////////////////////////////////////////
@@ -320,7 +326,8 @@ void block_database::store(const chain::header& header, size_t height,
     // Store creates new entry, and supports parallel, so no locking.
     const auto write = [&](byte_serializer& serial)
     {
-        header.to_data(serial);
+        // Write block header including median_time_past metadata.
+        header.to_data(serial, false);
         serial.write_4_bytes_little_endian(height32);
         serial.write_4_bytes_little_endian(checksum);
         serial.write_4_bytes_little_endian(tx_start32);
@@ -378,7 +385,7 @@ bool block_database::update(const hash_digest& hash, size_t height,
     // Update modifies metadata, requiring lock for atomicity.
     const auto update = [&](byte_serializer& serial)
     {
-        serial.skip(header_size + height_size);
+        serial.skip(checksum_offset);
 
         ///////////////////////////////////////////////////////////////////////
         // Critical Section

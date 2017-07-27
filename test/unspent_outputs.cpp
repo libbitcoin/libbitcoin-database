@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(unspent_outputs__add__one_capacity_42__size_1)
 {
     static const transaction tx{ 0, 0, input::list{}, output::list{ output{} } };
     unspent_outputs cache(42);
-    cache.add(tx, 0, false);
+    cache.add(tx, 0, 0, false);
     BOOST_REQUIRE_EQUAL(cache.size(), 1u);
 }
 
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(unspent_outputs__add__no_outputs_capcity_42__empty)
 {
     static const transaction tx{ 0, 0, {}, {} };
     unspent_outputs cache(42);
-    cache.add(tx, 0, false);
+    cache.add(tx, 0, 0, false);
     BOOST_REQUIRE(cache.empty());
 }
 
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(unspent_outputs__add__one_capcity_0__empty)
 {
     static const transaction tx{ 0, 0, {}, { {}, {} } };
     unspent_outputs cache(0);
-    cache.add(tx, 0, false);
+    cache.add(tx, 0, 0, false);
     BOOST_REQUIRE(cache.empty());
 }
 
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(unspent_outputs__remove1__remove_only__empty)
 {
     static const transaction tx{ 0, 0, {}, { {}, {} } };
     unspent_outputs cache(1);
-    cache.add(tx, 0, false);
+    cache.add(tx, 0, 0, false);
     BOOST_REQUIRE_EQUAL(cache.size(), 1u);
 
     cache.remove(tx.hash());
@@ -114,17 +114,18 @@ BOOST_AUTO_TEST_CASE(unspent_outputs__remove2__remove_one_output__expected_outpu
     static const transaction tx1{ 0, 0, {}, { { 0, {} }, { 1, {} } } };
     static const transaction tx2{ 0, 0, {}, { { 0, {} }, { expected_value, {} } } };
     unspent_outputs cache(42);
-    cache.add(tx1, 0, false);
-    cache.add(tx2, expected_height, false);
+    cache.add(tx1, 0, 0, false);
+    cache.add(tx2, expected_height, 0, false);
     BOOST_REQUIRE_EQUAL(cache.size(), 2u);
 
     bool out_coinbase;
     size_t out_height;
+    uint32_t out_median_time_past;
     chain::output out_value;
-    BOOST_REQUIRE(cache.get(out_value, out_height, out_coinbase, { tx1.hash(), 0 }, max_size_t, false));
-    BOOST_REQUIRE(cache.get(out_value, out_height, out_coinbase, { tx1.hash(), 1 }, max_size_t, false));
-    BOOST_REQUIRE(cache.get(out_value, out_height, out_coinbase, { tx2.hash(), 0 }, max_size_t, false));
-    BOOST_REQUIRE(cache.get(out_value, out_height, out_coinbase, { tx2.hash(), 1 }, max_size_t, false));
+    BOOST_REQUIRE(cache.get(out_value, out_height, out_median_time_past, out_coinbase, { tx1.hash(), 0 }, max_size_t, false));
+    BOOST_REQUIRE(cache.get(out_value, out_height, out_median_time_past, out_coinbase, { tx1.hash(), 1 }, max_size_t, false));
+    BOOST_REQUIRE(cache.get(out_value, out_height, out_median_time_past, out_coinbase, { tx2.hash(), 0 }, max_size_t, false));
+    BOOST_REQUIRE(cache.get(out_value, out_height, out_median_time_past, out_coinbase, { tx2.hash(), 1 }, max_size_t, false));
     BOOST_REQUIRE(out_value.is_valid());
     BOOST_REQUIRE_EQUAL(out_coinbase, false);
     BOOST_REQUIRE_EQUAL(out_height, expected_height);
@@ -135,10 +136,10 @@ BOOST_AUTO_TEST_CASE(unspent_outputs__remove2__remove_one_output__expected_outpu
 
     cache.remove({ tx1.hash(), 0 });
     BOOST_REQUIRE_EQUAL(cache.size(), 1u);
-    BOOST_REQUIRE(!cache.get(out_value, out_height, out_coinbase, { tx1.hash(), 0 }, max_size_t, false));
-    BOOST_REQUIRE(!cache.get(out_value, out_height, out_coinbase, { tx1.hash(), 1 }, max_size_t, false));
-    BOOST_REQUIRE(cache.get(out_value, out_height, out_coinbase, { tx2.hash(), 0 }, max_size_t, false));
-    BOOST_REQUIRE(cache.get(out_value, out_height, out_coinbase, { tx2.hash(), 1 }, max_size_t, false));
+    BOOST_REQUIRE(!cache.get(out_value, out_height, out_median_time_past, out_coinbase, { tx1.hash(), 0 }, max_size_t, false));
+    BOOST_REQUIRE(!cache.get(out_value, out_height, out_median_time_past, out_coinbase, { tx1.hash(), 1 }, max_size_t, false));
+    BOOST_REQUIRE(cache.get(out_value, out_height, out_median_time_past, out_coinbase, { tx2.hash(), 0 }, max_size_t, false));
+    BOOST_REQUIRE(cache.get(out_value, out_height, out_median_time_past, out_coinbase, { tx2.hash(), 1 }, max_size_t, false));
 }
 
 BOOST_AUTO_TEST_CASE(unspent_outputs__get__two_capacity_1__size_1_expected)
@@ -146,13 +147,14 @@ BOOST_AUTO_TEST_CASE(unspent_outputs__get__two_capacity_1__size_1_expected)
     static const size_t expected_height = 40;
     static const transaction tx1{ 0, 0, {}, { {}, {} } };
     unspent_outputs cache(1);
-    cache.add(tx1, expected_height, false);
+    cache.add(tx1, expected_height, 0, false);
     BOOST_REQUIRE_EQUAL(cache.size(), 1u);
 
     bool out_coinbase;
     size_t out_height;
+    uint32_t out_median_time_past;
     chain::output out_value1;
-    BOOST_REQUIRE(cache.get(out_value1, out_height, out_coinbase, { tx1.hash(), 1 }, max_size_t, false));
+    BOOST_REQUIRE(cache.get(out_value1, out_height, out_median_time_past, out_coinbase, { tx1.hash(), 1 }, max_size_t, false));
     BOOST_REQUIRE_EQUAL(out_coinbase, false);
     BOOST_REQUIRE_EQUAL(out_height, expected_height);
     BOOST_REQUIRE(!out_value1.is_valid());
@@ -162,16 +164,16 @@ BOOST_AUTO_TEST_CASE(unspent_outputs__get__two_capacity_1__size_1_expected)
     static const transaction tx2{ 0, 0, {}, { {}, { expected2a, {} }, { expected2b, {} } } };
     BOOST_REQUIRE(tx2.is_valid());
 
-    cache.add(tx2, 0, false);
+    cache.add(tx2, 0, 0, false);
     BOOST_REQUIRE_EQUAL(cache.size(), 1u);
 
     chain::output out_value2a;
-    BOOST_REQUIRE(cache.get(out_value2a, out_height, out_coinbase, { tx2.hash(), 1 }, max_size_t, false));
+    BOOST_REQUIRE(cache.get(out_value2a, out_height, out_median_time_past, out_coinbase, { tx2.hash(), 1 }, max_size_t, false));
     BOOST_REQUIRE(out_value2a.is_valid());
     BOOST_REQUIRE_EQUAL(out_value2a.value(), expected2a);
 
     chain::output out_value2b;
-    BOOST_REQUIRE(cache.get(out_value2b, out_height, out_coinbase, { tx2.hash(), 2 }, max_size_t, false));
+    BOOST_REQUIRE(cache.get(out_value2b, out_height, out_median_time_past, out_coinbase, { tx2.hash(), 2 }, max_size_t, false));
     BOOST_REQUIRE(out_value2b.is_valid());
     BOOST_REQUIRE_EQUAL(out_value2b.value(), expected2b);
 }

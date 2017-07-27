@@ -166,7 +166,8 @@ int main(int argc, char** argv)
         const auto result = db.open();
         BITCOIN_ASSERT(result);
 
-        db.store(tx, height, index);
+        static const uint32_t median_time_past = 0;
+        db.store(tx, height, median_time_past, index);
         db.synchronize();
     }
     else if (command == "remove")
