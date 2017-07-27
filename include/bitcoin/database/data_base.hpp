@@ -142,7 +142,7 @@ private:
     // ------------------------------------------------------------------------
 
     bool push_transactions(const chain::block& block, size_t height,
-        size_t bucket=0, size_t buckets=1);
+        uint32_t median_time_past, size_t bucket=0, size_t buckets=1);
     bool push_heights(const chain::block& block, size_t height);
     void push_inputs(const hash_digest& tx_hash, size_t height,
         const inputs& inputs);
@@ -164,10 +164,12 @@ private:
     void push_next(const code& ec, block_const_ptr_list_const_ptr blocks,
         size_t index, size_t height, dispatcher& dispatch,
         result_handler handler);
-    void do_push(block_const_ptr block, size_t height, dispatcher& dispatch,
+    void do_push(block_const_ptr block, size_t height,
+        uint32_t median_time_past, dispatcher& dispatch,
         result_handler handler);
     void do_push_transactions(block_const_ptr block, size_t height,
-        size_t bucket, size_t buckets, result_handler handler);
+        uint32_t median_time_past, size_t bucket, size_t buckets,
+        result_handler handler);
     void handle_push_transactions(const code& ec, block_const_ptr block,
         size_t height, result_handler handler);
 

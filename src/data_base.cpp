@@ -330,7 +330,10 @@ code data_base::insert(const chain::block& block, size_t height)
     if (ec)
         return ec;
 
-    if (!push_transactions(block, height) || !push_heights(block, height))
+    const auto median_time_past = block.header().validation.median_time_past;
+
+    if (!push_transactions(block, height, median_time_past) ||
+        !push_heights(block, height))
         return error::operation_failed;
 
     blocks_->store(block, height, true);
@@ -357,7 +360,7 @@ code data_base::push(const chain::transaction& tx, uint32_t forks)
         return error::operation_failed;
 
     // When position is unconfirmed, height is used to store validation forks.
-    transactions_->store(tx, forks, transaction_database::unconfirmed);
+    transactions_->store(tx, forks, 0, transaction_database::unconfirmed);
     transactions_->synchronize();
 
     return end_write() ? error::success : error::operation_failed;
@@ -384,7 +387,10 @@ code data_base::push(const block& block, size_t height)
     if (!begin_write())
         return error::operation_failed;
 
-    if (!push_transactions(block, height) || !push_heights(block, height))
+    const auto median_time_past = block.header().validation.median_time_past;
+
+    if (!push_transactions(block, height, median_time_past) ||
+        !push_heights(block, height))
         return error::operation_failed;
 
     blocks_->store(block, height, true);
@@ -398,7 +404,7 @@ code data_base::push(const block& block, size_t height)
 
 // To push in order call with bucket = 0 and buckets = 1 (defaults).
 bool data_base::push_transactions(const chain::block& block, size_t height,
-    size_t bucket, size_t buckets)
+    uint32_t median_time_past, size_t bucket, size_t buckets)
 {
     BITCOIN_ASSERT(bucket < buckets);
     const auto& txs = block.transactions();
@@ -408,7 +414,8 @@ bool data_base::push_transactions(const chain::block& block, size_t height,
         position = ceiling_add(position, buckets))
     {
         const auto& tx = txs[position];
-        tx.validation.offset = transactions_->store(tx, height, position);
+        tx.validation.offset = transactions_->store(tx, height,
+            median_time_past, position);
 
         if (height < settings_.index_start_height)
             continue;
@@ -488,7 +495,7 @@ void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
         const auto& payment_output = outputs[index + 1];
 
         // Try to extract the payment address from the second output.
-        auto address = payment_output.address();
+        const auto address = payment_output.address();
         if (!address)
             continue;
 
@@ -518,6 +525,7 @@ void data_base::push_stealth(const hash_digest& tx_hash, size_t height,
 bool data_base::pop(block& out_block)
 {
     size_t height;
+    const auto start_time = asio::steady_clock::now();
 
     // The blockchain is empty (nothing to pop, not even genesis).
     if (!blocks_->top(height))
@@ -564,8 +572,10 @@ bool data_base::pop(block& out_block)
     // Synchronise everything that was changed.
     synchronize();
 
-    // Return the block.
+    // Return the block (with header/block metadata and pop start time).
     out_block = chain::block(block.header(), std::move(transactions));
+    out_block.validation.error = error::success;
+    out_block.validation.start_pop = start_time;
     return true;
 }
 
@@ -622,6 +632,7 @@ void data_base::push_all(block_const_ptr_list_const_ptr in_blocks,
     push_next(error::success, in_blocks, 0, first_height, dispatch, handler);
 }
 
+// TODO: resolve inconsistency with height and median_time_past passing.
 void data_base::push_next(const code& ec,
     block_const_ptr_list_const_ptr blocks, size_t index, size_t height,
     dispatcher& dispatch, result_handler handler)
@@ -634,6 +645,7 @@ void data_base::push_next(const code& ec,
     }
 
     const auto block = (*blocks)[index];
+    const auto median_time_past = block->header().validation.median_time_past;
 
     // Set push start time for the block.
     block->validation.start_push = asio::steady_clock::now();
@@ -645,11 +657,11 @@ void data_base::push_next(const code& ec,
 
     // This is the beginning of the block sub-sequence.
     dispatch.concurrent(&data_base::do_push,
-        this, block, height, std::ref(dispatch), next);
+        this, block, height, median_time_past, std::ref(dispatch), next);
 }
 
 void data_base::do_push(block_const_ptr block, size_t height,
-    dispatcher& dispatch, result_handler handler)
+    uint32_t median_time_past, dispatcher& dispatch, result_handler handler)
 {
     result_handler block_complete =
         std::bind(&data_base::handle_push_transactions,
@@ -673,13 +685,16 @@ void data_base::do_push(block_const_ptr block, size_t height,
 
     for (size_t bucket = 0; bucket < buckets; ++bucket)
         dispatch.concurrent(&data_base::do_push_transactions,
-            this, block, height, bucket, buckets, join_handler);
+            this, block, height, median_time_past, bucket, buckets,
+                join_handler);
 }
 
 void data_base::do_push_transactions(block_const_ptr block, size_t height,
-    size_t bucket, size_t buckets, result_handler handler)
+    uint32_t median_time_past, size_t bucket, size_t buckets,
+    result_handler handler)
 {
-    const auto result = push_transactions(*block, height, bucket, buckets);
+    const auto result = push_transactions(*block, height, median_time_past,
+        bucket, buckets);
     handler(result ? error::success : error::operation_failed);
 }
 
@@ -744,7 +759,6 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
     for (size_t height = top; height > fork; --height)
     {
         message::block next;
-        const auto start_time = asio::steady_clock::now();
 
         if (!pop(next))
         {
@@ -754,11 +768,6 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
 
         BITCOIN_ASSERT(next.is_valid());
         auto block = std::make_shared<const message::block>(std::move(next));
-
-        // Mark the blocks as validated for their respective heights.
-        block->header().validation.height = height;
-        block->validation.error = error::success;
-        block->validation.start_pop = start_time;
         out_blocks->insert(out_blocks->begin(), block);
     }
 

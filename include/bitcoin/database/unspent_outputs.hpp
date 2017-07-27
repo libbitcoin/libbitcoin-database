@@ -55,7 +55,7 @@ public:
 
     /// Add a set of outputs to the cache (purges older entry).
     void add(const chain::transaction& transaction, size_t height,
-        bool confirmed);
+        uint32_t median_time_past, bool confirmed);
 
     /// Remove a set of outputs from the cache (has been reorganized out).
     void remove(const hash_digest& tx_hash);
@@ -64,7 +64,8 @@ public:
     void remove(const chain::output_point& point);
 
     /// Determine if the output is unspent (otherwise fall back to the store).
-    bool get(chain::output& out_output, size_t& out_height, bool& out_coinbase,
+    bool get(chain::output& out_output, size_t& out_height,
+        uint32_t& out_median_time_past, bool& out_coinbase,
         const chain::output_point& point, size_t fork_height,
         bool require_confirmed) const;
 

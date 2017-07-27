@@ -43,9 +43,13 @@ using namespace bc::machine;
 // [ version:varint      - const  ]
 
 static BC_CONSTEXPR auto prefix_size = slab_row<hash_digest>::prefix_size;
+static constexpr auto value_size = sizeof(uint64_t);
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto position_size = sizeof(uint16_t);
-static constexpr auto value_size = sizeof(uint64_t);
+static constexpr auto median_time_past_size = sizeof(uint32_t);
+static constexpr auto spender_height_value_size = height_size + value_size;
+static constexpr auto metadata_size = height_size + position_size +
+    median_time_past_size;
 
 // Valid tx position should never reach 2^16.
 const size_t transaction_database::unconfirmed = max_uint16;
@@ -142,13 +146,15 @@ memory_ptr transaction_database::find(const hash_digest& hash,
     ///////////////////////////////////////////////////////////////////////////
     // Critical Section
     metadata_mutex_.lock_shared();
-    const size_t height = deserial.read_4_bytes_little_endian();
-    const size_t position = deserial.read_2_bytes_little_endian();
+    const auto height = deserial.read_4_bytes_little_endian();
+    const auto position = deserial.read_2_bytes_little_endian();
+    ////const auto median_time_past = deserial.read_4_bytes_little_endian();
     metadata_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 
-    return (height > fork_height) || (require_confirmed &&
-        position == unconfirmed) ? nullptr : slab;
+    const auto confirmed = (position != unconfirmed);
+    return (confirmed && height > fork_height) || (require_confirmed &&
+        !confirmed) ? nullptr : slab;
 }
 
 transaction_result transaction_database::get(file_offset offset) const
@@ -166,6 +172,7 @@ transaction_result transaction_database::get(file_offset offset) const
     metadata_mutex_.lock_shared();
     const auto height = deserial.read_4_bytes_little_endian();
     const auto position = deserial.read_2_bytes_little_endian();
+    const auto median_time_past = deserial.read_4_bytes_little_endian();
     metadata_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 
@@ -173,7 +180,7 @@ transaction_result transaction_database::get(file_offset offset) const
     auto reader = make_unsafe_deserializer(memory - prefix_size);
 
     // Reads are not deferred for updatable values as atomicity is required.
-    return{ slab, reader.read_hash(), height, position };
+    return{ slab, reader.read_hash(), height, median_time_past, position };
 }
 
 transaction_result transaction_database::get(const hash_digest& hash,
@@ -192,19 +199,21 @@ transaction_result transaction_database::get(const hash_digest& hash,
     metadata_mutex_.lock_shared();
     const auto height = deserial.read_4_bytes_little_endian();
     const auto position = deserial.read_2_bytes_little_endian();
+    const auto median_time_past = deserial.read_4_bytes_little_endian();
     metadata_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 
     // Reads are not deferred for updatable values as atomicity is required.
-    return{ slab, hash, height, position };
+    return{ slab, hash, height, median_time_past, position };
 }
 
 bool transaction_database::get_output(output& out_output, size_t& out_height,
-    bool& out_coinbase, const output_point& point, size_t fork_height,
+    uint32_t& out_median_time_past, bool& out_coinbase,
+    const output_point& point, size_t fork_height,
     bool require_confirmed) const
 {
-    if (cache_.get(out_output, out_height, out_coinbase, point, fork_height,
-        require_confirmed))
+    if (cache_.get(out_output, out_height, out_median_time_past, out_coinbase,
+        point, fork_height, require_confirmed))
         return true;
 
     // The transaction does not exist at/below fork with matching confirmation.
@@ -217,21 +226,20 @@ bool transaction_database::get_output(output& out_output, size_t& out_height,
 
     ///////////////////////////////////////////////////////////////////////////
     metadata_mutex_.lock_shared();
-    const auto height = deserial.read_4_bytes_little_endian();
-    const auto position = deserial.read_2_bytes_little_endian();
+    out_height = deserial.read_4_bytes_little_endian();
+    out_coinbase = deserial.read_2_bytes_little_endian() == 0;
+    out_median_time_past = deserial.read_4_bytes_little_endian();
     metadata_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 
-    // Reads are not deferred for updatable values as atomicity is required.
-    transaction_result result(slab, point.hash(), height, position);
-    out_height = result.height();
-    out_coinbase = result.position() == 0;
+    // Result is used only to parse the output.
+    transaction_result result(slab, point.hash(), 0, 0, 0);
     out_output = result.output(point.index());
     return true;
 }
 
 file_offset transaction_database::store(const chain::transaction& tx,
-    size_t height, size_t position)
+    size_t height, uint32_t median_time_past, size_t position)
 {
     const auto hash = tx.hash();
 
@@ -240,11 +248,11 @@ file_offset transaction_database::store(const chain::transaction& tx,
     // A false pooled flag saves the cost of predictable confirm failure.
     if (position != unconfirmed && position != 0 && tx.validation.pooled)
     {
-        const auto offset = confirm(hash, height, position);
+        const auto offset = confirm(hash, height, median_time_past, position);
 
         if (offset != slab_map::not_found)
         {
-            cache_.add(tx, height, true);
+            cache_.add(tx, height, median_time_past, true);
             return offset;
         }
 
@@ -261,16 +269,16 @@ file_offset transaction_database::store(const chain::transaction& tx,
     {
         serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(position));
+        serial.write_4_bytes_little_endian(median_time_past);
         tx.to_data(serial, false);
     };
 
     const auto tx_size = tx.serialized_size(false);
-    BITCOIN_ASSERT(tx_size <= max_size_t - (height_size + position_size));
-    const auto total_size = static_cast<size_t>(height_size + position_size +
-        tx_size);
+    BITCOIN_ASSERT(tx_size <= max_size_t - metadata_size);
+    const auto total_size = metadata_size + static_cast<size_t>(tx_size);
 
     const auto offset = lookup_map_.store(hash, write, total_size);
-    cache_.add(tx, height, position != unconfirmed);
+    cache_.add(tx, height, median_time_past, position != unconfirmed);
 
     // We report this here because its a steady interval (block announce).
     if (!cache_.disabled() && position == 0)
@@ -300,7 +308,7 @@ bool transaction_database::spend(const output_point& point,
     if (slab == nullptr)
         return false;
 
-    const auto tx_start = REMAP_ADDRESS(slab) + height_size + position_size;
+    const auto tx_start = REMAP_ADDRESS(slab) + metadata_size;
     auto serial = make_unsafe_serializer(tx_start);
     const auto outputs = serial.read_size_little_endian();
     BITCOIN_ASSERT(serial);
@@ -312,13 +320,12 @@ bool transaction_database::spend(const output_point& point,
     // Skip outputs until the target output.
     for (uint32_t output = 0; output < point.index(); ++output)
     {
-        serial.skip(height_size + value_size);
+        serial.skip(spender_height_value_size);
         serial.skip(serial.read_size_little_endian());
         BITCOIN_ASSERT(serial);
     }
 
-    // This is unprotected because tx result reader is unprotectable here.
-    // This is valid only when read under the validation sequence (no write).
+    // Write the spender height to the first word of the target output.
     serial.write_4_bytes_little_endian(spender_height);
     return true;
 }
@@ -329,7 +336,7 @@ bool transaction_database::unspend(const output_point& point)
 }
 
 file_offset transaction_database::confirm(const hash_digest& hash,
-    size_t height, size_t position)
+    size_t height, uint32_t median_time_past, size_t position)
 {
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(position <= max_uint16);
@@ -341,6 +348,7 @@ file_offset transaction_database::confirm(const hash_digest& hash,
         unique_lock lock(metadata_mutex_);
         serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(position));
+        serial.write_4_bytes_little_endian(median_time_past);
         ///////////////////////////////////////////////////////////////////////
     };
 
@@ -352,7 +360,7 @@ bool transaction_database::unconfirm(const hash_digest& hash)
     // The transaction was verified under an unknown chain state, so we set the
     // verification forks to unverified. This will compel re-validation of the
     // unconfirmed transaction before acceptance into mempool/template queries.
-    return confirm(hash, rule_fork::unverified, unconfirmed) !=
+    return confirm(hash, rule_fork::unverified, 0, unconfirmed) !=
         slab_map::not_found;
 }
 
