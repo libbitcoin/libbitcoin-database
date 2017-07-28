@@ -99,7 +99,7 @@ public:
     //-------------------------------------------------------------------------
 
     /// Fetch transaction by file offset.
-    transaction_result get(file_offset hash) const;
+    transaction_result get(file_offset offset) const;
 
     /// Fetch transaction by its hash, at or below the specified block height.
     transaction_result get(const hash_digest& hash,
