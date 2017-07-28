@@ -102,8 +102,8 @@ public:
     transaction_result get(file_offset hash) const;
 
     /// Fetch transaction by its hash, at or below the specified block height.
-    transaction_result get(const hash_digest& hash, size_t fork_height,
-        bool require_confirmed) const;
+    transaction_result get(const hash_digest& hash,
+        size_t fork_height=max_size_t, bool require_confirmed=false) const;
 
     /// Get the output at the specified index within the transaction.
     bool get_output(chain::output& out_output, size_t& out_height,

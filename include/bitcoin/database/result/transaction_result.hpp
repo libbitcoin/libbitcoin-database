@@ -61,7 +61,7 @@ public:
     uint32_t median_time_past() const;
 
     /// True if all transaction outputs are spent at or below fork_height.
-    bool is_spent(size_t fork_height) const;
+    bool is_spent(size_t fork_height=max_size_t) const;
 
     /// The output at the specified index within this transaction.
     chain::output output(uint32_t index) const;

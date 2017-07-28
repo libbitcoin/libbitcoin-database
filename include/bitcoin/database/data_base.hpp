@@ -68,6 +68,7 @@ public:
 
     // Readers.
     // ------------------------------------------------------------------------
+    // These are const to preclude write operations.
 
     const block_database& blocks() const;
 
@@ -85,22 +86,13 @@ public:
     // Synchronous writers.
     // ------------------------------------------------------------------------
 
-    /// Create flush lock if flush_writes is true, and set sequential lock.
-    bool begin_insert() const;
-
-    /// Clear flush lock if flush_writes is true, and clear sequential lock.
-    bool end_insert() const;
-
-    /// Store a block in the database.
-    /// Returns store_block_duplicate if a block already exists at height.
-    code insert(const chain::block& block, size_t height);
-
-    /// Add an unconfirmed tx to the store (without indexing).
-    /// Returns unspent_duplicate if existing unspent hash duplicate exists.
+    /// Must be verified against unspent duplicates (or any duplicates).
     code push(const chain::transaction& tx, uint32_t forks);
 
-    /// Returns store_block_missing_parent if not linked.
-    /// Returns store_block_invalid_height if height is not the current top + 1.
+    /// Must be verified against being out of order (parent hash and height).
+    code push(const chain::header& header, size_t height);
+
+    /// Must be verified against being out of order (parent hash and height).
     code push(const chain::block& block, size_t height);
 
     // Asynchronous writers.
@@ -143,7 +135,7 @@ private:
 
     bool push_transactions(const chain::block& block, size_t height,
         uint32_t median_time_past, size_t bucket=0, size_t buckets=1);
-    bool push_heights(const chain::block& block, size_t height);
+    bool push_spends(const chain::block& block, size_t height);
     void push_inputs(const hash_digest& tx_hash, size_t height,
         const inputs& inputs);
     void push_outputs(const hash_digest& tx_hash, size_t height,
@@ -154,7 +146,7 @@ private:
     bool pop(chain::block& out_block);
     bool pop_inputs(const inputs& inputs, size_t height);
     bool pop_outputs(const outputs& outputs, size_t height);
-    code verify_insert(const chain::block& block, size_t height);
+    code verify_push(const chain::header& header, size_t height);
     code verify_push(const chain::block& block, size_t height);
     code verify_push(const chain::transaction& tx);
 

@@ -266,85 +266,46 @@ static inline hash_digest get_previous_hash(const block_database& blocks,
     return height == 0 ? null_hash : blocks.get(height - 1).hash();
 }
 
-// TODO: make debug only.
 // This store-level check is a failsafe for blockchain behavior.
-code data_base::verify_insert(const block& block, size_t height)
+code data_base::verify_push(const header& header, size_t height)
 {
-    if (block.transactions().empty())
-        return error::empty_block;
-
+////#ifndef NDEBUG
     if (get_next_height(blocks()) != height)
         return error::store_block_invalid_height;
+
+    if (get_previous_hash(blocks(), height) != header.previous_block_hash())
+        return error::store_block_missing_parent;
+////#endif
 
     return error::success;
 }
 
-// TODO: make debug only.
 // This store-level check is a failsafe for blockchain behavior.
 code data_base::verify_push(const block& block, size_t height)
 {
     if (block.transactions().empty())
         return error::empty_block;
 
-    if (get_next_height(blocks()) != height)
-        return error::store_block_invalid_height;
-
-    if (block.header().previous_block_hash() !=
-        get_previous_hash(blocks(), height))
-        return error::store_block_missing_parent;
-
-    return error::success;
+    return verify_push(block.header(), height);
 }
 
-// TODO: make debug only.
 // This store-level check is a failsafe for blockchain behavior.
 code data_base::verify_push(const transaction& tx)
 {
-    const auto result = transactions_->get(tx.hash(), max_size_t, false);
-    return result && !result.is_spent(max_size_t) ? error::unspent_duplicate :
-        error::success;
-}
+////#ifndef NDEBUG
+    const auto result = transactions_->get(tx.hash());
 
-bool data_base::begin_insert() const
-{
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    write_mutex_.lock();
+    if (result && !result.is_spent())
+        return error::unspent_duplicate;
+////#endif
 
-    return begin_write();
-}
-
-bool data_base::end_insert() const
-{
-    write_mutex_.unlock();
-    // End Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-
-    return end_write();
-}
-
-// Add block to the database at the given height.
-code data_base::insert(const chain::block& block, size_t height)
-{
-    const auto ec = verify_insert(block, height);
-
-    if (ec)
-        return ec;
-
-    const auto median_time_past = block.header().validation.median_time_past;
-
-    if (!push_transactions(block, height, median_time_past) ||
-        !push_heights(block, height))
-        return error::operation_failed;
-
-    blocks_->store(block, height, true);
-    synchronize();
     return error::success;
 }
 
 // This is designed for write exclusivity and read concurrency.
 code data_base::push(const chain::transaction& tx, uint32_t forks)
 {
+    static const uint32_t median_time_past = 0;
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(write_mutex_);
@@ -361,7 +322,8 @@ code data_base::push(const chain::transaction& tx, uint32_t forks)
         return error::operation_failed;
 
     // When position is unconfirmed, height is used to store validation forks.
-    transactions_->store(tx, forks, 0, transaction_database::unconfirmed);
+    transactions_->store(tx, forks, median_time_past,
+        transaction_database::unconfirmed);
     transactions_->synchronize();
 
     return end_write() ? error::success : error::operation_failed;
@@ -370,7 +332,33 @@ code data_base::push(const chain::transaction& tx, uint32_t forks)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-// Add a block in order (creates no gaps, must be at top).
+// This is designed for write exclusivity and read concurrency.
+code data_base::push(const header& header, size_t height)
+{
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock lock(write_mutex_);
+
+    const auto ec = verify_push(header, height);
+
+    if (ec)
+        return ec;
+
+    // Begin Flush Lock
+    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    if (!begin_write())
+        return error::operation_failed;
+
+    // TODO: implement block store header with header indexing.
+    ////blocks_->store(header, height, true);
+    synchronize();
+
+    return end_write() ? error::success : error::operation_failed;
+    // End Flush Lock
+    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ///////////////////////////////////////////////////////////////////////////
+}
+
 // This is designed for write exclusivity and read concurrency.
 code data_base::push(const block& block, size_t height)
 {
@@ -391,7 +379,7 @@ code data_base::push(const block& block, size_t height)
     const auto median_time_past = block.header().validation.median_time_past;
 
     if (!push_transactions(block, height, median_time_past) ||
-        !push_heights(block, height))
+        !push_spends(block, height))
         return error::operation_failed;
 
     blocks_->store(block, height, true);
@@ -433,7 +421,7 @@ bool data_base::push_transactions(const chain::block& block, size_t height,
     return true;
 }
 
-bool data_base::push_heights(const chain::block& block, size_t height)
+bool data_base::push_spends(const chain::block& block, size_t height)
 {
     transactions_->synchronize();
     const auto& txs = block.transactions();
@@ -586,7 +574,7 @@ bool data_base::pop(block& out_block)
 
     // Return the block (with header/block metadata and pop start time).
     out_block = chain::block(block.header(), std::move(transactions));
-    out_block.validation.error = error::success;
+    out_block.header().validation.error = error::success;
     out_block.validation.start_pop = start_time;
     return true;
 }
@@ -719,7 +707,7 @@ void data_base::handle_push_transactions(const code& ec, block_const_ptr block,
         return;
     }
 
-    if (!push_heights(*block, height))
+    if (!push_spends(*block, height))
     {
         handler(error::operation_failed);
         return;
