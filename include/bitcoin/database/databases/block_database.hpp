@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_BLOCK_DATABASE_HPP
 #define LIBBITCOIN_DATABASE_BLOCK_DATABASE_HPP
 
+#include <atomic>
 #include <cstddef>
 #include <memory>
 #include <boost/filesystem.hpp>
@@ -111,6 +112,9 @@ private:
     void pop_index(size_t height, record_manager& manager);
     void push_index(array_index index, size_t height,
         record_manager& manager);
+
+    // The header index branch parent in the block index.
+    std::atomic<size_t> fork_point_;
 
     // The starting size of the hash table, used by create.
     const size_t initial_map_file_size_;

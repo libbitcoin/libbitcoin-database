@@ -84,7 +84,8 @@ block_database::block_database(const path& map_filename,
     const path& header_index_filename, const path& block_index_filename,
     const path& tx_index_filename, size_t buckets, size_t expansion,
     mutex_ptr mutex)
-  : initial_map_file_size_(record_hash_table_header_size(buckets) +
+  : fork_point_(0),
+    initial_map_file_size_(record_hash_table_header_size(buckets) +
         minimum_records_size),
 
     lookup_file_(map_filename, mutex, expansion),
@@ -270,6 +271,9 @@ block_result block_database::get(const hash_digest& hash) const
 void block_database::store(const chain::header& header, size_t height,
     uint32_t checksum, array_index tx_start, size_t tx_count, uint8_t state)
 {
+    auto& manager = is_confirmed(state) ? block_index_manager_ :
+        header_index_manager_;
+
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(tx_start <= max_uint32);
     BITCOIN_ASSERT(tx_count <= max_uint16);
@@ -290,13 +294,11 @@ void block_database::store(const chain::header& header, size_t height,
 
     const auto index = lookup_map_.store(header.hash(), write);
 
-    if (is_confirmed(state))
-        push_index(index, height, block_index_manager_);
-    else if (is_indexed(state))
-        push_index(index, height, header_index_manager_);
+    if (is_confirmed(state) || is_indexed(state))
+        push_index(index, height, manager);
 }
 
-// This updates the header/block if the status is pooled.
+// A header creation does not move the fork point (not a reorg).
 void block_database::store(const chain::header& header, size_t height)
 {
     // Initially store header as indexed, pending download (the top header).
@@ -305,7 +307,7 @@ void block_database::store(const chain::header& header, size_t height)
     // The header/block already exists, promote from pooled to indexed.
     if (header.validation.pooled)
     {
-        confirm(header.hash(), height, state);
+        confirm(header.hash(), height, false);
         return;
     }
 
@@ -313,6 +315,7 @@ void block_database::store(const chain::header& header, size_t height)
 }
 
 // This creates a new store entry even if a previous existed.
+// A block creation does not move the fork point (not a reorg).
 void block_database::store(const chain::block& block, size_t height)
 {
     // Initially store block as confirmed-valid (the top block).
@@ -398,6 +401,7 @@ bool block_database::confirm(const hash_digest& hash, size_t height,
     metadata_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 
+    record = nullptr;
     const auto state = update_confirmation_state(original, true, block_index);
     const auto update = [&](byte_serializer& serial)
     {
@@ -410,7 +414,13 @@ bool block_database::confirm(const hash_digest& hash, size_t height,
         serial.write_byte(state);
     };
 
-    record = nullptr;
+    // Also increment the fork point for block-indexed confirmation.
+    if (block_index && is_confirmed(state))
+    {
+        BITCOIN_ASSERT_MSG(fork_point_ != max_size_t, "fork point overflow");
+        ++fork_point_;
+    }
+
     const auto index = lookup_map_.update(hash, update);
     push_index(index, height, manager);
     return true;
@@ -441,14 +451,7 @@ bool block_database::unconfirm(const hash_digest& hash, size_t height,
     metadata_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 
-    // TODO: if popping confirmed block from header index decrement fork point.
-    if (!block_index && is_confirmed(original))
-    {
-        // --fork_point_;
-        pop_index(height, manager);
-        return true;
-    }
-
+    record = nullptr;
     const auto state = update_confirmation_state(original, false, block_index);
     const auto update = [&](byte_serializer& serial)
     {
@@ -461,8 +464,17 @@ bool block_database::unconfirm(const hash_digest& hash, size_t height,
         serial.write_byte(state);
     };
 
-    record = nullptr;
-    /*const auto index =*/ lookup_map_.update(hash, update);
+    // Only decrement the fork point for confirmed block via header-index.
+    if (!block_index && is_confirmed(original))
+    {
+        BITCOIN_ASSERT_MSG(fork_point_ != 0, "fork point underflow");
+        --fork_point_;
+    }
+    else
+    {
+        lookup_map_.update(hash, update);
+    }
+
     pop_index(height, manager);
     return true;
 }
