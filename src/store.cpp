@@ -153,5 +153,5 @@ bool store::flush_unlock() const
     return !flush_each_write_ || (flush() && flush_lock_.unlock_shared());
 }
 
-} // namespace data_base
+} // namespace database
 } // namespace libbitcoin

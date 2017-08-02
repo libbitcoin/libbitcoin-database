@@ -91,7 +91,7 @@ public:
     ////bool unlink();
 
 private:
-    void write_index();
+    void push_index();
     array_index read_index(size_t from_height) const;
 
     // Row entries containing stealth tx data.

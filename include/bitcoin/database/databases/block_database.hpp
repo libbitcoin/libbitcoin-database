@@ -32,32 +32,6 @@
 namespace libbitcoin {
 namespace database {
 
-// Stored block headers are always valid (PoW) with height, states are:
-enum class block_state : uint8_t
-{
-    /// Interface only (not stored).
-    not_found = 0,
-
-    /// This represents txs validation failure after population.
-    /// Depopulated (empty), unrecoverable, retained for reject.
-    invalid = 1,
-
-    /// All transactions, not validated.
-    stored = 2,
-
-    /// Valid, unindexed.
-    pooled = 3,
-
-    /// Valid, header-indexed.
-    indexed = 4,
-
-    /// Valid, block-indexed.
-    confirmed = 5,
-
-    /// No transactions, possibly witheld.
-    empty = 6
-};
-
 /// Stores block_headers each with a list of transaction indexes.
 /// Lookup possible by hash or height.
 class BCD_API block_database
@@ -76,7 +50,7 @@ public:
     ~block_database();
 
     // Startup and shutdown.
-    // ----------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     /// Initialize a new transaction database.
     bool create();
@@ -96,87 +70,47 @@ public:
     // Queries.
     //-------------------------------------------------------------------------
 
-    /// The height of the highest indexed block.
-    bool top_block(size_t& out_height) const;
+    /// The height of the highest indexed block|header.
+    bool top(size_t& out_height, bool block_index=true) const;
 
-    /// The height of the highest indexed header.
-    bool top_header(size_t& out_height) const;
+    /// Fetch block by block|header index height.
+    block_result get(size_t height, bool block_index=true) const;
 
-    // TODO: review.
-    /// Fetch block by height (always confirmed).
-    block_result get(size_t height) const;
-
-    // TODO: review.
-    /// Fetch block by hash (optionally confirmed).
-    block_result get(const hash_digest& hash, bool require_confirmed) const;
+    /// Fetch block by hash.
+    block_result get(const hash_digest& hash) const;
 
     // Store.
-    // ----------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
-    // TODO: review.
-    /// Store a header with no transactions.
+    // Store header, indexed at the specified height.
     void store(const chain::header& header, size_t height);
 
-    // TODO: review.
-    /// Store a header and associate transactions (false if any missing).
-    void store(const chain::block& block, size_t height, bool confirmed);
-
-    // TODO: review.
-    /// Store a header and associate transactions (false if any missing).
-    void store(const message::compact_block& compact, size_t height,
-        bool confirmed);
+    /// Store block, indexed at the specified height, and associate tx offsets.
+    void store(const chain::block& block, size_t height);
 
     // Update.
-    // ----------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
-    // TODO: review.
-    /////// Update an existing block's transactions association and state.
-    ////bool update(const chain::block& block, bool validated);
+    /// Promote block to indexed|confirmed.
+    bool confirm(const hash_digest& hash, size_t height, bool block_index);
 
-    // TODO: review.
-    /////// Update an existing block's transactions association.
-    ////bool update(const message::compact_block& compact, bool validated);
-
-    // TODO: review.
-    /// Promote (to confirmed) block and all ancestors up to the block hash.
-    /// This does not promote the block's transactions or their spends, which
-    /// must be confirmed before this call.
-    bool confirm(const hash_digest& hash, bool confirm=true);
-
-    // TODO: review.
-    /// Demote (to valid) all blocks at and above the given height.
-    /// This does not demote the blocks' transactions or their spends, which
-    /// must be demoted before this call. Should always be the top block.
-    bool unconfirm(size_t from_height);
+    /// Demote header|block at the given height to pooled.
+    bool unconfirm(const hash_digest& hash, size_t height, bool block_index);
 
 private:
     typedef record_hash_table<hash_digest> record_map;
     typedef message::compact_block::short_id_list short_id_list;
 
-    static bool is_confirmed(block_state status);
-    static bool is_indexed(block_state status);
-    static bool is_pooled(block_state status);
-    static bool is_valid(block_state status);
-    static block_state to_status(bool confirmed);
-
-    // Associate an array of transactions for a block.
     array_index associate(const chain::transaction::list& transactions);
-    array_index associate(const short_id_list& ids);
-
-    // TODO: review.
     void store(const chain::header& header, size_t height, uint32_t checksum,
-        array_index tx_start, size_t tx_count, block_state status);
+        array_index tx_start, size_t tx_count, uint8_t status);
 
-    ////bool update(const hash_digest& hash, uint32_t checksum,
-    ////    array_index tx_start, size_t tx_count, uint8_t status);
-
-    // TODO: review.
-    // Write block hash table index into the block index.
-    void write_index(array_index index, array_index height);
-
-    // TODO: review.
-    // Use block index to get block hash table index from height.
-    array_index get_index(array_index height) const;
+    // Index Utilities.
+    bool read_top(size_t& out_height, const record_manager& manager) const;
+    array_index read_index(size_t height, const record_manager& manager) const;
+    void pop_index(size_t height, record_manager& manager);
+    void push_index(array_index index, size_t height,
+        record_manager& manager);
 
     // The starting size of the hash table, used by create.
     const size_t initial_map_file_size_;
@@ -202,7 +136,7 @@ private:
     memory_map tx_index_file_;
     record_manager tx_index_manager_;
 
-    // This provides atomicity for checksum, tx_start, tx_count, confirmed.
+    // This provides atomicity for checksum, tx_start, tx_count, state.
     mutable shared_mutex metadata_mutex_;
 };
 

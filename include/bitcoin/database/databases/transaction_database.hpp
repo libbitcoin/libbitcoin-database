@@ -34,30 +34,6 @@
 namespace libbitcoin {
 namespace database {
 
-// Stored txs are verified or protected by valid header PoW, states are:
-// TODO: compress into position using flag for indexed and sentinal for pool.
-enum class transaction_state : uint8_t
-{
-    /// Interface only (not stored).
-    not_found = 0,
-
-    /// If the tx can become valid via soft fork, set "stored" instead.
-    /// Retain for reject, height/position unused (is this usable?).
-    invalid = 1,
-
-    /// Valid via header PoW only, height/position unused.
-    stored = 2,
-
-    /// Valid via pool|popped block, height is forks, position unused.
-    pooled = 3,
-
-    /// Valid, header-indexed, height is forks, position unused.
-    indexed = 4,
-
-    /// Valid, block-indexed, height is height, position position.
-    confirmed = 5
-};
-
 /// This enables lookups of transactions by hash.
 /// An alternative and faster method is lookup from a unique index
 /// that is assigned upon storage.
@@ -69,9 +45,6 @@ public:
     typedef boost::filesystem::path path;
     typedef slab_hash_table<hash_digest> slab_map;
     typedef std::shared_ptr<shared_mutex> mutex_ptr;
-
-    /// Sentinel for use in tx position to indicate unconfirmed.
-    static const size_t unconfirmed;
 
     /// Construct the database.
     transaction_database(const path& map_filename, size_t buckets,
@@ -104,49 +77,36 @@ public:
     /// Fetch transaction by file offset.
     transaction_result get(file_offset offset) const;
 
-    /// Fetch transaction by its hash, at or below the specified block height.
-    transaction_result get(const hash_digest& hash,
-        size_t fork_height=max_size_t, bool require_confirmed=false) const;
+    /// Fetch transaction by its hash.
+    transaction_result get(const hash_digest& hash) const;
 
-    /// Get the output at the specified index within the transaction.
-    bool get_output(chain::output& out_output, size_t& out_height,
-        uint32_t& out_median_time_past, bool& out_coinbase,
-        const chain::output_point& point, size_t fork_height,
-        bool require_confirmed) const;
+    /// Populate output metadata for the specified point.
+    /// Confirmation is satisfied by confirmed|indexed, fork point dependent.
+    bool get_output(const chain::output_point& point,
+        size_t fork_height=max_size_t) const;
 
     // Store.
     // ------------------------------------------------------------------------
 
     /// Height and position may be sentinels or otherwise.
-    /// Store a transaction in the database, returning slab file offset.
-    file_offset store(const chain::transaction& tx, size_t height,
-        uint32_t median_time_past, size_t position);
+    /// Store|promote the transaction and set offset metadata.
+    bool store(const chain::transaction& tx, size_t height,
+         uint32_t median_time_past, size_t position,
+        transaction_state state=transaction_state::pooled);
 
-    // Update.
-    //-------------------------------------------------------------------------
-
-    /// Update the spender height of the output in the tx store.
-    bool spend(const chain::output_point& point, size_t spender_height);
-
-    /// Update the spender height of the output in the tx store.
-    bool unspend(const chain::output_point& point);
-
-    /// Promote an unconfirmed tx (not including its indexes).
-    file_offset confirm(const hash_digest& hash, size_t height,
-        uint32_t median_time_past, size_t position);
-
-    /// Demote the transaction.
-    bool unconfirm(const hash_digest& hash);
+    /// Demote the transaction to pooled.
+    bool pool(uint64_t offset);
+    bool pool(const chain::transaction& tx);
 
 private:
-    static bool is_confirmed(transaction_state status);
-    static bool is_indexed(transaction_state status);
-    static bool is_pooled(transaction_state status);
-    static bool is_valid(transaction_state position);
-    static transaction_state to_status(bool confirmed);
+    void log_output_cache_hit_rate();
 
-    memory_ptr find(const hash_digest& hash, size_t maximum_height,
-        bool require_confirmed) const;
+    // Update the spender height of the output.
+    bool spend(const chain::output_point& point, size_t spender_height);
+
+    // Update the state of the existing tx.
+    bool confirm(file_offset offset, size_t height, uint32_t median_time_past,
+        size_t position, transaction_state state);
 
     // The starting size of the hash table, used by create.
     const size_t initial_map_file_size_;

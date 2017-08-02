@@ -63,7 +63,7 @@ public:
     /// Call close on destruct.
     ~data_base();
 
-    // Readers.
+    /// Reader interfaces.
     // ------------------------------------------------------------------------
     // These are const to preclude write operations.
 
@@ -83,19 +83,29 @@ public:
     // Synchronous writers.
     // ------------------------------------------------------------------------
 
-    /// Must be verified against unspent duplicates (or any duplicates).
+    /// Push unconfirmed tx that was verified with the given forks.
     code push(const chain::transaction& tx, uint32_t forks);
 
-    /// Must be verified against being out of order (parent hash and height).
-    code push(const chain::header& header, size_t height);
-
-    /// Must be verified against being out of order (parent hash and height).
+    /// Push next top block of expected height.
     code push(const chain::block& block, size_t height);
 
-    // Asynchronous writers.
+    /// Push next top header of expected height.
+    code push(const chain::header& header, size_t height);
+
+    /// Pop top block of expected height.
+    code pop(chain::block& out_block, size_t height);
+
+    /// Pop top header of expected height.
+    code pop(chain::header& out_header, size_t height);
+
+    // Reorganization.
     // ------------------------------------------------------------------------
 
-    /// Invoke pop_all and then push_all under a common lock.
+    void reorganize(const config::checkpoint& fork_point,
+        block_const_ptr_list_const_ptr incoming,
+        block_const_ptr_list_ptr outgoing, dispatcher& dispatch,
+        result_handler handler);
+
     void reorganize(const config::checkpoint& fork_point,
         header_const_ptr_list_const_ptr incoming,
         header_const_ptr_list_ptr outgoing, dispatcher& dispatch,
@@ -106,15 +116,64 @@ protected:
     void commit();
     bool flush() const override;
 
-    // Sets error if first_height is not the current top + 1 or not linked.
-    void push_all(block_const_ptr_list_const_ptr in_blocks,
-        size_t first_height, dispatcher& dispatch, result_handler handler);
+    // Utilities.
+    // ------------------------------------------------------------------------
 
-    // Pop the set of blocks above the given hash.
-    // Sets error if the database is corrupt or the hash doesn't exist.
-    // Any blocks returned were successfully popped prior to any failure.
-    void pop_above(block_const_ptr_list_ptr out_blocks,
-        const hash_digest& fork_hash, dispatcher& dispatch,
+    code verify(const config::checkpoint& fork_point, bool block_index) const;
+    code verify_top(size_t height, bool block_index) const;
+    code verify_push(const chain::header& header, size_t height) const;
+    code verify_push(const chain::block& block, size_t height) const;
+    code verify_push(const chain::transaction& tx) const;
+    chain::transaction::list to_transactions(const block_result& result) const;
+
+    // Synchronous.
+    // ------------------------------------------------------------------------
+
+    bool push_transactions(const chain::block& block, size_t height,
+        uint32_t median_time_past, size_t bucket=0, size_t buckets=1,
+        transaction_state state=transaction_state::confirmed);
+    void push_inputs(const chain::transaction& tx, size_t height);
+    void push_outputs(const chain::transaction& tx, size_t height);
+    void push_stealth(const chain::transaction& tx, size_t height);
+
+    bool pop_transactions(const chain::block& out_block, size_t bucket=0, size_t buckets=1);
+    bool pop_inputs(const chain::transaction& tx);
+    bool pop_outputs(const chain::transaction& tx);
+    bool pop_stealth(const chain::transaction& tx);
+
+    // Block Reorganization (push is parallel).
+    // ------------------------------------------------------------------------
+
+    void pop_above(block_const_ptr_list_ptr blocks,
+        const config::checkpoint& fork_point, dispatcher& dispatch,
+        result_handler handler);
+    void handle_pop(const code& ec,
+        block_const_ptr_list_const_ptr blocks, size_t fork_height,
+        dispatcher& dispatch, result_handler handler);
+    void push_all(block_const_ptr_list_const_ptr blocks, size_t fork_height,
+        dispatcher& dispatch, result_handler handler);
+    void push_next(const code& ec, block_const_ptr_list_const_ptr blocks,
+        size_t index, size_t height, dispatcher& dispatch,
+        result_handler handler);
+    void handle_push(const code& ec, result_handler handler) const;
+
+    void do_push(block_const_ptr block, size_t height,
+        uint32_t median_time_past, dispatcher& dispatch,
+        result_handler handler);
+    void do_push_transactions(block_const_ptr block, size_t height,
+        uint32_t median_time_past, size_t bucket, size_t buckets,
+        result_handler handler);
+    void handle_do_push_transactions(const code& ec, block_const_ptr block,
+        size_t height, result_handler handler);
+
+    // Header Reorganization (not parallel).
+    // ------------------------------------------------------------------------
+
+    bool pop_above(header_const_ptr_list_ptr headers,
+        const config::checkpoint& fork_point, dispatcher& dispatch,
+        result_handler handler);
+    bool push_all(header_const_ptr_list_const_ptr headers,
+        const config::checkpoint& fork_point, dispatcher& dispatch,
         result_handler handler);
 
     std::shared_ptr<block_database> blocks_;
@@ -126,46 +185,6 @@ protected:
 private:
     typedef chain::input::list inputs;
     typedef chain::output::list outputs;
-
-    // Synchronous writers.
-    // ------------------------------------------------------------------------
-
-    bool push_transactions(const chain::block& block, size_t height,
-        uint32_t median_time_past, size_t bucket=0, size_t buckets=1);
-    bool push_spends(const chain::block& block, size_t height);
-    void push_inputs(const hash_digest& tx_hash, size_t height,
-        const inputs& inputs);
-    void push_outputs(const hash_digest& tx_hash, size_t height,
-        const outputs& outputs);
-    void push_stealth(const hash_digest& tx_hash, size_t height,
-        const outputs& outputs);
-
-    bool pop(chain::block& out_block);
-    bool pop_inputs(const inputs& inputs, size_t height);
-    bool pop_outputs(const outputs& outputs, size_t height);
-    code verify_push(const chain::header& header, size_t height);
-    code verify_push(const chain::block& block, size_t height);
-    code verify_push(const chain::transaction& tx);
-
-    // Asynchronous writers.
-    // ------------------------------------------------------------------------
-
-    void push_next(const code& ec, block_const_ptr_list_const_ptr blocks,
-        size_t index, size_t height, dispatcher& dispatch,
-        result_handler handler);
-    void do_push(block_const_ptr block, size_t height,
-        uint32_t median_time_past, dispatcher& dispatch,
-        result_handler handler);
-    void do_push_transactions(block_const_ptr block, size_t height,
-        uint32_t median_time_past, size_t bucket, size_t buckets,
-        result_handler handler);
-    void handle_push_transactions(const code& ec, block_const_ptr block,
-        size_t height, result_handler handler);
-
-    void handle_pop(const code& ec,
-        block_const_ptr_list_const_ptr incoming_blocks,
-        size_t first_height, dispatcher& dispatch, result_handler handler);
-    void handle_push(const code& ec, result_handler handler) const;
 
     std::atomic<bool> closed_;
     const settings& settings_;

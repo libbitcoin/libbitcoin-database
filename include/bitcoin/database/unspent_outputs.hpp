@@ -53,21 +53,19 @@ public:
     /// The cache performance as a ratio of hits to accesses.
     float hit_rate() const;
 
-    /// Add a set of outputs to the cache (purges older entry).
-    void add(const chain::transaction& transaction, size_t height,
+    /// Add outputs to cache, unconfirmed height is forks (purges matching tx).
+    void add(const chain::transaction& tx, size_t height,
         uint32_t median_time_past, bool confirmed);
 
-    /// Remove a set of outputs from the cache (has been reorganized out).
+    /// Remove outputs from the cache (tx has been reorganized out).
     void remove(const hash_digest& tx_hash);
 
-    /// Remove an output from the cache (has been spent).
+    /// Remove one output from the cache (has been confirmed spent).
     void remove(const chain::output_point& point);
 
-    /// Determine if the output is unspent (otherwise fall back to the store).
-    bool get(chain::output& out_output, size_t& out_height,
-        uint32_t& out_median_time_past, bool& out_coinbase,
-        const chain::output_point& point, size_t fork_height,
-        bool require_confirmed) const;
+    /// Populate output if cached/unspent relative to fork height.
+    bool populate(const chain::output_point& point,
+        size_t fork_height=max_size_t) const;
 
 private:
     // A bidirection map is used for efficient output and position retrieval.

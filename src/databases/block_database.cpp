@@ -27,15 +27,16 @@
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/result/block_result.hpp>
 
-// Record format (v4) [95 bytes]:
+// Record format (v4) [99 bytes]:
 // Below excludes block height and tx hash indexes (arrays).
 // ----------------------------------------------------------------------------
-// [ state:1    - atomic1 ] (invalid, empty, stored, pooled, indexed, confirmed)
-// [ header:80  - const   ]
-// [ height:4   - const   ] (in any branch)
-// [ checksum:4 - atomic2 ] (optional, zero if not cached, code if invalid)
-// [ tx_start:4 - atomic3 ] (array index into the transaction_index, or zero)
-// [ tx_count:2 - atomic3 ] (atomic with start, zero if block unpopulated)
+// [ header:80          - const   ]
+// [ median_time_past:4 - const   ]
+// [ height:4           - const   ] (in any branch)
+// [ state:1            - atomic1 ] (invalid, empty, stored, pooled, indexed, confirmed)
+// [ checksum/code:4    - atomic2 ] (optional, zero if not cached, code if invalid)
+// [ tx_start:4         - atomic3 ] (array index into the transaction_index, or zero)
+// [ tx_count:2         - atomic3 ] (atomic with start, zero if block unpopulated)
 
 // Record format (v3) [variable bytes] (median_time_past added in v3.3):
 // Below excludes block height index (array).
@@ -56,17 +57,14 @@ static BC_CONSTEXPR auto prefix_size = record_row<hash_digest>::prefix_size;
 static const auto header_size = header::satoshi_fixed_size();
 static constexpr auto median_time_past_size = sizeof(uint32_t);
 static constexpr auto height_size = sizeof(uint32_t);
+static constexpr auto state_size = sizeof(uint8_t);
 static constexpr auto checksum_size = sizeof(uint32_t);
 static constexpr auto tx_start_size = sizeof(uint32_t);
 static constexpr auto tx_count_size = sizeof(uint16_t);
-static constexpr auto confirmed_size = sizeof(uint8_t);
 static const auto height_offset = header_size + median_time_past_size;
-static const auto checksum_offset = height_offset + checksum_size;
+static const auto state_offset = height_offset + height_size;
 static const auto block_size = header_size + median_time_past_size +
-    height_size + checksum_size + tx_start_size + tx_count_size +
-    confirmed_size;
-
-static constexpr auto no_checksum = 0u;
+    height_size + state_size + checksum_size + tx_start_size + tx_count_size;
 
 static constexpr auto header_index_header_size = 0u;
 static constexpr auto header_index_record_size = sizeof(array_index);
@@ -78,30 +76,8 @@ static constexpr auto tx_index_record_size = sizeof(file_offset);
 // The block database keys off of block hash and has block value.
 static const auto record_size = hash_table_record_size<hash_digest>(block_size);
 
-bool block_database::is_confirmed(block_state status)
-{
-    return status == block_state::confirmed;
-}
-
-bool block_database::is_indexed(block_state status)
-{
-    return status == block_state::indexed;
-}
-
-bool block_database::is_pooled(block_state status)
-{
-    return status == block_state::pooled || status == block_state::indexed;
-}
-
-bool block_database::is_valid(block_state status)
-{
-    return is_confirmed(status) || is_indexed(status) || is_pooled(status);
-}
-
-block_state block_database::to_status(bool confirmed)
-{
-    return confirmed ? block_state::confirmed : block_state::pooled;
-}
+// Placeholder for unimplemented checksum caching.
+static constexpr auto no_checksum = 0u;
 
 // Blocks uses a hash table and two array indexes, all O(1).
 block_database::block_database(const path& map_filename,
@@ -213,71 +189,55 @@ bool block_database::close()
 // Queries.
 // ----------------------------------------------------------------------------
 
-static bool top(size_t& out_height, size_t count)
+bool block_database::top(size_t& out_height, bool block_index) const
 {
-    // Guard against no genesis block.
-    if (count == 0)
-        return false;
-
-    out_height = count - 1;
-    return true;
+    auto& manager = block_index ? block_index_manager_ : header_index_manager_;
+    return read_top(out_height, manager);
 }
 
-bool block_database::top_block(size_t& out_height) const
+block_result block_database::get(size_t height, bool block_index) const
 {
-    return top(out_height, block_index_manager_.count());
-}
+    auto& manager = block_index ? block_index_manager_ : header_index_manager_;
 
-bool block_database::top_header(size_t& out_height) const
-{
-    return top(out_height, header_index_manager_.count());
-}
-
-// TODO: review.
-block_result block_database::get(size_t height) const
-{
-    if (height >= block_index_manager_.count())
+    if (height >= manager.count())
         return{ tx_index_manager_ };
 
-    const auto height32 = static_cast<uint32_t>(height);
-    auto record = lookup_manager_.get(get_index(height));
+    auto record = lookup_manager_.get(read_index(height, manager));
     const auto prefix = REMAP_ADDRESS(record);
 
     // Advance the record row entry past the key and link to the record data.
     REMAP_INCREMENT(record, prefix_size);
     auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(record));
 
-    // The header and height never change after the block is reachable.
-    deserial.skip(checksum_offset);
+    // The header and height are const.
+    deserial.skip(state_offset);
 
+    // Each of the three atomic sets could be guarded independently.
     ///////////////////////////////////////////////////////////////////////////
+    // Critical Section.
     metadata_mutex_.lock_shared();
+    const auto state = deserial.read_byte();
     const auto checksum = deserial.read_4_bytes_little_endian();
     const auto tx_start = deserial.read_4_bytes_little_endian();
     const auto tx_count = deserial.read_2_bytes_little_endian();
-    const auto state = static_cast<block_state>(deserial.read_byte());
     metadata_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
-
-    // Must be strong chain block if indexed by height.
-    BITCOIN_ASSERT(is_confirmed(state));
 
     // HACK: back up into the record to obtain the hash/key (optimization).
     auto reader = make_unsafe_deserializer(prefix);
 
     // Reads are not deferred for updatable values as atomicity is required.
-    return{ tx_index_manager_, record, reader.read_hash(), height32, checksum,
-        tx_start, tx_count, true };
+    return{ tx_index_manager_, record, reader.read_hash(),
+        static_cast<uint32_t>(height), checksum, tx_start, tx_count, state };
 }
 
-// TODO: review.
-block_result block_database::get(const hash_digest& hash,
-    bool require_confirmed) const
+// Returns any state, including invalid and empty.
+block_result block_database::get(const hash_digest& hash) const
 {
     // This is offset to the data section of the record row entry.
     const auto record = lookup_map_.find(hash);
 
-    if (!record)
+    if (record == nullptr)
         return{ tx_index_manager_ };
 
     const auto memory = REMAP_ADDRESS(record);
@@ -287,30 +247,82 @@ block_result block_database::get(const hash_digest& hash,
     auto deserial = make_unsafe_deserializer(memory + height_offset);
     const auto height = deserial.read_4_bytes_little_endian();
 
+    // Each of the three atomic sets could be guarded independently.
     ///////////////////////////////////////////////////////////////////////////
+    // Critical Section.
     metadata_mutex_.lock_shared();
+    const auto state = deserial.read_byte();
     const auto checksum = deserial.read_4_bytes_little_endian();
     const auto tx_start = deserial.read_4_bytes_little_endian();
     const auto tx_count = deserial.read_2_bytes_little_endian();
-    const auto state = static_cast<block_state>(deserial.read_byte());
     metadata_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 
-    if (!is_valid(state))
-        return{ tx_index_manager_ };
-
-    const auto confirmed = is_confirmed(state);
-
-    if (require_confirmed && !confirmed)
-        return{ tx_index_manager_ };
-
     // Reads are not deferred for updatable values as atomicity is required.
     return{ tx_index_manager_, record, hash, height, checksum, tx_start,
-        tx_count, confirmed };
+        tx_count, state };
 }
 
-// Save each transaction offset into the transaction_index and return the index
-// of the first entry. Offsets must be cached in tx metadata.
+// Store.
+// ----------------------------------------------------------------------------
+
+// private
+void block_database::store(const chain::header& header, size_t height,
+    uint32_t checksum, array_index tx_start, size_t tx_count, uint8_t state)
+{
+    BITCOIN_ASSERT(height <= max_uint32);
+    BITCOIN_ASSERT(tx_start <= max_uint32);
+    BITCOIN_ASSERT(tx_count <= max_uint16);
+    BITCOIN_ASSERT(!header.validation.pooled);
+    const auto height32 = static_cast<uint32_t>(height);
+
+    const auto write = [&](byte_serializer& serial)
+    {
+        // The record is not accessible until stored, so no guards required.
+        // Write block header including median_time_past metadata.
+        header.to_data(serial, false);
+        serial.write_4_bytes_little_endian(height32);
+        serial.write_byte(state);
+        serial.write_4_bytes_little_endian(checksum);
+        serial.write_4_bytes_little_endian(static_cast<uint32_t>(tx_start));
+        serial.write_2_bytes_little_endian(static_cast<uint16_t>(tx_count));
+    };
+
+    const auto index = lookup_map_.store(header.hash(), write);
+
+    if (is_confirmed(state))
+        push_index(index, height, block_index_manager_);
+    else if (is_indexed(state))
+        push_index(index, height, header_index_manager_);
+}
+
+// This updates the header/block if the status is pooled.
+void block_database::store(const chain::header& header, size_t height)
+{
+    // Initially store header as indexed, pending download (the top header).
+    static const auto state = block_state::indexed | block_state::pending;
+
+    // The header/block already exists, promote from pooled to indexed.
+    if (header.validation.pooled)
+    {
+        confirm(header.hash(), height, state);
+        return;
+    }
+
+    store(header, height, no_checksum, 0, 0, state);
+}
+
+// This creates a new store entry even if a previous existed.
+void block_database::store(const chain::block& block, size_t height)
+{
+    // Initially store block as confirmed-valid (the top block).
+    static const auto state = block_state::confirmed | block_state::valid;
+
+    const auto& header = block.header();
+    const auto& txs = block.transactions();
+    store(header, height, no_checksum, associate(txs), txs.size(), state);
+}
+
 array_index block_database::associate(const transaction::list& transactions)
 {
     if (transactions.empty())
@@ -330,199 +342,178 @@ array_index block_database::associate(const transaction::list& transactions)
     return start;
 }
 
-// Save each transaction offset into the transaction_index and return the index
-// of the first entry. Offsets must be cached in short_id metadata.
-array_index block_database::associate(const short_id_list& ids)
-{
-    BITCOIN_ASSERT_MSG(false, "not implemented");
-
-    if (ids.empty())
-        return 0;
-
-    const auto start = tx_index_manager_.new_records(ids.size());
-    const auto record = tx_index_manager_.get(start);
-    auto serial = make_unsafe_serializer(REMAP_ADDRESS(record));
-
-    for (const auto& id: ids)
-    {
-        // TODO: create and employ short_id type with offset metadata.
-        ////const auto offset = id.validation.offset;
-        ////BITCOIN_ASSERT(offset != slab_map::not_found);
-        ////serial.write_8_bytes_little_endian(offset);
-    }
-
-    return start;
-}
-
-// Store.
-// ----------------------------------------------------------------------------
-
-// TODO: review.
-// private
-void block_database::store(const chain::header& header, size_t height,
-    uint32_t checksum, array_index tx_start, size_t tx_count,
-    block_state status)
-{
-    BITCOIN_ASSERT(height <= max_uint32);
-    BITCOIN_ASSERT(tx_start <= max_uint32);
-    BITCOIN_ASSERT(tx_count <= max_uint16);
-    const auto height32 = static_cast<uint32_t>(height);
-
-    // This creates a new header entry and is thread safe, so no locking.
-    const auto write = [&](byte_serializer& serial)
-    {
-        // Write block header including median_time_past metadata.
-        header.to_data(serial, false);
-        serial.write_4_bytes_little_endian(height32);
-        serial.write_4_bytes_little_endian(checksum);
-        serial.write_4_bytes_little_endian(static_cast<uint32_t>(tx_start));
-        serial.write_2_bytes_little_endian(static_cast<uint16_t>(tx_count));
-        serial.write_byte(static_cast<uint8_t>(status));
-    };
-
-    const auto index = lookup_map_.store(header.hash(), write);
-
-    if (!is_confirmed(status))
-        return;
-
-    write_index(index, height32);
-}
-
-// TODO: review.
-// This assumes the header does not exist and has no knowledge of required txs.
-void block_database::store(const chain::header& header, size_t height)
-{
-    static constexpr auto tx_count = 0;
-    store(header, height, no_checksum, 0, tx_count, block_state::empty);
-}
-
-// TODO: review.
-// This assumes the header does not exist and requires tx association metadata.
-void block_database::store(const chain::block& block, size_t height,
-    bool confirmed)
-{
-    // TODO: cache block.checksum() from message.
-    const auto checksum = no_checksum;
-    const auto& header = block.header();
-    const auto& txs = block.transactions();
-    store(header, height, checksum, associate(txs), txs.size(),
-        to_status(confirmed));
-}
-
-// TODO: review.
-// This assumes the header does not exist and requires tx association metadata.
-void block_database::store(const message::compact_block& compact,
-    size_t height, bool confirmed)
-{
-    const auto& header = compact.header();
-    const auto& ids = compact.short_ids();
-    store(header, height, no_checksum, associate(ids), ids.size(),
-        to_status(confirmed));
-}
-
 // Update.
 // ----------------------------------------------------------------------------
+// These are used to atomically update values 
 
-////// private
-////bool block_database::update(const hash_digest& hash, uint32_t checksum,
-////    array_index tx_start, size_t tx_count, uint8_t status)
-////{
-////    BITCOIN_ASSERT(tx_start <= max_uint32);
-////    BITCOIN_ASSERT(tx_count <= max_uint16);
-////
-////    // Update modifies metadata, requires lock for consistency and atomicity.
-////    const auto update = [&](byte_serializer& serial)
-////    {
-////        serial.skip(header_size + height_size);
-////
-////        ///////////////////////////////////////////////////////////////////////
-////        // Critical Section
-////        unique_lock lock(metadata_mutex_);
-////        serial.write_4_bytes_little_endian(checksum);
-////        serial.write_4_bytes_little_endian(static_cast<uint32_t>(tx_start));
-////        serial.write_2_bytes_little_endian(static_cast<uint16_t>(tx_count));
-////        serial.write_byte(status);
-////        ///////////////////////////////////////////////////////////////////////
-////    };
-////
-////    // We never change the height of a block and we cannot update to confirmed.
-////    const auto index = lookup_map_.update(hash, update);
-////    return index != record_map::not_found;
-////}
-////
-////bool block_database::update(const chain::block& block, bool confirmed)
-////{
-////    // TODO: cache block.checksum() from message.
-////    const auto checksum = no_checksum;
-////
-////    const auto& txs = block.transactions();
-////    return update(block.hash(), checksum, associate(txs), txs.size(),
-////        to_status(confirmed));
-////}
-////
-////bool block_database::update(const message::compact_block& compact,
-////    bool confirmed)
-////{
-////    const auto& ids = compact.short_ids();
-////    return update(compact.header().hash(), no_checksum, associate(ids),
-////        ids.size(), to_status(confirmed));
-////}
-
-// TODO: review.
-bool block_database::confirm(const hash_digest& hash, bool confirm)
+static uint8_t update_confirmation_state(uint8_t original, bool positive,
+    bool block_index)
 {
-    const auto update = [&](byte_serializer& serial)
-    {
-        serial.skip(block_size - confirmed_size);
+    // May only confirm a valid block.
+    BITCOIN_ASSERT(!positive || !block_index || is_valid(original));
 
-        ///////////////////////////////////////////////////////////////////////
-        // Critical Section
-        unique_lock lock(metadata_mutex_);
-        serial.write_byte(static_cast<uint8_t>(to_status(confirm)));
-        ///////////////////////////////////////////////////////////////////////
-    };
+    // May only unconfirm via block indexing.
+    BITCOIN_ASSERT(positive || !block_index || !is_confirmed(original));
 
-    return lookup_map_.update(hash, update) != record_map::not_found;
+    // May only index a pooled header.
+    BITCOIN_ASSERT(!positive || block_index || is_pooled(original));
+
+    // May only deindex via header indexing.
+    BITCOIN_ASSERT(positive || block_index || !is_indexed(original));
+
+    // Preserve the validation state (header-indexed blocks can be pending).
+    const auto validation_state = original & block_state::validations;
+    const auto positive_state = block_index ? block_state::confirmed :
+        block_state::indexed;
+
+    // Demotion is always directly to the pooled state.
+    const auto confirmation_state = positive ? positive_state :
+        block_state::pooled;
+
+    // Merge the new confirmation state with existing validation state.
+    return confirmation_state | validation_state;
 }
 
-// TODO: review.
-bool block_database::unconfirm(size_t from_height)
+bool block_database::confirm(const hash_digest& hash, size_t height,
+    bool block_index)
 {
-    const auto count = block_index_manager_.count();
+    BITCOIN_ASSERT(height != max_uint32);
+    auto& manager = block_index ? block_index_manager_ : header_index_manager_;
 
-    if (from_height >= count)
+    // Can only confirm at the top of the given index (push).
+    if (height != manager.count())
         return false;
 
-    for (auto height = from_height; height < count; ++height)
-        if (!confirm(get(height).hash(), false))
-            return false;
+    // TODO: eliminate the double state lookup for state update.
+    // TODO: the caller doesn't know the current header state.
+    auto record = lookup_manager_.get(read_index(height, manager));
+    REMAP_INCREMENT(record, prefix_size);
+    const auto state_start = REMAP_ADDRESS(record);
+    auto deserial = make_unsafe_deserializer(state_start);
 
-    // This is the only place where the logical index is reduced in length.
-    // This will remove from the index all references at and above from_height.
-    block_index_manager_.set_count(from_height);
+    ///////////////////////////////////////////////////////////////////////////
+    // Critical Section.
+    metadata_mutex_.lock_shared();
+    const auto original = deserial.read_byte();
+    metadata_mutex_.unlock_shared();
+    ///////////////////////////////////////////////////////////////////////////
+
+    const auto state = update_confirmation_state(original, true, block_index);
+    const auto update = [&](byte_serializer& serial)
+    {
+        ///////////////////////////////////////////////////////////////////////
+        // Critical Section.
+        unique_lock lock(metadata_mutex_);
+
+        // Skip block header, including median_time_past metadata, and height.
+        serial.skip(state_offset);
+        serial.write_byte(state);
+    };
+
+    record = nullptr;
+    const auto index = lookup_map_.update(hash, update);
+    push_index(index, height, manager);
     return true;
 }
 
-// Utility.
-// ----------------------------------------------------------------------------
-
-// TODO: review.
-void block_database::write_index(array_index index, array_index height)
+bool block_database::unconfirm(const hash_digest& hash, size_t height,
+    bool block_index)
 {
-    BITCOIN_ASSERT(height < max_uint32);
-    BITCOIN_ASSERT(block_index_manager_.count() == height);
+    BITCOIN_ASSERT(height != max_uint32);
+    auto& manager = block_index ? block_index_manager_ : header_index_manager_;
 
-    block_index_manager_.new_records(1);
-    const auto record = block_index_manager_.get(height);
-    auto serial = make_unsafe_serializer(REMAP_ADDRESS(record));
-    serial.write_4_bytes_little_endian(index);
+    // Can only unconfirm the top of the given index (pop).
+    if (height + 1u != manager.count())
+        return false;
+
+    // TODO: eliminate the double state lookup for state update.
+    // TODO: the caller already knows the current header state.
+    // TODO: update isn't actually required here (index unused).
+    auto record = lookup_manager_.get(read_index(height, manager));
+    REMAP_INCREMENT(record, prefix_size);
+    const auto state_start = REMAP_ADDRESS(record);
+    auto deserial = make_unsafe_deserializer(state_start);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Critical Section.
+    metadata_mutex_.lock_shared();
+    const auto original = deserial.read_byte();
+    metadata_mutex_.unlock_shared();
+    ///////////////////////////////////////////////////////////////////////////
+
+    // TODO: if popping confirmed block from header index decrement fork point.
+    if (!block_index && is_confirmed(original))
+    {
+        // --fork_point_;
+        pop_index(height, manager);
+        return true;
+    }
+
+    const auto state = update_confirmation_state(original, false, block_index);
+    const auto update = [&](byte_serializer& serial)
+    {
+        ///////////////////////////////////////////////////////////////////////
+        // Critical Section.
+        unique_lock lock(metadata_mutex_);
+
+        // Skip block header, including median_time_past metadata, and height.
+        serial.skip(state_offset);
+        serial.write_byte(state);
+    };
+
+    record = nullptr;
+    /*const auto index =*/ lookup_map_.update(hash, update);
+    pop_index(height, manager);
+    return true;
 }
 
-// TODO: review.
-array_index block_database::get_index(array_index height) const
+// Index Utilities.
+// ----------------------------------------------------------------------------
+
+bool block_database::read_top(size_t& out_height,
+    const record_manager& manager) const
 {
-    const auto record = block_index_manager_.get(height);
+    const auto count = manager.count();
+
+    // Guard against no genesis block.
+    if (count == 0)
+        return false;
+
+    out_height = count - 1;
+    return true;
+}
+
+array_index block_database::read_index(size_t height,
+    const record_manager& manager) const
+{
+    BITCOIN_ASSERT(height < max_uint32);
+    BITCOIN_ASSERT(height < manager.count());
+
+    const auto height32 = static_cast<uint32_t>(height);
+    const auto record = manager.get(height32);
     return from_little_endian_unsafe<array_index>(REMAP_ADDRESS(record));
+}
+
+void block_database::pop_index(size_t height, record_manager& manager)
+{
+    BITCOIN_ASSERT(height < max_uint32);
+    BITCOIN_ASSERT(height + 1u == manager.count());
+
+    const auto height32 = static_cast<uint32_t>(height);
+    manager.set_count(height32);
+}
+
+void block_database::push_index(array_index index, size_t height,
+    record_manager& manager)
+{
+    BITCOIN_ASSERT(height < max_uint32);
+    BITCOIN_ASSERT(height == manager.count());
+
+    manager.new_records(1);
+    const auto height32 = static_cast<uint32_t>(height);
+    const auto record = manager.get(height32);
+    auto serial = make_unsafe_serializer(REMAP_ADDRESS(record));
+    serial.write_4_bytes_little_endian(index);
 }
 
 } // namespace database

@@ -31,37 +31,37 @@ using namespace boost::system;
 using namespace boost::filesystem;
 
 void test_block_exists(const data_base& interface, size_t height,
-    const block& block0, bool indexed)
+    const block& block, bool index_addresses)
 {
     const auto& history_store = interface.history();
-    const auto block_hash = block0.hash();
-    auto r0 = interface.blocks().get(height);
-    auto r0_byhash = interface.blocks().get(block_hash, true);
+    const auto block_hash = block.hash();
+    auto result = interface.blocks().get(height);
+    auto result_by_hash = interface.blocks().get(block_hash);
 
-    BOOST_REQUIRE(r0);
-    BOOST_REQUIRE(r0_byhash);
-    BOOST_REQUIRE(r0.hash() == block_hash);
-    BOOST_REQUIRE(r0_byhash.hash() == block_hash);
-    BOOST_REQUIRE_EQUAL(r0.height(), height);
-    BOOST_REQUIRE_EQUAL(r0_byhash.height(), height);
-    BOOST_REQUIRE_EQUAL(r0.transaction_count(), block0.transactions().size());
-    BOOST_REQUIRE_EQUAL(r0_byhash.transaction_count(), block0.transactions().size());
+    BOOST_REQUIRE(result);
+    BOOST_REQUIRE(result_by_hash);
+    BOOST_REQUIRE(result.hash() == block_hash);
+    BOOST_REQUIRE(result_by_hash.hash() == block_hash);
+    BOOST_REQUIRE_EQUAL(result.height(), height);
+    BOOST_REQUIRE_EQUAL(result_by_hash.height(), height);
+    BOOST_REQUIRE_EQUAL(result.transaction_count(), block.transactions().size());
+    BOOST_REQUIRE_EQUAL(result_by_hash.transaction_count(), block.transactions().size());
 
-    // TODO: test tx hashes.
+    // TODO: test tx offsets (vs. tx hashes).
 
-    for (size_t i = 0; i < block0.transactions().size(); ++i)
+    for (size_t i = 0; i < block.transactions().size(); ++i)
     {
-        const auto& tx = block0.transactions()[i];
+        const auto& tx = block.transactions()[i];
         const auto tx_hash = tx.hash();
-        ////BOOST_REQUIRE(r0.transaction_hash(i) == tx_hash);
-        ////BOOST_REQUIRE(r0_byhash.transaction_hash(i) == tx_hash);
+        ////BOOST_REQUIRE(result.transaction_hash(i) == tx_hash);
+        ////BOOST_REQUIRE(result_by_hash.transaction_hash(i) == tx_hash);
 
-        auto r0_tx = interface.transactions().get(tx_hash, max_size_t, false);
-        BOOST_REQUIRE(r0_tx);
-        BOOST_REQUIRE(r0_byhash);
-        BOOST_REQUIRE(r0_tx.transaction().hash() == tx_hash);
-        BOOST_REQUIRE_EQUAL(r0_tx.height(), height);
-        BOOST_REQUIRE_EQUAL(r0_tx.position(), i);
+        auto result_tx = interface.transactions().get(tx_hash);
+        BOOST_REQUIRE(result_tx);
+        BOOST_REQUIRE(result_by_hash);
+        BOOST_REQUIRE(result_tx.transaction().hash() == tx_hash);
+        BOOST_REQUIRE_EQUAL(result_tx.height(), height);
+        BOOST_REQUIRE_EQUAL(result_tx.position(), i);
 
         if (!tx.is_coinbase())
         {
@@ -71,12 +71,13 @@ void test_block_exists(const data_base& interface, size_t height,
                 input_point spend{ tx_hash, j };
                 BOOST_REQUIRE_EQUAL(spend.index(), j);
 
-                auto r0_spend = interface.spends().get(input.previous_output());
-                BOOST_REQUIRE(r0_spend.is_valid());
-                BOOST_REQUIRE(r0_spend.hash() == spend.hash());
-                BOOST_REQUIRE_EQUAL(r0_spend.index(), spend.index());
+                const auto& prevout = input.previous_output();
+                auto result_spend = interface.spends().get(prevout);
+                BOOST_REQUIRE(result_spend.is_valid());
+                BOOST_REQUIRE(result_spend.hash() == spend.hash());
+                BOOST_REQUIRE_EQUAL(result_spend.index(), spend.index());
 
-                if (!indexed)
+                if (!index_addresses)
                     continue;
 
                 const auto addresses = input.addresses();
@@ -103,7 +104,7 @@ void test_block_exists(const data_base& interface, size_t height,
             }
         }
 
-        if (!indexed)
+        if (!index_addresses)
             return;
 
         for (size_t j = 0; j < tx.outputs().size(); ++j)
@@ -137,14 +138,14 @@ void test_block_exists(const data_base& interface, size_t height,
 }
 
 void test_block_not_exists(const data_base& interface, const block& block0,
-    bool indexed)
+    bool index_addresses)
 {
     const auto& history_store = interface.history();
 
     // Popped blocks still exist in the block hash table, but not confirmed.
     const auto block_hash = block0.hash();
-    const auto r0_confirmed = interface.blocks().get(block_hash, true);
-    BOOST_REQUIRE(!r0_confirmed);
+    const auto result = interface.blocks().get(block_hash);
+    BOOST_REQUIRE(!is_confirmed(result.state()));
 
     for (size_t i = 0; i < block0.transactions().size(); ++i)
     {
@@ -160,7 +161,7 @@ void test_block_not_exists(const data_base& interface, const block& block0,
                 auto r0_spend = interface.spends().get(input.previous_output());
                 BOOST_REQUIRE(!r0_spend.is_valid());
 
-                if (!indexed)
+                if (!index_addresses)
                     continue;
 
                 const auto addresses = input.addresses();
@@ -186,7 +187,7 @@ void test_block_not_exists(const data_base& interface, const block& block0,
             }
         }
 
-        if (!indexed)
+        if (!index_addresses)
             return;
 
         for (size_t j = 0; j < tx.outputs().size(); ++j)
@@ -272,22 +273,23 @@ public:
     {
     }
 
-    void push_all(block_const_ptr_list_const_ptr in_blocks,
-        size_t first_height, dispatcher& dispatch, result_handler handler)
-    {
-        data_base::push_all(in_blocks, first_height, dispatch, handler);
-    }
-
-    void pop_above(block_const_ptr_list_ptr out_blocks,
-        const hash_digest& fork_hash, dispatcher& dispatch,
+    void pop_above(block_const_ptr_list_ptr blocks,
+        const config::checkpoint& fork_point, dispatcher& dispatch,
         result_handler handler)
     {
-        data_base::pop_above(out_blocks, fork_hash, dispatch, handler);
+        data_base::pop_above(blocks, fork_point, dispatch, handler);
+    }
+
+    void push_next(block_const_ptr_list_const_ptr blocks, size_t index,
+        size_t height, dispatcher& dispatch, result_handler handler)
+    {
+        data_base::push_next(error::success, blocks, index, height,
+            dispatch, handler);
     }
 };
 
-static code push_all_result(data_base_accessor& instance,
-    block_const_ptr_list_const_ptr in_blocks, size_t first_height,
+static code pop_above_result(data_base_accessor& instance,
+    block_const_ptr_list_ptr out_blocks, const config::checkpoint& fork_point,
     dispatcher& dispatch)
 {
     std::promise<code> promise;
@@ -295,12 +297,12 @@ static code push_all_result(data_base_accessor& instance,
     {
         promise.set_value(ec);
     };
-    instance.push_all(in_blocks, first_height, dispatch, handler);
+    instance.pop_above(out_blocks, fork_point, dispatch, handler);
     return promise.get_future().get();
 }
 
-static code pop_above_result(data_base_accessor& instance,
-    block_const_ptr_list_ptr out_blocks, const hash_digest& fork_hash,
+static code push_all_result(data_base_accessor& instance,
+    block_const_ptr_list_const_ptr in_blocks, size_t index, size_t height,
     dispatcher& dispatch)
 {
     std::promise<code> promise;
@@ -308,7 +310,7 @@ static code pop_above_result(data_base_accessor& instance,
     {
         promise.set_value(ec);
     };
-    instance.pop_above(out_blocks, fork_hash, dispatch, handler);
+    instance.push_next(in_blocks, index, height, dispatch, handler);
     return promise.get_future().get();
 }
 
@@ -319,17 +321,13 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     create_directory(DIRECTORY);
     database::settings settings;
     settings.directory = DIRECTORY;
+    settings.index_addresses = true;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
-    settings.index_start_height = 0;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
     settings.spend_table_buckets = 42;
     settings.history_table_buckets = 42;
-
-    // If index_height is set to anything other than 0 or max it can cause
-    // false negatives since it excludes entries below the specified height.
-    const auto indexed = settings.index_start_height < store::without_indexes;
 
     size_t height;
     threadpool pool(1);
@@ -337,8 +335,8 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
     data_base_accessor instance(settings);
     const auto block0 = block::genesis_mainnet();
     BOOST_REQUIRE(instance.create(block0));
-    test_block_exists(instance, 0, block0, indexed);
-    BOOST_REQUIRE(instance.blocks().top_block(height));
+    test_block_exists(instance, 0, block0, settings.index_addresses);
+    BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 0);
 
     // This tests a missing parent, not a database failure.
@@ -350,60 +348,60 @@ BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
 
     std::cout << "push block #1" << std::endl;
     const auto block1 = read_block(MAINNET_BLOCK1);
-    test_block_not_exists(instance, block1, indexed);
+    test_block_not_exists(instance, block1, settings.index_addresses);
     BOOST_REQUIRE_EQUAL(instance.push(block1, 1), error::success);
-    test_block_exists(instance, 0, block0, indexed);
-    BOOST_REQUIRE(instance.blocks().top_block(height));
+    test_block_exists(instance, 0, block0, settings.index_addresses);
+    BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 1u);
-    test_block_exists(instance, 1, block1, indexed);
+    test_block_exists(instance, 1, block1, settings.index_addresses);
 
     std::cout << "push_all blocks #2 & #3" << std::endl;
     const auto block2_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK2));
     const auto block3_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK3));
     const auto blocks_push_ptr = std::make_shared<const block_const_ptr_list>(block_const_ptr_list{ block2_ptr, block3_ptr });
-    test_block_not_exists(instance, *block2_ptr, indexed);
-    test_block_not_exists(instance, *block3_ptr, indexed);
-    BOOST_REQUIRE_EQUAL(push_all_result(instance, blocks_push_ptr, 2, dispatch), error::success);
-    test_block_exists(instance, 1, block1, indexed);
-    BOOST_REQUIRE(instance.blocks().top_block(height));
+    test_block_not_exists(instance, *block2_ptr, settings.index_addresses);
+    test_block_not_exists(instance, *block3_ptr, settings.index_addresses);
+    BOOST_REQUIRE_EQUAL(push_all_result(instance, blocks_push_ptr, 0, 2, dispatch), error::success);
+    test_block_exists(instance, 1, block1, settings.index_addresses);
+    BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 3u);
-    test_block_exists(instance, 3, *block3_ptr, indexed);
-    test_block_exists(instance, 2, *block2_ptr, indexed);
+    test_block_exists(instance, 3, *block3_ptr, settings.index_addresses);
+    test_block_exists(instance, 2, *block2_ptr, settings.index_addresses);
 
     std::cout << "insert block #2 (store_block_invalid_height)" << std::endl;
     BOOST_REQUIRE_EQUAL(instance.push(*block2_ptr, 2), error::store_block_invalid_height);
 
     std::cout << "pop_above block 1 (blocks #2 & #3)" << std::endl;
     const auto blocks_popped_ptr = std::make_shared<block_const_ptr_list>();
-    BOOST_REQUIRE_EQUAL(pop_above_result(instance, blocks_popped_ptr, block1.hash(), dispatch), error::success);
-    BOOST_REQUIRE(instance.blocks().top_block(height));
+    BOOST_REQUIRE_EQUAL(pop_above_result(instance, blocks_popped_ptr, { block1.hash(), 1 }, dispatch), error::success);
+    BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 1u);
     BOOST_REQUIRE_EQUAL(blocks_popped_ptr->size(), 2u);
     BOOST_REQUIRE(*(*blocks_popped_ptr)[0] == *block2_ptr);
     BOOST_REQUIRE(*(*blocks_popped_ptr)[1] == *block3_ptr);
-    test_block_not_exists(instance, *block3_ptr, indexed);
-    test_block_not_exists(instance, *block2_ptr, indexed);
-    test_block_exists(instance, 1, block1, indexed);
-    test_block_exists(instance, 0, block0, indexed);
+    test_block_not_exists(instance, *block3_ptr, settings.index_addresses);
+    test_block_not_exists(instance, *block2_ptr, settings.index_addresses);
+    test_block_exists(instance, 1, block1, settings.index_addresses);
+    test_block_exists(instance, 0, block0, settings.index_addresses);
 
     std::cout << "push block #3 (store_block_invalid_height)" << std::endl;
     BOOST_REQUIRE_EQUAL(instance.push(*block3_ptr, 3), error::store_block_invalid_height);
 
     std::cout << "insert block #2" << std::endl;
     BOOST_REQUIRE_EQUAL(instance.push(*block2_ptr, 2), error::success);
-    BOOST_REQUIRE(instance.blocks().top_block(height));
+    BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 2u);
 
     std::cout << "pop_above block 0 (block #1 & #2)" << std::endl;
     blocks_popped_ptr->clear();
-    BOOST_REQUIRE_EQUAL(pop_above_result(instance, blocks_popped_ptr, block0.hash(), dispatch), error::success);
-    BOOST_REQUIRE(instance.blocks().top_block(height));
+    BOOST_REQUIRE_EQUAL(pop_above_result(instance, blocks_popped_ptr, { block0.hash(), 0 }, dispatch), error::success);
+    BOOST_REQUIRE(instance.blocks().top(height));
     BOOST_REQUIRE_EQUAL(height, 0u);
     BOOST_REQUIRE(*(*blocks_popped_ptr)[0] == block1);
     BOOST_REQUIRE(*(*blocks_popped_ptr)[1] == *block2_ptr);
-    test_block_not_exists(instance, block1, indexed);
-    test_block_not_exists(instance, *block2_ptr, indexed);
-    test_block_exists(instance, 0, block0, indexed);
+    test_block_not_exists(instance, block1, settings.index_addresses);
+    test_block_not_exists(instance, *block2_ptr, settings.index_addresses);
+    test_block_exists(instance, 0, block0, settings.index_addresses);
 
     std::cout << "end push/pop test" << std::endl;
 }

@@ -157,18 +157,18 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     BOOST_REQUIRE(db.create());
 
     size_t height;
-    BOOST_REQUIRE(!db.top_block(height));
+    BOOST_REQUIRE(!db.top(height));
 
-    db.store(block0, 0, true);
-    db.store(block1, 1, true);
-    db.store(block2, 2, true);
-    db.store(block3, 3, true);
-    BOOST_REQUIRE(db.top_block(height));
+    db.store(block0, 0);
+    db.store(block1, 1);
+    db.store(block2, 2);
+    db.store(block3, 3);
+    BOOST_REQUIRE(db.top(height));
     BOOST_REQUIRE_EQUAL(height, 3u);
 
     // Fetch block 2 by hash.
     {
-        auto res_h2 = db.get(h2, true);
+        auto res_h2 = db.get(h2);
         BOOST_REQUIRE(res_h2);
         BOOST_REQUIRE(res_h2.hash() == h2);
 
@@ -181,8 +181,8 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     }
 
     // Try a fork event.
-    db.store(block4a, 4, true);
-    db.store(block5a, 5, true);
+    db.store(block4a, 4);
+    db.store(block5a, 5);
 
     // Fetch blocks.
     {
@@ -195,10 +195,11 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     }
 
     // Unlink old chain.
-    BOOST_REQUIRE(db.top_block(height));
+    BOOST_REQUIRE(db.top(height));
     BOOST_REQUIRE_EQUAL(height, 5u);
-    db.unconfirm(4);
-    BOOST_REQUIRE(db.top_block(height));
+    db.unconfirm(h5a, 5, true);
+    db.unconfirm(h4a, 4, true);
+    BOOST_REQUIRE(db.top(height));
     BOOST_REQUIRE_EQUAL(height, 3u);
 
     // Block 3 exists.
@@ -216,9 +217,9 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     }
 
     // Add new blocks.
-    db.store(block4b, 4, true);
-    db.store(block5b, 5, true);
-    BOOST_REQUIRE(db.top_block(height));
+    db.store(block4b, 4);
+    db.store(block5b, 5);
+    BOOST_REQUIRE(db.top(height));
     BOOST_REQUIRE_EQUAL(height, 5u);
 
     // Fetch blocks.
@@ -240,7 +241,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
 
     // Test also fetch by hash.
     {
-        auto res_h5b = db.get(h5b, true);
+        auto res_h5b = db.get(h5b);
         BOOST_REQUIRE(res_h5b);
         BOOST_REQUIRE(res_h5b.hash() == h5b);
         db.commit();

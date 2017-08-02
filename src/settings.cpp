@@ -27,10 +27,10 @@ using namespace boost::filesystem;
 
 settings::settings()
   : directory("blockchain"),
-
+  
+    index_addresses(true),
     flush_writes(false),
     file_growth_rate(50),
-    index_start_height(0),
 
     // Hash table sizes (must be configured).
     block_table_buckets(0),

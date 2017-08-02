@@ -29,6 +29,61 @@
 namespace libbitcoin {
 namespace database {
 
+// Stored block headers are always valid (PoW) with height, states are:
+enum block_state : uint8_t
+{
+    /// This is not a stored state.
+    missing = 0,
+
+    /// Mutually-exclusive (invalid is not pooled, only pending may be empty).
+    failed = 1 << 0,
+    pending = 1 << 1,
+    valid = 1 << 2,
+
+    /// Mutually-exclusive (confirmed must be valid, confirmed can't be empty).
+    pooled = 1 << 3,
+    indexed = 1 << 4,
+    confirmed = 1 << 5,
+
+    validations = invalid | pending | valid,
+    confirmations = pooled | indexed | confirmed
+};
+
+// validation states
+
+// This is not the same as !valid (could be pending).
+inline bool is_failed(uint8_t state)
+{
+    return (state & block_state::failed) != 0;
+}
+
+inline bool is_pending(uint8_t state)
+{
+    return (state & block_state::pending) != 0;
+}
+
+inline bool is_valid(uint8_t state)
+{
+    return (state & block_state::valid) != 0;
+}
+
+// confirmation states
+
+inline bool is_pooled(uint8_t state)
+{
+    return (state & block_state::pooled) != 0;
+}
+
+inline bool is_indexed(uint8_t state)
+{
+    return (state & block_state::indexed) != 0;
+}
+
+inline bool is_confirmed(uint8_t state)
+{
+    return (state & block_state::confirmed) != 0;
+}
+
 /// Partially-deferred read block result.
 /// Values subject to change are not read-deferred.
 /// Transaction values are either empty or permanent.
@@ -37,15 +92,12 @@ class BCD_API block_result
 public:
     block_result(const record_manager& index_manager);
 
-    // TODO: review.
     block_result(const record_manager& index_manager, memory_ptr record,
         hash_digest&& hash, uint32_t height, uint32_t checksum,
-        array_index tx_start, size_t tx_count, bool confirmed);
-
-    // TODO: review.
+        array_index tx_start, size_t tx_count, uint8_t state);
     block_result(const record_manager& index_manager, memory_ptr record,
         const hash_digest& hash, uint32_t height, uint32_t checksum,
-        array_index tx_start, size_t tx_count, bool confirmed);
+        array_index tx_start, size_t tx_count, uint8_t state);
 
     /// True if the requested block exists.
     operator bool() const;
@@ -53,12 +105,13 @@ public:
     /// Reset the record pointer so that no lock is held.
     void reset();
 
-    // TODO: review.
-    /// True if the block is presently in the strong chain.
-    bool confirmed() const;
+    /// An error code if block state is invalid (otherwise error::success).
+    code error() const;
 
-    // TODO: review.
-    /// The height of the block in its chain.
+    /// The state of the block (flags).
+    uint8_t state() const;
+
+    /// The height of the block (independent of chain).
     size_t height() const;
 
     /// The block header hash (from cache).
@@ -92,7 +145,7 @@ private:
     const uint32_t checksum_;
     const array_index tx_start_;
     const size_t tx_count_;
-    const bool confirmed_;
+    const uint8_t state_;
     const record_manager& index_manager_;
 };
 

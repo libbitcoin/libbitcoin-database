@@ -46,35 +46,35 @@ block_result::block_result(const record_manager& index_manager)
     checksum_(0),
     tx_start_(0),
     tx_count_(0),
-    confirmed_(false),
+    state_(block_state::missing),
     index_manager_(index_manager)
 {
 }
 
 block_result::block_result(const record_manager& index_manager,
     memory_ptr record, hash_digest&& hash, uint32_t height,
-    uint32_t checksum, array_index tx_start, size_t tx_count, bool confirmed)
+    uint32_t checksum, array_index tx_start, size_t tx_count, uint8_t state)
   : record_(record),
     hash_(std::move(hash)),
     height_(height),
     checksum_(checksum),
     tx_start_(tx_start),
     tx_count_(tx_count),
-    confirmed_(confirmed),
+    state_(state),
     index_manager_(index_manager)
 {
 }
 
 block_result::block_result(const record_manager& index_manager,
     memory_ptr record, const hash_digest& hash, uint32_t height,
-    uint32_t checksum, array_index tx_start, size_t tx_count, bool confirmed)
+    uint32_t checksum, array_index tx_start, size_t tx_count, uint8_t state)
   : record_(record),
     hash_(hash),
     height_(height),
     checksum_(checksum),
     tx_start_(tx_start),
     tx_count_(tx_count),
-    confirmed_(confirmed),
+    state_(state),
     index_manager_(index_manager)
 {
 }
@@ -89,9 +89,16 @@ void block_result::reset()
     record_.reset();
 }
 
-bool block_result::confirmed() const
+code block_result::error() const
 {
-    return confirmed_;
+    // Checksum stores error code if the block is invalid.
+    return is_failed(state_) ? static_cast<error::error_code_t>(checksum_) :
+        error::success;
+}
+
+uint8_t block_result::state() const
+{
+    return state_;
 }
 
 size_t block_result::height() const
