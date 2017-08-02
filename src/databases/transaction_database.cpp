@@ -302,32 +302,6 @@ bool transaction_database::store(const chain::transaction& tx, size_t height,
     return true;
 }
 
-// False implies store corruption.
-bool transaction_database::pool(uint64_t offset)
-{
-    // TODO: change tx.get(...) to always populate offset.
-    const auto tx = get(offset).transaction();
-    tx.validation.offset = offset;
-    return pool(tx);
-}
-
-// False implies store corruption.
-bool transaction_database::pool(const chain::transaction& tx)
-{
-    static const uint32_t median_time_past = 0;
-    BITCOIN_ASSERT(tx.validation.offset != slab_map::not_found);
-
-    // TODO: optimize by not requiring full tx (get prevouts from offset).
-    for (const auto& input: tx.inputs())
-        if (!spend(input.previous_output(), output::validation::not_spent))
-            return false;
-
-    // The tx was verified under an unknown chain state, so set unverified.
-    return confirm(tx.validation.offset, rule_fork::unverified,
-        median_time_past, transaction_result::unconfirmed,
-        transaction_state::pooled);
-}
-
 // Update.
 // ----------------------------------------------------------------------------
 
@@ -406,6 +380,32 @@ bool transaction_database::confirm(file_offset offset, size_t height,
     serial.write_4_bytes_little_endian(median_time_past);
     ///////////////////////////////////////////////////////////////////////////
     return true;
+}
+
+// False implies store corruption.
+bool transaction_database::unconfirm(uint64_t offset)
+{
+    // TODO: change tx.get(...) to always populate offset.
+    const auto tx = get(offset).transaction();
+    tx.validation.offset = offset;
+    return unconfirm(tx);
+}
+
+// False implies store corruption.
+bool transaction_database::unconfirm(const chain::transaction& tx)
+{
+    static const uint32_t median_time_past = 0;
+    BITCOIN_ASSERT(tx.validation.offset != slab_map::not_found);
+
+    // TODO: optimize by not requiring full tx (get prevouts from offset).
+    for (const auto& input: tx.inputs())
+        if (!spend(input.previous_output(), output::validation::not_spent))
+            return false;
+
+    // The tx was verified under an unknown chain state, so set unverified.
+    return confirm(tx.validation.offset, rule_fork::unverified,
+        median_time_past, transaction_result::unconfirmed,
+        transaction_state::pooled);
 }
 
 } // namespace database

@@ -94,9 +94,8 @@ public:
          uint32_t median_time_past, size_t position,
         transaction_state state=transaction_state::pooled);
 
-    /// Demote the transaction to pooled.
-    bool pool(uint64_t offset);
-    bool pool(const chain::transaction& tx);
+    // Demote the transaction to pooled.
+    bool unconfirm(const chain::transaction& tx);
 
 private:
     void log_output_cache_hit_rate();
@@ -107,6 +106,9 @@ private:
     // Update the state of the existing tx.
     bool confirm(file_offset offset, size_t height, uint32_t median_time_past,
         size_t position, transaction_state state);
+
+    // Demote the transaction to pooled.
+    bool unconfirm(uint64_t offset);
 
     // The starting size of the hash table, used by create.
     const size_t initial_map_file_size_;

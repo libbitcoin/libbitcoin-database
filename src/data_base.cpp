@@ -671,7 +671,7 @@ bool data_base::pop_transactions(const block& block, size_t bucket,
     {
         const auto& tx = txs[position];
 
-        if (!transactions_->pool(tx))
+        if (!transactions_->unconfirm(tx))
             return false;
 
         if (settings_.index_addresses)
