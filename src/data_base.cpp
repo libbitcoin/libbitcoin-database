@@ -972,6 +972,7 @@ void data_base::reorganize(const config::checkpoint& fork_point,
 bool data_base::pop_above(header_const_ptr_list_ptr headers,
     const checkpoint& fork_point, dispatcher& dispatch, result_handler handler)
 {
+    headers->clear();
     auto ec = verify(fork_point, false);
 
     if (ec)
@@ -983,12 +984,10 @@ bool data_base::pop_above(header_const_ptr_list_ptr headers,
 
     const auto fork = fork_point.height();
     const auto depth = top - fork;
+    headers->reserve(depth);
 
     if (depth == 0)
         return true;
-
-    headers->clear();
-    headers->reserve(depth);
 
     for (size_t height = top; height > fork; --height)
     {
