@@ -171,31 +171,14 @@ transaction_result transaction_database::get(file_offset offset) const
 
     // Reads are not deferred for updatable values as atomicity is required.
     return{ slab, reader.read_hash(), height, median_time_past, position,
-        state };
+        state, offset };
 }
 
 transaction_result transaction_database::get(const hash_digest& hash) const
 {
-    const auto slab = lookup_map_.find(hash);
-
-    if (slab == nullptr)
-        return{};
-
-    auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(slab));
-
-    // The three metadata values must be atomic and mutually consistent.
-    ///////////////////////////////////////////////////////////////////////////
-    // Critical Section
-    metadata_mutex_.lock_shared();
-    const auto height = deserial.read_4_bytes_little_endian();
-    const auto position = deserial.read_2_bytes_little_endian();
-    const auto state = static_cast<transaction_state>(deserial.read_byte());
-    const auto median_time_past = deserial.read_4_bytes_little_endian();
-    metadata_mutex_.unlock_shared();
-    ///////////////////////////////////////////////////////////////////////////
-
-    // Reads are not deferred for updatable values as atomicity is required.
-    return{ slab, hash, height, median_time_past, position, state };
+    const auto offset = lookup_map_.offset(hash);
+    return offset == slab_hash_table<hash_digest>::not_found ?
+        transaction_result{} : get(offset);
 }
 
 // Metadata should be defaulted by caller.
@@ -385,7 +368,6 @@ bool transaction_database::confirm(file_offset offset, size_t height,
 // False implies store corruption.
 bool transaction_database::unconfirm(uint64_t offset)
 {
-    // TODO: change tx.get(...) to always populate offset.
     const auto tx = get(offset).transaction();
     tx.validation.offset = offset;
     return unconfirm(tx);

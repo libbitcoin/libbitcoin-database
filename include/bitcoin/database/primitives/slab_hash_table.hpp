@@ -68,10 +68,13 @@ public:
         size_t value_size);
 
     /// Execute a writer against a key's buffer if the key is found.
-    /// Returns the file offset of the found value (or zero).
+    /// Returns the file offset of the found value (or not_found).
     file_offset update(const KeyType& key, write_function write);
 
-    /// Find the slab for a given key. Returns a null pointer if not found.
+    /// Find the file offset for a given key. Returns not_found if not found.
+    file_offset offset(const KeyType& key) const;
+
+    /// Find the slab pointer for a given key. Returns nullptr if not found.
     memory_ptr find(const KeyType& key) const;
 
     /// Delete a key-value pair from the hashtable by unlinking the node.

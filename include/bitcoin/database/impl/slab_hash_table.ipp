@@ -102,6 +102,30 @@ file_offset slab_hash_table<KeyType>::update(const KeyType& key,
 
 // This is limited to returning the first of multiple matching key values.
 template <typename KeyType>
+file_offset slab_hash_table<KeyType>::offset(const KeyType& key) const
+{
+    // Find start item...
+    auto current = read_bucket_value(key);
+
+    // Iterate through list...
+    while (current != header_.empty)
+    {
+        const slab_row<KeyType> item(manager_, current);
+
+        // Found, return offset.
+        if (item.compare(key))
+            return item.offset();
+
+        const auto previous = current;
+        current = item.next_position();
+        BITCOIN_ASSERT(previous != current);
+    }
+
+    return not_found;
+}
+
+// This is limited to returning the first of multiple matching key values.
+template <typename KeyType>
 memory_ptr slab_hash_table<KeyType>::find(const KeyType& key) const
 {
     // Find start item...

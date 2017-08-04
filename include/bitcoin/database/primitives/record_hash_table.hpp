@@ -73,11 +73,13 @@ public:
     array_index store(const KeyType& key, write_function write);
 
     /// Execute a writer against a key's buffer if the key is found.
-    /// Returns the array index of the found value (or zero).
+    /// Returns the array index of the found value (or not_found).
     array_index update(const KeyType& key, write_function write);
 
-    /// Find the record for a given key.
-    /// Returns a null pointer if not found.
+    /// Find the array index for given key. Returns not_found if not found.
+    array_index offset(const KeyType& key) const;
+
+    /// Find the record for given key. Returns nullptr if not found.
     memory_ptr find(const KeyType& key) const;
 
     /// Delete a key-value pair from the hashtable by unlinking the node.

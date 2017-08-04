@@ -103,6 +103,30 @@ array_index record_hash_table<KeyType>::update(const KeyType& key,
 
 // This is limited to returning the first of multiple matching key values.
 template <typename KeyType>
+array_index record_hash_table<KeyType>::offset(const KeyType& key) const
+{
+    // Find start item...
+    auto current = read_bucket_value(key);
+
+    // Iterate through list...
+    while (current != header_.empty)
+    {
+        const record_row<KeyType> item(manager_, current);
+
+        // Found, return index.
+        if (item.compare(key))
+            return item.offset();
+
+        const auto previous = current;
+        current = item.next_index();
+        BITCOIN_ASSERT(previous != current);
+    }
+
+    return not_found;
+}
+
+// This is limited to returning the first of multiple matching key values.
+template <typename KeyType>
 memory_ptr record_hash_table<KeyType>::find(const KeyType& key) const
 {
     // Find start item...
@@ -113,7 +137,7 @@ memory_ptr record_hash_table<KeyType>::find(const KeyType& key) const
     {
         const record_row<KeyType> item(manager_, current);
 
-        // Found, return data.
+        // Found, return pointer.
         if (item.compare(key))
             return item.data();
 

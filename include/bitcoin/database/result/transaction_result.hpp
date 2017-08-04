@@ -35,18 +35,14 @@ enum class transaction_state : uint8_t
     /// Interface only (not stored).
     missing = 0,
 
-    /// If the tx can become valid via soft fork, set "stored" instead.
-    /// Retain for reject, height/position unused (is this usable?).
-    invalid = 1,
+    /// Confirmable if forks match, height is forks, position unused.
+    pooled = 1,
 
-    /// Valid as pool if forks satisfied, position unused.
-    pooled = 2,
+    /// Confirmed in header index, height is forks, position unused.
+    indexed = 2,
 
-    /// Valid as header-indexed, also pooled if forks match, position unused.
-    indexed = 3,
-
-    /// Valid as block-indexed, height and position are confirmed block values.
-    confirmed = 4
+    /// Confirmed in block index, height and position are block values.
+    confirmed = 3
 };
 
 /// Deferred read transaction result.
@@ -62,10 +58,11 @@ public:
     transaction_result();
     transaction_result(memory_ptr slab);
     transaction_result(memory_ptr slab, hash_digest&& hash, uint32_t height,
-        uint32_t median_time_past, uint16_t position, transaction_state state);
+        uint32_t median_time_past, uint16_t position, transaction_state state,
+        file_offset offset);
     transaction_result(memory_ptr slab, const hash_digest& hash,
         uint32_t height, uint32_t median_time_past, uint16_t position,
-        transaction_state state);
+        transaction_state state, file_offset offset);
 
     /// True if this transaction result is valid (found).
     operator bool() const;
@@ -88,6 +85,9 @@ public:
     /// The transaction hash (from cache).
     const hash_digest& hash() const;
 
+    /// The file offset for the transaction slab.
+    const file_offset offset() const;
+
     /// The median time past of the block which includes the transaction.
     uint32_t median_time_past() const;
 
@@ -106,6 +106,7 @@ private:
     const uint32_t median_time_past_;
     const uint16_t position_;
     const hash_digest hash_;
+    const file_offset offset_;
     const transaction_state state_;
 };
 

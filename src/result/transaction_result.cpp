@@ -51,36 +51,38 @@ transaction_result::transaction_result()
 
 transaction_result::transaction_result(memory_ptr slab)
   : slab_(nullptr),
-    height_(unverified),
+    height_(transaction_result::unverified),
     median_time_past_(0),
-    position_(unconfirmed),
+    position_(transaction_result::unconfirmed),
     hash_(null_hash),
-    state_(transaction_state::missing)
+    state_(transaction_state::missing),
+    offset_(transaction::validation::undetermined_offset)
 {
 }
 
 transaction_result::transaction_result(memory_ptr slab, hash_digest&& hash,
     uint32_t height, uint32_t median_time_past, uint16_t position,
-    transaction_state state)
+    transaction_state state, file_offset offset)
   : slab_(slab),
     height_(height),
     median_time_past_(median_time_past),
     position_(position),
     hash_(std::move(hash)),
-    state_(state)
+    state_(state),
+    offset_(offset)
 {
 }
 
 transaction_result::transaction_result(memory_ptr slab,
     const hash_digest& hash, uint32_t height, uint32_t median_time_past,
-    uint16_t position,
-    transaction_state state)
+    uint16_t position, transaction_state state, file_offset offset)
   : slab_(slab),
     height_(height),
     median_time_past_(median_time_past),
     position_(position),
     hash_(hash),
-    state_(state)
+    state_(state),
+    offset_(offset)
 {
 }
 
@@ -96,9 +98,8 @@ void transaction_result::reset()
 
 code transaction_result::error() const
 {
-    // Height stores error code if the tx is invalid.
-    return state_ == transaction_state::invalid ?
-        static_cast<error::error_code_t>(height_) : error::success;
+    // Height could store error code, but we don't currently use invalid state.
+    return error::success;
 }
 
 transaction_state transaction_result::state() const
@@ -121,6 +122,11 @@ size_t transaction_result::height() const
 const hash_digest& transaction_result::hash() const
 {
     return hash_;
+}
+
+const file_offset transaction_result::offset() const
+{
+    return offset_;
 }
 
 // Median time past is unguarded and will be inconsistent during write.
