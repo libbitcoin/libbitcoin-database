@@ -136,12 +136,15 @@ uint32_t transaction_result::median_time_past() const
 }
 
 // Spentness is unguarded and will be inconsistent during write.
+// Set fork_height to max_size_t for tx pool validation.
 bool transaction_result::is_spent(size_t fork_height) const
 {
-    const auto allow_indexed = (fork_height != max_size_t);
+    const auto relevant = height_ <= fork_height;
+    const auto for_pool = fork_height == max_size_t;
+
     const auto confirmed =
-        (state_ == transaction_state::indexed && allow_indexed) ||
-        (state_ == transaction_state::confirmed && height_ <= fork_height);
+        (state_ == transaction_state::indexed && !for_pool) ||
+        (state_ == transaction_state::confirmed && relevant);
 
     // Cannot be spent unless confirmed.
     if (!confirmed)
@@ -158,7 +161,7 @@ bool transaction_result::is_spent(size_t fork_height) const
         // TODO: This reads the full output, which is simple but not optimial.
         const auto output = output::factory(deserial, false);
 
-        if (!output.validation.spent(fork_height, allow_indexed))
+        if (!output.validation.spent(fork_height))
             return false;
     }
 

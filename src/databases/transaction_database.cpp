@@ -182,6 +182,7 @@ transaction_result transaction_database::get(const hash_digest& hash) const
 }
 
 // Metadata should be defaulted by caller.
+// Set fork_height to max_size_t for tx pool validation.
 bool transaction_database::get_output(const output_point& point,
     size_t fork_height) const
 {
@@ -214,13 +215,15 @@ bool transaction_database::get_output(const output_point& point,
         return false;
 
     const auto state = result.state();
-    const auto require_confirmed = (fork_height != max_size_t);
+    const auto relevant = height <= fork_height;
+    const auto for_pool = fork_height == max_size_t;
+
     const auto confirmed = 
-        (state == transaction_state::indexed && require_confirmed) ||
-        (state == transaction_state::confirmed && height <= fork_height);
+        (state == transaction_state::indexed && !for_pool) ||
+        (state == transaction_state::confirmed && relevant);
 
     // Guarantee confirmation state.
-    if (require_confirmed && !confirmed)
+    if (!for_pool && !confirmed)
         return false;
 
     // Find the output at the specified index for the found tx.
@@ -235,7 +238,7 @@ bool transaction_database::get_output(const output_point& point,
     prevout.height = height;
     prevout.median_time_past = result.median_time_past();
     prevout.spent = prevout.confirmed && prevout.cache.validation.spent(
-        fork_height, require_confirmed);
+        fork_height);
 
     // Return is redundant with cache validity.
     return true;
@@ -368,7 +371,9 @@ bool transaction_database::confirm(file_offset offset, size_t height,
 // False implies store corruption.
 bool transaction_database::unconfirm(uint64_t offset)
 {
-    const auto tx = get(offset).transaction();
+    const auto result = get(offset);
+    BITCOIN_ASSERT(static_cast<bool>(result));
+    const auto tx = result.transaction();
     tx.validation.offset = offset;
     return unconfirm(tx);
 }

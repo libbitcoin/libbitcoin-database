@@ -167,6 +167,7 @@ void unspent_outputs::remove(const output_point& point)
 }
 
 // All responses are unspent, metadata should be defaulted by caller.
+// Set fork_height to max_size_t for tx pool validation.
 bool unspent_outputs::populate(const output_point& point,
     size_t fork_height) const
 {
@@ -188,11 +189,12 @@ bool unspent_outputs::populate(const output_point& point,
 
     const auto& transaction = tx->first;
     const auto height = transaction.height();
-    const auto require_confirmed = (fork_height != max_size_t);
-    const auto confirmed = transaction.is_confirmed() && height <= fork_height;
+    const auto relevant = height <= fork_height;
+    const auto for_pool = fork_height == max_size_t;
+    const auto confirmed = transaction.is_confirmed() && relevant;
 
     // Guarantee confirmation state.
-    if (require_confirmed && !confirmed)
+    if (!for_pool && !confirmed)
         return false;
 
     // Find the output at the specified index for the found unspent tx.
