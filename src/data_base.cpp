@@ -517,7 +517,6 @@ transaction::list data_base::to_transactions(const block_result& result) const
 
     for (const auto offset: result.transaction_offsets())
     {
-        // TODO: change tx.get(...) to always populate offset.
         const auto result = transactions_->get(offset);
         BITCOIN_ASSERT(static_cast<bool>(result));
         txs.push_back(result.transaction());

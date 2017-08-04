@@ -35,6 +35,7 @@ enum block_state : uint8_t
     /// This is not a stored state.
     missing = 0,
 
+    /// Stored headers are always valid, these refer to their blocks.
     /// Mutually-exclusive (invalid is not pooled, only pending may be empty).
     failed = 1 << 0,
     pending = 1 << 1,

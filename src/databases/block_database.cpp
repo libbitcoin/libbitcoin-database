@@ -235,7 +235,7 @@ block_result block_database::get(size_t height, bool block_index) const
 // Returns any state, including invalid and empty.
 block_result block_database::get(const hash_digest& hash) const
 {
-    // This is offset to the data section of the record row entry.
+    // This is pointer to the data section of the record row entry.
     const auto record = lookup_map_.find(hash);
 
     if (record == nullptr)
