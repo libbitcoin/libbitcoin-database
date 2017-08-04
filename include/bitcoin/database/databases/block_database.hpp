@@ -86,11 +86,11 @@ public:
     // Store.
     // ------------------------------------------------------------------------
 
-    // Store header, indexed at the specified height.
-    void store(const chain::header& header, size_t height);
+    /// Push header, validated at height.
+    void push(const chain::header& header, size_t height);
 
-    /// Store block, indexed at the specified height, and associate tx offsets.
-    void store(const chain::block& block, size_t height);
+    /// Push block, validated at height, and associate tx offsets.
+    void push(const chain::block& block, size_t height);
 
     // Update.
     // ------------------------------------------------------------------------
@@ -106,7 +106,7 @@ private:
     typedef message::compact_block::short_id_list short_id_list;
 
     array_index associate(const chain::transaction::list& transactions);
-    void store(const chain::header& header, size_t height, uint32_t checksum,
+    void push(const chain::header& header, size_t height, uint32_t checksum,
         array_index tx_start, size_t tx_count, uint8_t status);
 
     // Index Utilities.
@@ -116,7 +116,7 @@ private:
     void push_index(array_index index, size_t height,
         record_manager& manager);
 
-    // The header index branch parent in the block index.
+    // The top confirmed block in the header index.
     std::atomic<size_t> fork_point_;
 
     // The starting size of the hash table, used by create.

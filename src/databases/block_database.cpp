@@ -273,7 +273,7 @@ block_result block_database::get(const hash_digest& hash) const
 // ----------------------------------------------------------------------------
 
 // private
-void block_database::store(const chain::header& header, size_t height,
+void block_database::push(const chain::header& header, size_t height,
     uint32_t checksum, array_index tx_start, size_t tx_count, uint8_t state)
 {
     auto& manager = is_confirmed(state) ? block_index_manager_ :
@@ -304,7 +304,7 @@ void block_database::store(const chain::header& header, size_t height,
 }
 
 // A header creation does not move the fork point (not a reorg).
-void block_database::store(const chain::header& header, size_t height)
+void block_database::push(const chain::header& header, size_t height)
 {
     // Initially store header as indexed, pending download (the top header).
     static const auto state = block_state::indexed | block_state::pending;
@@ -316,19 +316,19 @@ void block_database::store(const chain::header& header, size_t height)
         return;
     }
 
-    store(header, height, no_checksum, 0, 0, state);
+    push(header, height, no_checksum, 0, 0, state);
 }
 
 // This creates a new store entry even if a previous existed.
 // A block creation does not move the fork point (not a reorg).
-void block_database::store(const chain::block& block, size_t height)
+void block_database::push(const chain::block& block, size_t height)
 {
     // Initially store block as confirmed-valid (the top block).
     static const auto state = block_state::confirmed | block_state::valid;
 
     const auto& header = block.header();
     const auto& txs = block.transactions();
-    store(header, height, no_checksum, associate(txs), txs.size(), state);
+    push(header, height, no_checksum, associate(txs), txs.size(), state);
 }
 
 array_index block_database::associate(const transaction::list& transactions)

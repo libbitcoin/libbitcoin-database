@@ -311,7 +311,7 @@ code data_base::push(const header& header, size_t height)
     if (!begin_write())
         return error::operation_failed;
 
-    blocks_->store(header, height);
+    blocks_->push(header, height);
     blocks_->commit();
 
     return end_write() ? error::success : error::operation_failed;
@@ -342,7 +342,7 @@ code data_base::push(const block& block, size_t height)
     if (!push_transactions(block, height, median_time_past))
         return error::operation_failed;
 
-    blocks_->store(block, height);
+    blocks_->push(block, height);
     commit();
 
     return end_write() ? error::success : error::operation_failed;
@@ -934,7 +934,7 @@ void data_base::handle_do_push_transactions(const code& ec,
         return;
     }
 
-    blocks_->store(*block, height);
+    blocks_->push(*block, height);
     commit();
 
     block->validation.end_push = asio::steady_clock::now();
