@@ -91,7 +91,7 @@ public:
     /// Height and position may be sentinels or otherwise.
     /// Store|promote the transaction and set offset metadata.
     bool store(const chain::transaction& tx, size_t height,
-         uint32_t median_time_past, size_t position,
+        uint32_t median_time_past, size_t position,
         transaction_state state=transaction_state::pooled);
 
     // Demote the transaction to pooled.
