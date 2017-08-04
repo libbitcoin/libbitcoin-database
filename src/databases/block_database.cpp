@@ -190,6 +190,11 @@ bool block_database::close()
 // Queries.
 // ----------------------------------------------------------------------------
 
+size_t block_database::fork_point() const
+{
+    return fork_point_;
+}
+
 bool block_database::top(size_t& out_height, bool block_index) const
 {
     auto& manager = block_index ? block_index_manager_ : header_index_manager_;

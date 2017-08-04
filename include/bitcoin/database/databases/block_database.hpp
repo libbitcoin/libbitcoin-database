@@ -71,6 +71,9 @@ public:
     // Queries.
     //-------------------------------------------------------------------------
 
+    /// The highest confirmed block of the header index.
+    size_t fork_point() const;
+
     /// The height of the highest indexed block|header.
     bool top(size_t& out_height, bool block_index=true) const;
 
