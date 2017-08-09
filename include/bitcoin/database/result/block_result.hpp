@@ -36,9 +36,9 @@ enum block_state : uint8_t
     missing = 0,
 
     /// Stored headers are always valid, these refer to their blocks.
-    /// Mutually-exclusive (invalid is not pooled, only pending may be empty).
+    /// Mutually-exclusive (invalid is not pooled, only pent may be empty).
     failed = 1 << 0,
-    pending = 1 << 1,
+    pent = 1 << 1,
     valid = 1 << 2,
 
     /// Mutually-exclusive (confirmed must be valid, confirmed can't be empty).
@@ -46,21 +46,21 @@ enum block_state : uint8_t
     indexed = 1 << 4,
     confirmed = 1 << 5,
 
-    validations = invalid | pending | valid,
+    validations = invalid | pent | valid,
     confirmations = pooled | indexed | confirmed
 };
 
 // validation states
 
-// This is not the same as !valid (could be pending).
+// This is not the same as !valid (could be pent).
 inline bool is_failed(uint8_t state)
 {
     return (state & block_state::failed) != 0;
 }
 
-inline bool is_pending(uint8_t state)
+inline bool is_pent(uint8_t state)
 {
-    return (state & block_state::pending) != 0;
+    return (state & block_state::pent) != 0;
 }
 
 inline bool is_valid(uint8_t state)

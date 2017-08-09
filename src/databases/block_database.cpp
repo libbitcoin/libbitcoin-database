@@ -306,8 +306,8 @@ void block_database::push(const chain::header& header, size_t height,
 // A header creation does not move the fork point (not a reorg).
 void block_database::push(const chain::header& header, size_t height)
 {
-    // Initially store header as indexed, pending download (the top header).
-    static const auto state = block_state::indexed | block_state::pending;
+    // Initially store header as indexed, pent download (the top header).
+    static const auto state = block_state::indexed | block_state::pent;
 
     // The header/block already exists, promote from pooled to indexed.
     if (header.validation.pooled)
@@ -369,7 +369,7 @@ static uint8_t update_confirmation_state(uint8_t original, bool positive,
     // May only deindex via header indexing.
     BITCOIN_ASSERT(positive || block_index || !is_indexed(original));
 
-    // Preserve the validation state (header-indexed blocks can be pending).
+    // Preserve the validation state (header-indexed blocks can be pent).
     const auto validation_state = original & block_state::validations;
     const auto positive_state = block_index ? block_state::confirmed :
         block_state::indexed;
