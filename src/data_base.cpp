@@ -761,6 +761,14 @@ void data_base::update(block_const_ptr block, size_t height,
         std::bind(&data_base::handle_do_push_transactions,
             this, _1, block, handler);
 
+    // TODO: with write flushing enabled this will produce overlapping locks.
+    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    if (!begin_write())
+    {
+        block_complete(error::operation_failed);
+        return;
+    }
+
     const auto ec = verify_update(*block, height);
 
     if (ec)
@@ -769,8 +777,7 @@ void data_base::update(block_const_ptr block, size_t height,
         return;
     }
 
-    const auto threads = size_t(1);//// dispatch.size();
-
+    const auto threads = dispatch.size();
     const auto buckets = std::min(threads, block->transactions().size());
     const auto join_handler = bc::synchronize(std::move(block_complete),
         buckets, NAME "_do_push");
@@ -798,6 +805,7 @@ void data_base::handle_do_push_transactions(const code& ec,
 {
     if (ec)
     {
+        // The write is unclosed here.
         handler(ec);
         return;
     }
@@ -805,11 +813,11 @@ void data_base::handle_do_push_transactions(const code& ec,
     // Update the block's transactions (not its state).
     blocks_->update(*block);
     commit();
-
     block->validation.end_push = asio::steady_clock::now();
 
-    // This is the end of the parallel block push sub-sequence.
-    handler(error::success);
+    // TODO: with write flushing enabled this will produce overlapping locks.
+    handler(end_write() ? error::success : error::operation_failed);
+    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 }
 
 // Header Reorganization (not parallel).
