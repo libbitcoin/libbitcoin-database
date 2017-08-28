@@ -295,6 +295,7 @@ code data_base::push(const transaction& tx, uint32_t forks)
 }
 
 // TODO: enable promotion from any unconfirmed state (to confirmed).
+// TODO: otherwise this will replace the previously-existing header.
 // This expects header is validated and not yet stored.
 code data_base::push(const header& header, size_t height)
 {
@@ -320,6 +321,7 @@ code data_base::push(const header& header, size_t height)
 }
 
 // TODO: enable promotion from any unconfirmed state (to indexed).
+// TODO: otherwise this will replace the previously-existing block.
 // This expects block is validated, header is not yet stored.
 code data_base::push(const block& block, size_t height)
 {
@@ -433,19 +435,24 @@ code data_base::pop(chain::header& out_header, size_t height)
 // ----------------------------------------------------------------------------
 // protected
 
+static hash_digest get_block(const block_database& blocks,
+    size_t height, bool block_index)
+{
+    return height == 0 ? null_hash : blocks.get(height, block_index).hash();
+}
+
+static hash_digest get_previous_block(const block_database& blocks,
+    size_t height, bool block_index)
+{
+    return height == 0 ? null_hash : blocks.get(height - 1, block_index).hash();
+}
+
 static size_t get_next_block(const block_database& blocks,
     bool block_index)
 {
     size_t current_height;
     const auto empty_chain = !blocks.top(current_height, block_index);
     return empty_chain ? 0 : current_height + 1;
-}
-
-static hash_digest get_previous_block(const block_database& blocks,
-    size_t height, bool block_index)
-{
-    return height == 0 ? null_hash : 
-        blocks.get(height - 1, block_index).hash();
 }
 
 code data_base::verify_top(size_t height, bool block_index) const
@@ -464,6 +471,18 @@ code data_base::verify(const checkpoint& fork_point, bool block_index) const
     const auto state = result.state();
     if (!is_confirmed(state) && (block_index || !is_indexed(state)))
         return  error::operation_failed;
+
+    return error::success;
+}
+
+// This store-level check is a failsafe for blockchain behavior.
+code data_base::verify_push(const transaction& tx) const
+{
+    const auto result = transactions_->get(tx.hash());
+
+    // This is an expensive re-check, but only if a duplicate exists.
+    if (result && !result.is_spent())
+        return error::unspent_duplicate;
 
     return error::success;
 }
@@ -498,13 +517,13 @@ code data_base::verify_push(const block& block, size_t height) const
 }
 
 // This store-level check is a failsafe for blockchain behavior.
-code data_base::verify_push(const transaction& tx) const
+code data_base::verify_update(const block& block, size_t height) const
 {
-    const auto result = transactions_->get(tx.hash());
+    if (block.transactions().empty())
+        return error::empty_block;
 
-    // This is an expensive re-check, but only if a duplicate exists.
-    if (result && !result.is_spent())
-        return error::unspent_duplicate;
+    if (get_block(blocks(), height, false) != block.hash())
+        return error::not_found;
 
     return error::success;
 }
@@ -729,173 +748,20 @@ bool data_base::pop_stealth(const chain::transaction& tx)
     return true;
 }
 
-// Block reorganization.
-// ----------------------------------------------------------------------------
-
-void data_base::reorganize(const config::checkpoint& fork_point,
-    block_const_ptr_list_const_ptr incoming,
-    block_const_ptr_list_ptr outgoing, dispatcher& dispatch,
-    result_handler handler)
-{
-    if (fork_point.height() > max_size_t - incoming->size())
-    {
-        handler(error::operation_failed);
-        return;
-    }
-
-    const result_handler pop_handler =
-        std::bind(&data_base::handle_pop,
-            this, _1, incoming, fork_point.height(), std::ref(dispatch),
-                handler);
-
-    // Critical Section.
-    ///////////////////////////////////////////////////////////////////////////
-    write_mutex_.lock();
-
-    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    if (!begin_write())
-    {
-        pop_handler(error::operation_failed);
-        return;
-    }
-
-    pop_above(outgoing, fork_point, dispatch, pop_handler);
-}
-
-// TODO: make async.
-// This precludes popping the genesis block.
-void data_base::pop_above(block_const_ptr_list_ptr blocks,
-    const checkpoint& fork_point, dispatcher& dispatch, result_handler handler)
-{
-    auto ec = verify(fork_point, true);
-
-    if (ec)
-    {
-        handler(ec);
-        return;
-    }
-
-    size_t top;
-    if (!blocks_->top(top, true))
-    {
-        handler(error::operation_failed);
-        return;
-    }
-
-    const auto fork = fork_point.height();
-    const auto depth = top - fork;
-
-    if (depth == 0)
-    {
-        handler(error::success);
-        return;
-    }
-
-    blocks->clear();
-    blocks->reserve(depth);
-
-    for (size_t height = top; height > fork; --height)
-    {
-        const auto start_time = asio::steady_clock::now();
-        const auto next = std::make_shared<message::block>();
-
-        // TODO: parallelize tx pop.
-        if ((ec = pop(*next, height)))
-        {
-            handler(ec);
-            return;
-        }
-
-        blocks->insert(blocks->begin(), next);
-        next->validation.start_pop = start_time;
-        next->header().validation.height = height;
-    }
-
-    // This is the beginning of the push_all sequence.
-    handler(error::success);
-}
-
-// TODO: pop_next().
-
-void data_base::handle_pop(const code& ec,
-    block_const_ptr_list_const_ptr blocks, size_t fork_height, dispatcher& dispatch,
-    result_handler handler)
-{
-    const result_handler push_handler =
-        std::bind(&data_base::handle_push,
-            this, _1, handler);
-
-    if (ec)
-    {
-        push_handler(ec);
-        return;
-    }
-
-    push_all(blocks, fork_height, dispatch, push_handler);
-}
-
-void data_base::push_all(block_const_ptr_list_const_ptr blocks,
-    size_t fork_height, dispatcher& dispatch, result_handler handler)
-{
-    push_next(error::success, blocks, 0, fork_height + 1, dispatch, handler);
-}
-
-// This controls the asynchronous block push loop.
-void data_base::push_next(const code& ec,
-    block_const_ptr_list_const_ptr blocks, size_t index, size_t height,
-    dispatcher& dispatch, result_handler handler)
-{
-    if (ec || index >= blocks->size())
-    {
-        // This ends the loop.
-        handler(ec);
-        return;
-    }
-
-    const auto block = (*blocks)[index];
-    const auto median_time_past = block->header().validation.median_time_past;
-    block->validation.start_push = asio::steady_clock::now();
-
-    const result_handler next_handler =
-        std::bind(&data_base::push_next,
-            this, _1, blocks, index + 1, height + 1, std::ref(dispatch),
-                handler);
-
-    // This is the start of the parallel block sub-sequence.
-    dispatch.concurrent(&data_base::do_push,
-        this, block, height, median_time_past, std::ref(dispatch),
-            next_handler);
-}
-
-// We never invoke the caller's handler under the mutex, we never fail to clear
-// the mutex, and we always invoke the caller's handler exactly once.
-void data_base::handle_push(const code& ec, result_handler handler) const
-{
-    write_mutex_.unlock();
-    // End Critical Section.
-    ///////////////////////////////////////////////////////////////////////////
-
-    if (ec)
-    {
-        handler(ec);
-        return;
-    }
-
-    handler(end_write() ? error::success : error::operation_failed);
-    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-}
-
 // Block push (parallel by tx).
 // ----------------------------------------------------------------------------
 
-void data_base::do_push(block_const_ptr block, size_t height,
-    uint32_t median_time_past, dispatcher& dispatch, result_handler handler)
+// Add transactions for an existing block header.
+// This assumes the txs do not exist, which is ok for IBD, but not catch-up.
+// TODO: optimize for catch-up sync by updating existing transactions.
+void data_base::update(block_const_ptr block, size_t height,
+    dispatcher& dispatch, result_handler handler)
 {
     result_handler block_complete =
         std::bind(&data_base::handle_do_push_transactions,
-            this, _1, block, height, handler);
+            this, _1, block, handler);
 
-    const auto ec = verify_push(*block, height);
+    const auto ec = verify_update(*block, height);
 
     if (ec)
     {
@@ -903,30 +769,32 @@ void data_base::do_push(block_const_ptr block, size_t height,
         return;
     }
 
-    const auto threads = dispatch.size();
-    const auto buckets = std::min(threads, block->transactions().size());
-    BITCOIN_ASSERT(buckets != 0);
+    const auto threads = size_t(1);//// dispatch.size();
 
+    const auto buckets = std::min(threads, block->transactions().size());
     const auto join_handler = bc::synchronize(std::move(block_complete),
         buckets, NAME "_do_push");
 
     for (size_t bucket = 0; bucket < buckets; ++bucket)
         dispatch.concurrent(&data_base::do_push_transactions,
-            this, block, height, median_time_past, bucket, buckets,
-                join_handler);
+            this, block, height, bucket, buckets, join_handler);
 }
 
 void data_base::do_push_transactions(block_const_ptr block, size_t height,
-    uint32_t median_time_past, size_t bucket, size_t buckets,
-    result_handler handler)
+    size_t bucket, size_t buckets, result_handler handler)
 {
+    // TODO: tx median_time_past must be updated following block validation.
+    static constexpr uint32_t median_time_past = 0;
+
+    // State transition to indexed requires validation via header index.
     const auto result = push_transactions(*block, height, median_time_past,
-        bucket, buckets);
+        bucket, buckets, transaction_state::pooled);
+
     handler(result ? error::success : error::operation_failed);
 }
 
 void data_base::handle_do_push_transactions(const code& ec,
-    block_const_ptr block, size_t height, result_handler handler)
+    block_const_ptr block, result_handler handler)
 {
     if (ec)
     {
@@ -934,19 +802,19 @@ void data_base::handle_do_push_transactions(const code& ec,
         return;
     }
 
-    blocks_->push(*block, height);
+    // Update the block's transactions (not its state).
+    blocks_->update(*block);
     commit();
 
     block->validation.end_push = asio::steady_clock::now();
 
-    // This is the end of the parallel block sub-sequence.
+    // This is the end of the parallel block push sub-sequence.
     handler(error::success);
 }
 
-// Header reorganization.
+// Header Reorganization (not parallel).
 // ----------------------------------------------------------------------------
 
-// TODO: make async.
 // A false return implies store corruption.
 void data_base::reorganize(const config::checkpoint& fork_point,
     header_const_ptr_list_const_ptr incoming,
@@ -966,14 +834,12 @@ void data_base::reorganize(const config::checkpoint& fork_point,
     handler(result ? error::success : error::operation_failed);
 }
 
-// TODO: make async.
 // A false return implies store corruption.
 bool data_base::pop_above(header_const_ptr_list_ptr headers,
     const checkpoint& fork_point, dispatcher& dispatch, result_handler handler)
 {
     headers->clear();
     auto ec = verify(fork_point, false);
-
     if (ec)
         return false;
 
@@ -988,11 +854,10 @@ bool data_base::pop_above(header_const_ptr_list_ptr headers,
     if (depth == 0)
         return true;
 
+    // Pop all headers above the fork point.
     for (size_t height = top; height > fork; --height)
     {
         const auto next = std::make_shared<message::header>();
-
-        // TODO: parallelize tx pop.
         if ((ec = pop(*next, height)))
             return false;
 
@@ -1003,7 +868,6 @@ bool data_base::pop_above(header_const_ptr_list_ptr headers,
     return true;
 }
 
-// TODO: make async.
 // A false return implies store corruption.
 bool data_base::push_all(header_const_ptr_list_const_ptr headers,
     const checkpoint& fork_point, dispatcher& dispatch, result_handler handler)
@@ -1011,11 +875,10 @@ bool data_base::push_all(header_const_ptr_list_const_ptr headers,
     code ec;
     const auto first_height = fork_point.height() + 1;
 
+    // Push all headers onto the fork point.
     for (size_t index = 0; index < headers->size(); ++index)
     {
         const auto next = (*headers)[index];
-
-        // TODO: parallelize tx push.
         if ((ec = push(*next, first_height + index)))
             return false;
     }

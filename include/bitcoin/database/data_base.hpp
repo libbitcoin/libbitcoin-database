@@ -80,11 +80,9 @@ public:
     /// Invalid if indexes not initialized.
     const stealth_database& stealth() const;
 
-    // Synchronous writers.
+    // Utility writers.
     // ------------------------------------------------------------------------
-
-    /// Push unconfirmed tx that was verified with the given forks.
-    code push(const chain::transaction& tx, uint32_t forks);
+    // Block push/pop are not used by blockchain.
 
     /// Push next top block of expected height.
     code push(const chain::block& block, size_t height);
@@ -98,14 +96,17 @@ public:
     /// Pop top header of expected height.
     code pop(chain::header& out_header, size_t height);
 
-    // Reorganization.
+    // Organization.
     // ------------------------------------------------------------------------
 
-    void reorganize(const config::checkpoint& fork_point,
-        block_const_ptr_list_const_ptr incoming,
-        block_const_ptr_list_ptr outgoing, dispatcher& dispatch,
+    /// Push unconfirmed tx that was verified with the given forks.
+    code push(const chain::transaction& tx, uint32_t forks);
+
+    /// Update the block with transactions.
+    void update(block_const_ptr block, size_t height, dispatcher& dispatch,
         result_handler handler);
 
+    /// Reorganize the header index, updating block index accordingly.
     void reorganize(const config::checkpoint& fork_point,
         header_const_ptr_list_const_ptr incoming,
         header_const_ptr_list_ptr outgoing, dispatcher& dispatch,
@@ -121,50 +122,35 @@ protected:
 
     code verify(const config::checkpoint& fork_point, bool block_index) const;
     code verify_top(size_t height, bool block_index) const;
+    code verify_push(const chain::transaction& tx) const;
     code verify_push(const chain::header& header, size_t height) const;
     code verify_push(const chain::block& block, size_t height) const;
-    code verify_push(const chain::transaction& tx) const;
+    code verify_update(const chain::block& block, size_t height) const;
     chain::transaction::list to_transactions(const block_result& result) const;
 
     // Synchronous.
     // ------------------------------------------------------------------------
 
-    bool push_transactions(const chain::block& block, size_t height,
-        uint32_t median_time_past, size_t bucket=0, size_t buckets=1,
-        transaction_state state=transaction_state::confirmed);
     void push_inputs(const chain::transaction& tx, size_t height);
     void push_outputs(const chain::transaction& tx, size_t height);
     void push_stealth(const chain::transaction& tx, size_t height);
+    bool push_transactions(const chain::block& block, size_t height,
+        uint32_t median_time_past, size_t bucket=0, size_t buckets=1,
+        transaction_state state=transaction_state::confirmed);
 
-    bool pop_transactions(const chain::block& out_block, size_t bucket=0, size_t buckets=1);
     bool pop_inputs(const chain::transaction& tx);
     bool pop_outputs(const chain::transaction& tx);
     bool pop_stealth(const chain::transaction& tx);
+    bool pop_transactions(const chain::block& out_block, size_t bucket=0,
+        size_t buckets=1);
 
-    // Block Reorganization (push is parallel).
+    // Block Push (parallel by tx).
     // ------------------------------------------------------------------------
 
-    void pop_above(block_const_ptr_list_ptr blocks,
-        const config::checkpoint& fork_point, dispatcher& dispatch,
-        result_handler handler);
-    void handle_pop(const code& ec,
-        block_const_ptr_list_const_ptr blocks, size_t fork_height,
-        dispatcher& dispatch, result_handler handler);
-    void push_all(block_const_ptr_list_const_ptr blocks, size_t fork_height,
-        dispatcher& dispatch, result_handler handler);
-    void push_next(const code& ec, block_const_ptr_list_const_ptr blocks,
-        size_t index, size_t height, dispatcher& dispatch,
-        result_handler handler);
-    void handle_push(const code& ec, result_handler handler) const;
-
-    void do_push(block_const_ptr block, size_t height,
-        uint32_t median_time_past, dispatcher& dispatch,
-        result_handler handler);
     void do_push_transactions(block_const_ptr block, size_t height,
-        uint32_t median_time_past, size_t bucket, size_t buckets,
-        result_handler handler);
+        size_t bucket, size_t buckets, result_handler handler);
     void handle_do_push_transactions(const code& ec, block_const_ptr block,
-        size_t height, result_handler handler);
+        result_handler handler);
 
     // Header Reorganization (not parallel).
     // ------------------------------------------------------------------------
@@ -175,6 +161,9 @@ protected:
     bool push_all(header_const_ptr_list_const_ptr headers,
         const config::checkpoint& fork_point, dispatcher& dispatch,
         result_handler handler);
+
+    // Databases.
+    // ------------------------------------------------------------------------
 
     std::shared_ptr<block_database> blocks_;
     std::shared_ptr<transaction_database> transactions_;

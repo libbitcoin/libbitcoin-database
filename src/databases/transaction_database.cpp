@@ -177,8 +177,7 @@ transaction_result transaction_database::get(file_offset offset) const
 transaction_result transaction_database::get(const hash_digest& hash) const
 {
     const auto offset = lookup_map_.offset(hash);
-    return offset == slab_hash_table<hash_digest>::not_found ?
-        transaction_result{} : get(offset);
+    return offset == slab_map::not_found ? transaction_result{} : get(offset);
 }
 
 // Metadata should be defaulted by caller.

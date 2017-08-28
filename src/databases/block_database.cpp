@@ -63,6 +63,7 @@ static constexpr auto tx_start_size = sizeof(uint32_t);
 static constexpr auto tx_count_size = sizeof(uint16_t);
 static const auto height_offset = header_size + median_time_past_size;
 static const auto state_offset = height_offset + height_size;
+static const auto transactions_offset = state_offset + checksum_size;
 static const auto block_size = header_size + median_time_past_size +
     height_size + state_size + checksum_size + tx_start_size + tx_count_size;
 
@@ -343,7 +344,7 @@ array_index block_database::associate(const transaction::list& transactions)
     for (const auto& tx: transactions)
     {
         const auto offset = tx.validation.offset;
-        BITCOIN_ASSERT(offset != record_map::not_found);
+        BITCOIN_ASSERT(offset != slab_map::not_found);
         serial.write_8_bytes_little_endian(offset);
     }
 
@@ -482,6 +483,31 @@ bool block_database::unconfirm(const hash_digest& hash, size_t height,
 
     pop_index(height, manager);
     return true;
+}
+
+// Populate transaction references, state is unchanged.
+bool block_database::update(const chain::block& block)
+{
+    const auto& txs = block.transactions();
+    const auto tx_start = associate(txs);
+    const auto tx_count = txs.size();
+
+    BITCOIN_ASSERT(tx_start <= max_uint32);
+    BITCOIN_ASSERT(tx_count <= max_uint16);
+
+    const auto update = [&](byte_serializer& serial)
+    {
+        ///////////////////////////////////////////////////////////////////////
+        // Critical Section.
+        unique_lock lock(metadata_mutex_);
+
+        serial.skip(transactions_offset);
+        serial.write_4_bytes_little_endian(static_cast<uint32_t>(tx_start));
+        serial.write_2_bytes_little_endian(static_cast<uint16_t>(tx_count));
+        ///////////////////////////////////////////////////////////////////////
+    };
+
+    return lookup_map_.update(block.hash(), update) != record_map::not_found;
 }
 
 // Index Utilities.

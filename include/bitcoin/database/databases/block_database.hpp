@@ -28,6 +28,7 @@
 #include <bitcoin/database/memory/memory_map.hpp>
 #include <bitcoin/database/primitives/record_hash_table.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
+#include <bitcoin/database/primitives/slab_hash_table.hpp>
 #include <bitcoin/database/result/block_result.hpp>
 
 namespace libbitcoin {
@@ -40,6 +41,7 @@ class BCD_API block_database
 public:
     typedef std::vector<size_t> heights;
     typedef boost::filesystem::path path;
+    typedef slab_hash_table<hash_digest> slab_map;
     typedef std::shared_ptr<shared_mutex> mutex_ptr;
 
     /// Construct the database.
@@ -100,6 +102,9 @@ public:
 
     /// Demote header|block at the given height to pooled.
     bool unconfirm(const hash_digest& hash, size_t height, bool block_index);
+
+    /// Populate transaction references, state is unchanged.
+    bool update(const chain::block& block);
 
 private:
     typedef record_hash_table<hash_digest> record_map;
