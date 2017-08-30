@@ -762,6 +762,7 @@ void data_base::update(block_const_ptr block, size_t height,
             this, _1, block, handler);
 
     // TODO: with write flushing enabled this will produce overlapping locks.
+    // This requires conditional application of the write mutex.
     //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     if (!begin_write())
     {
