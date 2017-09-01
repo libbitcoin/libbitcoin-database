@@ -104,9 +104,9 @@ bool data_base::create(const block& genesis)
     if (!created)
         return false;
 
-    // Store and index the first header/block.
+    // Index, populate, validate and confirm the first header/block.
     created = push(genesis.header(), 0) == error::success &&
-        push(genesis, 0) == error::success;
+        update_genesis(genesis) == error::success;
 
     closed_ = false;
     return created;
@@ -312,6 +312,7 @@ code data_base::push(const header& header, size_t height)
     if (!begin_write())
         return error::store_lock_failure;
 
+    // State is indexed | pent.
     blocks_->push(header, height);
     blocks_->commit();
 
@@ -345,6 +346,45 @@ code data_base::push(const block& block, size_t height)
         return ec;
 
     blocks_->push(block, height);
+    commit();
+
+    return end_write() ? error::success : error::store_lock_failure;
+    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+// Update, validate and confirm the genesis block.
+code data_base::update_genesis(const block& block)
+{
+    static constexpr uint32_t height = 0;
+    static constexpr uint32_t median_time_past = 0;
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock lock(write_mutex_);
+
+    auto ec = verify_update(block, height);
+
+    if (ec)
+        return ec;
+
+    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    if (!begin_write())
+        return error::store_lock_failure;
+
+    // Pushes transactions sequentially as **confirmed**.
+    if ((ec = push_transactions(block, height, median_time_past)))
+        return ec;
+
+    // Populate pent block's transaction references.
+    blocks_->update(block);
+
+    // Promote validation state from pent to **valid**.
+    blocks_->validate(block.hash(), true);
+
+    // Promote index state from indexed to **confirmed**.
+    blocks_->confirm(block.hash(), height, true);
+
     commit();
 
     return end_write() ? error::success : error::store_lock_failure;
@@ -438,13 +478,13 @@ code data_base::pop(chain::header& out_header, size_t height)
 static hash_digest get_block(const block_database& blocks,
     size_t height, bool block_index)
 {
-    return height == 0 ? null_hash : blocks.get(height, block_index).hash();
+    return blocks.get(height, block_index).hash();
 }
 
 static hash_digest get_previous_block(const block_database& blocks,
     size_t height, bool block_index)
 {
-    return height == 0 ? null_hash : blocks.get(height - 1, block_index).hash();
+    return height == 0 ? null_hash : get_block(blocks, height - 1, block_index);
 }
 
 static size_t get_next_block(const block_database& blocks,
@@ -751,7 +791,7 @@ bool data_base::pop_stealth(const chain::transaction& tx)
     return true;
 }
 
-// Block push (parallel by tx).
+// Block update (parallel by tx).
 // ----------------------------------------------------------------------------
 
 // Add transactions for an existing block header.
@@ -781,14 +821,17 @@ void data_base::update(block_const_ptr block, size_t height,
         return;
     }
 
-    const auto threads = dispatch.size();
-    const auto buckets = std::min(threads, block->transactions().size());
-    const auto join_handler = bc::synchronize(std::move(block_complete),
-        buckets, NAME "_do_push");
+    // Original single thread per block (may be faster during sync).
+    do_push_transactions(block, height, 0, 1, block_complete);
 
-    for (size_t bucket = 0; bucket < buckets; ++bucket)
-        dispatch.concurrent(&data_base::do_push_transactions,
-            this, block, height, bucket, buckets, join_handler);
+    ////const auto threads = dispatch.size();
+    ////const auto buckets = std::min(threads, block->transactions().size());
+    ////const auto join_handler = bc::synchronize(std::move(block_complete),
+    ////    buckets, NAME "_do_push");
+
+    ////for (size_t bucket = 0; bucket < buckets; ++bucket)
+    ////    dispatch.concurrent(&data_base::do_push_transactions,
+    ////        this, block, height, bucket, buckets, join_handler);
 }
 
 void data_base::do_push_transactions(block_const_ptr block, size_t height,
@@ -815,7 +858,6 @@ void data_base::handle_do_push_transactions(const code& ec,
     // Update the block's transactions (not its state).
     blocks_->update(*block);
     commit();
-    block->validation.end_push = asio::steady_clock::now();
 
     // TODO: with write flushing enabled this will produce overlapping locks.
     handler(end_write() ? error::success : error::store_lock_failure);

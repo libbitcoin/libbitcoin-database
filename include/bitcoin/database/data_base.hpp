@@ -175,6 +175,9 @@ private:
     typedef chain::input::list inputs;
     typedef chain::output::list outputs;
 
+    // Update, validate and confirm the genesis block.
+    code update_genesis(const chain::block& block);
+
     std::atomic<bool> closed_;
     const settings& settings_;
 

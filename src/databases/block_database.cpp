@@ -86,6 +86,7 @@ block_database::block_database(const path& map_filename,
     const path& tx_index_filename, size_t buckets, size_t expansion,
     mutex_ptr mutex)
   : fork_point_(0),
+    valid_point_(0),
     initial_map_file_size_(record_hash_table_header_size(buckets) +
         minimum_records_size),
 
@@ -194,6 +195,11 @@ bool block_database::close()
 size_t block_database::fork_point() const
 {
     return fork_point_;
+}
+
+size_t block_database::valid_point() const
+{
+    return valid_point_;
 }
 
 bool block_database::top(size_t& out_height, bool block_index) const
@@ -355,6 +361,96 @@ array_index block_database::associate(const transaction::list& transactions)
 // ----------------------------------------------------------------------------
 // These are used to atomically update values 
 
+// Populate transaction references, state is unchanged.
+bool block_database::update(const chain::block& block)
+{
+    const auto& txs = block.transactions();
+    const auto tx_start = associate(txs);
+    const auto tx_count = txs.size();
+
+    BITCOIN_ASSERT(tx_start <= max_uint32);
+    BITCOIN_ASSERT(tx_count <= max_uint16);
+
+    const auto update = [&](byte_serializer& serial)
+    {
+        ///////////////////////////////////////////////////////////////////////
+        // Critical Section.
+        unique_lock lock(metadata_mutex_);
+
+        serial.skip(transactions_offset);
+        serial.write_4_bytes_little_endian(static_cast<uint32_t>(tx_start));
+        serial.write_2_bytes_little_endian(static_cast<uint16_t>(tx_count));
+        ///////////////////////////////////////////////////////////////////////
+    };
+
+    return lookup_map_.update(block.hash(), update) != record_map::not_found;
+}
+
+static uint8_t update_validation_state(uint8_t original, bool positive)
+{
+    // May only validate or invalidate a pooled or indexed block.
+    BITCOIN_ASSERT(is_pooled(original) || is_indexed(original));
+
+    // Preserve the confirmation state (pooled or indexed).
+    // We try to only validate indexed blocks, but allow pooled for a race.
+    const auto confirmation_state = original & block_state::confirmations;
+    const auto validation_state = positive ? block_state::valid :
+        block_state::failed;
+
+    // Merge the new confirmation state with existing validation state.
+    return confirmation_state | validation_state;
+}
+
+// Promote pent block to valid|invalid.
+bool block_database::validate(const hash_digest& hash, bool positive)
+{
+    // TODO: eliminate the double state lookup for state update.
+    // TODO: the caller doesn't know the current header state.
+
+    // This is pointer to the data section of the record row entry.
+    auto record = lookup_map_.find(hash);
+
+    if (record == nullptr)
+        return false;
+
+    const auto memory = REMAP_ADDRESS(record);
+    ////const auto prefix_start = memory - prefix_size;
+
+    // The header and height never change after the block is reachable.
+    auto deserial = make_unsafe_deserializer(memory + height_offset);
+    const auto height = deserial.read_4_bytes_little_endian();
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Critical Section.
+    metadata_mutex_.lock_shared();
+    const auto original = deserial.read_byte();
+    metadata_mutex_.unlock_shared();
+    ///////////////////////////////////////////////////////////////////////////
+
+    record = nullptr;
+    const auto state = update_validation_state(original, positive);
+    const auto update = [&](byte_serializer& serial)
+    {
+        ///////////////////////////////////////////////////////////////////////
+        // Critical Section.
+        unique_lock lock(metadata_mutex_);
+
+        // Skip block header, including median_time_past metadata, and height.
+        serial.skip(state_offset);
+        serial.write_byte(state);
+    };
+
+    lookup_map_.update(hash, update);
+
+    // Also update the validation chaser, assumes all prior are valid.
+    BITCOIN_ASSERT_MSG(valid_point_ != max_size_t, "valid point overflow");
+    BITCOIN_ASSERT_MSG((height == 0 && valid_point_ == 0) ||
+        (height == valid_point_ + 1), "validation out of order");
+
+    valid_point_ = height;
+    return true;
+}
+
 static uint8_t update_confirmation_state(uint8_t original, bool positive,
     bool block_index)
 {
@@ -483,31 +579,6 @@ bool block_database::unconfirm(const hash_digest& hash, size_t height,
 
     pop_index(height, manager);
     return true;
-}
-
-// Populate transaction references, state is unchanged.
-bool block_database::update(const chain::block& block)
-{
-    const auto& txs = block.transactions();
-    const auto tx_start = associate(txs);
-    const auto tx_count = txs.size();
-
-    BITCOIN_ASSERT(tx_start <= max_uint32);
-    BITCOIN_ASSERT(tx_count <= max_uint16);
-
-    const auto update = [&](byte_serializer& serial)
-    {
-        ///////////////////////////////////////////////////////////////////////
-        // Critical Section.
-        unique_lock lock(metadata_mutex_);
-
-        serial.skip(transactions_offset);
-        serial.write_4_bytes_little_endian(static_cast<uint32_t>(tx_start));
-        serial.write_2_bytes_little_endian(static_cast<uint16_t>(tx_count));
-        ///////////////////////////////////////////////////////////////////////
-    };
-
-    return lookup_map_.update(block.hash(), update) != record_map::not_found;
 }
 
 // Index Utilities.

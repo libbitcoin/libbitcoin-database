@@ -76,6 +76,9 @@ public:
     /// The highest confirmed block of the header index.
     size_t fork_point() const;
 
+    /// The highest valid block of the header index.
+    size_t valid_point() const;
+
     /// The height of the highest indexed block|header.
     bool top(size_t& out_height, bool block_index=true) const;
 
@@ -97,14 +100,17 @@ public:
     // Update.
     // ------------------------------------------------------------------------
 
-    /// Promote block to indexed|confirmed.
+    /// Populate pent block transaction references, state is unchanged.
+    bool update(const chain::block& block);
+
+    /// Promote pent block to valid|invalid.
+    bool validate(const hash_digest& hash, bool positive);
+
+    /// Promote pooled|indexed block to indexed|confirmed.
     bool confirm(const hash_digest& hash, size_t height, bool block_index);
 
     /// Demote header|block at the given height to pooled.
     bool unconfirm(const hash_digest& hash, size_t height, bool block_index);
-
-    /// Populate transaction references, state is unchanged.
-    bool update(const chain::block& block);
 
 private:
     typedef record_hash_table<hash_digest> record_map;
@@ -123,6 +129,9 @@ private:
 
     // The top confirmed block in the header index.
     std::atomic<size_t> fork_point_;
+
+    // The top valid block in the header index.
+    std::atomic<size_t> valid_point_;
 
     // The starting size of the hash table, used by create.
     const size_t initial_map_file_size_;
