@@ -134,14 +134,14 @@ protected:
     void push_inputs(const chain::transaction& tx, size_t height);
     void push_outputs(const chain::transaction& tx, size_t height);
     void push_stealth(const chain::transaction& tx, size_t height);
-    bool push_transactions(const chain::block& block, size_t height,
+    code push_transactions(const chain::block& block, size_t height,
         uint32_t median_time_past, size_t bucket=0, size_t buckets=1,
         transaction_state state=transaction_state::confirmed);
 
     bool pop_inputs(const chain::transaction& tx);
     bool pop_outputs(const chain::transaction& tx);
     bool pop_stealth(const chain::transaction& tx);
-    bool pop_transactions(const chain::block& out_block, size_t bucket=0,
+    code pop_transactions(const chain::block& out_block, size_t bucket=0,
         size_t buckets=1);
 
     // Block Push (parallel by tx).
