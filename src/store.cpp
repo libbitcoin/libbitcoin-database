@@ -135,12 +135,12 @@ bool store::is_write_locked(handle value) const
 
 bool store::begin_write() const
 {
-    return flush_lock() && sequential_lock_.begin_write();
+    return flush_lock() /*&& sequential_lock_.begin_write()*/;
 }
 
 bool store::end_write() const
 {
-    return sequential_lock_.end_write() && flush_unlock();
+    return /*sequential_lock_.end_write() &&*/ flush_unlock();
 }
 
 bool store::flush_lock() const
