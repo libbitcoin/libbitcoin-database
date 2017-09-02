@@ -63,7 +63,8 @@ static constexpr auto tx_start_size = sizeof(uint32_t);
 static constexpr auto tx_count_size = sizeof(uint16_t);
 static const auto height_offset = header_size + median_time_past_size;
 static const auto state_offset = height_offset + height_size;
-static const auto transactions_offset = state_offset + checksum_size;
+static const auto checksum_offset = state_offset + state_size;
+static const auto transactions_offset = checksum_offset + checksum_size;
 static const auto block_size = header_size + median_time_past_size +
     height_size + state_size + checksum_size + tx_start_size + tx_count_size;
 
