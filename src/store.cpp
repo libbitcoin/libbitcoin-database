@@ -118,20 +118,20 @@ bool store::close()
         exclusive_lock_.unlock();
 }
 
-store::handle store::begin_read() const
-{
-    return sequential_lock_.begin_read();
-}
-
-bool store::is_read_valid(handle value) const
-{
-    return sequential_lock_.is_read_valid(value);
-}
-
-bool store::is_write_locked(handle value) const
-{
-    return sequential_lock_.is_write_locked(value);
-}
+////store::handle store::begin_read() const
+////{
+////    return sequential_lock_.begin_read();
+////}
+////
+////bool store::is_read_valid(handle value) const
+////{
+////    return sequential_lock_.is_read_valid(value);
+////}
+////
+////bool store::is_write_locked(handle value) const
+////{
+////    return sequential_lock_.is_write_locked(value);
+////}
 
 bool store::begin_write() const
 {

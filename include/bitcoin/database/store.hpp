@@ -58,14 +58,14 @@ public:
     // Write with flush detection.
     // ------------------------------------------------------------------------
 
-    /// Start a read sequence and obtain its handle.
-    handle begin_read() const;
+    /////// Start a read sequence and obtain its handle.
+    ////handle begin_read() const;
 
-    /// Check read sequence result of the handle.
-    bool is_read_valid(handle handle) const;
+    /////// Check read sequence result of the handle.
+    ////bool is_read_valid(handle handle) const;
 
-    /// Check the write state of the handle.
-    bool is_write_locked(handle handle) const;
+    /////// Check the write state of the handle.
+    ////bool is_write_locked(handle handle) const;
 
     /// Start sequence write with optional flush lock.
     bool begin_write() const;
@@ -104,7 +104,7 @@ private:
     const bool flush_each_write_;
     mutable bc::flush_lock flush_lock_;
     mutable interprocess_lock exclusive_lock_;
-    mutable sequential_lock sequential_lock_;
+    ////mutable sequential_lock sequential_lock_;
 };
 
 } // namespace database
