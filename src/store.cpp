@@ -109,12 +109,12 @@ bool store::create()
 bool store::open()
 {
     return exclusive_lock_.lock() && flush_lock_.try_lock() &&
-        (flush_each_write_ || flush_lock_.lock_shared());
+        (flush_each_write() || flush_lock_.lock_shared());
 }
 
 bool store::close()
 {
-    return (flush_each_write_ || flush_lock_.unlock_shared()) &&
+    return (flush_each_write() || flush_lock_.unlock_shared()) &&
         exclusive_lock_.unlock();
 }
 
@@ -145,12 +145,17 @@ bool store::end_write() const
 
 bool store::flush_lock() const
 {
-    return !flush_each_write_ || flush_lock_.lock_shared();
+    return !flush_each_write() || flush_lock_.lock_shared();
 }
 
 bool store::flush_unlock() const
 {
-    return !flush_each_write_ || (flush() && flush_lock_.unlock_shared());
+    return !flush_each_write() || (flush() && flush_lock_.unlock_shared());
+}
+
+bool store::flush_each_write() const
+{
+    return flush_each_write_;
 }
 
 } // namespace database

@@ -79,6 +79,9 @@ public:
     /// Optionally end flush lock scope.
     bool flush_unlock() const;
 
+    /// True if write flushing is enabled.
+    bool flush_each_write() const;
+
     // File names.
     // ------------------------------------------------------------------------
 

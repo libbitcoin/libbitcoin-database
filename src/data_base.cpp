@@ -353,6 +353,42 @@ code data_base::push(const block& block, size_t height)
     ///////////////////////////////////////////////////////////////////////////
 }
 
+// Add transactions for an existing block header.
+// This assumes the txs do not exist, which is ok for IBD, but not catch-up.
+// This allows parallel write when write flushing is not enabled.
+// TODO: optimize for catch-up sync by updating existing transactions.
+code data_base::update(block_const_ptr block, size_t height)
+{
+    // TODO: tx median_time_past must be updated following block validation.
+    static constexpr uint32_t median_time_past = 0;
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    conditional_lock lock(flush_each_write());
+
+    auto ec = verify_update(*block, height);
+
+    if (ec)
+        return ec;
+
+    // Conditional write mutex preserves write flushing by preventing overlap.
+    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    if (!begin_write())
+        return error::store_lock_failure;
+
+    if ((ec = push_transactions(*block, height, median_time_past, 0, 1,
+        transaction_state::pooled)))
+        return ec;
+
+    // Update the block's transaction references (not its state).
+    blocks_->update(*block);
+    commit();
+
+    return end_write() ? error::success : error::store_lock_failure;
+    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ///////////////////////////////////////////////////////////////////////////
+}
+
 // Update, validate and confirm the genesis block.
 code data_base::update_genesis(const block& block)
 {
@@ -384,7 +420,6 @@ code data_base::update_genesis(const block& block)
 
     // Promote index state from indexed to **confirmed**.
     blocks_->confirm(block.hash(), height, true);
-
     commit();
 
     return end_write() ? error::success : error::store_lock_failure;
@@ -791,41 +826,7 @@ bool data_base::pop_stealth(const chain::transaction& tx)
     return true;
 }
 
-// Block update (parallel by tx).
-// ----------------------------------------------------------------------------
-
-// Add transactions for an existing block header.
-// This assumes the txs do not exist, which is ok for IBD, but not catch-up.
-// TODO: optimize for catch-up sync by updating existing transactions.
-code data_base::update(block_const_ptr block, size_t height)
-{
-    // TODO: tx median_time_past must be updated following block validation.
-    static constexpr uint32_t median_time_past = 0;
-
-    auto ec = verify_update(*block, height);
-
-    if (ec)
-        return ec;
-
-    // TODO: with write flushing enabled this will produce overlapping locks.
-    // This requires conditional application of the write mutex.
-    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    if (!begin_write())
-        return error::store_lock_failure;
-
-    const auto result = push_transactions(*block, height, median_time_past,
-        0, 1, transaction_state::pooled);
-
-    // Update the block's transaction references (not its state).
-    blocks_->update(*block);
-    commit();
-
-    // TODO: with write flushing enabled this will produce overlapping locks.
-    return end_write() ? error::success : error::store_lock_failure;
-    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-}
-
-// Header Reorganization (not parallel).
+// Header Reorganization (sequential).
 // ----------------------------------------------------------------------------
 
 // A false return implies store corruption.
