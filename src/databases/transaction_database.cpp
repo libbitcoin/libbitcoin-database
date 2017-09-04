@@ -253,10 +253,14 @@ bool transaction_database::store(const chain::transaction& tx, size_t height,
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(position <= max_uint16);
     const auto confirming = (state == transaction_state::confirmed);
+    const auto verified = (height != machine::rule_fork::unverified);
 
     // TODO: enable promotion from any unconfirmed state to pooled.
     if (confirming)
     {
+        BITCOIN_ASSERT(verified);
+        BITCOIN_ASSERT(position != transaction_result::unconfirmed);
+
         // Confirm the tx's previous outputs.
         for (const auto& input: tx.inputs())
             if (!spend(input.previous_output(), height))
@@ -283,7 +287,11 @@ bool transaction_database::store(const chain::transaction& tx, size_t height,
     // Write the new transaction.
     const auto size = metadata_size + tx.serialized_size(false);
     tx.validation.offset = lookup_map_.store(tx.hash(), write, size);
-    cache_.add(tx, height, median_time_past, confirming);
+
+    // If verified (according to rule forks) then useful to cache.
+    if (verified)
+        cache_.add(tx, height, median_time_past, confirming);
+
     return true;
 }
 

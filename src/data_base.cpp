@@ -376,9 +376,15 @@ code data_base::update(block_const_ptr block, size_t height)
     if (!begin_write())
         return error::store_lock_failure;
 
-    if ((ec = push_transactions(*block, height, median_time_past, 0, 1,
-        transaction_state::pooled)))
-        return ec;
+    for (const auto& tx: block->transactions())
+    {
+        if (!transactions_->store(tx, machine::rule_fork::unverified,
+            median_time_past, transaction_result::unconfirmed,
+            transaction_state::pooled))
+        {
+            return error::operation_failed;
+        }
+    }
 
     // Update the block's transaction references (not its state).
     blocks_->update(*block);
