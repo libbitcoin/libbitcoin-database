@@ -103,8 +103,7 @@ public:
     code push(const chain::transaction& tx, uint32_t forks);
 
     /// Update the block with transactions.
-    void update(block_const_ptr block, size_t height, dispatcher& dispatch,
-        result_handler handler);
+    code update(block_const_ptr block, size_t height);
 
     /// Reorganize the header index, updating block index accordingly.
     void reorganize(const config::checkpoint& fork_point,
@@ -143,14 +142,6 @@ protected:
     bool pop_stealth(const chain::transaction& tx);
     code pop_transactions(const chain::block& out_block, size_t bucket=0,
         size_t buckets=1);
-
-    // Block Push (parallel by tx).
-    // ------------------------------------------------------------------------
-
-    void do_push_transactions(block_const_ptr block, size_t height,
-        size_t bucket, size_t buckets, result_handler handler);
-    void handle_do_push_transactions(const code& ec, block_const_ptr block,
-        result_handler handler);
 
     // Header Reorganization (not parallel).
     // ------------------------------------------------------------------------

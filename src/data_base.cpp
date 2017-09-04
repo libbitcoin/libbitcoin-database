@@ -797,70 +797,31 @@ bool data_base::pop_stealth(const chain::transaction& tx)
 // Add transactions for an existing block header.
 // This assumes the txs do not exist, which is ok for IBD, but not catch-up.
 // TODO: optimize for catch-up sync by updating existing transactions.
-void data_base::update(block_const_ptr block, size_t height,
-    dispatcher& dispatch, result_handler handler)
+code data_base::update(block_const_ptr block, size_t height)
 {
-    result_handler block_complete =
-        std::bind(&data_base::handle_do_push_transactions,
-            this, _1, block, handler);
+    // TODO: tx median_time_past must be updated following block validation.
+    static constexpr uint32_t median_time_past = 0;
+
+    auto ec = verify_update(*block, height);
+
+    if (ec)
+        return ec;
 
     // TODO: with write flushing enabled this will produce overlapping locks.
     // This requires conditional application of the write mutex.
     //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     if (!begin_write())
-    {
-        block_complete(error::store_lock_failure);
-        return;
-    }
+        return error::store_lock_failure;
 
-    const auto ec = verify_update(*block, height);
+    const auto result = push_transactions(*block, height, median_time_past,
+        0, 1, transaction_state::pooled);
 
-    if (ec)
-    {
-        block_complete(ec);
-        return;
-    }
-
-    // Original single thread per block (may be faster during sync).
-    do_push_transactions(block, height, 0, 1, block_complete);
-
-    ////const auto threads = dispatch.size();
-    ////const auto buckets = std::min(threads, block->transactions().size());
-    ////const auto join_handler = bc::synchronize(std::move(block_complete),
-    ////    buckets, NAME "_do_push");
-
-    ////for (size_t bucket = 0; bucket < buckets; ++bucket)
-    ////    dispatch.concurrent(&data_base::do_push_transactions,
-    ////        this, block, height, bucket, buckets, join_handler);
-}
-
-void data_base::do_push_transactions(block_const_ptr block, size_t height,
-    size_t bucket, size_t buckets, result_handler handler)
-{
-    // TODO: tx median_time_past must be updated following block validation.
-    static constexpr uint32_t median_time_past = 0;
-
-    // State transition to indexed requires validation via header index.
-    handler(push_transactions(*block, height, median_time_past, bucket,
-        buckets, transaction_state::pooled));
-}
-
-void data_base::handle_do_push_transactions(const code& ec,
-    block_const_ptr block, result_handler handler)
-{
-    if (ec)
-    {
-        // The write is unclosed here.
-        handler(ec);
-        return;
-    }
-
-    // Update the block's transactions (not its state).
+    // Update the block's transaction references (not its state).
     blocks_->update(*block);
     commit();
 
     // TODO: with write flushing enabled this will produce overlapping locks.
-    handler(end_write() ? error::success : error::store_lock_failure);
+    return end_write() ? error::success : error::store_lock_failure;
     //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 }
 
