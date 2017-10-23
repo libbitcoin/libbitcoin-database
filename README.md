@@ -21,3 +21,16 @@ libbitcoin-database is now installed in `/usr/local/`.
 **About Libbitcoin Database**
 
 Libbitcoin Database is a custom database build directly on the operating system's [memory-mapped file](https://en.wikipedia.org/wiki/Memory-mapped_file) system. All primary tables and indexes are built on in-memory hash tables, resulting in constant-time lookups. The database uses [sequence locking](https://en.wikipedia.org/wiki/Seqlock) to avoid blocking the writer. This is ideal for a high performance blockchain server as reads are significantly more frequent than writes and yet writes must proceed without delay. The [libbitcoin-blockchain](https://github.com/libbitcoin/libbitcoin-blockchain) library uses the database as its blockchain store.
+
+## Installation
+
+### Macintosh
+
+#### Using Homebrew
+
+##### Installing from Formula
+
+Instead of building, libbitcoin-database can be installed from a formula:
+```sh
+$ brew install libbitcoin-database
+```
