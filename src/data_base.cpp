@@ -458,7 +458,8 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
         const input_point point{ tx_hash, index };
         spends_->store(input.previous_output(), point);
 
-        // TODO: use a vector result to extract sign_multisig.
+        // TODO: use extraction of prevout p2pk.
+        // TODO: use vector extraction of prevout bare multisig.
         const auto address = input.address();
         if (!address)
             continue;
@@ -475,7 +476,7 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
     {
         const auto& output = outputs[index];
 
-        // TODO: use a vector result to extract pay_multisig.
+        // TODO: use vector extraction of bare multisig.
         const auto address = output.address();
         if (!address)
             continue;
@@ -557,8 +558,8 @@ bool data_base::pop(block& out_block)
         transactions.emplace_back(tx.transaction(), std::move(tx_hash));
     }
 
-    // Loop txs backwards, the reverse of how they were added.
     // Remove txs, then outputs, then inputs (also reverse order).
+    // Loops txs backwards even though they may have been added asynchronously.
     for (auto tx = transactions.rbegin(); tx != transactions.rend(); ++tx)
     {
         if (!transactions_->unconfirm(tx->hash()))
@@ -605,6 +606,8 @@ bool data_base::pop_inputs(const input::list& inputs, size_t height)
         const auto address = payment_address::extract(input->script());
 
         // All history entries are confirmed.
+        // Given asynchronous updates, this is not required to remove the
+        // matching entry but instead the correct count of entries.
         if (address)
         {
             // This can fail if index start has been changed between restarts.
@@ -629,6 +632,8 @@ bool data_base::pop_outputs(const output::list& outputs, size_t height)
         const auto address = payment_address::extract(output->script());
 
         // All history entries are confirmed.
+        // Given asynchronous updates, this is not required to remove the
+        // matching entry but instead the correct count of entries.
         if (address)
         {
             // This can fail if index start has been changed between restarts.
