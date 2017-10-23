@@ -66,12 +66,6 @@ public:
     bool delete_last_row(const KeyType& key);
 
 private:
-    // Add new value to existing key.
-    void add_to_list(memory_ptr start_info, write_function write);
-
-    // Create new key with a single value.
-    void create_new(const KeyType& key, write_function write);
-
     record_hash_table_type& map_;
     record_list& records_;
     mutable shared_mutex mutex_;
