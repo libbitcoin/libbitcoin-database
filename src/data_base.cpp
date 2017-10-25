@@ -460,26 +460,27 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
 
         spends_->store(prevout, inpoint);
 
-        BITCOIN_ASSERT(prevout.validation.cache.is_valid());
-        const auto& output = prevout.validation.cache;
-        using script = bc::chain::script;
-
-        // With a required prevout the pay_public_key address can be obtained
-        // from the previous output script. The same is possible of bare
-        // multisig however we do not track that due to ambiguity.
-        if (script::is_pay_public_key_pattern(output.script().operations()) &&
-            script::is_sign_public_key_pattern(input.script().operations()))
-        {
-            const auto address = output.address();
-            BITCOIN_ASSERT(address);
+        // TODO: Disabled due to lack of prevout caching in case of checkpoint.
+        ////BITCOIN_ASSERT(prevout.validation.cache.is_valid());
+        ////const auto& output = prevout.validation.cache;
+        ////using script = bc::chain::script;
+        ////
+        ////// With a required prevout the pay_public_key address can be obtained
+        ////// from the previous output script. The same is possible of bare
+        ////// multisig however we do not track that due to ambiguity.
+        ////if (script::is_pay_public_key_pattern(output.script().operations()) &&
+        ////    script::is_sign_public_key_pattern(input.script().operations()))
+        ////{
+        ////    const auto address = output.address();
+        ////    BITCOIN_ASSERT(address);
+        ////    history_->add_input(address.hash(), inpoint, height, prevout);
+        ////}
+        ////else
+        ////{
+        const auto address = input.address();
+        if (address)
             history_->add_input(address.hash(), inpoint, height, prevout);
-        }
-        else
-        {
-            const auto address = input.address();
-            if (address)
-                history_->add_input(address.hash(), inpoint, height, prevout);
-        }
+        ////}
     }
 }
 
@@ -491,7 +492,7 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
         const auto& output = outputs[index];
         const auto address = output.address();
 
-        // There is no bare multisig tracking due to ambiguity.
+        // There is no bare multisig tracking due to address ambiguity.
         if (address)
         {
             const auto value = output.value();
