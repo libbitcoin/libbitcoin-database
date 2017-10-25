@@ -451,20 +451,31 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
 {
     for (uint32_t index = 0; index < inputs.size(); ++index)
     {
-        const input_point point{ tx_hash, index };
+        const input_point inpoint{ tx_hash, index };
         const auto& input = inputs[index];
         const auto& prevout = input.previous_output();
         const auto checksum = prevout.checksum();
 
-        spends_->store(prevout, point);
+        spends_->store(prevout, inpoint);
 
-        // If the prevout can be required here then this is better than input
-        // extraction because we get pay_multisig and pay_public_key spends.
-        ////BITCOIN_ASSERT(prevout.validation);
-        ////BITCOIN_ASSERT(prevout.validation.cache.is_valid());
-        ////for (const auto& address: prevout.validation.cache.addresses())
-        for (const auto& address: input.addresses())
-            history_->store(address.hash(), { height, point, checksum });
+        BITCOIN_ASSERT(prevout.validation.cache.is_valid());
+        const auto& output = prevout.validation.cache;
+        using script = bc::chain::script;
+
+        // With a required prevout the pay_public_key address can be obtained
+        // from the previous output script. The same is possible of bare
+        // multisig however we do not track that due to ambiguity.
+        if (script::is_pay_public_key_pattern(output.script().operations()) &&
+            script::is_sign_public_key_pattern(input.script().operations()))
+        {
+            for (const auto& address: output.addresses())
+                history_->store(address.hash(), { height, inpoint, checksum });
+        }
+        else
+        {
+            for (const auto& address: input.addresses())
+                history_->store(address.hash(), { height, inpoint, checksum });
+        }
     }
 }
 
@@ -473,12 +484,17 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
 {
     for (uint32_t index = 0; index < outputs.size(); ++index)
     {
-        const auto point = output_point{ tx_hash, index };
+        const auto outpoint = output_point{ tx_hash, index };
         const auto& output = outputs[index];
         const auto value = output.value();
+        using script = bc::chain::script;
 
-        for (const auto& address: output.addresses())
-            history_->store(address.hash(), { height, point, value });
+        // Multisig address tracking is ambigous, so skip bare multisig here.
+        if (!script::is_pay_multisig_pattern(output.script().operations()))
+        {
+            for (const auto& address: output.addresses())
+                history_->store(address.hash(), { height, outpoint, value });
+        }
     }
 }
 
