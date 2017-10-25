@@ -455,16 +455,31 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
     for (uint32_t index = 0; index < inputs.size(); ++index)
     {
         const auto& input = inputs[index];
-        const input_point point{ tx_hash, index };
-        spends_->store(input.previous_output(), point);
+        const input_point inpoint{ tx_hash, index };
+        const auto& prevout = input.previous_output();
 
-        // TODO: use a vector result to extract sign_multisig.
-        const auto address = input.address();
-        if (!address)
-            continue;
+        spends_->store(prevout, inpoint);
 
-        const auto& previous = input.previous_output();
-        history_->add_input(address.hash(), point, height, previous);
+        BITCOIN_ASSERT(prevout.validation.cache.is_valid());
+        const auto& output = prevout.validation.cache;
+        using script = bc::chain::script;
+
+        // With a required prevout the pay_public_key address can be obtained
+        // from the previous output script. The same is possible of bare
+        // multisig however we do not track that due to ambiguity.
+        if (script::is_pay_public_key_pattern(output.script().operations()) &&
+            script::is_sign_public_key_pattern(input.script().operations()))
+        {
+            const auto address = output.address();
+            BITCOIN_ASSERT(address);
+            history_->add_input(address.hash(), inpoint, height, prevout);
+        }
+        else
+        {
+            const auto address = input.address();
+            if (address)
+                history_->add_input(address.hash(), inpoint, height, prevout);
+        }
     }
 }
 
@@ -474,15 +489,15 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
     for (uint32_t index = 0; index < outputs.size(); ++index)
     {
         const auto& output = outputs[index];
-
-        // TODO: use a vector result to extract pay_multisig.
         const auto address = output.address();
-        if (!address)
-            continue;
 
-        const auto value = output.value();
-        const output_point point{ tx_hash, index };
-        history_->add_output(address.hash(), point, height, value);
+        // There is no bare multisig tracking due to ambiguity.
+        if (address)
+        {
+            const auto value = output.value();
+            const output_point outpoint{ tx_hash, index };
+            history_->add_output(address.hash(), outpoint, height, value);
+        }
     }
 }
 
@@ -557,8 +572,8 @@ bool data_base::pop(block& out_block)
         transactions.emplace_back(tx.transaction(), std::move(tx_hash));
     }
 
-    // Loop txs backwards, the reverse of how they were added.
     // Remove txs, then outputs, then inputs (also reverse order).
+    // Loops txs backwards even though they may have been added asynchronously.
     for (auto tx = transactions.rbegin(); tx != transactions.rend(); ++tx)
     {
         if (!transactions_->unconfirm(tx->hash()))
@@ -605,6 +620,8 @@ bool data_base::pop_inputs(const input::list& inputs, size_t height)
         const auto address = payment_address::extract(input->script());
 
         // All history entries are confirmed.
+        // Given asynchronous updates, this is not required to remove the
+        // matching entry but instead the correct count of entries.
         if (address)
         {
             // This can fail if index start has been changed between restarts.
@@ -629,6 +646,8 @@ bool data_base::pop_outputs(const output::list& outputs, size_t height)
         const auto address = payment_address::extract(output->script());
 
         // All history entries are confirmed.
+        // Given asynchronous updates, this is not required to remove the
+        // matching entry but instead the correct count of entries.
         if (address)
         {
             // This can fail if index start has been changed between restarts.
