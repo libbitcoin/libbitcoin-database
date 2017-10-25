@@ -458,7 +458,6 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
 
         spends_->store(prevout, inpoint);
 
-        BITCOIN_ASSERT(prevout.validation);
         BITCOIN_ASSERT(prevout.validation.cache.is_valid());
         const auto& output = prevout.validation.cache;
         using script = bc::chain::script;
