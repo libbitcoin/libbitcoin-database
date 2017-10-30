@@ -21,6 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
@@ -37,6 +38,7 @@ template <typename KeyType>
 class record_row
 {
 public:
+    static BC_CONSTEXPR array_index empty = bc::max_uint32;
     static BC_CONSTEXPR size_t index_size = sizeof(array_index);
     static BC_CONSTEXPR size_t key_start = 0;
     static BC_CONSTEXPR size_t key_size = std::tuple_size<KeyType>::value;
@@ -44,12 +46,13 @@ public:
 
     typedef serializer<uint8_t*>::functor write_function;
 
-    record_row(record_manager& manager, array_index index=0);
+    // Construct for a new or existing record.
+    record_row(record_manager& manager, array_index index=empty);
 
-    /// Allocate unlinked item for the given key.
+    /// Allocate and populate a new record.
     array_index create(const KeyType& key, write_function write);
 
-    /// Link allocated/populated item.
+    /// Link allocated/populated record.
     void link(array_index next);
 
     /// Does this match?
@@ -61,10 +64,10 @@ public:
     /// The file offset of the user data.
     file_offset offset() const;
 
-    /// Position of next item in the chained list.
+    /// Index of next record in the list.
     array_index next_index() const;
 
-    /// Write a new next index.
+    /// Write the next index.
     void write_next_index(array_index next);
 
 private:
@@ -72,7 +75,6 @@ private:
 
     array_index index_;
     record_manager& manager_;
-    mutable shared_mutex mutex_;
 };
 
 template <typename KeyType>
@@ -85,7 +87,7 @@ template <typename KeyType>
 array_index record_row<KeyType>::create(const KeyType& key,
     write_function write)
 {
-    BITCOIN_ASSERT(index_ == 0);
+    BITCOIN_ASSERT(index_ == empty);
 
     // Create new record and populate its key.
     //   [ KeyType  ] <==
@@ -135,7 +137,7 @@ memory_ptr record_row<KeyType>::data() const
     // Get value pointer.
     //   [ KeyType  ]
     //   [ next:4   ]
-    //   [ value... ] <==
+    //   [ value... ] ==>
 
     // Value data is at the end.
     return raw_data(prefix_size);
@@ -154,11 +156,9 @@ array_index record_row<KeyType>::next_index() const
     const auto memory = raw_data(key_size);
     const auto next_address = REMAP_ADDRESS(memory);
 
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    shared_lock lock(mutex_);
+    //*************************************************************************
     return from_little_endian_unsafe<array_index>(next_address);
-    ///////////////////////////////////////////////////////////////////////////
+    //*************************************************************************
 }
 
 template <typename KeyType>
@@ -167,11 +167,9 @@ void record_row<KeyType>::write_next_index(array_index next)
     const auto memory = raw_data(key_size);
     auto serial = make_unsafe_serializer(REMAP_ADDRESS(memory));
 
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    //*************************************************************************
     serial.template write_little_endian<array_index>(next);
-    ///////////////////////////////////////////////////////////////////////////
+    //*************************************************************************
 }
 
 template <typename KeyType>
