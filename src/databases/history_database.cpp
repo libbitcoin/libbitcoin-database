@@ -22,8 +22,9 @@
 #include <cstddef>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/record_hash_table.hpp>
+#include <bitcoin/database/primitives/record_multimap.hpp>
 #include <bitcoin/database/primitives/record_multimap_iterable.hpp>
-#include <bitcoin/database/primitives/record_multimap_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -40,10 +41,10 @@ static constexpr auto checksum_size = sizeof(uint64_t);
 static constexpr auto value_size = flag_size + point_size + height_size +
     checksum_size;
 
-static BC_CONSTEXPR auto record_size =
+static BC_CONSTEXPR auto table_record_size =
     hash_table_multimap_record_size<short_hash>();
 static BC_CONSTEXPR auto row_record_size =
-    hash_table_record_size<hash_digest>(value_size);
+    multimap_record_size(value_size);
 
 // History uses a hash table index, O(1).
 history_database::history_database(const path& lookup_filename,
@@ -55,13 +56,12 @@ history_database::history_database(const path& lookup_filename,
     lookup_file_(lookup_filename, mutex, expansion),
     lookup_header_(lookup_file_, buckets),
     lookup_manager_(lookup_file_, record_hash_table_header_size(buckets),
-        record_size),
+        table_record_size),
     lookup_map_(lookup_header_, lookup_manager_),
 
     rows_file_(rows_filename, mutex, expansion),
     rows_manager_(rows_file_, rows_header_size, row_record_size),
-    rows_list_(rows_manager_),
-    rows_multimap_(lookup_map_, rows_list_)
+    rows_multimap_(lookup_map_, rows_manager_)
 {
 }
 
@@ -148,7 +148,7 @@ void history_database::add_output(const short_hash& key,
         serial.write_8_bytes_little_endian(value);
     };
 
-    rows_multimap_.add_row(key, write);
+    rows_multimap_.store(key, write);
 }
 
 void history_database::add_input(const short_hash& key,
@@ -165,13 +165,13 @@ void history_database::add_input(const short_hash& key,
         serial.write_8_bytes_little_endian(previous.checksum());
     };
 
-    rows_multimap_.add_row(key, write);
+    rows_multimap_.store(key, write);
 }
 
 // This is the history unlink.
 bool history_database::delete_last_row(const short_hash& key)
 {
-    return rows_multimap_.delete_last_row(key);
+    return rows_multimap_.unlink(key);
 }
 
 history_compact::list history_database::get(const short_hash& key,
@@ -205,8 +205,8 @@ history_compact::list history_database::get(const short_hash& key,
     };
 
     history_compact::list result;
-    const auto start = rows_multimap_.lookup(key);
-    const auto records = record_multimap_iterable(rows_list_, start);
+    const auto start = rows_multimap_.find(key);
+    const auto records = record_multimap_iterable(rows_manager_, start);
 
     for (const auto index: records)
     {
@@ -215,7 +215,7 @@ history_compact::list history_database::get(const short_hash& key,
             break;
 
         // This obtains a remap safe address pointer against the rows file.
-        const auto record = rows_list_.get(index);
+        const auto record = rows_multimap_.get(index);
         const auto address = REMAP_ADDRESS(record);
 
         // Skip rows below from_height.

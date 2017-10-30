@@ -24,15 +24,21 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/record_list.hpp>
 #include <bitcoin/database/primitives/record_hash_table.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
+inline size_t multimap_record_size(size_t value_size)
+{
+    return sizeof(array_index) + value_size;
+}
+
 template <typename KeyType>
 BC_CONSTEXPR size_t hash_table_multimap_record_size()
 {
+    // The hash table maps a key only to the first record index.
     return hash_table_record_size<KeyType>(sizeof(array_index));
 }
 
@@ -49,26 +55,28 @@ template <typename KeyType>
 class record_multimap
 {
 public:
-    typedef record_hash_table<KeyType> record_hash_table_type;
     typedef serializer<uint8_t*>::functor write_function;
+    typedef record_hash_table<KeyType> record_hash_table_type;
 
-    record_multimap(record_hash_table_type& map, record_list& records);
+    record_multimap(record_hash_table_type& map, record_manager& manager);
 
-    /// Lookup a key, returning an iterable result with multiple values.
-    array_index lookup(const KeyType& key) const;
+    /// Add a new row for a key.
+    void store(const KeyType& key, write_function write);
 
-    /// Add a new row for a key. If the key doesn't exist, it will be created.
-    /// If it does exist, the value will be added at the start of the chain.
-    void add_row(const KeyType& key, write_function write);
+    /// Lookup a key, returning a traversable index.
+    array_index find(const KeyType& key) const;
 
-    /// Delete the last row entry that was added. This means when deleting
-    /// blocks we must walk backwards and delete in reverse order.
-    bool delete_last_row(const KeyType& key);
+    /// Get a remap safe address pointer to the indexed data.
+    memory_ptr get(array_index index) const;
+
+    /// Delete the last row that was added for the key.
+    bool unlink(const KeyType& key);
 
 private:
     record_hash_table_type& map_;
-    record_list& records_;
-    mutable shared_mutex mutex_;
+    record_manager& manager_;
+    mutable shared_mutex create_mutex_;
+    mutable shared_mutex update_mutex_;
 };
 
 } // namespace database

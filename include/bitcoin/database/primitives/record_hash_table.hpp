@@ -69,6 +69,9 @@ public:
     /// number of bytes (record_size - key_size - sizeof(array_index)).
     void store(const KeyType& key, write_function write);
 
+    /// Execute a writer against a key's buffer if the key is found.
+    void update(const KeyType& key, write_function write);
+
     /// Find the record for a given key.
     /// Returns a null pointer if not found.
     memory_ptr find(const KeyType& key) const;

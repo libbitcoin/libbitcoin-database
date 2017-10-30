@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_RECORD_MULTIMAP_ITERATOR_HPP
 #define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_ITERATOR_HPP
 
+#include <cstdint>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/record_list.hpp>
 
@@ -30,7 +31,7 @@ namespace database {
 class BCD_API record_multimap_iterator
 {
 public:
-    record_multimap_iterator(const record_list& records, array_index index);
+    record_multimap_iterator(const record_manager& manager, array_index index);
 
     /// Next value in the chain.
     void operator++();
@@ -44,7 +45,7 @@ public:
 
 private:
     array_index index_;
-    const record_list& records_;
+    const record_manager& manager_;
 };
 
 } // namespace database

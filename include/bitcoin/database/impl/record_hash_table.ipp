@@ -66,6 +66,34 @@ void record_hash_table<KeyType>::store(const KeyType& key,
     ///////////////////////////////////////////////////////////////////////////
 }
 
+// Execute a writer against a key's buffer if the key is found.
+template <typename KeyType>
+void record_hash_table<KeyType>::update(const KeyType& key,
+    write_function write)
+{
+    // Find start item...
+    auto current = read_bucket_value(key);
+
+    // Iterate through list...
+    while (current != header_.empty)
+    {
+        const record_row<KeyType> item(manager_, current);
+
+        // Found.
+        if (item.compare(key))
+        {
+            const auto data = REMAP_ADDRESS(item.data());
+            auto serial = make_unsafe_serializer(data);
+            write(serial);
+            return;
+        }
+
+        const auto previous = current;
+        current = item.next_index();
+        BITCOIN_ASSERT(previous != current);
+    }
+}
+
 // This is limited to returning the first of multiple matching key values.
 template <typename KeyType>
 memory_ptr record_hash_table<KeyType>::find(const KeyType& key) const
@@ -84,13 +112,7 @@ memory_ptr record_hash_table<KeyType>::find(const KeyType& key) const
 
         const auto previous = current;
         current = item.next_index();
-
-        // This may otherwise produce an infinite loop here.
-        // It indicates that a write operation has interceded.
-        // So we must return gracefully vs. looping forever.
-        // A parallel write operation cannot safely use this call.
-        if (previous == current)
-            return nullptr;
+        BITCOIN_ASSERT(previous != current);
     }
 
     return nullptr;
@@ -129,12 +151,7 @@ bool record_hash_table<KeyType>::unlink(const KeyType& key)
 
         previous = current;
         current = item.next_index();
-
-        // This may otherwise produce an infinite loop here.
-        // So we must return gracefully vs. looping forever.
-        // Another write should not interceded here, so this is a hard fail.
-        if (previous == current)
-            return false;
+        BITCOIN_ASSERT(previous != current);
     }
 
     return false;

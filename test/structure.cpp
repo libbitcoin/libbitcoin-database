@@ -107,46 +107,7 @@ BOOST_AUTO_TEST_CASE(record_manager__test)
 
 BOOST_AUTO_TEST_CASE(record_list__test)
 {
-    store::create(DIRECTORY "/record_list");
-    memory_map file(DIRECTORY "/record_list");
-    BOOST_REQUIRE(file.open());
-    BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);
-
-    file.resize(4);
-    const size_t record_size = record_list_offset + 6;
-    record_manager recs(file, 0, record_size);
-    BOOST_REQUIRE(recs.create());
-    BOOST_REQUIRE(recs.start());
-
-    record_list lrs(recs);
-    array_index idx = lrs.create();
-    BOOST_REQUIRE(idx == 0);
-
-    array_index idx1 = lrs.create();
-    BOOST_REQUIRE(idx1 == 1);
-
-    idx = lrs.create();
-    BOOST_REQUIRE(idx == 2);
-
-    idx = lrs.insert(idx1);
-    BOOST_REQUIRE(idx == 3);
-
-    idx = lrs.insert(idx);
-    BOOST_REQUIRE(idx == 4);
-
-    size_t count = 0;
-    array_index valid = idx;
-    while (idx != record_list::empty)
-    {
-        valid = idx;
-        idx = lrs.next(idx);
-        ++count;
-    }
-
-    BOOST_REQUIRE(count == 3);
-    BOOST_REQUIRE(valid == idx1);
-    recs.sync();
+    // TODO
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
