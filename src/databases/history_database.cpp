@@ -43,8 +43,7 @@ static constexpr auto value_size = flag_size + point_size + height_size +
 
 static BC_CONSTEXPR auto table_record_size =
     hash_table_multimap_record_size<short_hash>();
-static BC_CONSTEXPR auto row_record_size =
-    multimap_record_size(value_size);
+static const auto row_record_size = multimap_record_size(value_size);
 
 // History uses a hash table index, O(1).
 history_database::history_database(const path& lookup_filename,
