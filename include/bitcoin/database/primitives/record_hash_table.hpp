@@ -88,7 +88,7 @@ private:
 
     // Release node from linked chain.
     template <typename ListItem>
-    void release(const ListItem& item, file_offset previous);
+    void release(const ListItem& item, array_index previous);
 
     record_hash_table_header& header_;
     record_manager& manager_;
