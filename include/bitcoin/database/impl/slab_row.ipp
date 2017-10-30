@@ -38,7 +38,7 @@ template <typename KeyType>
 class slab_row
 {
 public:
-    static BC_CONSTEXPR array_index empty = bc::max_uint32;
+    static BC_CONSTEXPR file_offset empty = bc::max_uint64;
     static BC_CONSTEXPR size_t position_size = sizeof(file_offset);
     static BC_CONSTEXPR size_t key_start = 0;
     static BC_CONSTEXPR size_t key_size = std::tuple_size<KeyType>::value;
@@ -89,7 +89,7 @@ template <typename KeyType>
 file_offset slab_row<KeyType>::create(const KeyType& key, write_function write,
     size_t value_size)
 {
-    BITCOIN_ASSERT(position_ == 0);
+    BITCOIN_ASSERT(position_ == empty);
 
     // Create new slab and populate its key.
     //   [ KeyType  ] <==
