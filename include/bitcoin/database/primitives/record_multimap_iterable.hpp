@@ -20,7 +20,7 @@
 #define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_ITERABLE_HPP
 
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/record_list.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
 #include <bitcoin/database/primitives/record_multimap_iterator.hpp>
 
 namespace libbitcoin {
@@ -31,14 +31,14 @@ namespace database {
 class BCD_API record_multimap_iterable
 {
 public:
-    record_multimap_iterable(const record_list& records, array_index begin);
+    record_multimap_iterable(const record_manager& manager, array_index begin);
 
     record_multimap_iterator begin() const;
     record_multimap_iterator end() const;
 
 private:
     array_index begin_;
-    const record_list& records_;
+    const record_manager& manager_;
 };
 
 } // namespace database

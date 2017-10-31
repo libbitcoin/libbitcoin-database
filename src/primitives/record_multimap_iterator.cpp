@@ -19,33 +19,28 @@
 #include <bitcoin/database/primitives/record_multimap_iterator.hpp>
 
 #include <bitcoin/database/primitives/record_list.hpp>
-#include <bitcoin/database/primitives/record_multimap_iterable.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-record_multimap_iterator::record_multimap_iterator(const record_list& records,
-    array_index index)
-  : index_(index), records_(records)
+record_multimap_iterator::record_multimap_iterator(
+    const record_manager& manager, array_index index)
+  : index_(index), manager_(manager)
 {
 }
 
 void record_multimap_iterator::operator++()
 {
-    index_ = records_.next(index_);
+    // HACK: next_index() is const, so this is safe despite being ugly.
+    auto& manager = const_cast<record_manager&>(manager_);
+
+    index_ = record_list(manager, index_).next_index();
 }
+
 array_index record_multimap_iterator::operator*() const
 {
     return index_;
-}
-
-record_multimap_iterator record_multimap_iterable::begin() const
-{
-    return record_multimap_iterator(records_, begin_);
-}
-record_multimap_iterator record_multimap_iterable::end() const
-{
-    return record_multimap_iterator(records_, records_.empty);
 }
 
 bool record_multimap_iterator::operator==(record_multimap_iterator other) const

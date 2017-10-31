@@ -69,6 +69,9 @@ public:
     /// number of bytes (record_size - key_size - sizeof(array_index)).
     void store(const KeyType& key, write_function write);
 
+    /// Execute a writer against a key's buffer if the key is found.
+    void update(const KeyType& key, write_function write);
+
     /// Find the record for a given key.
     /// Returns a null pointer if not found.
     memory_ptr find(const KeyType& key) const;
@@ -86,13 +89,10 @@ private:
     // Link a new chain into the bucket header.
     void link(const KeyType& key, array_index begin);
 
-    // Release node from linked chain.
-    template <typename ListItem>
-    void release(const ListItem& item, file_offset previous);
-
     record_hash_table_header& header_;
     record_manager& manager_;
-    mutable shared_mutex mutex_;
+    mutable shared_mutex create_mutex_;
+    mutable shared_mutex update_mutex_;
 
 };
 

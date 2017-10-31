@@ -33,6 +33,8 @@ record_hash_table<KeyType>::record_hash_table(
     record_hash_table_header& header, record_manager& manager)
   : header_(header), manager_(manager)
 {
+    BITCOIN_ASSERT(record_hash_table_header::empty ==
+        record_row<KeyType>::empty);
 }
 
 // This is not limited to storing unique key values. If duplicate keyed values
@@ -46,15 +48,9 @@ void record_hash_table<KeyType>::store(const KeyType& key,
     record_row<KeyType> record(manager_);
     const auto position = record.create(key, write);
 
-    // For a given key in this hash table new item creation must be atomic from
-    // read of the old value to write of the new. Otherwise concurrent write of
-    // hash table conflicts will corrupt the key's record row. Unfortunmately
-    // there is no efficient way to lock a given bucket, so we lock across
-    // all buckets. But given that this protection is required for concurrent
-    // write but not for read-while-write (slock) we need not lock read.
+    // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    // Critical Section.
-    mutex_.lock();
+    create_mutex_.lock();
 
     // Link new record.next to current first record.
     record.link(read_bucket_value(key));
@@ -62,8 +58,38 @@ void record_hash_table<KeyType>::store(const KeyType& key,
     // Link header to new record as the new first.
     link(key, position);
 
-    mutex_.unlock();
+    create_mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
+}
+
+// Execute a writer against a key's buffer if the key is found.
+template <typename KeyType>
+void record_hash_table<KeyType>::update(const KeyType& key,
+    write_function write)
+{
+    // Find start item...
+    auto current = read_bucket_value(key);
+
+    // Iterate through list...
+    while (current != header_.empty)
+    {
+        const record_row<KeyType> item(manager_, current);
+
+        // Found.
+        if (item.compare(key))
+        {
+            const auto data = REMAP_ADDRESS(item.data());
+            auto serial = make_unsafe_serializer(data);
+            write(serial);
+            return;
+        }
+
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(update_mutex_);
+        current = item.next_index();
+        ///////////////////////////////////////////////////////////////////////
+    }
 }
 
 // This is limited to returning the first of multiple matching key values.
@@ -82,15 +108,11 @@ memory_ptr record_hash_table<KeyType>::find(const KeyType& key) const
         if (item.compare(key))
             return item.data();
 
-        const auto previous = current;
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(update_mutex_);
         current = item.next_index();
-
-        // This may otherwise produce an infinite loop here.
-        // It indicates that a write operation has interceded.
-        // So we must return gracefully vs. looping forever.
-        // A parallel write operation cannot safely use this call.
-        if (previous == current)
-            return nullptr;
+        ///////////////////////////////////////////////////////////////////////
     }
 
     return nullptr;
@@ -101,19 +123,25 @@ template <typename KeyType>
 bool record_hash_table<KeyType>::unlink(const KeyType& key)
 {
     // Find start item...
-    const auto begin = read_bucket_value(key);
-    const record_row<KeyType> begin_item(manager_, begin);
+    auto previous = read_bucket_value(key);
+    const record_row<KeyType> begin_item(manager_, previous);
 
     // If start item has the key then unlink from buckets.
     if (begin_item.compare(key))
     {
-        link(key, begin_item.next_index());
+        //*********************************************************************
+        const auto next = begin_item.next_index();
+        //*********************************************************************
+
+        link(key, next);
         return true;
     }
 
-    // Continue on...
-    auto previous = begin;
+    ///////////////////////////////////////////////////////////////////////////
+    update_mutex_.lock_shared();
     auto current = begin_item.next_index();
+    update_mutex_.unlock_shared();
+    ///////////////////////////////////////////////////////////////////////////
 
     // Iterate through list...
     while (current != header_.empty)
@@ -123,18 +151,27 @@ bool record_hash_table<KeyType>::unlink(const KeyType& key)
         // Found, unlink current item from previous.
         if (item.compare(key))
         {
-            release(item, previous);
+            record_row<KeyType> previous_item(manager_, previous);
+
+            // Critical Section
+            ///////////////////////////////////////////////////////////////////
+            update_mutex_.lock_upgrade();
+            const auto next = item.next_index();
+            update_mutex_.unlock_upgrade_and_lock();
+            //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            previous_item.write_next_index(next);
+            update_mutex_.unlock();
+            ///////////////////////////////////////////////////////////////////
             return true;
         }
 
         previous = current;
-        current = item.next_index();
 
-        // This may otherwise produce an infinite loop here.
-        // So we must return gracefully vs. looping forever.
-        // Another write should not interceded here, so this is a hard fail.
-        if (previous == current)
-            return false;
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(update_mutex_);
+        current = item.next_index();
+        ///////////////////////////////////////////////////////////////////////
     }
 
     return false;
@@ -161,15 +198,6 @@ template <typename KeyType>
 void record_hash_table<KeyType>::link(const KeyType& key, array_index begin)
 {
     header_.write(bucket_index(key), begin);
-}
-
-template <typename KeyType>
-template <typename ListItem>
-void record_hash_table<KeyType>::release(const ListItem& item,
-    file_offset previous)
-{
-    ListItem previous_item(manager_, previous);
-    previous_item.write_next_index(item.next_index());
 }
 
 } // namespace database

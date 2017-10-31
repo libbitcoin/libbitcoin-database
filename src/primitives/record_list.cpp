@@ -18,55 +18,74 @@
  */
 #include <bitcoin/database/primitives/record_list.hpp>
 
-#include <cstdint>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-// std::numeric_limits<array_index>::max()
-const array_index record_list::empty = bc::max_uint32;
-
-record_list::record_list(record_manager& manager)
-  : manager_(manager)
+record_list::record_list(record_manager& manager, array_index index)
+  : manager_(manager), index_(index)
 {
-    static_assert(sizeof(array_index) == sizeof(uint32_t),
-        "array_index incorrect size");
 }
 
-array_index record_list::create()
+array_index record_list::create(write_function write)
 {
-    // Insert new record with null next value.
-    return insert(empty);
+    BITCOIN_ASSERT(index_ == empty);
+
+    // Create new record without populating its next pointer.
+    //   [ next:4   ]
+    //   [ value... ] <==
+    index_ = manager_.new_records(1);
+
+    const auto memory = raw_data(index_size);
+    const auto record = REMAP_ADDRESS(memory);
+    auto serial = make_unsafe_serializer(record);
+    serial.write_delegated(write);
+
+    return index_;
 }
 
-array_index record_list::insert(array_index index)
+void record_list::link(array_index next)
 {
-    // Create new record and return its index.
-    auto new_index = manager_.new_records(1);
-    const auto record = manager_.get(new_index);
-    auto serial = make_unsafe_serializer(REMAP_ADDRESS(record));
-    //*************************************************************************
-    serial.template write_little_endian<array_index>(index);
-    //*************************************************************************
-    return new_index;
-}
+    // Populate next pointer value.
+    //   [ next:4   ] <==
+    //   [ value... ]
 
-array_index record_list::next(array_index index) const
-{
-    const auto record = manager_.get(index);
-    const auto memory = REMAP_ADDRESS(record);
+    // Write record.
+    const auto memory = raw_data(0);
+    const auto next_data = REMAP_ADDRESS(memory);
+    auto serial = make_unsafe_serializer(next_data);
+
     //*************************************************************************
-    return from_little_endian_unsafe<array_index>(memory);
+    serial.template write_little_endian<array_index>(next);
     //*************************************************************************
 }
-
-const memory_ptr record_list::get(array_index index) const
+memory_ptr record_list::data() const
 {
-    auto record = manager_.get(index);
-    REMAP_INCREMENT(record, sizeof(array_index));
-    return record;
+    // Get value pointer.
+    //   [ next:4   ]
+    //   [ value... ] ==>
+
+    // Value data is at the end.
+    return raw_data(index_size);
+}
+
+array_index record_list::next_index() const
+{
+    const auto memory = raw_data(0);
+    const auto next_address = REMAP_ADDRESS(memory);
+    //*************************************************************************
+    return from_little_endian_unsafe<array_index>(next_address);
+    //*************************************************************************
+}
+
+memory_ptr record_list::raw_data(file_offset offset) const
+{
+    auto memory = manager_.get(index_);
+    REMAP_INCREMENT(memory, offset);
+    return memory;
 }
 
 } // namespace database
