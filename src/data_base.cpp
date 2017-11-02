@@ -460,27 +460,26 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
 
         spends_->store(prevout, inpoint);
 
-        // TODO: Disabled due to lack of prevout caching in case of checkpoint.
-        ////BITCOIN_ASSERT(prevout.validation.cache.is_valid());
-        ////const auto& output = prevout.validation.cache;
-        ////using script = bc::chain::script;
-        ////
-        ////// With a required prevout the pay_public_key address can be obtained
-        ////// from the previous output script. The same is possible of bare
-        ////// multisig however we do not track that due to ambiguity.
-        ////if (script::is_pay_public_key_pattern(output.script().operations()) &&
-        ////    script::is_sign_public_key_pattern(input.script().operations()))
-        ////{
-        ////    const auto address = output.address();
-        ////    BITCOIN_ASSERT(address);
-        ////    history_->add_input(address.hash(), inpoint, height, prevout);
-        ////}
-        ////else
-        ////{
-        const auto address = input.address();
-        if (address)
-            history_->add_input(address.hash(), inpoint, height, prevout);
-        ////}
+        if (prevout.validation.cache.is_valid())
+        {
+            // This results in a complete and unambiguous history for the
+            // address since standard outputs contain unambiguous address data.
+            const auto& address = prevout.validation.cache.address();
+
+            if (address)
+                history_->add_input(address.hash(), inpoint, height, prevout);
+        }
+        else
+        {
+            // For any p2pk spend this creates no record (insufficient data).
+            // For any p2kh spend this runs the risk of misrepresenting a p2sh
+            // spend as p2kh, as they are ambiguous (so the spend not indexed).
+            // These are tradeoffs when no prevout is cached (checkpoint sync).
+            const auto& address = input.address();
+
+            if (address)
+                history_->add_input(address.hash(), inpoint, height, prevout);
+        }
     }
 }
 
@@ -492,13 +491,10 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
         const auto& output = outputs[index];
         const auto address = output.address();
 
-        // There is no bare multisig tracking due to address ambiguity.
+        // Standard outputs contain unambiguous address data.
         if (address)
-        {
-            const auto value = output.value();
-            const output_point outpoint{ tx_hash, index };
-            history_->add_output(address.hash(), outpoint, height, value);
-        }
+            history_->add_output(address.hash(), { tx_hash, index },
+                height, output.value());
     }
 }
 
