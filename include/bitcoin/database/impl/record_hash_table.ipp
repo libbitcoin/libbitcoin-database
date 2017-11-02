@@ -190,7 +190,7 @@ void record_hash_table<KeyType>::link(const KeyType& key, array_index begin)
 template <typename KeyType>
 template <typename ListItem>
 void record_hash_table<KeyType>::release(const ListItem& item,
-    file_offset previous)
+    array_index previous)
 {
     ListItem previous_item(manager_, previous);
     previous_item.write_next_index(item.next_index());
