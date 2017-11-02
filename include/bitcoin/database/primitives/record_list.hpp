@@ -19,7 +19,9 @@
 #ifndef LIBBITCOIN_DATABASE_RECORD_LIST_HPP
 #define LIBBITCOIN_DATABASE_RECORD_LIST_HPP
 
+#include <cstddef>
 #include <cstdint>
+#include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
@@ -27,32 +29,33 @@
 namespace libbitcoin {
 namespace database {
 
-// used by test and tools only.
-BC_CONSTEXPR size_t record_list_offset = sizeof(array_index);
-
-/// This is a one-way linked list with a next value containing the index of the
-/// subsequent record. Records can be dropped by forgetting an index, and
-/// updating to the next value. We can think of this as a LIFO queue.
 class BCD_API record_list
 {
 public:
-    static const array_index empty;
+    static BC_CONSTEXPR array_index empty = bc::max_uint32;
+    static BC_CONSTEXPR size_t index_size = sizeof(array_index);
 
-    record_list(record_manager& manager);
+    typedef serializer<uint8_t*>::functor write_function;
 
-    /// Create new list with a single record.
-    array_index create();
+    /// Construct for a new or existing record.
+    record_list(record_manager& manager, array_index index=empty);
 
-    /// Insert new record before index. Returns index of new record.
-    array_index insert(array_index index);
+    /// Allocate and populate a new record.
+    array_index create(write_function write);
 
-    /// Read next index for record in list.
-    array_index next(array_index index) const;
+    /// Allocate a record to the existing next record.
+    void link(array_index next);
 
-    /// Get underlying record data.
-    const memory_ptr get(array_index index) const;
+    /// The actual user data for this record.
+    memory_ptr data() const;
+
+    /// Index of the next record.
+    array_index next_index() const;
 
 private:
+    memory_ptr raw_data(file_offset offset) const;
+
+    array_index index_;
     record_manager& manager_;
 };
 

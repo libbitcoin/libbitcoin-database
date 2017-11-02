@@ -82,7 +82,7 @@ file_offset slab_hash_table<KeyType>::update(const KeyType& key,
     {
         const slab_row<KeyType> item(manager_, current);
 
-        // Found.
+        // Found, update data and return position.
         if (item.compare(key))
         {
             const auto data = REMAP_ADDRESS(item.data());
@@ -111,7 +111,7 @@ memory_ptr slab_hash_table<KeyType>::find(const KeyType& key) const
     {
         const slab_row<KeyType> item(manager_, current);
 
-        // Found.
+        // Found, return data.
         if (item.compare(key))
             return item.data();
 

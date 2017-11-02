@@ -83,7 +83,7 @@ array_index record_hash_table<KeyType>::update(const KeyType& key,
     {
         const record_row<KeyType> item(manager_, current);
 
-        // Found.
+        // Found, update data and return index.
         if (item.compare(key))
         {
             const auto data = REMAP_ADDRESS(item.data());

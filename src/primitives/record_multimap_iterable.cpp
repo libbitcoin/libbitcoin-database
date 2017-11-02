@@ -18,15 +18,28 @@
  */
 #include <bitcoin/database/primitives/record_multimap_iterable.hpp>
 
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/record_list.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
+#include <bitcoin/database/primitives/record_multimap_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 record_multimap_iterable::record_multimap_iterable(
-    const record_list& records, array_index begin)
-  : begin_(begin), records_(records)
+    const record_manager& manager, array_index begin)
+  : begin_(begin), manager_(manager)
 {
+}
+
+record_multimap_iterator record_multimap_iterable::begin() const
+{
+    return record_multimap_iterator(manager_, begin_);
+}
+
+record_multimap_iterator record_multimap_iterable::end() const
+{
+    return record_multimap_iterator(manager_, record_list::empty);
 }
 
 } // namespace database
