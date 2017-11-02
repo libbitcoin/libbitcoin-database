@@ -673,7 +673,7 @@ void data_base::push_inputs(const transaction& tx, size_t height)
 
     for (uint32_t index = 0; index < inputs.size(); ++index)
     {
-        const input_point inpoint{ tx_hash, index };
+        const input_point inpoint{ hash, index };
         const auto& input = inputs[index];
         const auto& prevout = input.previous_output();
         const auto checksum = prevout.checksum();
@@ -706,7 +706,7 @@ void data_base::push_outputs(const transaction& tx, size_t height)
 
     for (uint32_t index = 0; index < outputs.size(); ++index)
     {
-        const auto outpoint = output_point{ tx_hash, index };
+        const auto outpoint = output_point{ hash, index };
         const auto& output = outputs[index];
         const auto value = output.value();
         using script = bc::chain::script;
