@@ -302,7 +302,7 @@ array_index block_database::associate(const short_id_list& ids)
     {
         // TODO: create and employ short_id type with offset metadata.
         ////const auto offset = id.validation.offset;
-        ////BITCOIN_ASSERT(offset != record_map::not_found);
+        ////BITCOIN_ASSERT(offset != slab_map::not_found);
         ////serial.write_8_bytes_little_endian(offset);
     }
 
