@@ -465,8 +465,8 @@ circumvent_boost_icu_detection()
     local REGEX_TEST="libs/regex/build/has_icu_test.cpp"
     local LOCALE_TEST="libs/locale/build/has_icu_test.cpp"
 
-    display_message $SUCCESS > $REGEX_TEST
-    display_message $SUCCESS > $LOCALE_TEST
+    echo $SUCCESS > $REGEX_TEST
+    echo $SUCCESS > $LOCALE_TEST
 
     # display_message "Hack: ICU detection modified, will always indicate found."
 }
