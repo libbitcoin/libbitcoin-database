@@ -27,8 +27,10 @@
 namespace libbitcoin {
 namespace database {
 
+// Valid slab positions must not reach max_uint64.
 template <typename KeyType>
-const file_offset slab_hash_table<KeyType>::not_found = 0;
+const file_offset slab_hash_table<KeyType>::not_found = 
+    slab_hash_table_header::empty;
 
 template <typename KeyType>
 slab_hash_table<KeyType>::slab_hash_table(slab_hash_table_header& header,
@@ -48,12 +50,9 @@ file_offset slab_hash_table<KeyType>::store(const KeyType& key,
     slab_row<KeyType> slab(manager_);
     const auto position = slab.create(key, write, value_size);
 
-    // For a given key in this hash table new item creation must be atomic from
-    // read of the old value to write of the new. Otherwise concurrent write of
-    // hash table conflicts will corrupt the key's record row.
+    // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    // Critical Section.
-    mutex_.lock();
+    create_mutex_.lock();
 
     // Link new slab.next to current first slab.
     slab.link(read_bucket_value(key));
@@ -61,7 +60,7 @@ file_offset slab_hash_table<KeyType>::store(const KeyType& key,
     // Link header to new slab as the new first.
     link(key, position);
 
-    mutex_.unlock();
+    create_mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
 
     // Return the file offset of the slab data segment.
@@ -78,7 +77,7 @@ file_offset slab_hash_table<KeyType>::update(const KeyType& key,
     auto current = read_bucket_value(key);
 
     // Iterate through list...
-    while (current != header_.empty)
+    while (current != not_found)
     {
         const slab_row<KeyType> item(manager_, current);
 
@@ -91,9 +90,11 @@ file_offset slab_hash_table<KeyType>::update(const KeyType& key,
             return item.offset();
         }
 
-        const auto previous = current;
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(update_mutex_);
         current = item.next_position();
-        BITCOIN_ASSERT(previous != current);
+        ///////////////////////////////////////////////////////////////////////
     }
 
     return not_found;
@@ -107,7 +108,7 @@ memory_ptr slab_hash_table<KeyType>::find(const KeyType& key) const
     auto current = read_bucket_value(key);
 
     // Iterate through list...
-    while (current != header_.empty)
+    while (current != not_found)
     {
         const slab_row<KeyType> item(manager_, current);
 
@@ -115,9 +116,11 @@ memory_ptr slab_hash_table<KeyType>::find(const KeyType& key) const
         if (item.compare(key))
             return item.data();
 
-        const auto previous = current;
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(update_mutex_);
         current = item.next_position();
-        BITCOIN_ASSERT(previous != current);
+        ///////////////////////////////////////////////////////////////////////
     }
 
     return nullptr;
@@ -129,35 +132,55 @@ template <typename KeyType>
 bool slab_hash_table<KeyType>::unlink(const KeyType& key)
 {
     // Find start item...
-    const auto begin = read_bucket_value(key);
-    const slab_row<KeyType> begin_item(manager_, begin);
+    auto previous = read_bucket_value(key);
+    const slab_row<KeyType> begin_item(manager_, previous);
 
     // If start item has the key then unlink from buckets.
     if (begin_item.compare(key))
     {
-        link(key, begin_item.next_position());
+        //*********************************************************************
+        const auto next = begin_item.next_position();
+        //*********************************************************************
+
+        link(key, next);
         return true;
     }
 
-    // Continue on...
-    auto previous = begin;
+    ///////////////////////////////////////////////////////////////////////////
+    update_mutex_.lock_shared();
     auto current = begin_item.next_position();
+    update_mutex_.unlock_shared();
+    ///////////////////////////////////////////////////////////////////////////
 
     // Iterate through list...
-    while (current != header_.empty)
+    while (current != not_found)
     {
         const slab_row<KeyType> item(manager_, current);
 
         // Found, unlink current item from previous.
         if (item.compare(key))
         {
-            release(item, previous);
+            slab_row<KeyType> previous_item(manager_, previous);
+
+            // Critical Section
+            ///////////////////////////////////////////////////////////////////
+            update_mutex_.lock_upgrade();
+            const auto next = item.next_position();
+            update_mutex_.unlock_upgrade_and_lock();
+            //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            previous_item.write_next_position(next);
+            update_mutex_.unlock();
+            ///////////////////////////////////////////////////////////////////
             return true;
         }
 
         previous = current;
+
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(update_mutex_);
         current = item.next_position();
-        BITCOIN_ASSERT(previous != current);
+        ///////////////////////////////////////////////////////////////////////
     }
 
     return false;
@@ -184,15 +207,6 @@ template <typename KeyType>
 void slab_hash_table<KeyType>::link(const KeyType& key, file_offset begin)
 {
     header_.write(bucket_index(key), begin);
-}
-
-template <typename KeyType>
-template <typename ListItem>
-void slab_hash_table<KeyType>::release(const ListItem& item,
-    file_offset previous)
-{
-    ListItem previous_item(manager_, previous);
-    previous_item.write_next_position(item.next_position());
 }
 
 } // namespace database

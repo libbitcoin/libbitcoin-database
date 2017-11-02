@@ -21,7 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <bitcoin/database/define.hpp>
+#include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
 
@@ -39,7 +39,6 @@ template <typename KeyType>
 class slab_row
 {
 public:
-    typedef KeyType key_type;
     static BC_CONSTEXPR size_t position_size = sizeof(file_offset);
     static BC_CONSTEXPR size_t key_start = 0;
     static BC_CONSTEXPR size_t key_size = std::tuple_size<KeyType>::value;
@@ -47,13 +46,17 @@ public:
 
     typedef byte_serializer::functor write_function;
 
-    slab_row(slab_manager& manager, file_offset position=0);
+    // Construct for a new slab.
+    slab_row(slab_manager& manager);
 
-    /// Allocate unlinked item for the given key.
+    // Construct for an existing slab.
+    slab_row(slab_manager& manager, file_offset position);
+
+    /// Allocate and populate a new slab.
     file_offset create(const KeyType& key, write_function write,
         size_t value_size);
 
-    /// Link allocated/populated item.
+    /// Link allocated/populated slab.
     void link(file_offset next);
 
     /// Does this match?
@@ -65,10 +68,10 @@ public:
     /// The file offset of the user data.
     file_offset offset() const;
 
-    /// Position of next item in the chained list.
+    /// Position of next slab in the list.
     file_offset next_position() const;
 
-    /// Write a new next position.
+    /// Write the next position.
     void write_next_position(file_offset next);
 
 private:
@@ -76,8 +79,13 @@ private:
 
     file_offset position_;
     slab_manager& manager_;
-    mutable shared_mutex mutex_;
 };
+
+template <typename KeyType>
+slab_row<KeyType>::slab_row(slab_manager& manager)
+  : manager_(manager), position_(bc::max_uint32)
+{
+}
 
 template <typename KeyType>
 slab_row<KeyType>::slab_row(slab_manager& manager, file_offset position)
@@ -89,7 +97,7 @@ template <typename KeyType>
 file_offset slab_row<KeyType>::create(const KeyType& key, write_function write,
     size_t value_size)
 {
-    BITCOIN_ASSERT(position_ == 0);
+    BITCOIN_ASSERT(position_ == bc::max_uint32);
 
     // Create new slab and populate its key and data.
     //   [ KeyType  ] <==
@@ -158,11 +166,9 @@ file_offset slab_row<KeyType>::next_position() const
     const auto memory = raw_data(key_size);
     const auto next_address = REMAP_ADDRESS(memory);
 
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    shared_lock lock(mutex_);
+    //*************************************************************************
     return from_little_endian_unsafe<file_offset>(next_address);
-    ///////////////////////////////////////////////////////////////////////////
+    //*************************************************************************
 }
 
 template <typename KeyType>
@@ -171,11 +177,9 @@ void slab_row<KeyType>::write_next_position(file_offset next)
     const auto memory = raw_data(key_size);
     auto serial = make_unsafe_serializer(REMAP_ADDRESS(memory));
 
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    //*************************************************************************
     serial.template write_little_endian<file_offset>(next);
-    ///////////////////////////////////////////////////////////////////////////
+    //*************************************************************************
 }
 
 template <typename KeyType>
