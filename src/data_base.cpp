@@ -458,25 +458,22 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
 
         spends_->store(prevout, inpoint);
 
-        // TODO: Disabled due to lack of prevout caching in case of checkpoint.
-        ////BITCOIN_ASSERT(prevout.validation.cache.is_valid());
-        ////const auto& output = prevout.validation.cache;
-        ////using script = bc::chain::script;
-        ////
-        ////// With a required prevout the pay_public_key address can be obtained
-        ////// from the previous output script. The same is possible of bare
-        ////// multisig however we do not track that due to ambiguity.
-        ////if (script::is_pay_public_key_pattern(output.script().operations()) &&
-        ////    script::is_sign_public_key_pattern(input.script().operations()))
-        ////{
-        ////    for (const auto& address: output.addresses())
-        ////        history_->store(address.hash(), { height, inpoint, checksum });
-        ////}
-        ////else
-        ////{
-        for (const auto& address: input.addresses())
-            history_->store(address.hash(), { height, inpoint, checksum });
-        ////}
+        if (prevout.validation.cache.is_valid())
+        {
+            // This results in a complete and unambiguous history for the
+            // address since standard outputs contain unambiguous address data.
+            for (const auto& address: prevout.validation.cache.addresses())
+                history_->store(address.hash(), { height, inpoint, checksum });
+        }
+        else
+        {
+            // For any p2pk spend this creates no record (insufficient data).
+            // For any p2kh spend this creates the ambiguous p2sh address,
+            // which significantly expands the size of the history store.
+            // These are tradeoffs when no prevout is cached (checkpoint sync).
+            for (const auto& address: input.addresses())
+                history_->store(address.hash(), { height, inpoint, checksum });
+        }
     }
 }
 
@@ -490,12 +487,9 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
         const auto value = output.value();
         using script = bc::chain::script;
 
-        // Multisig address tracking is ambigous, so skip bare multisig here.
-        if (!script::is_pay_multisig_pattern(output.script().operations()))
-        {
-            for (const auto& address: output.addresses())
-                history_->store(address.hash(), { height, outpoint, value });
-        }
+        // Standard outputs contain unambiguous address data.
+        for (const auto& address: output.addresses())
+            history_->store(address.hash(), { height, outpoint, value });
     }
 }
 
