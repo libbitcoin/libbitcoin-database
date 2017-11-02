@@ -88,13 +88,10 @@ private:
     // Link a new chain into the bucket header.
     void link(const KeyType& key, file_offset begin);
 
-    // Release node from linked chain.
-    template <typename ListItem>
-    void release(const ListItem& item, file_offset previous);
-
     slab_hash_table_header& header_;
     slab_manager& manager_;
-    mutable shared_mutex mutex_;
+    mutable shared_mutex create_mutex_;
+    mutable shared_mutex update_mutex_;
 };
 
 } // namespace database

@@ -98,10 +98,9 @@ private:
     record_manager lookup_manager_;
     record_map lookup_map_;
 
-    /// List of history rows.
+    /// History rows.
     memory_map rows_file_;
     record_manager rows_manager_;
-    record_list rows_list_;
     record_multiple_map rows_multimap_;
 };
 

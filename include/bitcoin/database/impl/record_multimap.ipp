@@ -19,138 +19,111 @@
 #ifndef LIBBITCOIN_DATABASE_RECORD_MULTIMAP_IPP
 #define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_IPP
 
-#include <string>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/record_list.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 template <typename KeyType>
 record_multimap<KeyType>::record_multimap(record_hash_table_type& map,
-    record_list& records)
-  : map_(map), records_(records)
+    record_manager& manager)
+  : map_(map), manager_(manager)
 {
 }
 
 template <typename KeyType>
-array_index record_multimap<KeyType>::lookup(const KeyType& key) const
-{
-    const auto start_info = map_.find(key);
-
-    if (!start_info)
-        return records_.empty;
-
-    const auto address = REMAP_ADDRESS(start_info);
-
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
-    return from_little_endian_unsafe<array_index>(address);
-    ///////////////////////////////////////////////////////////////////////////
-}
-
-template <typename KeyType>
-void record_multimap<KeyType>::add_row(const KeyType& key,
+void record_multimap<KeyType>::store(const KeyType& key,
     write_function write)
 {
-    const auto start_info = map_.find(key);
+    // Allocate and populate new unlinked row.
+    record_list record(manager_);
+    const auto begin = record.create(write);
 
-    if (!start_info)
+    // Critical Section.
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock lock(create_mutex_);
+
+    const auto old_begin = find(key);
+
+    // Link the row to the previous first element (or terminator).
+    record.link(old_begin);
+
+    if (old_begin == record_list::empty)
     {
-        create_new(key, write);
-        return;
+        map_.store(key, [=](serializer<uint8_t*>& serial)
+        {
+            //*****************************************************************
+            serial.template write_little_endian<array_index>(begin);
+            //*****************************************************************
+        });
     }
-
-    // This forwards a memory object.
-    add_to_list(start_info, write);
-}
-
-template <typename KeyType>
-void record_multimap<KeyType>::add_to_list(memory_ptr start_info,
-    write_function write)
-{
-    const auto address = REMAP_ADDRESS(start_info);
-
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    mutex_.lock_shared();
-    const auto old_begin = from_little_endian_unsafe<array_index>(address);
-    mutex_.unlock_shared();
-    ///////////////////////////////////////////////////////////////////////////
-
-    const auto new_begin = records_.insert(old_begin);
-    const auto memory = records_.get(new_begin);
-    const auto data = REMAP_ADDRESS(memory);
-    auto serial_record = make_unsafe_serializer(data);
-    serial_record.write_delegated(write);
-
-    // The records_ and start_info remap safe pointers are in distinct files.
-    auto serial_link = make_unsafe_serializer(address);
-
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
-    serial_link.template write_little_endian<array_index>(new_begin);
+    else
+    {
+        map_.update(key, [=](serializer<uint8_t*>& serial)
+        {
+            // Critical Section
+            ///////////////////////////////////////////////////////////////////
+            unique_lock lock(update_mutex_);
+            serial.template write_little_endian<array_index>(begin);
+            ///////////////////////////////////////////////////////////////////
+        });
+    }
     ///////////////////////////////////////////////////////////////////////////
 }
 
 template <typename KeyType>
-bool record_multimap<KeyType>::delete_last_row(const KeyType& key)
+array_index record_multimap<KeyType>::find(const KeyType& key) const
 {
-    const auto start_info = map_.find(key);
+    const auto begin_address = map_.find(key);
 
-    if (!start_info)
+    if (!begin_address)
+        return record_list::empty;
+
+    const auto memory = REMAP_ADDRESS(begin_address);
+
+    // Critical Section.
+    ///////////////////////////////////////////////////////////////////////////
+    shared_lock lock(update_mutex_);
+    return from_little_endian_unsafe<array_index>(memory);
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+/// Get a remap safe address pointer to the indexed data.
+template <typename KeyType>
+memory_ptr record_multimap<KeyType>::get(array_index index) const
+{
+    const record_list record(manager_, index);
+    return record.data();
+}
+
+// Unlink is not safe for concurrent write.
+template <typename KeyType>
+bool record_multimap<KeyType>::unlink(const KeyType& key)
+{
+    const auto begin = find(key);
+
+    // No rows exist.
+    if (begin == record_list::empty)
         return false;
 
-    auto address = REMAP_ADDRESS(start_info);
+    const auto next_index = record_list(manager_, begin).next_index();
 
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    mutex_.lock_shared();
-    const auto old_begin = from_little_endian_unsafe<array_index>(address);
-    mutex_.unlock_shared();
-    ///////////////////////////////////////////////////////////////////////////
-
-    BITCOIN_ASSERT(old_begin != records_.empty);
-    const auto new_begin = records_.next(old_begin);
-
-    if (new_begin == records_.empty)
-    {
-        // Free existing remap pointer to prevent deadlock in map_.unlink.
-        address = nullptr;
-
+    // Remove the hash table entry, which delinks the single row.
+    if (next_index == record_list::empty)
         return map_.unlink(key);
-    }
 
-    auto serial = make_unsafe_serializer(address);
-
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
-    serial.template write_little_endian<array_index>(new_begin);
-    return true;
-    ///////////////////////////////////////////////////////////////////////////
-}
-
-template <typename KeyType>
-void record_multimap<KeyType>::create_new(const KeyType& key,
-    write_function write)
-{
-    // Create a new first record for the key.
-    const auto first = records_.create();
-    const auto data = REMAP_ADDRESS(records_.get(first));
-    auto serial_record = make_unsafe_serializer(data);
-    serial_record.write_delegated(write);
-
-    const auto write_start_info = [&](byte_serializer& serial)
+    // Update the hash table entry, which skips the first of multiple rows.
+    map_.update(key, [&](serializer<uint8_t*>& serial)
     {
-        //*********************************************************************
-        serial.template write_little_endian<array_index>(first);
-        //*********************************************************************
-    };
+        // Critical Section.
+        ///////////////////////////////////////////////////////////////////////
+        unique_lock lock(update_mutex_);
+        serial.template write_little_endian<array_index>(next_index);
+        ///////////////////////////////////////////////////////////////////////
+    });
 
-    // Make the map point to the new record.
-    map_.store(key, write_start_info);
+    return true;
 }
 
 } // namespace database

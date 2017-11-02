@@ -21,7 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <bitcoin/database/define.hpp>
+#include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 
@@ -39,7 +39,6 @@ template <typename KeyType>
 class record_row
 {
 public:
-    typedef KeyType key_type;
     static BC_CONSTEXPR size_t index_size = sizeof(array_index);
     static BC_CONSTEXPR size_t key_start = 0;
     static BC_CONSTEXPR size_t key_size = std::tuple_size<KeyType>::value;
@@ -47,12 +46,16 @@ public:
 
     typedef byte_serializer::functor write_function;
 
-    record_row(record_manager& manager, array_index index=0);
+    // Construct for a new record.
+    record_row(record_manager& manager);
 
-    /// Allocate unlinked item for the given key.
+    // Construct for an existing record.
+    record_row(record_manager& manager, array_index index);
+
+    /// Allocate and populate a new record.
     array_index create(const KeyType& key, write_function write);
 
-    /// Link allocated/populated item.
+    /// Link allocated/populated record.
     void link(array_index next);
 
     /// Does this match?
@@ -64,10 +67,10 @@ public:
     /// The file offset of the user data.
     file_offset offset() const;
 
-    /// Position of next item in the chained list.
+    /// Index of next record in the list.
     array_index next_index() const;
 
-    /// Write a new next index.
+    /// Write the next index.
     void write_next_index(array_index next);
 
 private:
@@ -75,8 +78,13 @@ private:
 
     array_index index_;
     record_manager& manager_;
-    mutable shared_mutex mutex_;
 };
+
+template <typename KeyType>
+record_row<KeyType>::record_row(record_manager& manager)
+  : manager_(manager), index_(bc::max_uint32)
+{
+}
 
 template <typename KeyType>
 record_row<KeyType>::record_row(record_manager& manager, array_index index)
@@ -88,7 +96,7 @@ template <typename KeyType>
 array_index record_row<KeyType>::create(const KeyType& key,
     write_function write)
 {
-    BITCOIN_ASSERT(index_ == 0);
+    BITCOIN_ASSERT(index_ == bc::max_uint32);
 
     // Create new record and populate its key and data.
     //   [ KeyType  ] <==
@@ -157,11 +165,9 @@ array_index record_row<KeyType>::next_index() const
     const auto memory = raw_data(key_size);
     const auto next_address = REMAP_ADDRESS(memory);
 
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    shared_lock lock(mutex_);
+    //*************************************************************************
     return from_little_endian_unsafe<array_index>(next_address);
-    ///////////////////////////////////////////////////////////////////////////
+    //*************************************************************************
 }
 
 template <typename KeyType>
@@ -170,11 +176,9 @@ void record_row<KeyType>::write_next_index(array_index next)
     const auto memory = raw_data(key_size);
     auto serial = make_unsafe_serializer(REMAP_ADDRESS(memory));
 
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    //*************************************************************************
     serial.template write_little_endian<array_index>(next);
-    ///////////////////////////////////////////////////////////////////////////
+    //*************************************************************************
 }
 
 template <typename KeyType>

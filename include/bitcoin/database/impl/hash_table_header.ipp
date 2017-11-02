@@ -27,7 +27,7 @@
 namespace libbitcoin {
 namespace database {
 
-static BC_CONSTEXPR uint64_t empty_fill = 0xffffffffffffffff;
+static BC_CONSTEXPR uint64_t empty_fill = bc::max_uint64;
 static BC_CONSTEXPR uint8_t empty_byte = (uint8_t)empty_fill;
 
 // This VC++ workaround is OK because ValueType must be unsigned.

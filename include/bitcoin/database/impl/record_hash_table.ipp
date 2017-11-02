@@ -28,9 +28,10 @@
 namespace libbitcoin {
 namespace database {
 
-// Valid block indexes must not reach max_uint32.
+// Valid record indexes must not reach max_uint32.
 template <typename KeyType>
-const array_index record_hash_table<KeyType>::not_found = max_uint32;
+const array_index record_hash_table<KeyType>::not_found =
+    record_hash_table_header::empty;
 
 template <typename KeyType>
 record_hash_table<KeyType>::record_hash_table(
@@ -50,11 +51,9 @@ array_index record_hash_table<KeyType>::store(const KeyType& key,
     record_row<KeyType> record(manager_);
     const auto index = record.create(key, write);
 
-    // For a given key in this hash table new item creation must be atomic from
-    // read of the old value to write of the new.
+    // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    // Critical Section.
-    mutex_.lock();
+    create_mutex_.lock();
 
     // Link new record.next to current first record.
     record.link(read_bucket_value(key));
@@ -62,7 +61,7 @@ array_index record_hash_table<KeyType>::store(const KeyType& key,
     // Link header to new record as the new first.
     link(key, index);
 
-    mutex_.unlock();
+    create_mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
 
     // Return the array index of the new record (starts at key, not value).
@@ -70,7 +69,7 @@ array_index record_hash_table<KeyType>::store(const KeyType& key,
 }
 
 // Execute a writer against a key's buffer if the key is found.
-// Return the array index of the found value (or zero).
+// Return the array index of the found value (or not_found).
 template <typename KeyType>
 array_index record_hash_table<KeyType>::update(const KeyType& key,
     write_function write)
@@ -79,11 +78,11 @@ array_index record_hash_table<KeyType>::update(const KeyType& key,
     auto current = read_bucket_value(key);
 
     // Iterate through list...
-    while (current != header_.empty)
+    while (current != not_found)
     {
         const record_row<KeyType> item(manager_, current);
 
-        // Found.
+        // Found, update data and return index.
         if (item.compare(key))
         {
             const auto data = REMAP_ADDRESS(item.data());
@@ -92,9 +91,11 @@ array_index record_hash_table<KeyType>::update(const KeyType& key,
             return current;
         }
 
-        const auto previous = current;
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(update_mutex_);
         current = item.next_index();
-        BITCOIN_ASSERT(previous != current);
+        ///////////////////////////////////////////////////////////////////////
     }
 
     return not_found;
@@ -108,7 +109,7 @@ memory_ptr record_hash_table<KeyType>::find(const KeyType& key) const
     auto current = read_bucket_value(key);
 
     // Iterate through list...
-    while (current != header_.empty)
+    while (current != not_found)
     {
         const record_row<KeyType> item(manager_, current);
 
@@ -116,9 +117,11 @@ memory_ptr record_hash_table<KeyType>::find(const KeyType& key) const
         if (item.compare(key))
             return item.data();
 
-        const auto previous = current;
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(update_mutex_);
         current = item.next_index();
-        BITCOIN_ASSERT(previous != current);
+        ///////////////////////////////////////////////////////////////////////
     }
 
     return nullptr;
@@ -130,35 +133,55 @@ template <typename KeyType>
 bool record_hash_table<KeyType>::unlink(const KeyType& key)
 {
     // Find start item...
-    const auto begin = read_bucket_value(key);
-    const record_row<KeyType> begin_item(manager_, begin);
+    auto previous = read_bucket_value(key);
+    const record_row<KeyType> begin_item(manager_, previous);
 
     // If start item has the key then unlink from buckets.
     if (begin_item.compare(key))
     {
-        link(key, begin_item.next_index());
+        //*********************************************************************
+        const auto next = begin_item.next_index();
+        //*********************************************************************
+
+        link(key, next);
         return true;
     }
 
-    // Continue on...
-    auto previous = begin;
+    ///////////////////////////////////////////////////////////////////////////
+    update_mutex_.lock_shared();
     auto current = begin_item.next_index();
+    update_mutex_.unlock_shared();
+    ///////////////////////////////////////////////////////////////////////////
 
     // Iterate through list...
-    while (current != header_.empty)
+    while (current != not_found)
     {
         const record_row<KeyType> item(manager_, current);
 
         // Found, unlink current item from previous.
         if (item.compare(key))
         {
-            release(item, previous);
+            record_row<KeyType> previous_item(manager_, previous);
+
+            // Critical Section
+            ///////////////////////////////////////////////////////////////////
+            update_mutex_.lock_upgrade();
+            const auto next = item.next_index();
+            update_mutex_.unlock_upgrade_and_lock();
+            //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            previous_item.write_next_index(next);
+            update_mutex_.unlock();
+            ///////////////////////////////////////////////////////////////////
             return true;
         }
 
         previous = current;
+
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(update_mutex_);
         current = item.next_index();
-        BITCOIN_ASSERT(previous != current);
+        ///////////////////////////////////////////////////////////////////////
     }
 
     return false;
@@ -185,15 +208,6 @@ template <typename KeyType>
 void record_hash_table<KeyType>::link(const KeyType& key, array_index begin)
 {
     header_.write(bucket_index(key), begin);
-}
-
-template <typename KeyType>
-template <typename ListItem>
-void record_hash_table<KeyType>::release(const ListItem& item,
-    file_offset previous)
-{
-    ListItem previous_item(manager_, previous);
-    previous_item.write_next_index(item.next_index());
 }
 
 } // namespace database
