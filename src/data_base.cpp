@@ -25,6 +25,7 @@
 #include <memory>
 #include <utility>
 #include <boost/filesystem.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/settings.hpp>
@@ -33,11 +34,12 @@
 namespace libbitcoin {
 namespace database {
 
-using namespace std::placeholders;
-using namespace boost::filesystem;
 using namespace bc::chain;
 using namespace bc::config;
 using namespace bc::wallet;
+using namespace boost::adaptors;
+using namespace boost::filesystem;
+using namespace std::placeholders;
 
 #define NAME "data_base"
 
@@ -571,15 +573,15 @@ bool data_base::pop(block& out_block)
 
     // Remove txs, then outputs, then inputs (also reverse order).
     // Loops txs backwards even though they may have been added asynchronously.
-    for (auto tx = transactions.rbegin(); tx != transactions.rend(); ++tx)
+    for (const auto& tx: reverse(transactions))
     {
-        if (!transactions_->unconfirm(tx->hash()))
+        if (!transactions_->unconfirm(tx.hash()))
             return false;
 
-        if (!pop_outputs(tx->outputs(), height))
+        if (!pop_outputs(tx.outputs(), height))
             return false;
 
-        if (!tx->is_coinbase() && !pop_inputs(tx->inputs(), height))
+        if (!tx.is_coinbase() && !pop_inputs(tx.inputs(), height))
             return false;
     }
 
@@ -600,9 +602,9 @@ bool data_base::pop(block& out_block)
 bool data_base::pop_inputs(const input::list& inputs, size_t height)
 {
     // Loop in reverse.
-    for (auto input = inputs.rbegin(); input != inputs.rend(); ++input)
+    for (const auto& input: reverse(inputs))
     {
-        if (!transactions_->unspend(input->previous_output()))
+        if (!transactions_->unspend(input.previous_output()))
             return false;
 
         if (height < settings_.index_start_height)
@@ -611,10 +613,10 @@ bool data_base::pop_inputs(const input::list& inputs, size_t height)
         // All spends are confirmed.
         // This can fail if index start has been changed between restarts.
         // So ignore the error here and succeeed even if not found.
-        /* bool */ spends_->unlink(input->previous_output());
+        /* bool */ spends_->unlink(input.previous_output());
 
         // Try to extract an address.
-        const auto address = payment_address::extract(input->script());
+        const auto address = payment_address::extract(input.script());
 
         // All history entries are confirmed.
         // Given asynchronous updates, this is not required to remove the
@@ -637,10 +639,10 @@ bool data_base::pop_outputs(const output::list& outputs, size_t height)
         return true;
 
     // Loop in reverse.
-    for (auto output = outputs.rbegin(); output != outputs.rend(); ++output)
+    for (const auto output: reverse(outputs))
     {
         // Try to extract an address.
-        const auto address = payment_address::extract(output->script());
+        const auto address = payment_address::extract(output.script());
 
         // All history entries are confirmed.
         // Given asynchronous updates, this is not required to remove the
