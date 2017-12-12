@@ -159,22 +159,22 @@ chain::output transaction_result::output(uint32_t index) const
     return out;
 }
 
-// median_time_past added in v3.3
+// median_time_past added in v3.3, witness added in v3.4
 // ----------------------------------------------------------------------------
 // [ height:4 ]
 // [ position:2 ]
 // [ median_time_past:4 ]
 // ----------------------------------------------------------------------------
 // [ output_count:varint ]
-// [ [ spender_height:4 ][ value:8 ][ script:varint ]... ]
+// [ [ spender_height:4 ][ value:8 ][ script:varint ]...]
 // [ input_count:varint ]
-// [ [ hash:4 ][ index:2 ][ script:varint ][ sequence:4 ]... ]
+// [ [ hash:4 ][ index:2 ][ script:varint ][ witness:varint ][ sequence:4 ]...]
 // [ locktime:varint ]
 // [ version:varint ]
 // ----------------------------------------------------------------------------
 
 // spender_heights are unguarded and will be inconsistent during write.
-chain::transaction transaction_result::transaction() const
+chain::transaction transaction_result::transaction(bool witness) const
 {
     BITCOIN_ASSERT(slab_);
     const auto tx_start = REMAP_ADDRESS(slab_) + metadata_size;
@@ -183,6 +183,10 @@ chain::transaction transaction_result::transaction() const
     // READ THE TX
     chain::transaction tx;
     tx.from_data(deserial, false);
+
+    // TODO: optimize so that witness reads are skipped.
+    if (!witness)
+        tx.strip_witness();
 
     // TODO: add hash param to deserialization to eliminate this construction.
     return chain::transaction(std::move(tx), hash_digest(hash_));
