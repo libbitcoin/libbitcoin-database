@@ -166,13 +166,32 @@ chain::output transaction_result::output(uint32_t index) const
     return chain::output::factory(deserial, false);
 }
 
+// median_time_past added in v3.3, witness added in v3.4
+// ----------------------------------------------------------------------------
+// [ height:4 ]
+// [ position:2 ]
+// [ median_time_past:4 ]
+// ----------------------------------------------------------------------------
+// [ output_count:varint ]
+// [ [ spender_height:4 ][ value:8 ][ script:varint ]...]
+// [ input_count:varint ]
+// [ [ hash:4 ][ index:2 ][ script:varint ][ witness:varint ][ sequence:4 ]...]
+// [ locktime:varint ]
+// [ version:varint ]
+// ----------------------------------------------------------------------------
+
 // Spentness is unguarded and will be inconsistent during write.
-chain::transaction transaction_result::transaction() const
+chain::transaction transaction_result::transaction(bool witness) const
 {
     BITCOIN_ASSERT(slab_);
     const auto tx_start = REMAP_ADDRESS(slab_) + metadata_size;
     auto deserial = make_unsafe_deserializer(tx_start);
-    return transaction::factory(deserial, hash_);
+    auto tx = transaction::factory(deserial, hash_, false, true);
+
+    if (witness)
+        tx.strip_witness();
+
+    return tx;
 }
 
 } // namespace database
