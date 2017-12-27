@@ -19,3 +19,9 @@ transaction_index
 transaction_table
 tx_index
 tx_table
+block_lookup
+block_rows
+lookup
+rows
+spend
+transaction
