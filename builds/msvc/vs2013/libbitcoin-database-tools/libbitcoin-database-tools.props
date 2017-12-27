@@ -45,7 +45,7 @@
   <Target Name="LinkageInfo" BeforeTargets="PrepareForBuild">
     <Message Text="Linkage-secp256k1  : $(Linkage-secp256k1)" Importance="high"/>
     <Message Text="Linkage-libbitcoin : $(Linkage-libbitcoin)" Importance="high"/>
-    <Message Text="Linkage-_bdatabase : $(Linkage-libbitcoin-database)" Importance="high"/>
+    <Message Text="Linkage-_database  : $(Linkage-libbitcoin-database)" Importance="high"/>
   </Target>
 
 </Project>
