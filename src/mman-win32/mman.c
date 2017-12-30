@@ -109,7 +109,7 @@ void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off)
         return MAP_FAILED;
     }
 
-    const HANDLE mapping = CreateFileMapping(handle, NULL, protect, max_hi,
+    const HANDLE mapping = CreateFileMappingW(handle, NULL, protect, max_hi,
         max_lo, NULL);
 
     if (mapping == NULL)
