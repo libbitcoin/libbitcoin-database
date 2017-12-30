@@ -466,20 +466,16 @@ void data_base::push_inputs(const hash_digest& tx_hash, size_t height,
         {
             // This results in a complete and unambiguous history for the
             // address since standard outputs contain unambiguous address data.
-            const auto& address = prevout.validation.cache.address();
-
-            if (address)
+            for (const auto& address: prevout.validation.cache.addresses())
                 history_->add_input(address.hash(), inpoint, height, prevout);
         }
         else
         {
             // For any p2pk spend this creates no record (insufficient data).
-            // For any p2kh spend this runs the risk of misrepresenting a p2sh
-            // spend as p2kh, as they are ambiguous (so the spend not indexed).
+            // For any p2kh spend this creates the ambiguous p2sh address,
+            // which significantly expands the size of the history store.
             // These are tradeoffs when no prevout is cached (checkpoint sync).
-            const auto& address = input.address();
-
-            if (address)
+            for (const auto& address: input.addresses())
                 history_->add_input(address.hash(), inpoint, height, prevout);
         }
     }
@@ -490,13 +486,13 @@ void data_base::push_outputs(const hash_digest& tx_hash, size_t height,
 {
     for (uint32_t index = 0; index < outputs.size(); ++index)
     {
+        const auto outpoint = output_point{ tx_hash, index };
         const auto& output = outputs[index];
-        const auto address = output.address();
+        const auto value = output.value();
 
         // Standard outputs contain unambiguous address data.
-        if (address)
-            history_->add_output(address.hash(), { tx_hash, index },
-                height, output.value());
+        for (const auto& address: output.addresses())
+            history_->add_output(address.hash(), outpoint, height, value);
     }
 }
 
@@ -615,18 +611,9 @@ bool data_base::pop_inputs(const input::list& inputs, size_t height)
         // So ignore the error here and succeeed even if not found.
         /* bool */ spends_->unlink(input.previous_output());
 
-        // Try to extract an address.
-        const auto address = payment_address::extract(input.script());
-
-        // All history entries are confirmed.
-        // Given asynchronous updates, this is not required to remove the
-        // matching entry but instead the correct count of entries.
-        if (address)
-        {
-            // This can fail if index start has been changed between restarts.
-            // So ignore the error here and succeeed even if not found.
+        // Delete can fail if index start has been changed between restarts.
+        for (const auto& address: input.addresses())
             /* bool */ history_->delete_last_row(address.hash());
-        }
     }
 
     return true;
@@ -641,18 +628,9 @@ bool data_base::pop_outputs(const output::list& outputs, size_t height)
     // Loop in reverse.
     for (const auto output: reverse(outputs))
     {
-        // Try to extract an address.
-        const auto address = payment_address::extract(output.script());
-
-        // All history entries are confirmed.
-        // Given asynchronous updates, this is not required to remove the
-        // matching entry but instead the correct count of entries.
-        if (address)
-        {
-            // This can fail if index start has been changed between restarts.
-            // So ignore the error here and succeeed even if not found.
+        // Delete can fail if index start has been changed between restarts.
+        for (const auto& address: output.addresses())
             /* bool */ history_->delete_last_row(address.hash());
-        }
 
         // All stealth entries are confirmed.
         // Stealth unlink is not implemented as there is no way to correlate.
