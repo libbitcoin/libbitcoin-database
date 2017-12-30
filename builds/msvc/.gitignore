@@ -25,3 +25,5 @@ lookup
 rows
 spend
 transaction
+record_manager
+slab_manager

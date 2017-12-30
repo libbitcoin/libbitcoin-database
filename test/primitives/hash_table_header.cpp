@@ -16,10 +16,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <random>
-#include <boost/functional/hash_fwd.hpp>
 #include <boost/test/unit_test.hpp>
+
+#include <random>
 #include <boost/filesystem.hpp>
+#include <boost/functional/hash_fwd.hpp>
 #include <bitcoin/database.hpp>
 
 using namespace boost::system;
@@ -124,6 +125,22 @@ public:
 };
 
 BOOST_FIXTURE_TEST_SUITE(hash_table_tests, hash_table_directory_setup_fixture)
+
+BOOST_AUTO_TEST_CASE(hash_table_header__test)
+{
+    store::create(DIRECTORY "/hash_table_header");
+    memory_map file(DIRECTORY "/hash_table_header");
+    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);
+    file.resize(4 + 4 * 10);
+
+    hash_table_header<uint32_t, uint32_t> header(file, 10);
+    BOOST_REQUIRE(header.create());
+    BOOST_REQUIRE(header.start());
+
+    header.write(9, 110);
+    BOOST_REQUIRE(header.read(9) == 110);
+}
 
 BOOST_AUTO_TEST_CASE(slab_hash_table__write_read__test)
 {
