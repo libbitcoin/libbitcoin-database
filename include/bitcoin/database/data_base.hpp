@@ -42,7 +42,6 @@ class BCD_API data_base
   : public store, noncopyable
 {
 public:
-    typedef store::handle handle;
     typedef handle0 result_handler;
     typedef boost::filesystem::path path;
 
@@ -72,13 +71,13 @@ public:
     const transaction_database& transactions() const;
 
     /// Invalid if indexes not initialized.
-    const spend_database& spends() const;
-
-    /// Invalid if indexes not initialized.
     const history_database& history() const;
 
     /// Invalid if indexes not initialized.
     const stealth_database& stealth() const;
+
+    /// Invalid if indexes not initialized.
+    const spend_database& spends() const;
 
     // Utility writers.
     // ------------------------------------------------------------------------
@@ -158,9 +157,9 @@ protected:
 
     std::shared_ptr<block_database> blocks_;
     std::shared_ptr<transaction_database> transactions_;
-    std::shared_ptr<spend_database> spends_;
     std::shared_ptr<history_database> history_;
     std::shared_ptr<stealth_database> stealth_;
+    std::shared_ptr<spend_database> spends_;
 
 private:
     typedef chain::input::list inputs;

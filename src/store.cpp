@@ -36,14 +36,10 @@ using namespace bc::database;
 #define BLOCK_TABLE "block_table"
 #define TRANSACTION_INDEX "transaction_index"
 #define TRANSACTION_TABLE "transaction_table"
-#define SPEND_TABLE "spend_table"
 #define HISTORY_TABLE "history_table"
 #define HISTORY_ROWS "history_rows"
 #define STEALTH_ROWS "stealth_rows"
-
-// The threshold max_uint32 is used to align with fixed-width config settings,
-// and size_t is used to align with the database height domain.
-const size_t store::without_indexes = max_uint32;
+#define SPEND_TABLE "spend_table"
 
 // static
 bool store::create(const path& file_path)
@@ -75,10 +71,10 @@ store::store(const path& prefix, bool with_indexes, bool flush_each_write)
     transaction_table(prefix / TRANSACTION_TABLE),
 
     // Optional indexes.
-    history_rows(prefix / HISTORY_ROWS),
     history_table(prefix / HISTORY_TABLE),
-    spend_table(prefix / SPEND_TABLE),
-    stealth_rows(prefix / STEALTH_ROWS)
+    history_rows(prefix / HISTORY_ROWS),
+    stealth_rows(prefix / STEALTH_ROWS),
+    spend_table(prefix / SPEND_TABLE)
 {
 }
 
@@ -90,20 +86,20 @@ bool store::create()
 {
     const auto created =
         create(header_index) &&
-        create(block_table) &&
         create(block_index) &&
-        create(transaction_table) &&
-        create(transaction_index);
+        create(block_table) &&
+        create(transaction_index) &&
+        create(transaction_table);
 
     if (!use_indexes)
         return created;
 
     return
         created &&
-        create(spend_table) &&
         create(history_table) &&
         create(history_rows) &&
-        create(stealth_rows);
+        create(stealth_rows) &&
+        create(spend_table);
 }
 
 bool store::open()
@@ -118,29 +114,14 @@ bool store::close()
         exclusive_lock_.unlock();
 }
 
-////store::handle store::begin_read() const
-////{
-////    return sequential_lock_.begin_read();
-////}
-////
-////bool store::is_read_valid(handle value) const
-////{
-////    return sequential_lock_.is_read_valid(value);
-////}
-////
-////bool store::is_write_locked(handle value) const
-////{
-////    return sequential_lock_.is_write_locked(value);
-////}
-
 bool store::begin_write() const
 {
-    return flush_lock() /*&& sequential_lock_.begin_write()*/;
+    return flush_lock();
 }
 
 bool store::end_write() const
 {
-    return /*sequential_lock_.end_write() &&*/ flush_unlock();
+    return flush_unlock();
 }
 
 bool store::flush_lock() const

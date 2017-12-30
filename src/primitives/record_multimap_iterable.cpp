@@ -18,7 +18,6 @@
  */
 #include <bitcoin/database/primitives/record_multimap_iterable.hpp>
 
-#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/record_list.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 #include <bitcoin/database/primitives/record_multimap_iterator.hpp>

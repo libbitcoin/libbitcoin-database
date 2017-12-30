@@ -97,9 +97,9 @@ bool data_base::create(const block& genesis)
 
     if (use_indexes)
         created = created &&
-            spends_->create() &&
             history_->create() &&
-            stealth_->create();
+            stealth_->create() &&
+            spends_->create();
 
     if (!created)
         return false;
@@ -129,9 +129,9 @@ bool data_base::open()
 
     if (use_indexes)
         opened = opened &&
-            spends_->open() &&
             history_->open() &&
-            stealth_->open();
+            stealth_->open() &&
+            spends_->open();
 
     closed_ = false;
     return opened;
@@ -150,16 +150,16 @@ void data_base::start()
 
     if (use_indexes)
     {
-        spends_ = std::make_shared<spend_database>(spend_table,
-            settings_.spend_table_buckets, settings_.file_growth_rate,
-            remap_mutex_);
-
         history_ = std::make_shared<history_database>(history_table,
             history_rows, settings_.history_table_buckets,
             settings_.file_growth_rate, remap_mutex_);
 
         stealth_ = std::make_shared<stealth_database>(stealth_rows,
             settings_.file_growth_rate, remap_mutex_);
+
+        spends_ = std::make_shared<spend_database>(spend_table,
+            settings_.spend_table_buckets, settings_.file_growth_rate,
+            remap_mutex_);
     }
 }
 
@@ -168,9 +168,9 @@ void data_base::commit()
 {
     if (use_indexes)
     {
-        spends_->commit();
         history_->commit();
         stealth_->commit();
+        spends_->commit();
     }
 
     transactions_->commit();
@@ -193,9 +193,9 @@ bool data_base::flush() const
 
     if (use_indexes)
         flushed = flushed &&
-            spends_->flush() &&
             history_->flush() &&
-            stealth_->flush();
+            stealth_->flush() &&
+            spends_->flush();
 
     LOG_DEBUG(LOG_DATABASE)
         << "Write flushed to disk: "
@@ -219,9 +219,9 @@ bool data_base::close()
 
     if (use_indexes)
         closed = closed &&
-        spends_->close() &&
         history_->close() &&
-        stealth_->close();
+        stealth_->close() &&
+        spends_->close();
 
     return closed && store::close();
     // Unlock exclusive file access and conditionally the global flush lock.
@@ -243,12 +243,6 @@ const transaction_database& data_base::transactions() const
 }
 
 // Invalid if indexes not initialized.
-const spend_database& data_base::spends() const
-{
-    return *spends_;
-}
-
-// Invalid if indexes not initialized.
 const history_database& data_base::history() const
 {
     return *history_;
@@ -258,6 +252,12 @@ const history_database& data_base::history() const
 const stealth_database& data_base::stealth() const
 {
     return *stealth_;
+}
+
+// Invalid if indexes not initialized.
+const spend_database& data_base::spends() const
+{
+    return *spends_;
 }
 
 // Synchronous writers.

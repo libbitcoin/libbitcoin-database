@@ -35,8 +35,8 @@ settings::settings()
     // Hash table sizes (must be configured).
     block_table_buckets(0),
     transaction_table_buckets(0),
-    spend_table_buckets(0),
     history_table_buckets(0),
+    spend_table_buckets(0),
     cache_capacity(0)
 {
 }
@@ -50,8 +50,8 @@ settings::settings(config::settings context)
         {
             block_table_buckets = 650000;
             transaction_table_buckets = 110000000;
-            spend_table_buckets = 250000000;
             history_table_buckets = 107000000;
+            spend_table_buckets = 250000000;
             break;
         }
 
@@ -60,8 +60,8 @@ settings::settings(config::settings context)
             // TODO: optimize for testnet.
             block_table_buckets = 650000;
             transaction_table_buckets = 110000000;
-            spend_table_buckets = 250000000;
             history_table_buckets = 107000000;
+            spend_table_buckets = 250000000;
             break;
         }
 

@@ -43,7 +43,6 @@ array_index record_list::create(write_function write)
     const auto record = REMAP_ADDRESS(memory);
     auto serial = make_unsafe_serializer(record);
     serial.write_delegated(write);
-
     return index_;
 }
 
@@ -57,7 +56,6 @@ void record_list::link(array_index next)
     const auto memory = raw_data(0);
     const auto next_data = REMAP_ADDRESS(memory);
     auto serial = make_unsafe_serializer(next_data);
-
     //*************************************************************************
     serial.template write_little_endian<array_index>(next);
     //*************************************************************************

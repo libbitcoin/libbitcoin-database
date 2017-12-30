@@ -31,9 +31,6 @@ class BCD_API store
 {
 public:
     typedef boost::filesystem::path path;
-    typedef sequential_lock::handle handle;
-
-    static const size_t without_indexes;
 
     /// Create a single file with one byte of arbitrary data.
     static bool create(const path& file_path);
@@ -58,15 +55,6 @@ public:
     // Write with flush detection.
     // ------------------------------------------------------------------------
 
-    /////// Start a read sequence and obtain its handle.
-    ////handle begin_read() const;
-
-    /////// Check read sequence result of the handle.
-    ////bool is_read_valid(handle handle) const;
-
-    /////// Check the write state of the handle.
-    ////bool is_write_locked(handle handle) const;
-
     /// Start sequence write with optional flush lock.
     bool begin_write() const;
 
@@ -89,14 +77,14 @@ public:
     const path header_index;
     const path block_index;
     const path block_table;
-    const path transaction_table;
     const path transaction_index;
+    const path transaction_table;
 
     /// Optional indexes.
-    const path history_rows;
     const path history_table;
-    const path spend_table;
+    const path history_rows;
     const path stealth_rows;
+    const path spend_table;
 
 protected:
     virtual bool flush() const = 0;
@@ -107,7 +95,6 @@ private:
     const bool flush_each_write_;
     mutable bc::flush_lock flush_lock_;
     mutable interprocess_lock exclusive_lock_;
-    ////mutable sequential_lock sequential_lock_;
 };
 
 } // namespace database
