@@ -25,7 +25,7 @@ using namespace bc;
 using namespace bc::chain;
 using namespace bc::database;
 
-// TODO: test confirmed/is_confirmed.
+// TODO: test confirmed/is_confirmed/median_time_past.
 
 BOOST_AUTO_TEST_SUITE(unspent_transaction_tests)
 

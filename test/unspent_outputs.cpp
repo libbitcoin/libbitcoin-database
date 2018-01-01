@@ -24,8 +24,6 @@ using namespace bc;
 using namespace bc::chain;
 using namespace bc::database;
 
-// TODO: test with confirmed/unconfirmed.
-
 BOOST_AUTO_TEST_SUITE(unspent_outputs_tests)
 
 BOOST_AUTO_TEST_CASE(unspent_outputs__construct__capacity_0__disabled)
