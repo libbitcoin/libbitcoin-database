@@ -19,10 +19,26 @@
 #include <boost/test/unit_test.hpp>
 #include <bitcoin/database.hpp>
 
+using namespace boost::system;
+using namespace boost::filesystem;
 using namespace bc;
 using namespace bc::database;
 
-BOOST_AUTO_TEST_SUITE(store_tests)
+#define DIRECTORY "store"
+
+class store_directory_setup_fixture
+{
+public:
+    store_directory_setup_fixture()
+    {
+        error_code ec;
+        remove_all(DIRECTORY, ec);
+        BOOST_REQUIRE(create_directories(DIRECTORY, ec));
+        log::initialize();
+    }
+};
+
+BOOST_FIXTURE_TEST_SUITE(store_tests, store_directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(store__method__vector__expectation)
 {
