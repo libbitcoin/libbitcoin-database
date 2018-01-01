@@ -36,13 +36,8 @@ public:
         error_code ec;
         remove_all(DIRECTORY, ec);
         BOOST_REQUIRE(create_directories(DIRECTORY, ec));
+        log::initialize();
     }
-
-    ////~spend_database_directory_setup_fixture()
-    ////{
-    ////    error_code ec;
-    ////    remove_all(DIRECTORY, ec);
-    ////}
 };
 
 BOOST_FIXTURE_TEST_SUITE(database_tests, spend_database_directory_setup_fixture)
