@@ -74,6 +74,8 @@ test_libbitcoin_database_test_SOURCES = \
     test/store.cpp \
     test/unspent_outputs.cpp \
     test/unspent_transaction.cpp \
+    test/utility.cpp \
+    test/utility.hpp \
     test/databases/block_database.cpp \
     test/databases/history_database.cpp \
     test/databases/spend_database.cpp \

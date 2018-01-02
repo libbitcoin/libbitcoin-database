@@ -95,6 +95,10 @@
     <ClCompile Include="..\..\..\..\test\store.cpp" />
     <ClCompile Include="..\..\..\..\test\unspent_outputs.cpp" />
     <ClCompile Include="..\..\..\..\test\unspent_transaction.cpp" />
+    <ClCompile Include="..\..\..\..\test\utility.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\test\utility.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
