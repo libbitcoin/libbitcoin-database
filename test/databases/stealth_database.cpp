@@ -17,8 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <boost/test/unit_test.hpp>
+
 #include <boost/filesystem.hpp>
 #include <bitcoin/database.hpp>
+#include "../utility.hpp"
 
 using namespace boost::system;
 using namespace boost::filesystem;
@@ -28,15 +30,11 @@ using namespace bc::database;
 
 #define DIRECTORY "stealth_database"
 
-class stealth_database_directory_setup_fixture
+struct stealth_database_directory_setup_fixture
 {
-public:
     stealth_database_directory_setup_fixture()
     {
-        error_code ec;
-        remove_all(DIRECTORY, ec);
-        BOOST_REQUIRE(create_directories(DIRECTORY, ec));
-        log::initialize();
+        BOOST_REQUIRE(test::clear_path(DIRECTORY));
     }
 };
 

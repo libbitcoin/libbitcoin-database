@@ -17,8 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <boost/test/unit_test.hpp>
+
 #include <boost/filesystem.hpp>
 #include <bitcoin/database.hpp>
+#include "../utility.hpp"
 
 using namespace boost::system;
 using namespace boost::filesystem;
@@ -28,17 +30,14 @@ using namespace bc::database;
 
 #define DIRECTORY "transaction_database"
 
-class transaction_database_directory_setup_fixture
+struct transaction_database_directory_setup_fixture
 {
-public:
     transaction_database_directory_setup_fixture()
     {
-        error_code ec;
-        remove_all(DIRECTORY, ec);
-        BOOST_REQUIRE(create_directories(DIRECTORY, ec));
-        log::initialize();
+        BOOST_REQUIRE(test::clear_path(DIRECTORY));
     }
 };
+
 
 BOOST_FIXTURE_TEST_SUITE(database_tests, transaction_database_directory_setup_fixture)
 
@@ -60,7 +59,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__test)
 
     const auto h2 = tx2.hash();
 
-    store::create(DIRECTORY "/tx_table");
+    test::create(DIRECTORY "/tx_table");
     transaction_database db(DIRECTORY "/tx_table", 1000, 50, 0);
     BOOST_REQUIRE(db.create());
 

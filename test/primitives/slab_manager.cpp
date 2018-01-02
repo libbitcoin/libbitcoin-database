@@ -20,6 +20,7 @@
 
 #include <boost/filesystem.hpp>
 #include <bitcoin/database.hpp>
+#include "../utility.hpp"
 
 using namespace boost::system;
 using namespace boost::filesystem;
@@ -48,7 +49,7 @@ BOOST_AUTO_TEST_CASE(slab_manager__method__vector__expectation)
 
 BOOST_AUTO_TEST_CASE(slab_manager__test)
 {
-    store::create(DIRECTORY "/slab_manager");
+    test::create(DIRECTORY "/slab_manager");
     memory_map file(DIRECTORY "/slab_manager");
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);

@@ -17,8 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <boost/test/unit_test.hpp>
+
 #include <boost/filesystem.hpp>
 #include <bitcoin/database.hpp>
+#include "../utility.hpp"
 
 using namespace boost::system;
 using namespace boost::filesystem;
@@ -28,15 +30,11 @@ using namespace bc::database;
 
 #define DIRECTORY "history_database"
 
-class history_database_directory_setup_fixture
+struct history_database_directory_setup_fixture
 {
-public:
     history_database_directory_setup_fixture()
     {
-        error_code ec;
-        remove_all(DIRECTORY, ec);
-        BOOST_REQUIRE(create_directories(DIRECTORY, ec));
-        log::initialize();
+        BOOST_REQUIRE(test::clear_path(DIRECTORY));
     }
 };
 
@@ -81,8 +79,8 @@ BOOST_AUTO_TEST_CASE(history_database__test)
     const size_t out_h41 = 74448;
     const uint64_t value41 = 990;
 
-    store::create(DIRECTORY "/history_table");
-    store::create(DIRECTORY "/history_rows");
+    test::create(DIRECTORY "/history_table");
+    test::create(DIRECTORY "/history_rows");
     history_database db(DIRECTORY "/history_table", DIRECTORY "/history_rows", 1000, 50);
     BOOST_REQUIRE(db.create());
     db.store(key1, { out_h11, out11, value11 });

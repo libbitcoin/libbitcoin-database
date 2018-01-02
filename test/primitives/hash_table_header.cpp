@@ -22,6 +22,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/functional/hash_fwd.hpp>
 #include <bitcoin/database.hpp>
+#include "../utility.hpp"
 
 using namespace boost::system;
 using namespace boost::filesystem;
@@ -74,7 +75,7 @@ void create_database_file()
 {
     BC_CONSTEXPR size_t header_size = slab_hash_table_header_size(buckets);
 
-    store::create(DIRECTORY "/slab_hash_table__write_read");
+    test::create(DIRECTORY "/slab_hash_table__write_read");
     memory_map file(DIRECTORY "/slab_hash_table__write_read");
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);
@@ -128,7 +129,7 @@ BOOST_FIXTURE_TEST_SUITE(hash_table_tests, hash_table_directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(hash_table_header__test)
 {
-    store::create(DIRECTORY "/hash_table_header");
+    test::create(DIRECTORY "/hash_table_header");
     memory_map file(DIRECTORY "/hash_table_header");
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);
@@ -177,7 +178,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__write_read__test)
 
 BOOST_AUTO_TEST_CASE(slab_hash_table__test)
 {
-    store::create(DIRECTORY "/slab_hash_table");
+    test::create(DIRECTORY "/slab_hash_table");
     memory_map file(DIRECTORY "/slab_hash_table");
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);
@@ -218,7 +219,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__test)
 ////    BC_CONSTEXPR size_t record_buckets = 2;
 ////    BC_CONSTEXPR size_t header_size = record_hash_table_header_size(record_buckets);
 ////
-////    store::create(DIRECTORY "/record_hash_table__32bit");
+////    test::create(DIRECTORY "/record_hash_table__32bit");
 ////    memory_map file(DIRECTORY "/record_hash_table__32bit");
 ////    BOOST_REQUIRE(file.open());
 ////
@@ -348,7 +349,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__test)
 ////    BC_CONSTEXPR size_t record_buckets = 2;
 ////    BC_CONSTEXPR size_t header_size = record_hash_table_header_size(record_buckets);
 ////
-////    store::create(DIRECTORY "/record_hash_table_64bit");
+////    test::create(DIRECTORY "/record_hash_table_64bit");
 ////    memory_map file(DIRECTORY "/record_hash_table_64bit");
 ////    BOOST_REQUIRE(file.open());
 ////

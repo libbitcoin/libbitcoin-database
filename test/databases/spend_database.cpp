@@ -17,8 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <boost/test/unit_test.hpp>
+
 #include <boost/filesystem.hpp>
 #include <bitcoin/database.hpp>
+#include "../utility.hpp"
 
 using namespace boost::system;
 using namespace boost::filesystem;
@@ -28,15 +30,11 @@ using namespace bc::database;
 
 #define DIRECTORY "spend_database"
 
-class spend_database_directory_setup_fixture
+struct spend_database_directory_setup_fixture
 {
-public:
     spend_database_directory_setup_fixture()
     {
-        error_code ec;
-        remove_all(DIRECTORY, ec);
-        BOOST_REQUIRE(create_directories(DIRECTORY, ec));
-        log::initialize();
+        BOOST_REQUIRE(test::clear_path(DIRECTORY));
     }
 };
 
@@ -54,7 +52,7 @@ BOOST_AUTO_TEST_CASE(spend_database__test)
     chain::input_point value3{ hash_literal("3cc768bbaef30587c72c6eba8dbf6aeec4ef24172ae6fe357f2e24c2b0fa44d5"), 3 };
     chain::input_point value4{ hash_literal("4742b3eac32d35961f9da9d42d495ff13cc768bbaef30587c72c6eba8dbf6aee"), 4 };
 
-    store::create(DIRECTORY "/spend_table");
+    test::create(DIRECTORY "/spend_table");
     spend_database db(DIRECTORY "/spend_table", 1000, 50);
     BOOST_REQUIRE(db.create());
 

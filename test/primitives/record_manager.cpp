@@ -20,6 +20,7 @@
 
 #include <boost/filesystem.hpp>
 #include <bitcoin/database.hpp>
+#include "../utility.hpp"
 
 using namespace boost::system;
 using namespace boost::filesystem;
@@ -48,7 +49,7 @@ BOOST_AUTO_TEST_CASE(record_manager__method__vector__expectation)
 
 BOOST_AUTO_TEST_CASE(record_manager__test)
 {
-    store::create(DIRECTORY "/record_manager");
+    test::create(DIRECTORY "/record_manager");
     memory_map file(DIRECTORY "/record_manager");
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);

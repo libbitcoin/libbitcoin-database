@@ -17,8 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <boost/test/unit_test.hpp>
+
 #include <boost/filesystem.hpp>
 #include <bitcoin/database.hpp>
+#include "../utility.hpp"
 
 using namespace boost::system;
 using namespace boost::filesystem;
@@ -36,15 +38,11 @@ transaction random_tx(size_t fudge)
 
 #define DIRECTORY "block_database"
 
-class block_database_directory_setup_fixture
+struct block_database_directory_setup_fixture
 {
-public:
     block_database_directory_setup_fixture()
     {
-        error_code ec;
-        remove_all(DIRECTORY, ec);
-        BOOST_REQUIRE(create_directories(DIRECTORY, ec));
-        log::initialize();
+        BOOST_REQUIRE(test::clear_path(DIRECTORY));
     }
 };
 
@@ -149,10 +147,10 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     const auto block_index = DIRECTORY "/block_index";
     const auto tx_index = DIRECTORY "/tx_index";
 
-    store::create(block_table);
-    store::create(header_index);
-    store::create(block_index);
-    store::create(tx_index);
+    test::create(block_table);
+    test::create(header_index);
+    test::create(block_index);
+    test::create(tx_index);
     block_database db(block_table, header_index, block_index, tx_index, 1000, 50);
     BOOST_REQUIRE(db.create());
 
