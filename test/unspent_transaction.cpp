@@ -25,8 +25,6 @@ using namespace bc;
 using namespace bc::chain;
 using namespace bc::database;
 
-// TODO: test confirmed/is_confirmed/median_time_past.
-
 BOOST_AUTO_TEST_SUITE(unspent_transaction_tests)
 
 BOOST_AUTO_TEST_CASE(unspent_transaction__move__coinbase_tx_hash_height__expected)
@@ -76,6 +74,26 @@ BOOST_AUTO_TEST_CASE(unspent_transaction__construct3__tx__expected_hash)
     static const transaction tx;
     BOOST_REQUIRE(unspent_transaction(tx, 0, 0, false).hash() == tx.hash());
 }
+
+BOOST_AUTO_TEST_CASE(unspent_transaction__construct3__height__expected_hash)
+{
+    const auto expected = 42u;
+    BOOST_REQUIRE(unspent_transaction({}, expected, 0, false).height() == expected);
+}
+
+BOOST_AUTO_TEST_CASE(unspent_transaction__construct3__median_time_past__expected_time)
+{
+    const auto expected = 42u;
+    BOOST_REQUIRE(unspent_transaction({}, 0, expected, false).median_time_past() == expected);
+}
+
+BOOST_AUTO_TEST_CASE(unspent_transaction__construct3__confirmed__expected_confirmation)
+{
+    BOOST_REQUIRE(unspent_transaction({}, 0, 0, true).is_confirmed());
+    BOOST_REQUIRE(!unspent_transaction({}, 0, 0, false).is_confirmed());
+}
+
+// TODO: test confirmed/is_confirmed/median_time_past.
 
 BOOST_AUTO_TEST_CASE(unspent_transaction__outputs__construct1__tx_hash__empty)
 {
