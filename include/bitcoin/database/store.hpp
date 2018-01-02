@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_STORE_HPP
 
 #include <memory>
+#include <string>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
@@ -32,8 +33,17 @@ class BCD_API store
 public:
     typedef boost::filesystem::path path;
 
-    /// Create a single file with one byte of arbitrary data.
-    static bool create(const path& file_path);
+    static const std::string FLUSH_LOCK;
+    static const std::string EXCLUSIVE_LOCK;
+    static const std::string HEADER_INDEX;
+    static const std::string BLOCK_INDEX;
+    static const std::string BLOCK_TABLE;
+    static const std::string TRANSACTION_INDEX;
+    static const std::string TRANSACTION_TABLE;
+    static const std::string HISTORY_TABLE;
+    static const std::string HISTORY_ROWS;
+    static const std::string STEALTH_ROWS;
+    static const std::string SPEND_TABLE;
 
     // Construct.
     // ------------------------------------------------------------------------
@@ -56,19 +66,13 @@ public:
     // ------------------------------------------------------------------------
 
     /// Start sequence write with optional flush lock.
-    bool begin_write() const;
+    virtual bool begin_write() const;
 
     /// End sequence write with optional flush unlock.
-    bool end_write() const;
-
-    /// Optionally begin flush lock scope.
-    bool flush_lock() const;
-
-    /// Optionally end flush lock scope.
-    bool flush_unlock() const;
+    virtual bool end_write() const;
 
     /// True if write flushing is enabled.
-    bool flush_each_write() const;
+    virtual bool flush_each_write() const;
 
     // File names.
     // ------------------------------------------------------------------------
@@ -87,6 +91,7 @@ public:
     const path spend_table;
 
 protected:
+    // The implementation must flush all data to disk here.
     virtual bool flush() const = 0;
 
     const bool use_indexes;

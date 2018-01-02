@@ -27,23 +27,28 @@ namespace database {
 
 using namespace bc::chain;
 using namespace bc::database;
+using namespace boost::filesystem;
 
 // Database file names.
-#define FLUSH_LOCK "flush_lock"
-#define EXCLUSIVE_LOCK "exclusive_lock"
-#define HEADER_INDEX "header_index"
-#define BLOCK_INDEX "block_index"
-#define BLOCK_TABLE "block_table"
-#define TRANSACTION_INDEX "transaction_index"
-#define TRANSACTION_TABLE "transaction_table"
-#define HISTORY_TABLE "history_table"
-#define HISTORY_ROWS "history_rows"
-#define STEALTH_ROWS "stealth_rows"
-#define SPEND_TABLE "spend_table"
+const std::string store::FLUSH_LOCK = "flush_lock";
+const std::string store::EXCLUSIVE_LOCK = "exclusive_lock";
+const std::string store::HEADER_INDEX = "header_index";
+const std::string store::BLOCK_INDEX = "block_index";
+const std::string store::BLOCK_TABLE = "block_table";
+const std::string store::TRANSACTION_INDEX = "transaction_index";
+const std::string store::TRANSACTION_TABLE = "transaction_table";
+const std::string store::HISTORY_TABLE = "history_table";
+const std::string store::HISTORY_ROWS = "history_rows";
+const std::string store::STEALTH_ROWS = "stealth_rows";
+const std::string store::SPEND_TABLE = "spend_table";
 
-// static
-bool store::create(const path& file_path)
+// Create a single file with one byte of arbitrary data.
+static bool create_file(const path& file_path)
 {
+    // Disallow create with existing file.
+    if (bc::ifstream(file_path.string()).good())
+        return false;
+
     bc::ofstream file(file_path.string());
 
     if (file.bad())
@@ -85,21 +90,21 @@ store::store(const path& prefix, bool with_indexes, bool flush_each_write)
 bool store::create()
 {
     const auto created =
-        create(header_index) &&
-        create(block_index) &&
-        create(block_table) &&
-        create(transaction_index) &&
-        create(transaction_table);
+        create_file(header_index) &&
+        create_file(block_index) &&
+        create_file(block_table) &&
+        create_file(transaction_index) &&
+        create_file(transaction_table);
 
     if (!use_indexes)
         return created;
 
     return
         created &&
-        create(history_table) &&
-        create(history_rows) &&
-        create(stealth_rows) &&
-        create(spend_table);
+        create_file(history_table) &&
+        create_file(history_rows) &&
+        create_file(stealth_rows) &&
+        create_file(spend_table);
 }
 
 bool store::open()
@@ -116,20 +121,10 @@ bool store::close()
 
 bool store::begin_write() const
 {
-    return flush_lock();
-}
-
-bool store::end_write() const
-{
-    return flush_unlock();
-}
-
-bool store::flush_lock() const
-{
     return !flush_each_write() || flush_lock_.lock_shared();
 }
 
-bool store::flush_unlock() const
+bool store::end_write() const
 {
     return !flush_each_write() || (flush() && flush_lock_.unlock_shared());
 }
