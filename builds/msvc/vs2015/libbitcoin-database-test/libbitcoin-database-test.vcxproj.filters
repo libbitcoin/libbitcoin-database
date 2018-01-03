@@ -25,6 +25,9 @@
     <Filter Include="src\state">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000005}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\utility">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000006}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\test\data_base.cpp">
@@ -54,7 +57,7 @@
     <ClCompile Include="..\..\..\..\test\memory\allocator.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\memory\memory_map.cpp">
+    <ClCompile Include="..\..\..\..\test\memory\file_map.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\hash_table_header.cpp">
@@ -108,13 +111,19 @@
     <ClCompile Include="..\..\..\..\test\unspent_transaction.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\utility.cpp">
-      <Filter>src</Filter>
+    <ClCompile Include="..\..\..\..\test\utility\test_map.cpp">
+      <Filter>src\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\utility\utility.cpp">
+      <Filter>src\utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\test\utility.hpp">
-      <Filter>src</Filter>
+    <ClInclude Include="..\..\..\..\test\utility\test_map.hpp">
+      <Filter>src\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\utility\utility.hpp">
+      <Filter>src\utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

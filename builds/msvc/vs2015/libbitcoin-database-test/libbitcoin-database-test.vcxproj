@@ -79,7 +79,7 @@
     <ClCompile Include="..\..\..\..\test\main.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\accessor.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\allocator.cpp" />
-    <ClCompile Include="..\..\..\..\test\memory\memory_map.cpp" />
+    <ClCompile Include="..\..\..\..\test\memory\file_map.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hash_table_header.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\record_hash_table.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\record_list.cpp" />
@@ -97,10 +97,12 @@
     <ClCompile Include="..\..\..\..\test\store.cpp" />
     <ClCompile Include="..\..\..\..\test\unspent_outputs.cpp" />
     <ClCompile Include="..\..\..\..\test\unspent_transaction.cpp" />
-    <ClCompile Include="..\..\..\..\test\utility.cpp" />
+    <ClCompile Include="..\..\..\..\test\utility\test_map.cpp" />
+    <ClCompile Include="..\..\..\..\test\utility\utility.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\test\utility.hpp" />
+    <ClInclude Include="..\..\..\..\test\utility\test_map.hpp" />
+    <ClInclude Include="..\..\..\..\test\utility\utility.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

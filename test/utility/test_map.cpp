@@ -16,33 +16,57 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <boost/test/unit_test.hpp>
+#include "test_map.hpp"
 
-#include <boost/filesystem.hpp>
 #include <bitcoin/database.hpp>
-#include "../utility/utility.hpp"
 
-using namespace boost::system;
-using namespace boost::filesystem;
 using namespace bc;
-using namespace bc::chain;
 using namespace bc::database;
 
-#define DIRECTORY "stealth_database"
+namespace test {
 
-struct stealth_database_directory_setup_fixture
+test_map::test_map()
 {
-    stealth_database_directory_setup_fixture()
-    {
-        BOOST_REQUIRE(test::clear_path(DIRECTORY));
-    }
-};
-
-BOOST_FIXTURE_TEST_SUITE(database_tests, stealth_database_directory_setup_fixture)
-
-BOOST_AUTO_TEST_CASE(stealth_database__method__vector__expectation)
-{
-    BOOST_REQUIRE(true);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+bool test_map::open()
+{
+    return false;
+}
+
+bool test_map::flush() const
+{
+    return false;
+}
+
+bool test_map::close()
+{
+    return false;
+}
+
+bool test_map::closed() const
+{
+    return false;
+}
+
+size_t test_map::size() const
+{
+    return 0;
+}
+
+memory_ptr test_map::access()
+{
+    return nullptr;
+}
+
+memory_ptr test_map::resize(size_t size)
+{
+    return nullptr;
+}
+
+memory_ptr test_map::reserve(size_t size)
+{
+    return nullptr;
+}
+
+} // namespace test

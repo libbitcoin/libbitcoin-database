@@ -16,33 +16,32 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <boost/test/unit_test.hpp>
+#ifndef TEST_MAP_HPP
+#define TEST_MAP_HPP
 
-#include <boost/filesystem.hpp>
+#include <cstddef>
 #include <bitcoin/database.hpp>
-#include "../utility/utility.hpp"
 
-using namespace boost::system;
-using namespace boost::filesystem;
-using namespace bc;
-using namespace bc::chain;
-using namespace bc::database;
+namespace test {
 
-#define DIRECTORY "stealth_database"
-
-struct stealth_database_directory_setup_fixture
+// Fake a memory map implementation.
+class test_map
+  : public bc::database::memory_map
 {
-    stealth_database_directory_setup_fixture()
-    {
-        BOOST_REQUIRE(test::clear_path(DIRECTORY));
-    }
+public:
+    test_map();
+    bool open();
+    bool flush() const;
+    bool close();
+    bool closed() const;
+    size_t size() const;
+    bc::database::memory_ptr access();
+    bc::database::memory_ptr resize(size_t size);
+    bc::database::memory_ptr reserve(size_t size);
+
+private:
 };
 
-BOOST_FIXTURE_TEST_SUITE(database_tests, stealth_database_directory_setup_fixture)
-
-BOOST_AUTO_TEST_CASE(stealth_database__method__vector__expectation)
-{
-    BOOST_REQUIRE(true);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+#endif

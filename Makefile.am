@@ -73,8 +73,6 @@ test_libbitcoin_database_test_SOURCES = \
     test/store.cpp \
     test/unspent_outputs.cpp \
     test/unspent_transaction.cpp \
-    test/utility.cpp \
-    test/utility.hpp \
     test/databases/block_database.cpp \
     test/databases/history_database.cpp \
     test/databases/spend_database.cpp \
@@ -82,7 +80,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/databases/transaction_database.cpp \
     test/memory/accessor.cpp \
     test/memory/allocator.cpp \
-    test/memory/memory_map.cpp \
+    test/memory/file_map.cpp \
     test/primitives/hash_table_header.cpp \
     test/primitives/record_hash_table.cpp \
     test/primitives/record_list.cpp \
@@ -95,7 +93,11 @@ test_libbitcoin_database_test_SOURCES = \
     test/result/block_result.cpp \
     test/result/transaction_result.cpp \
     test/state/block_state.cpp \
-    test/state/transaction_state.cpp
+    test/state/transaction_state.cpp \
+    test/utility/test_map.cpp \
+    test/utility/test_map.hpp \
+    test/utility/utility.cpp \
+    test/utility/utility.hpp
 
 endif WITH_TESTS
 

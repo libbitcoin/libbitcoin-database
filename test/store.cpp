@@ -19,7 +19,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <bitcoin/database.hpp>
-#include "utility.hpp"
+#include "utility/utility.hpp"
 
 using namespace bc;
 using namespace bc::database;

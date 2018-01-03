@@ -22,7 +22,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/functional/hash_fwd.hpp>
 #include <bitcoin/database.hpp>
-#include "../utility.hpp"
+#include "../utility/utility.hpp"
 
 using namespace boost::system;
 using namespace boost::filesystem;
