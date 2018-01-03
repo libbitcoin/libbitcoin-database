@@ -26,8 +26,7 @@
 namespace libbitcoin {
 namespace database {
 
-/// Result of a multimap database query. This is a container wrapper allowing
-/// the values to be iterated.
+/// Iterative result of a record multimap database query.
 class BCD_API record_multimap_iterable
 {
 public:

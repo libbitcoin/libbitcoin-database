@@ -26,14 +26,13 @@
 namespace libbitcoin {
 namespace database {
 
-/// Forward iterator for multimap record values.
-/// After performing key lookup iterate the multiple values in a for loop.
+/// Forward iterator for record multimap database query result.
 class BCD_API record_multimap_iterator
 {
 public:
     record_multimap_iterator(const record_manager& manager, array_index index);
 
-    /// Next value in the chain.
+    /// Next value in the result.
     void operator++();
 
     /// The record index.
