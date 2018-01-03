@@ -105,7 +105,7 @@ array_index record_row<KeyType>::create(const KeyType& key,
     index_ = manager_.new_records(1);
 
     const auto memory = raw_data(key_start);
-    const auto record = REMAP_ADDRESS(memory);
+    const auto record = memory->buffer();
     auto serial = make_unsafe_serializer(record);
     serial.write_forward(key);
     serial.skip(index_size);
@@ -124,7 +124,7 @@ void record_row<KeyType>::link(array_index next)
 
     // Write record.
     const auto memory = raw_data(key_size);
-    const auto next_data = REMAP_ADDRESS(memory);
+    const auto next_data = memory->buffer();
     auto serial = make_unsafe_serializer(next_data);
 
     //*************************************************************************
@@ -137,7 +137,7 @@ bool record_row<KeyType>::compare(const KeyType& key) const
 {
     // Key data is at the start.
     const auto memory = raw_data(key_start);
-    return std::equal(key.begin(), key.end(), REMAP_ADDRESS(memory));
+    return std::equal(key.begin(), key.end(), memory->buffer());
 }
 
 template <typename KeyType>
@@ -163,7 +163,7 @@ template <typename KeyType>
 array_index record_row<KeyType>::next_index() const
 {
     const auto memory = raw_data(key_size);
-    const auto next_address = REMAP_ADDRESS(memory);
+    const auto next_address = memory->buffer();
 
     //*************************************************************************
     return from_little_endian_unsafe<array_index>(next_address);
@@ -174,7 +174,7 @@ template <typename KeyType>
 void record_row<KeyType>::write_next_index(array_index next)
 {
     const auto memory = raw_data(key_size);
-    auto serial = make_unsafe_serializer(REMAP_ADDRESS(memory));
+    auto serial = make_unsafe_serializer(memory->buffer());
 
     //*************************************************************************
     serial.template write_little_endian<array_index>(next);
@@ -185,7 +185,7 @@ template <typename KeyType>
 memory_ptr record_row<KeyType>::raw_data(file_offset offset) const
 {
     auto memory = manager_.get(index_);
-    REMAP_INCREMENT(memory, offset);
+    memory->increment(offset);
     return memory;
 }
 

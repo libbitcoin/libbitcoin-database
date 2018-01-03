@@ -152,7 +152,7 @@ transaction_result transaction_database::get(file_offset offset) const
     if (slab == nullptr)
         return{};
 
-    const auto memory = REMAP_ADDRESS(slab);
+    const auto memory = slab->buffer();
     auto deserial = make_unsafe_deserializer(memory);
 
     // The four metadata values must be atomic and mutually consistent.
@@ -315,7 +315,7 @@ bool transaction_database::spend(const output_point& point,
     if (slab == nullptr)
         return false;
 
-    auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(slab));
+    auto deserial = make_unsafe_deserializer(slab->buffer());
 
     // The three metadata values must be atomic and mutually consistent.
     ///////////////////////////////////////////////////////////////////////////
@@ -332,7 +332,7 @@ bool transaction_database::spend(const output_point& point,
     if (state != transaction_state::confirmed || height > spender_height)
         return false;
 
-    auto serial = make_unsafe_serializer(REMAP_ADDRESS(slab) + metadata_size);
+    auto serial = make_unsafe_serializer(slab->buffer() + metadata_size);
     const auto outputs = serial.read_size_little_endian();
 
     // The index is not in the transaction.
@@ -362,7 +362,7 @@ bool transaction_database::confirm(file_offset offset, size_t height,
     if (slab == nullptr)
         return false;
 
-    auto serial = make_unsafe_serializer(REMAP_ADDRESS(slab));
+    auto serial = make_unsafe_serializer(slab->buffer());
 
     ///////////////////////////////////////////////////////////////////////////
     // Critical Section

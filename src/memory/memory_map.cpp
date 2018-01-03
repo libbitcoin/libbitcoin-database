@@ -172,7 +172,7 @@ memory_map::~memory_map()
 // Open is not idempotent (should be called on single thread).
 bool memory_map::open()
 {
-    // Critical Section (internal/unconditional)
+    // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     mutex_.lock_upgrade();
 
@@ -210,7 +210,7 @@ bool memory_map::flush() const
 {
     std::string error_name;
 
-    // Critical Section (internal/unconditional)
+    // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     mutex_.lock_upgrade();
 
@@ -246,7 +246,7 @@ bool memory_map::close()
     ////if (!closed_)
     ////    log_unmapping();
 
-    // Critical Section (internal/unconditional)
+    // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     mutex_.lock_upgrade();
 
@@ -288,9 +288,9 @@ bool memory_map::close()
 
 bool memory_map::closed() const
 {
-    // Critical Section (internal/unconditional)
+    // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    REMAP_READ(mutex_);
+    shared_lock lock(mutex_);
 
     return closed_;
     ///////////////////////////////////////////////////////////////////////////
@@ -301,9 +301,9 @@ bool memory_map::closed() const
 
 size_t memory_map::size() const
 {
-    // Critical Section (internal)
+    // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    REMAP_READ(mutex_);
+    shared_lock lock(mutex_);
 
     return file_size_;
     ///////////////////////////////////////////////////////////////////////////
@@ -311,7 +311,7 @@ size_t memory_map::size() const
 
 memory_ptr memory_map::access()
 {
-    return REMAP_ACCESSOR(data_, mutex_);
+    return std::make_shared<accessor>(mutex_, data_);
 }
 
 // throws runtime_error
@@ -337,9 +337,9 @@ memory_ptr memory_map::reserve(size_t size, size_t expansion)
     // Internally preventing resize during close is not possible because of
     // cross-file integrity. So we must coalesce all threads before closing.
 
-    // Critical Section (internal)
+    // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    const auto memory = REMAP_ALLOCATOR(mutex_);
+    const auto memory = std::make_shared<allocator>(mutex_);
 
     // The store should only have been closed after all threads terminated.
     if (closed_)
@@ -367,7 +367,7 @@ memory_ptr memory_map::reserve(size_t size, size_t expansion)
     }
 
     logical_size_ = size;
-    REMAP_ASSIGN(memory, data_);
+    memory->assign(data_);
 
     // Always return in shared lock state.
     // The critical section does not end until this shared pointer is freed.

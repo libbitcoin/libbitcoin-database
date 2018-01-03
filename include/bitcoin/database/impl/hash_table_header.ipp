@@ -60,7 +60,7 @@ bool hash_table_header<IndexType, ValueType>::create()
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.resize(minimum_file_size);
-    const auto buckets_address = REMAP_ADDRESS(memory);
+    const auto buckets_address = memory->buffer();
     auto serial = make_unsafe_serializer(buckets_address);
     serial.write_little_endian(buckets_);
 
@@ -87,7 +87,7 @@ bool hash_table_header<IndexType, ValueType>::start()
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto buckets_address = REMAP_ADDRESS(memory);
+    const auto buckets_address = memory->buffer();
 
     // Does not require atomicity (no concurrency during start).
     const auto buckets = from_little_endian_unsafe<IndexType>(buckets_address);
@@ -104,7 +104,7 @@ ValueType hash_table_header<IndexType, ValueType>::read(IndexType index) const
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto value_address = REMAP_ADDRESS(memory) + item_position(index);
+    const auto value_address = memory->buffer() + item_position(index);
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -122,7 +122,7 @@ void hash_table_header<IndexType, ValueType>::write(IndexType index,
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto value_address = REMAP_ADDRESS(memory) + item_position(index);
+    const auto value_address = memory->buffer() + item_position(index);
     auto serial = make_unsafe_serializer(value_address);
 
     // Critical Section

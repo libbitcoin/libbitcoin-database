@@ -149,7 +149,7 @@ memory_ptr record_manager::get(array_index record) const
 
     // The accessor must remain in scope until the end of the block.
     auto memory = file_.access();
-    REMAP_INCREMENT(memory, header_size_ + record_to_position(record));
+    memory->increment(header_size_ + record_to_position(record));
     return memory;
 }
 
@@ -162,7 +162,7 @@ void record_manager::read_count()
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto count_address = REMAP_ADDRESS(memory) + header_size_;
+    const auto count_address = memory->buffer() + header_size_;
     record_count_ = from_little_endian_unsafe<array_index>(count_address);
 }
 
@@ -173,7 +173,7 @@ void record_manager::write_count()
 
     // The accessor must remain in scope until the end of the block.
     auto memory = file_.access();
-    auto payload_size_address = REMAP_ADDRESS(memory) + header_size_;
+    auto payload_size_address = memory->buffer() + header_size_;
     auto serial = make_unsafe_serializer(payload_size_address);
     serial.write_little_endian(record_count_);
 }

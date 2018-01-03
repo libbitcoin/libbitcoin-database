@@ -80,7 +80,7 @@ array_index record_multimap<KeyType>::find(const KeyType& key) const
     if (!begin_address)
         return record_list::empty;
 
-    const auto memory = REMAP_ADDRESS(begin_address);
+    const auto memory = begin_address->buffer();
 
     // Critical Section.
     ///////////////////////////////////////////////////////////////////////////

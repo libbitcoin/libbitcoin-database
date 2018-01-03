@@ -40,7 +40,7 @@ array_index record_list::create(write_function write)
     index_ = manager_.new_records(1);
 
     const auto memory = raw_data(index_size);
-    const auto record = REMAP_ADDRESS(memory);
+    const auto record = memory->buffer();
     auto serial = make_unsafe_serializer(record);
     serial.write_delegated(write);
     return index_;
@@ -54,7 +54,7 @@ void record_list::link(array_index next)
 
     // Write record.
     const auto memory = raw_data(0);
-    const auto next_data = REMAP_ADDRESS(memory);
+    const auto next_data = memory->buffer();
     auto serial = make_unsafe_serializer(next_data);
     //*************************************************************************
     serial.template write_little_endian<array_index>(next);
@@ -73,7 +73,7 @@ memory_ptr record_list::data() const
 array_index record_list::next_index() const
 {
     const auto memory = raw_data(0);
-    const auto next_address = REMAP_ADDRESS(memory);
+    const auto next_address = memory->buffer();
     //*************************************************************************
     return from_little_endian_unsafe<array_index>(next_address);
     //*************************************************************************
@@ -82,7 +82,7 @@ array_index record_list::next_index() const
 memory_ptr record_list::raw_data(file_offset offset) const
 {
     auto memory = manager_.get(index_);
-    REMAP_INCREMENT(memory, offset);
+    memory->increment(offset);
     return memory;
 }
 

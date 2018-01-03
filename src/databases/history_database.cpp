@@ -156,7 +156,7 @@ history_database::list history_database::get(const short_hash& key,
             break;
 
         const auto record = rows_multimap_.get(index);
-        auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(record));
+        auto deserial = make_unsafe_deserializer(record->buffer());
 
         // Failed reads are conflated with skipped returns.
         if (payment.from_data(deserial, from_height))

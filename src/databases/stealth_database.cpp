@@ -120,7 +120,7 @@ stealth_database::list stealth_database::get(const binary& filter,
     for (array_index row = 0; row < rows_manager_.count(); ++row)
     {
         const auto record = rows_manager_.get(row);
-        auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(record));
+        auto deserial = make_unsafe_deserializer(record->buffer());
 
         // Failed reads are conflated with skipped returns.
         if (stealth.from_data(deserial, from_height, filter))
@@ -146,7 +146,7 @@ void stealth_database::store(const stealth_record& stealth)
     // Allocate new row and write data.
     const auto index = rows_manager_.new_records(1);
     const auto record = rows_manager_.get(index);
-    const auto memory = REMAP_ADDRESS(record);
+    const auto memory = record->buffer();
     auto serial = make_unsafe_serializer(memory);
     stealth.to_data(serial, false);
 }

@@ -114,28 +114,28 @@ const hash_digest& block_result::hash() const
 chain::header block_result::header() const
 {
     BITCOIN_ASSERT(record_);
-    auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(record_));
+    auto deserial = make_unsafe_deserializer(record_->buffer());
     return header::factory(deserial, hash_);
 }
 
 uint32_t block_result::bits() const
 {
     BITCOIN_ASSERT(record_);
-    const auto memory = REMAP_ADDRESS(record_);
+    const auto memory = record_->buffer();
     return from_little_endian_unsafe<uint32_t>(memory + bits_offset);
 }
 
 uint32_t block_result::timestamp() const
 {
     BITCOIN_ASSERT(record_);
-    const auto memory = REMAP_ADDRESS(record_);
+    const auto memory = record_->buffer();
     return from_little_endian_unsafe<uint32_t>(memory + time_offset);
 }
 
 uint32_t block_result::version() const
 {
     BITCOIN_ASSERT(record_);
-    const auto memory = REMAP_ADDRESS(record_);
+    const auto memory = record_->buffer();
     return from_little_endian_unsafe<uint32_t>(memory + version_offset);
 }
 
@@ -161,7 +161,7 @@ offset_list block_result::transaction_offsets() const
 
     offset_list value;
     value.reserve(tx_count_);
-    auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(records));
+    auto deserial = make_unsafe_deserializer(records->buffer());
 
     for (size_t index = 0; index < tx_count_; ++index)
         value.push_back(deserial.read_8_bytes_little_endian());

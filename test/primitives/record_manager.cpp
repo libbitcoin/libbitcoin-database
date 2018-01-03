@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(record_manager__test)
     test::create(DIRECTORY "/record_manager");
     memory_map file(DIRECTORY "/record_manager");
     BOOST_REQUIRE(file.open());
-    BOOST_REQUIRE(REMAP_ADDRESS(file.access()) != nullptr);
+    BOOST_REQUIRE(file.access()->buffer() != nullptr);
     file.resize(4);
 
     record_manager recs(file, 0, 10);

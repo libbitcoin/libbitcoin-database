@@ -107,7 +107,7 @@ file_offset slab_row<KeyType>::create(const KeyType& key, write_function write,
     position_ = manager_.new_slab(slab_size);
 
     const auto memory = raw_data(key_start);
-    const auto key_data = REMAP_ADDRESS(memory);
+    const auto key_data = memory->buffer();
     auto serial = make_unsafe_serializer(key_data);
     serial.write_forward(key);
     serial.skip(position_size);
@@ -126,7 +126,7 @@ void slab_row<KeyType>::link(file_offset next)
 
     // Write next pointer after the key.
     const auto memory = raw_data(key_size);
-    const auto next_data = REMAP_ADDRESS(memory);
+    const auto next_data = memory->buffer();
     auto serial = make_unsafe_serializer(next_data);
 
     //*************************************************************************
@@ -138,7 +138,7 @@ template <typename KeyType>
 bool slab_row<KeyType>::compare(const KeyType& key) const
 {
     const auto memory = raw_data(key_start);
-    return std::equal(key.begin(), key.end(), REMAP_ADDRESS(memory));
+    return std::equal(key.begin(), key.end(), memory->buffer());
 }
 
 template <typename KeyType>
@@ -164,7 +164,7 @@ template <typename KeyType>
 file_offset slab_row<KeyType>::next_position() const
 {
     const auto memory = raw_data(key_size);
-    const auto next_address = REMAP_ADDRESS(memory);
+    const auto next_address = memory->buffer();
 
     //*************************************************************************
     return from_little_endian_unsafe<file_offset>(next_address);
@@ -175,7 +175,7 @@ template <typename KeyType>
 void slab_row<KeyType>::write_next_position(file_offset next)
 {
     const auto memory = raw_data(key_size);
-    auto serial = make_unsafe_serializer(REMAP_ADDRESS(memory));
+    auto serial = make_unsafe_serializer(memory->buffer());
 
     //*************************************************************************
     serial.template write_little_endian<file_offset>(next);
@@ -186,7 +186,7 @@ template <typename KeyType>
 memory_ptr slab_row<KeyType>::raw_data(file_offset offset) const
 {
     auto memory = manager_.get(position_);
-    REMAP_INCREMENT(memory, offset);
+    memory->increment(offset);
     return memory;
 }
 

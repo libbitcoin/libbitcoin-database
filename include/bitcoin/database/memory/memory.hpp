@@ -43,13 +43,6 @@ public:
 };
 
 typedef memory::ptr memory_ptr;
-#define REMAP_ADDRESS(ptr) ptr->buffer()
-#define REMAP_ASSIGN(ptr, data) ptr->assign(data)
-#define REMAP_INCREMENT(ptr, offset) ptr->increment(offset)
-#define REMAP_ACCESSOR(ptr, mutex) std::make_shared<accessor>(mutex, ptr)
-#define REMAP_ALLOCATOR(mutex) std::make_shared<allocator>(mutex)
-#define REMAP_READ(mutex) shared_lock lock(mutex)
-#define REMAP_WRITE(mutex) unique_lock lock(mutex)
 
 } // namespace database
 } // namespace libbitcoin

@@ -113,7 +113,7 @@ input_point spend_database::get(const output_point& outpoint) const
     if (!slab)
         return spend;
 
-    auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(slab));
+    auto deserial = make_unsafe_deserializer(slab->buffer());
     spend.from_data(deserial, false);
     return spend;
 }

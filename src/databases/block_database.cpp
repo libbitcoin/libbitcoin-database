@@ -216,11 +216,11 @@ block_result block_database::get(size_t height, bool block_index) const
         return{ tx_index_manager_ };
 
     auto record = lookup_manager_.get(read_index(height, manager));
-    const auto prefix = REMAP_ADDRESS(record);
+    const auto prefix = record->buffer();
 
     // Advance the record row entry past the key and link to the record data.
-    REMAP_INCREMENT(record, prefix_size);
-    auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(record));
+    record->increment(prefix_size);
+    auto deserial = make_unsafe_deserializer(record->buffer());
 
     // The header and height are const.
     deserial.skip(state_offset);
@@ -253,7 +253,7 @@ block_result block_database::get(const hash_digest& hash) const
     if (record == nullptr)
         return{ tx_index_manager_ };
 
-    const auto memory = REMAP_ADDRESS(record);
+    const auto memory = record->buffer();
     ////const auto prefix_start = memory - prefix_size;
 
     // The header and height never change after the block is reachable.
@@ -345,7 +345,7 @@ array_index block_database::associate(const transaction::list& transactions)
 
     const auto start = tx_index_manager_.new_records(transactions.size());
     const auto record = tx_index_manager_.get(start);
-    auto serial = make_unsafe_serializer(REMAP_ADDRESS(record));
+    auto serial = make_unsafe_serializer(record->buffer());
 
     for (const auto& tx: transactions)
     {
@@ -413,7 +413,7 @@ bool block_database::validate(const hash_digest& hash, bool positive)
     if (record == nullptr)
         return false;
 
-    const auto memory = REMAP_ADDRESS(record);
+    const auto memory = record->buffer();
     ////const auto prefix_start = memory - prefix_size;
 
     // The header and height never change after the block is reachable.
@@ -492,8 +492,8 @@ bool block_database::confirm(const hash_digest& hash, size_t height,
     // TODO: eliminate the double state lookup for state update.
     // TODO: the caller doesn't know the current header state.
     auto record = lookup_manager_.get(read_index(height, manager));
-    REMAP_INCREMENT(record, prefix_size);
-    const auto state_start = REMAP_ADDRESS(record);
+    record->increment(prefix_size);
+    const auto state_start = record->buffer();
     auto deserial = make_unsafe_deserializer(state_start);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -542,8 +542,8 @@ bool block_database::unconfirm(const hash_digest& hash, size_t height,
     // TODO: the caller already knows the current header state.
     // TODO: update isn't actually required here (index unused).
     auto record = lookup_manager_.get(read_index(height, manager));
-    REMAP_INCREMENT(record, prefix_size);
-    const auto state_start = REMAP_ADDRESS(record);
+    record->increment(prefix_size);
+    const auto state_start = record->buffer();
     auto deserial = make_unsafe_deserializer(state_start);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -605,7 +605,7 @@ array_index block_database::read_index(size_t height,
 
     const auto height32 = static_cast<uint32_t>(height);
     const auto record = manager.get(height32);
-    return from_little_endian_unsafe<array_index>(REMAP_ADDRESS(record));
+    return from_little_endian_unsafe<array_index>(record->buffer());
 }
 
 void block_database::pop_index(size_t height, record_manager& manager)
@@ -626,7 +626,7 @@ void block_database::push_index(array_index index, size_t height,
     manager.new_records(1);
     const auto height32 = static_cast<uint32_t>(height);
     const auto record = manager.get(height32);
-    auto serial = make_unsafe_serializer(REMAP_ADDRESS(record));
+    auto serial = make_unsafe_serializer(record->buffer());
     serial.write_4_bytes_little_endian(index);
 }
 
