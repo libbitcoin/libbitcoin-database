@@ -26,7 +26,7 @@ namespace libbitcoin {
 namespace database {
 
 /**
- * Implements contigious memory array with a fixed size elements.
+ * Implements contiguous memory array with a fixed size elements.
  *
  * File format looks like:
  *
