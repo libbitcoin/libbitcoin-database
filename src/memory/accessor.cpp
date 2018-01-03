@@ -26,8 +26,6 @@
 namespace libbitcoin {
 namespace database {
 
-#ifdef REMAP_SAFETY
-
 accessor::accessor(shared_mutex& mutex, uint8_t*& data)
   : mutex_(mutex)
 {
@@ -62,8 +60,6 @@ accessor::~accessor()
     // End Critical Section
     ///////////////////////////////////////////////////////////////////////////
 }
-
-#endif // REMAP_SAFETY
 
 } // namespace database
 } // namespace libbitcoin

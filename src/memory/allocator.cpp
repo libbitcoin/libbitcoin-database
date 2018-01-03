@@ -26,8 +26,6 @@
 namespace libbitcoin {
 namespace database {
 
-#ifdef REMAP_SAFETY
-
 allocator::allocator(shared_mutex& mutex)
   : mutex_(mutex),
     data_(nullptr)
@@ -68,8 +66,6 @@ allocator::~allocator()
     ///////////////////////////////////////////////////////////////////////////
     mutex_.unlock_shared();
 }
-
-#endif // REMAP_SAFETY
 
 } // namespace database
 } // namespace libbitcoin

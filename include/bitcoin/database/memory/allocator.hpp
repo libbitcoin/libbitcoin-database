@@ -28,8 +28,6 @@
 namespace libbitcoin {
 namespace database {
 
-#ifdef REMAP_SAFETY
-
 /// This class provides remap safe access to file-mapped memory.
 /// The memory size is unprotected and unmanaged.
 class BCD_API allocator
@@ -55,8 +53,6 @@ private:
     shared_mutex& mutex_;
     uint8_t* data_;
 };
-
-#endif // REMAP_SAFETY
 
 } // namespace database
 } // namespace libbitcoin

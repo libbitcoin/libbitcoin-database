@@ -43,9 +43,6 @@
 // Log name.
 #define LOG_DATABASE "database"
 
-// Remap safety is required if the mmap file is not fully preallocated.
-#define REMAP_SAFETY
-
 namespace libbitcoin {
 namespace database {
 
