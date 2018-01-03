@@ -46,9 +46,6 @@
 // Remap safety is required if the mmap file is not fully preallocated.
 #define REMAP_SAFETY
 
-// Allocate safety is required for support of concurrent write operations.
-#define ALLOCATE_SAFETY
-
 namespace libbitcoin {
 namespace database {
 

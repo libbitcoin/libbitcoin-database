@@ -57,7 +57,7 @@ bool record_manager::create()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    ALLOCATE_WRITE(mutex_);
+    unique_lock lock(mutex_);
 
     // Existing file record count is nonzero.
     if (record_count_ != 0)
@@ -75,7 +75,7 @@ bool record_manager::start()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    ALLOCATE_WRITE(mutex_);
+    unique_lock lock(mutex_);
 
     read_count();
     const auto minimum = header_size_ + record_to_position(record_count_);
@@ -89,7 +89,7 @@ void record_manager::sync()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    ALLOCATE_WRITE(mutex_);
+    unique_lock lock(mutex_);
 
     write_count();
     ///////////////////////////////////////////////////////////////////////////
@@ -99,7 +99,7 @@ array_index record_manager::count() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    ALLOCATE_READ(mutex_);
+    shared_lock lock(mutex_);
 
     return record_count_;
     ///////////////////////////////////////////////////////////////////////////
@@ -109,7 +109,7 @@ void record_manager::set_count(const array_index value)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    ALLOCATE_WRITE(mutex_);
+    unique_lock lock(mutex_);
 
     BITCOIN_ASSERT(value <= record_count_);
 
@@ -123,7 +123,7 @@ array_index record_manager::new_records(size_t count)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    ALLOCATE_WRITE(mutex_);
+    unique_lock lock(mutex_);
 
     // Always write after the last index.
     const auto next_record_index = record_count_;

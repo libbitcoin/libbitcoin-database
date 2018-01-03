@@ -66,14 +66,6 @@ public:
     #define REMAP_WRITE(mutex)
 #endif // REMAP_SAFETY
 
-#ifdef ALLOCATE_SAFETY
-    #define ALLOCATE_READ(mutex) shared_lock lock(mutex)
-    #define ALLOCATE_WRITE(mutex) unique_lock lock(mutex)
-#else
-    #define ALLOCATE_READ(mutex)
-    #define ALLOCATE_WRITE(mutex)
-#endif // ALLOCATE_SAFETY
-
 } // namespace database
 } // namespace libbitcoin
 

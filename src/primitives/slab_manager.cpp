@@ -55,7 +55,7 @@ bool slab_manager::create()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    ALLOCATE_WRITE(mutex_);
+    unique_lock lock(mutex_);
 
     // Existing slabs size is incorrect for new file.
     if (payload_size_ != sizeof(file_offset))
@@ -73,7 +73,7 @@ bool slab_manager::start()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    ALLOCATE_WRITE(mutex_);
+    unique_lock lock(mutex_);
 
     read_size();
     const auto minimum = header_size_ + payload_size_;
@@ -87,7 +87,7 @@ void slab_manager::sync() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    ALLOCATE_WRITE(mutex_);
+    unique_lock lock(mutex_);
 
     write_size();
     ///////////////////////////////////////////////////////////////////////////
@@ -98,7 +98,7 @@ file_offset slab_manager::payload_size() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    ALLOCATE_READ(mutex_);
+    shared_lock lock(mutex_);
 
     return payload_size_;
     ///////////////////////////////////////////////////////////////////////////
@@ -110,7 +110,7 @@ file_offset slab_manager::new_slab(size_t size)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    ALLOCATE_WRITE(mutex_);
+    unique_lock lock(mutex_);
 
     // Always write after the last slab.
     const auto next_slab_position = payload_size_;
