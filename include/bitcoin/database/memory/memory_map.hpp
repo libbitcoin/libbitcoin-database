@@ -41,14 +41,12 @@ class BCD_API memory_map
 {
 public:
     typedef boost::filesystem::path path;
-    typedef std::shared_ptr<shared_mutex> mutex_ptr;
 
     static const size_t default_expansion;
 
     /// Construct a database (start is currently called, may throw).
     memory_map(const path& filename);
-    memory_map(const path& filename, mutex_ptr mutex);
-    memory_map(const path& filename, mutex_ptr mutex, size_t expansion);
+    memory_map(const path& filename, size_t expansion);
 
     /// Close the database.
     ~memory_map();
@@ -94,9 +92,6 @@ private:
     void log_flushed() const;
     void log_unmapping() const;
     void log_unmapped() const;
-
-    // Optionally guard against concurrent remap.
-    mutex_ptr remap_mutex_;
 
     // File system.
     const int file_handle_;

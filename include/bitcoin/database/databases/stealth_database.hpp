@@ -21,7 +21,6 @@
 
 #include <cstdint>
 #include <cstddef>
-#include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -42,11 +41,9 @@ class BCD_API stealth_database
 public:
     typedef boost::filesystem::path path;
     typedef chain::stealth_record::list list;
-    typedef std::shared_ptr<shared_mutex> mutex_ptr;
 
     /// Construct the database.
-    stealth_database(const path& rows_filename, size_t expansion,
-        mutex_ptr mutex=nullptr);
+    stealth_database(const path& rows_filename, size_t expansion);
 
     /// Close the database (all threads must first be stopped).
     ~stealth_database();
@@ -91,9 +88,6 @@ public:
     ////bool unlink();
 
 private:
-    void push_index();
-    array_index read_index(size_t from_height) const;
-
     // Row entries containing stealth tx data.
     memory_map rows_file_;
     record_manager rows_manager_;

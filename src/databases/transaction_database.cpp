@@ -79,11 +79,11 @@ static constexpr auto metadata_size = height_size + position_size +
 
 // Transactions uses a hash table index, O(1).
 transaction_database::transaction_database(const path& map_filename,
-    size_t buckets, size_t expansion, size_t cache_capacity, mutex_ptr mutex)
+    size_t buckets, size_t expansion, size_t cache_capacity)
   : initial_map_file_size_(slab_hash_table_header_size(buckets) +
         minimum_slabs_size),
 
-    lookup_file_(map_filename, mutex, expansion),
+    lookup_file_(map_filename, expansion),
     lookup_header_(lookup_file_, buckets),
     lookup_manager_(lookup_file_, slab_hash_table_header_size(buckets)),
     lookup_map_(lookup_header_, lookup_manager_),

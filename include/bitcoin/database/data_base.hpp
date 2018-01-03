@@ -173,9 +173,6 @@ private:
 
     // Used to prevent concurrent unsafe writes.
     mutable shared_mutex write_mutex_;
-
-    // Used to prevent concurrent file remapping.
-    std::shared_ptr<shared_mutex> remap_mutex_;
 };
 
 } // namespace database

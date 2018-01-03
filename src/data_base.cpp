@@ -57,7 +57,6 @@ using namespace bc::wallet;
 data_base::data_base(const settings& settings)
   : closed_(true),
     settings_(settings),
-    remap_mutex_(std::make_shared<shared_mutex>()),
     store(settings.directory, settings.index_addresses, settings.flush_writes)
 {
     LOG_DEBUG(LOG_DATABASE)
@@ -142,24 +141,23 @@ void data_base::start()
 {
     blocks_ = std::make_shared<block_database>(block_table, header_index,
         block_index, transaction_index, settings_.block_table_buckets,
-        settings_.file_growth_rate, remap_mutex_);
+        settings_.file_growth_rate);
 
     transactions_ = std::make_shared<transaction_database>(transaction_table,
         settings_.transaction_table_buckets, settings_.file_growth_rate,
-        settings_.cache_capacity, remap_mutex_);
+        settings_.cache_capacity);
 
     if (use_indexes)
     {
         history_ = std::make_shared<history_database>(history_table,
             history_rows, settings_.history_table_buckets,
-            settings_.file_growth_rate, remap_mutex_);
+            settings_.file_growth_rate);
 
         stealth_ = std::make_shared<stealth_database>(stealth_rows,
-            settings_.file_growth_rate, remap_mutex_);
+            settings_.file_growth_rate);
 
         spends_ = std::make_shared<spend_database>(spend_table,
-            settings_.spend_table_buckets, settings_.file_growth_rate,
-            remap_mutex_);
+            settings_.spend_table_buckets, settings_.file_growth_rate);
     }
 }
 

@@ -143,25 +143,19 @@ void memory_map::log_unmapped() const
 }
 
 memory_map::memory_map(const path& filename)
-  : memory_map(filename, nullptr, default_expansion)
-{
-}
-
-memory_map::memory_map(const path& filename, mutex_ptr mutex)
-  : memory_map(filename, mutex, default_expansion)
+  : memory_map(filename, default_expansion)
 {
 }
 
 // mmap documentation: tinyurl.com/hnbw8t5
-memory_map::memory_map(const path& filename, mutex_ptr mutex, size_t expansion)
+memory_map::memory_map(const path& filename, size_t expansion)
   : file_handle_(open_file(filename)),
     expansion_(expansion),
     filename_(filename),
     data_(nullptr),
     file_size_(file_size(file_handle_)),
     logical_size_(file_size_),
-    closed_(true),
-    remap_mutex_(mutex)
+    closed_(true)
 {
 }
 
@@ -443,10 +437,6 @@ bool memory_map::truncate_mapped(size_t size)
 {
     log_resizing(size);
 
-    // Critical Section (conditional/external)
-    ///////////////////////////////////////////////////////////////////////////
-    conditional_lock lock(remap_mutex_);
-
 #ifndef MREMAP_MAYMOVE
     if (!unmap())
         return false;
@@ -460,7 +450,6 @@ bool memory_map::truncate_mapped(size_t size)
 #else
     return remap(size);
 #endif
-    ///////////////////////////////////////////////////////////////////////////
 }
 
 bool memory_map::validate(size_t size)

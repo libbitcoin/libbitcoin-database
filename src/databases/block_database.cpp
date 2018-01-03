@@ -84,28 +84,27 @@ static constexpr auto no_checksum = 0u;
 // Blocks uses a hash table and two array indexes, all O(1).
 block_database::block_database(const path& map_filename,
     const path& header_index_filename, const path& block_index_filename,
-    const path& tx_index_filename, size_t buckets, size_t expansion,
-    mutex_ptr mutex)
+    const path& tx_index_filename, size_t buckets, size_t expansion)
   : fork_point_(0),
     valid_point_(0),
     initial_map_file_size_(record_hash_table_header_size(buckets) +
         minimum_records_size),
 
-    lookup_file_(map_filename, mutex, expansion),
+    lookup_file_(map_filename, expansion),
     lookup_header_(lookup_file_, buckets),
     lookup_manager_(lookup_file_, record_hash_table_header_size(buckets),
         record_size),
     lookup_map_(lookup_header_, lookup_manager_),
 
-    header_index_file_(header_index_filename, mutex, expansion),
+    header_index_file_(header_index_filename, expansion),
     header_index_manager_(header_index_file_, header_index_header_size,
         block_index_record_size),
 
-    block_index_file_(block_index_filename, mutex, expansion),
+    block_index_file_(block_index_filename, expansion),
     block_index_manager_(block_index_file_, block_index_header_size,
         block_index_record_size),
 
-    tx_index_file_(tx_index_filename, mutex, expansion),
+    tx_index_file_(tx_index_filename, expansion),
     tx_index_manager_(tx_index_file_, tx_index_header_size,
         tx_index_record_size)
 {

@@ -54,9 +54,8 @@ static constexpr auto row_size = prefix_size + height_size + hash_size +
     short_hash_size + hash_size;
 
 // Stealth uses an unindexed array, requiring linear search, (O(n)).
-stealth_database::stealth_database(const path& rows_filename, size_t expansion,
-    mutex_ptr mutex)
-  : rows_file_(rows_filename, mutex, expansion),
+stealth_database::stealth_database(const path& rows_filename, size_t expansion)
+  : rows_file_(rows_filename, expansion),
     rows_manager_(rows_file_, rows_header_size, row_size)
 {
 }

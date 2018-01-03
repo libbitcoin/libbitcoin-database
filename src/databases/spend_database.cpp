@@ -40,11 +40,11 @@ static BC_CONSTEXPR auto record_size = hash_table_record_size<point>(value_size)
 
 // Spends use a hash table index, O(1).
 spend_database::spend_database(const path& filename, size_t buckets,
-    size_t expansion, mutex_ptr mutex)
+    size_t expansion)
   : initial_map_file_size_(record_hash_table_header_size(buckets) +
         minimum_records_size),
 
-    lookup_file_(filename, mutex, expansion),
+    lookup_file_(filename, expansion),
     lookup_header_(lookup_file_, buckets),
     lookup_manager_(lookup_file_, record_hash_table_header_size(buckets),
         record_size),

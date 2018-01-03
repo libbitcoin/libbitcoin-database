@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_HISTORY_DATABASE_HPP
 #define LIBBITCOIN_DATABASE_HISTORY_DATABASE_HPP
 
-#include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
@@ -49,11 +48,10 @@ class BCD_API history_database
 public:
     typedef boost::filesystem::path path;
     typedef chain::payment_record::list list;
-    typedef std::shared_ptr<shared_mutex> mutex_ptr;
 
     /// Construct the database.
     history_database(const path& lookup_filename, const path& rows_filename,
-        size_t buckets, size_t expansion, mutex_ptr mutex=nullptr);
+        size_t buckets, size_t expansion);
 
     /// Close the database (all threads must first be stopped).
     ~history_database();

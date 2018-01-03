@@ -21,7 +21,6 @@
 
 #include <atomic>
 #include <cstddef>
-#include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
@@ -42,12 +41,11 @@ public:
     typedef std::vector<size_t> heights;
     typedef boost::filesystem::path path;
     typedef slab_hash_table<hash_digest> slab_map;
-    typedef std::shared_ptr<shared_mutex> mutex_ptr;
 
     /// Construct the database.
     block_database(const path& map_filename, const path& header_index_filename,
         const path& block_index_filename, const path& tx_index_filename,
-        size_t buckets, size_t expansion, mutex_ptr mutex=nullptr);
+        size_t buckets, size_t expansion);
 
     /// Close the database (all threads must first be stopped).
     ~block_database();

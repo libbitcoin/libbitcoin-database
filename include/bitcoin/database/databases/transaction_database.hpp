@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_TRANSACTION_DATABASE_HPP
 
 #include <cstddef>
-#include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
@@ -44,11 +43,10 @@ class BCD_API transaction_database
 public:
     typedef boost::filesystem::path path;
     typedef slab_hash_table<hash_digest> slab_map;
-    typedef std::shared_ptr<shared_mutex> mutex_ptr;
 
     /// Construct the database.
     transaction_database(const path& map_filename, size_t buckets,
-        size_t expansion, size_t cache_capacity, mutex_ptr mutex=nullptr);
+        size_t expansion, size_t cache_capacity);
 
     /// Close the database (all threads must first be stopped).
     ~transaction_database();

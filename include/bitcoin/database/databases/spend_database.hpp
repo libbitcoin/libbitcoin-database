@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_SPEND_DATABASE_HPP
 
 #include <cstddef>
-#include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
@@ -47,11 +46,9 @@ class BCD_API spend_database
 {
 public:
     typedef boost::filesystem::path path;
-    typedef std::shared_ptr<shared_mutex> mutex_ptr;
 
     /// Construct the database.
-    spend_database(const path& filename, size_t buckets, size_t expansion,
-        mutex_ptr mutex=nullptr);
+    spend_database(const path& filename, size_t buckets, size_t expansion);
 
     /// Close the database (all threads must first be stopped).
     ~spend_database();
