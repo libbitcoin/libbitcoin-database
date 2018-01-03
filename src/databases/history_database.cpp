@@ -53,23 +53,19 @@ static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto flag_size = sizeof(uint8_t);
 static constexpr auto point_size = std::tuple_size<point>::value;
 static constexpr auto checksum_size = sizeof(uint64_t);
-static constexpr auto value_size = height_size + flag_size + point_size +
-    checksum_size;
+static constexpr auto value_size = height_size + flag_size + point_size + checksum_size;
 
-static BC_CONSTEXPR auto table_record_size =
-    hash_table_multimap_record_size<short_hash>();
+static BC_CONSTEXPR auto table_record_size = hash_table_multimap_record_size<short_hash>();
 static const auto row_record_size = multimap_record_size(value_size);
 
 // History uses a hash table index, O(1).
 history_database::history_database(const path& lookup_filename,
     const path& rows_filename, size_t buckets, size_t expansion)
-  : initial_map_file_size_(record_hash_table_header_size(buckets) +
-        minimum_records_size),
+  : initial_map_file_size_(record_hash_table_header_size(buckets) + minimum_records_size),
 
     lookup_file_(lookup_filename, expansion),
     lookup_header_(lookup_file_, buckets),
-    lookup_manager_(lookup_file_, record_hash_table_header_size(buckets),
-        table_record_size),
+    lookup_manager_(lookup_file_, record_hash_table_header_size(buckets), table_record_size),
     lookup_map_(lookup_header_, lookup_manager_),
 
     rows_file_(rows_filename, expansion),

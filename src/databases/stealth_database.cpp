@@ -50,8 +50,7 @@ static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto prefix_size = sizeof(uint32_t);
 
 // ephemkey is without sign byte and address is without version byte.
-static constexpr auto row_size = prefix_size + height_size + hash_size +
-    short_hash_size + hash_size;
+static constexpr auto row_size = prefix_size + height_size + hash_size + short_hash_size + hash_size;
 
 // Stealth uses an unindexed array, requiring linear search, (O(n)).
 stealth_database::stealth_database(const path& rows_filename, size_t expansion)

@@ -75,14 +75,11 @@ static constexpr auto position_size = sizeof(uint16_t);
 static constexpr auto state_size = sizeof(uint8_t);
 static constexpr auto median_time_past_size = sizeof(uint32_t);
 static constexpr auto spender_height_value_size = height_size + value_size;
-static constexpr auto metadata_size = height_size + position_size +
-    state_size + median_time_past_size;
+static constexpr auto metadata_size = height_size + position_size + state_size + median_time_past_size;
 
 // Transactions uses a hash table index, O(1).
-transaction_database::transaction_database(const path& map_filename,
-    size_t buckets, size_t expansion, size_t cache_capacity)
-  : initial_map_file_size_(slab_hash_table_header_size(buckets) +
-        minimum_slabs_size),
+transaction_database::transaction_database(const path& map_filename, size_t buckets, size_t expansion, size_t cache_capacity)
+  : initial_map_file_size_(slab_hash_table_header_size(buckets) + minimum_slabs_size),
 
     lookup_file_(map_filename, expansion),
     lookup_header_(lookup_file_, buckets),
