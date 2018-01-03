@@ -22,7 +22,7 @@
 #include <stdexcept>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/memory/storage_map.hpp>
+#include <bitcoin/database/memory/memory_map.hpp>
 
 /// -- file --
 /// [ header ]
@@ -44,7 +44,7 @@ namespace database {
 
 // TODO: guard against overflows.
 
-record_manager::record_manager(storage_map& file, file_offset header_size,
+record_manager::record_manager(memory_map& file, file_offset header_size,
     size_t record_size)
   : file_(file),
     header_size_(header_size),

@@ -23,7 +23,7 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/memory/storage_map.hpp>
+#include <bitcoin/database/memory/memory_map.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -40,7 +40,7 @@ BC_CONSTFUNC size_t slab_hash_table_header_size(size_t buckets)
 class BCD_API slab_manager
 {
 public:
-    slab_manager(storage_map& file, file_offset header_size);
+    slab_manager(memory_map& file, file_offset header_size);
 
     /// Create slab manager.
     bool create();
@@ -71,7 +71,7 @@ private:
     void write_size() const;
 
     // This class is thread and remap safe.
-    storage_map& file_;
+    memory_map& file_;
     const file_offset header_size_;
 
     // Payload size is protected by mutex.

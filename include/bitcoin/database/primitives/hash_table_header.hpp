@@ -20,7 +20,7 @@
 #define LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_HPP
 
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/database/memory/storage_map.hpp>
+#include <bitcoin/database/memory/memory_map.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -45,7 +45,7 @@ public:
     typedef ValueType value_type;
     static const ValueType empty;
 
-    hash_table_header(storage_map& file, IndexType buckets);
+    hash_table_header(memory_map& file, IndexType buckets);
 
     /// Allocate the hash table and populate with empty values.
     bool create();
@@ -66,7 +66,7 @@ private:
     // Locate the item in the memory map.
     file_offset item_position(IndexType index) const;
 
-    storage_map& file_;
+    memory_map& file_;
     IndexType buckets_;
     mutable shared_mutex mutex_;
 };

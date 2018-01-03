@@ -31,7 +31,7 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/memory/storage_map.hpp>
+#include <bitcoin/database/memory/memory_map.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -39,7 +39,7 @@ namespace database {
 /// This class is thread safe, allowing concurent read and write.
 /// A change to the size of the memory map waits on and locks read and write.
 class BCD_API file_map
-  : public storage_map
+  : public memory_map
 {
 public:
     typedef boost::filesystem::path path;

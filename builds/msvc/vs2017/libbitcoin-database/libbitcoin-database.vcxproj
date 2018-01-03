@@ -108,7 +108,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\allocator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\file_map.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\storage_map.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_map.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table_header.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_hash_table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_list.hpp" />

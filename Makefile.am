@@ -150,7 +150,7 @@ include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/allocator.hpp \
     include/bitcoin/database/memory/file_map.hpp \
     include/bitcoin/database/memory/memory.hpp \
-    include/bitcoin/database/memory/storage_map.hpp
+    include/bitcoin/database/memory/memory_map.hpp
 
 include_bitcoin_database_primitivesdir = ${includedir}/bitcoin/database/primitives
 include_bitcoin_database_primitives_HEADERS = \

@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_STORAGE_MAP_HPP
-#define LIBBITCOIN_DATABASE_STORAGE_MAP_HPP
+#ifndef LIBBITCOIN_DATABASE_MEMORY_MAP_HPP
+#define LIBBITCOIN_DATABASE_MEMORY_MAP_HPP
 
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
@@ -27,7 +27,7 @@ namespace libbitcoin {
 namespace database {
 
 /// The implementation must be thread safe, allowing concurent read and write.
-class BCD_API storage_map
+class BCD_API memory_map
   : public noncopyable
 {
 public:
