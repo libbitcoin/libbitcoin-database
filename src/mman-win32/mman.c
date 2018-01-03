@@ -1,4 +1,4 @@
-/* mman-win32 from code.google.com/p/mman-win32 (MIT License). */
+/* mman-win32 derived from code.google.com/p/mman-win32 (MIT License). */
 
 #include "mman.h"
 

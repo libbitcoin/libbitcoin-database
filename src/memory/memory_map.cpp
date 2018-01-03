@@ -152,10 +152,10 @@ memory_map::memory_map(const path& filename, size_t expansion)
   : file_handle_(open_file(filename)),
     expansion_(expansion),
     filename_(filename),
+    closed_(true),
     data_(nullptr),
     file_size_(file_size(file_handle_)),
-    logical_size_(file_size_),
-    closed_(true)
+    logical_size_(file_size_)
 {
 }
 
@@ -314,19 +314,19 @@ memory_ptr memory_map::access()
     return std::make_shared<accessor>(mutex_, data_);
 }
 
-// throws runtime_error
+// Throws runtime_error if insufficient space.
 memory_ptr memory_map::resize(size_t size)
 {
     return reserve(size, 0);
 }
 
-// throws runtime_error
+// Throws runtime_error if insufficient space.
 memory_ptr memory_map::reserve(size_t size)
 {
     return reserve(size, expansion_);
 }
 
-// throws runtime_error
+// Throws runtime_error if insufficient space.
 // There is no way to gracefully recover from a resize failure because there
 // are integrity relationships across multiple database files. Stopping a write
 // in one would require rolling back preceding write operations in others.

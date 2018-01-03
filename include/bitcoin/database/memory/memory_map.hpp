@@ -31,6 +31,7 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/memory/storage_map.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -38,10 +39,10 @@ namespace database {
 /// This class is thread safe, allowing concurent read and write.
 /// A change to the size of the memory map waits on and locks read and write.
 class BCD_API memory_map
+  : public storage_map
 {
 public:
     typedef boost::filesystem::path path;
-
     static const size_t default_expansion;
 
     /// Construct a database (start is currently called, may throw).
@@ -51,27 +52,34 @@ public:
     /// Close the database.
     ~memory_map();
 
-    /// This class is not copyable.
-    memory_map(const memory_map&) = delete;
-    void operator=(const memory_map&) = delete;
-
-    /// Open and map database files.
+    /// Open and map database files, must be closed.
     bool open();
 
-    /// Flush the memory map to disk.
+    /// Flush the memory map to disk, idempotent.
     bool flush() const;
 
-    /// Unmap and release database files, can be restarted.
+    /// Unmap and release files, restartable, idempotent.
     bool close();
 
     /// Determine if the database is closed.
     bool closed() const;
 
+    /// The current physical (vs. logical) size of the map.
     size_t size() const;
+
+    /// Throws runtime_error if insufficient space.
+    /// Get protected shared access to memory, starting at first byte.
     memory_ptr access();
+
+    /// Throws runtime_error if insufficient space.
+    /// Resize the logical map to the specified size, return access.
+    /// Increase the physical size to match the logical size.
     memory_ptr resize(size_t size);
+
+    /// Throws runtime_error if insufficient space.
+    /// Resize the logical map to the specified size, return access.
+    /// Increase the physical size to at least the logical size.
     memory_ptr reserve(size_t size);
-    memory_ptr reserve(size_t size, size_t growth_ratio);
 
 private:
     static size_t file_size(int file_handle);
@@ -86,6 +94,7 @@ private:
     bool truncate(size_t size);
     bool truncate_mapped(size_t size);
     bool validate(size_t size);
+    memory_ptr reserve(size_t size, size_t growth_ratio);
 
     void log_mapping() const;
     void log_resizing(size_t size) const;
@@ -98,11 +107,11 @@ private:
     const size_t expansion_;
     const boost::filesystem::path filename_;
 
-    // Protected by internal mutex.
+    // Protected by mutex.
+    bool closed_;
     uint8_t* data_;
     size_t file_size_;
     size_t logical_size_;
-    std::atomic<bool> closed_;
     mutable upgrade_mutex mutex_;
 };
 
