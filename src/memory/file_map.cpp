@@ -39,7 +39,6 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
-#include <bitcoin/database/memory/allocator.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
 // file_map is able to support 32 bit, but because the database
@@ -339,7 +338,7 @@ memory_ptr file_map::reserve(size_t size, size_t expansion)
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    const auto memory = std::make_shared<allocator>(mutex_);
+    const auto memory = std::make_shared<accessor>(mutex_);
 
     // The store should only have been closed after all threads terminated.
     if (closed_)

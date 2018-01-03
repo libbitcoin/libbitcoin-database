@@ -46,7 +46,6 @@ src_libbitcoin_database_la_SOURCES = \
     src/databases/stealth_database.cpp \
     src/databases/transaction_database.cpp \
     src/memory/accessor.cpp \
-    src/memory/allocator.cpp \
     src/memory/file_map.cpp \
     src/mman-win32/mman.c \
     src/mman-win32/mman.h \
@@ -147,7 +146,6 @@ include_bitcoin_database_impl_HEADERS = \
 include_bitcoin_database_memorydir = ${includedir}/bitcoin/database/memory
 include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/accessor.hpp \
-    include/bitcoin/database/memory/allocator.hpp \
     include/bitcoin/database/memory/file_map.hpp \
     include/bitcoin/database/memory/memory.hpp \
     include/bitcoin/database/memory/memory_map.hpp

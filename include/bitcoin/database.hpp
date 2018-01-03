@@ -28,7 +28,6 @@
 #include <bitcoin/database/databases/stealth_database.hpp>
 #include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
-#include <bitcoin/database/memory/allocator.hpp>
 #include <bitcoin/database/memory/file_map.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/memory_map.hpp>
