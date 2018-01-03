@@ -63,7 +63,6 @@ public:
     IndexType size() const;
 
 private:
-
     // Locate the item in the memory map.
     file_offset item_position(IndexType index) const;
 
