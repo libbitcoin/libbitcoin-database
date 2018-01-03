@@ -39,7 +39,7 @@ namespace database {
 
 /// This class is thread safe and implements the sequential locking pattern.
 class BCD_API data_base
-  : public store, noncopyable
+  : public store
 {
 public:
     typedef handle0 result_handler;

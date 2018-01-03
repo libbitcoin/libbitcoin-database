@@ -29,6 +29,7 @@ namespace libbitcoin {
 namespace database {
 
 class BCD_API store
+  : noncopyable
 {
 public:
     typedef boost::filesystem::path path;

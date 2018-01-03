@@ -28,7 +28,7 @@ namespace database {
 
 /// The implementation must be thread safe, allowing concurent read and write.
 class BCD_API memory_map
-  : public noncopyable
+  : noncopyable
 {
 public:
     /// Open and map database files, must be closed.
