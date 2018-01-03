@@ -30,4 +30,3 @@ BOOST_AUTO_TEST_CASE(block_result__method__vector__expectation)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-

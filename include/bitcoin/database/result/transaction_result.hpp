@@ -24,26 +24,10 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/state/transaction_state.hpp>
 
 namespace libbitcoin {
 namespace database {
-
-// Stored txs are verified or protected by valid header PoW, states are:
-// TODO: compress into position using flag for indexed and sentinal for pool.
-enum class transaction_state : uint8_t
-{
-    /// Interface only (not stored).
-    missing = 0,
-
-    /// Confirmable if forks match, height is forks, position unused.
-    pooled = 1,
-
-    /// Confirmed in header index, height is forks, position unused.
-    indexed = 2,
-
-    /// Confirmed in block index, height and position are block values.
-    confirmed = 3
-};
 
 /// Deferred read transaction result.
 class BCD_API transaction_result

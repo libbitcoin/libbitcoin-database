@@ -29,6 +29,7 @@
 #include <bitcoin/database/primitives/record_manager.hpp>
 #include <bitcoin/database/primitives/slab_hash_table.hpp>
 #include <bitcoin/database/result/block_result.hpp>
+#include <bitcoin/database/state/block_state.hpp>
 
 namespace libbitcoin {
 namespace database {

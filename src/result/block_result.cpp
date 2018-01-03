@@ -24,6 +24,7 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
+#include <bitcoin/database/state/block_state.hpp>
 
 namespace libbitcoin {
 namespace database {

@@ -22,10 +22,10 @@
 #include <cstddef>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/result/block_result.hpp>
+#include <bitcoin/database/state/block_state.hpp>
 
 // Record format (v4) [99 bytes]:
 // Below excludes block height and tx hash indexes (arrays).

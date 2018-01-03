@@ -22,9 +22,9 @@
 using namespace bc;
 using namespace bc::database;
 
-BOOST_AUTO_TEST_SUITE(transaction_result_tests)
+BOOST_AUTO_TEST_SUITE(block_state_tests)
 
-BOOST_AUTO_TEST_CASE(transaction_result__method__vector__expectation)
+BOOST_AUTO_TEST_CASE(block_state__method__vector__expectation)
 {
     BOOST_REQUIRE(true);
 }

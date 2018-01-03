@@ -119,6 +119,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\block_result.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_result.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\state\block_state.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\state\transaction_state.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\store.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\unspent_outputs.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\unspent_transaction.hpp" />

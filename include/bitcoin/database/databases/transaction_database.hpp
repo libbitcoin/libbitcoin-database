@@ -27,6 +27,7 @@
 #include <bitcoin/database/primitives/slab_hash_table.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
+#include <bitcoin/database/state/transaction_state.hpp>
 #include <bitcoin/database/unspent_outputs.hpp>
 
 namespace libbitcoin {

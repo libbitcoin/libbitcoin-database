@@ -93,7 +93,9 @@ test_libbitcoin_database_test_SOURCES = \
     test/primitives/slab_hash_table.cpp \
     test/primitives/slab_manager.cpp \
     test/result/block_result.cpp \
-    test/result/transaction_result.cpp
+    test/result/transaction_result.cpp \
+    test/state/block_state.cpp \
+    test/state/transaction_state.cpp
 
 endif WITH_TESTS
 
@@ -166,6 +168,11 @@ include_bitcoin_database_resultdir = ${includedir}/bitcoin/database/result
 include_bitcoin_database_result_HEADERS = \
     include/bitcoin/database/result/block_result.hpp \
     include/bitcoin/database/result/transaction_result.hpp
+
+include_bitcoin_database_statedir = ${includedir}/bitcoin/database/state
+include_bitcoin_database_state_HEADERS = \
+    include/bitcoin/database/state/block_state.hpp \
+    include/bitcoin/database/state/transaction_state.hpp
 
 
 # Custom make targets.

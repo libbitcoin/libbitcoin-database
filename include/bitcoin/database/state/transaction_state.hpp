@@ -16,17 +16,32 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <boost/test/unit_test.hpp>
-#include <bitcoin/database.hpp>
+#ifndef LIBBITCOIN_DATABASE_TRANSACTION_STATE_HPP
+#define LIBBITCOIN_DATABASE_TRANSACTION_STATE_HPP
 
-using namespace bc;
-using namespace bc::database;
+#include <cstdint>
 
-BOOST_AUTO_TEST_SUITE(transaction_result_tests)
+namespace libbitcoin {
+namespace database {
 
-BOOST_AUTO_TEST_CASE(transaction_result__method__vector__expectation)
+// Stored txs are verified or protected by valid header PoW, states are:
+// TODO: compress into position using flag for indexed and sentinal for pool.
+enum class transaction_state : uint8_t
 {
-    BOOST_REQUIRE(true);
-}
+    /// Interface only (not stored).
+    missing = 0,
 
-BOOST_AUTO_TEST_SUITE_END()
+    /// Confirmable if forks match, height is forks, position unused.
+    pooled = 1,
+
+    /// Confirmed in header index, height is forks, position unused.
+    indexed = 2,
+
+    /// Confirmed in block index, height and position are block values.
+    confirmed = 3
+};
+
+} // namespace database
+} // namespace libbitcoin
+
+#endif
