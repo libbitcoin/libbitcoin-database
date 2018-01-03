@@ -22,7 +22,7 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory_map.hpp>
+#include <bitcoin/database/memory/file_map.hpp>
 #include <bitcoin/database/primitives/record_multimap.hpp>
 
 namespace libbitcoin {
@@ -103,13 +103,13 @@ private:
     const size_t initial_map_file_size_;
 
     /// Hash table used for start index lookup for linked list by address hash.
-    memory_map lookup_file_;
+    file_map lookup_file_;
     record_hash_table_header lookup_header_;
     record_manager lookup_manager_;
     record_map lookup_map_;
 
     /// History rows.
-    memory_map rows_file_;
+    file_map rows_file_;
     record_manager rows_manager_;
     record_multiple_map rows_multimap_;
 };

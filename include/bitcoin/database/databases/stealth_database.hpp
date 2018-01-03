@@ -23,8 +23,8 @@
 #include <cstddef>
 #include <boost/filesystem.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/memory/file_map.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/memory/memory_map.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
@@ -89,7 +89,7 @@ public:
 
 private:
     // Row entries containing stealth tx data.
-    memory_map rows_file_;
+    file_map rows_file_;
     record_manager rows_manager_;
 };
 

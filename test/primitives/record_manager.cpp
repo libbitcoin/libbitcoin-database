@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(record_manager__method__vector__expectation)
 BOOST_AUTO_TEST_CASE(record_manager__test)
 {
     test::create(DIRECTORY "/record_manager");
-    memory_map file(DIRECTORY "/record_manager");
+    file_map file(DIRECTORY "/record_manager");
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(file.access()->buffer() != nullptr);
     file.resize(4);

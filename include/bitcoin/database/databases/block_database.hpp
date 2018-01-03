@@ -24,7 +24,7 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory_map.hpp>
+#include <bitcoin/database/memory/file_map.hpp>
 #include <bitcoin/database/primitives/record_hash_table.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 #include <bitcoin/database/primitives/slab_hash_table.hpp>
@@ -135,24 +135,24 @@ private:
     const size_t initial_map_file_size_;
 
     // Hash table used for looking up block headers by hash.
-    memory_map lookup_file_;
+    file_map lookup_file_;
     record_hash_table_header lookup_header_;
     record_manager lookup_manager_;
     record_map lookup_map_;
 
     // Table used for looking up headers by height.
     // Each record resolves to a record via array_index.
-    memory_map header_index_file_;
+    file_map header_index_file_;
     record_manager header_index_manager_;
 
     // Table used for looking up blocks by height.
     // Each record resolves to a record via array_index.
-    memory_map block_index_file_;
+    file_map block_index_file_;
     record_manager block_index_manager_;
 
     // Association table between blocks and their contained transactions.
     // Each record resolves to a record via array_index.
-    memory_map tx_index_file_;
+    file_map tx_index_file_;
     record_manager tx_index_manager_;
 
     // This provides atomicity for checksum, tx_start, tx_count, state.

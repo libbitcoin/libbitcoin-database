@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MEMORY_MAP_HPP
-#define LIBBITCOIN_DATABASE_MEMORY_MAP_HPP
+#ifndef LIBBITCOIN_DATABASE_FILE_MAP_HPP
+#define LIBBITCOIN_DATABASE_FILE_MAP_HPP
 
 #ifndef _WIN32
 #include <sys/mman.h>
@@ -38,7 +38,7 @@ namespace database {
 
 /// This class is thread safe, allowing concurent read and write.
 /// A change to the size of the memory map waits on and locks read and write.
-class BCD_API memory_map
+class BCD_API file_map
   : public storage_map
 {
 public:
@@ -46,11 +46,11 @@ public:
     static const size_t default_expansion;
 
     /// Construct a database (start is currently called, may throw).
-    memory_map(const path& filename);
-    memory_map(const path& filename, size_t expansion);
+    file_map(const path& filename);
+    file_map(const path& filename, size_t expansion);
 
     /// Close the database.
-    ~memory_map();
+    ~file_map();
 
     /// Open and map database files, must be closed.
     bool open();

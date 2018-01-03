@@ -44,7 +44,7 @@ public:
     void increment(size_t value);
 
 protected:
-    friend class memory_map;
+    friend class file_map;
 
     /// Set the pointer.
     void assign(uint8_t* data);

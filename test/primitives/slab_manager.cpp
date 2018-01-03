@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(slab_manager__method__vector__expectation)
 BOOST_AUTO_TEST_CASE(slab_manager__test)
 {
     test::create(DIRECTORY "/slab_manager");
-    memory_map file(DIRECTORY "/slab_manager");
+    file_map file(DIRECTORY "/slab_manager");
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(file.access()->buffer() != nullptr);
     file.resize(200);

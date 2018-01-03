@@ -22,9 +22,9 @@
 using namespace bc;
 using namespace bc::database;
 
-BOOST_AUTO_TEST_SUITE(memory_map_tests)
+BOOST_AUTO_TEST_SUITE(file_map_tests)
 
-BOOST_AUTO_TEST_CASE(memory_map__method__vector__expectation)
+BOOST_AUTO_TEST_CASE(file_map__method__vector__expectation)
 {
     BOOST_REQUIRE(true);
 }

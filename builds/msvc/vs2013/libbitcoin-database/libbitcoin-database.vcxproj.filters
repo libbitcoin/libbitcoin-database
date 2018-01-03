@@ -78,7 +78,7 @@
     <ClCompile Include="..\..\..\..\src\memory\allocator.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\memory\memory_map.cpp">
+    <ClCompile Include="..\..\..\..\src\memory\file_map.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c">
@@ -149,10 +149,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\allocator.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\file_map.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_map.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\storage_map.hpp">

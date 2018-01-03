@@ -76,7 +76,7 @@ void create_database_file()
     BC_CONSTEXPR size_t header_size = slab_hash_table_header_size(buckets);
 
     test::create(DIRECTORY "/slab_hash_table__write_read");
-    memory_map file(DIRECTORY "/slab_hash_table__write_read");
+    file_map file(DIRECTORY "/slab_hash_table__write_read");
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(file.access()->buffer() != nullptr);
     file.resize(header_size + minimum_slabs_size);
@@ -130,7 +130,7 @@ BOOST_FIXTURE_TEST_SUITE(hash_table_tests, hash_table_directory_setup_fixture)
 BOOST_AUTO_TEST_CASE(hash_table_header__test)
 {
     test::create(DIRECTORY "/hash_table_header");
-    memory_map file(DIRECTORY "/hash_table_header");
+    file_map file(DIRECTORY "/hash_table_header");
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(file.access()->buffer() != nullptr);
     file.resize(4 + 4 * 10);
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__write_read__test)
     // Create the data file to be read below.
     create_database_file();
 
-    memory_map file(DIRECTORY "/slab_hash_table__write_read");
+    file_map file(DIRECTORY "/slab_hash_table__write_read");
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(file.access()->buffer() != nullptr);
 
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__write_read__test)
 BOOST_AUTO_TEST_CASE(slab_hash_table__test)
 {
     test::create(DIRECTORY "/slab_hash_table");
-    memory_map file(DIRECTORY "/slab_hash_table");
+    file_map file(DIRECTORY "/slab_hash_table");
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(file.access()->buffer() != nullptr);
     file.resize(4 + 8 * 100 + 8);
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__test)
 ////    BC_CONSTEXPR size_t header_size = record_hash_table_header_size(record_buckets);
 ////
 ////    test::create(DIRECTORY "/record_hash_table__32bit");
-////    memory_map file(DIRECTORY "/record_hash_table__32bit");
+////    file_map file(DIRECTORY "/record_hash_table__32bit");
 ////    BOOST_REQUIRE(file.open());
 ////
 ////    // Cannot hold an address reference because of following resize operation.
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__test)
 ////    BC_CONSTEXPR size_t header_size = record_hash_table_header_size(record_buckets);
 ////
 ////    test::create(DIRECTORY "/record_hash_table_64bit");
-////    memory_map file(DIRECTORY "/record_hash_table_64bit");
+////    file_map file(DIRECTORY "/record_hash_table_64bit");
 ////    BOOST_REQUIRE(file.open());
 ////
 ////    // Cannot hold an address reference because of following resize operation.

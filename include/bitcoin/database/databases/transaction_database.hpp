@@ -23,8 +23,7 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory_map.hpp>
-#include <bitcoin/database/result/transaction_result.hpp>
+#include <bitcoin/database/memory/file_map.hpp>
 #include <bitcoin/database/primitives/slab_hash_table.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
@@ -110,7 +109,7 @@ private:
     const size_t initial_map_file_size_;
 
     // Hash table used for looking up txs by hash.
-    memory_map lookup_file_;
+    file_map lookup_file_;
     slab_hash_table_header lookup_header_;
     slab_manager lookup_manager_;
     slab_map lookup_map_;
