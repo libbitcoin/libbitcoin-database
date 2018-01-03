@@ -96,8 +96,6 @@ public:
     bool unconfirm(const chain::transaction& tx);
 
 private:
-    void log_output_cache_hit_rate();
-
     // Update the spender height of the output.
     bool spend(const chain::output_point& point, size_t spender_height);
 
