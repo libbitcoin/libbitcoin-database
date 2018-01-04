@@ -29,14 +29,11 @@ using namespace bc::database;
 
 #define DIRECTORY "record_manager"
 
-class record_manager_directory_setup_fixture
+struct record_manager_directory_setup_fixture
 {
-public:
     record_manager_directory_setup_fixture()
     {
-        error_code ec;
-        remove_all(DIRECTORY, ec);
-        BOOST_REQUIRE(create_directories(DIRECTORY, ec));
+        BOOST_REQUIRE(test::clear_path(DIRECTORY));
     }
 };
 

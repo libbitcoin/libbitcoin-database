@@ -22,6 +22,7 @@
 ////#include <memory>
 ////#include <boost/filesystem.hpp>
 ////#include <bitcoin/database.hpp>
+////#include "utility/utility.hpp"
 ////
 ////using namespace bc;
 ////using namespace bc::chain;
@@ -227,16 +228,14 @@
 ////
 ////#define DIRECTORY "data_base"
 ////
-////class data_base_setup_fixture
+////struct data_base_setup_fixture
 ////{
-////public:
 ////    data_base_setup_fixture()
 ////    {
-////        error_code ec;
-////        remove_all(DIRECTORY, ec);
-////        BOOST_REQUIRE(create_directories(DIRECTORY, ec));
+////        BOOST_REQUIRE(test::clear_path(DIRECTORY));
 ////    }
 ////};
+////
 ////
 ////BOOST_FIXTURE_TEST_SUITE(data_base_tests, data_base_setup_fixture)
 ////

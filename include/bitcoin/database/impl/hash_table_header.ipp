@@ -52,65 +52,52 @@ hash_table_header<IndexType, ValueType>::hash_table_header(memory_map& file,
 template <typename IndexType, typename ValueType>
 bool hash_table_header<IndexType, ValueType>::create()
 {
-    // Cannot create zero-sized hash table.
-    if (buckets_ == 0)
-        return false;
-
-    // Calculate the minimum file size.
-    const auto minimum_file_size = item_position(buckets_);
+    // The file is sized to the position of one past the last item.
+    const auto file_size = item_position(buckets_);
 
     // The accessor must remain in scope until the end of the block.
-    const auto memory = file_.resize(minimum_file_size);
-    const auto buckets_address = memory->buffer();
-    auto serial = make_unsafe_serializer(buckets_address);
+    const auto memory = file_.resize(file_size);
+
+    // Speed-optimized fill implementation.
+    memset(memory->buffer(), empty_byte, file_size);
+
+    // Overwrite the start of the buffer with the bucket count.
+    auto serial = make_unsafe_serializer(memory->buffer());
     serial.write_little_endian(buckets_);
-
-    // optimized fill implementation
-    // This optimization makes it possible to debug full size headers.
-    const auto start = buckets_address + sizeof(IndexType);
-    memset(start, empty_byte, buckets_ * sizeof(ValueType));
-
-    // rationalized fill implementation
-    ////for (IndexType index = 0; index < buckets_; ++index)
-    ////    serial.write_little_endian(empty);
     return true;
 }
 
-// If false header file indicates incorrect size.
 template <typename IndexType, typename ValueType>
 bool hash_table_header<IndexType, ValueType>::start()
 {
     const auto minimum_file_size = item_position(buckets_);
 
     // Header file is too small.
-    if (minimum_file_size > file_.size())
+    if (file_.size() < minimum_file_size)
         return false;
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto buckets_address = memory->buffer();
 
     // Does not require atomicity (no concurrency during start).
-    const auto buckets = from_little_endian_unsafe<IndexType>(buckets_address);
-
-    // If buckets_ == 0 we trust what is read from the file.
-    return buckets_ == 0 || buckets == buckets_;
+    auto deserial = make_unsafe_deserializer(memory->buffer());
+    return deserial.read_little_endian<IndexType>() == buckets_;
 }
 
 template <typename IndexType, typename ValueType>
 ValueType hash_table_header<IndexType, ValueType>::read(IndexType index) const
 {
-    // This is not runtime safe but test is avoided as an optimization.
+    // This is not runtime safe but guard is avoided as an optimization.
     BITCOIN_ASSERT(index < buckets_);
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto value_address = memory->buffer() + item_position(index);
+    const auto address = memory->buffer() + item_position(index);
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     shared_lock lock(mutex_);
-    return from_little_endian_unsafe<ValueType>(value_address);
+    return from_little_endian_unsafe<ValueType>(address);
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -118,13 +105,13 @@ template <typename IndexType, typename ValueType>
 void hash_table_header<IndexType, ValueType>::write(IndexType index,
     ValueType value)
 {
-    // This is not runtime safe but test is avoided as an optimization.
+    // This is not runtime safe but guard is avoided as an optimization.
     BITCOIN_ASSERT(index < buckets_);
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto value_address = memory->buffer() + item_position(index);
-    auto serial = make_unsafe_serializer(value_address);
+    const auto address = memory->buffer() + item_position(index);
+    auto serial = make_unsafe_serializer(address);
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////

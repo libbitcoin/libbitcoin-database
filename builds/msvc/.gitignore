@@ -27,3 +27,4 @@ spend
 transaction
 record_manager
 slab_manager
+slab_hash_table

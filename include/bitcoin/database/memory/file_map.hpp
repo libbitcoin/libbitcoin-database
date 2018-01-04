@@ -73,7 +73,7 @@ public:
 
     /// Throws runtime_error if insufficient space.
     /// Resize the logical map to the specified size, return access.
-    /// Increase the physical size to match the logical size.
+    /// Increase or shrink the physical size to match the logical size.
     memory_ptr resize(size_t size);
 
     /// Throws runtime_error if insufficient space.

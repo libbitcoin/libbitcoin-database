@@ -29,14 +29,11 @@ using namespace bc::database;
 
 #define DIRECTORY "slab_manager"
 
-class slab_manager_directory_setup_fixture
+struct slab_manager_directory_setup_fixture
 {
-public:
     slab_manager_directory_setup_fixture()
     {
-        error_code ec;
-        remove_all(DIRECTORY, ec);
-        BOOST_REQUIRE(create_directories(DIRECTORY, ec));
+        BOOST_REQUIRE(test::clear_path(DIRECTORY));
     }
 };
 

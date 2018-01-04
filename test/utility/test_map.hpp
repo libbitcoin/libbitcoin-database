@@ -19,17 +19,19 @@
 #ifndef TEST_MAP_HPP
 #define TEST_MAP_HPP
 
-#include <cstddef>
 #include <bitcoin/database.hpp>
 
 namespace test {
 
-// Fake a memory map implementation.
+// Fake a thread safe memory map implementation.
 class test_map
   : public bc::database::memory_map
 {
 public:
     test_map();
+    test_map(const bc::data_chunk& initial);
+    ~test_map();
+
     bool open();
     bool flush() const;
     bool close();
@@ -40,6 +42,9 @@ public:
     bc::database::memory_ptr reserve(size_t size);
 
 private:
+    bool closed_;
+    bc::data_chunk buffer_;
+    mutable bc::upgrade_mutex mutex_;
 };
 
 }

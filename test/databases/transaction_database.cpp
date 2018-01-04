@@ -38,7 +38,6 @@ struct transaction_database_directory_setup_fixture
     }
 };
 
-
 BOOST_FIXTURE_TEST_SUITE(database_tests, transaction_database_directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(transaction_database__test)

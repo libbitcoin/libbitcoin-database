@@ -34,11 +34,9 @@ accessor::accessor(shared_mutex& mutex)
     mutex_.lock_upgrade();
 }
 
-accessor::accessor(shared_mutex& mutex, uint8_t*& data)
+accessor::accessor(shared_mutex& mutex, uint8_t* data)
   : mutex_(mutex)
 {
-    BITCOIN_ASSERT_MSG(data != nullptr, "Invalid buffer assigment.");
-
     ///////////////////////////////////////////////////////////////////////////
     // Begin Critical Section
     mutex_.lock_shared();
@@ -52,7 +50,7 @@ uint8_t* accessor::buffer()
 
 void accessor::increment(size_t value)
 {
-    BITCOIN_ASSERT_MSG(data != nullptr, "Buffer not assigned.");
+    BITCOIN_ASSERT_MSG(data_ != nullptr, "Buffer not assigned.");
     BITCOIN_ASSERT((size_t)data_ <= bc::max_size_t - value);
 
     data_ += value;

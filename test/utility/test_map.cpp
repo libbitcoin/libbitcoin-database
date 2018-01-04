@@ -25,48 +25,96 @@ using namespace bc::database;
 
 namespace test {
 
+// This is a trivial working memory_map interface implementation.
 test_map::test_map()
+  : test_map(data_chunk{})
 {
+}
+
+test_map::test_map(const data_chunk& initial)
+  : closed_(true), buffer_(initial)
+{
+}
+
+test_map::~test_map()
+{
+    close();
 }
 
 bool test_map::open()
 {
-    return false;
+    mutex_.lock_upgrade();
+
+    if (closed_)
+    {
+        mutex_.unlock_upgrade();
+        return true;
+    }
+
+    mutex_.unlock_upgrade_and_lock();
+    closed_ = false;
+    mutex_.unlock();
+    return true;
 }
 
 bool test_map::flush() const
 {
-    return false;
+    return true;
 }
 
 bool test_map::close()
 {
-    return false;
+    mutex_.lock_upgrade();
+
+    if (closed_)
+    {
+        mutex_.unlock_upgrade();
+        return true;
+    }
+
+    mutex_.unlock_upgrade_and_lock();
+    closed_ = true;
+    mutex_.unlock();
+    return true;
 }
 
 bool test_map::closed() const
 {
-    return false;
+    shared_lock lock(mutex_);
+    return closed_;
 }
 
 size_t test_map::size() const
 {
-    return 0;
+    shared_lock lock(mutex_);
+    return buffer_.size();
 }
 
 memory_ptr test_map::access()
 {
-    return nullptr;
+    return std::make_shared<accessor>(mutex_, buffer_.data());
 }
 
 memory_ptr test_map::resize(size_t size)
 {
-    return nullptr;
+    return reserve(size);
 }
 
 memory_ptr test_map::reserve(size_t size)
 {
-    return nullptr;
+    const auto memory = std::make_shared<accessor>(mutex_);
+
+    // Physical grows at same rate as logical (not time optimized).
+    // Allocation is never reduced in case of downsize (not space optimized).
+    if (size != buffer_.size())
+    {
+        mutex_.unlock_upgrade_and_lock();
+        buffer_.resize(size);
+        mutex_.unlock_and_lock_upgrade();
+    }
+
+    memory->assign(buffer_.data());
+    return memory;
 }
 
 } // namespace test

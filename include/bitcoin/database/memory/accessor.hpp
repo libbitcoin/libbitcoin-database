@@ -29,7 +29,7 @@ namespace libbitcoin {
 namespace database {
 
 /// This class provides shared/protected read/write access to a memory buffer.
-/// The call caller know the buffer size as it is unprotected and unmanaged.
+/// The call caller must know the buffer size as it is unprotected/unmanaged.
 class BCD_API accessor
   : public memory, noncopyable
 {
@@ -38,7 +38,7 @@ public:
     accessor(shared_mutex& mutex);
 
     /// Assign a non-null shared buffer pointer.
-    accessor(shared_mutex& mutex, uint8_t*& data);
+    accessor(shared_mutex& mutex, uint8_t* data);
 
     /// Free the buffer pointer lock.
     ~accessor();

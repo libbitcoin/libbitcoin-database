@@ -50,7 +50,7 @@ public:
     virtual memory_ptr access() = 0;
 
     /// Resize the logical map to the specified size, return access.
-    /// Increase the physical size to match the logical size.
+    /// Increase or shrink the physical size to match the logical size.
     virtual memory_ptr resize(size_t size) = 0;
 
     /// Resize the logical map to the specified size, return access.
