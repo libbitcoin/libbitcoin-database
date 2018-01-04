@@ -29,6 +29,7 @@ class test_map
 {
 public:
     test_map();
+    test_map(bc::data_chunk&& initial);
     test_map(const bc::data_chunk& initial);
     ~test_map();
 

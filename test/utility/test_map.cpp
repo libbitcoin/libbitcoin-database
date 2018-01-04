@@ -18,6 +18,7 @@
  */
 #include "test_map.hpp"
 
+#include <utility>
 #include <bitcoin/database.hpp>
 
 using namespace bc;
@@ -28,6 +29,11 @@ namespace test {
 // This is a trivial working memory_map interface implementation.
 test_map::test_map()
   : test_map(data_chunk{})
+{
+}
+
+test_map::test_map(data_chunk&& initial)
+  : closed_(true), buffer_(std::move(initial))
 {
 }
 
