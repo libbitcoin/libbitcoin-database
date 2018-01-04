@@ -30,6 +30,7 @@
 /// [ payload ]
 
 /// -- header (hash table) --
+/// [ count  ]
 /// [ bucket ]
 /// ...
 /// [ bucket ]
