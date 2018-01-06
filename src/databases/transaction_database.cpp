@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
@@ -68,7 +69,7 @@ using namespace bc::machine;
 // [ locktime:varint        - const   ]
 // [ version:varint         - const   ]
 
-static BC_CONSTEXPR auto prefix_size = slab_row<hash_digest>::prefix_size;
+static const auto prefix_size = slab_row<hash_digest, file_offset>::prefix_size;
 static constexpr auto value_size = sizeof(uint64_t);
 
 static constexpr auto height_size = sizeof(uint32_t);

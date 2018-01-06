@@ -39,7 +39,7 @@ namespace database {
  * The linked records are chains of records that can be iterated through
  * given a start index.
  */
-template <typename KeyType>
+template <typename KeyType, typename LinkType>
 class record_multimap
 {
 public:
@@ -55,10 +55,10 @@ public:
     void store(const KeyType& key, write_function write);
 
     /// Lookup a key, returning a traversable index.
-    array_index find(const KeyType& key) const;
+    LinkType find(const KeyType& key) const;
 
     /// Get a remap safe address pointer to the indexed data.
-    memory_ptr get(array_index index) const;
+    memory_ptr get(LinkType index) const;
 
     /// Delete the last row that was added for the key.
     bool unlink(const KeyType& key);

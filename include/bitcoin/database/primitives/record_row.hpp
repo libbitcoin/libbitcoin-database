@@ -36,16 +36,16 @@ namespace database {
  * With the starting item, we can iterate until the end using the
  * next_index() method.
  */
-template <typename KeyType>
+template <typename KeyType, typename LinkType>
 class record_row
 {
 public:
     typedef byte_serializer::functor write_function;
-    static const array_index not_found = bc::max_uint32;
-    static const size_t index_size = sizeof(array_index);
+    static const LinkType not_found = (LinkType)bc::max_uint64;
+    static const size_t link_size = sizeof(LinkType);
     static const size_t key_start = 0;
     static const size_t key_size = std::tuple_size<KeyType>::value;
-    static const file_offset prefix_size = key_size + index_size;
+    static const file_offset prefix_size = key_size + link_size;
 
     /// The uniform size of storing a record.
     static size_t size(size_t value_size);
@@ -54,13 +54,13 @@ public:
     record_row(record_manager& manager);
 
     // Construct for an existing record.
-    record_row(record_manager& manager, array_index index);
+    record_row(record_manager& manager, LinkType index);
 
     /// Allocate and populate a new record.
-    array_index create(const KeyType& key, write_function write);
+    LinkType create(const KeyType& key, write_function write);
 
     /// Link allocated/populated record.
-    void link(array_index next);
+    void link(LinkType next);
 
     /// Does this match?
     bool compare(const KeyType& key) const;
@@ -72,15 +72,15 @@ public:
     file_offset offset() const;
 
     /// Index of next record in the list.
-    array_index next_index() const;
+    LinkType next_index() const;
 
     /// Write the next index.
-    void write_next_index(array_index next);
+    void write_next_index(LinkType next);
 
 private:
-    memory_ptr raw_data(file_offset offset) const;
+    memory_ptr raw_data(size_t bytes) const;
 
-    array_index index_;
+    LinkType index_;
     record_manager& manager_;
 };
 

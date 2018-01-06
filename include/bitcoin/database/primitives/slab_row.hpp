@@ -36,29 +36,29 @@ namespace database {
  * With the starting item, we can iterate until the end using the
  * next_position() method.
  */
-template <typename KeyType>
+template <typename KeyType, typename LinkType>
 class slab_row
 {
 public:
     typedef byte_serializer::functor write_function;
-    static const file_offset not_found = bc::max_uint64;
+    static const LinkType not_found =(LinkType)bc::max_uint64;
     static const size_t key_start = 0;
     static const size_t key_size = std::tuple_size<KeyType>::value;
-    static const size_t position_size = sizeof(file_offset);
-    static const file_offset prefix_size = key_size + position_size;
+    static const size_t link_size = sizeof(LinkType);
+    static const LinkType prefix_size = key_size + link_size;
 
     // Construct for a new slab.
     slab_row(slab_manager& manager);
 
     // Construct for an existing slab.
-    slab_row(slab_manager& manager, file_offset position);
+    slab_row(slab_manager& manager, LinkType position);
 
     /// Allocate and populate a new slab.
-    file_offset create(const KeyType& key, write_function write,
+    LinkType create(const KeyType& key, write_function write,
         size_t value_size);
 
     /// Link allocated/populated slab.
-    void link(file_offset next);
+    void link(LinkType next);
 
     /// Does this match?
     bool compare(const KeyType& key) const;
@@ -67,18 +67,18 @@ public:
     memory_ptr data() const;
 
     /// The file offset of the user data.
-    file_offset offset() const;
+    LinkType offset() const;
 
     /// Position of next slab in the list.
-    file_offset next_position() const;
+    LinkType next_position() const;
 
     /// Write the next position.
-    void write_next_position(file_offset next);
+    void write_next_position(LinkType next);
 
 private:
-    memory_ptr raw_data(file_offset offset) const;
+    memory_ptr raw_data(size_t bytes) const;
 
-    file_offset position_;
+    LinkType position_;
     slab_manager& manager_;
 };
 

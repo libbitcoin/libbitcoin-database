@@ -43,7 +43,7 @@ spend_database::spend_database(const path& filename, size_t buckets,
     lookup_header_(lookup_file_, buckets),
     lookup_manager_(lookup_file_,
         record_map::header_type::size(buckets),
-        record_row<point>::size(std::tuple_size<point>::value)),
+        record_row<point, array_index>::size(std::tuple_size<point>::value)),
     lookup_map_(lookup_header_, lookup_manager_)
 {
 }

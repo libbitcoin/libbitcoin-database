@@ -29,31 +29,32 @@ namespace libbitcoin {
 namespace database {
 
 // static
-template <typename KeyType>
-size_t record_row<KeyType>::size(size_t value_size)
+template <typename KeyType, typename LinkType>
+size_t record_row<KeyType, LinkType>::size(size_t value_size)
 {
-    return std::tuple_size<KeyType>::value + sizeof(array_index) + value_size;
+    return std::tuple_size<KeyType>::value + sizeof(LinkType) + value_size;
 }
 
-template <typename KeyType>
-record_row<KeyType>::record_row(record_manager& manager)
+template <typename KeyType, typename LinkType>
+record_row<KeyType, LinkType>::record_row(record_manager& manager)
   : record_row(manager, not_found)
 {
 }
 
-template <typename KeyType>
-record_row<KeyType>::record_row(record_manager& manager, array_index index)
+template <typename KeyType, typename LinkType>
+record_row<KeyType, LinkType>::record_row(record_manager& manager,
+    LinkType index)
   : manager_(manager), index_(index)
 {
 }
 
-template <typename KeyType>
-array_index record_row<KeyType>::create(const KeyType& key,
+template <typename KeyType, typename LinkType>
+LinkType record_row<KeyType, LinkType>::create(const KeyType& key,
     write_function write)
 {
     BITCOIN_ASSERT(index_ == not_found);
 
-    // Create new record and populate its key and data.
+    // Create new (unlinked) record and populate its key and data.
     //   [ KeyType  ] <==
     //   [ next:4   ]
     //   [ value... ] <==
@@ -63,13 +64,13 @@ array_index record_row<KeyType>::create(const KeyType& key,
     const auto record = memory->buffer();
     auto serial = make_unsafe_serializer(record);
     serial.write_forward(key);
-    serial.skip(index_size);
+    serial.skip(link_size);
     serial.write_delegated(write);
     return index_;
 }
 
-template <typename KeyType>
-void record_row<KeyType>::link(array_index next)
+template <typename KeyType, typename LinkType>
+void record_row<KeyType, LinkType>::link(LinkType next)
 {
     // Populate next pointer value.
     //   [ KeyType  ]
@@ -86,16 +87,16 @@ void record_row<KeyType>::link(array_index next)
     //*************************************************************************
 }
 
-template <typename KeyType>
-bool record_row<KeyType>::compare(const KeyType& key) const
+template <typename KeyType, typename LinkType>
+bool record_row<KeyType, LinkType>::compare(const KeyType& key) const
 {
     // Key data is at the start.
     const auto memory = raw_data(key_start);
     return std::equal(key.begin(), key.end(), memory->buffer());
 }
 
-template <typename KeyType>
-memory_ptr record_row<KeyType>::data() const
+template <typename KeyType, typename LinkType>
+memory_ptr record_row<KeyType, LinkType>::data() const
 {
     // Get value pointer.
     //   [ KeyType  ]
@@ -106,15 +107,15 @@ memory_ptr record_row<KeyType>::data() const
     return raw_data(prefix_size);
 }
 
-template <typename KeyType>
-file_offset record_row<KeyType>::offset() const
+template <typename KeyType, typename LinkType>
+file_offset record_row<KeyType, LinkType>::offset() const
 {
     // Value data is at the end.
     return index_ + prefix_size;
 }
 
-template <typename KeyType>
-array_index record_row<KeyType>::next_index() const
+template <typename KeyType, typename LinkType>
+LinkType record_row<KeyType, LinkType>::next_index() const
 {
     const auto memory = raw_data(key_size);
     const auto next_address = memory->buffer();
@@ -124,8 +125,8 @@ array_index record_row<KeyType>::next_index() const
     //*************************************************************************
 }
 
-template <typename KeyType>
-void record_row<KeyType>::write_next_index(array_index next)
+template <typename KeyType, typename LinkType>
+void record_row<KeyType, LinkType>::write_next_index(LinkType next)
 {
     const auto memory = raw_data(key_size);
     auto serial = make_unsafe_serializer(memory->buffer());
@@ -135,11 +136,11 @@ void record_row<KeyType>::write_next_index(array_index next)
     //*************************************************************************
 }
 
-template <typename KeyType>
-memory_ptr record_row<KeyType>::raw_data(file_offset offset) const
+template <typename KeyType, typename LinkType>
+memory_ptr record_row<KeyType, LinkType>::raw_data(size_t bytes) const
 {
     auto memory = manager_.get(index_);
-    memory->increment(offset);
+    memory->increment(bytes);
     return memory;
 }
 

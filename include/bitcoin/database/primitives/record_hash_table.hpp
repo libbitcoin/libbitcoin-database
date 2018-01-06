@@ -56,6 +56,7 @@ public:
     typedef KeyType key_type;
     typedef byte_serializer::functor write_function;
     typedef hash_table_header<array_index, array_index> header_type;
+    typedef header_type::index_type index_type;
     typedef header_type::value_type offset_type;
     static const offset_type not_found = header_type::empty;
 
@@ -81,7 +82,7 @@ public:
 
 private:
     // The bucket index of a key.
-    header_type::index_type bucket_index(const KeyType& key) const;
+    index_type bucket_index(const KeyType& key) const;
 
     // The record start position for the set of elements mapped to the key.
     offset_type read_bucket_value(const KeyType& key) const;

@@ -116,19 +116,19 @@
 ////    BOOST_REQUIRE_EQUAL(header.read(1), 3u);
 ////
 ////    // Verify 0->empty
-////    record_row<tiny_hash> item0(alloc, 0);
+////    record_row<tiny_hash, uint32_t> item0(alloc, 0);
 ////    BOOST_REQUIRE_EQUAL(item0.next_index(), header.empty);
 ////
 ////    // Verify 1->0
-////    record_row<tiny_hash> item1(alloc, 1);
+////    record_row<tiny_hash, uint32_t> item1(alloc, 1);
 ////    BOOST_REQUIRE_EQUAL(item1.next_index(), 0u);
 ////
 ////    // Verify 2->empty
-////    record_row<tiny_hash> item2(alloc, 2);
+////    record_row<tiny_hash, uint32_t> item2(alloc, 2);
 ////    BOOST_REQUIRE_EQUAL(item2.next_index(), header.empty);
 ////
 ////    // Verify 3->2
-////    record_row<tiny_hash> item3(alloc, 3);
+////    record_row<tiny_hash, uint32_t> item3(alloc, 3);
 ////    BOOST_REQUIRE_EQUAL(item3.next_index(), 2u);
 ////
 ////    // [X->0][3->2]
@@ -139,15 +139,15 @@
 ////    BOOST_REQUIRE_EQUAL(header.read(1), 3u);
 ////
 ////    // Verify 0->empty
-////    record_row<tiny_hash> item0a(alloc, 0);
+////    record_row<tiny_hash, uint32_t> item0a(alloc, 0);
 ////    BOOST_REQUIRE_EQUAL(item0a.next_index(), header.empty);
 ////
 ////    // Verify 3->2
-////    record_row<tiny_hash> item3a(alloc, 3);
+////    record_row<tiny_hash, uint32_t> item3a(alloc, 3);
 ////    BOOST_REQUIRE_EQUAL(item3a.next_index(), 2u);
 ////
 ////    // Verify 2->empty
-////    record_row<tiny_hash> item2a(alloc, 2);
+////    record_row<tiny_hash, uint32_t> item2a(alloc, 2);
 ////    BOOST_REQUIRE_EQUAL(item2a.next_index(), header.empty);
 ////
 ////    // [0][X->2]
@@ -158,11 +158,11 @@
 ////    BOOST_REQUIRE_EQUAL(header.read(1), 2u);
 ////
 ////    // Verify 0->empty
-////    record_row<tiny_hash> item0b(alloc, 0);
+////    record_row<tiny_hash, uint32_t> item0b(alloc, 0);
 ////    BOOST_REQUIRE_EQUAL(item0b.next_index(), header.empty);
 ////
 ////    // Verify 2->empty
-////    record_row<tiny_hash> item2b(alloc, 2);
+////    record_row<tiny_hash, uint32_t> item2b(alloc, 2);
 ////    BOOST_REQUIRE_EQUAL(item2b.next_index(), header.empty);
 ////
 ////    tiny_hash invalid{ { 0x00, 0x01, 0x02, 0x03 } };
@@ -250,10 +250,10 @@
 ////    BOOST_REQUIRE_EQUAL(header.read(0), 3u);
 ////    BOOST_REQUIRE_EQUAL(header.read(1), 1u);
 ////
-////    record_row<little_hash> item(alloc, 3);
+////    record_row<little_hash, uint32_t> item(alloc, 3);
 ////    BOOST_REQUIRE_EQUAL(item.next_index(), 2u);
 ////
-////    record_row<little_hash> item1(alloc, 2);
+////    record_row<little_hash, uint32_t> item1(alloc, 2);
 ////    BOOST_REQUIRE_EQUAL(item1.next_index(), header.empty);
 ////
 ////    // [3->2][X->0]

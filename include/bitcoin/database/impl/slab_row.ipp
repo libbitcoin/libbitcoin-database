@@ -29,25 +29,26 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename KeyType>
-slab_row<KeyType>::slab_row(slab_manager& manager)
+template <typename KeyType, typename LinkType>
+slab_row<KeyType, LinkType>::slab_row(slab_manager& manager)
   : slab_row(manager_, not_found)
 {
 }
 
-template <typename KeyType>
-slab_row<KeyType>::slab_row(slab_manager& manager, file_offset position)
+template <typename KeyType, typename LinkType>
+slab_row<KeyType, LinkType>::slab_row(slab_manager& manager,
+    LinkType position)
   : manager_(manager), position_(position)
 {
 }
 
-template <typename KeyType>
-file_offset slab_row<KeyType>::create(const KeyType& key, write_function write,
-    size_t value_size)
+template <typename KeyType, typename LinkType>
+LinkType slab_row<KeyType, LinkType>::create(const KeyType& key,
+    write_function write, size_t value_size)
 {
     BITCOIN_ASSERT(position_ == not_found);
 
-    // Create new slab and populate its key and data.
+    // Create new (unlinked) slab and populate its key and data.
     //   [ KeyType  ] <==
     //   [ next:8   ]
     //   [ value... ] <==
@@ -58,14 +59,14 @@ file_offset slab_row<KeyType>::create(const KeyType& key, write_function write,
     const auto key_data = memory->buffer();
     auto serial = make_unsafe_serializer(key_data);
     serial.write_forward(key);
-    serial.skip(position_size);
+    serial.skip(link_size);
     serial.write_delegated(write);
 
     return position_;
 }
 
-template <typename KeyType>
-void slab_row<KeyType>::link(file_offset next)
+template <typename KeyType, typename LinkType>
+void slab_row<KeyType, LinkType>::link(LinkType next)
 {
     // Populate next pointer value.
     //   [ KeyType  ]
@@ -78,19 +79,19 @@ void slab_row<KeyType>::link(file_offset next)
     auto serial = make_unsafe_serializer(next_data);
 
     //*************************************************************************
-    serial.template write_little_endian<file_offset>(next);
+    serial.template write_little_endian<LinkType>(next);
     //*************************************************************************
 }
 
-template <typename KeyType>
-bool slab_row<KeyType>::compare(const KeyType& key) const
+template <typename KeyType, typename LinkType>
+bool slab_row<KeyType, LinkType>::compare(const KeyType& key) const
 {
     const auto memory = raw_data(key_start);
     return std::equal(key.begin(), key.end(), memory->buffer());
 }
 
-template <typename KeyType>
-memory_ptr slab_row<KeyType>::data() const
+template <typename KeyType, typename LinkType>
+memory_ptr slab_row<KeyType, LinkType>::data() const
 {
     // Get value pointer.
     //   [ KeyType  ]
@@ -101,40 +102,40 @@ memory_ptr slab_row<KeyType>::data() const
     return raw_data(prefix_size);
 }
 
-template <typename KeyType>
-file_offset slab_row<KeyType>::offset() const
+template <typename KeyType, typename LinkType>
+LinkType slab_row<KeyType, LinkType>::offset() const
 {
     // Value data is at the end.
     return position_ + prefix_size;
 }
 
-template <typename KeyType>
-file_offset slab_row<KeyType>::next_position() const
+template <typename KeyType, typename LinkType>
+LinkType slab_row<KeyType, LinkType>::next_position() const
 {
     const auto memory = raw_data(key_size);
     const auto next_address = memory->buffer();
 
     //*************************************************************************
-    return from_little_endian_unsafe<file_offset>(next_address);
+    return from_little_endian_unsafe<LinkType>(next_address);
     //*************************************************************************
 }
 
-template <typename KeyType>
-void slab_row<KeyType>::write_next_position(file_offset next)
+template <typename KeyType, typename LinkType>
+void slab_row<KeyType, LinkType>::write_next_position(LinkType next)
 {
     const auto memory = raw_data(key_size);
     auto serial = make_unsafe_serializer(memory->buffer());
 
     //*************************************************************************
-    serial.template write_little_endian<file_offset>(next);
+    serial.template write_little_endian<LinkType>(next);
     //*************************************************************************
 }
 
-template <typename KeyType>
-memory_ptr slab_row<KeyType>::raw_data(file_offset offset) const
+template <typename KeyType, typename LinkType>
+memory_ptr slab_row<KeyType, LinkType>::raw_data(size_t bytes) const
 {
     auto memory = manager_.get(position_);
-    memory->increment(offset);
+    memory->increment(bytes);
     return memory;
 }
 

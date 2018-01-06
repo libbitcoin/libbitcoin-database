@@ -42,7 +42,7 @@ typename record_hash_table<KeyType>::offset_type record_hash_table<KeyType>::sto
     const KeyType& key, write_function write)
 {
     // Allocate and populate new unlinked record.
-    record_row<KeyType> record(manager_);
+    record_row<KeyType, index_type> record(manager_);
     const auto index = record.create(key, write);
 
     // Critical Section
@@ -74,7 +74,7 @@ typename record_hash_table<KeyType>::offset_type record_hash_table<KeyType>::upd
     // Iterate through list...
     while (current != not_found)
     {
-        const record_row<KeyType> item(manager_, current);
+        const record_row<KeyType, index_type> item(manager_, current);
 
         // Found, update data and return index.
         if (item.compare(key))
@@ -106,7 +106,7 @@ typename record_hash_table<KeyType>::offset_type record_hash_table<KeyType>::off
     // Iterate through list...
     while (current != header_.empty)
     {
-        const record_row<KeyType> item(manager_, current);
+        const record_row<KeyType, index_type> item(manager_, current);
 
         // Found, return index.
         if (item.compare(key))
@@ -130,7 +130,7 @@ memory_ptr record_hash_table<KeyType>::find(const KeyType& key) const
     // Iterate through list...
     while (current != not_found)
     {
-        const record_row<KeyType> item(manager_, current);
+        const record_row<KeyType, index_type> item(manager_, current);
 
         // Found, return pointer.
         if (item.compare(key))
@@ -153,7 +153,7 @@ bool record_hash_table<KeyType>::unlink(const KeyType& key)
 {
     // Find start item...
     auto previous = read_bucket_value(key);
-    const record_row<KeyType> begin_item(manager_, previous);
+    const record_row<KeyType, index_type> begin_item(manager_, previous);
 
     // If start item has the key then unlink from buckets.
     if (begin_item.compare(key))
@@ -175,12 +175,12 @@ bool record_hash_table<KeyType>::unlink(const KeyType& key)
     // Iterate through list...
     while (current != not_found)
     {
-        const record_row<KeyType> item(manager_, current);
+        const record_row<KeyType, index_type> item(manager_, current);
 
         // Found, unlink current item from previous.
         if (item.compare(key))
         {
-            record_row<KeyType> previous_item(manager_, previous);
+            record_row<KeyType, index_type> previous_item(manager_, previous);
 
             // Critical Section
             ///////////////////////////////////////////////////////////////////
@@ -208,7 +208,7 @@ bool record_hash_table<KeyType>::unlink(const KeyType& key)
 
 // private
 template <typename KeyType>
-typename record_hash_table<KeyType>::header_type::index_type record_hash_table<KeyType>::bucket_index(
+typename record_hash_table<KeyType>::index_type record_hash_table<KeyType>::bucket_index(
     const KeyType& key) const
 {
     return remainder(key, header_.buckets());

@@ -62,7 +62,6 @@ public:
     memory_ptr get(array_index record) const;
 
 private:
-
     // The record index of a disk position.
     array_index position_to_record(file_offset position) const;
 
