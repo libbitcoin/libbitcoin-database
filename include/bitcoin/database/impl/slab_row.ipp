@@ -31,7 +31,8 @@ namespace database {
 
 template <typename KeyType, typename LinkType>
 slab_row<KeyType, LinkType>::slab_row(slab_manager<LinkType>& manager)
-  : slab_row(manager_, not_found)
+  ////: slab_row(manager_, not_found) <= VC++ compiler bug?
+  : manager_(manager), position_(not_found)
 {
 }
 

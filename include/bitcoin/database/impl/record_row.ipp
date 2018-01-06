@@ -37,7 +37,8 @@ size_t record_row<KeyType, LinkType>::size(size_t value_size)
 
 template <typename KeyType, typename LinkType>
 record_row<KeyType, LinkType>::record_row(record_manager<LinkType>& manager)
-  : record_row(manager, not_found)
+////: record_row(manager_, not_found) <= see slab_row constructor.
+  : manager_(manager), index_(not_found)
 {
 }
 
