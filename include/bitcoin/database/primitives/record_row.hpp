@@ -41,6 +41,7 @@ class record_row
 {
 public:
     typedef byte_serializer::functor write_function;
+
     static const LinkType not_found = (LinkType)bc::max_uint64;
     static const size_t link_size = sizeof(LinkType);
     static const size_t key_start = 0;

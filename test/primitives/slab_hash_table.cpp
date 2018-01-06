@@ -29,24 +29,30 @@ BOOST_AUTO_TEST_SUITE(slab_hash_table_tests)
 
 BOOST_AUTO_TEST_CASE(slab_hash_table__store__one_slab__expected)
 {
-    typedef slab_hash_table<test::tiny_hash> hash_table;
+    typedef test::tiny_hash key_type;
+    typedef uint32_t index_type;
+    typedef uint64_t link_type;
+
+    typedef slab_manager<link_type> slab_manager;
+    typedef hash_table_header<index_type, link_type> slab_header;
+    typedef slab_hash_table<key_type, index_type, link_type> slab_map;
 
     const auto buckets = 100u;
-    const auto header_size = hash_table::header_type::size(buckets);
+    const auto header_size = slab_header::size(buckets);
 
     test::storage file;
     BOOST_REQUIRE(file.open());
 
-    hash_table::header_type header(file, buckets);
+    slab_header header(file, buckets);
     BOOST_REQUIRE(header.create());
     BOOST_REQUIRE_GE(file.size(), header_size);
 
-    hash_table::slab_manager manager(file, header_size);
+    slab_manager manager(file, header_size);
     BOOST_REQUIRE(manager.create());
-    BOOST_REQUIRE_GE(file.size(), header_size + sizeof(hash_table::link_type));
+    BOOST_REQUIRE_GE(file.size(), header_size + sizeof(link_type));
 
-    slab_hash_table<test::tiny_hash> table(header, manager);
-    static const test::tiny_hash key1{ { 0xde, 0xad, 0xbe, 0xef } };
+    slab_map table(header, manager);
+    static const key_type key1{ { 0xde, 0xad, 0xbe, 0xef } };
 
     const auto writer = [](byte_serializer& serial)
     {
@@ -68,25 +74,31 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__store__one_slab__expected)
 
 BOOST_AUTO_TEST_CASE(slab_hash_table__find__overlapping_reads__expected)
 {
-    typedef slab_hash_table<test::tiny_hash> hash_table;
+    typedef test::tiny_hash key_type;
+    typedef uint32_t index_type;
+    typedef uint64_t link_type;
+
+    typedef slab_manager<link_type> slab_manager;
+    typedef hash_table_header<index_type, link_type> slab_header;
+    typedef slab_hash_table<key_type, index_type, link_type> slab_map;
 
     const auto buckets = 100u;
-    const auto header_size = hash_table::header_type::size(buckets);
+    const auto header_size = slab_header::size(buckets);
 
     test::storage file;
     BOOST_REQUIRE(file.open());
 
-    hash_table::header_type header(file, buckets);
+    slab_header header(file, buckets);
     BOOST_REQUIRE(header.create());
     BOOST_REQUIRE_GE(file.size(), header_size);
 
-    hash_table::slab_manager manager(file, header_size);
+    slab_manager manager(file, header_size);
     BOOST_REQUIRE(manager.create());
-    BOOST_REQUIRE_GE(file.size(), header_size + sizeof(hash_table::link_type));
+    BOOST_REQUIRE_GE(file.size(), header_size + sizeof(link_type));
 
-    slab_hash_table<test::tiny_hash> table(header, manager);
-    static const test::tiny_hash key1{ { 0xde, 0xad, 0xbe, 0xef } };
-    const test::tiny_hash key2{ { 0xba, 0xad, 0xbe, 0xef } };
+    slab_map table(header, manager);
+    static const key_type key1{ { 0xde, 0xad, 0xbe, 0xef } };
+    const key_type key2{ { 0xba, 0xad, 0xbe, 0xef } };
 
     const auto writer1 = [](byte_serializer& serial)
     {
@@ -119,25 +131,31 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__find__overlapping_reads__expected)
 
 BOOST_AUTO_TEST_CASE(slab_hash_table__unlink__first_stored__expected)
 {
-    typedef slab_hash_table<test::tiny_hash> hash_table;
+    typedef test::tiny_hash key_type;
+    typedef uint32_t index_type;
+    typedef uint64_t link_type;
+
+    typedef slab_manager<link_type> slab_manager;
+    typedef hash_table_header<index_type, link_type> slab_header;
+    typedef slab_hash_table<key_type, index_type, link_type> slab_map;
 
     const auto buckets = 100u;
-    const auto header_size = hash_table::header_type::size(buckets);
+    const auto header_size = slab_header::size(buckets);
 
     test::storage file;
     BOOST_REQUIRE(file.open());
 
-    hash_table::header_type header(file, buckets);
+    slab_header header(file, buckets);
     BOOST_REQUIRE(header.create());
     BOOST_REQUIRE_GE(file.size(), header_size);
 
-    hash_table::slab_manager manager(file, header_size);
+    slab_manager manager(file, header_size);
     BOOST_REQUIRE(manager.create());
-    BOOST_REQUIRE_GE(file.size(), header_size + sizeof(hash_table::link_type));
+    BOOST_REQUIRE_GE(file.size(), header_size + sizeof(link_type));
 
-    slab_hash_table<test::tiny_hash> table(header, manager);
-    static const test::tiny_hash key1{ { 0xde, 0xad, 0xbe, 0xef } };
-    const test::tiny_hash key2{ { 0xba, 0xad, 0xbe, 0xef } };
+    slab_map table(header, manager);
+    static const key_type key1{ { 0xde, 0xad, 0xbe, 0xef } };
+    const key_type key2{ { 0xba, 0xad, 0xbe, 0xef } };
 
     const auto writer1 = [](byte_serializer& serial)
     {

@@ -31,53 +31,54 @@ namespace libbitcoin {
 namespace database {
 
 /**
- * A hashtable mapping hashes to fixed sized values (records).
+ * A hash table mapping hashes to fixed sized values (records).
  * Uses a combination of the hash_table and record_manager.
- *
- * The hash_table is basically a bucket list containing the start
- * value for the record_row.
- *
- * The record_manager is used to create linked chains. A header
- * containing the hash of the item, and the next value is stored
- * with each record.
- *
- *   [ KeyType ]
- *   [ next:4  ]
- *   [ record  ]
  *
  * By using the record_manager instead of slabs, we can have smaller
  * indexes avoiding reading/writing extra bytes to the file.
  * Using fixed size records is therefore faster.
+ *
+ * The hash_table is basically a bucket list containing the start value for the
+ * record_row.
+ *
+ *  [   size:IndexType  ]
+ *  [ [ item:LinkType ] ]
+ *  [ [      ...      ] ]
+ *  [ [ item:LinkType ] ]
+ *
+ * The record_manager is used to create a payload of linked chains. A header
+ * containing the hash of the item, and the next value is stored with each
+ * record.
+ *
+ *   [ key:KeyType   ]
+ *   [ next:LinkType ]
+ *   [ record:data   ]
+ *
+ * The payload is prefixed with [ count:LinkType ].
  */
-template <typename KeyType>
+template <typename KeyType, typename IndexType, typename LinkType>
 class record_hash_table
 {
 public:
-    typedef KeyType key_type;
     typedef byte_serializer::functor write_function;
 
-    // This determines the nature of the hash table.
-    // These template parameters could be moved up to record_hash_table.
-    typedef hash_table_header<array_index, array_index> header_type;
-
-    typedef header_type::index_type index_type;
-    typedef header_type::value_type link_type;
-    typedef record_manager<link_type> record_manager;
-    static const link_type not_found = header_type::empty;
+    static const LinkType not_found = hash_table_header<IndexType,
+        LinkType>::empty;
 
     /// Construct a hash table for uniform size entries.
-    record_hash_table(header_type& header, record_manager& manager);
+    record_hash_table(hash_table_header<IndexType, LinkType>& header,
+        record_manager<LinkType>& manager);
 
     /// Execute a write. The provided write() function must write the correct
     /// size: (value_size = record_size - key_size - sizeof(array_index)).
-    link_type store(const KeyType& key, write_function write);
+    LinkType store(const KeyType& key, write_function write);
 
     /// Execute a writer against a key's buffer if the key is found.
     /// Returns the array offset of the found value (or not_found).
-    link_type update(const KeyType& key, write_function write);
+    LinkType update(const KeyType& key, write_function write);
 
     /// Find the array offset for given key. Returns not_found if not found.
-    link_type offset(const KeyType& key) const;
+    LinkType offset(const KeyType& key) const;
 
     /// Find the record for given key. Returns nullptr if not found.
     memory_ptr find(const KeyType& key) const;
@@ -87,16 +88,16 @@ public:
 
 private:
     // The bucket index of a key.
-    index_type bucket_index(const KeyType& key) const;
+    IndexType bucket_index(const KeyType& key) const;
 
     // The record start position for the set of elements mapped to the key.
-    link_type read_bucket_value(const KeyType& key) const;
+    LinkType read_bucket_value(const KeyType& key) const;
 
     // Link a new element into the bucket header (stack model, push front).
-    void link(const KeyType& key, link_type begin);
+    void link(const KeyType& key, LinkType begin);
 
-    header_type& header_;
-    record_manager& manager_;
+    hash_table_header<IndexType, LinkType>& header_;
+    record_manager<LinkType>& manager_;
     mutable shared_mutex create_mutex_;
     mutable shared_mutex update_mutex_;
 };

@@ -26,21 +26,22 @@ namespace libbitcoin {
 namespace database {
 
 // static
-template <typename KeyType, typename LinkType>
-size_t record_multimap<KeyType, LinkType>::element_size(size_t value_size)
+template <typename KeyType, typename IndexType, typename LinkType>
+size_t record_multimap<KeyType, IndexType, LinkType>::size(size_t value_size)
 {
     return sizeof(LinkType) + value_size;
 }
 
-template <typename KeyType, typename LinkType>
-record_multimap<KeyType, LinkType>::record_multimap(
-    record_hash_table_type& map, record_manager<LinkType>& manager)
+template <typename KeyType, typename IndexType, typename LinkType>
+record_multimap<KeyType, IndexType, LinkType>::record_multimap(
+    record_hash_table<KeyType, IndexType, LinkType>& map,
+    record_manager<LinkType>& manager)
   : map_(map), manager_(manager)
 {
 }
 
-template <typename KeyType, typename LinkType>
-void record_multimap<KeyType, LinkType>::store(const KeyType& key,
+template <typename KeyType, typename IndexType, typename LinkType>
+void record_multimap<KeyType, IndexType, LinkType>::store(const KeyType& key,
     write_function write)
 {
     // Allocate and populate new unlinked row.
@@ -79,8 +80,9 @@ void record_multimap<KeyType, LinkType>::store(const KeyType& key,
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename KeyType, typename LinkType>
-LinkType record_multimap<KeyType, LinkType>::find(const KeyType& key) const
+template <typename KeyType, typename IndexType, typename LinkType>
+LinkType record_multimap<KeyType, IndexType, LinkType>::find(
+    const KeyType& key) const
 {
     const auto begin_address = map_.find(key);
 
@@ -97,16 +99,17 @@ LinkType record_multimap<KeyType, LinkType>::find(const KeyType& key) const
 }
 
 /// Get a remap safe address pointer to the indexed data.
-template <typename KeyType, typename LinkType>
-memory_ptr record_multimap<KeyType, LinkType>::get(LinkType index) const
+template <typename KeyType, typename IndexType, typename LinkType>
+memory_ptr record_multimap<KeyType, IndexType, LinkType>::get(
+    LinkType index) const
 {
     const record_list<LinkType> record(manager_, index);
     return record.data();
 }
 
 // Unlink is not safe for concurrent write.
-template <typename KeyType, typename LinkType>
-bool record_multimap<KeyType, LinkType>::unlink(const KeyType& key)
+template <typename KeyType, typename IndexType, typename LinkType>
+bool record_multimap<KeyType, IndexType, LinkType>::unlink(const KeyType& key)
 {
     const auto begin = find(key);
 

@@ -35,6 +35,8 @@ namespace database {
 
 using namespace bc::chain;
 
+static const auto value_size = std::tuple_size<point>::value;
+
 // Spends use a hash table index, O(1).
 // The spend database keys off of output point and has input point value.
 spend_database::spend_database(const path& filename, size_t buckets,
@@ -42,8 +44,8 @@ spend_database::spend_database(const path& filename, size_t buckets,
   : lookup_file_(filename, expansion),
     lookup_header_(lookup_file_, buckets),
     lookup_manager_(lookup_file_,
-        record_map::header_type::size(buckets),
-        record_row<point, array_index>::size(std::tuple_size<point>::value)),
+        hash_table_header<index_type, link_type>::size(buckets),
+        record_row<key_type, array_index>::size(value_size)),
     lookup_map_(lookup_header_, lookup_manager_)
 {
 }

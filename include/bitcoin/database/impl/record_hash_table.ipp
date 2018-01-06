@@ -27,9 +27,10 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename KeyType>
-record_hash_table<KeyType>::record_hash_table(header_type& header,
-    record_manager& manager)
+template <typename KeyType, typename IndexType, typename LinkType>
+record_hash_table<KeyType, IndexType, LinkType>::record_hash_table(
+    hash_table_header<IndexType, LinkType>& header,
+    record_manager<LinkType>& manager)
   : header_(header), manager_(manager)
 {
 }
@@ -37,12 +38,12 @@ record_hash_table<KeyType>::record_hash_table(header_type& header,
 // This is not limited to storing unique key values. If duplicate keyed values
 // are store then retrieval and unlinking will fail as these multiples cannot
 // be differentiated except in the order written.
-template <typename KeyType>
-typename record_hash_table<KeyType>::link_type record_hash_table<KeyType>::store(
+template <typename KeyType, typename IndexType, typename LinkType>
+LinkType record_hash_table<KeyType, IndexType, LinkType>::store(
     const KeyType& key, write_function write)
 {
     // Allocate and populate new unlinked record.
-    record_row<KeyType, index_type> record(manager_);
+    record_row<KeyType, IndexType> record(manager_);
     const auto index = record.create(key, write);
 
     // Critical Section
@@ -64,17 +65,18 @@ typename record_hash_table<KeyType>::link_type record_hash_table<KeyType>::store
 
 // Execute a writer against a key's buffer if the key is found.
 // Return the array index of the found value (or not_found).
-template <typename KeyType>
-typename record_hash_table<KeyType>::link_type record_hash_table<KeyType>::update(
+template <typename KeyType, typename IndexType, typename LinkType>
+LinkType record_hash_table<KeyType, IndexType, LinkType>::update(
     const KeyType& key, write_function write)
 {
     // Find start item...
     auto current = read_bucket_value(key);
 
+    // TODO: implement hash_table_iterable/hash_table_iterator.
     // Iterate through list...
     while (current != not_found)
     {
-        const record_row<KeyType, index_type> item(manager_, current);
+        const record_row<KeyType, IndexType> item(manager_, current);
 
         // Found, update data and return index.
         if (item.compare(key))
@@ -96,17 +98,18 @@ typename record_hash_table<KeyType>::link_type record_hash_table<KeyType>::updat
 }
 
 // This is limited to returning the first of multiple matching key values.
-template <typename KeyType>
-typename record_hash_table<KeyType>::link_type record_hash_table<KeyType>::offset(
+template <typename KeyType, typename IndexType, typename LinkType>
+LinkType record_hash_table<KeyType, IndexType, LinkType>::offset(
     const KeyType& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
 
+    // TODO: implement record_table_iterable/record_table_iterator.
     // Iterate through list...
     while (current != header_.empty)
     {
-        const record_row<KeyType, index_type> item(manager_, current);
+        const record_row<KeyType, IndexType> item(manager_, current);
 
         // Found, return index.
         if (item.compare(key))
@@ -121,16 +124,18 @@ typename record_hash_table<KeyType>::link_type record_hash_table<KeyType>::offse
 }
 
 // This is limited to returning the first of multiple matching key values.
-template <typename KeyType>
-memory_ptr record_hash_table<KeyType>::find(const KeyType& key) const
+template <typename KeyType, typename IndexType, typename LinkType>
+memory_ptr record_hash_table<KeyType, IndexType, LinkType>::find(
+    const KeyType& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
 
+    // TODO: implement hash_table_iterable/hash_table_iterator.
     // Iterate through list...
     while (current != not_found)
     {
-        const record_row<KeyType, index_type> item(manager_, current);
+        const record_row<KeyType, IndexType> item(manager_, current);
 
         // Found, return pointer.
         if (item.compare(key))
@@ -148,12 +153,13 @@ memory_ptr record_hash_table<KeyType>::find(const KeyType& key) const
 
 // Unlink is not safe for concurrent write.
 // This is limited to unlinking the first of multiple matching key values.
-template <typename KeyType>
-bool record_hash_table<KeyType>::unlink(const KeyType& key)
+template <typename KeyType, typename IndexType, typename LinkType>
+bool record_hash_table<KeyType, IndexType, LinkType>::unlink(
+    const KeyType& key)
 {
     // Find start item...
     auto previous = read_bucket_value(key);
-    const record_row<KeyType, index_type> begin_item(manager_, previous);
+    const record_row<KeyType, IndexType> begin_item(manager_, previous);
 
     // If start item has the key then unlink from buckets.
     if (begin_item.compare(key))
@@ -172,15 +178,16 @@ bool record_hash_table<KeyType>::unlink(const KeyType& key)
     update_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 
+    // TODO: implement hash_table_iterable/hash_table_iterator.
     // Iterate through list...
     while (current != not_found)
     {
-        const record_row<KeyType, index_type> item(manager_, current);
+        const record_row<KeyType, IndexType> item(manager_, current);
 
         // Found, unlink current item from previous.
         if (item.compare(key))
         {
-            record_row<KeyType, index_type> previous_item(manager_, previous);
+            record_row<KeyType, IndexType> previous_item(manager_, previous);
 
             // Critical Section
             ///////////////////////////////////////////////////////////////////
@@ -207,24 +214,26 @@ bool record_hash_table<KeyType>::unlink(const KeyType& key)
 }
 
 // private
-template <typename KeyType>
-typename record_hash_table<KeyType>::index_type record_hash_table<KeyType>::bucket_index(
+template <typename KeyType, typename IndexType, typename LinkType>
+IndexType record_hash_table<KeyType, IndexType, LinkType>::bucket_index(
     const KeyType& key) const
 {
-    return remainder(key, header_.buckets());
+    return hash_table_header<IndexType, LinkType>::remainder(key,
+        header_.buckets());
 }
 
 // private
-template <typename KeyType>
-typename record_hash_table<KeyType>::link_type record_hash_table<KeyType>::read_bucket_value(
+template <typename KeyType, typename IndexType, typename LinkType>
+LinkType record_hash_table<KeyType, IndexType, LinkType>::read_bucket_value(
     const KeyType& key) const
 {
     return header_.read(bucket_index(key));
 }
 
 // private
-template <typename KeyType>
-void record_hash_table<KeyType>::link(const KeyType& key, link_type begin)
+template <typename KeyType, typename IndexType, typename LinkType>
+void record_hash_table<KeyType, IndexType, LinkType>::link(const KeyType& key,
+    LinkType begin)
 {
     header_.write(bucket_index(key), begin);
 }

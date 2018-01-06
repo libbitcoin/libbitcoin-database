@@ -56,7 +56,7 @@ namespace database {
 using namespace bc::chain;
 
 // static
-const size_t block_database::prefix_size_ = record_row<hash_digest,
+const size_t block_database::prefix_size_ = record_row<key_type,
     link_type>::prefix_size;
 
 static const auto header_size = header::satoshi_fixed_size();
@@ -87,8 +87,8 @@ block_database::block_database(const path& map_filename,
     lookup_file_(map_filename, expansion),
     lookup_header_(lookup_file_, buckets),
     lookup_manager_(lookup_file_,
-        record_map::header_type::size(buckets),
-        record_row<hash_digest, link_type>::size(block_size)),
+        hash_table_header<index_type, link_type>::size(buckets),
+        record_row<key_type, link_type>::size(block_size)),
     lookup_map_(lookup_header_, lookup_manager_),
 
     header_index_file_(header_index_filename, expansion),

@@ -31,54 +31,50 @@ namespace libbitcoin {
 namespace database {
 
 /**
- * A hashtable mapping hashes to variable sized values (slabs).
+ * A hash table mapping hashes to variable sized values (slabs).
  * Uses a combination of the hash_table and slab_manager.
  *
- * The hash_table is basically a bucket list containing the start
- * value for the slab_row.
+ * The hash_table is basically a bucket list containing the start value for the
+ * slab_row.
  *
- * The slab_manager is used to create linked chains. A header
- * containing the hash of the item, and the next value is stored
- * with each slab.
+ *  [   size:IndexType  ]
+ *  [ [ item:LinkType ] ]
+ *  [ [      ...      ] ]
+ *  [ [ item:LinkType ] ]
  *
- *   [ KeyType  ]
- *   [ next:8   ]
- *   [ value... ]
+ * The slab_manager is used to create a payload of linked chains. A header
+ * containing the hash of the item, and the next value is stored with each
+ * slab.
  *
- * If we run manager.sync() before the link() step then we ensure
- * data can be lost but the hashtable is never corrupted.
- * Instead we prefer speed and batch that operation. The user should
- * call allocator.sync() after a series of store() calls.
+ *   [ key:KeyType   ]
+ *   [ next:LinkType ]
+ *   [ record:data   ]
+ *
+ * The payload is prefixed with [ size:LinkType ].
  */
-template <typename KeyType>
+template <typename KeyType, typename IndexType, typename LinkType>
 class slab_hash_table
 {
 public:
-    typedef KeyType key_type;
     typedef byte_serializer::functor write_function;
 
-    // This determines the nature of the hash table.
-    // These template parameters could be moved up to slab_hash_table.
-    typedef hash_table_header<array_index, file_offset> header_type;
-
-    typedef header_type::value_type link_type;
-    typedef header_type::index_type index_type;
-    typedef slab_manager<link_type> slab_manager;
-    static const link_type not_found = header_type::empty;
+    static const LinkType not_found = hash_table_header<IndexType,
+        LinkType>::empty;
 
     /// Construct a hash table for variable size entries.
-    slab_hash_table(header_type& header, slab_manager& manager);
+    slab_hash_table(hash_table_header<IndexType, LinkType>& header,
+        slab_manager<LinkType>& manager);
 
     /// Execute a write. value_size is the required size of the buffer.
     /// Returns the file offset of the new value.
-    link_type store(const KeyType& key, write_function write, size_t size);
+    LinkType store(const KeyType& key, write_function write, size_t size);
 
     /// Execute a writer against a key's buffer if the key is found.
     /// Returns the file offset of the found value (or not_found).
-    link_type update(const KeyType& key, write_function write);
+    LinkType update(const KeyType& key, write_function write);
 
     /// Find the file offset for a given key. Returns not_found if not found.
-    link_type offset(const KeyType& key) const;
+    LinkType offset(const KeyType& key) const;
 
     /// Find the slab pointer for a given key. Returns nullptr if not found.
     memory_ptr find(const KeyType& key) const;
@@ -88,16 +84,16 @@ public:
 
 private:
     // The bucket index of a key.
-    index_type bucket_index(const KeyType& key) const;
+    IndexType bucket_index(const KeyType& key) const;
 
     // The slab start position for the set of elements mapped to the key.
-    link_type read_bucket_value(const KeyType& key) const;
+    LinkType read_bucket_value(const KeyType& key) const;
 
     // Link a new element into the bucket header (stack model, push front).
-    void link(const KeyType& key, link_type begin);
+    void link(const KeyType& key, LinkType begin);
 
-    header_type& header_;
-    slab_manager& manager_;
+    hash_table_header<IndexType, LinkType>& header_;
+    slab_manager<LinkType>& manager_;
     mutable shared_mutex create_mutex_;
     mutable shared_mutex update_mutex_;
 };

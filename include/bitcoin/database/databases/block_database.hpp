@@ -111,9 +111,14 @@ public:
     bool unconfirm(const hash_digest& hash, size_t height, bool block_index);
 
 private:
-    typedef record_hash_table<hash_digest> record_map;
-    typedef record_map::link_type link_type;
+    typedef hash_digest key_type;
+    typedef array_index index_type;
+    typedef array_index link_type;
+
     typedef record_manager<link_type> record_manager;
+    typedef hash_table_header<index_type, link_type> record_header;
+    typedef record_hash_table<key_type, index_type, link_type> record_map;
+
     typedef message::compact_block::short_id_list short_id_list;
 
     link_type associate(const chain::transaction::list& transactions);
@@ -136,7 +141,7 @@ private:
 
     // Hash table used for looking up block headers by hash.
     file_storage lookup_file_;
-    record_map::header_type lookup_header_;
+    record_header lookup_header_;
     record_manager lookup_manager_;
     record_map lookup_map_;
 
@@ -150,8 +155,12 @@ private:
     file_storage block_index_file_;
     record_manager block_index_manager_;
 
+    // See comments in history_database for similiarity to record_multimap.
+    // A new record_multiset template could abstract this in a similar manner.
     // Association table between blocks and their contained transactions.
+    // Only first tx is indexed and count is required to read the full set.
     // Each record resolves to a record via link_type.
+    // This indexes txs (vs. blocks) so the link type may be differentiated.
     file_storage tx_index_file_;
     record_manager tx_index_manager_;
 

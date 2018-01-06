@@ -96,14 +96,24 @@ public:
     bool unlink_last_row(const short_hash& key);
 
 private:
-    typedef record_hash_table<short_hash> record_map;
-    typedef record_map::link_type link_type;
+    typedef short_hash key_type;
+    typedef array_index index_type;
+    typedef array_index link_type;
+
     typedef record_manager<link_type> record_manager;
-    typedef record_multimap<short_hash, link_type> record_multiple_map;
+    typedef hash_table_header<index_type, link_type> record_header;
+    typedef record_hash_table<key_type, index_type, link_type> record_map;
+
+    // The multimap as a distinct file as opposed to linage within the map
+    // allows avoidance of hash storage with each entry. This is similar to
+    // the transaction index with the exception that the tx index stores tx
+    // sets by block in a contiguous set, eliminating a need for record_list.
+    typedef record_multimap<key_type, index_type, link_type>
+        record_multiple_map;
 
     /// Hash table used for start index lookup for linked list by address hash.
     file_storage lookup_file_;
-    record_map::header_type lookup_header_;
+    record_header lookup_header_;
     record_manager lookup_manager_;
     record_map lookup_map_;
 

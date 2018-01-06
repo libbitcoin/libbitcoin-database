@@ -26,28 +26,26 @@
 namespace libbitcoin {
 namespace database {
 
-/**
- * Implements contiguous memory array with a fixed size elements.
- *
- * File format looks like:
- *
- *  [   size:IndexType   ]
- *  [ [      ...       ] ]
- *  [ [ item:ValueType ] ]
- *  [ [      ...       ] ]
- *
- * Empty elements are represented by the value hash_table_header.empty
- */
-template <typename IndexType, typename ValueType>
+/// Size-prefixed array.
+/// Empty elements are represented by the value hash_table_header.empty.
+///
+///  [  size:IndexType  ]
+///  [ [ row:LinkType ] ]
+///  [ [      ...     ] ]
+///  [ [ row:LinkType ] ]
+///
+template <typename IndexType, typename LinkType>
 class hash_table_header
 {
 public:
-    typedef IndexType index_type;
-    typedef ValueType value_type;
+    /// TODO: implement std::hash replacement to prevent store drift.
+    /// A hash of the key reduced to the domain of the divisor.
+    template <typename KeyType>
+    static IndexType remainder(const KeyType& key, IndexType divisor);
 
-    // This cast is a VC++ workaround is OK because ValueType must be unsigned.
-    //static constexpr ValueType empty = std::numeric_limits<ValueType>::max();
-    static const ValueType empty = (ValueType)bc::max_uint64;
+    // This cast is a VC++ workaround is OK because LinkType must be unsigned.
+    //static constexpr LinkType empty = std::numeric_limits<LinkType>::max();
+    static const LinkType empty = (LinkType)bc::max_uint64;
 
     /// The hash table header byte size for a given bucket count.
     static size_t size(IndexType buckets);
@@ -62,10 +60,10 @@ public:
     bool start();
 
     /// Read item value.
-    ValueType read(IndexType index) const;
+    LinkType read(IndexType index) const;
 
     /// Write value to item.
-    void write(IndexType index, ValueType value);
+    void write(IndexType index, LinkType value);
 
     /// The hash table header bucket count.
     IndexType buckets() const;
@@ -81,13 +79,6 @@ private:
     IndexType buckets_;
     mutable shared_mutex mutex_;
 };
-
-/// Return a hash of the key reduced to the domain of the divisor.
-template <typename KeyType, typename Divisor>
-Divisor remainder(const KeyType& key, const Divisor divisor)
-{
-    return divisor == 0 ? 0 : std::hash<KeyType>()(key) % divisor;
-}
 
 } // namespace database
 } // namespace libbitcoin

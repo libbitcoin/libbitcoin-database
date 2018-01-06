@@ -63,13 +63,13 @@ history_database::history_database(const path& lookup_filename,
   : lookup_file_(lookup_filename, expansion),
     lookup_header_(lookup_file_, buckets),
     lookup_manager_(lookup_file_,
-        record_map::header_type::size(buckets),
-        record_row<short_hash, link_type>::size(sizeof(link_type))),
+        hash_table_header<index_type, link_type>::size(buckets),
+        record_row<key_type, link_type>::size(sizeof(link_type))),
     lookup_map_(lookup_header_, lookup_manager_),
 
     rows_file_(rows_filename, expansion),
     rows_manager_(rows_file_, 0,
-        record_multimap<short_hash, link_type>::element_size(value_size)),
+        record_multimap<key_type, index_type, link_type>::size(value_size)),
     rows_multimap_(lookup_map_, rows_manager_)
 {
 }

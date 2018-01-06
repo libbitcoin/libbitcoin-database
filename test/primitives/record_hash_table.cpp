@@ -35,27 +35,32 @@ BOOST_AUTO_TEST_SUITE(record_hash_table_tests)
 
 BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
 {
-    typedef record_hash_table<test::tiny_hash> hash_table;
+    typedef test::tiny_hash key_type;
+    typedef uint32_t index_type;
+    typedef uint32_t link_type;
+
+    typedef record_manager<link_type> record_manager;
+    typedef hash_table_header<index_type, link_type> record_header;
+    typedef record_hash_table<key_type, index_type, link_type> record_map;
 
     const auto buckets = 2u;
     const auto value_size = 4u;
-    const auto header_size = hash_table::header_type::size(buckets);
-    const auto record_size = record_row<test::tiny_hash, hash_table::link_type>::size(value_size);
+    const auto header_size = record_header::size(buckets);
 
     test::storage file;
     BOOST_REQUIRE(file.open());
 
-    hash_table::header_type header(file, buckets);
+    record_header header(file, buckets);
     BOOST_REQUIRE(header.create());
     BOOST_REQUIRE_GE(file.size(), header_size);
 
-    hash_table::record_manager manager(file, header_size, record_size);
+    record_manager manager(file, header_size, value_size);
     BOOST_REQUIRE(manager.create());
-    BOOST_REQUIRE_GE(file.size(), header_size + sizeof(hash_table::link_type));
+    BOOST_REQUIRE_GE(file.size(), header_size + sizeof(link_type));
 
-    record_hash_table<test::tiny_hash> table(header, manager);
-    test::tiny_hash key{ { 0xde, 0xad, 0xbe, 0xef } };
-    test::tiny_hash key1{ { 0xb0, 0x0b, 0xb0, 0x0b } };
+    record_map table(header, manager);
+    key_type key{ { 0xde, 0xad, 0xbe, 0xef } };
+    key_type key1{ { 0xb0, 0x0b, 0xb0, 0x0b } };
 
     const auto write = [](byte_serializer& serial)
     {
@@ -160,28 +165,32 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
 
 BOOST_AUTO_TEST_CASE(record_hash_table__64bit__test)
 {
-    typedef record_hash_table<test::little_hash> hash_table;
+    typedef test::little_hash key_type;
+    typedef uint32_t index_type;
+    typedef uint32_t link_type;
+
+    typedef record_manager<link_type> record_manager;
+    typedef hash_table_header<index_type, link_type> record_header;
+    typedef record_hash_table<key_type, index_type, link_type> record_map;
 
     const auto buckets = 2u;
     const auto value_size = 7u;
-    const auto header_size = hash_table::header_type::size(buckets);
-    const auto record_size = record_row<test::little_hash, hash_table::link_type>::size(value_size);
+    const auto header_size = record_header::size(buckets);
 
     test::storage file;
     BOOST_REQUIRE(file.open());
 
-    hash_table::header_type header(file, buckets);
+    record_header header(file, buckets);
     BOOST_REQUIRE(header.create());
     BOOST_REQUIRE_GE(file.size(), header_size);
 
-    hash_table::record_manager manager(file, header_size, record_size);
+    record_manager manager(file, header_size, value_size);
     BOOST_REQUIRE(manager.create());
-    BOOST_REQUIRE_GE(file.size(), header_size + sizeof(hash_table::link_type));
+    BOOST_REQUIRE_GE(file.size(), header_size + sizeof(link_type));
 
-    record_hash_table<test::little_hash> table(header, manager);
-
-    test::little_hash key{ { 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef } };
-    test::little_hash key1{ { 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b } };
+    record_map table(header, manager);
+    key_type key{ { 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef } };
+    key_type key1{ { 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b } };
 
     const auto write = [](byte_serializer& serial)
     {

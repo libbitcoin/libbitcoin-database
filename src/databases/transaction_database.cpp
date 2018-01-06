@@ -87,7 +87,8 @@ transaction_database::transaction_database(const path& map_filename,
     size_t buckets, size_t expansion, size_t cache_capacity)
   : lookup_file_(map_filename, expansion),
     lookup_header_(lookup_file_, buckets),
-    lookup_manager_(lookup_file_, slab_map::header_type::size(buckets)),
+    lookup_manager_(lookup_file_,
+        hash_table_header<index_type, link_type>::size(buckets)),
     lookup_map_(lookup_header_, lookup_manager_),
 
     cache_(cache_capacity)
@@ -139,7 +140,7 @@ bool transaction_database::close()
 // Queries.
 // ----------------------------------------------------------------------------
 
-transaction_result transaction_database::get(link_type offset) const
+transaction_result transaction_database::get(file_offset offset) const
 {
     const auto slab = lookup_manager_.get(offset);
 

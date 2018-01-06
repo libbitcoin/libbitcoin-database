@@ -35,6 +35,7 @@ class record_list
 public:
     typedef serializer<uint8_t*>::functor write_function;
     typedef record_manager<LinkType> record_manager;
+
     static const LinkType empty = (LinkType)bc::max_uint64;
 
     // Construct for a new record.

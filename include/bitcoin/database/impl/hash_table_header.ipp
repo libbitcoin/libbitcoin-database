@@ -27,25 +27,31 @@
 namespace libbitcoin {
 namespace database {
 
-static const uint8_t empty_byte = bc::max_uint8;
+template <typename IndexType, typename LinkType>
+template <typename KeyType>
+inline IndexType hash_table_header<IndexType, LinkType>::remainder(
+    const KeyType& key, IndexType divisor)
+{
+    return divisor == 0 ? 0 : std::hash<KeyType>()(key) % divisor;
+}
 
-template <typename IndexType, typename ValueType>
-hash_table_header<IndexType, ValueType>::hash_table_header(storage& file,
+template <typename IndexType, typename LinkType>
+hash_table_header<IndexType, LinkType>::hash_table_header(storage& file,
     IndexType buckets)
   : file_(file), buckets_(buckets)
 {
-    BITCOIN_ASSERT_MSG(empty == (ValueType)bc::max_uint64,
+    BITCOIN_ASSERT_MSG(empty == (LinkType)bc::max_uint64,
         "Unexpected value for empty sentinel.");
 
-    static_assert(std::is_unsigned<ValueType>::value,
+    static_assert(std::is_unsigned<LinkType>::value,
         "Hash table header requires unsigned value type.");
 
     static_assert(std::is_unsigned<IndexType>::value,
         "Hash table header requires unsigned index type.");
 }
 
-template <typename IndexType, typename ValueType>
-bool hash_table_header<IndexType, ValueType>::create()
+template <typename IndexType, typename LinkType>
+bool hash_table_header<IndexType, LinkType>::create()
 {
     const auto file_size = size(buckets_);
 
@@ -53,7 +59,7 @@ bool hash_table_header<IndexType, ValueType>::create()
     const auto memory = file_.resize(file_size);
 
     // Speed-optimized fill implementation.
-    memset(memory->buffer(), empty_byte, file_size);
+    memset(memory->buffer(), (uint8_t)empty, file_size);
 
     // Overwrite the start of the buffer with the bucket count.
     auto serial = make_unsafe_serializer(memory->buffer());
@@ -61,13 +67,11 @@ bool hash_table_header<IndexType, ValueType>::create()
     return true;
 }
 
-template <typename IndexType, typename ValueType>
-bool hash_table_header<IndexType, ValueType>::start()
+template <typename IndexType, typename LinkType>
+bool hash_table_header<IndexType, LinkType>::start()
 {
-    const auto minimum_file_size = offset(buckets_);
-
-    // Header file is too small.
-    if (file_.size() < minimum_file_size)
+    // File is too small for the number of buckets in the header.
+    if (file_.size() < offset(buckets_))
         return false;
 
     // The accessor must remain in scope until the end of the block.
@@ -78,10 +82,9 @@ bool hash_table_header<IndexType, ValueType>::start()
     return deserial.read_little_endian<IndexType>() == buckets_;
 }
 
-template <typename IndexType, typename ValueType>
-ValueType hash_table_header<IndexType, ValueType>::read(IndexType index) const
+template <typename IndexType, typename LinkType>
+LinkType hash_table_header<IndexType, LinkType>::read(IndexType index) const
 {
-    // This is not runtime safe but guard is avoided as an optimization.
     BITCOIN_ASSERT(index < buckets_);
 
     // The accessor must remain in scope until the end of the block.
@@ -91,15 +94,14 @@ ValueType hash_table_header<IndexType, ValueType>::read(IndexType index) const
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     shared_lock lock(mutex_);
-    return from_little_endian_unsafe<ValueType>(address);
+    return from_little_endian_unsafe<LinkType>(address);
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename IndexType, typename ValueType>
-void hash_table_header<IndexType, ValueType>::write(IndexType index,
-    ValueType value)
+template <typename IndexType, typename LinkType>
+void hash_table_header<IndexType, LinkType>::write(IndexType index,
+    LinkType value)
 {
-    // This is not runtime safe but guard is avoided as an optimization.
     BITCOIN_ASSERT(index < buckets_);
 
     // The accessor must remain in scope until the end of the block.
@@ -110,36 +112,48 @@ void hash_table_header<IndexType, ValueType>::write(IndexType index,
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(mutex_);
-    serial.template write_little_endian<ValueType>(value);
+    serial.template write_little_endian<LinkType>(value);
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename IndexType, typename ValueType>
-IndexType hash_table_header<IndexType, ValueType>::buckets() const
+template <typename IndexType, typename LinkType>
+IndexType hash_table_header<IndexType, LinkType>::buckets() const
 {
     return buckets_;
 }
 
-template <typename IndexType, typename ValueType>
-size_t hash_table_header<IndexType, ValueType>::size()
+template <typename IndexType, typename LinkType>
+size_t hash_table_header<IndexType, LinkType>::size()
 {
     return size(buckets_);
 }
 
 // static
-template <typename IndexType, typename ValueType>
-size_t hash_table_header<IndexType, ValueType>::size(IndexType buckets)
+template <typename IndexType, typename LinkType>
+size_t hash_table_header<IndexType, LinkType>::size(IndexType buckets)
 {
-    // The header size is the position of the bucket count (last + 1).
+    // Header byte size is file offset of last bucket + 1:
+    //
+    //  [  size:buckets        ]
+    //  [ [ row[0]           ] ]
+    //  [ [      ...         ] ]
+    //  [ [ row[buckets - 1] ] ] <=
+    //  
     return offset(buckets);
 }
 
 // static
-template <typename IndexType, typename ValueType>
-file_offset hash_table_header<IndexType, ValueType>::offset(IndexType index)
+template <typename IndexType, typename LinkType>
+file_offset hash_table_header<IndexType, LinkType>::offset(IndexType index)
 {
-    // Bucket count followed by array of bucket values.
-    return sizeof(IndexType) + index * sizeof(ValueType);
+    // File offset of indexed bucket is:
+    //
+    //     [  size       :IndexType  ]
+    //     [ [ row[0]    :LinkType ] ]
+    //     [ [      ...            ] ]
+    //  => [ [ row[index]:LinkType ] ]
+    //
+    return sizeof(IndexType) + index * sizeof(LinkType);
 }
 
 } // namespace database

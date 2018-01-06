@@ -39,17 +39,16 @@ namespace database {
  * The linked records are chains of records that can be iterated through
  * given a start index.
  */
-template <typename KeyType, typename LinkType>
+template <typename KeyType, typename IndexType, typename LinkType>
 class record_multimap
 {
 public:
     typedef serializer<uint8_t*>::functor write_function;
-    typedef record_hash_table<KeyType> record_hash_table_type;
 
     // The uniform size of storing an element in the multimap.
-    static size_t element_size(size_t value_size);
+    static size_t size(size_t value_size);
 
-    record_multimap(record_hash_table_type& map,
+    record_multimap(record_hash_table<KeyType, IndexType, LinkType>& map,
         record_manager<LinkType>& manager);
 
     /// Add a new row for a key.
@@ -65,7 +64,7 @@ public:
     bool unlink(const KeyType& key);
 
 private:
-    record_hash_table_type& map_;
+    record_hash_table<KeyType, IndexType, LinkType>& map_;
     record_manager<LinkType>& manager_;
     mutable shared_mutex create_mutex_;
     mutable shared_mutex update_mutex_;
