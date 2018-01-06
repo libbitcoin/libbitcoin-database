@@ -31,9 +31,10 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
 {
     typedef record_hash_table<test::tiny_hash> hash_table;
 
-    static const auto buckets = 2u;
+    const auto buckets = 2u;
+    const auto value_size = 4u;
     const auto header_size = hash_table::header_type::size(buckets);
-    const auto record_size = record_row<test::tiny_hash, hash_table::link_type>::size(4);
+    const auto record_size = record_row<test::tiny_hash, hash_table::link_type>::size(value_size);
 
     test::storage file;
     BOOST_REQUIRE(file.open());
@@ -155,9 +156,10 @@ BOOST_AUTO_TEST_CASE(record_hash_table__64bit__test)
 {
     typedef record_hash_table<test::little_hash> hash_table;
 
-    static const auto buckets = 2u;
+    const auto buckets = 2u;
+    const auto value_size = 7u;
     const auto header_size = hash_table::header_type::size(buckets);
-    const auto record_size = record_row<test::little_hash, hash_table::link_type>::size(8);
+    const auto record_size = record_row<test::little_hash, hash_table::link_type>::size(value_size);
 
     test::storage file;
     BOOST_REQUIRE(file.open());
@@ -184,7 +186,6 @@ BOOST_AUTO_TEST_CASE(record_hash_table__64bit__test)
         serial.write_byte(110);
         serial.write_byte(110);
         serial.write_byte(4);
-        serial.write_byte(88);
     };
 
     const auto write1 = [](byte_serializer& serial)
@@ -196,7 +197,6 @@ BOOST_AUTO_TEST_CASE(record_hash_table__64bit__test)
         serial.write_byte(95);
         serial.write_byte(94);
         serial.write_byte(93);
-        serial.write_byte(92);
     };
 
     table.store(key, write);
