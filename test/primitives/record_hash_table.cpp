@@ -51,7 +51,6 @@
 ////
 ////    // Cannot hold an address reference because of following resize operation.
 ////    BOOST_REQUIRE(file.access()->buffer() != nullptr);
-////    file.resize(header_size + minimum_records_size);
 ////
 ////    record_hash_table_header header(file, record_buckets);
 ////    BOOST_REQUIRE(header.create());
@@ -181,7 +180,6 @@
 ////
 ////    // Cannot hold an address reference because of following resize operation.
 ////    BOOST_REQUIRE(file.access()->buffer() != nullptr);
-////    file.resize(header_size + minimum_records_size);
 ////
 ////    record_hash_table_header header(file, record_buckets);
 ////    BOOST_REQUIRE(header.create());

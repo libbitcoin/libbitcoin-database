@@ -69,43 +69,4 @@ data_chunk generate_random_bytes(std::default_random_engine& engine,
     return result;
 }
 
-void create_database_file(const std::string& directory, size_t buckets,
-    size_t total_txs, size_t tx_size)
-{
-    const auto header_size = slab_hash_table_header_size(buckets);
-
-    test::create(directory);
-    file_map file(directory);
-    BOOST_REQUIRE(file.open());
-    BOOST_REQUIRE(file.access()->buffer() != nullptr);
-    file.resize(header_size + minimum_slabs_size);
-
-    slab_hash_table_header header(file, buckets);
-    BOOST_REQUIRE(header.create());
-    BOOST_REQUIRE(header.start());
-
-    const file_offset slab_start = header_size;
-
-    slab_manager maanager(file, slab_start);
-    BOOST_REQUIRE(maanager.create());
-    BOOST_REQUIRE(maanager.start());
-
-    slab_hash_table<hash_digest> table(header, maanager);
-
-    std::default_random_engine engine;
-    for (size_t i = 0; i < total_txs; ++i)
-    {
-        const auto value = generate_random_bytes(engine, tx_size);
-        const auto key = bitcoin_hash(value);
-        const auto write = [&value](byte_serializer& serial)
-        {
-            serial.write_forward(value);
-        };
-
-        table.store(key, write, value.size());
-    }
-
-    maanager.sync();
-}
-
 } // namespace test

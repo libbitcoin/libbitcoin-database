@@ -26,6 +26,11 @@ namespace libbitcoin {
 namespace database {
 
 // Link reads and writes are presumed to be protected by multimap.
+record_list::record_list(record_manager& manager)
+    : manager_(manager), index_(empty)
+{
+}
+
 record_list::record_list(record_manager& manager, array_index index)
   : manager_(manager), index_(index)
 {

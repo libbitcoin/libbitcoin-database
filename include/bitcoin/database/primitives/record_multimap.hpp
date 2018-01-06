@@ -30,18 +30,6 @@
 namespace libbitcoin {
 namespace database {
 
-inline size_t multimap_record_size(size_t value_size)
-{
-    return sizeof(array_index) + value_size;
-}
-
-template <typename KeyType>
-BC_CONSTEXPR size_t hash_table_multimap_record_size()
-{
-    // The hash table maps a key only to the first record index.
-    return hash_table_record_size<KeyType>(sizeof(array_index));
-}
-
 /**
  * A multimap hashtable where each key maps to a set of fixed size
  * values.
@@ -57,6 +45,9 @@ class record_multimap
 public:
     typedef serializer<uint8_t*>::functor write_function;
     typedef record_hash_table<KeyType> record_hash_table_type;
+
+    // The uniform size of storing an element in the multimap.
+    static size_t element_size(size_t value_size);
 
     record_multimap(record_hash_table_type& map, record_manager& manager);
 

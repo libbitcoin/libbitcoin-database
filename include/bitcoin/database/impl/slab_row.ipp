@@ -16,74 +16,22 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_SLAB_LIST_IPP
-#define LIBBITCOIN_DATABASE_SLAB_LIST_IPP
+#ifndef LIBBITCOIN_DATABASE_SLAB_ROW_IPP
+#define LIBBITCOIN_DATABASE_SLAB_ROW_IPP
 
 #include <cstddef>
 #include <cstdint>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/**
- * Item for slab_hash_table. A chained list with the key included.
- *
- * Stores the key, next position and user data.
- * With the starting item, we can iterate until the end using the
- * next_position() method.
- */
-template <typename KeyType>
-class slab_row
-{
-public:
-    static BC_CONSTEXPR size_t position_size = sizeof(file_offset);
-    static BC_CONSTEXPR size_t key_start = 0;
-    static BC_CONSTEXPR size_t key_size = std::tuple_size<KeyType>::value;
-    static BC_CONSTEXPR file_offset prefix_size = key_size + position_size;
-
-    typedef byte_serializer::functor write_function;
-
-    // Construct for a new slab.
-    slab_row(slab_manager& manager);
-
-    // Construct for an existing slab.
-    slab_row(slab_manager& manager, file_offset position);
-
-    /// Allocate and populate a new slab.
-    file_offset create(const KeyType& key, write_function write,
-        size_t value_size);
-
-    /// Link allocated/populated slab.
-    void link(file_offset next);
-
-    /// Does this match?
-    bool compare(const KeyType& key) const;
-
-    /// The actual user data.
-    memory_ptr data() const;
-
-    /// The file offset of the user data.
-    file_offset offset() const;
-
-    /// Position of next slab in the list.
-    file_offset next_position() const;
-
-    /// Write the next position.
-    void write_next_position(file_offset next);
-
-private:
-    memory_ptr raw_data(file_offset offset) const;
-
-    file_offset position_;
-    slab_manager& manager_;
-};
-
 template <typename KeyType>
 slab_row<KeyType>::slab_row(slab_manager& manager)
-  : manager_(manager), position_(bc::max_uint32)
+  : slab_row(manager_, not_found)
 {
 }
 
@@ -97,7 +45,7 @@ template <typename KeyType>
 file_offset slab_row<KeyType>::create(const KeyType& key, write_function write,
     size_t value_size)
 {
-    BITCOIN_ASSERT(position_ == bc::max_uint32);
+    BITCOIN_ASSERT(position_ == not_found);
 
     // Create new slab and populate its key and data.
     //   [ KeyType  ] <==

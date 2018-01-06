@@ -16,11 +16,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_RECORD_LIST_HPP
-#define LIBBITCOIN_DATABASE_RECORD_LIST_HPP
+#ifndef LIBBITCOIN_DATABASE_RECORD_ROW_HPP
+#define LIBBITCOIN_DATABASE_RECORD_ROW_HPP
 
 #include <cstddef>
-#include <cstdint>
+#include <utility>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -29,30 +29,53 @@
 namespace libbitcoin {
 namespace database {
 
-class BCD_API record_list
+/**
+ * Item for record_hash_table. A chained list with the key included.
+ *
+ * Stores the key, next index and user data.
+ * With the starting item, we can iterate until the end using the
+ * next_index() method.
+ */
+template <typename KeyType>
+class record_row
 {
 public:
-    typedef serializer<uint8_t*>::functor write_function;
-    static const array_index empty = bc::max_uint32;
+    typedef byte_serializer::functor write_function;
+    static const array_index not_found = bc::max_uint32;
     static const size_t index_size = sizeof(array_index);
+    static const size_t key_start = 0;
+    static const size_t key_size = std::tuple_size<KeyType>::value;
+    static const file_offset prefix_size = key_size + index_size;
+
+    /// The uniform size of storing a record.
+    static size_t size(size_t value_size);
 
     // Construct for a new record.
-    record_list(record_manager& manager);
+    record_row(record_manager& manager);
 
     // Construct for an existing record.
-    record_list(record_manager& manager, array_index index);
+    record_row(record_manager& manager, array_index index);
 
     /// Allocate and populate a new record.
-    array_index create(write_function write);
+    array_index create(const KeyType& key, write_function write);
 
-    /// Allocate a record to the existing next record.
+    /// Link allocated/populated record.
     void link(array_index next);
 
-    /// The actual user data for this record.
+    /// Does this match?
+    bool compare(const KeyType& key) const;
+
+    /// The actual user data.
     memory_ptr data() const;
 
-    /// Index of the next record.
+    /// The file offset of the user data.
+    file_offset offset() const;
+
+    /// Index of next record in the list.
     array_index next_index() const;
+
+    /// Write the next index.
+    void write_next_index(array_index next);
 
 private:
     memory_ptr raw_data(file_offset offset) const;
@@ -63,5 +86,8 @@ private:
 
 } // namespace database
 } // namespace libbitcoin
+
+
+#include <bitcoin/database/impl/record_row.ipp>
 
 #endif

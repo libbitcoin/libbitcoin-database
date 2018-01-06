@@ -23,6 +23,7 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/hash_table_header.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
 #include <bitcoin/database/state/transaction_state.hpp>
 
@@ -75,15 +76,15 @@ static constexpr auto position_size = sizeof(uint16_t);
 static constexpr auto state_size = sizeof(uint8_t);
 static constexpr auto median_time_past_size = sizeof(uint32_t);
 static constexpr auto spender_height_value_size = height_size + value_size;
-static constexpr auto metadata_size = height_size + position_size + state_size + median_time_past_size;
+static constexpr auto metadata_size = height_size + position_size +
+    state_size + median_time_past_size;
 
 // Transactions uses a hash table index, O(1).
-transaction_database::transaction_database(const path& map_filename, size_t buckets, size_t expansion, size_t cache_capacity)
-  : initial_map_file_size_(slab_hash_table_header_size(buckets) + minimum_slabs_size),
-
-    lookup_file_(map_filename, expansion),
+transaction_database::transaction_database(const path& map_filename,
+    size_t buckets, size_t expansion, size_t cache_capacity)
+  : lookup_file_(map_filename, expansion),
     lookup_header_(lookup_file_, buckets),
-    lookup_manager_(lookup_file_, slab_hash_table_header_size(buckets)),
+    lookup_manager_(lookup_file_, slab_map::header_type::size(buckets)),
     lookup_map_(lookup_header_, lookup_manager_),
 
     cache_(cache_capacity)
@@ -100,21 +101,13 @@ transaction_database::~transaction_database()
 
 bool transaction_database::create()
 {
-    // Resize and create require an opened file.
     if (!lookup_file_.open())
         return false;
 
-    // This will throw if insufficient disk space.
-    lookup_file_.resize(initial_map_file_size_);
-
-    if (!lookup_header_.create() ||
-        !lookup_manager_.create())
-        return false;
-
-    // Should not call start after create, already started.
+    // No need to call open after create.
     return
-        lookup_header_.start() &&
-        lookup_manager_.start();
+        lookup_header_.create() &&
+        lookup_manager_.create();
 }
 
 bool transaction_database::open()
@@ -279,7 +272,7 @@ bool transaction_database::store(const chain::transaction& tx, size_t height,
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(position));
         serial.write_byte(static_cast<uint8_t>(state));
         serial.write_4_bytes_little_endian(median_time_past);
-        tx.to_data(serial, false);
+        tx.to_data(serial, false, true);
     };
 
     // Write the new transaction.

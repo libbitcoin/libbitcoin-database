@@ -106,12 +106,9 @@ private:
     // Demote the transaction to pooled.
     bool unconfirm(uint64_t offset);
 
-    // The starting size of the hash table, used by create.
-    const size_t initial_map_file_size_;
-
     // Hash table used for looking up txs by hash.
     file_map lookup_file_;
-    slab_hash_table_header lookup_header_;
+    slab_map::header_type lookup_header_;
     slab_manager lookup_manager_;
     slab_map lookup_map_;
 

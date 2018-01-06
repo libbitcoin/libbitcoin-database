@@ -20,69 +20,24 @@
 #define LIBBITCOIN_DATABASE_RECORD_ROW_IPP
 
 #include <cstddef>
-#include <cstdint>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/**
- * Item for record_hash_table. A chained list with the key included.
- *
- * Stores the key, next index and user data.
- * With the starting item, we can iterate until the end using the
- * next_index() method.
- */
+// static
 template <typename KeyType>
-class record_row
+size_t record_row<KeyType>::size(size_t value_size)
 {
-public:
-    static BC_CONSTEXPR size_t index_size = sizeof(array_index);
-    static BC_CONSTEXPR size_t key_start = 0;
-    static BC_CONSTEXPR size_t key_size = std::tuple_size<KeyType>::value;
-    static BC_CONSTEXPR file_offset prefix_size = key_size + index_size;
-
-    typedef byte_serializer::functor write_function;
-
-    // Construct for a new record.
-    record_row(record_manager& manager);
-
-    // Construct for an existing record.
-    record_row(record_manager& manager, array_index index);
-
-    /// Allocate and populate a new record.
-    array_index create(const KeyType& key, write_function write);
-
-    /// Link allocated/populated record.
-    void link(array_index next);
-
-    /// Does this match?
-    bool compare(const KeyType& key) const;
-
-    /// The actual user data.
-    memory_ptr data() const;
-
-    /// The file offset of the user data.
-    file_offset offset() const;
-
-    /// Index of next record in the list.
-    array_index next_index() const;
-
-    /// Write the next index.
-    void write_next_index(array_index next);
-
-private:
-    memory_ptr raw_data(file_offset offset) const;
-
-    array_index index_;
-    record_manager& manager_;
-};
+    return std::tuple_size<KeyType>::value + sizeof(array_index) + value_size;
+}
 
 template <typename KeyType>
 record_row<KeyType>::record_row(record_manager& manager)
-  : manager_(manager), index_(bc::max_uint32)
+  : record_row(manager, not_found)
 {
 }
 
@@ -96,7 +51,7 @@ template <typename KeyType>
 array_index record_row<KeyType>::create(const KeyType& key,
     write_function write)
 {
-    BITCOIN_ASSERT(index_ == bc::max_uint32);
+    BITCOIN_ASSERT(index_ == not_found);
 
     // Create new record and populate its key and data.
     //   [ KeyType  ] <==
@@ -110,7 +65,6 @@ array_index record_row<KeyType>::create(const KeyType& key,
     serial.write_forward(key);
     serial.skip(index_size);
     serial.write_delegated(write);
-
     return index_;
 }
 

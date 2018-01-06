@@ -18,11 +18,12 @@
  */
 #include <bitcoin/database/databases/spend_database.hpp>
 
-#include <algorithm>
 #include <cstddef>
-#include <cstdint>
+#include <utility>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/record_hash_table.hpp>
+#include <bitcoin/database/primitives/record_row.hpp>
 
 // Record format (v3):
 // ----------------------------------------------------------------------------
@@ -34,17 +35,15 @@ namespace database {
 
 using namespace bc::chain;
 
-// The spend database keys off of output point and has input point value.
-static constexpr auto value_size = std::tuple_size<point>::value;
-static BC_CONSTEXPR auto record_size = hash_table_record_size<point>(value_size);
-
 // Spends use a hash table index, O(1).
-spend_database::spend_database(const path& filename, size_t buckets, size_t expansion)
-  : initial_map_file_size_(record_hash_table_header_size(buckets) + minimum_records_size),
-
-    lookup_file_(filename, expansion),
+// The spend database keys off of output point and has input point value.
+spend_database::spend_database(const path& filename, size_t buckets,
+    size_t expansion)
+  : lookup_file_(filename, expansion),
     lookup_header_(lookup_file_, buckets),
-    lookup_manager_(lookup_file_, record_hash_table_header_size(buckets), record_size),
+    lookup_manager_(lookup_file_,
+        record_map::header_type::size(buckets),
+        record_row<point>::size(std::tuple_size<point>::value)),
     lookup_map_(lookup_header_, lookup_manager_)
 {
 }
@@ -59,21 +58,13 @@ spend_database::~spend_database()
 
 bool spend_database::create()
 {
-    // Resize and create require an opened file.
     if (!lookup_file_.open())
         return false;
 
-    // This will throw if insufficient disk space.
-    lookup_file_.resize(initial_map_file_size_);
-
-    if (!lookup_header_.create() ||
-        !lookup_manager_.create())
-        return false;
-
-    // Should not call start after create, already started.
+    // No need to call open after create.
     return
-        lookup_header_.start() &&
-        lookup_manager_.start();
+        lookup_header_.create() &&
+        lookup_manager_.create();
 }
 
 bool spend_database::open()
@@ -119,7 +110,7 @@ spend_statinfo spend_database::statinfo() const
 {
     return
     {
-        lookup_header_.size(),
+        lookup_header_.buckets(),
         lookup_manager_.count()
     };
 }

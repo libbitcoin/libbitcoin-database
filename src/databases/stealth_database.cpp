@@ -44,18 +44,17 @@ namespace database {
 
 using namespace bc::chain;
 
-static constexpr auto rows_header_size = 0u;
-
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto prefix_size = sizeof(uint32_t);
 
 // ephemkey is without sign byte and address is without version byte.
-static constexpr auto row_size = prefix_size + height_size + hash_size + short_hash_size + hash_size;
+static constexpr auto row_size = prefix_size + height_size + hash_size +
+    short_hash_size + hash_size;
 
 // Stealth uses an unindexed array, requiring linear search, (O(n)).
 stealth_database::stealth_database(const path& rows_filename, size_t expansion)
   : rows_file_(rows_filename, expansion),
-    rows_manager_(rows_file_, rows_header_size, row_size)
+    rows_manager_(rows_file_, 0, row_size)
 {
 }
 
@@ -69,18 +68,12 @@ stealth_database::~stealth_database()
 
 bool stealth_database::create()
 {
-    // Resize and create require an opened file.
     if (!rows_file_.open())
         return false;
 
-    // This will throw if insufficient disk space.
-    rows_file_.resize(minimum_records_size);
-
-    if (!rows_manager_.create())
-        return false;
-
-    // Should not call start after create, already started.
-    return rows_manager_.start();
+    // No need to call open after create.
+    return
+        rows_manager_.create();
 }
 
 bool stealth_database::open()

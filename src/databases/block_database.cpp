@@ -24,6 +24,8 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/record_hash_table.hpp>
+#include <bitcoin/database/primitives/record_row.hpp>
 #include <bitcoin/database/result/block_result.hpp>
 #include <bitcoin/database/state/block_state.hpp>
 
@@ -52,8 +54,7 @@ namespace database {
 
 using namespace bc::chain;
 
-static BC_CONSTEXPR auto prefix_size = record_row<hash_digest>::prefix_size;
-
+static const auto prefix_size = record_row<hash_digest>::prefix_size;
 static const auto header_size = header::satoshi_fixed_size();
 static constexpr auto median_time_past_size = sizeof(uint32_t);
 static constexpr auto height_size = sizeof(uint32_t);
@@ -65,42 +66,35 @@ static const auto height_offset = header_size + median_time_past_size;
 static const auto state_offset = height_offset + height_size;
 static const auto checksum_offset = state_offset + state_size;
 static const auto transactions_offset = checksum_offset + checksum_size;
-static const auto block_size = header_size + median_time_past_size + height_size + state_size + checksum_size + tx_start_size + tx_count_size;
-
-static constexpr auto header_index_header_size = 0u;
-static constexpr auto header_index_record_size = sizeof(array_index);
-static constexpr auto block_index_header_size = 0u;
-static constexpr auto block_index_record_size = sizeof(array_index);
-static constexpr auto tx_index_header_size = 0u;
-static constexpr auto tx_index_record_size = sizeof(file_offset);
-
-// The block database keys off of block hash and has block value.
-static const auto record_size = hash_table_record_size<hash_digest>(block_size);
+static const auto block_size = header_size + median_time_past_size +
+    height_size + state_size + checksum_size + tx_start_size + tx_count_size;
 
 // Placeholder for unimplemented checksum caching.
 static constexpr auto no_checksum = 0u;
 
 // Blocks uses a hash table and two array indexes, all O(1).
+// The block database keys off of block hash and has block value.
 block_database::block_database(const path& map_filename,
     const path& header_index_filename, const path& block_index_filename,
     const path& tx_index_filename, size_t buckets, size_t expansion)
   : fork_point_(0),
     valid_point_(0),
-    initial_map_file_size_(record_hash_table_header_size(buckets) + minimum_records_size),
 
     lookup_file_(map_filename, expansion),
     lookup_header_(lookup_file_, buckets),
-    lookup_manager_(lookup_file_, record_hash_table_header_size(buckets), record_size),
+    lookup_manager_(lookup_file_,
+        record_map::header_type::size(buckets),
+        record_row<hash_digest>::size(block_size)),
     lookup_map_(lookup_header_, lookup_manager_),
 
     header_index_file_(header_index_filename, expansion),
-    header_index_manager_(header_index_file_, header_index_header_size, block_index_record_size),
+    header_index_manager_(header_index_file_, 0, sizeof(array_index)),
 
     block_index_file_(block_index_filename, expansion),
-    block_index_manager_(block_index_file_, block_index_header_size, block_index_record_size),
+    block_index_manager_(block_index_file_, 0, sizeof(array_index)),
 
     tx_index_file_(tx_index_filename, expansion),
-    tx_index_manager_(tx_index_file_, tx_index_header_size, tx_index_record_size)
+    tx_index_manager_(tx_index_file_, 0, sizeof(file_offset))
 {
 }
 
@@ -114,33 +108,19 @@ block_database::~block_database()
 
 bool block_database::create()
 {
-    // Resize and create require an opened file.
     if (!lookup_file_.open() ||
         !header_index_file_.open() ||
         !block_index_file_.open() ||
         !tx_index_file_.open())
         return false;
 
-    // These will throw if insufficient disk space.
-    lookup_file_.resize(initial_map_file_size_);
-    header_index_file_.resize(minimum_records_size);
-    block_index_file_.resize(minimum_records_size);
-    tx_index_file_.resize(minimum_records_size);
-
-    if (!lookup_header_.create() ||
-        !lookup_manager_.create() ||
-        !header_index_manager_.create() ||
-        !block_index_manager_.create() ||
-        !tx_index_manager_.create())
-        return false;
-
-    // Should not call open after create, already started.
+    // No need to call open after create.
     return
-        lookup_header_.start() &&
-        lookup_manager_.start() &&
-        header_index_manager_.start() &&
-        block_index_manager_.start() &&
-        tx_index_manager_.start();
+        lookup_header_.create() &&
+        lookup_manager_.create() &&
+        header_index_manager_.create() &&
+        block_index_manager_.create() &&
+        tx_index_manager_.create();
 }
 
 bool block_database::open()

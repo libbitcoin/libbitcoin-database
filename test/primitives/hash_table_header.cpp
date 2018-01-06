@@ -73,40 +73,85 @@ BOOST_AUTO_TEST_CASE(hash_table_header__start__oversized_file__success)
     BOOST_REQUIRE(header.start());
 }
 
-BOOST_AUTO_TEST_CASE(hash_table_header__size__default__expected)
+BOOST_AUTO_TEST_CASE(hash_table_header__buckets__default__expected)
 {
     test::test_map file;
     const auto buckets = 10u;
     const auto header_size = sizeof(uint32_t) + sizeof(uint32_t) * buckets;
     hash_table_header<uint32_t, uint32_t> header(file, buckets);
-    BOOST_REQUIRE_EQUAL(header.size(), buckets);
+    BOOST_REQUIRE_EQUAL(header.buckets(), buckets);
 }
 
-BOOST_AUTO_TEST_CASE(hash_table_header__size__create__expected)
+BOOST_AUTO_TEST_CASE(hash_table_header__buckets__create__expected)
 {
     test::test_map file;
     const auto buckets = 10u;
     const auto header_size = sizeof(uint32_t) + sizeof(uint32_t) * buckets;
     hash_table_header<uint32_t, uint32_t> header(file, buckets);
     BOOST_REQUIRE(header.create());
-    BOOST_REQUIRE_EQUAL(header.size(), buckets);
+    BOOST_REQUIRE_EQUAL(header.buckets(), buckets);
 }
 
-BOOST_AUTO_TEST_CASE(hash_table_header__size__resize__expected)
+BOOST_AUTO_TEST_CASE(hash_table_header__buckets__resize__expected)
 {
     test::test_map file;
     const auto buckets = 10u;
     const auto header_size = sizeof(uint32_t) + sizeof(uint32_t) * buckets;
     hash_table_header<uint32_t, uint32_t> header(file, buckets);
     BOOST_REQUIRE(file.resize(header_size + 1));
-    BOOST_REQUIRE_EQUAL(header.size(), buckets);
+    BOOST_REQUIRE_EQUAL(header.buckets(), buckets);
+}
+
+BOOST_AUTO_TEST_CASE(hash_table_header__size1__32bit__expected)
+{
+    const auto buckets = 10u;
+    const auto header_size = sizeof(uint32_t) + sizeof(uint32_t) * buckets;
+    const auto size = hash_table_header<uint32_t, uint32_t>::size(buckets);
+    BOOST_REQUIRE_EQUAL(size, header_size);
+}
+
+BOOST_AUTO_TEST_CASE(hash_table_header__size1__8bit_and_64bit__expected)
+{
+    const auto buckets = 10u;
+    const auto header_size = sizeof(uint8_t) + sizeof(uint64_t) * buckets;
+    const auto size = hash_table_header<uint8_t, uint64_t>::size(buckets);
+    BOOST_REQUIRE_EQUAL(size, header_size);
+}
+
+BOOST_AUTO_TEST_CASE(hash_table_header__size2__default__expected)
+{
+    test::test_map file;
+    const auto buckets = 10u;
+    const auto header_size = sizeof(uint8_t) + sizeof(uint64_t) * buckets;
+    hash_table_header<uint8_t, uint64_t> header(file, buckets);
+    BOOST_REQUIRE_EQUAL(header.size(), header_size);
+}
+
+BOOST_AUTO_TEST_CASE(hash_table_header__size2__create__expected)
+{
+    test::test_map file;
+    const auto buckets = 10u;
+    const auto header_size = sizeof(uint8_t) + sizeof(uint64_t) * buckets;
+    hash_table_header<uint8_t, uint64_t> header(file, buckets);
+    BOOST_REQUIRE(header.create());
+    BOOST_REQUIRE_EQUAL(header.size(), header_size);
+}
+
+BOOST_AUTO_TEST_CASE(hash_table_header__size2__resize__expected)
+{
+    test::test_map file;
+    const auto buckets = 10u;
+    const auto header_size = sizeof(uint8_t) + sizeof(uint64_t) * buckets;
+    hash_table_header<uint8_t, uint64_t> header(file, buckets);
+    BOOST_REQUIRE(file.resize(header_size + 1));
+    BOOST_REQUIRE_EQUAL(header.size(), header_size);
 }
 
 BOOST_AUTO_TEST_CASE(hash_table_header__read_write__32_bit_value__success)
 {
     test::test_map file;
     const auto buckets = 10u;
-    const auto header_size = sizeof(uint32_t) + sizeof(uint64_t) * buckets;
+    const auto header_size = hash_table_header<uint32_t, uint32_t>::size(buckets);
     hash_table_header<uint32_t, uint32_t> header(file, buckets);
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(file.resize(header_size));
@@ -121,7 +166,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__read_write__64_bit_value__success)
 {
     test::test_map file;
     const auto buckets = 10u;
-    const auto header_size = sizeof(uint32_t) + sizeof(uint64_t) * buckets;
+    const auto header_size = hash_table_header<uint32_t, uint64_t>::size(buckets);
     hash_table_header<uint32_t, uint64_t> header(file, buckets);
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(file.resize(header_size));

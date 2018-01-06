@@ -25,6 +25,13 @@
 namespace libbitcoin {
 namespace database {
 
+// static
+template <typename KeyType>
+size_t record_multimap<KeyType>::element_size(size_t value_size)
+{
+    return sizeof(array_index) + value_size;
+}
+
 template <typename KeyType>
 record_multimap<KeyType>::record_multimap(record_hash_table_type& map,
     record_manager& manager)

@@ -30,12 +30,6 @@
 namespace libbitcoin {
 namespace database {
 
-static BC_CONSTEXPR auto minimum_records_size = sizeof(array_index);
-BC_CONSTFUNC size_t record_hash_table_header_size(size_t buckets)
-{
-    return sizeof(array_index) + sizeof(array_index) * buckets;
-}
-
 /// The record manager represents a collection of fixed size chunks of
 /// data referenced by an index. The file will be resized accordingly
 /// and the total number of records updated so new chunks can be allocated.

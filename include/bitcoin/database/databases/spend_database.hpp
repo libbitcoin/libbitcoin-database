@@ -96,12 +96,9 @@ public:
 private:
     typedef record_hash_table<chain::point> record_map;
 
-    // The starting size of the hash table, used by create.
-    const size_t initial_map_file_size_;
-
     // Hash table used for looking up inpoint spends by outpoint.
     file_map lookup_file_;
-    record_hash_table_header lookup_header_;
+    record_map::header_type lookup_header_;
     record_manager lookup_manager_;
     record_map lookup_map_;
 };

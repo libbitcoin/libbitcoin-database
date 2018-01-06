@@ -176,7 +176,7 @@ void record_manager::write_count()
     auto memory = file_.access();
     auto payload_size_address = memory->buffer() + header_size_;
     auto serial = make_unsafe_serializer(payload_size_address);
-    serial.write_little_endian(record_count_);
+    serial.write_little_endian<array_index>(record_count_);
 }
 
 array_index record_manager::position_to_record(file_offset position) const

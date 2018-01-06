@@ -19,23 +19,17 @@
 #ifndef LIBBITCOIN_DATABASE_RECORD_HASH_TABLE_IPP
 #define LIBBITCOIN_DATABASE_RECORD_HASH_TABLE_IPP
 
-#include <string>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include "../impl/record_row.ipp"
-#include "../impl/remainder.ipp"
+#include <bitcoin/database/primitives/hash_table_header.hpp>
+#include <bitcoin/database/primitives/record_row.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-// Valid record indexes must not reach max_uint32.
 template <typename KeyType>
-const array_index record_hash_table<KeyType>::not_found =
-    record_hash_table_header::empty;
-
-template <typename KeyType>
-record_hash_table<KeyType>::record_hash_table(
-    record_hash_table_header& header, record_manager& manager)
+record_hash_table<KeyType>::record_hash_table(header_type& header,
+    record_manager& manager)
   : header_(header), manager_(manager)
 {
 }
@@ -44,8 +38,8 @@ record_hash_table<KeyType>::record_hash_table(
 // are store then retrieval and unlinking will fail as these multiples cannot
 // be differentiated except in the order written.
 template <typename KeyType>
-array_index record_hash_table<KeyType>::store(const KeyType& key,
-    write_function write)
+typename record_hash_table<KeyType>::offset_type record_hash_table<KeyType>::store(
+    const KeyType& key, write_function write)
 {
     // Allocate and populate new unlinked record.
     record_row<KeyType> record(manager_);
@@ -71,8 +65,8 @@ array_index record_hash_table<KeyType>::store(const KeyType& key,
 // Execute a writer against a key's buffer if the key is found.
 // Return the array index of the found value (or not_found).
 template <typename KeyType>
-array_index record_hash_table<KeyType>::update(const KeyType& key,
-    write_function write)
+typename record_hash_table<KeyType>::offset_type record_hash_table<KeyType>::update(
+    const KeyType& key, write_function write)
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -103,7 +97,8 @@ array_index record_hash_table<KeyType>::update(const KeyType& key,
 
 // This is limited to returning the first of multiple matching key values.
 template <typename KeyType>
-array_index record_hash_table<KeyType>::offset(const KeyType& key) const
+typename record_hash_table<KeyType>::offset_type record_hash_table<KeyType>::offset(
+    const KeyType& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -211,25 +206,25 @@ bool record_hash_table<KeyType>::unlink(const KeyType& key)
     return false;
 }
 
+// private
 template <typename KeyType>
-array_index record_hash_table<KeyType>::bucket_index(const KeyType& key) const
-{
-    const auto bucket = remainder(key, header_.size());
-    BITCOIN_ASSERT(bucket < header_.size());
-    return bucket;
-}
-
-template <typename KeyType>
-array_index record_hash_table<KeyType>::read_bucket_value(
+typename record_hash_table<KeyType>::header_type::index_type record_hash_table<KeyType>::bucket_index(
     const KeyType& key) const
 {
-    auto value = header_.read(bucket_index(key));
-    static_assert(sizeof(value) == sizeof(array_index), "Invalid size");
-    return value;
+    return remainder(key, header_.buckets());
 }
 
+// private
 template <typename KeyType>
-void record_hash_table<KeyType>::link(const KeyType& key, array_index begin)
+typename record_hash_table<KeyType>::offset_type record_hash_table<KeyType>::read_bucket_value(
+    const KeyType& key) const
+{
+    return header_.read(bucket_index(key));
+}
+
+// private
+template <typename KeyType>
+void record_hash_table<KeyType>::link(const KeyType& key, offset_type begin)
 {
     header_.write(bucket_index(key), begin);
 }

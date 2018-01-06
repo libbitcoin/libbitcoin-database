@@ -164,7 +164,7 @@ void slab_manager::write_size() const
     const auto memory = file_.access();
     const auto payload_size_address = memory->buffer() + header_size_;
     auto serial = make_unsafe_serializer(payload_size_address);
-    serial.write_little_endian(payload_size_);
+    serial.write_little_endian<file_offset>(payload_size_);
 }
 
 } // namespace database

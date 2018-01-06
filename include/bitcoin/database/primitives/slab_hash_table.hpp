@@ -22,14 +22,13 @@
 #include <cstddef>
 #include <cstdint>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
-
-typedef hash_table_header<array_index, file_offset> slab_hash_table_header;
 
 /**
  * A hashtable mapping hashes to variable sized values (slabs).
@@ -57,22 +56,23 @@ class slab_hash_table
 public:
     typedef KeyType key_type;
     typedef byte_serializer::functor write_function;
+    typedef hash_table_header<array_index, file_offset> header_type;
+    typedef header_type::value_type offset_type;
+    static const offset_type not_found = header_type::empty;
 
-    static const file_offset not_found;
-
-    slab_hash_table(slab_hash_table_header& header, slab_manager& manager);
+    /// Construct a hash table for variable size entries.
+    slab_hash_table(header_type& header, slab_manager& manager);
 
     /// Execute a write. value_size is the required size of the buffer.
     /// Returns the file offset of the new value.
-    file_offset store(const KeyType& key, write_function write,
-        size_t value_size);
+    offset_type store(const KeyType& key, write_function write, size_t size);
 
     /// Execute a writer against a key's buffer if the key is found.
     /// Returns the file offset of the found value (or not_found).
-    file_offset update(const KeyType& key, write_function write);
+    offset_type update(const KeyType& key, write_function write);
 
     /// Find the file offset for a given key. Returns not_found if not found.
-    file_offset offset(const KeyType& key) const;
+    offset_type offset(const KeyType& key) const;
 
     /// Find the slab pointer for a given key. Returns nullptr if not found.
     memory_ptr find(const KeyType& key) const;
@@ -81,17 +81,16 @@ public:
     bool unlink(const KeyType& key);
 
 private:
+    // The bucket index of a key.
+    header_type::index_type bucket_index(const KeyType& key) const;
 
-    // What is the bucket given a hash.
-    array_index bucket_index(const KeyType& key) const;
+    // The slab start position for the set of elements mapped to the key.
+    offset_type read_bucket_value(const KeyType& key) const;
 
-    // What is the slab start position for a chain.
-    file_offset read_bucket_value(const KeyType& key) const;
+    // Link a new element into the bucket header (stack model, push front).
+    void link(const KeyType& key, offset_type begin);
 
-    // Link a new chain into the bucket header.
-    void link(const KeyType& key, file_offset begin);
-
-    slab_hash_table_header& header_;
+    header_type& header_;
     slab_manager& manager_;
     mutable shared_mutex create_mutex_;
     mutable shared_mutex update_mutex_;

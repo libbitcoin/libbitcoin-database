@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_HPP
 #define LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_HPP
 
+#include <functional>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory_map.hpp>
 
@@ -43,33 +44,50 @@ class hash_table_header
 public:
     typedef IndexType index_type;
     typedef ValueType value_type;
-    static const ValueType empty;
 
+    // This cast is a VC++ workaround is OK because ValueType must be unsigned.
+    //static constexpr ValueType empty = std::numeric_limits<ValueType>::max();
+    static const ValueType empty = (ValueType)bc::max_uint64;
+
+    /// The hash table header byte size for a given bucket count.
+    static size_t size(IndexType buckets);
+
+    /// Construct a hash table header.
     hash_table_header(memory_map& file, IndexType buckets);
 
     /// Allocate the hash table and populate with empty values.
     bool create();
 
-    /// Must be called before use. Loads the size from the file.
+    /// Should be called before use. Validates the size from the file.
     bool start();
 
-    /// Read item's value.
+    /// Read item value.
     ValueType read(IndexType index) const;
 
     /// Write value to item.
     void write(IndexType index, ValueType value);
 
-    /// The hash table size (bucket count).
-    IndexType size() const;
+    /// The hash table header bucket count.
+    IndexType buckets() const;
+
+    /// The hash table header byte size.
+    size_t size();
 
 private:
-    // Locate the item in the memory map.
-    file_offset item_position(IndexType index) const;
+    // Position in the memory map relative the header end.
+    static file_offset offset(IndexType index);
 
     memory_map& file_;
     IndexType buckets_;
     mutable shared_mutex mutex_;
 };
+
+/// Return a hash of the key reduced to the domain of the divisor.
+template <typename KeyType, typename Divisor>
+Divisor remainder(const KeyType& key, const Divisor divisor)
+{
+    return divisor == 0 ? 0 : std::hash<KeyType>()(key) % divisor;
+}
 
 } // namespace database
 } // namespace libbitcoin

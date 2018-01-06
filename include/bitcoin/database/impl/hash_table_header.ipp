@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_IPP
 
 #include <cstring>
-#include <stdexcept>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/memory_map.hpp>
@@ -28,32 +27,27 @@
 namespace libbitcoin {
 namespace database {
 
-static BC_CONSTEXPR uint64_t empty_fill = bc::max_uint64;
-static BC_CONSTEXPR uint8_t empty_byte = (uint8_t)empty_fill;
-
-// This VC++ workaround is OK because ValueType must be unsigned.
-//static constexpr ValueType empty = std::numeric_limits<ValueType>::max();
-template <typename IndexType, typename ValueType>
-const ValueType hash_table_header<IndexType, ValueType>::empty =
-    (ValueType)empty_fill;
+static const uint8_t empty_byte = bc::max_uint8;
 
 template <typename IndexType, typename ValueType>
 hash_table_header<IndexType, ValueType>::hash_table_header(memory_map& file,
     IndexType buckets)
   : file_(file), buckets_(buckets)
 {
-    BITCOIN_ASSERT_MSG(empty == (ValueType)empty_fill,
+    BITCOIN_ASSERT_MSG(empty == (ValueType)bc::max_uint64,
         "Unexpected value for empty sentinel.");
 
     static_assert(std::is_unsigned<ValueType>::value,
-        "Hash table header requires unsigned type.");
+        "Hash table header requires unsigned value type.");
+
+    static_assert(std::is_unsigned<IndexType>::value,
+        "Hash table header requires unsigned index type.");
 }
 
 template <typename IndexType, typename ValueType>
 bool hash_table_header<IndexType, ValueType>::create()
 {
-    // The file is sized to the position of one past the last item.
-    const auto file_size = item_position(buckets_);
+    const auto file_size = size(buckets_);
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.resize(file_size);
@@ -63,14 +57,14 @@ bool hash_table_header<IndexType, ValueType>::create()
 
     // Overwrite the start of the buffer with the bucket count.
     auto serial = make_unsafe_serializer(memory->buffer());
-    serial.write_little_endian(buckets_);
+    serial.write_little_endian<IndexType>(buckets_);
     return true;
 }
 
 template <typename IndexType, typename ValueType>
 bool hash_table_header<IndexType, ValueType>::start()
 {
-    const auto minimum_file_size = item_position(buckets_);
+    const auto minimum_file_size = offset(buckets_);
 
     // Header file is too small.
     if (file_.size() < minimum_file_size)
@@ -92,7 +86,7 @@ ValueType hash_table_header<IndexType, ValueType>::read(IndexType index) const
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto address = memory->buffer() + item_position(index);
+    const auto address = memory->buffer() + offset(index);
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -110,7 +104,7 @@ void hash_table_header<IndexType, ValueType>::write(IndexType index,
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto address = memory->buffer() + item_position(index);
+    const auto address = memory->buffer() + offset(index);
     auto serial = make_unsafe_serializer(address);
 
     // Critical Section
@@ -121,15 +115,30 @@ void hash_table_header<IndexType, ValueType>::write(IndexType index,
 }
 
 template <typename IndexType, typename ValueType>
-IndexType hash_table_header<IndexType, ValueType>::size() const
+IndexType hash_table_header<IndexType, ValueType>::buckets() const
 {
     return buckets_;
 }
 
 template <typename IndexType, typename ValueType>
-file_offset hash_table_header<IndexType, ValueType>::item_position(
-    IndexType index) const
+size_t hash_table_header<IndexType, ValueType>::size()
 {
+    return size(buckets_);
+}
+
+// static
+template <typename IndexType, typename ValueType>
+size_t hash_table_header<IndexType, ValueType>::size(IndexType buckets)
+{
+    // The header size is the position of the bucket count (last + 1).
+    return offset(buckets);
+}
+
+// static
+template <typename IndexType, typename ValueType>
+file_offset hash_table_header<IndexType, ValueType>::offset(IndexType index)
+{
+    // Bucket count followed by array of bucket values.
     return sizeof(IndexType) + index * sizeof(ValueType);
 }
 

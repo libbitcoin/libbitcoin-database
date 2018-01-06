@@ -21,22 +21,14 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <tuple>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
-
-template <typename KeyType>
-BC_CONSTFUNC size_t hash_table_record_size(size_t value_size)
-{
-    return std::tuple_size<KeyType>::value + sizeof(array_index) + value_size;
-}
-
-typedef hash_table_header<array_index, array_index> record_hash_table_header;
 
 /**
  * A hashtable mapping hashes to fixed sized values (records).
@@ -63,21 +55,23 @@ class record_hash_table
 public:
     typedef KeyType key_type;
     typedef byte_serializer::functor write_function;
+    typedef hash_table_header<array_index, array_index> header_type;
+    typedef header_type::value_type offset_type;
+    static const offset_type not_found = header_type::empty;
 
-    static const array_index not_found;
-
-    record_hash_table(record_hash_table_header& header, record_manager& manager);
+    /// Construct a hash table for uniform size entries.
+    record_hash_table(header_type& header, record_manager& manager);
 
     /// Execute a write. The provided write() function must write the correct
-    /// number of bytes (record_size - key_size - sizeof(array_index)).
-    array_index store(const KeyType& key, write_function write);
+    /// size: (value_size = record_size - key_size - sizeof(array_index)).
+    offset_type store(const KeyType& key, write_function write);
 
     /// Execute a writer against a key's buffer if the key is found.
-    /// Returns the array index of the found value (or not_found).
-    array_index update(const KeyType& key, write_function write);
+    /// Returns the array offset of the found value (or not_found).
+    offset_type update(const KeyType& key, write_function write);
 
-    /// Find the array index for given key. Returns not_found if not found.
-    array_index offset(const KeyType& key) const;
+    /// Find the array offset for given key. Returns not_found if not found.
+    offset_type offset(const KeyType& key) const;
 
     /// Find the record for given key. Returns nullptr if not found.
     memory_ptr find(const KeyType& key) const;
@@ -86,20 +80,19 @@ public:
     bool unlink(const KeyType& key);
 
 private:
-    // What is the bucket given a hash.
-    array_index bucket_index(const KeyType& key) const;
+    // The bucket index of a key.
+    header_type::index_type bucket_index(const KeyType& key) const;
 
-    // What is the record start index for a chain.
-    array_index read_bucket_value(const KeyType& key) const;
+    // The record start position for the set of elements mapped to the key.
+    offset_type read_bucket_value(const KeyType& key) const;
 
-    // Link a new chain into the bucket header.
-    void link(const KeyType& key, array_index begin);
+    // Link a new element into the bucket header (stack model, push front).
+    void link(const KeyType& key, offset_type begin);
 
-    record_hash_table_header& header_;
+    header_type& header_;
     record_manager& manager_;
     mutable shared_mutex create_mutex_;
     mutable shared_mutex update_mutex_;
-
 };
 
 } // namespace database

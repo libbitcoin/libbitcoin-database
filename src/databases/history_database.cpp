@@ -25,6 +25,7 @@
 #include <bitcoin/database/primitives/record_hash_table.hpp>
 #include <bitcoin/database/primitives/record_multimap.hpp>
 #include <bitcoin/database/primitives/record_multimap_iterable.hpp>
+#include <bitcoin/database/primitives/record_row.hpp>
 
 // Record format (v4) [47 bytes]:
 // ----------------------------------------------------------------------------
@@ -47,29 +48,27 @@ namespace database {
 
 using namespace bc::chain;
 
-static constexpr auto rows_header_size = 0u;
-
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto flag_size = sizeof(uint8_t);
 static constexpr auto point_size = std::tuple_size<point>::value;
 static constexpr auto checksum_size = sizeof(uint64_t);
-static constexpr auto value_size = height_size + flag_size + point_size + checksum_size;
-
-static BC_CONSTEXPR auto table_record_size = hash_table_multimap_record_size<short_hash>();
-static const auto row_record_size = multimap_record_size(value_size);
+static constexpr auto value_size = height_size + flag_size + point_size +
+    checksum_size;
 
 // History uses a hash table index, O(1).
+// The hash table stores indexes into the first element of a multimap row.
 history_database::history_database(const path& lookup_filename,
     const path& rows_filename, size_t buckets, size_t expansion)
-  : initial_map_file_size_(record_hash_table_header_size(buckets) + minimum_records_size),
-
-    lookup_file_(lookup_filename, expansion),
+  : lookup_file_(lookup_filename, expansion),
     lookup_header_(lookup_file_, buckets),
-    lookup_manager_(lookup_file_, record_hash_table_header_size(buckets), table_record_size),
+    lookup_manager_(lookup_file_,
+        record_map::header_type::size(buckets),
+        record_row<short_hash>::size(sizeof(array_index))),
     lookup_map_(lookup_header_, lookup_manager_),
 
     rows_file_(rows_filename, expansion),
-    rows_manager_(rows_file_, rows_header_size, row_record_size),
+    rows_manager_(rows_file_, 0,
+        record_multimap<short_hash>::element_size(value_size)),
     rows_multimap_(lookup_map_, rows_manager_)
 {
 }
@@ -84,25 +83,15 @@ history_database::~history_database()
 
 bool history_database::create()
 {
-    // Resize and create require an opened file.
     if (!lookup_file_.open() ||
         !rows_file_.open())
         return false;
 
-    // These will throw if insufficient disk space.
-    lookup_file_.resize(initial_map_file_size_);
-    rows_file_.resize(minimum_records_size);
-
-    if (!lookup_header_.create() ||
-        !lookup_manager_.create() ||
-        !rows_manager_.create())
-        return false;
-
-    // Should not call start after create, already started.
+    // No need to call open after create.
     return
-        lookup_header_.start() &&
-        lookup_manager_.start() &&
-        rows_manager_.start();
+        lookup_header_.create() &&
+        lookup_manager_.create() &&
+        rows_manager_.create();
 }
 
 bool history_database::open()
@@ -166,7 +155,7 @@ history_statinfo history_database::statinfo() const
 {
     return
     {
-        lookup_header_.size(),
+        lookup_header_.buckets(),
         lookup_manager_.count(),
         rows_manager_.count()
     };

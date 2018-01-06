@@ -28,12 +28,6 @@
 namespace libbitcoin {
 namespace database {
 
-BC_CONSTEXPR size_t minimum_slabs_size = sizeof(file_offset);
-BC_CONSTFUNC size_t slab_hash_table_header_size(size_t buckets)
-{
-    return sizeof(array_index) + sizeof(file_offset) * buckets;
-}
-
 /// The slab manager represents a growing collection of various sized
 /// slabs of data on disk. It will resize the file accordingly and keep
 /// track of the current end pointer so new slabs can be allocated.
