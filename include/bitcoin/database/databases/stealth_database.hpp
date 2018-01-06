@@ -23,7 +23,7 @@
 #include <cstddef>
 #include <boost/filesystem.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/file_map.hpp>
+#include <bitcoin/database/memory/file_storage.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 
@@ -89,7 +89,7 @@ public:
 
 private:
     // Row entries containing stealth tx data.
-    file_map rows_file_;
+    file_storage rows_file_;
     record_manager rows_manager_;
 };
 

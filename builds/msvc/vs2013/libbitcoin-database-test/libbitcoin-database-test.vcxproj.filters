@@ -111,7 +111,7 @@
     <ClCompile Include="..\..\..\..\test\unspent_transaction.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\utility\test_map.cpp">
+    <ClCompile Include="..\..\..\..\test\utility\storage.cpp">
       <Filter>src\utility</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\utility\utility.cpp">
@@ -119,7 +119,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\test\utility\test_map.hpp">
+    <ClInclude Include="..\..\..\..\test\utility\storage.hpp">
       <Filter>src\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\test\utility\utility.hpp">

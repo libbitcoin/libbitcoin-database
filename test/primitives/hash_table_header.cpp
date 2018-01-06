@@ -20,7 +20,7 @@
 
 #include <cstdint>
 #include <bitcoin/database.hpp>
-#include "../utility/test_map.hpp"
+#include "../utility/storage.hpp"
 
 using namespace bc;
 using namespace bc::database;
@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_SUITE(hash_table_header_tests)
 
 BOOST_AUTO_TEST_CASE(hash_table_header__create__always__sets_minimum_file_size)
 {
-    test::test_map file;
+    test::storage file;
     const auto buckets = 10u;
     const auto header_size = sizeof(uint32_t) + sizeof(uint32_t) * buckets;
     hash_table_header<uint32_t, uint32_t> header(file, buckets);
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__create__always__sets_minimum_file_size)
 
 BOOST_AUTO_TEST_CASE(hash_table_header__start__default_file__success)
 {
-    test::test_map file;
+    test::storage file;
     const auto buckets = 10u;
     hash_table_header<uint32_t, uint32_t> header(file, buckets);
     BOOST_REQUIRE(file.open());
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__start__default_file__success)
 
 BOOST_AUTO_TEST_CASE(hash_table_header__start__undersized_file__failure)
 {
-    test::test_map file;
+    test::storage file;
     const auto buckets = 10u;
     const auto header_size = sizeof(uint32_t) + sizeof(uint32_t) * buckets;
     hash_table_header<uint32_t, uint32_t> header(file, buckets);
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__start__undersized_file__failure)
 
 BOOST_AUTO_TEST_CASE(hash_table_header__start__oversized_file__success)
 {
-    test::test_map file;
+    test::storage file;
     const auto buckets = 10u;
     const auto header_size = sizeof(uint32_t) + sizeof(uint32_t) * buckets;
     hash_table_header<uint32_t, uint32_t> header(file, buckets);
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__start__oversized_file__success)
 
 BOOST_AUTO_TEST_CASE(hash_table_header__buckets__default__expected)
 {
-    test::test_map file;
+    test::storage file;
     const auto buckets = 10u;
     const auto header_size = sizeof(uint32_t) + sizeof(uint32_t) * buckets;
     hash_table_header<uint32_t, uint32_t> header(file, buckets);
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__buckets__default__expected)
 
 BOOST_AUTO_TEST_CASE(hash_table_header__buckets__create__expected)
 {
-    test::test_map file;
+    test::storage file;
     const auto buckets = 10u;
     const auto header_size = sizeof(uint32_t) + sizeof(uint32_t) * buckets;
     hash_table_header<uint32_t, uint32_t> header(file, buckets);
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__buckets__create__expected)
 
 BOOST_AUTO_TEST_CASE(hash_table_header__buckets__resize__expected)
 {
-    test::test_map file;
+    test::storage file;
     const auto buckets = 10u;
     const auto header_size = sizeof(uint32_t) + sizeof(uint32_t) * buckets;
     hash_table_header<uint32_t, uint32_t> header(file, buckets);
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__size1__8bit_and_64bit__expected)
 
 BOOST_AUTO_TEST_CASE(hash_table_header__size2__default__expected)
 {
-    test::test_map file;
+    test::storage file;
     const auto buckets = 10u;
     const auto header_size = sizeof(uint8_t) + sizeof(uint64_t) * buckets;
     hash_table_header<uint8_t, uint64_t> header(file, buckets);
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__size2__default__expected)
 
 BOOST_AUTO_TEST_CASE(hash_table_header__size2__create__expected)
 {
-    test::test_map file;
+    test::storage file;
     const auto buckets = 10u;
     const auto header_size = sizeof(uint8_t) + sizeof(uint64_t) * buckets;
     hash_table_header<uint8_t, uint64_t> header(file, buckets);
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__size2__create__expected)
 
 BOOST_AUTO_TEST_CASE(hash_table_header__size2__resize__expected)
 {
-    test::test_map file;
+    test::storage file;
     const auto buckets = 10u;
     const auto header_size = sizeof(uint8_t) + sizeof(uint64_t) * buckets;
     hash_table_header<uint8_t, uint64_t> header(file, buckets);
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__size2__resize__expected)
 
 BOOST_AUTO_TEST_CASE(hash_table_header__read_write__32_bit_value__success)
 {
-    test::test_map file;
+    test::storage file;
     const auto buckets = 10u;
     const auto header_size = hash_table_header<uint32_t, uint32_t>::size(buckets);
     hash_table_header<uint32_t, uint32_t> header(file, buckets);
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__read_write__32_bit_value__success)
 
 BOOST_AUTO_TEST_CASE(hash_table_header__read_write__64_bit_value__success)
 {
-    test::test_map file;
+    test::storage file;
     const auto buckets = 10u;
     const auto header_size = hash_table_header<uint32_t, uint64_t>::size(buckets);
     hash_table_header<uint32_t, uint64_t> header(file, buckets);

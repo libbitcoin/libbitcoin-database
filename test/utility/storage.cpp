@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "test_map.hpp"
+#include "storage.hpp"
 
 #include <utility>
 #include <bitcoin/database.hpp>
@@ -26,28 +26,28 @@ using namespace bc::database;
 
 namespace test {
 
-// This is a trivial working memory_map interface implementation.
-test_map::test_map()
-  : test_map(data_chunk{})
+// This is a trivial working storage interface implementation.
+storage::storage()
+  : storage(data_chunk{})
 {
 }
 
-test_map::test_map(data_chunk&& initial)
+storage::storage(data_chunk&& initial)
   : closed_(true), buffer_(std::move(initial))
 {
 }
 
-test_map::test_map(const data_chunk& initial)
+storage::storage(const data_chunk& initial)
   : closed_(true), buffer_(initial)
 {
 }
 
-test_map::~test_map()
+storage::~storage()
 {
     close();
 }
 
-bool test_map::open()
+bool storage::open()
 {
     mutex_.lock_upgrade();
 
@@ -63,12 +63,12 @@ bool test_map::open()
     return true;
 }
 
-bool test_map::flush() const
+bool storage::flush() const
 {
     return true;
 }
 
-bool test_map::close()
+bool storage::close()
 {
     mutex_.lock_upgrade();
 
@@ -84,29 +84,29 @@ bool test_map::close()
     return true;
 }
 
-bool test_map::closed() const
+bool storage::closed() const
 {
     shared_lock lock(mutex_);
     return closed_;
 }
 
-size_t test_map::size() const
+size_t storage::size() const
 {
     shared_lock lock(mutex_);
     return buffer_.size();
 }
 
-memory_ptr test_map::access()
+memory_ptr storage::access()
 {
     return std::make_shared<accessor>(mutex_, buffer_.data());
 }
 
-memory_ptr test_map::resize(size_t size)
+memory_ptr storage::resize(size_t size)
 {
     return reserve(size);
 }
 
-memory_ptr test_map::reserve(size_t size)
+memory_ptr storage::reserve(size_t size)
 {
     const auto memory = std::make_shared<accessor>(mutex_);
 

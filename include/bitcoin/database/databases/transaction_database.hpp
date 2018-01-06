@@ -23,7 +23,7 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/file_map.hpp>
+#include <bitcoin/database/memory/file_storage.hpp>
 #include <bitcoin/database/primitives/slab_hash_table.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
@@ -107,7 +107,7 @@ private:
     bool unconfirm(uint64_t offset);
 
     // Hash table used for looking up txs by hash.
-    file_map lookup_file_;
+    file_storage lookup_file_;
     slab_map::header_type lookup_header_;
     slab_manager lookup_manager_;
     slab_map lookup_map_;

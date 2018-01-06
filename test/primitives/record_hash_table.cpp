@@ -46,7 +46,7 @@
 ////    const auto path = DIRECTORY "/record_hash_table__32bit";
 ////
 ////    test::create(path);
-////    file_map file(path);
+////    file_storage file(path);
 ////    BOOST_REQUIRE(file.open());
 ////
 ////    // Cannot hold an address reference because of following resize operation.
@@ -175,7 +175,7 @@
 ////    BC_CONSTEXPR size_t header_size = record_hash_table_header_size(record_buckets);
 ////
 ////    test::create(DIRECTORY "/record_hash_table_64bit");
-////    file_map file(DIRECTORY "/record_hash_table_64bit");
+////    file_storage file(DIRECTORY "/record_hash_table_64bit");
 ////    BOOST_REQUIRE(file.open());
 ////
 ////    // Cannot hold an address reference because of following resize operation.

@@ -21,7 +21,7 @@
 
 #include <functional>
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/database/memory/memory_map.hpp>
+#include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -53,7 +53,7 @@ public:
     static size_t size(IndexType buckets);
 
     /// Construct a hash table header.
-    hash_table_header(memory_map& file, IndexType buckets);
+    hash_table_header(storage& file, IndexType buckets);
 
     /// Allocate the hash table and populate with empty values.
     bool create();
@@ -77,7 +77,7 @@ private:
     // Position in the memory map relative the header end.
     static file_offset offset(IndexType index);
 
-    memory_map& file_;
+    storage& file_;
     IndexType buckets_;
     mutable shared_mutex mutex_;
 };

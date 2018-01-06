@@ -97,11 +97,11 @@
     <ClCompile Include="..\..\..\..\test\store.cpp" />
     <ClCompile Include="..\..\..\..\test\unspent_outputs.cpp" />
     <ClCompile Include="..\..\..\..\test\unspent_transaction.cpp" />
-    <ClCompile Include="..\..\..\..\test\utility\test_map.cpp" />
+    <ClCompile Include="..\..\..\..\test\utility\storage.cpp" />
     <ClCompile Include="..\..\..\..\test\utility\utility.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\test\utility\test_map.hpp" />
+    <ClInclude Include="..\..\..\..\test\utility\storage.hpp" />
     <ClInclude Include="..\..\..\..\test\utility\utility.hpp" />
   </ItemGroup>
   <ItemGroup>

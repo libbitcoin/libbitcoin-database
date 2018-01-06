@@ -23,7 +23,7 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/file_map.hpp>
+#include <bitcoin/database/memory/file_storage.hpp>
 #include <bitcoin/database/primitives/record_hash_table.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 
@@ -97,7 +97,7 @@ private:
     typedef record_hash_table<chain::point> record_map;
 
     // Hash table used for looking up inpoint spends by outpoint.
-    file_map lookup_file_;
+    file_storage lookup_file_;
     record_map::header_type lookup_header_;
     record_manager lookup_manager_;
     record_map lookup_map_;

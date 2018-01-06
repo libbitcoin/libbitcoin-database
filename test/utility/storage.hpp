@@ -24,14 +24,14 @@
 namespace test {
 
 // Fake a thread safe memory map implementation.
-class test_map
-  : public bc::database::memory_map
+class storage
+  : public bc::database::storage
 {
 public:
-    test_map();
-    test_map(bc::data_chunk&& initial);
-    test_map(const bc::data_chunk& initial);
-    ~test_map();
+    storage();
+    storage(bc::data_chunk&& initial);
+    storage(const bc::data_chunk& initial);
+    ~storage();
 
     bool open();
     bool flush() const;

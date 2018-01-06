@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_FILE_MAP_HPP
-#define LIBBITCOIN_DATABASE_FILE_MAP_HPP
+#ifndef LIBBITCOIN_DATABASE_FILE_STORAGE_HPP
+#define LIBBITCOIN_DATABASE_FILE_STORAGE_HPP
 
 #ifndef _WIN32
 #include <sys/mman.h>
@@ -31,26 +31,26 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/memory/memory_map.hpp>
+#include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 /// This class is thread safe, allowing concurent read and write.
 /// A change to the size of the memory map waits on and locks read and write.
-class BCD_API file_map
-  : public memory_map
+class BCD_API file_storage
+  : public storage
 {
 public:
     typedef boost::filesystem::path path;
     static const size_t default_expansion;
 
     /// Construct a database (start is currently called, may throw).
-    file_map(const path& filename);
-    file_map(const path& filename, size_t expansion);
+    file_storage(const path& filename);
+    file_storage(const path& filename, size_t expansion);
 
     /// Close the database.
-    ~file_map();
+    ~file_storage();
 
     /// Open and map database files, must be closed.
     bool open();

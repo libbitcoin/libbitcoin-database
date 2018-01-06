@@ -80,7 +80,7 @@
     <ClCompile Include="..\..\..\..\src\databases\stealth_database.cpp" />
     <ClCompile Include="..\..\..\..\src\databases\transaction_database.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\accessor.cpp" />
-    <ClCompile Include="..\..\..\..\src\memory\file_map.cpp" />
+    <ClCompile Include="..\..\..\..\src\memory\file_storage.cpp" />
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c" />
     <ClCompile Include="..\..\..\..\src\primitives\record_list.cpp" />
     <ClCompile Include="..\..\..\..\src\primitives\record_manager.cpp" />
@@ -104,9 +104,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\transaction_database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\file_map.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\file_storage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory_map.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\storage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table_header.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_hash_table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_list.hpp" />

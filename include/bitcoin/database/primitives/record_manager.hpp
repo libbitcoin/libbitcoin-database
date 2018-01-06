@@ -25,7 +25,7 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/memory/memory_map.hpp>
+#include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -37,7 +37,7 @@ namespace database {
 class BCD_API record_manager
 {
 public:
-    record_manager(memory_map& file, file_offset header_size,
+    record_manager(storage& file, file_offset header_size,
         size_t record_size);
 
     /// Create record manager.
@@ -76,7 +76,7 @@ private:
     void write_count();
 
     // This class is thread and remap safe.
-    memory_map& file_;
+    storage& file_;
     const file_offset header_size_;
     const size_t record_size_;
 

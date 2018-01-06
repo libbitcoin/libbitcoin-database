@@ -22,7 +22,7 @@
 #include <cstring>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/memory/memory_map.hpp>
+#include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -30,7 +30,7 @@ namespace database {
 static const uint8_t empty_byte = bc::max_uint8;
 
 template <typename IndexType, typename ValueType>
-hash_table_header<IndexType, ValueType>::hash_table_header(memory_map& file,
+hash_table_header<IndexType, ValueType>::hash_table_header(storage& file,
     IndexType buckets)
   : file_(file), buckets_(buckets)
 {

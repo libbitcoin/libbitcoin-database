@@ -20,7 +20,7 @@
 
 #include <utility>
 #include <bitcoin/database.hpp>
-#include "../utility/test_map.hpp"
+#include "../utility/storage.hpp"
 #include "../utility/utility.hpp"
 
 using namespace bc;
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__store__one_record__expected)
     const auto size = slab_hash_table<test::tiny_hash>::header_type::size(buckets);
 
     // Open/close storage and manage flush/remap locking externaly.
-    test::test_map file;
+    test::storage file;
     BOOST_REQUIRE(file.open());
 
     // Create and initialize header bucket count and empty buckets.
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__find__overlapping_reads__expected)
     const auto size = slab_hash_table<test::tiny_hash>::header_type::size(buckets);
 
     // Open/close storage and manage flush/remap locking externaly.
-    test::test_map file;
+    test::storage file;
     BOOST_REQUIRE(file.open());
 
     // Create and initialize header bucket count and empty buckets.
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__unlink__first_stored__expected)
     const auto size = slab_hash_table<test::tiny_hash>::header_type::size(buckets);
 
     // Open/close storage and manage flush/remap locking externaly.
-    test::test_map file;
+    test::storage file;
     BOOST_REQUIRE(file.open());
 
     // Create and initialize header bucket count and empty buckets.

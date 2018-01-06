@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/memory/file_map.hpp>
+#include <bitcoin/database/memory/file_storage.hpp>
 
 #include <iostream>
 
@@ -41,7 +41,7 @@
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
-// file_map is able to support 32 bit, but because the database
+// file_storage is able to support 32 bit, but because the database
 // requires a larger file this is neither validated nor supported.
 static_assert(sizeof(void*) == sizeof(uint64_t), "Not a 64 bit system!");
 
@@ -52,9 +52,9 @@ namespace database {
 #define INVALID_HANDLE -1
 
 // The percentage increase, e.g. 50 is 150% of the target size.
-const size_t file_map::default_expansion = 50;
+const size_t file_storage::default_expansion = 50;
 
-size_t file_map::file_size(int file_handle)
+size_t file_storage::file_size(int file_handle)
 {
     if (file_handle == INVALID_HANDLE)
         return 0;
@@ -83,7 +83,7 @@ size_t file_map::file_size(int file_handle)
     return static_cast<size_t>(sbuf.st_size);
 }
 
-int file_map::open_file(const path& filename)
+int file_storage::open_file(const path& filename)
 {
 #ifdef _WIN32
     int handle = _wopen(filename.wstring().c_str(),
@@ -95,7 +95,7 @@ int file_map::open_file(const path& filename)
     return handle;
 }
 
-bool file_map::handle_error(const std::string& context,
+bool file_storage::handle_error(const std::string& context,
     const path& filename)
 {
 #ifdef _WIN32
@@ -109,45 +109,45 @@ bool file_map::handle_error(const std::string& context,
     return false;
 }
 
-void file_map::log_mapping() const
+void file_storage::log_mapping() const
 {
     LOG_DEBUG(LOG_DATABASE)
         << "Mapping: " << filename_ << " [" << file_size_ << "] ("
         << page() << ")";
 }
 
-void file_map::log_resizing(size_t size) const
+void file_storage::log_resizing(size_t size) const
 {
     LOG_DEBUG(LOG_DATABASE)
         << "Resizing: " << filename_ << " [" << size << "]";
 }
 
-void file_map::log_flushed() const
+void file_storage::log_flushed() const
 {
     LOG_DEBUG(LOG_DATABASE)
         << "Flushed: " << filename_ << " [" << logical_size_ << "]";
 }
 
-void file_map::log_unmapping() const
+void file_storage::log_unmapping() const
 {
     LOG_DEBUG(LOG_DATABASE)
         << "Unmapping: " << filename_ << " [" << logical_size_ << "]";
 }
 
-void file_map::log_unmapped() const
+void file_storage::log_unmapped() const
 {
     LOG_DEBUG(LOG_DATABASE)
         << "Unmapped: " << filename_ << " [" << logical_size_ << ", "
         << file_size_ << "]";
 }
 
-file_map::file_map(const path& filename)
-  : file_map(filename, default_expansion)
+file_storage::file_storage(const path& filename)
+  : file_storage(filename, default_expansion)
 {
 }
 
 // mmap documentation: tinyurl.com/hnbw8t5
-file_map::file_map(const path& filename, size_t expansion)
+file_storage::file_storage(const path& filename, size_t expansion)
   : file_handle_(open_file(filename)),
     expansion_(expansion),
     filename_(filename),
@@ -159,7 +159,7 @@ file_map::file_map(const path& filename, size_t expansion)
 }
 
 // Database threads must be joined before close is called (or destruct).
-file_map::~file_map()
+file_storage::~file_storage()
 {
     close();
 }
@@ -169,7 +169,7 @@ file_map::~file_map()
 
 // Map the database file and signal start.
 // Open is not idempotent (should be called on single thread).
-bool file_map::open()
+bool file_storage::open()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -205,7 +205,7 @@ bool file_map::open()
     return true;
 }
 
-bool file_map::flush() const
+bool file_storage::flush() const
 {
     std::string error_name;
 
@@ -238,7 +238,7 @@ bool file_map::flush() const
 }
 
 // Close is idempotent and thread safe.
-bool file_map::close()
+bool file_storage::close()
 {
     std::string error_name;
 
@@ -285,7 +285,7 @@ bool file_map::close()
     return true;
 }
 
-bool file_map::closed() const
+bool file_storage::closed() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -298,7 +298,7 @@ bool file_map::closed() const
 // Operations.
 // ----------------------------------------------------------------------------
 
-size_t file_map::size() const
+size_t file_storage::size() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -308,19 +308,19 @@ size_t file_map::size() const
     ///////////////////////////////////////////////////////////////////////////
 }
 
-memory_ptr file_map::access()
+memory_ptr file_storage::access()
 {
     return std::make_shared<accessor>(mutex_, data_);
 }
 
 // Throws runtime_error if insufficient space.
-memory_ptr file_map::resize(size_t size)
+memory_ptr file_storage::resize(size_t size)
 {
     return reserve(size, 0);
 }
 
 // Throws runtime_error if insufficient space.
-memory_ptr file_map::reserve(size_t size)
+memory_ptr file_storage::reserve(size_t size)
 {
     return reserve(size, expansion_);
 }
@@ -331,7 +331,7 @@ memory_ptr file_map::reserve(size_t size)
 // in one would require rolling back preceding write operations in others.
 // To handle this situation without database corruption would require predicting
 // the required allocation and all resizing before writing a block.
-memory_ptr file_map::reserve(size_t size, size_t expansion)
+memory_ptr file_storage::reserve(size_t size, size_t expansion)
 {
     // Internally preventing resize during close is not possible because of
     // cross-file integrity. So we must coalesce all threads before closing.
@@ -377,7 +377,7 @@ memory_ptr file_map::reserve(size_t size, size_t expansion)
 // privates
 // ----------------------------------------------------------------------------
 
-size_t file_map::page() const
+size_t file_storage::page() const
 {
 #ifdef _WIN32
     SYSTEM_INFO configuration;
@@ -396,7 +396,7 @@ size_t file_map::page() const
 #endif
 }
 
-bool file_map::unmap()
+bool file_storage::unmap()
 {
     const auto success = (munmap(data_, file_size_) != FAIL);
     file_size_ = 0;
@@ -404,7 +404,7 @@ bool file_map::unmap()
     return success;
 }
 
-bool file_map::map(size_t size)
+bool file_storage::map(size_t size)
 {
     if (size == 0)
         return false;
@@ -415,7 +415,7 @@ bool file_map::map(size_t size)
     return validate(size);
 }
 
-bool file_map::remap(size_t size)
+bool file_storage::remap(size_t size)
 {
 #ifdef MREMAP_MAYMOVE
     data_ = reinterpret_cast<uint8_t*>(mremap(data_, file_size_, size,
@@ -427,12 +427,12 @@ bool file_map::remap(size_t size)
 #endif
 }
 
-bool file_map::truncate(size_t size)
+bool file_storage::truncate(size_t size)
 {
     return ftruncate(file_handle_, size) != FAIL;
 }
 
-bool file_map::truncate_mapped(size_t size)
+bool file_storage::truncate_mapped(size_t size)
 {
     log_resizing(size);
 
@@ -451,7 +451,7 @@ bool file_map::truncate_mapped(size_t size)
 #endif
 }
 
-bool file_map::validate(size_t size)
+bool file_storage::validate(size_t size)
 {
     if (data_ == MAP_FAILED)
     {

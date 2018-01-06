@@ -46,7 +46,7 @@ src_libbitcoin_database_la_SOURCES = \
     src/databases/stealth_database.cpp \
     src/databases/transaction_database.cpp \
     src/memory/accessor.cpp \
-    src/memory/file_map.cpp \
+    src/memory/file_storage.cpp \
     src/mman-win32/mman.c \
     src/mman-win32/mman.h \
     src/primitives/record_list.cpp \
@@ -94,8 +94,8 @@ test_libbitcoin_database_test_SOURCES = \
     test/result/transaction_result.cpp \
     test/state/block_state.cpp \
     test/state/transaction_state.cpp \
-    test/utility/test_map.cpp \
-    test/utility/test_map.hpp \
+    test/utility/storage.cpp \
+    test/utility/storage.hpp \
     test/utility/utility.cpp \
     test/utility/utility.hpp
 
@@ -143,16 +143,15 @@ include_bitcoin_database_impl_HEADERS = \
     include/bitcoin/database/impl/record_hash_table.ipp \
     include/bitcoin/database/impl/record_multimap.ipp \
     include/bitcoin/database/impl/record_row.ipp \
-    include/bitcoin/database/impl/remainder.ipp \
     include/bitcoin/database/impl/slab_hash_table.ipp \
     include/bitcoin/database/impl/slab_row.ipp
 
 include_bitcoin_database_memorydir = ${includedir}/bitcoin/database/memory
 include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/accessor.hpp \
-    include/bitcoin/database/memory/file_map.hpp \
+    include/bitcoin/database/memory/file_storage.hpp \
     include/bitcoin/database/memory/memory.hpp \
-    include/bitcoin/database/memory/memory_map.hpp
+    include/bitcoin/database/memory/storage.hpp
 
 include_bitcoin_database_primitivesdir = ${includedir}/bitcoin/database/primitives
 include_bitcoin_database_primitives_HEADERS = \
@@ -163,8 +162,10 @@ include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/record_multimap.hpp \
     include/bitcoin/database/primitives/record_multimap_iterable.hpp \
     include/bitcoin/database/primitives/record_multimap_iterator.hpp \
+    include/bitcoin/database/primitives/record_row.hpp \
     include/bitcoin/database/primitives/slab_hash_table.hpp \
-    include/bitcoin/database/primitives/slab_manager.hpp
+    include/bitcoin/database/primitives/slab_manager.hpp \
+    include/bitcoin/database/primitives/slab_row.hpp
 
 include_bitcoin_database_resultdir = ${includedir}/bitcoin/database/result
 include_bitcoin_database_result_HEADERS = \
