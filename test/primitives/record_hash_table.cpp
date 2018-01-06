@@ -27,6 +27,12 @@ using namespace bc::database;
 
 BOOST_AUTO_TEST_SUITE(record_hash_table_tests)
 
+// TODO: replace use of std::hash with fixed algorithms.
+// These tests are sensitive to std::hash algorithm, which is opaque.
+// This makes the tests unreliable and the store files non-portable.
+
+#ifdef NOT_DEFINED
+
 BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
 {
     typedef record_hash_table<test::tiny_hash> hash_table;
@@ -248,5 +254,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__64bit__test)
     test::little_hash invalid{ { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 } };
     BOOST_REQUIRE(!table.unlink(invalid));
 }
+
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
