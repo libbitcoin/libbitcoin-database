@@ -50,8 +50,6 @@ src_libbitcoin_database_la_SOURCES = \
     src/mman-win32/mman.c \
     src/mman-win32/mman.h \
     src/primitives/record_manager.cpp \
-    src/primitives/record_multimap_iterable.cpp \
-    src/primitives/record_multimap_iterator.cpp \
     src/primitives/slab_manager.cpp \
     src/result/block_result.cpp \
     src/result/transaction_result.cpp
@@ -142,6 +140,8 @@ include_bitcoin_database_impl_HEADERS = \
     include/bitcoin/database/impl/record_hash_table.ipp \
     include/bitcoin/database/impl/record_list.ipp \
     include/bitcoin/database/impl/record_multimap.ipp \
+    include/bitcoin/database/impl/record_multimap_iterable.ipp \
+    include/bitcoin/database/impl/record_multimap_iterator.ipp \
     include/bitcoin/database/impl/record_row.ipp \
     include/bitcoin/database/impl/slab_hash_table.ipp \
     include/bitcoin/database/impl/slab_row.ipp

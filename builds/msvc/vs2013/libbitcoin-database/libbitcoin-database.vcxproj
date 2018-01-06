@@ -83,8 +83,6 @@
     <ClCompile Include="..\..\..\..\src\memory\file_storage.cpp" />
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c" />
     <ClCompile Include="..\..\..\..\src\primitives\record_manager.cpp" />
-    <ClCompile Include="..\..\..\..\src\primitives\record_multimap_iterable.cpp" />
-    <ClCompile Include="..\..\..\..\src\primitives\record_multimap_iterator.cpp" />
     <ClCompile Include="..\..\..\..\src\primitives\slab_manager.cpp" />
     <ClCompile Include="..\..\..\..\src\result\block_result.cpp" />
     <ClCompile Include="..\..\..\..\src\result\transaction_result.cpp" />
@@ -133,6 +131,8 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_hash_table.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_list.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_multimap.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\record_multimap_iterable.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\record_multimap_iterator.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_row.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\slab_hash_table.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\slab_row.ipp" />

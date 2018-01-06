@@ -16,30 +16,37 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/primitives/record_multimap_iterable.hpp>
+#ifndef LIBBITCOIN_DATABASE_RECORD_MULTIMAP_ITERABLE_IPP
+#define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_ITERABLE_IPP
 
 #include <bitcoin/database/primitives/record_list.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
-#include <bitcoin/database/primitives/record_multimap_iterator.hpp>
+#include <bitcoin/database/primitives/record_list_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-record_multimap_iterable::record_multimap_iterable(
-    const record_manager& manager, array_index begin)
+template <typename LinkType>
+record_list_iterable<LinkType>::record_list_iterable(
+    const record_manager& manager, LinkType begin)
   : begin_(begin), manager_(manager)
 {
 }
 
-record_multimap_iterator record_multimap_iterable::begin() const
+template <typename LinkType>
+record_list_iterator<LinkType> record_list_iterable<LinkType>::begin() const
 {
-    return record_multimap_iterator(manager_, begin_);
+    return record_list_iterator<LinkType>(manager_, begin_);
 }
 
-record_multimap_iterator record_multimap_iterable::end() const
+template <typename LinkType>
+record_list_iterator<LinkType> record_list_iterable<LinkType>::end() const
 {
-    return record_multimap_iterator(manager_, record_list<array_index>::empty);
+    return record_list_iterator<LinkType>(manager_,
+        record_list<LinkType>::empty);
 }
 
 } // namespace database
 } // namespace libbitcoin
+
+#endif

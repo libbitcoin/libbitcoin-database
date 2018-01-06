@@ -87,12 +87,6 @@
     <ClCompile Include="..\..\..\..\src\primitives\record_manager.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\primitives\record_multimap_iterable.cpp">
-      <Filter>src\primitives</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\primitives\record_multimap_iterator.cpp">
-      <Filter>src\primitives</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\primitives\slab_manager.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
@@ -227,6 +221,12 @@
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_multimap.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\record_multimap_iterable.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\record_multimap_iterator.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_row.ipp">

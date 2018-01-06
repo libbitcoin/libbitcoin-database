@@ -22,9 +22,9 @@
 using namespace bc;
 using namespace bc::database;
 
-BOOST_AUTO_TEST_SUITE(record_multimap_iterator_tests)
+BOOST_AUTO_TEST_SUITE(record_list_iterator_tests)
 
-BOOST_AUTO_TEST_CASE(record_multimap_iterator__method__vector__expectation)
+BOOST_AUTO_TEST_CASE(record_list_iterator__method__vector__expectation)
 {
     BOOST_REQUIRE(true);
 }

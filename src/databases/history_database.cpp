@@ -23,8 +23,9 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/record_hash_table.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
 #include <bitcoin/database/primitives/record_multimap.hpp>
-#include <bitcoin/database/primitives/record_multimap_iterable.hpp>
+#include <bitcoin/database/primitives/record_list_iterable.hpp>
 #include <bitcoin/database/primitives/record_row.hpp>
 
 // Record format (v4) [47 bytes]:
@@ -133,7 +134,10 @@ history_database::list history_database::get(const short_hash& key,
     list result;
     payment_record payment;
     const auto start = rows_multimap_.find(key);
-    const auto records = record_multimap_iterable(rows_manager_, start);
+
+    // TODO: expose iterator from manager.
+    const auto records = record_list_iterable<array_index>(rows_manager_,
+        start);
 
     for (const auto index: records)
     {

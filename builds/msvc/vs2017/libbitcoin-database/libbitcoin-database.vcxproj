@@ -83,8 +83,6 @@
     <ClCompile Include="..\..\..\..\src\memory\file_storage.cpp" />
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c" />
     <ClCompile Include="..\..\..\..\src\primitives\record_manager.cpp" />
-    <ClCompile Include="..\..\..\..\src\primitives\record_multimap_iterable.cpp" />
-    <ClCompile Include="..\..\..\..\src\primitives\record_multimap_iterator.cpp" />
     <ClCompile Include="..\..\..\..\src\primitives\slab_manager.cpp" />
     <ClCompile Include="..\..\..\..\src\result\block_result.cpp" />
     <ClCompile Include="..\..\..\..\src\result\transaction_result.cpp" />
@@ -111,8 +109,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_list.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_multimap.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_multimap_iterable.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_multimap_iterator.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_list_iterable.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_list_iterator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_row.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_hash_table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_manager.hpp" />
@@ -133,6 +131,8 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_hash_table.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_list.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_multimap.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\record_list_iterable.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\record_list_iterator.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_row.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\slab_hash_table.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\slab_row.ipp" />

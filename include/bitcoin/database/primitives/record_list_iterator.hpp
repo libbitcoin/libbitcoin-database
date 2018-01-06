@@ -20,34 +20,36 @@
 #define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_ITERATOR_HPP
 
 #include <cstdint>
-#include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/record_list.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 /// Forward iterator for record multimap database query result.
-class BCD_API record_multimap_iterator
+template <typename LinkType>
+class record_list_iterator
 {
 public:
-    record_multimap_iterator(const record_manager& manager, array_index index);
+    record_list_iterator(const record_manager& manager, LinkType index);
 
     /// Next value in the result.
     void operator++();
 
     /// The record index.
-    array_index operator*() const;
+    LinkType operator*() const;
 
     /// Comparison operators.
-    bool operator==(record_multimap_iterator other) const;
-    bool operator!=(record_multimap_iterator other) const;
+    bool operator==(record_list_iterator other) const;
+    bool operator!=(record_list_iterator other) const;
 
 private:
-    array_index index_;
+    LinkType index_;
     const record_manager& manager_;
 };
 
 } // namespace database
 } // namespace libbitcoin
+
+#include <bitcoin/database/impl/record_list_iterator.ipp>
 
 #endif

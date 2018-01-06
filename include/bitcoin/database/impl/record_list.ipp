@@ -26,8 +26,6 @@
 namespace libbitcoin {
 namespace database {
 
-// Link reads and writes are presumed to be protected by multimap.
-
 template <typename LinkType>
 record_list<LinkType>::record_list(record_manager& manager)
     : manager_(manager), index_(empty)
@@ -68,6 +66,8 @@ void record_list<LinkType>::link(LinkType next)
     const auto memory = raw_data(0);
     const auto next_data = memory->buffer();
     auto serial = make_unsafe_serializer(next_data);
+
+    // Link reads and writes are presumed to be protected by multimap.
     //*************************************************************************
     serial.template write_little_endian<LinkType>(next);
     //*************************************************************************
@@ -89,6 +89,8 @@ LinkType record_list<LinkType>::next_index() const
 {
     const auto memory = raw_data(0);
     const auto next_address = memory->buffer();
+
+    // Link reads and writes are presumed to be protected by multimap.
     //*************************************************************************
     return from_little_endian_unsafe<LinkType>(next_address);
     //*************************************************************************

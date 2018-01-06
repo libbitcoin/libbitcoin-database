@@ -16,42 +16,33 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/primitives/record_multimap_iterator.hpp>
+#ifndef LIBBITCOIN_DATABASE_RECORD_MULTIMAP_ITERABLE_HPP
+#define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_ITERABLE_HPP
 
-#include <bitcoin/database/primitives/record_list.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
+#include <bitcoin/database/primitives/record_list_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-record_multimap_iterator::record_multimap_iterator(
-    const record_manager& manager, array_index index)
-  : index_(index), manager_(manager)
+/// Iterative result of a record multimap database query.
+template <typename LinkType>
+class record_list_iterable
 {
-}
+public:
+    record_list_iterable(const record_manager& manager, LinkType begin);
 
-void record_multimap_iterator::operator++()
-{
-    // HACK: next_index() is const, so this is safe despite being ugly.
-    auto& manager = const_cast<record_manager&>(manager_);
+    record_list_iterator<LinkType> begin() const;
+    record_list_iterator<LinkType> end() const;
 
-    index_ = record_list<array_index>(manager, index_).next_index();
-}
-
-array_index record_multimap_iterator::operator*() const
-{
-    return index_;
-}
-
-bool record_multimap_iterator::operator==(record_multimap_iterator other) const
-{
-    return this->index_ == other.index_;
-}
-
-bool record_multimap_iterator::operator!=(record_multimap_iterator other) const
-{
-    return this->index_ != other.index_;
-}
+private:
+    LinkType begin_;
+    const record_manager& manager_;
+};
 
 } // namespace database
 } // namespace libbitcoin
+
+#include <bitcoin/database/impl/record_list_iterable.ipp>
+
+#endif
