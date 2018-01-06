@@ -29,39 +29,41 @@
 namespace libbitcoin {
 namespace database {
 
-class BCD_API record_list
+template <typename LinkType>
+class record_list
 {
 public:
     typedef serializer<uint8_t*>::functor write_function;
-    static const array_index empty = bc::max_uint32;
-    static const size_t index_size = sizeof(array_index);
+    static const LinkType empty = (LinkType)bc::max_uint64;
 
     // Construct for a new record.
     record_list(record_manager& manager);
 
     // Construct for an existing record.
-    record_list(record_manager& manager, array_index index);
+    record_list(record_manager& manager, LinkType index);
 
     /// Allocate and populate a new record.
-    array_index create(write_function write);
+    LinkType create(write_function write);
 
     /// Allocate a record to the existing next record.
-    void link(array_index next);
+    void link(LinkType next);
 
     /// The actual user data for this record.
     memory_ptr data() const;
 
     /// Index of the next record.
-    array_index next_index() const;
+    LinkType next_index() const;
 
 private:
     memory_ptr raw_data(file_offset offset) const;
 
-    array_index index_;
+    LinkType index_;
     record_manager& manager_;
 };
 
 } // namespace database
 } // namespace libbitcoin
+
+#include <bitcoin/database/impl/record_list.ipp>
 
 #endif

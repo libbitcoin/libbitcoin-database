@@ -16,7 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/primitives/record_list.hpp>
+#ifndef LIBBITCOIN_DATABASE_RECORD_LIST_IPP
+#define LIBBITCOIN_DATABASE_RECORD_LIST_IPP
 
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -26,17 +27,21 @@ namespace libbitcoin {
 namespace database {
 
 // Link reads and writes are presumed to be protected by multimap.
-record_list::record_list(record_manager& manager)
+
+template <typename LinkType>
+record_list<LinkType>::record_list(record_manager& manager)
     : manager_(manager), index_(empty)
 {
 }
 
-record_list::record_list(record_manager& manager, array_index index)
+template <typename LinkType>
+record_list<LinkType>::record_list(record_manager& manager, LinkType index)
   : manager_(manager), index_(index)
 {
 }
 
-array_index record_list::create(write_function write)
+template <typename LinkType>
+LinkType record_list<LinkType>::create(write_function write)
 {
     BITCOIN_ASSERT(index_ == empty);
 
@@ -45,14 +50,15 @@ array_index record_list::create(write_function write)
     //   [ value... ] <==
     index_ = manager_.new_records(1);
 
-    const auto memory = raw_data(index_size);
+    const auto memory = raw_data(sizeof(LinkType));
     const auto record = memory->buffer();
     auto serial = make_unsafe_serializer(record);
     serial.write_delegated(write);
     return index_;
 }
 
-void record_list::link(array_index next)
+template <typename LinkType>
+void record_list<LinkType>::link(LinkType next)
 {
     // Populate next pointer value.
     //   [ next:4   ] <==
@@ -63,29 +69,33 @@ void record_list::link(array_index next)
     const auto next_data = memory->buffer();
     auto serial = make_unsafe_serializer(next_data);
     //*************************************************************************
-    serial.template write_little_endian<array_index>(next);
+    serial.template write_little_endian<LinkType>(next);
     //*************************************************************************
 }
-memory_ptr record_list::data() const
+
+template <typename LinkType>
+memory_ptr record_list<LinkType>::data() const
 {
     // Get value pointer.
     //   [ next:4   ]
     //   [ value... ] ==>
 
     // Value data is at the end.
-    return raw_data(index_size);
+    return raw_data(sizeof(LinkType));
 }
 
-array_index record_list::next_index() const
+template <typename LinkType>
+LinkType record_list<LinkType>::next_index() const
 {
     const auto memory = raw_data(0);
     const auto next_address = memory->buffer();
     //*************************************************************************
-    return from_little_endian_unsafe<array_index>(next_address);
+    return from_little_endian_unsafe<LinkType>(next_address);
     //*************************************************************************
 }
 
-memory_ptr record_list::raw_data(file_offset offset) const
+template <typename LinkType>
+memory_ptr record_list<LinkType>::raw_data(file_offset offset) const
 {
     auto memory = manager_.get(index_);
     memory->increment(offset);
@@ -94,3 +104,5 @@ memory_ptr record_list::raw_data(file_offset offset) const
 
 } // namespace database
 } // namespace libbitcoin
+
+#endif

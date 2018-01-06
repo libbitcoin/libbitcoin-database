@@ -56,7 +56,11 @@ class slab_hash_table
 public:
     typedef KeyType key_type;
     typedef byte_serializer::functor write_function;
+
+    // This determines the nature of the hash table.
+    // These template parameters could be moved up to slab_hash_table.
     typedef hash_table_header<array_index, file_offset> header_type;
+
     typedef header_type::value_type offset_type;
     typedef header_type::index_type index_type;
     static const offset_type not_found = header_type::empty;

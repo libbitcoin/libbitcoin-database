@@ -35,7 +35,7 @@ void record_multimap_iterator::operator++()
     // HACK: next_index() is const, so this is safe despite being ugly.
     auto& manager = const_cast<record_manager&>(manager_);
 
-    index_ = record_list(manager, index_).next_index();
+    index_ = record_list<array_index>(manager, index_).next_index();
 }
 
 array_index record_multimap_iterator::operator*() const

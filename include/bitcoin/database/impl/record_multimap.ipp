@@ -44,7 +44,7 @@ void record_multimap<KeyType, LinkType>::store(const KeyType& key,
     write_function write)
 {
     // Allocate and populate new unlinked row.
-    record_list record(manager_);
+    record_list<LinkType> record(manager_);
     const auto begin = record.create(write);
 
     // Critical Section.
@@ -56,7 +56,7 @@ void record_multimap<KeyType, LinkType>::store(const KeyType& key,
     // Link the row to the previous first element (or terminator).
     record.link(old_begin);
 
-    if (old_begin == record_list::empty)
+    if (old_begin == record_list<LinkType>::empty)
     {
         map_.store(key, [=](serializer<uint8_t*>& serial)
         {
@@ -85,7 +85,7 @@ LinkType record_multimap<KeyType, LinkType>::find(const KeyType& key) const
     const auto begin_address = map_.find(key);
 
     if (!begin_address)
-        return record_list::empty;
+        return record_list<LinkType>::empty;
 
     const auto memory = begin_address->buffer();
 
@@ -100,7 +100,7 @@ LinkType record_multimap<KeyType, LinkType>::find(const KeyType& key) const
 template <typename KeyType, typename LinkType>
 memory_ptr record_multimap<KeyType, LinkType>::get(LinkType index) const
 {
-    const record_list record(manager_, index);
+    const record_list<LinkType> record(manager_, index);
     return record.data();
 }
 
@@ -111,13 +111,14 @@ bool record_multimap<KeyType, LinkType>::unlink(const KeyType& key)
     const auto begin = find(key);
 
     // No rows exist.
-    if (begin == record_list::empty)
+    if (begin == record_list<LinkType>::empty)
         return false;
 
-    const auto next_index = record_list(manager_, begin).next_index();
+    const auto next_index = record_list<LinkType>(manager_, begin)
+        .next_index();
 
     // Remove the hash table entry, which delinks the single row.
-    if (next_index == record_list::empty)
+    if (next_index == record_list<LinkType>::empty)
         return map_.unlink(key);
 
     // Update the hash table entry, which skips the first of multiple rows.
