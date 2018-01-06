@@ -19,9 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_RECORD_MANAGER_HPP
 #define LIBBITCOIN_DATABASE_RECORD_MANAGER_HPP
 
-#include <atomic>
 #include <cstddef>
-#include <cstdint>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -34,11 +32,11 @@ namespace database {
 /// data referenced by an index. The file will be resized accordingly
 /// and the total number of records updated so new chunks can be allocated.
 /// It also provides logical record mapping to the record memory address.
-class BCD_API record_manager
+template <typename LinkType>
+class record_manager
 {
 public:
-    record_manager(storage& file, file_offset header_size,
-        size_t record_size);
+    record_manager(storage& file, size_t header_size, size_t record_size);
 
     /// Create record manager.
     bool create();
@@ -50,23 +48,23 @@ public:
     void sync();
 
     /// The number of records in this container.
-    array_index count() const;
+    LinkType count() const;
 
     /// Change the number of records of this container (truncation).
-    void set_count(const array_index value);
+    void set_count(const LinkType value);
 
     /// Allocate records and return first logical index, sync() after writing.
-    array_index new_records(size_t count);
+    LinkType new_records(LinkType count);
 
     /// Return memory object for the record at the specified index.
-    memory_ptr get(array_index record) const;
+    memory_ptr get(LinkType record) const;
 
 private:
     // The record index of a disk position.
-    array_index position_to_record(file_offset position) const;
+    LinkType position_to_record(file_offset position) const;
 
     // The disk position of a record index.
-    file_offset record_to_position(array_index record) const;
+    file_offset record_to_position(LinkType record) const;
 
     // Read the count of the records from the file.
     void read_count();
@@ -76,15 +74,17 @@ private:
 
     // This class is thread and remap safe.
     storage& file_;
-    const file_offset header_size_;
+    const size_t header_size_;
     const size_t record_size_;
 
     // Record count is protected by mutex.
-    array_index record_count_;
+    LinkType record_count_;
     mutable shared_mutex mutex_;
 };
 
 } // namespace database
 } // namespace libbitcoin
+
+#include <bitcoin/database/impl/record_manager.ipp>
 
 #endif

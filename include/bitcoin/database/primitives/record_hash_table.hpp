@@ -61,22 +61,23 @@ public:
     typedef hash_table_header<array_index, array_index> header_type;
 
     typedef header_type::index_type index_type;
-    typedef header_type::value_type offset_type;
-    static const offset_type not_found = header_type::empty;
+    typedef header_type::value_type link_type;
+    typedef record_manager<link_type> record_manager;
+    static const link_type not_found = header_type::empty;
 
     /// Construct a hash table for uniform size entries.
     record_hash_table(header_type& header, record_manager& manager);
 
     /// Execute a write. The provided write() function must write the correct
     /// size: (value_size = record_size - key_size - sizeof(array_index)).
-    offset_type store(const KeyType& key, write_function write);
+    link_type store(const KeyType& key, write_function write);
 
     /// Execute a writer against a key's buffer if the key is found.
     /// Returns the array offset of the found value (or not_found).
-    offset_type update(const KeyType& key, write_function write);
+    link_type update(const KeyType& key, write_function write);
 
     /// Find the array offset for given key. Returns not_found if not found.
-    offset_type offset(const KeyType& key) const;
+    link_type offset(const KeyType& key) const;
 
     /// Find the record for given key. Returns nullptr if not found.
     memory_ptr find(const KeyType& key) const;
@@ -89,10 +90,10 @@ private:
     index_type bucket_index(const KeyType& key) const;
 
     // The record start position for the set of elements mapped to the key.
-    offset_type read_bucket_value(const KeyType& key) const;
+    link_type read_bucket_value(const KeyType& key) const;
 
     // Link a new element into the bucket header (stack model, push front).
-    void link(const KeyType& key, offset_type begin);
+    void link(const KeyType& key, link_type begin);
 
     header_type& header_;
     record_manager& manager_;

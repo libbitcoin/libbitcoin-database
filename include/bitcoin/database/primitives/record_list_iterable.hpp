@@ -30,14 +30,15 @@ template <typename LinkType>
 class record_list_iterable
 {
 public:
-    record_list_iterable(const record_manager& manager, LinkType begin);
+    record_list_iterable(const record_manager<LinkType>& manager,
+        LinkType begin);
 
     record_list_iterator<LinkType> begin() const;
     record_list_iterator<LinkType> end() const;
 
 private:
     LinkType begin_;
-    const record_manager& manager_;
+    const record_manager<LinkType>& manager_;
 };
 
 } // namespace database

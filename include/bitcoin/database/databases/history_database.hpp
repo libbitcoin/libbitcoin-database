@@ -97,7 +97,9 @@ public:
 
 private:
     typedef record_hash_table<short_hash> record_map;
-    typedef record_multimap<short_hash, array_index> record_multiple_map;
+    typedef record_map::link_type link_type;
+    typedef record_manager<link_type> record_manager;
+    typedef record_multimap<short_hash, link_type> record_multiple_map;
 
     /// Hash table used for start index lookup for linked list by address hash.
     file_storage lookup_file_;

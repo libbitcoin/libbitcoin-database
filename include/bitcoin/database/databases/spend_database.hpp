@@ -95,6 +95,7 @@ public:
 
 private:
     typedef record_hash_table<chain::point> record_map;
+    typedef record_manager<record_map::link_type> record_manager;
 
     // Hash table used for looking up inpoint spends by outpoint.
     file_storage lookup_file_;

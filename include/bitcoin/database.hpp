@@ -34,10 +34,10 @@
 #include <bitcoin/database/primitives/hash_table_header.hpp>
 #include <bitcoin/database/primitives/record_hash_table.hpp>
 #include <bitcoin/database/primitives/record_list.hpp>
-#include <bitcoin/database/primitives/record_manager.hpp>
-#include <bitcoin/database/primitives/record_multimap.hpp>
 #include <bitcoin/database/primitives/record_list_iterable.hpp>
 #include <bitcoin/database/primitives/record_list_iterator.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
+#include <bitcoin/database/primitives/record_multimap.hpp>
 #include <bitcoin/database/primitives/record_row.hpp>
 #include <bitcoin/database/primitives/slab_hash_table.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>

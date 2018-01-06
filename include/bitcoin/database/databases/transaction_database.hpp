@@ -41,8 +41,9 @@ namespace database {
 class BCD_API transaction_database
 {
 public:
-    typedef boost::filesystem::path path;
     typedef slab_hash_table<hash_digest> slab_map;
+    typedef slab_map::link_type link_type;
+    typedef boost::filesystem::path path;
 
     /// Construct the database.
     transaction_database(const path& map_filename, size_t buckets,
@@ -73,7 +74,7 @@ public:
     //-------------------------------------------------------------------------
 
     /// Fetch transaction by file offset.
-    transaction_result get(file_offset offset) const;
+    transaction_result get(link_type offset) const;
 
     /// Fetch transaction by its hash.
     transaction_result get(const hash_digest& hash) const;
@@ -96,15 +97,19 @@ public:
     bool unconfirm(const chain::transaction& tx);
 
 private:
+    typedef slab_manager<link_type> slab_manager;
+
     // Update the spender height of the output.
     bool spend(const chain::output_point& point, size_t spender_height);
 
     // Update the state of the existing tx.
-    bool confirm(file_offset offset, size_t height, uint32_t median_time_past,
+    bool confirm(link_type offset, size_t height, uint32_t median_time_past,
         size_t position, transaction_state state);
 
     // Demote the transaction to pooled.
     bool unconfirm(uint64_t offset);
+
+    static const size_t prefix_size_;
 
     // Hash table used for looking up txs by hash.
     file_storage lookup_file_;

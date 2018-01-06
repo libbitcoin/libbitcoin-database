@@ -16,17 +16,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/primitives/record_manager.hpp>
+#ifndef LIBBITCOIN_DATABASE_SLAB_MANAGER_IPP
+#define LIBBITCOIN_DATABASE_SLAB_MANAGER_IPP
 
 #include <cstddef>
-#include <stdexcept>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
 /// -- file --
 /// [ header ]
-/// [ record_count ]
+/// [ payload_size ] (includes self)
 /// [ payload ]
 
 /// -- header (hash table) --
@@ -35,159 +35,148 @@
 /// ...
 /// [ bucket ]
 
-/// -- payload (fixed size records) --
-/// [ record ]
+/// -- payload (variable size records) --
+/// [ slab ]
 /// ...
-/// [ record ]
+/// [ slab ]
 
 namespace libbitcoin {
 namespace database {
 
 // TODO: guard against overflows.
 
-record_manager::record_manager(storage& file, file_offset header_size,
-    size_t record_size)
+template <typename LinkType>
+slab_manager<LinkType>::slab_manager(storage& file, size_t header_size)
   : file_(file),
     header_size_(header_size),
-    record_size_(record_size),
-    record_count_(0)
+    payload_size_(sizeof(LinkType))
 {
 }
 
-bool record_manager::create()
+template <typename LinkType>
+bool slab_manager<LinkType>::create()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(mutex_);
 
-    // Existing file record count is nonzero.
-    if (record_count_ != 0)
+    // Existing slabs size is incorrect for new file.
+    if (payload_size_ != sizeof(LinkType))
         return false;
 
     // This currently throws if there is insufficient space.
-    file_.resize(header_size_ + record_to_position(record_count_));
+    file_.resize(header_size_ + payload_size_);
 
-    write_count();
+    write_size();
     return true;
     ///////////////////////////////////////////////////////////////////////////
 }
 
-bool record_manager::start()
+template <typename LinkType>
+bool slab_manager<LinkType>::start()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(mutex_);
 
-    read_count();
-    const auto minimum = header_size_ + record_to_position(record_count_);
+    read_size();
+    const auto minimum = header_size_ + payload_size_;
 
-    // Records size exceeds file size.
+    // Slabs size exceeds file size.
     return minimum <= file_.size();
     ///////////////////////////////////////////////////////////////////////////
 }
 
-void record_manager::sync()
+template <typename LinkType>
+void slab_manager<LinkType>::sync() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(mutex_);
 
-    write_count();
+    write_size();
     ///////////////////////////////////////////////////////////////////////////
 }
 
-array_index record_manager::count() const
+// protected
+template <typename LinkType>
+size_t slab_manager<LinkType>::payload_size() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     shared_lock lock(mutex_);
 
-    return record_count_;
+    return payload_size_;
     ///////////////////////////////////////////////////////////////////////////
 }
 
-void record_manager::set_count(const array_index value)
+// Return is offset by header but not size storage (embedded in data files).
+// The file is thread safe, the critical section is to protect payload_size_.
+template <typename LinkType>
+LinkType slab_manager<LinkType>::new_slab(size_t size)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(mutex_);
 
-    BITCOIN_ASSERT(value <= record_count_);
+    // Always write after the last slab.
+    const auto next_slab_position = payload_size_;
 
-    record_count_ = value;
-    ///////////////////////////////////////////////////////////////////////////
-}
-
-// Return the next index, regardless of the number created.
-// The file is thread safe, the critical section is to protect record_count_.
-array_index record_manager::new_records(size_t count)
-{
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
-
-    // Always write after the last index.
-    const auto next_record_index = record_count_;
-
-    const size_t position = record_to_position(record_count_ + count);
-    const size_t required_size = header_size_ + position;
+    const size_t required_size = header_size_ + payload_size_ + size;
 
     if (!file_.reserve(required_size))
     {
         // TODO: return failure sentinel.
     }
 
-    record_count_ += count;
+    payload_size_ += size;
 
-    return next_record_index;
+    return next_slab_position;
     ///////////////////////////////////////////////////////////////////////////
 }
 
-memory_ptr record_manager::get(array_index record) const
+// Position is offset by header but not size storage (embedded in data files).
+template <typename LinkType>
+memory_ptr slab_manager<LinkType>::get(LinkType position) const
 {
-    // If record >= count() then we should still be within the file. The
-    // condition implies a block has been unconfirmed while reading it.
+    // Ensure requested position is within the file.
+    // We avoid a runtime error here to optimize out the payload_size lock.
+    BITCOIN_ASSERT_MSG(position < payload_size(), "Read past end of file.");
 
-    // The accessor must remain in scope until the end of the block.
     auto memory = file_.access();
-    memory->increment(header_size_ + record_to_position(record));
+    memory->increment(header_size_ + position);
     return memory;
 }
 
 // privates
 
-// Read the count value from the first 32 bits of the file after the header.
-void record_manager::read_count()
+// Read the size value from the first 64 bits of the file after the header.
+template <typename LinkType>
+void slab_manager<LinkType>::read_size()
 {
-    BITCOIN_ASSERT(header_size_ + sizeof(array_index) <= file_.size());
+    BITCOIN_ASSERT(header_size_ + sizeof(LinkType) <= file_.size());
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto count_address = memory->buffer() + header_size_;
-    record_count_ = from_little_endian_unsafe<array_index>(count_address);
+    const auto payload_size_address = memory->buffer() + header_size_;
+    payload_size_ = from_little_endian_unsafe<LinkType>(
+        payload_size_address);
 }
 
-// Write the count value to the first 32 bits of the file after the header.
-void record_manager::write_count()
+// Write the size value to the first 64 bits of the file after the header.
+template <typename LinkType>
+void slab_manager<LinkType>::write_size() const
 {
-    BITCOIN_ASSERT(header_size_ + sizeof(array_index) <= file_.size());
+    BITCOIN_ASSERT(header_size_ + sizeof(LinkType) <= file_.size());
 
     // The accessor must remain in scope until the end of the block.
-    auto memory = file_.access();
-    auto payload_size_address = memory->buffer() + header_size_;
+    const auto memory = file_.access();
+    const auto payload_size_address = memory->buffer() + header_size_;
     auto serial = make_unsafe_serializer(payload_size_address);
-    serial.write_little_endian<array_index>(record_count_);
-}
-
-array_index record_manager::position_to_record(file_offset position) const
-{
-    return (position - sizeof(array_index)) / record_size_;
-}
-
-file_offset record_manager::record_to_position(array_index record) const
-{
-    return sizeof(array_index) + record * record_size_;
+    serial.write_little_endian<LinkType>(payload_size_);
 }
 
 } // namespace database
 } // namespace libbitcoin
+
+#endif

@@ -79,7 +79,7 @@
     <ClCompile Include="..\..\..\..\test\main.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\accessor.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\allocator.cpp" />
-    <ClCompile Include="..\..\..\..\test\memory\file_map.cpp" />
+    <ClCompile Include="..\..\..\..\test\memory\file_storage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hash_table_header.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\record_hash_table.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\record_list.cpp" />

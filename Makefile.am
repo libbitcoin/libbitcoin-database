@@ -49,8 +49,6 @@ src_libbitcoin_database_la_SOURCES = \
     src/memory/file_storage.cpp \
     src/mman-win32/mman.c \
     src/mman-win32/mman.h \
-    src/primitives/record_manager.cpp \
-    src/primitives/slab_manager.cpp \
     src/result/block_result.cpp \
     src/result/transaction_result.cpp
 
@@ -77,7 +75,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/databases/transaction_database.cpp \
     test/memory/accessor.cpp \
     test/memory/allocator.cpp \
-    test/memory/file_map.cpp \
+    test/memory/file_storage.cpp \
     test/primitives/hash_table_header.cpp \
     test/primitives/record_hash_table.cpp \
     test/primitives/record_list.cpp \
@@ -139,11 +137,13 @@ include_bitcoin_database_impl_HEADERS = \
     include/bitcoin/database/impl/hash_table_header.ipp \
     include/bitcoin/database/impl/record_hash_table.ipp \
     include/bitcoin/database/impl/record_list.ipp \
+    include/bitcoin/database/impl/record_list_iterable.ipp \
+    include/bitcoin/database/impl/record_list_iterator.ipp \
+    include/bitcoin/database/impl/record_manager.ipp \
     include/bitcoin/database/impl/record_multimap.ipp \
-    include/bitcoin/database/impl/record_multimap_iterable.ipp \
-    include/bitcoin/database/impl/record_multimap_iterator.ipp \
     include/bitcoin/database/impl/record_row.ipp \
     include/bitcoin/database/impl/slab_hash_table.ipp \
+    include/bitcoin/database/impl/slab_manager.ipp \
     include/bitcoin/database/impl/slab_row.ipp
 
 include_bitcoin_database_memorydir = ${includedir}/bitcoin/database/memory
@@ -158,10 +158,10 @@ include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/hash_table_header.hpp \
     include/bitcoin/database/primitives/record_hash_table.hpp \
     include/bitcoin/database/primitives/record_list.hpp \
+    include/bitcoin/database/primitives/record_list_iterable.hpp \
+    include/bitcoin/database/primitives/record_list_iterator.hpp \
     include/bitcoin/database/primitives/record_manager.hpp \
     include/bitcoin/database/primitives/record_multimap.hpp \
-    include/bitcoin/database/primitives/record_multimap_iterable.hpp \
-    include/bitcoin/database/primitives/record_multimap_iterator.hpp \
     include/bitcoin/database/primitives/record_row.hpp \
     include/bitcoin/database/primitives/slab_hash_table.hpp \
     include/bitcoin/database/primitives/slab_manager.hpp \

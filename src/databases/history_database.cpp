@@ -64,12 +64,12 @@ history_database::history_database(const path& lookup_filename,
     lookup_header_(lookup_file_, buckets),
     lookup_manager_(lookup_file_,
         record_map::header_type::size(buckets),
-        record_row<short_hash, array_index>::size(sizeof(array_index))),
+        record_row<short_hash, link_type>::size(sizeof(link_type))),
     lookup_map_(lookup_header_, lookup_manager_),
 
     rows_file_(rows_filename, expansion),
     rows_manager_(rows_file_, 0,
-        record_multimap<short_hash, array_index>::element_size(value_size)),
+        record_multimap<short_hash, link_type>::element_size(value_size)),
     rows_multimap_(lookup_map_, rows_manager_)
 {
 }
@@ -136,8 +136,7 @@ history_database::list history_database::get(const short_hash& key,
     const auto start = rows_multimap_.find(key);
 
     // TODO: expose iterator from manager.
-    const auto records = record_list_iterable<array_index>(rows_manager_,
-        start);
+    const auto records = record_list_iterable<link_type>(rows_manager_, start);
 
     for (const auto index: records)
     {

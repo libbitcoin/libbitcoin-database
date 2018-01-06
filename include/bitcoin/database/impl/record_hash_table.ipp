@@ -38,7 +38,7 @@ record_hash_table<KeyType>::record_hash_table(header_type& header,
 // are store then retrieval and unlinking will fail as these multiples cannot
 // be differentiated except in the order written.
 template <typename KeyType>
-typename record_hash_table<KeyType>::offset_type record_hash_table<KeyType>::store(
+typename record_hash_table<KeyType>::link_type record_hash_table<KeyType>::store(
     const KeyType& key, write_function write)
 {
     // Allocate and populate new unlinked record.
@@ -65,7 +65,7 @@ typename record_hash_table<KeyType>::offset_type record_hash_table<KeyType>::sto
 // Execute a writer against a key's buffer if the key is found.
 // Return the array index of the found value (or not_found).
 template <typename KeyType>
-typename record_hash_table<KeyType>::offset_type record_hash_table<KeyType>::update(
+typename record_hash_table<KeyType>::link_type record_hash_table<KeyType>::update(
     const KeyType& key, write_function write)
 {
     // Find start item...
@@ -97,7 +97,7 @@ typename record_hash_table<KeyType>::offset_type record_hash_table<KeyType>::upd
 
 // This is limited to returning the first of multiple matching key values.
 template <typename KeyType>
-typename record_hash_table<KeyType>::offset_type record_hash_table<KeyType>::offset(
+typename record_hash_table<KeyType>::link_type record_hash_table<KeyType>::offset(
     const KeyType& key) const
 {
     // Find start item...
@@ -216,7 +216,7 @@ typename record_hash_table<KeyType>::index_type record_hash_table<KeyType>::buck
 
 // private
 template <typename KeyType>
-typename record_hash_table<KeyType>::offset_type record_hash_table<KeyType>::read_bucket_value(
+typename record_hash_table<KeyType>::link_type record_hash_table<KeyType>::read_bucket_value(
     const KeyType& key) const
 {
     return header_.read(bucket_index(key));
@@ -224,7 +224,7 @@ typename record_hash_table<KeyType>::offset_type record_hash_table<KeyType>::rea
 
 // private
 template <typename KeyType>
-void record_hash_table<KeyType>::link(const KeyType& key, offset_type begin)
+void record_hash_table<KeyType>::link(const KeyType& key, link_type begin)
 {
     header_.write(bucket_index(key), begin);
 }

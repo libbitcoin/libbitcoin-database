@@ -27,7 +27,7 @@ namespace database {
 
 template <typename LinkType>
 record_list_iterator<LinkType>::record_list_iterator(
-    const record_manager& manager, LinkType index)
+    const record_manager<LinkType>& manager, LinkType index)
   : index_(index), manager_(manager)
 {
 }
@@ -36,7 +36,7 @@ template <typename LinkType>
 void record_list_iterator<LinkType>::operator++()
 {
     // HACK: next_index() is const, so this is safe despite being ugly.
-    auto& manager = const_cast<record_manager&>(manager_);
+    auto& manager = const_cast<record_manager<LinkType>&>(manager_);
 
     index_ = record_list<LinkType>(manager, index_).next_index();
 }

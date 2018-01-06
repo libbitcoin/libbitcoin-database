@@ -45,13 +45,13 @@ public:
     static const size_t key_start = 0;
     static const size_t key_size = std::tuple_size<KeyType>::value;
     static const size_t link_size = sizeof(LinkType);
-    static const LinkType prefix_size = key_size + link_size;
+    static const size_t prefix_size = key_size + link_size;
 
     // Construct for a new slab.
-    slab_row(slab_manager& manager);
+    slab_row(slab_manager<LinkType>& manager);
 
     // Construct for an existing slab.
-    slab_row(slab_manager& manager, LinkType position);
+    slab_row(slab_manager<LinkType>& manager, LinkType position);
 
     /// Allocate and populate a new slab.
     LinkType create(const KeyType& key, write_function write,
@@ -79,7 +79,7 @@ private:
     memory_ptr raw_data(size_t bytes) const;
 
     LinkType position_;
-    slab_manager& manager_;
+    slab_manager<LinkType>& manager_;
 };
 
 } // namespace database

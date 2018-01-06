@@ -18,7 +18,6 @@
  */
 #include <boost/test/unit_test.hpp>
 
-#include <utility>
 #include <bitcoin/database.hpp>
 #include "../utility/storage.hpp"
 #include "../utility/utility.hpp"
@@ -26,30 +25,28 @@
 using namespace bc;
 using namespace bc::database;
 
-static const test::tiny_hash key1{ { 0xde, 0xad, 0xbe, 0xef } };
-static const test::tiny_hash key2{ { 0xba, 0xad, 0xbe, 0xef } };
-
 BOOST_AUTO_TEST_SUITE(slab_hash_table_tests)
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__store__one_record__expected)
+BOOST_AUTO_TEST_CASE(slab_hash_table__store__one_slab__expected)
 {
-    const auto buckets = 100u;
-    const auto size = slab_hash_table<test::tiny_hash>::header_type::size(buckets);
+    typedef slab_hash_table<test::tiny_hash> hash_table;
 
-    // Open/close storage and manage flush/remap locking externaly.
+    const auto buckets = 100u;
+    const auto header_size = hash_table::header_type::size(buckets);
+
     test::storage file;
     BOOST_REQUIRE(file.open());
 
-    // Create and initialize header bucket count and empty buckets.
-    slab_hash_table<test::tiny_hash>::header_type header(file, buckets);
+    hash_table::header_type header(file, buckets);
     BOOST_REQUIRE(header.create());
+    BOOST_REQUIRE_GE(file.size(), header_size);
 
-    // Create the initial slab (size) space after the hash table header.
-    slab_manager manager(file, size);
+    hash_table::slab_manager manager(file, header_size);
     BOOST_REQUIRE(manager.create());
+    BOOST_REQUIRE_GE(file.size(), header_size + sizeof(hash_table::link_type));
 
-    // Join header and slab manager into a hash table.
     slab_hash_table<test::tiny_hash> table(header, manager);
+    static const test::tiny_hash key1{ { 0xde, 0xad, 0xbe, 0xef } };
 
     const auto writer = [](byte_serializer& serial)
     {
@@ -71,23 +68,25 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__store__one_record__expected)
 
 BOOST_AUTO_TEST_CASE(slab_hash_table__find__overlapping_reads__expected)
 {
-    const auto buckets = 100u;
-    const auto size = slab_hash_table<test::tiny_hash>::header_type::size(buckets);
+    typedef slab_hash_table<test::tiny_hash> hash_table;
 
-    // Open/close storage and manage flush/remap locking externaly.
+    const auto buckets = 100u;
+    const auto header_size = hash_table::header_type::size(buckets);
+
     test::storage file;
     BOOST_REQUIRE(file.open());
 
-    // Create and initialize header bucket count and empty buckets.
-    slab_hash_table<test::tiny_hash>::header_type header(file, buckets);
+    hash_table::header_type header(file, buckets);
     BOOST_REQUIRE(header.create());
+    BOOST_REQUIRE_GE(file.size(), header_size);
 
-    // Create the initial slab (size) space after the hash table header.
-    slab_manager manager(file, size);
+    hash_table::slab_manager manager(file, header_size);
     BOOST_REQUIRE(manager.create());
+    BOOST_REQUIRE_GE(file.size(), header_size + sizeof(hash_table::link_type));
 
-    // Join header and slab manager into a hash table.
     slab_hash_table<test::tiny_hash> table(header, manager);
+    static const test::tiny_hash key1{ { 0xde, 0xad, 0xbe, 0xef } };
+    const test::tiny_hash key2{ { 0xba, 0xad, 0xbe, 0xef } };
 
     const auto writer1 = [](byte_serializer& serial)
     {
@@ -120,23 +119,25 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__find__overlapping_reads__expected)
 
 BOOST_AUTO_TEST_CASE(slab_hash_table__unlink__first_stored__expected)
 {
-    const auto buckets = 100u;
-    const auto size = slab_hash_table<test::tiny_hash>::header_type::size(buckets);
+    typedef slab_hash_table<test::tiny_hash> hash_table;
 
-    // Open/close storage and manage flush/remap locking externaly.
+    const auto buckets = 100u;
+    const auto header_size = hash_table::header_type::size(buckets);
+
     test::storage file;
     BOOST_REQUIRE(file.open());
 
-    // Create and initialize header bucket count and empty buckets.
-    slab_hash_table<test::tiny_hash>::header_type header(file, buckets);
+    hash_table::header_type header(file, buckets);
     BOOST_REQUIRE(header.create());
+    BOOST_REQUIRE_GE(file.size(), header_size);
 
-    // Create the initial slab (size) space after the hash table header.
-    slab_manager manager(file, size);
+    hash_table::slab_manager manager(file, header_size);
     BOOST_REQUIRE(manager.create());
+    BOOST_REQUIRE_GE(file.size(), header_size + sizeof(hash_table::link_type));
 
-    // Join header and slab manager into a hash table.
     slab_hash_table<test::tiny_hash> table(header, manager);
+    static const test::tiny_hash key1{ { 0xde, 0xad, 0xbe, 0xef } };
+    const test::tiny_hash key2{ { 0xba, 0xad, 0xbe, 0xef } };
 
     const auto writer1 = [](byte_serializer& serial)
     {

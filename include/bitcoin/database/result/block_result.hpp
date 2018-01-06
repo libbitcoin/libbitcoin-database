@@ -36,6 +36,8 @@ namespace database {
 class BCD_API block_result
 {
 public:
+    typedef record_manager<array_index> record_manager;
+
     block_result(const record_manager& index_manager);
 
     block_result(const record_manager& index_manager, memory_ptr record,

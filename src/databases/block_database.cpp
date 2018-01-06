@@ -22,6 +22,7 @@
 #include <cstddef>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/record_hash_table.hpp>
@@ -54,7 +55,10 @@ namespace database {
 
 using namespace bc::chain;
 
-static const auto prefix_size = record_row<hash_digest, array_index>::prefix_size;
+// static
+const size_t block_database::prefix_size_ = record_row<hash_digest,
+    link_type>::prefix_size;
+
 static const auto header_size = header::satoshi_fixed_size();
 static constexpr auto median_time_past_size = sizeof(uint32_t);
 static constexpr auto height_size = sizeof(uint32_t);
@@ -84,14 +88,14 @@ block_database::block_database(const path& map_filename,
     lookup_header_(lookup_file_, buckets),
     lookup_manager_(lookup_file_,
         record_map::header_type::size(buckets),
-        record_row<hash_digest, array_index>::size(block_size)),
+        record_row<hash_digest, link_type>::size(block_size)),
     lookup_map_(lookup_header_, lookup_manager_),
 
     header_index_file_(header_index_filename, expansion),
-    header_index_manager_(header_index_file_, 0, sizeof(array_index)),
+    header_index_manager_(header_index_file_, 0, sizeof(link_type)),
 
     block_index_file_(block_index_filename, expansion),
-    block_index_manager_(block_index_file_, 0, sizeof(array_index)),
+    block_index_manager_(block_index_file_, 0, sizeof(link_type)),
 
     tx_index_file_(tx_index_filename, expansion),
     tx_index_manager_(tx_index_file_, 0, sizeof(file_offset))
@@ -193,7 +197,7 @@ block_result block_database::get(size_t height, bool block_index) const
     const auto prefix = record->buffer();
 
     // Advance the record row entry past the key and link to the record data.
-    record->increment(prefix_size);
+    record->increment(prefix_size_);
     auto deserial = make_unsafe_deserializer(record->buffer());
 
     // The header and height are const.
@@ -228,7 +232,7 @@ block_result block_database::get(const hash_digest& hash) const
         return{ tx_index_manager_ };
 
     const auto memory = record->buffer();
-    ////const auto prefix_start = memory - prefix_size;
+    ////const auto prefix_start = memory - prefix_size_;
 
     // The header and height never change after the block is reachable.
     auto deserial = make_unsafe_deserializer(memory + height_offset);
@@ -255,7 +259,7 @@ block_result block_database::get(const hash_digest& hash) const
 
 // private
 void block_database::push(const chain::header& header, size_t height,
-    uint32_t checksum, array_index tx_start, size_t tx_count, uint8_t state)
+    uint32_t checksum, link_type tx_start, size_t tx_count, uint8_t state)
 {
     auto& manager = is_confirmed(state) ? block_index_manager_ :
         header_index_manager_;
@@ -312,7 +316,8 @@ void block_database::push(const chain::block& block, size_t height)
     push(header, height, no_checksum, associate(txs), txs.size(), state);
 }
 
-array_index block_database::associate(const transaction::list& transactions)
+block_database::link_type block_database::associate(
+    const transaction::list& transactions)
 {
     if (transactions.empty())
         return 0;
@@ -324,7 +329,7 @@ array_index block_database::associate(const transaction::list& transactions)
     for (const auto& tx: transactions)
     {
         const auto offset = tx.validation.offset;
-        BITCOIN_ASSERT(offset != slab_map::not_found);
+        BITCOIN_ASSERT(offset != transaction_database::slab_map::not_found);
         serial.write_8_bytes_little_endian(offset);
     }
 
@@ -388,7 +393,7 @@ bool block_database::validate(const hash_digest& hash, bool positive)
         return false;
 
     const auto memory = record->buffer();
-    ////const auto prefix_start = memory - prefix_size;
+    ////const auto prefix_start = memory - prefix_size_;
 
     // The header and height never change after the block is reachable.
     auto deserial = make_unsafe_deserializer(memory + height_offset);
@@ -466,7 +471,7 @@ bool block_database::confirm(const hash_digest& hash, size_t height,
     // TODO: eliminate the double state lookup for state update.
     // TODO: the caller doesn't know the current header state.
     auto record = lookup_manager_.get(read_index(height, manager));
-    record->increment(prefix_size);
+    record->increment(prefix_size_);
     const auto state_start = record->buffer();
     auto deserial = make_unsafe_deserializer(state_start);
 
@@ -516,7 +521,7 @@ bool block_database::unconfirm(const hash_digest& hash, size_t height,
     // TODO: the caller already knows the current header state.
     // TODO: update isn't actually required here (index unused).
     auto record = lookup_manager_.get(read_index(height, manager));
-    record->increment(prefix_size);
+    record->increment(prefix_size_);
     const auto state_start = record->buffer();
     auto deserial = make_unsafe_deserializer(state_start);
 
@@ -571,7 +576,7 @@ bool block_database::read_top(size_t& out_height,
     return true;
 }
 
-array_index block_database::read_index(size_t height,
+block_database::link_type block_database::read_index(size_t height,
     const record_manager& manager) const
 {
     BITCOIN_ASSERT(height < max_uint32);
@@ -579,7 +584,7 @@ array_index block_database::read_index(size_t height,
 
     const auto height32 = static_cast<uint32_t>(height);
     const auto record = manager.get(height32);
-    return from_little_endian_unsafe<array_index>(record->buffer());
+    return from_little_endian_unsafe<link_type>(record->buffer());
 }
 
 void block_database::pop_index(size_t height, record_manager& manager)
@@ -591,7 +596,7 @@ void block_database::pop_index(size_t height, record_manager& manager)
     manager.set_count(height32);
 }
 
-void block_database::push_index(array_index index, size_t height,
+void block_database::push_index(link_type index, size_t height,
     record_manager& manager)
 {
     BITCOIN_ASSERT(height < max_uint32);

@@ -18,53 +18,28 @@
  */
 #include <boost/test/unit_test.hpp>
 
-#include <boost/filesystem.hpp>
 #include <bitcoin/database.hpp>
-#include "../utility/utility.hpp"
+#include "../utility/storage.hpp"
 
-using namespace boost::system;
-using namespace boost::filesystem;
 using namespace bc;
 using namespace bc::database;
 
-#define DIRECTORY "slab_manager"
-
-struct slab_manager_directory_setup_fixture
-{
-    slab_manager_directory_setup_fixture()
-    {
-        BOOST_REQUIRE(test::clear_path(DIRECTORY));
-    }
-};
-
-BOOST_FIXTURE_TEST_SUITE(slab_manager_tests, slab_manager_directory_setup_fixture)
+BOOST_AUTO_TEST_SUITE(slab_manager_tests)
 
 BOOST_AUTO_TEST_CASE(slab_manager__method__vector__expectation)
 {
-    BOOST_REQUIRE(true);
-}
-
-BOOST_AUTO_TEST_CASE(slab_manager__test)
-{
-    test::create(DIRECTORY "/slab_manager");
-    file_storage file(DIRECTORY "/slab_manager");
+    test::storage file;
     BOOST_REQUIRE(file.open());
-    BOOST_REQUIRE(file.access()->buffer() != nullptr);
-    file.resize(200);
 
-    slab_manager data(file, 0);
-    BOOST_REQUIRE(data.create());
-    BOOST_REQUIRE(data.start());
+    slab_manager<uint64_t> manager(file, 0);
+    BOOST_REQUIRE(manager.create());
 
-    file_offset position = data.new_slab(100);
-    BOOST_REQUIRE(position == 8);
-    //slab_byte_pointer slab = data.get(position);
+    const auto position1 = manager.new_slab(100);
+    BOOST_REQUIRE_EQUAL(position1, 8u);
 
-    file_offset position2 = data.new_slab(100);
-    BOOST_REQUIRE(position2 == 108);
-    //slab = data.get(position2);
-
-    BOOST_REQUIRE(file.size() >= 208);
+    const auto position2 = manager.new_slab(100);
+    BOOST_REQUIRE_EQUAL(position2, 108u);
+    BOOST_REQUIRE_GE(file.size(), 208u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

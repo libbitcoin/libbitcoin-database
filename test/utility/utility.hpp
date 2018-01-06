@@ -37,10 +37,6 @@ typedef bc::byte_array<8> little_hash;
 bool create(const boost::filesystem::path& file_path);
 bool exists(const boost::filesystem::path& file_path);
 bool clear_path(const boost::filesystem::path& directory);
-void create_database_file(const std::string& directory, size_t buckets,
-    size_t total_txs, size_t tx_size);
-bc::data_chunk generate_random_bytes(std::default_random_engine& engine,
-    size_t size);
 
 } // namspace test
 

@@ -69,9 +69,11 @@ using namespace bc::machine;
 // [ locktime:varint        - const   ]
 // [ version:varint         - const   ]
 
-static const auto prefix_size = slab_row<hash_digest, file_offset>::prefix_size;
-static constexpr auto value_size = sizeof(uint64_t);
+// static
+const size_t transaction_database::prefix_size_ = slab_row<hash_digest,
+    link_type>::prefix_size;
 
+static constexpr auto value_size = sizeof(uint64_t);
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto position_size = sizeof(uint16_t);
 static constexpr auto state_size = sizeof(uint8_t);
@@ -137,7 +139,7 @@ bool transaction_database::close()
 // Queries.
 // ----------------------------------------------------------------------------
 
-transaction_result transaction_database::get(file_offset offset) const
+transaction_result transaction_database::get(link_type offset) const
 {
     const auto slab = lookup_manager_.get(offset);
 
@@ -159,7 +161,7 @@ transaction_result transaction_database::get(file_offset offset) const
     ///////////////////////////////////////////////////////////////////////////
 
     // HACK: back up into the slab to obtain the hash/key (optimization).
-    auto reader = make_unsafe_deserializer(memory - prefix_size);
+    auto reader = make_unsafe_deserializer(memory - prefix_size_);
 
     // Reads are not deferred for updatable values as atomicity is required.
     return{ slab, reader.read_hash(), height, median_time_past, position,
@@ -344,7 +346,7 @@ bool transaction_database::spend(const output_point& point,
     return true;
 }
 
-bool transaction_database::confirm(file_offset offset, size_t height,
+bool transaction_database::confirm(link_type offset, size_t height,
     uint32_t median_time_past, size_t position, transaction_state state)
 {
     BITCOIN_ASSERT(height <= max_uint32);

@@ -57,7 +57,7 @@
     <ClCompile Include="..\..\..\..\test\memory\allocator.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\memory\file_map.cpp">
+    <ClCompile Include="..\..\..\..\test\memory\file_storage.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\hash_table_header.cpp">

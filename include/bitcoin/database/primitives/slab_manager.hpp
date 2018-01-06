@@ -31,10 +31,11 @@ namespace database {
 /// The slab manager represents a growing collection of various sized
 /// slabs of data on disk. It will resize the file accordingly and keep
 /// track of the current end pointer so new slabs can be allocated.
-class BCD_API slab_manager
+template <typename LinkType>
+class slab_manager
 {
 public:
-    slab_manager(storage& file, file_offset header_size);
+    slab_manager(storage& file, size_t header_size);
 
     /// Create slab manager.
     bool create();
@@ -46,18 +47,16 @@ public:
     void sync() const;
 
     /// Allocate a slab and return its position, sync() after writing.
-    file_offset new_slab(size_t size);
+    LinkType new_slab(size_t size);
 
     /// Return memory object for the slab at the specified position.
-    memory_ptr get(file_offset position) const;
+    memory_ptr get(LinkType position) const;
 
 protected:
-
     /// Get the size of all slabs and size prefix (excludes header).
-    file_offset payload_size() const;
+    size_t payload_size() const;
 
 private:
-
     // Read the size of the data from the file.
     void read_size();
 
@@ -66,14 +65,16 @@ private:
 
     // This class is thread and remap safe.
     storage& file_;
-    const file_offset header_size_;
+    const size_t header_size_;
 
     // Payload size is protected by mutex.
-    file_offset payload_size_;
+    size_t payload_size_;
     mutable shared_mutex mutex_;
 };
 
 } // namespace database
 } // namespace libbitcoin
+
+#include <bitcoin/database/impl/slab_manager.ipp>
 
 #endif

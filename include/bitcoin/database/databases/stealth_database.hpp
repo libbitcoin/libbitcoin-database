@@ -90,7 +90,7 @@ public:
 private:
     // Row entries containing stealth tx data.
     file_storage rows_file_;
-    record_manager rows_manager_;
+    record_manager<array_index> rows_manager_;
 };
 
 } // namespace database

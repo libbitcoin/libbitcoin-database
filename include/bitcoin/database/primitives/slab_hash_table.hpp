@@ -61,23 +61,24 @@ public:
     // These template parameters could be moved up to slab_hash_table.
     typedef hash_table_header<array_index, file_offset> header_type;
 
-    typedef header_type::value_type offset_type;
+    typedef header_type::value_type link_type;
     typedef header_type::index_type index_type;
-    static const offset_type not_found = header_type::empty;
+    typedef slab_manager<link_type> slab_manager;
+    static const link_type not_found = header_type::empty;
 
     /// Construct a hash table for variable size entries.
     slab_hash_table(header_type& header, slab_manager& manager);
 
     /// Execute a write. value_size is the required size of the buffer.
     /// Returns the file offset of the new value.
-    offset_type store(const KeyType& key, write_function write, size_t size);
+    link_type store(const KeyType& key, write_function write, size_t size);
 
     /// Execute a writer against a key's buffer if the key is found.
     /// Returns the file offset of the found value (or not_found).
-    offset_type update(const KeyType& key, write_function write);
+    link_type update(const KeyType& key, write_function write);
 
     /// Find the file offset for a given key. Returns not_found if not found.
-    offset_type offset(const KeyType& key) const;
+    link_type offset(const KeyType& key) const;
 
     /// Find the slab pointer for a given key. Returns nullptr if not found.
     memory_ptr find(const KeyType& key) const;
@@ -90,10 +91,10 @@ private:
     index_type bucket_index(const KeyType& key) const;
 
     // The slab start position for the set of elements mapped to the key.
-    offset_type read_bucket_value(const KeyType& key) const;
+    link_type read_bucket_value(const KeyType& key) const;
 
     // Link a new element into the bucket header (stack model, push front).
-    void link(const KeyType& key, offset_type begin);
+    void link(const KeyType& key, link_type begin);
 
     header_type& header_;
     slab_manager& manager_;

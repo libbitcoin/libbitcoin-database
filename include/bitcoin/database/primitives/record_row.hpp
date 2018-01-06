@@ -45,16 +45,16 @@ public:
     static const size_t link_size = sizeof(LinkType);
     static const size_t key_start = 0;
     static const size_t key_size = std::tuple_size<KeyType>::value;
-    static const file_offset prefix_size = key_size + link_size;
+    static const size_t prefix_size = key_size + link_size;
 
     /// The uniform size of storing a record.
     static size_t size(size_t value_size);
 
     // Construct for a new record.
-    record_row(record_manager& manager);
+    record_row(record_manager<LinkType>& manager);
 
     // Construct for an existing record.
-    record_row(record_manager& manager, LinkType index);
+    record_row(record_manager<LinkType>& manager, LinkType index);
 
     /// Allocate and populate a new record.
     LinkType create(const KeyType& key, write_function write);
@@ -81,7 +81,7 @@ private:
     memory_ptr raw_data(size_t bytes) const;
 
     LinkType index_;
-    record_manager& manager_;
+    record_manager<LinkType>& manager_;
 };
 
 } // namespace database

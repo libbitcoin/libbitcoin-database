@@ -41,7 +41,6 @@ class BCD_API block_database
 public:
     typedef std::vector<size_t> heights;
     typedef boost::filesystem::path path;
-    typedef slab_hash_table<hash_digest> slab_map;
 
     /// Construct the database.
     block_database(const path& map_filename, const path& header_index_filename,
@@ -113,18 +112,21 @@ public:
 
 private:
     typedef record_hash_table<hash_digest> record_map;
+    typedef record_map::link_type link_type;
+    typedef record_manager<link_type> record_manager;
     typedef message::compact_block::short_id_list short_id_list;
 
-    array_index associate(const chain::transaction::list& transactions);
+    link_type associate(const chain::transaction::list& transactions);
     void push(const chain::header& header, size_t height, uint32_t checksum,
-        array_index tx_start, size_t tx_count, uint8_t status);
+        link_type tx_start, size_t tx_count, uint8_t status);
 
     // Index Utilities.
     bool read_top(size_t& out_height, const record_manager& manager) const;
-    array_index read_index(size_t height, const record_manager& manager) const;
+    link_type read_index(size_t height, const record_manager& manager) const;
     void pop_index(size_t height, record_manager& manager);
-    void push_index(array_index index, size_t height,
-        record_manager& manager);
+    void push_index(link_type index, size_t height, record_manager& manager);
+
+    static const size_t prefix_size_;
 
     // The top confirmed block in the header index.
     std::atomic<size_t> fork_point_;
@@ -139,17 +141,17 @@ private:
     record_map lookup_map_;
 
     // Table used for looking up headers by height.
-    // Each record resolves to a record via array_index.
+    // Each record resolves to a record via link_type.
     file_storage header_index_file_;
     record_manager header_index_manager_;
 
     // Table used for looking up blocks by height.
-    // Each record resolves to a record via array_index.
+    // Each record resolves to a record via link_type.
     file_storage block_index_file_;
     record_manager block_index_manager_;
 
     // Association table between blocks and their contained transactions.
-    // Each record resolves to a record via array_index.
+    // Each record resolves to a record via link_type.
     file_storage tx_index_file_;
     record_manager tx_index_manager_;
 

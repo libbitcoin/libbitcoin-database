@@ -30,7 +30,7 @@ template <typename LinkType>
 class record_list_iterator
 {
 public:
-    record_list_iterator(const record_manager& manager, LinkType index);
+    record_list_iterator(const record_manager<LinkType>& manager, LinkType index);
 
     /// Next value in the result.
     void operator++();
@@ -44,7 +44,7 @@ public:
 
 private:
     LinkType index_;
-    const record_manager& manager_;
+    const record_manager<LinkType>& manager_;
 };
 
 } // namespace database

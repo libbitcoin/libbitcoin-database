@@ -36,13 +36,13 @@ size_t record_row<KeyType, LinkType>::size(size_t value_size)
 }
 
 template <typename KeyType, typename LinkType>
-record_row<KeyType, LinkType>::record_row(record_manager& manager)
+record_row<KeyType, LinkType>::record_row(record_manager<LinkType>& manager)
   : record_row(manager, not_found)
 {
 }
 
 template <typename KeyType, typename LinkType>
-record_row<KeyType, LinkType>::record_row(record_manager& manager,
+record_row<KeyType, LinkType>::record_row(record_manager<LinkType>& manager,
     LinkType index)
   : manager_(manager), index_(index)
 {

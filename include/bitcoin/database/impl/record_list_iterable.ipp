@@ -28,7 +28,7 @@ namespace database {
 
 template <typename LinkType>
 record_list_iterable<LinkType>::record_list_iterable(
-    const record_manager& manager, LinkType begin)
+    const record_manager<LinkType>& manager, LinkType begin)
   : begin_(begin), manager_(manager)
 {
 }

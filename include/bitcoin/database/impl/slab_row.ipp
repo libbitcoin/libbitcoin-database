@@ -30,13 +30,13 @@ namespace libbitcoin {
 namespace database {
 
 template <typename KeyType, typename LinkType>
-slab_row<KeyType, LinkType>::slab_row(slab_manager& manager)
+slab_row<KeyType, LinkType>::slab_row(slab_manager<LinkType>& manager)
   : slab_row(manager_, not_found)
 {
 }
 
 template <typename KeyType, typename LinkType>
-slab_row<KeyType, LinkType>::slab_row(slab_manager& manager,
+slab_row<KeyType, LinkType>::slab_row(slab_manager<LinkType>& manager,
     LinkType position)
   : manager_(manager), position_(position)
 {

@@ -18,50 +18,29 @@
  */
 #include <boost/test/unit_test.hpp>
 
-#include <boost/filesystem.hpp>
 #include <bitcoin/database.hpp>
-#include "../utility/utility.hpp"
+#include "../utility/storage.hpp"
 
-using namespace boost::system;
-using namespace boost::filesystem;
 using namespace bc;
 using namespace bc::database;
 
-#define DIRECTORY "record_manager"
-
-struct record_manager_directory_setup_fixture
-{
-    record_manager_directory_setup_fixture()
-    {
-        BOOST_REQUIRE(test::clear_path(DIRECTORY));
-    }
-};
-
-BOOST_FIXTURE_TEST_SUITE(hash_table_tests, record_manager_directory_setup_fixture)
+BOOST_AUTO_TEST_SUITE(hash_table_tests)
 
 BOOST_AUTO_TEST_CASE(record_manager__method__vector__expectation)
 {
-    BOOST_REQUIRE(true);
-}
-
-BOOST_AUTO_TEST_CASE(record_manager__test)
-{
-    test::create(DIRECTORY "/record_manager");
-    file_storage file(DIRECTORY "/record_manager");
+    test::storage file;
     BOOST_REQUIRE(file.open());
-    BOOST_REQUIRE(file.access()->buffer() != nullptr);
-    file.resize(4);
 
-    record_manager recs(file, 0, 10);
-    BOOST_REQUIRE(recs.create());
-    BOOST_REQUIRE(recs.start());
+    record_manager<uint32_t> manager(file, 0, 10);
+    BOOST_REQUIRE(manager.create());
 
-    array_index idx = recs.new_records(1);
-    BOOST_REQUIRE(idx == 0);
-    idx = recs.new_records(1);
-    BOOST_REQUIRE(idx == 1);
-    BOOST_REQUIRE(file.size() >= 2 * 10 + 4);
-    recs.sync();
+    const auto index1 = manager.new_records(1);
+    BOOST_REQUIRE_EQUAL(index1, 0u);
+
+    const auto index2 = manager.new_records(1);
+    BOOST_REQUIRE_EQUAL(index2, 1u);
+    BOOST_REQUIRE_GE(file.size(),  2u * 10u + 4u);
+    manager.sync();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

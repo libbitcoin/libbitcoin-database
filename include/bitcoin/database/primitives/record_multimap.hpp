@@ -49,7 +49,8 @@ public:
     // The uniform size of storing an element in the multimap.
     static size_t element_size(size_t value_size);
 
-    record_multimap(record_hash_table_type& map, record_manager& manager);
+    record_multimap(record_hash_table_type& map,
+        record_manager<LinkType>& manager);
 
     /// Add a new row for a key.
     void store(const KeyType& key, write_function write);
@@ -65,7 +66,7 @@ public:
 
 private:
     record_hash_table_type& map_;
-    record_manager& manager_;
+    record_manager<LinkType>& manager_;
     mutable shared_mutex create_mutex_;
     mutable shared_mutex update_mutex_;
 };

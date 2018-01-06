@@ -34,7 +34,7 @@ size_t record_multimap<KeyType, LinkType>::element_size(size_t value_size)
 
 template <typename KeyType, typename LinkType>
 record_multimap<KeyType, LinkType>::record_multimap(
-    record_hash_table_type& map, record_manager& manager)
+    record_hash_table_type& map, record_manager<LinkType>& manager)
   : map_(map), manager_(manager)
 {
 }
