@@ -31,8 +31,7 @@ template <typename KeyType, typename IndexType, typename LinkType>
 record_hash_table<KeyType, IndexType, LinkType>::record_hash_table(
     storage& file, IndexType buckets, size_t value_size)
   : header_(file, buckets),
-    manager_(file, hash_table_header<IndexType, LinkType>::size(buckets),
-        value_size)
+    manager_(file, header::size(buckets), row::size(value_size))
 {
 }
 
@@ -244,8 +243,7 @@ template <typename KeyType, typename IndexType, typename LinkType>
 IndexType record_hash_table<KeyType, IndexType, LinkType>::bucket_index(
     const KeyType& key) const
 {
-    return hash_table_header<IndexType, LinkType>::remainder(key,
-        header_.buckets());
+    return header::remainder(key, header_.buckets());
 }
 
 // private

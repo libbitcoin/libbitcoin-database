@@ -32,7 +32,7 @@ template <typename KeyType, typename IndexType, typename LinkType>
 slab_hash_table<KeyType, IndexType, LinkType>::slab_hash_table(storage& file,
     IndexType buckets)
   : header_(file, buckets),
-    manager_(file, hash_table_header<IndexType, LinkType>::size(buckets))
+    manager_(file, header::size(buckets))
 {
 }
 
@@ -242,8 +242,7 @@ template <typename KeyType, typename IndexType, typename LinkType>
 IndexType slab_hash_table<KeyType, IndexType, LinkType>::bucket_index(
     const KeyType& key) const
 {
-    return hash_table_header<LinkType, IndexType>::remainder(key,
-        header_.buckets());
+    return header::remainder(key, header_.buckets());
 }
 
 // private

@@ -97,9 +97,10 @@ public:
     bool unlink(const KeyType& key);
 
 private:
-    typedef slab_row<KeyType, LinkType, slab_manager<LinkType>> row;
-    typedef slab_row<KeyType, LinkType, const slab_manager<LinkType>>
-        const_row;
+    typedef hash_table_header<IndexType, LinkType> header;
+    typedef slab_manager<LinkType> manager;
+    typedef slab_row<KeyType, LinkType, manager> row;
+    typedef slab_row<KeyType, LinkType, const manager> const_row;
 
     // The bucket index of a key.
     IndexType bucket_index(const KeyType& key) const;
@@ -110,8 +111,8 @@ private:
     // Link a new element into the bucket header (stack model, push front).
     void link(const KeyType& key, LinkType begin);
 
-    hash_table_header<IndexType, LinkType> header_;
-    slab_manager<LinkType> manager_;
+    header header_;
+    manager manager_;
     mutable shared_mutex create_mutex_;
     mutable shared_mutex update_mutex_;
 };
