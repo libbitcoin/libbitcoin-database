@@ -51,7 +51,7 @@ bool storage::open()
 {
     mutex_.lock_upgrade();
 
-    if (closed_)
+    if (!closed_)
     {
         mutex_.unlock_upgrade();
         return true;
