@@ -183,6 +183,10 @@ bool slab_hash_table<KeyType, IndexType, LinkType>::unlink(const KeyType& key)
 {
     // Find start item...
     auto previous = read_bucket_value(key);
+
+    if (previous == not_found)
+        return false;
+
     row begin_item(manager_, previous);
 
     // If start item has the key then unlink from buckets.
