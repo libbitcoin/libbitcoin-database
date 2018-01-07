@@ -28,7 +28,7 @@ namespace test {
 
 // This is a trivial working storage interface implementation.
 storage::storage()
-  : storage(data_chunk{})
+  : closed_(true)
 {
 }
 
