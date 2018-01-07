@@ -25,21 +25,23 @@
 
 namespace libbitcoin {
 namespace database {
-
-template <typename LinkType>
-record_list<LinkType>::record_list(record_manager& manager)
+    
+// Parameterizing RecordManager allows const and non-const.
+template <typename LinkType, typename RecordManager>
+record_list<LinkType, RecordManager>::record_list(RecordManager& manager)
     : manager_(manager), index_(empty)
 {
 }
 
-template <typename LinkType>
-record_list<LinkType>::record_list(record_manager& manager, LinkType index)
+template <typename LinkType, typename RecordManager>
+record_list<LinkType, RecordManager>::record_list(RecordManager& manager,
+    LinkType index)
   : manager_(manager), index_(index)
 {
 }
 
-template <typename LinkType>
-LinkType record_list<LinkType>::create(write_function write)
+template <typename LinkType, typename RecordManager>
+LinkType record_list<LinkType, RecordManager>::create(write_function write)
 {
     BITCOIN_ASSERT(index_ == empty);
 
@@ -55,8 +57,8 @@ LinkType record_list<LinkType>::create(write_function write)
     return index_;
 }
 
-template <typename LinkType>
-void record_list<LinkType>::link(LinkType next)
+template <typename LinkType, typename RecordManager>
+void record_list<LinkType, RecordManager>::link(LinkType next)
 {
     // Populate next pointer value.
     //   [ next:4   ] <==
@@ -73,8 +75,8 @@ void record_list<LinkType>::link(LinkType next)
     //*************************************************************************
 }
 
-template <typename LinkType>
-memory_ptr record_list<LinkType>::data() const
+template <typename LinkType, typename RecordManager>
+memory_ptr record_list<LinkType, RecordManager>::data() const
 {
     // Get value pointer.
     //   [ next:4   ]
@@ -84,8 +86,8 @@ memory_ptr record_list<LinkType>::data() const
     return raw_data(sizeof(LinkType));
 }
 
-template <typename LinkType>
-LinkType record_list<LinkType>::next_index() const
+template <typename LinkType, typename RecordManager>
+LinkType record_list<LinkType, RecordManager>::next_index() const
 {
     const auto memory = raw_data(0);
     const auto next_address = memory->buffer();
@@ -96,8 +98,9 @@ LinkType record_list<LinkType>::next_index() const
     //*************************************************************************
 }
 
-template <typename LinkType>
-memory_ptr record_list<LinkType>::raw_data(file_offset offset) const
+template <typename LinkType, typename RecordManager>
+memory_ptr record_list<LinkType, RecordManager>::raw_data(
+    file_offset offset) const
 {
     auto memory = manager_.get(index_);
     memory->increment(offset);

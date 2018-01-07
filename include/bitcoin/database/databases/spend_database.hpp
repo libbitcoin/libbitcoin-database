@@ -30,16 +30,6 @@
 namespace libbitcoin {
 namespace database {
 
-struct BCD_API spend_statinfo
-{
-    /// Number of buckets used in the hashtable.
-    /// load factor = rows / buckets
-    const size_t buckets;
-
-    /// Total number of spend rows.
-    const size_t rows;
-};
-
 /// This enables you to lookup the spend of an output point, returning
 /// the input point. It is a simple map.
 class BCD_API spend_database
@@ -77,8 +67,8 @@ public:
     /// Get inpoint that spent the given outpoint.
     chain::input_point get(const chain::output_point& outpoint) const;
 
-    /// Return statistical info about the database.
-    spend_statinfo statinfo() const;
+    /////// Return statistical info about the database.
+    ////spend_statinfo statinfo() const;
 
     // Store.
     //-------------------------------------------------------------------------
@@ -94,19 +84,12 @@ public:
     bool unlink(const chain::output_point& outpoint);
 
 private:
-    typedef chain::point key_type;
-    typedef array_index index_type;
-    typedef array_index link_type;
-
-    typedef record_manager<link_type> record_manager;
-    typedef hash_table_header<index_type, link_type> record_header;
-    typedef record_hash_table<key_type, array_index, link_type> record_map;
+    typedef record_hash_table<chain::point, array_index, array_index>
+        record_map;
 
     // Hash table used for looking up inpoint spends by outpoint.
-    file_storage lookup_file_;
-    record_header lookup_header_;
-    record_manager lookup_manager_;
-    record_map lookup_map_;
+    file_storage hash_table_file_;
+    record_map hash_table_;
 };
 
 } // namespace database

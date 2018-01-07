@@ -48,13 +48,13 @@ static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto prefix_size = sizeof(uint32_t);
 
 // ephemkey is without sign byte and address is without version byte.
-static constexpr auto row_size = prefix_size + height_size + hash_size +
+static constexpr auto value_size = prefix_size + height_size + hash_size +
     short_hash_size + hash_size;
 
 // Stealth uses an unindexed array, requiring linear search, (O(n)).
 stealth_database::stealth_database(const path& rows_filename, size_t expansion)
-  : rows_file_(rows_filename, expansion),
-    rows_manager_(rows_file_, 0, row_size)
+  : stealth_file_(rows_filename, expansion),
+    stealth_index_(stealth_file_, 0, value_size)
 {
 }
 
@@ -68,34 +68,34 @@ stealth_database::~stealth_database()
 
 bool stealth_database::create()
 {
-    if (!rows_file_.open())
+    if (!stealth_file_.open())
         return false;
 
     // No need to call open after create.
     return
-        rows_manager_.create();
+        stealth_index_.create();
 }
 
 bool stealth_database::open()
 {
     return
-        rows_file_.open() &&
-        rows_manager_.start();
+        stealth_file_.open() &&
+        stealth_index_.start();
 }
 
 void stealth_database::commit()
 {
-    rows_manager_.sync();
+    stealth_index_.sync();
 }
 
 bool stealth_database::flush() const
 {
-    return rows_file_.flush();
+    return stealth_file_.flush();
 }
 
 bool stealth_database::close()
 {
-    return rows_file_.close();
+    return stealth_file_.close();
 }
 
 // Queries.
@@ -109,9 +109,9 @@ stealth_database::list stealth_database::get(const binary& filter,
     list result;
     stealth_record stealth;
 
-    for (array_index row = 0; row < rows_manager_.count(); ++row)
+    for (array_index row = 0; row < stealth_index_.count(); ++row)
     {
-        const auto record = rows_manager_.get(row);
+        const auto record = stealth_index_.get(row);
         auto deserial = make_unsafe_deserializer(record->buffer());
 
         // Failed reads are conflated with skipped returns.
@@ -122,22 +122,14 @@ stealth_database::list stealth_database::get(const binary& filter,
     return result;
 }
 
-stealth_statinfo stealth_database::statinfo() const
-{
-    return
-    {
-        rows_manager_.count()
-    };
-}
-
 // Store.
 // ----------------------------------------------------------------------------
 
 void stealth_database::store(const stealth_record& stealth)
 {
     // Allocate new row and write data.
-    const auto index = rows_manager_.new_records(1);
-    const auto record = rows_manager_.get(index);
+    const auto index = stealth_index_.new_records(1);
+    const auto record = stealth_index_.get(index);
     const auto memory = record->buffer();
     auto serial = make_unsafe_serializer(memory);
     stealth.to_data(serial, false);

@@ -41,6 +41,7 @@ namespace database {
  */
 template <typename KeyType, typename IndexType, typename LinkType>
 class record_multimap
+  : noncopyable
 {
 public:
     typedef serializer<uint8_t*>::functor write_function;

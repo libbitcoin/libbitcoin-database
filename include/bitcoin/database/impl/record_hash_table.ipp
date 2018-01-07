@@ -29,10 +29,29 @@ namespace database {
 
 template <typename KeyType, typename IndexType, typename LinkType>
 record_hash_table<KeyType, IndexType, LinkType>::record_hash_table(
-    hash_table_header<IndexType, LinkType>& header,
-    record_manager<LinkType>& manager)
-  : header_(header), manager_(manager)
+    storage& file, IndexType buckets, size_t value_size)
+  : header_(file, buckets),
+    manager_(file, hash_table_header<IndexType, LinkType>::size(buckets),
+        value_size)
 {
+}
+
+template <typename KeyType, typename IndexType, typename LinkType>
+bool record_hash_table<KeyType, IndexType, LinkType>::create()
+{
+    return header_.create() && manager_.create();
+}
+
+template <typename KeyType, typename IndexType, typename LinkType>
+bool record_hash_table<KeyType, IndexType, LinkType>::start()
+{
+    return header_.start() && manager_.start();
+}
+
+template <typename KeyType, typename IndexType, typename LinkType>
+void record_hash_table<KeyType, IndexType, LinkType>::sync()
+{
+    return manager_.sync();
 }
 
 // This is not limited to storing unique key values. If duplicate keyed values
@@ -43,7 +62,7 @@ LinkType record_hash_table<KeyType, IndexType, LinkType>::store(
     const KeyType& key, write_function write)
 {
     // Allocate and populate new unlinked record.
-    record_row<KeyType, IndexType> record(manager_);
+    row record(manager_);
     const auto index = record.create(key, write);
 
     // Critical Section
@@ -76,7 +95,7 @@ LinkType record_hash_table<KeyType, IndexType, LinkType>::update(
     // Iterate through list...
     while (current != not_found)
     {
-        const record_row<KeyType, IndexType> item(manager_, current);
+        row item(manager_, current);
 
         // Found, update data and return index.
         if (item.compare(key))
@@ -109,7 +128,7 @@ LinkType record_hash_table<KeyType, IndexType, LinkType>::offset(
     // Iterate through list...
     while (current != header_.empty)
     {
-        const record_row<KeyType, IndexType> item(manager_, current);
+        const_row item(manager_, current);
 
         // Found, return index.
         if (item.compare(key))
@@ -135,7 +154,7 @@ memory_ptr record_hash_table<KeyType, IndexType, LinkType>::find(
     // Iterate through list...
     while (current != not_found)
     {
-        const record_row<KeyType, IndexType> item(manager_, current);
+        const_row item(manager_, current);
 
         // Found, return pointer.
         if (item.compare(key))
@@ -151,6 +170,13 @@ memory_ptr record_hash_table<KeyType, IndexType, LinkType>::find(
     return nullptr;
 }
 
+template <typename KeyType, typename IndexType, typename LinkType>
+memory_ptr record_hash_table<KeyType, IndexType, LinkType>::get(
+    LinkType record) const
+{
+    return manager_.get(record);
+}
+
 // Unlink is not safe for concurrent write.
 // This is limited to unlinking the first of multiple matching key values.
 template <typename KeyType, typename IndexType, typename LinkType>
@@ -159,7 +185,7 @@ bool record_hash_table<KeyType, IndexType, LinkType>::unlink(
 {
     // Find start item...
     auto previous = read_bucket_value(key);
-    const record_row<KeyType, IndexType> begin_item(manager_, previous);
+    row begin_item(manager_, previous);
 
     // If start item has the key then unlink from buckets.
     if (begin_item.compare(key))
@@ -182,12 +208,12 @@ bool record_hash_table<KeyType, IndexType, LinkType>::unlink(
     // Iterate through list...
     while (current != not_found)
     {
-        const record_row<KeyType, IndexType> item(manager_, current);
+        row item(manager_, current);
 
         // Found, unlink current item from previous.
         if (item.compare(key))
         {
-            record_row<KeyType, IndexType> previous_item(manager_, previous);
+            row previous_item(manager_, previous);
 
             // Critical Section
             ///////////////////////////////////////////////////////////////////

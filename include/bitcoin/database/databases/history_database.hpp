@@ -28,19 +28,6 @@
 namespace libbitcoin {
 namespace database {
 
-struct BCD_API history_statinfo
-{
-    /// Number of buckets used in the hashtable.
-    /// load factor = addrs / buckets
-    const size_t buckets;
-
-    /// Total number of unique addresses in the database.
-    const size_t addresses;
-
-    /// Total number of rows across all addresses.
-    const size_t rows;
-};
-
 /// This is a multimap where the key is the Bitcoin address hash,
 /// which returns several rows giving the history for that address.
 class BCD_API history_database
@@ -80,8 +67,8 @@ public:
     /// Get the output and input points associated with the address hash.
     list get(const short_hash& key, size_t limit, size_t from_height) const;
 
-    /// Return statistical info about the database.
-    history_statinfo statinfo() const;
+    /////// Return statistical info about the database.
+    ////history_statinfo statinfo() const;
 
     // Store.
     //-------------------------------------------------------------------------
@@ -99,9 +86,7 @@ private:
     typedef short_hash key_type;
     typedef array_index index_type;
     typedef array_index link_type;
-
     typedef record_manager<link_type> record_manager;
-    typedef hash_table_header<index_type, link_type> record_header;
     typedef record_hash_table<key_type, index_type, link_type> record_map;
 
     // The multimap as a distinct file as opposed to linage within the map
@@ -112,15 +97,13 @@ private:
         record_multiple_map;
 
     /// Hash table used for start index lookup for linked list by address hash.
-    file_storage lookup_file_;
-    record_header lookup_header_;
-    record_manager lookup_manager_;
-    record_map lookup_map_;
+    file_storage hash_table_file_;
+    record_map hash_table_;
 
     /// History rows.
-    file_storage rows_file_;
-    record_manager rows_manager_;
-    record_multiple_map rows_multimap_;
+    file_storage address_file_;
+    record_manager address_index_;
+    record_multiple_map address_multimap_;
 };
 
 } // namespace database

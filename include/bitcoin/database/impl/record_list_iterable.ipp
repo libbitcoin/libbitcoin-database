@@ -43,7 +43,7 @@ template <typename LinkType>
 record_list_iterator<LinkType> record_list_iterable<LinkType>::end() const
 {
     return record_list_iterator<LinkType>(manager_,
-        record_list<LinkType>::empty);
+        record_list<LinkType, record_manager<LinkType>>::empty);
 }
 
 } // namespace database

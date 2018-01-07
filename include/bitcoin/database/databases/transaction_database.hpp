@@ -100,12 +100,8 @@ private:
     friend class block_database;
 
     typedef hash_digest key_type;
-    typedef array_index index_type;
     typedef file_offset link_type;
-
-    typedef slab_manager<link_type> slab_manager;
-    typedef hash_table_header<index_type, link_type> slab_header;
-    typedef slab_hash_table<key_type, index_type, link_type> slab_map;
+    typedef slab_hash_table<key_type, array_index, link_type> slab_map;
 
     // Update the spender height of the output.
     bool spend(const chain::output_point& point, size_t spender_height);
@@ -120,10 +116,8 @@ private:
     static const size_t prefix_size_;
 
     // Hash table used for looking up txs by hash.
-    file_storage lookup_file_;
-    slab_header lookup_header_;
-    slab_manager lookup_manager_;
-    slab_map lookup_map_;
+    file_storage hash_table_file_;
+    slab_map hash_table_;
 
     // This is thread safe, and as a cache is mutable.
     mutable unspent_outputs cache_;

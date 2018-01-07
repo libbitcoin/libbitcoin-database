@@ -29,20 +29,20 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename LinkType>
+template <typename LinkType, typename RecordManager>
 class record_list
+  : noncopyable
 {
 public:
     typedef serializer<uint8_t*>::functor write_function;
-    typedef record_manager<LinkType> record_manager;
 
     static const LinkType empty = (LinkType)bc::max_uint64;
 
-    // Construct for a new record.
-    record_list(record_manager& manager);
+    /// Construct for a new record.
+    record_list(RecordManager& manager);
 
-    // Construct for an existing record.
-    record_list(record_manager& manager, LinkType index);
+    /// Construct for an existing record.
+    record_list(RecordManager& manager, LinkType index);
 
     /// Allocate and populate a new record.
     LinkType create(write_function write);
@@ -60,7 +60,7 @@ private:
     memory_ptr raw_data(file_offset offset) const;
 
     LinkType index_;
-    record_manager& manager_;
+    RecordManager& manager_;
 };
 
 } // namespace database

@@ -22,8 +22,6 @@
 #include <utility>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/record_hash_table.hpp>
-#include <bitcoin/database/primitives/record_row.hpp>
 
 // Record format (v3):
 // ----------------------------------------------------------------------------
@@ -41,12 +39,8 @@ static const auto value_size = std::tuple_size<point>::value;
 // The spend database keys off of output point and has input point value.
 spend_database::spend_database(const path& filename, size_t buckets,
     size_t expansion)
-  : lookup_file_(filename, expansion),
-    lookup_header_(lookup_file_, buckets),
-    lookup_manager_(lookup_file_,
-        hash_table_header<index_type, link_type>::size(buckets),
-        record_row<key_type, array_index>::size(value_size)),
-    lookup_map_(lookup_header_, lookup_manager_)
+  : hash_table_file_(filename, expansion),
+    hash_table_(hash_table_file_, buckets, value_size)
 {
 }
 
@@ -60,36 +54,34 @@ spend_database::~spend_database()
 
 bool spend_database::create()
 {
-    if (!lookup_file_.open())
+    if (!hash_table_file_.open())
         return false;
 
     // No need to call open after create.
     return
-        lookup_header_.create() &&
-        lookup_manager_.create();
+        hash_table_.create();
 }
 
 bool spend_database::open()
 {
     return
-        lookup_file_.open() &&
-        lookup_header_.start() &&
-        lookup_manager_.start();
+        hash_table_file_.open() &&
+        hash_table_.start();
 }
 
 void spend_database::commit()
 {
-    lookup_manager_.sync();
+    hash_table_.sync();
 }
 
 bool spend_database::flush() const
 {
-    return lookup_file_.flush();
+    return hash_table_file_.flush();
 }
 
 bool spend_database::close()
 {
-    return lookup_file_.close();
+    return hash_table_file_.close();
 }
 
 // Queries.
@@ -98,7 +90,7 @@ bool spend_database::close()
 input_point spend_database::get(const output_point& outpoint) const
 {
     input_point spend;
-    const auto slab = lookup_map_.find(outpoint);
+    const auto slab = hash_table_.find(outpoint);
 
     if (!slab)
         return spend;
@@ -106,15 +98,6 @@ input_point spend_database::get(const output_point& outpoint) const
     auto deserial = make_unsafe_deserializer(slab->buffer());
     spend.from_data(deserial, false);
     return spend;
-}
-
-spend_statinfo spend_database::statinfo() const
-{
-    return
-    {
-        lookup_header_.buckets(),
-        lookup_manager_.count()
-    };
 }
 
 // Store.
@@ -128,7 +111,7 @@ void spend_database::store(const chain::output_point& outpoint,
         spend.to_data(serial, false);
     };
 
-    lookup_map_.store(outpoint, write);
+    hash_table_.store(outpoint, write);
 }
 
 // Update.
@@ -136,7 +119,7 @@ void spend_database::store(const chain::output_point& outpoint,
 
 bool spend_database::unlink(const output_point& outpoint)
 {
-    auto memory = lookup_map_.find(outpoint);
+    auto memory = hash_table_.find(outpoint);
 
     // Spends are optional so do not assume presence.
     if (memory == nullptr)
@@ -144,7 +127,7 @@ bool spend_database::unlink(const output_point& outpoint)
 
     // Release lock before unlinking.
     memory = nullptr;
-    return lookup_map_.unlink(outpoint);
+    return hash_table_.unlink(outpoint);
 }
 
 } // namespace database

@@ -30,12 +30,6 @@
 namespace libbitcoin {
 namespace database {
 
-struct BCD_API stealth_statinfo
-{
-    /// Total number of rows (stealth is linear search).
-    const size_t rows;
-};
-
 class BCD_API stealth_database
 {
 public:
@@ -72,8 +66,8 @@ public:
     /// Linearly scan all entries, discarding those after from_height.
     list get(const binary& filter, size_t from_height) const;
 
-    /// Return statistical info about the database.
-    stealth_statinfo statinfo() const;
+    /////// Return statistical info about the database.
+    ////stealth_statinfo statinfo() const;
 
     // Store.
     //-------------------------------------------------------------------------
@@ -89,8 +83,8 @@ public:
 
 private:
     // Row entries containing stealth tx data.
-    file_storage rows_file_;
-    record_manager<array_index> rows_manager_;
+    file_storage stealth_file_;
+    record_manager<array_index> stealth_index_;
 };
 
 } // namespace database

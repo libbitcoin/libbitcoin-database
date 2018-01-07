@@ -24,7 +24,6 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/hash_table_header.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
 #include <bitcoin/database/state/transaction_state.hpp>
 
@@ -70,8 +69,8 @@ using namespace bc::machine;
 // [ version:varint         - const   ]
 
 // static
-const size_t transaction_database::prefix_size_ = slab_row<hash_digest,
-    link_type>::prefix_size;
+const size_t transaction_database::prefix_size_ = slab_row<key_type,
+    link_type, slab_manager<link_type>>::prefix_size;
 
 static constexpr auto value_size = sizeof(uint64_t);
 static constexpr auto height_size = sizeof(uint32_t);
@@ -85,12 +84,8 @@ static constexpr auto metadata_size = height_size + position_size +
 // Transactions uses a hash table index, O(1).
 transaction_database::transaction_database(const path& map_filename,
     size_t buckets, size_t expansion, size_t cache_capacity)
-  : lookup_file_(map_filename, expansion),
-    lookup_header_(lookup_file_, buckets),
-    lookup_manager_(lookup_file_,
-        hash_table_header<index_type, link_type>::size(buckets)),
-    lookup_map_(lookup_header_, lookup_manager_),
-
+  : hash_table_file_(map_filename, expansion),
+    hash_table_(hash_table_file_, buckets),
     cache_(cache_capacity)
 {
 }
@@ -105,36 +100,34 @@ transaction_database::~transaction_database()
 
 bool transaction_database::create()
 {
-    if (!lookup_file_.open())
+    if (!hash_table_file_.open())
         return false;
 
     // No need to call open after create.
     return
-        lookup_header_.create() &&
-        lookup_manager_.create();
+        hash_table_.create();
 }
 
 bool transaction_database::open()
 {
     return
-        lookup_file_.open() &&
-        lookup_header_.start() &&
-        lookup_manager_.start();
+        hash_table_file_.open() &&
+        hash_table_.start();
 }
 
 void transaction_database::commit()
 {
-    lookup_manager_.sync();
+    hash_table_.sync();
 }
 
 bool transaction_database::flush() const
 {
-    return lookup_file_.flush();
+    return hash_table_file_.flush();
 }
 
 bool transaction_database::close()
 {
-    return lookup_file_.close();
+    return hash_table_file_.close();
 }
 
 // Queries.
@@ -142,7 +135,7 @@ bool transaction_database::close()
 
 transaction_result transaction_database::get(file_offset offset) const
 {
-    const auto slab = lookup_manager_.get(offset);
+    const auto slab = hash_table_.get(offset);
 
     if (slab == nullptr)
         return{};
@@ -171,7 +164,7 @@ transaction_result transaction_database::get(file_offset offset) const
 
 transaction_result transaction_database::get(const hash_digest& hash) const
 {
-    const auto offset = lookup_map_.offset(hash);
+    const auto offset = hash_table_.offset(hash);
     return offset == slab_map::not_found ? transaction_result{} : get(offset);
 }
 
@@ -281,7 +274,7 @@ bool transaction_database::store(const chain::transaction& tx, size_t height,
 
     // Write the new transaction.
     const auto size = metadata_size + tx.serialized_size(false);
-    tx.validation.offset = lookup_map_.store(tx.hash(), write, size);
+    tx.validation.offset = hash_table_.store(tx.hash(), write, size);
 
     // If verified (according to rule forks) then useful to cache.
     if (verified)
@@ -305,7 +298,7 @@ bool transaction_database::spend(const output_point& point,
     if (spender_height != output::validation::not_spent)
         cache_.remove(point);
 
-    auto slab = lookup_map_.find(point.hash());
+    const auto slab = hash_table_.find(point.hash());
 
     if (slab == nullptr)
         return false;
@@ -352,7 +345,7 @@ bool transaction_database::confirm(link_type offset, size_t height,
 {
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(position <= max_uint16);
-    const auto slab = lookup_manager_.get(offset);
+    const auto slab = hash_table_.get(offset);
 
     if (slab == nullptr)
         return false;

@@ -33,6 +33,7 @@ namespace database {
 /// track of the current end pointer so new slabs can be allocated.
 template <typename LinkType>
 class slab_manager
+  : noncopyable
 {
 public:
     slab_manager(storage& file, size_t header_size);

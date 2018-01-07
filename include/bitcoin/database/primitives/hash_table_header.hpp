@@ -36,6 +36,7 @@ namespace database {
 ///
 template <typename IndexType, typename LinkType>
 class hash_table_header
+  : noncopyable
 {
 public:
     /// A hash of the key reduced to the domain of the divisor.

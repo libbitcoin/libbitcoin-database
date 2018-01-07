@@ -28,23 +28,23 @@
 
 namespace libbitcoin {
 namespace database {
-
-template <typename KeyType, typename LinkType>
-slab_row<KeyType, LinkType>::slab_row(slab_manager<LinkType>& manager)
-  ////: slab_row(manager_, not_found) <= VC++ compiler bug?
+    
+// Parameterizing SlabManager allows const and non-const.
+template <typename KeyType, typename LinkType, typename SlabManager>
+slab_row<KeyType, LinkType, SlabManager>::slab_row(SlabManager& manager)
   : manager_(manager), position_(not_found)
 {
 }
 
-template <typename KeyType, typename LinkType>
-slab_row<KeyType, LinkType>::slab_row(slab_manager<LinkType>& manager,
+template <typename KeyType, typename LinkType, typename SlabManager>
+slab_row<KeyType, LinkType, SlabManager>::slab_row(SlabManager& manager,
     LinkType position)
   : manager_(manager), position_(position)
 {
 }
 
-template <typename KeyType, typename LinkType>
-LinkType slab_row<KeyType, LinkType>::create(const KeyType& key,
+template <typename KeyType, typename LinkType, typename SlabManager>
+LinkType slab_row<KeyType, LinkType, SlabManager>::create(const KeyType& key,
     write_function write, size_t value_size)
 {
     BITCOIN_ASSERT(position_ == not_found);
@@ -66,8 +66,8 @@ LinkType slab_row<KeyType, LinkType>::create(const KeyType& key,
     return position_;
 }
 
-template <typename KeyType, typename LinkType>
-void slab_row<KeyType, LinkType>::link(LinkType next)
+template <typename KeyType, typename LinkType, typename SlabManager>
+void slab_row<KeyType, LinkType, SlabManager>::link(LinkType next)
 {
     // Populate next pointer value.
     //   [ KeyType  ]
@@ -84,15 +84,16 @@ void slab_row<KeyType, LinkType>::link(LinkType next)
     //*************************************************************************
 }
 
-template <typename KeyType, typename LinkType>
-bool slab_row<KeyType, LinkType>::compare(const KeyType& key) const
+template <typename KeyType, typename LinkType, typename SlabManager>
+bool slab_row<KeyType, LinkType, SlabManager>::compare(
+    const KeyType& key) const
 {
     const auto memory = raw_data(key_start);
     return std::equal(key.begin(), key.end(), memory->buffer());
 }
 
-template <typename KeyType, typename LinkType>
-memory_ptr slab_row<KeyType, LinkType>::data() const
+template <typename KeyType, typename LinkType, typename SlabManager>
+memory_ptr slab_row<KeyType, LinkType, SlabManager>::data() const
 {
     // Get value pointer.
     //   [ KeyType  ]
@@ -103,15 +104,15 @@ memory_ptr slab_row<KeyType, LinkType>::data() const
     return raw_data(prefix_size);
 }
 
-template <typename KeyType, typename LinkType>
-LinkType slab_row<KeyType, LinkType>::offset() const
+template <typename KeyType, typename LinkType, typename SlabManager>
+LinkType slab_row<KeyType, LinkType, SlabManager>::offset() const
 {
     // Value data is at the end.
     return position_ + prefix_size;
 }
 
-template <typename KeyType, typename LinkType>
-LinkType slab_row<KeyType, LinkType>::next_position() const
+template <typename KeyType, typename LinkType, typename SlabManager>
+LinkType slab_row<KeyType, LinkType, SlabManager>::next_position() const
 {
     const auto memory = raw_data(key_size);
     const auto next_address = memory->buffer();
@@ -121,8 +122,9 @@ LinkType slab_row<KeyType, LinkType>::next_position() const
     //*************************************************************************
 }
 
-template <typename KeyType, typename LinkType>
-void slab_row<KeyType, LinkType>::write_next_position(LinkType next)
+template <typename KeyType, typename LinkType, typename SlabManager>
+void slab_row<KeyType, LinkType, SlabManager>::write_next_position(
+    LinkType next)
 {
     const auto memory = raw_data(key_size);
     auto serial = make_unsafe_serializer(memory->buffer());
@@ -132,8 +134,9 @@ void slab_row<KeyType, LinkType>::write_next_position(LinkType next)
     //*************************************************************************
 }
 
-template <typename KeyType, typename LinkType>
-memory_ptr slab_row<KeyType, LinkType>::raw_data(size_t bytes) const
+template <typename KeyType, typename LinkType, typename SlabManager>
+memory_ptr slab_row<KeyType, LinkType, SlabManager>::raw_data(
+    size_t bytes) const
 {
     auto memory = manager_.get(position_);
     memory->increment(bytes);

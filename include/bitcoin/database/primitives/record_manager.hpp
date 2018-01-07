@@ -34,6 +34,7 @@ namespace database {
 /// It also provides logical record mapping to the record memory address.
 template <typename LinkType>
 class record_manager
+  : noncopyable
 {
 public:
     record_manager(storage& file, size_t header_size, size_t record_size);

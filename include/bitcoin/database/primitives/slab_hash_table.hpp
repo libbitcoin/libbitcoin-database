@@ -26,6 +26,8 @@
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
+#include <bitcoin/database/primitives/slab_row.hpp>
+#include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -54,6 +56,7 @@ namespace database {
  */
 template <typename KeyType, typename IndexType, typename LinkType>
 class slab_hash_table
+  : noncopyable
 {
 public:
     typedef byte_serializer::functor write_function;
@@ -62,8 +65,16 @@ public:
         LinkType>::empty;
 
     /// Construct a hash table for variable size entries.
-    slab_hash_table(hash_table_header<IndexType, LinkType>& header,
-        slab_manager<LinkType>& manager);
+    slab_hash_table(storage& file, IndexType buckets);
+
+    /// Create hash table in the file (left in started state).
+    bool create();
+
+    /// Verify the size of the hash table in the file.
+    bool start();
+
+    /// Commit changes to the hash table.
+    void sync();
 
     /// Execute a write. value_size is the required size of the buffer.
     /// Returns the file offset of the new value.
@@ -79,10 +90,17 @@ public:
     /// Find the slab pointer for a given key. Returns nullptr if not found.
     memory_ptr find(const KeyType& key) const;
 
+    /// Get slab from its file offset. Returns nullptr if not found.
+    memory_ptr get(LinkType slab) const;
+
     /// Delete a key-value pair from the hashtable by unlinking the node.
     bool unlink(const KeyType& key);
 
 private:
+    typedef slab_row<KeyType, LinkType, slab_manager<LinkType>> row;
+    typedef slab_row<KeyType, LinkType, const slab_manager<LinkType>>
+        const_row;
+
     // The bucket index of a key.
     IndexType bucket_index(const KeyType& key) const;
 
@@ -92,8 +110,8 @@ private:
     // Link a new element into the bucket header (stack model, push front).
     void link(const KeyType& key, LinkType begin);
 
-    hash_table_header<IndexType, LinkType>& header_;
-    slab_manager<LinkType>& manager_;
+    hash_table_header<IndexType, LinkType> header_;
+    slab_manager<LinkType> manager_;
     mutable shared_mutex create_mutex_;
     mutable shared_mutex update_mutex_;
 };

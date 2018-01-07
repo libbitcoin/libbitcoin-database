@@ -22,11 +22,8 @@
 #include <cstddef>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/record_hash_table.hpp>
-#include <bitcoin/database/primitives/record_manager.hpp>
 #include <bitcoin/database/primitives/record_multimap.hpp>
 #include <bitcoin/database/primitives/record_list_iterable.hpp>
-#include <bitcoin/database/primitives/record_row.hpp>
 
 // Record format (v4) [47 bytes]:
 // ----------------------------------------------------------------------------
@@ -60,17 +57,12 @@ static constexpr auto value_size = height_size + flag_size + point_size +
 // The hash table stores indexes into the first element of a multimap row.
 history_database::history_database(const path& lookup_filename,
     const path& rows_filename, size_t buckets, size_t expansion)
-  : lookup_file_(lookup_filename, expansion),
-    lookup_header_(lookup_file_, buckets),
-    lookup_manager_(lookup_file_,
-        hash_table_header<index_type, link_type>::size(buckets),
-        record_row<key_type, link_type>::size(sizeof(link_type))),
-    lookup_map_(lookup_header_, lookup_manager_),
+  : hash_table_file_(lookup_filename, expansion),
+    hash_table_(hash_table_file_, buckets, sizeof(link_type)),
 
-    rows_file_(rows_filename, expansion),
-    rows_manager_(rows_file_, 0,
-        record_multimap<key_type, index_type, link_type>::size(value_size)),
-    rows_multimap_(lookup_map_, rows_manager_)
+    address_file_(rows_filename, expansion),
+    address_index_(address_file_, 0, record_multimap<key_type, index_type, link_type>::size(value_size)),
+    address_multimap_(hash_table_, address_index_)
 {
 }
 
@@ -84,45 +76,43 @@ history_database::~history_database()
 
 bool history_database::create()
 {
-    if (!lookup_file_.open() ||
-        !rows_file_.open())
+    if (!hash_table_file_.open() ||
+        !address_file_.open())
         return false;
 
     // No need to call open after create.
     return
-        lookup_header_.create() &&
-        lookup_manager_.create() &&
-        rows_manager_.create();
+        hash_table_.create() &&
+        address_index_.create();
 }
 
 bool history_database::open()
 {
     return
-        lookup_file_.open() &&
-        rows_file_.open() &&
-        lookup_header_.start() &&
-        lookup_manager_.start() &&
-        rows_manager_.start();
+        hash_table_file_.open() &&
+        address_file_.open() &&
+        hash_table_.start() &&
+        address_index_.start();
 }
 
 void history_database::commit()
 {
-    lookup_manager_.sync();
-    rows_manager_.sync();
+    hash_table_.sync();
+    address_index_.sync();
 }
 
 bool history_database::flush() const
 {
     return
-        lookup_file_.flush() &&
-        rows_file_.flush();
+        hash_table_file_.flush() &&
+        address_file_.flush();
 }
 
 bool history_database::close()
 {
     return
-        lookup_file_.close() &&
-        rows_file_.close();
+        hash_table_file_.close() &&
+        address_file_.close();
 }
 
 // Queries.
@@ -133,17 +123,17 @@ history_database::list history_database::get(const short_hash& key,
 {
     list result;
     payment_record payment;
-    const auto start = rows_multimap_.find(key);
+    const auto start = address_multimap_.find(key);
 
     // TODO: expose iterator from manager.
-    const auto records = record_list_iterable<link_type>(rows_manager_, start);
+    auto records = record_list_iterable<link_type>(address_index_, start);
 
     for (const auto index: records)
     {
         if (limit > 0 && result.size() >= limit)
             break;
 
-        const auto record = rows_multimap_.get(index);
+        const auto record = address_multimap_.get(index);
         auto deserial = make_unsafe_deserializer(record->buffer());
 
         // Failed reads are conflated with skipped returns.
@@ -152,16 +142,6 @@ history_database::list history_database::get(const short_hash& key,
     }
 
     return result;
-}
-
-history_statinfo history_database::statinfo() const
-{
-    return
-    {
-        lookup_header_.buckets(),
-        lookup_manager_.count(),
-        rows_manager_.count()
-    };
 }
 
 // Store.
@@ -175,7 +155,7 @@ void history_database::store(const short_hash& key,
         payment.to_data(serial, false);
     };
 
-    rows_multimap_.store(key, write);
+    address_multimap_.store(key, write);
 }
 
 // Update.
@@ -183,7 +163,7 @@ void history_database::store(const short_hash& key,
 
 bool history_database::unlink_last_row(const short_hash& key)
 {
-    return rows_multimap_.unlink(key);
+    return address_multimap_.unlink(key);
 }
 
 } // namespace database

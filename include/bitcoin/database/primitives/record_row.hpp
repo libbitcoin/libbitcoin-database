@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_RECORD_ROW_HPP
 
 #include <cstddef>
+#include <type_traits>
 #include <utility>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
@@ -36,8 +37,9 @@ namespace database {
  * With the starting item, we can iterate until the end using the
  * next_index() method.
  */
-template <typename KeyType, typename LinkType>
+template <typename KeyType, typename LinkType, typename RecordManager>
 class record_row
+  : noncopyable
 {
 public:
     typedef byte_serializer::functor write_function;
@@ -51,11 +53,11 @@ public:
     /// The uniform size of storing a record.
     static size_t size(size_t value_size);
 
-    // Construct for a new record.
-    record_row(record_manager<LinkType>& manager);
+    /// Construct for a new record.
+    record_row(RecordManager& manager);
 
-    // Construct for an existing record.
-    record_row(record_manager<LinkType>& manager, LinkType index);
+    /// Construct for an existing record.
+    record_row(RecordManager& manager, LinkType index);
 
     /// Allocate and populate a new record.
     LinkType create(const KeyType& key, write_function write);
@@ -82,7 +84,7 @@ private:
     memory_ptr raw_data(size_t bytes) const;
 
     LinkType index_;
-    record_manager<LinkType>& manager_;
+    RecordManager& manager_;
 };
 
 } // namespace database

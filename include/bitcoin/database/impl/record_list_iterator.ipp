@@ -35,10 +35,8 @@ record_list_iterator<LinkType>::record_list_iterator(
 template <typename LinkType>
 void record_list_iterator<LinkType>::operator++()
 {
-    // HACK: next_index() is const, so this is safe despite being ugly.
-    auto& manager = const_cast<record_manager<LinkType>&>(manager_);
-
-    index_ = record_list<LinkType>(manager, index_).next_index();
+    index_ = record_list<LinkType, const record_manager<LinkType>>(manager_,
+        index_).next_index();
 }
 
 template <typename LinkType>

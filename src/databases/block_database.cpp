@@ -25,7 +25,6 @@
 #include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/record_hash_table.hpp>
 #include <bitcoin/database/primitives/record_row.hpp>
 #include <bitcoin/database/result/block_result.hpp>
 #include <bitcoin/database/state/block_state.hpp>
@@ -57,7 +56,7 @@ using namespace bc::chain;
 
 // static
 const size_t block_database::prefix_size_ = record_row<key_type,
-    link_type>::prefix_size;
+    link_type, record_manager>::prefix_size;
 
 static const auto header_size = header::satoshi_fixed_size();
 static constexpr auto median_time_past_size = sizeof(uint32_t);
@@ -84,21 +83,17 @@ block_database::block_database(const path& map_filename,
   : fork_point_(0),
     valid_point_(0),
 
-    lookup_file_(map_filename, expansion),
-    lookup_header_(lookup_file_, buckets),
-    lookup_manager_(lookup_file_,
-        hash_table_header<index_type, link_type>::size(buckets),
-        record_row<key_type, link_type>::size(block_size)),
-    lookup_map_(lookup_header_, lookup_manager_),
+    hash_table_file_(map_filename, expansion),
+    hash_table_(hash_table_file_, buckets, block_size),
 
     header_index_file_(header_index_filename, expansion),
-    header_index_manager_(header_index_file_, 0, sizeof(link_type)),
+    header_index_(header_index_file_, 0, sizeof(link_type)),
 
     block_index_file_(block_index_filename, expansion),
-    block_index_manager_(block_index_file_, 0, sizeof(link_type)),
+    block_index_(block_index_file_, 0, sizeof(link_type)),
 
     tx_index_file_(tx_index_filename, expansion),
-    tx_index_manager_(tx_index_file_, 0, sizeof(file_offset))
+    tx_index_(tx_index_file_, 0, sizeof(file_offset))
 {
 }
 
@@ -112,7 +107,7 @@ block_database::~block_database()
 
 bool block_database::create()
 {
-    if (!lookup_file_.open() ||
+    if (!hash_table_file_.open() ||
         !header_index_file_.open() ||
         !block_index_file_.open() ||
         !tx_index_file_.open())
@@ -120,39 +115,38 @@ bool block_database::create()
 
     // No need to call open after create.
     return
-        lookup_header_.create() &&
-        lookup_manager_.create() &&
-        header_index_manager_.create() &&
-        block_index_manager_.create() &&
-        tx_index_manager_.create();
+        hash_table_.create() &&
+        header_index_.create() &&
+        block_index_.create() &&
+        tx_index_.create();
 }
 
 bool block_database::open()
 {
     return
-        lookup_file_.open() &&
+        hash_table_file_.open() &&
         header_index_file_.open() &&
         block_index_file_.open() &&
         tx_index_file_.open() &&
-        lookup_header_.start() &&
-        lookup_manager_.start() &&
-        header_index_manager_.start() &&
-        block_index_manager_.start() &&
-        tx_index_manager_.start();
+
+        hash_table_.start() &&
+        header_index_.start() &&
+        block_index_.start() &&
+        tx_index_.start();
 }
 
 void block_database::commit()
 {
-    lookup_manager_.sync();
-    header_index_manager_.sync();
-    block_index_manager_.sync();
-    tx_index_manager_.sync();
+    hash_table_.sync();
+    header_index_.sync();
+    block_index_.sync();
+    tx_index_.sync();
 }
 
 bool block_database::flush() const
 {
     return
-        lookup_file_.flush() &&
+        hash_table_file_.flush() &&
         header_index_file_.flush() &&
         block_index_file_.flush() &&
         tx_index_file_.flush();
@@ -161,7 +155,7 @@ bool block_database::flush() const
 bool block_database::close()
 {
     return
-        lookup_file_.close() &&
+        hash_table_file_.close() &&
         header_index_file_.close() &&
         block_index_file_.close() &&
         tx_index_file_.close();
@@ -182,18 +176,18 @@ size_t block_database::valid_point() const
 
 bool block_database::top(size_t& out_height, bool block_index) const
 {
-    auto& manager = block_index ? block_index_manager_ : header_index_manager_;
+    auto& manager = block_index ? block_index_ : header_index_;
     return read_top(out_height, manager);
 }
 
 block_result block_database::get(size_t height, bool block_index) const
 {
-    auto& manager = block_index ? block_index_manager_ : header_index_manager_;
+    auto& manager = block_index ? block_index_ : header_index_;
 
     if (height >= manager.count())
-        return{ tx_index_manager_ };
+        return{ tx_index_ };
 
-    auto record = lookup_manager_.get(read_index(height, manager));
+    auto record = hash_table_.get(read_index(height, manager));
     const auto prefix = record->buffer();
 
     // Advance the record row entry past the key and link to the record data.
@@ -218,7 +212,7 @@ block_result block_database::get(size_t height, bool block_index) const
     auto reader = make_unsafe_deserializer(prefix);
 
     // Reads are not deferred for updatable values as atomicity is required.
-    return{ tx_index_manager_, record, reader.read_hash(),
+    return{ tx_index_, record, reader.read_hash(),
         static_cast<uint32_t>(height), checksum, tx_start, tx_count, state };
 }
 
@@ -226,10 +220,10 @@ block_result block_database::get(size_t height, bool block_index) const
 block_result block_database::get(const hash_digest& hash) const
 {
     // This is pointer to the data section of the record row entry.
-    const auto record = lookup_map_.find(hash);
+    const auto record = hash_table_.find(hash);
 
     if (record == nullptr)
-        return{ tx_index_manager_ };
+        return{ tx_index_ };
 
     const auto memory = record->buffer();
     ////const auto prefix_start = memory - prefix_size_;
@@ -250,7 +244,7 @@ block_result block_database::get(const hash_digest& hash) const
     ///////////////////////////////////////////////////////////////////////////
 
     // Reads are not deferred for updatable values as atomicity is required.
-    return{ tx_index_manager_, record, hash, height, checksum, tx_start,
+    return{ tx_index_, record, hash, height, checksum, tx_start,
         tx_count, state };
 }
 
@@ -261,8 +255,8 @@ block_result block_database::get(const hash_digest& hash) const
 void block_database::push(const chain::header& header, size_t height,
     uint32_t checksum, link_type tx_start, size_t tx_count, uint8_t state)
 {
-    auto& manager = is_confirmed(state) ? block_index_manager_ :
-        header_index_manager_;
+    auto& manager = is_confirmed(state) ? block_index_ :
+        header_index_;
 
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(tx_start <= max_uint32);
@@ -282,7 +276,7 @@ void block_database::push(const chain::header& header, size_t height,
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(tx_count));
     };
 
-    const auto index = lookup_map_.store(header.hash(), write);
+    const auto index = hash_table_.store(header.hash(), write);
 
     if (is_confirmed(state) || is_indexed(state))
         push_index(index, height, manager);
@@ -322,8 +316,8 @@ block_database::link_type block_database::associate(
     if (transactions.empty())
         return 0;
 
-    const auto start = tx_index_manager_.new_records(transactions.size());
-    const auto record = tx_index_manager_.get(start);
+    const auto start = tx_index_.new_records(transactions.size());
+    const auto record = tx_index_.get(start);
     auto serial = make_unsafe_serializer(record->buffer());
 
     for (const auto& tx: transactions)
@@ -362,7 +356,7 @@ bool block_database::update(const chain::block& block)
         ///////////////////////////////////////////////////////////////////////
     };
 
-    return lookup_map_.update(block.hash(), update) != record_map::not_found;
+    return hash_table_.update(block.hash(), update) != record_map::not_found;
 }
 
 static uint8_t update_validation_state(uint8_t original, bool positive)
@@ -387,7 +381,7 @@ bool block_database::validate(const hash_digest& hash, bool positive)
     // TODO: the caller doesn't know the current header state.
 
     // This is pointer to the data section of the record row entry.
-    auto record = lookup_map_.find(hash);
+    auto record = hash_table_.find(hash);
 
     if (record == nullptr)
         return false;
@@ -419,7 +413,7 @@ bool block_database::validate(const hash_digest& hash, bool positive)
         serial.write_byte(state);
     };
 
-    lookup_map_.update(hash, update);
+    hash_table_.update(hash, update);
 
     // Also update the validation chaser, assumes all prior are valid.
     BITCOIN_ASSERT_MSG(valid_point_ != max_size_t, "valid point overflow");
@@ -462,7 +456,7 @@ bool block_database::confirm(const hash_digest& hash, size_t height,
     bool block_index)
 {
     BITCOIN_ASSERT(height != max_uint32);
-    auto& manager = block_index ? block_index_manager_ : header_index_manager_;
+    auto& manager = block_index ? block_index_ : header_index_;
 
     // Can only confirm at the top of the given index (push).
     if (height != manager.count())
@@ -470,7 +464,7 @@ bool block_database::confirm(const hash_digest& hash, size_t height,
 
     // TODO: eliminate the double state lookup for state update.
     // TODO: the caller doesn't know the current header state.
-    auto record = lookup_manager_.get(read_index(height, manager));
+    auto record = hash_table_.get(read_index(height, manager));
     record->increment(prefix_size_);
     const auto state_start = record->buffer();
     auto deserial = make_unsafe_deserializer(state_start);
@@ -502,7 +496,7 @@ bool block_database::confirm(const hash_digest& hash, size_t height,
         ++fork_point_;
     }
 
-    const auto index = lookup_map_.update(hash, update);
+    const auto index = hash_table_.update(hash, update);
     push_index(index, height, manager);
     return true;
 }
@@ -511,7 +505,7 @@ bool block_database::unconfirm(const hash_digest& hash, size_t height,
     bool block_index)
 {
     BITCOIN_ASSERT(height != max_uint32);
-    auto& manager = block_index ? block_index_manager_ : header_index_manager_;
+    auto& manager = block_index ? block_index_ : header_index_;
 
     // Can only unconfirm the top of the given index (pop).
     if (height + 1u != manager.count())
@@ -520,7 +514,7 @@ bool block_database::unconfirm(const hash_digest& hash, size_t height,
     // TODO: eliminate the double state lookup for state update.
     // TODO: the caller already knows the current header state.
     // TODO: update isn't actually required here (index unused).
-    auto record = lookup_manager_.get(read_index(height, manager));
+    auto record = hash_table_.get(read_index(height, manager));
     record->increment(prefix_size_);
     const auto state_start = record->buffer();
     auto deserial = make_unsafe_deserializer(state_start);
@@ -553,7 +547,7 @@ bool block_database::unconfirm(const hash_digest& hash, size_t height,
     }
     else
     {
-        lookup_map_.update(hash, update);
+        hash_table_.update(hash, update);
     }
 
     pop_index(height, manager);

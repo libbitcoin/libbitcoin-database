@@ -23,16 +23,35 @@
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
 #include <bitcoin/database/primitives/slab_row.hpp>
+#include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 template <typename KeyType, typename IndexType, typename LinkType>
-slab_hash_table<KeyType, IndexType, LinkType>::slab_hash_table(
-    hash_table_header<IndexType, LinkType>& header,
-    slab_manager<LinkType>& manager)
-  : header_(header), manager_(manager)
+slab_hash_table<KeyType, IndexType, LinkType>::slab_hash_table(storage& file,
+    IndexType buckets)
+  : header_(file, buckets),
+    manager_(file, hash_table_header<IndexType, LinkType>::size(buckets))
 {
+}
+
+template <typename KeyType, typename IndexType, typename LinkType>
+bool slab_hash_table<KeyType, IndexType, LinkType>::create()
+{
+    return header_.create() && manager_.create();
+}
+
+template <typename KeyType, typename IndexType, typename LinkType>
+bool slab_hash_table<KeyType, IndexType, LinkType>::start()
+{
+    return header_.start() && manager_.start();
+}
+
+template <typename KeyType, typename IndexType, typename LinkType>
+void slab_hash_table<KeyType, IndexType, LinkType>::sync()
+{
+    return manager_.sync();
 }
 
 // This is not limited to storing unique key values. If duplicate keyed values
@@ -43,7 +62,7 @@ LinkType slab_hash_table<KeyType, IndexType, LinkType>::store(
     const KeyType& key, write_function write, size_t value_size)
 {
     // Allocate and populate new unlinked slab.
-    slab_row<KeyType, LinkType> slab(manager_);
+    row slab(manager_);
     const auto position = slab.create(key, write, value_size);
 
     // Critical Section
@@ -60,7 +79,7 @@ LinkType slab_hash_table<KeyType, IndexType, LinkType>::store(
     ///////////////////////////////////////////////////////////////////////////
 
     // Return the file offset of the slab data segment.
-    return position + slab_row<KeyType, LinkType>::prefix_size;
+    return position + row::prefix_size;
 }
 
 // Execute a writer against a key's buffer if the key is found.
@@ -76,7 +95,7 @@ LinkType slab_hash_table<KeyType, IndexType, LinkType>::update(
     // Iterate through list...
     while (current != not_found)
     {
-        const slab_row<KeyType, LinkType> item(manager_, current);
+        row item(manager_, current);
 
         // Found, update data and return position.
         if (item.compare(key))
@@ -108,7 +127,7 @@ LinkType slab_hash_table<KeyType, IndexType, LinkType>::offset(
     // Iterate through list...
     while (current != header_.empty)
     {
-        const slab_row<KeyType, LinkType> item(manager_, current);
+        const_row item(manager_, current);
 
         // Found, return offset.
         if (item.compare(key))
@@ -134,7 +153,7 @@ memory_ptr slab_hash_table<KeyType, IndexType, LinkType>::find(
     // Iterate through list...
     while (current != not_found)
     {
-        const slab_row<KeyType, LinkType> item(manager_, current);
+        const_row item(manager_, current);
 
         // Found, return data.
         if (item.compare(key))
@@ -150,6 +169,13 @@ memory_ptr slab_hash_table<KeyType, IndexType, LinkType>::find(
     return nullptr;
 }
 
+template <typename KeyType, typename IndexType, typename LinkType>
+memory_ptr slab_hash_table<KeyType, IndexType, LinkType>::get(
+    LinkType slab) const
+{
+    return manager_.get(slab);
+}
+
 // Unlink is not safe for concurrent write.
 // This is limited to unlinking the first of multiple matching key values.
 template <typename KeyType, typename IndexType, typename LinkType>
@@ -157,7 +183,7 @@ bool slab_hash_table<KeyType, IndexType, LinkType>::unlink(const KeyType& key)
 {
     // Find start item...
     auto previous = read_bucket_value(key);
-    const slab_row<KeyType, LinkType> begin_item(manager_, previous);
+    row begin_item(manager_, previous);
 
     // If start item has the key then unlink from buckets.
     if (begin_item.compare(key))
@@ -180,12 +206,12 @@ bool slab_hash_table<KeyType, IndexType, LinkType>::unlink(const KeyType& key)
     // Iterate through list...
     while (current != not_found)
     {
-        const slab_row<KeyType, LinkType> item(manager_, current);
+        row item(manager_, current);
 
         // Found, unlink current item from previous.
         if (item.compare(key))
         {
-            slab_row<KeyType, LinkType> previous_item(manager_, previous);
+            row previous_item(manager_, previous);
 
             // Critical Section
             ///////////////////////////////////////////////////////////////////

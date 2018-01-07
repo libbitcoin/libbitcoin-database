@@ -36,8 +36,9 @@ namespace database {
  * With the starting item, we can iterate until the end using the
  * next_position() method.
  */
-template <typename KeyType, typename LinkType>
+template <typename KeyType, typename LinkType, typename SlabManager>
 class slab_row
+  : noncopyable
 {
 public:
     typedef byte_serializer::functor write_function;
@@ -48,11 +49,11 @@ public:
     static const size_t link_size = sizeof(LinkType);
     static const size_t prefix_size = key_size + link_size;
 
-    // Construct for a new slab.
-    slab_row(slab_manager<LinkType>& manager);
+    /// Construct for a new slab.
+    slab_row(SlabManager& manager);
 
-    // Construct for an existing slab.
-    slab_row(slab_manager<LinkType>& manager, LinkType position);
+    /// Construct for an existing slab.
+    slab_row(SlabManager& manager, LinkType position);
 
     /// Allocate and populate a new slab.
     LinkType create(const KeyType& key, write_function write,
@@ -80,7 +81,7 @@ private:
     memory_ptr raw_data(size_t bytes) const;
 
     LinkType position_;
-    slab_manager<LinkType>& manager_;
+    SlabManager& manager_;
 };
 
 } // namespace database

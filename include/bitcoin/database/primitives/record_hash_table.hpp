@@ -26,6 +26,8 @@
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
+#include <bitcoin/database/primitives/record_row.hpp>
+#include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -58,6 +60,7 @@ namespace database {
  */
 template <typename KeyType, typename IndexType, typename LinkType>
 class record_hash_table
+  : noncopyable
 {
 public:
     typedef byte_serializer::functor write_function;
@@ -66,8 +69,16 @@ public:
         LinkType>::empty;
 
     /// Construct a hash table for uniform size entries.
-    record_hash_table(hash_table_header<IndexType, LinkType>& header,
-        record_manager<LinkType>& manager);
+    record_hash_table(storage& file, IndexType buckets, size_t value_size);
+
+    /// Create hash table in the file (left in started state).
+    bool create();
+
+    /// Verify the size of the hash table in the file.
+    bool start();
+
+    /// Commit changes to the hash table.
+    void sync();
 
     /// Execute a write. The provided write() function must write the correct
     /// size: (value_size = record_size - key_size - sizeof(array_index)).
@@ -83,10 +94,17 @@ public:
     /// Find the record for given key. Returns nullptr if not found.
     memory_ptr find(const KeyType& key) const;
 
+    /// Get record from its array offset. Returns nullptr if not found.
+    memory_ptr get(LinkType record) const;
+
     /// Delete a key-value pair from the hashtable by unlinking the node.
     bool unlink(const KeyType& key);
 
 private:
+    typedef record_row<KeyType, LinkType, record_manager<LinkType>> row;
+    typedef record_row<KeyType, LinkType, const record_manager<LinkType>>
+        const_row;
+
     // The bucket index of a key.
     IndexType bucket_index(const KeyType& key) const;
 
@@ -96,8 +114,8 @@ private:
     // Link a new element into the bucket header (stack model, push front).
     void link(const KeyType& key, LinkType begin);
 
-    hash_table_header<IndexType, LinkType>& header_;
-    record_manager<LinkType>& manager_;
+    hash_table_header<IndexType, LinkType> header_;
+    record_manager<LinkType> manager_;
     mutable shared_mutex create_mutex_;
     mutable shared_mutex update_mutex_;
 };

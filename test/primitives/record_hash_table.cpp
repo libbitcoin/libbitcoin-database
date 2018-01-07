@@ -27,40 +27,20 @@ using namespace bc::database;
 
 BOOST_AUTO_TEST_SUITE(record_hash_table_tests)
 
-// TODO: replace use of std::hash with fixed algorithms.
-// These tests are sensitive to std::hash algorithm, which is opaque.
-// This makes the tests unreliable and the store files non-portable.
-
-#ifdef NOT_DEFINED
-
 BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
 {
     typedef test::tiny_hash key_type;
-    typedef uint32_t index_type;
-    typedef uint32_t link_type;
-
-    typedef record_manager<link_type> record_manager;
-    typedef hash_table_header<index_type, link_type> record_header;
-    typedef record_hash_table<key_type, index_type, link_type> record_map;
-
-    const auto buckets = 2u;
-    const auto value_size = 4u;
-    const auto header_size = record_header::size(buckets);
+    typedef record_hash_table<key_type, uint32_t, uint32_t> record_map;
 
     test::storage file;
     BOOST_REQUIRE(file.open());
 
-    record_header header(file, buckets);
-    BOOST_REQUIRE(header.create());
-    BOOST_REQUIRE_GE(file.size(), header_size);
+    const auto buckets = 2u;
+    const auto value_size = 4u;
+    record_map table(file, buckets, value_size);
 
-    record_manager manager(file, header_size, value_size);
-    BOOST_REQUIRE(manager.create());
-    BOOST_REQUIRE_GE(file.size(), header_size + sizeof(link_type));
-
-    record_map table(header, manager);
-    key_type key{ { 0xde, 0xad, 0xbe, 0xef } };
-    key_type key1{ { 0xb0, 0x0b, 0xb0, 0x0b } };
+    const key_type key{ { 0xde, 0xad, 0xbe, 0xef } };
+    const key_type key1{ { 0xb0, 0x0b, 0xb0, 0x0b } };
 
     const auto write = [](byte_serializer& serial)
     {
@@ -78,86 +58,23 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
         serial.write_byte(96);
     };
 
-    // [e][e]
-    BOOST_REQUIRE_EQUAL(header.read(0), header.empty);
-    BOOST_REQUIRE_EQUAL(header.read(1), header.empty);
+    table.store(key, write);
+    ////table.sync();
 
     table.store(key, write);
-    manager.sync();
-
-    // [0][e]
-    BOOST_REQUIRE_EQUAL(header.read(0), 0u);
-    BOOST_REQUIRE_EQUAL(header.read(1), header.empty);
-
-    table.store(key, write);
-    manager.sync();
-
-    // [1->0][e]
-    BOOST_REQUIRE_EQUAL(header.read(0), 1u);
+    ////table.sync();
 
     table.store(key1, write1);
-    manager.sync();
-
-    // [1->0][2]
-    BOOST_REQUIRE_EQUAL(header.read(0), 1u);
-    BOOST_REQUIRE_EQUAL(header.read(1), 2u);
+    ////table.sync();
 
     table.store(key1, write);
-    manager.sync();
+    ////table.sync();
 
-    // [1->0][3->2]
-    BOOST_REQUIRE_EQUAL(header.read(0), 1u);
-    BOOST_REQUIRE_EQUAL(header.read(1), 3u);
-
-    // Verify 0->empty
-    record_row<test::tiny_hash, uint32_t> item0(manager, 0);
-    BOOST_REQUIRE_EQUAL(item0.next_index(), header.empty);
-
-    // Verify 1->0
-    record_row<test::tiny_hash, uint32_t> item1(manager, 1);
-    BOOST_REQUIRE_EQUAL(item1.next_index(), 0u);
-
-    // Verify 2->empty
-    record_row<test::tiny_hash, uint32_t> item2(manager, 2);
-    BOOST_REQUIRE_EQUAL(item2.next_index(), header.empty);
-
-    // Verify 3->2
-    record_row<test::tiny_hash, uint32_t> item3(manager, 3);
-    BOOST_REQUIRE_EQUAL(item3.next_index(), 2u);
-
-    // [X->0][3->2]
     BOOST_REQUIRE(table.unlink(key));
-    manager.sync();
+    ////table.sync();
 
-    BOOST_REQUIRE_EQUAL(header.read(0), 0);
-    BOOST_REQUIRE_EQUAL(header.read(1), 3u);
-
-    // Verify 0->empty
-    record_row<test::tiny_hash, uint32_t> item0a(manager, 0);
-    BOOST_REQUIRE_EQUAL(item0a.next_index(), header.empty);
-
-    // Verify 3->2
-    record_row<test::tiny_hash, uint32_t> item3a(manager, 3);
-    BOOST_REQUIRE_EQUAL(item3a.next_index(), 2u);
-
-    // Verify 2->empty
-    record_row<test::tiny_hash, uint32_t> item2a(manager, 2);
-    BOOST_REQUIRE_EQUAL(item2a.next_index(), header.empty);
-
-    // [0][X->2]
     BOOST_REQUIRE(table.unlink(key1));
-    manager.sync();
-
-    BOOST_REQUIRE_EQUAL(header.read(0), 0u);
-    BOOST_REQUIRE_EQUAL(header.read(1), 2u);
-
-    // Verify 0->empty
-    record_row<test::tiny_hash, uint32_t> item0b(manager, 0);
-    BOOST_REQUIRE_EQUAL(item0b.next_index(), header.empty);
-
-    // Verify 2->empty
-    record_row<test::tiny_hash, uint32_t> item2b(manager, 2);
-    BOOST_REQUIRE_EQUAL(item2b.next_index(), header.empty);
+    ////table.sync();
 
     test::tiny_hash invalid{ { 0x00, 0x01, 0x02, 0x03 } };
     BOOST_REQUIRE(!table.unlink(invalid));
@@ -166,31 +83,17 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
 BOOST_AUTO_TEST_CASE(record_hash_table__64bit__test)
 {
     typedef test::little_hash key_type;
-    typedef uint32_t index_type;
-    typedef uint32_t link_type;
-
-    typedef record_manager<link_type> record_manager;
-    typedef hash_table_header<index_type, link_type> record_header;
-    typedef record_hash_table<key_type, index_type, link_type> record_map;
-
-    const auto buckets = 2u;
-    const auto value_size = 7u;
-    const auto header_size = record_header::size(buckets);
+    typedef record_hash_table<key_type, uint32_t, uint32_t> record_map;
 
     test::storage file;
     BOOST_REQUIRE(file.open());
 
-    record_header header(file, buckets);
-    BOOST_REQUIRE(header.create());
-    BOOST_REQUIRE_GE(file.size(), header_size);
+    const auto buckets = 2u;
+    const auto value_size = 7u;
+    record_map table(file, buckets, value_size);
 
-    record_manager manager(file, header_size, value_size);
-    BOOST_REQUIRE(manager.create());
-    BOOST_REQUIRE_GE(file.size(), header_size + sizeof(link_type));
-
-    record_map table(header, manager);
-    key_type key{ { 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef } };
-    key_type key1{ { 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b } };
+    const key_type key{ { 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef } };
+    const key_type key1{ { 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b } };
 
     const auto write = [](byte_serializer& serial)
     {
@@ -215,55 +118,25 @@ BOOST_AUTO_TEST_CASE(record_hash_table__64bit__test)
     };
 
     table.store(key, write);
-    manager.sync();
-
-    // [e][0]
-    BOOST_REQUIRE_EQUAL(header.read(0), header.empty);
-    BOOST_REQUIRE_EQUAL(header.read(1), 0u);
+    ////table.sync();
 
     table.store(key, write);
-    manager.sync();
-
-    // [e][1->0]
-    BOOST_REQUIRE_EQUAL(header.read(0), header.empty);
-    BOOST_REQUIRE_EQUAL(header.read(1), 1u);
+    ////table.sync();
 
     table.store(key1, write1);
-    manager.sync();
-
-    // [2][1->0]
-    BOOST_REQUIRE_EQUAL(header.read(0), 2u);
-    BOOST_REQUIRE_EQUAL(header.read(1), 1u);
+    ////table.sync();
 
     table.store(key1, write);
-    manager.sync();
+    ////table.sync();
 
-    // [3->2][1->0]
-    BOOST_REQUIRE_EQUAL(header.read(0), 3u);
-    BOOST_REQUIRE_EQUAL(header.read(1), 1u);
-
-    record_row<test::little_hash, uint32_t> item(manager, 3);
-    BOOST_REQUIRE_EQUAL(item.next_index(), 2u);
-
-    record_row<test::little_hash, uint32_t> item1(manager, 2);
-    BOOST_REQUIRE_EQUAL(item1.next_index(), header.empty);
-
-    // [3->2][X->0]
     BOOST_REQUIRE(table.unlink(key));
-    manager.sync();
+    ////table.sync();
 
-    BOOST_REQUIRE_EQUAL(header.read(1), 0u);
-
-    // [X->2][X->0]
     BOOST_REQUIRE(table.unlink(key1));
-    manager.sync();
-
-    BOOST_REQUIRE_EQUAL(header.read(0), 2u);
+    ////table.sync();
 
     test::little_hash invalid{ { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 } };
     BOOST_REQUIRE(!table.unlink(invalid));
 }
-
-#endif
 
 BOOST_AUTO_TEST_SUITE_END()

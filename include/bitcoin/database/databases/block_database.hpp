@@ -112,12 +112,9 @@ public:
 
 private:
     typedef hash_digest key_type;
-    typedef array_index index_type;
     typedef array_index link_type;
-
     typedef record_manager<link_type> record_manager;
-    typedef hash_table_header<index_type, link_type> record_header;
-    typedef record_hash_table<key_type, index_type, link_type> record_map;
+    typedef record_hash_table<key_type, array_index, link_type> record_map;
 
     typedef message::compact_block::short_id_list short_id_list;
 
@@ -140,29 +137,24 @@ private:
     std::atomic<size_t> valid_point_;
 
     // Hash table used for looking up block headers by hash.
-    file_storage lookup_file_;
-    record_header lookup_header_;
-    record_manager lookup_manager_;
-    record_map lookup_map_;
+    file_storage hash_table_file_;
+    record_map hash_table_;
 
     // Table used for looking up headers by height.
-    // Each record resolves to a record via link_type.
     file_storage header_index_file_;
-    record_manager header_index_manager_;
+    record_manager header_index_;
 
     // Table used for looking up blocks by height.
-    // Each record resolves to a record via link_type.
     file_storage block_index_file_;
-    record_manager block_index_manager_;
+    record_manager block_index_;
 
     // See comments in history_database for similiarity to record_multimap.
     // A new record_multiset template could abstract this in a similar manner.
     // Association table between blocks and their contained transactions.
     // Only first tx is indexed and count is required to read the full set.
-    // Each record resolves to a record via link_type.
     // This indexes txs (vs. blocks) so the link type may be differentiated.
     file_storage tx_index_file_;
-    record_manager tx_index_manager_;
+    record_manager tx_index_;
 
     // This provides atomicity for checksum, tx_start, tx_count, state.
     mutable shared_mutex metadata_mutex_;
