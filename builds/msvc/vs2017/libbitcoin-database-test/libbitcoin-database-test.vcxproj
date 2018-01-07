@@ -83,10 +83,10 @@
     <ClCompile Include="..\..\..\..\test\primitives\hash_table_header.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\record_hash_table.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\record_list.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\record_list_iterable.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\record_list_iterator.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\record_manager.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\record_multimap.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives\record_multimap_iterable.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives\record_multimap_iterator.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\slab_hash_table.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\slab_manager.cpp" />
     <ClCompile Include="..\..\..\..\test\result\block_result.cpp" />

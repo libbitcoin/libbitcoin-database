@@ -24,7 +24,7 @@
 using namespace bc;
 using namespace bc::database;
 
-BOOST_AUTO_TEST_SUITE(hash_table_tests)
+BOOST_AUTO_TEST_SUITE(record_manager_tests)
 
 BOOST_AUTO_TEST_CASE(record_manager__method__vector__expectation)
 {

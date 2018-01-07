@@ -41,6 +41,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
 
     const key_type key{ { 0xde, 0xad, 0xbe, 0xef } };
     const key_type key1{ { 0xb0, 0x0b, 0xb0, 0x0b } };
+    const key_type invalid{ { 0x00, 0x01, 0x02, 0x03 } };
 
     const auto write = [](byte_serializer& serial)
     {
@@ -59,24 +60,11 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
     };
 
     table.store(key, write);
-    ////table.sync();
-
     table.store(key, write);
-    ////table.sync();
-
     table.store(key1, write1);
-    ////table.sync();
-
     table.store(key1, write);
-    ////table.sync();
-
     BOOST_REQUIRE(table.unlink(key));
-    ////table.sync();
-
     BOOST_REQUIRE(table.unlink(key1));
-    ////table.sync();
-
-    test::tiny_hash invalid{ { 0x00, 0x01, 0x02, 0x03 } };
     BOOST_REQUIRE(!table.unlink(invalid));
 }
 
@@ -94,6 +82,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__64bit__test)
 
     const key_type key{ { 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef } };
     const key_type key1{ { 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b } };
+    const key_type invalid{ { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 } };
 
     const auto write = [](byte_serializer& serial)
     {
@@ -118,24 +107,12 @@ BOOST_AUTO_TEST_CASE(record_hash_table__64bit__test)
     };
 
     table.store(key, write);
-    ////table.sync();
-
     table.store(key, write);
-    ////table.sync();
-
     table.store(key1, write1);
-    ////table.sync();
-
     table.store(key1, write);
-    ////table.sync();
-
     BOOST_REQUIRE(table.unlink(key));
-    ////table.sync();
-
     BOOST_REQUIRE(table.unlink(key1));
-    ////table.sync();
 
-    test::little_hash invalid{ { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 } };
     BOOST_REQUIRE(!table.unlink(invalid));
 }
 

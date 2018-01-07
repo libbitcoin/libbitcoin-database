@@ -69,16 +69,16 @@
     <ClCompile Include="..\..\..\..\test\primitives\record_list.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\primitives\record_list_iterable.cpp">
+      <Filter>src\primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\primitives\record_list_iterator.cpp">
+      <Filter>src\primitives</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\record_manager.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\record_multimap.cpp">
-      <Filter>src\primitives</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\record_multimap_iterable.cpp">
-      <Filter>src\primitives</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\record_multimap_iterator.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\slab_hash_table.cpp">

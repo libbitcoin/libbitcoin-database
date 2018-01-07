@@ -79,10 +79,10 @@ test_libbitcoin_database_test_SOURCES = \
     test/primitives/hash_table_header.cpp \
     test/primitives/record_hash_table.cpp \
     test/primitives/record_list.cpp \
+    test/primitives/record_list_iterable.cpp \
+    test/primitives/record_list_iterator.cpp \
     test/primitives/record_manager.cpp \
     test/primitives/record_multimap.cpp \
-    test/primitives/record_multimap_iterable.cpp \
-    test/primitives/record_multimap_iterator.cpp \
     test/primitives/slab_hash_table.cpp \
     test/primitives/slab_manager.cpp \
     test/result/block_result.cpp \
