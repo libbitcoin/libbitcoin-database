@@ -38,7 +38,6 @@ template <typename IndexType, typename LinkType>
 class hash_table_header
 {
 public:
-    /// TODO: implement std::hash replacement to prevent store drift.
     /// A hash of the key reduced to the domain of the divisor.
     template <typename KeyType>
     static IndexType remainder(const KeyType& key, IndexType divisor);

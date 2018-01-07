@@ -32,6 +32,7 @@ template <typename KeyType>
 inline IndexType hash_table_header<IndexType, LinkType>::remainder(
     const KeyType& key, IndexType divisor)
 {
+    // TODO: implement std::hash replacement to prevent store drift.
     return divisor == 0 ? 0 : std::hash<KeyType>()(key) % divisor;
 }
 
@@ -40,9 +41,6 @@ hash_table_header<IndexType, LinkType>::hash_table_header(storage& file,
     IndexType buckets)
   : file_(file), buckets_(buckets)
 {
-    BITCOIN_ASSERT_MSG(empty == (LinkType)bc::max_uint64,
-        "Unexpected value for empty sentinel.");
-
     static_assert(std::is_unsigned<LinkType>::value,
         "Hash table header requires unsigned value type.");
 
