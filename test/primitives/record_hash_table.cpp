@@ -38,6 +38,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__32bit__test)
     const auto buckets = 2u;
     const auto value_size = 4u;
     record_map table(file, buckets, value_size);
+    BOOST_REQUIRE(table.create());
 
     const key_type key{ { 0xde, 0xad, 0xbe, 0xef } };
     const key_type key1{ { 0xb0, 0x0b, 0xb0, 0x0b } };
@@ -79,6 +80,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__64bit__test)
     const auto buckets = 2u;
     const auto value_size = 7u;
     record_map table(file, buckets, value_size);
+    BOOST_REQUIRE(table.create());
 
     const key_type key{ { 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef } };
     const key_type key1{ { 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b } };

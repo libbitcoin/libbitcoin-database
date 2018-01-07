@@ -37,6 +37,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__store__one_slab__expected)
 
     const auto buckets = 100u;
     slab_map table(file, buckets);
+    BOOST_REQUIRE(table.create());
 
     const key_type key1{ { 0xde, 0xad, 0xbe, 0xef } };
 
@@ -68,6 +69,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__find__overlapping_reads__expected)
 
     const auto buckets = 100u;
     slab_map table(file, buckets);
+    BOOST_REQUIRE(table.create());
 
     const key_type key1{ { 0xde, 0xad, 0xbe, 0xef } };
     const key_type key2{ { 0xba, 0xad, 0xbe, 0xef } };
@@ -111,6 +113,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__unlink__first_stored__expected)
 
     const auto buckets = 100u;
     slab_map table(file, buckets);
+    BOOST_REQUIRE(table.create());
 
     const key_type key1{ { 0xde, 0xad, 0xbe, 0xef } };
     const key_type key2{ { 0xba, 0xad, 0xbe, 0xef } };
