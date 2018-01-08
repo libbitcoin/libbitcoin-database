@@ -29,7 +29,7 @@ namespace database {
 // Parameterizing RecordManager allows const and non-const.
 template <typename LinkType, typename RecordManager>
 record_list<LinkType, RecordManager>::record_list(RecordManager& manager)
-    : manager_(manager), index_(empty)
+    : manager_(manager), index_(not_found)
 {
 }
 
@@ -43,12 +43,12 @@ record_list<LinkType, RecordManager>::record_list(RecordManager& manager,
 template <typename LinkType, typename RecordManager>
 LinkType record_list<LinkType, RecordManager>::create(write_function write)
 {
-    BITCOIN_ASSERT(index_ == empty);
+    BITCOIN_ASSERT(index_ == not_found);
 
     // Create new record without populating its next pointer.
     //   [ next:4   ]
     //   [ value... ] <==
-    index_ = manager_.new_records(1);
+    index_ = manager_.allocate(1);
 
     const auto memory = raw_data(sizeof(LinkType));
     const auto record = memory->buffer();

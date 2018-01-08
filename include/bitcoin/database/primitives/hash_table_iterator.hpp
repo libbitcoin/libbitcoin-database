@@ -16,37 +16,39 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_RECORD_LIST_ITERABLE_IPP
-#define LIBBITCOIN_DATABASE_RECORD_LIST_ITERABLE_IPP
-
-#include <bitcoin/database/primitives/record_list.hpp>
-#include <bitcoin/database/primitives/record_manager.hpp>
-#include <bitcoin/database/primitives/record_list_iterator.hpp>
+#ifndef LIBBITCOIN_DATABASE_HASH_TABLE_ITERATOR_HPP
+#define LIBBITCOIN_DATABASE_HASH_TABLE_ITERATOR_HPP
 
 namespace libbitcoin {
 namespace database {
 
-template <typename LinkType>
-record_list_iterable<LinkType>::record_list_iterable(
-    const record_manager<LinkType>& manager, LinkType begin)
-  : begin_(begin), manager_(manager)
+/// Forward iterator for a hash table.
+/// TODO: generatlize to record_list and retain mutex for unlinks.
+template <typename LinkType, typename Manager, typename Row>
+class hash_table_iterator
 {
-}
+public:
+    hash_table_iterator(Manager& manager, LinkType index, shared_mutex& mutex);
 
-template <typename LinkType>
-record_list_iterator<LinkType> record_list_iterable<LinkType>::begin() const
-{
-    return record_list_iterator<LinkType>(manager_, begin_);
-}
+    /// Next value in the result.
+    void operator++();
 
-template <typename LinkType>
-record_list_iterator<LinkType> record_list_iterable<LinkType>::end() const
-{
-    return record_list_iterator<LinkType>(manager_,
-        record_list<LinkType, record_manager<LinkType>>::not_found);
-}
+    /// The element wrapped in a row object.
+    Row operator*() const;
+
+    /// Comparison operators.
+    bool operator==(hash_table_iterator other) const;
+    bool operator!=(hash_table_iterator other) const;
+
+private:
+    LinkType index_;
+    Manager& manager_;
+    shared_mutex& mutex_;
+};
 
 } // namespace database
 } // namespace libbitcoin
+
+#include <bitcoin/database/impl/hash_table_iterator.ipp>
 
 #endif

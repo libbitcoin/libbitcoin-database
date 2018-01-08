@@ -22,6 +22,7 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
+#include <bitcoin/database/primitives/hash_table_iterator.hpp>
 #include <bitcoin/database/primitives/record_row.hpp>
 
 namespace libbitcoin {
@@ -97,7 +98,7 @@ LinkType record_hash_table<KeyType, IndexType, LinkType>::update(
         row item(manager_, current);
 
         // Found, update data and return index.
-        if (item.compare(key))
+        if (item.equal(key))
         {
             const auto memory = item.data();
             auto serial = make_unsafe_serializer(memory->buffer());
@@ -108,7 +109,7 @@ LinkType record_hash_table<KeyType, IndexType, LinkType>::update(
         // Critical Section
         ///////////////////////////////////////////////////////////////////////
         shared_lock lock(update_mutex_);
-        current = item.next_index();
+        current = item.next();
         ///////////////////////////////////////////////////////////////////////
     }
 
@@ -156,13 +157,13 @@ memory_ptr record_hash_table<KeyType, IndexType, LinkType>::find(
         const_row item(manager_, current);
 
         // Found, return pointer.
-        if (item.compare(key))
+        if (item.equal(key))
             return item.data();
 
         // Critical Section
         ///////////////////////////////////////////////////////////////////////
         shared_lock lock(update_mutex_);
-        current = item.next_index();
+        current = item.next();
         ///////////////////////////////////////////////////////////////////////
     }
 
@@ -191,10 +192,10 @@ bool record_hash_table<KeyType, IndexType, LinkType>::unlink(
     row begin_item(manager_, previous);
 
     // If start item has the key then unlink from buckets.
-    if (begin_item.compare(key))
+    if (begin_item.equal(key))
     {
         //*********************************************************************
-        const auto next = begin_item.next_index();
+        const auto next = begin_item.next();
         //*********************************************************************
 
         link(key, next);
@@ -203,7 +204,7 @@ bool record_hash_table<KeyType, IndexType, LinkType>::unlink(
 
     ///////////////////////////////////////////////////////////////////////////
     update_mutex_.lock_shared();
-    auto current = begin_item.next_index();
+    auto current = begin_item.next();
     update_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 
@@ -214,17 +215,17 @@ bool record_hash_table<KeyType, IndexType, LinkType>::unlink(
         row item(manager_, current);
 
         // Found, unlink current item from previous.
-        if (item.compare(key))
+        if (item.equal(key))
         {
             row previous_item(manager_, previous);
 
             // Critical Section
             ///////////////////////////////////////////////////////////////////
             update_mutex_.lock_upgrade();
-            const auto next = item.next_index();
+            const auto next = item.next();
             update_mutex_.unlock_upgrade_and_lock();
             //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-            previous_item.write_next_index(next);
+            previous_item.link(next);
             update_mutex_.unlock();
             ///////////////////////////////////////////////////////////////////
             return true;
@@ -235,7 +236,7 @@ bool record_hash_table<KeyType, IndexType, LinkType>::unlink(
         // Critical Section
         ///////////////////////////////////////////////////////////////////////
         shared_lock lock(update_mutex_);
-        current = item.next_index();
+        current = item.next();
         ///////////////////////////////////////////////////////////////////////
     }
 

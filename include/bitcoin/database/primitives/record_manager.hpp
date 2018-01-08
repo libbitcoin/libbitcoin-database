@@ -55,7 +55,7 @@ public:
     void set_count(const LinkType value);
 
     /// Allocate records and return first logical index, sync() after writing.
-    LinkType new_records(LinkType count);
+    LinkType allocate(size_t count);
 
     /// Return memory object for the record at the specified index.
     memory_ptr get(LinkType record) const;

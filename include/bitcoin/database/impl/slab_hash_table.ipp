@@ -22,6 +22,7 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
+#include <bitcoin/database/primitives/hash_table_iterator.hpp>
 #include <bitcoin/database/primitives/slab_row.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
@@ -88,14 +89,13 @@ template <typename KeyType, typename IndexType, typename LinkType>
 LinkType slab_hash_table<KeyType, IndexType, LinkType>::update(
     const KeyType& key, write_function write)
 {
-    // Find start item...
-    auto current = read_bucket_value(key);
+    auto slabs = hash_table_iterable<manager, LinkType, row>(manager_,
+        read_bucket_value(key), update_mutex_);
 
-    // TODO: implement hash_table_iterable/hash_table_iterator.
-    // Iterate through list...
-    while (current != not_found)
+    for (slab: slabs)
     {
-        row item(manager_, current);
+        // TODO: return row directly from iterator.
+        row item(manager_, slab);
 
         // Found, update data and return position.
         if (item.compare(key))
@@ -105,12 +105,6 @@ LinkType slab_hash_table<KeyType, IndexType, LinkType>::update(
             write(serial);
             return item.offset();
         }
-
-        // Critical Section
-        ///////////////////////////////////////////////////////////////////////
-        shared_lock lock(update_mutex_);
-        current = item.next_position();
-        ///////////////////////////////////////////////////////////////////////
     }
 
     return not_found;
@@ -130,11 +124,11 @@ LinkType slab_hash_table<KeyType, IndexType, LinkType>::offset(
         const_row item(manager_, current);
 
         // Found, return offset.
-        if (item.compare(key))
+        if (item.equal(key))
             return item.offset();
 
         const auto previous = current;
-        current = item.next_position();
+        current = item.next();
         BITCOIN_ASSERT(previous != current);
     }
 
@@ -156,13 +150,13 @@ memory_ptr slab_hash_table<KeyType, IndexType, LinkType>::find(
         const_row item(manager_, current);
 
         // Found, return data.
-        if (item.compare(key))
+        if (item.equal(key))
             return item.data();
 
         // Critical Section
         ///////////////////////////////////////////////////////////////////////
         shared_lock lock(update_mutex_);
-        current = item.next_position();
+        current = item.next();
         ///////////////////////////////////////////////////////////////////////
     }
 
@@ -190,10 +184,10 @@ bool slab_hash_table<KeyType, IndexType, LinkType>::unlink(const KeyType& key)
     row begin_item(manager_, previous);
 
     // If start item has the key then unlink from buckets.
-    if (begin_item.compare(key))
+    if (begin_item.equal(key))
     {
         //*********************************************************************
-        const auto next = begin_item.next_position();
+        const auto next = begin_item.next();
         //*********************************************************************
 
         link(key, next);
@@ -202,7 +196,7 @@ bool slab_hash_table<KeyType, IndexType, LinkType>::unlink(const KeyType& key)
 
     ///////////////////////////////////////////////////////////////////////////
     update_mutex_.lock_shared();
-    auto current = begin_item.next_position();
+    auto current = begin_item.next();
     update_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 
@@ -213,17 +207,17 @@ bool slab_hash_table<KeyType, IndexType, LinkType>::unlink(const KeyType& key)
         row item(manager_, current);
 
         // Found, unlink current item from previous.
-        if (item.compare(key))
+        if (item.equal(key))
         {
             row previous_item(manager_, previous);
 
             // Critical Section
             ///////////////////////////////////////////////////////////////////
             update_mutex_.lock_upgrade();
-            const auto next = item.next_position();
+            const auto next = item.next();
             update_mutex_.unlock_upgrade_and_lock();
             //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-            previous_item.write_next_position(next);
+            previous_item.link(next);
             update_mutex_.unlock();
             ///////////////////////////////////////////////////////////////////
             return true;
@@ -234,7 +228,7 @@ bool slab_hash_table<KeyType, IndexType, LinkType>::unlink(const KeyType& key)
         // Critical Section
         ///////////////////////////////////////////////////////////////////////
         shared_lock lock(update_mutex_);
-        current = item.next_position();
+        current = item.next();
         ///////////////////////////////////////////////////////////////////////
     }
 

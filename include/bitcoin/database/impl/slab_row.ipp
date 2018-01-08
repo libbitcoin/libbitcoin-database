@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_SLAB_ROW_IPP
 
 #include <cstddef>
-#include <cstdint>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -32,14 +31,14 @@ namespace database {
 // Parameterizing SlabManager allows const and non-const.
 template <typename KeyType, typename LinkType, typename SlabManager>
 slab_row<KeyType, LinkType, SlabManager>::slab_row(SlabManager& manager)
-  : manager_(manager), position_(not_found)
+  : manager_(manager), link_(not_found)
 {
 }
 
 template <typename KeyType, typename LinkType, typename SlabManager>
 slab_row<KeyType, LinkType, SlabManager>::slab_row(SlabManager& manager,
-    LinkType position)
-  : manager_(manager), position_(position)
+    LinkType link)
+  : manager_(manager), link_(link)
 {
 }
 
@@ -47,85 +46,33 @@ template <typename KeyType, typename LinkType, typename SlabManager>
 LinkType slab_row<KeyType, LinkType, SlabManager>::create(const KeyType& key,
     write_function write, size_t value_size)
 {
-    BITCOIN_ASSERT(position_ == not_found);
+    BITCOIN_ASSERT(link_ == not_found);
 
     // Create new (unlinked) slab and populate its key and data.
-    //   [ KeyType  ] <==
-    //   [ next:8   ]
-    //   [ value... ] <==
+    // [ KeyType  ] <=
+    // [ LinkType ]
+    // [ value... ] <=
+
     const size_t slab_size = prefix_size + value_size;
-    position_ = manager_.new_slab(slab_size);
+    link_ = manager_.allocate(slab_size);
 
     const auto memory = raw_data(key_start);
-    const auto key_data = memory->buffer();
-    auto serial = make_unsafe_serializer(key_data);
+    auto serial = make_unsafe_serializer(memory->buffer());
     serial.write_forward(key);
     serial.skip(link_size);
     serial.write_delegated(write);
 
-    return position_;
+    return link_;
 }
 
 template <typename KeyType, typename LinkType, typename SlabManager>
 void slab_row<KeyType, LinkType, SlabManager>::link(LinkType next)
 {
-    // Populate next pointer value.
-    //   [ KeyType  ]
-    //   [ next:8   ] <==
-    //   [ value... ]
+    // Populate next link value.
+    // [ KeyType  ]
+    // [ LinkType ] <=
+    // [ value... ]
 
-    // Write next pointer after the key.
-    const auto memory = raw_data(key_size);
-    const auto next_data = memory->buffer();
-    auto serial = make_unsafe_serializer(next_data);
-
-    //*************************************************************************
-    serial.template write_little_endian<LinkType>(next);
-    //*************************************************************************
-}
-
-template <typename KeyType, typename LinkType, typename SlabManager>
-bool slab_row<KeyType, LinkType, SlabManager>::compare(
-    const KeyType& key) const
-{
-    const auto memory = raw_data(key_start);
-    return std::equal(key.begin(), key.end(), memory->buffer());
-}
-
-template <typename KeyType, typename LinkType, typename SlabManager>
-memory_ptr slab_row<KeyType, LinkType, SlabManager>::data() const
-{
-    // Get value pointer.
-    //   [ KeyType  ]
-    //   [ next:8   ]
-    //   [ value... ] ==>
-
-    // Value data is at the end.
-    return raw_data(prefix_size);
-}
-
-template <typename KeyType, typename LinkType, typename SlabManager>
-LinkType slab_row<KeyType, LinkType, SlabManager>::offset() const
-{
-    // Value data is at the end.
-    return position_ + prefix_size;
-}
-
-template <typename KeyType, typename LinkType, typename SlabManager>
-LinkType slab_row<KeyType, LinkType, SlabManager>::next_position() const
-{
-    const auto memory = raw_data(key_size);
-    const auto next_address = memory->buffer();
-
-    //*************************************************************************
-    return from_little_endian_unsafe<LinkType>(next_address);
-    //*************************************************************************
-}
-
-template <typename KeyType, typename LinkType, typename SlabManager>
-void slab_row<KeyType, LinkType, SlabManager>::write_next_position(
-    LinkType next)
-{
     const auto memory = raw_data(key_size);
     auto serial = make_unsafe_serializer(memory->buffer());
 
@@ -135,10 +82,49 @@ void slab_row<KeyType, LinkType, SlabManager>::write_next_position(
 }
 
 template <typename KeyType, typename LinkType, typename SlabManager>
+bool slab_row<KeyType, LinkType, SlabManager>::equal(const KeyType& key) const
+{
+    const auto memory = raw_data(key_start);
+    return std::equal(key.begin(), key.end(), memory->buffer());
+}
+
+template <typename KeyType, typename LinkType, typename SlabManager>
+memory_ptr slab_row<KeyType, LinkType, SlabManager>::data() const
+{
+    // Get value pointer.
+    // [ KeyType  ]
+    // [ LinkType ]
+    // [ value... ] <=
+
+    return raw_data(prefix_size);
+}
+
+template <typename KeyType, typename LinkType, typename SlabManager>
+file_offset slab_row<KeyType, LinkType, SlabManager>::offset() const
+{
+    // Get value file offset.
+    // [ KeyType  ]
+    // [ LinkType ]
+    // [ value... ] <=
+
+    return link_ + prefix_size;
+}
+
+template <typename KeyType, typename LinkType, typename SlabManager>
+LinkType slab_row<KeyType, LinkType, SlabManager>::next() const
+{
+    const auto memory = raw_data(key_size);
+
+    //*************************************************************************
+    return from_little_endian_unsafe<LinkType>(memory->buffer());
+    //*************************************************************************
+}
+
+template <typename KeyType, typename LinkType, typename SlabManager>
 memory_ptr slab_row<KeyType, LinkType, SlabManager>::raw_data(
     size_t bytes) const
 {
-    auto memory = manager_.get(position_);
+    auto memory = manager_.get(link_);
     memory->increment(bytes);
     return memory;
 }

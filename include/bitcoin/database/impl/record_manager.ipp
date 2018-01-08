@@ -127,7 +127,7 @@ void record_manager<LinkType>::set_count(const LinkType value)
 // Return the next index, regardless of the number created.
 // The file is thread safe, the critical section is to protect record_count_.
 template <typename LinkType>
-LinkType record_manager<LinkType>::new_records(LinkType count)
+LinkType record_manager<LinkType>::allocate(size_t count)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////

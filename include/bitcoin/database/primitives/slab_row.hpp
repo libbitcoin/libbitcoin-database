@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_SLAB_ROW_HPP
 
 #include <cstddef>
-#include <utility>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -38,7 +37,6 @@ namespace database {
  */
 template <typename KeyType, typename LinkType, typename SlabManager>
 class slab_row
-  : noncopyable
 {
 public:
     typedef byte_serializer::functor write_function;
@@ -53,34 +51,31 @@ public:
     slab_row(SlabManager& manager);
 
     /// Construct for an existing slab.
-    slab_row(SlabManager& manager, LinkType position);
+    slab_row(SlabManager& manager, LinkType link);
 
     /// Allocate and populate a new slab.
     LinkType create(const KeyType& key, write_function write,
         size_t value_size);
 
-    /// Link allocated/populated slab.
+    /// Connect allocated/populated slab.
     void link(LinkType next);
 
-    /// Does this match?
-    bool compare(const KeyType& key) const;
+    /// True if the slab key matches the parameter.
+    bool equal(const KeyType& key) const;
 
-    /// The actual user data.
+    /// A smart pointer to the user data.
     memory_ptr data() const;
 
-    /// The file offset of the user data.
-    LinkType offset() const;
+    /// File offset of the user data.
+    file_offset offset() const;
 
-    /// Position of next slab in the list.
-    LinkType next_position() const;
-
-    /// Write the next position.
-    void write_next_position(LinkType next);
+    /// File offset of next slab in the list.
+    LinkType next() const;
 
 private:
     memory_ptr raw_data(size_t bytes) const;
 
-    LinkType position_;
+    LinkType link_;
     SlabManager& manager_;
 };
 

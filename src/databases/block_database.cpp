@@ -316,7 +316,7 @@ block_database::link_type block_database::associate(
     if (transactions.empty())
         return 0;
 
-    const auto start = tx_index_.new_records(transactions.size());
+    const auto start = tx_index_.allocate(transactions.size());
     const auto record = tx_index_.get(start);
     auto serial = make_unsafe_serializer(record->buffer());
 
@@ -596,7 +596,7 @@ void block_database::push_index(link_type index, size_t height,
     BITCOIN_ASSERT(height < max_uint32);
     BITCOIN_ASSERT(height == manager.count());
 
-    manager.new_records(1);
+    manager.allocate(1);
     const auto height32 = static_cast<uint32_t>(height);
     const auto record = manager.get(height32);
     auto serial = make_unsafe_serializer(record->buffer());

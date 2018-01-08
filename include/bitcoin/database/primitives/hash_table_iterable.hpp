@@ -16,30 +16,33 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <boost/test/unit_test.hpp>
+#ifndef LIBBITCOIN_DATABASE_HASH_TABLE_ITERABLE_HPP
+#define LIBBITCOIN_DATABASE_HASH_TABLE_ITERABLE_HPP
 
-#include <bitcoin/database.hpp>
-#include "../utility/storage.hpp"
+#include <bitcoin/database/primitives/hash_table_iterator.hpp>
 
-using namespace bc;
-using namespace bc::database;
+namespace libbitcoin {
+namespace database {
 
-BOOST_AUTO_TEST_SUITE(slab_manager_tests)
-
-BOOST_AUTO_TEST_CASE(slab_manager__method__vector__expectation)
+/// Iterative result of a record multimap database query.
+template <typename LinkType, typename Manager, typename Row>
+class hash_table_iterable
 {
-    test::storage file;
-    BOOST_REQUIRE(file.open());
+public:
+    hash_table_iterable(Manager& manager, LinkType begin, shared_mutex& mutex);
 
-    slab_manager<uint64_t> manager(file, 0);
-    BOOST_REQUIRE(manager.create());
+    hash_table_iterator<LinkType, Manager, Row> begin() const;
+    hash_table_iterator<LinkType, Manager, Row> end() const;
 
-    const auto position1 = manager.allocate(100);
-    BOOST_REQUIRE_EQUAL(position1, 8u);
+private:
+    LinkType begin_;
+    Manager& manager_;
+    shared_mutex& mutex_;
+};
 
-    const auto position2 = manager.allocate(100);
-    BOOST_REQUIRE_EQUAL(position2, 108u);
-    BOOST_REQUIRE_GE(file.size(), 208u);
-}
+} // namespace database
+} // namespace libbitcoin
 
-BOOST_AUTO_TEST_SUITE_END()
+#include <bitcoin/database/impl/hash_table_iterable.ipp>
+
+#endif

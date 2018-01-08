@@ -16,34 +16,34 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_RECORD_LIST_ITERABLE_IPP
-#define LIBBITCOIN_DATABASE_RECORD_LIST_ITERABLE_IPP
+#ifndef LIBBITCOIN_DATABASE_HASH_TABLE_ITERABLE_IPP
+#define LIBBITCOIN_DATABASE_HASH_TABLE_ITERABLE_IPP
 
-#include <bitcoin/database/primitives/record_list.hpp>
-#include <bitcoin/database/primitives/record_manager.hpp>
-#include <bitcoin/database/primitives/record_list_iterator.hpp>
+#include <bitcoin/database/primitives/hash_table_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-template <typename LinkType>
-record_list_iterable<LinkType>::record_list_iterable(
-    const record_manager<LinkType>& manager, LinkType begin)
-  : begin_(begin), manager_(manager)
+template <typename LinkType, typename Manager, typename Row>
+hash_table_iterable<LinkType, Manager, Row>::hash_table_iterable(
+    Manager& manager, LinkType begin, shared_mutex& mutex)
+  : begin_(begin), manager_(manager), mutex_(mutex)
 {
 }
 
-template <typename LinkType>
-record_list_iterator<LinkType> record_list_iterable<LinkType>::begin() const
+template <typename LinkType, typename Manager, typename Row>
+hash_table_iterator<LinkType, Manager, Row>
+    hash_table_iterable<LinkType>::begin() const
 {
-    return record_list_iterator<LinkType>(manager_, begin_);
+    return hash_table_iterator<LinkType, Manager, Row>(manager_, begin_, mutex_);
 }
 
-template <typename LinkType>
-record_list_iterator<LinkType> record_list_iterable<LinkType>::end() const
+template <typename LinkType, typename Manager, typename Row>
+hash_table_iterator<LinkType, Manager>
+    hash_table_iterable<LinkType>::end() const
 {
-    return record_list_iterator<LinkType>(manager_,
-        record_list<LinkType, record_manager<LinkType>>::not_found);
+    return hash_table_iterator<LinkType, Manager, Row>(manager_,
+        Row::not_found, mutex_);
 }
 
 } // namespace database

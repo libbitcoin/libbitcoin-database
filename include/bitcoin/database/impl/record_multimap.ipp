@@ -58,7 +58,8 @@ void record_multimap<KeyType, IndexType, LinkType>::store(const KeyType& key,
     // Link the row to the previous first element (or terminator).
     record.link(old_begin);
 
-    if (old_begin == record_list<LinkType, record_manager<LinkType>>::empty)
+    if (old_begin == 
+        record_list<LinkType, record_manager<LinkType>>::not_found)
     {
         map_.store(key, [=](serializer<uint8_t*>& serial)
         {
@@ -88,7 +89,7 @@ LinkType record_multimap<KeyType, IndexType, LinkType>::find(
     const auto begin_address = map_.find(key);
 
     if (!begin_address)
-        return record_list<LinkType, const record_manager<LinkType>>::empty;
+        return record_list<LinkType, const record_manager<LinkType>>::not_found;
 
     const auto memory = begin_address->buffer();
 
@@ -115,14 +116,15 @@ bool record_multimap<KeyType, IndexType, LinkType>::unlink(const KeyType& key)
     const auto begin = find(key);
 
     // No rows exist.
-    if (begin == record_list<LinkType, record_manager<LinkType>>::empty)
+    if (begin == record_list<LinkType, record_manager<LinkType>>::not_found)
         return false;
 
     record_list<LinkType, record_manager<LinkType>> record(manager_, begin);
     const auto next_index = record.next_index();
 
     // Remove the hash table entry, which delinks the single row.
-    if (next_index == record_list<LinkType, record_manager<LinkType>>::empty)
+    if (next_index ==
+        record_list<LinkType, record_manager<LinkType>>::not_found)
         return map_.unlink(key);
 
     // Update the hash table entry, which skips the first of multiple rows.

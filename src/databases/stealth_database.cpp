@@ -128,10 +128,9 @@ stealth_database::list stealth_database::get(const binary& filter,
 void stealth_database::store(const stealth_record& stealth)
 {
     // Allocate new row and write data.
-    const auto index = stealth_index_.new_records(1);
+    const auto index = stealth_index_.allocate(1);
     const auto record = stealth_index_.get(index);
-    const auto memory = record->buffer();
-    auto serial = make_unsafe_serializer(memory);
+    auto serial = make_unsafe_serializer(record->buffer());
     stealth.to_data(serial, false);
 }
 

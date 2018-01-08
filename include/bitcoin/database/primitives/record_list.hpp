@@ -29,6 +29,7 @@
 namespace libbitcoin {
 namespace database {
 
+// TODO: rename to records_row.
 template <typename LinkType, typename RecordManager>
 class record_list
   : noncopyable
@@ -36,7 +37,7 @@ class record_list
 public:
     typedef serializer<uint8_t*>::functor write_function;
 
-    static const LinkType empty = (LinkType)bc::max_uint64;
+    static const LinkType not_found = (LinkType)bc::max_uint64;
 
     /// Construct for a new record.
     record_list(RecordManager& manager);

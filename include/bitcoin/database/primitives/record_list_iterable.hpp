@@ -25,6 +25,7 @@
 namespace libbitcoin {
 namespace database {
 
+// TODO: replace with hash_table_iterable.
 /// Iterative result of a record multimap database query.
 template <typename LinkType>
 class record_list_iterable

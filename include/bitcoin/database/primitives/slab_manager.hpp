@@ -48,7 +48,7 @@ public:
     void sync() const;
 
     /// Allocate a slab and return its position, sync() after writing.
-    LinkType new_slab(size_t size);
+    LinkType allocate(size_t size);
 
     /// Return memory object for the slab at the specified position.
     memory_ptr get(LinkType position) const;

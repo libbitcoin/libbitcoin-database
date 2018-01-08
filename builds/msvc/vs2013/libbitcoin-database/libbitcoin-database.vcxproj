@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
  |  Copyright (c) 2014-2015 libbitcoin-database developers (see COPYING).
  |
@@ -103,6 +103,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\storage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table_header.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table_iterable.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table_iterator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_hash_table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_list.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_list_iterable.hpp" />
@@ -126,6 +128,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\database\impl\hash_table_header.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\hash_table_iterable.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\hash_table_iterator.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_hash_table.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_list.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_list_iterable.ipp" />

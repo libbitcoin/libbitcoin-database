@@ -39,14 +39,14 @@ size_t record_row<KeyType, LinkType, RecordManager>::size(size_t value_size)
 template <typename KeyType, typename LinkType, typename RecordManager>
 record_row<KeyType, LinkType, RecordManager>::record_row(
     RecordManager& manager)
-  : manager_(manager), index_(not_found)
+  : manager_(manager), link_(not_found)
 {
 }
 
 template <typename KeyType, typename LinkType, typename RecordManager>
 record_row<KeyType, LinkType, RecordManager>::record_row(
-    RecordManager& manager, LinkType index)
-  : manager_(manager), index_(index)
+    RecordManager& manager, LinkType link)
+  : manager_(manager), link_(link)
 {
 }
 
@@ -54,83 +54,32 @@ template <typename KeyType, typename LinkType, typename RecordManager>
 LinkType record_row<KeyType, LinkType, RecordManager>::create(
     const KeyType& key, write_function write)
 {
-    BITCOIN_ASSERT(index_ == not_found);
+    BITCOIN_ASSERT(link_ == not_found);
 
     // Create new (unlinked) record and populate its key and data.
-    //   [ KeyType  ] <==
-    //   [ next:4   ]
-    //   [ value... ] <==
-    index_ = manager_.new_records(1);
+    // [ KeyType  ] <=
+    // [ LinkType ]
+    // [ value... ] <=
+
+    link_ = manager_.allocate(1);
 
     const auto memory = raw_data(key_start);
-    const auto record = memory->buffer();
-    auto serial = make_unsafe_serializer(record);
+    auto serial = make_unsafe_serializer(memory->buffer());
     serial.write_forward(key);
     serial.skip(link_size);
     serial.write_delegated(write);
-    return index_;
+
+    return link_;
 }
 
 template <typename KeyType, typename LinkType, typename RecordManager>
 void record_row<KeyType, LinkType, RecordManager>::link(LinkType next)
 {
-    // Populate next pointer value.
-    //   [ KeyType  ]
-    //   [ next:4   ] <==
-    //   [ value... ]
+    // Populate next link value.
+    // [ KeyType  ]
+    // [ LinkType ] <=
+    // [ value... ]
 
-    // Write record.
-    const auto memory = raw_data(key_size);
-    const auto next_data = memory->buffer();
-    auto serial = make_unsafe_serializer(next_data);
-
-    //*************************************************************************
-    serial.template write_little_endian<array_index>(next);
-    //*************************************************************************
-}
-
-template <typename KeyType, typename LinkType, typename RecordManager>
-bool record_row<KeyType, LinkType, RecordManager>::compare(
-    const KeyType& key) const
-{
-    // Key data is at the start.
-    const auto memory = raw_data(key_start);
-    return std::equal(key.begin(), key.end(), memory->buffer());
-}
-
-template <typename KeyType, typename LinkType, typename RecordManager>
-memory_ptr record_row<KeyType, LinkType, RecordManager>::data() const
-{
-    // Get value pointer.
-    //   [ KeyType  ]
-    //   [ next:4   ]
-    //   [ value... ] ==>
-
-    // Value data is at the end.
-    return raw_data(prefix_size);
-}
-
-template <typename KeyType, typename LinkType, typename RecordManager>
-file_offset record_row<KeyType, LinkType, RecordManager>::offset() const
-{
-    // Value data is at the end.
-    return index_ + prefix_size;
-}
-
-template <typename KeyType, typename LinkType, typename RecordManager>
-LinkType record_row<KeyType, LinkType, RecordManager>::next_index() const
-{
-    const auto memory = raw_data(key_size);
-    const auto next_address = memory->buffer();
-
-    //*************************************************************************
-    return from_little_endian_unsafe<array_index>(next_address);
-    //*************************************************************************
-}
-
-template <typename KeyType, typename LinkType, typename RecordManager>
-void record_row<KeyType, LinkType, RecordManager>::write_next_index(LinkType next)
-{
     const auto memory = raw_data(key_size);
     auto serial = make_unsafe_serializer(memory->buffer());
 
@@ -140,10 +89,39 @@ void record_row<KeyType, LinkType, RecordManager>::write_next_index(LinkType nex
 }
 
 template <typename KeyType, typename LinkType, typename RecordManager>
+bool record_row<KeyType, LinkType, RecordManager>::equal(
+    const KeyType& key) const
+{
+    const auto memory = raw_data(key_start);
+    return std::equal(key.begin(), key.end(), memory->buffer());
+}
+
+template <typename KeyType, typename LinkType, typename RecordManager>
+memory_ptr record_row<KeyType, LinkType, RecordManager>::data() const
+{
+    // Get value pointer.
+    // [ KeyType  ]
+    // [ LinkType ]
+    // [ value... ] <=
+
+    return raw_data(prefix_size);
+}
+
+template <typename KeyType, typename LinkType, typename RecordManager>
+LinkType record_row<KeyType, LinkType, RecordManager>::next() const
+{
+    const auto memory = raw_data(key_size);
+
+    //*************************************************************************
+    return from_little_endian_unsafe<array_index>(memory->buffer());
+    //*************************************************************************
+}
+
+template <typename KeyType, typename LinkType, typename RecordManager>
 memory_ptr record_row<KeyType, LinkType, RecordManager>::raw_data(
     size_t bytes) const
 {
-    auto memory = manager_.get(index_);
+    auto memory = manager_.get(link_);
     memory->increment(bytes);
     return memory;
 }

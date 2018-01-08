@@ -113,7 +113,7 @@ size_t slab_manager<LinkType>::payload_size() const
 // Return is offset by header but not size storage (embedded in data files).
 // The file is thread safe, the critical section is to protect payload_size_.
 template <typename LinkType>
-LinkType slab_manager<LinkType>::new_slab(size_t size)
+LinkType slab_manager<LinkType>::allocate(size_t size)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////

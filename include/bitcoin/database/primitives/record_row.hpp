@@ -39,15 +39,14 @@ namespace database {
  */
 template <typename KeyType, typename LinkType, typename RecordManager>
 class record_row
-  : noncopyable
 {
 public:
     typedef byte_serializer::functor write_function;
 
     static const LinkType not_found = (LinkType)bc::max_uint64;
-    static const size_t link_size = sizeof(LinkType);
     static const size_t key_start = 0;
     static const size_t key_size = std::tuple_size<KeyType>::value;
+    static const size_t link_size = sizeof(LinkType);
     static const size_t prefix_size = key_size + link_size;
 
     /// The uniform size of storing a record.
@@ -57,33 +56,27 @@ public:
     record_row(RecordManager& manager);
 
     /// Construct for an existing record.
-    record_row(RecordManager& manager, LinkType index);
+    record_row(RecordManager& manager, LinkType link);
 
     /// Allocate and populate a new record.
     LinkType create(const KeyType& key, write_function write);
 
-    /// Link allocated/populated record.
+    /// Connect allocated/populated record.
     void link(LinkType next);
 
-    /// Does this match?
-    bool compare(const KeyType& key) const;
+    /// True if the record key matches the parameter.
+    bool equal(const KeyType& key) const;
 
-    /// The actual user data.
+    /// A smart pointer to the user data.
     memory_ptr data() const;
 
-    /// The file offset of the user data.
-    file_offset offset() const;
-
-    /// Index of next record in the list.
-    LinkType next_index() const;
-
-    /// Write the next index.
-    void write_next_index(LinkType next);
+    /// Record index of next record in the list.
+    LinkType next() const;
 
 private:
     memory_ptr raw_data(size_t bytes) const;
 
-    LinkType index_;
+    LinkType link_;
     RecordManager& manager_;
 };
 
