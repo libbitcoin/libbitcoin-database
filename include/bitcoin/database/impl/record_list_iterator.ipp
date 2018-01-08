@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MULTIMAP_ITERATOR_IPP
-#define LIBBITCOIN_DATABASE_MULTIMAP_ITERATOR_IPP
+#ifndef LIBBITCOIN_DATABASE_RECORD_LIST_ITERATOR_IPP
+#define LIBBITCOIN_DATABASE_RECORD_LIST_ITERATOR_IPP
 
 #include <bitcoin/database/primitives/record_list.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
