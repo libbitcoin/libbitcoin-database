@@ -83,7 +83,6 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-
 #include <bitcoin/database/impl/record_row.ipp>
 
 #endif
