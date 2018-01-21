@@ -45,8 +45,8 @@ namespace database {
 
 // TODO: guard against overflows.
 
-template <typename LinkType>
-record_manager<LinkType>::record_manager(storage& file, size_t header_size,
+template <typename Link>
+record_manager<Link>::record_manager(storage& file, size_t header_size,
     size_t record_size)
   : file_(file),
     header_size_(header_size),
@@ -55,8 +55,8 @@ record_manager<LinkType>::record_manager(storage& file, size_t header_size,
 {
 }
 
-template <typename LinkType>
-bool record_manager<LinkType>::create()
+template <typename Link>
+bool record_manager<Link>::create()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -74,8 +74,8 @@ bool record_manager<LinkType>::create()
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename LinkType>
-bool record_manager<LinkType>::start()
+template <typename Link>
+bool record_manager<Link>::start()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -89,8 +89,8 @@ bool record_manager<LinkType>::start()
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename LinkType>
-void record_manager<LinkType>::sync()
+template <typename Link>
+void record_manager<Link>::sync()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -100,8 +100,8 @@ void record_manager<LinkType>::sync()
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename LinkType>
-LinkType record_manager<LinkType>::count() const
+template <typename Link>
+Link record_manager<Link>::count() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -111,8 +111,8 @@ LinkType record_manager<LinkType>::count() const
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename LinkType>
-void record_manager<LinkType>::set_count(const LinkType value)
+template <typename Link>
+void record_manager<Link>::set_count(const Link value)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -126,8 +126,8 @@ void record_manager<LinkType>::set_count(const LinkType value)
 
 // Return the next index, regardless of the number created.
 // The file is thread safe, the critical section is to protect record_count_.
-template <typename LinkType>
-LinkType record_manager<LinkType>::allocate(size_t count)
+template <typename Link>
+Link record_manager<Link>::allocate(size_t count)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -151,8 +151,8 @@ LinkType record_manager<LinkType>::allocate(size_t count)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename LinkType>
-memory_ptr record_manager<LinkType>::get(LinkType record) const
+template <typename Link>
+memory_ptr record_manager<Link>::get(Link record) const
 {
     // If record >= count() then we should still be within the file. The
     // condition implies a block has been unconfirmed while reading it.
@@ -166,41 +166,41 @@ memory_ptr record_manager<LinkType>::get(LinkType record) const
 // privates
 
 // Read the count value from the first 32 bits of the file after the header.
-template <typename LinkType>
-void record_manager<LinkType>::read_count()
+template <typename Link>
+void record_manager<Link>::read_count()
 {
-    BITCOIN_ASSERT(header_size_ + sizeof(LinkType) <= file_.size());
+    BITCOIN_ASSERT(header_size_ + sizeof(Link) <= file_.size());
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     const auto count_address = memory->buffer() + header_size_;
-    record_count_ = from_little_endian_unsafe<LinkType>(count_address);
+    record_count_ = from_little_endian_unsafe<Link>(count_address);
 }
 
 // Write the count value to the first 32 bits of the file after the header.
-template <typename LinkType>
-void record_manager<LinkType>::write_count()
+template <typename Link>
+void record_manager<Link>::write_count()
 {
-    BITCOIN_ASSERT(header_size_ + sizeof(LinkType) <= file_.size());
+    BITCOIN_ASSERT(header_size_ + sizeof(Link) <= file_.size());
 
     // The accessor must remain in scope until the end of the block.
     auto memory = file_.access();
     auto payload_size_address = memory->buffer() + header_size_;
     auto serial = make_unsafe_serializer(payload_size_address);
-    serial.write_little_endian<LinkType>(record_count_);
+    serial.write_little_endian<Link>(record_count_);
 }
 
-template <typename LinkType>
-LinkType record_manager<LinkType>::position_to_record(
+template <typename Link>
+Link record_manager<Link>::position_to_record(
     file_offset position) const
 {
-    return (position - sizeof(LinkType)) / record_size_;
+    return (position - sizeof(Link)) / record_size_;
 }
 
-template <typename LinkType>
-file_offset record_manager<LinkType>::record_to_position(LinkType record) const
+template <typename Link>
+file_offset record_manager<Link>::record_to_position(Link record) const
 {
-    return sizeof(LinkType) + record * record_size_;
+    return sizeof(Link) + record * record_size_;
 }
 
 } // namespace database

@@ -26,29 +26,28 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename IndexType, typename LinkType>
-template <typename KeyType>
-inline IndexType hash_table_header<IndexType, LinkType>::remainder(
-    const KeyType& key, IndexType divisor)
+template <typename Index, typename Link>
+template <typename Key>
+inline Index hash_table_header<Index, Link>::remainder(const Key& key,
+    Index divisor)
 {
     // TODO: implement std::hash replacement to prevent store drift.
-    return divisor == 0 ? 0 : std::hash<KeyType>()(key) % divisor;
+    return divisor == 0 ? 0 : std::hash<Key>()(key) % divisor;
 }
 
-template <typename IndexType, typename LinkType>
-hash_table_header<IndexType, LinkType>::hash_table_header(storage& file,
-    IndexType buckets)
+template <typename Index, typename Link>
+hash_table_header<Index, Link>::hash_table_header(storage& file, Index buckets)
   : file_(file), buckets_(buckets)
 {
-    static_assert(std::is_unsigned<LinkType>::value,
+    static_assert(std::is_unsigned<Link>::value,
         "Hash table header requires unsigned value type.");
 
-    static_assert(std::is_unsigned<IndexType>::value,
+    static_assert(std::is_unsigned<Index>::value,
         "Hash table header requires unsigned index type.");
 }
 
-template <typename IndexType, typename LinkType>
-bool hash_table_header<IndexType, LinkType>::create()
+template <typename Index, typename Link>
+bool hash_table_header<Index, Link>::create()
 {
     const auto file_size = size(buckets_);
 
@@ -60,12 +59,12 @@ bool hash_table_header<IndexType, LinkType>::create()
 
     // Overwrite the start of the buffer with the bucket count.
     auto serial = make_unsafe_serializer(memory->buffer());
-    serial.write_little_endian<IndexType>(buckets_);
+    serial.write_little_endian<Index>(buckets_);
     return true;
 }
 
-template <typename IndexType, typename LinkType>
-bool hash_table_header<IndexType, LinkType>::start()
+template <typename Index, typename Link>
+bool hash_table_header<Index, Link>::start()
 {
     // File is too small for the number of buckets in the header.
     if (file_.size() < offset(buckets_))
@@ -76,11 +75,11 @@ bool hash_table_header<IndexType, LinkType>::start()
 
     // Does not require atomicity (no concurrency during start).
     auto deserial = make_unsafe_deserializer(memory->buffer());
-    return deserial.read_little_endian<IndexType>() == buckets_;
+    return deserial.read_little_endian<Index>() == buckets_;
 }
 
-template <typename IndexType, typename LinkType>
-LinkType hash_table_header<IndexType, LinkType>::read(IndexType index) const
+template <typename Index, typename Link>
+Link hash_table_header<Index, Link>::read(Index index) const
 {
     BITCOIN_ASSERT(index < buckets_);
 
@@ -91,13 +90,12 @@ LinkType hash_table_header<IndexType, LinkType>::read(IndexType index) const
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     shared_lock lock(mutex_);
-    return from_little_endian_unsafe<LinkType>(address);
+    return from_little_endian_unsafe<Link>(address);
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename IndexType, typename LinkType>
-void hash_table_header<IndexType, LinkType>::write(IndexType index,
-    LinkType value)
+template <typename Index, typename Link>
+void hash_table_header<Index, Link>::write(Index index, Link value)
 {
     BITCOIN_ASSERT(index < buckets_);
 
@@ -109,25 +107,25 @@ void hash_table_header<IndexType, LinkType>::write(IndexType index,
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(mutex_);
-    serial.template write_little_endian<LinkType>(value);
+    serial.template write_little_endian<Link>(value);
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename IndexType, typename LinkType>
-IndexType hash_table_header<IndexType, LinkType>::buckets() const
+template <typename Index, typename Link>
+Index hash_table_header<Index, Link>::buckets() const
 {
     return buckets_;
 }
 
-template <typename IndexType, typename LinkType>
-size_t hash_table_header<IndexType, LinkType>::size()
+template <typename Index, typename Link>
+size_t hash_table_header<Index, Link>::size()
 {
     return size(buckets_);
 }
 
 // static
-template <typename IndexType, typename LinkType>
-size_t hash_table_header<IndexType, LinkType>::size(IndexType buckets)
+template <typename Index, typename Link>
+size_t hash_table_header<Index, Link>::size(Index buckets)
 {
     // Header byte size is file offset of last bucket + 1:
     //
@@ -140,17 +138,17 @@ size_t hash_table_header<IndexType, LinkType>::size(IndexType buckets)
 }
 
 // static
-template <typename IndexType, typename LinkType>
-file_offset hash_table_header<IndexType, LinkType>::offset(IndexType index)
+template <typename Index, typename Link>
+file_offset hash_table_header<Index, Link>::offset(Index index)
 {
     // File offset of indexed bucket is:
     //
-    //     [  size       :IndexType  ]
-    //     [ [ row[0]    :LinkType ] ]
-    //     [ [      ...            ] ]
-    //  => [ [ row[index]:LinkType ] ]
+    //     [  size       :Index  ]
+    //     [ [ row[0]    :Link ] ]
+    //     [ [      ...        ] ]
+    //  => [ [ row[index]:Link ] ]
     //
-    return sizeof(IndexType) + index * sizeof(LinkType);
+    return sizeof(Index) + index * sizeof(Link);
 }
 
 } // namespace database

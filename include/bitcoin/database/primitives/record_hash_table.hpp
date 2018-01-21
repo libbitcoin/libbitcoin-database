@@ -43,33 +43,32 @@ namespace database {
  * The hash_table is basically a bucket list containing the start value for the
  * linked_list.
  *
- *  [   size:IndexType  ]
- *  [ [ item:LinkType ] ]
- *  [ [      ...      ] ]
- *  [ [ item:LinkType ] ]
+ *  [   size:Index  ]
+ *  [ [ item:Link ] ]
+ *  [ [    ...    ] ]
+ *  [ [ item:Link ] ]
  *
  * The record_manager is used to create a payload of linked chains. A header
  * containing the hash of the item, and the next value is stored with each
  * record.
  *
- *   [ key:KeyType   ]
- *   [ next:LinkType ]
- *   [ record:data   ]
+ *   [ key:Key     ]
+ *   [ next:Link   ]
+ *   [ record:data ]
  *
- * The payload is prefixed with [ count:LinkType ].
+ * The payload is prefixed with [ count:Link ].
  */
-template <typename KeyType, typename IndexType, typename LinkType>
+template <typename Key, typename Index, typename Link>
 class record_hash_table
   : noncopyable
 {
 public:
     typedef byte_serializer::functor write_function;
 
-    static const LinkType not_found = hash_table_header<IndexType,
-        LinkType>::empty;
+    static const Link not_found = hash_table_header<Index, Link>::empty;
 
     /// Construct a hash table for uniform size entries.
-    record_hash_table(storage& file, IndexType buckets, size_t value_size);
+    record_hash_table(storage& file, Index buckets, size_t value_size);
 
     /// Create hash table in the file (left in started state).
     bool create();
@@ -82,38 +81,38 @@ public:
 
     /// Execute a write. The provided write() function must write the correct
     /// size: (value_size = record_size - key_size - sizeof(array_index)).
-    LinkType store(const KeyType& key, write_function write);
+    Link store(const Key& key, write_function write);
 
     /// Execute a writer against a key's buffer if the key is found.
     /// Returns the array offset of the found value (or not_found).
-    LinkType update(const KeyType& key, write_function write);
+    Link update(const Key& key, write_function write);
 
     /// Find the array offset for given key. Returns not_found if not found.
-    LinkType offset(const KeyType& key) const;
+    Link offset(const Key& key) const;
 
     /// Find the record for given key. Returns nullptr if not found.
-    memory_ptr find(const KeyType& key) const;
+    memory_ptr find(const Key& key) const;
 
     /// Get record from its array offset. Returns nullptr if not found.
-    memory_ptr get(LinkType record) const;
+    memory_ptr get(Link record) const;
 
     /// Delete a key-value pair from the hashtable by unlinking the node.
-    bool unlink(const KeyType& key);
+    bool unlink(const Key& key);
 
 private:
-    typedef hash_table_header<IndexType, LinkType> header;
-    typedef record_manager<LinkType> manager;
-    typedef linked_list<manager, LinkType, KeyType> row;
-    typedef linked_list<const manager, LinkType, KeyType> const_row;
+    typedef hash_table_header<Index, Link> header;
+    typedef record_manager<Link> manager;
+    typedef linked_list<manager, Link, Key> row;
+    typedef linked_list<const manager, Link, Key> const_row;
 
     // The bucket index of a key.
-    IndexType bucket_index(const KeyType& key) const;
+    Index bucket_index(const Key& key) const;
 
     // The record start position for the set of elements mapped to the key.
-    LinkType read_bucket_value(const KeyType& key) const;
+    Link read_bucket_value(const Key& key) const;
 
     // Link a new element into the bucket header (stack model, push front).
-    void link(const KeyType& key, LinkType begin);
+    void link(const Key& key, Link begin);
 
     header header_;
     manager manager_;

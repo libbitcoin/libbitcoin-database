@@ -32,7 +32,7 @@ namespace database {
 /// data referenced by an index. The file will be resized accordingly
 /// and the total number of records updated so new chunks can be allocated.
 /// It also provides logical record mapping to the record memory address.
-template <typename LinkType>
+template <typename Link>
 class record_manager
   : noncopyable
 {
@@ -49,23 +49,23 @@ public:
     void sync();
 
     /// The number of records in this container.
-    LinkType count() const;
+    Link count() const;
 
     /// Change the number of records of this container (truncation).
-    void set_count(const LinkType value);
+    void set_count(const Link value);
 
     /// Allocate records and return first logical index, sync() after writing.
-    LinkType allocate(size_t count);
+    Link allocate(size_t count);
 
     /// Return memory object for the record at the specified index.
-    memory_ptr get(LinkType record) const;
+    memory_ptr get(Link record) const;
 
 private:
     // The record index of a disk position.
-    LinkType position_to_record(file_offset position) const;
+    Link position_to_record(file_offset position) const;
 
     // The disk position of a record index.
-    file_offset record_to_position(LinkType record) const;
+    file_offset record_to_position(Link record) const;
 
     // Read the count of the records from the file.
     void read_count();
@@ -79,7 +79,7 @@ private:
     const size_t record_size_;
 
     // Record count is protected by mutex.
-    LinkType record_count_;
+    Link record_count_;
     mutable shared_mutex mutex_;
 };
 

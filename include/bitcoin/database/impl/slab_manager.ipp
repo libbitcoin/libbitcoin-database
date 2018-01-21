@@ -45,23 +45,23 @@ namespace database {
 
 // TODO: guard against overflows.
 
-template <typename LinkType>
-slab_manager<LinkType>::slab_manager(storage& file, size_t header_size)
+template <typename Link>
+slab_manager<Link>::slab_manager(storage& file, size_t header_size)
   : file_(file),
     header_size_(header_size),
-    payload_size_(sizeof(LinkType))
+    payload_size_(sizeof(Link))
 {
 }
 
-template <typename LinkType>
-bool slab_manager<LinkType>::create()
+template <typename Link>
+bool slab_manager<Link>::create()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(mutex_);
 
     // Existing slabs size is incorrect for new file.
-    if (payload_size_ != sizeof(LinkType))
+    if (payload_size_ != sizeof(Link))
         return false;
 
     // This currently throws if there is insufficient space.
@@ -72,8 +72,8 @@ bool slab_manager<LinkType>::create()
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename LinkType>
-bool slab_manager<LinkType>::start()
+template <typename Link>
+bool slab_manager<Link>::start()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -87,8 +87,8 @@ bool slab_manager<LinkType>::start()
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename LinkType>
-void slab_manager<LinkType>::sync() const
+template <typename Link>
+void slab_manager<Link>::sync() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -99,8 +99,8 @@ void slab_manager<LinkType>::sync() const
 }
 
 // protected
-template <typename LinkType>
-size_t slab_manager<LinkType>::payload_size() const
+template <typename Link>
+size_t slab_manager<Link>::payload_size() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -112,8 +112,8 @@ size_t slab_manager<LinkType>::payload_size() const
 
 // Return is offset by header but not size storage (embedded in data files).
 // The file is thread safe, the critical section is to protect payload_size_.
-template <typename LinkType>
-LinkType slab_manager<LinkType>::allocate(size_t size)
+template <typename Link>
+Link slab_manager<Link>::allocate(size_t size)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -137,8 +137,8 @@ LinkType slab_manager<LinkType>::allocate(size_t size)
 }
 
 // Position is offset by header but not size storage (embedded in data files).
-template <typename LinkType>
-memory_ptr slab_manager<LinkType>::get(LinkType position) const
+template <typename Link>
+memory_ptr slab_manager<Link>::get(Link position) const
 {
     // Ensure requested position is within the file.
     // We avoid a runtime error here to optimize out the payload_size lock.
@@ -152,29 +152,29 @@ memory_ptr slab_manager<LinkType>::get(LinkType position) const
 // privates
 
 // Read the size value from the first 64 bits of the file after the header.
-template <typename LinkType>
-void slab_manager<LinkType>::read_size()
+template <typename Link>
+void slab_manager<Link>::read_size()
 {
-    BITCOIN_ASSERT(header_size_ + sizeof(LinkType) <= file_.size());
+    BITCOIN_ASSERT(header_size_ + sizeof(Link) <= file_.size());
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     const auto payload_size_address = memory->buffer() + header_size_;
-    payload_size_ = from_little_endian_unsafe<LinkType>(
+    payload_size_ = from_little_endian_unsafe<Link>(
         payload_size_address);
 }
 
 // Write the size value to the first 64 bits of the file after the header.
-template <typename LinkType>
-void slab_manager<LinkType>::write_size() const
+template <typename Link>
+void slab_manager<Link>::write_size() const
 {
-    BITCOIN_ASSERT(header_size_ + sizeof(LinkType) <= file_.size());
+    BITCOIN_ASSERT(header_size_ + sizeof(Link) <= file_.size());
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     const auto payload_size_address = memory->buffer() + header_size_;
     auto serial = make_unsafe_serializer(payload_size_address);
-    serial.write_little_endian<LinkType>(payload_size_);
+    serial.write_little_endian<Link>(payload_size_);
 }
 
 } // namespace database

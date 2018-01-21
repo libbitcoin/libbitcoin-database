@@ -39,7 +39,7 @@ namespace database {
  * The linked records are chains of records that can be iterated through
  * given a start index.
  */
-template <typename KeyType, typename IndexType, typename Link>
+template <typename Key, typename Index, typename Link>
 class recordset_hash_table
   : noncopyable
 {
@@ -50,26 +50,26 @@ public:
     static size_t size(size_t value_size);
 
     /// Construct a new recordset hash table.
-    recordset_hash_table(record_hash_table<KeyType, IndexType, Link>& map,
+    recordset_hash_table(record_hash_table<Key, Index, Link>& map,
         record_manager<Link>& manager);
 
     /// Add a new element for a key.
-    void store(const KeyType& key, write_function write);
+    void store(const Key& key, write_function write);
 
     /// Get an iterator for the key.
     linked_list_iterable<record_manager<Link>, Link> find(
-        const KeyType& key) const;
+        const Key& key) const;
 
     /// Get a remap safe address pointer to key's data.
     memory_ptr get(Link index) const;
 
     /// Delete the last element that was added for the key.
-    bool unlink(const KeyType& key);
+    bool unlink(const Key& key);
 
 private:
     typedef linked_list<record_manager<Link>, Link> row_manager;
 
-    record_hash_table<KeyType, IndexType, Link>& map_;
+    record_hash_table<Key, Index, Link>& map_;
     record_manager<Link>& manager_;
     mutable shared_mutex create_mutex_;
     mutable shared_mutex update_mutex_;

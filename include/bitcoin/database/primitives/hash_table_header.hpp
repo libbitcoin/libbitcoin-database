@@ -29,29 +29,29 @@ namespace database {
 /// Size-prefixed array.
 /// Empty elements are represented by the value hash_table_header.empty.
 ///
-///  [  size:IndexType  ]
-///  [ [ row:LinkType ] ]
+///  [  size:Index  ]
+///  [ [ row:Link ] ]
 ///  [ [      ...     ] ]
-///  [ [ row:LinkType ] ]
+///  [ [ row:Link ] ]
 ///
-template <typename IndexType, typename LinkType>
+template <typename Index, typename Link>
 class hash_table_header
   : noncopyable
 {
 public:
     /// A hash of the key reduced to the domain of the divisor.
-    template <typename KeyType>
-    static IndexType remainder(const KeyType& key, IndexType divisor);
+    template <typename Key>
+    static Index remainder(const Key& key, Index divisor);
 
-    // This cast is a VC++ workaround is OK because LinkType must be unsigned.
-    //static constexpr LinkType empty = std::numeric_limits<LinkType>::max();
-    static const LinkType empty = (LinkType)bc::max_uint64;
+    // This cast is a VC++ workaround is OK because Link must be unsigned.
+    //static constexpr Link empty = std::numeric_limits<Link>::max();
+    static const Link empty = (Link)bc::max_uint64;
 
     /// The hash table header byte size for a given bucket count.
-    static size_t size(IndexType buckets);
+    static size_t size(Index buckets);
 
     /// Construct a hash table header.
-    hash_table_header(storage& file, IndexType buckets);
+    hash_table_header(storage& file, Index buckets);
 
     /// Allocate the hash table and populate with empty values.
     bool create();
@@ -60,23 +60,23 @@ public:
     bool start();
 
     /// Read item value.
-    LinkType read(IndexType index) const;
+    Link read(Index index) const;
 
     /// Write value to item.
-    void write(IndexType index, LinkType value);
+    void write(Index index, Link value);
 
     /// The hash table header bucket count.
-    IndexType buckets() const;
+    Index buckets() const;
 
     /// The hash table header byte size.
     size_t size();
 
 private:
     // Position in the memory map relative the header end.
-    static file_offset offset(IndexType index);
+    static file_offset offset(Index index);
 
     storage& file_;
-    IndexType buckets_;
+    Index buckets_;
     mutable shared_mutex mutex_;
 };
 

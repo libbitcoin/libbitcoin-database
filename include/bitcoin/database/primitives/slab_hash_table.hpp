@@ -39,33 +39,33 @@ namespace database {
  * The hash_table is basically a bucket list containing the start value for the
  * linked_list.
  *
- *  [   size:IndexType  ]
- *  [ [ item:LinkType ] ]
- *  [ [      ...      ] ]
- *  [ [ item:LinkType ] ]
+ *  [   size:Index  ]
+ *  [ [ item:Link ] ]
+ *  [ [    ...    ] ]
+ *  [ [ item:Link ] ]
  *
  * The slab_manager is used to create a payload of linked chains. A header
  * containing the hash of the item, and the next value is stored with each
  * slab.
  *
- *   [ key:KeyType   ]
- *   [ next:LinkType ]
- *   [ record:data   ]
+ *   [ key:Key     ]
+ *   [ next:Link   ]
+ *   [ record:data ]
  *
- * The payload is prefixed with [ size:LinkType ].
+ * The payload is prefixed with [ size:Link ].
  */
-template <typename KeyType, typename IndexType, typename LinkType>
+template <typename Key, typename Index, typename Link>
 class slab_hash_table
   : noncopyable
 {
 public:
     typedef byte_serializer::functor write_function;
 
-    static const LinkType not_found = hash_table_header<IndexType,
-        LinkType>::empty;
+    static const Link not_found = hash_table_header<Index,
+        Link>::empty;
 
     /// Construct a hash table for variable size entries.
-    slab_hash_table(storage& file, IndexType buckets);
+    slab_hash_table(storage& file, Index buckets);
 
     /// Create hash table in the file (left in started state).
     bool create();
@@ -78,38 +78,38 @@ public:
 
     /// Execute a write. value_size is the required size of the buffer.
     /// Returns the file offset of the new value.
-    LinkType store(const KeyType& key, write_function write, size_t size);
+    Link store(const Key& key, write_function write, size_t size);
 
     /// Execute a writer against a key's buffer if the key is found.
     /// Returns the file offset of the found value (or not_found).
-    LinkType update(const KeyType& key, write_function write);
+    Link update(const Key& key, write_function write);
 
     /// Find the file offset for a given key. Returns not_found if not found.
-    LinkType offset(const KeyType& key) const;
+    Link offset(const Key& key) const;
 
     /// Find the slab pointer for a given key. Returns nullptr if not found.
-    memory_ptr find(const KeyType& key) const;
+    memory_ptr find(const Key& key) const;
 
     /// Get slab from its file offset. Returns nullptr if not found.
-    memory_ptr get(LinkType slab) const;
+    memory_ptr get(Link slab) const;
 
     /// Delete a key-value pair from the hashtable by unlinking the node.
-    bool unlink(const KeyType& key);
+    bool unlink(const Key& key);
 
 private:
-    typedef hash_table_header<IndexType, LinkType> header;
-    typedef slab_manager<LinkType> manager;
-    typedef linked_list<manager, LinkType, KeyType> row;
-    typedef linked_list<const manager, LinkType, KeyType> const_row;
+    typedef hash_table_header<Index, Link> header;
+    typedef slab_manager<Link> manager;
+    typedef linked_list<manager, Link, Key> row;
+    typedef linked_list<const manager, Link, Key> const_row;
 
     // The bucket index of a key.
-    IndexType bucket_index(const KeyType& key) const;
+    Index bucket_index(const Key& key) const;
 
     // The slab start position for the set of elements mapped to the key.
-    LinkType read_bucket_value(const KeyType& key) const;
+    Link read_bucket_value(const Key& key) const;
 
     // Link a new element into the bucket header (stack model, push front).
-    void link(const KeyType& key, LinkType begin);
+    void link(const Key& key, Link begin);
 
     header header_;
     manager manager_;

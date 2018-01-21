@@ -28,28 +28,28 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename KeyType, typename IndexType, typename LinkType>
-slab_hash_table<KeyType, IndexType, LinkType>::slab_hash_table(storage& file,
-    IndexType buckets)
+template <typename Key, typename Index, typename Link>
+slab_hash_table<Key, Index, Link>::slab_hash_table(storage& file,
+    Index buckets)
   : header_(file, buckets),
     manager_(file, header::size(buckets))
 {
 }
 
-template <typename KeyType, typename IndexType, typename LinkType>
-bool slab_hash_table<KeyType, IndexType, LinkType>::create()
+template <typename Key, typename Index, typename Link>
+bool slab_hash_table<Key, Index, Link>::create()
 {
     return header_.create() && manager_.create();
 }
 
-template <typename KeyType, typename IndexType, typename LinkType>
-bool slab_hash_table<KeyType, IndexType, LinkType>::start()
+template <typename Key, typename Index, typename Link>
+bool slab_hash_table<Key, Index, Link>::start()
 {
     return header_.start() && manager_.start();
 }
 
-template <typename KeyType, typename IndexType, typename LinkType>
-void slab_hash_table<KeyType, IndexType, LinkType>::sync()
+template <typename Key, typename Index, typename Link>
+void slab_hash_table<Key, Index, Link>::sync()
 {
     return manager_.sync();
 }
@@ -57,9 +57,9 @@ void slab_hash_table<KeyType, IndexType, LinkType>::sync()
 // This is not limited to storing unique key values. If duplicate keyed values
 // are store then retrieval and unlinking will fail as these multiples cannot
 // be differentiated except in the order written (used by bip30).
-template <typename KeyType, typename IndexType, typename LinkType>
-LinkType slab_hash_table<KeyType, IndexType, LinkType>::store(
-    const KeyType& key, write_function write, size_t value_size)
+template <typename Key, typename Index, typename Link>
+Link slab_hash_table<Key, Index, Link>::store(
+    const Key& key, write_function write, size_t value_size)
 {
     // Allocate and populate new unlinked slab.
     row slab(manager_);
@@ -84,9 +84,9 @@ LinkType slab_hash_table<KeyType, IndexType, LinkType>::store(
 
 // Execute a writer against a key's buffer if the key is found.
 // Return the file offset of the found value (or zero).
-template <typename KeyType, typename IndexType, typename LinkType>
-LinkType slab_hash_table<KeyType, IndexType, LinkType>::update(
-    const KeyType& key, write_function write)
+template <typename Key, typename Index, typename Link>
+Link slab_hash_table<Key, Index, Link>::update(
+    const Key& key, write_function write)
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -110,9 +110,9 @@ LinkType slab_hash_table<KeyType, IndexType, LinkType>::update(
 }
 
 // This is limited to returning the first of multiple matching key values.
-template <typename KeyType, typename IndexType, typename LinkType>
-LinkType slab_hash_table<KeyType, IndexType, LinkType>::offset(
-    const KeyType& key) const
+template <typename Key, typename Index, typename Link>
+Link slab_hash_table<Key, Index, Link>::offset(
+    const Key& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -135,9 +135,9 @@ LinkType slab_hash_table<KeyType, IndexType, LinkType>::offset(
 }
 
 // This is limited to returning the first of multiple matching key values.
-template <typename KeyType, typename IndexType, typename LinkType>
-memory_ptr slab_hash_table<KeyType, IndexType, LinkType>::find(
-    const KeyType& key) const
+template <typename Key, typename Index, typename Link>
+memory_ptr slab_hash_table<Key, Index, Link>::find(
+    const Key& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -162,17 +162,17 @@ memory_ptr slab_hash_table<KeyType, IndexType, LinkType>::find(
     return nullptr;
 }
 
-template <typename KeyType, typename IndexType, typename LinkType>
-memory_ptr slab_hash_table<KeyType, IndexType, LinkType>::get(
-    LinkType slab) const
+template <typename Key, typename Index, typename Link>
+memory_ptr slab_hash_table<Key, Index, Link>::get(
+    Link slab) const
 {
     return manager_.get(slab);
 }
 
 // Unlink is not safe for concurrent write.
 // This is limited to unlinking the first of multiple matching key values.
-template <typename KeyType, typename IndexType, typename LinkType>
-bool slab_hash_table<KeyType, IndexType, LinkType>::unlink(const KeyType& key)
+template <typename Key, typename Index, typename Link>
+bool slab_hash_table<Key, Index, Link>::unlink(const Key& key)
 {
     // Find start item...
     auto previous = read_bucket_value(key);
@@ -235,25 +235,25 @@ bool slab_hash_table<KeyType, IndexType, LinkType>::unlink(const KeyType& key)
 }
 
 // private
-template <typename KeyType, typename IndexType, typename LinkType>
-IndexType slab_hash_table<KeyType, IndexType, LinkType>::bucket_index(
-    const KeyType& key) const
+template <typename Key, typename Index, typename Link>
+Index slab_hash_table<Key, Index, Link>::bucket_index(
+    const Key& key) const
 {
     return header::remainder(key, header_.buckets());
 }
 
 // private
-template <typename KeyType, typename IndexType, typename LinkType>
-LinkType slab_hash_table<KeyType, IndexType, LinkType>::read_bucket_value(
-    const KeyType& key) const
+template <typename Key, typename Index, typename Link>
+Link slab_hash_table<Key, Index, Link>::read_bucket_value(
+    const Key& key) const
 {
     return header_.read(bucket_index(key));
 }
 
 // private
-template <typename KeyType, typename IndexType, typename LinkType>
-void slab_hash_table<KeyType, IndexType, LinkType>::link(const KeyType& key,
-    LinkType begin)
+template <typename Key, typename Index, typename Link>
+void slab_hash_table<Key, Index, Link>::link(const Key& key,
+    Link begin)
 {
     header_.write(bucket_index(key), begin);
 }

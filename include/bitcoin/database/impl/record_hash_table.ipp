@@ -27,28 +27,28 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename KeyType, typename IndexType, typename LinkType>
-record_hash_table<KeyType, IndexType, LinkType>::record_hash_table(
-    storage& file, IndexType buckets, size_t value_size)
+template <typename Key, typename Index, typename Link>
+record_hash_table<Key, Index, Link>::record_hash_table(storage& file,
+    Index buckets, size_t value_size)
   : header_(file, buckets),
     manager_(file, header::size(buckets), row::size(value_size))
 {
 }
 
-template <typename KeyType, typename IndexType, typename LinkType>
-bool record_hash_table<KeyType, IndexType, LinkType>::create()
+template <typename Key, typename Index, typename Link>
+bool record_hash_table<Key, Index, Link>::create()
 {
     return header_.create() && manager_.create();
 }
 
-template <typename KeyType, typename IndexType, typename LinkType>
-bool record_hash_table<KeyType, IndexType, LinkType>::start()
+template <typename Key, typename Index, typename Link>
+bool record_hash_table<Key, Index, Link>::start()
 {
     return header_.start() && manager_.start();
 }
 
-template <typename KeyType, typename IndexType, typename LinkType>
-void record_hash_table<KeyType, IndexType, LinkType>::sync()
+template <typename Key, typename Index, typename Link>
+void record_hash_table<Key, Index, Link>::sync()
 {
     return manager_.sync();
 }
@@ -56,9 +56,9 @@ void record_hash_table<KeyType, IndexType, LinkType>::sync()
 // This is not limited to storing unique key values. If duplicate keyed values
 // are store then retrieval and unlinking will fail as these multiples cannot
 // be differentiated except in the order written.
-template <typename KeyType, typename IndexType, typename LinkType>
-LinkType record_hash_table<KeyType, IndexType, LinkType>::store(
-    const KeyType& key, write_function write)
+template <typename Key, typename Index, typename Link>
+Link record_hash_table<Key, Index, Link>::store(const Key& key,
+    write_function write)
 {
     // Allocate and populate new unlinked record.
     row record(manager_);
@@ -83,9 +83,9 @@ LinkType record_hash_table<KeyType, IndexType, LinkType>::store(
 
 // Execute a writer against a key's buffer if the key is found.
 // Return the array index of the found value (or not_found).
-template <typename KeyType, typename IndexType, typename LinkType>
-LinkType record_hash_table<KeyType, IndexType, LinkType>::update(
-    const KeyType& key, write_function write)
+template <typename Key, typename Index, typename Link>
+Link record_hash_table<Key, Index, Link>::update(const Key& key,
+    write_function write)
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -116,9 +116,8 @@ LinkType record_hash_table<KeyType, IndexType, LinkType>::update(
 }
 
 // This is limited to returning the first of multiple matching key values.
-template <typename KeyType, typename IndexType, typename LinkType>
-LinkType record_hash_table<KeyType, IndexType, LinkType>::offset(
-    const KeyType& key) const
+template <typename Key, typename Index, typename Link>
+Link record_hash_table<Key, Index, Link>::offset(const Key& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -142,9 +141,8 @@ LinkType record_hash_table<KeyType, IndexType, LinkType>::offset(
 }
 
 // This is limited to returning the first of multiple matching key values.
-template <typename KeyType, typename IndexType, typename LinkType>
-memory_ptr record_hash_table<KeyType, IndexType, LinkType>::find(
-    const KeyType& key) const
+template <typename Key, typename Index, typename Link>
+memory_ptr record_hash_table<Key, Index, Link>::find(const Key& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -169,18 +167,16 @@ memory_ptr record_hash_table<KeyType, IndexType, LinkType>::find(
     return nullptr;
 }
 
-template <typename KeyType, typename IndexType, typename LinkType>
-memory_ptr record_hash_table<KeyType, IndexType, LinkType>::get(
-    LinkType record) const
+template <typename Key, typename Index, typename Link>
+memory_ptr record_hash_table<Key, Index, Link>::get(Link record) const
 {
     return manager_.get(record);
 }
 
 // Unlink is not safe for concurrent write.
 // This is limited to unlinking the first of multiple matching key values.
-template <typename KeyType, typename IndexType, typename LinkType>
-bool record_hash_table<KeyType, IndexType, LinkType>::unlink(
-    const KeyType& key)
+template <typename Key, typename Index, typename Link>
+bool record_hash_table<Key, Index, Link>::unlink(const Key& key)
 {
     // Find start item...
     auto previous = read_bucket_value(key);
@@ -243,25 +239,23 @@ bool record_hash_table<KeyType, IndexType, LinkType>::unlink(
 }
 
 // private
-template <typename KeyType, typename IndexType, typename LinkType>
-IndexType record_hash_table<KeyType, IndexType, LinkType>::bucket_index(
-    const KeyType& key) const
+template <typename Key, typename Index, typename Link>
+Index record_hash_table<Key, Index, Link>::bucket_index(const Key& key) const
 {
     return header::remainder(key, header_.buckets());
 }
 
 // private
-template <typename KeyType, typename IndexType, typename LinkType>
-LinkType record_hash_table<KeyType, IndexType, LinkType>::read_bucket_value(
-    const KeyType& key) const
+template <typename Key, typename Index, typename Link>
+Link record_hash_table<Key, Index, Link>::read_bucket_value(
+    const Key& key) const
 {
     return header_.read(bucket_index(key));
 }
 
 // private
-template <typename KeyType, typename IndexType, typename LinkType>
-void record_hash_table<KeyType, IndexType, LinkType>::link(const KeyType& key,
-    LinkType begin)
+template <typename Key, typename Index, typename Link>
+void record_hash_table<Key, Index, Link>::link(const Key& key, Link begin)
 {
     header_.write(bucket_index(key), begin);
 }

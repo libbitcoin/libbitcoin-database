@@ -27,22 +27,22 @@ namespace libbitcoin {
 namespace database {
 
 // static
-template <typename KeyType, typename IndexType, typename Link>
-size_t recordset_hash_table<KeyType, IndexType, Link>::size(size_t value_size)
+template <typename Key, typename Index, typename Link>
+size_t recordset_hash_table<Key, Index, Link>::size(size_t value_size)
 {
     return sizeof(Link) + value_size;
 }
 
-template <typename KeyType, typename IndexType, typename Link>
-recordset_hash_table<KeyType, IndexType, Link>::recordset_hash_table(
-    record_hash_table<KeyType, IndexType, Link>& map,
+template <typename Key, typename Index, typename Link>
+recordset_hash_table<Key, Index, Link>::recordset_hash_table(
+    record_hash_table<Key, Index, Link>& map,
     record_manager<Link>& manager)
   : map_(map), manager_(manager)
 {
 }
 
-template <typename KeyType, typename IndexType, typename Link>
-void recordset_hash_table<KeyType, IndexType, Link>::store(const KeyType& key,
+template <typename Key, typename Index, typename Link>
+void recordset_hash_table<Key, Index, Link>::store(const Key& key,
     write_function write)
 {
     // Allocate and populate new unlinked row.
@@ -82,9 +82,9 @@ void recordset_hash_table<KeyType, IndexType, Link>::store(const KeyType& key,
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename KeyType, typename IndexType, typename Link>
+template <typename Key, typename Index, typename Link>
 linked_list_iterable<record_manager<Link>, Link>
-recordset_hash_table<KeyType, IndexType, Link>::find(const KeyType& key) const
+recordset_hash_table<Key, Index, Link>::find(const Key& key) const
 {
     const auto begin_address = map_.find(key);
 
@@ -101,15 +101,15 @@ recordset_hash_table<KeyType, IndexType, Link>::find(const KeyType& key) const
 }
 
 /// Get a remap safe address pointer to the indexed data.
-template <typename KeyType, typename IndexType, typename Link>
-memory_ptr recordset_hash_table<KeyType, IndexType, Link>::get(Link index) const
+template <typename Key, typename Index, typename Link>
+memory_ptr recordset_hash_table<Key, Index, Link>::get(Link index) const
 {
     return row_manager(manager_, index).data();
 }
 
 // Unlink is not safe for concurrent write.
-template <typename KeyType, typename IndexType, typename Link>
-bool recordset_hash_table<KeyType, IndexType, Link>::unlink(const KeyType& key)
+template <typename Key, typename Index, typename Link>
+bool recordset_hash_table<Key, Index, Link>::unlink(const Key& key)
 {
     const auto roots = find(key);
 
