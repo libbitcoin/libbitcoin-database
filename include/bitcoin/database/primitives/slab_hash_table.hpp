@@ -61,8 +61,7 @@ class slab_hash_table
 public:
     typedef byte_serializer::functor write_function;
 
-    static const Link not_found = hash_table_header<Index,
-        Link>::empty;
+    static const Link not_found = hash_table_header<Index, Link>::empty;
 
     /// Construct a hash table for variable size entries.
     slab_hash_table(storage& file, Index buckets);
@@ -80,9 +79,9 @@ public:
     /// Returns the file offset of the new value.
     Link store(const Key& key, write_function write, size_t size);
 
-    /// Execute a writer against a key's buffer if the key is found.
-    /// Returns the file offset of the found value (or not_found).
-    Link update(const Key& key, write_function write);
+    /////// Execute a writer against a key's buffer if the key is found.
+    /////// Returns the file offset of the found value (or not_found).
+    ////Link update(const Key& key, write_function write);
 
     /// Find the file offset for a given key. Returns not_found if not found.
     Link offset(const Key& key) const;

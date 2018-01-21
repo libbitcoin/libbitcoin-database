@@ -58,8 +58,8 @@ void slab_hash_table<Key, Index, Link>::sync()
 // are store then retrieval and unlinking will fail as these multiples cannot
 // be differentiated except in the order written (used by bip30).
 template <typename Key, typename Index, typename Link>
-Link slab_hash_table<Key, Index, Link>::store(
-    const Key& key, write_function write, size_t value_size)
+Link slab_hash_table<Key, Index, Link>::store(const Key& key,
+    write_function write, size_t value_size)
 {
     // Allocate and populate new unlinked slab.
     row slab(manager_);
@@ -78,47 +78,48 @@ Link slab_hash_table<Key, Index, Link>::store(
     create_mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
 
+    // TODO: change to the position of the record (starting at key, not value).
+
     // Return the file offset of the slab data segment.
     return position + row::prefix_size;
 }
 
-// Execute a writer against a key's buffer if the key is found.
-// Return the file offset of the found value (or zero).
-template <typename Key, typename Index, typename Link>
-Link slab_hash_table<Key, Index, Link>::update(
-    const Key& key, write_function write)
-{
-    // Find start item...
-    auto current = read_bucket_value(key);
-
-    // Iterate through list...
-    while (current != header_.empty)
-    {
-        row item(manager_, current);
-
-        // Found, update data and return position.
-        if (item.compare(key))
-        {
-            const auto memory = item.data();
-            auto serial = make_unsafe_serializer(memory->buffer());
-            write(serial);
-            return item.offset();
-        }
-    }
-
-    return not_found;
-}
+////// Execute a writer against a key's buffer if the key is found.
+////// Return the file offset of the found value (or zero).
+////template <typename Key, typename Index, typename Link>
+////Link slab_hash_table<Key, Index, Link>::update(const Key& key,
+////    write_function write)
+////{
+////    // Find start item...
+////    auto current = read_bucket_value(key);
+////
+////    // Iterate through list...
+////    while (current != not_found)
+////    {
+////        row item(manager_, current);
+////
+////        // Found, update data and return position.
+////        if (item.equal(key))
+////        {
+////            const auto memory = item.data();
+////            auto serial = make_unsafe_serializer(memory->buffer());
+////            write(serial);
+////            return item.offset();
+////        }
+////    }
+////
+////    return not_found;
+////}
 
 // This is limited to returning the first of multiple matching key values.
 template <typename Key, typename Index, typename Link>
-Link slab_hash_table<Key, Index, Link>::offset(
-    const Key& key) const
+Link slab_hash_table<Key, Index, Link>::offset(const Key& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
 
     // Iterate through list...
-    while (current != header_.empty)
+    while (current != not_found)
     {
         const_row item(manager_, current);
 
@@ -126,9 +127,11 @@ Link slab_hash_table<Key, Index, Link>::offset(
         if (item.equal(key))
             return item.offset();
 
-        const auto previous = current;
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(update_mutex_);
         current = item.next();
-        BITCOIN_ASSERT(previous != current);
+        ///////////////////////////////////////////////////////////////////////
     }
 
     return not_found;
@@ -136,8 +139,7 @@ Link slab_hash_table<Key, Index, Link>::offset(
 
 // This is limited to returning the first of multiple matching key values.
 template <typename Key, typename Index, typename Link>
-memory_ptr slab_hash_table<Key, Index, Link>::find(
-    const Key& key) const
+memory_ptr slab_hash_table<Key, Index, Link>::find(const Key& key) const
 {
     // Find start item...
     auto current = read_bucket_value(key);
@@ -163,8 +165,7 @@ memory_ptr slab_hash_table<Key, Index, Link>::find(
 }
 
 template <typename Key, typename Index, typename Link>
-memory_ptr slab_hash_table<Key, Index, Link>::get(
-    Link slab) const
+memory_ptr slab_hash_table<Key, Index, Link>::get(Link slab) const
 {
     return manager_.get(slab);
 }
@@ -236,24 +237,21 @@ bool slab_hash_table<Key, Index, Link>::unlink(const Key& key)
 
 // private
 template <typename Key, typename Index, typename Link>
-Index slab_hash_table<Key, Index, Link>::bucket_index(
-    const Key& key) const
+Index slab_hash_table<Key, Index, Link>::bucket_index(const Key& key) const
 {
     return header::remainder(key, header_.buckets());
 }
 
 // private
 template <typename Key, typename Index, typename Link>
-Link slab_hash_table<Key, Index, Link>::read_bucket_value(
-    const Key& key) const
+Link slab_hash_table<Key, Index, Link>::read_bucket_value(const Key& key) const
 {
     return header_.read(bucket_index(key));
 }
 
 // private
 template <typename Key, typename Index, typename Link>
-void slab_hash_table<Key, Index, Link>::link(const Key& key,
-    Link begin)
+void slab_hash_table<Key, Index, Link>::link(const Key& key, Link begin)
 {
     header_.write(bucket_index(key), begin);
 }

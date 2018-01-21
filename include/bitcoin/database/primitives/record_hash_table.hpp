@@ -87,8 +87,8 @@ public:
     /// Returns the array offset of the found value (or not_found).
     Link update(const Key& key, write_function write);
 
-    /// Find the array offset for given key. Returns not_found if not found.
-    Link offset(const Key& key) const;
+    /////// Find the array offset for given key. Returns not_found if not found.
+    ////Link offset(const Key& key) const;
 
     /// Find the record for given key. Returns nullptr if not found.
     memory_ptr find(const Key& key) const;

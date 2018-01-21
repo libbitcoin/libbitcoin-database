@@ -90,7 +90,6 @@ Link record_hash_table<Key, Index, Link>::update(const Key& key,
     // Find start item...
     auto current = read_bucket_value(key);
 
-    // TODO: implement hash_table_iterable/hash_table_iterator.
     // Iterate through list...
     while (current != not_found)
     {
@@ -115,30 +114,29 @@ Link record_hash_table<Key, Index, Link>::update(const Key& key,
     return not_found;
 }
 
-// This is limited to returning the first of multiple matching key values.
-template <typename Key, typename Index, typename Link>
-Link record_hash_table<Key, Index, Link>::offset(const Key& key) const
-{
-    // Find start item...
-    auto current = read_bucket_value(key);
-
-    // TODO: implement record_table_iterable/record_table_iterator.
-    // Iterate through list...
-    while (current != header_.empty)
-    {
-        const_row item(manager_, current);
-
-        // Found, return index.
-        if (item.compare(key))
-            return item.offset();
-
-        const auto previous = current;
-        current = item.next_index();
-        BITCOIN_ASSERT(previous != current);
-    }
-
-    return not_found;
-}
+////// This is limited to returning the first of multiple matching key values.
+////template <typename Key, typename Index, typename Link>
+////Link record_hash_table<Key, Index, Link>::offset(const Key& key) const
+////{
+////    // Find start item...
+////    auto current = read_bucket_value(key);
+////
+////    // Iterate through list...
+////    while (current != header_.empty)
+////    {
+////        const_row item(manager_, current);
+////
+////        // Found, return index.
+////        if (item.equal(key))
+////            return item.offset();
+////
+////        const auto previous = current;
+////        current = item.next_index();
+////        BITCOIN_ASSERT(previous != current);
+////    }
+////
+////    return not_found;
+////}
 
 // This is limited to returning the first of multiple matching key values.
 template <typename Key, typename Index, typename Link>
@@ -147,7 +145,6 @@ memory_ptr record_hash_table<Key, Index, Link>::find(const Key& key) const
     // Find start item...
     auto current = read_bucket_value(key);
 
-    // TODO: implement hash_table_iterable/hash_table_iterator.
     // Iterate through list...
     while (current != not_found)
     {
@@ -203,7 +200,6 @@ bool record_hash_table<Key, Index, Link>::unlink(const Key& key)
     update_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 
-    // TODO: implement hash_table_iterable/hash_table_iterator.
     // Iterate through list...
     while (current != not_found)
     {
