@@ -20,26 +20,22 @@
 #define LIBBITCOIN_DATABASE_ITERABLE_HPP
 
 #include <bitcoin/database/primitives/iterator.hpp>
-#include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-// TODO: replace with hash_table_iterable.
-/// Iterative result of a record multimap database query.
-template <typename LinkType>
+template <typename Manager, typename Link>
 class iterable
 {
 public:
-    iterable(const record_manager<LinkType>& manager,
-        LinkType begin);
+    iterable(const Manager& manager, Link begin);
 
-    iterator<LinkType> begin() const;
-    iterator<LinkType> end() const;
+    iterator<Manager, Link> begin() const;
+    iterator<Manager, Link> end() const;
 
 private:
-    LinkType begin_;
-    const record_manager<LinkType>& manager_;
+    Link begin_;
+    const Manager& manager_;
 };
 
 } // namespace database

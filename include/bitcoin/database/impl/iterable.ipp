@@ -21,29 +21,27 @@
 
 #include <bitcoin/database/primitives/iterator.hpp>
 #include <bitcoin/database/primitives/linked_list.hpp>
-#include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-template <typename LinkType>
-iterable<LinkType>::iterable(
-    const record_manager<LinkType>& manager, LinkType begin)
+template <typename Manager, typename Link>
+iterable<Manager, Link>::iterable(const Manager& manager, Link begin)
   : begin_(begin), manager_(manager)
 {
 }
 
-template <typename LinkType>
-iterator<LinkType> iterable<LinkType>::begin() const
+template <typename Manager, typename Link>
+iterator<Manager, Link> iterable<Manager, Link>::begin() const
 {
-    return iterator<LinkType>(manager_, begin_);
+    return iterator<Manager, Link>(manager_, begin_);
 }
 
-template <typename LinkType>
-iterator<LinkType> iterable<LinkType>::end() const
+template <typename Manager, typename Link>
+iterator<Manager, Link> iterable<Manager, Link>::end() const
 {
-    return iterator<LinkType>(manager_,
-        linked_list<record_manager<LinkType>, LinkType>::not_found);
+    return iterator<Manager, Link>(manager_,
+        linked_list<Manager, Link>::not_found);
 }
 
 } // namespace database

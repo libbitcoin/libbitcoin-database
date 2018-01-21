@@ -19,34 +19,28 @@
 #ifndef LIBBITCOIN_DATABASE_ITERATOR_HPP
 #define LIBBITCOIN_DATABASE_ITERATOR_HPP
 
-#include <cstdint>
-#include <bitcoin/database/primitives/record_manager.hpp>
-
 namespace libbitcoin {
 namespace database {
-    
-// TODO: replace with hash_table_iterator.
-/// Forward iterator for record multimap database query result.
-template <typename LinkType>
+
+template <typename Manager, typename Link>
 class iterator
 {
 public:
-    iterator(const record_manager<LinkType>& manager,
-        LinkType index);
+    iterator(const Manager& manager, Link index);
 
     /// Next value in the result.
     void operator++();
 
     /// The record index.
-    LinkType operator*() const;
+    Link operator*() const;
 
     /// Comparison operators.
     bool operator==(iterator other) const;
     bool operator!=(iterator other) const;
 
 private:
-    LinkType index_;
-    const record_manager<LinkType>& manager_;
+    Link index_;
+    const Manager& manager_;
 };
 
 } // namespace database

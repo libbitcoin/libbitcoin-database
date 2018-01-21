@@ -20,41 +20,36 @@
 #define LIBBITCOIN_DATABASE_ITERATOR_IPP
 
 #include <bitcoin/database/primitives/linked_list.hpp>
-#include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-template <typename LinkType>
-iterator<LinkType>::iterator(
-    const record_manager<LinkType>& manager, LinkType index)
+template <typename Manager, typename Link>
+iterator<Manager, Link>::iterator(const Manager& manager, Link index)
   : index_(index), manager_(manager)
 {
 }
 
-template <typename LinkType>
-void iterator<LinkType>::operator++()
+template <typename Manager, typename Link>
+void iterator<Manager, Link>::operator++()
 {
-    index_ = linked_list<const record_manager<LinkType>, LinkType>(manager_,
-        index_).next();
+    index_ = linked_list<const Manager, Link>(manager_, index_).next();
 }
 
-template <typename LinkType>
-LinkType iterator<LinkType>::operator*() const
+template <typename Manager, typename Link>
+Link iterator<Manager, Link>::operator*() const
 {
     return index_;
 }
 
-template <typename LinkType>
-bool iterator<LinkType>::operator==(
-    iterator other) const
+template <typename Manager, typename Link>
+bool iterator<Manager, Link>::operator==(iterator other) const
 {
     return this->index_ == other.index_;
 }
 
-template <typename LinkType>
-bool iterator<LinkType>::operator!=(
-    iterator other) const
+template <typename Manager, typename Link>
+bool iterator<Manager, Link>::operator!=(iterator other) const
 {
     return this->index_ != other.index_;
 }
