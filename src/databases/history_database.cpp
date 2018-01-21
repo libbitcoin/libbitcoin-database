@@ -23,8 +23,8 @@
 #include <tuple>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/iterable.hpp>
 #include <bitcoin/database/primitives/record_multimap.hpp>
-#include <bitcoin/database/primitives/record_list_iterable.hpp>
 
 // Record format (v4) [47 bytes]:
 // ----------------------------------------------------------------------------
@@ -127,7 +127,7 @@ history_database::list history_database::get(const short_hash& key,
     const auto start = address_multimap_.find(key);
 
     // TODO: expose iterator from manager.
-    auto records = record_list_iterable<link_type>(address_index_, start);
+    auto records = iterable<link_type>(address_index_, start);
 
     for (const auto index: records)
     {

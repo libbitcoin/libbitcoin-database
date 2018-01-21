@@ -20,8 +20,8 @@
 #define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_IPP
 
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/linked_list.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
-#include <bitcoin/database/primitives/table_row.hpp>
 
 namespace libbitcoin {
 namespace database {

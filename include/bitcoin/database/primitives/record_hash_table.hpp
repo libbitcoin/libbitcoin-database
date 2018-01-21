@@ -25,8 +25,8 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
+#include <bitcoin/database/primitives/linked_list.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
-#include <bitcoin/database/primitives/table_row.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
@@ -41,7 +41,7 @@ namespace database {
  * Using fixed size records is therefore faster.
  *
  * The hash_table is basically a bucket list containing the start value for the
- * table_row.
+ * linked_list.
  *
  *  [   size:IndexType  ]
  *  [ [ item:LinkType ] ]
@@ -103,8 +103,8 @@ public:
 private:
     typedef hash_table_header<IndexType, LinkType> header;
     typedef record_manager<LinkType> manager;
-    typedef table_row<manager, LinkType, KeyType> row;
-    typedef table_row<const manager, LinkType, KeyType> const_row;
+    typedef linked_list<manager, LinkType, KeyType> row;
+    typedef linked_list<const manager, LinkType, KeyType> const_row;
 
     // The bucket index of a key.
     IndexType bucket_index(const KeyType& key) const;

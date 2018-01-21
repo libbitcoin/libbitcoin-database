@@ -16,42 +16,35 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_RECORD_LIST_ITERATOR_HPP
-#define LIBBITCOIN_DATABASE_RECORD_LIST_ITERATOR_HPP
+#ifndef LIBBITCOIN_DATABASE_ITERABLE_HPP
+#define LIBBITCOIN_DATABASE_ITERABLE_HPP
 
-#include <cstdint>
+#include <bitcoin/database/primitives/iterator.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
-    
-// TODO: replace with hash_table_iterator.
-/// Forward iterator for record multimap database query result.
+
+// TODO: replace with hash_table_iterable.
+/// Iterative result of a record multimap database query.
 template <typename LinkType>
-class record_list_iterator
+class iterable
 {
 public:
-    record_list_iterator(const record_manager<LinkType>& manager,
-        LinkType index);
+    iterable(const record_manager<LinkType>& manager,
+        LinkType begin);
 
-    /// Next value in the result.
-    void operator++();
-
-    /// The record index.
-    LinkType operator*() const;
-
-    /// Comparison operators.
-    bool operator==(record_list_iterator other) const;
-    bool operator!=(record_list_iterator other) const;
+    iterator<LinkType> begin() const;
+    iterator<LinkType> end() const;
 
 private:
-    LinkType index_;
+    LinkType begin_;
     const record_manager<LinkType>& manager_;
 };
 
 } // namespace database
 } // namespace libbitcoin
 
-#include <bitcoin/database/impl/record_list_iterator.ipp>
+#include <bitcoin/database/impl/iterable.ipp>
 
 #endif

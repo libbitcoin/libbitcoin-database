@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLE_ROW_IPP
-#define LIBBITCOIN_DATABASE_TABLE_ROW_IPP
+#ifndef LIBBITCOIN_DATABASE_LINKED_LIST_IPP
+#define LIBBITCOIN_DATABASE_LINKED_LIST_IPP
 
 #include <cstddef>
 #include <tuple>
@@ -30,26 +30,26 @@ namespace database {
 
 // static
 template <typename Manager, typename Link, typename Key>
-size_t table_row<Manager, Link, Key>::size(size_t value_size)
+size_t linked_list<Manager, Link, Key>::size(size_t value_size)
 {
     return std::tuple_size<Key>::value + sizeof(Link) + value_size;
 }
 
 // Parameterizing Manager allows const and non-const.
 template <typename Manager, typename Link, typename Key>
-table_row<Manager, Link, Key>::table_row(Manager& manager)
+linked_list<Manager, Link, Key>::linked_list(Manager& manager)
   : manager_(manager), link_(not_found)
 {
 }
 
 template <typename Manager, typename Link, typename Key>
-table_row<Manager, Link, Key>::table_row(Manager& manager, Link link)
+linked_list<Manager, Link, Key>::linked_list(Manager& manager, Link link)
   : manager_(manager), link_(link)
 {
 }
 
 template <typename Manager, typename Link, typename Key>
-void table_row<Manager, Link, Key>::populate(const Key& key,
+void linked_list<Manager, Link, Key>::populate(const Key& key,
     write_function write)
 {
     // Populate a new (unlinked) element with key and value data.
@@ -66,7 +66,7 @@ void table_row<Manager, Link, Key>::populate(const Key& key,
 
 // This call assumes the manager is a record_manager.
 template <typename Manager, typename Link, typename Key>
-Link table_row<Manager, Link, Key>::create(write_function write)
+Link linked_list<Manager, Link, Key>::create(write_function write)
 {
     static BC_CONSTEXPR empty_key unkeyed{};
     BITCOIN_ASSERT(link_ == not_found);
@@ -77,7 +77,7 @@ Link table_row<Manager, Link, Key>::create(write_function write)
 
 // This call assumes the manager is a record_manager.
 template <typename Manager, typename Link, typename Key>
-Link table_row<Manager, Link, Key>::create(const Key& key,
+Link linked_list<Manager, Link, Key>::create(const Key& key,
     write_function write)
 {
     BITCOIN_ASSERT(link_ == not_found);
@@ -88,7 +88,7 @@ Link table_row<Manager, Link, Key>::create(const Key& key,
 
 // This call assumes the manager is a slab_manager.
 template <typename Manager, typename Link, typename Key>
-Link table_row<Manager, Link, Key>::create(const Key& key,
+Link linked_list<Manager, Link, Key>::create(const Key& key,
     write_function write, size_t value_size)
 {
     BITCOIN_ASSERT(link_ == not_found);
@@ -98,7 +98,7 @@ Link table_row<Manager, Link, Key>::create(const Key& key,
 }
 
 template <typename Manager, typename Link, typename Key>
-void table_row<Manager, Link, Key>::link(Link next)
+void linked_list<Manager, Link, Key>::link(Link next)
 {
     // Populate next link value.
     // [ Key  ]
@@ -114,14 +114,14 @@ void table_row<Manager, Link, Key>::link(Link next)
 }
 
 template <typename Manager, typename Link, typename Key>
-bool table_row<Manager, Link, Key>::equal(const Key& key) const
+bool linked_list<Manager, Link, Key>::equal(const Key& key) const
 {
     const auto memory = raw_data(key_start);
     return std::equal(key.begin(), key.end(), memory->buffer());
 }
 
 template <typename Manager, typename Link, typename Key>
-memory_ptr table_row<Manager, Link, Key>::data() const
+memory_ptr linked_list<Manager, Link, Key>::data() const
 {
     // Get value pointer.
     // [ Key  ]
@@ -132,7 +132,7 @@ memory_ptr table_row<Manager, Link, Key>::data() const
 }
 
 template <typename Manager, typename Link, typename Key>
-file_offset table_row<Manager, Link, Key>::offset() const
+file_offset linked_list<Manager, Link, Key>::offset() const
 {
     // Get value file offset.
     // [ Key  ]
@@ -143,7 +143,7 @@ file_offset table_row<Manager, Link, Key>::offset() const
 }
 
 template <typename Manager, typename Link, typename Key>
-Link table_row<Manager, Link, Key>::next() const
+Link linked_list<Manager, Link, Key>::next() const
 {
     const auto memory = raw_data(key_size);
 
@@ -153,7 +153,7 @@ Link table_row<Manager, Link, Key>::next() const
 }
 
 template <typename Manager, typename Link, typename Key>
-memory_ptr table_row<Manager, Link, Key>::raw_data(size_t bytes) const
+memory_ptr linked_list<Manager, Link, Key>::raw_data(size_t bytes) const
 {
     auto memory = manager_.get(link_);
     memory->increment(bytes);

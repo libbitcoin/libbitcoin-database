@@ -16,34 +16,47 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_RECORD_LIST_ITERABLE_IPP
-#define LIBBITCOIN_DATABASE_RECORD_LIST_ITERABLE_IPP
+#ifndef LIBBITCOIN_DATABASE_ITERATOR_IPP
+#define LIBBITCOIN_DATABASE_ITERATOR_IPP
 
-#include <bitcoin/database/primitives/table_row.hpp>
+#include <bitcoin/database/primitives/linked_list.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
-#include <bitcoin/database/primitives/record_list_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 template <typename LinkType>
-record_list_iterable<LinkType>::record_list_iterable(
-    const record_manager<LinkType>& manager, LinkType begin)
-  : begin_(begin), manager_(manager)
+iterator<LinkType>::iterator(
+    const record_manager<LinkType>& manager, LinkType index)
+  : index_(index), manager_(manager)
 {
 }
 
 template <typename LinkType>
-record_list_iterator<LinkType> record_list_iterable<LinkType>::begin() const
+void iterator<LinkType>::operator++()
 {
-    return record_list_iterator<LinkType>(manager_, begin_);
+    index_ = linked_list<const record_manager<LinkType>, LinkType>(manager_,
+        index_).next();
 }
 
 template <typename LinkType>
-record_list_iterator<LinkType> record_list_iterable<LinkType>::end() const
+LinkType iterator<LinkType>::operator*() const
 {
-    return record_list_iterator<LinkType>(manager_,
-        table_row<record_manager<LinkType>, LinkType>::not_found);
+    return index_;
+}
+
+template <typename LinkType>
+bool iterator<LinkType>::operator==(
+    iterator other) const
+{
+    return this->index_ == other.index_;
+}
+
+template <typename LinkType>
+bool iterator<LinkType>::operator!=(
+    iterator other) const
+{
+    return this->index_ != other.index_;
 }
 
 } // namespace database

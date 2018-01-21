@@ -16,35 +16,37 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_RECORD_LIST_ITERABLE_HPP
-#define LIBBITCOIN_DATABASE_RECORD_LIST_ITERABLE_HPP
+#ifndef LIBBITCOIN_DATABASE_ITERABLE_IPP
+#define LIBBITCOIN_DATABASE_ITERABLE_IPP
 
+#include <bitcoin/database/primitives/iterator.hpp>
+#include <bitcoin/database/primitives/linked_list.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
-#include <bitcoin/database/primitives/record_list_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-// TODO: replace with hash_table_iterable.
-/// Iterative result of a record multimap database query.
 template <typename LinkType>
-class record_list_iterable
+iterable<LinkType>::iterable(
+    const record_manager<LinkType>& manager, LinkType begin)
+  : begin_(begin), manager_(manager)
 {
-public:
-    record_list_iterable(const record_manager<LinkType>& manager,
-        LinkType begin);
+}
 
-    record_list_iterator<LinkType> begin() const;
-    record_list_iterator<LinkType> end() const;
+template <typename LinkType>
+iterator<LinkType> iterable<LinkType>::begin() const
+{
+    return iterator<LinkType>(manager_, begin_);
+}
 
-private:
-    LinkType begin_;
-    const record_manager<LinkType>& manager_;
-};
+template <typename LinkType>
+iterator<LinkType> iterable<LinkType>::end() const
+{
+    return iterator<LinkType>(manager_,
+        linked_list<record_manager<LinkType>, LinkType>::not_found);
+}
 
 } // namespace database
 } // namespace libbitcoin
-
-#include <bitcoin/database/impl/record_list_iterable.ipp>
 
 #endif

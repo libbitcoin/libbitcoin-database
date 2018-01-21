@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLE_ROW_HPP
-#define LIBBITCOIN_DATABASE_TABLE_ROW_HPP
+#ifndef LIBBITCOIN_DATABASE_LINKED_LIST_HPP
+#define LIBBITCOIN_DATABASE_LINKED_LIST_HPP
 
 #include <array>
 #include <cstddef>
@@ -38,7 +38,7 @@ static_assert(std::tuple_size<empty_key>::value == 0, "non-empty empty key");
  * Link is limited to 64 bytes. A default Key creates an unkeyed list.
  */
 template <typename Manager, typename Link, typename Key=empty_key>
-class table_row
+class linked_list
 {
 public:
     typedef byte_serializer::functor write_function;
@@ -53,10 +53,10 @@ public:
     static size_t size(size_t value_size);
 
     /// Construct for a new element.
-    table_row(Manager& manager);
+    linked_list(Manager& manager);
 
     /// Construct for an existing element.
-    table_row(Manager& manager, Link link);
+    linked_list(Manager& manager, Link link);
 
     /// Allocate and populate a new array element.
     Link create(write_function write);
@@ -93,6 +93,6 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#include <bitcoin/database/impl/table_row.ipp>
+#include <bitcoin/database/impl/linked_list.ipp>
 
 #endif

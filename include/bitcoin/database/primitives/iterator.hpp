@@ -16,50 +16,42 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_RECORD_LIST_ITERATOR_IPP
-#define LIBBITCOIN_DATABASE_RECORD_LIST_ITERATOR_IPP
+#ifndef LIBBITCOIN_DATABASE_ITERATOR_HPP
+#define LIBBITCOIN_DATABASE_ITERATOR_HPP
 
-#include <bitcoin/database/primitives/table_row.hpp>
+#include <cstdint>
 #include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
-
+    
+// TODO: replace with hash_table_iterator.
+/// Forward iterator for record multimap database query result.
 template <typename LinkType>
-record_list_iterator<LinkType>::record_list_iterator(
-    const record_manager<LinkType>& manager, LinkType index)
-  : index_(index), manager_(manager)
+class iterator
 {
-}
+public:
+    iterator(const record_manager<LinkType>& manager,
+        LinkType index);
 
-template <typename LinkType>
-void record_list_iterator<LinkType>::operator++()
-{
-    index_ = table_row<const record_manager<LinkType>, LinkType>(manager_,
-        index_).next();
-}
+    /// Next value in the result.
+    void operator++();
 
-template <typename LinkType>
-LinkType record_list_iterator<LinkType>::operator*() const
-{
-    return index_;
-}
+    /// The record index.
+    LinkType operator*() const;
 
-template <typename LinkType>
-bool record_list_iterator<LinkType>::operator==(
-    record_list_iterator other) const
-{
-    return this->index_ == other.index_;
-}
+    /// Comparison operators.
+    bool operator==(iterator other) const;
+    bool operator!=(iterator other) const;
 
-template <typename LinkType>
-bool record_list_iterator<LinkType>::operator!=(
-    record_list_iterator other) const
-{
-    return this->index_ != other.index_;
-}
+private:
+    LinkType index_;
+    const record_manager<LinkType>& manager_;
+};
 
 } // namespace database
 } // namespace libbitcoin
+
+#include <bitcoin/database/impl/iterator.ipp>
 
 #endif

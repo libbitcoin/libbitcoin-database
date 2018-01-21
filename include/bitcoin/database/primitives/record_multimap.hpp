@@ -67,7 +67,7 @@ public:
     bool unlink(const KeyType& key);
 
 private:
-    typedef table_row<record_manager<LinkType>, LinkType> row_manager;
+    typedef linked_list<record_manager<LinkType>, LinkType> row_manager;
     record_hash_table<KeyType, IndexType, LinkType>& map_;
     record_manager<LinkType>& manager_;
     mutable shared_mutex create_mutex_;

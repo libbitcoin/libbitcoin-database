@@ -70,7 +70,7 @@ using namespace bc::machine;
 
 // static
 const size_t transaction_database::prefix_size_ = 
-    table_row<slab_manager<link_type>, link_type, key_type>::prefix_size;
+    linked_list<slab_manager<link_type>, link_type, key_type>::prefix_size;
 
 static constexpr auto value_size = sizeof(uint64_t);
 static constexpr auto height_size = sizeof(uint32_t);
