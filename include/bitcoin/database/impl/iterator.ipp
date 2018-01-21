@@ -25,33 +25,33 @@ namespace libbitcoin {
 namespace database {
 
 template <typename Manager, typename Link>
-iterator<Manager, Link>::iterator(const Manager& manager, Link index)
-  : index_(index), manager_(manager)
+iterator<Manager, Link>::iterator(const Manager& manager, Link first)
+  : link_(first), manager_(manager)
 {
 }
 
 template <typename Manager, typename Link>
 void iterator<Manager, Link>::operator++()
 {
-    index_ = linked_list<const Manager, Link>(manager_, index_).next();
+    link_ = linked_list<const Manager, Link>(manager_, link_).next();
 }
 
 template <typename Manager, typename Link>
 Link iterator<Manager, Link>::operator*() const
 {
-    return index_;
+    return link_;
 }
 
 template <typename Manager, typename Link>
 bool iterator<Manager, Link>::operator==(iterator other) const
 {
-    return this->index_ == other.index_;
+    return link_ == other.link_;
 }
 
 template <typename Manager, typename Link>
 bool iterator<Manager, Link>::operator!=(iterator other) const
 {
-    return this->index_ != other.index_;
+    return link_ != other.link_;
 }
 
 } // namespace database

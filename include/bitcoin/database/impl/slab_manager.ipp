@@ -124,6 +124,7 @@ LinkType slab_manager<LinkType>::allocate(size_t size)
 
     const size_t required_size = header_size_ + payload_size_ + size;
 
+    // Currently throws runtime_error if insufficient space.
     if (!file_.reserve(required_size))
     {
         // TODO: return failure sentinel.

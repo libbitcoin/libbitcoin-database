@@ -32,8 +32,7 @@ namespace libbitcoin {
 namespace database {
 
 /**
- * A multimap hashtable where each key maps to a set of fixed size
- * values.
+ * A multimap hashtable where each key maps to a set of fixed size values.
  *
  * The database is abstracted on top of a record map, and linked records.
  * The map links keys to start indexes in the linked records.
@@ -50,20 +49,20 @@ public:
     /// The stored size of a value with the given size.
     static size_t size(size_t value_size);
 
-    /// Construct for a new mutimap.
+    /// Construct a new mutimap.
     record_multimap(record_hash_table<KeyType, IndexType, Link>& map,
         record_manager<Link>& manager);
 
-    /// Add a new row for a key.
+    /// Add a new element for a key.
     void store(const KeyType& key, write_function write);
 
-    /// Lookup a key, returning a traversable index.
+    /// Get an iterator for the key.
     iterable<record_manager<Link>, Link> find(const KeyType& key) const;
 
-    /// Get a remap safe address pointer to the indexed data.
+    /// Get a remap safe address pointer to key's data.
     memory_ptr get(Link index) const;
 
-    /// Delete the last row that was added for the key.
+    /// Delete the last element that was added for the key.
     bool unlink(const KeyType& key);
 
 private:

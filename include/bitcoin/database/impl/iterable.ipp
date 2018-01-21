@@ -26,8 +26,8 @@ namespace libbitcoin {
 namespace database {
 
 template <typename Manager, typename Link>
-iterable<Manager, Link>::iterable(const Manager& manager, Link begin)
-  : begin_(begin), manager_(manager)
+iterable<Manager, Link>::iterable(const Manager& manager, Link first)
+  : first_(first), manager_(manager)
 {
 }
 
@@ -46,7 +46,7 @@ Link iterable<Manager, Link>::front() const
 template <typename Manager, typename Link>
 iterator<Manager, Link> iterable<Manager, Link>::begin() const
 {
-    return { manager_, begin_ };
+    return { manager_, first_ };
 }
 
 template <typename Manager, typename Link>

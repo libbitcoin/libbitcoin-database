@@ -22,11 +22,15 @@
 namespace libbitcoin {
 namespace database {
 
+/// Iterator for linked_list.
+/// Link is both traversal and value.
+/// Manager dynamically traverses store-based list.
 template <typename Manager, typename Link>
 class iterator
 {
 public:
-    iterator(const Manager& manager, Link index);
+    /// Create a storage interator starting at first.
+    iterator(const Manager& manager, Link first);
 
     void operator++();
     Link operator*() const;
@@ -34,7 +38,7 @@ public:
     bool operator!=(iterator other) const;
 
 private:
-    Link index_;
+    Link link_;
     const Manager& manager_;
 };
 

@@ -139,6 +139,7 @@ LinkType record_manager<LinkType>::allocate(size_t count)
     const size_t position = record_to_position(record_count_ + count);
     const size_t required_size = header_size_ + position;
 
+    // Currently throws runtime_error if insufficient space.
     if (!file_.reserve(required_size))
     {
         // TODO: return failure sentinel.
