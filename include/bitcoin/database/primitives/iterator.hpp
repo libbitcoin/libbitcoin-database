@@ -28,13 +28,8 @@ class iterator
 public:
     iterator(const Manager& manager, Link index);
 
-    /// Next value in the result.
     void operator++();
-
-    /// The record index.
     Link operator*() const;
-
-    /// Comparison operators.
     bool operator==(iterator other) const;
     bool operator!=(iterator other) const;
 

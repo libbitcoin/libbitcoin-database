@@ -30,6 +30,8 @@ class iterable
 public:
     iterable(const Manager& manager, Link begin);
 
+    bool empty() const;
+    Link front() const;
     iterator<Manager, Link> begin() const;
     iterator<Manager, Link> end() const;
 

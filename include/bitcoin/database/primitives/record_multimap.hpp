@@ -24,13 +24,12 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/iterable.hpp>
 #include <bitcoin/database/primitives/record_hash_table.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
-
-// TODO: generalize to "multimap" (slab or record).
 
 /**
  * A multimap hashtable where each key maps to a set of fixed size
@@ -41,35 +40,36 @@ namespace database {
  * The linked records are chains of records that can be iterated through
  * given a start index.
  */
-template <typename KeyType, typename IndexType, typename LinkType>
+template <typename KeyType, typename IndexType, typename Link>
 class record_multimap
   : noncopyable
 {
 public:
     typedef serializer<uint8_t*>::functor write_function;
 
-    // The uniform size of storing an element in the multimap.
+    /// The stored size of a value with the given size.
     static size_t size(size_t value_size);
 
-    record_multimap(record_hash_table<KeyType, IndexType, LinkType>& map,
-        record_manager<LinkType>& manager);
+    /// Construct for a new mutimap.
+    record_multimap(record_hash_table<KeyType, IndexType, Link>& map,
+        record_manager<Link>& manager);
 
     /// Add a new row for a key.
     void store(const KeyType& key, write_function write);
 
     /// Lookup a key, returning a traversable index.
-    LinkType find(const KeyType& key) const;
+    iterable<record_manager<Link>, Link> find(const KeyType& key) const;
 
     /// Get a remap safe address pointer to the indexed data.
-    memory_ptr get(LinkType index) const;
+    memory_ptr get(Link index) const;
 
     /// Delete the last row that was added for the key.
     bool unlink(const KeyType& key);
 
 private:
-    typedef linked_list<record_manager<LinkType>, LinkType> row_manager;
-    record_hash_table<KeyType, IndexType, LinkType>& map_;
-    record_manager<LinkType>& manager_;
+    typedef linked_list<record_manager<Link>, Link> row_manager;
+    record_hash_table<KeyType, IndexType, Link>& map_;
+    record_manager<Link>& manager_;
     mutable shared_mutex create_mutex_;
     mutable shared_mutex update_mutex_;
 };

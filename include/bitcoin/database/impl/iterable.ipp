@@ -32,16 +32,27 @@ iterable<Manager, Link>::iterable(const Manager& manager, Link begin)
 }
 
 template <typename Manager, typename Link>
+bool iterable<Manager, Link>::empty() const
+{
+    return begin() == end();
+}
+
+template <typename Manager, typename Link>
+Link iterable<Manager, Link>::front() const
+{
+    return *begin();
+}
+
+template <typename Manager, typename Link>
 iterator<Manager, Link> iterable<Manager, Link>::begin() const
 {
-    return iterator<Manager, Link>(manager_, begin_);
+    return { manager_, begin_ };
 }
 
 template <typename Manager, typename Link>
 iterator<Manager, Link> iterable<Manager, Link>::end() const
 {
-    return iterator<Manager, Link>(manager_,
-        linked_list<Manager, Link>::not_found);
+    return { manager_, linked_list<Manager, Link>::not_found };
 }
 
 } // namespace database
