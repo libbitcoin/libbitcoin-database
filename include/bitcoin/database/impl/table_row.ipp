@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_SLAB_ROW_IPP
-#define LIBBITCOIN_DATABASE_SLAB_ROW_IPP
+#ifndef LIBBITCOIN_DATABASE_TABLE_ROW_IPP
+#define LIBBITCOIN_DATABASE_TABLE_ROW_IPP
 
 #include <cstddef>
 #include <tuple>
@@ -31,27 +31,27 @@ namespace database {
     
 // static
 template <typename KeyType, typename LinkType, typename SlabManager>
-size_t slab_row<KeyType, LinkType, SlabManager>::size(size_t value_size)
+size_t table_row<KeyType, LinkType, SlabManager>::size(size_t value_size)
 {
     return std::tuple_size<KeyType>::value + sizeof(LinkType) + value_size;
 }
 
 // Parameterizing SlabManager allows const and non-const.
 template <typename KeyType, typename LinkType, typename SlabManager>
-slab_row<KeyType, LinkType, SlabManager>::slab_row(SlabManager& manager)
+table_row<KeyType, LinkType, SlabManager>::table_row(SlabManager& manager)
   : manager_(manager), link_(not_found)
 {
 }
 
 template <typename KeyType, typename LinkType, typename SlabManager>
-slab_row<KeyType, LinkType, SlabManager>::slab_row(SlabManager& manager,
+table_row<KeyType, LinkType, SlabManager>::table_row(SlabManager& manager,
     LinkType link)
   : manager_(manager), link_(link)
 {
 }
 
 template <typename KeyType, typename LinkType, typename SlabManager>
-LinkType slab_row<KeyType, LinkType, SlabManager>::create(const KeyType& key,
+LinkType table_row<KeyType, LinkType, SlabManager>::create(const KeyType& key,
     write_function write)
 {
     BITCOIN_ASSERT(link_ == not_found);
@@ -73,7 +73,7 @@ LinkType slab_row<KeyType, LinkType, SlabManager>::create(const KeyType& key,
 }
 
 template <typename KeyType, typename LinkType, typename SlabManager>
-LinkType slab_row<KeyType, LinkType, SlabManager>::create(const KeyType& key,
+LinkType table_row<KeyType, LinkType, SlabManager>::create(const KeyType& key,
     write_function write, size_t value_size)
 {
     BITCOIN_ASSERT(link_ == not_found);
@@ -96,7 +96,7 @@ LinkType slab_row<KeyType, LinkType, SlabManager>::create(const KeyType& key,
 }
 
 template <typename KeyType, typename LinkType, typename SlabManager>
-void slab_row<KeyType, LinkType, SlabManager>::link(LinkType next)
+void table_row<KeyType, LinkType, SlabManager>::link(LinkType next)
 {
     // Populate next link value.
     // [ KeyType  ]
@@ -112,14 +112,14 @@ void slab_row<KeyType, LinkType, SlabManager>::link(LinkType next)
 }
 
 template <typename KeyType, typename LinkType, typename SlabManager>
-bool slab_row<KeyType, LinkType, SlabManager>::equal(const KeyType& key) const
+bool table_row<KeyType, LinkType, SlabManager>::equal(const KeyType& key) const
 {
     const auto memory = raw_data(key_start);
     return std::equal(key.begin(), key.end(), memory->buffer());
 }
 
 template <typename KeyType, typename LinkType, typename SlabManager>
-memory_ptr slab_row<KeyType, LinkType, SlabManager>::data() const
+memory_ptr table_row<KeyType, LinkType, SlabManager>::data() const
 {
     // Get value pointer.
     // [ KeyType  ]
@@ -130,7 +130,7 @@ memory_ptr slab_row<KeyType, LinkType, SlabManager>::data() const
 }
 
 template <typename KeyType, typename LinkType, typename SlabManager>
-file_offset slab_row<KeyType, LinkType, SlabManager>::offset() const
+file_offset table_row<KeyType, LinkType, SlabManager>::offset() const
 {
     // Get value file offset.
     // [ KeyType  ]
@@ -141,7 +141,7 @@ file_offset slab_row<KeyType, LinkType, SlabManager>::offset() const
 }
 
 template <typename KeyType, typename LinkType, typename SlabManager>
-LinkType slab_row<KeyType, LinkType, SlabManager>::next() const
+LinkType table_row<KeyType, LinkType, SlabManager>::next() const
 {
     const auto memory = raw_data(key_size);
 
@@ -151,7 +151,7 @@ LinkType slab_row<KeyType, LinkType, SlabManager>::next() const
 }
 
 template <typename KeyType, typename LinkType, typename SlabManager>
-memory_ptr slab_row<KeyType, LinkType, SlabManager>::raw_data(
+memory_ptr table_row<KeyType, LinkType, SlabManager>::raw_data(
     size_t bytes) const
 {
     auto memory = manager_.get(link_);

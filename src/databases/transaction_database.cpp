@@ -69,7 +69,7 @@ using namespace bc::machine;
 // [ version:varint         - const   ]
 
 // static
-const size_t transaction_database::prefix_size_ = slab_row<key_type,
+const size_t transaction_database::prefix_size_ = table_row<key_type,
     link_type, slab_manager<link_type>>::prefix_size;
 
 static constexpr auto value_size = sizeof(uint64_t);

@@ -113,7 +113,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_multimap.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_hash_table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_manager.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_row.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\table_row.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\block_result.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_result.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
@@ -137,7 +137,7 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_multimap.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\slab_hash_table.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\slab_manager.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\slab_row.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\table_row.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

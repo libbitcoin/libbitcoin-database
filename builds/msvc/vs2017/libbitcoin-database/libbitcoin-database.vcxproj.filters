@@ -164,7 +164,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_manager.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_row.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\table_row.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\block_result.hpp">
@@ -226,7 +226,7 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\slab_manager.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\slab_row.ipp">
+    <None Include="..\..\..\..\include\bitcoin\database\impl\table_row.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
     <None Include="packages.config" />

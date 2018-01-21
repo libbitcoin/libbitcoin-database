@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_SLAB_ROW_HPP
-#define LIBBITCOIN_DATABASE_SLAB_ROW_HPP
+#ifndef LIBBITCOIN_DATABASE_TABLE_ROW_HPP
+#define LIBBITCOIN_DATABASE_TABLE_ROW_HPP
 
 #include <cstddef>
 #include <tuple>
@@ -37,7 +37,7 @@ namespace database {
  * next_position() method.
  */
 template <typename KeyType, typename LinkType, typename SlabManager>
-class slab_row
+class table_row
 {
 public:
     typedef byte_serializer::functor write_function;
@@ -52,10 +52,10 @@ public:
     static size_t size(size_t value_size);
 
     /// Construct for a new slab.
-    slab_row(SlabManager& manager);
+    table_row(SlabManager& manager);
 
     /// Construct for an existing slab.
-    slab_row(SlabManager& manager, LinkType link);
+    table_row(SlabManager& manager, LinkType link);
 
     /// Allocate and populate a new record.
     LinkType create(const KeyType& key, write_function write);
@@ -89,6 +89,6 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#include <bitcoin/database/impl/slab_row.ipp>
+#include <bitcoin/database/impl/table_row.ipp>
 
 #endif

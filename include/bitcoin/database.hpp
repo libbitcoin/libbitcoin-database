@@ -40,7 +40,7 @@
 #include <bitcoin/database/primitives/record_multimap.hpp>
 #include <bitcoin/database/primitives/slab_hash_table.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
-#include <bitcoin/database/primitives/slab_row.hpp>
+#include <bitcoin/database/primitives/table_row.hpp>
 #include <bitcoin/database/result/block_result.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
 #include <bitcoin/database/state/block_state.hpp>
