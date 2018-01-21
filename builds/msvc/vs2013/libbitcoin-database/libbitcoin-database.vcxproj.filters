@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!--
  |  Copyright (c) 2014-2015 libbitcoin-database developers (see COPYING).
  |
@@ -158,9 +158,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_multimap.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_row.hpp">
-      <Filter>include\bitcoin\database\primitives</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_hash_table.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
@@ -200,12 +197,6 @@
     <ClInclude Include="..\..\..\..\src\mman-win32\mman.h">
       <Filter>src\mman-win32</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table_iterator.hpp">
-      <Filter>include\bitcoin\database\primitives</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table_iterable.hpp">
-      <Filter>include\bitcoin\database\primitives</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\database\impl\hash_table_header.ipp">
@@ -229,9 +220,6 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_multimap.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\record_row.ipp">
-      <Filter>include\bitcoin\database\impl</Filter>
-    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\slab_hash_table.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
@@ -242,11 +230,5 @@
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
     <None Include="packages.config" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\hash_table_iterator.ipp">
-      <Filter>include\bitcoin\database\impl</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\hash_table_iterable.ipp">
-      <Filter>include\bitcoin\database\impl</Filter>
-    </None>
   </ItemGroup>
 </Project>

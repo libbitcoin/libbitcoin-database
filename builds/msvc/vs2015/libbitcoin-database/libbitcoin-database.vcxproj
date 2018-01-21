@@ -109,7 +109,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_list_iterator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_multimap.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_row.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_hash_table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_row.hpp" />
@@ -132,7 +131,6 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_list_iterator.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_manager.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_multimap.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\record_row.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\slab_hash_table.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\slab_manager.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\slab_row.ipp" />

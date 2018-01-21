@@ -141,7 +141,6 @@ include_bitcoin_database_impl_HEADERS = \
     include/bitcoin/database/impl/record_list_iterator.ipp \
     include/bitcoin/database/impl/record_manager.ipp \
     include/bitcoin/database/impl/record_multimap.ipp \
-    include/bitcoin/database/impl/record_row.ipp \
     include/bitcoin/database/impl/slab_hash_table.ipp \
     include/bitcoin/database/impl/slab_manager.ipp \
     include/bitcoin/database/impl/slab_row.ipp
@@ -162,7 +161,6 @@ include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/record_list_iterator.hpp \
     include/bitcoin/database/primitives/record_manager.hpp \
     include/bitcoin/database/primitives/record_multimap.hpp \
-    include/bitcoin/database/primitives/record_row.hpp \
     include/bitcoin/database/primitives/slab_hash_table.hpp \
     include/bitcoin/database/primitives/slab_manager.hpp \
     include/bitcoin/database/primitives/slab_row.hpp
