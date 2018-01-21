@@ -49,47 +49,40 @@ table_row<Key, Link, Manager>::table_row(Manager& manager, Link link)
 }
 
 template <typename Key, typename Link, typename Manager>
-Link table_row<Key, Link, Manager>::create(const Key& key,
+void table_row<Key, Link, Manager>::populate(const Key& key,
     write_function write)
 {
-    BITCOIN_ASSERT(link_ == not_found);
-
-    // Create new (unlinked) record and populate its key and data.
+    // Populate a new (unlinked) element with key and value data.
     // [ Key  ] <=
     // [ Link ]
     // [ value... ] <=
-
-    link_ = manager_.allocate(1);
 
     const auto memory = raw_data(key_start);
     auto serial = make_unsafe_serializer(memory->buffer());
     serial.write_forward(key);
     serial.skip(link_size);
     serial.write_delegated(write);
+}
 
+// This call assumes the manager is a record_manager.
+template <typename Key, typename Link, typename Manager>
+Link table_row<Key, Link, Manager>::create(const Key& key,
+    write_function write)
+{
+    BITCOIN_ASSERT(link_ == not_found);
+    link_ = manager_.allocate(1);
+    populate(key, write);
     return link_;
 }
 
+// This call assumes the manager is a slab_manager.
 template <typename Key, typename Link, typename Manager>
 Link table_row<Key, Link, Manager>::create(const Key& key,
     write_function write, size_t value_size)
 {
     BITCOIN_ASSERT(link_ == not_found);
-
-    // Create new (unlinked) element and populate its key and data.
-    // [ Key  ] <=
-    // [ Link ]
-    // [ value... ] <=
-
-    const size_t element_size = prefix_size + value_size;
-    link_ = manager_.allocate(element_size);
-
-    const auto memory = raw_data(key_start);
-    auto serial = make_unsafe_serializer(memory->buffer());
-    serial.write_forward(key);
-    serial.skip(link_size);
-    serial.write_delegated(write);
-
+    link_ = manager_.allocate(prefix_size + value_size);
+    populate(key, write);
     return link_;
 }
 

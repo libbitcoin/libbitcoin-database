@@ -56,8 +56,7 @@ public:
     Link create(const Key& key, write_function write);
 
     /// Allocate and populate a new slab element.
-    Link create(const Key& key, write_function write,
-        size_t value_size);
+    Link create(const Key& key, write_function write, size_t value_size);
 
     /// Connect allocated/populated element.
     void link(Link next);
@@ -76,6 +75,7 @@ public:
 
 private:
     memory_ptr raw_data(size_t bytes) const;
+    void populate(const Key& key, write_function write);
 
     Link link_;
     Manager& manager_;
