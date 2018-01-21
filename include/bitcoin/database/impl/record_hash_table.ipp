@@ -114,29 +114,31 @@ Link record_hash_table<Key, Index, Link>::update(const Key& key,
     return not_found;
 }
 
-////// This is limited to returning the first of multiple matching key values.
-////template <typename Key, typename Index, typename Link>
-////Link record_hash_table<Key, Index, Link>::offset(const Key& key) const
-////{
-////    // Find start item...
-////    auto current = read_bucket_value(key);
-////
-////    // Iterate through list...
-////    while (current != header_.empty)
-////    {
-////        const_row item(manager_, current);
-////
-////        // Found, return index.
-////        if (item.equal(key))
-////            return item.offset();
-////
-////        const auto previous = current;
-////        current = item.next_index();
-////        BITCOIN_ASSERT(previous != current);
-////    }
-////
-////    return not_found;
-////}
+// This is limited to returning the first of multiple matching key values.
+template <typename Key, typename Index, typename Link>
+Link record_hash_table<Key, Index, Link>::offset(const Key& key) const
+{
+    // Find start item...
+    auto current = read_bucket_value(key);
+
+    // Iterate through list...
+    while (current != header_.empty)
+    {
+        const_row item(manager_, current);
+
+        // Found, return index.
+        if (item.equal(key))
+            return item.offset();
+
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(update_mutex_);
+        current = item.next();
+        ///////////////////////////////////////////////////////////////////////
+    }
+
+    return not_found;
+}
 
 // This is limited to returning the first of multiple matching key values.
 template <typename Key, typename Index, typename Link>

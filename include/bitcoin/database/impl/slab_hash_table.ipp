@@ -84,32 +84,38 @@ Link slab_hash_table<Key, Index, Link>::store(const Key& key,
     return position + row::prefix_size;
 }
 
-////// Execute a writer against a key's buffer if the key is found.
-////// Return the file offset of the found value (or zero).
-////template <typename Key, typename Index, typename Link>
-////Link slab_hash_table<Key, Index, Link>::update(const Key& key,
-////    write_function write)
-////{
-////    // Find start item...
-////    auto current = read_bucket_value(key);
-////
-////    // Iterate through list...
-////    while (current != not_found)
-////    {
-////        row item(manager_, current);
-////
-////        // Found, update data and return position.
-////        if (item.equal(key))
-////        {
-////            const auto memory = item.data();
-////            auto serial = make_unsafe_serializer(memory->buffer());
-////            write(serial);
-////            return item.offset();
-////        }
-////    }
-////
-////    return not_found;
-////}
+// Execute a writer against a key's buffer if the key is found.
+// Return the file offset of the found value (or zero).
+template <typename Key, typename Index, typename Link>
+Link slab_hash_table<Key, Index, Link>::update(const Key& key,
+    write_function write)
+{
+    // Find start item...
+    auto current = read_bucket_value(key);
+
+    // Iterate through list...
+    while (current != not_found)
+    {
+        row item(manager_, current);
+
+        // Found, update data and return position.
+        if (item.equal(key))
+        {
+            const auto memory = item.data();
+            auto serial = make_unsafe_serializer(memory->buffer());
+            write(serial);
+            return item.offset();
+        }
+
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(update_mutex_);
+        current = item.next();
+        ///////////////////////////////////////////////////////////////////////
+    }
+
+    return not_found;
+}
 
 // This is limited to returning the first of multiple matching key values.
 template <typename Key, typename Index, typename Link>
@@ -144,7 +150,6 @@ memory_ptr slab_hash_table<Key, Index, Link>::find(const Key& key) const
     // Find start item...
     auto current = read_bucket_value(key);
 
-    // TODO: implement hash_table_iterable/hash_table_iterator.
     // Iterate through list...
     while (current != not_found)
     {
@@ -200,7 +205,6 @@ bool slab_hash_table<Key, Index, Link>::unlink(const Key& key)
     update_mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 
-    // TODO: implement hash_table_iterable/hash_table_iterator.
     // Iterate through list...
     while (current != not_found)
     {
