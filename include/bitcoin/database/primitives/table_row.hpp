@@ -24,51 +24,46 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/slab_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 /**
- * Item for slab_hash_table. A chained list with the key included.
- *
- * Stores the key, next position and user data.
- * With the starting item, we can iterate until the end using the
- * next_position() method.
+ * A hash table key-conflict row, implemented as a linked list.
  */
-template <typename KeyType, typename LinkType, typename SlabManager>
+template <typename Key, typename Link, typename Manager>
 class table_row
 {
 public:
     typedef byte_serializer::functor write_function;
 
-    static const LinkType not_found =(LinkType)bc::max_uint64;
+    static const Link not_found =(Link)bc::max_uint64;
     static const size_t key_start = 0;
-    static const size_t key_size = std::tuple_size<KeyType>::value;
-    static const size_t link_size = sizeof(LinkType);
+    static const size_t key_size = std::tuple_size<Key>::value;
+    static const size_t link_size = sizeof(Link);
     static const size_t prefix_size = key_size + link_size;
 
-    /// The size of storing an element.
+    /// The stored size of a value with the given size.
     static size_t size(size_t value_size);
 
-    /// Construct for a new slab.
-    table_row(SlabManager& manager);
+    /// Construct for a new element.
+    table_row(Manager& manager);
 
-    /// Construct for an existing slab.
-    table_row(SlabManager& manager, LinkType link);
+    /// Construct for an existing element.
+    table_row(Manager& manager, Link link);
 
-    /// Allocate and populate a new record.
-    LinkType create(const KeyType& key, write_function write);
+    /// Allocate and populate a new record element.
+    Link create(const Key& key, write_function write);
 
-    /// Allocate and populate a new slab.
-    LinkType create(const KeyType& key, write_function write,
+    /// Allocate and populate a new slab element.
+    Link create(const Key& key, write_function write,
         size_t value_size);
 
-    /// Connect allocated/populated slab.
-    void link(LinkType next);
+    /// Connect allocated/populated element.
+    void link(Link next);
 
-    /// True if the slab key matches the parameter.
-    bool equal(const KeyType& key) const;
+    /// True if the element key matches the parameter.
+    bool equal(const Key& key) const;
 
     /// A smart pointer to the user data.
     memory_ptr data() const;
@@ -76,14 +71,14 @@ public:
     /// File offset of the user data.
     file_offset offset() const;
 
-    /// File offset of next slab in the list.
-    LinkType next() const;
+    /// File offset of next element in the list.
+    Link next() const;
 
 private:
     memory_ptr raw_data(size_t bytes) const;
 
-    LinkType link_;
-    SlabManager& manager_;
+    Link link_;
+    Manager& manager_;
 };
 
 } // namespace database

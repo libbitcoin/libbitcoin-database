@@ -24,41 +24,39 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/slab_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
-    
+
 // static
-template <typename KeyType, typename LinkType, typename SlabManager>
-size_t table_row<KeyType, LinkType, SlabManager>::size(size_t value_size)
+template <typename Key, typename Link, typename Manager>
+size_t table_row<Key, Link, Manager>::size(size_t value_size)
 {
-    return std::tuple_size<KeyType>::value + sizeof(LinkType) + value_size;
+    return std::tuple_size<Key>::value + sizeof(Link) + value_size;
 }
 
-// Parameterizing SlabManager allows const and non-const.
-template <typename KeyType, typename LinkType, typename SlabManager>
-table_row<KeyType, LinkType, SlabManager>::table_row(SlabManager& manager)
+// Parameterizing Manager allows const and non-const.
+template <typename Key, typename Link, typename Manager>
+table_row<Key, Link, Manager>::table_row(Manager& manager)
   : manager_(manager), link_(not_found)
 {
 }
 
-template <typename KeyType, typename LinkType, typename SlabManager>
-table_row<KeyType, LinkType, SlabManager>::table_row(SlabManager& manager,
-    LinkType link)
+template <typename Key, typename Link, typename Manager>
+table_row<Key, Link, Manager>::table_row(Manager& manager, Link link)
   : manager_(manager), link_(link)
 {
 }
 
-template <typename KeyType, typename LinkType, typename SlabManager>
-LinkType table_row<KeyType, LinkType, SlabManager>::create(const KeyType& key,
+template <typename Key, typename Link, typename Manager>
+Link table_row<Key, Link, Manager>::create(const Key& key,
     write_function write)
 {
     BITCOIN_ASSERT(link_ == not_found);
 
     // Create new (unlinked) record and populate its key and data.
-    // [ KeyType  ] <=
-    // [ LinkType ]
+    // [ Key  ] <=
+    // [ Link ]
     // [ value... ] <=
 
     link_ = manager_.allocate(1);
@@ -72,19 +70,19 @@ LinkType table_row<KeyType, LinkType, SlabManager>::create(const KeyType& key,
     return link_;
 }
 
-template <typename KeyType, typename LinkType, typename SlabManager>
-LinkType table_row<KeyType, LinkType, SlabManager>::create(const KeyType& key,
+template <typename Key, typename Link, typename Manager>
+Link table_row<Key, Link, Manager>::create(const Key& key,
     write_function write, size_t value_size)
 {
     BITCOIN_ASSERT(link_ == not_found);
 
-    // Create new (unlinked) slab and populate its key and data.
-    // [ KeyType  ] <=
-    // [ LinkType ]
+    // Create new (unlinked) element and populate its key and data.
+    // [ Key  ] <=
+    // [ Link ]
     // [ value... ] <=
 
-    const size_t slab_size = prefix_size + value_size;
-    link_ = manager_.allocate(slab_size);
+    const size_t element_size = prefix_size + value_size;
+    link_ = manager_.allocate(element_size);
 
     const auto memory = raw_data(key_start);
     auto serial = make_unsafe_serializer(memory->buffer());
@@ -95,64 +93,63 @@ LinkType table_row<KeyType, LinkType, SlabManager>::create(const KeyType& key,
     return link_;
 }
 
-template <typename KeyType, typename LinkType, typename SlabManager>
-void table_row<KeyType, LinkType, SlabManager>::link(LinkType next)
+template <typename Key, typename Link, typename Manager>
+void table_row<Key, Link, Manager>::link(Link next)
 {
     // Populate next link value.
-    // [ KeyType  ]
-    // [ LinkType ] <=
+    // [ Key  ]
+    // [ Link ] <=
     // [ value... ]
 
     const auto memory = raw_data(key_size);
     auto serial = make_unsafe_serializer(memory->buffer());
 
     //*************************************************************************
-    serial.template write_little_endian<LinkType>(next);
+    serial.template write_little_endian<Link>(next);
     //*************************************************************************
 }
 
-template <typename KeyType, typename LinkType, typename SlabManager>
-bool table_row<KeyType, LinkType, SlabManager>::equal(const KeyType& key) const
+template <typename Key, typename Link, typename Manager>
+bool table_row<Key, Link, Manager>::equal(const Key& key) const
 {
     const auto memory = raw_data(key_start);
     return std::equal(key.begin(), key.end(), memory->buffer());
 }
 
-template <typename KeyType, typename LinkType, typename SlabManager>
-memory_ptr table_row<KeyType, LinkType, SlabManager>::data() const
+template <typename Key, typename Link, typename Manager>
+memory_ptr table_row<Key, Link, Manager>::data() const
 {
     // Get value pointer.
-    // [ KeyType  ]
-    // [ LinkType ]
+    // [ Key  ]
+    // [ Link ]
     // [ value... ] <=
 
     return raw_data(prefix_size);
 }
 
-template <typename KeyType, typename LinkType, typename SlabManager>
-file_offset table_row<KeyType, LinkType, SlabManager>::offset() const
+template <typename Key, typename Link, typename Manager>
+file_offset table_row<Key, Link, Manager>::offset() const
 {
     // Get value file offset.
-    // [ KeyType  ]
-    // [ LinkType ]
+    // [ Key  ]
+    // [ Link ]
     // [ value... ] <=
 
     return link_ + prefix_size;
 }
 
-template <typename KeyType, typename LinkType, typename SlabManager>
-LinkType table_row<KeyType, LinkType, SlabManager>::next() const
+template <typename Key, typename Link, typename Manager>
+Link table_row<Key, Link, Manager>::next() const
 {
     const auto memory = raw_data(key_size);
 
     //*************************************************************************
-    return from_little_endian_unsafe<LinkType>(memory->buffer());
+    return from_little_endian_unsafe<Link>(memory->buffer());
     //*************************************************************************
 }
 
-template <typename KeyType, typename LinkType, typename SlabManager>
-memory_ptr table_row<KeyType, LinkType, SlabManager>::raw_data(
-    size_t bytes) const
+template <typename Key, typename Link, typename Manager>
+memory_ptr table_row<Key, Link, Manager>::raw_data(size_t bytes) const
 {
     auto memory = manager_.get(link_);
     memory->increment(bytes);
