@@ -20,8 +20,8 @@
 #define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_IPP
 
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/record_list.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
+#include <bitcoin/database/primitives/table_row.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -46,7 +46,7 @@ void record_multimap<KeyType, IndexType, LinkType>::store(const KeyType& key,
     write_function write)
 {
     // Allocate and populate new unlinked row.
-    record_list<LinkType, record_manager<LinkType>> record(manager_);
+    row_manager record(manager_);
     const auto begin = record.create(write);
 
     // Critical Section.
@@ -58,8 +58,7 @@ void record_multimap<KeyType, IndexType, LinkType>::store(const KeyType& key,
     // Link the row to the previous first element (or terminator).
     record.link(old_begin);
 
-    if (old_begin == 
-        record_list<LinkType, record_manager<LinkType>>::not_found)
+    if (old_begin == row_manager::not_found)
     {
         map_.store(key, [=](serializer<uint8_t*>& serial)
         {
@@ -89,7 +88,7 @@ LinkType record_multimap<KeyType, IndexType, LinkType>::find(
     const auto begin_address = map_.find(key);
 
     if (!begin_address)
-        return record_list<LinkType, const record_manager<LinkType>>::not_found;
+        return row_manager::not_found;
 
     const auto memory = begin_address->buffer();
 
@@ -105,8 +104,7 @@ template <typename KeyType, typename IndexType, typename LinkType>
 memory_ptr record_multimap<KeyType, IndexType, LinkType>::get(
     LinkType index) const
 {
-    return record_list<LinkType, const record_manager<LinkType>>(manager_,
-        index).data();
+    return row_manager(manager_, index).data();
 }
 
 // Unlink is not safe for concurrent write.
@@ -116,15 +114,14 @@ bool record_multimap<KeyType, IndexType, LinkType>::unlink(const KeyType& key)
     const auto begin = find(key);
 
     // No rows exist.
-    if (begin == record_list<LinkType, record_manager<LinkType>>::not_found)
+    if (begin == row_manager::not_found)
         return false;
 
-    record_list<LinkType, record_manager<LinkType>> record(manager_, begin);
+    row_manager record(manager_, begin);
     const auto next_index = record.next();
 
     // Remove the hash table entry, which delinks the single row.
-    if (next_index ==
-        record_list<LinkType, record_manager<LinkType>>::not_found)
+    if (next_index == row_manager::not_found)
         return map_.unlink(key);
 
     // Update the hash table entry, which skips the first of multiple rows.

@@ -82,7 +82,6 @@
     <ClCompile Include="..\..\..\..\test\memory\file_storage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hash_table_header.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\record_hash_table.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives\record_list.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\record_list_iterable.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\record_list_iterator.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\record_manager.cpp" />

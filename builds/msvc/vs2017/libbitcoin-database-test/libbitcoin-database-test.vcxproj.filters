@@ -66,9 +66,6 @@
     <ClCompile Include="..\..\..\..\test\primitives\record_hash_table.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\record_list.cpp">
-      <Filter>src\primitives</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\record_list_iterable.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>

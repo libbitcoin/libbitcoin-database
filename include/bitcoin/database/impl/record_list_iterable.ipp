@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_RECORD_LIST_ITERABLE_IPP
 #define LIBBITCOIN_DATABASE_RECORD_LIST_ITERABLE_IPP
 
-#include <bitcoin/database/primitives/record_list.hpp>
+#include <bitcoin/database/primitives/table_row.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 #include <bitcoin/database/primitives/record_list_iterator.hpp>
 
@@ -43,7 +43,7 @@ template <typename LinkType>
 record_list_iterator<LinkType> record_list_iterable<LinkType>::end() const
 {
     return record_list_iterator<LinkType>(manager_,
-        record_list<LinkType, record_manager<LinkType>>::not_found);
+        table_row<record_manager<LinkType>, LinkType>::not_found);
 }
 
 } // namespace database

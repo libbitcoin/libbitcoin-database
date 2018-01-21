@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_RECORD_LIST_ITERATOR_IPP
 #define LIBBITCOIN_DATABASE_RECORD_LIST_ITERATOR_IPP
 
-#include <bitcoin/database/primitives/record_list.hpp>
+#include <bitcoin/database/primitives/table_row.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
@@ -35,7 +35,7 @@ record_list_iterator<LinkType>::record_list_iterator(
 template <typename LinkType>
 void record_list_iterator<LinkType>::operator++()
 {
-    index_ = record_list<LinkType, const record_manager<LinkType>>(manager_,
+    index_ = table_row<const record_manager<LinkType>, LinkType>(manager_,
         index_).next();
 }
 

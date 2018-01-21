@@ -22,7 +22,6 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
-#include <bitcoin/database/primitives/hash_table_iterator.hpp>
 #include <bitcoin/database/primitives/table_row.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
@@ -89,13 +88,13 @@ template <typename KeyType, typename IndexType, typename LinkType>
 LinkType slab_hash_table<KeyType, IndexType, LinkType>::update(
     const KeyType& key, write_function write)
 {
-    auto slabs = hash_table_iterable<manager, LinkType, row>(manager_,
-        read_bucket_value(key), update_mutex_);
+    // Find start item...
+    auto current = read_bucket_value(key);
 
-    for (slab: slabs)
+    // Iterate through list...
+    while (current != header_.empty)
     {
-        // TODO: return row directly from iterator.
-        row item(manager_, slab);
+        row item(manager_, current);
 
         // Found, update data and return position.
         if (item.compare(key))

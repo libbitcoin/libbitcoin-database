@@ -43,11 +43,11 @@ class table_row
 public:
     typedef byte_serializer::functor write_function;
 
-    static const Link not_found =(Link)bc::max_uint64;
     static const size_t key_start = 0;
     static const size_t key_size = std::tuple_size<Key>::value;
     static const size_t link_size = sizeof(Link);
     static const size_t prefix_size = key_size + link_size;
+    static const auto not_found = (Link)bc::max_uint64;
 
     /// The stored size of a value with the given size.
     static size_t size(size_t value_size);

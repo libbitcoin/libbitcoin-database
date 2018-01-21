@@ -22,7 +22,6 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
-#include <bitcoin/database/primitives/hash_table_iterator.hpp>
 #include <bitcoin/database/primitives/table_row.hpp>
 
 namespace libbitcoin {
