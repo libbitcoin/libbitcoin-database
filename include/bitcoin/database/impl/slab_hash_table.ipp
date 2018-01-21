@@ -84,8 +84,8 @@ file_offset slab_hash_table<KeyType>::update(const KeyType& key,
         // Found, update data and return position.
         if (item.compare(key))
         {
-            const auto data = REMAP_ADDRESS(item.data());
-            auto serial = make_unsafe_serializer(data);
+            const auto memory = item.data();
+            auto serial = make_unsafe_serializer(REMAP_ADDRESS(memory));
             write(serial);
             return item.offset();
         }
