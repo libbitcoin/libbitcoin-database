@@ -155,7 +155,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_manager.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_multimap.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\recordset_hash_table.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_hash_table.hpp">
@@ -214,7 +214,7 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_manager.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\record_multimap.ipp">
+    <None Include="..\..\..\..\include\bitcoin\database\impl\recordset_hash_table.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\slab_hash_table.ipp">

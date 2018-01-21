@@ -28,13 +28,13 @@ namespace database {
 
 // static
 template <typename KeyType, typename IndexType, typename Link>
-size_t record_multimap<KeyType, IndexType, Link>::size(size_t value_size)
+size_t recordset_hash_table<KeyType, IndexType, Link>::size(size_t value_size)
 {
     return sizeof(Link) + value_size;
 }
 
 template <typename KeyType, typename IndexType, typename Link>
-record_multimap<KeyType, IndexType, Link>::record_multimap(
+recordset_hash_table<KeyType, IndexType, Link>::recordset_hash_table(
     record_hash_table<KeyType, IndexType, Link>& map,
     record_manager<Link>& manager)
   : map_(map), manager_(manager)
@@ -42,7 +42,7 @@ record_multimap<KeyType, IndexType, Link>::record_multimap(
 }
 
 template <typename KeyType, typename IndexType, typename Link>
-void record_multimap<KeyType, IndexType, Link>::store(const KeyType& key,
+void recordset_hash_table<KeyType, IndexType, Link>::store(const KeyType& key,
     write_function write)
 {
     // Allocate and populate new unlinked row.
@@ -84,7 +84,7 @@ void record_multimap<KeyType, IndexType, Link>::store(const KeyType& key,
 
 template <typename KeyType, typename IndexType, typename Link>
 linked_list_iterable<record_manager<Link>, Link>
-record_multimap<KeyType, IndexType, Link>::find(const KeyType& key) const
+recordset_hash_table<KeyType, IndexType, Link>::find(const KeyType& key) const
 {
     const auto begin_address = map_.find(key);
 
@@ -102,14 +102,14 @@ record_multimap<KeyType, IndexType, Link>::find(const KeyType& key) const
 
 /// Get a remap safe address pointer to the indexed data.
 template <typename KeyType, typename IndexType, typename Link>
-memory_ptr record_multimap<KeyType, IndexType, Link>::get(Link index) const
+memory_ptr recordset_hash_table<KeyType, IndexType, Link>::get(Link index) const
 {
     return row_manager(manager_, index).data();
 }
 
 // Unlink is not safe for concurrent write.
 template <typename KeyType, typename IndexType, typename Link>
-bool record_multimap<KeyType, IndexType, Link>::unlink(const KeyType& key)
+bool recordset_hash_table<KeyType, IndexType, Link>::unlink(const KeyType& key)
 {
     const auto roots = find(key);
 

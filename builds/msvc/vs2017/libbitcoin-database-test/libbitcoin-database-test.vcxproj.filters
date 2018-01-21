@@ -75,7 +75,7 @@
     <ClCompile Include="..\..\..\..\test\primitives\record_manager.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\record_multimap.cpp">
+    <ClCompile Include="..\..\..\..\test\primitives\recordset_hash_table.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\slab_hash_table.cpp">

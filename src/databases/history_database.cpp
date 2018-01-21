@@ -23,7 +23,7 @@
 #include <tuple>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/record_multimap.hpp>
+#include <bitcoin/database/primitives/recordset_hash_table.hpp>
 
 // Record format (v4) [47 bytes]:
 // ----------------------------------------------------------------------------
@@ -54,15 +54,16 @@ static constexpr auto value_size = height_size + flag_size + point_size +
     checksum_size;
 
 // History uses a hash table index, O(1).
-// The hash table stores indexes into the first element of a multimap row.
+// The hash table stores indexes to the first element of unkeyed linked lists.
 history_database::history_database(const path& lookup_filename,
     const path& rows_filename, size_t buckets, size_t expansion)
   : hash_table_file_(lookup_filename, expansion),
     hash_table_(hash_table_file_, buckets, sizeof(link_type)),
 
     address_file_(rows_filename, expansion),
-    address_index_(address_file_, 0, record_multimap<key_type, index_type, link_type>::size(value_size)),
-    address_multimap_(hash_table_, address_index_)
+    address_index_(address_file_, 0, recordset_hash_table<key_type, index_type,
+        link_type>::size(value_size)),
+    address_recordset_map_(hash_table_, address_index_)
 {
 }
 
@@ -123,14 +124,14 @@ history_database::list history_database::get(const short_hash& key,
 {
     list result;
     payment_record payment;
-    const auto records = address_multimap_.find(key);
+    const auto records = address_recordset_map_.find(key);
 
     for (auto index = records.begin(); index != records.end(); ++index)
     {
         if (limit > 0 && result.size() >= limit)
             break;
 
-        const auto record = address_multimap_.get(*index);
+        const auto record = address_recordset_map_.get(*index);
         auto deserial = make_unsafe_deserializer(record->buffer());
 
         // Failed reads are conflated with skipped returns.
@@ -152,7 +153,7 @@ void history_database::store(const short_hash& key,
         payment.to_data(serial, false);
     };
 
-    address_multimap_.store(key, write);
+    address_recordset_map_.store(key, write);
 }
 
 // Update.
@@ -160,7 +161,7 @@ void history_database::store(const short_hash& key,
 
 bool history_database::unlink_last_row(const short_hash& key)
 {
-    return address_multimap_.unlink(key);
+    return address_recordset_map_.unlink(key);
 }
 
 } // namespace database

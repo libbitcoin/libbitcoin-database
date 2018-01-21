@@ -23,12 +23,12 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/file_storage.hpp>
-#include <bitcoin/database/primitives/record_multimap.hpp>
+#include <bitcoin/database/primitives/recordset_hash_table.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/// This is a multimap where the key is the Bitcoin address hash,
+/// This is a recordset map where the key is the Bitcoin address hash,
 /// which returns several rows giving the history for that address.
 class BCD_API history_database
 {
@@ -89,12 +89,11 @@ private:
     typedef record_manager<link_type> record_manager;
     typedef record_hash_table<key_type, index_type, link_type> record_map;
 
-    // The multimap as a distinct file as opposed to linage within the map
+    // The recordset map as distinct file as opposed to linkage within the map
     // allows avoidance of hash storage with each entry. This is similar to
     // the transaction index with the exception that the tx index stores tx
-    // sets by block in a contiguous set, eliminating a need for linked list.
-    typedef record_multimap<key_type, index_type, link_type>
-        record_multiple_map;
+    // sets by block in a contiguous array, eliminating a need for linked list.
+    typedef recordset_hash_table<key_type, index_type, link_type> recordset_map;
 
     /// Hash table used for start index lookup for linked list by address hash.
     file_storage hash_table_file_;
@@ -103,7 +102,7 @@ private:
     /// History rows.
     file_storage address_file_;
     record_manager address_index_;
-    record_multiple_map address_multimap_;
+    recordset_map address_recordset_map_;
 };
 
 } // namespace database

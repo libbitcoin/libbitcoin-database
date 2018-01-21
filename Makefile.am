@@ -81,7 +81,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/primitives/iterator.cpp \
     test/primitives/record_hash_table.cpp \
     test/primitives/record_manager.cpp \
-    test/primitives/record_multimap.cpp \
+    test/primitives/recordset_hash_table.cpp \
     test/primitives/slab_hash_table.cpp \
     test/primitives/slab_manager.cpp \
     test/result/block_result.cpp \
@@ -139,7 +139,7 @@ include_bitcoin_database_impl_HEADERS = \
     include/bitcoin/database/impl/linked_list_iterator.ipp \
     include/bitcoin/database/impl/record_hash_table.ipp \
     include/bitcoin/database/impl/record_manager.ipp \
-    include/bitcoin/database/impl/record_multimap.ipp \
+    include/bitcoin/database/impl/recordset_hash_table.ipp \
     include/bitcoin/database/impl/slab_hash_table.ipp \
     include/bitcoin/database/impl/slab_manager.ipp
 
@@ -158,7 +158,7 @@ include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/linked_list_iterator.hpp \
     include/bitcoin/database/primitives/record_hash_table.hpp \
     include/bitcoin/database/primitives/record_manager.hpp \
-    include/bitcoin/database/primitives/record_multimap.hpp \
+    include/bitcoin/database/primitives/recordset_hash_table.hpp \
     include/bitcoin/database/primitives/slab_hash_table.hpp \
     include/bitcoin/database/primitives/slab_manager.hpp
 

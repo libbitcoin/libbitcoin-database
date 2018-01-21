@@ -32,7 +32,7 @@ namespace libbitcoin {
 namespace database {
 
 /**
- * A multimap hashtable where each key maps to a set of fixed size values.
+ * A hash table where each key maps to a set of fixed size values.
  *
  * The database is abstracted on top of a record map, and linked records.
  * The map links keys to start indexes in the linked records.
@@ -40,7 +40,7 @@ namespace database {
  * given a start index.
  */
 template <typename KeyType, typename IndexType, typename Link>
-class record_multimap
+class recordset_hash_table
   : noncopyable
 {
 public:
@@ -49,8 +49,8 @@ public:
     /// The stored size of a value with the given size.
     static size_t size(size_t value_size);
 
-    /// Construct a new mutimap.
-    record_multimap(record_hash_table<KeyType, IndexType, Link>& map,
+    /// Construct a new recordset hash table.
+    recordset_hash_table(record_hash_table<KeyType, IndexType, Link>& map,
         record_manager<Link>& manager);
 
     /// Add a new element for a key.
@@ -78,6 +78,6 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#include <bitcoin/database/impl/record_multimap.ipp>
+#include <bitcoin/database/impl/recordset_hash_table.ipp>
 
 #endif
