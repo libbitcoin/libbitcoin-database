@@ -20,6 +20,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <tuple>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/record_multimap.hpp>

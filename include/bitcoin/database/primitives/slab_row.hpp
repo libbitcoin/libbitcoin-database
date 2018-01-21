@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_SLAB_ROW_HPP
 
 #include <cstddef>
+#include <tuple>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -47,11 +48,17 @@ public:
     static const size_t link_size = sizeof(LinkType);
     static const size_t prefix_size = key_size + link_size;
 
+    /// The size of storing an element.
+    static size_t size(size_t value_size);
+
     /// Construct for a new slab.
     slab_row(SlabManager& manager);
 
     /// Construct for an existing slab.
     slab_row(SlabManager& manager, LinkType link);
+
+    /// Allocate and populate a new record.
+    LinkType create(const KeyType& key, write_function write);
 
     /// Allocate and populate a new slab.
     LinkType create(const KeyType& key, write_function write,

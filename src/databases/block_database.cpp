@@ -25,7 +25,7 @@
 #include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/record_row.hpp>
+#include <bitcoin/database/primitives/slab_row.hpp>
 #include <bitcoin/database/result/block_result.hpp>
 #include <bitcoin/database/state/block_state.hpp>
 
@@ -55,7 +55,7 @@ namespace database {
 using namespace bc::chain;
 
 // static
-const size_t block_database::prefix_size_ = record_row<key_type,
+const size_t block_database::prefix_size_ = slab_row<key_type,
     link_type, record_manager>::prefix_size;
 
 static const auto header_size = header::satoshi_fixed_size();

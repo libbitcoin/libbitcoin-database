@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_RECORD_ROW_IPP
 
 #include <cstddef>
+#include <tuple>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -84,7 +85,7 @@ void record_row<KeyType, LinkType, RecordManager>::link(LinkType next)
     auto serial = make_unsafe_serializer(memory->buffer());
 
     //*************************************************************************
-    serial.template write_little_endian<array_index>(next);
+    serial.template write_little_endian<LinkType>(next);
     //*************************************************************************
 }
 
@@ -113,7 +114,7 @@ LinkType record_row<KeyType, LinkType, RecordManager>::next() const
     const auto memory = raw_data(key_size);
 
     //*************************************************************************
-    return from_little_endian_unsafe<array_index>(memory->buffer());
+    return from_little_endian_unsafe<LinkType>(memory->buffer());
     //*************************************************************************
 }
 

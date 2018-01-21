@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_RECORD_ROW_HPP
 
 #include <cstddef>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <bitcoin/bitcoin.hpp>

@@ -19,6 +19,7 @@
 #include <bitcoin/database/databases/spend_database.hpp>
 
 #include <cstddef>
+#include <tuple>
 #include <utility>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
