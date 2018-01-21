@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_ITERATOR_IPP
-#define LIBBITCOIN_DATABASE_ITERATOR_IPP
+#ifndef LIBBITCOIN_DATABASE_LINKED_LIST_ITERATOR_IPP
+#define LIBBITCOIN_DATABASE_LINKED_LIST_ITERATOR_IPP
 
 #include <bitcoin/database/primitives/linked_list.hpp>
 
@@ -25,31 +25,34 @@ namespace libbitcoin {
 namespace database {
 
 template <typename Manager, typename Link>
-iterator<Manager, Link>::iterator(const Manager& manager, Link first)
+linked_list_iterator<Manager, Link>::linked_list_iterator(
+    const Manager& manager, Link first)
   : link_(first), manager_(manager)
 {
 }
 
 template <typename Manager, typename Link>
-void iterator<Manager, Link>::operator++()
+void linked_list_iterator<Manager, Link>::operator++()
 {
     link_ = linked_list<const Manager, Link>(manager_, link_).next();
 }
 
 template <typename Manager, typename Link>
-Link iterator<Manager, Link>::operator*() const
+Link linked_list_iterator<Manager, Link>::operator*() const
 {
     return link_;
 }
 
 template <typename Manager, typename Link>
-bool iterator<Manager, Link>::operator==(iterator other) const
+bool linked_list_iterator<Manager, Link>::operator==(
+    linked_list_iterator other) const
 {
     return link_ == other.link_;
 }
 
 template <typename Manager, typename Link>
-bool iterator<Manager, Link>::operator!=(iterator other) const
+bool linked_list_iterator<Manager, Link>::operator!=(
+    linked_list_iterator other) const
 {
     return link_ != other.link_;
 }

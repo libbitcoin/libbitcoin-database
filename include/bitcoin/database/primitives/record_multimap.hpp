@@ -24,7 +24,7 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/iterable.hpp>
+#include <bitcoin/database/primitives/linked_list_iterable.hpp>
 #include <bitcoin/database/primitives/record_hash_table.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 
@@ -57,7 +57,8 @@ public:
     void store(const KeyType& key, write_function write);
 
     /// Get an iterator for the key.
-    iterable<record_manager<Link>, Link> find(const KeyType& key) const;
+    linked_list_iterable<record_manager<Link>, Link> find(
+        const KeyType& key) const;
 
     /// Get a remap safe address pointer to key's data.
     memory_ptr get(Link index) const;
@@ -67,6 +68,7 @@ public:
 
 private:
     typedef linked_list<record_manager<Link>, Link> row_manager;
+
     record_hash_table<KeyType, IndexType, Link>& map_;
     record_manager<Link>& manager_;
     mutable shared_mutex create_mutex_;

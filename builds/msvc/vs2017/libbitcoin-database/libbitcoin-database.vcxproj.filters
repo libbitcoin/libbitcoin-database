@@ -140,13 +140,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table_header.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\iterable.hpp">
-      <Filter>include\bitcoin\database\primitives</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\iterator.hpp">
-      <Filter>include\bitcoin\database\primitives</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linked_list.hpp">
+      <Filter>include\bitcoin\database\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linked_list_iterable.hpp">
+      <Filter>include\bitcoin\database\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linked_list_iterator.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_hash_table.hpp">
@@ -199,13 +199,13 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\hash_table_header.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\iterable.ipp">
-      <Filter>include\bitcoin\database\impl</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\iterator.ipp">
-      <Filter>include\bitcoin\database\impl</Filter>
-    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\linked_list.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\linked_list_iterable.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\linked_list_iterator.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_hash_table.ipp">

@@ -134,9 +134,9 @@ include_bitcoin_database_databases_HEADERS = \
 include_bitcoin_database_impldir = ${includedir}/bitcoin/database/impl
 include_bitcoin_database_impl_HEADERS = \
     include/bitcoin/database/impl/hash_table_header.ipp \
-    include/bitcoin/database/impl/iterable.ipp \
-    include/bitcoin/database/impl/iterator.ipp \
     include/bitcoin/database/impl/linked_list.ipp \
+    include/bitcoin/database/impl/linked_list_iterable.ipp \
+    include/bitcoin/database/impl/linked_list_iterator.ipp \
     include/bitcoin/database/impl/record_hash_table.ipp \
     include/bitcoin/database/impl/record_manager.ipp \
     include/bitcoin/database/impl/record_multimap.ipp \
@@ -153,9 +153,9 @@ include_bitcoin_database_memory_HEADERS = \
 include_bitcoin_database_primitivesdir = ${includedir}/bitcoin/database/primitives
 include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/hash_table_header.hpp \
-    include/bitcoin/database/primitives/iterable.hpp \
-    include/bitcoin/database/primitives/iterator.hpp \
     include/bitcoin/database/primitives/linked_list.hpp \
+    include/bitcoin/database/primitives/linked_list_iterable.hpp \
+    include/bitcoin/database/primitives/linked_list_iterator.hpp \
     include/bitcoin/database/primitives/record_hash_table.hpp \
     include/bitcoin/database/primitives/record_manager.hpp \
     include/bitcoin/database/primitives/record_multimap.hpp \

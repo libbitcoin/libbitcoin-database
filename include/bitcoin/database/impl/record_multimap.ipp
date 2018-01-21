@@ -20,8 +20,7 @@
 #define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_IPP
 
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/iterable.hpp>
-#include <bitcoin/database/primitives/linked_list.hpp>
+#include <bitcoin/database/primitives/linked_list_iterable.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
@@ -84,7 +83,7 @@ void record_multimap<KeyType, IndexType, Link>::store(const KeyType& key,
 }
 
 template <typename KeyType, typename IndexType, typename Link>
-iterable<record_manager<Link>, Link>
+linked_list_iterable<record_manager<Link>, Link>
 record_multimap<KeyType, IndexType, Link>::find(const KeyType& key) const
 {
     const auto begin_address = map_.find(key);

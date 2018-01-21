@@ -16,10 +16,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_ITERABLE_HPP
-#define LIBBITCOIN_DATABASE_ITERABLE_HPP
+#ifndef LIBBITCOIN_DATABASE_LINKED_LIST_ITERABLE_HPP
+#define LIBBITCOIN_DATABASE_LINKED_LIST_ITERABLE_HPP
 
-#include <bitcoin/database/primitives/iterator.hpp>
+#include <bitcoin/database/primitives/linked_list_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -28,16 +28,16 @@ namespace database {
 /// Link is both traversal and value.
 /// Manager dynamically traverses store-based list.
 template <typename Manager, typename Link>
-class iterable
+class linked_list_iterable
 {
 public:
     /// Create a storage interator starting at first.
-    iterable(const Manager& manager, Link first);
+    linked_list_iterable(const Manager& manager, Link first);
 
     bool empty() const;
     Link front() const;
-    iterator<Manager, Link> begin() const;
-    iterator<Manager, Link> end() const;
+    linked_list_iterator<Manager, Link> begin() const;
+    linked_list_iterator<Manager, Link> end() const;
 
 private:
     const Link first_;
@@ -47,6 +47,6 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#include <bitcoin/database/impl/iterable.ipp>
+#include <bitcoin/database/impl/linked_list_iterable.ipp>
 
 #endif
