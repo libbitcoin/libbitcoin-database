@@ -120,7 +120,7 @@ bool record_multimap<KeyType, IndexType, LinkType>::unlink(const KeyType& key)
         return false;
 
     record_list<LinkType, record_manager<LinkType>> record(manager_, begin);
-    const auto next_index = record.next_index();
+    const auto next_index = record.next();
 
     // Remove the hash table entry, which delinks the single row.
     if (next_index ==

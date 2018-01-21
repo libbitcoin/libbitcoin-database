@@ -36,7 +36,7 @@ template <typename LinkType>
 void record_list_iterator<LinkType>::operator++()
 {
     index_ = record_list<LinkType, const record_manager<LinkType>>(manager_,
-        index_).next_index();
+        index_).next();
 }
 
 template <typename LinkType>

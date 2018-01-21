@@ -92,7 +92,7 @@ private:
     // The multimap as a distinct file as opposed to linage within the map
     // allows avoidance of hash storage with each entry. This is similar to
     // the transaction index with the exception that the tx index stores tx
-    // sets by block in a contiguous set, eliminating a need for record_list.
+    // sets by block in a contiguous set, eliminating a need for linked list.
     typedef record_multimap<key_type, index_type, link_type>
         record_multiple_map;
 

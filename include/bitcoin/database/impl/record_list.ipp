@@ -66,8 +66,7 @@ void record_list<LinkType, RecordManager>::link(LinkType next)
 
     // Write record.
     const auto memory = raw_data(0);
-    const auto next_data = memory->buffer();
-    auto serial = make_unsafe_serializer(next_data);
+    auto serial = make_unsafe_serializer(memory->buffer());
 
     // Link reads and writes are presumed to be protected by multimap.
     //*************************************************************************
@@ -87,23 +86,22 @@ memory_ptr record_list<LinkType, RecordManager>::data() const
 }
 
 template <typename LinkType, typename RecordManager>
-LinkType record_list<LinkType, RecordManager>::next_index() const
+LinkType record_list<LinkType, RecordManager>::next() const
 {
     const auto memory = raw_data(0);
-    const auto next_address = memory->buffer();
 
     // Link reads and writes are presumed to be protected by multimap.
     //*************************************************************************
-    return from_little_endian_unsafe<LinkType>(next_address);
+    return from_little_endian_unsafe<LinkType>(memory->buffer());
     //*************************************************************************
 }
 
 template <typename LinkType, typename RecordManager>
 memory_ptr record_list<LinkType, RecordManager>::raw_data(
-    file_offset offset) const
+    file_offset bytes) const
 {
     auto memory = manager_.get(index_);
-    memory->increment(offset);
+    memory->increment(bytes);
     return memory;
 }
 

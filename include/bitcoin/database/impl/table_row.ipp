@@ -29,27 +29,27 @@ namespace libbitcoin {
 namespace database {
 
 // static
-template <typename Key, typename Link, typename Manager>
-size_t table_row<Key, Link, Manager>::size(size_t value_size)
+template <typename Manager, typename Link, typename Key>
+size_t table_row<Manager, Link, Key>::size(size_t value_size)
 {
     return std::tuple_size<Key>::value + sizeof(Link) + value_size;
 }
 
 // Parameterizing Manager allows const and non-const.
-template <typename Key, typename Link, typename Manager>
-table_row<Key, Link, Manager>::table_row(Manager& manager)
+template <typename Manager, typename Link, typename Key>
+table_row<Manager, Link, Key>::table_row(Manager& manager)
   : manager_(manager), link_(not_found)
 {
 }
 
-template <typename Key, typename Link, typename Manager>
-table_row<Key, Link, Manager>::table_row(Manager& manager, Link link)
+template <typename Manager, typename Link, typename Key>
+table_row<Manager, Link, Key>::table_row(Manager& manager, Link link)
   : manager_(manager), link_(link)
 {
 }
 
-template <typename Key, typename Link, typename Manager>
-void table_row<Key, Link, Manager>::populate(const Key& key,
+template <typename Manager, typename Link, typename Key>
+void table_row<Manager, Link, Key>::populate(const Key& key,
     write_function write)
 {
     // Populate a new (unlinked) element with key and value data.
@@ -65,8 +65,19 @@ void table_row<Key, Link, Manager>::populate(const Key& key,
 }
 
 // This call assumes the manager is a record_manager.
-template <typename Key, typename Link, typename Manager>
-Link table_row<Key, Link, Manager>::create(const Key& key,
+template <typename Manager, typename Link, typename Key>
+Link table_row<Manager, Link, Key>::create(write_function write)
+{
+    static BC_CONSTEXPR empty_key unkeyed{};
+    BITCOIN_ASSERT(link_ == not_found);
+    link_ = manager_.allocate(1);
+    populate(unkeyed, write);
+    return link_;
+}
+
+// This call assumes the manager is a record_manager.
+template <typename Manager, typename Link, typename Key>
+Link table_row<Manager, Link, Key>::create(const Key& key,
     write_function write)
 {
     BITCOIN_ASSERT(link_ == not_found);
@@ -76,8 +87,8 @@ Link table_row<Key, Link, Manager>::create(const Key& key,
 }
 
 // This call assumes the manager is a slab_manager.
-template <typename Key, typename Link, typename Manager>
-Link table_row<Key, Link, Manager>::create(const Key& key,
+template <typename Manager, typename Link, typename Key>
+Link table_row<Manager, Link, Key>::create(const Key& key,
     write_function write, size_t value_size)
 {
     BITCOIN_ASSERT(link_ == not_found);
@@ -86,8 +97,8 @@ Link table_row<Key, Link, Manager>::create(const Key& key,
     return link_;
 }
 
-template <typename Key, typename Link, typename Manager>
-void table_row<Key, Link, Manager>::link(Link next)
+template <typename Manager, typename Link, typename Key>
+void table_row<Manager, Link, Key>::link(Link next)
 {
     // Populate next link value.
     // [ Key  ]
@@ -102,15 +113,15 @@ void table_row<Key, Link, Manager>::link(Link next)
     //*************************************************************************
 }
 
-template <typename Key, typename Link, typename Manager>
-bool table_row<Key, Link, Manager>::equal(const Key& key) const
+template <typename Manager, typename Link, typename Key>
+bool table_row<Manager, Link, Key>::equal(const Key& key) const
 {
     const auto memory = raw_data(key_start);
     return std::equal(key.begin(), key.end(), memory->buffer());
 }
 
-template <typename Key, typename Link, typename Manager>
-memory_ptr table_row<Key, Link, Manager>::data() const
+template <typename Manager, typename Link, typename Key>
+memory_ptr table_row<Manager, Link, Key>::data() const
 {
     // Get value pointer.
     // [ Key  ]
@@ -120,8 +131,8 @@ memory_ptr table_row<Key, Link, Manager>::data() const
     return raw_data(prefix_size);
 }
 
-template <typename Key, typename Link, typename Manager>
-file_offset table_row<Key, Link, Manager>::offset() const
+template <typename Manager, typename Link, typename Key>
+file_offset table_row<Manager, Link, Key>::offset() const
 {
     // Get value file offset.
     // [ Key  ]
@@ -131,8 +142,8 @@ file_offset table_row<Key, Link, Manager>::offset() const
     return link_ + prefix_size;
 }
 
-template <typename Key, typename Link, typename Manager>
-Link table_row<Key, Link, Manager>::next() const
+template <typename Manager, typename Link, typename Key>
+Link table_row<Manager, Link, Key>::next() const
 {
     const auto memory = raw_data(key_size);
 
@@ -141,8 +152,8 @@ Link table_row<Key, Link, Manager>::next() const
     //*************************************************************************
 }
 
-template <typename Key, typename Link, typename Manager>
-memory_ptr table_row<Key, Link, Manager>::raw_data(size_t bytes) const
+template <typename Manager, typename Link, typename Key>
+memory_ptr table_row<Manager, Link, Key>::raw_data(size_t bytes) const
 {
     auto memory = manager_.get(link_);
     memory->increment(bytes);

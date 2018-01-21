@@ -55,8 +55,8 @@ namespace database {
 using namespace bc::chain;
 
 // static
-const size_t block_database::prefix_size_ = table_row<key_type,
-    link_type, record_manager>::prefix_size;
+const size_t block_database::prefix_size_ = table_row<record_manager, link_type,
+    key_type>::prefix_size;
 
 static const auto header_size = header::satoshi_fixed_size();
 static constexpr auto median_time_past_size = sizeof(uint32_t);

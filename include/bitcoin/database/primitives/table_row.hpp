@@ -19,7 +19,9 @@
 #ifndef LIBBITCOIN_DATABASE_TABLE_ROW_HPP
 #define LIBBITCOIN_DATABASE_TABLE_ROW_HPP
 
+#include <array>
 #include <cstddef>
+#include <cstdint>
 #include <tuple>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
@@ -28,10 +30,14 @@
 namespace libbitcoin {
 namespace database {
 
+typedef std::array<uint8_t, 0> empty_key;
+static_assert(std::tuple_size<empty_key>::value == 0, "non-empty empty key");
+
 /**
  * A hash table key-conflict row, implemented as a linked list.
+ * Link is limited to 64 bytes. A default Key creates an unkeyed list.
  */
-template <typename Key, typename Link, typename Manager>
+template <typename Manager, typename Link, typename Key=empty_key>
 class table_row
 {
 public:
@@ -51,6 +57,9 @@ public:
 
     /// Construct for an existing element.
     table_row(Manager& manager, Link link);
+
+    /// Allocate and populate a new array element.
+    Link create(write_function write);
 
     /// Allocate and populate a new record element.
     Link create(const Key& key, write_function write);

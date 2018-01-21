@@ -99,8 +99,8 @@ public:
 private:
     typedef hash_table_header<IndexType, LinkType> header;
     typedef slab_manager<LinkType> manager;
-    typedef table_row<KeyType, LinkType, manager> row;
-    typedef table_row<KeyType, LinkType, const manager> const_row;
+    typedef table_row<manager, LinkType, KeyType> row;
+    typedef table_row<const manager, LinkType, KeyType> const_row;
 
     // The bucket index of a key.
     IndexType bucket_index(const KeyType& key) const;

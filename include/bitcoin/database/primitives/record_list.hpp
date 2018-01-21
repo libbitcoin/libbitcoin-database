@@ -29,7 +29,6 @@
 namespace libbitcoin {
 namespace database {
 
-// TODO: rename to records_row.
 template <typename LinkType, typename RecordManager>
 class record_list
   : noncopyable
@@ -55,10 +54,10 @@ public:
     memory_ptr data() const;
 
     /// Index of the next record.
-    LinkType next_index() const;
+    LinkType next() const;
 
 private:
-    memory_ptr raw_data(file_offset offset) const;
+    memory_ptr raw_data(file_offset bytes) const;
 
     LinkType index_;
     RecordManager& manager_;
