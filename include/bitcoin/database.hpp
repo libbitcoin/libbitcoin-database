@@ -24,7 +24,6 @@
 #include <bitcoin/database/version.hpp>
 #include <bitcoin/database/databases/block_database.hpp>
 #include <bitcoin/database/databases/history_database.hpp>
-#include <bitcoin/database/databases/stealth_database.hpp>
 #include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/file_storage.hpp>

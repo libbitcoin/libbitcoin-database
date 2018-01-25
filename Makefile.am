@@ -42,7 +42,6 @@ src_libbitcoin_database_la_SOURCES = \
     src/unspent_transaction.cpp \
     src/databases/block_database.cpp \
     src/databases/history_database.cpp \
-    src/databases/stealth_database.cpp \
     src/databases/transaction_database.cpp \
     src/memory/accessor.cpp \
     src/memory/file_storage.cpp \
@@ -69,7 +68,6 @@ test_libbitcoin_database_test_SOURCES = \
     test/unspent_transaction.cpp \
     test/databases/block_database.cpp \
     test/databases/history_database.cpp \
-    test/databases/stealth_database.cpp \
     test/databases/transaction_database.cpp \
     test/memory/accessor.cpp \
     test/memory/allocator.cpp \
@@ -125,7 +123,6 @@ include_bitcoin_database_databasesdir = ${includedir}/bitcoin/database/databases
 include_bitcoin_database_databases_HEADERS = \
     include/bitcoin/database/databases/block_database.hpp \
     include/bitcoin/database/databases/history_database.hpp \
-    include/bitcoin/database/databases/stealth_database.hpp \
     include/bitcoin/database/databases/transaction_database.hpp
 
 include_bitcoin_database_impldir = ${includedir}/bitcoin/database/impl

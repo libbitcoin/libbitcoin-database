@@ -73,7 +73,6 @@
     <ClCompile Include="..\..\..\..\test\data_base.cpp" />
     <ClCompile Include="..\..\..\..\test\databases\block_database.cpp" />
     <ClCompile Include="..\..\..\..\test\databases\history_database.cpp" />
-    <ClCompile Include="..\..\..\..\test\databases\stealth_database.cpp" />
     <ClCompile Include="..\..\..\..\test\databases\transaction_database.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\accessor.cpp" />

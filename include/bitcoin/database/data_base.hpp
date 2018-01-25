@@ -28,7 +28,6 @@
 #include <bitcoin/database/databases/block_database.hpp>
 #include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/databases/history_database.hpp>
-#include <bitcoin/database/databases/stealth_database.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/store.hpp>
@@ -71,9 +70,6 @@ public:
 
     /// Invalid if indexes not initialized.
     const history_database& history() const;
-
-    /// Invalid if indexes not initialized.
-    const stealth_database& stealth() const;
 
     // Utility writers.
     // ------------------------------------------------------------------------
@@ -127,14 +123,12 @@ protected:
 
     void push_inputs(const chain::transaction& tx, size_t height);
     void push_outputs(const chain::transaction& tx, size_t height);
-    void push_stealth(const chain::transaction& tx, size_t height);
     code push_transactions(const chain::block& block, size_t height,
         uint32_t median_time_past, size_t bucket=0, size_t buckets=1,
         transaction_state state=transaction_state::confirmed);
 
     bool pop_inputs(const chain::transaction& tx);
     bool pop_outputs(const chain::transaction& tx);
-    bool pop_stealth(const chain::transaction& tx);
     code pop_transactions(const chain::block& out_block, size_t bucket=0,
         size_t buckets=1);
 
@@ -154,7 +148,6 @@ protected:
     std::shared_ptr<block_database> blocks_;
     std::shared_ptr<transaction_database> transactions_;
     std::shared_ptr<history_database> history_;
-    std::shared_ptr<stealth_database> stealth_;
 
 private:
     typedef chain::input::list inputs;

@@ -63,9 +63,6 @@
     <ClCompile Include="..\..\..\..\src\databases\history_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\databases\stealth_database.cpp">
-      <Filter>src\databases</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\databases\transaction_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
@@ -108,9 +105,6 @@
       <Filter>include\bitcoin\database\databases</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\history_database.hpp">
-      <Filter>include\bitcoin\database\databases</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\stealth_database.hpp">
       <Filter>include\bitcoin\database\databases</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\transaction_database.hpp">

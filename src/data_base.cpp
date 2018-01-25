@@ -45,7 +45,7 @@ using namespace bc::wallet;
 // (2) blocks_.get(spender_height)->transactions().
 // (3) (transactions()->inputs()->previous_output() == outpoint)->inpoint.
 // This has the same average cost as 1 output-query + 1/2 block-query.
-// This will reduce server indexing by 29% (address/stealth indexing only).
+// This will reduce server indexing by 30% (address indexing only).
 // Could make index optional, redirecting queries if not present.
 
 // A failure after begin_write is returned without calling end_write.
@@ -95,8 +95,7 @@ bool data_base::create(const block& genesis)
 
     if (use_indexes)
         created = created &&
-        history_->create() &&
-        stealth_->create();
+        history_->create();
 
     if (!created)
         return false;
@@ -126,8 +125,7 @@ bool data_base::open()
 
     if (use_indexes)
         opened = opened &&
-        history_->open() &&
-        stealth_->open();
+        history_->open();
 
     closed_ = false;
     return opened;
@@ -149,9 +147,6 @@ void data_base::start()
         history_ = std::make_shared<history_database>(history_table,
             history_rows, settings_.history_table_buckets,
             settings_.file_growth_rate);
-
-        stealth_ = std::make_shared<stealth_database>(stealth_rows,
-            settings_.file_growth_rate);
     }
 }
 
@@ -159,10 +154,7 @@ void data_base::start()
 void data_base::commit()
 {
     if (use_indexes)
-    {
         history_->commit();
-        stealth_->commit();
-    }
 
     transactions_->commit();
     blocks_->commit();
@@ -184,8 +176,7 @@ bool data_base::flush() const
 
     if (use_indexes)
         flushed = flushed &&
-        history_->flush() &&
-        stealth_->flush();
+        history_->flush();
 
     LOG_DEBUG(LOG_DATABASE)
         << "Write flushed to disk: "
@@ -209,8 +200,7 @@ bool data_base::close()
 
     if (use_indexes)
         closed = closed &&
-        history_->close() &&
-        stealth_->close();
+        history_->close();
 
     return closed && store::close();
     // Unlock exclusive file access and conditionally the global flush lock.
@@ -235,12 +225,6 @@ const transaction_database& data_base::transactions() const
 const history_database& data_base::history() const
 {
     return *history_;
-}
-
-// Invalid if indexes not initialized.
-const stealth_database& data_base::stealth() const
-{
-    return *stealth_;
 }
 
 // Synchronous writers.
@@ -639,7 +623,6 @@ code data_base::push_transactions(const block& block, size_t height,
         {
             push_inputs(tx, height);
             push_outputs(tx, height);
-            push_stealth(tx, height);
         }
     }
 
@@ -698,48 +681,6 @@ void data_base::push_outputs(const transaction& tx, size_t height)
     }
 }
 
-void data_base::push_stealth(const transaction& tx, size_t height)
-{
-    const auto hash = tx.hash();
-    const auto& outputs = tx.outputs();
-
-    // Protected loop termination.
-    if (outputs.empty())
-        return;
-
-    // Stealth outputs are paired by convention.
-    for (size_t index = 0; index < (outputs.size() - 1); ++index)
-    {
-        const auto& ephemeral_script = outputs[index].script();
-        const auto& payment_output = outputs[index + 1];
-
-        // Try to extract the payment address from the second output.
-        const auto address = payment_output.address();
-        if (!address)
-            continue;
-
-        // Try to extract an unsigned ephemeral key from the first output.
-        hash_digest unsigned_ephemeral_key;
-        if (!extract_ephemeral_key(unsigned_ephemeral_key, ephemeral_script))
-            continue;
-
-        // Try to extract a stealth prefix from the first output.
-        uint32_t prefix;
-        if (!to_stealth_prefix(prefix, ephemeral_script))
-            continue;
-
-        // The payment address versions are arbitrary and unused here.
-        stealth_->store(
-        {
-            height,
-            prefix,
-            unsigned_ephemeral_key,
-            address.hash(),
-            hash
-        });
-    }
-}
-
 // A false return implies store corruption.
 // To pop in order call with bucket = 0 and buckets = 1 (defaults).
 code data_base::pop_transactions(const block& block, size_t bucket,
@@ -760,8 +701,7 @@ code data_base::pop_transactions(const block& block, size_t bucket,
         if (settings_.index_addresses)
         {
             if (!pop_inputs(tx) ||
-                !pop_outputs(tx) ||
-                !pop_stealth(tx))
+                !pop_outputs(tx))
                 return error::operation_failed;
         }
     }
@@ -798,13 +738,6 @@ bool data_base::pop_outputs(const chain::transaction& tx)
             if (!history_->unlink_last_row(address.hash()))
                 return false;
 
-    return true;
-}
-
-// A false return implies store corruption.
-bool data_base::pop_stealth(const chain::transaction& tx)
-{
-    // Stealth unlink is not implemented, there is no way to correlate.
     return true;
 }
 

@@ -87,7 +87,6 @@ public:
     /// Optional indexes.
     const path history_table;
     const path history_rows;
-    const path stealth_rows;
 
 protected:
     // The implementation must flush all data to disk here.
