@@ -144,3 +144,105 @@
 ////}
 ////
 ////BOOST_AUTO_TEST_SUITE_END()
+
+
+////BOOST_AUTO_TEST_SUITE(hash_table_tests)
+////
+////BOOST_AUTO_TEST_CASE(hash_table__32bit__test)
+////{
+////    typedef test::tiny_hash key_type;
+////    typedef record_manager<key_type> record_manager;
+////    typedef hash_table<record_manager, key_type, uint32_t, uint32_t> record_map;
+////
+////    test::storage file;
+////    BOOST_REQUIRE(file.open());
+////
+////    const auto buckets = 2u;
+////    const auto value_size = 4u;
+////    record_map table(file, buckets, value_size);
+////    BOOST_REQUIRE(table.create());
+////
+////    const key_type key{ { 0xde, 0xad, 0xbe, 0xef } };
+////    const key_type key1{ { 0xb0, 0x0b, 0xb0, 0x0b } };
+////    const key_type invalid{ { 0x00, 0x01, 0x02, 0x03 } };
+////
+////    const auto write = [](byte_serializer& serial)
+////    {
+////        serial.write_byte(110);
+////        serial.write_byte(110);
+////        serial.write_byte(4);
+////        serial.write_byte(88);
+////    };
+////
+////    const auto write1 = [](byte_serializer& serial)
+////    {
+////        serial.write_byte(99);
+////        serial.write_byte(98);
+////        serial.write_byte(97);
+////        serial.write_byte(96);
+////    };
+////
+////    auto allocator = table.allocator();
+////
+////    auto element = allocator.create(key, write);
+////    table.link(element);
+////
+////    table.store(key, write);
+////    table.store(key1, write1);
+////    table.store(key1, write);
+////    BOOST_REQUIRE(table.unlink(key));
+////    BOOST_REQUIRE(table.unlink(key1));
+////    BOOST_REQUIRE(!table.unlink(invalid));
+////}
+////
+////BOOST_AUTO_TEST_CASE(hash_table__64bit__test)
+////{
+////    typedef test::little_hash key_type;
+////    typedef record_manager<key_type> record_manager;
+////    typedef hash_table<record_manager, key_type, uint32_t, uint32_t> record_map;
+////
+////    test::storage file;
+////    BOOST_REQUIRE(file.open());
+////
+////    const auto buckets = 2u;
+////    const auto value_size = 7u;
+////    record_map table(file, buckets, value_size);
+////    BOOST_REQUIRE(table.create());
+////
+////    const key_type key{ { 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef } };
+////    const key_type key1{ { 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b } };
+////    const key_type invalid{ { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 } };
+////
+////    const auto write = [](byte_serializer& serial)
+////    {
+////        serial.write_byte(110);
+////        serial.write_byte(110);
+////        serial.write_byte(4);
+////        serial.write_byte(88);
+////        serial.write_byte(110);
+////        serial.write_byte(110);
+////        serial.write_byte(4);
+////    };
+////
+////    const auto write1 = [](byte_serializer& serial)
+////    {
+////        serial.write_byte(99);
+////        serial.write_byte(98);
+////        serial.write_byte(97);
+////        serial.write_byte(96);
+////        serial.write_byte(95);
+////        serial.write_byte(94);
+////        serial.write_byte(93);
+////    };
+////
+////    table.store(key, write);
+////    table.store(key, write);
+////    table.store(key1, write1);
+////    table.store(key1, write);
+////    BOOST_REQUIRE(table.unlink(key));
+////    BOOST_REQUIRE(table.unlink(key1));
+////
+////    BOOST_REQUIRE(!table.unlink(invalid));
+////}
+////
+////BOOST_AUTO_TEST_SUITE_END()

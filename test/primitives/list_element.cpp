@@ -22,9 +22,9 @@
 using namespace bc;
 using namespace bc::database;
 
-BOOST_AUTO_TEST_SUITE(allocator_tests)
+BOOST_AUTO_TEST_SUITE(list_element_tests)
 
-BOOST_AUTO_TEST_CASE(allocator__method__vector__expectation)
+BOOST_AUTO_TEST_CASE(list_element__method__vector__expectation)
 {
     BOOST_REQUIRE(true);
 }

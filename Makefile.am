@@ -70,13 +70,12 @@ test_libbitcoin_database_test_SOURCES = \
     test/databases/history_database.cpp \
     test/databases/transaction_database.cpp \
     test/memory/accessor.cpp \
-    test/memory/allocator.cpp \
     test/memory/file_storage.cpp \
     test/primitives/hash_table.cpp \
     test/primitives/hash_table_header.cpp \
     test/primitives/hash_table_multimap.cpp \
-    test/primitives/hash_table_records.cpp \
     test/primitives/list.cpp \
+    test/primitives/list_element.cpp \
     test/primitives/list_iterator.cpp \
     test/primitives/record_manager.cpp \
     test/primitives/slab_manager.cpp \

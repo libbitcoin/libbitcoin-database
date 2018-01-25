@@ -67,7 +67,6 @@ public:
     /// The current physical (vs. logical) size of the map.
     size_t size() const;
 
-    /// Throws runtime_error if insufficient space.
     /// Get protected shared access to memory, starting at first byte.
     memory_ptr access();
 

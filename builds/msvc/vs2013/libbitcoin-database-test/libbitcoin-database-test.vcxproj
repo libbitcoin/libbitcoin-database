@@ -76,13 +76,12 @@
     <ClCompile Include="..\..\..\..\test\databases\transaction_database.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\accessor.cpp" />
-    <ClCompile Include="..\..\..\..\test\memory\allocator.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\file_storage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hash_table.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hash_table_header.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hash_table_multimap.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives\hash_table_records.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\list.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\list_element.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\list_iterator.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\record_manager.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\slab_manager.cpp" />

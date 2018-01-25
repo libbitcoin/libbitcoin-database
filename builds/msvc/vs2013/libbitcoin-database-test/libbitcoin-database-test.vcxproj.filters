@@ -48,9 +48,6 @@
     <ClCompile Include="..\..\..\..\test\memory\accessor.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\memory\allocator.cpp">
-      <Filter>src\memory</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\memory\file_storage.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
@@ -63,10 +60,10 @@
     <ClCompile Include="..\..\..\..\test\primitives\hash_table_multimap.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\hash_table_records.cpp">
+    <ClCompile Include="..\..\..\..\test\primitives\list.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\list.cpp">
+    <ClCompile Include="..\..\..\..\test\primitives\list_element.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\list_iterator.cpp">
