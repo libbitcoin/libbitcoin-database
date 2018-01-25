@@ -48,27 +48,27 @@ public:
     typedef list<manager, Link, empty_key> list;
     typedef hash_table<manager, Key, Index, Link> table;
 
-    /// The stored size of a recordset value with the given size.
+    /// The stored size of a record value with the given size.
     static size_t size(size_t value_size);
 
-    /// Construct a new recordset hash table.
+    /// Construct a new record multimap.
     /// THIS ASSUMES MAP HAS VALUE == sizeof(Link).
     hash_table_multimap(table& map, manager& manager);
 
-    /// Use to allocate an element in a recordset. 
+    /// Use to allocate an element in a multimap. 
     value_type allocator();
 
-    /// Find an iterator for the given recordset key.
+    /// Find an iterator for the given multimap key.
     list find(const Key& key) const;
 
-    /// Get the iterator for the given link from a recordset.
+    /// Get the iterator for the given link from a multimap.
     list find(Link link) const;
 
-    /// Add the given element to a recordset.
-    /// Recordset elements have empty internal key values.
+    /// Add the given element to a multimap.
+    /// Multimap elements have empty internal key values.
     void link(const Key& key, value_type& element);
 
-    /// Remove a recordset element with the given key.
+    /// Remove a multimap element with the given key.
     bool unlink(const Key& key);
 
 private:

@@ -66,7 +66,7 @@ address_database::address_database(const path& lookup_filename,
     address_file_(rows_filename, expansion),
     address_index_(address_file_, 0,
         hash_table_multimap<key_type, index_type, link_type>::size(value_size)),
-    address_recordset_map_(hash_table_, address_index_)
+    address_multimap_(hash_table_, address_index_)
 {
 }
 
@@ -135,7 +135,7 @@ address_database::list address_database::get(const short_hash& key,
     };
 
     // Get an iterator for the set of records that matches the key.
-    auto history = address_recordset_map_.find(key);
+    auto history = address_multimap_.find(key);
 
     for (const auto element: history)
     {
@@ -163,9 +163,9 @@ void address_database::store(const short_hash& key,
     };
 
     // Write the new payment history.
-    auto front = address_recordset_map_.allocator();
+    auto front = address_multimap_.allocator();
     front.create(writer);
-    address_recordset_map_.link(key, front);
+    address_multimap_.link(key, front);
 }
 
 // Update.
@@ -173,7 +173,7 @@ void address_database::store(const short_hash& key,
 
 bool address_database::unlink_last_row(const short_hash& key)
 {
-    return address_recordset_map_.unlink(key);
+    return address_multimap_.unlink(key);
 }
 
 } // namespace database
