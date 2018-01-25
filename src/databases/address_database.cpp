@@ -26,21 +26,21 @@
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_multimap.hpp>
 
-// Record format (v4) [47 bytes]:
+// Record format (v4) [47 bytes, 71 with key/link]:
 // ----------------------------------------------------------------------------
 // [ height:4      - const] (may short-circuit sequential read after height)
 // [ kind:1        - const]
 // [ point-hash:32 - const]
 // [ point-index:2 - const]
-// [ data:8        - const]
+// [ checksum:8    - const]
 
-// Record format (v3) [47 bytes]:
+// Record format (v3) [47 bytes, 71 with key/link]:
 // ----------------------------------------------------------------------------
 // [ kind:1        - const]
 // [ point-hash:32 - const]
 // [ point-index:2 - const]
 // [ height:4      - const]
-// [ data:8        - const]
+// [ checksum:8    - const]
 
 namespace libbitcoin {
 namespace database {
@@ -48,10 +48,12 @@ namespace database {
 using namespace bc::chain;
 
 static constexpr auto height_size = sizeof(uint32_t);
-static constexpr auto flag_size = sizeof(uint8_t);
+static constexpr auto kind_size = sizeof(uint8_t);
 static constexpr auto point_size = std::tuple_size<point>::value;
 static constexpr auto checksum_size = sizeof(uint64_t);
-static constexpr auto value_size = height_size + flag_size + point_size +
+
+// Total size of address storage.
+static constexpr auto value_size = height_size + kind_size + point_size +
     checksum_size;
 
 // History uses a hash table index, O(1).
