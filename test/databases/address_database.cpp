@@ -28,19 +28,19 @@ using namespace bc;
 using namespace bc::chain;
 using namespace bc::database;
 
-#define DIRECTORY "history_database"
+#define DIRECTORY "address_database"
 
-struct history_database_directory_setup_fixture
+struct address_database_directory_setup_fixture
 {
-    history_database_directory_setup_fixture()
+    address_database_directory_setup_fixture()
     {
         BOOST_REQUIRE(test::clear_path(DIRECTORY));
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE(database_tests, history_database_directory_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(database_tests, address_database_directory_setup_fixture)
 
-BOOST_AUTO_TEST_CASE(history_database__test)
+BOOST_AUTO_TEST_CASE(address_database__test)
 {
     const short_hash key1 = base16_literal("a006500b7ddfd568e2b036c65a4f4d6aaa0cbd9b");
     output_point out11{ hash_literal("4129e76f363f9742bc98dd3d40c99c9066e4d53b8e10e5097bd6f7b5059d7c53"), 110 };
@@ -79,9 +79,9 @@ BOOST_AUTO_TEST_CASE(history_database__test)
     const size_t out_h41 = 74448;
     const uint64_t value41 = 990;
 
-    test::create(DIRECTORY "/history_table");
-    test::create(DIRECTORY "/history_rows");
-    history_database db(DIRECTORY "/history_table", DIRECTORY "/history_rows", 1000, 50);
+    test::create(DIRECTORY "/address_table");
+    test::create(DIRECTORY "/address_rows");
+    address_database db(DIRECTORY "/address_table", DIRECTORY "/address_rows", 1000, 50);
     BOOST_REQUIRE(db.create());
     db.store(key1, { out_h11, out11, value11 });
     db.store(key1, { out_h12, out12, value12 });

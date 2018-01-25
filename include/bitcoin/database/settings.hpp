@@ -40,7 +40,7 @@ public:
     uint16_t file_growth_rate;
     uint32_t block_table_buckets;
     uint32_t transaction_table_buckets;
-    uint32_t history_table_buckets;
+    uint32_t address_table_buckets;
     uint32_t cache_capacity;
 };
 

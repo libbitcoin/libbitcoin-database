@@ -149,7 +149,7 @@ private:
     file_storage block_index_file_;
     record_manager block_index_;
 
-    // See comments in history_database for similiarity to recordset.
+    // See comments in address_database for similiarity to recordset.
     // A new recordset template could abstract this in a similar manner.
     // Association table between blocks and their contained transactions.
     // Only first tx is indexed and count is required to read the full set.

@@ -63,7 +63,7 @@ data_base::data_base(const settings& settings)
         << "Buckets: "
         << "block [" << settings.block_table_buckets << "], "
         << "transaction [" << settings.transaction_table_buckets << "], "
-        << "history [" << settings.history_table_buckets << "]";
+        << "address [" << settings.address_table_buckets << "]";
 }
 
 data_base::~data_base()
@@ -95,7 +95,7 @@ bool data_base::create(const block& genesis)
 
     if (use_indexes)
         created = created &&
-        history_->create();
+        addresses_->create();
 
     if (!created)
         return false;
@@ -125,7 +125,7 @@ bool data_base::open()
 
     if (use_indexes)
         opened = opened &&
-        history_->open();
+        addresses_->open();
 
     closed_ = false;
     return opened;
@@ -144,8 +144,8 @@ void data_base::start()
 
     if (use_indexes)
     {
-        history_ = std::make_shared<history_database>(history_table,
-            history_rows, settings_.history_table_buckets,
+        addresses_ = std::make_shared<address_database>(address_table,
+            address_rows, settings_.address_table_buckets,
             settings_.file_growth_rate);
     }
 }
@@ -154,7 +154,7 @@ void data_base::start()
 void data_base::commit()
 {
     if (use_indexes)
-        history_->commit();
+        addresses_->commit();
 
     transactions_->commit();
     blocks_->commit();
@@ -176,7 +176,7 @@ bool data_base::flush() const
 
     if (use_indexes)
         flushed = flushed &&
-        history_->flush();
+        addresses_->flush();
 
     LOG_DEBUG(LOG_DATABASE)
         << "Write flushed to disk: "
@@ -200,7 +200,7 @@ bool data_base::close()
 
     if (use_indexes)
         closed = closed &&
-        history_->close();
+        addresses_->close();
 
     return closed && store::close();
     // Unlock exclusive file access and conditionally the global flush lock.
@@ -222,9 +222,9 @@ const transaction_database& data_base::transactions() const
 }
 
 // Invalid if indexes not initialized.
-const history_database& data_base::history() const
+const address_database& data_base::addresses() const
 {
-    return *history_;
+    return *addresses_;
 }
 
 // Synchronous writers.
@@ -649,7 +649,7 @@ void data_base::push_inputs(const transaction& tx, size_t height)
             // This results in a complete and unambiguous history for the
             // address since standard outputs contain unambiguous address data.
             for (const auto& address: prevout.validation.cache.addresses())
-                history_->store(address.hash(), { height, inpoint, checksum });
+                addresses_->store(address.hash(), { height, inpoint, checksum });
         }
         else
         {
@@ -658,7 +658,7 @@ void data_base::push_inputs(const transaction& tx, size_t height)
             // which significantly expands the size of the history store.
             // These are tradeoffs when no prevout is cached (checkpoint sync).
             for (const auto& address: input.addresses())
-                history_->store(address.hash(), { height, inpoint, checksum });
+                addresses_->store(address.hash(), { height, inpoint, checksum });
         }
     }
 }
@@ -677,7 +677,7 @@ void data_base::push_outputs(const transaction& tx, size_t height)
 
         // Standard outputs contain unambiguous address data.
         for (const auto& address: output.addresses())
-            history_->store(address.hash(), { height, outpoint, value });
+            addresses_->store(address.hash(), { height, outpoint, value });
     }
 }
 
@@ -719,7 +719,7 @@ bool data_base::pop_inputs(const chain::transaction& tx)
 
     for (auto input = inputs.begin(); input != inputs.end(); ++input)
         for (const auto& address: input->addresses())
-            if (!history_->unlink_last_row(address.hash()))
+            if (!addresses_->unlink_last_row(address.hash()))
                 return false;
 
     return true;
@@ -735,7 +735,7 @@ bool data_base::pop_outputs(const chain::transaction& tx)
 
     for (auto output = outputs.begin(); output != outputs.end(); ++output)
         for (const auto& address: output->addresses())
-            if (!history_->unlink_last_row(address.hash()))
+            if (!addresses_->unlink_last_row(address.hash()))
                 return false;
 
     return true;

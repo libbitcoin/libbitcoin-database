@@ -75,7 +75,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\src\data_base.cpp" />
     <ClCompile Include="..\..\..\..\src\databases\block_database.cpp" />
-    <ClCompile Include="..\..\..\..\src\databases\history_database.cpp" />
+    <ClCompile Include="..\..\..\..\src\databases\address_database.cpp" />
     <ClCompile Include="..\..\..\..\src\databases\transaction_database.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\accessor.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\file_storage.cpp" />
@@ -91,7 +91,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\data_base.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\block_database.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\history_database.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\address_database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\transaction_database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp" />

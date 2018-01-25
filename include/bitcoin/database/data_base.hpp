@@ -25,8 +25,8 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/databases/address_database.hpp>
 #include <bitcoin/database/databases/block_database.hpp>
-#include <bitcoin/database/databases/history_database.hpp>
 #include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/settings.hpp>
@@ -69,7 +69,7 @@ public:
     const transaction_database& transactions() const;
 
     /// Invalid if indexes not initialized.
-    const history_database& history() const;
+    const address_database& addresses() const;
 
     // Utility writers.
     // ------------------------------------------------------------------------
@@ -147,7 +147,7 @@ protected:
 
     std::shared_ptr<block_database> blocks_;
     std::shared_ptr<transaction_database> transactions_;
-    std::shared_ptr<history_database> history_;
+    std::shared_ptr<address_database> addresses_;
 
 private:
     typedef chain::input::list inputs;

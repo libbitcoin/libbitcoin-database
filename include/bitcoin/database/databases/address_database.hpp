@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_HISTORY_DATABASE_HPP
-#define LIBBITCOIN_DATABASE_HISTORY_DATABASE_HPP
+#ifndef LIBBITCOIN_DATABASE_ADDRESS_DATABASE_HPP
+#define LIBBITCOIN_DATABASE_ADDRESS_DATABASE_HPP
 
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
@@ -32,23 +32,23 @@ namespace database {
 
 /// This is a recordset map where the key is the Bitcoin address hash,
 /// which returns several rows giving the history for that address.
-class BCD_API history_database
+class BCD_API address_database
 {
 public:
     typedef boost::filesystem::path path;
     typedef chain::payment_record::list list;
 
     /// Construct the database.
-    history_database(const path& lookup_filename, const path& rows_filename,
+    address_database(const path& lookup_filename, const path& rows_filename,
         size_t buckets, size_t expansion);
 
     /// Close the database (all threads must first be stopped).
-    ~history_database();
+    ~address_database();
 
     // Startup and shutdown.
     // ----------------------------------------------------------------------------
 
-    /// Initialize a new history database.
+    /// Initialize a new address database.
     bool create();
 
     /// Call before using the database.
@@ -70,7 +70,7 @@ public:
     list get(const short_hash& key, size_t limit, size_t from_height) const;
 
     /////// Return statistical info about the database.
-    ////history_statinfo statinfo() const;
+    ////address_statinfo statinfo() const;
 
     // Store.
     //-------------------------------------------------------------------------
@@ -89,7 +89,8 @@ private:
     typedef array_index index_type;
     typedef array_index link_type;
     typedef record_manager<link_type> record_manager;
-    typedef hash_table<record_manager, key_type, index_type, link_type> record_map;
+    typedef hash_table<record_manager, key_type, index_type, link_type>
+        record_map;
 
     // The recordset map as distinct file as opposed to linkage within the map
     // allows avoidance of hash storage with each entry. This is similar to

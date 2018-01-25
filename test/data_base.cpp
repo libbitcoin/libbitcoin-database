@@ -34,7 +34,7 @@
 ////void test_block_exists(const data_base& interface, size_t height,
 ////    const block& block, bool index_addresses)
 ////{
-////    const auto& history_store = interface.history();
+////    const auto& address_store = interface.addresses();
 ////    const auto block_hash = block.hash();
 ////    auto result = interface.blocks().get(height);
 ////    auto result_by_hash = interface.blocks().get(block_hash);
@@ -81,7 +81,7 @@
 ////
 ////                for (const auto& address: addresses)
 ////                {
-////                    auto history = history_store.get(address.hash(), 0, 0);
+////                    auto history = address_store.get(address.hash(), 0, 0);
 ////                    auto found = false;
 ////
 ////                    for (const auto& row: history)
@@ -110,7 +110,7 @@
 ////
 ////            for (const auto& address: addresses)
 ////            {
-////                auto history = history_store.get(address.hash(), 0, 0);
+////                auto history = address_store.get(address.hash(), 0, 0);
 ////                auto found = false;
 ////
 ////                for (const auto& row: history)
@@ -135,7 +135,7 @@
 ////void test_block_not_exists(const data_base& interface, const block& block0,
 ////    bool index_addresses)
 ////{
-////    const auto& history_store = interface.history();
+////    const auto& address_store = interface.history();
 ////
 ////    // Popped blocks still exist in the block hash table, but not confirmed.
 ////    const auto block_hash = block0.hash();
@@ -165,7 +165,7 @@
 ////
 ////                for (const auto& address: addresses)
 ////                {
-////                    auto history = history_store.get(address.hash(), 0, 0);
+////                    auto history = address_store.get(address.hash(), 0, 0);
 ////                    auto found = false;
 ////
 ////                    for (const auto& row: history)
@@ -193,7 +193,7 @@
 ////
 ////            for (const auto& address: addresses)
 ////            {
-////                auto history = history_store.get(address.hash(), 0, 0);
+////                auto history = address_store.get(address.hash(), 0, 0);
 ////                auto found = false;
 ////
 ////                for (const auto& row: history)
@@ -319,7 +319,7 @@
 ////    settings.file_growth_rate = 42;
 ////    settings.block_table_buckets = 42;
 ////    settings.transaction_table_buckets = 42;
-////    settings.history_table_buckets = 42;
+////    settings.address_table_buckets = 42;
 ////
 ////    size_t height;
 ////    threadpool pool(1);

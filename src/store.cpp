@@ -37,8 +37,8 @@ const std::string store::BLOCK_INDEX = "block_index";
 const std::string store::BLOCK_TABLE = "block_table";
 const std::string store::TRANSACTION_INDEX = "transaction_index";
 const std::string store::TRANSACTION_TABLE = "transaction_table";
-const std::string store::HISTORY_TABLE = "history_table";
-const std::string store::HISTORY_ROWS = "history_rows";
+const std::string store::ADDRESS_TABLE = "address_table";
+const std::string store::ADDRESS_ROWS = "address_rows";
 
 // Create a single file with one byte of arbitrary data.
 static bool create_file(const path& file_path)
@@ -74,8 +74,8 @@ store::store(const path& prefix, bool with_indexes, bool flush_each_write)
     transaction_table(prefix / TRANSACTION_TABLE),
 
     // Optional indexes.
-    history_table(prefix / HISTORY_TABLE),
-    history_rows(prefix / HISTORY_ROWS)
+    address_table(prefix / ADDRESS_TABLE),
+    address_rows(prefix / ADDRESS_ROWS)
 {
 }
 
@@ -97,8 +97,8 @@ bool store::create()
 
     return
         created &&
-        create_file(history_table) &&
-        create_file(history_rows);
+        create_file(address_table) &&
+        create_file(address_rows);
 }
 
 bool store::open()

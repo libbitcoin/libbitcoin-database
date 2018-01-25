@@ -36,9 +36,6 @@
     <ClCompile Include="..\..\..\..\test\databases\block_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\databases\history_database.cpp">
-      <Filter>src\databases</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\databases\transaction_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
@@ -104,6 +101,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\utility\utility.cpp">
       <Filter>src\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\databases\address_database.cpp">
+      <Filter>src\databases</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

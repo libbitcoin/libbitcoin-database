@@ -41,8 +41,8 @@ public:
     static const std::string BLOCK_TABLE;
     static const std::string TRANSACTION_INDEX;
     static const std::string TRANSACTION_TABLE;
-    static const std::string HISTORY_TABLE;
-    static const std::string HISTORY_ROWS;
+    static const std::string ADDRESS_TABLE;
+    static const std::string ADDRESS_ROWS;
 
     // Construct.
     // ------------------------------------------------------------------------
@@ -84,8 +84,8 @@ public:
     const path transaction_table;
 
     /// Optional indexes.
-    const path history_table;
-    const path history_rows;
+    const path address_table;
+    const path address_rows;
 
 protected:
     // The implementation must flush all data to disk here.

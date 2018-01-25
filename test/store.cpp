@@ -76,16 +76,16 @@ BOOST_AUTO_TEST_CASE(store__construct__no_indexes__expectated_files)
     static const std::string block_table = directory + "/" + store::BLOCK_TABLE;
     static const std::string tx_index = directory + "/" + store::TRANSACTION_INDEX;
     static const std::string tx_table = directory + "/" + store::TRANSACTION_TABLE;
-    static const std::string history_table = directory + "/" + store::HISTORY_TABLE;
-    static const std::string history_rows = directory + "/" + store::HISTORY_ROWS;
+    static const std::string address_table = directory + "/" + store::ADDRESS_TABLE;
+    static const std::string address_rows = directory + "/" + store::ADDRESS_ROWS;
 
     BOOST_REQUIRE(!test::exists(header_index));
     BOOST_REQUIRE(!test::exists(block_index));
     BOOST_REQUIRE(!test::exists(block_table));
     BOOST_REQUIRE(!test::exists(tx_index));
     BOOST_REQUIRE(!test::exists(tx_table));
-    BOOST_REQUIRE(!test::exists(history_table));
-    BOOST_REQUIRE(!test::exists(history_rows));
+    BOOST_REQUIRE(!test::exists(address_table));
+    BOOST_REQUIRE(!test::exists(address_rows));
 
     BOOST_REQUIRE(store.create());
 
@@ -94,8 +94,8 @@ BOOST_AUTO_TEST_CASE(store__construct__no_indexes__expectated_files)
     BOOST_REQUIRE(test::exists(block_table));
     BOOST_REQUIRE(test::exists(tx_index));
     BOOST_REQUIRE(test::exists(tx_table));
-    BOOST_REQUIRE(!test::exists(history_table));
-    BOOST_REQUIRE(!test::exists(history_rows));
+    BOOST_REQUIRE(!test::exists(address_table));
+    BOOST_REQUIRE(!test::exists(address_rows));
 
     BOOST_REQUIRE(store.close());
 }
@@ -111,16 +111,16 @@ BOOST_AUTO_TEST_CASE(store__construct__indexes__expectated_files)
     static const std::string block_table = directory + "/" + store::BLOCK_TABLE;
     static const std::string tx_index = directory + "/" + store::TRANSACTION_INDEX;
     static const std::string tx_table = directory + "/" + store::TRANSACTION_TABLE;
-    static const std::string history_table = directory + "/" + store::HISTORY_TABLE;
-    static const std::string history_rows = directory + "/" + store::HISTORY_ROWS;
+    static const std::string address_table = directory + "/" + store::ADDRESS_TABLE;
+    static const std::string address_rows = directory + "/" + store::ADDRESS_ROWS;
 
     BOOST_REQUIRE(!test::exists(header_index));
     BOOST_REQUIRE(!test::exists(block_index));
     BOOST_REQUIRE(!test::exists(block_table));
     BOOST_REQUIRE(!test::exists(tx_index));
     BOOST_REQUIRE(!test::exists(tx_table));
-    BOOST_REQUIRE(!test::exists(history_table));
-    BOOST_REQUIRE(!test::exists(history_rows));
+    BOOST_REQUIRE(!test::exists(address_table));
+    BOOST_REQUIRE(!test::exists(address_rows));
 
     BOOST_REQUIRE(store.create());
 
@@ -129,8 +129,8 @@ BOOST_AUTO_TEST_CASE(store__construct__indexes__expectated_files)
     BOOST_REQUIRE(test::exists(block_table));
     BOOST_REQUIRE(test::exists(tx_index));
     BOOST_REQUIRE(test::exists(tx_table));
-    BOOST_REQUIRE(test::exists(history_table));
-    BOOST_REQUIRE(test::exists(history_rows));
+    BOOST_REQUIRE(test::exists(address_table));
+    BOOST_REQUIRE(test::exists(address_rows));
 
     BOOST_REQUIRE(store.close());
 }

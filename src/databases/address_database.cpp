@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/databases/history_database.hpp>
+#include <bitcoin/database/databases/address_database.hpp>
 
 #include <cstdint>
 #include <cstddef>
@@ -56,7 +56,7 @@ static constexpr auto value_size = height_size + flag_size + point_size +
 
 // History uses a hash table index, O(1).
 // The hash table stores indexes to the first element of unkeyed linked lists.
-history_database::history_database(const path& lookup_filename,
+address_database::address_database(const path& lookup_filename,
     const path& rows_filename, size_t buckets, size_t expansion)
   : hash_table_file_(lookup_filename, expansion),
 
@@ -70,7 +70,7 @@ history_database::history_database(const path& lookup_filename,
 {
 }
 
-history_database::~history_database()
+address_database::~address_database()
 {
     close();
 }
@@ -78,7 +78,7 @@ history_database::~history_database()
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 
-bool history_database::create()
+bool address_database::create()
 {
     if (!hash_table_file_.open() ||
         !address_file_.open())
@@ -90,7 +90,7 @@ bool history_database::create()
         address_index_.create();
 }
 
-bool history_database::open()
+bool address_database::open()
 {
     return
         hash_table_file_.open() &&
@@ -99,20 +99,20 @@ bool history_database::open()
         address_index_.start();
 }
 
-void history_database::commit()
+void address_database::commit()
 {
     hash_table_.commit();
     address_index_.commit();
 }
 
-bool history_database::flush() const
+bool address_database::flush() const
 {
     return
         hash_table_file_.flush() &&
         address_file_.flush();
 }
 
-bool history_database::close()
+bool address_database::close()
 {
     return
         hash_table_file_.close() &&
@@ -122,7 +122,7 @@ bool history_database::close()
 // Queries.
 // ----------------------------------------------------------------------------
 
-history_database::list history_database::get(const short_hash& key,
+address_database::list address_database::get(const short_hash& key,
     size_t limit, size_t from_height) const
 {
     list result;
@@ -154,7 +154,7 @@ history_database::list history_database::get(const short_hash& key,
 // Store.
 // ----------------------------------------------------------------------------
 
-void history_database::store(const short_hash& key,
+void address_database::store(const short_hash& key,
     const payment_record& payment)
 {
     const auto writer = [&](byte_serializer& serial)
@@ -171,7 +171,7 @@ void history_database::store(const short_hash& key,
 // Update.
 // ----------------------------------------------------------------------------
 
-bool history_database::unlink_last_row(const short_hash& key)
+bool address_database::unlink_last_row(const short_hash& key)
 {
     return address_recordset_map_.unlink(key);
 }

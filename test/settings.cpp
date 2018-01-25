@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default_context__expected)
     BOOST_REQUIRE_EQUAL(configuration.file_growth_rate, 50u);
     BOOST_REQUIRE_EQUAL(configuration.block_table_buckets, 0u);
     BOOST_REQUIRE_EQUAL(configuration.transaction_table_buckets, 0u);
-    BOOST_REQUIRE_EQUAL(configuration.history_table_buckets, 0u);
+    BOOST_REQUIRE_EQUAL(configuration.address_table_buckets, 0u);
     BOOST_REQUIRE_EQUAL(configuration.cache_capacity, 0u);
 }
 
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__none_context__expected)
     BOOST_REQUIRE_EQUAL(configuration.file_growth_rate, 50u);
     BOOST_REQUIRE_EQUAL(configuration.block_table_buckets, 0u);
     BOOST_REQUIRE_EQUAL(configuration.transaction_table_buckets, 0u);
-    BOOST_REQUIRE_EQUAL(configuration.history_table_buckets, 0u);
+    BOOST_REQUIRE_EQUAL(configuration.address_table_buckets, 0u);
     BOOST_REQUIRE_EQUAL(configuration.cache_capacity, 0u);
 }
 
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__mainnet_context__expected)
     BOOST_REQUIRE_EQUAL(configuration.file_growth_rate, 50u);
     BOOST_REQUIRE_EQUAL(configuration.block_table_buckets, 650000u);
     BOOST_REQUIRE_EQUAL(configuration.transaction_table_buckets, 110000000u);
-    BOOST_REQUIRE_EQUAL(configuration.history_table_buckets, 107000000u);
+    BOOST_REQUIRE_EQUAL(configuration.address_table_buckets, 107000000u);
     BOOST_REQUIRE_EQUAL(configuration.cache_capacity, 0u);
 }
 
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__testnet_context__expected)
     BOOST_REQUIRE_EQUAL(configuration.file_growth_rate, 50u);
     BOOST_REQUIRE_EQUAL(configuration.block_table_buckets, 650000u);
     BOOST_REQUIRE_EQUAL(configuration.transaction_table_buckets, 110000000u);
-    BOOST_REQUIRE_EQUAL(configuration.history_table_buckets, 107000000u);
+    BOOST_REQUIRE_EQUAL(configuration.address_table_buckets, 107000000u);
     BOOST_REQUIRE_EQUAL(configuration.cache_capacity, 0u);
 }
 
