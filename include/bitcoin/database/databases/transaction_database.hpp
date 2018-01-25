@@ -105,9 +105,6 @@ private:
     typedef slab_manager<link_type> slab_manager;
     typedef hash_table<slab_manager, key_type, index_type, link_type> slab_map;
 
-    // Read metadata atomically and populate transaction result.
-    transaction_result populate(slab_map::const_value_type& element) const;
-
     // Update the spender height of the output.
     bool spend(const chain::output_point& point, size_t spender_height);
 

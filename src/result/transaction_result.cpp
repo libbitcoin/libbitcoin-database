@@ -31,68 +31,54 @@ namespace database {
 using namespace bc::chain;
 using namespace bc::machine;
 
-static constexpr auto indexed_size = sizeof(uint8_t);
-static constexpr auto value_size = sizeof(uint64_t);
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto position_size = sizeof(uint16_t);
 static constexpr auto state_size = sizeof(uint8_t);
 static constexpr auto median_time_past_size = sizeof(uint32_t);
 
-static constexpr auto metadata_size = height_size + position_size + state_size + median_time_past_size;
+static constexpr auto index_spend_size = sizeof(uint8_t);
+////static constexpr auto height_size = sizeof(uint32_t);
+static constexpr auto value_size = sizeof(uint64_t);
+
+static constexpr auto spend_size = index_spend_size + height_size + value_size;
+static constexpr auto metadata_size = height_size + position_size +
+    state_size + median_time_past_size;
 
 const uint16_t transaction_result::unconfirmed = max_uint16;
 const uint32_t transaction_result::unverified = rule_fork::unverified;
 
-transaction_result::transaction_result()
-  : transaction_result(nullptr)
-{
-}
-
-transaction_result::transaction_result(memory_ptr slab)
-  : slab_(nullptr),
-    height_(transaction_result::unverified),
-    median_time_past_(0),
-    position_(transaction_result::unconfirmed),
-    hash_(null_hash),
+transaction_result::transaction_result(const const_element_type& element,
+    shared_mutex& metadata_mutex)
+  : height_(0),
+    position_(unconfirmed),
     state_(transaction_state::missing),
-    link_(transaction::validation::undetermined_link)
+    median_time_past_(0),
+    element_(element),
+    metadata_mutex_(metadata_mutex)
 {
-}
+    if (!element_)
+        return;
 
-transaction_result::transaction_result(memory_ptr slab, hash_digest&& hash,
-    uint32_t height, uint32_t median_time_past, uint16_t position,
-    transaction_state state, file_offset link)
-  : slab_(slab),
-    height_(height),
-    median_time_past_(median_time_past),
-    position_(position),
-    hash_(std::move(hash)),
-    state_(state),
-    link_(link)
-{
-}
+    // There is only one atomic set here.
+    const auto reader = [&](byte_deserializer& deserial)
+    {
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(metadata_mutex_);
+        height_ = deserial.read_4_bytes_little_endian();
+        position_ = deserial.read_2_bytes_little_endian();
+        state_ = static_cast<transaction_state>(deserial.read_byte());
+        median_time_past_ = deserial.read_4_bytes_little_endian();
+        ///////////////////////////////////////////////////////////////////////
+    };
 
-transaction_result::transaction_result(memory_ptr slab,
-    const hash_digest& hash, uint32_t height, uint32_t median_time_past,
-    uint16_t position, transaction_state state, file_offset link)
-  : slab_(slab),
-    height_(height),
-    median_time_past_(median_time_past),
-    position_(position),
-    hash_(hash),
-    state_(state),
-    link_(link)
-{
+    // Metadata reads not deferred for updatable values as atomicity required.
+    element.read(reader);
 }
 
 transaction_result::operator bool() const
 {
-    return slab_ != nullptr;
-}
-
-void transaction_result::reset()
-{
-    slab_.reset();
+    return element_;
 }
 
 code transaction_result::error() const
@@ -101,40 +87,39 @@ code transaction_result::error() const
     return error::success;
 }
 
+file_offset transaction_result::link() const
+{
+    return element_.link();
+}
+
+hash_digest transaction_result::hash() const
+{
+    // This is read each time it is invoked, so caller should cache.
+    return element_ ? null_hash : element_.key();
+}
+
+size_t transaction_result::height() const
+{
+    // Height is overloaded (holds forks) unless confirmed.
+    return height_;
+}
+
+size_t transaction_result::position() const
+{
+    // Position is unconfirmed unless if block-associated.
+    return position_;
+}
+
 transaction_state transaction_result::state() const
 {
     return state_;
 }
 
-// Position is unconfirmed unless if block-associated.
-size_t transaction_result::position() const
-{
-    return position_;
-}
-
-// Height is overloaded (holds forks) unless confirmed.
-size_t transaction_result::height() const
-{
-    return height_;
-}
-
-const hash_digest& transaction_result::hash() const
-{
-    return hash_;
-}
-
-const file_offset transaction_result::link() const
-{
-    return link_;
-}
-
-// Median time past is unguarded and will be inconsistent during write.
 uint32_t transaction_result::median_time_past() const
 {
     return median_time_past_;
 }
 
-// Spentness is unguarded and will be inconsistent during write.
 // Set fork_height to max_size_t for tx pool validation.
 bool transaction_result::is_spent(size_t fork_height) const
 {
@@ -149,72 +134,73 @@ bool transaction_result::is_spent(size_t fork_height) const
     if (!confirmed)
         return false;
 
-    BITCOIN_ASSERT(slab_);
-    const auto tx_start = slab_->buffer() + metadata_size;
-    auto deserial = make_unsafe_deserializer(tx_start);
-    const auto outputs = deserial.read_size_little_endian();
+    BITCOIN_ASSERT(element_);
+    auto spent = true;
 
-    // Search all outputs for an unspent indication.
-    for (uint32_t out = 0; out < outputs; ++out)
+    // Spentness is unguarded and will be inconsistent during write.
+    const auto reader = [&](byte_deserializer& deserial)
     {
-        // TODO: This reads the full output, which is simple but not optimial.
-        const auto output = output::factory(deserial, false);
+        deserial.skip(metadata_size);
+        const auto outputs = deserial.read_size_little_endian();
 
-        if (!output.validation.spent(fork_height))
-            return false;
-    }
+        // Search all outputs for an unspent indication.
+        for (uint32_t out = 0; spent && out < outputs; ++out)
+        {
+            // TODO: This reads full output, which is simple but not optimial.
+            const auto output = output::factory(deserial, false);
+            spent = output.validation.spent(fork_height);
+        }
+    };
 
-    return true;
+    element_.read(reader);
+    return spent;
 }
 
-// Spentness is unguarded and will be inconsistent during write.
 // If index is out of range returns default/invalid output (.value not_found).
 chain::output transaction_result::output(uint32_t index) const
 {
-    BITCOIN_ASSERT(slab_);
-    const auto tx_start = slab_->buffer() + metadata_size;
-    auto deserial = make_unsafe_deserializer(tx_start);
-    const auto outputs = deserial.read_size_little_endian();
+    BITCOIN_ASSERT(element_);
+    chain::output output;
 
-    if (index >= outputs)
-        return{};
-
-    // Skip outputs until the target output.
-    for (uint32_t out = 0; out < index; ++out)
+    // Spentness is unguarded and will be inconsistent during write.
+    const auto reader = [&](byte_deserializer& deserial)
     {
-        deserial.skip(indexed_size + height_size + value_size);
-        deserial.skip(deserial.read_size_little_endian());
-    }
+        deserial.skip(metadata_size);
+        const auto outputs = deserial.read_size_little_endian();
+
+        if (index >= outputs)
+            return;
+
+        // Skip outputs until the target output.
+        for (uint32_t out = 0; out < index; ++out)
+        {
+            deserial.skip(spend_size);
+            deserial.skip(deserial.read_size_little_endian());
+        }
+
+        // Read the target output.
+        output.from_data(deserial, false);
+    };
 
     // Read and return the target output (including spender height).
-    return chain::output::factory(deserial, false);
+    element_.read(reader);
+    return output;
 }
-
-// median_time_past added in v3.3, witness added in v3.4
-// ----------------------------------------------------------------------------
-// [ height:4 ]
-// [ position:2 ]
-// [ median_time_past:4 ]
-// ----------------------------------------------------------------------------
-// [ output_count:varint ]
-// [ [ spender_height:4 ][ value:8 ][ script:varint ]...]
-// [ input_count:varint ]
-// [ [ hash:4 ][ index:2 ][ script:varint ][ witness:varint ][ sequence:4 ]...]
-// [ locktime:varint ]
-// [ version:varint ]
-// ----------------------------------------------------------------------------
 
 // Spentness is unguarded and will be inconsistent during write.
 chain::transaction transaction_result::transaction(bool witness) const
 {
-    BITCOIN_ASSERT(slab_);
-    const auto tx_start = slab_->buffer() + metadata_size;
-    auto deserial = make_unsafe_deserializer(tx_start);
-    auto tx = transaction::factory(deserial, hash_, false, true);
+    BITCOIN_ASSERT(element_);
+    chain::transaction tx;
+    auto key = hash();
 
-    if (witness)
-        tx.strip_witness();
+    const auto reader = [&](byte_deserializer& deserial)
+    {
+        deserial.skip(metadata_size);
+        tx.from_data(deserial, std::move(key), false, witness);
+    };
 
+    element_.read(reader);
     return tx;
 }
 

@@ -39,7 +39,7 @@ using namespace bc::machine;
 // [ position:2          - atomic1 ] (unconfirmed sentinel, could store state)
 // [ state:1             - atomic1 ] (invalid, stored, pooled, indexed, confirmed)
 // [ median_time_past:4  - atomic1 ] (zero if unconfirmed)
-// [ output_count:varint - const   ]
+// [ output_count:varint - const   ] (tx starts here)
 // [
 //   [ index_spend:1    - atomic2 ]
 //   [ spender_height:4 - atomic2 ] (could store index_spend in high bit)
@@ -73,12 +73,12 @@ static constexpr auto position_size = sizeof(uint16_t);
 static constexpr auto state_size = sizeof(uint8_t);
 static constexpr auto median_time_past_size = sizeof(uint32_t);
 
-////static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto index_spend_size = sizeof(uint8_t);
+////static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto value_size = sizeof(uint64_t);
 
 static constexpr auto spend_size = index_spend_size + height_size + value_size;
-static constexpr auto tx_metadata_size = height_size + position_size +
+static constexpr auto metadata_size = height_size + position_size +
     state_size + median_time_past_size;
 
 // Transactions uses a hash table index, O(1).
@@ -133,51 +133,15 @@ bool transaction_database::close()
 // Queries.
 // ----------------------------------------------------------------------------
 
-transaction_result transaction_database::populate(
-    slab_map::const_value_type& element) const
-{
-    uint32_t height;
-    uint16_t position;
-    transaction_state state;
-    uint32_t median_time_past;
-
-    const auto reader = [&](byte_deserializer& deserial)
-    {
-        // Critical Section
-        ///////////////////////////////////////////////////////////////////////
-        shared_lock lock(metadata_mutex_);
-        height = deserial.read_4_bytes_little_endian();
-        position = deserial.read_2_bytes_little_endian();
-        state = static_cast<transaction_state>(deserial.read_byte());
-        median_time_past = deserial.read_4_bytes_little_endian();
-        ///////////////////////////////////////////////////////////////////////
-    };
-
-    // Reads are not deferred for updatable values as atomicity is required.
-    element.read(reader);
-
-    // TODO: update tx result.
-    return {};
-    ////return
-    ////{
-    ////    element
-    ////    height,
-    ////    median_time_past,
-    ////    position,
-    ////    state
-    ////};
-}
-
 transaction_result transaction_database::get(file_offset offset) const
 {
-    auto element = hash_table_.find(offset);
-    return element ? populate(element) : transaction_result{};
+    // This is not guarded for an invalid offset.
+    return { hash_table_.find(offset), metadata_mutex_ };
 }
 
 transaction_result transaction_database::get(const hash_digest& hash) const
 {
-    auto element = hash_table_.find(hash);
-    return element ? populate(element) : transaction_result{};
+    return { hash_table_.find(hash), metadata_mutex_ };
 }
 
 // Metadata should be defaulted by caller.
@@ -285,7 +249,7 @@ bool transaction_database::store(const chain::transaction& tx, size_t height,
     };
 
     // Transactions are variable-sized.
-    const auto size = tx_metadata_size + tx.serialized_size(false);
+    const auto size = metadata_size + tx.serialized_size(false);
 
     // Write the new transaction.
     auto front = hash_table_.allocator();
@@ -352,7 +316,7 @@ bool transaction_database::spend(const output_point& point,
 
     const auto writer = [&](byte_serializer& serial)
     {
-        serial.skip(tx_metadata_size);
+        serial.skip(metadata_size);
         outputs = serial.read_size_little_endian();
 
         // Skip outputs until the target output.
@@ -375,14 +339,12 @@ bool transaction_database::spend(const output_point& point,
     return true;
 }
 
-bool transaction_database::confirm(link_type offset, size_t height,
+bool transaction_database::confirm(link_type link, size_t height,
     uint32_t median_time_past, size_t position, transaction_state state)
 {
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(position <= max_uint16);
-
-    // BUGBUG: change offset to link, so this works (uses proper hiding).
-    auto element = hash_table_.find(offset);
+    auto element = hash_table_.find(link);
 
     if (!element)
         return false;

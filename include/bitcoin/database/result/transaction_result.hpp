@@ -24,6 +24,8 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/list_element.hpp>
+#include <bitcoin/database/primitives/slab_manager.hpp>
 #include <bitcoin/database/state/transaction_state.hpp>
 
 namespace libbitcoin {
@@ -33,44 +35,41 @@ namespace database {
 class BCD_API transaction_result
 {
 public:
+    typedef hash_digest key_type;
+    typedef file_offset link_type;
+    typedef slab_manager<link_type> manager;
+    typedef list_element<const manager, link_type, key_type>
+        const_element_type;
+
     /// This is unconfirmed tx height (forks) sentinel.
     static const uint32_t unverified;
 
     /// This is unconfirmed tx position sentinel.
     static const uint16_t unconfirmed;
 
-    transaction_result();
-    transaction_result(memory_ptr slab);
-    transaction_result(memory_ptr slab, hash_digest&& hash, uint32_t height,
-        uint32_t median_time_past, uint16_t position, transaction_state state,
-        file_offset link);
-    transaction_result(memory_ptr slab, const hash_digest& hash,
-        uint32_t height, uint32_t median_time_past, uint16_t position,
-        transaction_state state, file_offset link);
+    transaction_result(const const_element_type& element,
+        shared_mutex& metadata_mutex);
 
     /// True if this transaction result is valid (found).
     operator bool() const;
 
-    /// Reset the slab pointer so that no lock is held.
-    void reset();
-
     /// An error code if block state is invalid.
     code error() const;
 
-    /// The state of the transaction.
-    transaction_state state() const;
+    /// The link for the transaction slab.
+    file_offset link() const;
 
-    /// The ordinal position of the tx in a block, or unconfirmed.
-    size_t position() const;
+    /// The transaction hash (from cache).
+    hash_digest hash() const;
 
     /// The height of the block of the tx, or forks if unconfirmed.
     size_t height() const;
 
-    /// The transaction hash (from cache).
-    const hash_digest& hash() const;
+    /// The ordinal position of the tx in a block, or unconfirmed.
+    size_t position() const;
 
-    /// The link for the transaction slab.
-    const file_offset link() const;
+    /// The state of the transaction.
+    transaction_state state() const;
 
     /// The median time past of the block which includes the transaction.
     uint32_t median_time_past() const;
@@ -85,13 +84,16 @@ public:
     chain::transaction transaction(bool witness=true) const;
 
 private:
-    memory_ptr slab_;
-    const uint32_t height_;
-    const uint32_t median_time_past_;
-    const uint16_t position_;
-    const hash_digest hash_;
-    const file_offset link_;
-    const transaction_state state_;
+    uint32_t height_;
+    uint16_t position_;
+    transaction_state state_;
+    uint32_t median_time_past_;
+
+    // This class is thread safe.
+    const const_element_type element_;
+
+    // Metadata values are kept consistent by mutex.
+    shared_mutex& metadata_mutex_;
 };
 
 } // namespace database

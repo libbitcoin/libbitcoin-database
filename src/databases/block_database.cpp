@@ -179,64 +179,28 @@ bool block_database::top(size_t& out_height, bool block_index) const
     return read_top(out_height, manager);
 }
 
-block_result block_database::populate(
-    record_map::const_value_type& element) const
-{
-    uint32_t height;
-    uint8_t state;
-    uint32_t checksum;
-    uint32_t tx_start;
-    uint32_t tx_count;
-
-    // Each of the three atomic sets could be guarded independently.
-    const auto reader = [&](byte_deserializer& deserial)
-    {
-        deserial.skip(height_offset);
-
-        // Critical Section.
-        ///////////////////////////////////////////////////////////////////////
-        shared_lock lock(metadata_mutex_);
-        height = deserial.read_4_bytes_little_endian();
-        state = deserial.read_byte();
-        checksum = deserial.read_4_bytes_little_endian();
-        tx_start = deserial.read_4_bytes_little_endian();
-        tx_count = deserial.read_2_bytes_little_endian();
-        ///////////////////////////////////////////////////////////////////////
-    };
-
-    // Reads are not deferred for updatable values as atomicity is required.
-    element.read(reader);
-
-    // TODO: update block result.
-    return { tx_index_ };
-    ////return
-    ////{
-    ////    tx_index_,
-    ////    element,
-    ////    height,
-    ////    checksum,
-    ////    tx_start,
-    ////    tx_count,
-    ////    state
-    ////};
-}
-
 block_result block_database::get(size_t height, bool block_index) const
 {
     auto& manager = block_index ? block_index_ : header_index_;
 
-    if (height >= manager.count())
-        return { tx_index_ };
-
-    auto element = hash_table_.find(read_index(height, manager));
-    return element ? populate(element) : block_result{ tx_index_ };
+    return
+    {
+        // This is not guarded for an invalid offset.
+        hash_table_.find(read_index(height, manager)),
+        metadata_mutex_,
+        tx_index_
+    };
 }
 
 // Returns any state, including invalid and empty.
 block_result block_database::get(const hash_digest& hash) const
 {
-    auto element = hash_table_.find(hash);
-    return element ? populate(element) : block_result{ tx_index_ };
+    return
+    {
+        hash_table_.find(hash),
+        metadata_mutex_,
+        tx_index_
+    };
 }
 
 // Store.
