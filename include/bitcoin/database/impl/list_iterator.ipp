@@ -27,8 +27,8 @@ namespace database {
 
 // This class is a friend of the list_element class.
 template <typename Manager, typename Link, typename Key>
-list_iterator<Manager, Link, Key>::list_iterator(
-    Manager& manager, Link first, shared_mutex& mutex)
+list_iterator<Manager, Link, Key>::list_iterator(Manager& manager,
+    Link first, shared_mutex& mutex)
   : element_(manager, first, mutex)
 {
 }

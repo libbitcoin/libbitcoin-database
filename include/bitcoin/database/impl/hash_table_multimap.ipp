@@ -20,10 +20,10 @@
 #define LIBBITCOIN_DATABASE_HASH_TABLE_MULTIMAP_IPP
 
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/list_element.hpp>
-#include <bitcoin/database/primitives/list.hpp>
-#include <bitcoin/database/primitives/record_manager.hpp>
 #include <bitcoin/database/primitives/hash_table.hpp>
+#include <bitcoin/database/primitives/list.hpp>
+#include <bitcoin/database/primitives/list_element.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {

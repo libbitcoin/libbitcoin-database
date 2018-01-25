@@ -176,24 +176,21 @@ bool hash_table<Manager, Key, Index, Link>::unlink(const Key& key)
 
 // private
 template <typename Manager, typename Key, typename Index, typename Link>
-Link hash_table<Manager, Key, Index, Link>::bucket_value(
-    Index index) const
+Link hash_table<Manager, Key, Index, Link>::bucket_value(Index index) const
 {
     return header_.read(index);
 }
 
 // private
 template <typename Manager, typename Key, typename Index, typename Link>
-Link hash_table<Manager, Key, Index, Link>::bucket_value(
-    const Key& key) const
+Link hash_table<Manager, Key, Index, Link>::bucket_value(const Key& key) const
 {
     return header_.read(bucket_index(key));
 }
 
 // private
 template <typename Manager, typename Key, typename Index, typename Link>
-Index hash_table<Manager, Key, Index, Link>::bucket_index(
-    const Key& key) const
+Index hash_table<Manager, Key, Index, Link>::bucket_index(const Key& key) const
 {
     return hash_table_header<Index, Link>::remainder(key, header_.buckets());
 }

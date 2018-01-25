@@ -68,7 +68,6 @@ bool record_manager<Link>::create()
 
     // This currently throws if there is insufficient space.
     file_.resize(header_size_ + link_to_position(record_count_));
-
     write_count();
     return true;
     ///////////////////////////////////////////////////////////////////////////
@@ -84,7 +83,7 @@ bool record_manager<Link>::start()
     read_count();
     const auto minimum = header_size_ + link_to_position(record_count_);
 
-    // Records size exceeds file size.
+    // Records size does not exceed file size.
     return minimum <= file_.size();
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -95,7 +94,6 @@ void record_manager<Link>::commit()
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(mutex_);
-
     write_count();
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -106,20 +104,17 @@ Link record_manager<Link>::count() const
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     shared_lock lock(mutex_);
-
     return record_count_;
     ///////////////////////////////////////////////////////////////////////////
 }
 
 template <typename Link>
-void record_manager<Link>::set_count(const Link value)
+void record_manager<Link>::set_count(Link value)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(mutex_);
-
     BITCOIN_ASSERT(value <= record_count_);
-
     record_count_ = value;
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -135,18 +130,14 @@ Link record_manager<Link>::allocate(size_t count)
 
     // Always write after the last index.
     const auto next_record_index = record_count_;
-
     const size_t position = link_to_position(record_count_ + count);
     const size_t required_size = header_size_ + position;
 
     // Currently throws runtime_error if insufficient space.
     if (!file_.reserve(required_size))
-    {
-        // TODO: return failure sentinel.
-    }
+        return 0;
 
     record_count_ += count;
-
     return next_record_index;
     ///////////////////////////////////////////////////////////////////////////
 }

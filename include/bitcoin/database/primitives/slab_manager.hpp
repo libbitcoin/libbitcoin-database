@@ -36,6 +36,10 @@ class slab_manager
   : noncopyable
 {
 public:
+    // This cast is a VC++ workaround is OK because Link must be unsigned.
+    //static constexpr Link empty = std::numeric_limits<Link>::max();
+    static const Link not_allocated = (Link)bc::max_uint64;
+
     slab_manager(storage& file, size_t header_size);
 
     /// Create slab manager.

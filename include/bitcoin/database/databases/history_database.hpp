@@ -23,9 +23,9 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/file_storage.hpp>
-#include <bitcoin/database/primitives/record_manager.hpp>
-#include <bitcoin/database/primitives/hash_table_multimap.hpp>
 #include <bitcoin/database/primitives/hash_table.hpp>
+#include <bitcoin/database/primitives/hash_table_multimap.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {

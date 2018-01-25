@@ -58,8 +58,6 @@ template <typename Manager, typename Key, typename Index, typename Link>
 class hash_table
 {
 public:
-    typedef byte_serializer::functor write_function;
-    typedef byte_deserializer::functor read_function;
     typedef list_element<Manager, Link, Key> value_type;
     typedef list_element<const Manager, Link, Key> const_value_type;
     

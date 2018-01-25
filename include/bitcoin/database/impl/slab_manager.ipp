@@ -66,7 +66,6 @@ bool slab_manager<Link>::create()
 
     // This currently throws if there is insufficient space.
     file_.resize(header_size_ + payload_size_);
-
     write_size();
     return true;
     ///////////////////////////////////////////////////////////////////////////
@@ -82,7 +81,7 @@ bool slab_manager<Link>::start()
     read_size();
     const auto minimum = header_size_ + payload_size_;
 
-    // Slabs size exceeds file size.
+    // Slabs size does not exceed file size.
     return minimum <= file_.size();
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -93,7 +92,6 @@ void slab_manager<Link>::commit()
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(mutex_);
-
     write_size();
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -105,7 +103,6 @@ size_t slab_manager<Link>::payload_size() const
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     shared_lock lock(mutex_);
-
     return payload_size_;
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -121,17 +118,13 @@ Link slab_manager<Link>::allocate(size_t size)
 
     // Always write after the last slab.
     const auto next_slab_position = payload_size_;
-
     const size_t required_size = header_size_ + payload_size_ + size;
 
     // Currently throws runtime_error if insufficient space.
     if (!file_.reserve(required_size))
-    {
-        // TODO: return failure sentinel.
-    }
+        return not_allocated;
 
     payload_size_ += size;
-
     return next_slab_position;
     ///////////////////////////////////////////////////////////////////////////
 }

@@ -27,7 +27,6 @@
 #include <bitcoin/database/memory/file_storage.hpp>
 #include <bitcoin/database/primitives/hash_table.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
-#include <bitcoin/database/primitives/hash_table.hpp>
 #include <bitcoin/database/result/block_result.hpp>
 #include <bitcoin/database/state/block_state.hpp>
 

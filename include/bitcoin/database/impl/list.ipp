@@ -27,8 +27,8 @@ namespace libbitcoin {
 namespace database {
 
 template <typename Manager, typename Link, typename Key>
-list<Manager, Link, Key>::list(
-    Manager& manager, Link first, shared_mutex& mutex)
+list<Manager, Link, Key>::list(Manager& manager, Link first,
+    shared_mutex& mutex)
   : first_(first), manager_(manager), mutex_(mutex)
 {
 }

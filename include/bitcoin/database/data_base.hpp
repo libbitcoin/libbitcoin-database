@@ -26,8 +26,8 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/databases/block_database.hpp>
-#include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/databases/history_database.hpp>
+#include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/store.hpp>

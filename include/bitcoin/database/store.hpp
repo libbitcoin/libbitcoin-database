@@ -43,7 +43,6 @@ public:
     static const std::string TRANSACTION_TABLE;
     static const std::string HISTORY_TABLE;
     static const std::string HISTORY_ROWS;
-    static const std::string STEALTH_ROWS;
 
     // Construct.
     // ------------------------------------------------------------------------

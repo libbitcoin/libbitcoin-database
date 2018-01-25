@@ -37,6 +37,10 @@ class record_manager
   : noncopyable
 {
 public:
+    // This cast is a VC++ workaround is OK because Link must be unsigned.
+    //static constexpr Link empty = std::numeric_limits<Link>::max();
+    static const Link not_allocated = (Link)bc::max_uint64;
+
     record_manager(storage& file, size_t header_size, size_t record_size);
 
     /// Create record manager.
@@ -52,7 +56,7 @@ public:
     Link count() const;
 
     /// Change the number of records of this container (truncation).
-    void set_count(const Link value);
+    void set_count(Link value);
 
     /// Allocate records and return first logical index, commit after writing.
     Link allocate(size_t count);
