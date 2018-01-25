@@ -16,34 +16,34 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_LINKED_LIST_ITERATOR_IPP
-#define LIBBITCOIN_DATABASE_LINKED_LIST_ITERATOR_IPP
+#ifndef LIBBITCOIN_DATABASE_LIST_ITERATOR_IPP
+#define LIBBITCOIN_DATABASE_LIST_ITERATOR_IPP
 
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/database/primitives/linked_list.hpp>
+#include <bitcoin/database/primitives/list_element.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-// This class is a friend of the linked_list class.
+// This class is a friend of the list_element class.
 template <typename Manager, typename Link, typename Key>
-linked_list_iterator<Manager, Link, Key>::linked_list_iterator(
+list_iterator<Manager, Link, Key>::list_iterator(
     Manager& manager, Link first, shared_mutex& mutex)
   : element_(manager, first, mutex)
 {
 }
 
 template <typename Manager, typename Link, typename Key>
-linked_list_iterator<Manager, Link, Key>&
-linked_list_iterator<Manager, Link, Key>::operator++()
+list_iterator<Manager, Link, Key>&
+list_iterator<Manager, Link, Key>::operator++()
 {
     element_.link_ = element_.next();
     return *this;
 }
 
 template <typename Manager, typename Link, typename Key>
-linked_list_iterator<Manager, Link, Key>
-linked_list_iterator<Manager, Link, Key>::operator++(int)
+list_iterator<Manager, Link, Key>
+list_iterator<Manager, Link, Key>::operator++(int)
 {
     auto copy = *this;
     element_.link_ = element_.next();
@@ -51,29 +51,29 @@ linked_list_iterator<Manager, Link, Key>::operator++(int)
 }
 
 template <typename Manager, typename Link, typename Key>
-typename const linked_list_iterator<Manager, Link, Key>::value_type&
-linked_list_iterator<Manager, Link, Key>::operator*() const
+typename const list_iterator<Manager, Link, Key>::value_type&
+list_iterator<Manager, Link, Key>::operator*() const
 {
     return element_;
 }
 
 template <typename Manager, typename Link, typename Key>
-typename const linked_list_iterator<Manager, Link, Key>::value_type&
-linked_list_iterator<Manager, Link, Key>::operator->() const
+typename const list_iterator<Manager, Link, Key>::value_type&
+list_iterator<Manager, Link, Key>::operator->() const
 {
     return element_;
 }
 
 template <typename Manager, typename Link, typename Key>
-bool linked_list_iterator<Manager, Link, Key>::operator==(
-    const linked_list_iterator& other) const
+bool list_iterator<Manager, Link, Key>::operator==(
+    const list_iterator& other) const
 {
     return element_ == other.element_;
 }
 
 template <typename Manager, typename Link, typename Key>
-bool linked_list_iterator<Manager, Link, Key>::operator!=(
-    const linked_list_iterator& other) const
+bool list_iterator<Manager, Link, Key>::operator!=(
+    const list_iterator& other) const
 {
     return element_ != other.element_;
 }

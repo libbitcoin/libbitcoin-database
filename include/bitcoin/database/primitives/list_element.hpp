@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_LINKED_LIST_HPP
-#define LIBBITCOIN_DATABASE_LINKED_LIST_HPP
+#ifndef LIBBITCOIN_DATABASE_LIST_ELEMENT_HPP
+#define LIBBITCOIN_DATABASE_LIST_ELEMENT_HPP
 
 #include <cstddef>
 #include <cstdint>
@@ -34,7 +34,7 @@ namespace database {
  * Link is limited to 64 bytes. A default Key creates an unkeyed list.
  */
 template <typename Manager, typename Link, typename Key>
-class linked_list
+class list_element
 {
 public:
     typedef byte_serializer::functor write_function;
@@ -45,10 +45,10 @@ public:
     static size_t size(size_t value_size);
 
     /// Construct for a new element.
-    linked_list(Manager& manager, shared_mutex& mutex);
+    list_element(Manager& manager, shared_mutex& mutex);
 
     /// Construct for an existing element.
-    linked_list(Manager& manager, Link link, shared_mutex& mutex);
+    list_element(Manager& manager, Link link, shared_mutex& mutex);
 
     /// Allocate and populate a new array element.
     Link create(write_function write);
@@ -87,13 +87,13 @@ public:
     operator const bool() const;
 
     /// Equality comparison operators, compares link value only.
-    bool operator==(linked_list other) const;
-    bool operator!=(linked_list other) const;
+    bool operator==(list_element other) const;
+    bool operator!=(list_element other) const;
 
 private:
     // Allow the iterator to access private members.
     template <typename Manager, typename Link, typename Key>
-    friend class linked_list_iterator;
+    friend class list_iterator;
 
     memory_ptr data(size_t bytes) const;
     void initialize(const Key& key, write_function write);
@@ -106,6 +106,6 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#include <bitcoin/database/impl/linked_list.ipp>
+#include <bitcoin/database/impl/list_element.ipp>
 
 #endif

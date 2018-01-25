@@ -22,9 +22,9 @@
 using namespace bc;
 using namespace bc::database;
 
-BOOST_AUTO_TEST_SUITE(recordset_hash_table_tests)
+BOOST_AUTO_TEST_SUITE(hash_table_multimap_tests)
 
-BOOST_AUTO_TEST_CASE(recordset_hash_table__method__vector__expectation)
+BOOST_AUTO_TEST_CASE(hash_table_multimap__method__vector__expectation)
 {
     BOOST_REQUIRE(true);
 }

@@ -25,13 +25,13 @@
 ////using namespace bc;
 ////using namespace bc::database;
 ////
-////BOOST_AUTO_TEST_SUITE(slab_hash_table_tests)
+////BOOST_AUTO_TEST_SUITE(hash_table_tests)
 ////
-////BOOST_AUTO_TEST_CASE(slab_hash_table__32bit__test)
+////BOOST_AUTO_TEST_CASE(hash_table__32bit__test)
 ////{
 ////    typedef test::tiny_hash key_type;
 ////    typedef record_manager<key_type> record_manager;
-////    typedef slab_hash_table<record_manager, key_type, uint32_t, uint32_t> record_map;
+////    typedef hash_table<record_manager, key_type, uint32_t, uint32_t> record_map;
 ////
 ////    test::storage file;
 ////    BOOST_REQUIRE(file.open());
@@ -74,11 +74,11 @@
 ////    BOOST_REQUIRE(!table.unlink(invalid));
 ////}
 ////
-////BOOST_AUTO_TEST_CASE(slab_hash_table__64bit__test)
+////BOOST_AUTO_TEST_CASE(hash_table__64bit__test)
 ////{
 ////    typedef test::little_hash key_type;
 ////    typedef record_manager<key_type> record_manager;
-////    typedef slab_hash_table<record_manager, key_type, uint32_t, uint32_t> record_map;
+////    typedef hash_table<record_manager, key_type, uint32_t, uint32_t> record_map;
 ////
 ////    test::storage file;
 ////    BOOST_REQUIRE(file.open());

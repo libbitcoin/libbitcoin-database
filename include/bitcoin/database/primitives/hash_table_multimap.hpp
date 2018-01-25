@@ -16,16 +16,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_RECORD_MULTIMAP_HPP
-#define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_HPP
+#ifndef LIBBITCOIN_DATABASE_HASH_TABLE_MULTIMAP_HPP
+#define LIBBITCOIN_DATABASE_HASH_TABLE_MULTIMAP_HPP
 
 #include <cstdint>
 #include <string>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/linked_list_iterable.hpp>
-#include <bitcoin/database/primitives/slab_hash_table.hpp>
+#include <bitcoin/database/primitives/list.hpp>
+#include <bitcoin/database/primitives/hash_table.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
@@ -40,20 +40,20 @@ namespace database {
  * given a start index.
  */
 template <typename Key, typename Index, typename Link>
-class recordset_hash_table
+class hash_table_multimap
 {
 public:
     typedef record_manager<Link> manager;
-    typedef linked_list<manager, Link, empty_key> value_type;
-    typedef linked_list_iterable<manager, Link, empty_key> list;
-    typedef slab_hash_table<manager, Key, Index, Link> table;
+    typedef list_element<manager, Link, empty_key> value_type;
+    typedef list<manager, Link, empty_key> list;
+    typedef hash_table<manager, Key, Index, Link> table;
 
     /// The stored size of a recordset value with the given size.
     static size_t size(size_t value_size);
 
     /// Construct a new recordset hash table.
     /// THIS ASSUMES MAP HAS VALUE == sizeof(Link).
-    recordset_hash_table(table& map, manager& manager);
+    hash_table_multimap(table& map, manager& manager);
 
     /// Use to allocate an element in a recordset. 
     value_type allocator();
@@ -81,6 +81,6 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#include <bitcoin/database/impl/recordset_hash_table.ipp>
+#include <bitcoin/database/impl/hash_table_multimap.ipp>
 
 #endif

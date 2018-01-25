@@ -74,13 +74,13 @@ test_libbitcoin_database_test_SOURCES = \
     test/memory/accessor.cpp \
     test/memory/allocator.cpp \
     test/memory/file_storage.cpp \
+    test/primitives/hash_table.cpp \
     test/primitives/hash_table_header.cpp \
-    test/primitives/iterable.cpp \
-    test/primitives/iterator.cpp \
-    test/primitives/record_hash_table.cpp \
+    test/primitives/hash_table_multimap.cpp \
+    test/primitives/hash_table_records.cpp \
+    test/primitives/list.cpp \
+    test/primitives/list_iterator.cpp \
     test/primitives/record_manager.cpp \
-    test/primitives/recordset_hash_table.cpp \
-    test/primitives/slab_hash_table.cpp \
     test/primitives/slab_manager.cpp \
     test/result/block_result.cpp \
     test/result/transaction_result.cpp \
@@ -130,13 +130,13 @@ include_bitcoin_database_databases_HEADERS = \
 
 include_bitcoin_database_impldir = ${includedir}/bitcoin/database/impl
 include_bitcoin_database_impl_HEADERS = \
+    include/bitcoin/database/impl/hash_table.ipp \
     include/bitcoin/database/impl/hash_table_header.ipp \
-    include/bitcoin/database/impl/linked_list.ipp \
-    include/bitcoin/database/impl/linked_list_iterable.ipp \
-    include/bitcoin/database/impl/linked_list_iterator.ipp \
+    include/bitcoin/database/impl/hash_table_multimap.ipp \
+    include/bitcoin/database/impl/list.ipp \
+    include/bitcoin/database/impl/list_element.ipp \
+    include/bitcoin/database/impl/list_iterator.ipp \
     include/bitcoin/database/impl/record_manager.ipp \
-    include/bitcoin/database/impl/recordset_hash_table.ipp \
-    include/bitcoin/database/impl/slab_hash_table.ipp \
     include/bitcoin/database/impl/slab_manager.ipp
 
 include_bitcoin_database_memorydir = ${includedir}/bitcoin/database/memory
@@ -148,13 +148,13 @@ include_bitcoin_database_memory_HEADERS = \
 
 include_bitcoin_database_primitivesdir = ${includedir}/bitcoin/database/primitives
 include_bitcoin_database_primitives_HEADERS = \
+    include/bitcoin/database/primitives/hash_table.hpp \
     include/bitcoin/database/primitives/hash_table_header.hpp \
-    include/bitcoin/database/primitives/linked_list.hpp \
-    include/bitcoin/database/primitives/linked_list_iterable.hpp \
-    include/bitcoin/database/primitives/linked_list_iterator.hpp \
+    include/bitcoin/database/primitives/hash_table_multimap.hpp \
+    include/bitcoin/database/primitives/list.hpp \
+    include/bitcoin/database/primitives/list_element.hpp \
+    include/bitcoin/database/primitives/list_iterator.hpp \
     include/bitcoin/database/primitives/record_manager.hpp \
-    include/bitcoin/database/primitives/recordset_hash_table.hpp \
-    include/bitcoin/database/primitives/slab_hash_table.hpp \
     include/bitcoin/database/primitives/slab_manager.hpp
 
 include_bitcoin_database_resultdir = ${includedir}/bitcoin/database/result

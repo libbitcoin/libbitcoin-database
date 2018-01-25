@@ -57,25 +57,25 @@
     <ClCompile Include="..\..\..\..\test\memory\file_storage.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\primitives\hash_table.cpp">
+      <Filter>src\primitives</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\hash_table_header.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\iterable.cpp">
+    <ClCompile Include="..\..\..\..\test\primitives\hash_table_multimap.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp">
+    <ClCompile Include="..\..\..\..\test\primitives\hash_table_records.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\record_hash_table.cpp">
+    <ClCompile Include="..\..\..\..\test\primitives\list.cpp">
+      <Filter>src\primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\primitives\list_iterator.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\record_manager.cpp">
-      <Filter>src\primitives</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\recordset_hash_table.cpp">
-      <Filter>src\primitives</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\slab_hash_table.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\slab_manager.cpp">

@@ -131,25 +131,25 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\storage.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table.hpp">
+      <Filter>include\bitcoin\database\primitives</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table_header.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linked_list.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table_multimap.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linked_list_iterable.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\list.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linked_list_iterator.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\list_element.hpp">
+      <Filter>include\bitcoin\database\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\list_iterator.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_manager.hpp">
-      <Filter>include\bitcoin\database\primitives</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\recordset_hash_table.hpp">
-      <Filter>include\bitcoin\database\primitives</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_hash_table.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_manager.hpp">
@@ -187,25 +187,25 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\hash_table.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\hash_table_header.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\linked_list.ipp">
+    <None Include="..\..\..\..\include\bitcoin\database\impl\hash_table_multimap.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\linked_list_iterable.ipp">
+    <None Include="..\..\..\..\include\bitcoin\database\impl\list.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\linked_list_iterator.ipp">
+    <None Include="..\..\..\..\include\bitcoin\database\impl\list_element.ipp">
+      <Filter>include\bitcoin\database\impl</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\list_iterator.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_manager.ipp">
-      <Filter>include\bitcoin\database\impl</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\recordset_hash_table.ipp">
-      <Filter>include\bitcoin\database\impl</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\slab_hash_table.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\slab_manager.ipp">

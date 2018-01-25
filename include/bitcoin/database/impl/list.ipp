@@ -16,46 +16,46 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_LINKED_LIST_ITERABLE_IPP
-#define LIBBITCOIN_DATABASE_LINKED_LIST_ITERABLE_IPP
+#ifndef LIBBITCOIN_DATABASE_LIST_IPP
+#define LIBBITCOIN_DATABASE_LIST_IPP
 
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/database/primitives/linked_list.hpp>
-#include <bitcoin/database/primitives/linked_list_iterator.hpp>
+#include <bitcoin/database/primitives/list_element.hpp>
+#include <bitcoin/database/primitives/list_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 template <typename Manager, typename Link, typename Key>
-linked_list_iterable<Manager, Link, Key>::linked_list_iterable(
+list<Manager, Link, Key>::list(
     Manager& manager, Link first, shared_mutex& mutex)
   : first_(first), manager_(manager), mutex_(mutex)
 {
 }
 
 template <typename Manager, typename Link, typename Key>
-bool linked_list_iterable<Manager, Link, Key>::empty() const
+bool list<Manager, Link, Key>::empty() const
 {
     return begin() == end();
 }
 
 template <typename Manager, typename Link, typename Key>
-typename linked_list_iterable<Manager, Link, Key>::const_value_type
-linked_list_iterable<Manager, Link, Key>::front() const
+typename list<Manager, Link, Key>::const_value_type
+list<Manager, Link, Key>::front() const
 {
     return *begin();
 }
 
 template <typename Manager, typename Link, typename Key>
-typename linked_list_iterable<Manager, Link, Key>::const_iterator
-linked_list_iterable<Manager, Link, Key>::begin() const
+typename list<Manager, Link, Key>::const_iterator
+list<Manager, Link, Key>::begin() const
 {
     return { manager_, first_, mutex_ };
 }
 
 template <typename Manager, typename Link, typename Key>
-typename linked_list_iterable<Manager, Link, Key>::const_iterator
-linked_list_iterable<Manager, Link, Key>::end() const
+typename list<Manager, Link, Key>::const_iterator
+list<Manager, Link, Key>::end() const
 {
     return { manager_, const_value_type::not_found, mutex_ };
 }

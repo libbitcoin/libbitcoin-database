@@ -16,21 +16,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_SLAB_HASH_TABLE_IPP
-#define LIBBITCOIN_DATABASE_SLAB_HASH_TABLE_IPP
+#ifndef LIBBITCOIN_DATABASE_HASH_TABLE_IPP
+#define LIBBITCOIN_DATABASE_HASH_TABLE_IPP
 
 #include <cstddef>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
-#include <bitcoin/database/primitives/linked_list_iterable.hpp>
+#include <bitcoin/database/primitives/list.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 template <typename Manager, typename Key, typename Index, typename Link>
-slab_hash_table<Manager, Key, Index, Link>::slab_hash_table(storage& file,
+hash_table<Manager, Key, Index, Link>::hash_table(storage& file,
     Index buckets)
   : header_(file, buckets),
     manager_(file, hash_table_header<Index, Link>::size(buckets))
@@ -38,7 +38,7 @@ slab_hash_table<Manager, Key, Index, Link>::slab_hash_table(storage& file,
 }
 
 template <typename Manager, typename Key, typename Index, typename Link>
-slab_hash_table<Manager, Key, Index, Link>::slab_hash_table(storage& file,
+hash_table<Manager, Key, Index, Link>::hash_table(storage& file,
     Index buckets, size_t value_size)
   : header_(file, buckets),
     manager_(file, hash_table_header<Index, Link>::size(buckets), value_size)
@@ -46,36 +46,36 @@ slab_hash_table<Manager, Key, Index, Link>::slab_hash_table(storage& file,
 }
 
 template <typename Manager, typename Key, typename Index, typename Link>
-bool slab_hash_table<Manager, Key, Index, Link>::create()
+bool hash_table<Manager, Key, Index, Link>::create()
 {
     return header_.create() && manager_.create();
 }
 
 template <typename Manager, typename Key, typename Index, typename Link>
-bool slab_hash_table<Manager, Key, Index, Link>::start()
+bool hash_table<Manager, Key, Index, Link>::start()
 {
     return header_.start() && manager_.start();
 }
 
 template <typename Manager, typename Key, typename Index, typename Link>
-void slab_hash_table<Manager, Key, Index, Link>::commit()
+void hash_table<Manager, Key, Index, Link>::commit()
 {
     return manager_.commit();
 }
 
 template <typename Manager, typename Key, typename Index, typename Link>
-typename slab_hash_table<Manager, Key, Index, Link>::value_type
-slab_hash_table<Manager, Key, Index, Link>::allocator()
+typename hash_table<Manager, Key, Index, Link>::value_type
+hash_table<Manager, Key, Index, Link>::allocator()
 {
     return { manager_, list_mutex_ };
 }
 
 template <typename Manager, typename Key, typename Index, typename Link>
-typename slab_hash_table<Manager, Key, Index, Link>::const_value_type
-slab_hash_table<Manager, Key, Index, Link>::find(const Key& key) const
+typename hash_table<Manager, Key, Index, Link>::const_value_type
+hash_table<Manager, Key, Index, Link>::find(const Key& key) const
 {
     // manager_ is const.
-    linked_list_iterable<const Manager, Link, Key> list(manager_,
+    list<const Manager, Link, Key> list(manager_,
         bucket_value(key), list_mutex_);
 
     for (const auto item: list)
@@ -86,14 +86,14 @@ slab_hash_table<Manager, Key, Index, Link>::find(const Key& key) const
 }
 
 template <typename Manager, typename Key, typename Index, typename Link>
-typename slab_hash_table<Manager, Key, Index, Link>::const_value_type
-slab_hash_table<Manager, Key, Index, Link>::find(Link link) const
+typename hash_table<Manager, Key, Index, Link>::const_value_type
+hash_table<Manager, Key, Index, Link>::find(Link link) const
 {
     return { manager_, link, list_mutex_ };
 }
 
 template <typename Manager, typename Key, typename Index, typename Link>
-void slab_hash_table<Manager, Key, Index, Link>::link(value_type& element)
+void hash_table<Manager, Key, Index, Link>::link(value_type& element)
 {
     const auto index = bucket_index(element.key());
 
@@ -111,7 +111,7 @@ void slab_hash_table<Manager, Key, Index, Link>::link(value_type& element)
 // Unlink the first of matching key value.
 // Unlink is not executed concurrently with writes.
 template <typename Manager, typename Key, typename Index, typename Link>
-bool slab_hash_table<Manager, Key, Index, Link>::unlink(const Key& key)
+bool hash_table<Manager, Key, Index, Link>::unlink(const Key& key)
 {
     const auto index = bucket_index(key);
 
@@ -120,7 +120,7 @@ bool slab_hash_table<Manager, Key, Index, Link>::unlink(const Key& key)
     root_mutex_.lock_upgrade();
 
     // manager_ is const.
-    linked_list_iterable<Manager, Link, Key> list(manager_,
+    list<Manager, Link, Key> list(manager_,
         bucket_value(index), list_mutex_);
 
     if (list.empty())
@@ -176,7 +176,7 @@ bool slab_hash_table<Manager, Key, Index, Link>::unlink(const Key& key)
 
 // private
 template <typename Manager, typename Key, typename Index, typename Link>
-Link slab_hash_table<Manager, Key, Index, Link>::bucket_value(
+Link hash_table<Manager, Key, Index, Link>::bucket_value(
     Index index) const
 {
     return header_.read(index);
@@ -184,7 +184,7 @@ Link slab_hash_table<Manager, Key, Index, Link>::bucket_value(
 
 // private
 template <typename Manager, typename Key, typename Index, typename Link>
-Link slab_hash_table<Manager, Key, Index, Link>::bucket_value(
+Link hash_table<Manager, Key, Index, Link>::bucket_value(
     const Key& key) const
 {
     return header_.read(bucket_index(key));
@@ -192,7 +192,7 @@ Link slab_hash_table<Manager, Key, Index, Link>::bucket_value(
 
 // private
 template <typename Manager, typename Key, typename Index, typename Link>
-Index slab_hash_table<Manager, Key, Index, Link>::bucket_index(
+Index hash_table<Manager, Key, Index, Link>::bucket_index(
     const Key& key) const
 {
     return hash_table_header<Index, Link>::remainder(key, header_.buckets());

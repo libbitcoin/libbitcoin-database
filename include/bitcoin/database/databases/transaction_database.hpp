@@ -24,7 +24,7 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/file_storage.hpp>
-#include <bitcoin/database/primitives/slab_hash_table.hpp>
+#include <bitcoin/database/primitives/hash_table.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
 #include <bitcoin/database/state/transaction_state.hpp>
@@ -103,7 +103,7 @@ private:
     typedef array_index index_type;
     typedef file_offset link_type;
     typedef slab_manager<link_type> slab_manager;
-    typedef slab_hash_table<slab_manager, key_type, index_type, link_type> slab_map;
+    typedef hash_table<slab_manager, key_type, index_type, link_type> slab_map;
 
     // Read metadata atomically and populate transaction result.
     transaction_result populate(slab_map::const_value_type& element) const;

@@ -24,7 +24,7 @@
 #include <utility>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/recordset_hash_table.hpp>
+#include <bitcoin/database/primitives/hash_table_multimap.hpp>
 
 // Record format (v4) [47 bytes]:
 // ----------------------------------------------------------------------------
@@ -60,12 +60,12 @@ history_database::history_database(const path& lookup_filename,
     const path& rows_filename, size_t buckets, size_t expansion)
   : hash_table_file_(lookup_filename, expansion),
 
-    // THIS sizeof(link_type) IS ASSUMED BY recordset_hash_table.
+    // THIS sizeof(link_type) IS ASSUMED BY hash_table_multimap.
     hash_table_(hash_table_file_, buckets, sizeof(link_type)),
 
     address_file_(rows_filename, expansion),
     address_index_(address_file_, 0,
-        recordset_hash_table<key_type, index_type, link_type>::size(value_size)),
+        hash_table_multimap<key_type, index_type, link_type>::size(value_size)),
     address_recordset_map_(hash_table_, address_index_)
 {
 }

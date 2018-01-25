@@ -16,46 +16,44 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_LINKED_LIST_ITERABLE_HPP
-#define LIBBITCOIN_DATABASE_LINKED_LIST_ITERABLE_HPP
+#ifndef LIBBITCOIN_DATABASE_LIST_ITERATOR_HPP
+#define LIBBITCOIN_DATABASE_LIST_ITERATOR_HPP
 
+#include <utility>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/linked_list.hpp>
-#include <bitcoin/database/primitives/linked_list_iterator.hpp>
+#include <bitcoin/database/primitives/list_element.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/// Iterable wrapper for linked_list.
+/// Const iterator for list_element.
 /// Manager dynamically traverses store-based list.
 /// Mutex provides read safety for link traversal during unlink.
 template <typename Manager, typename Link, typename Key>
-class linked_list_iterable
+class list_iterator
 {
 public:
-    typedef linked_list_iterator<Manager, Link, Key> iterator;
-    typedef linked_list_iterator<const Manager, Link, Key> const_iterator;
-    typedef typename linked_list_iterator<Manager, Link, Key>::const_value_type
-        const_value_type;
+    typedef list_element<Manager, Link, Key> value_type;
+    typedef list_element<const Manager, Link, Key> const_value_type;
 
     /// Create a storage iterator starting at first.
-    linked_list_iterable(Manager& manager, Link first, shared_mutex& mutex);
+    list_iterator(Manager& manager, Link first, shared_mutex& mutex);
 
-    bool empty() const;
-    const_value_type front() const;
-    const_iterator begin() const;
-    const_iterator end() const;
+    list_iterator& operator++();
+    list_iterator operator++(int);
+    const value_type& operator*() const;
+    const value_type& operator->() const;
+    bool operator==(const list_iterator& other) const;
+    bool operator!=(const list_iterator& other) const;
 
 private:
-    const Link first_;
-    Manager& manager_;
-    shared_mutex& mutex_;
+    value_type element_;
 };
 
 } // namespace database
 } // namespace libbitcoin
 
-#include <bitcoin/database/impl/linked_list_iterable.ipp>
+#include <bitcoin/database/impl/list_iterator.ipp>
 
 #endif

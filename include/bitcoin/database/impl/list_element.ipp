@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_LINKED_LIST_IPP
-#define LIBBITCOIN_DATABASE_LINKED_LIST_IPP
+#ifndef LIBBITCOIN_DATABASE_LIST_ELEMENT_IPP
+#define LIBBITCOIN_DATABASE_LIST_ELEMENT_IPP
 
 #include <algorithm>
 #include <cstddef>
@@ -40,21 +40,21 @@ namespace database {
 
 // static
 template <typename Manager, typename Link, typename Key>
-size_t linked_list<Manager, Link, Key>::size(size_t value_size)
+size_t list_element<Manager, Link, Key>::size(size_t value_size)
 {
     return std::tuple_size<Key>::value + sizeof(Link) + value_size;
 }
 
 // Parameterizing Manager allows const and non-const.
 template <typename Manager, typename Link, typename Key>
-linked_list<Manager, Link, Key>::linked_list(Manager& manager,
+list_element<Manager, Link, Key>::list_element(Manager& manager,
     shared_mutex& mutex)
   : manager_(manager), link_(not_found), mutex_(mutex)
 {
 }
 
 template <typename Manager, typename Link, typename Key>
-linked_list<Manager, Link, Key>::linked_list(Manager& manager, Link link,
+list_element<Manager, Link, Key>::list_element(Manager& manager, Link link,
     shared_mutex& mutex)
   : manager_(manager), link_(link), mutex_(mutex)
 {
@@ -63,7 +63,7 @@ linked_list<Manager, Link, Key>::linked_list(Manager& manager, Link link,
 // private
 // Populate a new (unlinked) element with key and value data.
 template <typename Manager, typename Link, typename Key>
-void linked_list<Manager, Link, Key>::initialize(const Key& key,
+void list_element<Manager, Link, Key>::initialize(const Key& key,
     write_function write)
 {
     const auto memory = data(0);
@@ -77,7 +77,7 @@ void linked_list<Manager, Link, Key>::initialize(const Key& key,
 
 // This call assumes the manager is a record_manager.
 template <typename Manager, typename Link, typename Key>
-Link linked_list<Manager, Link, Key>::create(write_function write)
+Link list_element<Manager, Link, Key>::create(write_function write)
 {
     BC_CONSTEXPR empty_key unkeyed{};
     BITCOIN_ASSERT(is_valid());
@@ -88,7 +88,7 @@ Link linked_list<Manager, Link, Key>::create(write_function write)
 
 // This call assumes the manager is a record_manager.
 template <typename Manager, typename Link, typename Key>
-Link linked_list<Manager, Link, Key>::create(const Key& key,
+Link list_element<Manager, Link, Key>::create(const Key& key,
     write_function write)
 {
     BITCOIN_ASSERT(is_valid());
@@ -99,7 +99,7 @@ Link linked_list<Manager, Link, Key>::create(const Key& key,
 
 // This call assumes the manager is a slab_manager.
 template <typename Manager, typename Link, typename Key>
-Link linked_list<Manager, Link, Key>::create(const Key& key,
+Link list_element<Manager, Link, Key>::create(const Key& key,
     write_function write, size_t value_size)
 {
     BITCOIN_ASSERT(is_valid());
@@ -109,7 +109,7 @@ Link linked_list<Manager, Link, Key>::create(const Key& key,
 }
 
 template <typename Manager, typename Link, typename Key>
-void linked_list<Manager, Link, Key>::write(write_function writer)
+void list_element<Manager, Link, Key>::write(write_function writer)
 {
     BITCOIN_ASSERT(is_valid());
     const auto memory = data(std::tuple_size<Key>::value + sizeof(Link));
@@ -119,7 +119,7 @@ void linked_list<Manager, Link, Key>::write(write_function writer)
 
 // Populate next link value.
 template <typename Manager, typename Link, typename Key>
-void linked_list<Manager, Link, Key>::next(Link next)
+void list_element<Manager, Link, Key>::next(Link next)
 {
     const auto memory = data(std::tuple_size<Key>::value);
     auto serial = make_unsafe_serializer(memory->buffer());
@@ -132,7 +132,7 @@ void linked_list<Manager, Link, Key>::next(Link next)
 }
 
 template <typename Manager, typename Link, typename Key>
-void linked_list<Manager, Link, Key>::read(read_function reader) const
+void list_element<Manager, Link, Key>::read(read_function reader) const
 {
     BITCOIN_ASSERT(is_valid());
     const auto memory = data(std::tuple_size<Key>::value + sizeof(Link));
@@ -141,14 +141,14 @@ void linked_list<Manager, Link, Key>::read(read_function reader) const
 }
 
 template <typename Manager, typename Link, typename Key>
-bool linked_list<Manager, Link, Key>::match(const Key& key) const
+bool list_element<Manager, Link, Key>::match(const Key& key) const
 {
     const auto memory = data(0);
     return std::equal(key.begin(), key.end(), memory->buffer());
 }
 
 template <typename Manager, typename Link, typename Key>
-Key linked_list<Manager, Link, Key>::key() const
+Key list_element<Manager, Link, Key>::key() const
 {
     const auto memory = data(0);
     auto deserial = make_unsafe_deserializer(memory->buffer());
@@ -158,13 +158,13 @@ Key linked_list<Manager, Link, Key>::key() const
 }
 
 template <typename Manager, typename Link, typename Key>
-Link linked_list<Manager, Link, Key>::link() const
+Link list_element<Manager, Link, Key>::link() const
 {
     return link_;
 }
 
 template <typename Manager, typename Link, typename Key>
-Link linked_list<Manager, Link, Key>::next() const
+Link list_element<Manager, Link, Key>::next() const
 {
     const auto memory = data(std::tuple_size<Key>::value);
     auto deserial = make_unsafe_deserializer(memory->buffer());
@@ -177,32 +177,32 @@ Link linked_list<Manager, Link, Key>::next() const
 }
 
 template <typename Manager, typename Link, typename Key>
-bool linked_list<Manager, Link, Key>::is_valid() const
+bool list_element<Manager, Link, Key>::is_valid() const
 {
     return link_ == not_found;
 }
 
 template <typename Manager, typename Link, typename Key>
-linked_list<Manager, Link, Key>::operator const bool() const
+list_element<Manager, Link, Key>::operator const bool() const
 {
     return is_valid();
 }
 
 template <typename Manager, typename Link, typename Key>
-bool linked_list<Manager, Link, Key>::operator==(linked_list other) const
+bool list_element<Manager, Link, Key>::operator==(list_element other) const
 {
     return link_ == other.link_;
 }
 
 template <typename Manager, typename Link, typename Key>
-bool linked_list<Manager, Link, Key>::operator!=(linked_list other) const
+bool list_element<Manager, Link, Key>::operator!=(list_element other) const
 {
     return link_ != other.link_;
 }
 
 // private
 template <typename Manager, typename Link, typename Key>
-memory_ptr linked_list<Manager, Link, Key>::data(size_t bytes) const
+memory_ptr list_element<Manager, Link, Key>::data(size_t bytes) const
 {
     BITCOIN_ASSERT(is_valid());
     auto memory = manager_.get(link_);

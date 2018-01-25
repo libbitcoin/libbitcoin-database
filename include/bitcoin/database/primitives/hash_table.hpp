@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_SLAB_HASH_TABLE_HPP
-#define LIBBITCOIN_DATABASE_SLAB_HASH_TABLE_HPP
+#ifndef LIBBITCOIN_DATABASE_HASH_TABLE_HPP
+#define LIBBITCOIN_DATABASE_HASH_TABLE_HPP
 
 #include <cstddef>
 #include <cstdint>
@@ -25,7 +25,7 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
-#include <bitcoin/database/primitives/linked_list.hpp>
+#include <bitcoin/database/primitives/list_element.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
@@ -37,7 +37,7 @@ namespace database {
  * Uses a combination of the hash_table and slab_manager.
  *
  * The hash_table is basically a bucket list containing the start value for the
- * linked_list.
+ * list_element.
  *
  *  [   size:Index  ]
  *  [ [ item:Link ] ]
@@ -55,22 +55,22 @@ namespace database {
  * The payload is prefixed with [ size:Link ].
  */
 template <typename Manager, typename Key, typename Index, typename Link>
-class slab_hash_table
+class hash_table
 {
 public:
     typedef byte_serializer::functor write_function;
     typedef byte_deserializer::functor read_function;
-    typedef linked_list<Manager, Link, Key> value_type;
-    typedef linked_list<const Manager, Link, Key> const_value_type;
+    typedef list_element<Manager, Link, Key> value_type;
+    typedef list_element<const Manager, Link, Key> const_value_type;
     
     /// Construct a hash table for variable size entries.
     static const Link not_found = hash_table_header<Index, Link>::empty;
 
     /// Construct a hash table for variable size entries.
-    slab_hash_table(storage& file, Index buckets);
+    hash_table(storage& file, Index buckets);
 
     /// Construct a hash table for fixed size entries.
-    slab_hash_table(storage& file, Index buckets, size_t value_size);
+    hash_table(storage& file, Index buckets, size_t value_size);
 
     /// Create hash table in the file (left in started state).
     bool create();
@@ -110,6 +110,6 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#include <bitcoin/database/impl/slab_hash_table.ipp>
+#include <bitcoin/database/impl/hash_table.ipp>
 
 #endif

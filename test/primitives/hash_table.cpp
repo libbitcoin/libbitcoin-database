@@ -25,12 +25,12 @@
 ////using namespace bc;
 ////using namespace bc::database;
 ////
-////BOOST_AUTO_TEST_SUITE(slab_hash_table_tests)
+////BOOST_AUTO_TEST_SUITE(hash_table_tests)
 ////
-////BOOST_AUTO_TEST_CASE(slab_hash_table__store__one_slab__expected)
+////BOOST_AUTO_TEST_CASE(hash_table__store__one_slab__expected)
 ////{
 ////    typedef test::tiny_hash key_type;
-////    typedef slab_hash_table<key_type, uint32_t, uint64_t> slab_map;
+////    typedef hash_table<key_type, uint32_t, uint64_t> slab_map;
 ////
 ////    test::storage file;
 ////    BOOST_REQUIRE(file.open());
@@ -59,10 +59,10 @@
 ////    BOOST_REQUIRE_EQUAL(slab[2], 99u);
 ////}
 ////
-////BOOST_AUTO_TEST_CASE(slab_hash_table__find__overlapping_reads__expected)
+////BOOST_AUTO_TEST_CASE(hash_table__find__overlapping_reads__expected)
 ////{
 ////    typedef test::tiny_hash key_type;
-////    typedef slab_hash_table<key_type, uint32_t, uint64_t> slab_map;
+////    typedef hash_table<key_type, uint32_t, uint64_t> slab_map;
 ////
 ////    test::storage file;
 ////    BOOST_REQUIRE(file.open());
@@ -103,10 +103,10 @@
 ////    BOOST_REQUIRE_EQUAL(slab2[0], 44u);
 ////}
 ////
-////BOOST_AUTO_TEST_CASE(slab_hash_table__unlink__first_stored__expected)
+////BOOST_AUTO_TEST_CASE(hash_table__unlink__first_stored__expected)
 ////{
 ////    typedef test::tiny_hash key_type;
-////    typedef slab_hash_table<key_type, uint32_t, uint64_t> slab_map;
+////    typedef hash_table<key_type, uint32_t, uint64_t> slab_map;
 ////
 ////    test::storage file;
 ////    BOOST_REQUIRE(file.open());

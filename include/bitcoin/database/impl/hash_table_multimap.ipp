@@ -16,43 +16,43 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_RECORD_MULTIMAP_IPP
-#define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_IPP
+#ifndef LIBBITCOIN_DATABASE_HASH_TABLE_MULTIMAP_IPP
+#define LIBBITCOIN_DATABASE_HASH_TABLE_MULTIMAP_IPP
 
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/linked_list.hpp>
-#include <bitcoin/database/primitives/linked_list_iterable.hpp>
+#include <bitcoin/database/primitives/list_element.hpp>
+#include <bitcoin/database/primitives/list.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
-#include <bitcoin/database/primitives/slab_hash_table.hpp>
+#include <bitcoin/database/primitives/hash_table.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 // static
 template <typename Key, typename Index, typename Link>
-size_t recordset_hash_table<Key, Index, Link>::size(size_t value_size)
+size_t hash_table_multimap<Key, Index, Link>::size(size_t value_size)
 {
     return value_type::size(value_size);
 }
 
 template <typename Key, typename Index, typename Link>
-recordset_hash_table<Key, Index, Link>::recordset_hash_table(table& map,
+hash_table_multimap<Key, Index, Link>::hash_table_multimap(table& map,
     manager& manager)
   : map_(map), manager_(manager)
 {
 }
 
 template <typename Key, typename Index, typename Link>
-typename recordset_hash_table<Key, Index, Link>::value_type
-recordset_hash_table<Key, Index, Link>::allocator()
+typename hash_table_multimap<Key, Index, Link>::value_type
+hash_table_multimap<Key, Index, Link>::allocator()
 {
     // Empty-keyed (for payload elements).
     return { manager_, list_mutex_ };
 }
 
 template <typename Key, typename Index, typename Link>
-typename recordset_hash_table<Key, Index, Link>::list
-recordset_hash_table<Key, Index, Link>::find(const Key& key) const
+typename hash_table_multimap<Key, Index, Link>::list
+hash_table_multimap<Key, Index, Link>::find(const Key& key) const
 {
     const auto element = map_.find(key);
 
@@ -74,8 +74,8 @@ recordset_hash_table<Key, Index, Link>::find(const Key& key) const
 }
 
 template <typename Key, typename Index, typename Link>
-typename recordset_hash_table<Key, Index, Link>::list
-recordset_hash_table<Key, Index, Link>::find(Link link) const
+typename hash_table_multimap<Key, Index, Link>::list
+hash_table_multimap<Key, Index, Link>::find(Link link) const
 {
     const auto element = map_.find(link);
 
@@ -97,7 +97,7 @@ recordset_hash_table<Key, Index, Link>::find(Link link) const
 }
 
 template <typename Key, typename Index, typename Link>
-void recordset_hash_table<Key, Index, Link>::link(const Key& key,
+void hash_table_multimap<Key, Index, Link>::link(const Key& key,
     value_type& element)
 {
     const auto writer = [&](byte_serializer& serial)
@@ -150,7 +150,7 @@ void recordset_hash_table<Key, Index, Link>::link(const Key& key,
 }
 
 template <typename Key, typename Index, typename Link>
-bool recordset_hash_table<Key, Index, Link>::unlink(const Key& key)
+bool hash_table_multimap<Key, Index, Link>::unlink(const Key& key)
 {
     // Critical Section.
     ///////////////////////////////////////////////////////////////////////////
