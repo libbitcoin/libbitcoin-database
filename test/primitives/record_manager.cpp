@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(record_manager__method__vector__expectation)
     const auto index2 = manager.allocate(1);
     BOOST_REQUIRE_EQUAL(index2, 1u);
     BOOST_REQUIRE_GE(file.size(),  2u * 10u + 4u);
-    manager.sync();
+    manager.commit();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

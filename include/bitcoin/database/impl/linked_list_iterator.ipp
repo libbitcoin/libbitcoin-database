@@ -19,42 +19,63 @@
 #ifndef LIBBITCOIN_DATABASE_LINKED_LIST_ITERATOR_IPP
 #define LIBBITCOIN_DATABASE_LINKED_LIST_ITERATOR_IPP
 
+#include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/primitives/linked_list.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-template <typename Manager, typename Link>
-linked_list_iterator<Manager, Link>::linked_list_iterator(
-    const Manager& manager, Link first)
-  : link_(first), manager_(manager)
+// This class is a friend of the linked_list class.
+template <typename Manager, typename Link, typename Key>
+linked_list_iterator<Manager, Link, Key>::linked_list_iterator(
+    Manager& manager, Link first, shared_mutex& mutex)
+  : element_(manager, first, mutex)
 {
 }
 
-template <typename Manager, typename Link>
-void linked_list_iterator<Manager, Link>::operator++()
+template <typename Manager, typename Link, typename Key>
+linked_list_iterator<Manager, Link, Key>&
+linked_list_iterator<Manager, Link, Key>::operator++()
 {
-    link_ = linked_list<const Manager, Link>(manager_, link_).next();
+    element_.link_ = element_.next();
+    return *this;
 }
 
-template <typename Manager, typename Link>
-Link linked_list_iterator<Manager, Link>::operator*() const
+template <typename Manager, typename Link, typename Key>
+linked_list_iterator<Manager, Link, Key>
+linked_list_iterator<Manager, Link, Key>::operator++(int)
 {
-    return link_;
+    auto copy = *this;
+    element_.link_ = element_.next();
+    return copy;
 }
 
-template <typename Manager, typename Link>
-bool linked_list_iterator<Manager, Link>::operator==(
-    linked_list_iterator other) const
+template <typename Manager, typename Link, typename Key>
+typename const linked_list_iterator<Manager, Link, Key>::value_type&
+linked_list_iterator<Manager, Link, Key>::operator*() const
 {
-    return link_ == other.link_;
+    return element_;
 }
 
-template <typename Manager, typename Link>
-bool linked_list_iterator<Manager, Link>::operator!=(
-    linked_list_iterator other) const
+template <typename Manager, typename Link, typename Key>
+typename const linked_list_iterator<Manager, Link, Key>::value_type&
+linked_list_iterator<Manager, Link, Key>::operator->() const
 {
-    return link_ != other.link_;
+    return element_;
+}
+
+template <typename Manager, typename Link, typename Key>
+bool linked_list_iterator<Manager, Link, Key>::operator==(
+    const linked_list_iterator& other) const
+{
+    return element_ == other.element_;
+}
+
+template <typename Manager, typename Link, typename Key>
+bool linked_list_iterator<Manager, Link, Key>::operator!=(
+    const linked_list_iterator& other) const
+{
+    return element_ != other.element_;
 }
 
 } // namespace database

@@ -67,7 +67,7 @@ template <typename Index, typename Link>
 bool hash_table_header<Index, Link>::start()
 {
     // File is too small for the number of buckets in the header.
-    if (file_.size() < offset(buckets_))
+    if (file_.size() < link(buckets_))
         return false;
 
     // The accessor must remain in scope until the end of the block.
@@ -85,7 +85,7 @@ Link hash_table_header<Index, Link>::read(Index index) const
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto address = memory->buffer() + offset(index);
+    const auto address = memory->buffer() + link(index);
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -101,7 +101,7 @@ void hash_table_header<Index, Link>::write(Index index, Link value)
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto address = memory->buffer() + offset(index);
+    const auto address = memory->buffer() + link(index);
     auto serial = make_unsafe_serializer(address);
 
     // Critical Section
@@ -127,21 +127,21 @@ size_t hash_table_header<Index, Link>::size()
 template <typename Index, typename Link>
 size_t hash_table_header<Index, Link>::size(Index buckets)
 {
-    // Header byte size is file offset of last bucket + 1:
+    // Header byte size is file link of last bucket + 1:
     //
     //  [  size:buckets        ]
     //  [ [ row[0]           ] ]
     //  [ [      ...         ] ]
     //  [ [ row[buckets - 1] ] ] <=
     //  
-    return offset(buckets);
+    return link(buckets);
 }
 
 // static
 template <typename Index, typename Link>
-file_offset hash_table_header<Index, Link>::offset(Index index)
+file_offset hash_table_header<Index, Link>::link(Index index)
 {
-    // File offset of indexed bucket is:
+    // File link of indexed bucket is:
     //
     //     [  size       :Index  ]
     //     [ [ row[0]    :Link ] ]

@@ -23,7 +23,9 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/file_storage.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
 #include <bitcoin/database/primitives/recordset_hash_table.hpp>
+#include <bitcoin/database/primitives/slab_hash_table.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -87,7 +89,7 @@ private:
     typedef array_index index_type;
     typedef array_index link_type;
     typedef record_manager<link_type> record_manager;
-    typedef record_hash_table<key_type, index_type, link_type> record_map;
+    typedef slab_hash_table<record_manager, key_type, index_type, link_type> record_map;
 
     // The recordset map as distinct file as opposed to linkage within the map
     // allows avoidance of hash storage with each entry. This is similar to

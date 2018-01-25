@@ -150,7 +150,7 @@ size_t block_result::transaction_count() const
     return tx_count_;
 }
 
-offset_list block_result::transaction_offsets() const
+link_list block_result::transaction_links() const
 {
     const auto end = tx_start_ + tx_count_;
     if (end > index_manager_.count())
@@ -160,7 +160,7 @@ offset_list block_result::transaction_offsets() const
     if (!records)
         return{};
 
-    offset_list value;
+    link_list value;
     value.reserve(tx_count_);
     auto deserial = make_unsafe_deserializer(records->buffer());
 

@@ -43,10 +43,10 @@ public:
     transaction_result(memory_ptr slab);
     transaction_result(memory_ptr slab, hash_digest&& hash, uint32_t height,
         uint32_t median_time_past, uint16_t position, transaction_state state,
-        file_offset offset);
+        file_offset link);
     transaction_result(memory_ptr slab, const hash_digest& hash,
         uint32_t height, uint32_t median_time_past, uint16_t position,
-        transaction_state state, file_offset offset);
+        transaction_state state, file_offset link);
 
     /// True if this transaction result is valid (found).
     operator bool() const;
@@ -69,8 +69,8 @@ public:
     /// The transaction hash (from cache).
     const hash_digest& hash() const;
 
-    /// The file offset for the transaction slab.
-    const file_offset offset() const;
+    /// The link for the transaction slab.
+    const file_offset link() const;
 
     /// The median time past of the block which includes the transaction.
     uint32_t median_time_past() const;
@@ -90,7 +90,7 @@ private:
     const uint32_t median_time_past_;
     const uint16_t position_;
     const hash_digest hash_;
-    const file_offset offset_;
+    const file_offset link_;
     const transaction_state state_;
 };
 

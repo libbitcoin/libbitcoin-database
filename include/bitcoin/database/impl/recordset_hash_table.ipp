@@ -20,8 +20,10 @@
 #define LIBBITCOIN_DATABASE_RECORD_MULTIMAP_IPP
 
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/linked_list.hpp>
 #include <bitcoin/database/primitives/linked_list_iterable.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
+#include <bitcoin/database/primitives/slab_hash_table.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -30,108 +32,153 @@ namespace database {
 template <typename Key, typename Index, typename Link>
 size_t recordset_hash_table<Key, Index, Link>::size(size_t value_size)
 {
-    return sizeof(Link) + value_size;
+    return value_type::size(value_size);
 }
 
 template <typename Key, typename Index, typename Link>
-recordset_hash_table<Key, Index, Link>::recordset_hash_table(
-    record_hash_table<Key, Index, Link>& map,
-    record_manager<Link>& manager)
+recordset_hash_table<Key, Index, Link>::recordset_hash_table(table& map,
+    manager& manager)
   : map_(map), manager_(manager)
 {
 }
 
 template <typename Key, typename Index, typename Link>
-void recordset_hash_table<Key, Index, Link>::store(const Key& key,
-    write_function write)
+typename recordset_hash_table<Key, Index, Link>::value_type
+recordset_hash_table<Key, Index, Link>::allocator()
 {
-    // Allocate and populate new unlinked row.
-    row_manager record(manager_);
-    const auto begin = record.create(write);
-
-    // Critical Section.
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(create_mutex_);
-
-    const auto roots = find(key);
-
-    if (roots.empty())
-    {
-        record.link(row_manager::not_found);
-
-        map_.store(key, [=](serializer<uint8_t*>& serial)
-        {
-            //*****************************************************************
-            serial.template write_little_endian<Link>(begin);
-            //*****************************************************************
-        });
-    }
-    else
-    {
-        record.link(roots.front());
-
-        map_.update(key, [=](serializer<uint8_t*>& serial)
-        {
-            // Critical Section
-            ///////////////////////////////////////////////////////////////////
-            unique_lock lock(update_mutex_);
-            serial.template write_little_endian<Link>(begin);
-            ///////////////////////////////////////////////////////////////////
-        });
-    }
-    ///////////////////////////////////////////////////////////////////////////
+    // Empty-keyed (for payload elements).
+    return { manager_, list_mutex_ };
 }
 
 template <typename Key, typename Index, typename Link>
-linked_list_iterable<record_manager<Link>, Link>
+typename recordset_hash_table<Key, Index, Link>::list
 recordset_hash_table<Key, Index, Link>::find(const Key& key) const
 {
-    const auto begin_address = map_.find(key);
+    const auto element = map_.find(key);
 
-    if (!begin_address)
-        return { manager_, row_manager::not_found };
+    if (!element)
+        return { manager_, element.not_found, list_mutex_ };
 
-    const auto memory = begin_address->buffer();
-
-    // Critical Section.
-    ///////////////////////////////////////////////////////////////////////////
-    shared_lock lock(update_mutex_);
-    return { manager_, from_little_endian_unsafe<Link>(memory) };
-    ///////////////////////////////////////////////////////////////////////////
-}
-
-/// Get a remap safe address pointer to the indexed data.
-template <typename Key, typename Index, typename Link>
-memory_ptr recordset_hash_table<Key, Index, Link>::get(Link index) const
-{
-    return row_manager(manager_, index).data();
-}
-
-// Unlink is not safe for concurrent write.
-template <typename Key, typename Index, typename Link>
-bool recordset_hash_table<Key, Index, Link>::unlink(const Key& key)
-{
-    const auto roots = find(key);
-
-    if (roots.empty())
-        return false;
-
-    row_manager record(manager_, roots.front());
-    const auto next_index = record.next();
-
-    // Remove the hash table entry, which delinks the single row.
-    if (next_index == row_manager::not_found)
-        return map_.unlink(key);
-
-    // Update the hash table entry, which skips the first of multiple rows.
-    map_.update(key, [&](serializer<uint8_t*>& serial)
+    Link first;
+    const auto reader = [&](byte_deserializer& deserial)
     {
         // Critical Section.
         ///////////////////////////////////////////////////////////////////////
-        unique_lock lock(update_mutex_);
-        serial.template write_little_endian<Link>(next_index);
+        shared_lock lock(root_mutex_);
+        first = deserial.template read_little_endian<Link>();
         ///////////////////////////////////////////////////////////////////////
-    });
+    };
+
+    element.read(reader);
+    return { manager_, first, list_mutex_ };
+}
+
+template <typename Key, typename Index, typename Link>
+typename recordset_hash_table<Key, Index, Link>::list
+recordset_hash_table<Key, Index, Link>::find(Link link) const
+{
+    const auto element = map_.find(link);
+
+    if (!element)
+        return { manager_, element.not_found, list_mutex_ };
+
+    Link first;
+    const auto reader = [&](byte_deserializer& deserial)
+    {
+        // Critical Section.
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(root_mutex_);
+        first = deserial.template read_little_endian<Link>();
+        ///////////////////////////////////////////////////////////////////////
+    };
+
+    element.read(reader);
+    return { manager_, first, list_mutex_ };
+}
+
+template <typename Key, typename Index, typename Link>
+void recordset_hash_table<Key, Index, Link>::link(const Key& key,
+    value_type& element)
+{
+    const auto writer = [&](byte_serializer& serial)
+    {
+        serial.template write_little_endian<Link>(element.link());
+    };
+
+    // Critical Section.
+    ///////////////////////////////////////////////////////////////////////////
+    root_mutex_.lock_upgrade();
+
+    // Find the root element for this key in hash table.
+    // The hash table supports multiple values per key, but this uses only one.
+    const auto roots = find(key);
+
+    root_mutex_.unlock_upgrade_and_lock();
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    if (roots.empty())
+    {
+        // Commit the termination of the new list.
+        element.next(element.not_found);
+
+        // Create and map new root and "link" from it to the new element.
+        auto root = map_.allocator();
+        root.create(key, writer);
+        map_.link(root);
+    }
+    else
+    {
+        Link first;
+        auto root = roots.front();
+        const auto reader = [&](byte_deserializer& deserial)
+        {
+            first = deserial.template read_little_endian<Link>();
+        };
+
+        // Read the address of the existing first list element.
+        root.read(reader);
+
+        // Commit linkage to the existing first list element.
+        element.next(first);
+
+        // "link" existing root to the new first element.
+        root.write(writer);
+    }
+
+    root_mutex_.unlock();
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+template <typename Key, typename Index, typename Link>
+bool recordset_hash_table<Key, Index, Link>::unlink(const Key& key)
+{
+    // Critical Section.
+    ///////////////////////////////////////////////////////////////////////////
+    root_mutex_.lock_upgrade();
+
+    // Find the root element for this key in hash table.
+    // The hash table supports multiple values per key, but this uses only one.
+    const auto roots = find(key);
+
+    if (roots.empty())
+    {
+        root_mutex_.unlock_upgrade();
+        //---------------------------------------------------------------------
+        return false;
+    }
+
+    // Define link writer for parent element.
+    const auto linker = [&](byte_serializer& serial)
+    {
+        serial.template write_little_endian<Link>(roots.front().next());
+    };
+
+    root_mutex_.unlock_upgrade_and_lock();
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    roots.front().write(linker);
+
+    root_mutex_.unlock();
+    ///////////////////////////////////////////////////////////////////////////
 
     return true;
 }

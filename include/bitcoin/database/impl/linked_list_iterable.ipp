@@ -19,43 +19,45 @@
 #ifndef LIBBITCOIN_DATABASE_LINKED_LIST_ITERABLE_IPP
 #define LIBBITCOIN_DATABASE_LINKED_LIST_ITERABLE_IPP
 
+#include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/primitives/linked_list.hpp>
 #include <bitcoin/database/primitives/linked_list_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-template <typename Manager, typename Link>
-linked_list_iterable<Manager, Link>::linked_list_iterable(
-    const Manager& manager, Link first)
-  : first_(first), manager_(manager)
+template <typename Manager, typename Link, typename Key>
+linked_list_iterable<Manager, Link, Key>::linked_list_iterable(
+    Manager& manager, Link first, shared_mutex& mutex)
+  : first_(first), manager_(manager), mutex_(mutex)
 {
 }
 
-template <typename Manager, typename Link>
-bool linked_list_iterable<Manager, Link>::empty() const
+template <typename Manager, typename Link, typename Key>
+bool linked_list_iterable<Manager, Link, Key>::empty() const
 {
     return begin() == end();
 }
 
-template <typename Manager, typename Link>
-Link linked_list_iterable<Manager, Link>::front() const
+template <typename Manager, typename Link, typename Key>
+typename linked_list_iterable<Manager, Link, Key>::const_value_type
+linked_list_iterable<Manager, Link, Key>::front() const
 {
     return *begin();
 }
 
-template <typename Manager, typename Link>
-linked_list_iterator<Manager, Link> linked_list_iterable<Manager,
-    Link>::begin() const
+template <typename Manager, typename Link, typename Key>
+typename linked_list_iterable<Manager, Link, Key>::const_iterator
+linked_list_iterable<Manager, Link, Key>::begin() const
 {
-    return { manager_, first_ };
+    return { manager_, first_, mutex_ };
 }
 
-template <typename Manager, typename Link>
-linked_list_iterator<Manager, Link> linked_list_iterable<Manager,
-    Link>::end() const
+template <typename Manager, typename Link, typename Key>
+typename linked_list_iterable<Manager, Link, Key>::const_iterator
+linked_list_iterable<Manager, Link, Key>::end() const
 {
-    return { manager_, linked_list<Manager, Link>::not_found };
+    return { manager_, const_value_type::not_found, mutex_ };
 }
 
 } // namespace database

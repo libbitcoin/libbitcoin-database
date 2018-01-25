@@ -83,8 +83,8 @@ public:
     /// The number of transactions in this block (may be zero).
     size_t transaction_count() const;
 
-    /// Get the set of transaction offsets into the tx table for the block.
-    offset_list transaction_offsets() const;
+    /// Get the set of transaction links into the tx table for the block.
+    link_list transaction_links() const;
 
 private:
     memory_ptr record_;

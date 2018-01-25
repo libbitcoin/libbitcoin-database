@@ -67,7 +67,7 @@ bool record_manager<Link>::create()
         return false;
 
     // This currently throws if there is insufficient space.
-    file_.resize(header_size_ + record_to_position(record_count_));
+    file_.resize(header_size_ + link_to_position(record_count_));
 
     write_count();
     return true;
@@ -82,7 +82,7 @@ bool record_manager<Link>::start()
     unique_lock lock(mutex_);
 
     read_count();
-    const auto minimum = header_size_ + record_to_position(record_count_);
+    const auto minimum = header_size_ + link_to_position(record_count_);
 
     // Records size exceeds file size.
     return minimum <= file_.size();
@@ -90,7 +90,7 @@ bool record_manager<Link>::start()
 }
 
 template <typename Link>
-void record_manager<Link>::sync()
+void record_manager<Link>::commit()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -136,7 +136,7 @@ Link record_manager<Link>::allocate(size_t count)
     // Always write after the last index.
     const auto next_record_index = record_count_;
 
-    const size_t position = record_to_position(record_count_ + count);
+    const size_t position = link_to_position(record_count_ + count);
     const size_t required_size = header_size_ + position;
 
     // Currently throws runtime_error if insufficient space.
@@ -152,14 +152,14 @@ Link record_manager<Link>::allocate(size_t count)
 }
 
 template <typename Link>
-memory_ptr record_manager<Link>::get(Link record) const
+memory_ptr record_manager<Link>::get(Link link) const
 {
     // If record >= count() then we should still be within the file. The
     // condition implies a block has been unconfirmed while reading it.
 
     // The accessor must remain in scope until the end of the block.
     auto memory = file_.access();
-    memory->increment(header_size_ + record_to_position(record));
+    memory->increment(header_size_ + link_to_position(link));
     return memory;
 }
 
@@ -191,16 +191,15 @@ void record_manager<Link>::write_count()
 }
 
 template <typename Link>
-Link record_manager<Link>::position_to_record(
-    file_offset position) const
+Link record_manager<Link>::position_to_link(file_offset position) const
 {
     return (position - sizeof(Link)) / record_size_;
 }
 
 template <typename Link>
-file_offset record_manager<Link>::record_to_position(Link record) const
+file_offset record_manager<Link>::link_to_position(Link link) const
 {
-    return sizeof(Link) + record * record_size_;
+    return sizeof(Link) + link * record_size_;
 }
 
 } // namespace database

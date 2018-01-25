@@ -85,7 +85,7 @@ bool stealth_database::open()
 
 void stealth_database::commit()
 {
-    stealth_index_.sync();
+    stealth_index_.commit();
 }
 
 bool stealth_database::flush() const
@@ -114,7 +114,7 @@ stealth_database::list stealth_database::get(const binary& filter,
         const auto record = stealth_index_.get(row);
         auto deserial = make_unsafe_deserializer(record->buffer());
 
-        // Failed reads are conflated with skipped returns.
+        // This skips rows that do not match the filter.
         if (stealth.from_data(deserial, from_height, filter))
             result.push_back(stealth);
     }

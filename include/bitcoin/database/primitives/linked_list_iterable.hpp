@@ -19,29 +19,38 @@
 #ifndef LIBBITCOIN_DATABASE_LINKED_LIST_ITERABLE_HPP
 #define LIBBITCOIN_DATABASE_LINKED_LIST_ITERABLE_HPP
 
+#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/define.hpp>
+#include <bitcoin/database/primitives/linked_list.hpp>
 #include <bitcoin/database/primitives/linked_list_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 /// Iterable wrapper for linked_list.
-/// Link is both traversal and value.
 /// Manager dynamically traverses store-based list.
-template <typename Manager, typename Link>
+/// Mutex provides read safety for link traversal during unlink.
+template <typename Manager, typename Link, typename Key>
 class linked_list_iterable
 {
 public:
-    /// Create a storage interator starting at first.
-    linked_list_iterable(const Manager& manager, Link first);
+    typedef linked_list_iterator<Manager, Link, Key> iterator;
+    typedef linked_list_iterator<const Manager, Link, Key> const_iterator;
+    typedef typename linked_list_iterator<Manager, Link, Key>::const_value_type
+        const_value_type;
+
+    /// Create a storage iterator starting at first.
+    linked_list_iterable(Manager& manager, Link first, shared_mutex& mutex);
 
     bool empty() const;
-    Link front() const;
-    linked_list_iterator<Manager, Link> begin() const;
-    linked_list_iterator<Manager, Link> end() const;
+    const_value_type front() const;
+    const_iterator begin() const;
+    const_iterator end() const;
 
 private:
     const Link first_;
-    const Manager& manager_;
+    Manager& manager_;
+    shared_mutex& mutex_;
 };
 
 } // namespace database

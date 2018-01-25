@@ -19,10 +19,9 @@
 #ifndef LIBBITCOIN_DATABASE_LINKED_LIST_HPP
 #define LIBBITCOIN_DATABASE_LINKED_LIST_HPP
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
-#include <tuple>
+#include <utility>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -30,33 +29,26 @@
 namespace libbitcoin {
 namespace database {
 
-typedef std::array<uint8_t, 0> empty_key;
-static_assert(std::tuple_size<empty_key>::value == 0, "non-empty empty key");
-
 /**
  * A hash table key-conflict row, implemented as a linked list.
  * Link is limited to 64 bytes. A default Key creates an unkeyed list.
  */
-template <typename Manager, typename Link, typename Key=empty_key>
+template <typename Manager, typename Link, typename Key>
 class linked_list
 {
 public:
     typedef byte_serializer::functor write_function;
-
-    static const size_t key_start = 0;
-    static const size_t key_size = std::tuple_size<Key>::value;
-    static const size_t link_size = sizeof(Link);
-    static const size_t prefix_size = key_size + link_size;
+    typedef byte_deserializer::functor read_function;
     static const auto not_found = (Link)bc::max_uint64;
 
     /// The stored size of a value with the given size.
     static size_t size(size_t value_size);
 
     /// Construct for a new element.
-    linked_list(Manager& manager);
+    linked_list(Manager& manager, shared_mutex& mutex);
 
     /// Construct for an existing element.
-    linked_list(Manager& manager, Link link);
+    linked_list(Manager& manager, Link link, shared_mutex& mutex);
 
     /// Allocate and populate a new array element.
     Link create(write_function write);
@@ -67,27 +59,48 @@ public:
     /// Allocate and populate a new slab element.
     Link create(const Key& key, write_function write, size_t value_size);
 
-    /// Connect allocated/populated element.
-    void link(Link next);
+    /// Connect the next element.
+    void next(Link next);
+
+    /// Write to the state of the element.
+    void write(write_function writer);
+
+    /// Read from the state of the element.
+    void read(read_function reader) const;
 
     /// True if the element key matches the parameter.
-    bool equal(const Key& key) const;
+    bool match(const Key& key) const;
 
-    /// A smart pointer to the user data.
-    memory_ptr data() const;
+    /// The key of this element.
+    Key key() const;
 
-    /// File offset of the user data.
-    file_offset offset() const;
+    /// The address of this element.
+    Link link() const;
 
-    /// File offset of next element in the list.
+    /// The address of the next element.
     Link next() const;
 
+    /// Element was found (not end).
+    bool is_valid() const;
+
+    /// Cast operator, true if element was found (not end).
+    operator const bool() const;
+
+    /// Equality comparison operators, compares link value only.
+    bool operator==(linked_list other) const;
+    bool operator!=(linked_list other) const;
+
 private:
-    memory_ptr raw_data(size_t bytes) const;
-    void populate(const Key& key, write_function write);
+    // Allow the iterator to access private members.
+    template <typename Manager, typename Link, typename Key>
+    friend class linked_list_iterator;
+
+    memory_ptr data(size_t bytes) const;
+    void initialize(const Key& key, write_function write);
 
     Link link_;
     Manager& manager_;
+    shared_mutex& mutex_;
 };
 
 } // namespace database

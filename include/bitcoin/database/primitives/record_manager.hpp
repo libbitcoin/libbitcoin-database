@@ -45,8 +45,8 @@ public:
     /// Prepare manager for usage.
     bool start();
 
-    /// Synchronise to disk.
-    void sync();
+    /// Commit record count to file.
+    void commit();
 
     /// The number of records in this container.
     Link count() const;
@@ -54,18 +54,18 @@ public:
     /// Change the number of records of this container (truncation).
     void set_count(const Link value);
 
-    /// Allocate records and return first logical index, sync() after writing.
+    /// Allocate records and return first logical index, commit after writing.
     Link allocate(size_t count);
 
     /// Return memory object for the record at the specified index.
-    memory_ptr get(Link record) const;
+    memory_ptr get(Link link) const;
 
 private:
     // The record index of a disk position.
-    Link position_to_record(file_offset position) const;
+    Link position_to_link(file_offset position) const;
 
     // The disk position of a record index.
-    file_offset record_to_position(Link record) const;
+    file_offset link_to_position(Link link) const;
 
     // Read the count of the records from the file.
     void read_count();

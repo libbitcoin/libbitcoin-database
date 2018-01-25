@@ -88,7 +88,7 @@ bool slab_manager<Link>::start()
 }
 
 template <typename Link>
-void slab_manager<Link>::sync() const
+void slab_manager<Link>::commit()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -138,14 +138,14 @@ Link slab_manager<Link>::allocate(size_t size)
 
 // Position is offset by header but not size storage (embedded in data files).
 template <typename Link>
-memory_ptr slab_manager<Link>::get(Link position) const
+memory_ptr slab_manager<Link>::get(Link link) const
 {
     // Ensure requested position is within the file.
     // We avoid a runtime error here to optimize out the payload_size lock.
     BITCOIN_ASSERT_MSG(position < payload_size(), "Read past end of file.");
 
     auto memory = file_.access();
-    memory->increment(header_size_ + position);
+    memory->increment(header_size_ + link);
     return memory;
 }
 

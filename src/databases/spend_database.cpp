@@ -34,14 +34,13 @@ namespace database {
 
 using namespace bc::chain;
 
-static const auto value_size = std::tuple_size<point>::value;
-
 // Spends use a hash table index, O(1).
 // The spend database keys off of output point and has input point value.
 spend_database::spend_database(const path& filename, size_t buckets,
     size_t expansion)
   : hash_table_file_(filename, expansion),
-    hash_table_(hash_table_file_, buckets, value_size)
+    hash_table_(hash_table_file_, buckets,
+        std::tuple_size</*point*/ short_hash>::value)
 {
 }
 
@@ -72,7 +71,7 @@ bool spend_database::open()
 
 void spend_database::commit()
 {
-    hash_table_.sync();
+    hash_table_.commit();
 }
 
 bool spend_database::flush() const
@@ -91,13 +90,17 @@ bool spend_database::close()
 input_point spend_database::get(const output_point& outpoint) const
 {
     input_point spend;
-    const auto slab = hash_table_.find(outpoint);
+    ////auto element = hash_table_.find(outpoint);
 
-    if (!slab)
-        return spend;
+    ////if (!element)
+    ////    return spend;
 
-    auto deserial = make_unsafe_deserializer(slab->buffer());
-    spend.from_data(deserial, false);
+    ////const auto reader = [&](byte_deserializer& deserial)
+    ////{
+    ////    spend.from_data(deserial, false);
+    ////};
+
+    ////element.read(reader);
     return spend;
 }
 
@@ -107,12 +110,15 @@ input_point spend_database::get(const output_point& outpoint) const
 void spend_database::store(const chain::output_point& outpoint,
     const chain::input_point& spend)
 {
-    const auto write = [&](byte_serializer& serial)
-    {
-        spend.to_data(serial, false);
-    };
+    ////const auto writer = [&](byte_serializer& serial)
+    ////{
+    ////    spend.to_data(serial, false);
+    ////};
 
-    hash_table_.store(outpoint, write);
+    // Write the new spend.
+    auto front = hash_table_.allocator();
+    ////front.create(outpoint, writer);
+    hash_table_.link(front);
 }
 
 // Update.
@@ -120,15 +126,7 @@ void spend_database::store(const chain::output_point& outpoint,
 
 bool spend_database::unlink(const output_point& outpoint)
 {
-    auto memory = hash_table_.find(outpoint);
-
-    // Spends are optional so do not assume presence.
-    if (memory == nullptr)
-        return false;
-
-    // Release lock before unlinking.
-    memory = nullptr;
-    return hash_table_.unlink(outpoint);
+    return hash_table_.unlink({});
 }
 
 } // namespace database

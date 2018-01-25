@@ -25,7 +25,7 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/linked_list_iterable.hpp>
-#include <bitcoin/database/primitives/record_hash_table.hpp>
+#include <bitcoin/database/primitives/slab_hash_table.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
@@ -41,38 +41,41 @@ namespace database {
  */
 template <typename Key, typename Index, typename Link>
 class recordset_hash_table
-  : noncopyable
 {
 public:
-    typedef serializer<uint8_t*>::functor write_function;
+    typedef record_manager<Link> manager;
+    typedef linked_list<manager, Link, empty_key> value_type;
+    typedef linked_list_iterable<manager, Link, empty_key> list;
+    typedef slab_hash_table<manager, Key, Index, Link> table;
 
-    /// The stored size of a value with the given size.
+    /// The stored size of a recordset value with the given size.
     static size_t size(size_t value_size);
 
     /// Construct a new recordset hash table.
-    recordset_hash_table(record_hash_table<Key, Index, Link>& map,
-        record_manager<Link>& manager);
+    /// THIS ASSUMES MAP HAS VALUE == sizeof(Link).
+    recordset_hash_table(table& map, manager& manager);
 
-    /// Add a new element for a key.
-    void store(const Key& key, write_function write);
+    /// Use to allocate an element in a recordset. 
+    value_type allocator();
 
-    /// Get an iterator for the key.
-    linked_list_iterable<record_manager<Link>, Link> find(
-        const Key& key) const;
+    /// Find an iterator for the given recordset key.
+    list find(const Key& key) const;
 
-    /// Get a remap safe address pointer to key's data.
-    memory_ptr get(Link index) const;
+    /// Get the iterator for the given link from a recordset.
+    list find(Link link) const;
 
-    /// Delete the last element that was added for the key.
+    /// Add the given element to a recordset.
+    /// Recordset elements have empty internal key values.
+    void link(const Key& key, value_type& element);
+
+    /// Remove a recordset element with the given key.
     bool unlink(const Key& key);
 
 private:
-    typedef linked_list<record_manager<Link>, Link> row_manager;
-
-    record_hash_table<Key, Index, Link>& map_;
-    record_manager<Link>& manager_;
-    mutable shared_mutex create_mutex_;
-    mutable shared_mutex update_mutex_;
+    table& map_;
+    manager& manager_;
+    mutable shared_mutex root_mutex_;
+    mutable shared_mutex list_mutex_;
 };
 
 } // namespace database

@@ -44,10 +44,10 @@ public:
     /// Prepare manager for use.
     bool start();
 
-    /// Synchronise the payload size to disk.
-    void sync() const;
+    /// Commit total slabs size to file.
+    void commit();
 
-    /// Allocate a slab and return its position, sync() after writing.
+    /// Allocate a slab and return its position, commit after writing.
     Link allocate(size_t size);
 
     /// Return memory object for the slab at the specified position.

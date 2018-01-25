@@ -73,7 +73,7 @@ public:
 
 private:
     // Position in the memory map relative the header end.
-    static file_offset offset(Index index);
+    static file_offset link(Index index);
 
     storage& file_;
     Index buckets_;

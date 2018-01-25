@@ -31,15 +31,14 @@ namespace database {
 using namespace bc::chain;
 using namespace bc::machine;
 
-
 static constexpr auto indexed_size = sizeof(uint8_t);
 static constexpr auto value_size = sizeof(uint64_t);
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto position_size = sizeof(uint16_t);
 static constexpr auto state_size = sizeof(uint8_t);
 static constexpr auto median_time_past_size = sizeof(uint32_t);
-static constexpr auto metadata_size = height_size + position_size +
-    state_size + median_time_past_size;
+
+static constexpr auto metadata_size = height_size + position_size + state_size + median_time_past_size;
 
 const uint16_t transaction_result::unconfirmed = max_uint16;
 const uint32_t transaction_result::unverified = rule_fork::unverified;
@@ -56,33 +55,33 @@ transaction_result::transaction_result(memory_ptr slab)
     position_(transaction_result::unconfirmed),
     hash_(null_hash),
     state_(transaction_state::missing),
-    offset_(transaction::validation::undetermined_offset)
+    link_(transaction::validation::undetermined_link)
 {
 }
 
 transaction_result::transaction_result(memory_ptr slab, hash_digest&& hash,
     uint32_t height, uint32_t median_time_past, uint16_t position,
-    transaction_state state, file_offset offset)
+    transaction_state state, file_offset link)
   : slab_(slab),
     height_(height),
     median_time_past_(median_time_past),
     position_(position),
     hash_(std::move(hash)),
     state_(state),
-    offset_(offset)
+    link_(link)
 {
 }
 
 transaction_result::transaction_result(memory_ptr slab,
     const hash_digest& hash, uint32_t height, uint32_t median_time_past,
-    uint16_t position, transaction_state state, file_offset offset)
+    uint16_t position, transaction_state state, file_offset link)
   : slab_(slab),
     height_(height),
     median_time_past_(median_time_past),
     position_(position),
     hash_(hash),
     state_(state),
-    offset_(offset)
+    link_(link)
 {
 }
 
@@ -124,9 +123,9 @@ const hash_digest& transaction_result::hash() const
     return hash_;
 }
 
-const file_offset transaction_result::offset() const
+const file_offset transaction_result::link() const
 {
-    return offset_;
+    return link_;
 }
 
 // Median time past is unguarded and will be inconsistent during write.

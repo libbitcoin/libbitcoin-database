@@ -24,8 +24,8 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/file_storage.hpp>
-#include <bitcoin/database/primitives/record_hash_table.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
+#include <bitcoin/database/primitives/slab_hash_table.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -84,8 +84,12 @@ public:
     bool unlink(const chain::output_point& outpoint);
 
 private:
-    typedef record_hash_table<chain::point, array_index, array_index>
-        record_map;
+    ////typedef chain::point key_type;
+    typedef short_hash key_type;
+    typedef array_index index_type;
+    typedef array_index link_type;
+    typedef record_manager<link_type> record_manager;
+    typedef slab_hash_table<record_manager, key_type, index_type, link_type> record_map;
 
     // Hash table used for looking up inpoint spends by outpoint.
     file_storage hash_table_file_;

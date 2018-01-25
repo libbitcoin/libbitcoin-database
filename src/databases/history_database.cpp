@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <tuple>
+#include <utility>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/recordset_hash_table.hpp>
@@ -58,11 +59,13 @@ static constexpr auto value_size = height_size + flag_size + point_size +
 history_database::history_database(const path& lookup_filename,
     const path& rows_filename, size_t buckets, size_t expansion)
   : hash_table_file_(lookup_filename, expansion),
+
+    // THIS sizeof(link_type) IS ASSUMED BY recordset_hash_table.
     hash_table_(hash_table_file_, buckets, sizeof(link_type)),
 
     address_file_(rows_filename, expansion),
-    address_index_(address_file_, 0, recordset_hash_table<key_type, index_type,
-        link_type>::size(value_size)),
+    address_index_(address_file_, 0,
+        recordset_hash_table<key_type, index_type, link_type>::size(value_size)),
     address_recordset_map_(hash_table_, address_index_)
 {
 }
@@ -98,8 +101,8 @@ bool history_database::open()
 
 void history_database::commit()
 {
-    hash_table_.sync();
-    address_index_.sync();
+    hash_table_.commit();
+    address_index_.commit();
 }
 
 bool history_database::flush() const
@@ -124,19 +127,25 @@ history_database::list history_database::get(const short_hash& key,
 {
     list result;
     payment_record payment;
-    const auto records = address_recordset_map_.find(key);
 
-    for (auto index = records.begin(); index != records.end(); ++index)
+    // Declare reusable reader.
+    const auto reader = [&](byte_deserializer& deserial)
+    {
+        payment.from_data(deserial, from_height);
+    };
+
+    // Get an iterator for the set of records that matches the key.
+    auto history = address_recordset_map_.find(key);
+
+    for (const auto element: history)
     {
         if (limit > 0 && result.size() >= limit)
             break;
 
-        const auto record = address_recordset_map_.get(*index);
-        auto deserial = make_unsafe_deserializer(record->buffer());
+        element.read(reader);
 
-        // Failed reads are conflated with skipped returns.
-        if (payment.from_data(deserial, from_height))
-            result.push_back(payment);
+        BITCOIN_ASSERT(payment.is_valid());
+        result.push_back(std::move(payment));
     }
 
     return result;
@@ -148,12 +157,15 @@ history_database::list history_database::get(const short_hash& key,
 void history_database::store(const short_hash& key,
     const payment_record& payment)
 {
-    const auto write = [&](byte_serializer& serial)
+    const auto writer = [&](byte_serializer& serial)
     {
         payment.to_data(serial, false);
     };
 
-    address_recordset_map_.store(key, write);
+    // Write the new payment history.
+    auto front = address_recordset_map_.allocator();
+    front.create(writer);
+    address_recordset_map_.link(key, front);
 }
 
 // Update.

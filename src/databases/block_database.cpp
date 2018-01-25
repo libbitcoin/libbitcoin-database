@@ -29,7 +29,7 @@
 #include <bitcoin/database/result/block_result.hpp>
 #include <bitcoin/database/state/block_state.hpp>
 
-// Record format (v4) [99 bytes]:
+// Record format (v4) [99 bytes, 135 with key/link]:
 // Below excludes block height and tx hash indexes (arrays).
 // ----------------------------------------------------------------------------
 // [ header:80          - const   ]
@@ -54,10 +54,6 @@ namespace database {
 
 using namespace bc::chain;
 
-// static
-const size_t block_database::prefix_size_ = linked_list<record_manager, link_type,
-    key_type>::prefix_size;
-
 static const auto header_size = header::satoshi_fixed_size();
 static constexpr auto median_time_past_size = sizeof(uint32_t);
 static constexpr auto height_size = sizeof(uint32_t);
@@ -65,15 +61,18 @@ static constexpr auto state_size = sizeof(uint8_t);
 static constexpr auto checksum_size = sizeof(uint32_t);
 static constexpr auto tx_start_size = sizeof(uint32_t);
 static constexpr auto tx_count_size = sizeof(uint16_t);
+
 static const auto height_offset = header_size + median_time_past_size;
 static const auto state_offset = height_offset + height_size;
 static const auto checksum_offset = state_offset + state_size;
 static const auto transactions_offset = checksum_offset + checksum_size;
-static const auto block_size = header_size + median_time_past_size +
-    height_size + state_size + checksum_size + tx_start_size + tx_count_size;
 
 // Placeholder for unimplemented checksum caching.
 static constexpr auto no_checksum = 0u;
+
+// Total size of block header and metadta storage.
+static const auto block_size = header_size + median_time_past_size +
+    height_size + state_size + checksum_size + tx_start_size + tx_count_size;
 
 // Blocks uses a hash table and two array indexes, all O(1).
 // The block database keys off of block hash and has block value.
@@ -137,10 +136,10 @@ bool block_database::open()
 
 void block_database::commit()
 {
-    hash_table_.sync();
-    header_index_.sync();
-    block_index_.sync();
-    tx_index_.sync();
+    hash_table_.commit();
+    header_index_.commit();
+    block_index_.commit();
+    tx_index_.commit();
 }
 
 bool block_database::flush() const
@@ -180,72 +179,64 @@ bool block_database::top(size_t& out_height, bool block_index) const
     return read_top(out_height, manager);
 }
 
+block_result block_database::populate(
+    record_map::const_value_type& element) const
+{
+    uint32_t height;
+    uint8_t state;
+    uint32_t checksum;
+    uint32_t tx_start;
+    uint32_t tx_count;
+
+    // Each of the three atomic sets could be guarded independently.
+    const auto reader = [&](byte_deserializer& deserial)
+    {
+        deserial.skip(height_offset);
+
+        // Critical Section.
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(metadata_mutex_);
+        height = deserial.read_4_bytes_little_endian();
+        state = deserial.read_byte();
+        checksum = deserial.read_4_bytes_little_endian();
+        tx_start = deserial.read_4_bytes_little_endian();
+        tx_count = deserial.read_2_bytes_little_endian();
+        ///////////////////////////////////////////////////////////////////////
+    };
+
+    // Reads are not deferred for updatable values as atomicity is required.
+    element.read(reader);
+
+    // TODO: update block result.
+    return { tx_index_ };
+    ////return
+    ////{
+    ////    tx_index_,
+    ////    element,
+    ////    height,
+    ////    checksum,
+    ////    tx_start,
+    ////    tx_count,
+    ////    state
+    ////};
+}
+
 block_result block_database::get(size_t height, bool block_index) const
 {
     auto& manager = block_index ? block_index_ : header_index_;
 
     if (height >= manager.count())
-        return{ tx_index_ };
+        return { tx_index_ };
 
-    auto record = hash_table_.get(read_index(height, manager));
-    const auto prefix = record->buffer();
-
-    // Advance the record row entry past the key and link to the record data.
-    record->increment(prefix_size_);
-    auto deserial = make_unsafe_deserializer(record->buffer());
-
-    // The header and height are const.
-    deserial.skip(state_offset);
-
-    // Each of the three atomic sets could be guarded independently.
-    ///////////////////////////////////////////////////////////////////////////
-    // Critical Section.
-    metadata_mutex_.lock_shared();
-    const auto state = deserial.read_byte();
-    const auto checksum = deserial.read_4_bytes_little_endian();
-    const auto tx_start = deserial.read_4_bytes_little_endian();
-    const auto tx_count = deserial.read_2_bytes_little_endian();
-    metadata_mutex_.unlock_shared();
-    ///////////////////////////////////////////////////////////////////////////
-
-    // HACK: back up into the record to obtain the hash/key (optimization).
-    auto reader = make_unsafe_deserializer(prefix);
-
-    // Reads are not deferred for updatable values as atomicity is required.
-    return{ tx_index_, record, reader.read_hash(),
-        static_cast<uint32_t>(height), checksum, tx_start, tx_count, state };
+    auto element = hash_table_.find(read_index(height, manager));
+    return element ? populate(element) : block_result{ tx_index_ };
 }
 
 // Returns any state, including invalid and empty.
 block_result block_database::get(const hash_digest& hash) const
 {
-    // This is pointer to the data section of the record row entry.
-    const auto record = hash_table_.find(hash);
-
-    if (record == nullptr)
-        return{ tx_index_ };
-
-    const auto memory = record->buffer();
-    ////const auto prefix_start = memory - prefix_size_;
-
-    // The header and height never change after the block is reachable.
-    auto deserial = make_unsafe_deserializer(memory + height_offset);
-    const auto height = deserial.read_4_bytes_little_endian();
-
-    // Each of the three atomic sets could be guarded independently.
-    ///////////////////////////////////////////////////////////////////////////
-    // Critical Section.
-    metadata_mutex_.lock_shared();
-    const auto state = deserial.read_byte();
-    const auto checksum = deserial.read_4_bytes_little_endian();
-    const auto tx_start = deserial.read_4_bytes_little_endian();
-    const auto tx_count = deserial.read_2_bytes_little_endian();
-    metadata_mutex_.unlock_shared();
-    ///////////////////////////////////////////////////////////////////////////
-
-    // Reads are not deferred for updatable values as atomicity is required.
-    return{ tx_index_, record, hash, height, checksum, tx_start,
-        tx_count, state };
+    auto element = hash_table_.find(hash);
+    return element ? populate(element) : block_result{ tx_index_ };
 }
 
 // Store.
@@ -255,31 +246,33 @@ block_result block_database::get(const hash_digest& hash) const
 void block_database::push(const chain::header& header, size_t height,
     uint32_t checksum, link_type tx_start, size_t tx_count, uint8_t state)
 {
-    auto& manager = is_confirmed(state) ? block_index_ :
-        header_index_;
+    auto& manager = is_confirmed(state) ? block_index_ : header_index_;
 
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(tx_start <= max_uint32);
     BITCOIN_ASSERT(tx_count <= max_uint16);
     BITCOIN_ASSERT(!header.validation.pooled);
-    const auto height32 = static_cast<uint32_t>(height);
 
-    const auto write = [&](byte_serializer& serial)
+    const auto writer = [&](byte_serializer& serial)
     {
-        // The record is not accessible until stored, so no guards required.
-        // Write block header including median_time_past metadata.
         header.to_data(serial, false);
-        serial.write_4_bytes_little_endian(height32);
+        serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
         serial.write_byte(state);
         serial.write_4_bytes_little_endian(checksum);
         serial.write_4_bytes_little_endian(static_cast<uint32_t>(tx_start));
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(tx_count));
     };
 
-    const auto index = hash_table_.store(header.hash(), write);
+    // Write the new block.
+    auto front = hash_table_.allocator();
+    front.create(header.hash(), writer);
+    hash_table_.link(front);
+
+    // Capture the record link for reference by the index.
+    const auto link = front.link();
 
     if (is_confirmed(state) || is_indexed(state))
-        push_index(index, height, manager);
+        push_index(link, height, manager);
 }
 
 // A header creation does not move the fork point (not a reorg).
@@ -321,11 +314,7 @@ block_database::link_type block_database::associate(
     auto serial = make_unsafe_serializer(record->buffer());
 
     for (const auto& tx: transactions)
-    {
-        const auto offset = tx.validation.offset;
-        BITCOIN_ASSERT(offset != transaction_database::slab_map::not_found);
-        serial.write_8_bytes_little_endian(offset);
-    }
+        serial.write_8_bytes_little_endian(tx.validation.link);
 
     return start;
 }
@@ -344,19 +333,24 @@ bool block_database::update(const chain::block& block)
     BITCOIN_ASSERT(tx_start <= max_uint32);
     BITCOIN_ASSERT(tx_count <= max_uint16);
 
-    const auto update = [&](byte_serializer& serial)
+    const auto updater = [&](byte_serializer& serial)
     {
-        ///////////////////////////////////////////////////////////////////////
         // Critical Section.
+        ///////////////////////////////////////////////////////////////////////
         unique_lock lock(metadata_mutex_);
-
         serial.skip(transactions_offset);
         serial.write_4_bytes_little_endian(static_cast<uint32_t>(tx_start));
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(tx_count));
         ///////////////////////////////////////////////////////////////////////
     };
 
-    return hash_table_.update(block.hash(), update) != record_map::not_found;
+    auto element = hash_table_.find(block.hash());
+
+    if (!element)
+        return false;
+
+    element.write(updater);
+    return true;
 }
 
 static uint8_t update_validation_state(uint8_t original, bool positive)
@@ -375,50 +369,49 @@ static uint8_t update_validation_state(uint8_t original, bool positive)
 }
 
 // Promote pent block to valid|invalid.
+// TODO: the caller doesn't know the current header state.
 bool block_database::validate(const hash_digest& hash, bool positive)
 {
-    // TODO: eliminate the double state lookup for state update.
-    // TODO: the caller doesn't know the current header state.
+    auto element = hash_table_.find(hash);
 
-    // This is pointer to the data section of the record row entry.
-    auto record = hash_table_.find(hash);
-
-    if (record == nullptr)
+    if (!element)
         return false;
 
-    const auto memory = record->buffer();
-    ////const auto prefix_start = memory - prefix_size_;
+    uint32_t height;
+    uint8_t state;
 
-    // The header and height never change after the block is reachable.
-    auto deserial = make_unsafe_deserializer(memory + height_offset);
-    const auto height = deserial.read_4_bytes_little_endian();
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Critical Section.
-    metadata_mutex_.lock_shared();
-    const auto original = deserial.read_byte();
-    metadata_mutex_.unlock_shared();
-    ///////////////////////////////////////////////////////////////////////////
-
-    record = nullptr;
-    const auto state = update_validation_state(original, positive);
-    const auto update = [&](byte_serializer& serial)
+    const auto reader = [&](byte_deserializer& deserial)
     {
-        ///////////////////////////////////////////////////////////////////////
-        // Critical Section.
-        unique_lock lock(metadata_mutex_);
+        deserial.skip(height_offset);
+        height = deserial.read_4_bytes_little_endian();
 
-        // Skip block header, including median_time_past metadata, and height.
-        serial.skip(state_offset);
-        serial.write_byte(state);
+        // Critical Section.
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(metadata_mutex_);
+        state = deserial.read_byte();
+        ///////////////////////////////////////////////////////////////////////
     };
 
-    hash_table_.update(hash, update);
+    const auto updater = [&](byte_serializer& serial)
+    {
+        serial.skip(state_offset);
+        const auto updated = update_validation_state(state, positive);
+
+        // Critical Section.
+        ///////////////////////////////////////////////////////////////////////
+        unique_lock lock(metadata_mutex_);
+        serial.write_byte(updated);
+        ///////////////////////////////////////////////////////////////////////
+    };
+
+    element.read(reader);
+    element.write(updater);
 
     // Also update the validation chaser, assumes all prior are valid.
     BITCOIN_ASSERT_MSG(valid_point_ != max_size_t, "valid point overflow");
-    BITCOIN_ASSERT_MSG((height == 0 && valid_point_ == 0) ||
-        (height == valid_point_ + 1), "validation out of order");
+    BITCOIN_ASSERT_MSG(
+        (height == 0 && valid_point_ == 0) || (height == valid_point_ + 1),
+        "validation out of order");
 
     valid_point_ = height;
     return true;
@@ -452,6 +445,7 @@ static uint8_t update_confirmation_state(uint8_t original, bool positive,
     return confirmation_state | validation_state;
 }
 
+// TODO: the caller doesn't know the current header state.
 bool block_database::confirm(const hash_digest& hash, size_t height,
     bool block_index)
 {
@@ -462,45 +456,52 @@ bool block_database::confirm(const hash_digest& hash, size_t height,
     if (height != manager.count())
         return false;
 
-    // TODO: eliminate the double state lookup for state update.
-    // TODO: the caller doesn't know the current header state.
-    auto record = hash_table_.get(read_index(height, manager));
-    record->increment(prefix_size_);
-    const auto state_start = record->buffer();
-    auto deserial = make_unsafe_deserializer(state_start);
+    auto element = hash_table_.find(read_index(height, manager));
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Critical Section.
-    metadata_mutex_.lock_shared();
-    const auto original = deserial.read_byte();
-    metadata_mutex_.unlock_shared();
-    ///////////////////////////////////////////////////////////////////////////
+    if (!element)
+        return false;
 
-    record = nullptr;
-    const auto state = update_confirmation_state(original, true, block_index);
-    const auto update = [&](byte_serializer& serial)
+    uint8_t original;
+
+    const auto reader = [&](byte_deserializer& deserial)
     {
-        ///////////////////////////////////////////////////////////////////////
-        // Critical Section.
-        unique_lock lock(metadata_mutex_);
+        deserial.skip(state_offset);
 
-        // Skip block header, including median_time_past metadata, and height.
-        serial.skip(state_offset);
-        serial.write_byte(state);
+        // Critical Section.
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(metadata_mutex_);
+        original = deserial.read_byte();
+        ///////////////////////////////////////////////////////////////////////
     };
 
-    // Also increment the fork point for block-indexed confirmation.
-    if (block_index && is_confirmed(state))
+    element.read(reader);
+    auto updated = update_confirmation_state(original, true, block_index);
+
+    const auto updater = [&](byte_serializer& serial)
+    {
+        serial.skip(state_offset);
+
+        // Critical Section.
+        ///////////////////////////////////////////////////////////////////////
+        unique_lock lock(metadata_mutex_);
+        serial.write_byte(updated);
+        ///////////////////////////////////////////////////////////////////////
+    };
+
+    element.write(updater);
+
+    // Increment fork point for block-indexed confirmation.
+    if (block_index && is_confirmed(updated))
     {
         BITCOIN_ASSERT_MSG(fork_point_ != max_size_t, "fork point overflow");
         ++fork_point_;
     }
 
-    const auto index = hash_table_.update(hash, update);
-    push_index(index, height, manager);
+    push_index(element.link(), height, manager);
     return true;
 }
 
+// TODO: the caller already knows the current header state.
 bool block_database::unconfirm(const hash_digest& hash, size_t height,
     bool block_index)
 {
@@ -511,43 +512,45 @@ bool block_database::unconfirm(const hash_digest& hash, size_t height,
     if (height + 1u != manager.count())
         return false;
 
-    // TODO: eliminate the double state lookup for state update.
-    // TODO: the caller already knows the current header state.
-    // TODO: update isn't actually required here (index unused).
-    auto record = hash_table_.get(read_index(height, manager));
-    record->increment(prefix_size_);
-    const auto state_start = record->buffer();
-    auto deserial = make_unsafe_deserializer(state_start);
+    auto element = hash_table_.find(read_index(height, manager));
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Critical Section.
-    metadata_mutex_.lock_shared();
-    const auto original = deserial.read_byte();
-    metadata_mutex_.unlock_shared();
-    ///////////////////////////////////////////////////////////////////////////
+    if (!element)
+        return false;
 
-    record = nullptr;
-    const auto state = update_confirmation_state(original, false, block_index);
-    const auto update = [&](byte_serializer& serial)
+    uint8_t original;
+
+    const auto reader = [&](byte_deserializer& deserial)
     {
+        deserial.skip(state_offset);
+
         ///////////////////////////////////////////////////////////////////////
         // Critical Section.
-        unique_lock lock(metadata_mutex_);
-
-        // Skip block header, including median_time_past metadata, and height.
-        serial.skip(state_offset);
-        serial.write_byte(state);
+        shared_lock lock(metadata_mutex_);
+        original = deserial.read_byte();
+        ///////////////////////////////////////////////////////////////////////
     };
 
-    // Only decrement the fork point for confirmed block via header-index.
+    element.read(reader);
+    auto updated = update_confirmation_state(original, false, block_index);
+
+    const auto updater = [&](byte_serializer& serial)
+    {
+        serial.skip(state_offset);
+
+        // Critical Section.
+        ///////////////////////////////////////////////////////////////////////
+        unique_lock lock(metadata_mutex_);
+        serial.write_byte(updated);
+        ///////////////////////////////////////////////////////////////////////
+    };
+
+    element.write(updater);
+
+    // Decrement fork point for previously-confirmed block via header-index.
     if (!block_index && is_confirmed(original))
     {
         BITCOIN_ASSERT_MSG(fork_point_ != 0, "fork point underflow");
         --fork_point_;
-    }
-    else
-    {
-        hash_table_.update(hash, update);
     }
 
     pop_index(height, manager);

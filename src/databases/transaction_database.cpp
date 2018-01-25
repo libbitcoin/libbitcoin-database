@@ -68,17 +68,17 @@ using namespace bc::machine;
 // [ locktime:varint        - const   ]
 // [ version:varint         - const   ]
 
-// static
-const size_t transaction_database::prefix_size_ = 
-    linked_list<slab_manager<link_type>, link_type, key_type>::prefix_size;
-
-static constexpr auto value_size = sizeof(uint64_t);
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto position_size = sizeof(uint16_t);
 static constexpr auto state_size = sizeof(uint8_t);
 static constexpr auto median_time_past_size = sizeof(uint32_t);
-static constexpr auto spender_height_value_size = height_size + value_size;
-static constexpr auto metadata_size = height_size + position_size +
+
+////static constexpr auto height_size = sizeof(uint32_t);
+static constexpr auto index_spend_size = sizeof(uint8_t);
+static constexpr auto value_size = sizeof(uint64_t);
+
+static constexpr auto spend_size = index_spend_size + height_size + value_size;
+static constexpr auto tx_metadata_size = height_size + position_size +
     state_size + median_time_past_size;
 
 // Transactions uses a hash table index, O(1).
@@ -117,7 +117,7 @@ bool transaction_database::open()
 
 void transaction_database::commit()
 {
-    hash_table_.sync();
+    hash_table_.commit();
 }
 
 bool transaction_database::flush() const
@@ -133,39 +133,51 @@ bool transaction_database::close()
 // Queries.
 // ----------------------------------------------------------------------------
 
-transaction_result transaction_database::get(file_offset offset) const
+transaction_result transaction_database::populate(
+    slab_map::const_value_type& element) const
 {
-    const auto slab = hash_table_.get(offset);
+    uint32_t height;
+    uint16_t position;
+    transaction_state state;
+    uint32_t median_time_past;
 
-    if (slab == nullptr)
-        return{};
-
-    const auto memory = slab->buffer();
-    auto deserial = make_unsafe_deserializer(memory);
-
-    // The four metadata values must be atomic and mutually consistent.
-    ///////////////////////////////////////////////////////////////////////////
-    // Critical Section
-    metadata_mutex_.lock_shared();
-    const auto height = deserial.read_4_bytes_little_endian();
-    const auto position = deserial.read_2_bytes_little_endian();
-    const auto state = static_cast<transaction_state>(deserial.read_byte());
-    const auto median_time_past = deserial.read_4_bytes_little_endian();
-    metadata_mutex_.unlock_shared();
-    ///////////////////////////////////////////////////////////////////////////
-
-    // HACK: back up into the slab to obtain the hash/key (optimization).
-    auto reader = make_unsafe_deserializer(memory - prefix_size_);
+    const auto reader = [&](byte_deserializer& deserial)
+    {
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(metadata_mutex_);
+        height = deserial.read_4_bytes_little_endian();
+        position = deserial.read_2_bytes_little_endian();
+        state = static_cast<transaction_state>(deserial.read_byte());
+        median_time_past = deserial.read_4_bytes_little_endian();
+        ///////////////////////////////////////////////////////////////////////
+    };
 
     // Reads are not deferred for updatable values as atomicity is required.
-    return{ slab, reader.read_hash(), height, median_time_past, position,
-        state, offset };
+    element.read(reader);
+
+    // TODO: update tx result.
+    return {};
+    ////return
+    ////{
+    ////    element
+    ////    height,
+    ////    median_time_past,
+    ////    position,
+    ////    state
+    ////};
+}
+
+transaction_result transaction_database::get(file_offset offset) const
+{
+    auto element = hash_table_.find(offset);
+    return element ? populate(element) : transaction_result{};
 }
 
 transaction_result transaction_database::get(const hash_digest& hash) const
 {
-    const auto offset = hash_table_.offset(hash);
-    return offset == slab_map::not_found ? transaction_result{} : get(offset);
+    auto element = hash_table_.find(hash);
+    return element ? populate(element) : transaction_result{};
 }
 
 // Metadata should be defaulted by caller.
@@ -255,15 +267,15 @@ bool transaction_database::store(const chain::transaction& tx, size_t height,
                 return false;
 
         // Promote the tx that already exists.
-        if (tx.validation.offset != slab_map::not_found)
+        if (tx.validation.link != slab_map::not_found)
         {
             cache_.add(tx, height, median_time_past, confirming);
-            return confirm(tx.validation.offset, height, median_time_past,
+            return confirm(tx.validation.link, height, median_time_past,
                 position, state);
         }
     }
 
-    const auto write = [&](byte_serializer& serial)
+    const auto writer = [&](byte_serializer& serial)
     {
         serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(position));
@@ -272,9 +284,16 @@ bool transaction_database::store(const chain::transaction& tx, size_t height,
         tx.to_data(serial, false, true);
     };
 
+    // Transactions are variable-sized.
+    const auto size = tx_metadata_size + tx.serialized_size(false);
+
     // Write the new transaction.
-    const auto size = metadata_size + tx.serialized_size(false);
-    tx.validation.offset = hash_table_.store(tx.hash(), write, size);
+    auto front = hash_table_.allocator();
+    front.create(tx.hash(), writer, size);
+    hash_table_.link(front);
+
+    // Capture the link for later direct block reference.
+    tx.validation.link = front.link();
 
     // If verified (according to rule forks) then useful to cache.
     if (verified)
@@ -298,45 +317,61 @@ bool transaction_database::spend(const output_point& point,
     if (spender_height != output::validation::not_spent)
         cache_.remove(point);
 
-    const auto slab = hash_table_.find(point.hash());
+    auto element = hash_table_.find(point.hash());
 
-    if (slab == nullptr)
+    if (!element)
         return false;
 
-    auto deserial = make_unsafe_deserializer(slab->buffer());
+    uint32_t height;
+    uint16_t position;
+    transaction_state state;
+    size_t outputs;
 
-    // The three metadata values must be atomic and mutually consistent.
-    ///////////////////////////////////////////////////////////////////////////
-    // Critical Section
-    metadata_mutex_.lock_shared();
-    const auto height = deserial.read_4_bytes_little_endian();
-    const auto position = deserial.read_2_bytes_little_endian();
-    const auto state = static_cast<transaction_state>(deserial.read_byte());
-    ////const auto median_time_past = deserial.read_4_bytes_little_endian();
-    metadata_mutex_.unlock_shared();
-    ///////////////////////////////////////////////////////////////////////////
+    const auto reader = [&](byte_deserializer& deserial)
+    {
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(metadata_mutex_);
+        height = deserial.read_4_bytes_little_endian();
+        position = deserial.read_2_bytes_little_endian();
+        state = static_cast<transaction_state>(deserial.read_byte());
+        deserial.skip(median_time_past_size);
+        outputs = deserial.read_size_little_endian();
+        ///////////////////////////////////////////////////////////////////////
+    };
+
+    element.read(reader);
 
     // Limit to confirmed transactions at or below the spender height.
     if (state != transaction_state::confirmed || height > spender_height)
         return false;
 
-    auto serial = make_unsafe_serializer(slab->buffer() + metadata_size);
-    const auto outputs = serial.read_size_little_endian();
-
     // The index is not in the transaction.
     if (point.index() >= outputs)
         return false;
 
-    // Skip outputs until the target output.
-    for (uint32_t output = 0; output < point.index(); ++output)
+    const auto writer = [&](byte_serializer& serial)
     {
-        serial.skip(spender_height_value_size);
-        serial.skip(serial.read_size_little_endian());
-        BITCOIN_ASSERT(serial);
-    }
+        serial.skip(tx_metadata_size);
+        outputs = serial.read_size_little_endian();
 
-    // Write the spender height to the first word of the target output.
-    serial.write_4_bytes_little_endian(spender_height);
+        // Skip outputs until the target output.
+        for (uint32_t output = 0; output < point.index(); ++output)
+        {
+            serial.skip(spend_size);
+            serial.skip(serial.read_size_little_endian());
+        }
+
+        serial.skip(index_spend_size);
+
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        unique_lock lock(metadata_mutex_);
+        serial.write_4_bytes_little_endian(spender_height);
+        ///////////////////////////////////////////////////////////////////////
+    };
+
+    element.write(writer);
     return true;
 }
 
@@ -345,31 +380,36 @@ bool transaction_database::confirm(link_type offset, size_t height,
 {
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(position <= max_uint16);
-    const auto slab = hash_table_.get(offset);
 
-    if (slab == nullptr)
+    // BUGBUG: change offset to link, so this works (uses proper hiding).
+    auto element = hash_table_.find(offset);
+
+    if (!element)
         return false;
 
-    auto serial = make_unsafe_serializer(slab->buffer());
+    const auto writer = [&](byte_serializer& serial)
+    {
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        unique_lock lock(metadata_mutex_);
+        serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
+        serial.write_2_bytes_little_endian(static_cast<uint16_t>(position));
+        serial.write_byte(static_cast<uint8_t>(state));
+        serial.write_4_bytes_little_endian(median_time_past);
+        ///////////////////////////////////////////////////////////////////////
+    };
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Critical Section
-    unique_lock lock(metadata_mutex_);
-    serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
-    serial.write_2_bytes_little_endian(static_cast<uint16_t>(position));
-    serial.write_byte(static_cast<uint8_t>(state));
-    serial.write_4_bytes_little_endian(median_time_past);
-    ///////////////////////////////////////////////////////////////////////////
+    element.write(writer);
     return true;
 }
 
 // False implies store corruption.
-bool transaction_database::unconfirm(uint64_t offset)
+bool transaction_database::unconfirm(link_type link)
 {
-    const auto result = get(offset);
+    const auto result = get(link);
     BITCOIN_ASSERT(static_cast<bool>(result));
     const auto tx = result.transaction();
-    tx.validation.offset = offset;
+    tx.validation.link = link;
     return unconfirm(tx);
 }
 
@@ -377,7 +417,7 @@ bool transaction_database::unconfirm(uint64_t offset)
 bool transaction_database::unconfirm(const chain::transaction& tx)
 {
     static const uint32_t median_time_past = 0;
-    BITCOIN_ASSERT(tx.validation.offset != slab_map::not_found);
+    BITCOIN_ASSERT(tx.validation.link != slab_map::not_found);
 
     // TODO: optimize by not requiring full tx (get prevouts from offset).
     for (const auto& input: tx.inputs())
@@ -385,7 +425,7 @@ bool transaction_database::unconfirm(const chain::transaction& tx)
             return false;
 
     // The tx was verified under an unknown chain state, so set unverified.
-    return confirm(tx.validation.offset, rule_fork::unverified,
+    return confirm(tx.validation.link, rule_fork::unverified,
         median_time_past, transaction_result::unconfirmed,
         transaction_state::pooled);
 }

@@ -72,8 +72,8 @@ public:
     // Queries.
     //-------------------------------------------------------------------------
 
-    /// Fetch transaction by file offset.
-    transaction_result get(file_offset offset) const;
+    /// Fetch transaction by its link.
+    transaction_result get(file_offset link) const;
 
     /// Fetch transaction by its hash.
     transaction_result get(const hash_digest& hash) const;
@@ -87,7 +87,7 @@ public:
     // ------------------------------------------------------------------------
 
     /// Height and position may be sentinels or otherwise.
-    /// Store|promote the transaction and set offset metadata.
+    /// Store|promote the transaction and set link metadata.
     bool store(const chain::transaction& tx, size_t height,
         uint32_t median_time_past, size_t position,
         transaction_state state=transaction_state::pooled);
@@ -100,20 +100,23 @@ private:
     friend class block_database;
 
     typedef hash_digest key_type;
+    typedef array_index index_type;
     typedef file_offset link_type;
-    typedef slab_hash_table<key_type, array_index, link_type> slab_map;
+    typedef slab_manager<link_type> slab_manager;
+    typedef slab_hash_table<slab_manager, key_type, index_type, link_type> slab_map;
+
+    // Read metadata atomically and populate transaction result.
+    transaction_result populate(slab_map::const_value_type& element) const;
 
     // Update the spender height of the output.
     bool spend(const chain::output_point& point, size_t spender_height);
 
     // Update the state of the existing tx.
-    bool confirm(link_type offset, size_t height, uint32_t median_time_past,
+    bool confirm(link_type link, size_t height, uint32_t median_time_past,
         size_t position, transaction_state state);
 
     // Demote the transaction to pooled.
-    bool unconfirm(uint64_t offset);
-
-    static const size_t prefix_size_;
+    bool unconfirm(link_type link);
 
     // Hash table used for looking up txs by hash.
     file_storage hash_table_file_;

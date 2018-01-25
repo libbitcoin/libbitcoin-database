@@ -54,17 +54,23 @@ namespace database {
  *
  * The payload is prefixed with [ size:Link ].
  */
-template <typename Key, typename Index, typename Link>
+template <typename Manager, typename Key, typename Index, typename Link>
 class slab_hash_table
-  : noncopyable
 {
 public:
     typedef byte_serializer::functor write_function;
-
+    typedef byte_deserializer::functor read_function;
+    typedef linked_list<Manager, Link, Key> value_type;
+    typedef linked_list<const Manager, Link, Key> const_value_type;
+    
+    /// Construct a hash table for variable size entries.
     static const Link not_found = hash_table_header<Index, Link>::empty;
 
     /// Construct a hash table for variable size entries.
     slab_hash_table(storage& file, Index buckets);
+
+    /// Construct a hash table for fixed size entries.
+    slab_hash_table(storage& file, Index buckets, size_t value_size);
 
     /// Create hash table in the file (left in started state).
     bool create();
@@ -73,47 +79,32 @@ public:
     bool start();
 
     /// Commit changes to the hash table.
-    void sync();
+    void commit();
 
-    /// Execute a write. value_size is the required size of the buffer.
-    /// Returns the file offset of the new value.
-    Link store(const Key& key, write_function write, size_t size);
+    /// Use to allocate an element in the hash table. 
+    value_type allocator();
 
-    /// Execute a writer against a key's buffer if the key is found.
-    /// Returns the file offset of the found value (or not_found).
-    Link update(const Key& key, write_function write);
+    /// Find an element with the given key in the hash table.
+    const_value_type find(const Key& key) const;
 
-    /// Find the file offset for a given key. Returns not_found if not found.
-    Link offset(const Key& key) const;
+    /// Get the element with the given link from the hash table.
+    const_value_type find(Link link) const;
 
-    /// Find the slab pointer for a given key. Returns nullptr if not found.
-    memory_ptr find(const Key& key) const;
+    /// Add the given element to the hash table.
+    void link(value_type& element);
 
-    /// Get slab from its file offset. Returns nullptr if not found.
-    memory_ptr get(Link slab) const;
-
-    /// Delete a key-value pair from the hashtable by unlinking the node.
+    /// Remove an element with the given key from the hash table.
     bool unlink(const Key& key);
 
 private:
-    typedef hash_table_header<Index, Link> header;
-    typedef slab_manager<Link> manager;
-    typedef linked_list<manager, Link, Key> row;
-    typedef linked_list<const manager, Link, Key> const_row;
-
-    // The bucket index of a key.
+    Link bucket_value(Index index) const;
+    Link bucket_value(const Key& key) const;
     Index bucket_index(const Key& key) const;
 
-    // The slab start position for the set of elements mapped to the key.
-    Link read_bucket_value(const Key& key) const;
-
-    // Link a new element into the bucket header (stack model, push front).
-    void link(const Key& key, Link begin);
-
-    header header_;
-    manager manager_;
-    mutable shared_mutex create_mutex_;
-    mutable shared_mutex update_mutex_;
+    hash_table_header<Index, Link> header_;
+    Manager manager_;
+    mutable shared_mutex root_mutex_;
+    mutable shared_mutex list_mutex_;
 };
 
 } // namespace database
