@@ -39,9 +39,6 @@
     <ClCompile Include="..\..\..\..\test\databases\history_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\databases\spend_database.cpp">
-      <Filter>src\databases</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\databases\stealth_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>

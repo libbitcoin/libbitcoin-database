@@ -40,7 +40,7 @@ using namespace bc::wallet;
 
 #define NAME "data_base"
 
-// TODO: remove spends store, replace with complex query, output gets inpoint:
+// TODO: replace spends with complex query, output gets inpoint:
 // (1) transactions_.get(outpoint, require_confirmed)->spender_height.
 // (2) blocks_.get(spender_height)->transactions().
 // (3) (transactions()->inputs()->previous_output() == outpoint)->inpoint.
@@ -63,7 +63,6 @@ data_base::data_base(const settings& settings)
         << "Buckets: "
         << "block [" << settings.block_table_buckets << "], "
         << "transaction [" << settings.transaction_table_buckets << "], "
-        << "spend [" << settings.spend_table_buckets << "], "
         << "history [" << settings.history_table_buckets << "]";
 }
 
@@ -96,9 +95,8 @@ bool data_base::create(const block& genesis)
 
     if (use_indexes)
         created = created &&
-            history_->create() &&
-            stealth_->create() &&
-            spends_->create();
+        history_->create() &&
+        stealth_->create();
 
     if (!created)
         return false;
@@ -128,9 +126,8 @@ bool data_base::open()
 
     if (use_indexes)
         opened = opened &&
-            history_->open() &&
-            stealth_->open() &&
-            spends_->open();
+        history_->open() &&
+        stealth_->open();
 
     closed_ = false;
     return opened;
@@ -155,9 +152,6 @@ void data_base::start()
 
         stealth_ = std::make_shared<stealth_database>(stealth_rows,
             settings_.file_growth_rate);
-
-        spends_ = std::make_shared<spend_database>(spend_table,
-            settings_.spend_table_buckets, settings_.file_growth_rate);
     }
 }
 
@@ -168,7 +162,6 @@ void data_base::commit()
     {
         history_->commit();
         stealth_->commit();
-        spends_->commit();
     }
 
     transactions_->commit();
@@ -191,9 +184,8 @@ bool data_base::flush() const
 
     if (use_indexes)
         flushed = flushed &&
-            history_->flush() &&
-            stealth_->flush() &&
-            spends_->flush();
+        history_->flush() &&
+        stealth_->flush();
 
     LOG_DEBUG(LOG_DATABASE)
         << "Write flushed to disk: "
@@ -218,8 +210,7 @@ bool data_base::close()
     if (use_indexes)
         closed = closed &&
         history_->close() &&
-        stealth_->close() &&
-        spends_->close();
+        stealth_->close();
 
     return closed && store::close();
     // Unlock exclusive file access and conditionally the global flush lock.
@@ -250,12 +241,6 @@ const history_database& data_base::history() const
 const stealth_database& data_base::stealth() const
 {
     return *stealth_;
-}
-
-// Invalid if indexes not initialized.
-const spend_database& data_base::spends() const
-{
-    return *spends_;
 }
 
 // Synchronous writers.
@@ -676,8 +661,6 @@ void data_base::push_inputs(const transaction& tx, size_t height)
         const auto& prevout = input.previous_output();
         const auto checksum = prevout.checksum();
 
-        spends_->store(prevout, inpoint);
-
         if (prevout.validation.cache.is_valid())
         {
             // This results in a complete and unambiguous history for the
@@ -793,11 +776,6 @@ bool data_base::pop_inputs(const chain::transaction& tx)
         return true;
 
     const auto& inputs = tx.inputs();
-
-    // TODO: eliminate spend index table optimization.
-    for (auto input = inputs.begin(); input != inputs.end(); ++input)
-        if (!spends_->unlink(input->previous_output()))
-            return false;
 
     for (auto input = inputs.begin(); input != inputs.end(); ++input)
         for (const auto& address: input->addresses())

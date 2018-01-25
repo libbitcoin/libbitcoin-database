@@ -42,7 +42,6 @@ src_libbitcoin_database_la_SOURCES = \
     src/unspent_transaction.cpp \
     src/databases/block_database.cpp \
     src/databases/history_database.cpp \
-    src/databases/spend_database.cpp \
     src/databases/stealth_database.cpp \
     src/databases/transaction_database.cpp \
     src/memory/accessor.cpp \
@@ -70,7 +69,6 @@ test_libbitcoin_database_test_SOURCES = \
     test/unspent_transaction.cpp \
     test/databases/block_database.cpp \
     test/databases/history_database.cpp \
-    test/databases/spend_database.cpp \
     test/databases/stealth_database.cpp \
     test/databases/transaction_database.cpp \
     test/memory/accessor.cpp \
@@ -127,7 +125,6 @@ include_bitcoin_database_databasesdir = ${includedir}/bitcoin/database/databases
 include_bitcoin_database_databases_HEADERS = \
     include/bitcoin/database/databases/block_database.hpp \
     include/bitcoin/database/databases/history_database.hpp \
-    include/bitcoin/database/databases/spend_database.hpp \
     include/bitcoin/database/databases/stealth_database.hpp \
     include/bitcoin/database/databases/transaction_database.hpp
 
@@ -137,7 +134,6 @@ include_bitcoin_database_impl_HEADERS = \
     include/bitcoin/database/impl/linked_list.ipp \
     include/bitcoin/database/impl/linked_list_iterable.ipp \
     include/bitcoin/database/impl/linked_list_iterator.ipp \
-    include/bitcoin/database/impl/record_hash_table.ipp \
     include/bitcoin/database/impl/record_manager.ipp \
     include/bitcoin/database/impl/recordset_hash_table.ipp \
     include/bitcoin/database/impl/slab_hash_table.ipp \
@@ -156,7 +152,6 @@ include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/linked_list.hpp \
     include/bitcoin/database/primitives/linked_list_iterable.hpp \
     include/bitcoin/database/primitives/linked_list_iterator.hpp \
-    include/bitcoin/database/primitives/record_hash_table.hpp \
     include/bitcoin/database/primitives/record_manager.hpp \
     include/bitcoin/database/primitives/recordset_hash_table.hpp \
     include/bitcoin/database/primitives/slab_hash_table.hpp \

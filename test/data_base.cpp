@@ -72,17 +72,11 @@
 ////                input_point spend{ tx_hash, j };
 ////                BOOST_REQUIRE_EQUAL(spend.index(), j);
 ////
-////                const auto& prevout = input.previous_output();
-////                auto result_spend = interface.spends().get(prevout);
-////                BOOST_REQUIRE(result_spend.is_valid());
-////                BOOST_REQUIRE(result_spend.hash() == spend.hash());
-////                BOOST_REQUIRE_EQUAL(result_spend.index(), spend.index());
-////
 ////                if (!index_addresses)
 ////                    continue;
 ////
 ////                const auto addresses = input.addresses();
-////                ////const auto& prevout = input.previous_output();
+////                const auto& prevout = input.previous_output();
 ////                ////const auto address = prevout.validation.cache.addresses();
 ////
 ////                for (const auto& address: addresses)
@@ -325,7 +319,6 @@
 ////    settings.file_growth_rate = 42;
 ////    settings.block_table_buckets = 42;
 ////    settings.transaction_table_buckets = 42;
-////    settings.spend_table_buckets = 42;
 ////    settings.history_table_buckets = 42;
 ////
 ////    size_t height;

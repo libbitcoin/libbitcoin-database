@@ -76,7 +76,6 @@
     <ClCompile Include="..\..\..\..\src\data_base.cpp" />
     <ClCompile Include="..\..\..\..\src\databases\block_database.cpp" />
     <ClCompile Include="..\..\..\..\src\databases\history_database.cpp" />
-    <ClCompile Include="..\..\..\..\src\databases\spend_database.cpp" />
     <ClCompile Include="..\..\..\..\src\databases\stealth_database.cpp" />
     <ClCompile Include="..\..\..\..\src\databases\transaction_database.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\accessor.cpp" />
@@ -94,7 +93,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\data_base.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\block_database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\history_database.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\spend_database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\stealth_database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\transaction_database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp" />
@@ -106,7 +104,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linked_list.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linked_list_iterable.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linked_list_iterator.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_hash_table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\recordset_hash_table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_hash_table.hpp" />
@@ -127,7 +124,6 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\linked_list.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\linked_list_iterable.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\linked_list_iterator.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\record_hash_table.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_manager.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\recordset_hash_table.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\slab_hash_table.ipp" />

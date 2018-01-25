@@ -63,9 +63,6 @@
     <ClCompile Include="..\..\..\..\src\databases\history_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\databases\spend_database.cpp">
-      <Filter>src\databases</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\databases\stealth_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
@@ -113,9 +110,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\history_database.hpp">
       <Filter>include\bitcoin\database\databases</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\spend_database.hpp">
-      <Filter>include\bitcoin\database\databases</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\stealth_database.hpp">
       <Filter>include\bitcoin\database\databases</Filter>
     </ClInclude>
@@ -147,9 +141,6 @@
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linked_list_iterator.hpp">
-      <Filter>include\bitcoin\database\primitives</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_hash_table.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_manager.hpp">
@@ -206,9 +197,6 @@
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\linked_list_iterator.ipp">
-      <Filter>include\bitcoin\database\impl</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\record_hash_table.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\record_manager.ipp">

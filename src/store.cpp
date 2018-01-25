@@ -40,7 +40,6 @@ const std::string store::TRANSACTION_TABLE = "transaction_table";
 const std::string store::HISTORY_TABLE = "history_table";
 const std::string store::HISTORY_ROWS = "history_rows";
 const std::string store::STEALTH_ROWS = "stealth_rows";
-const std::string store::SPEND_TABLE = "spend_table";
 
 // Create a single file with one byte of arbitrary data.
 static bool create_file(const path& file_path)
@@ -78,8 +77,7 @@ store::store(const path& prefix, bool with_indexes, bool flush_each_write)
     // Optional indexes.
     history_table(prefix / HISTORY_TABLE),
     history_rows(prefix / HISTORY_ROWS),
-    stealth_rows(prefix / STEALTH_ROWS),
-    spend_table(prefix / SPEND_TABLE)
+    stealth_rows(prefix / STEALTH_ROWS)
 {
 }
 
@@ -103,8 +101,7 @@ bool store::create()
         created &&
         create_file(history_table) &&
         create_file(history_rows) &&
-        create_file(stealth_rows) &&
-        create_file(spend_table);
+        create_file(stealth_rows);
 }
 
 bool store::open()

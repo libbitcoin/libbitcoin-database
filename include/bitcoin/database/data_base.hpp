@@ -26,7 +26,6 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/databases/block_database.hpp>
-#include <bitcoin/database/databases/spend_database.hpp>
 #include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/databases/history_database.hpp>
 #include <bitcoin/database/databases/stealth_database.hpp>
@@ -75,9 +74,6 @@ public:
 
     /// Invalid if indexes not initialized.
     const stealth_database& stealth() const;
-
-    /// Invalid if indexes not initialized.
-    const spend_database& spends() const;
 
     // Utility writers.
     // ------------------------------------------------------------------------
@@ -159,7 +155,6 @@ protected:
     std::shared_ptr<transaction_database> transactions_;
     std::shared_ptr<history_database> history_;
     std::shared_ptr<stealth_database> stealth_;
-    std::shared_ptr<spend_database> spends_;
 
 private:
     typedef chain::input::list inputs;

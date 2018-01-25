@@ -44,7 +44,6 @@ public:
     static const std::string HISTORY_TABLE;
     static const std::string HISTORY_ROWS;
     static const std::string STEALTH_ROWS;
-    static const std::string SPEND_TABLE;
 
     // Construct.
     // ------------------------------------------------------------------------
@@ -89,7 +88,6 @@ public:
     const path history_table;
     const path history_rows;
     const path stealth_rows;
-    const path spend_table;
 
 protected:
     // The implementation must flush all data to disk here.
