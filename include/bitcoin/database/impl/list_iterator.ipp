@@ -25,7 +25,12 @@
 namespace libbitcoin {
 namespace database {
 
-// This class is a friend of the list_element class.
+template <typename Manager, typename Link, typename Key>
+list_iterator<Manager, Link, Key>::list_iterator(value_type element)
+  : element_(element)
+{
+}
+
 template <typename Manager, typename Link, typename Key>
 list_iterator<Manager, Link, Key>::list_iterator(Manager& manager,
     Link first, shared_mutex& mutex)
@@ -37,6 +42,7 @@ template <typename Manager, typename Link, typename Key>
 list_iterator<Manager, Link, Key>&
 list_iterator<Manager, Link, Key>::operator++()
 {
+    // This class is a friend of the list_element class.
     element_.link_ = element_.next();
     return *this;
 }
@@ -46,6 +52,8 @@ list_iterator<Manager, Link, Key>
 list_iterator<Manager, Link, Key>::operator++(int)
 {
     auto copy = *this;
+
+    // This class is a friend of the list_element class.
     element_.link_ = element_.next();
     return copy;
 }

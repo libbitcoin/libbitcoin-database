@@ -22,16 +22,17 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/result/address_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-address_result::address_result(multimap::list list, const short_hash& hash,
-    size_t limit, size_t from_height)
-  : list_(list),
-    hash_(hash),
+address_result::address_result(const_value_type element,
+    const short_hash& hash, size_t limit, size_t from_height)
+  : hash_(hash),
     limit_(limit),
-    from_height_(from_height)
+    from_height_(from_height),
+    element_(element)
 {
 }
 
@@ -50,30 +51,36 @@ size_t address_result::from_height() const
     return from_height_;
 }
 
-////payment_record address_result::begin() const
-////{
-////    payment_record payment;
-////
-////    // Declare reusable reader.
-////    const auto reader = [&](byte_deserializer& deserial)
-////    {
-////        payment.from_data(deserial, from_height);
-////    };
-////
-////    // Get an iterator for the set of records that matches the key.
-////    auto history = address_multimap_.find(key);
-////
-////    for (const auto element : history)
-////    {
-////        if (limit > 0 && result.size() >= limit)
-////            break;
-////
-////        element.read(reader);
-////
-////        BITCOIN_ASSERT(payment.is_valid());
-////        result.push_back(std::move(payment));
-////    }
-////}
+address_iterator address_result::begin() const
+{
+    ////payment_record payment;
+    ////
+    ////// Declare reusable reader.
+    ////const auto reader = [&](byte_deserializer& deserial)
+    ////{
+    ////    payment.from_data(deserial, from_height);
+    ////};
+    ////
+    ////// Get the list of of records that matches the key.
+    ////auto history = address_multimap_.find(key);
+    ////
+    ////for (const auto element: history)
+    ////{
+    ////    if (limit > 0 && result.size() >= limit)
+    ////        break;
+    ////
+    ////    element.read(reader);
+    ////
+    ////    BITCOIN_ASSERT(payment.is_valid());
+    ////    result.push_back(std::move(payment));
+    ////}
+    return {};
+}
+
+address_iterator address_result::end() const
+{
+    return {};
+}
 
 } // namespace database
 } // namespace libbitcoin

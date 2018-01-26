@@ -25,6 +25,7 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/list_element.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
+#include <bitcoin/database/result/transaction_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -83,8 +84,9 @@ public:
     /// The number of transactions in this block (may be zero).
     size_t transaction_count() const;
 
-    /// Get the set of transaction links into the tx table for the block.
-    link_list transaction_links() const;
+    /// Iterate over the transaction link set.
+    transaction_iterator begin() const;
+    transaction_iterator end() const;
 
 private:
     chain::header header_;

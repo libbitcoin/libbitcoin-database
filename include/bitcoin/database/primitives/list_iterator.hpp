@@ -42,6 +42,9 @@ public:
     typedef const value_type& reference;
     typedef std::output_iterator_tag iterator_category;
 
+    /// Create a storage iterator starting at the given element.
+    list_iterator(value_type element);
+
     /// Create a storage iterator starting at first.
     list_iterator(Manager& manager, Link first, shared_mutex& mutex);
 

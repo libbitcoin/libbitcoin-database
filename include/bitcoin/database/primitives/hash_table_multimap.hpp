@@ -45,7 +45,7 @@ class hash_table_multimap
 public:
     typedef record_manager<Link> manager;
     typedef list_element<manager, Link, empty_key> value_type;
-    typedef list<manager, Link, empty_key> list;
+    typedef list_element<const manager, Link, empty_key> const_value_type;
     typedef hash_table<manager, Key, Index, Link> table;
 
     /// The stored size of a record value with the given size.
@@ -59,10 +59,10 @@ public:
     value_type allocator();
 
     /// Find an iterator for the given multimap key.
-    list find(const Key& key) const;
+    const_value_type find(const Key& key) const;
 
     /// Get the iterator for the given link from a multimap.
-    list find(Link link) const;
+    const_value_type find(Link link) const;
 
     /// Add the given element to a multimap.
     /// Multimap elements have empty internal key values.

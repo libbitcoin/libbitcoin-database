@@ -24,6 +24,7 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
+#include <bitcoin/database/result/transaction_iterator.hpp>
 #include <bitcoin/database/state/block_state.hpp>
 
 namespace libbitcoin {
@@ -152,25 +153,30 @@ size_t block_result::transaction_count() const
     return tx_count_;
 }
 
-// Read transaction links from the tx index array (file).
-link_list block_result::transaction_links() const
+transaction_iterator block_result::begin() const
 {
-    const auto end = tx_start_ + tx_count_;
-    if (end > index_manager_.count())
-        return{};
+    ////const auto end = tx_start_ + tx_count_;
+    ////if (end > index_manager_.count())
+    ////    return{};
 
-    const auto records = index_manager_.get(tx_start_);
-    if (!records)
-        return{};
+    ////const auto records = index_manager_.get(tx_start_);
+    ////if (!records)
+    ////    return{};
 
-    link_list value;
-    value.reserve(tx_count_);
-    auto deserial = make_unsafe_deserializer(records->buffer());
+    ////link_list value;
+    ////value.reserve(tx_count_);
+    ////auto deserial = make_unsafe_deserializer(records->buffer());
 
-    for (size_t index = 0; index < tx_count_; ++index)
-        value.push_back(deserial.read_8_bytes_little_endian());
+    ////for (size_t index = 0; index < tx_count_; ++index)
+    ////    value.push_back(deserial.read_8_bytes_little_endian());
 
-    return value;
+    ////return value;
+    return {};
+}
+
+transaction_iterator block_result::end() const
+{
+    return {};
 }
 
 } // namespace database

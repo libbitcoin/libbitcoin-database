@@ -74,9 +74,8 @@ template <typename Manager, typename Key, typename Index, typename Link>
 typename hash_table<Manager, Key, Index, Link>::const_value_type
 hash_table<Manager, Key, Index, Link>::find(const Key& key) const
 {
-    // manager_ is const.
-    list<const Manager, Link, Key> list(manager_,
-        bucket_value(key), list_mutex_);
+    list<const Manager, Link, Key> list(manager_, bucket_value(key),
+        list_mutex_);
 
     for (const auto item: list)
         if (item.match(key))
@@ -119,9 +118,7 @@ bool hash_table<Manager, Key, Index, Link>::unlink(const Key& key)
     ///////////////////////////////////////////////////////////////////////////
     root_mutex_.lock_upgrade();
 
-    // manager_ is const.
-    list<Manager, Link, Key> list(manager_,
-        bucket_value(index), list_mutex_);
+    list<Manager, Link, Key> list(manager_, bucket_value(index), list_mutex_);
 
     if (list.empty())
     {

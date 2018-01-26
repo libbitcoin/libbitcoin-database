@@ -96,6 +96,12 @@
     <ClCompile Include="..\..\..\..\src\unspent_transaction.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\result\address_iterator.cpp">
+      <Filter>src\result</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\result\transaction_iterator.cpp">
+      <Filter>src\result</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp">
@@ -184,6 +190,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\src\mman-win32\mman.h">
       <Filter>src\mman-win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\address_iterator.hpp">
+      <Filter>include\bitcoin\database\result</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_iterator.hpp">
+      <Filter>include\bitcoin\database\result</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

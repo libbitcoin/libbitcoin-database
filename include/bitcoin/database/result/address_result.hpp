@@ -22,7 +22,9 @@
 #include <cstddef>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/hash_table_multimap.hpp>
+#include <bitcoin/database/primitives/list_element.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
+#include <bitcoin/database/result/address_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -31,12 +33,12 @@ namespace database {
 class BCD_API address_result
 {
 public:
-    typedef short_hash key_type;
-    typedef array_index index_type;
+    typedef empty_key key_type;
     typedef array_index link_type;
-    typedef hash_table_multimap<key_type, index_type, link_type> multimap;
+    typedef record_manager<link_type> manager;
+    typedef list_element<const manager, link_type, key_type> const_value_type;
 
-    address_result(multimap::list list, const short_hash& hash, size_t limit,
+    address_result(const_value_type element, const short_hash& hash, size_t limit,
         size_t from_height);
 
     /// The address hash of the query.
@@ -48,13 +50,17 @@ public:
     /// The height start of the query.
     size_t from_height() const;
 
+    /// Iterate over the address metadata set.
+    address_iterator begin() const;
+    address_iterator end() const;
+
 private:
     short_hash hash_;
     size_t limit_;
     size_t from_height_;
 
     // This class is thread safe.
-    multimap::list list_;
+    const_value_type element_;
 };
 
 } // namespace database

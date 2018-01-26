@@ -38,19 +38,6 @@ class BCD_API address_database
 public:
     typedef boost::filesystem::path path;
 
-    typedef short_hash key_type;
-    typedef array_index index_type;
-    typedef array_index link_type;
-    typedef record_manager<link_type> record_manager;
-    typedef hash_table<record_manager, key_type, index_type, link_type>
-        record_map;
-
-    // The record multimap as distinct file as opposed to linkage within the map
-    // allows avoidance of hash storage with each entry. This is similar to
-    // the transaction index with the exception that the tx index stores tx
-    // sets by block in a contiguous array, eliminating a need for linked list.
-    typedef hash_table_multimap<key_type, index_type, link_type> record_multimap;
-
     /// Construct the database.
     address_database(const path& lookup_filename, const path& rows_filename,
         size_t buckets, size_t expansion);
@@ -96,6 +83,19 @@ public:
     bool pop(const short_hash& hash);
 
 private:
+    typedef short_hash key_type;
+    typedef array_index index_type;
+    typedef array_index link_type;
+    typedef record_manager<link_type> record_manager;
+    typedef hash_table<record_manager, key_type, index_type, link_type>
+        record_map;
+
+    // The record multimap as distinct file as opposed to linkage within the map
+    // allows avoidance of hash storage with each entry. This is similar to
+    // the transaction index with the exception that the tx index stores tx
+    // sets by block in a contiguous array, eliminating a need for linked list.
+    typedef hash_table_multimap<key_type, index_type, link_type> record_multimap;
+
     /// Hash table used for start index lookup for linked list by address hash.
     file_storage hash_table_file_;
     record_map hash_table_;

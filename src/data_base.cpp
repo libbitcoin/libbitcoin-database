@@ -585,13 +585,13 @@ transaction::list data_base::to_transactions(const block_result& result) const
     transaction::list txs;
     txs.reserve(result.transaction_count());
 
-    for (const auto link: result.transaction_links())
-    {
-        const auto result = transactions_->get(link);
-        BITCOIN_ASSERT(static_cast<bool>(result));
-        txs.push_back(result.transaction());
-        txs.back().validation.link = link;
-    }
+    ////for (const auto link: result.transaction_links())
+    ////{
+    ////    const auto result = transactions_->get(link);
+    ////    BITCOIN_ASSERT(static_cast<bool>(result));
+    ////    txs.push_back(result.transaction());
+    ////    txs.back().validation.link = link;
+    ////}
 
     return txs;
 }

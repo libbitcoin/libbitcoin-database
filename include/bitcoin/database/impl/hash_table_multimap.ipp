@@ -51,7 +51,7 @@ hash_table_multimap<Key, Index, Link>::allocator()
 }
 
 template <typename Key, typename Index, typename Link>
-typename hash_table_multimap<Key, Index, Link>::list
+typename hash_table_multimap<Key, Index, Link>::const_value_type
 hash_table_multimap<Key, Index, Link>::find(const Key& key) const
 {
     const auto element = map_.find(key);
@@ -74,7 +74,7 @@ hash_table_multimap<Key, Index, Link>::find(const Key& key) const
 }
 
 template <typename Key, typename Index, typename Link>
-typename hash_table_multimap<Key, Index, Link>::list
+typename hash_table_multimap<Key, Index, Link>::const_value_type
 hash_table_multimap<Key, Index, Link>::find(Link link) const
 {
     const auto element = map_.find(link);
@@ -111,27 +111,27 @@ void hash_table_multimap<Key, Index, Link>::link(const Key& key,
 
     // Find the root element for this key in hash table.
     // The hash table supports multiple values per key, but this uses only one.
-    const auto roots = find(key);
+    auto root = find(key);
 
     root_mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    if (roots.empty())
+    if (!root)
     {
         // Commit the termination of the new list.
         element.next(element.not_found);
 
         // Create and map new root and "link" from it to the new element.
-        auto root = map_.allocator();
-        root.create(key, writer);
-        map_.link(root);
+        auto new_root = map_.allocator();
+        new_root.create(key, writer);
+        map_.link(new_root);
     }
     else
     {
         Link first;
-        auto root = roots.front();
         const auto reader = [&](byte_deserializer& deserial)
         {
+            // This could be a terminator if previously unlinked.
             first = deserial.template read_little_endian<Link>();
         };
 
@@ -158,24 +158,47 @@ bool hash_table_multimap<Key, Index, Link>::unlink(const Key& key)
 
     // Find the root element for this key in hash table.
     // The hash table supports multiple values per key, but this uses only one.
-    const auto roots = find(key);
+    auto root = find(key);
 
-    if (roots.empty())
+    // There is no root element, nothing to unlink.
+    if (!root)
     {
         root_mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
         return false;
     }
 
-    // Define link writer for parent element.
-    const auto linker = [&](byte_serializer& serial)
+    Link link;
+    const auto reader = [&](byte_deserializer& deserial)
     {
-        serial.template write_little_endian<Link>(roots.front().next());
+        // This could be a terminator if previously unlinked.
+        link = deserial.template read_little_endian<Link>();
+    };
+
+    // Read the address of the existing first list element.
+    root.read(reader);
+
+    value_type first{ manager_, link, list_mutex_ };
+
+    // The root element is empty (points to terminator), nothing to unlink.
+    if (!first)
+    {
+        root_mutex_.unlock_upgrade();
+        //---------------------------------------------------------------------
+        return false;
+    }
+
+    // This may leave an empty root element in place, but presumably that will
+    // become resused in the future as the transaction is re-confirmed.
+    const auto writer = [&](byte_serializer& serial)
+    {
+        // Skip over the first element pointed to by the root.
+        serial.template write_little_endian<Link>(first.next());
     };
 
     root_mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    roots.front().write(linker);
+    root.write(writer);
 
     root_mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
