@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_LIST_ITERATOR_HPP
 #define LIBBITCOIN_DATABASE_LIST_ITERATOR_HPP
 
+#include <iterator>
 #include <utility>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
@@ -34,16 +35,20 @@ template <typename Manager, typename Link, typename Key>
 class list_iterator
 {
 public:
+    // std::iterator_traits
+    typedef ptrdiff_t difference_type;
     typedef list_element<Manager, Link, Key> value_type;
-    typedef list_element<const Manager, Link, Key> const_value_type;
+    typedef const value_type& pointer;
+    typedef const value_type& reference;
+    typedef std::output_iterator_tag iterator_category;
 
     /// Create a storage iterator starting at first.
     list_iterator(Manager& manager, Link first, shared_mutex& mutex);
 
     list_iterator& operator++();
     list_iterator operator++(int);
-    const value_type& operator*() const;
-    const value_type& operator->() const;
+    pointer operator*() const;
+    reference operator->() const;
     bool operator==(const list_iterator& other) const;
     bool operator!=(const list_iterator& other) const;
 

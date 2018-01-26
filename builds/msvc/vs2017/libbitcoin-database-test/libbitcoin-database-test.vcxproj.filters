@@ -33,6 +33,9 @@
     <ClCompile Include="..\..\..\..\test\data_base.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\databases\address_database.cpp">
+      <Filter>src\databases</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\databases\block_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
@@ -72,6 +75,9 @@
     <ClCompile Include="..\..\..\..\test\primitives\slab_manager.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\result\address_result.cpp">
+      <Filter>src\result</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\result\block_result.cpp">
       <Filter>src\result</Filter>
     </ClCompile>
@@ -101,9 +107,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\utility\utility.cpp">
       <Filter>src\utility</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\databases\address_database.cpp">
-      <Filter>src\databases</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

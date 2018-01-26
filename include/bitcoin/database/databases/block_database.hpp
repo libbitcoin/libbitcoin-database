@@ -38,7 +38,6 @@ namespace database {
 class BCD_API block_database
 {
 public:
-    typedef std::vector<size_t> heights;
     typedef boost::filesystem::path path;
 
     /// Construct the database.
@@ -116,8 +115,6 @@ private:
     typedef hash_table<record_manager, key_type, array_index, link_type> record_map;
 
     typedef message::compact_block::short_id_list short_id_list;
-
-    block_result populate(record_map::const_value_type& element) const;
 
     link_type associate(const chain::transaction::list& transactions);
     void push(const chain::header& header, size_t height, uint32_t checksum,

@@ -23,17 +23,15 @@
 #include <cstddef>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/list_element.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
-#include <bitcoin/database/state/block_state.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 /// Partially-deferred read block result.
 /// Values subject to change are not read-deferred.
-/// Transaction values are either empty or permanent.
+/// Transaction values are either empty (0 count) or permanent.
 class BCD_API block_result
 {
 public:

@@ -26,6 +26,7 @@
 #include <bitcoin/database/primitives/hash_table.hpp>
 #include <bitcoin/database/primitives/hash_table_multimap.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
+#include <bitcoin/database/result/address_result.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -36,7 +37,19 @@ class BCD_API address_database
 {
 public:
     typedef boost::filesystem::path path;
-    typedef chain::payment_record::list list;
+
+    typedef short_hash key_type;
+    typedef array_index index_type;
+    typedef array_index link_type;
+    typedef record_manager<link_type> record_manager;
+    typedef hash_table<record_manager, key_type, index_type, link_type>
+        record_map;
+
+    // The record multimap as distinct file as opposed to linkage within the map
+    // allows avoidance of hash storage with each entry. This is similar to
+    // the transaction index with the exception that the tx index stores tx
+    // sets by block in a contiguous array, eliminating a need for linked list.
+    typedef hash_table_multimap<key_type, index_type, link_type> record_multimap;
 
     /// Construct the database.
     address_database(const path& lookup_filename, const path& rows_filename,
@@ -67,37 +80,22 @@ public:
     //-------------------------------------------------------------------------
 
     /// Get the output and input points associated with the address hash.
-    list get(const short_hash& key, size_t limit, size_t from_height) const;
-
-    /////// Return statistical info about the database.
-    ////address_statinfo statinfo() const;
+    address_result get(const short_hash& hash, size_t limit,
+        size_t from_height) const;
 
     // Store.
     //-------------------------------------------------------------------------
 
     /// Add a row for the key. If key doesn't exist it will be created.
-    void store(const short_hash& key, const chain::payment_record& payment);
+    void store(const short_hash& hash, const chain::payment_record& payment);
 
     // Update.
     //-------------------------------------------------------------------------
 
     /// Logically delete the last row that was added to key.
-    bool unlink_last_row(const short_hash& key);
+    bool pop(const short_hash& hash);
 
 private:
-    typedef short_hash key_type;
-    typedef array_index index_type;
-    typedef array_index link_type;
-    typedef record_manager<link_type> record_manager;
-    typedef hash_table<record_manager, key_type, index_type, link_type>
-        record_map;
-
-    // The record multimap as distinct file as opposed to linkage within the map
-    // allows avoidance of hash storage with each entry. This is similar to
-    // the transaction index with the exception that the tx index stores tx
-    // sets by block in a contiguous array, eliminating a need for linked list.
-    typedef hash_table_multimap<key_type, index_type, link_type> record_multimap;
-
     /// Hash table used for start index lookup for linked list by address hash.
     file_storage hash_table_file_;
     record_map hash_table_;

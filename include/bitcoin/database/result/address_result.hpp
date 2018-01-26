@@ -16,45 +16,48 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_LIST_HPP
-#define LIBBITCOIN_DATABASE_LIST_HPP
+#ifndef LIBBITCOIN_DATABASE_ADDRESS_RESULT_HPP
+#define LIBBITCOIN_DATABASE_ADDRESS_RESULT_HPP
 
+#include <cstddef>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/list_element.hpp>
-#include <bitcoin/database/primitives/list_iterator.hpp>
+#include <bitcoin/database/primitives/hash_table_multimap.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/// Iterable wrapper for list_element.
-/// Manager dynamically traverses store-based list.
-/// Mutex provides read safety for link traversal during unlink.
-template <typename Manager, typename Link, typename Key>
-class list
+/// Partially-deferred address result.
+class BCD_API address_result
 {
 public:
-    typedef list_iterator<Manager, Link, Key> iterator;
-    typedef list_iterator<const Manager, Link, Key> const_iterator;
-    typedef list_element<const Manager, Link, Key> const_value_type;
+    typedef short_hash key_type;
+    typedef array_index index_type;
+    typedef array_index link_type;
+    typedef hash_table_multimap<key_type, index_type, link_type> multimap;
 
-    /// Create a storage iterator starting at first.
-    list(Manager& manager, Link first, shared_mutex& mutex);
+    address_result(multimap::list list, const short_hash& hash, size_t limit,
+        size_t from_height);
 
-    bool empty() const;
-    const_value_type front() const;
-    const_iterator begin() const;
-    const_iterator end() const;
+    /// The address hash of the query.
+    const short_hash& hash() const;
+
+    /// The count limit of the query.
+    size_t limit() const;
+
+    /// The height start of the query.
+    size_t from_height() const;
 
 private:
-    const Link first_;
-    Manager& manager_;
-    shared_mutex& mutex_;
+    short_hash hash_;
+    size_t limit_;
+    size_t from_height_;
+
+    // This class is thread safe.
+    multimap::list list_;
 };
 
 } // namespace database
 } // namespace libbitcoin
-
-#include <bitcoin/database/impl/list.ipp>
 
 #endif

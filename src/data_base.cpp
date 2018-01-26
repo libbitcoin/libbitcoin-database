@@ -719,7 +719,7 @@ bool data_base::pop_inputs(const chain::transaction& tx)
 
     for (auto input = inputs.begin(); input != inputs.end(); ++input)
         for (const auto& address: input->addresses())
-            if (!addresses_->unlink_last_row(address.hash()))
+            if (!addresses_->pop(address.hash()))
                 return false;
 
     return true;
@@ -735,7 +735,7 @@ bool data_base::pop_outputs(const chain::transaction& tx)
 
     for (auto output = outputs.begin(); output != outputs.end(); ++output)
         for (const auto& address: output->addresses())
-            if (!addresses_->unlink_last_row(address.hash()))
+            if (!addresses_->pop(address.hash()))
                 return false;
 
     return true;

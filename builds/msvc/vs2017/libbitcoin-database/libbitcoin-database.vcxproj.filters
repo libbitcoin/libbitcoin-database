@@ -57,6 +57,9 @@
     <ClCompile Include="..\..\..\..\src\data_base.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\databases\address_database.cpp">
+      <Filter>src\databases</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\databases\block_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
@@ -71,6 +74,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c">
       <Filter>src\mman-win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\result\address_result.cpp">
+      <Filter>src\result</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\result\block_result.cpp">
       <Filter>src\result</Filter>
@@ -90,9 +96,6 @@
     <ClCompile Include="..\..\..\..\src\unspent_transaction.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\databases\address_database.cpp">
-      <Filter>src\databases</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp">
@@ -100,6 +103,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\data_base.hpp">
       <Filter>include\bitcoin\database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\address_database.hpp">
+      <Filter>include\bitcoin\database\databases</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\block_database.hpp">
       <Filter>include\bitcoin\database\databases</Filter>
@@ -146,6 +152,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_manager.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\address_result.hpp">
+      <Filter>include\bitcoin\database\result</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\block_result.hpp">
       <Filter>include\bitcoin\database\result</Filter>
     </ClInclude>
@@ -175,9 +184,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\src\mman-win32\mman.h">
       <Filter>src\mman-win32</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\address_database.hpp">
-      <Filter>include\bitcoin\database\databases</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

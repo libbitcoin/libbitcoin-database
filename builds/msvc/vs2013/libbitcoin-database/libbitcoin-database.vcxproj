@@ -74,12 +74,13 @@
   </ImportGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\src\data_base.cpp" />
+    <ClCompile Include="..\..\..\..\src\databases\address_database.cpp" />
     <ClCompile Include="..\..\..\..\src\databases\block_database.cpp" />
-    <ClCompile Include="..\..\..\..\src\databases\history_database.cpp" />
     <ClCompile Include="..\..\..\..\src\databases\transaction_database.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\accessor.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\file_storage.cpp" />
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c" />
+    <ClCompile Include="..\..\..\..\src\result\address_result.cpp" />
     <ClCompile Include="..\..\..\..\src\result\block_result.cpp" />
     <ClCompile Include="..\..\..\..\src\result\transaction_result.cpp" />
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
@@ -90,8 +91,8 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\data_base.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\address_database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\block_database.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\history_database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\transaction_database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp" />
@@ -106,6 +107,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\list_iterator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_manager.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\address_result.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\block_result.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_result.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />

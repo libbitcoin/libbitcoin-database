@@ -71,8 +71,8 @@
   </ImportGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\test\data_base.cpp" />
+    <ClCompile Include="..\..\..\..\test\databases\address_database.cpp" />
     <ClCompile Include="..\..\..\..\test\databases\block_database.cpp" />
-    <ClCompile Include="..\..\..\..\test\databases\history_database.cpp" />
     <ClCompile Include="..\..\..\..\test\databases\transaction_database.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\accessor.cpp" />
@@ -85,6 +85,7 @@
     <ClCompile Include="..\..\..\..\test\primitives\list_iterator.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\record_manager.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\slab_manager.cpp" />
+    <ClCompile Include="..\..\..\..\test\result\address_result.cpp" />
     <ClCompile Include="..\..\..\..\test\result\block_result.cpp" />
     <ClCompile Include="..\..\..\..\test\result\transaction_result.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />

@@ -49,7 +49,7 @@ using namespace bc::chain;
 
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto kind_size = sizeof(uint8_t);
-static constexpr auto point_size = std::tuple_size<point>::value;
+static constexpr auto point_size = hash_size + sizeof(uint16_t);
 static constexpr auto checksum_size = sizeof(uint64_t);
 
 // Total size of address storage.
@@ -124,39 +124,16 @@ bool address_database::close()
 // Queries.
 // ----------------------------------------------------------------------------
 
-address_database::list address_database::get(const short_hash& key,
-    size_t limit, size_t from_height) const
+address_result address_database::get(const short_hash& hash, size_t limit,
+    size_t from_height) const
 {
-    list result;
-    payment_record payment;
-
-    // Declare reusable reader.
-    const auto reader = [&](byte_deserializer& deserial)
-    {
-        payment.from_data(deserial, from_height);
-    };
-
-    // Get an iterator for the set of records that matches the key.
-    auto history = address_multimap_.find(key);
-
-    for (const auto element: history)
-    {
-        if (limit > 0 && result.size() >= limit)
-            break;
-
-        element.read(reader);
-
-        BITCOIN_ASSERT(payment.is_valid());
-        result.push_back(std::move(payment));
-    }
-
-    return result;
+    return { address_multimap_.find(hash), hash, limit, from_height };
 }
 
 // Store.
 // ----------------------------------------------------------------------------
 
-void address_database::store(const short_hash& key,
+void address_database::store(const short_hash& hash,
     const payment_record& payment)
 {
     const auto writer = [&](byte_serializer& serial)
@@ -167,15 +144,15 @@ void address_database::store(const short_hash& key,
     // Write the new payment history.
     auto front = address_multimap_.allocator();
     front.create(writer);
-    address_multimap_.link(key, front);
+    address_multimap_.link(hash, front);
 }
 
 // Update.
 // ----------------------------------------------------------------------------
 
-bool address_database::unlink_last_row(const short_hash& key)
+bool address_database::pop(const short_hash& hash)
 {
-    return address_multimap_.unlink(key);
+    return address_multimap_.unlink(hash);
 }
 
 } // namespace database

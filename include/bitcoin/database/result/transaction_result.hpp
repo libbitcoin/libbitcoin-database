@@ -23,7 +23,6 @@
 #include <cstdint>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/list_element.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
 #include <bitcoin/database/state/transaction_state.hpp>
@@ -31,7 +30,7 @@
 namespace libbitcoin {
 namespace database {
 
-/// Deferred read transaction result.
+/// Partially-deferred read transaction result.
 class BCD_API transaction_result
 {
 public:

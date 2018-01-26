@@ -42,7 +42,6 @@ class BCD_API transaction_database
 {
 public:
     typedef boost::filesystem::path path;
-    static const file_offset not_found = (file_offset)bc::max_uint64;
 
     /// Construct the database.
     transaction_database(const path& map_filename, size_t buckets,
@@ -96,9 +95,6 @@ public:
     bool unconfirm(const chain::transaction& tx);
 
 private:
-    // Expose slab_map::not_found to block_database only.
-    friend class block_database;
-
     typedef hash_digest key_type;
     typedef array_index index_type;
     typedef file_offset link_type;
