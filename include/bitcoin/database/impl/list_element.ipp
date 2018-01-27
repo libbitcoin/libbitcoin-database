@@ -80,7 +80,6 @@ template <typename Manager, typename Link, typename Key>
 Link list_element<Manager, Link, Key>::create(write_function write)
 {
     BC_CONSTEXPR empty_key unkeyed{};
-    BITCOIN_ASSERT((bool)(*this));
     link_ = manager_.allocate(1);
     initialize(unkeyed, write);
     return link_;
@@ -91,7 +90,6 @@ template <typename Manager, typename Link, typename Key>
 Link list_element<Manager, Link, Key>::create(const Key& key,
     write_function write)
 {
-    BITCOIN_ASSERT((bool)(*this));
     link_ = manager_.allocate(1);
     initialize(key, write);
     return link_;
@@ -102,7 +100,6 @@ template <typename Manager, typename Link, typename Key>
 Link list_element<Manager, Link, Key>::create(const Key& key,
     write_function write, size_t value_size)
 {
-    BITCOIN_ASSERT((bool)(*this));
     link_ = manager_.allocate(size(value_size));
     initialize(key, write);
     return link_;
@@ -111,7 +108,6 @@ Link list_element<Manager, Link, Key>::create(const Key& key,
 template <typename Manager, typename Link, typename Key>
 void list_element<Manager, Link, Key>::write(write_function writer)
 {
-    BITCOIN_ASSERT((bool)(*this));
     const auto memory = data(std::tuple_size<Key>::value + sizeof(Link));
     auto serial = make_unsafe_serializer(memory->buffer());
     writer(serial);
@@ -134,7 +130,6 @@ void list_element<Manager, Link, Key>::next(Link next)
 template <typename Manager, typename Link, typename Key>
 void list_element<Manager, Link, Key>::read(read_function reader) const
 {
-    BITCOIN_ASSERT((bool)(*this));
     const auto memory = data(std::tuple_size<Key>::value + sizeof(Link));
     auto deserial = make_unsafe_deserializer(memory->buffer());
     reader(deserial);
