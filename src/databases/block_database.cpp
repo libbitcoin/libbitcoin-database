@@ -85,12 +85,15 @@ block_database::block_database(const path& map_filename,
     hash_table_file_(map_filename, expansion),
     hash_table_(hash_table_file_, buckets, block_size),
 
+    // Array storage.
     header_index_file_(header_index_filename, expansion),
     header_index_(header_index_file_, 0, sizeof(link_type)),
 
+    // Array storage.
     block_index_file_(block_index_filename, expansion),
     block_index_(block_index_file_, 0, sizeof(link_type)),
 
+    // Array storage.
     tx_index_file_(tx_index_filename, expansion),
     tx_index_(tx_index_file_, 0, sizeof(file_offset))
 {
@@ -229,11 +232,8 @@ void block_database::push(const chain::header& header, size_t height,
 
     // Write the new block.
     auto front = hash_table_.allocator();
-    front.create(header.hash(), writer);
+    const auto link = front.create(header.hash(), writer);
     hash_table_.link(front);
-
-    // Capture the record link for reference by the index.
-    const auto link = front.link();
 
     if (is_confirmed(state) || is_indexed(state))
         push_index(link, height, manager);

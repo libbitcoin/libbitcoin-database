@@ -253,11 +253,8 @@ bool transaction_database::store(const chain::transaction& tx, size_t height,
 
     // Write the new transaction.
     auto front = hash_table_.allocator();
-    front.create(tx.hash(), writer, size);
+    tx.validation.link = front.create(tx.hash(), writer, size);
     hash_table_.link(front);
-
-    // Capture the link for later direct block reference.
-    tx.validation.link = front.link();
 
     // If verified (according to rule forks) then useful to cache.
     if (verified)
