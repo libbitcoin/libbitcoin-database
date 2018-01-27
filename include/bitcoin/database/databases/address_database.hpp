@@ -100,7 +100,7 @@ private:
     record_map hash_table_;
 
     /// History rows.
-    file_storage address_file_;
+    file_storage address_index_file_;
     record_manager address_index_;
     record_multimap address_multimap_;
 };

@@ -65,9 +65,11 @@ address_database::address_database(const path& lookup_filename,
     // THIS sizeof(link_type) IS ASSUMED BY hash_table_multimap.
     hash_table_(hash_table_file_, buckets, sizeof(link_type)),
 
-    address_file_(rows_filename, expansion),
-    address_index_(address_file_, 0,
+    // Linked-list storage for multimap.
+    address_index_file_(rows_filename, expansion),
+    address_index_(address_index_file_, 0,
         hash_table_multimap<key_type, index_type, link_type>::size(value_size)),
+
     address_multimap_(hash_table_, address_index_)
 {
 }
@@ -83,7 +85,7 @@ address_database::~address_database()
 bool address_database::create()
 {
     if (!hash_table_file_.open() ||
-        !address_file_.open())
+        !address_index_file_.open())
         return false;
 
     // No need to call open after create.
@@ -96,7 +98,7 @@ bool address_database::open()
 {
     return
         hash_table_file_.open() &&
-        address_file_.open() &&
+        address_index_file_.open() &&
         hash_table_.start() &&
         address_index_.start();
 }
@@ -111,14 +113,14 @@ bool address_database::flush() const
 {
     return
         hash_table_file_.flush() &&
-        address_file_.flush();
+        address_index_file_.flush();
 }
 
 bool address_database::close()
 {
     return
         hash_table_file_.close() &&
-        address_file_.close();
+        address_index_file_.close();
 }
 
 // Queries.
