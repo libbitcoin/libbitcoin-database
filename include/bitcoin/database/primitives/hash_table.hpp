@@ -76,7 +76,7 @@ public:
     /// Verify the size of the hash table in the file.
     bool start();
 
-    /// Commit changes to the hash table.
+    /// Commit table size to the file.
     void commit();
 
     /// Use to allocate an element in the hash table. 

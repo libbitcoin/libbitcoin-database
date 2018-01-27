@@ -49,7 +49,7 @@ public:
     /// Prepare manager for usage.
     bool start();
 
-    /// Commit record count to file.
+    /// Commit record count to the file.
     void commit();
 
     /// The number of records in this container.

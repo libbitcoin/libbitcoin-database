@@ -48,7 +48,7 @@ public:
     /// Prepare manager for use.
     bool start();
 
-    /// Commit total slabs size to file.
+    /// Commit total slabs size to the file.
     void commit();
 
     /// Allocate a slab and return its position, commit after writing.
