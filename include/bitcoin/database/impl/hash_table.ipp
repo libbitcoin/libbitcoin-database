@@ -41,7 +41,8 @@ template <typename Manager, typename Index, typename Link, typename Key>
 hash_table<Manager, Index, Link, Key>::hash_table(storage& file,
     Index buckets, size_t value_size)
   : header_(file, buckets),
-    manager_(file, hash_table_header<Index, Link>::size(buckets), value_size)
+    manager_(file, hash_table_header<Index, Link>::size(buckets),
+        value_type::size(value_size))
 {
 }
 
