@@ -112,7 +112,7 @@ private:
     typedef hash_digest key_type;
     typedef array_index link_type;
     typedef record_manager<link_type> record_manager;
-    typedef hash_table<record_manager, key_type, array_index, link_type> record_map;
+    typedef hash_table<record_manager, array_index, link_type, key_type> record_map;
 
     typedef message::compact_block::short_id_list short_id_list;
 

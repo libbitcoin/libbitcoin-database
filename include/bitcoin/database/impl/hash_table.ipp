@@ -29,50 +29,50 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename Manager, typename Key, typename Index, typename Link>
-hash_table<Manager, Key, Index, Link>::hash_table(storage& file,
+template <typename Manager, typename Index, typename Link, typename Key>
+hash_table<Manager, Index, Link, Key>::hash_table(storage& file,
     Index buckets)
   : header_(file, buckets),
     manager_(file, hash_table_header<Index, Link>::size(buckets))
 {
 }
 
-template <typename Manager, typename Key, typename Index, typename Link>
-hash_table<Manager, Key, Index, Link>::hash_table(storage& file,
+template <typename Manager, typename Index, typename Link, typename Key>
+hash_table<Manager, Index, Link, Key>::hash_table(storage& file,
     Index buckets, size_t value_size)
   : header_(file, buckets),
     manager_(file, hash_table_header<Index, Link>::size(buckets), value_size)
 {
 }
 
-template <typename Manager, typename Key, typename Index, typename Link>
-bool hash_table<Manager, Key, Index, Link>::create()
+template <typename Manager, typename Index, typename Link, typename Key>
+bool hash_table<Manager, Index, Link, Key>::create()
 {
     return header_.create() && manager_.create();
 }
 
-template <typename Manager, typename Key, typename Index, typename Link>
-bool hash_table<Manager, Key, Index, Link>::start()
+template <typename Manager, typename Index, typename Link, typename Key>
+bool hash_table<Manager, Index, Link, Key>::start()
 {
     return header_.start() && manager_.start();
 }
 
-template <typename Manager, typename Key, typename Index, typename Link>
-void hash_table<Manager, Key, Index, Link>::commit()
+template <typename Manager, typename Index, typename Link, typename Key>
+void hash_table<Manager, Index, Link, Key>::commit()
 {
     return manager_.commit();
 }
 
-template <typename Manager, typename Key, typename Index, typename Link>
-typename hash_table<Manager, Key, Index, Link>::value_type
-hash_table<Manager, Key, Index, Link>::allocator()
+template <typename Manager, typename Index, typename Link, typename Key>
+typename hash_table<Manager, Index, Link, Key>::value_type
+hash_table<Manager, Index, Link, Key>::allocator()
 {
     return { manager_, list_mutex_ };
 }
 
-template <typename Manager, typename Key, typename Index, typename Link>
-typename hash_table<Manager, Key, Index, Link>::const_value_type
-hash_table<Manager, Key, Index, Link>::find(const Key& key) const
+template <typename Manager, typename Index, typename Link, typename Key>
+typename hash_table<Manager, Index, Link, Key>::const_value_type
+hash_table<Manager, Index, Link, Key>::find(const Key& key) const
 {
     list<const Manager, Link, Key> list(manager_, bucket_value(key),
         list_mutex_);
@@ -84,15 +84,15 @@ hash_table<Manager, Key, Index, Link>::find(const Key& key) const
     return *list.end();
 }
 
-template <typename Manager, typename Key, typename Index, typename Link>
-typename hash_table<Manager, Key, Index, Link>::const_value_type
-hash_table<Manager, Key, Index, Link>::find(Link link) const
+template <typename Manager, typename Index, typename Link, typename Key>
+typename hash_table<Manager, Index, Link, Key>::const_value_type
+hash_table<Manager, Index, Link, Key>::find(Link link) const
 {
     return { manager_, link, list_mutex_ };
 }
 
-template <typename Manager, typename Key, typename Index, typename Link>
-void hash_table<Manager, Key, Index, Link>::link(value_type& element)
+template <typename Manager, typename Index, typename Link, typename Key>
+void hash_table<Manager, Index, Link, Key>::link(value_type& element)
 {
     const auto index = bucket_index(element.key());
 
@@ -109,8 +109,8 @@ void hash_table<Manager, Key, Index, Link>::link(value_type& element)
 
 // Unlink the first of matching key value.
 // Unlink is not executed concurrently with writes.
-template <typename Manager, typename Key, typename Index, typename Link>
-bool hash_table<Manager, Key, Index, Link>::unlink(const Key& key)
+template <typename Manager, typename Index, typename Link, typename Key>
+bool hash_table<Manager, Index, Link, Key>::unlink(const Key& key)
 {
     const auto index = bucket_index(key);
 
@@ -172,22 +172,22 @@ bool hash_table<Manager, Key, Index, Link>::unlink(const Key& key)
 }
 
 // private
-template <typename Manager, typename Key, typename Index, typename Link>
-Link hash_table<Manager, Key, Index, Link>::bucket_value(Index index) const
+template <typename Manager, typename Index, typename Link, typename Key>
+Link hash_table<Manager, Index, Link, Key>::bucket_value(Index index) const
 {
     return header_.read(index);
 }
 
 // private
-template <typename Manager, typename Key, typename Index, typename Link>
-Link hash_table<Manager, Key, Index, Link>::bucket_value(const Key& key) const
+template <typename Manager, typename Index, typename Link, typename Key>
+Link hash_table<Manager, Index, Link, Key>::bucket_value(const Key& key) const
 {
     return header_.read(bucket_index(key));
 }
 
 // private
-template <typename Manager, typename Key, typename Index, typename Link>
-Index hash_table<Manager, Key, Index, Link>::bucket_index(const Key& key) const
+template <typename Manager, typename Index, typename Link, typename Key>
+Index hash_table<Manager, Index, Link, Key>::bucket_index(const Key& key) const
 {
     return hash_table_header<Index, Link>::remainder(key, header_.buckets());
 }

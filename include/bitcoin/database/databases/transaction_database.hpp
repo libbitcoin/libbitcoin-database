@@ -99,7 +99,7 @@ private:
     typedef array_index index_type;
     typedef file_offset link_type;
     typedef slab_manager<link_type> slab_manager;
-    typedef hash_table<slab_manager, key_type, index_type, link_type> slab_map;
+    typedef hash_table<slab_manager, index_type, link_type, key_type> slab_map;
 
     // Update the spender height of the output.
     bool spend(const chain::output_point& point, size_t spender_height);

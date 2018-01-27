@@ -29,30 +29,30 @@ namespace libbitcoin {
 namespace database {
 
 // static
-template <typename Key, typename Index, typename Link>
-size_t hash_table_multimap<Key, Index, Link>::size(size_t value_size)
+template <typename Index, typename Link, typename Key>
+size_t hash_table_multimap<Index, Link, Key>::size(size_t value_size)
 {
     return value_type::size(value_size);
 }
 
-template <typename Key, typename Index, typename Link>
-hash_table_multimap<Key, Index, Link>::hash_table_multimap(table& map,
+template <typename Index, typename Link, typename Key>
+hash_table_multimap<Index, Link, Key>::hash_table_multimap(table& map,
     manager& manager)
   : map_(map), manager_(manager)
 {
 }
 
-template <typename Key, typename Index, typename Link>
-typename hash_table_multimap<Key, Index, Link>::value_type
-hash_table_multimap<Key, Index, Link>::allocator()
+template <typename Index, typename Link, typename Key>
+typename hash_table_multimap<Index, Link, Key>::value_type
+hash_table_multimap<Index, Link, Key>::allocator()
 {
     // Empty-keyed (for payload elements).
     return { manager_, list_mutex_ };
 }
 
-template <typename Key, typename Index, typename Link>
-typename hash_table_multimap<Key, Index, Link>::const_value_type
-hash_table_multimap<Key, Index, Link>::find(const Key& key) const
+template <typename Index, typename Link, typename Key>
+typename hash_table_multimap<Index, Link, Key>::const_value_type
+hash_table_multimap<Index, Link, Key>::find(const Key& key) const
 {
     const auto element = map_.find(key);
 
@@ -73,9 +73,9 @@ hash_table_multimap<Key, Index, Link>::find(const Key& key) const
     return { manager_, first, list_mutex_ };
 }
 
-template <typename Key, typename Index, typename Link>
-typename hash_table_multimap<Key, Index, Link>::const_value_type
-hash_table_multimap<Key, Index, Link>::find(Link link) const
+template <typename Index, typename Link, typename Key>
+typename hash_table_multimap<Index, Link, Key>::const_value_type
+hash_table_multimap<Index, Link, Key>::find(Link link) const
 {
     const auto element = map_.find(link);
 
@@ -96,8 +96,8 @@ hash_table_multimap<Key, Index, Link>::find(Link link) const
     return { manager_, first, list_mutex_ };
 }
 
-template <typename Key, typename Index, typename Link>
-void hash_table_multimap<Key, Index, Link>::link(const Key& key,
+template <typename Index, typename Link, typename Key>
+void hash_table_multimap<Index, Link, Key>::link(const Key& key,
     value_type& element)
 {
     const auto writer = [&](byte_serializer& serial)
@@ -149,8 +149,8 @@ void hash_table_multimap<Key, Index, Link>::link(const Key& key,
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename Key, typename Index, typename Link>
-bool hash_table_multimap<Key, Index, Link>::unlink(const Key& key)
+template <typename Index, typename Link, typename Key>
+bool hash_table_multimap<Index, Link, Key>::unlink(const Key& key)
 {
     // Critical Section.
     ///////////////////////////////////////////////////////////////////////////

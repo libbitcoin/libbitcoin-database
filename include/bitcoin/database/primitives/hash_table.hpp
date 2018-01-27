@@ -54,7 +54,7 @@ namespace database {
  *
  * The payload is prefixed with [ size:Link ].
  */
-template <typename Manager, typename Key, typename Index, typename Link>
+template <typename Manager, typename Index, typename Link, typename Key>
 class hash_table
 {
 public:

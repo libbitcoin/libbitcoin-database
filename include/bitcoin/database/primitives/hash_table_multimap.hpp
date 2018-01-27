@@ -39,14 +39,14 @@ namespace database {
  * The linked records are chains of records that can be iterated through
  * given a start index.
  */
-template <typename Key, typename Index, typename Link>
+template <typename Index, typename Link, typename Key>
 class hash_table_multimap
 {
 public:
     typedef record_manager<Link> manager;
     typedef list_element<manager, Link, empty_key> value_type;
     typedef list_element<const manager, Link, empty_key> const_value_type;
-    typedef hash_table<manager, Key, Index, Link> table;
+    typedef hash_table<manager, Index, Link, Key> table;
 
     /// The stored size of a record value with the given size.
     static size_t size(size_t value_size);
