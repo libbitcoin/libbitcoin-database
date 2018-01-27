@@ -19,8 +19,11 @@
 #ifndef LIBBITCOIN_DATABASE_TRANSACTION_ITERATOR_HPP
 #define LIBBITCOIN_DATABASE_TRANSACTION_ITERATOR_HPP
 
+#include <cstddef>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -28,9 +31,44 @@ namespace database {
 class BCD_API transaction_iterator
 {
 public:
-    transaction_iterator();
+    // Definition for underlying type.
+    //-------------------------------------------------------------------------
+    typedef record_manager<array_index> manager;
+
+    // std::iterator_traits
+    //-------------------------------------------------------------------------
+
+    typedef file_offset pointer;
+    typedef file_offset reference;
+    typedef file_offset value_type;
+    typedef ptrdiff_t difference_type;
+    typedef std::output_iterator_tag iterator_category;
+    typedef transaction_iterator iterator;
+    typedef transaction_iterator const_iterator;
+
+    // Constructors.
+    //-------------------------------------------------------------------------
+
+    transaction_iterator(const manager& records, size_t start, size_t count);
+
+    // Operators.
+    //-------------------------------------------------------------------------
+
+    pointer operator->() const;
+    reference operator*() const;
+    transaction_iterator& operator++();
+    transaction_iterator operator++(int);
+    bool operator==(const transaction_iterator& other) const;
+    bool operator!=(const transaction_iterator& other) const;
 
 private:
+    void increment();
+
+    value_type offset_;
+    array_index index_;
+    const size_t start_;
+    const size_t count_;
+    const manager& manager_;
 };
 
 } // namespace database

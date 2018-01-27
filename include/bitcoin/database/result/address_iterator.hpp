@@ -19,8 +19,11 @@
 #ifndef LIBBITCOIN_DATABASE_ADDRESS_ITERATOR_HPP
 #define LIBBITCOIN_DATABASE_ADDRESS_ITERATOR_HPP
 
+#include <cstddef>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/primitives/list_element.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -28,9 +31,42 @@ namespace database {
 class BCD_API address_iterator
 {
 public:
-    address_iterator();
+    // Definition for underlying type (avoids circular reference).
+    //-------------------------------------------------------------------------
+    typedef list_element<const record_manager<array_index>, array_index,
+        empty_key> const_element;
+
+    // std::iterator_traits
+    //-------------------------------------------------------------------------
+
+    typedef chain::payment_record pointer;
+    typedef chain::payment_record reference;
+    typedef chain::payment_record value_type;
+    typedef ptrdiff_t difference_type;
+    typedef std::output_iterator_tag iterator_category;
+    typedef address_iterator iterator;
+    typedef address_iterator const_iterator;
+
+    // Constructors.
+    //-------------------------------------------------------------------------
+
+    address_iterator(const const_element& element);
+
+    // Operators.
+    //-------------------------------------------------------------------------
+
+    pointer operator->() const;
+    reference operator*() const;
+    address_iterator& operator++();
+    address_iterator operator++(int);
+    bool operator==(const address_iterator& other) const;
+    bool operator!=(const address_iterator& other) const;
 
 private:
+    void increment();
+
+    const_element element_;
+    value_type payment_;
 };
 
 } // namespace database

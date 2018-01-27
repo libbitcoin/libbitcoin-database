@@ -155,28 +155,12 @@ size_t block_result::transaction_count() const
 
 transaction_iterator block_result::begin() const
 {
-    ////const auto end = tx_start_ + tx_count_;
-    ////if (end > index_manager_.count())
-    ////    return{};
-
-    ////const auto records = index_manager_.get(tx_start_);
-    ////if (!records)
-    ////    return{};
-
-    ////link_list value;
-    ////value.reserve(tx_count_);
-    ////auto deserial = make_unsafe_deserializer(records->buffer());
-
-    ////for (size_t index = 0; index < tx_count_; ++index)
-    ////    value.push_back(deserial.read_8_bytes_little_endian());
-
-    ////return value;
-    return {};
+    return { index_manager_, tx_start_, tx_count_ };
 }
 
 transaction_iterator block_result::end() const
 {
-    return {};
+    return { index_manager_, tx_count_, tx_count_ };
 }
 
 } // namespace database

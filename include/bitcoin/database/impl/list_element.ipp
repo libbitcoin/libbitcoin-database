@@ -177,15 +177,16 @@ Link list_element<Manager, Link, Key>::next() const
 }
 
 template <typename Manager, typename Link, typename Key>
-bool list_element<Manager, Link, Key>::is_valid() const
+list_element<Manager, Link, Key>
+list_element<Manager, Link, Key>::terminator() const
 {
-    return link_ == not_found;
+    return { manager_, mutex_ };
 }
 
 template <typename Manager, typename Link, typename Key>
-list_element<Manager, Link, Key>::operator const bool() const
+list_element<Manager, Link, Key>::operator bool() const
 {
-    return is_valid();
+    return link_ != not_found;
 }
 
 template <typename Manager, typename Link, typename Key>
@@ -197,7 +198,7 @@ bool list_element<Manager, Link, Key>::operator==(list_element other) const
 template <typename Manager, typename Link, typename Key>
 bool list_element<Manager, Link, Key>::operator!=(list_element other) const
 {
-    return link_ != other.link_;
+    return !(link_ == other.link_);
 }
 
 // private

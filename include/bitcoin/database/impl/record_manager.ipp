@@ -24,18 +24,7 @@
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
-/// -- file --
-/// [ header ]
 /// [ record_count ]
-/// [ payload ]
-
-/// -- header (hash table) --
-/// [ count  ]
-/// [ bucket ]
-/// ...
-/// [ bucket ]
-
-/// -- payload (fixed size records) --
 /// [ record ]
 /// ...
 /// [ record ]

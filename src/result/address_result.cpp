@@ -27,12 +27,9 @@
 namespace libbitcoin {
 namespace database {
 
-address_result::address_result(const_value_type element,
-    const short_hash& hash, size_t limit, size_t from_height)
-  : hash_(hash),
-    limit_(limit),
-    from_height_(from_height),
-    element_(element)
+address_result::address_result(const const_value_type& element,
+    const short_hash& hash)
+  : hash_(hash), element_(element)
 {
 }
 
@@ -40,46 +37,14 @@ const short_hash& address_result::hash() const
 {
     return hash_;
 }
-
-size_t address_result::limit() const
-{
-    return limit_;
-}
-
-size_t address_result::from_height() const
-{
-    return from_height_;
-}
-
 address_iterator address_result::begin() const
 {
-    ////payment_record payment;
-    ////
-    ////// Declare reusable reader.
-    ////const auto reader = [&](byte_deserializer& deserial)
-    ////{
-    ////    payment.from_data(deserial, from_height);
-    ////};
-    ////
-    ////// Get the list of of records that matches the key.
-    ////auto history = address_multimap_.find(key);
-    ////
-    ////for (const auto element: history)
-    ////{
-    ////    if (limit > 0 && result.size() >= limit)
-    ////        break;
-    ////
-    ////    element.read(reader);
-    ////
-    ////    BITCOIN_ASSERT(payment.is_valid());
-    ////    result.push_back(std::move(payment));
-    ////}
-    return {};
+    return { element_ };
 }
 
 address_iterator address_result::end() const
 {
-    return {};
+    return { element_.terminator() };
 }
 
 } // namespace database

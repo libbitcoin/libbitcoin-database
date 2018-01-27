@@ -18,11 +18,68 @@
  */
 #include <bitcoin/database/result/transaction_iterator.hpp>
 
+#include <cstddef>
+#include <bitcoin/database/memory/memory.hpp>
+
 namespace libbitcoin {
 namespace database {
 
-transaction_iterator::transaction_iterator()
+using namespace bc::chain;
+
+transaction_iterator::transaction_iterator(const manager& records,
+    size_t start, size_t count)
+  : offset_(0),
+    index_(0),
+    start_(start),
+    count_(count),
+    manager_(records)
 {
+    increment();
+}
+
+void transaction_iterator::increment()
+{
+    if (index_ < count_)
+    {
+        const auto memory = manager_.get(start_);
+        memory->increment(index_ * sizeof(offset_));
+        auto deserial = make_unsafe_deserializer(memory->buffer());
+        offset_ = deserial.read_8_bytes_little_endian();
+        ++index_;
+    }
+}
+
+transaction_iterator::pointer transaction_iterator::operator->() const
+{
+    return offset_;
+}
+
+transaction_iterator::reference transaction_iterator::operator*() const
+{
+    return offset_;
+}
+
+transaction_iterator::iterator& transaction_iterator::operator++()
+{
+    increment();
+    return *this;
+}
+
+transaction_iterator::iterator transaction_iterator::operator++(int)
+{
+    auto it = *this;
+    increment();
+    return it;
+}
+
+bool transaction_iterator::operator==(const transaction_iterator& other) const
+{
+    return start_ == other.start_ && index_ == other.index_;
+}
+
+bool transaction_iterator::operator!=(const transaction_iterator& other) const
+{
+    return !(*this == other);
 }
 
 } // namespace database

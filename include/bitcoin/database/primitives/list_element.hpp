@@ -80,11 +80,11 @@ public:
     /// The address of the next element.
     Link next() const;
 
-    /// Element was found (not end).
-    bool is_valid() const;
+    /// A list terminator for this instance.
+    list_element terminator() const;
 
     /// Cast operator, true if element was found (not end).
-    operator const bool() const;
+    operator bool() const;
 
     /// Equality comparison operators, compares link value only.
     bool operator==(list_element other) const;

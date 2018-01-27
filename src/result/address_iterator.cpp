@@ -21,8 +21,52 @@
 namespace libbitcoin {
 namespace database {
 
-address_iterator::address_iterator()
+using namespace bc::chain;
+
+address_iterator::address_iterator(const const_element& element)
+  : element_(element)
 {
+}
+
+void address_iterator::increment()
+{
+    element_.read([&](byte_deserializer& deserial)
+    {
+        payment_.from_data(deserial, false);
+    });
+}
+
+address_iterator::pointer address_iterator::operator->() const
+{
+    return payment_;
+}
+
+address_iterator::reference address_iterator::operator*() const
+{
+    return payment_;
+}
+
+address_iterator::iterator& address_iterator::operator++()
+{
+    increment();
+    return *this;
+}
+
+address_iterator::iterator address_iterator::operator++(int)
+{
+    auto it = *this;
+    increment();
+    return it;
+}
+
+bool address_iterator::operator==(const address_iterator& other) const
+{
+    return element_ == other.element_;
+}
+
+bool address_iterator::operator!=(const address_iterator& other) const
+{
+    return !(*this == other);
 }
 
 } // namespace database

@@ -124,10 +124,9 @@ bool address_database::close()
 // Queries.
 // ----------------------------------------------------------------------------
 
-address_result address_database::get(const short_hash& hash, size_t limit,
-    size_t from_height) const
+address_result address_database::get(const short_hash& hash) const
 {
-    return { address_multimap_.find(hash), hash, limit, from_height };
+    return { address_multimap_.find(hash), hash };
 }
 
 // Store.

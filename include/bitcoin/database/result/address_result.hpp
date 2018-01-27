@@ -38,17 +38,10 @@ public:
     typedef record_manager<link_type> manager;
     typedef list_element<const manager, link_type, key_type> const_value_type;
 
-    address_result(const_value_type element, const short_hash& hash, size_t limit,
-        size_t from_height);
+    address_result(const const_value_type& element, const short_hash& hash);
 
     /// The address hash of the query.
     const short_hash& hash() const;
-
-    /// The count limit of the query.
-    size_t limit() const;
-
-    /// The height start of the query.
-    size_t from_height() const;
 
     /// Iterate over the address metadata set.
     address_iterator begin() const;
@@ -56,8 +49,6 @@ public:
 
 private:
     short_hash hash_;
-    size_t limit_;
-    size_t from_height_;
 
     // This class is thread safe.
     const_value_type element_;

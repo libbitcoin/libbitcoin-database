@@ -67,8 +67,7 @@ public:
     //-------------------------------------------------------------------------
 
     /// Get the output and input points associated with the address hash.
-    address_result get(const short_hash& hash, size_t limit,
-        size_t from_height) const;
+    address_result get(const short_hash& hash) const;
 
     // Store.
     //-------------------------------------------------------------------------
