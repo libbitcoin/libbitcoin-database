@@ -24,9 +24,41 @@ using namespace bc::database;
 
 BOOST_AUTO_TEST_SUITE(accessor_tests)
 
-BOOST_AUTO_TEST_CASE(accessor__method__vector__expectation)
+BOOST_AUTO_TEST_CASE(accessor_constructor1__always__buffer_nullptr)
 {
-    BOOST_REQUIRE(true);
+    shared_mutex mutex;
+    accessor instance(mutex);
+    BOOST_REQUIRE_EQUAL(instance.buffer(),nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(accessor_constructor2__always__expected_buffer)
+{
+    uint8_t value;
+    auto expected = &value;
+    shared_mutex mutex;
+    accessor instance(mutex, expected);
+    BOOST_REQUIRE_EQUAL(instance.buffer(), expected);
+}
+
+BOOST_AUTO_TEST_CASE(accessor_increment__nonzero__expected_offset)
+{
+    uint8_t value;
+    auto buffer = &value;
+    shared_mutex mutex;
+    accessor instance(mutex, buffer);
+    const auto offset = 42u;
+    instance.increment(offset);
+    BOOST_REQUIRE_EQUAL(instance.buffer(), buffer + offset);
+}
+
+BOOST_AUTO_TEST_CASE(accessor_assign__nonzero__expected_buffer)
+{
+    uint8_t value;
+    auto expected = &value;
+    shared_mutex mutex;
+    accessor instance(mutex);
+    instance.assign(expected);
+    BOOST_REQUIRE_EQUAL(instance.buffer(), expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

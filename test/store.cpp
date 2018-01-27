@@ -68,7 +68,6 @@ BOOST_AUTO_TEST_CASE(store__construct__flush_each_write_true__expectated)
 BOOST_AUTO_TEST_CASE(store__construct__no_indexes__expectated_files)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
-    BOOST_REQUIRE(test::clear_path(directory));
     store_accessor store(directory);
 
     static const std::string header_index = directory + "/" + store::HEADER_INDEX;
@@ -103,7 +102,6 @@ BOOST_AUTO_TEST_CASE(store__construct__no_indexes__expectated_files)
 BOOST_AUTO_TEST_CASE(store__construct__indexes__expectated_files)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
-    BOOST_REQUIRE(test::clear_path(directory));
     store_accessor store(directory, true);
 
     static const std::string header_index = directory + "/" + store::HEADER_INDEX;
@@ -138,7 +136,6 @@ BOOST_AUTO_TEST_CASE(store__construct__indexes__expectated_files)
 BOOST_AUTO_TEST_CASE(store__construct__exclusive_lock__expectated_files)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
-    BOOST_REQUIRE(test::clear_path(directory));
     store_accessor store(directory);
 
     static const std::string exclusive_lock = directory + "/" + store::EXCLUSIVE_LOCK;
@@ -154,7 +151,6 @@ BOOST_AUTO_TEST_CASE(store__construct__exclusive_lock__expectated_files)
 BOOST_AUTO_TEST_CASE(store__construct__global_flush_lock__expectated_files)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
-    BOOST_REQUIRE(test::clear_path(directory));
     store_accessor store(directory);
 
     static const std::string flush_lock = directory + "/" + store::FLUSH_LOCK;
@@ -180,7 +176,6 @@ BOOST_AUTO_TEST_CASE(store__construct__global_flush_lock__expectated_files)
 BOOST_AUTO_TEST_CASE(store__construct__local_flush_lock__expectated_files)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
-    BOOST_REQUIRE(test::clear_path(directory));
     store_accessor store(directory, false, true);
 
     static const std::string flush_lock = directory + "/" + store::FLUSH_LOCK;
@@ -206,7 +201,6 @@ BOOST_AUTO_TEST_CASE(store__construct__local_flush_lock__expectated_files)
 BOOST_AUTO_TEST_CASE(store__construct__unbalanced_begin_write__leaves_lock_after_close)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
-    BOOST_REQUIRE(test::clear_path(directory));
     store_accessor store(directory, false, true);
 
     static const std::string flush_lock = directory + "/" + store::FLUSH_LOCK;
@@ -221,7 +215,6 @@ BOOST_AUTO_TEST_CASE(store__construct__unbalanced_begin_write__leaves_lock_after
 BOOST_AUTO_TEST_CASE(store__construct__failed_flush__expected)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
-    BOOST_REQUIRE(test::clear_path(directory));
     store_accessor store(directory, false, true, false);
 
     static const std::string flush_lock = directory + "/" + store::FLUSH_LOCK;
@@ -237,7 +230,6 @@ BOOST_AUTO_TEST_CASE(store__construct__failed_flush__expected)
 BOOST_AUTO_TEST_CASE(store__construct__unbalanced_end_write__success)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
-    BOOST_REQUIRE(test::clear_path(directory));
     store_accessor store(directory, false, true);
 
     static const std::string flush_lock = directory + "/" + store::FLUSH_LOCK;
@@ -250,7 +242,6 @@ BOOST_AUTO_TEST_CASE(store__construct__unbalanced_end_write__success)
 BOOST_AUTO_TEST_CASE(store__open__before_create__success)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
-    BOOST_REQUIRE(test::clear_path(directory));
     store_accessor store(directory);
     BOOST_REQUIRE(store.open());
 }
@@ -258,7 +249,6 @@ BOOST_AUTO_TEST_CASE(store__open__before_create__success)
 BOOST_AUTO_TEST_CASE(store__close__before_create__success)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
-    BOOST_REQUIRE(test::clear_path(directory));
     store_accessor store(directory);
     BOOST_REQUIRE(store.close());
 }
@@ -266,7 +256,6 @@ BOOST_AUTO_TEST_CASE(store__close__before_create__success)
 BOOST_AUTO_TEST_CASE(store__close__before_open__idempotent)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
-    BOOST_REQUIRE(test::clear_path(directory));
     store_accessor store(directory);
     BOOST_REQUIRE(store.create());
     BOOST_REQUIRE(store.close());
@@ -275,7 +264,6 @@ BOOST_AUTO_TEST_CASE(store__close__before_open__idempotent)
 BOOST_AUTO_TEST_CASE(store__create__twice__false)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
-    BOOST_REQUIRE(test::clear_path(directory));
     store_accessor store(directory);
     BOOST_REQUIRE(store.create());
     BOOST_REQUIRE(!store.create());
@@ -284,7 +272,6 @@ BOOST_AUTO_TEST_CASE(store__create__twice__false)
 BOOST_AUTO_TEST_CASE(store__create__exists__false)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
-    BOOST_REQUIRE(test::clear_path(directory));
     store_accessor store(directory);
     BOOST_REQUIRE(store.create());
     BOOST_REQUIRE(store.close());
@@ -294,7 +281,6 @@ BOOST_AUTO_TEST_CASE(store__create__exists__false)
 BOOST_AUTO_TEST_CASE(store__open__twice__idempotent)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
-    BOOST_REQUIRE(test::clear_path(directory));
     store_accessor store(directory);
     BOOST_REQUIRE(store.create());
     BOOST_REQUIRE(store.open());
@@ -304,7 +290,6 @@ BOOST_AUTO_TEST_CASE(store__open__twice__idempotent)
 BOOST_AUTO_TEST_CASE(store__close__twice__idempotent)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
-    BOOST_REQUIRE(test::clear_path(directory));
     store_accessor store(directory);
     BOOST_REQUIRE(store.create());
     BOOST_REQUIRE(store.open());

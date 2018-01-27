@@ -51,12 +51,18 @@ bool exists(const path& file_path)
 }
 
 
-bool clear_path(const boost::filesystem::path& directory)
+bool clear_path(const path& directory)
 {
     error_code ec;
     log::initialize();
     remove_all(directory, ec);
     return create_directories(directory, ec);
+}
+
+bool remove(const path& file_path)
+{
+    error_code ec;
+    return boost::filesystem::remove(file_path, ec);
 }
 
 data_chunk generate_random_bytes(std::default_random_engine& engine,

@@ -27,7 +27,7 @@ namespace libbitcoin {
 namespace database {
 
 accessor::accessor(shared_mutex& mutex)
-  : mutex_(mutex)
+  : mutex_(mutex), data_(nullptr)
 {
     ///////////////////////////////////////////////////////////////////////////
     // Begin Critical Section
@@ -59,8 +59,6 @@ void accessor::increment(size_t value)
 // Assign a buffer to this upgradable allocator.
 void accessor::assign(uint8_t* data)
 {
-    BITCOIN_ASSERT_MSG(data != nullptr, "Invalid buffer assigment.");
-
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     mutex_.unlock_upgrade_and_lock_shared();
     data_ = data;

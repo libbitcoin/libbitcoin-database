@@ -36,6 +36,7 @@ typedef bc::byte_array<8> little_hash;
 
 bool create(const boost::filesystem::path& file_path);
 bool exists(const boost::filesystem::path& file_path);
+bool remove(const boost::filesystem::path& file_path);
 bool clear_path(const boost::filesystem::path& directory);
 
 } // namspace test

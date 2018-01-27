@@ -308,7 +308,18 @@ size_t file_storage::size() const
 
 memory_ptr file_storage::access()
 {
-    return std::make_shared<accessor>(mutex_, data_);
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    auto memory = std::make_shared<accessor>(mutex_, data_);
+
+    // The store should only have been closed after all threads terminated.
+    if (closed_)
+    {
+        memory->assign(data_);
+        throw std::runtime_error("Access failure, store closed.");
+    }
+
+    return memory;
 }
 
 // Throws runtime_error if insufficient space.
@@ -336,11 +347,14 @@ memory_ptr file_storage::reserve(size_t size, size_t expansion)
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    const auto memory = std::make_shared<accessor>(mutex_);
+    auto memory = std::make_shared<accessor>(mutex_);
 
     // The store should only have been closed after all threads terminated.
     if (closed_)
+    {
+        memory->assign(data_);
         throw std::runtime_error("Resize failure, store already closed.");
+    }
 
     if (size > file_size_)
     {

@@ -6,12 +6,13 @@
 *.user
 *.ipch
 *.VC.*
-block_index
-block_table
-hash_table
-header_index
 address_rows
 address_table
+block_index
+block_table
+file_storage
+hash_table
+header_index
 record_hash_table_64bit
 spend_table
 stealth_rows
