@@ -53,19 +53,19 @@ struct store_directory_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(store_tests, store_directory_setup_fixture)
 
-BOOST_AUTO_TEST_CASE(store__construct__flush_each_write_false__expectated)
+BOOST_AUTO_TEST_CASE(store__construct__flush_each_write_false__expected)
 {
     store_accessor store("");
     BOOST_REQUIRE(!store.flush_each_write());
 }
 
-BOOST_AUTO_TEST_CASE(store__construct__flush_each_write_true__expectated)
+BOOST_AUTO_TEST_CASE(store__construct__flush_each_write_true__expected)
 {
     store_accessor store("", false, true);
     BOOST_REQUIRE(store.flush_each_write());
 }
 
-BOOST_AUTO_TEST_CASE(store__construct__no_indexes__expectated_files)
+BOOST_AUTO_TEST_CASE(store__construct__no_indexes__expected_files)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
     store_accessor store(directory);
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(store__construct__no_indexes__expectated_files)
     BOOST_REQUIRE(store.close());
 }
 
-BOOST_AUTO_TEST_CASE(store__construct__indexes__expectated_files)
+BOOST_AUTO_TEST_CASE(store__construct__indexes__expected_files)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
     store_accessor store(directory, true);
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(store__construct__indexes__expectated_files)
     BOOST_REQUIRE(store.close());
 }
 
-BOOST_AUTO_TEST_CASE(store__construct__exclusive_lock__expectated_files)
+BOOST_AUTO_TEST_CASE(store__construct__exclusive_lock__expected_files)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
     store_accessor store(directory);
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(store__construct__exclusive_lock__expectated_files)
     BOOST_REQUIRE(!test::exists(exclusive_lock));
 }
 
-BOOST_AUTO_TEST_CASE(store__construct__global_flush_lock__expectated_files)
+BOOST_AUTO_TEST_CASE(store__construct__global_flush_lock__expected_files)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
     store_accessor store(directory);
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(store__construct__global_flush_lock__expectated_files)
     BOOST_REQUIRE(!test::exists(flush_lock));
 }
 
-BOOST_AUTO_TEST_CASE(store__construct__local_flush_lock__expectated_files)
+BOOST_AUTO_TEST_CASE(store__construct__local_flush_lock__expected_files)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
     store_accessor store(directory, false, true);
