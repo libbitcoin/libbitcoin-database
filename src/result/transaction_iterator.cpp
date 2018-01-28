@@ -27,11 +27,11 @@ namespace database {
 using namespace bc::chain;
 
 transaction_iterator::transaction_iterator(const manager& records,
-    size_t start, size_t count)
+    array_index start, size_t count)
   : offset_(0),
-    index_(0),
-    start_(start),
+    index_(count),
     count_(count),
+    start_(start),
     manager_(records)
 {
     populate();
@@ -39,10 +39,10 @@ transaction_iterator::transaction_iterator(const manager& records,
 
 void transaction_iterator::populate()
 {
-    if (index_ < count_)
+    if (index_ != 0)
     {
         const auto memory = manager_.get(start_);
-        memory->increment(index_ * sizeof(offset_));
+        memory->increment((count_ - index_) * sizeof(offset_));
         auto deserial = make_unsafe_deserializer(memory->buffer());
         offset_ = deserial.read_8_bytes_little_endian();
     }
@@ -60,7 +60,7 @@ transaction_iterator::reference transaction_iterator::operator*() const
 
 transaction_iterator::iterator& transaction_iterator::operator++()
 {
-    ++index_;
+    --index_;
     populate();
     return *this;
 }
@@ -68,7 +68,7 @@ transaction_iterator::iterator& transaction_iterator::operator++()
 transaction_iterator::iterator transaction_iterator::operator++(int)
 {
     auto it = *this;
-    ++index_;
+    --index_;
     populate();
     return it;
 }

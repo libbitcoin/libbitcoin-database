@@ -49,7 +49,8 @@ public:
     // Constructors.
     //-------------------------------------------------------------------------
 
-    transaction_iterator(const manager& records, size_t start, size_t count);
+    transaction_iterator(const manager& records, array_index start,
+        size_t count);
 
     // Operators.
     //-------------------------------------------------------------------------
@@ -65,9 +66,9 @@ private:
     void populate();
 
     value_type offset_;
-    array_index index_;
-    const size_t start_;
+    size_t index_;
     const size_t count_;
+    const array_index start_;
     const manager& manager_;
 };
 

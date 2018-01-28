@@ -31,9 +31,10 @@ using namespace bc::database;
 transaction random_tx(size_t fudge)
 {
     static const auto genesis = block::genesis_mainnet();
-    auto result = genesis.transactions()[0];
-    result.inputs()[0].previous_output().set_index(fudge);
-    return result;
+    auto tx = genesis.transactions()[0];
+    tx.inputs()[0].previous_output().set_index(fudge);
+    tx.validation.link = fudge;
+    return tx;
 }
 
 #define DIRECTORY "block_database"
@@ -56,7 +57,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
         random_tx(0),
         random_tx(1)
     });
-    //const auto h0 = block0.header.hash();
+    const auto h0 = block0.hash();
 
     block block1;
     block1.set_header(block0.header());
@@ -68,7 +69,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
         random_tx(4),
         random_tx(5)
     });
-    //const auto h1 = block1.header.hash();
+    const auto h1 = block1.hash();
 
     block block2;
     block2.set_header(block0.header());
@@ -92,7 +93,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
         random_tx(12),
         random_tx(13)
     });
-    //const auto h3 = block3.hash();
+    const auto h3 = block3.hash();
 
     block block4a;
     block4a.set_header(block0.header());
@@ -164,15 +165,30 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     BOOST_REQUIRE(db.top(height));
     BOOST_REQUIRE_EQUAL(height, 3u);
 
+    // Fetch block 0 by hash.
+    const auto result0 = db.get(h0);
+    BOOST_REQUIRE(result0);
+    BOOST_REQUIRE(result0.hash() == h0);
+
+    auto it0 = result0.begin();
+    BOOST_REQUIRE(it0 != result0.end());
+    BOOST_REQUIRE_EQUAL(*it0++, 0u);
+    BOOST_REQUIRE_EQUAL(*it0++, 1u);
+    BOOST_REQUIRE(it0 == result0.end());
+
     // Fetch block 2 by hash.
     const auto result2 = db.get(h2);
     BOOST_REQUIRE(result2);
     BOOST_REQUIRE(result2.hash() == h2);
-    ////BOOST_REQUIRE(result2.transaction_hash(0) == block2.transactions()[0].hash());
-    ////BOOST_REQUIRE(result2.transaction_hash(1) == block2.transactions()[1].hash());
-    ////BOOST_REQUIRE(result2.transaction_hash(2) == block2.transactions()[2].hash());
-    ////BOOST_REQUIRE(result2.transaction_hash(3) == block2.transactions()[3].hash());
-    ////BOOST_REQUIRE(result2.transaction_hash(4) == block2.transactions()[4].hash());
+
+    auto it2 = result2.begin();
+    BOOST_REQUIRE(it2 != result2.end());
+    BOOST_REQUIRE_EQUAL(*it2++, 6u);
+    BOOST_REQUIRE_EQUAL(*it2++, 7u);
+    BOOST_REQUIRE_EQUAL(*it2++, 8u);
+    BOOST_REQUIRE_EQUAL(*it2++, 9u);
+    BOOST_REQUIRE_EQUAL(*it2++, 10u);
+    BOOST_REQUIRE(it2 == result2.end());
 
     // Try a fork event.
     db.push(block4a, 4);
@@ -217,11 +233,6 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     const auto result5b = db.get(5);
     BOOST_REQUIRE(result5b);
     BOOST_REQUIRE(result5b.hash() == h5b);
-    ////BOOST_REQUIRE(result5b.transaction_hash(0) == block5b.transactions()[0].hash());
-    ////BOOST_REQUIRE(result5b.transaction_hash(1) == block5b.transactions()[1].hash());
-    ////BOOST_REQUIRE(result5b.transaction_hash(2) == block5b.transactions()[2].hash());
-    ////BOOST_REQUIRE(result5b.transaction_hash(3) == block5b.transactions()[3].hash());
-    ////BOOST_REQUIRE(result5b.transaction_hash(4) == block5b.transactions()[4].hash());
 
     // Test also fetch by hash.
     const auto result_h5b = db.get(h5b);

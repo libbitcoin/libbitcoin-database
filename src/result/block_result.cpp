@@ -160,7 +160,7 @@ transaction_iterator block_result::begin() const
 
 transaction_iterator block_result::end() const
 {
-    return { index_manager_, tx_count_, tx_count_ };
+    return { index_manager_, tx_start_, 0 };
 }
 
 } // namespace database
