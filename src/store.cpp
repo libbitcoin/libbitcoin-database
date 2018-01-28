@@ -20,6 +20,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 
 namespace libbitcoin {
@@ -28,6 +29,7 @@ namespace database {
 using namespace bc::chain;
 using namespace bc::database;
 using namespace boost::filesystem;
+using namespace boost::system;
 
 // Database file names.
 const std::string store::FLUSH_LOCK = "flush_lock";
@@ -49,7 +51,7 @@ static bool create_file(const path& file_path)
 
     bc::ofstream file(file_path.string());
 
-    if (file.bad())
+    if (!file.good())
         return false;
 
     // Write one byte so file is nonzero size (for memory map validation).
@@ -62,6 +64,7 @@ static bool create_file(const path& file_path)
 
 store::store(const path& prefix, bool with_indexes, bool flush_each_write)
   : use_indexes(with_indexes),
+    prefix_(prefix),
     flush_each_write_(flush_each_write),
     flush_lock_(prefix / FLUSH_LOCK),
     exclusive_lock_(prefix / EXCLUSIVE_LOCK),
@@ -85,7 +88,10 @@ store::store(const path& prefix, bool with_indexes, bool flush_each_write)
 // Create files.
 bool store::create()
 {
-    const auto created =
+    error_code ec;
+    create_directories(prefix_, ec);
+
+    const auto created = !ec &&
         create_file(header_index) &&
         create_file(block_index) &&
         create_file(block_table) &&
