@@ -94,10 +94,6 @@ public:
     bool operator!=(list_element other) const;
 
 private:
-    // Allow the iterator to access private members.
-    template <typename Manager, typename Link, typename Key>
-    friend class list_iterator;
-
     memory_ptr data(size_t bytes) const;
     void initialize(const Key& key, write_function write);
 

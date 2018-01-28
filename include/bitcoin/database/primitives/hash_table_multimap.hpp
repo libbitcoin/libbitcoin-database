@@ -52,7 +52,7 @@ public:
     static size_t size(size_t value_size);
 
     /// Construct a new record multimap.
-    /// THIS ASSUMES MAP HAS VALUE == sizeof(Link).
+    /// THIS ASSUMES MAP HAS VALUE SIZE == sizeof(Link).
     hash_table_multimap(table& map, manager& manager);
 
     /// Use to allocate an element in a multimap. 

@@ -42,8 +42,7 @@ template <typename Manager, typename Link, typename Key>
 list_iterator<Manager, Link, Key>&
 list_iterator<Manager, Link, Key>::operator++()
 {
-    // This class is a friend of the list_element class.
-    element_.link_ = element_.next();
+    element_.jump_next();
     return *this;
 }
 
@@ -52,9 +51,7 @@ list_iterator<Manager, Link, Key>
 list_iterator<Manager, Link, Key>::operator++(int)
 {
     auto copy = *this;
-
-    // This class is a friend of the list_element class.
-    element_.link_ = element_.next();
+    element_.jump_next();
     return copy;
 }
 
