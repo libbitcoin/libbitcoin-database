@@ -256,10 +256,25 @@ BOOST_AUTO_TEST_CASE(store__construct__unbalanced_end_write__success)
     BOOST_REQUIRE(!test::exists(flush_lock));
 }
 
-BOOST_AUTO_TEST_CASE(store__open__before_create__success)
+BOOST_AUTO_TEST_CASE(store__open__before_create_existing_directory__success)
+{
+    static const std::string directory = DIRECTORY;
+    store_accessor store(directory);
+    BOOST_REQUIRE(store.open());
+}
+
+BOOST_AUTO_TEST_CASE(store__open__before_create_missing_directory__failure)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
     store_accessor store(directory);
+    BOOST_REQUIRE(!store.open());
+}
+
+BOOST_AUTO_TEST_CASE(store__open__after_create_missing_directory__success)
+{
+    static const std::string directory = DIRECTORY "/" + TEST_NAME;
+    store_accessor store(directory);
+    BOOST_REQUIRE(store.create());
     BOOST_REQUIRE(store.open());
 }
 
