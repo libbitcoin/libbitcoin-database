@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(accessor_constructor1__always__buffer_nullptr)
 {
     shared_mutex mutex;
     accessor instance(mutex);
-    BOOST_REQUIRE_EQUAL(instance.buffer(),nullptr);
+    BOOST_REQUIRE(instance.buffer() == nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(accessor_constructor2__always__expected_buffer)
