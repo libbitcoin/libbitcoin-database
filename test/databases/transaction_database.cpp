@@ -59,15 +59,19 @@ BOOST_AUTO_TEST_CASE(transaction_database__test)
     transaction_database db(path, 1000, 50, 0);
     BOOST_REQUIRE(db.create());
 
+    const auto hash1 = tx1.hash();
+    BOOST_REQUIRE(!db.get(hash1));
+
+    const auto hash2 = tx2.hash();
+    BOOST_REQUIRE(!db.get(hash2));
+
     db.store(tx1, 110, 0, 88);
     db.store(tx2, 4, 0, 6);
 
-    const auto hash1 = tx1.hash();
     const auto result1 = db.get(hash1);
     BOOST_REQUIRE(result1);
     BOOST_REQUIRE(result1.transaction().hash() == hash1);
 
-    const auto hash2 = tx2.hash();
     const auto result2 = db.get(hash2);
     BOOST_REQUIRE(result2);
     BOOST_REQUIRE(result2.transaction().hash() == hash2);
