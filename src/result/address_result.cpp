@@ -33,10 +33,16 @@ address_result::address_result(const const_value_type& element,
 {
 }
 
+address_result::operator bool() const
+{
+    return element_;
+}
+
 const short_hash& address_result::hash() const
 {
     return hash_;
 }
+
 address_iterator address_result::begin() const
 {
     return { element_ };

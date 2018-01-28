@@ -40,6 +40,9 @@ public:
 
     address_result(const const_value_type& element, const short_hash& hash);
 
+    /// True if the requested block exists.
+    operator bool() const;
+
     /// The address hash of the query.
     const short_hash& hash() const;
 
