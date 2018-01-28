@@ -37,8 +37,10 @@
 #include <bitcoin/database/primitives/list_iterator.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
+#include <bitcoin/database/result/address_iterator.hpp>
 #include <bitcoin/database/result/address_result.hpp>
 #include <bitcoin/database/result/block_result.hpp>
+#include <bitcoin/database/result/transaction_iterator.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
 #include <bitcoin/database/state/block_state.hpp>
 #include <bitcoin/database/state/transaction_state.hpp>

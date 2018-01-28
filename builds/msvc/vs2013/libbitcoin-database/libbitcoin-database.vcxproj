@@ -80,8 +80,10 @@
     <ClCompile Include="..\..\..\..\src\memory\accessor.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\file_storage.cpp" />
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c" />
+    <ClCompile Include="..\..\..\..\src\result\address_iterator.cpp" />
     <ClCompile Include="..\..\..\..\src\result\address_result.cpp" />
     <ClCompile Include="..\..\..\..\src\result\block_result.cpp" />
+    <ClCompile Include="..\..\..\..\src\result\transaction_iterator.cpp" />
     <ClCompile Include="..\..\..\..\src\result\transaction_result.cpp" />
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
     <ClCompile Include="..\..\..\..\src\store.cpp" />
@@ -107,8 +109,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\list_iterator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_manager.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\address_iterator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\address_result.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\block_result.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_iterator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_result.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\state\block_state.hpp" />

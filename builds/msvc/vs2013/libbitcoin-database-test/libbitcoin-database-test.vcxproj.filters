@@ -75,10 +75,16 @@
     <ClCompile Include="..\..\..\..\test\primitives\slab_manager.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\result\address_iterator.cpp">
+      <Filter>src\result</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\result\address_result.cpp">
       <Filter>src\result</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\result\block_result.cpp">
+      <Filter>src\result</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\result\transaction_iterator.cpp">
       <Filter>src\result</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\result\transaction_result.cpp">

@@ -47,8 +47,10 @@ src_libbitcoin_database_la_SOURCES = \
     src/memory/file_storage.cpp \
     src/mman-win32/mman.c \
     src/mman-win32/mman.h \
+    src/result/address_iterator.cpp \
     src/result/address_result.cpp \
     src/result/block_result.cpp \
+    src/result/transaction_iterator.cpp \
     src/result/transaction_result.cpp
 
 # local: test/libbitcoin_database_test
@@ -80,8 +82,10 @@ test_libbitcoin_database_test_SOURCES = \
     test/primitives/list_iterator.cpp \
     test/primitives/record_manager.cpp \
     test/primitives/slab_manager.cpp \
+    test/result/address_iterator.cpp \
     test/result/address_result.cpp \
     test/result/block_result.cpp \
+    test/result/transaction_iterator.cpp \
     test/result/transaction_result.cpp \
     test/state/block_state.cpp \
     test/state/transaction_state.cpp \
@@ -157,8 +161,10 @@ include_bitcoin_database_primitives_HEADERS = \
 
 include_bitcoin_database_resultdir = ${includedir}/bitcoin/database/result
 include_bitcoin_database_result_HEADERS = \
+    include/bitcoin/database/result/address_iterator.hpp \
     include/bitcoin/database/result/address_result.hpp \
     include/bitcoin/database/result/block_result.hpp \
+    include/bitcoin/database/result/transaction_iterator.hpp \
     include/bitcoin/database/result/transaction_result.hpp
 
 include_bitcoin_database_statedir = ${includedir}/bitcoin/database/state

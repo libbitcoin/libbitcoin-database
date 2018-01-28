@@ -75,10 +75,16 @@
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c">
       <Filter>src\mman-win32</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\result\address_iterator.cpp">
+      <Filter>src\result</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\result\address_result.cpp">
       <Filter>src\result</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\result\block_result.cpp">
+      <Filter>src\result</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\result\transaction_iterator.cpp">
       <Filter>src\result</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\result\transaction_result.cpp">
@@ -95,12 +101,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\unspent_transaction.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\result\address_iterator.cpp">
-      <Filter>src\result</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\result\transaction_iterator.cpp">
-      <Filter>src\result</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -158,10 +158,16 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_manager.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\address_iterator.hpp">
+      <Filter>include\bitcoin\database\result</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\address_result.hpp">
       <Filter>include\bitcoin\database\result</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\block_result.hpp">
+      <Filter>include\bitcoin\database\result</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_iterator.hpp">
       <Filter>include\bitcoin\database\result</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_result.hpp">
@@ -190,12 +196,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\src\mman-win32\mman.h">
       <Filter>src\mman-win32</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\address_iterator.hpp">
-      <Filter>include\bitcoin\database\result</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_iterator.hpp">
-      <Filter>include\bitcoin\database\result</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
