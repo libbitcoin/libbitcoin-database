@@ -62,7 +62,7 @@ public:
     bool operator!=(const transaction_iterator& other) const;
 
 private:
-    void increment();
+    void populate();
 
     value_type offset_;
     array_index index_;

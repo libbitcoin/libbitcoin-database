@@ -34,10 +34,10 @@ transaction_iterator::transaction_iterator(const manager& records,
     count_(count),
     manager_(records)
 {
-    increment();
+    populate();
 }
 
-void transaction_iterator::increment()
+void transaction_iterator::populate()
 {
     if (index_ < count_)
     {
@@ -61,14 +61,14 @@ transaction_iterator::reference transaction_iterator::operator*() const
 
 transaction_iterator::iterator& transaction_iterator::operator++()
 {
-    increment();
+    populate();
     return *this;
 }
 
 transaction_iterator::iterator transaction_iterator::operator++(int)
 {
     auto it = *this;
-    increment();
+    populate();
     return it;
 }
 

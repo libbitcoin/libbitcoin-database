@@ -63,7 +63,7 @@ public:
     bool operator!=(const address_iterator& other) const;
 
 private:
-    void increment();
+    void populate();
 
     const_element element_;
     value_type payment_;
