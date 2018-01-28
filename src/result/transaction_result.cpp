@@ -95,7 +95,7 @@ file_offset transaction_result::link() const
 hash_digest transaction_result::hash() const
 {
     // This is read each time it is invoked, so caller should cache.
-    return element_ ? null_hash : element_.key();
+    return element_ ? element_.key() : null_hash;
 }
 
 size_t transaction_result::height() const
