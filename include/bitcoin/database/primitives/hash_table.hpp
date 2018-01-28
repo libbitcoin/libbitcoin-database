@@ -88,6 +88,9 @@ public:
     /// Get the element with the given link from the hash table.
     const_value_type find(Link link) const;
 
+    /// A not found instance for this table, same as find(not_found).
+    const_value_type terminator() const;
+
     /// Add the given element to the hash table.
     void link(value_type& element);
 

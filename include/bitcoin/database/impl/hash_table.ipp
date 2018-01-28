@@ -93,6 +93,13 @@ hash_table<Manager, Index, Link, Key>::find(Link link) const
 }
 
 template <typename Manager, typename Index, typename Link, typename Key>
+typename hash_table<Manager, Index, Link, Key>::const_value_type
+hash_table<Manager, Index, Link, Key>::terminator() const
+{
+    return find(not_found);
+}
+
+template <typename Manager, typename Index, typename Link, typename Key>
 void hash_table<Manager, Index, Link, Key>::link(value_type& element)
 {
     const auto index = bucket_index(element.key());
