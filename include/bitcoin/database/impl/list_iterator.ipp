@@ -59,14 +59,14 @@ list_iterator<Manager, Link, Key>::operator++(int)
 }
 
 template <typename Manager, typename Link, typename Key>
-typename const list_iterator<Manager, Link, Key>::pointer
+typename list_iterator<Manager, Link, Key>::pointer
 list_iterator<Manager, Link, Key>::operator*() const
 {
     return element_;
 }
 
 template <typename Manager, typename Link, typename Key>
-typename const list_iterator<Manager, Link, Key>::reference
+typename list_iterator<Manager, Link, Key>::reference
 list_iterator<Manager, Link, Key>::operator->() const
 {
     return element_;
