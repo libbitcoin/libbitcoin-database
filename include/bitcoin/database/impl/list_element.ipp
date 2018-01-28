@@ -113,9 +113,20 @@ void list_element<Manager, Link, Key>::write(write_function writer)
     writer(serial);
 }
 
+// Jump to the next element in the list.
+template <typename Manager, typename Link, typename Key>
+bool list_element<Manager, Link, Key>::jump_next()
+{
+    if (link_ == not_found)
+        return false;
+
+    link_ = next();
+    return true;
+}
+
 // Populate next link value.
 template <typename Manager, typename Link, typename Key>
-void list_element<Manager, Link, Key>::next(Link next)
+void list_element<Manager, Link, Key>::set_next(Link next)
 {
     const auto memory = data(std::tuple_size<Key>::value);
     auto serial = make_unsafe_serializer(memory->buffer());
@@ -200,7 +211,7 @@ bool list_element<Manager, Link, Key>::operator!=(list_element other) const
 template <typename Manager, typename Link, typename Key>
 memory_ptr list_element<Manager, Link, Key>::data(size_t bytes) const
 {
-    BITCOIN_ASSERT((bool)(*this));
+    BITCOIN_ASSERT(link_ != not_found);
     auto memory = manager_.get(link_);
     memory->increment(bytes);
     return memory;

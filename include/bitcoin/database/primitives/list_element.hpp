@@ -59,8 +59,11 @@ public:
     /// Allocate and populate a new keyed slab element.
     Link create(const Key& key, write_function write, size_t value_size);
 
-    /// Connect the next element.
-    void next(Link next);
+    /// Update this element to the next element (read next from file).
+    bool jump_next();
+
+    /// Connect the next element (write to file).
+    void set_next(Link next);
 
     /// Write to the state of the element.
     void write(write_function writer);
@@ -68,16 +71,16 @@ public:
     /// Read from the state of the element.
     void read(read_function reader) const;
 
-    /// True if the element key matches the parameter.
+    /// True if the element key (read from file) matches the parameter.
     bool match(const Key& key) const;
 
-    /// The key of this element.
+    /// The key of this element (read from file).
     Key key() const;
 
     /// The address of this element.
     Link link() const;
 
-    /// The address of the next element.
+    /// The address of the next element (read from file).
     Link next() const;
 
     /// A list terminator for this instance.

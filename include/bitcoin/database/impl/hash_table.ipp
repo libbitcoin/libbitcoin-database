@@ -100,7 +100,7 @@ void hash_table<Manager, Index, Link, Key>::link(value_type& element)
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     root_mutex_.lock_upgrade();
-    element.next(bucket_value(index));
+    element.set_next(bucket_value(index));
     root_mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     header_.write(index, element.link());

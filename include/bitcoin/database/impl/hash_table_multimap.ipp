@@ -119,7 +119,7 @@ void hash_table_multimap<Index, Link, Key>::link(const Key& key,
     if (!root)
     {
         // Commit the termination of the new list.
-        element.next(element.not_found);
+        element.set_next(element.not_found);
 
         // Create and map new root and "link" from it to the new element.
         auto new_root = map_.allocator();
@@ -139,7 +139,7 @@ void hash_table_multimap<Index, Link, Key>::link(const Key& key,
         root.read(reader);
 
         // Commit linkage to the existing first list element.
-        element.next(first);
+        element.set_next(first);
 
         // "link" existing root to the new first element.
         root.write(writer);

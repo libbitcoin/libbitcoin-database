@@ -45,7 +45,6 @@ void transaction_iterator::populate()
         memory->increment(index_ * sizeof(offset_));
         auto deserial = make_unsafe_deserializer(memory->buffer());
         offset_ = deserial.read_8_bytes_little_endian();
-        ++index_;
     }
 }
 
@@ -61,6 +60,7 @@ transaction_iterator::reference transaction_iterator::operator*() const
 
 transaction_iterator::iterator& transaction_iterator::operator++()
 {
+    ++index_;
     populate();
     return *this;
 }
@@ -68,6 +68,7 @@ transaction_iterator::iterator& transaction_iterator::operator++()
 transaction_iterator::iterator transaction_iterator::operator++(int)
 {
     auto it = *this;
+    ++index_;
     populate();
     return it;
 }

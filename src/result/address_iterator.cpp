@@ -52,6 +52,7 @@ address_iterator::reference address_iterator::operator*() const
 
 address_iterator::iterator& address_iterator::operator++()
 {
+    element_.jump_next();
     populate();
     return *this;
 }
@@ -59,6 +60,7 @@ address_iterator::iterator& address_iterator::operator++()
 address_iterator::iterator address_iterator::operator++(int)
 {
     auto it = *this;
+    element_.jump_next();
     populate();
     return it;
 }
