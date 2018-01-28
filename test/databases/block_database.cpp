@@ -42,7 +42,7 @@ struct block_database_directory_setup_fixture
 {
     block_database_directory_setup_fixture()
     {
-        BOOST_REQUIRE(test::clear_path(DIRECTORY));
+        test::clear_path(DIRECTORY);
     }
 };
 

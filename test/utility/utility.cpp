@@ -37,7 +37,7 @@ bool create(const path& file_path)
 {
     bc::ofstream file(file_path.string());
 
-    if (file.bad())
+    if (!file.good())
         return false;
 
     file.put('z');
@@ -51,12 +51,12 @@ bool exists(const path& file_path)
 }
 
 
-bool clear_path(const path& directory)
+void clear_path(const path& directory)
 {
     error_code ec;
     log::initialize();
     remove_all(directory, ec);
-    return create_directories(directory, ec);
+    create_directories(directory, ec);
 }
 
 bool remove(const path& file_path)

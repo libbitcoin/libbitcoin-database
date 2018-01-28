@@ -36,7 +36,7 @@ struct transaction_database_directory_setup_fixture
 {
     transaction_database_directory_setup_fixture()
     {
-        BOOST_REQUIRE(test::clear_path(DIRECTORY));
+        test::clear_path(DIRECTORY);
     }
 };
 

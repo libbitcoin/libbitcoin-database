@@ -226,7 +226,7 @@
 ////{
 ////    data_base_setup_fixture()
 ////    {
-////        BOOST_REQUIRE(test::clear_path(DIRECTORY));
+////        test::clear_path(DIRECTORY);
 ////    }
 ////};
 ////
