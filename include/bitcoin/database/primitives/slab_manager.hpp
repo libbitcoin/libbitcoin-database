@@ -51,15 +51,14 @@ public:
     /// Commit total slabs size to the file.
     void commit();
 
+    /// Get the size of all slabs and size prefix (excludes header).
+    size_t payload_size() const;
+
     /// Allocate a slab and return its position, commit after writing.
     Link allocate(size_t size);
 
     /// Return memory object for the slab at the specified position.
     memory_ptr get(Link position) const;
-
-protected:
-    /// Get the size of all slabs and size prefix (excludes header).
-    size_t payload_size() const;
 
 private:
     // Read the size of the data from the file.

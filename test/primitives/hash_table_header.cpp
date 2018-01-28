@@ -18,6 +18,7 @@
  */
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
 #include <cstdint>
 #include <bitcoin/database.hpp>
 #include "../utility/storage.hpp"
@@ -27,23 +28,67 @@ using namespace bc::database;
 
 BOOST_AUTO_TEST_SUITE(hash_table_header_tests)
 
+BOOST_AUTO_TEST_CASE(hash_table_header__size__always__expected)
+{
+    typedef uint32_t index_type;
+    typedef uint64_t link_type;
+    typedef hash_table_header<index_type, link_type> header_type;
+
+    test::storage file;
+    const auto buckets = 42u;
+    const auto expected = sizeof(index_type) + sizeof(link_type) * buckets;
+    header_type header(file, buckets);
+    BOOST_REQUIRE_EQUAL(header.size(), expected);
+}
+
 BOOST_AUTO_TEST_CASE(hash_table_header__create__always__sets_minimum_file_size)
 {
     test::storage file;
-    const auto buckets = 10u;
-    const auto header_size = sizeof(uint32_t) + sizeof(uint32_t) * buckets;
-    hash_table_header<uint32_t, uint32_t> header(file, buckets);
+    hash_table_header<uint32_t, uint32_t> header(file, 10u);
+
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE_EQUAL(file.size(), 0u);
     BOOST_REQUIRE(header.create());
-    BOOST_REQUIRE_GE(file.size(), header_size);
+    BOOST_REQUIRE_GE(file.size(), header.size());
+}
+
+BOOST_AUTO_TEST_CASE(hash_table_header__create__always__sets_bucket_count)
+{
+    typedef uint32_t index_type;
+    typedef uint64_t link_type;
+    typedef hash_table_header<index_type, link_type> header_type;
+
+    test::storage file;
+    const auto expected = 42u;
+    header_type header(file, expected);
+    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(header.create());
+
+    auto deserial = make_unsafe_deserializer(file.access()->buffer());
+    BOOST_REQUIRE_EQUAL(deserial.read_little_endian<index_type>(), expected);
+}
+
+BOOST_AUTO_TEST_CASE(hash_table_header__create__always__fills_empty_buckets)
+{
+    typedef uint32_t index_type;
+    typedef uint64_t link_type;
+    typedef hash_table_header<index_type, link_type> header_type;
+
+    test::storage file;
+    header_type header(file, 10u);
+    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(header.create());
+
+    const auto buffer = file.access()->buffer();
+    const auto start = buffer + sizeof(index_type);
+    const auto empty = [](uint8_t byte) { return byte == header_type::empty; };
+    std::for_each(start, buffer + header.size(), empty);
 }
 
 BOOST_AUTO_TEST_CASE(hash_table_header__start__default_file__success)
 {
     test::storage file;
-    const auto buckets = 10u;
-    hash_table_header<uint32_t, uint32_t> header(file, buckets);
+    hash_table_header<uint32_t, uint32_t> header(file, 10u);
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(header.create());
     BOOST_REQUIRE(header.start());
@@ -52,109 +97,104 @@ BOOST_AUTO_TEST_CASE(hash_table_header__start__default_file__success)
 BOOST_AUTO_TEST_CASE(hash_table_header__start__undersized_file__failure)
 {
     test::storage file;
-    const auto buckets = 10u;
-    const auto header_size = sizeof(uint32_t) + sizeof(uint32_t) * buckets;
-    hash_table_header<uint32_t, uint32_t> header(file, buckets);
+    hash_table_header<uint32_t, uint32_t> header(file, 10u);
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(header.create());
-    BOOST_REQUIRE(file.resize(header_size - 1));
+    BOOST_REQUIRE(file.resize(header.size() - 1));
     BOOST_REQUIRE(!header.start());
 }
 
 BOOST_AUTO_TEST_CASE(hash_table_header__start__oversized_file__success)
 {
     test::storage file;
-    const auto buckets = 10u;
-    const auto header_size = sizeof(uint32_t) + sizeof(uint32_t) * buckets;
-    hash_table_header<uint32_t, uint32_t> header(file, buckets);
+    hash_table_header<uint32_t, uint32_t> header(file, 10u);
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(header.create());
-    BOOST_REQUIRE(file.resize(header_size + 1));
+    BOOST_REQUIRE(file.resize(header.size() + 1));
     BOOST_REQUIRE(header.start());
 }
 
 BOOST_AUTO_TEST_CASE(hash_table_header__buckets__default__expected)
 {
     test::storage file;
-    const auto buckets = 10u;
-    const auto header_size = sizeof(uint32_t) + sizeof(uint32_t) * buckets;
-    hash_table_header<uint32_t, uint32_t> header(file, buckets);
-    BOOST_REQUIRE_EQUAL(header.buckets(), buckets);
+    const auto expected = 10u;
+    hash_table_header<uint32_t, uint32_t> header(file, expected);
+    BOOST_REQUIRE_EQUAL(header.buckets(), expected);
 }
 
 BOOST_AUTO_TEST_CASE(hash_table_header__buckets__create__expected)
 {
     test::storage file;
-    const auto buckets = 10u;
-    const auto header_size = sizeof(uint32_t) + sizeof(uint32_t) * buckets;
-    hash_table_header<uint32_t, uint32_t> header(file, buckets);
+    const auto expected = 10u;
+    hash_table_header<uint32_t, uint32_t> header(file, expected);
     BOOST_REQUIRE(header.create());
-    BOOST_REQUIRE_EQUAL(header.buckets(), buckets);
+    BOOST_REQUIRE_EQUAL(header.buckets(), expected);
 }
 
 BOOST_AUTO_TEST_CASE(hash_table_header__buckets__resize__expected)
 {
     test::storage file;
-    const auto buckets = 10u;
-    const auto header_size = sizeof(uint32_t) + sizeof(uint32_t) * buckets;
-    hash_table_header<uint32_t, uint32_t> header(file, buckets);
-    BOOST_REQUIRE(file.resize(header_size + 1));
-    BOOST_REQUIRE_EQUAL(header.buckets(), buckets);
+    const auto expected = 10u;
+    hash_table_header<uint32_t, uint32_t> header(file, expected);
+    BOOST_REQUIRE(file.resize(header.size() + 1));
+    BOOST_REQUIRE_EQUAL(header.buckets(), expected);
 }
 
 BOOST_AUTO_TEST_CASE(hash_table_header__size1__32bit__expected)
 {
+    typedef uint32_t index_type;
+    typedef uint32_t link_type;
+    typedef hash_table_header<index_type, link_type> header_type;
+
     const auto buckets = 10u;
-    const auto header_size = sizeof(uint32_t) + sizeof(uint32_t) * buckets;
-    const auto size = hash_table_header<uint32_t, uint32_t>::size(buckets);
-    BOOST_REQUIRE_EQUAL(size, header_size);
+    const auto expected = sizeof(index_type) + sizeof(link_type) * buckets;
+    BOOST_REQUIRE_EQUAL(header_type::size(buckets), expected);
 }
 
 BOOST_AUTO_TEST_CASE(hash_table_header__size1__8bit_and_64bit__expected)
 {
+    typedef uint8_t index_type;
+    typedef uint64_t link_type;
+    typedef hash_table_header<index_type, link_type> header_type;
+
     const auto buckets = 10u;
-    const auto header_size = sizeof(uint8_t) + sizeof(uint64_t) * buckets;
-    const auto size = hash_table_header<uint8_t, uint64_t>::size(buckets);
-    BOOST_REQUIRE_EQUAL(size, header_size);
+    const auto expected = sizeof(index_type) + sizeof(link_type) * buckets;
+    BOOST_REQUIRE_EQUAL(header_type::size(buckets), expected);
 }
 
 BOOST_AUTO_TEST_CASE(hash_table_header__size2__default__expected)
 {
+    typedef uint8_t index_type;
+    typedef uint64_t link_type;
+    typedef hash_table_header<index_type, link_type> header_type;
+
     test::storage file;
     const auto buckets = 10u;
-    const auto header_size = sizeof(uint8_t) + sizeof(uint64_t) * buckets;
-    hash_table_header<uint8_t, uint64_t> header(file, buckets);
-    BOOST_REQUIRE_EQUAL(header.size(), header_size);
+    const auto expected = sizeof(index_type) + sizeof(link_type) * buckets;
+    header_type header(file, buckets);
+    BOOST_REQUIRE_EQUAL(header.size(), expected);
 }
 
 BOOST_AUTO_TEST_CASE(hash_table_header__size2__create__expected)
 {
-    test::storage file;
-    const auto buckets = 10u;
-    const auto header_size = sizeof(uint8_t) + sizeof(uint64_t) * buckets;
-    hash_table_header<uint8_t, uint64_t> header(file, buckets);
-    BOOST_REQUIRE(header.create());
-    BOOST_REQUIRE_EQUAL(header.size(), header_size);
-}
+    typedef uint32_t index_type;
+    typedef uint32_t link_type;
+    typedef hash_table_header<index_type, link_type> header_type;
 
-BOOST_AUTO_TEST_CASE(hash_table_header__size2__resize__expected)
-{
     test::storage file;
     const auto buckets = 10u;
-    const auto header_size = sizeof(uint8_t) + sizeof(uint64_t) * buckets;
-    hash_table_header<uint8_t, uint64_t> header(file, buckets);
-    BOOST_REQUIRE(file.resize(header_size + 1));
-    BOOST_REQUIRE_EQUAL(header.size(), header_size);
+    const auto expected = sizeof(index_type) + sizeof(link_type) * buckets;
+    header_type header(file, buckets);
+    BOOST_REQUIRE(header.create());
+    BOOST_REQUIRE_EQUAL(header.size(), expected);
 }
 
 BOOST_AUTO_TEST_CASE(hash_table_header__read_write__32_bit_value__success)
 {
     test::storage file;
-    const auto buckets = 10u;
-    const auto header_size = hash_table_header<uint32_t, uint32_t>::size(buckets);
-    hash_table_header<uint32_t, uint32_t> header(file, buckets);
+    hash_table_header<uint32_t, uint32_t> header(file, 10u);
     BOOST_REQUIRE(file.open());
-    BOOST_REQUIRE(file.resize(header_size));
+    BOOST_REQUIRE(file.resize(header.size()));
     BOOST_REQUIRE(header.create());
     header.write(9, 42);
     header.write(0, 24);
@@ -165,11 +205,9 @@ BOOST_AUTO_TEST_CASE(hash_table_header__read_write__32_bit_value__success)
 BOOST_AUTO_TEST_CASE(hash_table_header__read_write__64_bit_value__success)
 {
     test::storage file;
-    const auto buckets = 10u;
-    const auto header_size = hash_table_header<uint32_t, uint64_t>::size(buckets);
-    hash_table_header<uint32_t, uint64_t> header(file, buckets);
+    hash_table_header<uint32_t, uint64_t> header(file, 10u);
     BOOST_REQUIRE(file.open());
-    BOOST_REQUIRE(file.resize(header_size));
+    BOOST_REQUIRE(file.resize(header.size()));
     BOOST_REQUIRE(header.create());
     header.write(9, 42);
     header.write(0, 24);
@@ -178,4 +216,3 @@ BOOST_AUTO_TEST_CASE(hash_table_header__read_write__64_bit_value__success)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-

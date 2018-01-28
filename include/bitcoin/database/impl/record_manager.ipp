@@ -153,8 +153,9 @@ void record_manager<Link>::read_count()
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto count_address = memory->buffer() + header_size_;
-    record_count_ = from_little_endian_unsafe<Link>(count_address);
+    memory->increment(header_size_);
+    auto deserial = make_unsafe_deserializer(memory->buffer());
+    record_count_ = deserial.template read_little_endian<Link>();
 }
 
 // Write the count value to the first 32 bits of the file after the header.
@@ -165,8 +166,8 @@ void record_manager<Link>::write_count()
 
     // The accessor must remain in scope until the end of the block.
     auto memory = file_.access();
-    auto payload_size_address = memory->buffer() + header_size_;
-    auto serial = make_unsafe_serializer(payload_size_address);
+    memory->increment(header_size_);
+    auto serial = make_unsafe_serializer(memory->buffer());
     serial.write_little_endian<Link>(record_count_);
 }
 

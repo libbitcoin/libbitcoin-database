@@ -85,7 +85,6 @@ void slab_manager<Link>::commit()
     ///////////////////////////////////////////////////////////////////////////
 }
 
-// protected
 template <typename Link>
 size_t slab_manager<Link>::payload_size() const
 {
@@ -141,9 +140,9 @@ void slab_manager<Link>::read_size()
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto payload_size_address = memory->buffer() + header_size_;
-    payload_size_ = from_little_endian_unsafe<Link>(
-        payload_size_address);
+    memory->increment(header_size_);
+    auto deserial = make_unsafe_deserializer(memory->buffer());
+    payload_size_ = deserial.template read_little_endian<Link>();
 }
 
 // Write the size value to the first 64 bits of the file after the header.
@@ -154,8 +153,8 @@ void slab_manager<Link>::write_size() const
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto payload_size_address = memory->buffer() + header_size_;
-    auto serial = make_unsafe_serializer(payload_size_address);
+    memory->increment(header_size_);
+    auto serial = make_unsafe_serializer(memory->buffer());
     serial.write_little_endian<Link>(payload_size_);
 }
 
