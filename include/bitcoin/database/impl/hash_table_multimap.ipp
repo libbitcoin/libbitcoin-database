@@ -111,7 +111,7 @@ void hash_table_multimap<Index, Link, Key>::link(const Key& key,
 
     // Find the root element for this key in hash table.
     // The hash table supports multiple values per key, but this uses only one.
-    auto root = find(key);
+    auto root = map_.find(key);
 
     root_mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -158,7 +158,7 @@ bool hash_table_multimap<Index, Link, Key>::unlink(const Key& key)
 
     // Find the root element for this key in hash table.
     // The hash table supports multiple values per key, but this uses only one.
-    auto root = find(key);
+    auto root = map_.find(key);
 
     // There is no root element, nothing to unlink.
     if (!root)
