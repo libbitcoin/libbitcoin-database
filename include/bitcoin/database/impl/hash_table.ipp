@@ -140,13 +140,12 @@ bool hash_table<Manager, Index, Link, Key>::unlink(const Key& key)
     // If start item (first in list) has the key then unlink from header.
 
     // TODO: implement -> overload.
-    auto foo = *previous;
-
-    if (foo.match(key))
+    auto previous_reference = *previous;
+    if (previous_reference.match(key))
     {
         root_mutex_.unlock_upgrade_and_lock();
         //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        header_.write(index, foo.next());
+        header_.write(index, previous_reference.next());
         root_mutex_.unlock();
         //---------------------------------------------------------------------
         return true;
@@ -156,22 +155,15 @@ bool hash_table<Manager, Index, Link, Key>::unlink(const Key& key)
     ///////////////////////////////////////////////////////////////////////////
 
     // The linked list internally manages link update safety using list_mutex_.
-    for (auto item = ++previous;
-
-        // TODO: implement != overload.
-        item != list.end();
-
-        item++)
+    for (auto item = ++previous; item != list.end(); item++)
     {
         // TODO: implement -> overload.
-        auto baz = *item;
-
-        if (baz.match(key))
+        auto item_reference = *item;
+        if (item_reference.match(key))
         {
             // TODO: implement -> overload.
-            auto bar = *previous;
-
-            bar.next(baz.next());
+            auto previous_reference = *previous;
+            previous_reference.set_next(item_reference.next());
             return true;
         }
     }
