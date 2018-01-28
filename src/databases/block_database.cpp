@@ -185,11 +185,12 @@ bool block_database::top(size_t& out_height, bool block_index) const
 block_result block_database::get(size_t height, bool block_index) const
 {
     auto& manager = block_index ? block_index_ : header_index_;
+    const auto link = height < manager.count() ? read_index(height, manager) :
+        hash_table_.not_found;
 
     return
     {
-        hash_table_.find(height < manager.count() ?
-            read_index(height, manager) : hash_table_.not_found),
+        hash_table_.find(link),
         metadata_mutex_,
         tx_index_
     };
@@ -223,6 +224,7 @@ void block_database::push(const chain::header& header, size_t height,
     const auto writer = [&](byte_serializer& serial)
     {
         header.to_data(serial, false);
+        serial.write_4_bytes_little_endian(header.validation.median_time_past);
         serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
         serial.write_byte(state);
         serial.write_4_bytes_little_endian(checksum);
