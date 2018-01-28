@@ -50,13 +50,13 @@ public:
     /// Construct for an existing element.
     list_element(Manager& manager, Link link, shared_mutex& mutex);
 
-    /// Allocate and populate a new array element.
+    /// Allocate and populate a new unkeyed record element.
     Link create(write_function write);
 
-    /// Allocate and populate a new record element.
+    /// Allocate and populate a new keyed record element.
     Link create(const Key& key, write_function write);
 
-    /// Allocate and populate a new slab element.
+    /// Allocate and populate a new keyed slab element.
     Link create(const Key& key, write_function write, size_t value_size);
 
     /// Connect the next element.
