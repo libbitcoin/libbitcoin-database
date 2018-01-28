@@ -105,10 +105,21 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     });
     const auto h4a = block4a.hash();
 
+    block block4b;
+    block4b.set_header(block0.header());
+    block4b.header().set_nonce(633);
+    block4b.set_transactions(
+    {
+        random_tx(22),
+        random_tx(23),
+        random_tx(24)
+    });
+    const auto h4b = block4b.hash();
+
     block block5a;
     block5a.set_header(header(block0.header()));
     block5a.header().set_nonce(99);
-    block2.set_transactions(
+    block5a.set_transactions(
     {
         random_tx(17),
         random_tx(18),
@@ -118,21 +129,10 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     });
     const auto h5a = block5a.hash();
 
-    block block4b;
-    block4b.set_header(block0.header());
-    block4b.header().set_nonce(633);
-    block2.set_transactions(
-    {
-        random_tx(22),
-        random_tx(23),
-        random_tx(24)
-    });
-    const auto h4b = block4b.hash();
-
     block block5b;
     block5b.set_header(block0.header());
     block5b.header().set_nonce(222);
-    block2.set_transactions(
+    block5b.set_transactions(
     {
         random_tx(25),
         random_tx(26),
@@ -165,29 +165,28 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     BOOST_REQUIRE_EQUAL(height, 3u);
 
     // Fetch block 2 by hash.
-    auto res_h2 = db.get(h2);
-    BOOST_REQUIRE(res_h2);
-    BOOST_REQUIRE(res_h2.hash() == h2);
-    // TODO: set tx association into metadata and validate here.
-    ////BOOST_REQUIRE(res_h2.transaction_hash(0) == block2.transactions()[0].hash());
-    ////BOOST_REQUIRE(res_h2.transaction_hash(1) == block2.transactions()[1].hash());
-    ////BOOST_REQUIRE(res_h2.transaction_hash(2) == block2.transactions()[2].hash());
-    ////BOOST_REQUIRE(res_h2.transaction_hash(3) == block2.transactions()[3].hash());
-    ////BOOST_REQUIRE(res_h2.transaction_hash(4) == block2.transactions()[4].hash());
+    const auto result2 = db.get(h2);
+    BOOST_REQUIRE(result2);
+    BOOST_REQUIRE(result2.hash() == h2);
+    ////BOOST_REQUIRE(result2.transaction_hash(0) == block2.transactions()[0].hash());
+    ////BOOST_REQUIRE(result2.transaction_hash(1) == block2.transactions()[1].hash());
+    ////BOOST_REQUIRE(result2.transaction_hash(2) == block2.transactions()[2].hash());
+    ////BOOST_REQUIRE(result2.transaction_hash(3) == block2.transactions()[3].hash());
+    ////BOOST_REQUIRE(result2.transaction_hash(4) == block2.transactions()[4].hash());
 
     // Try a fork event.
     db.push(block4a, 4);
     db.push(block5a, 5);
 
-    // Fetch blocks.
-    auto result4a = db.get(4);
+    // Fetch blocks 4/5.
+    const auto result4a = db.get(4);
     BOOST_REQUIRE(result4a);
     BOOST_REQUIRE(result4a.hash() == h4a);
-    auto res5a = db.get(5);
-    BOOST_REQUIRE(res5a);
-    BOOST_REQUIRE(res5a.hash() == h5a);
+    const auto result5a = db.get(5);
+    BOOST_REQUIRE(result5a);
+    BOOST_REQUIRE(result5a.hash() == h5a);
 
-    // Unlink old chain.
+    // Unlink blocks 4a/5a.
     BOOST_REQUIRE(db.top(height));
     BOOST_REQUIRE_EQUAL(height, 5u);
     db.unconfirm(h5a, 5, true);
@@ -196,39 +195,39 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     BOOST_REQUIRE_EQUAL(height, 3u);
 
     // Block 3 exists.
-    auto result3 = db.get(3);
+    const auto result3 = db.get(3);
     BOOST_REQUIRE(result3);
 
-    // No blocks exist now.
-    auto result4_none = db.get(4);
-    BOOST_REQUIRE(!result4_none);
-    auto res5_none = db.get(5);
-    BOOST_REQUIRE(!res5_none);
+    // Blocks 4a/5a are missing (verify index guard).
+    const auto result4 = db.get(4);
+    BOOST_REQUIRE(!result4);
+    const auto result5 = db.get(5);
+    BOOST_REQUIRE(!result5);
 
-    // Add new blocks.
+    // Add new blocks 4b/5b.
     db.push(block4b, 4);
     db.push(block5b, 5);
     BOOST_REQUIRE(db.top(height));
     BOOST_REQUIRE_EQUAL(height, 5u);
 
-    // Fetch blocks.
-    auto result4b = db.get(4);
+    // Fetch blocks 4b/5b.
+    const auto result4b = db.get(4);
     BOOST_REQUIRE(result4b);
     BOOST_REQUIRE(result4b.hash() == h4b);
-    auto res5b = db.get(5);
-    BOOST_REQUIRE(res5b);
-    BOOST_REQUIRE(res5b.hash() == h5b);
-    // TODO: set tx association into metadata and validate here.
-    ////BOOST_REQUIRE(res5b.transaction_hash(0) == block5b.transactions()[0].hash());
-    ////BOOST_REQUIRE(res5b.transaction_hash(1) == block5b.transactions()[1].hash());
-    ////BOOST_REQUIRE(res5b.transaction_hash(2) == block5b.transactions()[2].hash());
-    ////BOOST_REQUIRE(res5b.transaction_hash(3) == block5b.transactions()[3].hash());
-    ////BOOST_REQUIRE(res5b.transaction_hash(4) == block5b.transactions()[4].hash());
+    const auto result5b = db.get(5);
+    BOOST_REQUIRE(result5b);
+    BOOST_REQUIRE(result5b.hash() == h5b);
+    ////BOOST_REQUIRE(result5b.transaction_hash(0) == block5b.transactions()[0].hash());
+    ////BOOST_REQUIRE(result5b.transaction_hash(1) == block5b.transactions()[1].hash());
+    ////BOOST_REQUIRE(result5b.transaction_hash(2) == block5b.transactions()[2].hash());
+    ////BOOST_REQUIRE(result5b.transaction_hash(3) == block5b.transactions()[3].hash());
+    ////BOOST_REQUIRE(result5b.transaction_hash(4) == block5b.transactions()[4].hash());
 
     // Test also fetch by hash.
-    auto res_h5b = db.get(h5b);
-    BOOST_REQUIRE(res_h5b);
-    BOOST_REQUIRE(res_h5b.hash() == h5b);
+    const auto result_h5b = db.get(h5b);
+    BOOST_REQUIRE(result_h5b);
+    BOOST_REQUIRE(result_h5b.hash() == h5b);
+
     db.commit();
 }
 
