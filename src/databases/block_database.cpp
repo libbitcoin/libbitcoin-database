@@ -188,8 +188,8 @@ block_result block_database::get(size_t height, bool block_index) const
 
     return
     {
-        // This is not guarded for an invalid offset.
-        hash_table_.find(read_index(height, manager)),
+        hash_table_.find(height < manager.count() ?
+            read_index(height, manager) : hash_table_.not_found),
         metadata_mutex_,
         tx_index_
     };
@@ -387,14 +387,14 @@ static uint8_t update_confirmation_state(uint8_t original, bool positive,
     // May only confirm a valid block.
     BITCOIN_ASSERT(!positive || !block_index || is_valid(original));
 
-    // May only unconfirm via block indexing.
-    BITCOIN_ASSERT(positive || !block_index || !is_confirmed(original));
+    // May only unconfirm a confirmed block.
+    BITCOIN_ASSERT(positive || !block_index || is_confirmed(original));
 
     // May only index a pooled header.
     BITCOIN_ASSERT(!positive || block_index || is_pooled(original));
 
-    // May only deindex via header indexing.
-    BITCOIN_ASSERT(positive || block_index || !is_indexed(original));
+    // May only deindex an indexed header.
+    BITCOIN_ASSERT(positive || block_index || is_indexed(original));
 
     // Preserve the validation state (header-indexed blocks can be pent).
     const auto validation_state = original & block_state::validations;
@@ -416,17 +416,17 @@ bool block_database::confirm(const hash_digest& hash, size_t height,
     BITCOIN_ASSERT(height != max_uint32);
     auto& manager = block_index ? block_index_ : header_index_;
 
-    // Can only confirm at the top of the given index (push).
+    // Can only confirm to the top of the given index (push).
     if (height != manager.count())
         return false;
 
-    auto element = hash_table_.find(read_index(height, manager));
+    // The block is not indexed, confirming next, so find by hash.
+    auto element = hash_table_.find(hash);
 
     if (!element)
         return false;
 
     uint8_t original;
-
     const auto reader = [&](byte_deserializer& deserial)
     {
         deserial.skip(state_offset);
@@ -440,7 +440,6 @@ bool block_database::confirm(const hash_digest& hash, size_t height,
 
     element.read(reader);
     auto updated = update_confirmation_state(original, true, block_index);
-
     const auto updater = [&](byte_serializer& serial)
     {
         serial.skip(state_offset);
@@ -473,16 +472,16 @@ bool block_database::unconfirm(const hash_digest& hash, size_t height,
     auto& manager = block_index ? block_index_ : header_index_;
 
     // Can only unconfirm the top of the given index (pop).
-    if (height + 1u != manager.count())
+    if (height + 1 != manager.count())
         return false;
 
+    // Unconfirmation implies that block is indexed, so use index.
     auto element = hash_table_.find(read_index(height, manager));
 
     if (!element)
         return false;
 
     uint8_t original;
-
     const auto reader = [&](byte_deserializer& deserial)
     {
         deserial.skip(state_offset);
@@ -496,7 +495,6 @@ bool block_database::unconfirm(const hash_digest& hash, size_t height,
 
     element.read(reader);
     auto updated = update_confirmation_state(original, false, block_index);
-
     const auto updater = [&](byte_serializer& serial)
     {
         serial.skip(state_offset);
