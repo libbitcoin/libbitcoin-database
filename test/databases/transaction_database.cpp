@@ -76,6 +76,11 @@ BOOST_AUTO_TEST_CASE(transaction_database__test)
     BOOST_REQUIRE(result2);
     BOOST_REQUIRE(result2.transaction().hash() == hash2);
 
+    // Verify computed hash.
+    const auto result3 = db.get(result2.link());
+    BOOST_REQUIRE(result3);
+    BOOST_REQUIRE(result3.transaction().hash() == hash2);
+
     db.commit();
 }
 
