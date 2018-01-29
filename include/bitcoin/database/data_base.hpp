@@ -21,6 +21,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
@@ -40,8 +41,7 @@ class BCD_API data_base
   : public store
 {
 public:
-    typedef handle0 result_handler;
-    typedef boost::filesystem::path path;
+    typedef std::function<void(const code&)> result_handler;
 
     data_base(const settings& settings);
 
