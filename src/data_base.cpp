@@ -291,7 +291,8 @@ code data_base::push(const header& header, size_t height)
 // TODO: enable promotion from any unconfirmed state (to indexed).
 // TODO: otherwise this will replace the previously-existing block.
 // This expects block is validated, header is not yet stored.
-code data_base::push(const block& block, size_t height)
+code data_base::push(const block& block, size_t height,
+    uint32_t median_time_past)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -305,8 +306,6 @@ code data_base::push(const block& block, size_t height)
     //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     if (!begin_write())
         return error::store_lock_failure;
-
-    const auto median_time_past = block.header().validation.median_time_past;
 
     // Pushes transactions sequentially as confirmed.
     if ((ec = push_transactions(block, height, median_time_past)))
@@ -787,11 +786,11 @@ bool data_base::pop_above(header_const_ptr_list_ptr headers,
     for (size_t height = top; height > fork; --height)
     {
         const auto next = std::make_shared<message::header>();
+
         if ((ec = pop(*next, height)))
             return false;
 
         headers->insert(headers->begin(), next);
-        next->validation.height = height;
     }
 
     return true;

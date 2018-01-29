@@ -112,13 +112,15 @@ private:
     typedef hash_digest key_type;
     typedef array_index link_type;
     typedef record_manager<link_type> record_manager;
-    typedef hash_table<record_manager, array_index, link_type, key_type> record_map;
+    typedef hash_table<record_manager, array_index, link_type, key_type>
+        record_map;
 
     typedef message::compact_block::short_id_list short_id_list;
 
     link_type associate(const chain::transaction::list& transactions);
-    void push(const chain::header& header, size_t height, uint32_t checksum,
-        link_type tx_start, size_t tx_count, uint8_t status);
+    void push(const chain::header& header, size_t height,
+        uint32_t median_time_past, uint32_t checksum, link_type tx_start,
+        size_t tx_count, uint8_t status);
 
     // Index Utilities.
     bool read_top(size_t& out_height, const record_manager& manager) const;

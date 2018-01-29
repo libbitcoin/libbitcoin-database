@@ -76,7 +76,8 @@ public:
     // Block push/pop are not used by blockchain.
 
     /// Push next top block of expected height.
-    code push(const chain::block& block, size_t height);
+    code push(const chain::block& block, size_t height,
+        uint32_t median_time_past);
 
     /// Push next top header of expected height.
     code push(const chain::header& header, size_t height);

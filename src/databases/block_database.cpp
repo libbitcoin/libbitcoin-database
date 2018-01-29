@@ -69,6 +69,7 @@ static const auto transactions_offset = checksum_offset + checksum_size;
 
 // Placeholder for unimplemented checksum caching.
 static constexpr auto no_checksum = 0u;
+static constexpr auto default_time = 0u;
 
 // Total size of block header and metadta storage.
 static const auto block_size = header_size + median_time_past_size +
@@ -212,7 +213,8 @@ block_result block_database::get(const hash_digest& hash) const
 
 // private
 void block_database::push(const chain::header& header, size_t height,
-    uint32_t checksum, link_type tx_start, size_t tx_count, uint8_t state)
+    uint32_t median_time_past, uint32_t checksum, link_type tx_start,
+    size_t tx_count, uint8_t state)
 {
     auto& manager = is_confirmed(state) ? block_index_ : header_index_;
 
@@ -224,7 +226,7 @@ void block_database::push(const chain::header& header, size_t height,
     const auto writer = [&](byte_serializer& serial)
     {
         header.to_data(serial, false);
-        serial.write_4_bytes_little_endian(header.validation.median_time_past);
+        serial.write_4_bytes_little_endian(median_time_past);
         serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
         serial.write_byte(state);
         serial.write_4_bytes_little_endian(checksum);
@@ -254,7 +256,7 @@ void block_database::push(const chain::header& header, size_t height)
         return;
     }
 
-    push(header, height, no_checksum, 0, 0, state);
+    push(header, height, default_time, no_checksum, 0, 0, state);
 }
 
 // This creates a new store entry even if a previous existed.
@@ -266,7 +268,8 @@ void block_database::push(const chain::block& block, size_t height)
 
     const auto& header = block.header();
     const auto& txs = block.transactions();
-    push(header, height, no_checksum, associate(txs), txs.size(), state);
+    push(header, height, default_time, no_checksum, associate(txs),
+        txs.size(), state);
 }
 
 block_database::link_type block_database::associate(
