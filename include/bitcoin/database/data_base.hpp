@@ -36,7 +36,7 @@
 namespace libbitcoin {
 namespace database {
 
-/// This class is thread safe and implements the sequential locking pattern.
+/// This class provides thread safe access to the database.
 class BCD_API data_base
   : public store
 {
@@ -62,7 +62,7 @@ public:
 
     /// Reader interfaces.
     // ------------------------------------------------------------------------
-    // These are const to preclude write operations.
+    // These are const to preclude write operations by public callers.
 
     const block_database& blocks() const;
 
@@ -71,37 +71,38 @@ public:
     /// Invalid if indexes not initialized.
     const address_database& addresses() const;
 
+    // Node writers.
+    // ------------------------------------------------------------------------
+
+    /// Store unconfirmed tx that was verified with the given forks.
+    code store(const chain::transaction& tx, uint32_t forks);
+
+    /// Push next top header of expected height.
+    code push(const chain::header& header, size_t height);
+
+    /// Pop top header of expected height.
+    code pop(chain::header& out_header, size_t height);
+
+    /// Update the stored block with txs, initiating block validation and
+    /// block index reorganization applicable.
+    code update(block_const_ptr block, size_t height);
+
+    /// Reorganize the header index, reorganizing block index and initiating
+    /// block downloads as applicable.
+    code reorganize(const config::checkpoint& fork_point,
+        header_const_ptr_list_const_ptr incoming,
+        header_const_ptr_list_ptr outgoing);
+
     // Utility writers.
     // ------------------------------------------------------------------------
-    // Block push/pop are not used by blockchain.
+    // These are not used by the node.
 
     /// Push next top block of expected height.
     code push(const chain::block& block, size_t height,
         uint32_t median_time_past);
 
-    /// Push next top header of expected height.
-    code push(const chain::header& header, size_t height);
-
     /// Pop top block of expected height.
     code pop(chain::block& out_block, size_t height);
-
-    /// Pop top header of expected height.
-    code pop(chain::header& out_header, size_t height);
-
-    // Organization.
-    // ------------------------------------------------------------------------
-
-    /// Push unconfirmed tx that was verified with the given forks.
-    code push(const chain::transaction& tx, uint32_t forks);
-
-    /// Update the block with transactions.
-    code update(block_const_ptr block, size_t height);
-
-    /// Reorganize the header index, updating block index accordingly.
-    void reorganize(const config::checkpoint& fork_point,
-        header_const_ptr_list_const_ptr incoming,
-        header_const_ptr_list_ptr outgoing, dispatcher& dispatch,
-        result_handler handler);
 
 protected:
     void start();
@@ -133,16 +134,6 @@ protected:
     code pop_transactions(const chain::block& out_block, size_t bucket=0,
         size_t buckets=1);
 
-    // Header Reorganization (not parallel).
-    // ------------------------------------------------------------------------
-
-    bool pop_above(header_const_ptr_list_ptr headers,
-        const config::checkpoint& fork_point, dispatcher& dispatch,
-        result_handler handler);
-    bool push_all(header_const_ptr_list_const_ptr headers,
-        const config::checkpoint& fork_point, dispatcher& dispatch,
-        result_handler handler);
-
     // Databases.
     // ------------------------------------------------------------------------
 
@@ -154,8 +145,11 @@ private:
     typedef chain::input::list inputs;
     typedef chain::output::list outputs;
 
-    // Update, validate and confirm the genesis block.
-    code update_genesis(const chain::block& block);
+    code push_genesis(const chain::block& block);
+    bool pop_above(header_const_ptr_list_ptr headers,
+        const config::checkpoint& fork_point);
+    bool push_all(header_const_ptr_list_const_ptr headers,
+        const config::checkpoint& fork_point);
 
     std::atomic<bool> closed_;
     const settings& settings_;

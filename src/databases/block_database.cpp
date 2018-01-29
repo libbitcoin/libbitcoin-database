@@ -290,7 +290,7 @@ block_database::link_type block_database::associate(
 
 // Update.
 // ----------------------------------------------------------------------------
-// These are used to atomically update values 
+// These are used to atomically update metadata. 
 
 // Populate transaction references, state is unchanged.
 bool block_database::update(const chain::block& block)
@@ -304,10 +304,11 @@ bool block_database::update(const chain::block& block)
 
     const auto updater = [&](byte_serializer& serial)
     {
+        serial.skip(transactions_offset);
+
         // Critical Section.
         ///////////////////////////////////////////////////////////////////////
         unique_lock lock(metadata_mutex_);
-        serial.skip(transactions_offset);
         serial.write_4_bytes_little_endian(static_cast<uint32_t>(tx_start));
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(tx_count));
         ///////////////////////////////////////////////////////////////////////
@@ -346,9 +347,8 @@ bool block_database::validate(const hash_digest& hash, bool positive)
     if (!element)
         return false;
 
-    uint32_t height;
     uint8_t state;
-
+    uint32_t height;
     const auto reader = [&](byte_deserializer& deserial)
     {
         deserial.skip(height_offset);
@@ -414,6 +414,39 @@ static uint8_t update_confirmation_state(uint8_t original, bool positive,
     return confirmation_state | validation_state;
 }
 
+uint8_t block_database::confirm(const_element& element, bool positive,
+    bool block_index)
+{
+    uint8_t original;
+    const auto reader = [&](byte_deserializer& deserial)
+    {
+        deserial.skip(state_offset);
+
+        // Critical Section.
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(metadata_mutex_);
+        original = deserial.read_byte();
+        ///////////////////////////////////////////////////////////////////////
+    };
+
+    uint8_t updated;
+    const auto updater = [&](byte_serializer& serial)
+    {
+        serial.skip(state_offset);
+        updated = update_confirmation_state(original, positive, block_index);
+
+        // Critical Section.
+        ///////////////////////////////////////////////////////////////////////
+        unique_lock lock(metadata_mutex_);
+        serial.write_byte(updated);
+        ///////////////////////////////////////////////////////////////////////
+    };
+
+    element.read(reader);
+    element.write(updater);
+    return positive ? updated : original;
+}
+
 // TODO: the caller doesn't know the current header state.
 bool block_database::confirm(const hash_digest& hash, size_t height,
     bool block_index)
@@ -431,32 +464,7 @@ bool block_database::confirm(const hash_digest& hash, size_t height,
     if (!element)
         return false;
 
-    uint8_t original;
-    const auto reader = [&](byte_deserializer& deserial)
-    {
-        deserial.skip(state_offset);
-
-        // Critical Section.
-        ///////////////////////////////////////////////////////////////////////
-        shared_lock lock(metadata_mutex_);
-        original = deserial.read_byte();
-        ///////////////////////////////////////////////////////////////////////
-    };
-
-    element.read(reader);
-    auto updated = update_confirmation_state(original, true, block_index);
-    const auto updater = [&](byte_serializer& serial)
-    {
-        serial.skip(state_offset);
-
-        // Critical Section.
-        ///////////////////////////////////////////////////////////////////////
-        unique_lock lock(metadata_mutex_);
-        serial.write_byte(updated);
-        ///////////////////////////////////////////////////////////////////////
-    };
-
-    element.write(updater);
+    const auto updated = confirm(element, true, block_index);
 
     // Increment fork point for block-indexed confirmation.
     if (block_index && is_confirmed(updated))
@@ -486,32 +494,7 @@ bool block_database::unconfirm(const hash_digest& hash, size_t height,
     if (!element)
         return false;
 
-    uint8_t original;
-    const auto reader = [&](byte_deserializer& deserial)
-    {
-        deserial.skip(state_offset);
-
-        ///////////////////////////////////////////////////////////////////////
-        // Critical Section.
-        shared_lock lock(metadata_mutex_);
-        original = deserial.read_byte();
-        ///////////////////////////////////////////////////////////////////////
-    };
-
-    element.read(reader);
-    auto updated = update_confirmation_state(original, false, block_index);
-    const auto updater = [&](byte_serializer& serial)
-    {
-        serial.skip(state_offset);
-
-        // Critical Section.
-        ///////////////////////////////////////////////////////////////////////
-        unique_lock lock(metadata_mutex_);
-        serial.write_byte(updated);
-        ///////////////////////////////////////////////////////////////////////
-    };
-
-    element.write(updater);
+    const auto original = confirm(element, false, block_index);
 
     // Decrement fork point for previously-confirmed block via header-index.
     if (!block_index && is_confirmed(original))

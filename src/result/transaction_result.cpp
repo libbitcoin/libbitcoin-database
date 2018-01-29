@@ -201,6 +201,7 @@ chain::transaction transaction_result::transaction(bool witness) const
     };
 
     element_.read(reader);
+    tx.validation.link = element_.link();
     return tx;
 }
 
