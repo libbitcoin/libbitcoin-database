@@ -81,6 +81,8 @@ static constexpr auto spend_size = index_spend_size + height_size + value_size;
 static constexpr auto metadata_size = height_size + position_size +
     state_size + median_time_past_size;
 
+static constexpr auto no_time = 0u;
+
 // Transactions uses a hash table index, O(1).
 transaction_database::transaction_database(const path& map_filename,
     size_t buckets, size_t expansion, size_t cache_capacity)
@@ -210,34 +212,11 @@ bool transaction_database::get_output(const output_point& point,
 // Store.
 // ----------------------------------------------------------------------------
 
-// False implies store corruption.
-bool transaction_database::store(const chain::transaction& tx, size_t height,
+bool transaction_database::store(const chain::transaction& tx, uint32_t height,
     uint32_t median_time_past, size_t position, transaction_state state)
 {
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(position <= max_uint16);
-    const auto confirming = (state == transaction_state::confirmed);
-    const auto verified = (height != machine::rule_fork::unverified);
-
-    // TODO: enable promotion from any unconfirmed state to pooled.
-    if (confirming)
-    {
-        BITCOIN_ASSERT(verified);
-        BITCOIN_ASSERT(position != transaction_result::unconfirmed);
-
-        // Confirm the tx's previous outputs.
-        for (const auto& input: tx.inputs())
-            if (!spend(input.previous_output(), height))
-                return false;
-
-        // Promote the tx that already exists.
-        if (tx.validation.link != slab_map::not_found)
-        {
-            cache_.add(tx, height, median_time_past, confirming);
-            return confirm(tx.validation.link, height, median_time_past,
-                position, state);
-        }
-    }
 
     const auto writer = [&](byte_serializer& serial)
     {
@@ -255,18 +234,25 @@ bool transaction_database::store(const chain::transaction& tx, size_t height,
     auto front = hash_table_.allocator();
     tx.validation.link = front.create(tx.hash(), writer, size);
     hash_table_.link(front);
-
-    // If verified (according to rule forks) then useful to cache.
-    if (verified)
-        cache_.add(tx, height, median_time_past, confirming);
-
     return true;
+}
+
+bool transaction_database::pool(const chain::transaction& tx, uint32_t forks)
+{
+    return store(tx, forks, no_time, transaction_result::unconfirmed,
+        transaction_state::pooled);
 }
 
 // Update.
 // ----------------------------------------------------------------------------
 
-// The output is confirmed spent, or the confirmed spend is unspent.
+// private
+bool transaction_database::unspend(const output_point& point)
+{
+    return spend(point, output::validation::not_spent);
+}
+
+// private
 bool transaction_database::spend(const output_point& point,
     size_t spender_height)
 {
@@ -284,17 +270,15 @@ bool transaction_database::spend(const output_point& point,
         return false;
 
     uint32_t height;
-    uint16_t position;
     transaction_state state;
     size_t outputs;
-
     const auto reader = [&](byte_deserializer& deserial)
     {
         // Critical Section
         ///////////////////////////////////////////////////////////////////////
         shared_lock lock(metadata_mutex_);
         height = deserial.read_4_bytes_little_endian();
-        position = deserial.read_2_bytes_little_endian();
+        deserial.skip(position_size);
         state = static_cast<transaction_state>(deserial.read_byte());
         deserial.skip(median_time_past_size);
         outputs = deserial.read_size_little_endian();
@@ -314,7 +298,7 @@ bool transaction_database::spend(const output_point& point,
     const auto writer = [&](byte_serializer& serial)
     {
         serial.skip(metadata_size);
-        outputs = serial.read_size_little_endian();
+        serial.read_size_little_endian();
 
         // Skip outputs until the target output.
         for (uint32_t output = 0; output < point.index(); ++output)
@@ -336,7 +320,56 @@ bool transaction_database::spend(const output_point& point,
     return true;
 }
 
-bool transaction_database::confirm(link_type link, size_t height,
+bool transaction_database::unconfirm(file_offset link)
+{
+    const auto result = get(link);
+
+    if (!result)
+        return false;
+
+    for (const auto inpoint: result)
+        if (!unspend(inpoint))
+            return false;
+
+    // The tx was verified under a now unknown chain state, so set unverified.
+    return update(link, rule_fork::unverified, no_time,
+        transaction_result::unconfirmed, transaction_state::pooled);
+}
+
+bool transaction_database::confirm(file_offset link, size_t height,
+    uint32_t median_time_past, size_t position)
+{
+    BITCOIN_ASSERT(height <= max_uint32);
+    BITCOIN_ASSERT(position <= max_uint16);
+    BITCOIN_ASSERT(position != transaction_result::unconfirmed);
+
+    const auto result = get(link);
+
+    if (!result)
+        return false;
+
+    // Spend the tx's previous outputs.
+    for (const auto inpoint: result)
+        if (!spend(inpoint, height))
+            return false;
+
+    // TODO: consider eliminating the output cache.
+    // TODO: It may be more costly to populate it than the benefit, because txs
+    // will have to be read from disk and loaded into the cache!
+    ////// Promote the tx that already exists.
+    ////if (link != slab_map::not_found)
+    ////{
+    ////    cache_.add(tx, height, median_time_past, true);
+    ////    return confirm(tx.validation.link, height, median_time_past,
+    ////        position, transaction_state::confirmed);
+    ////}
+
+    return update(link, height, median_time_past, position,
+        transaction_state::confirmed);
+}
+
+// private
+bool transaction_database::update(link_type link, size_t height,
     uint32_t median_time_past, size_t position, transaction_state state)
 {
     BITCOIN_ASSERT(height <= max_uint32);
@@ -360,33 +393,6 @@ bool transaction_database::confirm(link_type link, size_t height,
 
     element.write(writer);
     return true;
-}
-
-// False implies store corruption.
-bool transaction_database::unconfirm(link_type link)
-{
-    const auto result = get(link);
-    BITCOIN_ASSERT(static_cast<bool>(result));
-    const auto tx = result.transaction();
-    tx.validation.link = link;
-    return unconfirm(tx);
-}
-
-// False implies store corruption.
-bool transaction_database::unconfirm(const chain::transaction& tx)
-{
-    static const uint32_t median_time_past = 0;
-    BITCOIN_ASSERT(tx.validation.link != slab_map::not_found);
-
-    // TODO: optimize by not requiring full tx (get prevouts from offset).
-    for (const auto& input: tx.inputs())
-        if (!spend(input.previous_output(), output::validation::not_spent))
-            return false;
-
-    // The tx was verified under an unknown chain state, so set unverified.
-    return confirm(tx.validation.link, rule_fork::unverified,
-        median_time_past, transaction_result::unconfirmed,
-        transaction_state::pooled);
 }
 
 } // namespace database

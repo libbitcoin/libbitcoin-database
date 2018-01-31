@@ -124,6 +124,13 @@ bool list_element<Manager, Link, Key>::jump_next()
     return true;
 }
 
+// Convert the instance into a terminator.
+template <typename Manager, typename Link, typename Key>
+void list_element<Manager, Link, Key>::terminate()
+{
+    link_ = not_found;
+}
+
 // Populate next link value.
 template <typename Manager, typename Link, typename Key>
 void list_element<Manager, Link, Key>::set_next(Link next)
@@ -190,9 +197,15 @@ list_element<Manager, Link, Key>::terminator() const
 }
 
 template <typename Manager, typename Link, typename Key>
+bool list_element<Manager, Link, Key>::terminal() const
+{
+    return link_ == not_found;
+}
+
+template <typename Manager, typename Link, typename Key>
 list_element<Manager, Link, Key>::operator bool() const
 {
-    return link_ != not_found;
+    return !terminal();
 }
 
 template <typename Manager, typename Link, typename Key>

@@ -69,7 +69,7 @@ static const auto transactions_offset = checksum_offset + checksum_size;
 
 // Placeholder for unimplemented checksum caching.
 static constexpr auto no_checksum = 0u;
-static constexpr auto default_time = 0u;
+static constexpr auto no_time = 0u;
 
 // Total size of block header and metadta storage.
 static const auto block_size = header_size + median_time_past_size +
@@ -256,19 +256,20 @@ void block_database::push(const chain::header& header, size_t height)
         return;
     }
 
-    push(header, height, default_time, no_checksum, 0, 0, state);
+    push(header, height, no_time, no_checksum, 0, 0, state);
 }
 
 // This creates a new store entry even if a previous existed.
 // A block creation does not move the fork point (not a reorg).
-void block_database::push(const chain::block& block, size_t height)
+void block_database::push(const chain::block& block, size_t height,
+    uint32_t median_time_past)
 {
     // Initially store block as confirmed-valid (the top block).
     static const auto state = block_state::confirmed | block_state::valid;
 
     const auto& header = block.header();
     const auto& txs = block.transactions();
-    push(header, height, default_time, no_checksum, associate(txs),
+    push(header, height, median_time_past, no_checksum, associate(txs),
         txs.size(), state);
 }
 

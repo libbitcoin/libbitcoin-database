@@ -84,6 +84,9 @@
     <ClCompile Include="..\..\..\..\src\result\block_result.cpp">
       <Filter>src\result</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\result\inpoint_iterator.cpp">
+      <Filter>src\result</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\result\transaction_iterator.cpp">
       <Filter>src\result</Filter>
     </ClCompile>
@@ -165,6 +168,9 @@
       <Filter>include\bitcoin\database\result</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\block_result.hpp">
+      <Filter>include\bitcoin\database\result</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\inpoint_iterator.hpp">
       <Filter>include\bitcoin\database\result</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_iterator.hpp">

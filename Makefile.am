@@ -50,6 +50,7 @@ src_libbitcoin_database_la_SOURCES = \
     src/result/address_iterator.cpp \
     src/result/address_result.cpp \
     src/result/block_result.cpp \
+    src/result/inpoint_iterator.cpp \
     src/result/transaction_iterator.cpp \
     src/result/transaction_result.cpp
 
@@ -164,6 +165,7 @@ include_bitcoin_database_result_HEADERS = \
     include/bitcoin/database/result/address_iterator.hpp \
     include/bitcoin/database/result/address_result.hpp \
     include/bitcoin/database/result/block_result.hpp \
+    include/bitcoin/database/result/inpoint_iterator.hpp \
     include/bitcoin/database/result/transaction_iterator.hpp \
     include/bitcoin/database/result/transaction_result.hpp
 

@@ -91,7 +91,8 @@ public:
     void push(const chain::header& header, size_t height);
 
     /// Push block, validated at height, and associate tx links.
-    void push(const chain::block& block, size_t height);
+    void push(const chain::block& block, size_t height,
+        uint32_t median_time_past);
 
     // Update.
     // ------------------------------------------------------------------------

@@ -205,5 +205,15 @@ chain::transaction transaction_result::transaction(bool witness) const
     return tx;
 }
 
+inpoint_iterator transaction_result::begin() const
+{
+    return { element_ };
+}
+
+inpoint_iterator transaction_result::end() const
+{
+    return { element_.terminator() };
+}
+
 } // namespace database
 } // namespace libbitcoin

@@ -85,14 +85,20 @@ public:
     // Store.
     // ------------------------------------------------------------------------
 
-    /// Height and position may be sentinels or otherwise.
-    /// Store|promote the transaction and set link metadata.
-    bool store(const chain::transaction& tx, size_t height,
+    /// Create a confirmed transaction.
+    bool store(const chain::transaction& tx, uint32_t height,
         uint32_t median_time_past, size_t position,
-        transaction_state state=transaction_state::pooled);
+        transaction_state state=transaction_state::confirmed);
+
+    /// Create a pooled transaction.
+    bool pool(const chain::transaction& tx, uint32_t forks);
+
+    // Promote the transaction to confirmed.
+    bool confirm(file_offset link, size_t height, uint32_t median_time_past,
+        size_t position);
 
     // Demote the transaction to pooled.
-    bool unconfirm(const chain::transaction& tx);
+    bool unconfirm(file_offset link);
 
 private:
     typedef hash_digest key_type;
@@ -104,12 +110,12 @@ private:
     // Update the spender height of the output.
     bool spend(const chain::output_point& point, size_t spender_height);
 
-    // Update the state of the existing tx.
-    bool confirm(link_type link, size_t height, uint32_t median_time_past,
-        size_t position, transaction_state state);
+    // Unspend the output.
+    bool unspend(const chain::output_point& point);
 
-    // Demote the transaction to pooled.
-    bool unconfirm(link_type link);
+    // Update the state of the existing tx.
+    bool update(link_type link, size_t height, uint32_t median_time_past,
+        size_t position, transaction_state state);
 
     // Hash table used for looking up txs by hash.
     file_storage hash_table_file_;

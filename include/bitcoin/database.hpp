@@ -40,6 +40,7 @@
 #include <bitcoin/database/result/address_iterator.hpp>
 #include <bitcoin/database/result/address_result.hpp>
 #include <bitcoin/database/result/block_result.hpp>
+#include <bitcoin/database/result/inpoint_iterator.hpp>
 #include <bitcoin/database/result/transaction_iterator.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
 #include <bitcoin/database/state/block_state.hpp>

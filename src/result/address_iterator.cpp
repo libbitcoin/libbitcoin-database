@@ -31,7 +31,11 @@ address_iterator::address_iterator(const const_element& element)
 
 void address_iterator::populate()
 {
-    if (element_.link() != element_.not_found)
+    // Because it is common to not return all addresses, based on a total count
+    // and/or height limitation, and because the set is contained in a
+    // discontiguous list, we do not prepopulate the full set here. However,
+    // this behavior can be modified within this iterator as desired.
+    if (!element_.terminal())
     {
         element_.read([&](byte_deserializer& deserial)
         {
@@ -67,6 +71,8 @@ address_iterator::iterator address_iterator::operator++(int)
 
 bool address_iterator::operator==(const address_iterator& other) const
 {
+    // This is sufficient due to the behavior of the list_element equality
+    // operator override. Only the link values are compared.
     return element_ == other.element_;
 }
 

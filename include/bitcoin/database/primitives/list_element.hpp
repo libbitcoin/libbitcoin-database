@@ -62,6 +62,9 @@ public:
     /// Update this element to the next element (read next from file).
     bool jump_next();
 
+    /// Convert the instance into a terminator.
+    void terminate();
+
     /// Connect the next element (write to file).
     void set_next(Link next);
 
@@ -86,7 +89,10 @@ public:
     /// A list terminator for this instance.
     list_element terminator() const;
 
-    /// Cast operator, true if element was found (not end).
+    /// The element is terminal (not found, cannot be read).
+    bool terminal() const;
+
+    /// Cast operator, true if element was found (not terminal).
     operator bool() const;
 
     /// Equality comparison operators, compares link value only.

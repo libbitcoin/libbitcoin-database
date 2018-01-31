@@ -83,6 +83,7 @@
     <ClCompile Include="..\..\..\..\src\result\address_iterator.cpp" />
     <ClCompile Include="..\..\..\..\src\result\address_result.cpp" />
     <ClCompile Include="..\..\..\..\src\result\block_result.cpp" />
+    <ClCompile Include="..\..\..\..\src\result\inpoint_iterator.cpp" />
     <ClCompile Include="..\..\..\..\src\result\transaction_iterator.cpp" />
     <ClCompile Include="..\..\..\..\src\result\transaction_result.cpp" />
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
@@ -112,6 +113,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\address_iterator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\address_result.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\block_result.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\inpoint_iterator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_iterator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_result.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />

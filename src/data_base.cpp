@@ -520,8 +520,8 @@ code data_base::push_transactions(const block& block, size_t height,
     {
         const auto& tx = txs[position];
 
-        if (!transactions_->store(tx, height, median_time_past, position,
-            state))
+        // This stores and confirms the transaction.
+        if (!transactions_->store(tx, height, median_time_past, position))
             return error::operation_failed;
 
         if (settings_.index_addresses)
@@ -598,7 +598,7 @@ code data_base::pop_transactions(const block& block, size_t bucket,
     {
         const auto& tx = txs[position];
 
-        if (!transactions_->unconfirm(tx))
+        if (!transactions_->unconfirm(tx.validation.link))
             return error::operation_failed;
 
         if (settings_.index_addresses)
@@ -729,7 +729,7 @@ code data_base::push(const block& block, size_t height,
     if ((ec = push_transactions(block, height, median_time_past)))
         return ec;
 
-    blocks_->push(block, height);
+    blocks_->push(block, height, median_time_past);
     commit();
 
     return end_write() ? error::success : error::store_lock_failure;

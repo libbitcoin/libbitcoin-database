@@ -25,6 +25,7 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/list_element.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
+#include <bitcoin/database/result/inpoint_iterator.hpp>
 #include <bitcoin/database/state/transaction_state.hpp>
 
 namespace libbitcoin {
@@ -81,6 +82,10 @@ public:
 
     /// The transaction, optionally including witness.
     chain::transaction transaction(bool witness=true) const;
+
+    /// Iterate over the input set.
+    inpoint_iterator begin() const;
+    inpoint_iterator end() const;
 
 private:
     uint32_t height_;

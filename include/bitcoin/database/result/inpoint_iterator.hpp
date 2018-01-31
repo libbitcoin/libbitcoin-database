@@ -16,56 +16,56 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TRANSACTION_ITERATOR_HPP
-#define LIBBITCOIN_DATABASE_TRANSACTION_ITERATOR_HPP
+#ifndef LIBBITCOIN_DATABASE_INPUT_ITERATOR_HPP
+#define LIBBITCOIN_DATABASE_INPUT_ITERATOR_HPP
 
 #include <cstddef>
 #include <vector>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/record_manager.hpp>
+#include <bitcoin/database/primitives/list_element.hpp>
+#include <bitcoin/database/primitives/slab_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-class BCD_API transaction_iterator
+class BCD_API inpoint_iterator
 {
 public:
-    // Definition for constructor type.
+    // Definition for constructor type (avoids circular reference).
     //-------------------------------------------------------------------------
-    typedef record_manager<array_index> manager;
+    typedef slab_manager<file_offset> manager;
+    typedef list_element<const manager, file_offset, hash_digest> const_element;
 
     // std::iterator_traits
     //-------------------------------------------------------------------------
 
-    typedef file_offset pointer;
-    typedef file_offset reference;
-    typedef file_offset value_type;
+    typedef chain::point pointer;
+    typedef chain::point reference;
+    typedef chain::point value_type;
     typedef ptrdiff_t difference_type;
     typedef std::output_iterator_tag iterator_category;
-    typedef transaction_iterator iterator;
-    typedef transaction_iterator const_iterator;
+    typedef inpoint_iterator iterator;
+    typedef inpoint_iterator const_iterator;
 
     // Constructors.
     //-------------------------------------------------------------------------
 
-    transaction_iterator(const manager& records, array_index start,
-        size_t count);
+    inpoint_iterator(const const_element& element);
 
     // Operators.
     //-------------------------------------------------------------------------
 
     pointer operator->() const;
     reference operator*() const;
-    transaction_iterator& operator++();
-    transaction_iterator operator++(int);
-    bool operator==(const transaction_iterator& other) const;
-    bool operator!=(const transaction_iterator& other) const;
+    inpoint_iterator& operator++();
+    inpoint_iterator operator++(int);
+    bool operator==(const inpoint_iterator& other) const;
+    bool operator!=(const inpoint_iterator& other) const;
 
 private:
     size_t index_;
-    std::vector<value_type> offsets_;
+    std::vector<value_type> inpoints_;
 };
 
 } // namespace database
