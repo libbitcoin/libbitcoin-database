@@ -391,10 +391,11 @@ code data_base::push_genesis(const block& block)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-// Utilities.
+// Debug Utilities.
 // ----------------------------------------------------------------------------
 // protected
 
+#ifndef NDEBUG
 static hash_digest get_block(const block_database& blocks,
     size_t height, bool block_index)
 {
@@ -414,17 +415,25 @@ static size_t get_next_block(const block_database& blocks,
     const auto empty_chain = !blocks.top(current_height, block_index);
     return empty_chain ? 0 : current_height + 1;
 }
+#endif
 
 code data_base::verify_top(size_t height, bool block_index) const
 {
+#ifndef NDEBUG
     size_t actual_height;
-    return blocks_->top(actual_height, block_index) &&
-        (actual_height == height) ? error::success : error::operation_failed;
+    if (!blocks_->top(actual_height, block_index)
+        || !(actual_height == height))
+        return error::operation_failed;
+#endif
+
+    return error::success;
 }
 
 code data_base::verify(const checkpoint& fork_point, bool block_index) const
 {
+#ifndef NDEBUG
     const auto result = blocks_->get(fork_point.hash());
+
     if (!result)
         return error::not_found;
 
@@ -432,31 +441,37 @@ code data_base::verify(const checkpoint& fork_point, bool block_index) const
         return error::store_block_invalid_height;
 
     const auto state = result.state();
+
     if (!is_confirmed(state) && (block_index || !is_indexed(state)))
         return error::store_incorrect_state;
+#endif
 
     return error::success;
 }
 
 code data_base::verify_push(const transaction& tx) const
 {
+#ifndef NDEBUG
     const auto result = transactions_->get(tx.hash());
 
     // This is an expensive re-check, but only if a duplicate exists.
     if (result && !result.is_spent())
         return error::unspent_duplicate;
+#endif
 
     return error::success;
 }
 
 code data_base::verify_push(const header& header, size_t height) const
 {
+#ifndef NDEBUG
     if (get_next_block(blocks(), false) != height)
         return error::store_block_invalid_height;
 
     if (get_previous_block(blocks(), height, false) !=
         header.previous_block_hash())
         return error::store_block_missing_parent;
+#endif
 
     return error::success;
 }
@@ -466,40 +481,29 @@ code data_base::verify_push(const block& block, size_t height) const
     if (block.transactions().empty())
         return error::empty_block;
 
+#ifndef NDEBUG
     if (get_next_block(blocks(), true) != height)
         return error::store_block_invalid_height;
 
     if (get_previous_block(blocks(), height, true) !=
         block.header().previous_block_hash())
         return error::store_block_missing_parent;
+#endif
 
     return error::success;
 }
 
 code data_base::verify_update(const block& block, size_t height) const
 {
+#ifndef NDEBUG
     if (block.transactions().empty())
         return error::empty_block;
 
     if (get_block(blocks(), height, false) != block.hash())
         return error::not_found;
+#endif
 
     return error::success;
-}
-
-transaction::list data_base::to_transactions(const block_result& result) const
-{
-    transaction::list txs;
-    txs.reserve(result.transaction_count());
-
-    for (const auto link: result)
-    {
-        const auto tx = transactions_->get(link);
-        BITCOIN_ASSERT(tx);
-        txs.push_back(tx.transaction());
-    }
-
-    return txs;
 }
 
 // Synchronous transaction writers.
@@ -774,6 +778,22 @@ code data_base::pop(chain::block& out_block, size_t height)
     return end_write() ? error::success : error::store_lock_failure;
     //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     ///////////////////////////////////////////////////////////////////////////
+}
+
+// private
+transaction::list data_base::to_transactions(const block_result& result) const
+{
+    transaction::list txs;
+    txs.reserve(result.transaction_count());
+
+    for (const auto link: result)
+    {
+        const auto tx = transactions_->get(link);
+        BITCOIN_ASSERT(tx);
+        txs.push_back(tx.transaction());
+    }
+
+    return txs;
 }
 
 } // namespace database

@@ -95,7 +95,7 @@ public:
 
     // Utility writers.
     // ------------------------------------------------------------------------
-    // These are not used by the node.
+    // Not used by the node.
 
     /// Push next top block of expected height.
     code push(const chain::block& block, size_t height,
@@ -109,7 +109,7 @@ protected:
     void commit();
     bool flush() const override;
 
-    // Utilities.
+    // Debug Utilities.
     // ------------------------------------------------------------------------
 
     code verify(const config::checkpoint& fork_point, bool block_index) const;
@@ -118,7 +118,6 @@ protected:
     code verify_push(const chain::header& header, size_t height) const;
     code verify_push(const chain::block& block, size_t height) const;
     code verify_update(const chain::block& block, size_t height) const;
-    chain::transaction::list to_transactions(const block_result& result) const;
 
     // Synchronous.
     // ------------------------------------------------------------------------
@@ -145,6 +144,7 @@ private:
     typedef chain::input::list inputs;
     typedef chain::output::list outputs;
 
+    chain::transaction::list to_transactions(const block_result& result) const;
     code push_genesis(const chain::block& block);
     bool pop_above(header_const_ptr_list_ptr headers,
         const config::checkpoint& fork_point);
