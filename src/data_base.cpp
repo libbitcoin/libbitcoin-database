@@ -258,7 +258,7 @@ code data_base::store(const transaction& tx, uint32_t forks)
 // TODO: enable promotion from any unconfirmed state (to confirmed).
 // TODO: otherwise this will replace the previously-existing header.
 // This expects header is validated and not yet stored.
-code data_base::push(const header& header, size_t height)
+code data_base::push(const chain::header& header, size_t height)
 {
     code ec;
 
@@ -429,7 +429,8 @@ code data_base::verify_top(size_t height, bool block_index) const
     return error::success;
 }
 
-code data_base::verify(const checkpoint& fork_point, bool block_index) const
+code data_base::verify(const config::checkpoint& fork_point,
+    bool block_index) const
 {
 #ifndef NDEBUG
     const auto result = blocks_->get(fork_point.hash());
@@ -658,7 +659,7 @@ code data_base::reorganize(const config::checkpoint& fork_point,
 
 // private
 bool data_base::pop_above(header_const_ptr_list_ptr headers,
-    const checkpoint& fork_point)
+    const config::checkpoint& fork_point)
 {
     code ec;
     headers->clear();
@@ -690,7 +691,7 @@ bool data_base::pop_above(header_const_ptr_list_ptr headers,
 
 // private
 bool data_base::push_all(header_const_ptr_list_const_ptr headers,
-    const checkpoint& fork_point)
+    const config::checkpoint& fork_point)
 {
     code ec;
     const auto first_height = fork_point.height() + 1;
