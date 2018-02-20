@@ -36,7 +36,6 @@ namespace database {
 using namespace std::placeholders;
 using namespace boost::filesystem;
 using namespace bc::chain;
-using namespace bc::config;
 using namespace bc::wallet;
 
 #define NAME "data_base"
@@ -786,7 +785,7 @@ void data_base::pop_above(block_const_ptr_list_ptr out_blocks,
 }
 
 // This is designed for write exclusivity and read concurrency.
-void data_base::reorganize(const checkpoint& fork_point,
+void data_base::reorganize(const config::checkpoint& fork_point,
     block_const_ptr_list_const_ptr incoming_blocks,
     block_const_ptr_list_ptr outgoing_blocks, dispatcher& dispatch,
     result_handler handler)
