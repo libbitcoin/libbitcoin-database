@@ -235,9 +235,9 @@ void block_database::push(const chain::header& header, size_t height,
     };
 
     // Write the new block.
-    auto front = hash_table_.allocator();
-    const auto link = front.create(header.hash(), writer);
-    hash_table_.link(front);
+    auto next = hash_table_.allocator();
+    const auto link = next.create(header.hash(), writer);
+    hash_table_.link(next);
 
     if (is_confirmed(state) || is_indexed(state))
         push_index(link, height, manager);

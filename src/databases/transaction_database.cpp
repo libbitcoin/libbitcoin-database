@@ -231,9 +231,9 @@ bool transaction_database::store(const chain::transaction& tx, uint32_t height,
     const auto size = metadata_size + tx.serialized_size(false);
 
     // Write the new transaction.
-    auto front = hash_table_.allocator();
-    tx.validation.link = front.create(tx.hash(), writer, size);
-    hash_table_.link(front);
+    auto next = hash_table_.allocator();
+    tx.validation.link = next.create(tx.hash(), writer, size);
+    hash_table_.link(next);
     return true;
 }
 

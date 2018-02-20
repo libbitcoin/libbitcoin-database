@@ -135,9 +135,9 @@ void address_database::store(const short_hash& hash,
     };
 
     // Write the new payment history.
-    auto front = address_multimap_.allocator();
-    front.create(writer);
-    address_multimap_.link(hash, front);
+    auto next = address_multimap_.allocator();
+    next.create(writer);
+    address_multimap_.link(hash, next);
 }
 
 // Update.
