@@ -228,7 +228,7 @@ bool transaction_database::store(const chain::transaction& tx, uint32_t height,
     };
 
     // Transactions are variable-sized.
-    const auto size = metadata_size + tx.serialized_size(false);
+    const auto size = metadata_size + tx.serialized_size(false, true);
 
     // Write the new transaction.
     auto next = hash_table_.allocator();
