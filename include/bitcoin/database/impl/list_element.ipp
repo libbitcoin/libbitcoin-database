@@ -106,7 +106,7 @@ Link list_element<Manager, Link, Key>::create(const Key& key,
 }
 
 template <typename Manager, typename Link, typename Key>
-void list_element<Manager, Link, Key>::write(write_function writer)
+void list_element<Manager, Link, Key>::write(write_function writer) const
 {
     const auto memory = data(std::tuple_size<Key>::value + sizeof(Link));
     auto serial = make_unsafe_serializer(memory->buffer());
@@ -133,7 +133,7 @@ void list_element<Manager, Link, Key>::terminate()
 
 // Populate next link value.
 template <typename Manager, typename Link, typename Key>
-void list_element<Manager, Link, Key>::set_next(Link next)
+void list_element<Manager, Link, Key>::set_next(Link next) const
 {
     const auto memory = data(std::tuple_size<Key>::value);
     auto serial = make_unsafe_serializer(memory->buffer());

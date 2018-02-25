@@ -64,10 +64,10 @@ public:
     void terminate();
 
     /// Connect the next element (write to file).
-    void set_next(Link next);
+    void set_next(Link next) const;
 
-    /// Write to the state of the element.
-    void write(write_function writer);
+    /// Write to the state of the element (write to file).
+    void write(write_function writer) const;
 
     /// Read from the state of the element.
     void read(read_function reader) const;
