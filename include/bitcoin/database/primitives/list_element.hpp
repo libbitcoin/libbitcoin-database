@@ -29,10 +29,8 @@
 namespace libbitcoin {
 namespace database {
 
-/**
- * A hash table key-conflict row, implemented as a linked list.
- * Link is limited to 64 bytes. A default Key creates an unkeyed list.
- */
+/// A hash table key-conflict row, implemented as a linked list.
+/// Link cannot exceed 64 bits. A default Key creates an unkeyed list.
 template <typename Manager, typename Link, typename Key>
 class list_element
 {
