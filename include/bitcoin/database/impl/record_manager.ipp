@@ -168,7 +168,7 @@ void record_manager<Link>::write_count()
     const auto memory = file_.access();
     memory->increment(header_size_);
     auto serial = make_unsafe_serializer(memory->buffer());
-    serial.write_little_endian<Link>(record_count_);
+    serial.template write_little_endian<Link>(record_count_);
 }
 
 template <typename Link>

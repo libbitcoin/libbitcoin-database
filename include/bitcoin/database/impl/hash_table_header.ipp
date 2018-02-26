@@ -59,7 +59,7 @@ bool hash_table_header<Index, Link>::create()
 
     // Overwrite the start of the buffer with the bucket count.
     auto serial = make_unsafe_serializer(memory->buffer());
-    serial.write_little_endian<Index>(buckets_);
+    serial.template write_little_endian<Index>(buckets_);
     return true;
 }
 
@@ -75,7 +75,7 @@ bool hash_table_header<Index, Link>::start()
 
     // Does not require atomicity (no concurrency during start).
     auto deserial = make_unsafe_deserializer(memory->buffer());
-    return deserial.read_little_endian<Index>() == buckets_;
+    return deserial.template read_little_endian<Index>() == buckets_;
 }
 
 template <typename Index, typename Link>

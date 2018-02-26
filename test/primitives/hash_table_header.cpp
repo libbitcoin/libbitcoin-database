@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__create__always__sets_bucket_count)
     BOOST_REQUIRE(header.create());
 
     auto deserial = make_unsafe_deserializer(file.access()->buffer());
-    BOOST_REQUIRE_EQUAL(deserial.read_little_endian<index_type>(), expected);
+    BOOST_REQUIRE_EQUAL(deserial.template read_little_endian<index_type>(), expected);
 }
 
 BOOST_AUTO_TEST_CASE(hash_table_header__create__always__fills_empty_buckets)
