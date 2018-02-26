@@ -31,6 +31,7 @@ struct file_storage_directory_setup_fixture
 {
     file_storage_directory_setup_fixture()
     {
+        test::clear_path(DIRECTORY);
         log::initialize();
     }
 };
