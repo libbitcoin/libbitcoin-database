@@ -85,8 +85,8 @@ private:
     typedef short_hash key_type;
     typedef array_index index_type;
     typedef array_index link_type;
-    typedef record_manager<link_type> record_manager;
-    typedef hash_table<record_manager, index_type, link_type, key_type>
+    typedef record_manager<link_type> manager_type;
+    typedef hash_table<manager_type, index_type, link_type, key_type>
         record_map;
 
     // The record multimap as distinct file as opposed to linkage within the map
@@ -101,7 +101,7 @@ private:
 
     /// History rows.
     file_storage address_index_file_;
-    record_manager address_index_;
+    manager_type address_index_;
     record_multimap address_multimap_;
 };
 
