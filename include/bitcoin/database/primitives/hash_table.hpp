@@ -60,9 +60,9 @@ class hash_table
 public:
     typedef list_element<Manager, Link, Key> value_type;
     typedef list_element<const Manager, Link, Key> const_value_type;
-    
+
     /// Construct a hash table for variable size entries.
-    static const Link not_found = hash_table_header<Index, Link>::empty;
+    static const Link not_found;
 
     /// Construct a hash table for variable size entries.
     hash_table(storage& file, Index buckets);
