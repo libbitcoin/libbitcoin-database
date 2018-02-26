@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__one_element__round_trips)
     const auto const_element = table.find(key);
     BOOST_REQUIRE(const_element);
     BOOST_REQUIRE_EQUAL(const_element.link(), link);
-    BOOST_REQUIRE_EQUAL(const_element.next(), const_element.not_found);
+    BOOST_REQUIRE_EQUAL(const_element.next(), slab_map::not_found);
     BOOST_REQUIRE(const_element.key() == key);
     BOOST_REQUIRE(const_element.match(key));
     const_element.read(reader);
@@ -128,14 +128,14 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__multiple_elements__expected)
     const auto const_element1 = table.find(link1);
     BOOST_REQUIRE(const_element1);
     BOOST_REQUIRE_EQUAL(const_element1.link(), link1);
-    BOOST_REQUIRE_EQUAL(const_element1.next(), const_element1.not_found);
+    BOOST_REQUIRE_EQUAL(const_element1.next(), slab_map::not_found);
     BOOST_REQUIRE(const_element1.match(key1));
     const_element1.read(reader1);
 
     const auto const_element2 = table.find(link2);
     BOOST_REQUIRE(const_element2);
     BOOST_REQUIRE_EQUAL(const_element2.link(), link2);
-    BOOST_REQUIRE_EQUAL(const_element2.next(), const_element2.not_found);
+    BOOST_REQUIRE_EQUAL(const_element2.next(), slab_map::not_found);
     BOOST_REQUIRE(const_element2.match(key2));
     const_element2.read(reader2);
 }
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__unlink_first_stored__expected)
     const auto const_element2 = table.find(key2);
     BOOST_REQUIRE(const_element2);
     BOOST_REQUIRE_EQUAL(const_element2.link(), link2);
-    BOOST_REQUIRE_EQUAL(const_element2.next(), const_element2.not_found);
+    BOOST_REQUIRE_EQUAL(const_element2.next(), slab_map::not_found);
     BOOST_REQUIRE(const_element2.match(key2));
     const_element2.read(reader2);
 }
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_32_bit__round_trips)
     auto const_element = table.find(key2);
     BOOST_REQUIRE(const_element);
     BOOST_REQUIRE_EQUAL(const_element.link(), link2);
-    BOOST_REQUIRE_EQUAL(const_element.next(), const_element.not_found);
+    BOOST_REQUIRE_EQUAL(const_element.next(), record_map::not_found);
     BOOST_REQUIRE(const_element.match(key2));
     const_element.read(reader);
 }
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_64_bit__round_trips)
     auto const_element = table.find(key2);
     BOOST_REQUIRE(const_element);
     BOOST_REQUIRE_EQUAL(const_element.link(), link2);
-    BOOST_REQUIRE_EQUAL(const_element.next(), const_element.not_found);
+    BOOST_REQUIRE_EQUAL(const_element.next(), record_map::not_found);
     BOOST_REQUIRE(const_element.match(key2));
     const_element.read(reader);
 }
