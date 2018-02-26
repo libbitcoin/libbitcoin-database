@@ -512,7 +512,7 @@ bool block_database::unconfirm(const hash_digest& hash, size_t height,
 // ----------------------------------------------------------------------------
 
 bool block_database::read_top(size_t& out_height,
-    const record_manager& manager) const
+    const manager_type& manager) const
 {
     const auto count = manager.count();
 
@@ -525,7 +525,7 @@ bool block_database::read_top(size_t& out_height,
 }
 
 block_database::link_type block_database::read_index(size_t height,
-    const record_manager& manager) const
+    const manager_type& manager) const
 {
     BITCOIN_ASSERT(height < max_uint32);
     BITCOIN_ASSERT(height < manager.count());
@@ -535,7 +535,7 @@ block_database::link_type block_database::read_index(size_t height,
     return from_little_endian_unsafe<link_type>(record->buffer());
 }
 
-void block_database::pop_index(size_t height, record_manager& manager)
+void block_database::pop_index(size_t height, manager_type& manager)
 {
     BITCOIN_ASSERT(height < max_uint32);
     BITCOIN_ASSERT(height + 1u == manager.count());
@@ -545,7 +545,7 @@ void block_database::pop_index(size_t height, record_manager& manager)
 }
 
 void block_database::push_index(link_type index, size_t height,
-    record_manager& manager)
+    manager_type& manager)
 {
     BITCOIN_ASSERT(height < max_uint32);
     BITCOIN_ASSERT(height == manager.count());

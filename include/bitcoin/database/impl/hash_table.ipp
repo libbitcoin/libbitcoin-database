@@ -30,6 +30,10 @@ namespace libbitcoin {
 namespace database {
 
 template <typename Manager, typename Index, typename Link, typename Key>
+const Link hash_table<Manager, Index, Link, Key>::not_found = 
+    hash_table_header<Index, Link>::empty;
+
+template <typename Manager, typename Index, typename Link, typename Key>
 hash_table<Manager, Index, Link, Key>::hash_table(storage& file,
     Index buckets)
   : header_(file, buckets),

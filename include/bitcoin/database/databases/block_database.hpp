@@ -112,9 +112,9 @@ public:
 private:
     typedef hash_digest key_type;
     typedef array_index link_type;
-    typedef record_manager<link_type> record_manager;
-    typedef list_element<const record_manager, link_type, key_type> const_element;
-    typedef hash_table<record_manager, array_index, link_type, key_type> record_map;
+    typedef record_manager<link_type> manager_type;
+    typedef list_element<const manager_type, link_type, key_type> const_element;
+    typedef hash_table<manager_type, array_index, link_type, key_type> record_map;
 
     typedef message::compact_block::short_id_list short_id_list;
 
@@ -125,10 +125,10 @@ private:
         size_t tx_count, uint8_t status);
 
     // Index Utilities.
-    bool read_top(size_t& out_height, const record_manager& manager) const;
-    link_type read_index(size_t height, const record_manager& manager) const;
-    void pop_index(size_t height, record_manager& manager);
-    void push_index(link_type index, size_t height, record_manager& manager);
+    bool read_top(size_t& out_height, const manager_type& manager) const;
+    link_type read_index(size_t height, const manager_type& manager) const;
+    void pop_index(size_t height, manager_type& manager);
+    void push_index(link_type index, size_t height, manager_type& manager);
 
     static const size_t prefix_size_;
 
@@ -144,17 +144,17 @@ private:
 
     // Table used for looking up headers by height.
     file_storage header_index_file_;
-    record_manager header_index_;
+    manager_type header_index_;
 
     // Table used for looking up blocks by height.
     file_storage block_index_file_;
-    record_manager block_index_;
+    manager_type block_index_;
 
     // Association table between blocks and their contained transactions.
     // Only first tx is indexed and count is required to read the full set.
     // This indexes txs (vs. blocks) so the link type may be differentiated.
     file_storage tx_index_file_;
-    record_manager tx_index_;
+    manager_type tx_index_;
 
     // This provides atomicity for checksum, tx_start, tx_count, state.
     mutable shared_mutex metadata_mutex_;
