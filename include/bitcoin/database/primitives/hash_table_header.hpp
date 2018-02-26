@@ -19,56 +19,64 @@
 #ifndef LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_HPP
 #define LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_HPP
 
+#include <functional>
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/database/memory/memory_map.hpp>
+#include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/**
- * Implements contigious memory array with a fixed size elements.
- *
- * File format looks like:
- *
- *  [   size:IndexType   ]
- *  [ [      ...       ] ]
- *  [ [ item:ValueType ] ]
- *  [ [      ...       ] ]
- *
- * Empty elements are represented by the value hash_table_header.empty
- */
-template <typename IndexType, typename ValueType>
+/// Size-prefixed array.
+/// Empty elements are represented by the value hash_table_header.empty.
+///
+///  [  size:Index  ]
+///  [ [ row:Link ] ]
+///  [ [      ...     ] ]
+///  [ [ row:Link ] ]
+///
+template <typename Index, typename Link>
 class hash_table_header
+  : noncopyable
 {
 public:
-    typedef IndexType index_type;
-    typedef ValueType value_type;
-    static const ValueType empty;
+    /// A hash of the key reduced to the domain of the divisor.
+    template <typename Key>
+    static Index remainder(const Key& key, Index divisor);
 
-    hash_table_header(memory_map& file, IndexType buckets);
+    // This cast is a VC++ workaround is OK because Link must be unsigned.
+    //static constexpr Link empty = std::numeric_limits<Link>::max();
+    static const Link empty = (Link)bc::max_uint64;
+
+    /// The hash table header byte size for a given bucket count.
+    static size_t size(Index buckets);
+
+    /// Construct a hash table header.
+    hash_table_header(storage& file, Index buckets);
 
     /// Allocate the hash table and populate with empty values.
     bool create();
 
-    /// Must be called before use. Loads the size from the file.
+    /// Should be called before use. Validates the size from the file.
     bool start();
 
-    /// Read item's value.
-    ValueType read(IndexType index) const;
+    /// Read item value.
+    Link read(Index index) const;
 
     /// Write value to item.
-    void write(IndexType index, ValueType value);
+    void write(Index index, Link value);
 
-    /// The hash table size (bucket count).
-    IndexType size() const;
+    /// The hash table header bucket count.
+    Index buckets() const;
+
+    /// The hash table header byte size.
+    size_t size();
 
 private:
+    // Position in the memory map relative the header end.
+    static file_offset link(Index index);
 
-    // Locate the item in the memory map.
-    file_offset item_position(IndexType index) const;
-
-    memory_map& file_;
-    IndexType buckets_;
+    storage& file_;
+    Index buckets_;
     mutable shared_mutex mutex_;
 };
 

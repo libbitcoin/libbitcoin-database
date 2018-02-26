@@ -24,74 +24,113 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
+#include <bitcoin/database/result/transaction_iterator.hpp>
+#include <bitcoin/database/state/block_state.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 using namespace bc::chain;
 
-static constexpr size_t version_size = sizeof(uint32_t);
-static constexpr size_t previous_size = hash_size;
-static constexpr size_t merkle_size = hash_size;
-static constexpr size_t time_size = sizeof(uint32_t);
+static const auto header_size = header::satoshi_fixed_size();
+static constexpr auto median_time_past_size = sizeof(uint32_t);
+static constexpr auto height_size = sizeof(uint32_t);
+static constexpr auto state_size = sizeof(uint8_t);
+static constexpr auto checksum_size = sizeof(uint32_t);
+static constexpr auto tx_start_size = sizeof(uint32_t);
+static constexpr auto tx_count_size = sizeof(uint16_t);
 
-static constexpr auto version_offset = 0u;
-static constexpr auto time_offset = version_size + previous_size + merkle_size;
-static constexpr auto bits_offset = time_offset + time_size;
+static const auto height_offset = header_size + median_time_past_size;
+static const auto state_offset = height_offset + height_size;
+static const auto checksum_offset = state_offset + state_size;
+static const auto transactions_offset = checksum_offset + checksum_size;
 
-block_result::block_result(const record_manager& index_manager)
-  : record_(nullptr),
-    hash_(null_hash),
-    height_(0),
-    checksum_(0),
+// Placeholder for unimplemented checksum caching.
+static constexpr auto no_checksum = 0u;
+
+block_result::block_result(const const_element_type& element,
+    shared_mutex& metadata_mutex, const manager& index_manager)
+  : height_(0),
+    median_time_past_(0),
+    state_(block_state::missing),
+    checksum_(no_checksum),
     tx_start_(0),
     tx_count_(0),
-    confirmed_(false),
-    index_manager_(index_manager)
+    element_(element),
+    index_manager_(index_manager),
+    metadata_mutex_(metadata_mutex)
 {
-}
+    if (!element_)
+        return;
 
-block_result::block_result(const record_manager& index_manager,
-    memory_ptr record, hash_digest&& hash, uint32_t height,
-    uint32_t checksum, array_index tx_start, size_t tx_count, bool confirmed)
-  : record_(record),
-    hash_(std::move(hash)),
-    height_(height),
-    checksum_(checksum),
-    tx_start_(tx_start),
-    tx_count_(tx_count),
-    confirmed_(confirmed),
-    index_manager_(index_manager)
-{
-}
+    auto hash = element_.key();
 
-block_result::block_result(const record_manager& index_manager,
-    memory_ptr record, const hash_digest& hash, uint32_t height,
-    uint32_t checksum, array_index tx_start, size_t tx_count, bool confirmed)
-  : record_(record),
-    hash_(hash),
-    height_(height),
-    checksum_(checksum),
-    tx_start_(tx_start),
-    tx_count_(tx_count),
-    confirmed_(confirmed),
-    index_manager_(index_manager)
-{
+    // Each of the three atomic sets could be guarded independently.
+    const auto reader = [&](byte_deserializer& deserial)
+    {
+        // Critical Section.
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(metadata_mutex_);
+        header_.from_data(deserial, std::move(hash), false);
+        median_time_past_ = deserial.read_4_bytes_little_endian();
+        height_ = deserial.read_4_bytes_little_endian();
+        state_ = deserial.read_byte();
+        checksum_ = deserial.read_4_bytes_little_endian();
+        tx_start_ = deserial.read_4_bytes_little_endian();
+        tx_count_ = deserial.read_2_bytes_little_endian();
+        ///////////////////////////////////////////////////////////////////////
+    };
+
+     // Reads are not deferred for updatable values as atomicity is required.
+     element.read(reader);
 }
 
 block_result::operator bool() const
 {
-    return record_ != nullptr;
+    return element_;
 }
 
-void block_result::reset()
+code block_result::error() const
 {
-    record_.reset();
+    // Checksum stores error code if the block is invalid.
+    return is_failed(state_) ? static_cast<error::error_code_t>(checksum_) :
+        error::success;
 }
 
-bool block_result::confirmed() const
+array_index block_result::link() const
 {
-    return confirmed_;
+    return element_.link();
+}
+
+hash_digest block_result::hash() const
+{
+    // This is read each time it is invoked, so caller should cache.
+    return element_ ? element_.key() : null_hash;
+}
+
+const chain::header& block_result::header() const
+{
+    return header_;
+}
+
+uint32_t block_result::bits() const
+{
+    return header_.bits();
+}
+
+uint32_t block_result::timestamp() const
+{
+    return header_.timestamp();
+}
+
+uint32_t block_result::version() const
+{
+    return header_.version();
+}
+
+uint32_t block_result::median_time_past() const
+{
+    return median_time_past_;
 }
 
 size_t block_result::height() const
@@ -99,37 +138,9 @@ size_t block_result::height() const
     return height_;
 }
 
-const hash_digest& block_result::hash() const
+uint8_t block_result::state() const
 {
-    return hash_;
-}
-
-chain::header block_result::header() const
-{
-    BITCOIN_ASSERT(record_);
-    auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(record_));
-    return header::factory(deserial, hash_);
-}
-
-uint32_t block_result::bits() const
-{
-    BITCOIN_ASSERT(record_);
-    const auto memory = REMAP_ADDRESS(record_);
-    return from_little_endian_unsafe<uint32_t>(memory + bits_offset);
-}
-
-uint32_t block_result::timestamp() const
-{
-    BITCOIN_ASSERT(record_);
-    const auto memory = REMAP_ADDRESS(record_);
-    return from_little_endian_unsafe<uint32_t>(memory + time_offset);
-}
-
-uint32_t block_result::version() const
-{
-    BITCOIN_ASSERT(record_);
-    const auto memory = REMAP_ADDRESS(record_);
-    return from_little_endian_unsafe<uint32_t>(memory + version_offset);
+    return state_;
 }
 
 uint32_t block_result::checksum() const
@@ -142,24 +153,14 @@ size_t block_result::transaction_count() const
     return tx_count_;
 }
 
-offset_list block_result::transaction_offsets() const
+transaction_iterator block_result::begin() const
 {
-    const auto end = tx_start_ + tx_count_;
-    if (end > index_manager_.count())
-        return{};
+    return { index_manager_, tx_start_, tx_count_ };
+}
 
-    const auto records = index_manager_.get(tx_start_);
-    if (!records)
-        return{};
-
-    offset_list value;
-    value.reserve(tx_count_);
-    auto deserial = make_unsafe_deserializer(REMAP_ADDRESS(records));
-
-    for (size_t index = 0; index < tx_count_; ++index)
-        value.push_back(deserial.read_8_bytes_little_endian());
-
-    return value;
+transaction_iterator block_result::end() const
+{
+    return { index_manager_, tx_start_, 0 };
 }
 
 } // namespace database

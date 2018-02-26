@@ -27,6 +27,7 @@ namespace libbitcoin {
 namespace database {
 
 using namespace bc::chain;
+using namespace bc::machine;
 
 unspent_transaction::unspent_transaction(unspent_transaction&& other)
   : height_(other.height_),
@@ -49,7 +50,7 @@ unspent_transaction::unspent_transaction(const unspent_transaction& other)
 }
 
 unspent_transaction::unspent_transaction(const hash_digest& hash)
-  : height_(0),
+  : height_(rule_fork::unverified),
     median_time_past_(0),
     is_coinbase_(false),
     is_confirmed_(false),

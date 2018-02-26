@@ -20,15 +20,14 @@
 #define LIBBITCOIN_DATABASE_TRANSACTION_DATABASE_HPP
 
 #include <cstddef>
-#include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory_map.hpp>
-#include <bitcoin/database/result/transaction_result.hpp>
-#include <bitcoin/database/primitives/slab_hash_table.hpp>
+#include <bitcoin/database/memory/file_storage.hpp>
+#include <bitcoin/database/primitives/hash_table.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
+#include <bitcoin/database/state/transaction_state.hpp>
 #include <bitcoin/database/unspent_outputs.hpp>
 
 namespace libbitcoin {
@@ -43,18 +42,16 @@ class BCD_API transaction_database
 {
 public:
     typedef boost::filesystem::path path;
-    typedef slab_hash_table<hash_digest> slab_map;
-    typedef std::shared_ptr<shared_mutex> mutex_ptr;
-
-    /// Sentinel for use in tx position to indicate unconfirmed.
-    static const size_t unconfirmed;
 
     /// Construct the database.
     transaction_database(const path& map_filename, size_t buckets,
-        size_t expansion, size_t cache_capacity, mutex_ptr mutex=nullptr);
+        size_t expansion, size_t cache_capacity);
 
     /// Close the database (all threads must first be stopped).
     ~transaction_database();
+
+    // Startup and shutdown.
+    // ------------------------------------------------------------------------
 
     /// Initialize a new transaction database.
     bool create();
@@ -62,60 +59,67 @@ public:
     /// Call before using the database.
     bool open();
 
-    /// Call to unload the memory map.
-    bool close();
-
-    /// Fetch transaction by file offset.
-    transaction_result get(file_offset hash) const;
-
-    /// Fetch transaction by its hash, at or below the specified block height.
-    transaction_result get(const hash_digest& hash, size_t fork_height,
-        bool require_confirmed) const;
-
-    /// Get the output at the specified index within the transaction.
-    bool get_output(chain::output& out_output, size_t& out_height,
-        uint32_t& out_median_time_past, bool& out_coinbase,
-        const chain::output_point& point, size_t fork_height,
-        bool require_confirmed) const;
-
-    /// Store a set of transactions presumed to be associated to a block.
-    file_offset associate(const chain::transaction::list& transactions);
-
-    /// Store a transaction in the database.
-    file_offset store(const chain::transaction& tx, size_t height,
-        uint32_t median_time_past, size_t position);
-
-    /// Update the spender height of the output in the tx store.
-    bool spend(const chain::output_point& point, size_t spender_height);
-
-    /// Update the spender height of the output in the tx store.
-    bool unspend(const chain::output_point& point);
-
-    /// Promote an unconfirmed tx (not including its indexes).
-    file_offset confirm(const hash_digest& hash, size_t height,
-        uint32_t median_time_past, size_t position);
-
-    /// Demote the transaction.
-    bool unconfirm(const hash_digest& hash);
-
     /// Commit latest inserts.
-    void synchronize();
+    void commit();
 
     /// Flush the memory map to disk.
     bool flush() const;
 
-private:
-    memory_ptr find(const hash_digest& hash, size_t maximum_height,
-        bool require_confirmed) const;
+    /// Call to unload the memory map.
+    bool close();
 
-    // The starting size of the hash table, used by create.
-    const size_t initial_map_file_size_;
+    // Queries.
+    //-------------------------------------------------------------------------
+
+    /// Fetch transaction by its link.
+    transaction_result get(file_offset link) const;
+
+    /// Fetch transaction by its hash.
+    transaction_result get(const hash_digest& hash) const;
+
+    /// Populate output metadata for the specified point.
+    /// Confirmation is satisfied by confirmed|indexed, fork point dependent.
+    bool get_output(const chain::output_point& point,
+        size_t fork_height=max_size_t) const;
+
+    // Store.
+    // ------------------------------------------------------------------------
+
+    /// Create a confirmed transaction.
+    bool store(const chain::transaction& tx, uint32_t height,
+        uint32_t median_time_past, size_t position,
+        transaction_state state=transaction_state::confirmed);
+
+    /// Create a pooled transaction.
+    bool pool(const chain::transaction& tx, uint32_t forks);
+
+    // Promote the transaction to confirmed.
+    bool confirm(file_offset link, size_t height, uint32_t median_time_past,
+        size_t position);
+
+    // Demote the transaction to pooled.
+    bool unconfirm(file_offset link);
+
+private:
+    typedef hash_digest key_type;
+    typedef array_index index_type;
+    typedef file_offset link_type;
+    typedef slab_manager<link_type> slab_manager;
+    typedef hash_table<slab_manager, index_type, link_type, key_type> slab_map;
+
+    // Update the spender height of the output.
+    bool spend(const chain::output_point& point, size_t spender_height);
+
+    // Unspend the output.
+    bool unspend(const chain::output_point& point);
+
+    // Update the state of the existing tx.
+    bool update(link_type link, size_t height, uint32_t median_time_past,
+        size_t position, transaction_state state);
 
     // Hash table used for looking up txs by hash.
-    memory_map lookup_file_;
-    slab_hash_table_header lookup_header_;
-    slab_manager lookup_manager_;
-    slab_map lookup_map_;
+    file_storage hash_table_file_;
+    slab_map hash_table_;
 
     // This is thread safe, and as a cache is mutable.
     mutable unspent_outputs cache_;

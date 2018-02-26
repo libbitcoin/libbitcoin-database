@@ -40,22 +40,18 @@ src_libbitcoin_database_la_SOURCES = \
     src/store.cpp \
     src/unspent_outputs.cpp \
     src/unspent_transaction.cpp \
+    src/databases/address_database.cpp \
     src/databases/block_database.cpp \
-    src/databases/history_database.cpp \
-    src/databases/spend_database.cpp \
-    src/databases/stealth_database.cpp \
     src/databases/transaction_database.cpp \
     src/memory/accessor.cpp \
-    src/memory/allocator.cpp \
-    src/memory/memory_map.cpp \
+    src/memory/file_storage.cpp \
     src/mman-win32/mman.c \
     src/mman-win32/mman.h \
-    src/primitives/record_list.cpp \
-    src/primitives/record_manager.cpp \
-    src/primitives/record_multimap_iterable.cpp \
-    src/primitives/record_multimap_iterator.cpp \
-    src/primitives/slab_manager.cpp \
+    src/result/address_iterator.cpp \
+    src/result/address_result.cpp \
     src/result/block_result.cpp \
+    src/result/inpoint_iterator.cpp \
+    src/result/transaction_iterator.cpp \
     src/result/transaction_result.cpp
 
 # local: test/libbitcoin_database_test
@@ -68,16 +64,36 @@ check_PROGRAMS = test/libbitcoin_database_test
 test_libbitcoin_database_test_CPPFLAGS = -I${srcdir}/include ${bitcoin_CPPFLAGS}
 test_libbitcoin_database_test_LDADD = src/libbitcoin-database.la ${boost_unit_test_framework_LIBS} ${bitcoin_LIBS}
 test_libbitcoin_database_test_SOURCES = \
-    test/block_database.cpp \
     test/data_base.cpp \
-    test/hash_table.cpp \
-    test/history_database.cpp \
     test/main.cpp \
-    test/spend_database.cpp \
-    test/structure.cpp \
-    test/transaction_database.cpp \
+    test/settings.cpp \
+    test/store.cpp \
     test/unspent_outputs.cpp \
-    test/unspent_transaction.cpp
+    test/unspent_transaction.cpp \
+    test/databases/address_database.cpp \
+    test/databases/block_database.cpp \
+    test/databases/transaction_database.cpp \
+    test/memory/accessor.cpp \
+    test/memory/file_storage.cpp \
+    test/primitives/hash_table.cpp \
+    test/primitives/hash_table_header.cpp \
+    test/primitives/hash_table_multimap.cpp \
+    test/primitives/list.cpp \
+    test/primitives/list_element.cpp \
+    test/primitives/list_iterator.cpp \
+    test/primitives/record_manager.cpp \
+    test/primitives/slab_manager.cpp \
+    test/result/address_iterator.cpp \
+    test/result/address_result.cpp \
+    test/result/block_result.cpp \
+    test/result/transaction_iterator.cpp \
+    test/result/transaction_result.cpp \
+    test/state/block_state.cpp \
+    test/state/transaction_state.cpp \
+    test/utility/storage.cpp \
+    test/utility/storage.hpp \
+    test/utility/utility.cpp \
+    test/utility/utility.hpp
 
 endif WITH_TESTS
 
@@ -111,45 +127,52 @@ include_bitcoin_database_HEADERS = \
 
 include_bitcoin_database_databasesdir = ${includedir}/bitcoin/database/databases
 include_bitcoin_database_databases_HEADERS = \
+    include/bitcoin/database/databases/address_database.hpp \
     include/bitcoin/database/databases/block_database.hpp \
-    include/bitcoin/database/databases/history_database.hpp \
-    include/bitcoin/database/databases/spend_database.hpp \
-    include/bitcoin/database/databases/stealth_database.hpp \
     include/bitcoin/database/databases/transaction_database.hpp
 
 include_bitcoin_database_impldir = ${includedir}/bitcoin/database/impl
 include_bitcoin_database_impl_HEADERS = \
+    include/bitcoin/database/impl/hash_table.ipp \
     include/bitcoin/database/impl/hash_table_header.ipp \
-    include/bitcoin/database/impl/record_hash_table.ipp \
-    include/bitcoin/database/impl/record_multimap.ipp \
-    include/bitcoin/database/impl/record_row.ipp \
-    include/bitcoin/database/impl/remainder.ipp \
-    include/bitcoin/database/impl/slab_hash_table.ipp \
-    include/bitcoin/database/impl/slab_row.ipp
+    include/bitcoin/database/impl/hash_table_multimap.ipp \
+    include/bitcoin/database/impl/list.ipp \
+    include/bitcoin/database/impl/list_element.ipp \
+    include/bitcoin/database/impl/list_iterator.ipp \
+    include/bitcoin/database/impl/record_manager.ipp \
+    include/bitcoin/database/impl/slab_manager.ipp
 
 include_bitcoin_database_memorydir = ${includedir}/bitcoin/database/memory
 include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/accessor.hpp \
-    include/bitcoin/database/memory/allocator.hpp \
+    include/bitcoin/database/memory/file_storage.hpp \
     include/bitcoin/database/memory/memory.hpp \
-    include/bitcoin/database/memory/memory_map.hpp
+    include/bitcoin/database/memory/storage.hpp
 
 include_bitcoin_database_primitivesdir = ${includedir}/bitcoin/database/primitives
 include_bitcoin_database_primitives_HEADERS = \
+    include/bitcoin/database/primitives/hash_table.hpp \
     include/bitcoin/database/primitives/hash_table_header.hpp \
-    include/bitcoin/database/primitives/record_hash_table.hpp \
-    include/bitcoin/database/primitives/record_list.hpp \
+    include/bitcoin/database/primitives/hash_table_multimap.hpp \
+    include/bitcoin/database/primitives/list.hpp \
+    include/bitcoin/database/primitives/list_element.hpp \
+    include/bitcoin/database/primitives/list_iterator.hpp \
     include/bitcoin/database/primitives/record_manager.hpp \
-    include/bitcoin/database/primitives/record_multimap.hpp \
-    include/bitcoin/database/primitives/record_multimap_iterable.hpp \
-    include/bitcoin/database/primitives/record_multimap_iterator.hpp \
-    include/bitcoin/database/primitives/slab_hash_table.hpp \
     include/bitcoin/database/primitives/slab_manager.hpp
 
 include_bitcoin_database_resultdir = ${includedir}/bitcoin/database/result
 include_bitcoin_database_result_HEADERS = \
+    include/bitcoin/database/result/address_iterator.hpp \
+    include/bitcoin/database/result/address_result.hpp \
     include/bitcoin/database/result/block_result.hpp \
+    include/bitcoin/database/result/inpoint_iterator.hpp \
+    include/bitcoin/database/result/transaction_iterator.hpp \
     include/bitcoin/database/result/transaction_result.hpp
+
+include_bitcoin_database_statedir = ${includedir}/bitcoin/database/state
+include_bitcoin_database_state_HEADERS = \
+    include/bitcoin/database/state/block_state.hpp \
+    include/bitcoin/database/state/transaction_state.hpp
 
 
 # Custom make targets.

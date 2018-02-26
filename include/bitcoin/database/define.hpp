@@ -19,7 +19,9 @@
 #ifndef LIBBITCOIN_DATABASE_DEFINE_HPP
 #define LIBBITCOIN_DATABASE_DEFINE_HPP
 
+#include <array>
 #include <cstdint>
+#include <tuple>
 #include <vector>
 #include <bitcoin/bitcoin.hpp>
 
@@ -43,19 +45,16 @@
 // Log name.
 #define LOG_DATABASE "database"
 
-// Remap safety is required if the mmap file is not fully preallocated.
-#define REMAP_SAFETY
-
-// Allocate safety is required for support of concurrent write operations.
-#define ALLOCATE_SAFETY
-
 namespace libbitcoin {
 namespace database {
 
 typedef uint32_t array_index;
 typedef uint64_t file_offset;
-typedef std::vector<file_offset> offset_list;
+typedef std::vector<file_offset> link_list;
 typedef bc::serializer<uint8_t*> byte_serializer;
+typedef bc::deserializer<uint8_t*, false> byte_deserializer;
+typedef std::array<uint8_t, 0> empty_key;
+static_assert(std::tuple_size<empty_key>::value == 0, "non-empty empty key");
 
 } // namespace database
 } // namespace libbitcoin

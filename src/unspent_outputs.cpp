@@ -26,7 +26,8 @@ namespace database {
 
 using namespace bc::chain;
 
-// Because of BIP30 it is safe to use tx hashes as identifiers here.
+// This does not differentiate indexed-block transactions. These are treated as
+// unconfirmed, so this optimizes only for a top height fork point and tx pool.
 unspent_outputs::unspent_outputs(size_t capacity)
   : capacity_(capacity), hits_(1), queries_(1), sequence_(0)
 {
@@ -63,11 +64,17 @@ float unspent_outputs::hit_rate() const
     return hits_ * 1.0f / queries_;
 }
 
-void unspent_outputs::add(const transaction& transaction, size_t height,
+void unspent_outputs::add(const transaction& tx, size_t height,
     uint32_t median_time_past, bool confirmed)
 {
-    if (disabled() || transaction.outputs().empty())
+    if (disabled() || tx.outputs().empty())
         return;
+
+    if (tx.is_coinbase())
+    {
+        LOG_DEBUG(LOG_DATABASE)
+            << "Output cache hit rate: " << hit_rate() << ", size: " << size();
+    }
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -81,9 +88,11 @@ void unspent_outputs::add(const transaction& transaction, size_t height,
     if (unspent_.size() >= capacity_)
         unspent_.right.erase(unspent_.right.begin());
 
+    // TODO: promote the unconfirmed tx cache instead of replacing it.
+    // A confirmed tx may replace the same unconfirmed tx here.
     unspent_.insert(
     {
-        unspent_transaction{ transaction, height, median_time_past, confirmed },
+        unspent_transaction{ tx, height, median_time_past, confirmed },
         ++sequence_
     });
     ///////////////////////////////////////////////////////////////////////////
@@ -120,6 +129,7 @@ void unspent_outputs::remove(const hash_digest& tx_hash)
     ///////////////////////////////////////////////////////////////////////////
 }
 
+// The output is confirmed spent, so remove it from unspent outputs.
 void unspent_outputs::remove(const output_point& point)
 {
     if (disabled())
@@ -156,15 +166,16 @@ void unspent_outputs::remove(const output_point& point)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-bool unspent_outputs::get(output& out_output, size_t& out_height,
-    uint32_t& out_median_time_past, bool& out_coinbase,
-    const output_point& point, size_t fork_height,
-    bool require_confirmed) const
+// All responses are unspent, metadata should be defaulted by caller.
+// Set fork_height to max_size_t for tx pool validation.
+bool unspent_outputs::populate(const output_point& point,
+    size_t fork_height) const
 {
     if (disabled())
         return false;
 
     ++queries_;
+    auto& prevout = point.validation;
     const unspent_transaction key{ point };
 
     // Critical Section
@@ -173,31 +184,36 @@ bool unspent_outputs::get(output& out_output, size_t& out_height,
 
     // Find the unspent tx entry.
     const auto tx = unspent_.left.find(key);
+    if (tx == unspent_.left.end())
+        return false;
 
-    if (tx == unspent_.left.end() ||
-        (require_confirmed && !tx->first.is_confirmed()))
+    const auto& transaction = tx->first;
+    const auto height = transaction.height();
+    const auto relevant = height <= fork_height;
+    const auto for_pool = fork_height == max_size_t;
+    const auto confirmed = transaction.is_confirmed() && relevant;
+
+    // Guarantee confirmation state.
+    if (!for_pool && !confirmed)
         return false;
 
     // Find the output at the specified index for the found unspent tx.
-    const auto outputs = tx->first.outputs();
+    const auto outputs = transaction.outputs();
     const auto output = outputs->find(point.index());
-
     if (output == outputs->end())
         return false;
 
-    // Determine if the cached unspent tx is above specified fork_height.
-    // Since the hash table does not allow duplicates there are no others.
-    const auto& unspent = tx->first;
-    const auto height = unspent.height();
-
-    if (height > fork_height)
-        return false;
-
     ++hits_;
-    out_height = height;
-    out_median_time_past = unspent.median_time_past();
-    out_coinbase = unspent.is_coinbase();
-    out_output = output->second;
+
+    // Populate the output metadata.
+    prevout.cache = output->second;
+    prevout.confirmed = confirmed;
+    prevout.coinbase = transaction.is_coinbase();
+
+    prevout.height = height;
+    prevout.median_time_past = transaction.median_time_past();
+    prevout.spent = false;
+
     return true;
     ///////////////////////////////////////////////////////////////////////////
 }

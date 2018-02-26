@@ -28,32 +28,34 @@
 namespace libbitcoin {
 namespace database {
 
-#ifdef REMAP_SAFETY
-
-/// This class provides shared remap safe access to file-mapped memory.
-/// The memory size is unprotected and unmanaged.
+/// This class provides shared/protected read/write access to a memory buffer.
+/// The call caller must know the buffer size as it is unprotected/unmanaged.
 class BCD_API accessor
-  : public memory
+  : public memory, noncopyable
 {
 public:
-    accessor(shared_mutex& mutex, uint8_t*& data);
+    /// Assign a null upgradeable buffer pointer.
+    accessor(shared_mutex& mutex);
+
+    /// Assign a non-null shared buffer pointer.
+    accessor(shared_mutex& mutex, uint8_t* data);
+
+    /// Free the buffer pointer lock.
     ~accessor();
 
-    /// This class is not copyable.
-    accessor(const accessor& other) = delete;
-
-    /// Get the address indicated by the pointer.
+    /// Get the buffer pointer.
     uint8_t* buffer();
 
-    /// Increment the pointer the specified number of bytes.
+    /// Advance the buffer pointer a specified number of bytes.
     void increment(size_t value);
+
+    /// Set the buffer pointer and lock for shared access.
+    void assign(uint8_t* data);
 
 private:
     shared_mutex& mutex_;
     uint8_t* data_;
 };
-
-#endif // REMAP_SAFETY
 
 } // namespace database
 } // namespace libbitcoin

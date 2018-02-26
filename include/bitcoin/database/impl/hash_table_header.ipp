@@ -19,130 +19,136 @@
 #ifndef LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_IPP
 #define LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_IPP
 
-#include <cstring>
-#include <stdexcept>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-static BC_CONSTEXPR uint64_t empty_fill = bc::max_uint64;
-static BC_CONSTEXPR uint8_t empty_byte = (uint8_t)empty_fill;
-
-// This VC++ workaround is OK because ValueType must be unsigned.
-//static constexpr ValueType empty = std::numeric_limits<ValueType>::max();
-template <typename IndexType, typename ValueType>
-const ValueType hash_table_header<IndexType, ValueType>::empty =
-    (ValueType)empty_fill;
-
-template <typename IndexType, typename ValueType>
-hash_table_header<IndexType, ValueType>::hash_table_header(memory_map& file,
-    IndexType buckets)
-  : file_(file), buckets_(buckets)
+template <typename Index, typename Link>
+template <typename Key>
+inline Index hash_table_header<Index, Link>::remainder(const Key& key,
+    Index divisor)
 {
-    BITCOIN_ASSERT_MSG(empty == (ValueType)empty_fill,
-        "Unexpected value for empty sentinel.");
-
-    static_assert(std::is_unsigned<ValueType>::value,
-        "Hash table header requires unsigned type.");
+    // TODO: implement std::hash replacement to prevent store drift.
+    return divisor == 0 ? 0 : std::hash<Key>()(key) % divisor;
 }
 
-template <typename IndexType, typename ValueType>
-bool hash_table_header<IndexType, ValueType>::create()
+template <typename Index, typename Link>
+hash_table_header<Index, Link>::hash_table_header(storage& file, Index buckets)
+  : file_(file), buckets_(buckets)
 {
-    // Cannot create zero-sized hash table.
-    if (buckets_ == 0)
-        return false;
+    static_assert(std::is_unsigned<Link>::value,
+        "Hash table header requires unsigned value type.");
 
-    // Calculate the minimum file size.
-    const auto minimum_file_size = item_position(buckets_);
+    static_assert(std::is_unsigned<Index>::value,
+        "Hash table header requires unsigned index type.");
+}
+
+template <typename Index, typename Link>
+bool hash_table_header<Index, Link>::create()
+{
+    const auto file_size = size(buckets_);
 
     // The accessor must remain in scope until the end of the block.
-    const auto memory = file_.resize(minimum_file_size);
-    const auto buckets_address = REMAP_ADDRESS(memory);
-    auto serial = make_unsafe_serializer(buckets_address);
-    serial.write_little_endian(buckets_);
+    const auto memory = file_.resize(file_size);
 
-    // optimized fill implementation
-    // This optimization makes it possible to debug full size headers.
-    const auto start = buckets_address + sizeof(IndexType);
-    memset(start, empty_byte, buckets_ * sizeof(ValueType));
+    // Speed-optimized fill implementation.
+    memset(memory->buffer(), (uint8_t)empty, file_size);
 
-    // rationalized fill implementation
-    ////for (IndexType index = 0; index < buckets_; ++index)
-    ////    serial.write_little_endian(empty);
+    // Overwrite the start of the buffer with the bucket count.
+    auto serial = make_unsafe_serializer(memory->buffer());
+    serial.template write_little_endian<Index>(buckets_);
     return true;
 }
 
-// If false header file indicates incorrect size.
-template <typename IndexType, typename ValueType>
-bool hash_table_header<IndexType, ValueType>::start()
+template <typename Index, typename Link>
+bool hash_table_header<Index, Link>::start()
 {
-    const auto minimum_file_size = item_position(buckets_);
-
-    // Header file is too small.
-    if (minimum_file_size > file_.size())
+    // File is too small for the number of buckets in the header.
+    if (file_.size() < link(buckets_))
         return false;
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto buckets_address = REMAP_ADDRESS(memory);
 
     // Does not require atomicity (no concurrency during start).
-    const auto buckets = from_little_endian_unsafe<IndexType>(buckets_address);
-
-    // If buckets_ == 0 we trust what is read from the file.
-    return buckets_ == 0 || buckets == buckets_;
+    auto deserial = make_unsafe_deserializer(memory->buffer());
+    return deserial.template read_little_endian<Index>() == buckets_;
 }
 
-template <typename IndexType, typename ValueType>
-ValueType hash_table_header<IndexType, ValueType>::read(IndexType index) const
+template <typename Index, typename Link>
+Link hash_table_header<Index, Link>::read(Index index) const
 {
-    // This is not runtime safe but test is avoided as an optimization.
     BITCOIN_ASSERT(index < buckets_);
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto value_address = REMAP_ADDRESS(memory) + item_position(index);
+    const auto address = memory->buffer() + link(index);
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     shared_lock lock(mutex_);
-    return from_little_endian_unsafe<ValueType>(value_address);
+    return from_little_endian_unsafe<Link>(address);
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename IndexType, typename ValueType>
-void hash_table_header<IndexType, ValueType>::write(IndexType index,
-    ValueType value)
+template <typename Index, typename Link>
+void hash_table_header<Index, Link>::write(Index index, Link value)
 {
-    // This is not runtime safe but test is avoided as an optimization.
     BITCOIN_ASSERT(index < buckets_);
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto value_address = REMAP_ADDRESS(memory) + item_position(index);
-    auto serial = make_unsafe_serializer(value_address);
+    const auto address = memory->buffer() + link(index);
+    auto serial = make_unsafe_serializer(address);
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(mutex_);
-    serial.template write_little_endian<ValueType>(value);
+    serial.template write_little_endian<Link>(value);
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename IndexType, typename ValueType>
-IndexType hash_table_header<IndexType, ValueType>::size() const
+template <typename Index, typename Link>
+Index hash_table_header<Index, Link>::buckets() const
 {
     return buckets_;
 }
 
-template <typename IndexType, typename ValueType>
-file_offset hash_table_header<IndexType, ValueType>::item_position(
-    IndexType index) const
+template <typename Index, typename Link>
+size_t hash_table_header<Index, Link>::size()
 {
-    return sizeof(IndexType) + index * sizeof(ValueType);
+    return size(buckets_);
+}
+
+// static
+template <typename Index, typename Link>
+size_t hash_table_header<Index, Link>::size(Index buckets)
+{
+    // Header byte size is file link of last bucket + 1:
+    //
+    //  [  size:buckets        ]
+    //  [ [ row[0]           ] ]
+    //  [ [      ...         ] ]
+    //  [ [ row[buckets - 1] ] ] <=
+    //  
+    return link(buckets);
+}
+
+// static
+template <typename Index, typename Link>
+file_offset hash_table_header<Index, Link>::link(Index index)
+{
+    // File link of indexed bucket is:
+    //
+    //     [  size       :Index  ]
+    //     [ [ row[0]    :Link ] ]
+    //     [ [      ...        ] ]
+    //  => [ [ row[index]:Link ] ]
+    //
+    return sizeof(Index) + index * sizeof(Link);
 }
 
 } // namespace database

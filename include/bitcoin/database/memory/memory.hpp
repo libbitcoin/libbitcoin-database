@@ -29,8 +29,6 @@
 namespace libbitcoin {
 namespace database {
 
-#ifdef REMAP_SAFETY
-
 /// This interface defines remap safe unrestricted access to a memory map.
 class BCD_API memory
 {
@@ -44,35 +42,7 @@ public:
     virtual void increment(size_t value) = 0;
 };
 
-#endif // REMAP_SAFETY
-
-#ifdef REMAP_SAFETY
-    typedef memory::ptr memory_ptr;
-    #define REMAP_ADDRESS(ptr) ptr->buffer()
-    #define REMAP_ASSIGN(ptr, data) ptr->assign(data)
-    #define REMAP_INCREMENT(ptr, offset) ptr->increment(offset)
-    #define REMAP_ACCESSOR(ptr, mutex) std::make_shared<accessor>(mutex, ptr)
-    #define REMAP_ALLOCATOR(mutex) std::make_shared<allocator>(mutex)
-    #define REMAP_READ(mutex) shared_lock lock(mutex)
-    #define REMAP_WRITE(mutex) unique_lock lock(mutex)
-#else
-    typedef uint8_t* memory_ptr;
-    #define REMAP_ADDRESS(ptr) ptr
-    #define REMAP_ASSIGN(ptr, data)
-    #define REMAP_INCREMENT(ptr, offset) ptr += (offset)
-    #define REMAP_ACCESSOR(ptr, mutex)
-    #define REMAP_ALLOCATOR(mutex)
-    #define REMAP_READ(mutex)
-    #define REMAP_WRITE(mutex)
-#endif // REMAP_SAFETY
-
-#ifdef ALLOCATE_SAFETY
-    #define ALLOCATE_READ(mutex) shared_lock lock(mutex)
-    #define ALLOCATE_WRITE(mutex) unique_lock lock(mutex)
-#else
-    #define ALLOCATE_READ(mutex)
-    #define ALLOCATE_WRITE(mutex)
-#endif // ALLOCATE_SAFETY
+typedef memory::ptr memory_ptr;
 
 } // namespace database
 } // namespace libbitcoin

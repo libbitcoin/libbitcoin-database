@@ -23,24 +23,24 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/memory/memory_map.hpp>
+#include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-BC_CONSTEXPR size_t minimum_slabs_size = sizeof(file_offset);
-BC_CONSTFUNC size_t slab_hash_table_header_size(size_t buckets)
-{
-    return sizeof(file_offset) + minimum_slabs_size * buckets;
-}
-
 /// The slab manager represents a growing collection of various sized
 /// slabs of data on disk. It will resize the file accordingly and keep
 /// track of the current end pointer so new slabs can be allocated.
-class BCD_API slab_manager
+template <typename Link>
+class slab_manager
+  : noncopyable
 {
 public:
-    slab_manager(memory_map& file, file_offset header_size);
+    // This cast is a VC++ workaround is OK because Link must be unsigned.
+    //static constexpr Link empty = std::numeric_limits<Link>::max();
+    static const Link not_allocated = (Link)bc::max_uint64;
+
+    slab_manager(storage& file, size_t header_size);
 
     /// Create slab manager.
     bool create();
@@ -48,22 +48,19 @@ public:
     /// Prepare manager for use.
     bool start();
 
-    /// Synchronise the payload size to disk.
-    void sync() const;
-
-    /// Allocate a slab and return its position, sync() after writing.
-    file_offset new_slab(size_t size);
-
-    /// Return memory object for the slab at the specified position.
-    memory_ptr get(file_offset position) const;
-
-protected:
+    /// Commit total slabs size to the file.
+    void commit();
 
     /// Get the size of all slabs and size prefix (excludes header).
-    file_offset payload_size() const;
+    size_t payload_size() const;
+
+    /// Allocate a slab and return its position, commit after writing.
+    Link allocate(size_t size);
+
+    /// Return memory object for the slab at the specified position.
+    memory_ptr get(Link position) const;
 
 private:
-
     // Read the size of the data from the file.
     void read_size();
 
@@ -71,15 +68,17 @@ private:
     void write_size() const;
 
     // This class is thread and remap safe.
-    memory_map& file_;
-    const file_offset header_size_;
+    storage& file_;
+    const size_t header_size_;
 
     // Payload size is protected by mutex.
-    file_offset payload_size_;
+    size_t payload_size_;
     mutable shared_mutex mutex_;
 };
 
 } // namespace database
 } // namespace libbitcoin
+
+#include <bitcoin/database/impl/slab_manager.ipp>
 
 #endif

@@ -19,32 +19,29 @@
 #ifndef LIBBITCOIN_DATABASE_RECORD_MANAGER_HPP
 #define LIBBITCOIN_DATABASE_RECORD_MANAGER_HPP
 
-#include <atomic>
 #include <cstddef>
-#include <cstdint>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/memory/memory_map.hpp>
+#include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
 namespace database {
-
-static BC_CONSTEXPR auto minimum_records_size = sizeof(array_index);
-BC_CONSTFUNC size_t record_hash_table_header_size(size_t buckets)
-{
-    return sizeof(array_index) + minimum_records_size * buckets;
-}
 
 /// The record manager represents a collection of fixed size chunks of
 /// data referenced by an index. The file will be resized accordingly
 /// and the total number of records updated so new chunks can be allocated.
 /// It also provides logical record mapping to the record memory address.
-class BCD_API record_manager
+template <typename Link>
+class record_manager
+  : noncopyable
 {
 public:
-    record_manager(memory_map& file, file_offset header_size,
-        size_t record_size);
+    // This cast is a VC++ workaround is OK because Link must be unsigned.
+    //static constexpr Link empty = std::numeric_limits<Link>::max();
+    static const Link not_allocated = (Link)bc::max_uint64;
+
+    record_manager(storage& file, size_t header_size, size_t record_size);
 
     /// Create record manager.
     bool create();
@@ -52,28 +49,27 @@ public:
     /// Prepare manager for usage.
     bool start();
 
-    /// Synchronise to disk.
-    void sync();
+    /// Commit record count to the file.
+    void commit();
 
     /// The number of records in this container.
-    array_index count() const;
+    Link count() const;
 
     /// Change the number of records of this container (truncation).
-    void set_count(const array_index value);
+    void set_count(Link value);
 
-    /// Allocate records and return first logical index, sync() after writing.
-    array_index new_records(size_t count);
+    /// Allocate records and return first logical index, commit after writing.
+    Link allocate(size_t count);
 
     /// Return memory object for the record at the specified index.
-    memory_ptr get(array_index record) const;
+    memory_ptr get(Link link) const;
 
 private:
-
     // The record index of a disk position.
-    array_index position_to_record(file_offset position) const;
+    Link position_to_link(file_offset position) const;
 
     // The disk position of a record index.
-    file_offset record_to_position(array_index record) const;
+    file_offset link_to_position(Link link) const;
 
     // Read the count of the records from the file.
     void read_count();
@@ -82,18 +78,18 @@ private:
     void write_count();
 
     // This class is thread and remap safe.
-    memory_map& file_;
-    const file_offset header_size_;
-
-    // Payload size is protected by mutex.
-    array_index record_count_;
-    mutable shared_mutex mutex_;
-
-    // Records are fixed size.
+    storage& file_;
+    const size_t header_size_;
     const size_t record_size_;
+
+    // Record count is protected by mutex.
+    Link record_count_;
+    mutable shared_mutex mutex_;
 };
 
 } // namespace database
 } // namespace libbitcoin
+
+#include <bitcoin/database/impl/record_manager.ipp>
 
 #endif

@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_STORE_HPP
 
 #include <memory>
+#include <string>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
@@ -28,15 +29,20 @@ namespace libbitcoin {
 namespace database {
 
 class BCD_API store
+  : noncopyable
 {
 public:
     typedef boost::filesystem::path path;
-    typedef sequential_lock::handle handle;
 
-    static const size_t without_indexes;
-
-    /// Create a single file with one byte of arbitrary data.
-    static bool create(const path& file_path);
+    static const std::string FLUSH_LOCK;
+    static const std::string EXCLUSIVE_LOCK;
+    static const std::string HEADER_INDEX;
+    static const std::string BLOCK_INDEX;
+    static const std::string BLOCK_TABLE;
+    static const std::string TRANSACTION_INDEX;
+    static const std::string TRANSACTION_TABLE;
+    static const std::string ADDRESS_TABLE;
+    static const std::string ADDRESS_ROWS;
 
     // Construct.
     // ------------------------------------------------------------------------
@@ -58,52 +64,40 @@ public:
     // Write with flush detection.
     // ------------------------------------------------------------------------
 
-    /// Start a read sequence and obtain its handle.
-    handle begin_read() const;
-
-    /// Check read sequence result of the handle.
-    bool is_read_valid(handle handle) const;
-
-    /// Check the write state of the handle.
-    bool is_write_locked(handle handle) const;
-
     /// Start sequence write with optional flush lock.
-    bool begin_write() const;
+    virtual bool begin_write() const;
 
     /// End sequence write with optional flush unlock.
-    bool end_write() const;
+    virtual bool end_write() const;
 
-    /// Optionally begin flush lock scope.
-    bool flush_lock() const;
-
-    /// Optionally end flush lock scope.
-    bool flush_unlock() const;
+    /// True if write flushing is enabled.
+    virtual bool flush_each_write() const;
 
     // File names.
     // ------------------------------------------------------------------------
 
     /// Content store.
+    const path header_index;
     const path block_index;
     const path block_table;
-    const path transaction_table;
     const path transaction_index;
+    const path transaction_table;
 
     /// Optional indexes.
-    const path history_rows;
-    const path history_table;
-    const path spend_table;
-    const path stealth_rows;
+    const path address_table;
+    const path address_rows;
 
 protected:
+    // The implementation must flush all data to disk here.
     virtual bool flush() const = 0;
 
     const bool use_indexes;
 
 private:
+    const path prefix_;
     const bool flush_each_write_;
     mutable bc::flush_lock flush_lock_;
     mutable interprocess_lock exclusive_lock_;
-    mutable sequential_lock sequential_lock_;
 };
 
 } // namespace database

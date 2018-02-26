@@ -19,15 +19,16 @@
 #ifndef LIBBITCOIN_DATABASE_BLOCK_DATABASE_HPP
 #define LIBBITCOIN_DATABASE_BLOCK_DATABASE_HPP
 
+#include <atomic>
 #include <cstddef>
-#include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory_map.hpp>
-#include <bitcoin/database/primitives/record_hash_table.hpp>
+#include <bitcoin/database/memory/file_storage.hpp>
+#include <bitcoin/database/primitives/hash_table.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 #include <bitcoin/database/result/block_result.hpp>
+#include <bitcoin/database/state/block_state.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -37,19 +38,18 @@ namespace database {
 class BCD_API block_database
 {
 public:
-    typedef std::vector<size_t> heights;
     typedef boost::filesystem::path path;
-    typedef std::shared_ptr<shared_mutex> mutex_ptr;
-
-    static const array_index empty;
 
     /// Construct the database.
-    block_database(const path& map_filename, const path& block_index_filename,
-        const path& tx_index_filename, size_t buckets, size_t expansion,
-        mutex_ptr mutex=nullptr);
+    block_database(const path& map_filename, const path& header_index_filename,
+        const path& block_index_filename, const path& tx_index_filename,
+        size_t buckets, size_t expansion);
 
     /// Close the database (all threads must first be stopped).
     ~block_database();
+
+    // Startup and shutdown.
+    // ------------------------------------------------------------------------
 
     /// Initialize a new transaction database.
     bool create();
@@ -57,107 +57,106 @@ public:
     /// Call before using the database.
     bool open();
 
-    /// Call to unload the memory map.
-    bool close();
-
-    /// Determine if a block exists at the given height.
-    bool exists(size_t height) const;
-
-    /// The list of heights representing all chain gaps.
-    bool gaps(heights& out_gaps) const;
-
-    /// Fetch block by height using the index table.
-    block_result get(size_t height) const;
-
-    /// Fetch block by hash using the hashtable.
-    block_result get(const hash_digest& hash, bool require_confirmed) const;
-
-    /// This is ordered, but block parallelism may leave confirmation gaps.
-    /// Store an unconfirmed header with no transactions.
-    void store(const chain::header& header, size_t height);
-
-    /// This is optimized by storing tx file offsets in metadata.
-    /// Store a header and associate transactions (false if any missing).
-    void store(const chain::block& block, size_t height, bool confirmed);
-
-    /// TODO: optimize by storing tx file offsets in metadata.
-    /// This may come from the wire or be generated via the mining interface.
-    /// Store a header and associate transactions (false if any missing).
-    void store(const message::compact_block& compact, size_t height,
-        bool confirmed);
-
-    /// Update an existing block's transactions association.
-    bool update(const chain::block& block, size_t height, bool confirmed);
-
-    /// Update an existing block's transactions association.
-    bool update(const message::compact_block& compact, size_t height,
-        bool confirmed);
-
-    /// Promote the block and all ancestors up to the fork point.
-    /// This does not promote the block's transactions or their spends, which
-    /// must be confirmed before this call.
-    bool confirm(const hash_digest& hash, bool confirm=true);
-
-    /// Demote all blocks at and above the given height.
-    /// This does not demote the blocks' transactions or their spends, which
-    /// must be unconfirmed before this call. Should always be the top block.
-    bool unconfirm(size_t from_height);
-
     /// Commit latest inserts.
-    void synchronize();
+    void commit();
 
     /// Flush the memory maps to disk.
     bool flush() const;
 
-    /// The index of the highest existing block, independent of gaps.
-    bool top(size_t& out_height) const;
+    /// Call to unload the memory map.
+    bool close();
+
+    // Queries.
+    //-------------------------------------------------------------------------
+
+    /// The highest confirmed block of the header index.
+    size_t fork_point() const;
+
+    /// The highest valid block of the header index.
+    size_t valid_point() const;
+
+    /// The height of the highest indexed block|header.
+    bool top(size_t& out_height, bool block_index=true) const;
+
+    /// Fetch block by block|header index height.
+    block_result get(size_t height, bool block_index=true) const;
+
+    /// Fetch block by hash.
+    block_result get(const hash_digest& hash) const;
+
+    // Store.
+    // ------------------------------------------------------------------------
+
+    /// Push header, validated at height.
+    void push(const chain::header& header, size_t height);
+
+    /// Push block, validated at height, and associate tx links.
+    void push(const chain::block& block, size_t height,
+        uint32_t median_time_past);
+
+    // Update.
+    // ------------------------------------------------------------------------
+
+    /// Populate pent block transaction references, state is unchanged.
+    bool update(const chain::block& block);
+
+    /// Promote pent block to valid|invalid.
+    bool validate(const hash_digest& hash, bool positive);
+
+    /// Promote pooled|indexed block to indexed|confirmed.
+    bool confirm(const hash_digest& hash, size_t height, bool block_index);
+
+    /// Demote header|block at the given height to pooled.
+    bool unconfirm(const hash_digest& hash, size_t height, bool block_index);
 
 private:
-    typedef record_hash_table<hash_digest> record_map;
+    typedef hash_digest key_type;
+    typedef array_index link_type;
+    typedef record_manager<link_type> record_manager;
+    typedef list_element<const record_manager, link_type, key_type> const_element;
+    typedef hash_table<record_manager, array_index, link_type, key_type> record_map;
+
     typedef message::compact_block::short_id_list short_id_list;
 
-    // Associate an array of transactions for a block.
-    array_index associate(const chain::transaction::list& transactions);
-    array_index associate(const short_id_list& ids);
+    uint8_t confirm(const_element& element, bool positive, bool block_index);
+    link_type associate(const chain::transaction::list& transactions);
+    void push(const chain::header& header, size_t height,
+        uint32_t median_time_past, uint32_t checksum, link_type tx_start,
+        size_t tx_count, uint8_t status);
 
-    void store(const chain::header& header, size_t height, uint32_t checksum,
-        array_index tx_start, size_t tx_count, bool confirmed);
+    // Index Utilities.
+    bool read_top(size_t& out_height, const record_manager& manager) const;
+    link_type read_index(size_t height, const record_manager& manager) const;
+    void pop_index(size_t height, record_manager& manager);
+    void push_index(link_type index, size_t height, record_manager& manager);
 
-    bool update(const hash_digest& hash, size_t height, uint32_t checksum,
-        array_index tx_start, size_t tx_count, bool confirmed);
+    static const size_t prefix_size_;
 
-    // Zeroize the specified index values.
-    void zeroize(array_index first, array_index count);
+    // The top confirmed block in the header index.
+    std::atomic<size_t> fork_point_;
 
-    // Write block hash table index into the block index.
-    void write_index(array_index index, array_index height);
-
-    // Use block index to get block hash table index from height.
-    array_index get_index(array_index height) const;
-
-    // The starting size of the hash table, used by create.
-    const size_t initial_map_file_size_;
+    // The top valid block in the header index.
+    std::atomic<size_t> valid_point_;
 
     // Hash table used for looking up block headers by hash.
-    memory_map lookup_file_;
-    record_hash_table_header lookup_header_;
-    record_manager lookup_manager_;
-    record_map lookup_map_;
+    file_storage hash_table_file_;
+    record_map hash_table_;
+
+    // Table used for looking up headers by height.
+    file_storage header_index_file_;
+    record_manager header_index_;
 
     // Table used for looking up blocks by height.
-    // Each record resolves to a record via array_index.
-    memory_map block_index_file_;
-    record_manager block_index_manager_;
+    file_storage block_index_file_;
+    record_manager block_index_;
 
     // Association table between blocks and their contained transactions.
-    // Each record resolves to a record via array_index.
-    memory_map tx_index_file_;
-    record_manager tx_index_manager_;
+    // Only first tx is indexed and count is required to read the full set.
+    // This indexes txs (vs. blocks) so the link type may be differentiated.
+    file_storage tx_index_file_;
+    record_manager tx_index_;
 
-    // Guard against concurrent update of a range of block indexes.
-    mutable upgrade_mutex index_mutex_;
-
-    // This provides atomicity for checksum, tx_start, tx_count, confirmed.
+    // This provides atomicity for checksum, tx_start, tx_count, state.
     mutable shared_mutex metadata_mutex_;
 };
 

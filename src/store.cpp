@@ -20,6 +20,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 
 namespace libbitcoin {
@@ -27,29 +28,30 @@ namespace database {
 
 using namespace bc::chain;
 using namespace bc::database;
+using namespace boost::filesystem;
+using namespace boost::system;
 
 // Database file names.
-#define FLUSH_LOCK "flush_lock"
-#define EXCLUSIVE_LOCK "exclusive_lock"
-#define BLOCK_INDEX "block_index"
-#define BLOCK_TABLE "block_table"
-#define TRANSACTION_INDEX "transaction_index"
-#define TRANSACTION_TABLE "transaction_table"
-#define SPEND_TABLE "spend_table"
-#define HISTORY_TABLE "history_table"
-#define HISTORY_ROWS "history_rows"
-#define STEALTH_ROWS "stealth_rows"
+const std::string store::FLUSH_LOCK = "flush_lock";
+const std::string store::EXCLUSIVE_LOCK = "exclusive_lock";
+const std::string store::HEADER_INDEX = "header_index";
+const std::string store::BLOCK_INDEX = "block_index";
+const std::string store::BLOCK_TABLE = "block_table";
+const std::string store::TRANSACTION_INDEX = "transaction_index";
+const std::string store::TRANSACTION_TABLE = "transaction_table";
+const std::string store::ADDRESS_TABLE = "address_table";
+const std::string store::ADDRESS_ROWS = "address_rows";
 
-// The threshold max_uint32 is used to align with fixed-width config settings,
-// and size_t is used to align with the database height domain.
-const size_t store::without_indexes = max_uint32;
-
-// static
-bool store::create(const path& file_path)
+// Create a single file with one byte of arbitrary data.
+static bool create_file(const path& file_path)
 {
+    // Disallow create with existing file.
+    if (bc::ifstream(file_path.string()).good())
+        return false;
+
     bc::ofstream file(file_path.string());
 
-    if (file.bad())
+    if (!file.good())
         return false;
 
     // Write one byte so file is nonzero size (for memory map validation).
@@ -62,21 +64,21 @@ bool store::create(const path& file_path)
 
 store::store(const path& prefix, bool with_indexes, bool flush_each_write)
   : use_indexes(with_indexes),
+    prefix_(prefix),
     flush_each_write_(flush_each_write),
     flush_lock_(prefix / FLUSH_LOCK),
     exclusive_lock_(prefix / EXCLUSIVE_LOCK),
 
     // Content store.
+    header_index(prefix / HEADER_INDEX),
     block_index(prefix / BLOCK_INDEX),
     block_table(prefix / BLOCK_TABLE),
     transaction_index(prefix / TRANSACTION_INDEX),
     transaction_table(prefix / TRANSACTION_TABLE),
 
     // Optional indexes.
-    history_rows(prefix / HISTORY_ROWS),
-    history_table(prefix / HISTORY_TABLE),
-    spend_table(prefix / SPEND_TABLE),
-    stealth_rows(prefix / STEALTH_ROWS)
+    address_table(prefix / ADDRESS_TABLE),
+    address_rows(prefix / ADDRESS_ROWS)
 {
 }
 
@@ -86,69 +88,51 @@ store::store(const path& prefix, bool with_indexes, bool flush_each_write)
 // Create files.
 bool store::create()
 {
-    const auto created =
-        create(block_table) &&
-        create(block_index) &&
-        create(transaction_table) &&
-        create(transaction_index);
+    error_code ec;
+    create_directories(prefix_, ec);
+
+    const auto created = !ec &&
+        create_file(header_index) &&
+        create_file(block_index) &&
+        create_file(block_table) &&
+        create_file(transaction_index) &&
+        create_file(transaction_table);
 
     if (!use_indexes)
         return created;
 
     return
         created &&
-        create(spend_table) &&
-        create(history_table) &&
-        create(history_rows) &&
-        create(stealth_rows);
+        create_file(address_table) &&
+        create_file(address_rows);
 }
 
 bool store::open()
 {
     return exclusive_lock_.lock() && flush_lock_.try_lock() &&
-        (flush_each_write_ || flush_lock_.lock_shared());
+        (flush_each_write() || flush_lock_.lock_shared());
 }
 
 bool store::close()
 {
-    return (flush_each_write_ || flush_lock_.unlock_shared()) &&
+    return (flush_each_write() || flush_lock_.unlock_shared()) &&
         exclusive_lock_.unlock();
-}
-
-store::handle store::begin_read() const
-{
-    return sequential_lock_.begin_read();
-}
-
-bool store::is_read_valid(handle value) const
-{
-    return sequential_lock_.is_read_valid(value);
-}
-
-bool store::is_write_locked(handle value) const
-{
-    return sequential_lock_.is_write_locked(value);
 }
 
 bool store::begin_write() const
 {
-    return flush_lock() && sequential_lock_.begin_write();
+    return !flush_each_write() || flush_lock_.lock_shared();
 }
 
 bool store::end_write() const
 {
-    return sequential_lock_.end_write() && flush_unlock();
+    return !flush_each_write() || (flush() && flush_lock_.unlock_shared());
 }
 
-bool store::flush_lock() const
+bool store::flush_each_write() const
 {
-    return !flush_each_write_ || flush_lock_.lock_shared();
+    return flush_each_write_;
 }
 
-bool store::flush_unlock() const
-{
-    return !flush_each_write_ || (flush() && flush_lock_.unlock_shared());
-}
-
-} // namespace data_base
+} // namespace database
 } // namespace libbitcoin

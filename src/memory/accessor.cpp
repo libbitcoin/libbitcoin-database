@@ -26,20 +26,20 @@
 namespace libbitcoin {
 namespace database {
 
-#ifdef REMAP_SAFETY
+accessor::accessor(shared_mutex& mutex)
+  : mutex_(mutex), data_(nullptr)
+{
+    ///////////////////////////////////////////////////////////////////////////
+    // Begin Critical Section
+    mutex_.lock_upgrade();
+}
 
-accessor::accessor(shared_mutex& mutex, uint8_t*& data)
+accessor::accessor(shared_mutex& mutex, uint8_t* data)
   : mutex_(mutex)
 {
     ///////////////////////////////////////////////////////////////////////////
     // Begin Critical Section
-
-    // Acquire shared lock.
     mutex_.lock_shared();
-
-    BITCOIN_ASSERT_MSG(data != nullptr, "Invalid pointer value.");
-
-    // Save protected pointer.
     data_ = data;
 }
 
@@ -50,20 +50,26 @@ uint8_t* accessor::buffer()
 
 void accessor::increment(size_t value)
 {
+    BITCOIN_ASSERT_MSG(data_ != nullptr, "Buffer not assigned.");
     BITCOIN_ASSERT((size_t)data_ <= bc::max_size_t - value);
+
     data_ += value;
+}
+
+// Assign a buffer to this upgradable allocator.
+void accessor::assign(uint8_t* data)
+{
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    mutex_.unlock_upgrade_and_lock_shared();
+    data_ = data;
 }
 
 accessor::~accessor()
 {
-    // Release shared lock.
     mutex_.unlock_shared();
-
     // End Critical Section
     ///////////////////////////////////////////////////////////////////////////
 }
-
-#endif // REMAP_SAFETY
 
 } // namespace database
 } // namespace libbitcoin

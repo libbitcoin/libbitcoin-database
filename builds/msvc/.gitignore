@@ -6,12 +6,13 @@
 *.user
 *.ipch
 *.VC.*
+address_rows
+address_table
 block_index
 block_table
+file_storage
 hash_table
 header_index
-history_rows
-history_table
 record_hash_table_64bit
 spend_table
 stealth_rows
@@ -25,3 +26,6 @@ lookup
 rows
 spend
 transaction
+record_manager
+slab_manager
+slab_hash_table

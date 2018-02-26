@@ -70,16 +70,38 @@
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\test\block_database.cpp" />
     <ClCompile Include="..\..\..\..\test\data_base.cpp" />
-    <ClCompile Include="..\..\..\..\test\hash_table.cpp" />
-    <ClCompile Include="..\..\..\..\test\history_database.cpp" />
+    <ClCompile Include="..\..\..\..\test\databases\address_database.cpp" />
+    <ClCompile Include="..\..\..\..\test\databases\block_database.cpp" />
+    <ClCompile Include="..\..\..\..\test\databases\transaction_database.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
-    <ClCompile Include="..\..\..\..\test\spend_database.cpp" />
-    <ClCompile Include="..\..\..\..\test\structure.cpp" />
-    <ClCompile Include="..\..\..\..\test\transaction_database.cpp" />
+    <ClCompile Include="..\..\..\..\test\memory\accessor.cpp" />
+    <ClCompile Include="..\..\..\..\test\memory\file_storage.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\hash_table.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\hash_table_header.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\hash_table_multimap.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\list.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\list_element.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\list_iterator.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\record_manager.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\slab_manager.cpp" />
+    <ClCompile Include="..\..\..\..\test\result\address_iterator.cpp" />
+    <ClCompile Include="..\..\..\..\test\result\address_result.cpp" />
+    <ClCompile Include="..\..\..\..\test\result\block_result.cpp" />
+    <ClCompile Include="..\..\..\..\test\result\transaction_iterator.cpp" />
+    <ClCompile Include="..\..\..\..\test\result\transaction_result.cpp" />
+    <ClCompile Include="..\..\..\..\test\settings.cpp" />
+    <ClCompile Include="..\..\..\..\test\state\block_state.cpp" />
+    <ClCompile Include="..\..\..\..\test\state\transaction_state.cpp" />
+    <ClCompile Include="..\..\..\..\test\store.cpp" />
     <ClCompile Include="..\..\..\..\test\unspent_outputs.cpp" />
     <ClCompile Include="..\..\..\..\test\unspent_transaction.cpp" />
+    <ClCompile Include="..\..\..\..\test\utility\storage.cpp" />
+    <ClCompile Include="..\..\..\..\test\utility\utility.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\test\utility\storage.hpp" />
+    <ClInclude Include="..\..\..\..\test\utility\utility.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
