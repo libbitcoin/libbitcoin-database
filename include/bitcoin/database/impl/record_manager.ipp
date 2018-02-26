@@ -138,7 +138,7 @@ memory_ptr record_manager<Link>::get(Link link) const
     // condition implies a block has been unconfirmed while reading it.
 
     // The accessor must remain in scope until the end of the block.
-    auto memory = file_.access();
+    const auto memory = file_.access();
     memory->increment(header_size_ + link_to_position(link));
     return memory;
 }
@@ -165,7 +165,7 @@ void record_manager<Link>::write_count()
     BITCOIN_ASSERT(header_size_ + sizeof(Link) <= file_.size());
 
     // The accessor must remain in scope until the end of the block.
-    auto memory = file_.access();
+    const auto memory = file_.access();
     memory->increment(header_size_);
     auto serial = make_unsafe_serializer(memory->buffer());
     serial.write_little_endian<Link>(record_count_);

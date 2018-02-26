@@ -125,7 +125,7 @@ memory_ptr slab_manager<Link>::get(Link link) const
     // We avoid a runtime error here to optimize out the payload_size lock.
     BITCOIN_ASSERT_MSG(link < payload_size(), "Read past end of file.");
 
-    auto memory = file_.access();
+    const auto memory = file_.access();
     memory->increment(header_size_ + link);
     return memory;
 }
