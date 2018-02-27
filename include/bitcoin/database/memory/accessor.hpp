@@ -35,10 +35,7 @@ class BCD_API accessor
 {
 public:
     /// Assign a null upgradeable buffer pointer.
-    accessor(shared_mutex& mutex);
-
-    /// Assign a non-null shared buffer pointer.
-    accessor(shared_mutex& mutex, uint8_t* data);
+    accessor(upgrade_mutex& mutex);
 
     /// Free the buffer pointer lock.
     ~accessor();
@@ -46,14 +43,14 @@ public:
     /// Get the buffer pointer.
     uint8_t* buffer();
 
-    /// Advance the buffer pointer a specified number of bytes.
-    void increment(size_t value);
-
     /// Set the buffer pointer and lock for shared access.
     void assign(uint8_t* data);
 
+    /// Advance the buffer pointer a specified number of bytes.
+    void increment(size_t value);
+
 private:
-    shared_mutex& mutex_;
+    upgrade_mutex& mutex_;
     uint8_t* data_;
 };
 

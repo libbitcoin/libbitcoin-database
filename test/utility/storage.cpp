@@ -98,7 +98,9 @@ size_t storage::size() const
 
 memory_ptr storage::access()
 {
-    return std::make_shared<accessor>(mutex_, buffer_.data());
+    const auto memory = std::make_shared<accessor>(mutex_);
+    memory->assign(buffer_.data());
+    return memory;
 }
 
 memory_ptr storage::resize(size_t size)
