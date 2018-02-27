@@ -310,14 +310,13 @@ memory_ptr file_storage::access()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    auto memory = std::make_shared<accessor>(mutex_, data_);
+    auto memory = std::make_shared<accessor>(mutex_);
+
+    memory->assign(data_);
 
     // The store should only have been closed after all threads terminated.
     if (closed_)
-    {
-        memory->assign(data_);
         throw std::runtime_error("Access failure, store closed.");
-    }
 
     return memory;
 }
