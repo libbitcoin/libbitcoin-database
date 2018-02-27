@@ -85,12 +85,13 @@ Link hash_table_header<Index, Link>::read(Index index) const
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto address = memory->buffer() + link(index);
+    memory->increment(link(index));
+    auto deserial = make_unsafe_deserializer(memory->buffer());
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     shared_lock lock(mutex_);
-    return from_little_endian_unsafe<Link>(address);
+    return deserial.template read_little_endian<Link>();
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -101,8 +102,8 @@ void hash_table_header<Index, Link>::write(Index index, Link value)
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
-    const auto address = memory->buffer() + link(index);
-    auto serial = make_unsafe_serializer(address);
+    memory->increment(link(index));
+    auto serial = make_unsafe_serializer(memory->buffer());
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
