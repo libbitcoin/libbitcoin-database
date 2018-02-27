@@ -30,7 +30,7 @@ settings::settings()
   
     index_addresses(true),
     flush_writes(false),
-    file_growth_rate(50),
+    file_growth_rate(5),
 
     // Hash table sizes (must be configured).
     block_table_buckets(0),
