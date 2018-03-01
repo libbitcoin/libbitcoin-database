@@ -54,13 +54,13 @@ src_libbitcoin_database_la_SOURCES = \
     src/result/transaction_iterator.cpp \
     src/result/transaction_result.cpp
 
-# local: test/libbitcoin_database_test
+# local: test/libbitcoin-database-test
 #------------------------------------------------------------------------------
 if WITH_TESTS
 
-TESTS = libbitcoin_database_test_runner.sh
+TESTS = libbitcoin-database-test_runner.sh
 
-check_PROGRAMS = test/libbitcoin_database_test
+check_PROGRAMS = test/libbitcoin-database-test
 test_libbitcoin_database_test_CPPFLAGS = -I${srcdir}/include ${bitcoin_CPPFLAGS}
 test_libbitcoin_database_test_LDADD = src/libbitcoin-database.la ${boost_unit_test_framework_LIBS} ${bitcoin_LIBS}
 test_libbitcoin_database_test_SOURCES = \
