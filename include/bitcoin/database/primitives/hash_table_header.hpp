@@ -43,9 +43,8 @@ public:
     template <typename Key>
     static Index remainder(const Key& key, Index divisor);
 
-    // This cast is a VC++ workaround is OK because Link must be unsigned.
-    //static constexpr Link empty = std::numeric_limits<Link>::max();
-    static const Link empty = (Link)bc::max_uint64;
+    // Empty cell (null pointer) sentinel.
+    static const Link empty;
 
     /// The hash table header byte size for a given bucket count.
     static size_t size(Index buckets);

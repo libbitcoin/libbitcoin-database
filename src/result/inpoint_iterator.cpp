@@ -97,7 +97,7 @@ inpoint_iterator::iterator inpoint_iterator::operator++(int)
 bool inpoint_iterator::operator==(const inpoint_iterator& other) const
 {
     // Cannot compare vectors iterators because they are from different vectors.
-    // Cannot combine the vectors without qurying result in transaction_result.
+    // Cannot combine the vectors without querying result in transaction_result.
     const auto left_terminal = (inpoints_.size() == index_);
     const auto right_terminal = (other.inpoints_.size() == other.index_);
     const auto both_terminal = left_terminal && right_terminal;

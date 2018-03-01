@@ -35,6 +35,11 @@ inline Index hash_table_header<Index, Link>::remainder(const Key& key,
     return divisor == 0 ? 0 : std::hash<Key>()(key) % divisor;
 }
 
+// Link must be unsigned (see static assertions below).
+// HACK: This is a VC++ workaround, otherwise std::numeric_limits<Link>::max().
+template <typename Index, typename Link>
+const Link hash_table_header<Index, Link>::empty = (Link)bc::max_uint64;
+
 template <typename Index, typename Link>
 hash_table_header<Index, Link>::hash_table_header(storage& file, Index buckets)
   : file_(file), buckets_(buckets)
