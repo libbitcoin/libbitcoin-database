@@ -122,8 +122,8 @@ protected:
     // Synchronous.
     // ------------------------------------------------------------------------
 
-    void push_inputs(const chain::transaction& tx, size_t height);
-    void push_outputs(const chain::transaction& tx, size_t height);
+    void push_inputs(const chain::transaction& tx);
+    void push_outputs(const chain::transaction& tx);
     code push_transactions(const chain::block& block, size_t height,
         uint32_t median_time_past, size_t bucket=0, size_t buckets=1,
         transaction_state state=transaction_state::confirmed);

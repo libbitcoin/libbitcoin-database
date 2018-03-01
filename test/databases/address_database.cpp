@@ -43,53 +43,35 @@ BOOST_FIXTURE_TEST_SUITE(database_tests, address_database_directory_setup_fixtur
 BOOST_AUTO_TEST_CASE(address_database__test)
 {
     const short_hash key1 = base16_literal("a006500b7ddfd568e2b036c65a4f4d6aaa0cbd9b");
-    output_point out11{ hash_literal("4129e76f363f9742bc98dd3d40c99c9066e4d53b8e10e5097bd6f7b5059d7c53"), 110 };
-    const size_t out_h11 = 110;
-    const uint64_t value11 = 4;
-    output_point out12{ hash_literal("eefa5d23968584be9d8d064bcf99c24666e4d53b8e10e5097bd6f7b5059d7c53"), 4 };
-    const size_t out_h12 = 120;
-    const uint64_t value12 = 8;
-    output_point out13{ hash_literal("4129e76f363f9742bc98dd3d40c99c90eefa5d23968584be9d8d064bcf99c246"), 8 };
-    const size_t out_h13 = 222;
-    const uint64_t value13 = 6;
-
-    input_point spend11{ hash_literal("4742b3eac32d35961f9da9d42d495ff1d90aba96944cac3e715047256f7016d1"), 0 };
-    const size_t spend_h11 = 115;
-    input_point spend13{ hash_literal("3cc768bbaef30587c72c6eba8dbf6aeec4ef24172ae6fe357f2e24c2b0fa44d5"), 0 };
-    const size_t spend_h13 = 320;
+    static const payment_record output_11{ 65, 110, 4, true };
+    static const payment_record output_12{ 238, 4, 8, true };
+    static const payment_record output_13{ 65, 8, 6, true };
+    static const payment_record input_11{ 71, 0, 0x0a, false };
+    static const payment_record input_13{ 60, 0, 0x0b, false };
 
     const short_hash key2 = base16_literal("9c6b3bdaa612ceab88d49d4431ed58f26e69b90d");
-    output_point out21{ hash_literal("80d9e7012b5b171bf78e75b52d2d149580d9e7012b5b171bf78e75b52d2d1495"), 9 };
-    const size_t out_h21 = 3982;
-    const uint64_t value21 = 65;
-    output_point out22{ hash_literal("4742b3eac32d35961f9da9d42d495ff13cc768bbaef30587c72c6eba8dbf6aee"), 0 };
-    const size_t out_h22 = 78;
-    const uint64_t value22 = 9;
-
-    input_point spend22{ hash_literal("3cc768bbaef30587c72c6eba8dbfffffc4ef24172ae6fe357f2e24c2b0fa44d5"), 0 };
-    const size_t spend_h22 = 900;
+    static const payment_record output_21{ 128, 9, 65, true };
+    static const payment_record output_22{ 71, 0, 9, true };
+    static const payment_record input_22{ 60, 0, 0x0c, false };
 
     const short_hash key3 = base16_literal("3eb84f6a98478e516325b70fecf9903e1ce7528b");
-    output_point out31{ hash_literal("d90aba96944cac3e715047256f7016d1d90aba96944cac3e715047256f7016d1"), 0 };
-    const size_t out_h31 = 378;
-    const uint64_t value31 = 34;
+    static const payment_record output_31{ 217, 0, 34, true };
 
     const short_hash key4 = base16_literal("d60db39ca8ce4caf0f7d2b7d3111535d9543473f");
-    ////output_point out42{ hash_literal("aaaaaaaaaaacac3e715047256f7016d1d90aaa96944cac3e715047256f7016d1"), 0};
-    const size_t out_h41 = 74448;
-    const uint64_t value41 = 990;
+    static const payment_record output_41{ 170, 0, 7990, true };
 
     test::create(DIRECTORY "/address_table");
     test::create(DIRECTORY "/address_rows");
     address_database db(DIRECTORY "/address_table", DIRECTORY "/address_rows", 1000, 50);
     BOOST_REQUIRE(db.create());
-    db.store(key1, { out_h11, out11, value11 });
-    db.store(key1, { out_h12, out12, value12 });
-    db.store(key1, { out_h13, out13, value13 });
-    db.store(key1, { spend_h11, spend11, out11.checksum() });
-    db.store(key1, { spend_h13, spend13, out13.checksum() });
-    db.store(key2, { out_h21, out21, value21 });
-    db.store(key2, { out_h22, out22, value22 });
+
+    db.store(key1, output_11);
+    db.store(key1, output_12);
+    db.store(key1, output_13);
+    db.store(key1, input_11);
+    db.store(key1, input_13);
+    db.store(key2, output_21);
+    db.store(key2, output_22);
 
     auto result1 = db.get(key1);
     BOOST_REQUIRE(result1);
@@ -98,90 +80,90 @@ BOOST_AUTO_TEST_CASE(address_database__test)
     BOOST_REQUIRE(it1 != result1.end());
     auto entry1_0 = *it1;
 
-    BOOST_REQUIRE(entry1_0.is_input());
-    BOOST_REQUIRE(entry1_0.point().hash() == spend13.hash());
-    BOOST_REQUIRE(entry1_0.point().index() == spend13.index());
-    BOOST_REQUIRE(entry1_0.height() == spend_h13);
-    BOOST_REQUIRE(entry1_0.data() == out13.checksum());
+    BOOST_REQUIRE(!entry1_0.is_output());
+    BOOST_REQUIRE(entry1_0.link() == input_13.link());
+    BOOST_REQUIRE(entry1_0.point().index() == input_13.point().index());
+    BOOST_REQUIRE(entry1_0.height() == input_13.height());
+    BOOST_REQUIRE(entry1_0.data() == input_13.data());
 
     BOOST_REQUIRE(++it1 != result1.end());
-    auto entry1_1 = *it1;
+    auto entry_1_1 = *it1;
 
-    BOOST_REQUIRE(entry1_1.is_input());
-    BOOST_REQUIRE(entry1_1.point().hash() == spend11.hash());
-    BOOST_REQUIRE(entry1_1.point().index() == spend11.index());
-    BOOST_REQUIRE(entry1_1.height() == spend_h11);
-    BOOST_REQUIRE(entry1_1.data() == out11.checksum());
-
-    BOOST_REQUIRE(++it1 != result1.end());
-    auto entry1_2 = *it1;
-
-    BOOST_REQUIRE(entry1_2.is_output());
-    BOOST_REQUIRE(entry1_2.point().hash() == out13.hash());
-    BOOST_REQUIRE(entry1_2.point().index() == out13.index());
-    BOOST_REQUIRE(entry1_2.height() == out_h13);
-    BOOST_REQUIRE(entry1_2.data() == value13);
+    BOOST_REQUIRE(!entry_1_1.is_output());
+    BOOST_REQUIRE(entry_1_1.link() == input_11.link());
+    BOOST_REQUIRE(entry_1_1.point().index() == input_11.point().index());
+    BOOST_REQUIRE(entry_1_1.height() == input_11.height());
+    BOOST_REQUIRE(entry_1_1.data() == input_11.data());
 
     BOOST_REQUIRE(++it1 != result1.end());
-    auto entry1_3 = *it1;
+    auto entry_1_2 = *it1;
 
-    BOOST_REQUIRE(entry1_3.is_output());
-    BOOST_REQUIRE(entry1_3.point().hash() == out12.hash());
-    BOOST_REQUIRE(entry1_3.point().index() == out12.index());
-    BOOST_REQUIRE(entry1_3.height() == out_h12);
-    BOOST_REQUIRE(entry1_3.data() == value12);
+    BOOST_REQUIRE(entry_1_2.is_output());
+    BOOST_REQUIRE(entry_1_2.link() == output_13.link());
+    BOOST_REQUIRE(entry_1_2.point().index() == output_13.point().index());
+    BOOST_REQUIRE(entry_1_2.height() == output_13.height());
+    BOOST_REQUIRE(entry_1_2.data() == output_13.data());
 
     BOOST_REQUIRE(++it1 != result1.end());
-    auto entry1_4 = *it1;
+    auto entry_1_3 = *it1;
 
-    BOOST_REQUIRE(entry1_4.is_valid());
-    BOOST_REQUIRE(entry1_4.is_output());
-    BOOST_REQUIRE(entry1_4.point().hash() == out11.hash());
-    BOOST_REQUIRE(entry1_4.point().index() == out11.index());
-    BOOST_REQUIRE(entry1_4.height() == out_h11);
-    BOOST_REQUIRE(entry1_4.data() == value11);
+    BOOST_REQUIRE(entry_1_3.is_output());
+    BOOST_REQUIRE(entry_1_3.link() == output_12.link());
+    BOOST_REQUIRE(entry_1_3.point().index() == output_12.point().index());
+    BOOST_REQUIRE(entry_1_3.height() == output_12.height());
+    BOOST_REQUIRE(entry_1_3.data() == output_12.data());
+
+    BOOST_REQUIRE(++it1 != result1.end());
+    auto entry_1_4 = *it1;
+
+    BOOST_REQUIRE(entry_1_4.is_valid());
+    BOOST_REQUIRE(entry_1_4.is_output());
+    BOOST_REQUIRE(entry_1_4.link() == output_11.link());
+    BOOST_REQUIRE(entry_1_4.point().index() == output_11.point().index());
+    BOOST_REQUIRE(entry_1_4.height() == output_11.height());
+    BOOST_REQUIRE(entry_1_4.data() == output_11.data());
 
     auto result2 = db.get(key2);
     auto it2 = result2.begin();
 
     BOOST_REQUIRE(it2 != result2.end());
-    auto entry_1_0 = *it2;
-    BOOST_REQUIRE(entry_1_0.is_output());
+    auto entry_2_0 = *it2;
+    BOOST_REQUIRE(entry_2_0.is_output());
 
     BOOST_REQUIRE(++it2 != result2.end());
-    auto entry_1_1 = *it2;
-    BOOST_REQUIRE(entry_1_1.is_output());
+    auto entry_2_1 = *it2;
+    BOOST_REQUIRE(entry_2_1.is_output());
 
-    db.store(key2, { spend_h22, spend22, out22.checksum() });
+    db.store(key2, input_22);
     auto result3 = db.get(key2);
     auto it3 = result3.begin();
 
     BOOST_REQUIRE(it3 != result3.end());
     auto entry_3_0 = *it3;
 
-    BOOST_REQUIRE(entry_3_0.is_input());
-    BOOST_REQUIRE(entry_3_0.point().hash() == spend22.hash());
-    BOOST_REQUIRE(entry_3_0.point().index() == spend22.index());
-    BOOST_REQUIRE(entry_3_0.height() == spend_h22);
-    BOOST_REQUIRE(entry_3_0.data() == out22.checksum());
+    BOOST_REQUIRE(!entry_3_0.is_output());
+    BOOST_REQUIRE_EQUAL(entry_3_0.link(), input_22.link());
+    BOOST_REQUIRE_EQUAL(entry_3_0.point().index(), input_22.point().index());
+    BOOST_REQUIRE_EQUAL(entry_3_0.height(), input_22.height());
+    BOOST_REQUIRE_EQUAL(entry_3_0.data(), input_22.data());
 
     BOOST_REQUIRE(++it3 != result3.end());
     auto entry_3_1 = *it3;
 
     BOOST_REQUIRE(entry_3_1.is_output());
-    BOOST_REQUIRE(entry_3_1.point().hash() == out22.hash());
-    BOOST_REQUIRE(entry_3_1.point().index() == out22.index());
-    BOOST_REQUIRE(entry_3_1.height() == out_h22);
-    BOOST_REQUIRE(entry_3_1.data() == value22);
+    BOOST_REQUIRE(entry_3_1.link() == output_22.link());
+    BOOST_REQUIRE(entry_3_1.point().index() == output_22.point().index());
+    BOOST_REQUIRE(entry_3_1.height() == output_22.height());
+    BOOST_REQUIRE(entry_3_1.data() == output_22.data());
 
     BOOST_REQUIRE(++it3 != result3.end());
     auto entry_3_2 = *it3;
 
     BOOST_REQUIRE(entry_3_2.is_output());
-    BOOST_REQUIRE(entry_3_2.point().hash() == out21.hash());
-    BOOST_REQUIRE(entry_3_2.point().index() == out21.index());
-    BOOST_REQUIRE(entry_3_2.height() == out_h21);
-    BOOST_REQUIRE(entry_3_2.data() == value21);
+    BOOST_REQUIRE(entry_3_2.link() == output_21.link());
+    BOOST_REQUIRE(entry_3_2.point().index() == output_21.point().index());
+    BOOST_REQUIRE(entry_3_2.height() == output_21.height());
+    BOOST_REQUIRE(entry_3_2.data() == output_21.data());
 
     db.pop(key2);
     auto result4 = db.get(key2);
@@ -195,13 +177,13 @@ BOOST_AUTO_TEST_CASE(address_database__test)
     auto entry_4_1 = *it4;
     BOOST_REQUIRE(entry_4_1.is_output());
 
-    db.store(key3, { out_h31, out31, value31 });
+    db.store(key3, output_31);
     auto result5 = db.get(key3);
     auto it5 = result5.begin();
     BOOST_REQUIRE(it5 != result5.end());
     BOOST_REQUIRE(++it5 == result5.end());
 
-    db.store(key4, { out_h41, out31, value41 });
+    db.store(key4, output_41);
     auto result6 = db.get(key4);
     auto it6 = result6.begin();
     BOOST_REQUIRE(it6 != result6.end());
