@@ -531,35 +531,35 @@ code data_base::push_transactions(const block& block, size_t height,
 
         if (settings_.index_addresses)
         {
-            push_inputs(tx, height);
-            push_outputs(tx, height);
+            push_inputs(tx);
+            push_outputs(tx);
         }
     }
 
     return error::success;
 }
 
-void data_base::push_inputs(const transaction& tx, size_t height)
+// TODO: add segwit address indexing.
+void data_base::push_inputs(const transaction& tx)
 {
     if (tx.is_coinbase())
         return;
 
     uint32_t index = 0;
-    const auto hash = tx.hash();
     const auto& inputs = tx.inputs();
+    const auto link = tx.validation.link;
 
     for (const auto& input: inputs)
     {
         const auto& prevout = input.previous_output();
-        const auto checksum = prevout.checksum();
-        const input_point inpoint{ hash, index++ };
+        const payment_record in{ link, index++, prevout.checksum(), false };
 
         if (prevout.validation.cache.is_valid())
         {
             // This results in a complete and unambiguous history for the
             // address since standard outputs contain unambiguous address data.
             for (const auto& address: prevout.validation.cache.addresses())
-                addresses_->store(address.hash(), { height, inpoint, checksum });
+                addresses_->store(address.hash(), in);
         }
         else
         {
@@ -568,25 +568,25 @@ void data_base::push_inputs(const transaction& tx, size_t height)
             // which significantly expands the size of the history store.
             // These are tradeoffs when no prevout is cached (checkpoint sync).
             for (const auto& address: input.addresses())
-                addresses_->store(address.hash(), { height, inpoint, checksum });
+                addresses_->store(address.hash(), in);
         }
     }
 }
 
-void data_base::push_outputs(const transaction& tx, size_t height)
+// TODO: add segwit address indexing.
+void data_base::push_outputs(const transaction& tx)
 {
     uint32_t index = 0;
-    const auto hash = tx.hash();
     const auto& outputs = tx.outputs();
+    const auto link = tx.validation.link;
 
     for (const auto& output: outputs)
     {
-        const auto value = output.value();
-        const output_point outpoint{ hash, index++ };
+        const payment_record out{ link, index++, output.value(), true };
 
         // Standard outputs contain unambiguous address data.
         for (const auto& address: output.addresses())
-            addresses_->store(address.hash(), { height, outpoint, value });
+            addresses_->store(address.hash(), out);
     }
 }
 
