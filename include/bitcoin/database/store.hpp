@@ -91,10 +91,10 @@ protected:
     // The implementation must flush all data to disk here.
     virtual bool flush() const = 0;
 
-    const bool use_indexes;
 
 private:
     const path prefix_;
+    const bool with_indexes_;
     const bool flush_each_write_;
     mutable bc::flush_lock flush_lock_;
     mutable interprocess_lock exclusive_lock_;

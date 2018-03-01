@@ -63,8 +63,8 @@ static bool create_file(const path& file_path)
 // ------------------------------------------------------------------------
 
 store::store(const path& prefix, bool with_indexes, bool flush_each_write)
-  : use_indexes(with_indexes),
-    prefix_(prefix),
+  : prefix_(prefix),
+    with_indexes_(with_indexes),
     flush_each_write_(flush_each_write),
     flush_lock_(prefix / FLUSH_LOCK),
     exclusive_lock_(prefix / EXCLUSIVE_LOCK),
@@ -98,7 +98,7 @@ bool store::create()
         create_file(transaction_index) &&
         create_file(transaction_table);
 
-    if (!use_indexes)
+    if (!with_indexes_)
         return created;
 
     return
