@@ -347,6 +347,18 @@ code data_base::update(block_const_ptr block, size_t height)
         // This stores the transaction and sets tx link metadata.
         if (!transactions_->store(tx, unverified, no_time, unconfirmed, pool))
             return error::operation_failed;
+
+        // HACK: added this temporarily, to measure tx store efficiency.
+        // This causes out-of-order indexing, which would break reorganization.
+        // This also implies indexing of inputs without prevouts, so imperfect.
+        // With validation we have prevouts and can control order, though not
+        // as fast and requires full validation (for all prevouts) or short
+        // validation (checkpoint/milestone) population of prevouts.
+        if (settings_.index_addresses)
+        {
+            push_inputs(tx);
+            push_outputs(tx);
+        }
     }
 
     // Update the block's transaction references (not its state).

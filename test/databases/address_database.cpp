@@ -81,47 +81,32 @@ BOOST_AUTO_TEST_CASE(address_database__test)
     auto entry1_0 = *it1;
 
     BOOST_REQUIRE(!entry1_0.is_output());
-    BOOST_REQUIRE(entry1_0.link() == input_13.link());
-    BOOST_REQUIRE(entry1_0.point().index() == input_13.point().index());
-    BOOST_REQUIRE(entry1_0.height() == input_13.height());
-    BOOST_REQUIRE(entry1_0.data() == input_13.data());
+    BOOST_REQUIRE(entry1_0 == input_13);
 
     BOOST_REQUIRE(++it1 != result1.end());
     auto entry_1_1 = *it1;
 
     BOOST_REQUIRE(!entry_1_1.is_output());
-    BOOST_REQUIRE(entry_1_1.link() == input_11.link());
-    BOOST_REQUIRE(entry_1_1.point().index() == input_11.point().index());
-    BOOST_REQUIRE(entry_1_1.height() == input_11.height());
-    BOOST_REQUIRE(entry_1_1.data() == input_11.data());
+    BOOST_REQUIRE(entry_1_1 == input_11);
 
     BOOST_REQUIRE(++it1 != result1.end());
     auto entry_1_2 = *it1;
 
     BOOST_REQUIRE(entry_1_2.is_output());
-    BOOST_REQUIRE(entry_1_2.link() == output_13.link());
-    BOOST_REQUIRE(entry_1_2.point().index() == output_13.point().index());
-    BOOST_REQUIRE(entry_1_2.height() == output_13.height());
-    BOOST_REQUIRE(entry_1_2.data() == output_13.data());
+    BOOST_REQUIRE(entry_1_2 == output_13);
 
     BOOST_REQUIRE(++it1 != result1.end());
     auto entry_1_3 = *it1;
 
     BOOST_REQUIRE(entry_1_3.is_output());
-    BOOST_REQUIRE(entry_1_3.link() == output_12.link());
-    BOOST_REQUIRE(entry_1_3.point().index() == output_12.point().index());
-    BOOST_REQUIRE(entry_1_3.height() == output_12.height());
-    BOOST_REQUIRE(entry_1_3.data() == output_12.data());
+    BOOST_REQUIRE(entry_1_3 == output_12);
 
     BOOST_REQUIRE(++it1 != result1.end());
     auto entry_1_4 = *it1;
 
     BOOST_REQUIRE(entry_1_4.is_valid());
     BOOST_REQUIRE(entry_1_4.is_output());
-    BOOST_REQUIRE(entry_1_4.link() == output_11.link());
-    BOOST_REQUIRE(entry_1_4.point().index() == output_11.point().index());
-    BOOST_REQUIRE(entry_1_4.height() == output_11.height());
-    BOOST_REQUIRE(entry_1_4.data() == output_11.data());
+    BOOST_REQUIRE(entry_1_4 == output_11);
 
     auto result2 = db.get(key2);
     auto it2 = result2.begin();
@@ -142,28 +127,19 @@ BOOST_AUTO_TEST_CASE(address_database__test)
     auto entry_3_0 = *it3;
 
     BOOST_REQUIRE(!entry_3_0.is_output());
-    BOOST_REQUIRE_EQUAL(entry_3_0.link(), input_22.link());
-    BOOST_REQUIRE_EQUAL(entry_3_0.point().index(), input_22.point().index());
-    BOOST_REQUIRE_EQUAL(entry_3_0.height(), input_22.height());
-    BOOST_REQUIRE_EQUAL(entry_3_0.data(), input_22.data());
+    BOOST_REQUIRE(entry_3_0 == input_22);
 
     BOOST_REQUIRE(++it3 != result3.end());
     auto entry_3_1 = *it3;
 
     BOOST_REQUIRE(entry_3_1.is_output());
-    BOOST_REQUIRE(entry_3_1.link() == output_22.link());
-    BOOST_REQUIRE(entry_3_1.point().index() == output_22.point().index());
-    BOOST_REQUIRE(entry_3_1.height() == output_22.height());
-    BOOST_REQUIRE(entry_3_1.data() == output_22.data());
+    BOOST_REQUIRE(entry_3_1 == output_22);
 
     BOOST_REQUIRE(++it3 != result3.end());
     auto entry_3_2 = *it3;
 
     BOOST_REQUIRE(entry_3_2.is_output());
-    BOOST_REQUIRE(entry_3_2.link() == output_21.link());
-    BOOST_REQUIRE(entry_3_2.point().index() == output_21.point().index());
-    BOOST_REQUIRE(entry_3_2.height() == output_21.height());
-    BOOST_REQUIRE(entry_3_2.data() == output_21.data());
+    BOOST_REQUIRE(entry_3_2 == output_21);
 
     db.pop(key2);
     auto result4 = db.get(key2);

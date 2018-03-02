@@ -39,12 +39,8 @@ namespace database {
 
 using namespace bc::chain;
 
-static constexpr auto kind_size = sizeof(uint8_t);
-static constexpr auto point_size = sizeof(uint16_t) + sizeof(uint64_t);
-static constexpr auto checksum_size = sizeof(uint64_t);
-
 // Total size of address storage (using tx link vs. hash for point).
-static constexpr auto value_size = kind_size + point_size + checksum_size;
+static const auto value_size = payment_record::satoshi_fixed_size(false);
 
 // History uses a hash table index, O(1).
 // The hash table stores indexes to the first element of unkeyed linked lists.
