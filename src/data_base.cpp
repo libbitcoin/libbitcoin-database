@@ -99,7 +99,7 @@ bool data_base::create(const block& genesis)
     // These leave the databases open.
     auto created = blocks_->create() && transactions_->create();
 
-    if (use_indexes)
+    if (settings_.index_addresses)
         created &= addresses_->create();
 
     created &= push_genesis(genesis) == error::success;
@@ -124,7 +124,7 @@ bool data_base::open()
 
     auto opened = blocks_->open() && transactions_->open();
 
-    if (use_indexes)
+    if (settings_.index_addresses)
         opened &= addresses_->open();
 
     if (!opened)
@@ -145,7 +145,7 @@ void data_base::start()
         settings_.transaction_table_buckets, settings_.file_growth_rate,
         settings_.cache_capacity);
 
-    if (use_indexes)
+    if (settings_.index_addresses)
     {
         addresses_ = std::make_shared<address_database>(address_table,
             address_rows, settings_.address_table_buckets,
@@ -156,7 +156,7 @@ void data_base::start()
 // protected
 void data_base::commit()
 {
-    if (use_indexes)
+    if (settings_.index_addresses)
         addresses_->commit();
 
     transactions_->commit();
@@ -175,7 +175,7 @@ bool data_base::flush() const
 
     auto flushed = blocks_->flush() && transactions_->flush();
 
-    if (use_indexes)
+    if (settings_.index_addresses)
         flushed &= addresses_->flush();
 
     LOG_DEBUG(LOG_DATABASE)
@@ -196,7 +196,7 @@ bool data_base::close()
 
     auto closed = blocks_->close() && transactions_->close();
 
-    if (use_indexes)
+    if (settings_.index_addresses)
         closed &= addresses_->close();
 
     return closed && store::close();
@@ -343,8 +343,11 @@ code data_base::update(block_const_ptr block, size_t height)
         return error::store_lock_failure;
 
     for (const auto& tx: block->transactions())
+    {
+        // This stores the transaction and sets tx link metadata.
         if (!transactions_->store(tx, unverified, no_time, unconfirmed, pool))
             return error::operation_failed;
+    }
 
     // Update the block's transaction references (not its state).
     blocks_->update(*block);
@@ -525,7 +528,7 @@ code data_base::push_transactions(const block& block, size_t height,
     {
         const auto& tx = txs[position];
 
-        // This stores and confirms the transaction.
+        // This stores and confirms the transaction, and sets tx link metadata.
         if (!transactions_->store(tx, height, median_time_past, position))
             return error::operation_failed;
 
