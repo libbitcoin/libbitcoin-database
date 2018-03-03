@@ -124,13 +124,13 @@ BOOST_AUTO_TEST_CASE(unspent_outputs__remove2__remove_one_output__expected_outpu
     chain::output_point point{ tx2.hash(), 1 };
     BOOST_REQUIRE(cache.populate(point, max_size_t));
 
-    BOOST_REQUIRE(point.validation.cache.is_valid());
-    BOOST_REQUIRE_EQUAL(point.validation.cache.value(), expected_value);
-    BOOST_REQUIRE_EQUAL(point.validation.height, expected_height);
-    BOOST_REQUIRE_EQUAL(point.validation.median_time_past, expected_median_time_past);
-    BOOST_REQUIRE_EQUAL(point.validation.confirmed, expected_confirmed);
-    BOOST_REQUIRE(!point.validation.coinbase);
-    BOOST_REQUIRE(!point.validation.spent);
+    BOOST_REQUIRE(point.metadata.cache.is_valid());
+    BOOST_REQUIRE_EQUAL(point.metadata.cache.value(), expected_value);
+    BOOST_REQUIRE_EQUAL(point.metadata.height, expected_height);
+    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, expected_median_time_past);
+    BOOST_REQUIRE_EQUAL(point.metadata.confirmed, expected_confirmed);
+    BOOST_REQUIRE(!point.metadata.coinbase);
+    BOOST_REQUIRE(!point.metadata.spent);
 
     cache.remove({ tx1.hash(), 1 });
     BOOST_REQUIRE_EQUAL(cache.size(), 2u);
@@ -153,8 +153,8 @@ BOOST_AUTO_TEST_CASE(unspent_outputs__get__two_capacity_1__size_1_expected)
 
     chain::output_point point{ tx1.hash(), 1 };
     BOOST_REQUIRE(cache.populate(point, max_size_t));
-    BOOST_REQUIRE_EQUAL(point.validation.height, expected_height);
-    BOOST_REQUIRE(!point.validation.cache.is_valid());
+    BOOST_REQUIRE_EQUAL(point.metadata.height, expected_height);
+    BOOST_REQUIRE(!point.metadata.cache.is_valid());
 
     static const uint64_t expected2a = 41;
     static const uint64_t expected2b = 42;
@@ -166,13 +166,13 @@ BOOST_AUTO_TEST_CASE(unspent_outputs__get__two_capacity_1__size_1_expected)
 
     chain::output_point point2a{ tx2.hash(), 1 };
     BOOST_REQUIRE(cache.populate(point2a, max_size_t));
-    BOOST_REQUIRE(point2a.validation.cache.is_valid());
-    BOOST_REQUIRE_EQUAL(point2a.validation.cache.value(), expected2a);
+    BOOST_REQUIRE(point2a.metadata.cache.is_valid());
+    BOOST_REQUIRE_EQUAL(point2a.metadata.cache.value(), expected2a);
 
     chain::output_point point2b{ tx2.hash(), 2 };
     BOOST_REQUIRE(cache.populate(point2b, max_size_t));
-    BOOST_REQUIRE(point2b.validation.cache.is_valid());
-    BOOST_REQUIRE_EQUAL(point2b.validation.cache.value(), expected2b);
+    BOOST_REQUIRE(point2b.metadata.cache.is_valid());
+    BOOST_REQUIRE_EQUAL(point2b.metadata.cache.value(), expected2b);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -147,11 +147,11 @@ transaction_result transaction_database::get(const hash_digest& hash) const
 }
 
 // Metadata should be defaulted by caller.
-// Set fork_height to max_size_t for tx pool validation.
+// Set fork_height to max_size_t for tx pool metadata.
 bool transaction_database::get_output(const output_point& point,
     size_t fork_height) const
 {
-    auto& prevout = point.validation;
+    auto& prevout = point.metadata;
     prevout.height = 0;
     prevout.median_time_past = 0;
     prevout.spent = false;
@@ -202,7 +202,7 @@ bool transaction_database::get_output(const output_point& point,
 
     prevout.height = height;
     prevout.median_time_past = result.median_time_past();
-    prevout.spent = prevout.confirmed && prevout.cache.validation.spent(
+    prevout.spent = prevout.confirmed && prevout.cache.metadata.spent(
         fork_height);
 
     // Return is redundant with cache validity.
@@ -232,7 +232,7 @@ bool transaction_database::store(const chain::transaction& tx, uint32_t height,
 
     // Write the new transaction.
     auto next = hash_table_.allocator();
-    tx.validation.link = next.create(tx.hash(), writer, size);
+    tx.metadata.link = next.create(tx.hash(), writer, size);
     hash_table_.link(next);
     return true;
 }
@@ -360,7 +360,7 @@ bool transaction_database::confirm(file_offset link, size_t height,
     ////if (link != slab_map::not_found)
     ////{
     ////    cache_.add(tx, height, median_time_past, true);
-    ////    return confirm(tx.validation.link, height, median_time_past,
+    ////    return confirm(tx.metadata.link, height, median_time_past,
     ////        position, transaction_state::confirmed);
     ////}
 

@@ -167,7 +167,7 @@ void unspent_outputs::remove(const output_point& point)
 }
 
 // All responses are unspent, metadata should be defaulted by caller.
-// Set fork_height to max_size_t for tx pool validation.
+// Set fork_height to max_size_t for tx pool metadata.
 bool unspent_outputs::populate(const output_point& point,
     size_t fork_height) const
 {
@@ -175,7 +175,7 @@ bool unspent_outputs::populate(const output_point& point,
         return false;
 
     ++queries_;
-    auto& prevout = point.validation;
+    auto& prevout = point.metadata;
     const unspent_transaction key{ point };
 
     // Critical Section

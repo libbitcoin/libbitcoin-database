@@ -77,7 +77,7 @@
 ////
 ////                const auto addresses = input.addresses();
 ////                const auto& prevout = input.previous_output();
-////                ////const auto address = prevout.validation.cache.addresses();
+////                ////const auto address = prevout.metadata.cache.addresses();
 ////
 ////                for (const auto& address: addresses)
 ////                {
@@ -161,7 +161,7 @@
 ////
 ////                const auto addresses = input.addresses();
 ////                ////const auto& prevout = input.previous_output();
-////                ////const auto address = prevout.validation.cache.addresses();
+////                ////const auto address = prevout.metadata.cache.addresses();
 ////
 ////                for (const auto& address: addresses)
 ////                {

@@ -33,7 +33,7 @@ transaction random_tx(size_t fudge)
     static const auto genesis = block::genesis_mainnet();
     auto tx = genesis.transactions()[0];
     tx.inputs()[0].previous_output().set_index(fudge);
-    tx.validation.link = fudge;
+    tx.metadata.link = fudge;
     return tx;
 }
 
