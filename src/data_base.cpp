@@ -51,7 +51,7 @@ using namespace bc::wallet;
 // A failure after begin_write is returned without calling end_write.
 // This leaves the local flush lock enabled, preventing usage after restart.
 
-// TODO: tx median_time_past must be updated following block validation.
+// TODO: tx median_time_past must be updated following block metadata.
 static constexpr uint32_t no_time = 0;
 static constexpr uint32_t genesis_height = 0;
 static const auto pool = transaction_state::pooled;
@@ -562,18 +562,18 @@ void data_base::push_inputs(const transaction& tx)
 
     uint32_t index = 0;
     const auto& inputs = tx.inputs();
-    const auto link = tx.validation.link;
+    const auto link = tx.metadata.link;
 
     for (const auto& input: inputs)
     {
         const auto& prevout = input.previous_output();
         const payment_record in{ link, index++, prevout.checksum(), false };
 
-        if (prevout.validation.cache.is_valid())
+        if (prevout.metadata.cache.is_valid())
         {
             // This results in a complete and unambiguous history for the
             // address since standard outputs contain unambiguous address data.
-            for (const auto& address: prevout.validation.cache.addresses())
+            for (const auto& address: prevout.metadata.cache.addresses())
                 addresses_->store(address.hash(), in);
         }
         else
@@ -593,7 +593,7 @@ void data_base::push_outputs(const transaction& tx)
 {
     uint32_t index = 0;
     const auto& outputs = tx.outputs();
-    const auto link = tx.validation.link;
+    const auto link = tx.metadata.link;
 
     for (const auto& output: outputs)
     {
@@ -618,7 +618,7 @@ code data_base::pop_transactions(const block& block, size_t bucket,
     {
         const auto& tx = txs[position];
 
-        if (!transactions_->unconfirm(tx.validation.link))
+        if (!transactions_->unconfirm(tx.metadata.link))
             return error::operation_failed;
 
         if (settings_.index_addresses)

@@ -120,7 +120,7 @@ uint32_t transaction_result::median_time_past() const
     return median_time_past_;
 }
 
-// Set fork_height to max_size_t for tx pool validation.
+// Set fork_height to max_size_t for tx pool metadata.
 bool transaction_result::is_spent(size_t fork_height) const
 {
     const auto relevant = height_ <= fork_height;
@@ -148,7 +148,7 @@ bool transaction_result::is_spent(size_t fork_height) const
         {
             // TODO: This reads full output, which is simple but not optimial.
             const auto output = output::factory(deserial, false);
-            spent = output.validation.spent(fork_height);
+            spent = output.metadata.spent(fork_height);
         }
     };
 
@@ -201,7 +201,7 @@ chain::transaction transaction_result::transaction(bool witness) const
     };
 
     element_.read(reader);
-    tx.validation.link = element_.link();
+    tx.metadata.link = element_.link();
     return tx;
 }
 

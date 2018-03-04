@@ -221,7 +221,7 @@ void block_database::push(const chain::header& header, size_t height,
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(tx_start <= max_uint32);
     BITCOIN_ASSERT(tx_count <= max_uint16);
-    BITCOIN_ASSERT(!header.validation.pooled);
+    BITCOIN_ASSERT(!header.metadata.pooled);
 
     const auto writer = [&](byte_serializer& serial)
     {
@@ -250,7 +250,7 @@ void block_database::push(const chain::header& header, size_t height)
     static const auto state = block_state::indexed | block_state::pent;
 
     // The header/block already exists, promote from pooled to indexed.
-    if (header.validation.pooled)
+    if (header.metadata.pooled)
     {
         confirm(header.hash(), height, false);
         return;
@@ -284,7 +284,7 @@ block_database::link_type block_database::associate(
     auto serial = make_unsafe_serializer(record->buffer());
 
     for (const auto& tx: transactions)
-        serial.write_8_bytes_little_endian(tx.validation.link);
+        serial.write_8_bytes_little_endian(tx.metadata.link);
 
     return start;
 }
