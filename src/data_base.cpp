@@ -348,25 +348,49 @@ code data_base::update(block_const_ptr block, size_t height)
         if (!transactions_->store(tx, unverified, no_time, unconfirmed, pool))
             return error::operation_failed;
 
-        // HACK: added this temporarily, to measure tx store efficiency.
-        // This causes out-of-order indexing, which would break reorganization.
-        // This also implies indexing of inputs without prevouts, so imperfect.
-        // With validation we have prevouts and can control order, though not
-        // as fast and requires full validation (for all prevouts) or short
-        // validation (checkpoint/milestone) population of prevouts.
-        if (settings_.index_addresses)
-        {
-            push_inputs(tx);
-            push_outputs(tx);
-        }
+        ////// HACK: added this temporarily, to measure tx store efficiency.
+        ////// This causes out-of-order indexing, which would break reorganization.
+        ////// This also implies indexing of inputs without prevouts, so imperfect.
+        ////// With validation we have prevouts and can control order, though not
+        ////// as fast and requires full validation (for all prevouts) or short
+        ////// validation (checkpoint/milestone) population of prevouts.
+        ////if (settings_.index_addresses)
+        ////{
+        ////    push_inputs(tx);
+        ////    push_outputs(tx);
+        ////}
     }
 
-    // Update the block's transaction references (not its state).
-    blocks_->update(*block);
+    // Update the block's transaction associations (not its state).
+    if (!blocks_->update(*block))
+        return error::operation_failed;
+
     commit();
 
     return end_write() ? error::success : error::store_lock_failure;
     //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+code data_base::validate(block_const_ptr block, bool positive)
+{
+    code ec;
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    conditional_lock lock(flush_each_write());
+
+    if ((ec = verify(*block)))
+        return ec;
+
+    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    if (!begin_write())
+        return error::store_lock_failure;
+
+    if (!blocks_->validate(block->hash(), positive))
+        return error::operation_failed;
+
+    return end_write() ? error::success : error::store_lock_failure;
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -432,13 +456,11 @@ static size_t get_next_block(const block_database& blocks,
 }
 #endif
 
-code data_base::verify_top(size_t height, bool block_index) const
+code data_base::verify(const block& block) const
 {
-#ifndef NDEBUG
-    size_t actual_height;
-    if (!blocks_->top(actual_height, block_index)
-        || !(actual_height == height))
-        return error::operation_failed;
+#ifdef NDEBUG
+    if (!blocks_->get(block.hash()))
+        return error::not_found;
 #endif
 
     return error::success;
@@ -464,6 +486,19 @@ code data_base::verify(const config::checkpoint& fork_point,
 
     return error::success;
 }
+
+code data_base::verify_top(size_t height, bool block_index) const
+{
+#ifndef NDEBUG
+    size_t actual_height;
+    if (!blocks_->top(actual_height, block_index)
+        || !(actual_height == height))
+        return error::operation_failed;
+#endif
+
+    return error::success;
+}
+
 
 code data_base::verify_push(const transaction& tx) const
 {
