@@ -87,6 +87,9 @@ public:
     /// block index reorganization applicable.
     code update(block_const_ptr block, size_t height);
 
+    /// Set the validation state of the block.
+    code validate(block_const_ptr block, bool positive);
+
     /// Reorganize the header index, reorganizing block index and initiating
     /// block downloads as applicable.
     code reorganize(const config::checkpoint& fork_point,
@@ -112,6 +115,7 @@ protected:
     // Debug Utilities.
     // ------------------------------------------------------------------------
 
+    code verify(const chain::block& block) const;
     code verify(const config::checkpoint& fork_point, bool block_index) const;
     code verify_top(size_t height, bool block_index) const;
     code verify_push(const chain::transaction& tx) const;
