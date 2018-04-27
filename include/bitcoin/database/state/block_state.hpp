@@ -53,6 +53,7 @@ inline bool is_failed(uint8_t state)
     return (state & block_state::failed) != 0;
 }
 
+// This means that it has not yet been validated.
 inline bool is_pent(uint8_t state)
 {
     return (state & block_state::pent) != 0;

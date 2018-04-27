@@ -167,13 +167,18 @@ bool block_database::close()
 // Queries.
 // ----------------------------------------------------------------------------
 
+// This is the common block between the two indexes.
 size_t block_database::fork_point() const
 {
+    // TODO: initialize fork_point_ by scanning for first common index.
     return fork_point_;
 }
 
+// This is the height of the last validated block.
 size_t block_database::valid_point() const
 {
+    // TODO: reduce this height as validated blocks are deindexed.
+    // TODO: initialize valid_point_ as part of initial gap scan.
     return valid_point_;
 }
 
