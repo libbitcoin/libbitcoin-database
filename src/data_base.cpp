@@ -805,7 +805,7 @@ code data_base::verify(const config::checkpoint& fork_point,
 
     const auto state = result.state();
 
-    if (!is_confirmed(state) && (block_index || !is_indexed(state)))
+    if (!is_confirmed(state) && (block_index || !is_candidate(state)))
         return error::store_incorrect_state;
 #endif
 

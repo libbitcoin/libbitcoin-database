@@ -226,15 +226,15 @@ void block_database::push(const chain::header& header, size_t height,
     const auto link = next.create(header.hash(), writer);
     hash_table_.link(next);
 
-    ////if (is_confirmed(state) || is_indexed(state))
+    ////if (is_confirmed(state) || is_candidate(state))
     ////    push_index(link, height, manager);
 }
 
 // A header creation does not move the fork point (not a reorg).
 void block_database::push(const chain::header& header, size_t height)
 {
-    // Initially store header as indexed, pent download (the top header).
-    static const auto state = block_state::indexed | block_state::pent;
+    // Initially store header as candidate, pent download (the top header).
+    static const auto state = block_state::candidate;
 
     // The header/block already exists, promote from pooled to indexed.
     if (header.metadata.exists)
@@ -314,7 +314,7 @@ bool block_database::update(const chain::block& block)
 static uint8_t update_validation_state(uint8_t original, bool positive)
 {
     // May only validate or invalidate a pooled or indexed block.
-    BITCOIN_ASSERT(is_pooled(original) || is_indexed(original));
+    BITCOIN_ASSERT(is_pooled(original) || is_candidate(original));
 
     // Preserve the confirmation state (pooled or indexed).
     // We try to only validate indexed blocks, but allow pooled for a race.
@@ -380,16 +380,16 @@ static uint8_t update_confirmation_state(uint8_t original, bool positive,
     BITCOIN_ASSERT(!positive || block_index || is_pooled(original));
 
     // May only deindex an indexed header.
-    BITCOIN_ASSERT(positive || block_index || is_indexed(original));
+    BITCOIN_ASSERT(positive || block_index || is_candidate(original));
 
     // Preserve the validation state (header-indexed blocks can be pent).
     const auto validation_state = original & block_state::validations;
     const auto positive_state = block_index ? block_state::confirmed :
-        block_state::indexed;
+        block_state::candidate;
 
     // Demotion is always directly to the pooled state.
     const auto confirmation_state = positive ? positive_state :
-        block_state::pooled;
+        block_state::missing;
 
     // Merge the new confirmation state with existing validation state.
     return confirmation_state | validation_state;

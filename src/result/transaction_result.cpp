@@ -51,7 +51,7 @@ transaction_result::transaction_result(const const_element_type& element,
     shared_mutex& metadata_mutex)
   : height_(0),
     position_(unconfirmed),
-    state_(transaction_state::missing),
+    state_(transaction_state::pooled),
     median_time_past_(0),
     element_(element),
     metadata_mutex_(metadata_mutex)
@@ -124,7 +124,7 @@ bool transaction_result::is_spent(size_t fork_height, bool candidate) const
 {
     const auto relevant = height_ <= fork_height;
     const auto confirmed = state_ == transaction_state::confirmed && relevant;
-    const auto candidacy = state_ == transaction_state::indexed && candidate;
+    const auto candidacy = state_ == transaction_state::candidate && candidate;
 
     // Cannot be spent unless confirmed/candidate.
     if (!confirmed && !candidate)

@@ -192,7 +192,7 @@ bool transaction_database::get_output(const output_point& point,
         return false;
 
     // Populate the output metadata.
-    prevout.candidate = state == transaction_state::indexed;
+    prevout.candidate = state == transaction_state::candidate;
     prevout.confirmed = state == transaction_state::confirmed;
     prevout.coinbase = result.position() == 0;
     prevout.height = height;

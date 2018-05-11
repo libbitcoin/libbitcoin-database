@@ -28,17 +28,14 @@ namespace database {
 // TODO: compress into position using flag for indexed and sentinal for pool.
 enum class transaction_state : uint8_t
 {
-    /// Interface only (not stored).
-    missing = 0,
-
     /// Confirmable if forks match, height is forks, position unused.
-    pooled = 1,
+    pooled = 0,
 
     /// Confirmed in header index, height is forks, position unused.
-    indexed = 2,
+    candidate = 1,
 
     /// Confirmed in block index, height and position are block values.
-    confirmed = 3
+    confirmed = 2
 };
 
 } // namespace database
