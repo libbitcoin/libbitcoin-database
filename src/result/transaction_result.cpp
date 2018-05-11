@@ -197,7 +197,10 @@ chain::transaction transaction_result::transaction(bool witness) const
     };
 
     element_.read(reader);
+
+    // TODO: populate all metadata or use methods?
     tx.metadata.link = element_.link();
+    tx.metadata.existed = true;
     return tx;
 }
 

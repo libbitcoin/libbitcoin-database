@@ -110,6 +110,7 @@ hash_digest block_result::hash() const
 
 const chain::header& block_result::header() const
 {
+    // TODO: populate all metadata or only use methods?
     return header_;
 }
 

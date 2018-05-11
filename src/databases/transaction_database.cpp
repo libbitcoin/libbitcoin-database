@@ -212,8 +212,11 @@ bool transaction_database::store(const chain::transaction& tx, uint32_t height,
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(position <= max_uint16);
 
+    // This allows address indexer to bypass indexing despite link existence.
+    tx.metadata.existed = tx.metadata.link != transaction::validation::unlinked;
+
     // If the transacation already exists just update its metadata.
-    if (tx.metadata.link == transaction::validation::unlinked)
+    if (tx.metadata.existed)
         return update(tx.metadata.link, height, median_time_past, position,
             state);
 
