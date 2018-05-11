@@ -147,9 +147,8 @@ transaction_result transaction_database::get(const hash_digest& hash) const
 }
 
 // Metadata should be defaulted by caller.
-// Set fork_height to max_size_t for tx pool metadata.
 bool transaction_database::get_output(const output_point& point,
-    size_t fork_height) const
+    size_t fork_height, bool candidate) const
 {
     auto& prevout = point.metadata;
     prevout.height = 0;
@@ -160,9 +159,10 @@ bool transaction_database::get_output(const output_point& point,
     if (point.is_null())
         return false;
 
-    // Cache does not contain spent outputs or indexed confirmation states.
-    if (cache_.populate(point, fork_height))
-        return true;
+    ////// Cache contians only unspent confirmed outputs.
+    ////// This will not return an output found above the fork point.
+    ////if (cache_.populate(point, fork_height))
+    ////    return true;
 
     // Find the tx entry.
     const auto result = get(point.hash());
@@ -179,33 +179,27 @@ bool transaction_database::get_output(const output_point& point,
     if (height == 0)
         return false;
 
-    const auto state = result.state();
-    const auto relevant = height <= fork_height;
-    const auto for_pool = fork_height == max_size_t;
-
-    const auto confirmed = 
-        (state == transaction_state::indexed && !for_pool) ||
-        (state == transaction_state::confirmed && relevant);
-
-    // Guarantee confirmation state.
-    if (!for_pool && !confirmed)
-        return false;
-
     // Find the output at the specified index for the found tx.
     prevout.cache = result.output(point.index());
     if (!prevout.cache.is_valid())
         return false;
 
-    // Populate the output metadata.
-    prevout.confirmed = confirmed;
-    prevout.coinbase = result.position() == 0;
+    const auto state = result.state();
+    const auto relevant = height <= fork_height;
 
+    // Return false if exists but not confirmed under fork point.
+    if (!relevant)
+        return false;
+
+    // Populate the output metadata.
+    prevout.candidate = state == transaction_state::indexed;
+    prevout.confirmed = state == transaction_state::confirmed;
+    prevout.coinbase = result.position() == 0;
     prevout.height = height;
     prevout.median_time_past = result.median_time_past();
-    prevout.spent = prevout.confirmed && prevout.cache.metadata.spent(
-        fork_height);
+    prevout.spent = prevout.cache.metadata.spent(fork_height, candidate);
 
-    // Return is redundant with cache validity.
+    // Return is redundant with prevout.cache validity.
     return true;
 }
 
@@ -217,6 +211,11 @@ bool transaction_database::store(const chain::transaction& tx, uint32_t height,
 {
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(position <= max_uint16);
+
+    // If the transacation already exists just update its metadata.
+    if (tx.metadata.link == transaction::validation::unlinked)
+        return update(tx.metadata.link, height, median_time_past, position,
+            state);
 
     const auto writer = [&](byte_serializer& serial)
     {
@@ -237,21 +236,27 @@ bool transaction_database::store(const chain::transaction& tx, uint32_t height,
     return true;
 }
 
-bool transaction_database::pool(const chain::transaction& tx, uint32_t forks)
-{
-    return store(tx, forks, no_time, transaction_result::unconfirmed,
-        transaction_state::pooled);
-}
-
-// Update.
+// Candidate.
 // ----------------------------------------------------------------------------
 
+bool transaction_database::candidate(const transaction::list& transactions,
+    bool positive)
+{
+    // TODO: implement.
+    return false;
+}
+
+// Confirm/Unconfirm.
+// ----------------------------------------------------------------------------
+
+// TODO: add candidate flag.
 // private
 bool transaction_database::unspend(const output_point& point)
 {
-    return spend(point, output::validation::not_spent);
+    return spend(point, output::validation::unspent);
 }
 
+// TODO: add candidate flag.
 // private
 bool transaction_database::spend(const output_point& point,
     size_t spender_height)
@@ -260,9 +265,9 @@ bool transaction_database::spend(const output_point& point,
     if (point.is_null())
         return true;
 
-    // If unspending we could restore the spend to the cache, but not worth it.
-    if (spender_height != output::validation::not_spent)
-        cache_.remove(point);
+    ////// If unspending we could restore the spend to the cache, but not worth it.
+    ////if (spender_height != output::validation::unspent)
+    ////    cache_.remove(point);
 
     auto element = hash_table_.find(point.hash());
 
@@ -320,6 +325,7 @@ bool transaction_database::spend(const output_point& point,
     return true;
 }
 
+// TODO: add candidate flag and update spend/unspend to use it.
 bool transaction_database::unconfirm(file_offset link)
 {
     const auto result = get(link);
@@ -327,15 +333,18 @@ bool transaction_database::unconfirm(file_offset link)
     if (!result)
         return false;
 
+    // Unspend the tx's previous outputs.
     for (const auto inpoint: result)
         if (!unspend(inpoint))
             return false;
 
     // The tx was verified under a now unknown chain state, so set unverified.
+    // The tx was validated at one point, so always okay to treat as pooled.
     return update(link, rule_fork::unverified, no_time,
         transaction_result::unconfirmed, transaction_state::pooled);
 }
 
+// TODO: add candidate flag and update spend/unspend to use it.
 bool transaction_database::confirm(file_offset link, size_t height,
     uint32_t median_time_past, size_t position)
 {
@@ -353,17 +362,13 @@ bool transaction_database::confirm(file_offset link, size_t height,
         if (!spend(inpoint, height))
             return false;
 
-    // TODO: consider eliminating the output cache.
-    // TODO: It may be more costly to populate it than the benefit, because txs
-    // will have to be read from disk and loaded into the cache!
-    ////// Promote the tx that already exists.
-    ////if (link != slab_map::not_found)
-    ////{
-    ////    cache_.add(tx, height, median_time_past, true);
-    ////    return confirm(tx.metadata.link, height, median_time_past,
-    ////        position, transaction_state::confirmed);
-    ////}
+    //// TODO: nothing is calling this yet!
+    //// TODO: need to get tx for this interface!
+    //// TODO: It may be more costly to populate it than the benefit, because txs
+    //// will have to be read from disk and loaded into the cache!
+    //cache_.add(tx, height, median_time_past, true);
 
+    // Promote the tx that already exists.
     return update(link, height, median_time_past, position,
         transaction_state::confirmed);
 }

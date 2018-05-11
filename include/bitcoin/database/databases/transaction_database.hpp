@@ -77,27 +77,26 @@ public:
     /// Fetch transaction by its hash.
     transaction_result get(const hash_digest& hash) const;
 
-    /// Populate output metadata for the specified point.
-    /// Confirmation is satisfied by confirmed|indexed, fork point dependent.
-    bool get_output(const chain::output_point& point,
-        size_t fork_height=max_size_t) const;
+    /// Populate output metadata for the specified point and given context.
+    bool get_output(const chain::output_point& point, size_t fork_height,
+        bool candidate) const;
 
     // Store.
     // ------------------------------------------------------------------------
 
-    /// Create a confirmed transaction.
+    /// Create a transaction.
     bool store(const chain::transaction& tx, uint32_t height,
-        uint32_t median_time_past, size_t position,
-        transaction_state state=transaction_state::confirmed);
+        uint32_t median_time_past, size_t position, transaction_state state);
 
-    /// Create a pooled transaction.
-    bool pool(const chain::transaction& tx, uint32_t forks);
+    /// Mark txs and outputs spent by them as candidate.
+    bool candidate(const chain::transaction::list& transactions,
+        bool positive);
 
-    // Promote the transaction to confirmed.
+    /// Promote the transaction to confirmed.
     bool confirm(file_offset link, size_t height, uint32_t median_time_past,
         size_t position);
 
-    // Demote the transaction to pooled.
+    /// Demote the transaction to pooled.
     bool unconfirm(file_offset link);
 
 private:
@@ -107,22 +106,22 @@ private:
     typedef slab_manager<link_type> manager_type;
     typedef hash_table<manager_type, index_type, link_type, key_type> slab_map;
 
+    // Update the state of the existing tx.
+    bool update(link_type link, size_t height, uint32_t median_time_past,
+        size_t position, transaction_state state);
+
     // Update the spender height of the output.
     bool spend(const chain::output_point& point, size_t spender_height);
 
     // Unspend the output.
     bool unspend(const chain::output_point& point);
 
-    // Update the state of the existing tx.
-    bool update(link_type link, size_t height, uint32_t median_time_past,
-        size_t position, transaction_state state);
-
     // Hash table used for looking up txs by hash.
     file_storage hash_table_file_;
     slab_map hash_table_;
 
-    // This is thread safe, and as a cache is mutable.
-    mutable unspent_outputs cache_;
+    // This is thread safe.
+    unspent_outputs cache_;
 
     // This provides atomicity for height and position.
     mutable shared_mutex metadata_mutex_;

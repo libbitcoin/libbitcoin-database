@@ -74,8 +74,8 @@ public:
     /// The median time past of the block which includes the transaction.
     uint32_t median_time_past() const;
 
-    /// All tx outputs confirmed spent, ignore indexing if max fork point.
-    bool is_spent(size_t fork_height=max_size_t) const;
+    /// All tx outputs confirmed below fork, or candidate as applicable.
+    bool is_spent(size_t fork_height, bool candidate) const;
 
     /// The output at the specified index within this transaction.
     chain::output output(uint32_t index) const;

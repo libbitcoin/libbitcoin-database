@@ -27,6 +27,7 @@
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/result/block_result.hpp>
 #include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/store.hpp>
 
@@ -53,10 +54,6 @@ using namespace bc::wallet;
 
 // TODO: tx median_time_past must be updated following block metadata.
 static constexpr uint32_t no_time = 0;
-static constexpr uint32_t genesis_height = 0;
-static const auto pool = transaction_state::pooled;
-static const auto unverified = machine::rule_fork::unverified;
-static const auto unconfirmed = transaction_result::unconfirmed;
 
 // Construct.
 // ----------------------------------------------------------------------------
@@ -224,9 +221,8 @@ const address_database& data_base::addresses() const
     return *addresses_;
 }
 
-// Synchronous writers.
+// Public writers.
 // ----------------------------------------------------------------------------
-// public
 
 // TODO: enable promotion from any unconfirmed state to pooled.
 // This expects tx is validated, unconfirmed and not yet stored.
@@ -246,13 +242,288 @@ code data_base::store(const transaction& tx, uint32_t forks)
     if (!begin_write())
         return error::store_lock_failure;
 
+    // This assumes a given tx is never stored more than one time.
+    if (settings_.index_addresses)
+        addresses_->index(tx);
+
     // When position is unconfirmed, height is used to store validation forks.
-    transactions_->store(tx, forks, no_time, unconfirmed, pool);
+    transactions_->store(tx, forks, no_time, transaction_result::unconfirmed,
+        transaction_state::pooled);
     transactions_->commit();
 
     return end_write() ? error::success : error::store_lock_failure;
     //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     ///////////////////////////////////////////////////////////////////////////
+}
+
+code data_base::reorganize(const config::checkpoint& fork_point,
+    header_const_ptr_list_const_ptr incoming,
+    header_const_ptr_list_ptr outgoing)
+{
+    if (fork_point.height() > max_size_t - incoming->size())
+        return error::operation_failed;
+
+    const auto result =
+        pop_above(outgoing, fork_point) &&
+        push_all(incoming, fork_point);
+
+    return result ? error::success : error::operation_failed;
+}
+
+// Add transactions for an existing block header.
+// This allows parallel write when write flushing is not enabled.
+code data_base::update(const chain::block& block, size_t height)
+{
+    code ec;
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    conditional_lock lock(flush_each_write());
+
+    if ((ec = verify_update(block, height)))
+        return ec;
+
+    // Conditional write mutex preserves write flushing by preventing overlap.
+    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    if (!begin_write())
+        return error::store_lock_failure;
+
+    // TODO: could bypass if the block header indicates not empty.
+
+    // This stores or connects each transaction and sets tx link metadata.
+    if ((ec = store_transactions(block, machine::rule_fork::unverified,
+        no_time, transaction_state::pooled)))
+        return ec;
+
+    // Update the block's transaction associations (not its state).
+    if (!blocks_->update(block))
+        return error::operation_failed;
+
+    commit();
+
+    return end_write() ? error::success : error::store_lock_failure;
+    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+// Mark a block as invalid based on error value.
+code data_base::invalidate(const header& header, const code& error)
+{
+    code ec;
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    conditional_lock lock(flush_each_write());
+
+    if ((ec = verify(header)))
+        return ec;
+
+    header.metadata.error = error;
+
+    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    if (!begin_write())
+        return error::store_lock_failure;
+
+    // Mark candidate block as validated if not already validated.
+    if (!header.metadata.validated)
+        if (!blocks_->validate(header.hash(), header.metadata.error))
+            return error::operation_failed;
+
+    header.metadata.validated = true;
+
+    return end_write() ? error::success : error::store_lock_failure;
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+// Mark candidate block valid, txs and outputs spent by them as candidate.
+code data_base::candidate(const block& block)
+{
+    code ec;
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    conditional_lock lock(flush_each_write());
+
+    if ((ec = verify_valid(block)))
+        return ec;
+
+    const auto& header = block.header();
+    header.metadata.error = error::success;
+
+    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    if (!begin_write())
+        return error::store_lock_failure;
+    
+    // Mark candidate block as valid if not already validated.
+    if (!header.metadata.validated)
+        if (!blocks_->validate(header.hash(), header.metadata.error))
+            return error::operation_failed;
+
+    // Mark candidate block txs and outputs spent by them as candidate.
+    if (!transactions_->candidate(block.transactions(), true))
+        return error::operation_failed;
+
+    header.metadata.validated = true;
+
+    return end_write() ? error::success : error::store_lock_failure;
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+// Reorganize blocks.
+code data_base::reorganize(const config::checkpoint& fork_point,
+    block_const_ptr_list_const_ptr incoming,
+    block_const_ptr_list_ptr outgoing)
+{
+    // TODO
+    return error::not_implemented;
+}
+
+// Utilities.
+// ----------------------------------------------------------------------------
+// protected
+
+// Store, update, validate and confirm the genesis block.
+code data_base::push_genesis(const block& block)
+{
+    static constexpr auto genesis_height = 0u;
+    auto ec = push(block.header(), genesis_height);
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock lock(write_mutex_);
+
+    if ((ec = verify_update(block, genesis_height)))
+        return ec;
+
+    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    if (!begin_write())
+        return error::store_lock_failure;
+
+    // Since genesis output is not spendable it is not indexed.
+    if ((ec = store_transactions(block, genesis_height, no_time,
+        transaction_state::confirmed)))
+        return ec;
+
+    // Populate pent block's transaction references.
+    if (!blocks_->update(block))
+        return error::operation_failed;
+
+    // Promote validation state from pent to **valid**.
+    if (!blocks_->validate(block.hash(), error::success))
+        return error::operation_failed;
+
+    // Promote block index state from indexed to **confirmed**.
+    if (!blocks_->confirm(block.hash(), genesis_height, true))
+        return error::operation_failed;
+
+    commit();
+
+    return end_write() ? error::success : error::store_lock_failure;
+    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+////// TODO: add segwit address indexing.
+////void data_base::push_inputs(const transaction& tx)
+////{
+////    if (tx.is_coinbase())
+////        return;
+////
+////    uint32_t index = 0;
+////    const auto& inputs = tx.inputs();
+////    const auto link = tx.metadata.link;
+////
+////    for (const auto& input: inputs)
+////    {
+////        const auto& prevout = input.previous_output();
+////        const payment_record in{ link, index++, prevout.checksum(), false };
+////
+////        if (prevout.metadata.cache.is_valid())
+////        {
+////            // This results in a complete and unambiguous history for the
+////            // address since standard outputs contain unambiguous address data.
+////            for (const auto& address: prevout.metadata.cache.addresses())
+////                addresses_->store(address.hash(), in);
+////        }
+////        else
+////        {
+////            // For any p2pk spend this creates no record (insufficient data).
+////            // For any p2kh spend this creates the ambiguous p2sh address,
+////            // which significantly expands the size of the history store.
+////            // These are tradeoffs when no prevout is cached (checkpoint sync).
+////            for (const auto& address: input.addresses())
+////                addresses_->store(address.hash(), in);
+////        }
+////    }
+////}
+
+////// TODO: add segwit address indexing.
+////void data_base::push_outputs(const transaction& tx)
+////{
+////    uint32_t index = 0;
+////    const auto& outputs = tx.outputs();
+////    const auto link = tx.metadata.link;
+////
+////    for (const auto& output: outputs)
+////    {
+////        const payment_record out{ link, index++, output.value(), true };
+////
+////        // Standard outputs contain unambiguous address data.
+////        for (const auto& address: output.addresses())
+////            addresses_->store(address.hash(), out);
+////    }
+////}
+
+// Header reorganization.
+// ----------------------------------------------------------------------------
+// protected
+
+bool data_base::pop_above(header_const_ptr_list_ptr headers,
+    const config::checkpoint& fork_point)
+{
+    code ec;
+    headers->clear();
+    if ((ec = verify(fork_point, false)))
+        return false;
+
+    size_t top;
+    if (!blocks_->top(top, false))
+        return false;
+
+    const auto fork = fork_point.height();
+    const auto depth = top - fork;
+    headers->reserve(depth);
+    if (depth == 0)
+        return true;
+
+    // Pop all headers above the fork point.
+    for (size_t height = top; height > fork; --height)
+    {
+        const auto next = std::make_shared<message::header>();
+        if ((ec = pop(*next, height)))
+            return false;
+
+        headers->insert(headers->begin(), next);
+    }
+
+    return true;
+}
+
+bool data_base::push_all(header_const_ptr_list_const_ptr headers,
+    const config::checkpoint& fork_point)
+{
+    code ec;
+    const auto first_height = fork_point.height() + 1;
+
+    // Push all headers onto the fork point.
+    for (size_t index = 0; index < headers->size(); ++index)
+    {
+        const auto next = (*headers)[index];
+        if ((ec = push(*next, first_height + index)))
+            return false;
+    }
+
+    return true;
 }
 
 // TODO: enable promotion from any unconfirmed state (to confirmed).
@@ -299,16 +570,15 @@ code data_base::pop(chain::header& out_header, size_t height)
     if (!result)
         return error::operation_failed;
 
-    ////// Create a block for walking transactions.
-    ////const chain::block block(result.header(), to_transactions(result));
-
     //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     if (!begin_write())
         return error::store_lock_failure;
 
-    ////if ((ec = pop_transactions(block)))
-    ////    return ec;
+    // Deconfirm previous outputs spent by txs of this block (if any).
+    if (!unconfirm_transactions(result.header()))
+        return error::operation_failed;
 
+    // Deconfirm the block header.
     if (!blocks_->unconfirm(result.hash(), height, false))
         return error::operation_failed;
 
@@ -322,112 +592,161 @@ code data_base::pop(chain::header& out_header, size_t height)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-// Add transactions for an existing block header.
-// This assumes the txs do not exist, which is ok for IBD, but not catch-up.
-// This allows parallel write when write flushing is not enabled.
-// TODO: optimize for catch-up sync by updating existing transactions.
-code data_base::update(block_const_ptr block, size_t height)
+// Block reorganization.
+// ----------------------------------------------------------------------------
+// protected
+
+bool data_base::pop_above(block_const_ptr_list_ptr blocks,
+    const config::checkpoint& fork_point)
 {
-    code ec;
-
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    conditional_lock lock(flush_each_write());
-
-    if ((ec = verify_update(*block, height)))
-        return ec;
-
-    // Conditional write mutex preserves write flushing by preventing overlap.
-    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    if (!begin_write())
-        return error::store_lock_failure;
-
-    for (const auto& tx: block->transactions())
-    {
-        // This stores the transaction and sets tx link metadata.
-        if (!transactions_->store(tx, unverified, no_time, unconfirmed, pool))
-            return error::operation_failed;
-
-        ////// HACK: added this temporarily, to measure tx store efficiency.
-        ////// This causes out-of-order indexing, which would break reorganization.
-        ////// This also implies indexing of inputs without prevouts, so imperfect.
-        ////// With validation we have prevouts and can control order, though not
-        ////// as fast and requires full validation (for all prevouts) or short
-        ////// validation (checkpoint/milestone) population of prevouts.
-        ////if (settings_.index_addresses)
-        ////{
-        ////    push_inputs(tx);
-        ////    push_outputs(tx);
-        ////}
-    }
-
-    // Update the block's transaction associations (not its state).
-    if (!blocks_->update(*block))
-        return error::operation_failed;
-
-    commit();
-
-    return end_write() ? error::success : error::store_lock_failure;
-    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ///////////////////////////////////////////////////////////////////////////
+    return true;
 }
 
-code data_base::validate(block_const_ptr block, bool positive)
+bool data_base::push_all(block_const_ptr_list_const_ptr blocks,
+    const config::checkpoint& fork_point)
 {
-    code ec;
-
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    conditional_lock lock(flush_each_write());
-
-    if ((ec = verify(*block)))
-        return ec;
-
-    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    if (!begin_write())
-        return error::store_lock_failure;
-
-    if (!blocks_->validate(block->hash(), positive))
-        return error::operation_failed;
-
-    return end_write() ? error::success : error::store_lock_failure;
-    ///////////////////////////////////////////////////////////////////////////
+    return true;
 }
 
-// private
-// Store, update, validate and confirm the genesis block.
-code data_base::push_genesis(const block& block)
+code data_base::push(const block& block, size_t height,
+    uint32_t median_time_past)
 {
-    auto ec = push(block.header(), genesis_height);
+    code ec;
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(write_mutex_);
 
-    if ((ec = verify_update(block, genesis_height)))
+    if ((ec = verify_push(block, height)))
         return ec;
 
     //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     if (!begin_write())
         return error::store_lock_failure;
 
-    // Pushes transactions sequentially as **confirmed**.
-    if ((ec = push_transactions(block, genesis_height, no_time)))
+    // Pushes transactions sequentially as confirmed, WITHOUT ADDRESS INDEXING.
+    if ((ec = store_transactions(block, height, median_time_past,
+        transaction_state::confirmed)))
         return ec;
 
-    // Populate pent block's transaction references.
-    blocks_->update(block);
-
-    // Promote validation state from pent to **valid**.
-    blocks_->validate(block.hash(), true);
-
-    // Promote index state from indexed to **confirmed**.
-    blocks_->confirm(block.hash(), genesis_height, true);
+    blocks_->push(block, height, median_time_past);
     commit();
 
     return end_write() ? error::success : error::store_lock_failure;
     //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     ///////////////////////////////////////////////////////////////////////////
+}
+
+code data_base::pop(chain::block& out_block, size_t height)
+{
+    code ec;
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock lock(write_mutex_);
+
+    if ((ec = verify_top(height, true)))
+        return ec;
+
+    const auto result = blocks_->get(height, true);
+
+    if (!result)
+        return error::operation_failed;
+
+    // Create a block for walking transactions and return.
+    out_block = chain::block(result.header(), to_transactions(result));
+
+    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    if (!begin_write())
+        return error::store_lock_failure;
+
+    // Deconfirms transactions (and thereby also address indexes).
+    if ((ec = unconfirm_transactions(out_block)))
+        return ec;
+
+    // Changes block state and height index.
+    if (!blocks_->unconfirm(out_block.hash(), height, true))
+        return error::operation_failed;
+
+    // Commit everything that was changed.
+    commit();
+
+    BITCOIN_ASSERT(out_block.is_valid());
+    return end_write() ? error::success : error::store_lock_failure;
+    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+// Transactions.
+// ----------------------------------------------------------------------------
+// protected
+
+// TODO: set as pooled.
+// This stores each tx of the block as pooled, and sets tx link metadata.
+code data_base::store_transactions(const block& block, size_t height,
+    uint32_t median_time_past, transaction_state state)
+{
+    size_t position = 0;
+    for (const auto& tx: block.transactions())
+    {
+        // If this is a new tx and so configured, index addresses.
+        if (tx.metadata.link == transaction::validation::unlinked &&
+            settings_.index_addresses)
+            addresses_->index(tx);
+
+        if (!transactions_->store(tx, height, median_time_past, position++,
+            state))
+            return error::operation_failed;
+    }
+
+    return error::success;
+}
+
+// TODO: create confirm_transactions (reorg block in confirmed).
+// TODO: verify unconfirm_transactions (reorg block out confirmed).
+
+// TODO: create candidate_transactions (validated to candidate).
+// TODO: create uncandidate_transactions (reorg out candidate).
+
+// Call for block pop.
+code data_base::unconfirm_transactions(const block& block)
+{
+    for (const auto& tx: block.transactions())
+        if (!transactions_->unconfirm(tx.metadata.link))
+            return error::operation_failed;
+
+    return error::success;
+}
+
+// Call for header pop.
+code data_base::unconfirm_transactions(const chain::header& header)
+{
+    // TODO: optimize by accepting the tx result to avoid this call.
+    const auto result = blocks_->get(header.hash());
+
+    if (!result)
+        return error::operation_failed;
+
+    for (const auto link: result)
+        if (!transactions_->unconfirm(link))
+            return error::operation_failed;
+
+    return error::success;
+}
+
+transaction::list data_base::to_transactions(const block_result& result) const
+{
+    transaction::list txs;
+    txs.reserve(result.transaction_count());
+
+    for (const auto link: result)
+    {
+        const auto tx = transactions_->get(link);
+        BITCOIN_ASSERT(tx);
+        txs.push_back(tx.transaction());
+    }
+
+    return txs;
 }
 
 // Debug Utilities.
@@ -439,6 +758,12 @@ static hash_digest get_block(const block_database& blocks,
     size_t height, bool block_index)
 {
     return blocks.get(height, block_index).hash();
+}
+
+static bool get_is_empty_block(const block_database& blocks,
+    size_t height, bool block_index)
+{
+    return blocks.get(height, block_index).transaction_count() == 0;
 }
 
 static hash_digest get_previous_block(const block_database& blocks,
@@ -456,10 +781,10 @@ static size_t get_next_block(const block_database& blocks,
 }
 #endif
 
-code data_base::verify(const block& block) const
+code data_base::verify(const header& header) const
 {
-#ifdef NDEBUG
-    if (!blocks_->get(block.hash()))
+#ifndef NDEBUG
+    if (!blocks_->get(header.hash()))
         return error::not_found;
 #endif
 
@@ -499,14 +824,13 @@ code data_base::verify_top(size_t height, bool block_index) const
     return error::success;
 }
 
-
 code data_base::verify_push(const transaction& tx) const
 {
 #ifndef NDEBUG
     const auto result = transactions_->get(tx.hash());
 
-    // This is an expensive re-check, but only if a duplicate exists.
-    if (result && !result.is_spent())
+    // This is an expensive re-check, but only if a confirmed duplicate exists.
+    if (result && !result.is_spent(max_size_t, false))
         return error::unspent_duplicate;
 #endif
 
@@ -529,10 +853,10 @@ code data_base::verify_push(const header& header, size_t height) const
 
 code data_base::verify_push(const block& block, size_t height) const
 {
+#ifndef NDEBUG
     if (block.transactions().empty())
         return error::empty_block;
 
-#ifndef NDEBUG
     if (get_next_block(blocks(), true) != height)
         return error::store_block_invalid_height;
 
@@ -550,6 +874,9 @@ code data_base::verify_update(const block& block, size_t height) const
     if (block.transactions().empty())
         return error::empty_block;
 
+    if (!get_is_empty_block(blocks(), height, false))
+        return error::operation_failed;
+
     if (get_block(blocks(), height, false) != block.hash())
         return error::not_found;
 #endif
@@ -557,294 +884,19 @@ code data_base::verify_update(const block& block, size_t height) const
     return error::success;
 }
 
-// Synchronous transaction writers.
-// ----------------------------------------------------------------------------
-// protected
-
-// To push in order call with bucket = 0 and buckets = 1 (defaults).
-code data_base::push_transactions(const block& block, size_t height,
-    uint32_t median_time_past, size_t bucket, size_t buckets,
-    transaction_state state)
+code data_base::verify_valid(const block& block) const
 {
-    BITCOIN_ASSERT(bucket < buckets);
-    const auto& txs = block.transactions();
-    const auto count = txs.size();
-
-    for (auto position = bucket; position < count;
-        position = ceiling_add(position, buckets))
-    {
-        const auto& tx = txs[position];
-
-        // This stores and confirms the transaction, and sets tx link metadata.
-        if (!transactions_->store(tx, height, median_time_past, position))
-            return error::operation_failed;
-
-        if (settings_.index_addresses)
-        {
-            push_inputs(tx);
-            push_outputs(tx);
-        }
-    }
-
-    return error::success;
-}
-
-// TODO: add segwit address indexing.
-void data_base::push_inputs(const transaction& tx)
-{
-    if (tx.is_coinbase())
-        return;
-
-    uint32_t index = 0;
-    const auto& inputs = tx.inputs();
-    const auto link = tx.metadata.link;
-
-    for (const auto& input: inputs)
-    {
-        const auto& prevout = input.previous_output();
-        const payment_record in{ link, index++, prevout.checksum(), false };
-
-        if (prevout.metadata.cache.is_valid())
-        {
-            // This results in a complete and unambiguous history for the
-            // address since standard outputs contain unambiguous address data.
-            for (const auto& address: prevout.metadata.cache.addresses())
-                addresses_->store(address.hash(), in);
-        }
-        else
-        {
-            // For any p2pk spend this creates no record (insufficient data).
-            // For any p2kh spend this creates the ambiguous p2sh address,
-            // which significantly expands the size of the history store.
-            // These are tradeoffs when no prevout is cached (checkpoint sync).
-            for (const auto& address: input.addresses())
-                addresses_->store(address.hash(), in);
-        }
-    }
-}
-
-// TODO: add segwit address indexing.
-void data_base::push_outputs(const transaction& tx)
-{
-    uint32_t index = 0;
-    const auto& outputs = tx.outputs();
-    const auto link = tx.metadata.link;
-
-    for (const auto& output: outputs)
-    {
-        const payment_record out{ link, index++, output.value(), true };
-
-        // Standard outputs contain unambiguous address data.
-        for (const auto& address: output.addresses())
-            addresses_->store(address.hash(), out);
-    }
-}
-
-// To pop in order call with bucket = 0 and buckets = 1 (defaults).
-code data_base::pop_transactions(const block& block, size_t bucket,
-    size_t buckets)
-{
-    BITCOIN_ASSERT(bucket < buckets);
-    const auto& txs = block.transactions();
-    const auto count = txs.size();
-
-    for (auto position = bucket; position < count;
-        position = ceiling_add(position, buckets))
-    {
-        const auto& tx = txs[position];
-
-        if (!transactions_->unconfirm(tx.metadata.link))
-            return error::operation_failed;
-
-        if (settings_.index_addresses)
-            if (!pop_inputs(tx) || !pop_outputs(tx))
-                return error::operation_failed;
-    }
-
-    return error::success;
-}
-
-bool data_base::pop_inputs(const chain::transaction& tx)
-{
-    if (!settings_.index_addresses || tx.is_coinbase())
-        return true;
-
-    for (auto input: tx.inputs())
-        for (const auto& address: input.addresses())
-            if (!addresses_->pop(address.hash()))
-                return false;
-
-    return true;
-}
-
-bool data_base::pop_outputs(const chain::transaction& tx)
-{
-    if (!settings_.index_addresses)
-        return true;
-
-    for (auto output: tx.outputs())
-        for (const auto& address: output.addresses())
-            if (!addresses_->pop(address.hash()))
-                return false;
-
-    return true;
-}
-
-// Header reorganization.
-// ----------------------------------------------------------------------------
-
-code data_base::reorganize(const config::checkpoint& fork_point,
-    header_const_ptr_list_const_ptr incoming,
-    header_const_ptr_list_ptr outgoing)
-{
-    if (fork_point.height() > max_size_t - incoming->size())
-        return error::operation_failed;
-
-    const auto result =
-        pop_above(outgoing, fork_point) &&
-        push_all(incoming, fork_point);
-
-    return result ? error::success : error::operation_failed;
-}
-
-// private
-bool data_base::pop_above(header_const_ptr_list_ptr headers,
-    const config::checkpoint& fork_point)
-{
-    code ec;
-    headers->clear();
-    if ((ec = verify(fork_point, false)))
-        return false;
-
-    size_t top;
-    if (!blocks_->top(top, false))
-        return false;
-
-    const auto fork = fork_point.height();
-    const auto depth = top - fork;
-    headers->reserve(depth);
-    if (depth == 0)
-        return true;
-
-    // Pop all headers above the fork point.
-    for (size_t height = top; height > fork; --height)
-    {
-        const auto next = std::make_shared<message::header>();
-        if ((ec = pop(*next, height)))
-            return false;
-
-        headers->insert(headers->begin(), next);
-    }
-
-    return true;
-}
-
-// private
-bool data_base::push_all(header_const_ptr_list_const_ptr headers,
-    const config::checkpoint& fork_point)
-{
-    code ec;
-    const auto first_height = fork_point.height() + 1;
-
-    // Push all headers onto the fork point.
-    for (size_t index = 0; index < headers->size(); ++index)
-    {
-        const auto next = (*headers)[index];
-        if ((ec = push(*next, first_height + index)))
-            return false;
-    }
-
-    return true;
-}
-
-// Utility writers.
-// ----------------------------------------------------------------------------
-// These are not used by the node.
-
-// TODO: enable promotion from any unconfirmed state (to indexed).
-// TODO: otherwise this will replace the previously-existing block.
-// This expects block is validated, header is not yet stored.
-code data_base::push(const block& block, size_t height,
-    uint32_t median_time_past)
-{
-    code ec;
-
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(write_mutex_);
-
-    if ((ec = verify_push(block, height)))
-        return ec;
-
-    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    if (!begin_write())
-        return error::store_lock_failure;
-
-    // Pushes transactions sequentially as confirmed.
-    if ((ec = push_transactions(block, height, median_time_past)))
-        return ec;
-
-    blocks_->push(block, height, median_time_past);
-    commit();
-
-    return end_write() ? error::success : error::store_lock_failure;
-    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ///////////////////////////////////////////////////////////////////////////
-}
-
-// This expects block exists at the top of the block index.
-code data_base::pop(chain::block& out_block, size_t height)
-{
-    code ec;
-
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(write_mutex_);
-
-    if ((ec = verify_top(height, true)))
-        return ec;
-
-    const auto result = blocks_->get(height, true);
+#ifndef NDEBUG
+    const auto result = blocks_->get(block.hash());
 
     if (!result)
+        return error::not_found;
+
+    if (!is_valid(result.state()))
         return error::operation_failed;
+#endif
 
-    // Create a block for walking transactions and return.
-    out_block = chain::block(result.header(), to_transactions(result));
-
-    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    if (!begin_write())
-        return error::store_lock_failure;
-
-    if ((ec = pop_transactions(out_block)))
-        return ec;
-
-    if (!blocks_->unconfirm(out_block.hash(), height, true))
-        return error::operation_failed;
-
-    // Commit everything that was changed.
-    commit();
-
-    BITCOIN_ASSERT(out_block.is_valid());
-    return end_write() ? error::success : error::store_lock_failure;
-    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ///////////////////////////////////////////////////////////////////////////
-}
-
-// private
-transaction::list data_base::to_transactions(const block_result& result) const
-{
-    transaction::list txs;
-    txs.reserve(result.transaction_count());
-
-    for (const auto link: result)
-    {
-        const auto tx = transactions_->get(link);
-        BITCOIN_ASSERT(tx);
-        txs.push_back(tx.transaction());
-    }
-
-    return txs;
+    return error::success;
 }
 
 } // namespace database

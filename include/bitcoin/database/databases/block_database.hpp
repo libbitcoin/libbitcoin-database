@@ -69,12 +69,6 @@ public:
     // Queries.
     //-------------------------------------------------------------------------
 
-    /// The highest confirmed block of the header index.
-    size_t fork_point() const;
-
-    /// The highest valid block of the header index.
-    size_t valid_point() const;
-
     /// The height of the highest indexed block|header.
     bool top(size_t& out_height, bool block_index=true) const;
 
@@ -100,8 +94,8 @@ public:
     /// Populate pent block transaction references, state is unchanged.
     bool update(const chain::block& block);
 
-    /// Promote pent block to valid|invalid.
-    bool validate(const hash_digest& hash, bool positive);
+    /// Promote pent block to valid or invalid and set code.
+    bool validate(const hash_digest& hash, const code& error);
 
     /// Promote pooled|indexed block to indexed|confirmed.
     bool confirm(const hash_digest& hash, size_t height, bool block_index);
@@ -131,12 +125,6 @@ private:
     void push_index(link_type index, size_t height, manager_type& manager);
 
     static const size_t prefix_size_;
-
-    // The top confirmed block in the header index.
-    std::atomic<size_t> fork_point_;
-
-    // The top valid block in the header index.
-    std::atomic<size_t> valid_point_;
 
     // Hash table used for looking up block headers by hash.
     file_storage hash_table_file_;

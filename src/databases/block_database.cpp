@@ -80,10 +80,7 @@ static const auto block_size = header_size + median_time_past_size +
 block_database::block_database(const path& map_filename,
     const path& header_index_filename, const path& block_index_filename,
     const path& tx_index_filename, size_t buckets, size_t expansion)
-  : fork_point_(0),
-    valid_point_(0),
-
-    hash_table_file_(map_filename, expansion),
+  : hash_table_file_(map_filename, expansion),
     hash_table_(hash_table_file_, buckets, block_size),
 
     // Array storage.
@@ -167,21 +164,6 @@ bool block_database::close()
 // Queries.
 // ----------------------------------------------------------------------------
 
-// This is the common block between the two indexes.
-size_t block_database::fork_point() const
-{
-    // TODO: initialize fork_point_ by scanning for first common index.
-    return fork_point_;
-}
-
-// This is the height of the last validated block.
-size_t block_database::valid_point() const
-{
-    // TODO: reduce this height as validated blocks are deindexed.
-    // TODO: initialize valid_point_ as part of initial gap scan.
-    return valid_point_;
-}
-
 bool block_database::top(size_t& out_height, bool block_index) const
 {
     auto& manager = block_index ? block_index_ : header_index_;
@@ -221,12 +203,12 @@ void block_database::push(const chain::header& header, size_t height,
     uint32_t median_time_past, uint32_t checksum, link_type tx_start,
     size_t tx_count, uint8_t state)
 {
-    auto& manager = is_confirmed(state) ? block_index_ : header_index_;
+    ////auto& manager = is_confirmed(state) ? block_index_ : header_index_;
 
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(tx_start <= max_uint32);
     BITCOIN_ASSERT(tx_count <= max_uint16);
-    BITCOIN_ASSERT(!header.metadata.pooled);
+    BITCOIN_ASSERT(!header.metadata.exists);
 
     const auto writer = [&](byte_serializer& serial)
     {
@@ -244,8 +226,8 @@ void block_database::push(const chain::header& header, size_t height,
     const auto link = next.create(header.hash(), writer);
     hash_table_.link(next);
 
-    if (is_confirmed(state) || is_indexed(state))
-        push_index(link, height, manager);
+    ////if (is_confirmed(state) || is_indexed(state))
+    ////    push_index(link, height, manager);
 }
 
 // A header creation does not move the fork point (not a reorg).
@@ -255,7 +237,7 @@ void block_database::push(const chain::header& header, size_t height)
     static const auto state = block_state::indexed | block_state::pent;
 
     // The header/block already exists, promote from pooled to indexed.
-    if (header.metadata.pooled)
+    if (header.metadata.exists)
     {
         confirm(header.hash(), height, false);
         return;
@@ -345,8 +327,7 @@ static uint8_t update_validation_state(uint8_t original, bool positive)
 }
 
 // Promote pent block to valid|invalid.
-// TODO: the caller doesn't know the current header state.
-bool block_database::validate(const hash_digest& hash, bool positive)
+bool block_database::validate(const hash_digest& hash, const code& error)
 {
     auto element = hash_table_.find(hash);
 
@@ -354,11 +335,9 @@ bool block_database::validate(const hash_digest& hash, bool positive)
         return false;
 
     uint8_t state;
-    uint32_t height;
     const auto reader = [&](byte_deserializer& deserial)
     {
-        deserial.skip(height_offset);
-        height = deserial.read_4_bytes_little_endian();
+        deserial.skip(state_offset);
 
         // Critical Section.
         ///////////////////////////////////////////////////////////////////////
@@ -370,25 +349,21 @@ bool block_database::validate(const hash_digest& hash, bool positive)
     const auto updater = [&](byte_serializer& serial)
     {
         serial.skip(state_offset);
-        const auto updated = update_validation_state(state, positive);
+        const auto updated = update_validation_state(state, !error);
 
         // Critical Section.
         ///////////////////////////////////////////////////////////////////////
         unique_lock lock(metadata_mutex_);
         serial.write_byte(updated);
+
+        // Do not overwrite checksum with error code unless block is invalid.
+        if (error)
+            serial.write_4_bytes_little_endian(error.value());
         ///////////////////////////////////////////////////////////////////////
     };
 
     element.read(reader);
     element.write(updater);
-
-    // Also update the validation chaser, assumes all prior are valid.
-    BITCOIN_ASSERT_MSG(valid_point_ != max_size_t, "valid point overflow");
-    BITCOIN_ASSERT_MSG(
-        (height == 0 && valid_point_ == 0) || (height == valid_point_ + 1),
-        "validation out of order");
-
-    valid_point_ = height;
     return true;
 }
 
@@ -471,14 +446,6 @@ bool block_database::confirm(const hash_digest& hash, size_t height,
         return false;
 
     const auto updated = confirm(element, true, block_index);
-
-    // Increment fork point for block-indexed confirmation.
-    if (block_index && is_confirmed(updated))
-    {
-        BITCOIN_ASSERT_MSG(fork_point_ != max_size_t, "fork point overflow");
-        ++fork_point_;
-    }
-
     push_index(element.link(), height, manager);
     return true;
 }
@@ -501,14 +468,6 @@ bool block_database::unconfirm(const hash_digest& hash, size_t height,
         return false;
 
     const auto original = confirm(element, false, block_index);
-
-    // Decrement fork point for previously-confirmed block via header-index.
-    if (!block_index && is_confirmed(original))
-    {
-        BITCOIN_ASSERT_MSG(fork_point_ != 0, "fork point underflow");
-        --fork_point_;
-    }
-
     pop_index(height, manager);
     return true;
 }

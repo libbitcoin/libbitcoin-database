@@ -120,18 +120,14 @@ uint32_t transaction_result::median_time_past() const
     return median_time_past_;
 }
 
-// Set fork_height to max_size_t for tx pool metadata.
-bool transaction_result::is_spent(size_t fork_height) const
+bool transaction_result::is_spent(size_t fork_height, bool candidate) const
 {
     const auto relevant = height_ <= fork_height;
-    const auto for_pool = fork_height == max_size_t;
+    const auto confirmed = state_ == transaction_state::confirmed && relevant;
+    const auto candidacy = state_ == transaction_state::indexed && candidate;
 
-    const auto confirmed =
-        (state_ == transaction_state::indexed && !for_pool) ||
-        (state_ == transaction_state::confirmed && relevant);
-
-    // Cannot be spent unless confirmed.
-    if (!confirmed)
+    // Cannot be spent unless confirmed/candidate.
+    if (!confirmed && !candidate)
         return false;
 
     BITCOIN_ASSERT(element_);
@@ -148,7 +144,7 @@ bool transaction_result::is_spent(size_t fork_height) const
         {
             // TODO: This reads full output, which is simple but not optimial.
             const auto output = output::factory(deserial, false);
-            spent = output.metadata.spent(fork_height);
+            spent = output.metadata.spent(fork_height, candidacy);
         }
     };
 
