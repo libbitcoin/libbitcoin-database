@@ -88,13 +88,21 @@ public:
     /// Update the stored block with txs.
     code update(const chain::block& block, size_t height);
 
-    // BLOCK ORGANIZER (invalidize)
+    // BLOCK ORGANIZER (invalidate)
     /// Set header validation state and metadata.
     code invalidate(const chain::header& header, const code& error);
 
-    // BLOCK ORGANIZER (validize)
-    /// Mark candidate block valid, txs and outputs spent by them as candidate.
+    // BLOCK ORGANIZER (candidate)
+    /// Mark candidate block, txs and outputs spent by them as candidate.
     code candidate(const chain::block& block);
+
+    // BLOCK ORGANIZER (candidate)
+    /// Add payments of transactions of the block to the payment index.
+    code index(const chain::block& block);
+
+    // TRANSACTION ORGANIZER (candidate)
+    /// Add payments of the transaction to the payment index.
+    code index(const chain::transaction& tx);
 
     // BLOCK ORGANIZER (reorganize)
     /// Reorganize the block index to the specified fork point.
@@ -160,9 +168,10 @@ protected:
     // Debug Utilities.
     // ------------------------------------------------------------------------
 
-    code verify(const chain::header& header) const;
     code verify(const config::checkpoint& fork_point, bool block_index) const;
     code verify_top(size_t height, bool block_index) const;
+    code verify_exists(const chain::header& header) const;
+    code verify_exists(const chain::transaction& tx) const;
     code verify_push(const chain::transaction& tx) const;
     code verify_push(const chain::header& header, size_t height) const;
     code verify_push(const chain::block& block, size_t height) const;

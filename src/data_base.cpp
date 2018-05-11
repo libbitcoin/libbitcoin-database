@@ -224,6 +224,59 @@ const address_database& data_base::addresses() const
 // Public writers.
 // ----------------------------------------------------------------------------
 
+code data_base::index(const transaction& tx)
+{
+    code ec;
+    if (!settings_.index_addresses || tx.metadata.existed)
+        return ec;
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    conditional_lock lock(flush_each_write());
+
+    if ((ec = verify_exists(tx)))
+        return ec;
+
+    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    if (!begin_write())
+        return error::store_lock_failure;
+
+    addresses_->index(tx);
+    addresses_->commit();
+
+    return end_write() ? error::success : error::store_lock_failure;
+    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+code data_base::index(const block& block)
+{
+    code ec;
+    if (!settings_.index_addresses)
+        return ec;
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    conditional_lock lock(flush_each_write());
+
+    if ((ec = verify_exists(block.header())))
+        return ec;
+
+    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    if (!begin_write())
+        return error::store_lock_failure;
+
+    for (const auto& tx: block.transactions())
+        if (!tx.metadata.existed)
+            addresses_->index(tx);
+
+    addresses_->commit();
+
+    return end_write() ? error::success : error::store_lock_failure;
+    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ///////////////////////////////////////////////////////////////////////////
+}
+
 // TODO: enable promotion from any unconfirmed state to pooled.
 // This expects tx is validated, unconfirmed and not yet stored.
 code data_base::store(const transaction& tx, uint32_t forks)
@@ -232,7 +285,7 @@ code data_base::store(const transaction& tx, uint32_t forks)
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(write_mutex_);
+    conditional_lock lock(flush_each_write());
 
     // Returns error::unspent_duplicate if an unspent tx with same hash exists.
     if ((ec = verify_push(tx)))
@@ -241,10 +294,6 @@ code data_base::store(const transaction& tx, uint32_t forks)
     //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     if (!begin_write())
         return error::store_lock_failure;
-
-    // This assumes a given tx is never stored more than one time.
-    if (settings_.index_addresses)
-        addresses_->index(tx);
 
     // When position is unconfirmed, height is used to store validation forks.
     transactions_->store(tx, forks, no_time, transaction_result::unconfirmed,
@@ -315,7 +364,7 @@ code data_base::invalidate(const header& header, const code& error)
     ///////////////////////////////////////////////////////////////////////////
     conditional_lock lock(flush_each_write());
 
-    if ((ec = verify(header)))
+    if ((ec = verify_exists(header)))
         return ec;
 
     header.metadata.error = error;
@@ -688,16 +737,9 @@ code data_base::store_transactions(const block& block, size_t height,
 {
     size_t position = 0;
     for (const auto& tx: block.transactions())
-    {
-        // If this is a new tx and so configured, index addresses.
-        if (tx.metadata.link == transaction::validation::unlinked &&
-            settings_.index_addresses)
-            addresses_->index(tx);
-
         if (!transactions_->store(tx, height, median_time_past, position++,
             state))
             return error::operation_failed;
-    }
 
     return error::success;
 }
@@ -781,16 +823,6 @@ static size_t get_next_block(const block_database& blocks,
 }
 #endif
 
-code data_base::verify(const header& header) const
-{
-#ifndef NDEBUG
-    if (!blocks_->get(header.hash()))
-        return error::not_found;
-#endif
-
-    return error::success;
-}
-
 code data_base::verify(const config::checkpoint& fork_point,
     bool block_index) const
 {
@@ -819,6 +851,26 @@ code data_base::verify_top(size_t height, bool block_index) const
     if (!blocks_->top(actual_height, block_index)
         || !(actual_height == height))
         return error::operation_failed;
+#endif
+
+    return error::success;
+}
+
+code data_base::verify_exists(const header& header) const
+{
+#ifndef NDEBUG
+    if (!blocks_->get(header.hash()))
+        return error::not_found;
+#endif
+
+    return error::success;
+}
+
+code data_base::verify_exists(const transaction& tx) const
+{
+#ifndef NDEBUG
+    if (!transactions_->get(tx.hash()))
+        return error::not_found;
 #endif
 
     return error::success;

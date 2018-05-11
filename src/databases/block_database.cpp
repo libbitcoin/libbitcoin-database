@@ -313,16 +313,15 @@ bool block_database::update(const chain::block& block)
 
 static uint8_t update_validation_state(uint8_t original, bool positive)
 {
-    // May only validate or invalidate a pooled or indexed block.
-    BITCOIN_ASSERT(is_pooled(original) || is_candidate(original));
+    // May only validate or invalidate an unvalidated block.
+    BITCOIN_ASSERT(!is_failed(original) && !is_valid(original));
 
-    // Preserve the confirmation state (pooled or indexed).
-    // We try to only validate indexed blocks, but allow pooled for a race.
+    // Preserve the confirmation state.
     const auto confirmation_state = original & block_state::confirmations;
     const auto validation_state = positive ? block_state::valid :
         block_state::failed;
 
-    // Merge the new confirmation state with existing validation state.
+    // Merge the new validation state with existing confirmation state.
     return confirmation_state | validation_state;
 }
 
@@ -371,23 +370,23 @@ static uint8_t update_confirmation_state(uint8_t original, bool positive,
     bool block_index)
 {
     // May only confirm a valid block.
-    BITCOIN_ASSERT(!positive || !block_index || is_valid(original));
+    BITCOIN_ASSERT(positive || block_index || is_valid(original));
 
     // May only unconfirm a confirmed block.
-    BITCOIN_ASSERT(positive || !block_index || is_confirmed(original));
+    BITCOIN_ASSERT(!positive || block_index || is_confirmed(original));
 
-    // May only index a pooled header.
-    BITCOIN_ASSERT(!positive || block_index || is_pooled(original));
+    // May only candidate a valid block.
+    BITCOIN_ASSERT(positive || !block_index || is_valid(original));
 
-    // May only deindex an indexed header.
-    BITCOIN_ASSERT(positive || block_index || is_candidate(original));
+    // May only uncandidate a candidate header.
+    BITCOIN_ASSERT(!positive || !block_index || is_candidate(original));
 
     // Preserve the validation state (header-indexed blocks can be pent).
     const auto validation_state = original & block_state::validations;
     const auto positive_state = block_index ? block_state::confirmed :
         block_state::candidate;
 
-    // Demotion is always directly to the pooled state.
+    // Deconfirmation is always directly to the pooled state.
     const auto confirmation_state = positive ? positive_state :
         block_state::missing;
 
