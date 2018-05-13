@@ -146,6 +146,62 @@ transaction_result transaction_database::get(const hash_digest& hash) const
     return { hash_table_.find(hash), metadata_mutex_ };
 }
 
+void transaction_database::get_block_metadata(const chain::transaction& tx,
+    uint32_t forks, size_t fork_height) const
+{
+    const auto result = get(tx.hash());
+
+    // Default values are correct for indication of not found.
+    if (!result)
+        return;
+
+    const auto bip34 = chain::script::is_enabled(forks,
+        machine::rule_fork::bip34_rule);
+
+    //*************************************************************************
+    // CONSENSUS: BIP30 treats a spent duplicate as if it did not exist, and
+    // any duplicate of an unspent tx as invalid (with two expcetions).
+    // BIP34 active renders BIP30 moot as duplicates are presumed impossible.
+    //*************************************************************************
+    if (!bip34 && result.is_spent(fork_height, true))
+    {
+        // The original tx will not be queryable independent of the block.
+        // The original tx's block linkage is unbroken by accepting duplicate.
+        // BIP30 exception blocks are not spent (will not be unlinked here).
+        BITCOIN_ASSERT(tx.metadata.link == transaction::validation::unlinked);
+        return;
+    }
+
+    const auto state = result.state();
+    const auto height = result.height();
+    const auto relevant = fork_height <= height;
+    tx.metadata.link = result.link();
+    tx.metadata.existed = tx.metadata.link == transaction::validation::unlinked;
+    tx.metadata.candidate = state == transaction_state::candidate;
+    tx.metadata.confirmed = state == transaction_state::confirmed && relevant;
+    tx.metadata.verified = state != transaction_state::confirmed &&
+        height == forks;
+}
+
+void transaction_database::get_pool_metadata(const chain::transaction& tx,
+    uint32_t forks) const
+{
+    const auto result = get(tx.hash());
+
+    // Default values presumed correct for indication of not found.
+    if (!result)
+        return;
+
+    const auto state = result.state();
+    const auto height = result.height();
+    tx.metadata.link = result.link();
+    tx.metadata.existed = tx.metadata.link == transaction::validation::unlinked;
+    tx.metadata.candidate = state == transaction_state::candidate;
+    tx.metadata.confirmed = state == transaction_state::confirmed;
+    tx.metadata.verified = state != transaction_state::confirmed &&
+        height == forks;
+}
+
 // Metadata should be defaulted by caller.
 bool transaction_database::get_output(const output_point& point,
     size_t fork_height, bool candidate) const
@@ -159,7 +215,7 @@ bool transaction_database::get_output(const output_point& point,
     if (point.is_null())
         return false;
 
-    ////// Cache contians only unspent confirmed outputs.
+    ////// Cache contains only unspent confirmed outputs.
     ////// This will not return an output found above the fork point.
     ////if (cache_.populate(point, fork_height))
     ////    return true;

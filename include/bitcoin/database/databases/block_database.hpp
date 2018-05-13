@@ -78,6 +78,9 @@ public:
     /// Fetch block by hash.
     block_result get(const hash_digest& hash) const;
 
+    /// Populate header metadata for the given header.
+    void get_header_metadata(const chain::header& header) const;
+
     // Store.
     // ------------------------------------------------------------------------
 

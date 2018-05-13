@@ -77,6 +77,13 @@ public:
     /// Fetch transaction by its hash.
     transaction_result get(const hash_digest& hash) const;
 
+    /// Populate tx metadata for the given block context.
+    void get_block_metadata(const chain::transaction& tx, uint32_t forks,
+        size_t fork_height) const;
+
+    /// Populate tx metadata for the given transaction pool context.
+    void get_pool_metadata(const chain::transaction& tx, uint32_t forks) const;
+
     /// Populate output metadata for the specified point and given context.
     bool get_output(const chain::output_point& point, size_t fork_height,
         bool candidate) const;

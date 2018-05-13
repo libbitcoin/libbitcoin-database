@@ -195,6 +195,25 @@ block_result block_database::get(const hash_digest& hash) const
     };
 }
 
+void block_database::get_header_metadata(const chain::header& header) const
+{
+    const auto result = get(header.hash());
+
+    // Default values presumed correct for indication of not found.
+    if (!result)
+        return;
+
+    const auto state = result.state();
+    const auto height = result.height();
+
+    header.metadata.error = result.error();
+    header.metadata.exists = true;
+    header.metadata.populated = result.transaction_count() != 0;
+    header.metadata.validated = is_valid(state) || is_failed(state);
+    header.metadata.candidate = is_candidate(state);
+    header.metadata.confirmed = is_confirmed(state);
+}
+
 // Store.
 // ----------------------------------------------------------------------------
 
