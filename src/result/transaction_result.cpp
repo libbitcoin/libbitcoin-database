@@ -81,12 +81,6 @@ transaction_result::operator bool() const
     return element_;
 }
 
-code transaction_result::error() const
-{
-    // Height could store error code, but we don't currently use invalid state.
-    return error::success;
-}
-
 file_offset transaction_result::link() const
 {
     return element_.link();

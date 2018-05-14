@@ -53,9 +53,6 @@ public:
     /// True if this transaction result is valid (found).
     operator bool() const;
 
-    /// An error code if block state is invalid.
-    code error() const;
-
     /// The link for the transaction slab.
     file_offset link() const;
 
