@@ -367,17 +367,14 @@ code data_base::invalidate(const header& header, const code& error)
     if ((ec = verify_exists(header)))
         return ec;
 
-    header.metadata.error = error;
-
     //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     if (!begin_write())
         return error::store_lock_failure;
 
-    // Mark candidate block as validated if not already validated.
-    if (!header.metadata.validated)
-        if (!blocks_->validate(header.hash(), header.metadata.error))
-            return error::operation_failed;
+    if (!blocks_->validate(header.hash(), error))
+        return error::operation_failed;
 
+    header.metadata.error = error;
     header.metadata.validated = true;
 
     return end_write() ? error::success : error::store_lock_failure;
@@ -397,21 +394,20 @@ code data_base::candidate(const block& block)
         return ec;
 
     const auto& header = block.header();
-    header.metadata.error = error::success;
 
     //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     if (!begin_write())
         return error::store_lock_failure;
-    
-    // Mark candidate block as valid if not already validated.
-    if (!header.metadata.validated)
-        if (!blocks_->validate(header.hash(), header.metadata.error))
-            return error::operation_failed;
+
+    // Mark candidate block as valid.
+    if (!blocks_->validate(header.hash(), header.metadata.error))
+        return error::operation_failed;
 
     // Mark candidate block txs and outputs spent by them as candidate.
     if (!transactions_->candidate(block.transactions(), true))
         return error::operation_failed;
 
+    header.metadata.error = error::success;
     header.metadata.validated = true;
 
     return end_write() ? error::success : error::store_lock_failure;
