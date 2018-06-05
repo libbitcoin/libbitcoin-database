@@ -74,21 +74,17 @@ public:
     // Node writers.
     // ------------------------------------------------------------------------
 
-    // TRANSACTION ORGANIZER (store)
-    /// Store unconfirmed tx/payments that was verified with the given forks.
-    code store(const chain::transaction& tx, uint32_t forks);
-
     // HEADER ORGANIZER (reorganize)
     /// Reorganize the header index to the specified fork point.
     code reorganize(const config::checkpoint& fork_point,
         header_const_ptr_list_const_ptr incoming,
         header_const_ptr_list_ptr outgoing);
 
-    // BLOCK ORGANIZER (download)
+    // BLOCK ORGANIZER (update)
     /// Update the stored block with txs.
     code update(const chain::block& block, size_t height);
 
-    // BLOCK ORGANIZER (invalidate)
+    // BLOCK ORGANIZER (update, invalidate)
     /// Set header validation state and metadata.
     code invalidate(const chain::header& header, const code& error);
 
@@ -100,15 +96,19 @@ public:
     /// Add payments of transactions of the block to the payment index.
     code index(const chain::block& block);
 
-    // TRANSACTION ORGANIZER (candidate)
-    /// Add payments of the transaction to the payment index.
-    code index(const chain::transaction& tx);
-
     // BLOCK ORGANIZER (reorganize)
     /// Reorganize the block index to the specified fork point.
     code reorganize(const config::checkpoint& fork_point,
         block_const_ptr_list_const_ptr incoming,
         block_const_ptr_list_ptr outgoing);
+
+    // TRANSACTION ORGANIZER (store)
+    /// Store unconfirmed tx/payments that was verified with the given forks.
+    code store(const chain::transaction& tx, uint32_t forks);
+
+    // TRANSACTION ORGANIZER (store)
+    /// Add payments of the transaction to the payment index.
+    code index(const chain::transaction& tx);
 
 protected:
     void start();
