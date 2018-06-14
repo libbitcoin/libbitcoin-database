@@ -215,12 +215,9 @@ bool transaction_database::get_output(const output_point& point,
     if (point.is_null())
         return false;
 
-    ////// Cache contains only unspent confirmed outputs.
-    ////// This will not return an output found above the fork point.
-    ////if (cache_.populate(point, fork_height))
-    ////    return true;
+    if (cache_.populate(point, fork_height))
+        return true;
 
-    // Find the tx entry.
     const auto result = get(point.hash());
 
     if (!result)
