@@ -40,6 +40,7 @@ src_libbitcoin_database_la_SOURCES = \
     src/store.cpp \
     src/unspent_outputs.cpp \
     src/unspent_transaction.cpp \
+    src/verify.cpp \
     src/databases/address_database.cpp \
     src/databases/block_database.cpp \
     src/databases/transaction_database.cpp \
@@ -123,6 +124,7 @@ include_bitcoin_database_HEADERS = \
     include/bitcoin/database/store.hpp \
     include/bitcoin/database/unspent_outputs.hpp \
     include/bitcoin/database/unspent_transaction.hpp \
+    include/bitcoin/database/verify.hpp \
     include/bitcoin/database/version.hpp
 
 include_bitcoin_database_databasesdir = ${includedir}/bitcoin/database/databases

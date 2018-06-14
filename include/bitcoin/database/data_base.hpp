@@ -141,42 +141,32 @@ protected:
     // Block reorganization.
     // ------------------------------------------------------------------------
 
-    // Call from block reorganize.
-    bool push_all(block_const_ptr_list_const_ptr blocks,
-        const config::checkpoint& fork_point);
+    ////// Call from block reorganize.
+    ////bool push_all(block_const_ptr_list_const_ptr blocks,
+    ////    const config::checkpoint& fork_point);
 
-    // Call from block reorganize.
-    bool pop_above(block_const_ptr_list_ptr headers,
-        const config::checkpoint& fork_point);
+    ////// Call from block reorganize.
+    ////bool pop_above(block_const_ptr_list_ptr headers,
+    ////    const config::checkpoint& fork_point);
 
-    // Call block push_all.
-    code push(const chain::block& block, size_t height,
-        uint32_t median_time_past);
+    ////// Call from block push_all.
+    ////code push(const chain::block& block, size_t height,
+    ////    uint32_t median_time_past);
 
-    // Call from block pop_above.
-    code pop(chain::block& out_block, size_t height);
+    ////// Call from block pop_above.
+    ////code pop(chain::block& out_block, size_t height);
 
     // Transactions.
     // ------------------------------------------------------------------------
 
+    // Store the transactions associated with the block.
     code store_transactions(const chain::block& block, size_t height,
         uint32_t median_time_past, transaction_state state);
-    code unconfirm_transactions(const chain::block& block);
+
+    ////code unconfirm_transactions(const chain::block& block);
     code unconfirm_transactions(const chain::header& header);
-    chain::transaction::list to_transactions(const block_result& result) const;
 
-    // Debug Utilities.
-    // ------------------------------------------------------------------------
-
-    code verify(const config::checkpoint& fork_point, bool block_index) const;
-    code verify_top(size_t height, bool block_index) const;
-    code verify_exists(const chain::header& header) const;
-    code verify_exists(const chain::transaction& tx) const;
-    code verify_push(const chain::transaction& tx) const;
-    code verify_push(const chain::header& header, size_t height) const;
-    code verify_push(const chain::block& block, size_t height) const;
-    code verify_update(const chain::block& block, size_t height) const;
-    code verify_valid(const chain::block& block) const;
+    ////chain::transaction::list to_transactions(const block_result& result) const;
 
     // Databases.
     // ------------------------------------------------------------------------
