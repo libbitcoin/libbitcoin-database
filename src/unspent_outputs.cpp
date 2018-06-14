@@ -186,27 +186,20 @@ bool unspent_outputs::populate(const output_point& point,
     if (tx == unspent_.left.end())
         return false;
 
-    const auto& transaction = tx->first;
-    const auto height = transaction.height();
-    const auto relevant = height <= fork_height;
-    const auto confirmed = transaction.is_confirmed() && relevant;
-
-    // Return false if exists but not confirmed under fork point.
-    if (!confirmed)
-        return false;
-
     // Find the output at the specified index for the found unspent tx.
+    const auto& transaction = tx->first;
     const auto outputs = transaction.outputs();
     const auto output = outputs->find(point.index());
     if (output == outputs->end())
         return false;
 
     ++hits_;
+    const auto height = transaction.height();
 
     // Populate the output metadata.
     prevout.spent = false;
     prevout.candidate = false;
-    prevout.confirmed = true;
+    prevout.confirmed = transaction.is_confirmed() && height <= fork_height;
     prevout.coinbase = transaction.is_coinbase();
     prevout.height = height;
     prevout.median_time_past = transaction.median_time_past();
