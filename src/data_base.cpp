@@ -282,7 +282,6 @@ code data_base::index(const block& block)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-// This expects tx is validated, unconfirmed and not yet stored (pool).
 code data_base::store(const transaction& tx, uint32_t forks)
 {
     code ec;
@@ -299,9 +298,11 @@ code data_base::store(const transaction& tx, uint32_t forks)
     if (!begin_write())
         return error::store_lock_failure;
 
-    // When position is unconfirmed, height is used to store validation forks.
-    transactions_->store(tx, forks, no_time, transaction_result::unconfirmed,
-        transaction_state::pooled);
+    // Store the transaction if missing and always set tx link metadata.
+    if (!transactions_->store(tx, forks, no_time,
+        transaction_result::unconfirmed, transaction_state::pooled))
+        return error::operation_failed;
+
     transactions_->commit();
 
     return end_write() ? error::success : error::store_lock_failure;
@@ -323,7 +324,7 @@ code data_base::reorganize(const config::checkpoint& fork_point,
     return result ? error::success : error::operation_failed;
 }
 
-// Add transactions for an existing block header.
+// Add missing transactions for an existing block header.
 // This allows parallel write when write flushing is not enabled.
 code data_base::update(const chain::block& block, size_t height)
 {
@@ -336,14 +337,14 @@ code data_base::update(const chain::block& block, size_t height)
     if ((ec = verify_update(*blocks_, block, height)))
         return ec;
 
+    // This could be skipped when the stored header's tx count is non-zero.
+
     // Conditional write mutex preserves write flushing by preventing overlap.
     //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     if (!begin_write())
         return error::store_lock_failure;
 
-    // TODO: could bypass if the block header indicates not empty.
-
-    // This stores or connects each transaction and sets tx link metadata.
+    // Store the missing transactions and set tx link metadata for all.
     if ((ec = store_transactions(block, machine::rule_fork::unverified,
         no_time, transaction_state::pooled)))
         return ec;
@@ -576,9 +577,7 @@ bool data_base::push_all(header_const_ptr_list_const_ptr headers,
     return true;
 }
 
-// TODO: enable promotion from any unconfirmed state (to confirmed).
-// TODO: otherwise this will replace the previously-existing header.
-// This expects header is validated and not yet stored.
+// This expects header is valid and metadata.exists is populated.
 code data_base::push(const chain::header& header, size_t height)
 {
     code ec;
@@ -594,7 +593,7 @@ code data_base::push(const chain::header& header, size_t height)
     if (!begin_write())
         return error::store_lock_failure;
 
-    // State is indexed | pent (pending download).
+    // This will change an existing header from any state to confirmed.
     blocks_->push(header, height);
     blocks_->commit();
 
@@ -732,8 +731,11 @@ code data_base::pop(chain::header& out_header, size_t height)
 // ----------------------------------------------------------------------------
 // protected
 
-// TODO: set as pooled.
-// This stores each tx of the block as pooled, and sets tx link metadata.
+// BUGBUG: Must look up each tx hash for existence and set link metadata.
+// BUGBUG: Otherwise there's no tx pool existence optimization and there will
+// BUGBUG: be duplcate payment indexing. But initial block download suffers.
+
+// This stores or updates each tx of the block and sets tx link metadata.
 code data_base::store_transactions(const block& block, size_t height,
     uint32_t median_time_past, transaction_state state)
 {

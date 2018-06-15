@@ -160,7 +160,7 @@ void transaction_database::get_block_metadata(const chain::transaction& tx,
 
     //*************************************************************************
     // CONSENSUS: BIP30 treats a spent duplicate as if it did not exist, and
-    // any duplicate of an unspent tx as invalid (with two expcetions).
+    // any duplicate of an unspent tx as invalid (with two exceptions).
     // BIP34 active renders BIP30 moot as duplicates are presumed impossible.
     //*************************************************************************
     if (!bip34 && result.is_spent(fork_height, true))
@@ -265,13 +265,21 @@ bool transaction_database::store(const chain::transaction& tx, uint32_t height,
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(position <= max_uint16);
 
+    // Assume the caller has not tested for existence (true for block update).
+    if (tx.metadata.link == transaction::validation::unlinked)
+    {
+        const auto result = get(tx.hash());
+
+        if (result)
+            tx.metadata.link = result.link();
+    }
+
     // This allows address indexer to bypass indexing despite link existence.
     tx.metadata.existed = tx.metadata.link != transaction::validation::unlinked;
 
-    // If the transacation already exists just update its metadata.
+    // If the transaction already exists just return (with link set).
     if (tx.metadata.existed)
-        return update(tx.metadata.link, height, median_time_past, position,
-            state);
+        return true;
 
     const auto writer = [&](byte_serializer& serial)
     {

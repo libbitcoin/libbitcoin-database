@@ -440,18 +440,16 @@ uint8_t block_database::confirm(const_element& element, bool positive,
     return positive ? updated : original;
 }
 
-// TODO: the caller doesn't know the current header state.
 bool block_database::confirm(const hash_digest& hash, size_t height,
     bool candidate)
 {
     BITCOIN_ASSERT(height != max_uint32);
     auto& manager = candidate ? candidate_index_ : confirmed_index_;
 
-    // Can only confirm to the top of the given index (push).
+    // Can only add to the top of an index (push).
     if (height != manager.count())
         return false;
 
-    // The block is not indexed, confirming next, so find by hash.
     auto element = hash_table_.find(hash);
 
     if (!element)
@@ -462,14 +460,13 @@ bool block_database::confirm(const hash_digest& hash, size_t height,
     return true;
 }
 
-// TODO: the caller already knows the current header state.
 bool block_database::unconfirm(const hash_digest& hash, size_t height,
     bool candidate)
 {
     BITCOIN_ASSERT(height != max_uint32);
     auto& manager = candidate ? candidate_index_ : confirmed_index_;
 
-    // Can only unconfirm the top of the given index (pop).
+    // Can only remove from the top of an index (push).
     if (height + 1 != manager.count())
         return false;
 
