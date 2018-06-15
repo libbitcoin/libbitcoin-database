@@ -8,11 +8,11 @@
 *.VC.*
 address_rows
 address_table
-block_index
 block_table
+candidate_index
+confirmed_index
 file_storage
 hash_table
-header_index
 record_hash_table_64bit
 spend_table
 stealth_rows

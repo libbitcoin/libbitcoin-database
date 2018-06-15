@@ -36,9 +36,9 @@ public:
 
     static const std::string FLUSH_LOCK;
     static const std::string EXCLUSIVE_LOCK;
-    static const std::string HEADER_INDEX;
-    static const std::string BLOCK_INDEX;
     static const std::string BLOCK_TABLE;
+    static const std::string CANDIDATE_INDEX;
+    static const std::string CONFIRMED_INDEX;
     static const std::string TRANSACTION_INDEX;
     static const std::string TRANSACTION_TABLE;
     static const std::string ADDRESS_TABLE;
@@ -77,9 +77,9 @@ public:
     // ------------------------------------------------------------------------
 
     /// Content store.
-    const path header_index;
-    const path block_index;
     const path block_table;
+    const path candidate_index;
+    const path confirmed_index;
     const path transaction_index;
     const path transaction_table;
 

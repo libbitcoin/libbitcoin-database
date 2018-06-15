@@ -145,25 +145,25 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     ////const auto h5b = block5b.hash();
 
     ////const auto block_table = DIRECTORY "/block_table";
-    ////const auto header_index = DIRECTORY "/header_index";
-    ////const auto block_index = DIRECTORY "/block_index";
+    ////const auto candidate_index = DIRECTORY "/candidate_index";
+    ////const auto confirmed_index = DIRECTORY "/confirmed_index";
     ////const auto tx_index = DIRECTORY "/tx_index";
 
     ////test::create(block_table);
-    ////test::create(header_index);
-    ////test::create(block_index);
+    ////test::create(candidate_index);
+    ////test::create(confirmed_index);
     ////test::create(tx_index);
-    ////block_database db(block_table, header_index, block_index, tx_index, 1000, 50);
+    ////block_database db(block_table, candidate_index, confirmed_index, tx_index, 1000, 50);
     ////BOOST_REQUIRE(db.create());
 
     ////size_t height;
-    ////BOOST_REQUIRE(!db.top(height));
+    ////BOOST_REQUIRE(!db.top(height, false));
 
     ////db.push(block0, 0, 0);
     ////db.push(block1, 1, 0);
     ////db.push(block2, 2, 0);
     ////db.push(block3, 3, 0);
-    ////BOOST_REQUIRE(db.top(height));
+    ////BOOST_REQUIRE(db.top(height, false));
     ////BOOST_REQUIRE_EQUAL(height, 3u);
 
     ////// Fetch block 0 by hash.
@@ -204,11 +204,11 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     ////BOOST_REQUIRE(result5a.hash() == h5a);
 
     ////// Unlink blocks 4a/5a.
-    ////BOOST_REQUIRE(db.top(height));
+    ////BOOST_REQUIRE(db.top(height, false));
     ////BOOST_REQUIRE_EQUAL(height, 5u);
     ////db.unconfirm(h5a, 5, true);
     ////db.unconfirm(h4a, 4, true);
-    ////BOOST_REQUIRE(db.top(height));
+    ////BOOST_REQUIRE(db.top(height, false));
     ////BOOST_REQUIRE_EQUAL(height, 3u);
 
     ////// Block 3 exists.
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     ////// Add new blocks 4b/5b.
     ////db.push(block4b, 4, 0);
     ////db.push(block5b, 5, 0);
-    ////BOOST_REQUIRE(db.top(height));
+    ////BOOST_REQUIRE(db.top(height, false));
     ////BOOST_REQUIRE_EQUAL(height, 5u);
 
     ////// Fetch blocks 4b/5b.

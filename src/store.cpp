@@ -34,9 +34,9 @@ using namespace boost::system;
 // Database file names.
 const std::string store::FLUSH_LOCK = "flush_lock";
 const std::string store::EXCLUSIVE_LOCK = "exclusive_lock";
-const std::string store::HEADER_INDEX = "header_index";
-const std::string store::BLOCK_INDEX = "block_index";
 const std::string store::BLOCK_TABLE = "block_table";
+const std::string store::CANDIDATE_INDEX = "candidate_index";
+const std::string store::CONFIRMED_INDEX = "confirmed_index";
 const std::string store::TRANSACTION_INDEX = "transaction_index";
 const std::string store::TRANSACTION_TABLE = "transaction_table";
 const std::string store::ADDRESS_TABLE = "address_table";
@@ -70,9 +70,9 @@ store::store(const path& prefix, bool with_indexes, bool flush_each_write)
     exclusive_lock_(prefix / EXCLUSIVE_LOCK),
 
     // Content store.
-    header_index(prefix / HEADER_INDEX),
-    block_index(prefix / BLOCK_INDEX),
     block_table(prefix / BLOCK_TABLE),
+    candidate_index(prefix / CANDIDATE_INDEX),
+    confirmed_index(prefix / CONFIRMED_INDEX),
     transaction_index(prefix / TRANSACTION_INDEX),
     transaction_table(prefix / TRANSACTION_TABLE),
 
@@ -92,9 +92,9 @@ bool store::create()
     create_directories(prefix_, ec);
 
     const auto created = !ec &&
-        create_file(header_index) &&
-        create_file(block_index) &&
         create_file(block_table) &&
+        create_file(candidate_index) &&
+        create_file(confirmed_index) &&
         create_file(transaction_index) &&
         create_file(transaction_table);
 

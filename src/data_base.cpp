@@ -135,8 +135,8 @@ bool data_base::open()
 // protected
 void data_base::start()
 {
-    blocks_ = std::make_shared<block_database>(block_table, header_index,
-        block_index, transaction_index, settings_.block_table_buckets,
+    blocks_ = std::make_shared<block_database>(block_table, candidate_index,
+        confirmed_index, transaction_index, settings_.block_table_buckets,
         settings_.file_growth_rate);
 
     transactions_ = std::make_shared<transaction_database>(transaction_table,
@@ -282,8 +282,7 @@ code data_base::index(const block& block)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-// TODO: enable promotion from any unconfirmed state to pooled.
-// This expects tx is validated, unconfirmed and not yet stored.
+// This expects tx is validated, unconfirmed and not yet stored (pool).
 code data_base::store(const transaction& tx, uint32_t forks)
 {
     code ec;
@@ -292,8 +291,8 @@ code data_base::store(const transaction& tx, uint32_t forks)
     ///////////////////////////////////////////////////////////////////////////
     conditional_lock lock(flush_each_write());
 
-    // Returns error::unspent_duplicate if an unspent tx with same hash exists.
-    if ((ec = verify_push(*transactions_, tx)))
+    // Returns error::duplicate_transaction if tx with same hash exists.
+    if ((ec = verify_missing(*transactions_, tx)))
         return ec;
 
     //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -464,7 +463,7 @@ code data_base::push_genesis(const block& block)
         return error::operation_failed;
 
     // Promote block index state from indexed to **confirmed**.
-    if (!blocks_->confirm(block.hash(), genesis_height, true))
+    if (!blocks_->confirm(block.hash(), genesis_height, false))
         return error::operation_failed;
 
     commit();
@@ -534,11 +533,11 @@ bool data_base::pop_above(header_const_ptr_list_ptr headers,
 {
     code ec;
     headers->clear();
-    if ((ec = verify(*blocks_, fork_point, false)))
+    if ((ec = verify(*blocks_, fork_point, true)))
         return false;
 
     size_t top;
-    if (!blocks_->top(top, false))
+    if (!blocks_->top(top, true))
         return false;
 
     const auto fork = fork_point.height();
@@ -613,10 +612,10 @@ code data_base::pop(chain::header& out_header, size_t height)
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(write_mutex_);
 
-    if ((verify_top(*blocks_, height, false)))
+    if ((verify_top(*blocks_, height, true)))
         return ec;
 
-    const auto result = blocks_->get(height, false);
+    const auto result = blocks_->get(height, true);
 
     if (!result)
         return error::operation_failed;
@@ -625,12 +624,13 @@ code data_base::pop(chain::header& out_header, size_t height)
     if (!begin_write())
         return error::store_lock_failure;
 
-    // Deconfirm previous outputs spent by txs of this block (if any).
+    // TODO: unconfirm only the candidate confirmations.
+    // Unconfirm previous outputs spent by txs of this block (if any).
     if (!unconfirm_transactions(result.header()))
         return error::operation_failed;
 
-    // Deconfirm the block header.
-    if (!blocks_->unconfirm(result.hash(), height, false))
+    // Unconfirm the candidate header.
+    if (!blocks_->unconfirm(result.hash(), height, true))
         return error::operation_failed;
 
     // Commit everything that was changed and return header.

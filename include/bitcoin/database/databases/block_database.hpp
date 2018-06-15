@@ -41,8 +41,9 @@ public:
     typedef boost::filesystem::path path;
 
     /// Construct the database.
-    block_database(const path& map_filename, const path& header_index_filename,
-        const path& block_index_filename, const path& tx_index_filename,
+    block_database(const path& map_filename,
+        const path& candidate_index_filename,
+        const path& confirmed_index_filename, const path& tx_index_filename,
         size_t buckets, size_t expansion);
 
     /// Close the database (all threads must first be stopped).
@@ -69,11 +70,11 @@ public:
     // Queries.
     //-------------------------------------------------------------------------
 
-    /// The height of the highest indexed block|header.
-    bool top(size_t& out_height, bool block_index=true) const;
+    /// The height of the highest candidate|confirmed block.
+    bool top(size_t& out_height, bool candidate) const;
 
     /// Fetch block by block|header index height.
-    block_result get(size_t height, bool block_index=true) const;
+    block_result get(size_t height, bool candidate) const;
 
     /// Fetch block by hash.
     block_result get(const hash_digest& hash) const;
@@ -100,11 +101,11 @@ public:
     /// Promote pent block to valid or invalid and set code.
     bool validate(const hash_digest& hash, const code& error);
 
-    /// Promote pooled|indexed block to indexed|confirmed.
-    bool confirm(const hash_digest& hash, size_t height, bool block_index);
+    /// Promote pooled|candidate block to candidate|confirmed respectively.
+    bool confirm(const hash_digest& hash, size_t height, bool candidate);
 
-    /// Demote header|block at the given height to pooled.
-    bool unconfirm(const hash_digest& hash, size_t height, bool block_index);
+    /// Demote candidate|confirmed header at the given height to pooled.
+    bool unconfirm(const hash_digest& hash, size_t height, bool candidate);
 
 private:
     typedef hash_digest key_type;
@@ -115,7 +116,7 @@ private:
 
     typedef message::compact_block::short_id_list short_id_list;
 
-    uint8_t confirm(const_element& element, bool positive, bool block_index);
+    uint8_t confirm(const_element& element, bool positive, bool candidate);
     link_type associate(const chain::transaction::list& transactions);
     void push(const chain::header& header, size_t height,
         uint32_t median_time_past, uint32_t checksum, link_type tx_start,
@@ -133,13 +134,13 @@ private:
     file_storage hash_table_file_;
     record_map hash_table_;
 
-    // Table used for looking up headers by height.
-    file_storage header_index_file_;
-    manager_type header_index_;
+    // Table used for looking up candidate headers by height.
+    file_storage candidate_index_file_;
+    manager_type candidate_index_;
 
-    // Table used for looking up blocks by height.
-    file_storage block_index_file_;
-    manager_type block_index_;
+    // Table used for looking up confirmed headers by height.
+    file_storage confirmed_index_file_;
+    manager_type confirmed_index_;
 
     // Association table between blocks and their contained transactions.
     // Only first tx is indexed and count is required to read the full set.

@@ -78,18 +78,18 @@ static const auto block_size = header_size + median_time_past_size +
 // Blocks uses a hash table and two array indexes, all O(1).
 // The block database keys off of block hash and has block value.
 block_database::block_database(const path& map_filename,
-    const path& header_index_filename, const path& block_index_filename,
+    const path& candidate_index_filename, const path& confirmed_index_filename,
     const path& tx_index_filename, size_t buckets, size_t expansion)
   : hash_table_file_(map_filename, expansion),
     hash_table_(hash_table_file_, buckets, block_size),
 
     // Array storage.
-    header_index_file_(header_index_filename, expansion),
-    header_index_(header_index_file_, 0, sizeof(link_type)),
+    candidate_index_file_(candidate_index_filename, expansion),
+    candidate_index_(candidate_index_file_, 0, sizeof(link_type)),
 
     // Array storage.
-    block_index_file_(block_index_filename, expansion),
-    block_index_(block_index_file_, 0, sizeof(link_type)),
+    confirmed_index_file_(confirmed_index_filename, expansion),
+    confirmed_index_(confirmed_index_file_, 0, sizeof(link_type)),
 
     // Array storage.
     tx_index_file_(tx_index_filename, expansion),
@@ -108,16 +108,16 @@ block_database::~block_database()
 bool block_database::create()
 {
     if (!hash_table_file_.open() ||
-        !header_index_file_.open() ||
-        !block_index_file_.open() ||
+        !candidate_index_file_.open() ||
+        !confirmed_index_file_.open() ||
         !tx_index_file_.open())
         return false;
 
     // No need to call open after create.
     return
         hash_table_.create() &&
-        header_index_.create() &&
-        block_index_.create() &&
+        candidate_index_.create() &&
+        confirmed_index_.create() &&
         tx_index_.create();
 }
 
@@ -125,21 +125,21 @@ bool block_database::open()
 {
     return
         hash_table_file_.open() &&
-        header_index_file_.open() &&
-        block_index_file_.open() &&
+        candidate_index_file_.open() &&
+        confirmed_index_file_.open() &&
         tx_index_file_.open() &&
 
         hash_table_.start() &&
-        header_index_.start() &&
-        block_index_.start() &&
+        candidate_index_.start() &&
+        confirmed_index_.start() &&
         tx_index_.start();
 }
 
 void block_database::commit()
 {
     hash_table_.commit();
-    header_index_.commit();
-    block_index_.commit();
+    candidate_index_.commit();
+    confirmed_index_.commit();
     tx_index_.commit();
 }
 
@@ -147,8 +147,8 @@ bool block_database::flush() const
 {
     return
         hash_table_file_.flush() &&
-        header_index_file_.flush() &&
-        block_index_file_.flush() &&
+        candidate_index_file_.flush() &&
+        confirmed_index_file_.flush() &&
         tx_index_file_.flush();
 }
 
@@ -156,23 +156,23 @@ bool block_database::close()
 {
     return
         hash_table_file_.close() &&
-        header_index_file_.close() &&
-        block_index_file_.close() &&
+        candidate_index_file_.close() &&
+        confirmed_index_file_.close() &&
         tx_index_file_.close();
 }
 
 // Queries.
 // ----------------------------------------------------------------------------
 
-bool block_database::top(size_t& out_height, bool block_index) const
+bool block_database::top(size_t& out_height, bool candidate) const
 {
-    auto& manager = block_index ? block_index_ : header_index_;
+    auto& manager = candidate ? candidate_index_ : confirmed_index_;
     return read_top(out_height, manager);
 }
 
-block_result block_database::get(size_t height, bool block_index) const
+block_result block_database::get(size_t height, bool candidate) const
 {
-    auto& manager = block_index ? block_index_ : header_index_;
+    auto& manager = candidate ? candidate_index_ : confirmed_index_;
     const auto link = height < manager.count() ? read_index(height, manager) :
         hash_table_.not_found;
 
@@ -222,8 +222,6 @@ void block_database::push(const chain::header& header, size_t height,
     uint32_t median_time_past, uint32_t checksum, link_type tx_start,
     size_t tx_count, uint8_t state)
 {
-    ////auto& manager = is_confirmed(state) ? block_index_ : header_index_;
-
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(tx_start <= max_uint32);
     BITCOIN_ASSERT(tx_count <= max_uint16);
@@ -240,13 +238,9 @@ void block_database::push(const chain::header& header, size_t height,
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(tx_count));
     };
 
-    // Write the new block.
     auto next = hash_table_.allocator();
     const auto link = next.create(header.hash(), writer);
     hash_table_.link(next);
-
-    ////if (is_confirmed(state) || is_candidate(state))
-    ////    push_index(link, height, manager);
 }
 
 // A header creation does not move the fork point (not a reorg).
@@ -255,10 +249,10 @@ void block_database::push(const chain::header& header, size_t height)
     // Initially store header as candidate, pent download (the top header).
     static const auto state = block_state::candidate;
 
-    // The header/block already exists, promote from pooled to indexed.
+    // The header/block already exists, promote from pooled to candidate.
     if (header.metadata.exists)
     {
-        confirm(header.hash(), height, false);
+        confirm(header.hash(), height, true);
         return;
     }
 
@@ -386,24 +380,24 @@ bool block_database::validate(const hash_digest& hash, const code& error)
 }
 
 static uint8_t update_confirmation_state(uint8_t original, bool positive,
-    bool block_index)
+    bool candidate)
 {
     // May only confirm a valid block.
-    BITCOIN_ASSERT(positive || block_index || is_valid(original));
+    BITCOIN_ASSERT(positive || !candidate || is_valid(original));
 
     // May only unconfirm a confirmed block.
-    BITCOIN_ASSERT(!positive || block_index || is_confirmed(original));
+    BITCOIN_ASSERT(!positive || !candidate || is_confirmed(original));
 
     // May only candidate a valid block.
-    BITCOIN_ASSERT(positive || !block_index || is_valid(original));
+    BITCOIN_ASSERT(positive || !candidate || is_valid(original));
 
     // May only uncandidate a candidate header.
-    BITCOIN_ASSERT(!positive || !block_index || is_candidate(original));
+    BITCOIN_ASSERT(!positive || candidate || is_candidate(original));
 
     // Preserve the validation state (header-indexed blocks can be pent).
     const auto validation_state = original & block_state::validations;
-    const auto positive_state = block_index ? block_state::confirmed :
-        block_state::candidate;
+    const auto positive_state = candidate ? block_state::candidate :
+        block_state::confirmed;
 
     // Deconfirmation is always directly to the pooled state.
     const auto confirmation_state = positive ? positive_state :
@@ -414,7 +408,7 @@ static uint8_t update_confirmation_state(uint8_t original, bool positive,
 }
 
 uint8_t block_database::confirm(const_element& element, bool positive,
-    bool block_index)
+    bool candidate)
 {
     uint8_t original;
     const auto reader = [&](byte_deserializer& deserial)
@@ -432,7 +426,7 @@ uint8_t block_database::confirm(const_element& element, bool positive,
     const auto updater = [&](byte_serializer& serial)
     {
         serial.skip(state_offset);
-        updated = update_confirmation_state(original, positive, block_index);
+        updated = update_confirmation_state(original, positive, candidate);
 
         // Critical Section.
         ///////////////////////////////////////////////////////////////////////
@@ -448,10 +442,10 @@ uint8_t block_database::confirm(const_element& element, bool positive,
 
 // TODO: the caller doesn't know the current header state.
 bool block_database::confirm(const hash_digest& hash, size_t height,
-    bool block_index)
+    bool candidate)
 {
     BITCOIN_ASSERT(height != max_uint32);
-    auto& manager = block_index ? block_index_ : header_index_;
+    auto& manager = candidate ? candidate_index_ : confirmed_index_;
 
     // Can only confirm to the top of the given index (push).
     if (height != manager.count())
@@ -463,17 +457,17 @@ bool block_database::confirm(const hash_digest& hash, size_t height,
     if (!element)
         return false;
 
-    const auto updated = confirm(element, true, block_index);
+    const auto updated = confirm(element, true, candidate);
     push_index(element.link(), height, manager);
     return true;
 }
 
 // TODO: the caller already knows the current header state.
 bool block_database::unconfirm(const hash_digest& hash, size_t height,
-    bool block_index)
+    bool candidate)
 {
     BITCOIN_ASSERT(height != max_uint32);
-    auto& manager = block_index ? block_index_ : header_index_;
+    auto& manager = candidate ? candidate_index_ : confirmed_index_;
 
     // Can only unconfirm the top of the given index (pop).
     if (height + 1 != manager.count())
@@ -485,7 +479,7 @@ bool block_database::unconfirm(const hash_digest& hash, size_t height,
     if (!element)
         return false;
 
-    const auto original = confirm(element, false, block_index);
+    const auto original = confirm(element, false, candidate);
     pop_index(height, manager);
     return true;
 }

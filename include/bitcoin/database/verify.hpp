@@ -28,16 +28,16 @@ namespace libbitcoin {
 namespace database {
 
 code verify(const block_database& blocks, const config::checkpoint& fork_point,
-    bool block_index);
+    bool candidate);
 
-code verify_top(const block_database& blocks, size_t height, bool block_index);
+code verify_top(const block_database& blocks, size_t height, bool candidate);
 
 code verify_exists(const block_database& blocks, const chain::header& header);
 
 code verify_exists(const transaction_database& transactions,
     const chain::transaction& tx);
 
-code verify_push(const transaction_database& transactions,
+code verify_missing(const transaction_database& transactions,
     const chain::transaction& tx);
 
 code verify_push(const block_database& blocks, const chain::header& header,

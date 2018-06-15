@@ -29,35 +29,34 @@ using namespace bc::chain;
 
 #ifndef NDEBUG
 static hash_digest get_block(const block_database& blocks,
-    size_t height, bool block_index)
+    size_t height, bool candidate)
 {
-    return blocks.get(height, block_index).hash();
+    return blocks.get(height, candidate).hash();
 }
 
 static bool get_is_empty_block(const block_database& blocks,
-    size_t height, bool block_index)
+    size_t height, bool candidate)
 {
-    return blocks.get(height, block_index).transaction_count() == 0;
+    return blocks.get(height, candidate).transaction_count() == 0;
 }
 
 static hash_digest get_previous_block(const block_database& blocks,
-    size_t height, bool block_index)
+    size_t height, bool candidate)
 {
     return height == 0 ? null_hash : get_block(blocks, height - 1,
-        block_index);
+        candidate);
 }
 
-static size_t get_next_block(const block_database& blocks,
-    bool block_index)
+static size_t get_next_block(const block_database& blocks, bool candidate)
 {
     size_t current_height;
-    const auto empty_chain = !blocks.top(current_height, block_index);
+    const auto empty_chain = !blocks.top(current_height, candidate);
     return empty_chain ? 0 : current_height + 1;
 }
 #endif
 
 code verify(const block_database& blocks, const config::checkpoint& fork_point,
-    bool block_index)
+    bool candidate)
 {
 #ifndef NDEBUG
     const auto result = blocks.get(fork_point.hash());
@@ -70,19 +69,18 @@ code verify(const block_database& blocks, const config::checkpoint& fork_point,
 
     const auto state = result.state();
 
-    if (!is_confirmed(state) && (block_index || !is_candidate(state)))
+    if (!is_confirmed(state) && !(candidate && is_candidate(state)))
         return error::store_incorrect_state;
 #endif
 
     return error::success;
 }
 
-code verify_top(const block_database& blocks, size_t height, bool block_index)
+code verify_top(const block_database& blocks, size_t height, bool candidate)
 {
 #ifndef NDEBUG
     size_t actual_height;
-    if (!blocks.top(actual_height, block_index)
-        || !(actual_height == height))
+    if (!blocks.top(actual_height, candidate) || (actual_height != height))
         return error::operation_failed;
 #endif
 
@@ -110,15 +108,12 @@ code verify_exists(const transaction_database& transactions,
     return error::success;
 }
 
-code verify_push(const transaction_database& transactions,
+code verify_missing(const transaction_database& transactions,
     const transaction& tx)
 {
-#ifndef NDEBUG
-    const auto result = transactions.get(tx.hash());
-
-    // This is an expensive re-check, but only if a confirmed duplicate exists.
-    if (result && !result.is_spent(max_size_t, false))
-        return error::unspent_duplicate;
+#ifdef NDEBUG
+    if (transactions.get(tx.hash()))
+        return error::duplicate_transaction;
 #endif
 
     return error::success;

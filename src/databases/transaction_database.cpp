@@ -176,7 +176,7 @@ void transaction_database::get_block_metadata(const chain::transaction& tx,
     const auto height = result.height();
     const auto relevant = fork_height <= height;
     tx.metadata.link = result.link();
-    tx.metadata.existed = tx.metadata.link == transaction::validation::unlinked;
+    tx.metadata.existed = tx.metadata.link != transaction::validation::unlinked;
     tx.metadata.candidate = state == transaction_state::candidate;
     tx.metadata.confirmed = state == transaction_state::confirmed && relevant;
     tx.metadata.verified = state != transaction_state::confirmed &&
@@ -195,7 +195,7 @@ void transaction_database::get_pool_metadata(const chain::transaction& tx,
     const auto state = result.state();
     const auto height = result.height();
     tx.metadata.link = result.link();
-    tx.metadata.existed = tx.metadata.link == transaction::validation::unlinked;
+    tx.metadata.existed = tx.metadata.link != transaction::validation::unlinked;
     tx.metadata.candidate = state == transaction_state::candidate;
     tx.metadata.confirmed = state == transaction_state::confirmed;
     tx.metadata.verified = state != transaction_state::confirmed &&
