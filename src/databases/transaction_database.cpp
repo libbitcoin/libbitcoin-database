@@ -311,31 +311,157 @@ bool transaction_database::store(const transaction::list& transactions,
 
 bool transaction_database::candidate(file_offset link)
 {
-    auto result = get(link);
-
-    if (!result)
-        return false;
-
-    return false;
+    return candidate(link, true);
 }
 
 bool transaction_database::uncandidate(file_offset link)
 {
-    // TODO: implement.
-    return false;
+    return candidate(link, false);
+}
+
+// private
+bool transaction_database::candidate(file_offset link, bool positive)
+{
+    auto result = get(link);
+
+    if (!result || !update(link, true))
+        return false;
+
+    // Spend or unspend the candidate tx's previous outputs.
+    for (const auto inpoint: result)
+        if (!candidate_spend(inpoint, positive))
+            return false;
+
+    return true;
+}
+
+// private
+bool transaction_database::candidate_spend(const chain::output_point& point,
+    bool positive)
+{
+    // This just simplifies calling by allowing coinbase to be included.
+    if (point.is_null())
+        return true;
+
+    auto element = hash_table_.find(point.hash());
+
+    if (!element)
+        return false;
+
+    size_t outputs;
+    const auto reader = [&](byte_deserializer& deserial)
+    {
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        shared_lock lock(metadata_mutex_);
+        deserial.skip(metadata_size);
+        outputs = deserial.read_size_little_endian();
+        ///////////////////////////////////////////////////////////////////////
+    };
+
+    element.read(reader);
+
+    // The index is not in the transaction.
+    if (point.index() >= outputs)
+        return false;
+
+    const auto writer = [&](byte_serializer& serial)
+    {
+        serial.skip(metadata_size);
+        serial.read_size_little_endian();
+
+        // Skip outputs until the target output.
+        for (uint32_t output = 0; output < point.index(); ++output)
+        {
+            serial.skip(spend_size);
+            serial.skip(serial.read_size_little_endian());
+        }
+
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        unique_lock lock(metadata_mutex_);
+        serial.write_byte(positive ? transaction_result::candidate_true :
+            transaction_result::candidate_false);
+        ///////////////////////////////////////////////////////////////////////
+    };
+
+    element.write(writer);
+    return true;
+}
+
+// private
+bool transaction_database::update(link_type link, bool candidate)
+{
+    auto element = hash_table_.find(link);
+
+    if (!element)
+        return false;
+
+    const auto writer = [&](byte_serializer& serial)
+    {
+        // Critical Section
+        ///////////////////////////////////////////////////////////////////////
+        unique_lock lock(metadata_mutex_);
+        serial.skip(height_size + position_size);
+        serial.write_byte(candidate ? transaction_result::candidate_true :
+            transaction_result::candidate_false);
+        ///////////////////////////////////////////////////////////////////////
+    };
+
+    element.write(writer);
+    return true;
 }
 
 // Confirm/Unconfirm.
 // ----------------------------------------------------------------------------
 
-// private
-bool transaction_database::unspend(const output_point& point)
+bool transaction_database::unconfirm(file_offset link)
 {
-    return spend(point, output::validation::unspent);
+    const auto result = get(link);
+
+    if (!result)
+        return false;
+
+    // Unspend the tx's previous outputs.
+    for (const auto inpoint: result)
+        if (!confirmed_spend(inpoint, output::validation::unspent))
+            return false;
+
+    // The tx was verified under a now unknown chain state, so set unverified.
+    // The tx was validated at one point, so always okay to treat as pooled.
+    return update(link, rule_fork::unverified, no_time,
+        transaction_result::unconfirmed, false);
+}
+
+// This doesn't currently get called for unconfirmed.
+bool transaction_database::confirm(file_offset link, size_t height,
+    uint32_t median_time_past, size_t position)
+{
+    BITCOIN_ASSERT(height <= max_uint32);
+    BITCOIN_ASSERT(position <= max_uint16);
+    BITCOIN_ASSERT(position != transaction_result::unconfirmed);
+
+    const auto result = get(link);
+
+    if (!result)
+        return false;
+
+    // Spend the tx's previous outputs.
+    for (const auto inpoint: result)
+        if (!confirmed_spend(inpoint, height))
+            return false;
+
+    // TODO: It may be more costly to populate the tx than the benefit.
+    if (!cache_.disabled())
+        cache_.add(result.transaction(), height, median_time_past,
+            height != transaction_result::unconfirmed);
+
+    // Promote the tx that already exists.
+    return update(link, height, median_time_past, position, false);
 }
 
 // private
-bool transaction_database::spend(const output_point& point,
+bool transaction_database::confirmed_spend(const output_point& point,
     size_t spender_height)
 {
     // This just simplifies calling by allowing coinbase to be included.
@@ -399,49 +525,6 @@ bool transaction_database::spend(const output_point& point,
 
     element.write(writer);
     return true;
-}
-
-bool transaction_database::unconfirm(file_offset link)
-{
-    const auto result = get(link);
-
-    if (!result)
-        return false;
-
-    // Unspend the tx's previous outputs.
-    for (const auto inpoint: result)
-        if (!unspend(inpoint))
-            return false;
-
-    // The tx was verified under a now unknown chain state, so set unverified.
-    // The tx was validated at one point, so always okay to treat as pooled.
-    return update(link, rule_fork::unverified, no_time,
-        transaction_result::unconfirmed, false);
-}
-
-bool transaction_database::confirm(file_offset link, size_t height,
-    uint32_t median_time_past, size_t position)
-{
-    BITCOIN_ASSERT(height <= max_uint32);
-    BITCOIN_ASSERT(position <= max_uint16);
-    BITCOIN_ASSERT(position != transaction_result::unconfirmed);
-
-    const auto result = get(link);
-
-    if (!result)
-        return false;
-
-    // Spend the tx's previous outputs.
-    for (const auto inpoint: result)
-        if (!spend(inpoint, height))
-            return false;
-
-    // TODO: It may be more costly to populate the tx than the benefit.
-    if (!cache_.disabled())
-        cache_.add(result.transaction(true), height, median_time_past, true);
-
-    // Promote the tx that already exists.
-    return update(link, height, median_time_past, position, false);
 }
 
 // private

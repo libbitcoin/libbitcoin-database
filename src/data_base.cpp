@@ -626,8 +626,10 @@ code data_base::pop(chain::header& out_header, size_t height)
 ////        return error::operation_failed;
 ////
 ////    // Confirms transactions (and thereby also address indexes).
+////    uint32_t position = 0;
 ////    for (const auto& tx: block.transactions())
-////        if (!transactions_->confirm(tx.metadata.link))
+////        if (!transactions_->confirm(tx.metadata.link, height,
+////            median_time_past, position++))
 ////            return error::operation_failed;
 ////
 ////    blocks_->push(block, height, median_time_past);

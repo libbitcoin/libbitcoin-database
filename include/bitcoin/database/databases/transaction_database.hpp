@@ -118,15 +118,22 @@ private:
     typedef slab_manager<link_type> manager_type;
     typedef hash_table<manager_type, index_type, link_type, key_type> slab_map;
 
-    // Update the state of the existing tx.
+    // Update the candidate metadata of the existing tx.
+    bool update(link_type link, bool candidate);
+
+    // Update metadata of the existing tx.
     bool update(link_type link, size_t height, uint32_t median_time_past,
         size_t position, bool candidate);
 
-    // Update the spender height of the output.
-    bool spend(const chain::output_point& point, size_t spender_height);
+    // Update the candidate state of the tx.
+    bool candidate(file_offset link, bool positive);
 
-    // Unspend the output.
-    bool unspend(const chain::output_point& point);
+    // Update the candidate spent of the output.
+    bool candidate_spend(const chain::output_point& point, bool positive);
+
+    // Update the spender height of the output.
+    bool confirmed_spend(const chain::output_point& point,
+        size_t spender_height);
 
     // Hash table used for looking up txs by hash.
     file_storage hash_table_file_;
