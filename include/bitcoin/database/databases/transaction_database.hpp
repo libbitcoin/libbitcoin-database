@@ -88,16 +88,22 @@ public:
     bool get_output(const chain::output_point& point, size_t fork_height,
         bool candidate) const;
 
-    // Store.
+    // Writers.
     // ------------------------------------------------------------------------
 
-    /// Create a transaction.
+    /// Store a transaction.
     bool store(const chain::transaction& tx, uint32_t height,
         uint32_t median_time_past, size_t position, transaction_state state);
 
-    /// Mark txs and outputs spent by them as candidate.
-    bool candidate(const chain::transaction::list& transactions,
-        bool positive);
+    /// Store a set of transactions presumed to be in block order.
+    bool store(const chain::transaction::list& transactions, size_t height,
+        uint32_t median_time_past, transaction_state state);
+
+    /// Mark outputs spent by the candidate tx.
+    bool candidate(file_offset link);
+
+    /// Unmark outputs formerly spent by the candidate tx.
+    bool uncandidate(file_offset link);
 
     /// Promote the transaction to confirmed.
     bool confirm(file_offset link, size_t height, uint32_t median_time_past,

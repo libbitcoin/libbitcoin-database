@@ -100,7 +100,7 @@ bool data_base::create(const block& genesis)
     if (settings_.index_addresses)
         created &= addresses_->create();
 
-    created &= push_genesis(genesis) == error::success;
+    created &= push(genesis) == error::success;
 
     if (!created)
         return false;
@@ -337,7 +337,7 @@ code data_base::update(const chain::block& block, size_t height)
     if ((ec = verify_update(*blocks_, block, height)))
         return ec;
 
-    // This could be skipped when the stored header's tx count is non-zero.
+    // TODO: This could be skipped when stored header's tx count is non-zero.
 
     // Conditional write mutex preserves write flushing by preventing overlap.
     //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -345,9 +345,9 @@ code data_base::update(const chain::block& block, size_t height)
         return error::store_lock_failure;
 
     // Store the missing transactions and set tx link metadata for all.
-    if ((ec = store_transactions(block, machine::rule_fork::unverified,
-        no_time, transaction_state::pooled)))
-        return ec;
+    if (!transactions_->store(block.transactions(),
+        machine::rule_fork::unverified, no_time, transaction_state::pooled))
+        return error::operation_failed;
 
     // Update the block's transaction associations (not its state).
     if (!blocks_->update(block))
@@ -360,7 +360,7 @@ code data_base::update(const chain::block& block, size_t height)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-// Mark a block as invalid based on error value.
+// Promote unvalidated block to valid|invalid based on error value.
 code data_base::invalidate(const header& header, const code& error)
 {
     code ec;
@@ -386,7 +386,7 @@ code data_base::invalidate(const header& header, const code& error)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-// Mark candidate block valid, txs and outputs spent by them as candidate.
+// Mark candidate as valid, and txs and outputs spent by them as candidate.
 code data_base::candidate(const block& block)
 {
     code ec;
@@ -395,22 +395,24 @@ code data_base::candidate(const block& block)
     ///////////////////////////////////////////////////////////////////////////
     conditional_lock lock(flush_each_write());
 
-    if ((ec = verify_valid(*blocks_, block)))
+    if ((ec = verify_not_failed(*blocks_, block)))
         return ec;
 
     const auto& header = block.header();
+    BITCOIN_ASSERT(!header.metadata.error);
 
     //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     if (!begin_write())
         return error::store_lock_failure;
 
-    // Mark candidate block as valid.
-    if (!blocks_->validate(header.hash(), header.metadata.error))
+    // Set candidate validation state to valid.
+    if (!blocks_->validate(header.hash(), error::success))
         return error::operation_failed;
 
     // Mark candidate block txs and outputs spent by them as candidate.
-    if (!transactions_->candidate(block.transactions(), true))
-        return error::operation_failed;
+    for (const auto& tx: block.transactions())
+        if (!transactions_->candidate(tx.metadata.link))
+            return error::operation_failed;
 
     header.metadata.error = error::success;
     header.metadata.validated = true;
@@ -424,47 +426,42 @@ code data_base::reorganize(const config::checkpoint& fork_point,
     block_const_ptr_list_const_ptr incoming,
     block_const_ptr_list_ptr outgoing)
 {
-    // TODO
+    // TODO: implement.
     return error::not_implemented;
 }
 
-// Utilities.
-// ----------------------------------------------------------------------------
-// protected
-
-// TODO: convert to general push of a confirmed block.
-// Store, update, validate and confirm the genesis block.
-code data_base::push_genesis(const block& block)
+// Store, update, validate and confirm the presumed valid block.
+// Since genesis output is not spendable, indexing is not integrated.
+// Call data_base::index(block) to index transactions after pushing the block.
+code data_base::push(const block& block, size_t height,
+    uint32_t median_time_past)
 {
-    static constexpr auto genesis_height = 0u;
-    auto ec = push(block.header(), genesis_height);
-
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(write_mutex_);
-
-    if ((ec = verify_update(*blocks_, block, genesis_height)))
-        return ec;
 
     //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     if (!begin_write())
         return error::store_lock_failure;
 
-    // Since genesis output is not spendable it is not indexed.
-    if ((ec = store_transactions(block, genesis_height, no_time,
-        transaction_state::confirmed)))
-        return ec;
+    // Push the header onto the candidate chain.
+    auto ec = push(block.header(), height);
 
-    // Populate pent block's transaction references.
+    // Store the missing transactions and set tx link metadata for all.
+    if (!transactions_->store(block.transactions(), height, median_time_past,
+        transaction_state::confirmed))
+        return error::operation_failed;
+
+    // Populate the block's transaction references.
     if (!blocks_->update(block))
         return error::operation_failed;
 
-    // Promote validation state from pent to **valid**.
+    // Promote validation state to valid.
     if (!blocks_->validate(block.hash(), error::success))
         return error::operation_failed;
 
-    // Promote block index state from indexed to **confirmed**.
-    if (!blocks_->confirm(block.hash(), genesis_height, false))
+    // Promote confirmation state from candidate to confirmed.
+    if (!blocks_->confirm(block.hash(), height, false))
         return error::operation_failed;
 
     commit();
@@ -473,57 +470,6 @@ code data_base::push_genesis(const block& block)
     //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     ///////////////////////////////////////////////////////////////////////////
 }
-
-////// TODO: add segwit address indexing.
-////void data_base::push_inputs(const transaction& tx)
-////{
-////    if (tx.is_coinbase())
-////        return;
-////
-////    uint32_t index = 0;
-////    const auto& inputs = tx.inputs();
-////    const auto link = tx.metadata.link;
-////
-////    for (const auto& input: inputs)
-////    {
-////        const auto& prevout = input.previous_output();
-////        const payment_record in{ link, index++, prevout.checksum(), false };
-////
-////        if (prevout.metadata.cache.is_valid())
-////        {
-////            // This results in a complete and unambiguous history for the
-////            // address since standard outputs contain unambiguous address data.
-////            for (const auto& address: prevout.metadata.cache.addresses())
-////                addresses_->store(address.hash(), in);
-////        }
-////        else
-////        {
-////            // For any p2pk spend this creates no record (insufficient data).
-////            // For any p2kh spend this creates the ambiguous p2sh address,
-////            // which significantly expands the size of the history store.
-////            // These are tradeoffs when no prevout is cached (checkpoint sync).
-////            for (const auto& address: input.addresses())
-////                addresses_->store(address.hash(), in);
-////        }
-////    }
-////}
-
-////// TODO: add segwit address indexing.
-////void data_base::push_outputs(const transaction& tx)
-////{
-////    uint32_t index = 0;
-////    const auto& outputs = tx.outputs();
-////    const auto link = tx.metadata.link;
-////
-////    for (const auto& output: outputs)
-////    {
-////        const payment_record out{ link, index++, output.value(), true };
-////
-////        // Standard outputs contain unambiguous address data.
-////        for (const auto& address: output.addresses())
-////            addresses_->store(address.hash(), out);
-////    }
-////}
 
 // Header reorganization.
 // ----------------------------------------------------------------------------
@@ -602,7 +548,7 @@ code data_base::push(const chain::header& header, size_t height)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-// This expects header exists at the top of the header index.
+// This expects header exists at the top of the candidate index.
 code data_base::pop(chain::header& out_header, size_t height)
 {
     code ec;
@@ -623,10 +569,10 @@ code data_base::pop(chain::header& out_header, size_t height)
     if (!begin_write())
         return error::store_lock_failure;
 
-    // TODO: unconfirm only the candidate confirmations.
-    // Unconfirm previous outputs spent by txs of this block (if any).
-    if (!unconfirm_transactions(result.header()))
-        return error::operation_failed;
+    // Uncandidate previous outputs spent by txs of this candidate block.
+    for (const auto link: result)
+        if (!transactions_->uncandidate(link))
+            return error::operation_failed;
 
     // Unconfirm the candidate header.
     if (!blocks_->unconfirm(result.hash(), height, true))
@@ -675,9 +621,14 @@ code data_base::pop(chain::header& out_header, size_t height)
 ////        return error::store_lock_failure;
 ////
 ////    // Pushes transactions sequentially as confirmed, WITHOUT ADDRESS INDEXING.
-////    if ((ec = store_transactions(block, height, median_time_past,
-////        transaction_state::confirmed)))
-////        return ec;
+////    if (!transactions_.store(block.transactions(), height, median_time_past,
+////        transaction_state::confirmed))
+////        return error::operation_failed;
+////
+////    // Confirms transactions (and thereby also address indexes).
+////    for (const auto& tx: block.transactions())
+////        if (!transactions_->confirm(tx.metadata.link))
+////            return error::operation_failed;
 ////
 ////    blocks_->push(block, height, median_time_past);
 ////    commit();
@@ -711,8 +662,9 @@ code data_base::pop(chain::header& out_header, size_t height)
 ////        return error::store_lock_failure;
 ////
 ////    // Deconfirms transactions (and thereby also address indexes).
-////    if ((ec = unconfirm_transactions(out_block)))
-////        return ec;
+////    for (const auto& tx: block.transactions())
+////        if (!transactions_->unconfirm(tx.metadata.link))
+////            return error::operation_failed;
 ////
 ////    // Changes block state and height index.
 ////    if (!blocks_->unconfirm(out_block.hash(), height, true))
@@ -727,73 +679,76 @@ code data_base::pop(chain::header& out_header, size_t height)
 ////    ///////////////////////////////////////////////////////////////////////////
 ////}
 
-// Transactions.
+// Utilities.
 // ----------------------------------------------------------------------------
 // protected
 
-// BUGBUG: Must look up each tx hash for existence and set link metadata.
-// BUGBUG: Otherwise there's no tx pool existence optimization and there will
-// BUGBUG: be duplcate payment indexing. But initial block download suffers.
-
-// This stores or updates each tx of the block and sets tx link metadata.
-code data_base::store_transactions(const block& block, size_t height,
-    uint32_t median_time_past, transaction_state state)
-{
-    size_t position = 0;
-    for (const auto& tx: block.transactions())
-        if (!transactions_->store(tx, height, median_time_past, position++,
-            state))
-            return error::operation_failed;
-
-    return error::success;
-}
-
-// TODO: create confirm_transactions (reorg block in confirmed).
-// TODO: verify unconfirm_transactions (reorg block out confirmed).
-
-// TODO: create candidate_transactions (validated to candidate).
-// TODO: create uncandidate_transactions (reorg out candidate).
-
-////// Call from block pop.
-////code data_base::unconfirm_transactions(const block& block)
+////// TODO: add segwit address indexing.
+////void data_base::push_inputs(const transaction& tx)
 ////{
-////    for (const auto& tx: block.transactions())
-////        if (!transactions_->unconfirm(tx.metadata.link))
-////            return error::operation_failed;
+////    if (tx.is_coinbase())
+////        return;
 ////
-////    return error::success;
+////    uint32_t index = 0;
+////    const auto& inputs = tx.inputs();
+////    const auto link = tx.metadata.link;
+////
+////    for (const auto& input: inputs)
+////    {
+////        const auto& prevout = input.previous_output();
+////        const payment_record in{ link, index++, prevout.checksum(), false };
+////
+////        if (prevout.metadata.cache.is_valid())
+////        {
+////            // This results in a complete and unambiguous history for the
+////            // address since standard outputs contain unambiguous address data.
+////            for (const auto& address: prevout.metadata.cache.addresses())
+////                addresses_->store(address.hash(), in);
+////        }
+////        else
+////        {
+////            // For any p2pk spend this creates no record (insufficient data).
+////            // For any p2kh spend this creates the ambiguous p2sh address,
+////            // which significantly expands the size of the history store.
+////            // These are tradeoffs when no prevout is cached (checkpoint sync).
+////            for (const auto& address: input.addresses())
+////                addresses_->store(address.hash(), in);
+////        }
+////    }
 ////}
 
-// Call from header pop.
-code data_base::unconfirm_transactions(const chain::header& header)
-{
-    // TODO: optimize by accepting the tx result to avoid this call.
-    const auto result = blocks_->get(header.hash());
+////// TODO: add segwit address indexing.
+////void data_base::push_outputs(const transaction& tx)
+////{
+////    uint32_t index = 0;
+////    const auto& outputs = tx.outputs();
+////    const auto link = tx.metadata.link;
+////
+////    for (const auto& output: outputs)
+////    {
+////        const payment_record out{ link, index++, output.value(), true };
+////
+////        // Standard outputs contain unambiguous address data.
+////        for (const auto& address: output.addresses())
+////            addresses_->store(address.hash(), out);
+////    }
+////}
 
-    if (!result)
-        return error::operation_failed;
+// Private (assumes valid result links).
+transaction::list data_base::to_transactions(const block_result& result) const
+{
+    transaction::list txs;
+    txs.reserve(result.transaction_count());
 
     for (const auto link: result)
-        if (!transactions_->unconfirm(link))
-            return error::operation_failed;
+    {
+        const auto tx = transactions_->get(link);
+        BITCOIN_ASSERT(tx);
+        txs.push_back(tx.transaction());
+    }
 
-    return error::success;
+    return txs;
 }
-
-////transaction::list data_base::to_transactions(const block_result& result) const
-////{
-////    transaction::list txs;
-////    txs.reserve(result.transaction_count());
-////
-////    for (const auto link: result)
-////    {
-////        const auto tx = transactions_->get(link);
-////        BITCOIN_ASSERT(tx);
-////        txs.push_back(tx.transaction());
-////    }
-////
-////    return txs;
-////}
 
 } // namespace database
 } // namespace libbitcoin

@@ -169,7 +169,7 @@ code verify_update(const block_database& blocks, const block& block,
     return error::success;
 }
 
-code verify_valid(const block_database& blocks, const block& block)
+code verify_not_failed(const block_database& blocks, const block& block)
 {
 #ifndef NDEBUG
     const auto result = blocks.get(block.hash());
@@ -177,7 +177,7 @@ code verify_valid(const block_database& blocks, const block& block)
     if (!result)
         return error::not_found;
 
-    if (!is_valid(result.state()))
+    if (is_failed(result.state()))
         return error::operation_failed;
 #endif
 

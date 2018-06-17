@@ -49,7 +49,7 @@ code verify_push(const block_database& blocks, const chain::block& block,
 code verify_update(const block_database& blocks, const chain::block& block,
     size_t height);
 
-code verify_valid(const block_database& blocks, const chain::block& block);
+code verify_not_failed(const block_database& blocks, const chain::block& block);
 
 } // namespace database
 } // namespace libbitcoin

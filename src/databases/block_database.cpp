@@ -218,7 +218,7 @@ void block_database::get_header_metadata(const chain::header& header) const
 // ----------------------------------------------------------------------------
 
 // private
-void block_database::push(const chain::header& header, size_t height,
+void block_database::store(const chain::header& header, size_t height,
     uint32_t median_time_past, uint32_t checksum, link_type tx_start,
     size_t tx_count, uint8_t state)
 {
@@ -246,31 +246,15 @@ void block_database::push(const chain::header& header, size_t height,
 // A header creation does not move the fork point (not a reorg).
 void block_database::push(const chain::header& header, size_t height)
 {
-    // Initially store header as candidate, pent download (the top header).
-    static const auto state = block_state::candidate;
-
-    // The header/block already exists, promote from pooled to candidate.
+    // The header (or block) already exists, promote to candidate.
     if (header.metadata.exists)
     {
         confirm(header.hash(), height, true);
         return;
     }
 
-    push(header, height, no_time, no_checksum, 0, 0, state);
-}
-
-// This creates a new store entry even if a previous existed.
-// A block creation does not move the fork point (not a reorg).
-void block_database::push(const chain::block& block, size_t height,
-    uint32_t median_time_past)
-{
-    // Initially store block as confirmed-valid (the top block).
-    static const auto state = block_state::confirmed | block_state::valid;
-
-    const auto& header = block.header();
-    const auto& txs = block.transactions();
-    push(header, height, median_time_past, no_checksum, associate(txs),
-        txs.size(), state);
+    // Initially store header as top candidate, pending download.
+    store(header, height, no_time, no_checksum, 0, 0, block_state::candidate);
 }
 
 block_database::link_type block_database::associate(
@@ -338,7 +322,7 @@ static uint8_t update_validation_state(uint8_t original, bool positive)
     return confirmation_state | validation_state;
 }
 
-// Promote pent block to valid|invalid.
+// Promote unvalidated block to valid|invalid based on error value.
 bool block_database::validate(const hash_digest& hash, const code& error)
 {
     auto element = hash_table_.find(hash);

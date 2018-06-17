@@ -82,29 +82,22 @@ public:
     /// Populate header metadata for the given header.
     void get_header_metadata(const chain::header& header) const;
 
-    // Store.
+    // Writers.
     // ------------------------------------------------------------------------
 
     /// Push header, validated at height.
     void push(const chain::header& header, size_t height);
 
-    /// Push block, validated at height, and associate tx links.
-    void push(const chain::block& block, size_t height,
-        uint32_t median_time_past);
-
-    // Update.
-    // ------------------------------------------------------------------------
-
-    /// Populate pent block transaction references, state is unchanged.
+    /// Populate pooled block transaction references, state is unchanged.
     bool update(const chain::block& block);
 
-    /// Promote pent block to valid or invalid and set code.
+    /// Promote pooled block to valid|invalid and set code.
     bool validate(const hash_digest& hash, const code& error);
 
     /// Promote pooled|candidate block to candidate|confirmed respectively.
     bool confirm(const hash_digest& hash, size_t height, bool candidate);
 
-    /// Demote candidate|confirmed header at the given height to pooled.
+    /// Demote candidate|confirmed header to pooled|pooled (not candidate).
     bool unconfirm(const hash_digest& hash, size_t height, bool candidate);
 
 private:
@@ -118,7 +111,7 @@ private:
 
     uint8_t confirm(const_element& element, bool positive, bool candidate);
     link_type associate(const chain::transaction::list& transactions);
-    void push(const chain::header& header, size_t height,
+    void store(const chain::header& header, size_t height,
         uint32_t median_time_past, uint32_t checksum, link_type tx_start,
         size_t tx_count, uint8_t status);
 

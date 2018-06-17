@@ -300,11 +300,28 @@ bool transaction_database::store(const chain::transaction& tx, uint32_t height,
     return true;
 }
 
-// Candidate.
+// Store each new tx of the block and set tx link metadata for all.
+bool transaction_database::store(const transaction::list& transactions,
+    size_t height, uint32_t median_time_past, transaction_state state)
+{
+    size_t position = 0;
+    for (const auto& tx: transactions)
+        if (!store(tx, height, median_time_past, position++, state))
+            return false;
+
+    return true;
+}
+
+// Candidate/Uncandidate.
 // ----------------------------------------------------------------------------
 
-bool transaction_database::candidate(const transaction::list& transactions,
-    bool positive)
+bool transaction_database::candidate(file_offset link)
+{
+    // TODO: implement.
+    return false;
+}
+
+bool transaction_database::uncandidate(file_offset link)
 {
     // TODO: implement.
     return false;
@@ -313,14 +330,12 @@ bool transaction_database::candidate(const transaction::list& transactions,
 // Confirm/Unconfirm.
 // ----------------------------------------------------------------------------
 
-// TODO: add candidate flag.
 // private
 bool transaction_database::unspend(const output_point& point)
 {
     return spend(point, output::validation::unspent);
 }
 
-// TODO: add candidate flag.
 // private
 bool transaction_database::spend(const output_point& point,
     size_t spender_height)
@@ -329,9 +344,9 @@ bool transaction_database::spend(const output_point& point,
     if (point.is_null())
         return true;
 
-    ////// If unspending we could restore the spend to the cache, but not worth it.
-    ////if (spender_height != output::validation::unspent)
-    ////    cache_.remove(point);
+    // If unspending we could restore the spend to the cache, but not worth it.
+    if (spender_height != output::validation::unspent && !cache_.disabled())
+        cache_.remove(point);
 
     auto element = hash_table_.find(point.hash());
 
@@ -389,7 +404,6 @@ bool transaction_database::spend(const output_point& point,
     return true;
 }
 
-// TODO: add candidate flag and update spend/unspend to use it.
 bool transaction_database::unconfirm(file_offset link)
 {
     const auto result = get(link);
@@ -408,7 +422,6 @@ bool transaction_database::unconfirm(file_offset link)
         transaction_result::unconfirmed, transaction_state::pooled);
 }
 
-// TODO: add candidate flag and update spend/unspend to use it.
 bool transaction_database::confirm(file_offset link, size_t height,
     uint32_t median_time_past, size_t position)
 {
@@ -426,11 +439,9 @@ bool transaction_database::confirm(file_offset link, size_t height,
         if (!spend(inpoint, height))
             return false;
 
-    //// TODO: nothing is calling this yet!
-    //// TODO: need to get tx for this interface!
-    //// TODO: It may be more costly to populate it than the benefit, because txs
-    //// will have to be read from disk and loaded into the cache!
-    //cache_.add(tx, height, median_time_past, true);
+    // TODO: It may be more costly to populate the tx than the benefit.
+    if (!cache_.disabled())
+        cache_.add(result.transaction(true), height, median_time_past, true);
 
     // Promote the tx that already exists.
     return update(link, height, median_time_past, position,

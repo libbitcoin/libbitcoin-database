@@ -74,6 +74,11 @@ public:
     // Node writers.
     // ------------------------------------------------------------------------
 
+    // INITCHAIN (genesis)
+    /// Push the block through candidacy and confirmation, without indexing.
+    code push(const chain::block& block, size_t height=0,
+        uint32_t median_time_past=0);
+
     // HEADER ORGANIZER (reorganize)
     /// Reorganize the header index to the specified fork point.
     code reorganize(const config::checkpoint& fork_point,
@@ -115,58 +120,27 @@ protected:
     void commit();
     bool flush() const override;
 
-    // Utilities.
-    // ------------------------------------------------------------------------
-
-    // Push the block as a genesis block, outputs not address-indexed.
-    code push_genesis(const chain::block& block);
-
     // Header reorganization.
     // ------------------------------------------------------------------------
 
-    // Call from header reorganize.
     bool push_all(header_const_ptr_list_const_ptr headers,
         const config::checkpoint& fork_point);
-
-    // Call from header reorganize.
     bool pop_above(header_const_ptr_list_ptr headers,
         const config::checkpoint& fork_point);
-
-    // Call from header push_all.
     code push(const chain::header& header, size_t height);
-
-    // Call from header pop_above.
     code pop(chain::header& out_header, size_t height);
 
     // Block reorganization.
     // ------------------------------------------------------------------------
 
-    ////// Call from block reorganize.
     ////bool push_all(block_const_ptr_list_const_ptr blocks,
     ////    const config::checkpoint& fork_point);
-
-    ////// Call from block reorganize.
     ////bool pop_above(block_const_ptr_list_ptr headers,
     ////    const config::checkpoint& fork_point);
-
-    ////// Call from block push_all.
     ////code push(const chain::block& block, size_t height,
-    ////    uint32_t median_time_past);
-
-    ////// Call from block pop_above.
+    //      uint32_t median_time_past);
     ////code pop(chain::block& out_block, size_t height);
 
-    // Transactions.
-    // ------------------------------------------------------------------------
-
-    // Store the transactions associated with the block.
-    code store_transactions(const chain::block& block, size_t height,
-        uint32_t median_time_past, transaction_state state);
-
-    ////code unconfirm_transactions(const chain::block& block);
-    code unconfirm_transactions(const chain::header& header);
-
-    ////chain::transaction::list to_transactions(const block_result& result) const;
 
     // Databases.
     // ------------------------------------------------------------------------
@@ -176,6 +150,8 @@ protected:
     std::shared_ptr<address_database> addresses_;
 
 private:
+    chain::transaction::list to_transactions(const block_result& result) const;
+
     std::atomic<bool> closed_;
     const settings& settings_;
 
