@@ -27,7 +27,6 @@
 #include <bitcoin/database/primitives/hash_table.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
-#include <bitcoin/database/state/transaction_state.hpp>
 #include <bitcoin/database/unspent_outputs.hpp>
 
 namespace libbitcoin {
@@ -93,11 +92,11 @@ public:
 
     /// Store a transaction.
     bool store(const chain::transaction& tx, uint32_t height,
-        uint32_t median_time_past, size_t position, transaction_state state);
+        uint32_t median_time_past, size_t position, bool candidate);
 
     /// Store a set of transactions presumed to be in block order.
     bool store(const chain::transaction::list& transactions, size_t height,
-        uint32_t median_time_past, transaction_state state);
+        uint32_t median_time_past, bool candidate);
 
     /// Mark outputs spent by the candidate tx.
     bool candidate(file_offset link);
@@ -121,7 +120,7 @@ private:
 
     // Update the state of the existing tx.
     bool update(link_type link, size_t height, uint32_t median_time_past,
-        size_t position, transaction_state state);
+        size_t position, bool candidate);
 
     // Update the spender height of the output.
     bool spend(const chain::output_point& point, size_t spender_height);

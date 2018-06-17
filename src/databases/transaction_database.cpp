@@ -25,7 +25,6 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
-#include <bitcoin/database/state/transaction_state.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -35,26 +34,26 @@ using namespace bc::machine;
 
 // Record format (v4):
 // ----------------------------------------------------------------------------
-// [ height/forks/code:4 - atomic1 ] (code if invalid)
-// [ position:2          - atomic1 ] (unconfirmed sentinel, could store state)
-// [ state:1             - atomic1 ] (invalid, stored, pooled, indexed, confirmed)
-// [ median_time_past:4  - atomic1 ] (zero if unconfirmed)
-// [ output_count:varint - const   ] (tx starts here)
+// [ height/forks/code:4 - atomic1  ] (code if invalid)
+// [ position:2          - atomic1  ] (unconfirmed sentinel, could store state)
+// [ candidate:1         - atomic1  ] (candidate(1))
+// [ median_time_past:4  - atomic1  ] (zero if unconfirmed)
+// [ output_count:varint - const    ] (tx starts here)
 // [
-//   [ index_spend:1    - atomic2 ]
-//   [ spender_height:4 - atomic2 ] (could store index_spend in high bit)
-//   [ value:8          - const   ]
-//   [ script:varint    - const   ]
+//   [ candidate_spent:1 - atomic2 ]
+//   [ spender_height:4  - atomic2 ]  (could store candidate_spent in high bit)
+//   [ value:8           - const   ]
+//   [ script:varint     - const   ]
 // ]...
 // [ input_count:varint   - const   ]
 // [
-//   [ hash:32           - const  ]
-//   [ index:2           - const  ]
-//   [ script:varint     - const  ]
-//   [ sequence:4        - const  ]
+//   [ hash:32            - const  ]
+//   [ index:2            - const  ]
+//   [ script:varint      - const  ]
+//   [ sequence:4         - const  ]
 // ]...
-// [ locktime:varint      - const   ]
-// [ version:varint       - const   ]
+// [ locktime:varint      - const    ]
+// [ version:varint       - const    ]
 
 // Record format (v3.3):
 // ----------------------------------------------------------------------------
@@ -70,16 +69,17 @@ using namespace bc::machine;
 
 static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto position_size = sizeof(uint16_t);
-static constexpr auto state_size = sizeof(uint8_t);
+static constexpr auto candidate_size = sizeof(uint8_t);
 static constexpr auto median_time_past_size = sizeof(uint32_t);
 
-static constexpr auto index_spend_size = sizeof(uint8_t);
+static constexpr auto candidate_spent_size = sizeof(uint8_t);
 ////static constexpr auto height_size = sizeof(uint32_t);
 static constexpr auto value_size = sizeof(uint64_t);
 
-static constexpr auto spend_size = index_spend_size + height_size + value_size;
+static constexpr auto spend_size = candidate_spent_size + height_size +
+    value_size;
 static constexpr auto metadata_size = height_size + position_size +
-    state_size + median_time_past_size;
+    candidate_size + median_time_past_size;
 
 static constexpr auto no_time = 0u;
 
@@ -172,15 +172,14 @@ void transaction_database::get_block_metadata(const chain::transaction& tx,
         return;
     }
 
-    const auto state = result.state();
     const auto height = result.height();
-    const auto relevant = fork_height <= height;
+    tx.metadata.existed = tx.metadata.link !=
+        transaction::validation::unlinked;
+    tx.metadata.candidate = result.candidate();
+    tx.metadata.confirmed = result.position() !=
+        transaction_result::unconfirmed && fork_height <= height;
     tx.metadata.link = result.link();
-    tx.metadata.existed = tx.metadata.link != transaction::validation::unlinked;
-    tx.metadata.candidate = state == transaction_state::candidate;
-    tx.metadata.confirmed = state == transaction_state::confirmed && relevant;
-    tx.metadata.verified = state != transaction_state::confirmed &&
-        height == forks;
+    tx.metadata.verified = !tx.metadata.confirmed && height == forks;
 }
 
 void transaction_database::get_pool_metadata(const chain::transaction& tx,
@@ -192,14 +191,13 @@ void transaction_database::get_pool_metadata(const chain::transaction& tx,
     if (!result)
         return;
 
-    const auto state = result.state();
-    const auto height = result.height();
+    tx.metadata.existed = tx.metadata.link !=
+        transaction::validation::unlinked;
+    tx.metadata.candidate = result.candidate();
+    tx.metadata.confirmed = result.position() !=
+        transaction_result::unconfirmed;
     tx.metadata.link = result.link();
-    tx.metadata.existed = tx.metadata.link != transaction::validation::unlinked;
-    tx.metadata.candidate = state == transaction_state::candidate;
-    tx.metadata.confirmed = state == transaction_state::confirmed;
-    tx.metadata.verified = state != transaction_state::confirmed &&
-        height == forks;
+    tx.metadata.verified = !tx.metadata.confirmed && result.height() == forks;
 }
 
 // Metadata should be defaulted by caller.
@@ -237,17 +235,12 @@ bool transaction_database::get_output(const output_point& point,
     if (!prevout.cache.is_valid())
         return false;
 
-    const auto state = result.state();
-    const auto relevant = height <= fork_height;
-
-    // Return false if exists but not confirmed under fork point.
-    if (!relevant)
-        return false;
-
     // Populate the output metadata.
-    prevout.candidate = state == transaction_state::candidate;
-    prevout.confirmed = state == transaction_state::confirmed;
-    prevout.coinbase = result.position() == 0;
+    const auto position = result.position();
+    prevout.candidate = result.candidate();
+    prevout.coinbase = position == 0;
+    prevout.confirmed = position != transaction_result::unconfirmed &&
+        height <= fork_height;
     prevout.height = height;
     prevout.median_time_past = result.median_time_past();
     prevout.spent = prevout.cache.metadata.spent(fork_height, candidate);
@@ -260,7 +253,7 @@ bool transaction_database::get_output(const output_point& point,
 // ----------------------------------------------------------------------------
 
 bool transaction_database::store(const chain::transaction& tx, uint32_t height,
-    uint32_t median_time_past, size_t position, transaction_state state)
+    uint32_t median_time_past, size_t position, bool candidate)
 {
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(position <= max_uint16);
@@ -285,7 +278,8 @@ bool transaction_database::store(const chain::transaction& tx, uint32_t height,
     {
         serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(position));
-        serial.write_byte(static_cast<uint8_t>(state));
+        serial.write_byte(candidate ? transaction_result::candidate_true :
+            transaction_result::candidate_false);
         serial.write_4_bytes_little_endian(median_time_past);
         tx.to_data(serial, false, true);
     };
@@ -302,11 +296,11 @@ bool transaction_database::store(const chain::transaction& tx, uint32_t height,
 
 // Store each new tx of the block and set tx link metadata for all.
 bool transaction_database::store(const transaction::list& transactions,
-    size_t height, uint32_t median_time_past, transaction_state state)
+    size_t height, uint32_t median_time_past, bool candidate)
 {
     size_t position = 0;
     for (const auto& tx: transactions)
-        if (!store(tx, height, median_time_past, position++, state))
+        if (!store(tx, height, median_time_past, position++, candidate))
             return false;
 
     return true;
@@ -317,7 +311,11 @@ bool transaction_database::store(const transaction::list& transactions,
 
 bool transaction_database::candidate(file_offset link)
 {
-    // TODO: implement.
+    auto result = get(link);
+
+    if (!result)
+        return false;
+
     return false;
 }
 
@@ -353,18 +351,17 @@ bool transaction_database::spend(const output_point& point,
     if (!element)
         return false;
 
-    uint32_t height;
-    transaction_state state;
     size_t outputs;
+    uint32_t height;
+    uint16_t position;
     const auto reader = [&](byte_deserializer& deserial)
     {
         // Critical Section
         ///////////////////////////////////////////////////////////////////////
         shared_lock lock(metadata_mutex_);
         height = deserial.read_4_bytes_little_endian();
-        deserial.skip(position_size);
-        state = static_cast<transaction_state>(deserial.read_byte());
-        deserial.skip(median_time_past_size);
+        position = deserial.read_2_bytes_little_endian();
+        deserial.skip(candidate_size + median_time_past_size);
         outputs = deserial.read_size_little_endian();
         ///////////////////////////////////////////////////////////////////////
     };
@@ -372,7 +369,7 @@ bool transaction_database::spend(const output_point& point,
     element.read(reader);
 
     // Limit to confirmed transactions at or below the spender height.
-    if (state != transaction_state::confirmed || height > spender_height)
+    if (position == transaction_result::unconfirmed || height > spender_height)
         return false;
 
     // The index is not in the transaction.
@@ -391,7 +388,7 @@ bool transaction_database::spend(const output_point& point,
             serial.skip(serial.read_size_little_endian());
         }
 
-        serial.skip(index_spend_size);
+        serial.skip(candidate_spent_size);
 
         // Critical Section
         ///////////////////////////////////////////////////////////////////////
@@ -419,7 +416,7 @@ bool transaction_database::unconfirm(file_offset link)
     // The tx was verified under a now unknown chain state, so set unverified.
     // The tx was validated at one point, so always okay to treat as pooled.
     return update(link, rule_fork::unverified, no_time,
-        transaction_result::unconfirmed, transaction_state::pooled);
+        transaction_result::unconfirmed, false);
 }
 
 bool transaction_database::confirm(file_offset link, size_t height,
@@ -444,13 +441,12 @@ bool transaction_database::confirm(file_offset link, size_t height,
         cache_.add(result.transaction(true), height, median_time_past, true);
 
     // Promote the tx that already exists.
-    return update(link, height, median_time_past, position,
-        transaction_state::confirmed);
+    return update(link, height, median_time_past, position, false);
 }
 
 // private
 bool transaction_database::update(link_type link, size_t height,
-    uint32_t median_time_past, size_t position, transaction_state state)
+    uint32_t median_time_past, size_t position, bool candidate)
 {
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(position <= max_uint16);
@@ -466,7 +462,8 @@ bool transaction_database::update(link_type link, size_t height,
         unique_lock lock(metadata_mutex_);
         serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(position));
-        serial.write_byte(static_cast<uint8_t>(state));
+        serial.write_byte(candidate ? transaction_result::candidate_true :
+            transaction_result::candidate_false);
         serial.write_4_bytes_little_endian(median_time_past);
         ///////////////////////////////////////////////////////////////////////
     };

@@ -300,7 +300,7 @@ code data_base::store(const transaction& tx, uint32_t forks)
 
     // Store the transaction if missing and always set tx link metadata.
     if (!transactions_->store(tx, forks, no_time,
-        transaction_result::unconfirmed, transaction_state::pooled))
+        transaction_result::unconfirmed, false))
         return error::operation_failed;
 
     transactions_->commit();
@@ -346,7 +346,7 @@ code data_base::update(const chain::block& block, size_t height)
 
     // Store the missing transactions and set tx link metadata for all.
     if (!transactions_->store(block.transactions(),
-        machine::rule_fork::unverified, no_time, transaction_state::pooled))
+        machine::rule_fork::unverified, no_time, false))
         return error::operation_failed;
 
     // Update the block's transaction associations (not its state).
@@ -449,7 +449,7 @@ code data_base::push(const block& block, size_t height,
 
     // Store the missing transactions and set tx link metadata for all.
     if (!transactions_->store(block.transactions(), height, median_time_past,
-        transaction_state::confirmed))
+        false))
         return error::operation_failed;
 
     // Populate the block's transaction references.
@@ -622,7 +622,7 @@ code data_base::pop(chain::header& out_header, size_t height)
 ////
 ////    // Pushes transactions sequentially as confirmed, WITHOUT ADDRESS INDEXING.
 ////    if (!transactions_.store(block.transactions(), height, median_time_past,
-////        transaction_state::confirmed))
+////        false))
 ////        return error::operation_failed;
 ////
 ////    // Confirms transactions (and thereby also address indexes).

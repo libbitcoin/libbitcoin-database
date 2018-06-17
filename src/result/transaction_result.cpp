@@ -44,14 +44,16 @@ static constexpr auto spend_size = index_spend_size + height_size + value_size;
 static constexpr auto metadata_size = height_size + position_size +
     state_size + median_time_past_size;
 
+const uint8_t transaction_result::candidate_true = 1;
+const uint8_t transaction_result::candidate_false = 0;
 const uint16_t transaction_result::unconfirmed = max_uint16;
 const uint32_t transaction_result::unverified = rule_fork::unverified;
 
 transaction_result::transaction_result(const const_element_type& element,
     shared_mutex& metadata_mutex)
-  : height_(0),
+  : candidate_(false),
+    height_(0),
     position_(unconfirmed),
-    state_(transaction_state::pooled),
     median_time_past_(0),
     element_(element),
     metadata_mutex_(metadata_mutex)
@@ -67,7 +69,7 @@ transaction_result::transaction_result(const const_element_type& element,
         shared_lock lock(metadata_mutex_);
         height_ = deserial.read_4_bytes_little_endian();
         position_ = deserial.read_2_bytes_little_endian();
-        state_ = static_cast<transaction_state>(deserial.read_byte());
+        candidate_ = deserial.read_byte() == candidate_true;
         median_time_past_ = deserial.read_4_bytes_little_endian();
         ///////////////////////////////////////////////////////////////////////
     };
@@ -92,6 +94,11 @@ hash_digest transaction_result::hash() const
     return element_ ? element_.key() : null_hash;
 }
 
+bool transaction_result::candidate() const
+{
+    return candidate_;
+}
+
 size_t transaction_result::height() const
 {
     // Height is overloaded (holds forks) unless confirmed.
@@ -104,11 +111,6 @@ size_t transaction_result::position() const
     return position_;
 }
 
-transaction_state transaction_result::state() const
-{
-    return state_;
-}
-
 uint32_t transaction_result::median_time_past() const
 {
     return median_time_past_;
@@ -116,9 +118,7 @@ uint32_t transaction_result::median_time_past() const
 
 bool transaction_result::is_spent(size_t fork_height, bool candidate) const
 {
-    const auto relevant = height_ <= fork_height;
-    const auto confirmed = state_ == transaction_state::confirmed && relevant;
-    const auto candidacy = state_ == transaction_state::candidate && candidate;
+    const auto confirmed = position_ != unconfirmed && height_ <= fork_height;
 
     // Cannot be spent unless confirmed/candidate.
     if (!confirmed && !candidate)
@@ -138,7 +138,7 @@ bool transaction_result::is_spent(size_t fork_height, bool candidate) const
         {
             // TODO: This reads full output, which is simple but not optimial.
             const auto output = output::factory(deserial, false);
-            spent = output.metadata.spent(fork_height, candidacy);
+            spent = output.metadata.spent(fork_height, candidate_ && candidate);
         }
     };
 

@@ -70,6 +70,7 @@
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\test\block_state.cpp" />
     <ClCompile Include="..\..\..\..\test\data_base.cpp" />
     <ClCompile Include="..\..\..\..\test\databases\address_database.cpp" />
     <ClCompile Include="..\..\..\..\test\databases\block_database.cpp" />
@@ -91,8 +92,6 @@
     <ClCompile Include="..\..\..\..\test\result\transaction_iterator.cpp" />
     <ClCompile Include="..\..\..\..\test\result\transaction_result.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
-    <ClCompile Include="..\..\..\..\test\state\block_state.cpp" />
-    <ClCompile Include="..\..\..\..\test\state\transaction_state.cpp" />
     <ClCompile Include="..\..\..\..\test\store.cpp" />
     <ClCompile Include="..\..\..\..\test\unspent_outputs.cpp" />
     <ClCompile Include="..\..\..\..\test\unspent_transaction.cpp" />

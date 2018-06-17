@@ -94,6 +94,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\block_state.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\data_base.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\address_database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\block_database.hpp" />
@@ -118,8 +119,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_iterator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_result.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\state\block_state.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\state\transaction_state.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\store.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\unspent_outputs.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\unspent_transaction.hpp" />

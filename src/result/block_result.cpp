@@ -22,10 +22,10 @@
 #include <cstddef>
 #include <utility>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/block_state.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 #include <bitcoin/database/result/transaction_iterator.hpp>
-#include <bitcoin/database/state/block_state.hpp>
 
 namespace libbitcoin {
 namespace database {

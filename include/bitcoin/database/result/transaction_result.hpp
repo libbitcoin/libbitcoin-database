@@ -26,7 +26,6 @@
 #include <bitcoin/database/primitives/list_element.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
 #include <bitcoin/database/result/inpoint_iterator.hpp>
-#include <bitcoin/database/state/transaction_state.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -40,6 +39,12 @@ public:
     typedef slab_manager<link_type> manager;
     typedef list_element<const manager, link_type, key_type>
         const_element_type;
+
+    /// This is the store value for candidate true.
+    static const uint8_t candidate_true;
+
+    /// This is the store value for candidate false.
+    static const uint8_t candidate_false;
 
     /// This is unconfirmed tx height (forks) sentinel.
     static const uint32_t unverified;
@@ -65,8 +70,8 @@ public:
     /// The ordinal position of the tx in a block, or unconfirmed.
     size_t position() const;
 
-    /// The state of the transaction.
-    transaction_state state() const;
+    /// The transaction is in a candidate block.
+    bool candidate() const;
 
     /// The median time past of the block which includes the transaction.
     uint32_t median_time_past() const;
@@ -85,9 +90,9 @@ public:
     inpoint_iterator end() const;
 
 private:
+    bool candidate_;
     uint32_t height_;
     uint16_t position_;
-    transaction_state state_;
     uint32_t median_time_past_;
 
     // This class is thread safe.

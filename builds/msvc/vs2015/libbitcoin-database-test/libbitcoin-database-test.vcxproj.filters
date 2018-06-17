@@ -22,14 +22,14 @@
     <Filter Include="src\result">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\state">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000005}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\utility">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000006}</UniqueIdentifier>
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000005}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\test\block_state.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\data_base.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -92,12 +92,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\settings.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\state\block_state.cpp">
-      <Filter>src\state</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\state\transaction_state.cpp">
-      <Filter>src\state</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\store.cpp">
       <Filter>src</Filter>

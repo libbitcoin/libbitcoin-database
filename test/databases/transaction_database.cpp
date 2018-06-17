@@ -65,8 +65,8 @@ BOOST_AUTO_TEST_CASE(transaction_database__test)
     const auto hash2 = tx2.hash();
     BOOST_REQUIRE(!db.get(hash2));
 
-    db.store(tx1, 110, 0, 88, transaction_state::confirmed);
-    db.store(tx2, 4, 0, 6, transaction_state::confirmed);
+    db.store(tx1, 110, 0, 88, false);
+    db.store(tx2, 4, 0, 6, false);
 
     const auto result1 = db.get(hash1);
     BOOST_REQUIRE(result1);

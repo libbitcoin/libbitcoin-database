@@ -15,6 +15,7 @@
  */
 
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/block_state.hpp>
 #include <bitcoin/database/data_base.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/settings.hpp>
@@ -44,7 +45,5 @@
 #include <bitcoin/database/result/inpoint_iterator.hpp>
 #include <bitcoin/database/result/transaction_iterator.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
-#include <bitcoin/database/state/block_state.hpp>
-#include <bitcoin/database/state/transaction_state.hpp>
 
 #endif
