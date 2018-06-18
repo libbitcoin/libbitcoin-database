@@ -322,9 +322,9 @@ bool transaction_database::uncandidate(file_offset link)
 // private
 bool transaction_database::candidate(file_offset link, bool positive)
 {
-    auto result = get(link);
+    const auto result = get(link);
 
-    if (!result || !update(link, true))
+    if (!result || !update(link, positive))
         return false;
 
     // Spend or unspend the candidate tx's previous outputs.
@@ -343,7 +343,7 @@ bool transaction_database::candidate_spend(const chain::output_point& point,
     if (point.is_null())
         return true;
 
-    auto element = hash_table_.find(point.hash());
+    const auto element = hash_table_.find(point.hash());
 
     if (!element)
         return false;
@@ -392,7 +392,7 @@ bool transaction_database::candidate_spend(const chain::output_point& point,
 // private
 bool transaction_database::update(link_type link, bool candidate)
 {
-    auto element = hash_table_.find(link);
+    const auto element = hash_table_.find(link);
 
     if (!element)
         return false;
@@ -417,36 +417,20 @@ bool transaction_database::update(link_type link, bool candidate)
 
 bool transaction_database::unconfirm(file_offset link)
 {
-    const auto result = get(link);
-
-    if (!result)
-        return false;
-
-    // Unspend the tx's previous outputs.
-    for (const auto inpoint: result)
-        if (!confirmed_spend(inpoint, output::validation::unspent))
-            return false;
-
     // The tx was verified under a now unknown chain state, so set unverified.
-    // The tx was validated at one point, so always okay to treat as pooled.
-    return update(link, rule_fork::unverified, no_time,
-        transaction_result::unconfirmed, false);
+    return confirm(link, rule_fork::unverified, no_time,
+        transaction_result::unconfirmed);
 }
 
-// This doesn't currently get called for unconfirmed.
 bool transaction_database::confirm(file_offset link, size_t height,
     uint32_t median_time_past, size_t position)
 {
-    BITCOIN_ASSERT(height <= max_uint32);
-    BITCOIN_ASSERT(position <= max_uint16);
-    BITCOIN_ASSERT(position != transaction_result::unconfirmed);
-
     const auto result = get(link);
 
     if (!result)
         return false;
 
-    // Spend the tx's previous outputs.
+    // Spend or unspend the tx's previous outputs.
     for (const auto inpoint: result)
         if (!confirmed_spend(inpoint, height))
             return false;
@@ -454,7 +438,7 @@ bool transaction_database::confirm(file_offset link, size_t height,
     // TODO: It may be more costly to populate the tx than the benefit.
     if (!cache_.disabled())
         cache_.add(result.transaction(), height, median_time_past,
-            height != transaction_result::unconfirmed);
+            position != transaction_result::unconfirmed);
 
     // Promote the tx that already exists.
     return update(link, height, median_time_past, position, false);
@@ -468,11 +452,13 @@ bool transaction_database::confirmed_spend(const output_point& point,
     if (point.is_null())
         return true;
 
-    // If unspending we could restore the spend to the cache, but not worth it.
-    if (spender_height != output::validation::unspent && !cache_.disabled())
+    const auto unspend = (spender_height & output::validation::unspent) != 0;
+
+    // When unspending could restore the spend to the cache, but not worth it.
+    if (unspend && !cache_.disabled())
         cache_.remove(point);
 
-    auto element = hash_table_.find(point.hash());
+    const auto element = hash_table_.find(point.hash());
 
     if (!element)
         return false;
@@ -533,7 +519,7 @@ bool transaction_database::update(link_type link, size_t height,
 {
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(position <= max_uint16);
-    auto element = hash_table_.find(link);
+    const auto element = hash_table_.find(link);
 
     if (!element)
         return false;
