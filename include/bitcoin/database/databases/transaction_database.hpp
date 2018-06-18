@@ -90,13 +90,15 @@ public:
     // Writers.
     // ------------------------------------------------------------------------
 
-    /// Store a transaction.
-    bool store(const chain::transaction& tx, uint32_t height,
-        uint32_t median_time_past, size_t position, bool candidate);
+    /// Store a transaction not associated with a block.
+    bool store(const chain::transaction& tx, uint32_t forks);
 
-    /// Store a set of transactions presumed to be in block order.
+    /// Store a set of transactions associated with an unconfirmed block.
+    bool store(const chain::transaction::list& transactions);
+
+    /// Store a set of transactions associated with a confirmed block.
     bool store(const chain::transaction::list& transactions, size_t height,
-        uint32_t median_time_past, bool candidate);
+        uint32_t median_time_past);
 
     /// Mark outputs spent by the candidate tx.
     bool candidate(file_offset link);
@@ -117,6 +119,10 @@ private:
     typedef file_offset link_type;
     typedef slab_manager<link_type> manager_type;
     typedef hash_table<manager_type, index_type, link_type, key_type> slab_map;
+
+    // Store a transaction.
+    bool store(const chain::transaction& tx, size_t height,
+        uint32_t median_time_past, size_t position);
 
     // Update the candidate metadata of the existing tx.
     bool update(link_type link, bool candidate);

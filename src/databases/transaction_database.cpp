@@ -252,8 +252,38 @@ bool transaction_database::get_output(const output_point& point,
 // Store.
 // ----------------------------------------------------------------------------
 
-bool transaction_database::store(const chain::transaction& tx, uint32_t height,
-    uint32_t median_time_past, size_t position, bool candidate)
+// Store new unconfirmed tx and set tx link metadata in any case.
+bool transaction_database::store(const chain::transaction& tx, uint32_t forks)
+{
+    return store(tx, forks, no_time, transaction_result::unconfirmed);
+}
+
+// Store each new tx of the unconfirmed block and set tx link metadata for all.
+bool transaction_database::store(const transaction::list& transactions)
+{
+    for (const auto& tx: transactions)
+        if (!store(tx, rule_fork::unverified, no_time,
+            transaction_result::unconfirmed))
+            return false;
+
+    return true;
+}
+
+// Store each new tx of the confirmed block and set tx link metadata for all.
+bool transaction_database::store(const chain::transaction::list& transactions,
+    size_t height, uint32_t median_time_past)
+{
+    size_t position = 0;
+    for (const auto& tx: transactions)
+        if (!store(tx, height, median_time_past, position++))
+            return false;
+
+    return true;
+}
+
+// private
+bool transaction_database::store(const chain::transaction& tx, size_t height,
+    uint32_t median_time_past, size_t position)
 {
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(position <= max_uint16);
@@ -278,9 +308,8 @@ bool transaction_database::store(const chain::transaction& tx, uint32_t height,
     {
         serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(position));
-        serial.write_byte(candidate ? transaction_result::candidate_true :
-            transaction_result::candidate_false);
-        serial.write_4_bytes_little_endian(median_time_past);
+        serial.write_byte(transaction_result::candidate_false);
+        serial.write_4_bytes_little_endian(no_time);
         tx.to_data(serial, false, true);
     };
 
@@ -291,18 +320,6 @@ bool transaction_database::store(const chain::transaction& tx, uint32_t height,
     auto next = hash_table_.allocator();
     tx.metadata.link = next.create(tx.hash(), writer, size);
     hash_table_.link(next);
-    return true;
-}
-
-// Store each new tx of the block and set tx link metadata for all.
-bool transaction_database::store(const transaction::list& transactions,
-    size_t height, uint32_t median_time_past, bool candidate)
-{
-    size_t position = 0;
-    for (const auto& tx: transactions)
-        if (!store(tx, height, median_time_past, position++, candidate))
-            return false;
-
     return true;
 }
 
@@ -435,10 +452,11 @@ bool transaction_database::confirm(file_offset link, size_t height,
         if (!confirmed_spend(inpoint, height))
             return false;
 
-    // TODO: It may be more costly to populate the tx than the benefit.
+    const auto confirmed = position != transaction_result::unconfirmed;
+
+    // TODO: It may be more costly to populate the tx than the cache benefit.
     if (!cache_.disabled())
-        cache_.add(result.transaction(), height, median_time_past,
-            position != transaction_result::unconfirmed);
+        cache_.add(result.transaction(), height, median_time_past, confirmed);
 
     // Promote the tx that already exists.
     return update(link, height, median_time_past, position, false);

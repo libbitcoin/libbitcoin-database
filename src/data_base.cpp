@@ -38,6 +38,7 @@ namespace database {
 using namespace std::placeholders;
 using namespace boost::filesystem;
 using namespace bc::chain;
+using namespace bc::machine;
 using namespace bc::wallet;
 
 #define NAME "data_base"
@@ -299,9 +300,10 @@ code data_base::store(const transaction& tx, uint32_t forks)
         return error::store_lock_failure;
 
     // Store the transaction if missing and always set tx link metadata.
-    if (!transactions_->store(tx, forks, no_time,
-        transaction_result::unconfirmed, false))
+    if (!transactions_->store(tx, forks))
         return error::operation_failed;
+
+    // TODO: add the tx to unspent transaction cache as unconfirmed.
 
     transactions_->commit();
 
@@ -345,8 +347,7 @@ code data_base::update(const chain::block& block, size_t height)
         return error::store_lock_failure;
 
     // Store the missing transactions and set tx link metadata for all.
-    if (!transactions_->store(block.transactions(),
-        machine::rule_fork::unverified, no_time, false))
+    if (!transactions_->store(block.transactions()))
         return error::operation_failed;
 
     // Update the block's transaction associations (not its state).
@@ -448,8 +449,7 @@ code data_base::push(const block& block, size_t height,
     auto ec = push(block.header(), height);
 
     // Store the missing transactions and set tx link metadata for all.
-    if (!transactions_->store(block.transactions(), height, median_time_past,
-        false))
+    if (!transactions_->store(block.transactions(), height, median_time_past))
         return error::operation_failed;
 
     // Populate the block's transaction references.
@@ -604,6 +604,7 @@ code data_base::pop(chain::header& out_header, size_t height)
 ////    return true;
 ////}
 
+// TODO: move the block from candidate to confirmed.
 ////code data_base::push(const block& block, size_t height,
 ////    uint32_t median_time_past)
 ////{
@@ -640,6 +641,7 @@ code data_base::pop(chain::header& out_header, size_t height)
 ////    ///////////////////////////////////////////////////////////////////////////
 ////}
 
+// TODO: move the block from confirmed to pooled (not candidate).
 ////code data_base::pop(chain::block& out_block, size_t height)
 ////{
 ////    code ec;
