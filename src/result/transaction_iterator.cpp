@@ -40,7 +40,7 @@ transaction_iterator::transaction_iterator(const manager& records,
         const auto memory = records.get(start);
         auto deserial = make_unsafe_deserializer(memory->buffer());
 
-        for (auto offset = 0; offset < count; ++offset)
+        for (auto offset = 0u; offset < count; ++offset)
             offsets_[offset] =
                 deserial.template read_little_endian<value_type>();
     }

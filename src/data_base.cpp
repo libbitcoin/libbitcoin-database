@@ -564,7 +564,7 @@ code data_base::verify_update(const block& block, size_t height) const
 // To push in order call with bucket = 0 and buckets = 1 (defaults).
 code data_base::push_transactions(const block& block, size_t height,
     uint32_t median_time_past, size_t bucket, size_t buckets,
-    transaction_state state)
+    transaction_state )
 {
     BITCOIN_ASSERT(bucket < buckets);
     const auto& txs = block.transactions();

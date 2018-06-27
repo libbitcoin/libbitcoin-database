@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(hash_table_multimap__construct__always__expected)
     };
 
     auto element = multimap.allocator();
-    const auto link = element.create(writer);
+    /*const auto link =*/ element.create(writer);
     multimap.link(key, element);
 
     BOOST_REQUIRE(multimap.find(key));
