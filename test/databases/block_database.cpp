@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
         random_tx(4),
         random_tx(5)
     });
-    const auto h1 = block1.hash();
+    //const auto h1 = block1.hash();
 
     block block2;
     block2.set_header(block0.header());
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
         random_tx(12),
         random_tx(13)
     });
-    const auto h3 = block3.hash();
+    //const auto h3 = block3.hash();
 
     block block4a;
     block4a.set_header(block0.header());

@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(record_manager__count__multiple_records_with_offset__expect
     BOOST_REQUIRE(file.open());
 
     const auto record_size = 10u;
-    const auto link_size = sizeof(link_type);
+    // const auto link_size = sizeof(link_type);
     record_manager<link_type> manager(file, 42, record_size);
     BOOST_REQUIRE(manager.create());
 
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(record_manager__set_count__multiple_records_with_offset__ex
     BOOST_REQUIRE(file.open());
 
     const auto record_size = 10u;
-    const auto link_size = sizeof(link_type);
+    // const auto link_size = sizeof(link_type);
     record_manager<link_type> manager(file, 42, record_size);
     BOOST_REQUIRE(manager.create());
 

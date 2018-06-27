@@ -291,7 +291,7 @@ block_database::link_type block_database::associate(
 
 // Update.
 // ----------------------------------------------------------------------------
-// These are used to atomically update metadata. 
+// These are used to atomically update metadata.
 
 // Populate transaction references, state is unchanged.
 bool block_database::update(const chain::block& block)
@@ -479,7 +479,7 @@ bool block_database::confirm(const hash_digest& hash, size_t height,
 }
 
 // TODO: the caller already knows the current header state.
-bool block_database::unconfirm(const hash_digest& hash, size_t height,
+bool block_database::unconfirm(const hash_digest& , size_t height,
     bool block_index)
 {
     BITCOIN_ASSERT(height != max_uint32);
