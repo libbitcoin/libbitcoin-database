@@ -125,7 +125,7 @@ AS_CASE([${enable_shared}], [yes], AC_DEFINE([BOOST_ALL_DYN_LINK]))
 AS_CASE([${CC}], [*],
     [AX_BOOST_BASE([1.62.0],
         [AC_SUBST([boost_CPPFLAGS], [${BOOST_CPPFLAGS}])
-         AC_SUBST([boost_SYS_CPPFLAGS], [`echo ${BOOST_CPPFLAGS} | $SED s/-I/-isystem/g`])
+         AC_SUBST([boost_SYS_CPPFLAGS], [`echo ${BOOST_CPPFLAGS} | $SED s/^-I/-isystem/g | $SED s/' -I'/' -isystem'/g`])
          AC_SUBST([boost_LDFLAGS], [${BOOST_LDFLAGS}])
          AC_MSG_NOTICE([boost_CPPFLAGS : ${boost_CPPFLAGS}])
          AC_MSG_NOTICE([boost_LDFLAGS : ${boost_LDFLAGS}])],
@@ -142,7 +142,7 @@ AS_CASE([${with_tests}], [yes],
 PKG_CHECK_MODULES([bitcoin], [libbitcoin >= 4.0.0])
 AC_SUBST([bitcoin_PKG], ['libbitcoin >= 4.0.0'])
 AC_SUBST([bitcoin_CPPFLAGS], [${bitcoin_CFLAGS}])
-AC_SUBST([bitcoin_SYS_CPPFLAGS], [`echo ${bitcoin_CFLAGS} | $SED s/-I/-isystem/g`])
+AC_SUBST([bitcoin_SYS_CPPFLAGS], [`echo ${bitcoin_CFLAGS} | $SED s/^-I/-isystem/g | $SED s/' -I'/' -isystem'/g`])
 AC_MSG_NOTICE([bitcoin_CPPFLAGS : ${bitcoin_CPPFLAGS}])
 AC_MSG_NOTICE([bitcoin_LIBS : ${bitcoin_LIBS}])
 
