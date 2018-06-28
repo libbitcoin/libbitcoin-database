@@ -275,7 +275,7 @@ block_database::link_type block_database::associate(
 
 // Update.
 // ----------------------------------------------------------------------------
-// These are used to atomically update metadata. 
+// These are used to atomically update metadata.
 
 // Populate transaction references, state is unchanged.
 bool block_database::update(const chain::block& block)
