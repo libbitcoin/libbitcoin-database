@@ -167,7 +167,6 @@ void unspent_outputs::remove(const output_point& point)
 }
 
 // All responses are unspent, metadata should be defaulted by caller.
-// Set fork_height to max_size_t for tx pool metadata.
 bool unspent_outputs::populate(const output_point& point,
     size_t fork_height) const
 {
@@ -187,32 +186,24 @@ bool unspent_outputs::populate(const output_point& point,
     if (tx == unspent_.left.end())
         return false;
 
-    const auto& transaction = tx->first;
-    const auto height = transaction.height();
-    const auto relevant = height <= fork_height;
-    const auto for_pool = fork_height == max_size_t;
-    const auto confirmed = transaction.is_confirmed() && relevant;
-
-    // Guarantee confirmation state.
-    if (!for_pool && !confirmed)
-        return false;
-
     // Find the output at the specified index for the found unspent tx.
+    const auto& transaction = tx->first;
     const auto outputs = transaction.outputs();
     const auto output = outputs->find(point.index());
     if (output == outputs->end())
         return false;
 
     ++hits_;
+    const auto height = transaction.height();
 
     // Populate the output metadata.
-    prevout.cache = output->second;
-    prevout.confirmed = confirmed;
+    prevout.spent = false;
+    prevout.candidate = false;
+    prevout.confirmed = transaction.is_confirmed() && height <= fork_height;
     prevout.coinbase = transaction.is_coinbase();
-
     prevout.height = height;
     prevout.median_time_past = transaction.median_time_past();
-    prevout.spent = false;
+    prevout.cache = output->second;
 
     return true;
     ///////////////////////////////////////////////////////////////////////////

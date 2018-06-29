@@ -15,12 +15,14 @@
  */
 
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/block_state.hpp>
 #include <bitcoin/database/data_base.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/store.hpp>
 #include <bitcoin/database/unspent_outputs.hpp>
 #include <bitcoin/database/unspent_transaction.hpp>
+#include <bitcoin/database/verify.hpp>
 #include <bitcoin/database/version.hpp>
 #include <bitcoin/database/databases/address_database.hpp>
 #include <bitcoin/database/databases/block_database.hpp>
@@ -43,7 +45,5 @@
 #include <bitcoin/database/result/inpoint_iterator.hpp>
 #include <bitcoin/database/result/transaction_iterator.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
-#include <bitcoin/database/state/block_state.hpp>
-#include <bitcoin/database/state/transaction_state.hpp>
 
 #endif

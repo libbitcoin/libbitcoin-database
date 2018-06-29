@@ -27,22 +27,19 @@ namespace database {
 // Stored block headers are always valid (PoW) with height, states are:
 enum block_state : uint8_t
 {
-    /// This is not a stored state.
     missing = 0,
 
     /// Stored headers are always valid, these refer to their blocks.
     /// Mutually-exclusive (invalid is not pooled, only pent may be empty).
     failed = 1 << 0,
-    pent = 1 << 1,
-    valid = 1 << 2,
+    valid = 1 << 1,
 
     /// Mutually-exclusive (confirmed must be valid, confirmed can't be empty).
-    pooled = 1 << 3,
-    indexed = 1 << 4,
-    confirmed = 1 << 5,
+    candidate = 1 << 2,
+    confirmed = 1 << 3,
 
-    validations = invalid | pent | valid,
-    confirmations = pooled | indexed | confirmed
+    validations = failed | valid,
+    confirmations = candidate | confirmed
 };
 
 // validation states
@@ -53,31 +50,36 @@ inline bool is_failed(uint8_t state)
     return (state & block_state::failed) != 0;
 }
 
-inline bool is_pent(uint8_t state)
-{
-    return (state & block_state::pent) != 0;
-}
-
 inline bool is_valid(uint8_t state)
 {
     return (state & block_state::valid) != 0;
 }
 
+////inline bool is_pent(uint8_t state)
+////{
+////    return !is_valid(state) && !is_failed(state);
+////}
+
 // confirmation states
 
-inline bool is_pooled(uint8_t state)
+inline bool is_candidate(uint8_t state)
 {
-    return (state & block_state::pooled) != 0;
-}
-
-inline bool is_indexed(uint8_t state)
-{
-    return (state & block_state::indexed) != 0;
+    return (state & block_state::candidate) != 0;
 }
 
 inline bool is_confirmed(uint8_t state)
 {
     return (state & block_state::confirmed) != 0;
+}
+
+////inline bool is_pooled(uint8_t state)
+////{
+////    return !is_candidate(state) && !is_confirmed(state);
+////}
+
+inline bool is_valid_candidate(uint8_t state)
+{
+    return is_valid(state) && is_candidate(state);
 }
 
 } // namespace database

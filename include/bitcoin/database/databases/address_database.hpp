@@ -72,14 +72,8 @@ public:
     // Store.
     //-------------------------------------------------------------------------
 
-    /// Add a row for the key. If key doesn't exist it will be created.
-    void store(const short_hash& hash, const chain::payment_record& payment);
-
-    // Update.
-    //-------------------------------------------------------------------------
-
-    /// Logically delete the last row that was added to key.
-    bool pop(const short_hash& hash);
+    /// Add a row for each payment recorded in the transaction.
+    void index(const chain::transaction& tx);
 
 private:
     typedef short_hash key_type;

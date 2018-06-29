@@ -23,12 +23,12 @@
 #include <cstddef>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/database/block_state.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/file_storage.hpp>
 #include <bitcoin/database/primitives/hash_table.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 #include <bitcoin/database/result/block_result.hpp>
-#include <bitcoin/database/state/block_state.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -41,8 +41,9 @@ public:
     typedef boost::filesystem::path path;
 
     /// Construct the database.
-    block_database(const path& map_filename, const path& header_index_filename,
-        const path& block_index_filename, const path& tx_index_filename,
+    block_database(const path& map_filename,
+        const path& candidate_index_filename,
+        const path& confirmed_index_filename, const path& tx_index_filename,
         size_t buckets, size_t expansion);
 
     /// Close the database (all threads must first be stopped).
@@ -69,45 +70,35 @@ public:
     // Queries.
     //-------------------------------------------------------------------------
 
-    /// The highest confirmed block of the header index.
-    size_t fork_point() const;
-
-    /// The highest valid block of the header index.
-    size_t valid_point() const;
-
-    /// The height of the highest indexed block|header.
-    bool top(size_t& out_height, bool block_index=true) const;
+    /// The height of the highest candidate|confirmed block.
+    bool top(size_t& out_height, bool candidate) const;
 
     /// Fetch block by block|header index height.
-    block_result get(size_t height, bool block_index=true) const;
+    block_result get(size_t height, bool candidate) const;
 
     /// Fetch block by hash.
     block_result get(const hash_digest& hash) const;
 
-    // Store.
+    /// Populate header metadata for the given header.
+    void get_header_metadata(const chain::header& header) const;
+
+    // Writers.
     // ------------------------------------------------------------------------
 
     /// Push header, validated at height.
     void push(const chain::header& header, size_t height);
 
-    /// Push block, validated at height, and associate tx links.
-    void push(const chain::block& block, size_t height,
-        uint32_t median_time_past);
-
-    // Update.
-    // ------------------------------------------------------------------------
-
-    /// Populate pent block transaction references, state is unchanged.
+    /// Populate pooled block transaction references, state is unchanged.
     bool update(const chain::block& block);
 
-    /// Promote pent block to valid|invalid.
-    bool validate(const hash_digest& hash, bool positive);
+    /// Promote pooled block to valid|invalid and set code.
+    bool validate(const hash_digest& hash, const code& error);
 
-    /// Promote pooled|indexed block to indexed|confirmed.
-    bool confirm(const hash_digest& hash, size_t height, bool block_index);
+    /// Promote pooled|candidate block to candidate|confirmed respectively.
+    bool confirm(const hash_digest& hash, size_t height, bool candidate);
 
-    /// Demote header|block at the given height to pooled.
-    bool unconfirm(const hash_digest& hash, size_t height, bool block_index);
+    /// Demote candidate|confirmed header to pooled|pooled (not candidate).
+    bool unconfirm(const hash_digest& hash, size_t height, bool candidate);
 
 private:
     typedef hash_digest key_type;
@@ -118,9 +109,9 @@ private:
 
     typedef message::compact_block::short_id_list short_id_list;
 
-    uint8_t confirm(const_element& element, bool positive, bool block_index);
+    uint8_t confirm(const_element& element, bool positive, bool candidate);
     link_type associate(const chain::transaction::list& transactions);
-    void push(const chain::header& header, size_t height,
+    void store(const chain::header& header, size_t height,
         uint32_t median_time_past, uint32_t checksum, link_type tx_start,
         size_t tx_count, uint8_t status);
 
@@ -132,23 +123,17 @@ private:
 
     static const size_t prefix_size_;
 
-    // The top confirmed block in the header index.
-    std::atomic<size_t> fork_point_;
-
-    // The top valid block in the header index.
-    std::atomic<size_t> valid_point_;
-
     // Hash table used for looking up block headers by hash.
     file_storage hash_table_file_;
     record_map hash_table_;
 
-    // Table used for looking up headers by height.
-    file_storage header_index_file_;
-    manager_type header_index_;
+    // Table used for looking up candidate headers by height.
+    file_storage candidate_index_file_;
+    manager_type candidate_index_;
 
-    // Table used for looking up blocks by height.
-    file_storage block_index_file_;
-    manager_type block_index_;
+    // Table used for looking up confirmed headers by height.
+    file_storage confirmed_index_file_;
+    manager_type confirmed_index_;
 
     // Association table between blocks and their contained transactions.
     // Only first tx is indexed and count is required to read the full set.

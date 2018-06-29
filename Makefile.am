@@ -40,6 +40,7 @@ src_libbitcoin_database_la_SOURCES = \
     src/store.cpp \
     src/unspent_outputs.cpp \
     src/unspent_transaction.cpp \
+    src/verify.cpp \
     src/databases/address_database.cpp \
     src/databases/block_database.cpp \
     src/databases/transaction_database.cpp \
@@ -64,6 +65,7 @@ check_PROGRAMS = test/libbitcoin-database-test
 test_libbitcoin_database_test_CPPFLAGS = -I${srcdir}/include ${bitcoin_CPPFLAGS}
 test_libbitcoin_database_test_LDADD = src/libbitcoin-database.la ${boost_unit_test_framework_LIBS} ${bitcoin_LIBS}
 test_libbitcoin_database_test_SOURCES = \
+    test/block_state.cpp \
     test/data_base.cpp \
     test/main.cpp \
     test/settings.cpp \
@@ -88,8 +90,6 @@ test_libbitcoin_database_test_SOURCES = \
     test/result/block_result.cpp \
     test/result/transaction_iterator.cpp \
     test/result/transaction_result.cpp \
-    test/state/block_state.cpp \
-    test/state/transaction_state.cpp \
     test/utility/storage.cpp \
     test/utility/storage.hpp \
     test/utility/utility.cpp \
@@ -117,12 +117,14 @@ include_bitcoin_HEADERS = \
 
 include_bitcoin_databasedir = ${includedir}/bitcoin/database
 include_bitcoin_database_HEADERS = \
+    include/bitcoin/database/block_state.hpp \
     include/bitcoin/database/data_base.hpp \
     include/bitcoin/database/define.hpp \
     include/bitcoin/database/settings.hpp \
     include/bitcoin/database/store.hpp \
     include/bitcoin/database/unspent_outputs.hpp \
     include/bitcoin/database/unspent_transaction.hpp \
+    include/bitcoin/database/verify.hpp \
     include/bitcoin/database/version.hpp
 
 include_bitcoin_database_databasesdir = ${includedir}/bitcoin/database/databases
@@ -168,11 +170,6 @@ include_bitcoin_database_result_HEADERS = \
     include/bitcoin/database/result/inpoint_iterator.hpp \
     include/bitcoin/database/result/transaction_iterator.hpp \
     include/bitcoin/database/result/transaction_result.hpp
-
-include_bitcoin_database_statedir = ${includedir}/bitcoin/database/state
-include_bitcoin_database_state_HEADERS = \
-    include/bitcoin/database/state/block_state.hpp \
-    include/bitcoin/database/state/transaction_state.hpp
 
 
 # Custom make targets.

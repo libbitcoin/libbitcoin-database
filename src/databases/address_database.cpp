@@ -112,6 +112,7 @@ bool address_database::close()
 // Queries.
 // ----------------------------------------------------------------------------
 
+// TODO: obtain confirmation height from tx record (along with hash).
 address_result address_database::get(const short_hash& hash) const
 {
     return { address_multimap_.find(hash), hash };
@@ -120,26 +121,19 @@ address_result address_database::get(const short_hash& hash) const
 // Store.
 // ----------------------------------------------------------------------------
 
-void address_database::store(const short_hash& hash,
-    const payment_record& payment)
+// Confirmation of payment is dynamically derived from current tx state.
+void address_database::index(const chain::transaction& tx)
 {
-    const auto writer = [&](byte_serializer& serial)
-    {
-        payment.to_data(serial, false);
-    };
+    // TODO: loop over payments, relying only on output scripts, adding rows.
+    ////const auto writer = [&](byte_serializer& serial)
+    ////{
+    ////    payment.to_data(serial, false);
+    ////};
 
-    // Write the new payment history.
-    auto next = address_multimap_.allocator();
-    next.create(writer);
-    address_multimap_.link(hash, next);
-}
-
-// Update.
-// ----------------------------------------------------------------------------
-
-bool address_database::pop(const short_hash& hash)
-{
-    return address_multimap_.unlink(hash);
+    ////// Write the new payment history.
+    ////auto next = address_multimap_.allocator();
+    ////next.create(writer);
+    ////address_multimap_.link(hash, next);
 }
 
 } // namespace database

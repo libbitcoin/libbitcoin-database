@@ -27,7 +27,6 @@
 #include <bitcoin/database/primitives/hash_table.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
-#include <bitcoin/database/state/transaction_state.hpp>
 #include <bitcoin/database/unspent_outputs.hpp>
 
 namespace libbitcoin {
@@ -77,27 +76,41 @@ public:
     /// Fetch transaction by its hash.
     transaction_result get(const hash_digest& hash) const;
 
-    /// Populate output metadata for the specified point.
-    /// Confirmation is satisfied by confirmed|indexed, fork point dependent.
-    bool get_output(const chain::output_point& point,
-        size_t fork_height=max_size_t) const;
+    /// Populate tx metadata for the given block context.
+    void get_block_metadata(const chain::transaction& tx, uint32_t forks,
+        size_t fork_height) const;
 
-    // Store.
+    /// Populate tx metadata for the given transaction pool context.
+    void get_pool_metadata(const chain::transaction& tx, uint32_t forks) const;
+
+    /// Populate output metadata for the specified point and given context.
+    bool get_output(const chain::output_point& point, size_t fork_height,
+        bool candidate) const;
+
+    // Writers.
     // ------------------------------------------------------------------------
 
-    /// Create a confirmed transaction.
-    bool store(const chain::transaction& tx, uint32_t height,
-        uint32_t median_time_past, size_t position,
-        transaction_state state=transaction_state::confirmed);
+    /// Store a transaction not associated with a block.
+    bool store(const chain::transaction& tx, uint32_t forks);
 
-    /// Create a pooled transaction.
-    bool pool(const chain::transaction& tx, uint32_t forks);
+    /// Store a set of transactions associated with an unconfirmed block.
+    bool store(const chain::transaction::list& transactions);
 
-    // Promote the transaction to confirmed.
+    /// Store a set of transactions associated with a confirmed block.
+    bool store(const chain::transaction::list& transactions, size_t height,
+        uint32_t median_time_past);
+
+    /// Mark outputs spent by the candidate tx.
+    bool candidate(file_offset link);
+
+    /// Unmark outputs formerly spent by the candidate tx.
+    bool uncandidate(file_offset link);
+
+    /// Promote the transaction to confirmed.
     bool confirm(file_offset link, size_t height, uint32_t median_time_past,
         size_t position);
 
-    // Demote the transaction to pooled.
+    /// Demote the transaction to pooled.
     bool unconfirm(file_offset link);
 
 private:
@@ -107,22 +120,33 @@ private:
     typedef slab_manager<link_type> manager_type;
     typedef hash_table<manager_type, index_type, link_type, key_type> slab_map;
 
-    // Update the spender height of the output.
-    bool spend(const chain::output_point& point, size_t spender_height);
+    // Store a transaction.
+    bool store(const chain::transaction& tx, size_t height,
+        uint32_t median_time_past, size_t position);
 
-    // Unspend the output.
-    bool unspend(const chain::output_point& point);
+    // Update the candidate metadata of the existing tx.
+    bool update(link_type link, bool candidate);
 
-    // Update the state of the existing tx.
+    // Update metadata of the existing tx.
     bool update(link_type link, size_t height, uint32_t median_time_past,
-        size_t position, transaction_state state);
+        size_t position, bool candidate);
+
+    // Update the candidate state of the tx.
+    bool candidate(file_offset link, bool positive);
+
+    // Update the candidate spent of the output.
+    bool candidate_spend(const chain::output_point& point, bool positive);
+
+    // Update the spender height of the output.
+    bool confirmed_spend(const chain::output_point& point,
+        size_t spender_height);
 
     // Hash table used for looking up txs by hash.
     file_storage hash_table_file_;
     slab_map hash_table_;
 
-    // This is thread safe, and as a cache is mutable.
-    mutable unspent_outputs cache_;
+    // This is thread safe.
+    unspent_outputs cache_;
 
     // This provides atomicity for height and position.
     mutable shared_mutex metadata_mutex_;

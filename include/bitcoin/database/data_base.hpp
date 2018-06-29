@@ -74,68 +74,73 @@ public:
     // Node writers.
     // ------------------------------------------------------------------------
 
-    /// Store unconfirmed tx that was verified with the given forks.
-    code store(const chain::transaction& tx, uint32_t forks);
+    // INITCHAIN (genesis)
+    /// Push the block through candidacy and confirmation, without indexing.
+    code push(const chain::block& block, size_t height=0,
+        uint32_t median_time_past=0);
 
-    /// Push next top header of expected height.
-    code push(const chain::header& header, size_t height);
-
-    /// Pop top header of expected height.
-    code pop(chain::header& out_header, size_t height);
-
-    /// Update the stored block with txs, initiating block validation and
-    /// block index reorganization applicable.
-    code update(block_const_ptr block, size_t height);
-
-    /// Set the validation state of the block.
-    code validate(block_const_ptr block, bool positive);
-
-    /// Reorganize the header index, reorganizing block index and initiating
-    /// block downloads as applicable.
+    // HEADER ORGANIZER (reorganize)
+    /// Reorganize the header index to the specified fork point.
     code reorganize(const config::checkpoint& fork_point,
         header_const_ptr_list_const_ptr incoming,
         header_const_ptr_list_ptr outgoing);
 
-    // Utility writers.
-    // ------------------------------------------------------------------------
-    // Not used by the node.
+    // BLOCK ORGANIZER (update)
+    /// Update the stored block with txs.
+    code update(const chain::block& block, size_t height);
 
-    /// Push next top block of expected height.
-    code push(const chain::block& block, size_t height,
-        uint32_t median_time_past);
+    // BLOCK ORGANIZER (update, invalidate)
+    /// Set header validation state and metadata.
+    code invalidate(const chain::header& header, const code& error);
 
-    /// Pop top block of expected height.
-    code pop(chain::block& out_block, size_t height);
+    // BLOCK ORGANIZER (candidate)
+    /// Mark candidate block, txs and outputs spent by them as candidate.
+    code candidate(const chain::block& block);
+
+    // BLOCK ORGANIZER (candidate)
+    /// Add payments of transactions of the block to the payment index.
+    code index(const chain::block& block);
+
+    // BLOCK ORGANIZER (reorganize)
+    /// Reorganize the block index to the specified fork point.
+    code reorganize(const config::checkpoint& fork_point,
+        block_const_ptr_list_const_ptr incoming,
+        block_const_ptr_list_ptr outgoing);
+
+    // TRANSACTION ORGANIZER (store)
+    /// Store unconfirmed tx/payments that was verified with the given forks.
+    code store(const chain::transaction& tx, uint32_t forks);
+
+    // TRANSACTION ORGANIZER (store)
+    /// Add payments of the transaction to the payment index.
+    code index(const chain::transaction& tx);
 
 protected:
     void start();
     void commit();
     bool flush() const override;
 
-    // Debug Utilities.
+    // Header reorganization.
     // ------------------------------------------------------------------------
 
-    code verify(const chain::block& block) const;
-    code verify(const config::checkpoint& fork_point, bool block_index) const;
-    code verify_top(size_t height, bool block_index) const;
-    code verify_push(const chain::transaction& tx) const;
-    code verify_push(const chain::header& header, size_t height) const;
-    code verify_push(const chain::block& block, size_t height) const;
-    code verify_update(const chain::block& block, size_t height) const;
+    bool push_all(header_const_ptr_list_const_ptr headers,
+        const config::checkpoint& fork_point);
+    bool pop_above(header_const_ptr_list_ptr headers,
+        const config::checkpoint& fork_point);
+    code push(const chain::header& header, size_t height);
+    code pop(chain::header& out_header, size_t height);
 
-    // Synchronous.
+    // Block reorganization.
     // ------------------------------------------------------------------------
 
-    void push_inputs(const chain::transaction& tx);
-    void push_outputs(const chain::transaction& tx);
-    code push_transactions(const chain::block& block, size_t height,
-        uint32_t median_time_past, size_t bucket=0, size_t buckets=1,
-        transaction_state state=transaction_state::confirmed);
+    ////bool push_all(block_const_ptr_list_const_ptr blocks,
+    ////    const config::checkpoint& fork_point);
+    ////bool pop_above(block_const_ptr_list_ptr headers,
+    ////    const config::checkpoint& fork_point);
+    ////code push(const chain::block& block, size_t height,
+    //      uint32_t median_time_past);
+    ////code pop(chain::block& out_block, size_t height);
 
-    bool pop_inputs(const chain::transaction& tx);
-    bool pop_outputs(const chain::transaction& tx);
-    code pop_transactions(const chain::block& out_block, size_t bucket=0,
-        size_t buckets=1);
 
     // Databases.
     // ------------------------------------------------------------------------
@@ -145,20 +150,12 @@ protected:
     std::shared_ptr<address_database> addresses_;
 
 private:
-    typedef chain::input::list inputs;
-    typedef chain::output::list outputs;
-
     chain::transaction::list to_transactions(const block_result& result) const;
-    code push_genesis(const chain::block& block);
-    bool pop_above(header_const_ptr_list_ptr headers,
-        const config::checkpoint& fork_point);
-    bool push_all(header_const_ptr_list_const_ptr headers,
-        const config::checkpoint& fork_point);
 
     std::atomic<bool> closed_;
     const settings& settings_;
 
-    // Used to prevent concurrent unsafe writes.
+    // Used to prevent unsafe concurrent writes.
     mutable shared_mutex write_mutex_;
 };
 

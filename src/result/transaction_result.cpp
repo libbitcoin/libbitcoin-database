@@ -44,14 +44,16 @@ static constexpr auto spend_size = index_spend_size + height_size + value_size;
 static constexpr auto metadata_size = height_size + position_size +
     state_size + median_time_past_size;
 
+const uint8_t transaction_result::candidate_true = 1;
+const uint8_t transaction_result::candidate_false = 0;
 const uint16_t transaction_result::unconfirmed = max_uint16;
 const uint32_t transaction_result::unverified = rule_fork::unverified;
 
 transaction_result::transaction_result(const const_element_type& element,
     shared_mutex& metadata_mutex)
-  : height_(0),
+  : candidate_(false),
+    height_(0),
     position_(unconfirmed),
-    state_(transaction_state::missing),
     median_time_past_(0),
     element_(element),
     metadata_mutex_(metadata_mutex)
@@ -67,7 +69,7 @@ transaction_result::transaction_result(const const_element_type& element,
         shared_lock lock(metadata_mutex_);
         height_ = deserial.read_4_bytes_little_endian();
         position_ = deserial.read_2_bytes_little_endian();
-        state_ = static_cast<transaction_state>(deserial.read_byte());
+        candidate_ = deserial.read_byte() == candidate_true;
         median_time_past_ = deserial.read_4_bytes_little_endian();
         ///////////////////////////////////////////////////////////////////////
     };
@@ -81,12 +83,6 @@ transaction_result::operator bool() const
     return element_;
 }
 
-code transaction_result::error() const
-{
-    // Height could store error code, but we don't currently use invalid state.
-    return error::success;
-}
-
 file_offset transaction_result::link() const
 {
     return element_.link();
@@ -96,6 +92,11 @@ hash_digest transaction_result::hash() const
 {
     // This is read each time it is invoked, so caller should cache.
     return element_ ? element_.key() : null_hash;
+}
+
+bool transaction_result::candidate() const
+{
+    return candidate_;
 }
 
 size_t transaction_result::height() const
@@ -110,28 +111,17 @@ size_t transaction_result::position() const
     return position_;
 }
 
-transaction_state transaction_result::state() const
-{
-    return state_;
-}
-
 uint32_t transaction_result::median_time_past() const
 {
     return median_time_past_;
 }
 
-// Set fork_height to max_size_t for tx pool metadata.
-bool transaction_result::is_spent(size_t fork_height) const
+bool transaction_result::is_spent(size_t fork_height, bool candidate) const
 {
-    const auto relevant = height_ <= fork_height;
-    const auto for_pool = fork_height == max_size_t;
+    const auto confirmed = position_ != unconfirmed && height_ <= fork_height;
 
-    const auto confirmed =
-        (state_ == transaction_state::indexed && !for_pool) ||
-        (state_ == transaction_state::confirmed && relevant);
-
-    // Cannot be spent unless confirmed.
-    if (!confirmed)
+    // Cannot be spent unless confirmed/candidate.
+    if (!confirmed && !candidate)
         return false;
 
     BITCOIN_ASSERT(element_);
@@ -148,7 +138,7 @@ bool transaction_result::is_spent(size_t fork_height) const
         {
             // TODO: This reads full output, which is simple but not optimial.
             const auto output = output::factory(deserial, false);
-            spent = output.metadata.spent(fork_height);
+            spent = output.metadata.spent(fork_height, candidate_ && candidate);
         }
     };
 
@@ -201,7 +191,10 @@ chain::transaction transaction_result::transaction(bool witness) const
     };
 
     element_.read(reader);
+
+    // TODO: populate all metadata or use methods?
     tx.metadata.link = element_.link();
+    tx.metadata.existed = true;
     return tx;
 }
 
