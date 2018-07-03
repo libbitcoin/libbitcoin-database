@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__unlink_first_stored__expected)
 
     // Allocate, create and store a new elements.
     auto element = table.allocator();
-    const auto link1 = element.create(key1, writer1, 2);
+    /*const auto link1 =*/ element.create(key1, writer1, 2);
     table.link(element);
     const auto link2 = element.create(key2, writer2, 1);
     table.link(element);
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_32_bit__round_trips)
 
     // Allocate, create and store a new elements.
     auto element = table.allocator();
-    const auto link1 = element.create(key1, writer1);
+    /*const auto link1 =*/ element.create(key1, writer1);
     table.link(element);
     const auto link2 = element.create(key2, writer2);
     table.link(element);
@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_64_bit__round_trips)
 
     // Allocate, create and store a new elements.
     auto element = table.allocator();
-    const auto link1 = element.create(key1, writer1);
+    /*const auto link1 =*/ element.create(key1, writer1);
     table.link(element);
     const auto link2 = element.create(key2, writer2);
     table.link(element);
