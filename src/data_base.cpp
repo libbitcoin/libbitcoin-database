@@ -446,7 +446,7 @@ code data_base::push(const block& block, size_t height,
         return error::store_lock_failure;
 
     // Push the header onto the candidate chain.
-    auto ec = push(block.header(), height);
+    blocks_->push(block.header(), height);
 
     // Store the missing transactions and set tx link metadata for all.
     if (!transactions_->store(block.transactions(), height, median_time_past))
@@ -475,6 +475,23 @@ code data_base::push(const block& block, size_t height,
 // ----------------------------------------------------------------------------
 // protected
 
+bool data_base::push_all(header_const_ptr_list_const_ptr headers,
+    const config::checkpoint& fork_point)
+{
+    code ec;
+    const auto first_height = fork_point.height() + 1;
+
+    // Push all headers onto the fork point.
+    for (size_t index = 0; index < headers->size(); ++index)
+    {
+        const auto next = (*headers)[index];
+        if ((ec = push_header(*next, first_height + index)))
+            return false;
+    }
+
+    return true;
+}
+
 bool data_base::pop_above(header_const_ptr_list_ptr headers,
     const config::checkpoint& fork_point)
 {
@@ -497,7 +514,7 @@ bool data_base::pop_above(header_const_ptr_list_ptr headers,
     for (size_t height = top; height > fork; --height)
     {
         const auto next = std::make_shared<message::header>();
-        if ((ec = pop(*next, height)))
+        if ((ec = pop_header(*next, height)))
             return false;
 
         headers->insert(headers->begin(), next);
@@ -506,25 +523,8 @@ bool data_base::pop_above(header_const_ptr_list_ptr headers,
     return true;
 }
 
-bool data_base::push_all(header_const_ptr_list_const_ptr headers,
-    const config::checkpoint& fork_point)
-{
-    code ec;
-    const auto first_height = fork_point.height() + 1;
-
-    // Push all headers onto the fork point.
-    for (size_t index = 0; index < headers->size(); ++index)
-    {
-        const auto next = (*headers)[index];
-        if ((ec = push(*next, first_height + index)))
-            return false;
-    }
-
-    return true;
-}
-
 // This expects header is valid and metadata.exists is populated.
-code data_base::push(const chain::header& header, size_t height)
+code data_base::push_header(const chain::header& header, size_t height)
 {
     code ec;
 
@@ -549,7 +549,7 @@ code data_base::push(const chain::header& header, size_t height)
 }
 
 // This expects header exists at the top of the candidate index.
-code data_base::pop(chain::header& out_header, size_t height)
+code data_base::pop_header(chain::header& out_header, size_t height)
 {
     code ec;
 
