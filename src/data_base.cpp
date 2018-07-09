@@ -60,9 +60,11 @@ static constexpr uint32_t no_time = 0;
 // Construct.
 // ----------------------------------------------------------------------------
 
-data_base::data_base(const settings& settings)
+data_base::data_base(const settings& settings,
+    const bc::settings& bitcoin_settings)
   : closed_(true),
     settings_(settings),
+    bitcoin_settings_(bitcoin_settings),
     database::store(settings.directory, settings.index_addresses,
         settings.flush_writes)
 {
@@ -138,7 +140,7 @@ void data_base::start()
 {
     blocks_ = std::make_shared<block_database>(block_table, candidate_index,
         confirmed_index, transaction_index, settings_.block_table_buckets,
-        settings_.file_growth_rate);
+        settings_.file_growth_rate, bitcoin_settings_);
 
     transactions_ = std::make_shared<transaction_database>(transaction_table,
         settings_.transaction_table_buckets, settings_.file_growth_rate,
@@ -513,7 +515,7 @@ bool data_base::pop_above(header_const_ptr_list_ptr headers,
     // Pop all headers above the fork point.
     for (size_t height = top; height > fork; --height)
     {
-        const auto next = std::make_shared<message::header>();
+        const auto next = std::make_shared<message::header>(bitcoin_settings_);
         if ((ec = pop_header(*next, height)))
             return false;
 
