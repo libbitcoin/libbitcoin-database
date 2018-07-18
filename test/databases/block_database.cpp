@@ -19,6 +19,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/filesystem.hpp>
+#include <bitcoin/bitcoin.hpp>
 #include <bitcoin/database.hpp>
 #include "../utility/utility.hpp"
 
@@ -30,7 +31,8 @@ using namespace bc::database;
 
 transaction random_tx(size_t fudge)
 {
-    static const auto genesis = block::genesis_mainnet(bc::settings());
+    static const auto genesis = bc::settings(bc::config::settings::mainnet)
+        .genesis_block;
     auto tx = genesis.transactions()[0];
     tx.inputs()[0].previous_output().set_index(fudge);
     tx.metadata.link = fudge;
