@@ -253,7 +253,7 @@ void block_database::push(const chain::header& header, size_t height)
     // The header (or block) already exists, promote to candidate.
     if (header.metadata.exists)
     {
-        confirm(header.hash(), height, true);
+        index(header.hash(), height, true);
         return;
     }
 
@@ -395,7 +395,7 @@ static uint8_t update_confirmation_state(uint8_t original, bool positive,
     return confirmation_state | validation_state;
 }
 
-uint8_t block_database::confirm(const_element& element, bool positive,
+uint8_t block_database::index(const_element& element, bool positive,
     bool candidate)
 {
     uint8_t original;
@@ -428,7 +428,7 @@ uint8_t block_database::confirm(const_element& element, bool positive,
     return positive ? updated : original;
 }
 
-bool block_database::confirm(const hash_digest& hash, size_t height,
+bool block_database::index(const hash_digest& hash, size_t height,
     bool candidate)
 {
     BITCOIN_ASSERT(height != max_uint32);
@@ -443,12 +443,12 @@ bool block_database::confirm(const hash_digest& hash, size_t height,
     if (!element)
         return false;
 
-    const auto updated = confirm(element, true, candidate);
+    const auto updated = index(element, true, candidate);
     push_index(element.link(), height, manager);
     return true;
 }
 
-bool block_database::unconfirm(const hash_digest& hash, size_t height,
+bool block_database::unindex(const hash_digest& hash, size_t height,
     bool candidate)
 {
     BITCOIN_ASSERT(height != max_uint32);
@@ -464,7 +464,7 @@ bool block_database::unconfirm(const hash_digest& hash, size_t height,
     if (!element)
         return false;
 
-    const auto original = confirm(element, false, candidate);
+    const auto original = index(element, false, candidate);
     pop_index(height, manager);
     return true;
 }

@@ -462,8 +462,8 @@ code data_base::push(const block& block, size_t height,
     if (!blocks_->validate(block.hash(), error::success))
         return error::operation_failed;
 
-    // Promote confirmation state from candidate to confirmed.
-    if (!blocks_->confirm(block.hash(), height, false))
+    // Promote confirmation index from candidate to confirmed.
+    if (!blocks_->index(block.hash(), height, false))
         return error::operation_failed;
 
     commit();
@@ -576,8 +576,8 @@ code data_base::pop_header(chain::header& out_header, size_t height)
         if (!transactions_->uncandidate(link))
             return error::operation_failed;
 
-    // Unconfirm the candidate header.
-    if (!blocks_->unconfirm(result.hash(), height, true))
+    // Unindex the candidate header.
+    if (!blocks_->unindex(result.hash(), height, true))
         return error::operation_failed;
 
     // Commit everything that was changed and return header.
