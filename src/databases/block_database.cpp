@@ -284,6 +284,11 @@ block_database::link_type block_database::associate(
 // Populate transaction references, state is unchanged.
 bool block_database::update(const chain::block& block)
 {
+    auto element = hash_table_.find(block.hash());
+
+    if (!element)
+        return false;
+
     const auto& txs = block.transactions();
     const auto tx_start = associate(txs);
     const auto tx_count = txs.size();
@@ -302,11 +307,6 @@ bool block_database::update(const chain::block& block)
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(tx_count));
         ///////////////////////////////////////////////////////////////////////
     };
-
-    auto element = hash_table_.find(block.hash());
-
-    if (!element)
-        return false;
 
     element.write(updater);
     return true;
