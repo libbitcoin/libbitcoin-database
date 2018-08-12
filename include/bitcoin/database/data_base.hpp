@@ -133,13 +133,12 @@ protected:
     // Block reorganization.
     // ------------------------------------------------------------------------
 
-    ////bool push_all(block_const_ptr_list_const_ptr blocks,
-    ////    const config::checkpoint& fork_point);
-    ////bool pop_above(block_const_ptr_list_ptr headers,
-    ////    const config::checkpoint& fork_point);
-    ////code push(const chain::block& block, size_t height,
-    //      uint32_t median_time_past);
-    ////code pop(chain::block& out_block, size_t height);
+    bool push_all(block_const_ptr_list_const_ptr blocks,
+        const config::checkpoint& fork_point);
+    bool pop_above(block_const_ptr_list_ptr headers,
+        const config::checkpoint& fork_point);
+    code push_block(const chain::block& block, size_t height);
+    code pop_block(chain::block& out_block, size_t height);
 
 
     // Databases.
