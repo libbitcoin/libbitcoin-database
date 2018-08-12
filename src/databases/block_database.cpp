@@ -253,7 +253,7 @@ void block_database::push(const chain::header& header, size_t height)
     // The header (or block) already exists, promote to candidate.
     if (header.metadata.exists)
     {
-        confirm(header.hash(), height, true);
+        index(header.hash(), height, true);
         return;
     }
 
@@ -284,6 +284,11 @@ block_database::link_type block_database::associate(
 // Populate transaction references, state is unchanged.
 bool block_database::update(const chain::block& block)
 {
+    auto element = hash_table_.find(block.hash());
+
+    if (!element)
+        return false;
+
     const auto& txs = block.transactions();
     const auto tx_start = associate(txs);
     const auto tx_count = txs.size();
@@ -302,11 +307,6 @@ bool block_database::update(const chain::block& block)
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(tx_count));
         ///////////////////////////////////////////////////////////////////////
     };
-
-    auto element = hash_table_.find(block.hash());
-
-    if (!element)
-        return false;
 
     element.write(updater);
     return true;
@@ -395,7 +395,7 @@ static uint8_t update_confirmation_state(uint8_t original, bool positive,
     return confirmation_state | validation_state;
 }
 
-uint8_t block_database::confirm(const_element& element, bool positive,
+uint8_t block_database::index(const_element& element, bool positive,
     bool candidate)
 {
     uint8_t original;
@@ -428,7 +428,7 @@ uint8_t block_database::confirm(const_element& element, bool positive,
     return positive ? updated : original;
 }
 
-bool block_database::confirm(const hash_digest& hash, size_t height,
+bool block_database::index(const hash_digest& hash, size_t height,
     bool candidate)
 {
     BITCOIN_ASSERT(height != max_uint32);
@@ -443,12 +443,12 @@ bool block_database::confirm(const hash_digest& hash, size_t height,
     if (!element)
         return false;
 
-    const auto updated = confirm(element, true, candidate);
+    const auto updated = index(element, true, candidate);
     push_index(element.link(), height, manager);
     return true;
 }
 
-bool block_database::unconfirm(const hash_digest& hash, size_t height,
+bool block_database::unindex(const hash_digest& hash, size_t height,
     bool candidate)
 {
     BITCOIN_ASSERT(height != max_uint32);
@@ -464,7 +464,7 @@ bool block_database::unconfirm(const hash_digest& hash, size_t height,
     if (!element)
         return false;
 
-    const auto original = confirm(element, false, candidate);
+    const auto original = index(element, false, candidate);
     pop_index(height, manager);
     return true;
 }

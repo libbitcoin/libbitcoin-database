@@ -121,25 +121,28 @@ private:
     typedef hash_table<manager_type, index_type, link_type, key_type> slab_map;
 
     // Store a transaction.
-    bool store(const chain::transaction& tx, size_t height,
+    //-------------------------------------------------------------------------
+    bool storize(const chain::transaction& tx, size_t height,
         uint32_t median_time_past, size_t position);
 
-    // Update the candidate metadata of the existing tx.
-    bool update(link_type link, bool candidate);
-
-    // Update metadata of the existing tx.
-    bool update(link_type link, size_t height, uint32_t median_time_past,
-        size_t position, bool candidate);
-
     // Update the candidate state of the tx.
+    //-------------------------------------------------------------------------
     bool candidate(file_offset link, bool positive);
 
     // Update the candidate spent of the output.
     bool candidate_spend(const chain::output_point& point, bool positive);
 
+    // Update the candidate metadata of the existing tx.
+    bool candidize(link_type link, bool candidate);
+
     // Update the spender height of the output.
+    //-------------------------------------------------------------------------
     bool confirmed_spend(const chain::output_point& point,
         size_t spender_height);
+
+    // Promote metadata of the existing tx to confirmed.
+    bool confirmize(link_type link, size_t height, uint32_t median_time_past,
+        size_t position);
 
     // Hash table used for looking up txs by hash.
     file_storage hash_table_file_;
