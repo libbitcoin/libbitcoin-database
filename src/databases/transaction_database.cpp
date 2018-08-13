@@ -310,7 +310,7 @@ bool transaction_database::storize(const chain::transaction& tx, size_t height,
         serial.write_4_bytes_little_endian(static_cast<uint32_t>(height));
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(position));
         serial.write_byte(transaction_result::candidate_false);
-        serial.write_4_bytes_little_endian(no_time);
+        serial.write_4_bytes_little_endian(median_time_past);
         tx.to_data(serial, false, true);
     };
 
