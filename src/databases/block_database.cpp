@@ -365,16 +365,16 @@ static uint8_t update_confirmation_state(uint8_t original, bool positive,
     bool candidate)
 {
     // May only confirm a valid block.
-    BITCOIN_ASSERT(positive || !candidate || is_valid(original));
+    BITCOIN_ASSERT(!positive || candidate || is_valid(original));
 
     // May only unconfirm a confirmed block.
-    BITCOIN_ASSERT(!positive || !candidate || is_confirmed(original));
+    BITCOIN_ASSERT(positive || candidate || is_confirmed(original));
 
-    // May only candidate a valid block.
-    BITCOIN_ASSERT(positive || !candidate || is_valid(original));
+    // May only candidate an unfailed block.
+    BITCOIN_ASSERT(!positive || !candidate || !is_failed(original));
 
     // May only uncandidate a candidate header.
-    BITCOIN_ASSERT(!positive || candidate || is_candidate(original));
+    BITCOIN_ASSERT(positive || !candidate || is_candidate(original));
 
     // Preserve the validation state (header-indexed blocks can be pent).
     const auto validation_state = original & block_state::validations;
