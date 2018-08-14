@@ -332,11 +332,6 @@ bool transaction_database::candidate(file_offset link)
     return candidate(link, true);
 }
 
-bool transaction_database::uncandidate(file_offset link)
-{
-    return candidate(link, false);
-}
-
 // private
 bool transaction_database::candidate(file_offset link, bool positive)
 {
@@ -351,6 +346,11 @@ bool transaction_database::candidate(file_offset link, bool positive)
             return false;
 
     return true;
+}
+
+bool transaction_database::uncandidate(file_offset link)
+{
+    return candidate(link, false);
 }
 
 // private
@@ -433,11 +433,15 @@ bool transaction_database::candidize(link_type link, bool candidate)
 // Confirm/Unconfirm.
 // ----------------------------------------------------------------------------
 
-bool transaction_database::unconfirm(file_offset link)
+bool transaction_database::confirm(const transaction::list& transactions,
+    size_t height, uint32_t median_time_past)
 {
-    // The tx was verified under a now unknown chain state, so set unverified.
-    return confirm(link, rule_fork::unverified, no_time,
-        transaction_result::unconfirmed);
+    uint32_t position = 0;
+    for (const auto& tx: transactions)
+        if (!confirm(tx.metadata.link, height, median_time_past, position++))
+            return false;
+
+    return true;
 }
 
 bool transaction_database::confirm(file_offset link, size_t height,
@@ -461,6 +465,13 @@ bool transaction_database::confirm(file_offset link, size_t height,
 
     // Promote the tx that already exists.
     return confirmize(link, height, median_time_past, position);
+}
+
+bool transaction_database::unconfirm(file_offset link)
+{
+    // The tx was verified under a now unknown chain state, so set unverified.
+    return confirm(link, rule_fork::unverified, no_time,
+        transaction_result::unconfirmed);
 }
 
 // private

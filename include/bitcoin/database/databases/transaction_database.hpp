@@ -106,6 +106,10 @@ public:
     /// Unmark outputs formerly spent by the candidate tx.
     bool uncandidate(file_offset link);
 
+    /// Promote the set of transactions associated with a block to confirmed.
+    bool confirm(const chain::transaction::list& transactions, size_t height,
+        uint32_t median_time_past);
+
     /// Promote the transaction to confirmed.
     bool confirm(file_offset link, size_t height, uint32_t median_time_past,
         size_t position);
