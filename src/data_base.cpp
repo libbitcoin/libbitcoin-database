@@ -468,7 +468,7 @@ code data_base::push(const block& block, size_t height,
     if (!transactions_->confirm(block.transactions(), height, median_time_past))
         return error::operation_failed;
 
-    // Promote validation state to valid.
+    // Promote validation state to valid (presumed valid).
     if (!blocks_->validate(block.hash(), error::success))
         return error::operation_failed;
 
