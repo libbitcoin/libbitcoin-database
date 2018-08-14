@@ -123,10 +123,10 @@ code verify_push(const block_database& blocks, const header& header,
     size_t height)
 {
 #ifndef NDEBUG
-    if (get_next_block(blocks, false) != height)
+    if (get_next_block(blocks, true) != height)
         return error::store_block_invalid_height;
 
-    if (get_previous_block(blocks, height, false) !=
+    if (get_previous_block(blocks, height, true) !=
         header.previous_block_hash())
         return error::store_block_missing_parent;
 #endif
