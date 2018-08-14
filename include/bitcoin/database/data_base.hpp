@@ -127,7 +127,8 @@ protected:
         const config::checkpoint& fork_point);
     bool pop_above(header_const_ptr_list_ptr headers,
         const config::checkpoint& fork_point);
-    code push_header(const chain::header& header, size_t height);
+    code push_header(const chain::header& header, size_t height,
+        uint32_t median_time_past);
     code pop_header(chain::header& out_header, size_t height);
 
     // Block reorganization.
