@@ -449,7 +449,7 @@ bool block_database::unindex(const hash_digest& hash, size_t height,
     auto& manager = candidate ? candidate_index_ : confirmed_index_;
 
     // Can only remove from the top of an index (push).
-    if (height + 1 != manager.count())
+    if (height + 1u != manager.count())
         return false;
 
     // Unconfirmation implies that block is indexed, so use index.
