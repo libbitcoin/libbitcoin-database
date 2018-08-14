@@ -67,10 +67,6 @@ static const auto state_offset = height_offset + height_size;
 static const auto checksum_offset = state_offset + state_size;
 static const auto transactions_offset = checksum_offset + checksum_size;
 
-// Placeholder for unimplemented checksum caching.
-static constexpr auto no_checksum = 0u;
-static constexpr auto no_time = 0u;
-
 // Total size of block header and metadta storage.
 static const auto block_size = header_size + median_time_past_size +
     height_size + state_size + checksum_size + tx_start_size + tx_count_size;
@@ -247,18 +243,16 @@ void block_database::store(const chain::header& header, size_t height,
     hash_table_.link(next);
 }
 
-// A header creation does not move the fork point (not a reorg).
-void block_database::push(const chain::header& header, size_t height)
+void block_database::store(const chain::header& header, size_t height,
+    uint32_t median_time_past)
 {
-    // The header (or block) already exists, promote to candidate.
-    if (header.metadata.exists)
-    {
-        index(header.hash(), height, true);
-        return;
-    }
+    static constexpr auto tx_start = 0u;
+    static constexpr auto tx_count = 0u;
+    static constexpr auto no_checksum = 0u;
 
-    // Initially store header as top candidate, pending download.
-    store(header, height, no_time, no_checksum, 0, 0, block_state::candidate);
+    // New headers are only accepted in the candidate state.
+    store(header, height, median_time_past, no_checksum, tx_start, tx_count,
+        block_state::candidate);
 }
 
 block_database::link_type block_database::associate(
