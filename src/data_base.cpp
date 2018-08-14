@@ -436,8 +436,8 @@ code data_base::reorganize(const config::checkpoint& fork_point,
     return result ? error::success : error::operation_failed;
 }
 
+// TODO: index payments.
 // Store, update, validate and confirm the presumed valid block.
-// Call data_base::index(block) to index transactions after pushing the block.
 code data_base::push(const block& block, size_t height,
     uint32_t median_time_past)
 {
