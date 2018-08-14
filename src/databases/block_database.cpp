@@ -67,10 +67,6 @@ static const auto state_offset = height_offset + height_size;
 static const auto checksum_offset = state_offset + state_size;
 static const auto transactions_offset = checksum_offset + checksum_size;
 
-// Placeholder for unimplemented checksum caching.
-static constexpr auto no_checksum = 0u;
-static constexpr auto no_time = 0u;
-
 // Total size of block header and metadta storage.
 static const auto block_size = header_size + median_time_past_size +
     height_size + state_size + checksum_size + tx_start_size + tx_count_size;
@@ -247,18 +243,16 @@ void block_database::store(const chain::header& header, size_t height,
     hash_table_.link(next);
 }
 
-// A header creation does not move the fork point (not a reorg).
-void block_database::push(const chain::header& header, size_t height)
+void block_database::store(const chain::header& header, size_t height,
+    uint32_t median_time_past)
 {
-    // The header (or block) already exists, promote to candidate.
-    if (header.metadata.exists)
-    {
-        index(header.hash(), height, true);
-        return;
-    }
+    static constexpr auto tx_start = 0u;
+    static constexpr auto tx_count = 0u;
+    static constexpr auto no_checksum = 0u;
 
-    // Initially store header as top candidate, pending download.
-    store(header, height, no_time, no_checksum, 0, 0, block_state::candidate);
+    // New headers are only accepted in the candidate state.
+    store(header, height, median_time_past, no_checksum, tx_start, tx_count,
+        block_state::candidate);
 }
 
 block_database::link_type block_database::associate(
@@ -371,16 +365,16 @@ static uint8_t update_confirmation_state(uint8_t original, bool positive,
     bool candidate)
 {
     // May only confirm a valid block.
-    BITCOIN_ASSERT(positive || !candidate || is_valid(original));
+    BITCOIN_ASSERT(!positive || candidate || is_valid(original));
 
     // May only unconfirm a confirmed block.
-    BITCOIN_ASSERT(!positive || !candidate || is_confirmed(original));
+    BITCOIN_ASSERT(positive || candidate || is_confirmed(original));
 
-    // May only candidate a valid block.
-    BITCOIN_ASSERT(positive || !candidate || is_valid(original));
+    // May only candidate an unfailed block.
+    BITCOIN_ASSERT(!positive || !candidate || !is_failed(original));
 
     // May only uncandidate a candidate header.
-    BITCOIN_ASSERT(!positive || candidate || is_candidate(original));
+    BITCOIN_ASSERT(positive || !candidate || is_candidate(original));
 
     // Preserve the validation state (header-indexed blocks can be pent).
     const auto validation_state = original & block_state::validations;
@@ -455,7 +449,7 @@ bool block_database::unindex(const hash_digest& hash, size_t height,
     auto& manager = candidate ? candidate_index_ : confirmed_index_;
 
     // Can only remove from the top of an index (push).
-    if (height + 1 != manager.count())
+    if (height + 1u != manager.count())
         return false;
 
     // Unconfirmation implies that block is indexed, so use index.

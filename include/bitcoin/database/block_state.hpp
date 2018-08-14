@@ -55,11 +55,6 @@ inline bool is_valid(uint8_t state)
     return (state & block_state::valid) != 0;
 }
 
-////inline bool is_pent(uint8_t state)
-////{
-////    return !is_valid(state) && !is_failed(state);
-////}
-
 // confirmation states
 
 inline bool is_candidate(uint8_t state)
@@ -70,16 +65,6 @@ inline bool is_candidate(uint8_t state)
 inline bool is_confirmed(uint8_t state)
 {
     return (state & block_state::confirmed) != 0;
-}
-
-////inline bool is_pooled(uint8_t state)
-////{
-////    return !is_candidate(state) && !is_confirmed(state);
-////}
-
-inline bool is_valid_candidate(uint8_t state)
-{
-    return is_valid(state) && is_candidate(state);
 }
 
 } // namespace database

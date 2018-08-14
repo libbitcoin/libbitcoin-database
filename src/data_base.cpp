@@ -54,9 +54,6 @@ using namespace bc::wallet;
 // A failure after begin_write is returned without calling end_write.
 // This leaves the local flush lock enabled, preventing usage after restart.
 
-// TODO: tx median_time_past must be updated following block metadata.
-static constexpr uint32_t no_time = 0;
-
 // Construct.
 // ----------------------------------------------------------------------------
 
@@ -439,9 +436,8 @@ code data_base::reorganize(const config::checkpoint& fork_point,
     return result ? error::success : error::operation_failed;
 }
 
+// TODO: index payments.
 // Store, update, validate and confirm the presumed valid block.
-// Since genesis output is not spendable, indexing is not integrated.
-// Call data_base::index(block) to index transactions after pushing the block.
 code data_base::push(const block& block, size_t height,
     uint32_t median_time_past)
 {
@@ -453,22 +449,30 @@ code data_base::push(const block& block, size_t height,
     if (!begin_write())
         return error::store_lock_failure;
 
-    // Push the header onto the candidate chain.
-    blocks_->push(block.header(), height);
+    // Store the header.
+    blocks_->store(block.header(), height, median_time_past);
 
-    // Store the missing transactions and set tx link metadata for all.
-    if (!transactions_->store(block.transactions(), height, median_time_past))
+    // Push header reference onto the candidate index and set candidate state.
+    if (!blocks_->index(block.hash(), height, true))
         return error::operation_failed;
 
-    // Populate the block's transaction references.
+    // Store any missing txs as unconfirmed, set tx link metadata for all.
+    if (!transactions_->store(block.transactions()))
+        return error::operation_failed;
+
+    // Populate transaction references from link metadata.
     if (!blocks_->update(block))
         return error::operation_failed;
 
-    // Promote validation state to valid.
+    // Confirm all transactions (candidate state transition not requried).
+    if (!transactions_->confirm(block.transactions(), height, median_time_past))
+        return error::operation_failed;
+
+    // Promote validation state to valid (presumed valid).
     if (!blocks_->validate(block.hash(), error::success))
         return error::operation_failed;
 
-    // Promote confirmation index from candidate to confirmed.
+    // Push header reference onto the confirmed index and set confirmed state.
     if (!blocks_->index(block.hash(), height, false))
         return error::operation_failed;
 
@@ -492,8 +496,9 @@ bool data_base::push_all(header_const_ptr_list_const_ptr headers,
     // Push all headers onto the fork point.
     for (size_t index = 0; index < headers->size(); ++index)
     {
-        const auto next = (*headers)[index];
-        if ((ec = push_header(*next, first_height + index)))
+        const auto& header = *((*headers)[index]);
+        const auto median_time_past = header.metadata.median_time_past;
+        if ((ec = push_header(header, first_height + index, median_time_past)))
             return false;
     }
 
@@ -531,8 +536,10 @@ bool data_base::pop_above(header_const_ptr_list_ptr headers,
     return true;
 }
 
-// This expects header is valid and metadata.exists is populated.
-code data_base::push_header(const chain::header& header, size_t height)
+// Expects header is next candidate and metadata.exists is populated.
+// Median time past metadata is populated when the block is validated.
+code data_base::push_header(const chain::header& header, size_t height,
+    uint32_t median_time_past)
 {
     code ec;
 
@@ -547,8 +554,10 @@ code data_base::push_header(const chain::header& header, size_t height)
     if (!begin_write())
         return error::store_lock_failure;
 
-    // This will change an existing header from any state to candidate.
-    blocks_->push(header, height);
+    if (!header.metadata.exists)
+        blocks_->store(header, height, median_time_past);
+
+    blocks_->index(header.hash(), height, true);
     blocks_->commit();
 
     return end_write() ? error::success : error::store_lock_failure;
@@ -556,7 +565,7 @@ code data_base::push_header(const chain::header& header, size_t height)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-// This expects header exists at the top of the candidate index.
+// Expects header exists at the top of the candidate index.
 code data_base::pop_header(chain::header& out_header, size_t height)
 {
     code ec;
@@ -609,8 +618,8 @@ bool data_base::push_all(block_const_ptr_list_const_ptr blocks,
     // Push all blocks onto the fork point.
     for (size_t index = 0; index < blocks->size(); ++index)
     {
-        const auto next = (*blocks)[index];
-        if ((ec = push_block(*next, first_height + index)))
+        const auto& block = *((*blocks)[index]);
+        if ((ec = push_block(block, first_height + index)))
             return false;
     }
 

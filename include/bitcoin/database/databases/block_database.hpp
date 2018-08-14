@@ -85,8 +85,9 @@ public:
     // Writers.
     // ------------------------------------------------------------------------
 
-    /// Push header, validated at height.
-    void push(const chain::header& header, size_t height);
+    /// Store header, validated at height, candidate, pending (but unindexed).
+    void store(const chain::header& header, size_t height,
+        uint32_t median_time_past);
 
     /// Populate pooled block transaction references, state is unchanged.
     bool update(const chain::block& block);
