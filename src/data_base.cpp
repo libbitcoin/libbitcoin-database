@@ -89,7 +89,7 @@ bool data_base::create(const block& genesis)
         return false;
 
     // Create files.
-    if (!store::create())
+    if (!create())
         return false;
 
     start();

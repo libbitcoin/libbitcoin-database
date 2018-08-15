@@ -51,6 +51,9 @@ public:
     /// Create and open all databases.
     bool create(const chain::block& genesis);
 
+    // Expose polymorphic create method from base.
+    using store::create;
+
     /// Open all databases.
     bool open() override;
 
