@@ -75,8 +75,7 @@ static const auto block_size = header_size + median_time_past_size +
 // The block database keys off of block hash and has block value.
 block_database::block_database(const path& map_filename,
     const path& candidate_index_filename, const path& confirmed_index_filename,
-    const path& tx_index_filename, size_t buckets, size_t expansion,
-    const bc::settings& bitcoin_settings)
+    const path& tx_index_filename, size_t buckets, size_t expansion)
   : hash_table_file_(map_filename, expansion),
     hash_table_(hash_table_file_, buckets, block_size),
 
@@ -90,8 +89,7 @@ block_database::block_database(const path& map_filename,
 
     // Array storage.
     tx_index_file_(tx_index_filename, expansion),
-    tx_index_(tx_index_file_, 0, sizeof(file_offset)),
-    bitcoin_settings_(bitcoin_settings)
+    tx_index_(tx_index_file_, 0, sizeof(file_offset))
 {
 }
 
@@ -178,8 +176,7 @@ block_result block_database::get(size_t height, bool candidate) const
     {
         hash_table_.find(link),
         metadata_mutex_,
-        tx_index_,
-        bitcoin_settings_
+        tx_index_
     };
 }
 
@@ -190,8 +187,7 @@ block_result block_database::get(const hash_digest& hash) const
     {
         hash_table_.find(hash),
         metadata_mutex_,
-        tx_index_,
-        bitcoin_settings_
+        tx_index_
     };
 }
 

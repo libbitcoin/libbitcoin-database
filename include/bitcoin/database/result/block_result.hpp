@@ -43,8 +43,7 @@ public:
         const_element_type;
 
     block_result(const const_element_type& element,
-        shared_mutex& metadata_mutex, const manager& index_manager,
-        const bc::settings& bitcoin_settings);
+        shared_mutex& metadata_mutex, const manager& index_manager);
 
     /// True if the requested block exists.
     operator bool() const;

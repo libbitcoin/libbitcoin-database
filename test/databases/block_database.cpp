@@ -31,8 +31,8 @@ using namespace bc::database;
 
 transaction random_tx(size_t fudge)
 {
-    static const chain::block genesis = bc::settings(bc::config::settings::mainnet)
-        .genesis_block;
+    static const auto settings = bc::settings(bc::config::settings::mainnet);
+    static const chain::block genesis = settings.genesis_block;
     auto tx = genesis.transactions()[0];
     tx.inputs()[0].previous_output().set_index(fudge);
     tx.metadata.link = fudge;
@@ -54,7 +54,7 @@ BOOST_FIXTURE_TEST_SUITE(database_tests, block_database_directory_setup_fixture)
 BOOST_AUTO_TEST_CASE(block_database__test)
 {
     // TODO: replace.
-    ////auto block0 = block::genesis_mainnet(bc::settings());
+    ////auto block0 = block::genesis_mainnet();
     ////block0.set_transactions(
     ////{
     ////    random_tx(0),
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     ////});
     ////const auto h0 = block0.hash();
 
-    ////block block1(bc::settings{});
+    ////block block1;
     ////block1.set_header(block0.header());
     ////block1.header().set_nonce(4);
     ////block1.set_transactions(
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     ////});
     ////const auto h1 = block1.hash();
 
-    ////block block2(bc::settings{});
+    ////block block2;
     ////block2.set_header(block0.header());
     ////block2.header().set_nonce(110);
     ////block2.set_transactions(
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     ////});
     ////const auto h2 = block2.hash();
 
-    ////block block3(bc::settings{});
+    ////block block3;
     ////block3.set_header(block0.header());
     ////block3.header().set_nonce(88);
     ////block3.set_transactions(
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     ////});
     ////const auto h3 = block3.hash();
 
-    ////block block4a(bc::settings{});
+    ////block block4a;
     ////block4a.set_header(block0.header());
     ////block4a.header().set_nonce(63);
     ////block4a.set_transactions(
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     ////});
     ////const auto h4a = block4a.hash();
 
-    ////block block4b(bc::settings{});
+    ////block block4b;
     ////block4b.set_header(block0.header());
     ////block4b.header().set_nonce(633);
     ////block4b.set_transactions(
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     ////});
     ////const auto h4b = block4b.hash();
 
-    ////block block5a(bc::settings{});
+    ////block block5a;
     ////block5a.set_header(header(block0.header()));
     ////block5a.header().set_nonce(99);
     ////block5a.set_transactions(
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     ////});
     ////const auto h5a = block5a.hash();
 
-    ////block block5b(bc::settings{});
+    ////block block5b;
     ////block5b.set_header(block0.header());
     ////block5b.header().set_nonce(222);
     ////block5b.set_transactions(
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     ////test::create(candidate_index);
     ////test::create(confirmed_index);
     ////test::create(tx_index);
-    ////block_database db(block_table, candidate_index, confirmed_index, tx_index, 1000, 50, bc::settings());
+    ////block_database db(block_table, candidate_index, confirmed_index, tx_index, 1000, 50);
     ////BOOST_REQUIRE(db.create());
 
     ////size_t height;

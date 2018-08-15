@@ -44,7 +44,7 @@ public:
     block_database(const path& map_filename,
         const path& candidate_index_filename,
         const path& confirmed_index_filename, const path& tx_index_filename,
-        size_t buckets, size_t expansion, const bc::settings& bitcoin_settings);
+        size_t buckets, size_t expansion);
 
     /// Close the database (all threads must first be stopped).
     ~block_database();
@@ -141,8 +141,6 @@ private:
     // This indexes txs (vs. blocks) so the link type may be differentiated.
     file_storage tx_index_file_;
     manager_type tx_index_;
-
-    const bc::settings& bitcoin_settings_;
 
     // This provides atomicity for checksum, tx_start, tx_count, state.
     mutable shared_mutex metadata_mutex_;
