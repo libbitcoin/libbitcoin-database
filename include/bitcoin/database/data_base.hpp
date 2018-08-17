@@ -43,7 +43,7 @@ class BCD_API data_base
 public:
     typedef std::function<void(const code&)> result_handler;
 
-    data_base(const settings& settings, const bc::settings& bitocin_settings);
+    data_base(const settings& settings);
 
     // Open and close.
     // ------------------------------------------------------------------------
@@ -157,7 +157,6 @@ private:
 
     std::atomic<bool> closed_;
     const settings& settings_;
-    const bc::settings& bitcoin_settings_;
 
     // Used to prevent unsafe concurrent writes.
     mutable shared_mutex write_mutex_;

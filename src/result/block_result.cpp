@@ -49,10 +49,8 @@ static const auto transactions_offset = checksum_offset + checksum_size;
 static constexpr auto no_checksum = 0u;
 
 block_result::block_result(const const_element_type& element,
-    shared_mutex& metadata_mutex, const manager& index_manager,
-    const bc::settings& bitcoin_settings)
+    shared_mutex& metadata_mutex, const manager& index_manager)
   : height_(0),
-    header_(bitcoin_settings),
     median_time_past_(0),
     state_(block_state::missing),
     checksum_(no_checksum),
