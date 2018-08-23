@@ -65,6 +65,16 @@ settings::settings(config::settings context)
             break;
         }
 
+        case config::settings::regtest:
+        {
+            // TODO: optimize for regtest.
+            block_table_buckets = 650000;
+            transaction_table_buckets = 110000000;
+            spend_table_buckets = 250000000;
+            history_table_buckets = 107000000;
+            break;
+        }
+
         default:
         case config::settings::none:
         {
