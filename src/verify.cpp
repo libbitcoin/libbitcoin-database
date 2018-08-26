@@ -159,10 +159,10 @@ code verify_update(const block_database& blocks, const block& block,
     if (block.transactions().empty())
         return error::empty_block;
 
-    if (!get_is_empty_block(blocks, height, false))
+    if (!get_is_empty_block(blocks, height, true))
         return error::operation_failed;
 
-    if (get_block(blocks, height, false) != block.hash())
+    if (get_block(blocks, height, true) != block.hash())
         return error::not_found;
 #endif
 
