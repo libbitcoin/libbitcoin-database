@@ -658,6 +658,7 @@ bool data_base::pop_above(block_const_ptr_list_ptr blocks,
 code data_base::push_block(const block& block, size_t height)
 {
     code ec;
+    BITCOIN_ASSERT(block.header().metadata.state);
     auto median_time_past = block.header().metadata.state->median_time_past();
 
     // Critical Section
