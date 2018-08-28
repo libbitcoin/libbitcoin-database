@@ -52,6 +52,7 @@ inpoint_iterator::inpoint_iterator(const const_element& element)
             deserial.skip(metadata_size);
             const auto outputs = deserial.read_size_little_endian();
 
+            // Skip outputs.
             for (auto output = 0u; output < outputs; ++output)
             {
                 deserial.skip(spend_size);
@@ -63,9 +64,19 @@ inpoint_iterator::inpoint_iterator(const const_element& element)
 
             for (auto input = 0u; input < inputs; ++input)
             {
+                // Read input point.
                 inpoints_[input].from_data(deserial, false);
-                deserial.skip(deserial.read_size_little_endian() +
-                    sequence_size);
+
+                // Skip script.
+                deserial.skip(deserial.read_size_little_endian());
+
+                // Skip witnesses.
+                for (auto count = deserial.read_size_little_endian();
+                    count > 0; --count)
+                    deserial.skip(deserial.read_size_little_endian());
+
+                // Skip sequence.
+                deserial.skip(sequence_size);
             }
         });
     }
