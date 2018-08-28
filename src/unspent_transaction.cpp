@@ -78,7 +78,7 @@ unspent_transaction::unspent_transaction(const chain::transaction& tx,
     outputs_->reserve(size);
 
     // TODO: consider eliminating the byte buffer in favor of ops::list only.
-    for (uint32_t index = 0; index < size; ++index)
+    for (auto index = 0u; index < size; ++index)
         (*outputs_)[index] = outputs[index];
 }
 

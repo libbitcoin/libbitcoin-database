@@ -66,7 +66,7 @@
 ////
 ////        if (!tx.is_coinbase())
 ////        {
-////            for (uint32_t j = 0; j < tx.inputs().size(); ++j)
+////            for (auto j = 0u; j < tx.inputs().size(); ++j)
 ////            {
 ////                const auto& input = tx.inputs()[j];
 ////                input_point spend{ tx_hash, j };

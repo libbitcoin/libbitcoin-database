@@ -389,7 +389,7 @@ bool transaction_database::candidate_spend(const chain::output_point& point,
         serial.read_size_little_endian();
 
         // Skip outputs until the target output.
-        for (uint32_t output = 0; output < point.index(); ++output)
+        for (auto output = 0u; output < point.index(); ++output)
         {
             serial.skip(spend_size);
             serial.skip(serial.read_size_little_endian());
@@ -524,7 +524,7 @@ bool transaction_database::confirmed_spend(const output_point& point,
         serial.read_size_little_endian();
 
         // Skip outputs until the target output.
-        for (uint32_t output = 0; output < point.index(); ++output)
+        for (auto output = 0u; output < point.index(); ++output)
         {
             serial.skip(spend_size);
             serial.skip(serial.read_size_little_endian());
