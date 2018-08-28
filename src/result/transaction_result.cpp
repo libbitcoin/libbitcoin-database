@@ -134,7 +134,7 @@ bool transaction_result::is_spent(size_t fork_height, bool candidate) const
         const auto outputs = deserial.read_size_little_endian();
 
         // Search all outputs for an unspent indication.
-        for (uint32_t out = 0; spent && out < outputs; ++out)
+        for (auto out = 0u; spent && out < outputs; ++out)
         {
             // TODO: This reads full output, which is simple but not optimial.
             const auto output = output::factory(deserial, false);
@@ -162,7 +162,7 @@ chain::output transaction_result::output(uint32_t index) const
             return;
 
         // Skip outputs until the target output.
-        for (uint32_t out = 0; out < index; ++out)
+        for (auto out = 0u; out < index; ++out)
         {
             deserial.skip(spend_size);
             deserial.skip(deserial.read_size_little_endian());
