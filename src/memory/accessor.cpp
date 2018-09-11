@@ -57,6 +57,7 @@ void accessor::increment(size_t value)
 
 accessor::~accessor()
 {
+    mutex_.unlock_upgrade_and_lock_shared();
     mutex_.unlock_shared();
     // End Critical Section
     ///////////////////////////////////////////////////////////////////////////
