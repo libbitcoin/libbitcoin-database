@@ -6,7 +6,7 @@
 *.pyc
 Makefile
 Makefile.in
-libbitcoin-blockchain.pc
+libbitcoin-database.pc
 
 obj
 .*.swp
