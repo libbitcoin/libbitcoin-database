@@ -119,6 +119,7 @@ code verify_missing(const transaction_database& transactions,
     return error::success;
 }
 
+// Headers are pushed to the candidate chain.
 code verify_push(const block_database& blocks, const header& header,
     size_t height)
 {
@@ -134,6 +135,7 @@ code verify_push(const block_database& blocks, const header& header,
     return error::success;
 }
 
+// Blocks are pushed to the confirmed chain.
 code verify_push(const block_database& blocks, const block& block,
     size_t height)
 {
@@ -141,10 +143,10 @@ code verify_push(const block_database& blocks, const block& block,
     if (block.transactions().empty())
         return error::empty_block;
 
-    if (get_next_block(blocks, true) != height)
+    if (get_next_block(blocks, false) != height)
         return error::store_block_invalid_height;
 
-    if (get_previous_block(blocks, height, true) !=
+    if (get_previous_block(blocks, height, false) !=
         block.header().previous_block_hash())
         return error::store_block_missing_parent;
 #endif
