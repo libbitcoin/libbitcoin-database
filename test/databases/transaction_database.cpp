@@ -382,12 +382,103 @@ BOOST_AUTO_TEST_CASE(transaction_database__uncandidate__with_input_in_db__return
 // Confirm
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(transaction_database__confirm__single_transaction__success)
+BOOST_AUTO_TEST_CASE(transaction_database__confirm__single_transaction_not_in_db__failure)
 {
+    transaction tx1;
+    data_chunk wire_tx1;
+    BOOST_REQUIRE(decode_base16(wire_tx1, TRANSACTION1));
+    BOOST_REQUIRE(tx1.from_data(wire_tx1));
+
+    const auto path = DIRECTORY "/tx_table";
+    test::create(path);
+    transaction_database db(path, 1000, 50, 0);
+    BOOST_REQUIRE(db.create());
+
+    const auto hash1 = tx1.hash();
+    BOOST_REQUIRE(!db.get(hash1));
+    db.store(transaction::list{tx1});
+
+    // Setup end
+
+    const bool result = db.confirm(db.get(hash1).link(), 123, 456, 789);
+    BOOST_REQUIRE(!result);
+
+    const auto tx1_reloaded = db.get(hash1);
+
+    BOOST_REQUIRE_EQUAL(tx1_reloaded.height(), libbitcoin::machine::rule_fork::unverified);
+    BOOST_REQUIRE_EQUAL(tx1_reloaded.median_time_past(), 0u);
+    BOOST_REQUIRE_EQUAL(tx1_reloaded.position(), transaction_result::unconfirmed);
+    BOOST_REQUIRE(!tx1_reloaded.candidate());
 }
 
-BOOST_AUTO_TEST_CASE(transaction_database__confirm__single_transaction_not_in_db__success)
+BOOST_AUTO_TEST_CASE(transaction_database__confirm__single_transaction_with_inputs_in_db__success)
 {
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
+
+    const auto path = DIRECTORY "/tx_table";
+    test::create(path);
+    transaction_database db(path, 1000, 50, 0);
+    BOOST_REQUIRE(db.create());
+
+    // tx1: coinbase transaction
+    const chain::input::list tx1_inputs
+    {
+        { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
+    };
+
+    chain::output::list tx1_outputs;
+    tx1_outputs.emplace_back();
+    tx1_outputs.back().set_value(1200);
+
+    chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
+    BOOST_REQUIRE(tx1.is_coinbase());
+    const auto hash1 = tx1.hash();
+    db.store(transaction::list{tx1});
+
+    // tx2: spends coinbase, tx1 as input, dummy output
+    chain::input::list tx2_inputs;
+    chain::output_point previous_output{hash1, 0};
+    chain::input instance(previous_output, {}, 0);
+    tx2_inputs.emplace_back(instance);
+
+    chain::output::list tx2_outputs;
+    tx2_outputs.emplace_back();
+    tx2_outputs.back().set_value(1200);
+
+    chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
+    const auto hash2 = tx2.hash();
+    db.store(tx2, 1);
+
+    BOOST_REQUIRE(!db.get(hash2).transaction().outputs().front().metadata.candidate_spend);
+
+    BOOST_REQUIRE_EQUAL(db.get(hash1).height(), libbitcoin::machine::rule_fork::unverified);
+    BOOST_REQUIRE(!db.get(hash1).transaction().outputs().front().metadata.spent(123, false));
+
+    // Setup end
+
+    const bool confirm1 = db.confirm(db.get(hash1).link(), 23, 56, 89);
+    BOOST_REQUIRE(confirm1);
+    const bool confirm2 = db.confirm(db.get(hash2).link(), 123, 456, 789);
+    BOOST_REQUIRE(confirm2);
+
+    const auto tx2_reloaded = db.get(hash2);
+
+    BOOST_REQUIRE_EQUAL(tx2_reloaded.height(), 123);
+    BOOST_REQUIRE_EQUAL(tx2_reloaded.median_time_past(), 456);
+    BOOST_REQUIRE_EQUAL(tx2_reloaded.position(), 789);
+    BOOST_REQUIRE(!tx2_reloaded.candidate());
+    BOOST_REQUIRE(!tx2_reloaded.transaction().outputs().front().metadata.candidate_spend);
+
+    const auto tx1_reloaded = db.get(hash1);
+
+    BOOST_REQUIRE_EQUAL(tx1_reloaded.height(), 23);
+    BOOST_REQUIRE_EQUAL(tx1_reloaded.median_time_past(), 56);
+    BOOST_REQUIRE_EQUAL(tx1_reloaded.position(), 89);
+    BOOST_REQUIRE(!tx1_reloaded.candidate());
+
+    BOOST_REQUIRE_EQUAL(tx1_reloaded.transaction().outputs().front().metadata.confirmed_spend_height, 123);
+    BOOST_REQUIRE(tx1_reloaded.transaction().outputs().front().metadata.spent(123, false));
 }
 
 BOOST_AUTO_TEST_CASE(transaction_database_with_cache__confirm__single_transaction__success)
