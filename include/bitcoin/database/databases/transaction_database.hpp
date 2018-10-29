@@ -93,7 +93,7 @@ public:
     /// Store a transaction not associated with a block.
     bool store(const chain::transaction& tx, uint32_t forks);
 
-    /// Store a set of transactions associated with an unconfirmed block.
+    /// Store a set of transactions (potentially from an unconfirmed block).
     bool store(const chain::transaction::list& transactions);
 
     /// Store a set of transactions associated with a confirmed block.
