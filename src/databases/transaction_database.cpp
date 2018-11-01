@@ -262,20 +262,7 @@ bool transaction_database::store(const chain::transaction& tx, uint32_t forks)
 bool transaction_database::store(const transaction::list& transactions)
 {
     for (const auto& tx: transactions)
-        if (!storize(tx, rule_fork::unverified, no_time,
-            transaction_result::unconfirmed))
-            return false;
-
-    return true;
-}
-
-// Store each new tx of the confirmed block and set tx link metadata for all.
-bool transaction_database::store(const chain::transaction::list& transactions,
-    size_t height, uint32_t median_time_past)
-{
-    size_t position = 0;
-    for (const auto& tx: transactions)
-        if (!storize(tx, height, median_time_past, position++))
+        if (!store(tx, rule_fork::unverified))
             return false;
 
     return true;
