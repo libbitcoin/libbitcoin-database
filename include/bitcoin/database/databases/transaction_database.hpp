@@ -96,10 +96,6 @@ public:
     /// Store a set of transactions (potentially from an unconfirmed block).
     bool store(const chain::transaction::list& transactions);
 
-    /// Store a set of transactions associated with a confirmed block.
-    bool store(const chain::transaction::list& transactions, size_t height,
-        uint32_t median_time_past);
-
     /// Mark outputs spent by the candidate tx.
     bool candidate(file_offset link);
 
