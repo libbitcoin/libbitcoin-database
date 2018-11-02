@@ -193,6 +193,7 @@ block_result block_database::get(const hash_digest& hash) const
 
 void block_database::get_header_metadata(const chain::header& header) const
 {
+    header.metadata.exists = false;
     const auto result = get(header.hash());
 
     // Default values presumed correct for indication of not found.
