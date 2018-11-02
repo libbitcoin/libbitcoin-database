@@ -1000,6 +1000,31 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__confirmed_at_height__conf
     BOOST_REQUIRE(!point.metadata.spent);    
 }
 
+BOOST_AUTO_TEST_CASE(transaction_database_with_cache__get_output__confirmed_at_height__confirmed)
+{
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
+
+    test::create(file_path);
+    transaction_database instance(file_path, 1000, 50, 100);
+    BOOST_REQUIRE(instance.create());
+
+    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+
+    instance.store(tx1, 100);
+    instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
+
+    output_point point{ tx1.hash(), 0 };
+
+    BOOST_REQUIRE(instance.get_output(point, 123, false));
+    BOOST_REQUIRE(!point.metadata.coinbase);
+    BOOST_REQUIRE(!point.metadata.candidate);
+    BOOST_REQUIRE(point.metadata.confirmed);
+    BOOST_REQUIRE_EQUAL(point.metadata.height, 123);
+    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);
+    BOOST_REQUIRE(!point.metadata.spent);
+}
+
 BOOST_AUTO_TEST_CASE(transaction_database__get_output__unconfirmed_at_height__unconfirmed)
 {
     uint32_t version = 2345u;
