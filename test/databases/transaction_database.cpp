@@ -890,40 +890,193 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__unconfirmed_for_fo
 // Queries - get_output
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_ouput__coinbase__false)
+BOOST_AUTO_TEST_CASE(transaction_database__get_output__null_point__false)
 {
+    test::create(file_path);
+    transaction_database instance(file_path, 1000, 50, 0);
+    BOOST_REQUIRE(instance.create());
+
+    // setup end
+    
+    BOOST_REQUIRE(!instance.get_output({ null_hash, point::null_index }, 1, false));
 }
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_ouput__not_found__false)
+BOOST_AUTO_TEST_CASE(transaction_database__get_output__not_found__false)
 {
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
+
+    test::create(file_path);
+    transaction_database instance(file_path, 1000, 50, 0);
+    BOOST_REQUIRE(instance.create());
+
+    static const transaction tx1(version, locktime, {}, {});
+
+    // setup end
+    
+    BOOST_REQUIRE(!instance.get_output({ tx1.hash(), 0 }, 1, false));
 }
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_ouput__null_point__false)
+
+BOOST_AUTO_TEST_CASE(transaction_database__get_output__genesis__false)
 {
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
+
+    test::create(file_path);
+    transaction_database instance(file_path, 1000, 50, 0);
+    BOOST_REQUIRE(instance.create());
+
+    static const transaction tx1(version, locktime, {}, {});
+    instance.store(tx1, 0);
+
+    // setup end
+
+    BOOST_REQUIRE(!instance.get_output({ tx1.hash(), 0 }, 1, false));
 }
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_ouput__genesis__false)
+BOOST_AUTO_TEST_CASE(transaction_database__get_output__no_output_at_index__false)
 {
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
+    
+    test::create(file_path);
+    transaction_database instance(file_path, 1000, 50, 0);
+    BOOST_REQUIRE(instance.create());
+
+    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+
+    instance.store(tx1, 100);
+    
+    BOOST_REQUIRE(!instance.get_output({ tx1.hash(), 1 }, 1, false));
 }
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_ouput__prevout_invalid__false)
+BOOST_AUTO_TEST_CASE(transaction_database__get_output__unconfirmed_at_fork_height__unconfirmed)
 {
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
+    
+    test::create(file_path);
+    transaction_database instance(file_path, 1000, 50, 0);
+    BOOST_REQUIRE(instance.create());
+
+    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+
+    instance.store(tx1, 100);
+
+    output_point point{ tx1.hash(), 0 };
+
+    BOOST_REQUIRE(instance.get_output(point, 101, false));
+    BOOST_REQUIRE(!point.metadata.coinbase);    
+    BOOST_REQUIRE(!point.metadata.candidate);    
+    BOOST_REQUIRE(!point.metadata.confirmed);    
+    BOOST_REQUIRE_EQUAL(point.metadata.height, 100);    
+    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 0);    
+    BOOST_REQUIRE(!point.metadata.spent);    
 }
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_ouput__confirmed_at_fork_height__confirmed)
+BOOST_AUTO_TEST_CASE(transaction_database__get_output__confirmed_at_height__confirmed)
 {
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
+    
+    test::create(file_path);
+    transaction_database instance(file_path, 1000, 50, 0);
+    BOOST_REQUIRE(instance.create());
+
+    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+
+    instance.store(tx1, 100);
+    instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
+
+    output_point point{ tx1.hash(), 0 };
+
+    BOOST_REQUIRE(instance.get_output(point, 123, false));
+    BOOST_REQUIRE(!point.metadata.coinbase);    
+    BOOST_REQUIRE(!point.metadata.candidate);    
+    BOOST_REQUIRE(point.metadata.confirmed);    
+    BOOST_REQUIRE_EQUAL(point.metadata.height, 123);    
+    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);    
+    BOOST_REQUIRE(!point.metadata.spent);    
 }
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_ouput__unconfirmed_at_fork_height__unconfirmed)
+BOOST_AUTO_TEST_CASE(transaction_database__get_output__unconfirmed_at_height__unconfirmed)
 {
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
+    
+    test::create(file_path);
+    transaction_database instance(file_path, 1000, 50, 0);
+    BOOST_REQUIRE(instance.create());
+
+    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+
+    instance.store(tx1, 100);
+    instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
+
+    output_point point{ tx1.hash(), 0 };
+
+    BOOST_REQUIRE(instance.get_output(point, 100, false));
+    BOOST_REQUIRE(!point.metadata.coinbase);    
+    BOOST_REQUIRE(!point.metadata.candidate);    
+    BOOST_REQUIRE(!point.metadata.confirmed);    
+    BOOST_REQUIRE_EQUAL(point.metadata.height, 123);    
+    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);    
+    BOOST_REQUIRE(!point.metadata.spent);    
 }
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_ouput__prevout_spent__spent)
+BOOST_AUTO_TEST_CASE(transaction_database__get_output__prevout_spent__spent)
 {
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
+    
+    test::create(file_path);
+    transaction_database instance(file_path, 1000, 50, 0);
+    BOOST_REQUIRE(instance.create());
+
+    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    static const transaction tx2{ locktime, version, { { { tx1.hash(), 0 }, {}, 0 } }, { { 1100, {} } } };
+
+    instance.store({ tx1, tx2 });
+    instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
+    instance.confirm(instance.get(tx2.hash()).link(), 1230, 1560, 1780);
+
+    output_point point{ tx1.hash(), 0 };
+
+    BOOST_REQUIRE(instance.get_output(point, 1230, false));
+    BOOST_REQUIRE(!point.metadata.coinbase);    
+    BOOST_REQUIRE(!point.metadata.candidate);    
+    BOOST_REQUIRE(point.metadata.confirmed);    
+    BOOST_REQUIRE_EQUAL(point.metadata.height, 123);    
+    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);
+    BOOST_REQUIRE(point.metadata.spent);
 }
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_ouput__prevout_unspent__unspent)
+BOOST_AUTO_TEST_CASE(transaction_database__get_output__prevout_unspent_at_height__spent)
 {
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
+    
+    test::create(file_path);
+    transaction_database instance(file_path, 1000, 50, 0);
+    BOOST_REQUIRE(instance.create());
+
+    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    static const transaction tx2{ locktime, version, { { { tx1.hash(), 0 }, {}, 0 } }, { { 1100, {} } } };
+
+    instance.store({ tx1, tx2 });
+    instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
+    instance.confirm(instance.get(tx2.hash()).link(), 1230, 1560, 1780);
+
+    output_point point{ tx1.hash(), 0 };
+
+    BOOST_REQUIRE(instance.get_output(point, 1229, false));
+    BOOST_REQUIRE(!point.metadata.coinbase);    
+    BOOST_REQUIRE(!point.metadata.candidate);    
+    BOOST_REQUIRE(point.metadata.confirmed);    
+    BOOST_REQUIRE_EQUAL(point.metadata.height, 123);    
+    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);
+    BOOST_REQUIRE(!point.metadata.spent);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
