@@ -832,7 +832,7 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__unconfirm__single_confirme
 }
 
 
-// Queries
+// Queries - get_block_metadata
 // ----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__nonexisting__not_found)
@@ -847,27 +847,82 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__confirmed_and_for
 {
 }
 
-// From bitcoin/chain/transaction.hpp
-//         /// There is no distiction between a tx that can be valid under some
-//         /// forks and one that cannot be valid under any forks. The only
-//         /// criteria for storage is deserialization and DoS protection. The
-//         /// latter is provided by pool validation or containing block PoW.
-//         /// A transaction that is deconfirmed is set to unverified, which is
-//         /// simply a storage space optimization. This results in revalidation
-//         /// in the case where the transaction may be confirmed again.
-//         /// If verified the tx has been validated relative to given forks.
-//         bool verified = false;
-
-
 BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__unconfirmed__unverified)
 {
 }
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__confirmed_forked__unverified)
+BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__confirmed_for_forks__unverified)
 {
 }
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__unverified2__confirmed)
+BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__unconfirmed_for_forks__verified)
+{
+}
+
+// Queries - get_pool_metadata
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__nonexisting__not_found)
+{
+}
+
+BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__confirmed_and_fork_height_lt_height__confirmed)
+{
+}
+
+BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__confirmed_and_fork_height_gt_height__unconfirmed)
+{
+}
+
+BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__unconfirmed__unverified)
+{
+}
+
+BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__confirmed_for_forks__unverified)
+{
+}
+
+BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__unconfirmed_for_forks__verified)
+{
+}
+
+
+// Queries - get_output
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(transaction_database__get_ouput__coinbase__false)
+{
+}
+
+BOOST_AUTO_TEST_CASE(transaction_database__get_ouput__not_found__false)
+{
+}
+
+BOOST_AUTO_TEST_CASE(transaction_database__get_ouput__null_point__false)
+{
+}
+
+BOOST_AUTO_TEST_CASE(transaction_database__get_ouput__genesis__false)
+{
+}
+
+BOOST_AUTO_TEST_CASE(transaction_database__get_ouput__prevout_invalid__false)
+{
+}
+
+BOOST_AUTO_TEST_CASE(transaction_database__get_ouput__confirmed_at_fork_height__confirmed)
+{
+}
+
+BOOST_AUTO_TEST_CASE(transaction_database__get_ouput__unconfirmed_at_fork_height__unconfirmed)
+{
+}
+
+BOOST_AUTO_TEST_CASE(transaction_database__get_ouput__prevout_spent__spent)
+{
+}
+
+BOOST_AUTO_TEST_CASE(transaction_database__get_ouput__prevout_unspent__unspent)
 {
 }
 
