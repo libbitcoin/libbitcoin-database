@@ -837,26 +837,120 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__unconfirm__single_confirme
 
 BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__nonexisting__not_found)
 {
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
+
+    test::create(file_path);
+    transaction_database instance(file_path, 1000, 50, 0);
+    BOOST_REQUIRE(instance.create());
+
+    static const transaction tx(version, locktime, {}, {});
+
+    // setup end
+
+    instance.get_block_metadata(tx, 1, 1);
+
+    BOOST_REQUIRE(!tx.metadata.existed);
+    BOOST_REQUIRE(!tx.metadata.candidate);
+    BOOST_REQUIRE_EQUAL(tx.metadata.link, transaction::validation::unlinked);
+    BOOST_REQUIRE(!tx.metadata.verified);
+}
+
+BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__no_bip34_and_spent__not_found)
+{
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
+
+    test::create(file_path);
+    transaction_database instance(file_path, 1000, 50, 0);
+    BOOST_REQUIRE(instance.create());
+
+    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    static const transaction tx2{ locktime, version, { { { tx1.hash(), 0 }, {}, 0 } }, { { 1100, {} } } };
+
+    instance.store({ tx1, tx2 });
+    instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
+    instance.confirm(instance.get(tx2.hash()).link(), 1230, 1560, 1780);
+
+    // setup end
+
+    instance.get_block_metadata(tx1, 1, 1230);
+
+    BOOST_REQUIRE(!tx1.metadata.existed);
+    BOOST_REQUIRE(!tx1.metadata.candidate);
+    BOOST_REQUIRE_EQUAL(tx1.metadata.link, transaction::validation::unlinked);
+    BOOST_REQUIRE(!tx1.metadata.verified);
+}
+
+BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__no_bip34_and_not_spent__found)
+{
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
+
+    test::create(file_path);
+    transaction_database instance(file_path, 1000, 50, 0);
+    BOOST_REQUIRE(instance.create());
+
+    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+
+    instance.store(tx1, 100);
+
+    // setup end
+
+    instance.get_block_metadata(tx1, 1, 100);
+
+    BOOST_REQUIRE(tx1.metadata.existed);
+    BOOST_REQUIRE(!tx1.metadata.candidate);
+    BOOST_REQUIRE_EQUAL(tx1.metadata.link, instance.get(tx1.hash()).link());
+    BOOST_REQUIRE(!tx1.metadata.verified);
 }
 
 BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__confirmed_and_fork_height_lt_height__confirmed)
 {
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
+
+    test::create(file_path);
+    transaction_database instance(file_path, 1000, 50, 0);
+    BOOST_REQUIRE(instance.create());
+
+    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+
+    instance.store(tx1, 100);
+
+    // setup end
+
+    instance.get_block_metadata(tx1, 1, 99);
+
+    BOOST_REQUIRE(tx1.metadata.existed);
+    BOOST_REQUIRE(!tx1.metadata.candidate);
+    BOOST_REQUIRE(!tx1.metadata.confirmed);
+    BOOST_REQUIRE_EQUAL(tx1.metadata.link, instance.get(tx1.hash()).link());
+    BOOST_REQUIRE(!tx1.metadata.verified);
 }
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__confirmed_and_fork_height_gt_height__unconfirmed)
+BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__confirmed__unverified)
 {
-}
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__unconfirmed__unverified)
-{
-}
+    test::create(file_path);
+    transaction_database instance(file_path, 1000, 50, 0);
+    BOOST_REQUIRE(instance.create());
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__confirmed_for_forks__unverified)
-{
-}
+    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__unconfirmed_for_forks__verified)
-{
+    instance.store(tx1, 100);
+    instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
+
+    // setup end
+
+    instance.get_block_metadata(tx1, 1, 123);
+
+    BOOST_REQUIRE(tx1.metadata.existed);
+    BOOST_REQUIRE(!tx1.metadata.candidate);
+    BOOST_REQUIRE_EQUAL(tx1.metadata.link, instance.get(tx1.hash()).link());
+    BOOST_REQUIRE(!tx1.metadata.verified);
 }
 
 // Queries - get_pool_metadata
