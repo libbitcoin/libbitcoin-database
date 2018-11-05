@@ -958,28 +958,47 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__confirmed__unveri
 
 BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__nonexisting__not_found)
 {
-}
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__confirmed_and_fork_height_lt_height__confirmed)
+    test::create(file_path);
+    transaction_database instance(file_path, 1000, 50, 0);
+    BOOST_REQUIRE(instance.create());
+
+    static const transaction tx(version, locktime, {}, {});
+
+    // setup end
+
+    instance.get_pool_metadata(tx, 1);
+
+    BOOST_REQUIRE(!tx.metadata.existed);
+    BOOST_REQUIRE(!tx.metadata.candidate);
+    BOOST_REQUIRE_EQUAL(tx.metadata.link, transaction::validation::unlinked);
+    BOOST_REQUIRE(!tx.metadata.verified);}
+
+BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__confirmed__unverified)
 {
-}
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__confirmed_and_fork_height_gt_height__unconfirmed)
-{
-}
+    test::create(file_path);
+    transaction_database instance(file_path, 1000, 50, 0);
+    BOOST_REQUIRE(instance.create());
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__unconfirmed__unverified)
-{
-}
+    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__confirmed_for_forks__unverified)
-{
-}
+    instance.store(tx1, 100);
+    instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
 
-BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__unconfirmed_for_forks__verified)
-{
-}
+    // setup end
 
+    instance.get_pool_metadata(tx1, 1);
+
+    BOOST_REQUIRE(tx1.metadata.existed);
+    BOOST_REQUIRE(!tx1.metadata.candidate);
+    BOOST_REQUIRE_EQUAL(tx1.metadata.link, instance.get(tx1.hash()).link());
+    BOOST_REQUIRE(!tx1.metadata.verified);
+}
 
 // Queries - get_output
 // ----------------------------------------------------------------------------
