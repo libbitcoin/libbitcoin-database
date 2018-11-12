@@ -67,7 +67,7 @@ static const auto state_offset = height_offset + height_size;
 static const auto checksum_offset = state_offset + state_size;
 static const auto transactions_offset = checksum_offset + checksum_size;
 
-// Total size of block header and metadta storage.
+// Total size of block header and metadata storage.
 static const auto block_size = header_size + median_time_past_size +
     height_size + state_size + checksum_size + tx_start_size + tx_count_size;
 
