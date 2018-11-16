@@ -137,9 +137,11 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     instance.store(block2.header(), 2, 0);
     instance.store(block3.header(), 3, 0);
 
+    // without being indexed, heights are not set
     BOOST_REQUIRE(!instance.top(candidate_height, true));
     BOOST_REQUIRE(!instance.top(confirmed_height, false));
 
+    // without being indexed, get returns false
     BOOST_REQUIRE(instance.get(h0).hash() == h0);
     BOOST_REQUIRE(!instance.get(0, true));
 
@@ -158,14 +160,34 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     BOOST_REQUIRE(instance.get(0, true));
     BOOST_REQUIRE_EQUAL(instance.get(0, true).state(), block_state::candidate);
 
+    // unindex block 0 without clearing top should fail
+    BOOST_REQUIRE(!instance.unindex(h0, 2, true));
+
+    // get 4a without indexing it should fail
+    BOOST_REQUIRE(!instance.get(h4a));
+
+    // TODO: The test fails because the hash of element at height 3 is
+    // not compared to h4a in the unindex method    
+    // // unindex block 4a without indexing it should fail
+    // BOOST_REQUIRE(!instance.unindex(h4a, 3, true));
+
+    // unindex block 0 - 4 from candidate index
+    instance.unindex(h3, 3, true);
+    instance.unindex(h2, 2, true);
+    instance.unindex(h1, 1, true);
+    instance.unindex(h0, 0, true);
+
     //validate block 1
     BOOST_REQUIRE(instance.validate(h1, error::success));
     BOOST_REQUIRE(instance.get(0, true).state() | block_state::valid);
 
-    // Add blocks 0-4 to confirmed index
+    // Add blocks 0-4 to confirmed index (with required validation)
+    BOOST_REQUIRE(instance.validate(h0, error::success));
     instance.index(h0, 0, false);
     instance.index(h1, 1, false);
+    BOOST_REQUIRE(instance.validate(h2, error::success));
     instance.index(h2, 2, false);
+    BOOST_REQUIRE(instance.validate(h3, error::success));
     instance.index(h3, 3, false);
 
     // block 0 stored, not updated, tx_count is not yet set
@@ -180,45 +202,16 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     // Updated blocks set tx_count
     BOOST_REQUIRE_EQUAL(instance.get(h0).transaction_count(), 2);
 
-    // block 0 is in candidate and confirmed index, with confirmed state
-    BOOST_REQUIRE(instance.get(0, true));
-    BOOST_REQUIRE_EQUAL(instance.get(0, true).state(), block_state::confirmed);
-    BOOST_REQUIRE(instance.get(0, false));
-    BOOST_REQUIRE_EQUAL(instance.get(0, false).state(), block_state::confirmed);
-
-    // block 1 is still valid
-    BOOST_REQUIRE(instance.get(0, true).state() | block_state::valid);
-
-    // Check heights for candidate and confirmed index
-    BOOST_REQUIRE(instance.top(candidate_height, true));
-    BOOST_REQUIRE(instance.top(confirmed_height, false));
-    BOOST_REQUIRE_EQUAL(candidate_height, 3u);
-    BOOST_REQUIRE_EQUAL(confirmed_height, 3u);
-
-    // unindex block 0 without clearing top should fail
-    BOOST_REQUIRE(!instance.unindex(h0, 2, true));
-
-    // TODO: unindex block 4a without indexing it should fail
-    // BOOST_REQUIRE(!instance.unindex(h4a, 3, true));
-
-    // unindex block 0 - 4 from candidate index
-    instance.unindex(h3, 3, true);
-    instance.unindex(h2, 2, true);
-    instance.unindex(h1, 1, true);
-    instance.unindex(h0, 0, true);
-
-    // block 0 is in only in confirmed index, with missing state
+    // block 0 is only in confirmed index, with valid & confirmed state
     BOOST_REQUIRE(!instance.get(0, true));
     BOOST_REQUIRE(instance.get(0, false));
-    BOOST_REQUIRE_EQUAL(instance.get(0, false).state(), block_state::missing);
-
+    BOOST_REQUIRE_EQUAL(instance.get(0, false).state(), block_state::valid | block_state::confirmed);
+    
     // Check heights for candidate and confirmed index
     BOOST_REQUIRE(!instance.top(candidate_height, true));
     BOOST_REQUIRE(instance.top(confirmed_height, false));
-    // candidate height remains unchanged
-    BOOST_REQUIRE_EQUAL(candidate_height, 3u);
     BOOST_REQUIRE_EQUAL(confirmed_height, 3u);
-
+    
     // Fetch block 0 by hash.
     const auto result0 = instance.get(h0);
 
@@ -252,7 +245,10 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     instance.store(block5a.header(), 5, 0);
     instance.update(block4a);
     instance.update(block5a);
+
+    BOOST_REQUIRE(instance.validate(h4a, error::success));
     instance.index(h4a, 4, false);
+    BOOST_REQUIRE(instance.validate(h5a, error::success));
     instance.index(h5a, 5, false);
 
     // Fetch blocks 4/5.
@@ -280,10 +276,12 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     // Add new blocks 4b/5b.
     instance.store(block4b.header(), 4, 0);
     instance.store(block5b.header(), 5, 0);
+    BOOST_REQUIRE(instance.validate(h4b, error::success));
+    instance.index(h4b, 4, false);
+    BOOST_REQUIRE(instance.validate(h5b, error::success));
+    instance.index(h5b, 5, false);
     instance.update(block4b);
     instance.update(block5b);
-    instance.index(h4b, 4, false);
-    instance.index(h5b, 5, false);
 
     BOOST_REQUIRE(instance.top(confirmed_height, false));
     BOOST_REQUIRE_EQUAL(confirmed_height, 5u);
@@ -306,7 +304,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     BOOST_REQUIRE_EQUAL(block4b.header().metadata.error, error::success);
     BOOST_REQUIRE(block4b.header().metadata.exists);
     BOOST_REQUIRE(block4b.header().metadata.populated);
-    BOOST_REQUIRE(!block4b.header().metadata.validated);
+    BOOST_REQUIRE(block4b.header().metadata.validated);
     BOOST_REQUIRE(!block4b.header().metadata.candidate);
     BOOST_REQUIRE(block4b.header().metadata.confirmed);
 
