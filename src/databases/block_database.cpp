@@ -455,6 +455,8 @@ bool block_database::unindex(const hash_digest& hash, size_t height,
     if (!element)
         return false;
 
+    BITCOIN_ASSERT(hash == element.key());
+
     const auto original = index(element, false, candidate);
     pop_index(height, manager);
     return true;

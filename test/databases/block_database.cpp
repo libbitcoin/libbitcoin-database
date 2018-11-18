@@ -58,7 +58,6 @@ BOOST_FIXTURE_TEST_SUITE(block_database_tests, block_database_directory_setup_fi
 
 BOOST_AUTO_TEST_CASE(block_database__test)
 {
-    // TODO: replace.
     static const auto settings = bc::settings(bc::config::settings::mainnet);
     chain::block block0 = settings.genesis_block;
     block0.set_transactions(
@@ -165,11 +164,6 @@ BOOST_AUTO_TEST_CASE(block_database__test)
 
     // get 4a without indexing it should fail
     BOOST_REQUIRE(!instance.get(h4a));
-
-    // TODO: The test fails because the hash of element at height 3 is
-    // not compared to h4a in the unindex method    
-    // // unindex block 4a without indexing it should fail
-    // BOOST_REQUIRE(!instance.unindex(h4a, 3, true));
 
     // unindex block 0 - 4 from candidate index
     instance.unindex(h3, 3, true);
