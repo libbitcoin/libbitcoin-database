@@ -58,6 +58,7 @@ BOOST_FIXTURE_TEST_SUITE(block_database_tests, block_database_directory_setup_fi
 
 BOOST_AUTO_TEST_CASE(block_database__test)
 {
+    // TODO: replace.
     static const auto settings = bc::settings(bc::config::settings::mainnet);
     chain::block block0 = settings.genesis_block;
     block0.set_transactions(

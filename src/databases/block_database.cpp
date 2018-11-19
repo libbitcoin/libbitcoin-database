@@ -439,7 +439,7 @@ bool block_database::index(const hash_digest& hash, size_t height,
     return true;
 }
 
-bool block_database::unindex(const hash_digest& hash, size_t height,
+bool block_database::unindex(const hash_digest& DEBUG_ONLY(hash), size_t height,
     bool candidate)
 {
     BITCOIN_ASSERT(height != max_uint32);
