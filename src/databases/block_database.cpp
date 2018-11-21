@@ -67,7 +67,7 @@ static const auto state_offset = height_offset + height_size;
 static const auto checksum_offset = state_offset + state_size;
 static const auto transactions_offset = checksum_offset + checksum_size;
 
-// Total size of block header and metadta storage.
+// Total size of block header and metadata storage.
 static const auto block_size = header_size + median_time_past_size +
     height_size + state_size + checksum_size + tx_start_size + tx_count_size;
 
@@ -439,7 +439,7 @@ bool block_database::index(const hash_digest& hash, size_t height,
     return true;
 }
 
-bool block_database::unindex(const hash_digest& hash, size_t height,
+bool block_database::unindex(const hash_digest& DEBUG_ONLY(hash), size_t height,
     bool candidate)
 {
     BITCOIN_ASSERT(height != max_uint32);
@@ -454,6 +454,8 @@ bool block_database::unindex(const hash_digest& hash, size_t height,
 
     if (!element)
         return false;
+
+    BITCOIN_ASSERT(hash == element.key());
 
     const auto original = index(element, false, candidate);
     pop_index(height, manager);
