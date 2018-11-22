@@ -20,7 +20,7 @@
 #define LIBBITCOIN_DATABASE_ADDRESS_DATABASE_HPP
 
 #include <boost/filesystem.hpp>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/file_storage.hpp>
 #include <bitcoin/database/primitives/hash_table.hpp>
@@ -67,16 +67,16 @@ public:
     //-------------------------------------------------------------------------
 
     /// Get the output and input points associated with the address hash.
-    address_result get(const short_hash& hash) const;
+    address_result get(const system::short_hash& hash) const;
 
     // Store.
     //-------------------------------------------------------------------------
 
     /// Add a row for each payment recorded in the transaction.
-    void index(const chain::transaction& tx);
+    void index(const system::chain::transaction& tx);
 
 private:
-    typedef short_hash key_type;
+    typedef system::short_hash key_type;
     typedef array_index index_type;
     typedef array_index link_type;
     typedef record_manager<link_type> manager_type;

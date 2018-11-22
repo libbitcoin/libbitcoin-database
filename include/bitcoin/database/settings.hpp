@@ -31,7 +31,7 @@ class BCD_API settings
 {
 public:
     settings();
-    settings(config::settings context);
+    settings(system::config::settings context);
 
     /// Properties.
     boost::filesystem::path directory;

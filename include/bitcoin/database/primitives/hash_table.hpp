@@ -21,7 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
@@ -79,7 +79,7 @@ public:
     /// Commit table size to the file.
     void commit();
 
-    /// Use to allocate an element in the hash table. 
+    /// Use to allocate an element in the hash table.
     value_type allocator();
 
     /// Find an element with the given key in the hash table.
@@ -104,8 +104,8 @@ private:
 
     hash_table_header<Index, Link> header_;
     Manager manager_;
-    mutable shared_mutex root_mutex_;
-    mutable shared_mutex list_mutex_;
+    mutable system::shared_mutex root_mutex_;
+    mutable system::shared_mutex list_mutex_;
 };
 
 } // namespace database

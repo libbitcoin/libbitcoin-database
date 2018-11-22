@@ -22,7 +22,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <utility>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
@@ -43,10 +43,10 @@ public:
     static size_t size(size_t value_size);
 
     /// Construct for a new element.
-    list_element(Manager& manager, shared_mutex& mutex);
+    list_element(Manager& manager, system::shared_mutex& mutex);
 
     /// Construct for an existing element.
-    list_element(Manager& manager, Link link, shared_mutex& mutex);
+    list_element(Manager& manager, Link link, system::shared_mutex& mutex);
 
     /// Allocate and populate a new unkeyed record element.
     Link create(write_function write);
@@ -103,7 +103,7 @@ private:
 
     Link link_;
     Manager& manager_;
-    shared_mutex& mutex_;
+    system::shared_mutex& mutex_;
 };
 
 } // namespace database

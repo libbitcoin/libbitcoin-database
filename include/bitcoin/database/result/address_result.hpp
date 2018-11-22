@@ -20,7 +20,7 @@
 #define LIBBITCOIN_DATABASE_ADDRESS_RESULT_HPP
 
 #include <cstddef>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/list_element.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
@@ -38,20 +38,21 @@ public:
     typedef record_manager<link_type> manager;
     typedef list_element<const manager, link_type, key_type> const_value_type;
 
-    address_result(const const_value_type& element, const short_hash& hash);
+    address_result(const const_value_type& element,
+        const system::short_hash& hash);
 
     /// True if the requested block exists.
     operator bool() const;
 
     /// The address hash of the query.
-    const short_hash& hash() const;
+    const system::short_hash& hash() const;
 
     /// Iterate over the address metadata set.
     address_iterator begin() const;
     address_iterator end() const;
 
 private:
-    short_hash hash_;
+    system::short_hash hash_;
 
     // This class is thread safe.
     const_value_type element_;

@@ -37,7 +37,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <boost/filesystem.hpp>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
@@ -289,7 +289,7 @@ bool file_storage::closed() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    shared_lock lock(mutex_);
+    system::shared_lock lock(mutex_);
     return closed_;
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -301,7 +301,7 @@ size_t file_storage::size() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    shared_lock lock(mutex_);
+    system::shared_lock lock(mutex_);
     return file_size_;
     ///////////////////////////////////////////////////////////////////////////
 }

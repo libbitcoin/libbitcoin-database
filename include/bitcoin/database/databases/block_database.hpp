@@ -22,7 +22,7 @@
 #include <atomic>
 #include <cstddef>
 #include <boost/filesystem.hpp>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/block_state.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/file_storage.hpp>
@@ -77,42 +77,43 @@ public:
     block_result get(size_t height, bool candidate) const;
 
     /// Fetch block by hash.
-    block_result get(const hash_digest& hash) const;
+    block_result get(const system::hash_digest& hash) const;
 
     /// Populate header metadata for the given header.
-    void get_header_metadata(const chain::header& header) const;
+    void get_header_metadata(const system::chain::header& header) const;
 
     // Writers.
     // ------------------------------------------------------------------------
 
     /// Store header, validated at height, candidate, pending (but unindexed).
-    void store(const chain::header& header, size_t height,
+    void store(const system::chain::header& header, size_t height,
         uint32_t median_time_past);
 
     /// Populate pooled block transaction references, state is unchanged.
-    bool update(const chain::block& block);
+    bool update(const system::chain::block& block);
 
     /// Promote pooled block to valid|invalid and set code.
-    bool validate(const hash_digest& hash, const code& error);
+    bool validate(const system::hash_digest& hash, const system::code& error);
 
     /// Promote pooled|candidate block to candidate|confirmed respectively.
-    bool index(const hash_digest& hash, size_t height, bool candidate);
+    bool index(const system::hash_digest& hash, size_t height, bool candidate);
 
     /// Demote candidate|confirmed header to pooled|pooled (not candidate).
-    bool unindex(const hash_digest& hash, size_t height, bool candidate);
+    bool unindex(const system::hash_digest& hash, size_t height,
+        bool candidate);
 
 private:
-    typedef hash_digest key_type;
+    typedef system::hash_digest key_type;
     typedef array_index link_type;
     typedef record_manager<link_type> manager_type;
     typedef list_element<const manager_type, link_type, key_type> const_element;
     typedef hash_table<manager_type, array_index, link_type, key_type> record_map;
 
-    typedef message::compact_block::short_id_list short_id_list;
+    typedef system::message::compact_block::short_id_list short_id_list;
 
     uint8_t index(const_element& element, bool positive, bool candidate);
-    link_type associate(const chain::transaction::list& transactions);
-    void store(const chain::header& header, size_t height,
+    link_type associate(const system::chain::transaction::list& transactions);
+    void store(const system::chain::header& header, size_t height,
         uint32_t median_time_past, uint32_t checksum, link_type tx_start,
         size_t tx_count, uint8_t status);
 
@@ -143,7 +144,7 @@ private:
     manager_type tx_index_;
 
     // This provides atomicity for checksum, tx_start, tx_count, state.
-    mutable shared_mutex metadata_mutex_;
+    mutable system::shared_mutex metadata_mutex_;
 };
 
 } // namespace database

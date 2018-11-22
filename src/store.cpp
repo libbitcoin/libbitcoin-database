@@ -21,13 +21,13 @@
 #include <cstddef>
 #include <memory>
 #include <boost/filesystem.hpp>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-using namespace bc::chain;
 using namespace bc::database;
+using namespace bc::system::chain;
 using namespace boost::filesystem;
 using namespace boost::system;
 
@@ -46,10 +46,10 @@ const std::string store::ADDRESS_ROWS = "address_rows";
 static bool create_file(const path& file_path)
 {
     // Disallow create with existing file.
-    if (bc::ifstream(file_path.string()).good())
+    if (system::ifstream(file_path.string()).good())
         return false;
 
-    bc::ofstream file(file_path.string());
+    system::ofstream file(file_path.string());
 
     if (!file.good())
         return false;

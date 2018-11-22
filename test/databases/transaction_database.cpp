@@ -25,8 +25,9 @@
 using namespace boost::system;
 using namespace boost::filesystem;
 using namespace bc;
-using namespace bc::chain;
 using namespace bc::database;
+using namespace bc::system;
+using namespace bc::system::chain;
 
 #define DIRECTORY "transaction_database"
 #define TRANSACTION1 "0100000001537c9d05b5f7d67b09e5108e3bd5e466909cc9403ddd98bc42973f366fe729410600000000ffffffff0163000000000000001976a914fe06e7b4c88a719e92373de489c08244aee4520b88ac00000000"
@@ -72,7 +73,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__store1__single_transactions__success)
     BOOST_REQUIRE(!instance.get(hash2));
 
     // Setup end
-    
+
     instance.store(tx1, 100);
 
     const auto result1 = instance.get(hash1);
@@ -114,7 +115,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__store2__list_of_transactions__success
     BOOST_REQUIRE(!instance.get(hash2));
 
     // Setup end
-    
+
     instance.store({tx1, tx2});
 
     const auto result1 = instance.get(hash1);
@@ -137,22 +138,22 @@ BOOST_AUTO_TEST_CASE(transaction_database__store1__single_unconfirmed__success)
     data_chunk wire_tx1;
     BOOST_REQUIRE(decode_base16(wire_tx1, TRANSACTION1));
     BOOST_REQUIRE(tx1.from_data(wire_tx1));
-    
+
     test::create(file_path);
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const auto hash1 = tx1.hash();
     BOOST_REQUIRE(!instance.get(hash1));
-    
+
     // Setup end
-    
+
     instance.store(tx1, 1);
 
     const auto result1 = instance.get(hash1);
     BOOST_REQUIRE(result1);
     BOOST_REQUIRE(result1.transaction().hash() == hash1);
-    
+
     // Verify computed hash and get via link
     const auto fetched = instance.get(result1.link());
     BOOST_REQUIRE(fetched);
@@ -182,7 +183,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__store2__list_of_unconfirmed__success)
     BOOST_REQUIRE(!instance.get(hash2));
 
     // Setup end
-    
+
     instance.store({tx1, tx2});
 
     const auto result1 = instance.get(hash1);
@@ -220,8 +221,8 @@ BOOST_AUTO_TEST_CASE(transaction_database__candidate__with_no_input_in_db__candi
     const auto result1 = instance.get(hash1);
     BOOST_REQUIRE(result1);
     BOOST_REQUIRE(result1.transaction().hash() == hash1);
-    
-    // Setup end    
+
+    // Setup end
 
     const bool result = instance.candidate(instance.get(hash1).link());
     BOOST_REQUIRE(!result);
@@ -231,7 +232,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__candidate__with_input_in_db__candidat
 {
     uint32_t version = 2345u;
     uint32_t locktime = 0xffffffff;
-    
+
     test::create(file_path);
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
@@ -241,17 +242,17 @@ BOOST_AUTO_TEST_CASE(transaction_database__candidate__with_input_in_db__candidat
     {
         { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
     };
-    
+
     chain::output::list tx1_outputs
     {
         { 1200, {} }
     };
 
     chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
-    BOOST_REQUIRE(tx1.is_coinbase());    
+    BOOST_REQUIRE(tx1.is_coinbase());
     const auto hash1 = tx1.hash();
     instance.store(tx1, 1);
-    
+
     const auto result1 = instance.get(hash1);
     BOOST_REQUIRE(result1);
     BOOST_REQUIRE(result1.transaction().hash() == hash1);
@@ -273,12 +274,12 @@ BOOST_AUTO_TEST_CASE(transaction_database__candidate__with_input_in_db__candidat
 
     BOOST_REQUIRE(!result1.candidate());
     BOOST_REQUIRE(!result1.transaction().outputs().front().metadata.candidate_spend);
-    
-    // Setup end    
+
+    // Setup end
 
     const bool result = instance.candidate(instance.get(hash2).link());
     BOOST_REQUIRE(result);
-    
+
     const auto tx2_reloaded = instance.get(hash2);
     BOOST_REQUIRE(tx2_reloaded.candidate());
 
@@ -304,8 +305,8 @@ BOOST_AUTO_TEST_CASE(transaction_database__uncandidate__with_no_input_in_db__fal
     const auto result1 = instance.get(hash1);
     BOOST_REQUIRE(result1);
     BOOST_REQUIRE(result1.transaction().hash() == hash1);
-    
-    // Setup end    
+
+    // Setup end
 
     const bool result = instance.uncandidate(instance.get(hash1).link());
     BOOST_REQUIRE(!result);
@@ -315,7 +316,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__uncandidate__with_input_in_db__candid
 {
     uint32_t version = 2345u;
     uint32_t locktime = 0xffffffff;
-    
+
     test::create(file_path);
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
@@ -325,17 +326,17 @@ BOOST_AUTO_TEST_CASE(transaction_database__uncandidate__with_input_in_db__candid
     {
         { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
     };
-    
+
     chain::output::list tx1_outputs
     {
         { 1200, {} }
     };
 
     chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
-    BOOST_REQUIRE(tx1.is_coinbase());    
+    BOOST_REQUIRE(tx1.is_coinbase());
     const auto hash1 = tx1.hash();
     instance.store(tx1, 1);
-    
+
     const auto result1 = instance.get(hash1);
     BOOST_REQUIRE(result1);
     BOOST_REQUIRE(result1.transaction().hash() == hash1);
@@ -357,12 +358,12 @@ BOOST_AUTO_TEST_CASE(transaction_database__uncandidate__with_input_in_db__candid
 
     BOOST_REQUIRE(!result1.candidate());
     BOOST_REQUIRE(!result1.transaction().outputs().front().metadata.candidate_spend);
-    
+
     // Setup end
-    
+
     const bool result = instance.uncandidate(instance.get(hash2).link());
     BOOST_REQUIRE(result);
-    
+
     BOOST_REQUIRE(!instance.get(hash2).candidate());
 
     const auto tx1_reloaded = instance.get(hash1);
@@ -395,7 +396,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__confirm2__single_transaction_not_in_d
 
     const auto tx1_reloaded = instance.get(hash1);
 
-    BOOST_REQUIRE_EQUAL(tx1_reloaded.height(), libbitcoin::machine::rule_fork::unverified);
+    BOOST_REQUIRE_EQUAL(tx1_reloaded.height(), bc::system::machine::rule_fork::unverified);
     BOOST_REQUIRE_EQUAL(tx1_reloaded.median_time_past(), 0u);
     BOOST_REQUIRE_EQUAL(tx1_reloaded.position(), transaction_result::unconfirmed);
     BOOST_REQUIRE(!tx1_reloaded.candidate());
@@ -443,7 +444,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__confirm2__single_transaction_with_inp
 
     BOOST_REQUIRE(!instance.get(hash2).transaction().outputs().front().metadata.candidate_spend);
 
-    BOOST_REQUIRE_EQUAL(instance.get(hash1).height(), libbitcoin::machine::rule_fork::unverified);
+    BOOST_REQUIRE_EQUAL(instance.get(hash1).height(), bc::system::machine::rule_fork::unverified);
     BOOST_REQUIRE(!instance.get(hash1).transaction().outputs().front().metadata.spent(123, false));
 
     // Setup end
@@ -514,7 +515,7 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__confirm2__single_transacti
 
     BOOST_REQUIRE(!instance.get(hash2).transaction().outputs().front().metadata.candidate_spend);
 
-    BOOST_REQUIRE_EQUAL(instance.get(hash1).height(), libbitcoin::machine::rule_fork::unverified);
+    BOOST_REQUIRE_EQUAL(instance.get(hash1).height(), bc::system::machine::rule_fork::unverified);
     BOOST_REQUIRE(!instance.get(hash1).transaction().outputs().front().metadata.spent(123, false));
 
     // Setup end
@@ -601,7 +602,7 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__confirm1__single_transacti
 
     BOOST_REQUIRE(!instance.get(hash2).transaction().outputs().front().metadata.candidate_spend);
 
-    BOOST_REQUIRE_EQUAL(instance.get(hash1).height(), libbitcoin::machine::rule_fork::unverified);
+    BOOST_REQUIRE_EQUAL(instance.get(hash1).height(), bc::system::machine::rule_fork::unverified);
     BOOST_REQUIRE(!instance.get(hash1).transaction().outputs().front().metadata.spent(123, false));
 
     // Setup end
@@ -739,7 +740,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__unconfirm__single_confirmed__success)
 
     const auto tx2_reloaded = instance.get(hash2);
 
-    BOOST_REQUIRE_EQUAL(tx2_reloaded.height(), libbitcoin::machine::rule_fork::unverified);
+    BOOST_REQUIRE_EQUAL(tx2_reloaded.height(), bc::system::machine::rule_fork::unverified);
     BOOST_REQUIRE_EQUAL(tx2_reloaded.median_time_past(), 0u);
     BOOST_REQUIRE_EQUAL(tx2_reloaded.position(), transaction_result::unconfirmed);
     BOOST_REQUIRE(!tx2_reloaded.candidate());
@@ -755,7 +756,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__unconfirm__single_confirmed__success)
 
 
     BOOST_REQUIRE_EQUAL(tx1_reloaded.transaction().outputs().front().metadata.confirmed_spend_height,
-                        libbitcoin::machine::rule_fork::unverified);
+        bc::system::machine::rule_fork::unverified);
     BOOST_REQUIRE(!tx1_reloaded.transaction().outputs().front().metadata.spent(123, false));
 }
 
@@ -811,7 +812,7 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__unconfirm__single_confirme
 
     const auto tx2_reloaded = instance.get(hash2);
 
-    BOOST_REQUIRE_EQUAL(tx2_reloaded.height(), libbitcoin::machine::rule_fork::unverified);
+    BOOST_REQUIRE_EQUAL(tx2_reloaded.height(), bc::system::machine::rule_fork::unverified);
     BOOST_REQUIRE_EQUAL(tx2_reloaded.median_time_past(), 0u);
     BOOST_REQUIRE_EQUAL(tx2_reloaded.position(), transaction_result::unconfirmed);
     BOOST_REQUIRE(!tx2_reloaded.candidate());
@@ -827,7 +828,7 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__unconfirm__single_confirme
 
 
     BOOST_REQUIRE_EQUAL(tx1_reloaded.transaction().outputs().front().metadata.confirmed_spend_height,
-                        libbitcoin::machine::rule_fork::unverified);
+        bc::system::machine::rule_fork::unverified);
     BOOST_REQUIRE(!tx1_reloaded.transaction().outputs().front().metadata.spent(123, false));
 }
 
@@ -1010,7 +1011,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__null_point__false)
     BOOST_REQUIRE(instance.create());
 
     // setup end
-    
+
     BOOST_REQUIRE(!instance.get_output({ null_hash, point::null_index }, 1, false));
 }
 
@@ -1026,7 +1027,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__not_found__false)
     static const transaction tx1(version, locktime, {}, {});
 
     // setup end
-    
+
     BOOST_REQUIRE(!instance.get_output({ tx1.hash(), 0 }, 1, false));
 }
 
@@ -1052,7 +1053,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__no_output_at_index__false
 {
     uint32_t version = 2345u;
     uint32_t locktime = 0xffffffff;
-    
+
     test::create(file_path);
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
@@ -1060,7 +1061,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__no_output_at_index__false
     static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
 
     instance.store(tx1, 100);
-    
+
     BOOST_REQUIRE(!instance.get_output({ tx1.hash(), 1 }, 1, false));
 }
 
@@ -1068,7 +1069,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__unconfirmed_at_fork_heigh
 {
     uint32_t version = 2345u;
     uint32_t locktime = 0xffffffff;
-    
+
     test::create(file_path);
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
@@ -1080,19 +1081,19 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__unconfirmed_at_fork_heigh
     output_point point{ tx1.hash(), 0 };
 
     BOOST_REQUIRE(instance.get_output(point, 101, false));
-    BOOST_REQUIRE(!point.metadata.coinbase);    
-    BOOST_REQUIRE(!point.metadata.candidate);    
-    BOOST_REQUIRE(!point.metadata.confirmed);    
-    BOOST_REQUIRE_EQUAL(point.metadata.height, 100);    
-    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 0);    
-    BOOST_REQUIRE(!point.metadata.spent);    
+    BOOST_REQUIRE(!point.metadata.coinbase);
+    BOOST_REQUIRE(!point.metadata.candidate);
+    BOOST_REQUIRE(!point.metadata.confirmed);
+    BOOST_REQUIRE_EQUAL(point.metadata.height, 100);
+    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 0);
+    BOOST_REQUIRE(!point.metadata.spent);
 }
 
 BOOST_AUTO_TEST_CASE(transaction_database__get_output__confirmed_at_height__confirmed)
 {
     uint32_t version = 2345u;
     uint32_t locktime = 0xffffffff;
-    
+
     test::create(file_path);
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
@@ -1105,12 +1106,12 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__confirmed_at_height__conf
     output_point point{ tx1.hash(), 0 };
 
     BOOST_REQUIRE(instance.get_output(point, 123, false));
-    BOOST_REQUIRE(!point.metadata.coinbase);    
-    BOOST_REQUIRE(!point.metadata.candidate);    
-    BOOST_REQUIRE(point.metadata.confirmed);    
-    BOOST_REQUIRE_EQUAL(point.metadata.height, 123);    
-    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);    
-    BOOST_REQUIRE(!point.metadata.spent);    
+    BOOST_REQUIRE(!point.metadata.coinbase);
+    BOOST_REQUIRE(!point.metadata.candidate);
+    BOOST_REQUIRE(point.metadata.confirmed);
+    BOOST_REQUIRE_EQUAL(point.metadata.height, 123);
+    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);
+    BOOST_REQUIRE(!point.metadata.spent);
 }
 
 BOOST_AUTO_TEST_CASE(transaction_database_with_cache__get_output__confirmed_at_height__confirmed)
@@ -1142,7 +1143,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__unconfirmed_at_height__un
 {
     uint32_t version = 2345u;
     uint32_t locktime = 0xffffffff;
-    
+
     test::create(file_path);
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
@@ -1155,19 +1156,19 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__unconfirmed_at_height__un
     output_point point{ tx1.hash(), 0 };
 
     BOOST_REQUIRE(instance.get_output(point, 100, false));
-    BOOST_REQUIRE(!point.metadata.coinbase);    
-    BOOST_REQUIRE(!point.metadata.candidate);    
-    BOOST_REQUIRE(!point.metadata.confirmed);    
-    BOOST_REQUIRE_EQUAL(point.metadata.height, 123);    
-    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);    
-    BOOST_REQUIRE(!point.metadata.spent);    
+    BOOST_REQUIRE(!point.metadata.coinbase);
+    BOOST_REQUIRE(!point.metadata.candidate);
+    BOOST_REQUIRE(!point.metadata.confirmed);
+    BOOST_REQUIRE_EQUAL(point.metadata.height, 123);
+    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);
+    BOOST_REQUIRE(!point.metadata.spent);
 }
 
 BOOST_AUTO_TEST_CASE(transaction_database__get_output__prevout_spent__spent)
 {
     uint32_t version = 2345u;
     uint32_t locktime = 0xffffffff;
-    
+
     test::create(file_path);
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
@@ -1182,10 +1183,10 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__prevout_spent__spent)
     output_point point{ tx1.hash(), 0 };
 
     BOOST_REQUIRE(instance.get_output(point, 1230, false));
-    BOOST_REQUIRE(!point.metadata.coinbase);    
-    BOOST_REQUIRE(!point.metadata.candidate);    
-    BOOST_REQUIRE(point.metadata.confirmed);    
-    BOOST_REQUIRE_EQUAL(point.metadata.height, 123);    
+    BOOST_REQUIRE(!point.metadata.coinbase);
+    BOOST_REQUIRE(!point.metadata.candidate);
+    BOOST_REQUIRE(point.metadata.confirmed);
+    BOOST_REQUIRE_EQUAL(point.metadata.height, 123);
     BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);
     BOOST_REQUIRE(point.metadata.spent);
 }
@@ -1194,7 +1195,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__prevout_unspent_at_height
 {
     uint32_t version = 2345u;
     uint32_t locktime = 0xffffffff;
-    
+
     test::create(file_path);
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
@@ -1209,10 +1210,10 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__prevout_unspent_at_height
     output_point point{ tx1.hash(), 0 };
 
     BOOST_REQUIRE(instance.get_output(point, 1229, false));
-    BOOST_REQUIRE(!point.metadata.coinbase);    
-    BOOST_REQUIRE(!point.metadata.candidate);    
-    BOOST_REQUIRE(point.metadata.confirmed);    
-    BOOST_REQUIRE_EQUAL(point.metadata.height, 123);    
+    BOOST_REQUIRE(!point.metadata.coinbase);
+    BOOST_REQUIRE(!point.metadata.candidate);
+    BOOST_REQUIRE(point.metadata.confirmed);
+    BOOST_REQUIRE_EQUAL(point.metadata.height, 123);
     BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);
     BOOST_REQUIRE(!point.metadata.spent);
 }

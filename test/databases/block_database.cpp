@@ -19,19 +19,21 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/filesystem.hpp>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database.hpp>
 #include "../utility/utility.hpp"
 
 using namespace boost::system;
 using namespace boost::filesystem;
 using namespace bc;
-using namespace bc::chain;
 using namespace bc::database;
+using namespace bc::system;
+using namespace bc::system::chain;
 
 transaction random_tx(size_t fudge)
 {
-    static const auto settings = bc::settings(bc::config::settings::mainnet);
+    static const auto settings = system::settings(
+        system::config::settings::mainnet);
     static const chain::block genesis = settings.genesis_block;
     auto tx = genesis.transactions()[0];
     tx.inputs()[0].previous_output().set_index(fudge);

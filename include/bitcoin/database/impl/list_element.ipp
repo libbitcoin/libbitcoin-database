@@ -22,7 +22,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <tuple>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
@@ -48,14 +48,14 @@ size_t list_element<Manager, Link, Key>::size(size_t value_size)
 // Parameterizing Manager allows const and non-const.
 template <typename Manager, typename Link, typename Key>
 list_element<Manager, Link, Key>::list_element(Manager& manager,
-    shared_mutex& mutex)
+    system::shared_mutex& mutex)
   : manager_(manager), link_(not_found), mutex_(mutex)
 {
 }
 
 template <typename Manager, typename Link, typename Key>
 list_element<Manager, Link, Key>::list_element(Manager& manager, Link link,
-    shared_mutex& mutex)
+    system::shared_mutex& mutex)
   : manager_(manager), link_(link), mutex_(mutex)
 {
 }
@@ -67,7 +67,7 @@ void list_element<Manager, Link, Key>::initialize(const Key& key,
     write_function write)
 {
     const auto memory = data(0);
-    auto serial = make_unsafe_serializer(memory->buffer());
+    auto serial = system::make_unsafe_serializer(memory->buffer());
 
     // Limited to tuple|iterator Key types.
     serial.write_forward(key);
@@ -109,7 +109,7 @@ template <typename Manager, typename Link, typename Key>
 void list_element<Manager, Link, Key>::write(write_function writer) const
 {
     const auto memory = data(std::tuple_size<Key>::value + sizeof(Link));
-    auto serial = make_unsafe_serializer(memory->buffer());
+    auto serial = system::make_unsafe_serializer(memory->buffer());
     writer(serial);
 }
 
@@ -136,11 +136,11 @@ template <typename Manager, typename Link, typename Key>
 void list_element<Manager, Link, Key>::set_next(Link next) const
 {
     const auto memory = data(std::tuple_size<Key>::value);
-    auto serial = make_unsafe_serializer(memory->buffer());
+    auto serial = system::make_unsafe_serializer(memory->buffer());
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    system::unique_lock lock(mutex_);
     serial.template write_little_endian<Link>(next);
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -149,7 +149,7 @@ template <typename Manager, typename Link, typename Key>
 void list_element<Manager, Link, Key>::read(read_function reader) const
 {
     const auto memory = data(std::tuple_size<Key>::value + sizeof(Link));
-    auto deserial = make_unsafe_deserializer(memory->buffer());
+    auto deserial = system::make_unsafe_deserializer(memory->buffer());
     reader(deserial);
 }
 
@@ -164,7 +164,7 @@ template <typename Manager, typename Link, typename Key>
 Key list_element<Manager, Link, Key>::key() const
 {
     const auto memory = data(0);
-    auto deserial = make_unsafe_deserializer(memory->buffer());
+    auto deserial = system::make_unsafe_deserializer(memory->buffer());
 
     // Limited to tuple Key types (see deserializer to generalize).
     return deserial.template read_forward<Key>();
@@ -180,11 +180,11 @@ template <typename Manager, typename Link, typename Key>
 Link list_element<Manager, Link, Key>::next() const
 {
     const auto memory = data(std::tuple_size<Key>::value);
-    auto deserial = make_unsafe_deserializer(memory->buffer());
+    auto deserial = system::make_unsafe_deserializer(memory->buffer());
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    shared_lock lock(mutex_);
+    system::shared_lock lock(mutex_);
     return deserial.template read_little_endian<Link>();
     ///////////////////////////////////////////////////////////////////////////
 }

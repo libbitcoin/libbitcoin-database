@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_STORAGE_HPP
 #define LIBBITCOIN_DATABASE_STORAGE_HPP
 
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
@@ -28,7 +28,7 @@ namespace database {
 
 /// The implementation must be thread safe, allowing concurent read and write.
 class BCD_API storage
-  : noncopyable
+  : system::noncopyable
 {
 public:
     /// Open and map database files, must be closed.

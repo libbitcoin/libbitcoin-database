@@ -21,7 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
@@ -31,11 +31,11 @@ namespace database {
 /// This class provides shared/protected read/write access to a memory buffer.
 /// The call caller must know the buffer size as it is unprotected/unmanaged.
 class BCD_API accessor
-  : public memory, noncopyable
+  : public memory, system::noncopyable
 {
 public:
     /// Assign a null upgradeable buffer pointer.
-    accessor(upgrade_mutex& mutex);
+    accessor(system::upgrade_mutex& mutex);
 
     /// Free the buffer pointer lock.
     ~accessor();
@@ -50,7 +50,7 @@ public:
     void increment(size_t value);
 
 private:
-    upgrade_mutex& mutex_;
+    system::upgrade_mutex& mutex_;
     uint8_t* data_;
 };
 

@@ -22,14 +22,14 @@
 #include <memory>
 #include <string>
 #include <boost/filesystem.hpp>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 class BCD_API store
-  : noncopyable
+  : system::noncopyable
 {
 public:
     typedef boost::filesystem::path path;
@@ -96,8 +96,8 @@ private:
     const path prefix_;
     const bool with_indexes_;
     const bool flush_each_write_;
-    mutable flush_lock flush_lock_;
-    mutable interprocess_lock exclusive_lock_;
+    mutable system::flush_lock flush_lock_;
+    mutable system::interprocess_lock exclusive_lock_;
 };
 
 } // namespace database

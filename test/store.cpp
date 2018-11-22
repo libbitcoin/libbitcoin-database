@@ -23,6 +23,7 @@
 
 using namespace bc;
 using namespace bc::database;
+using namespace bc::system;
 
 // Test directory
 #define DIRECTORY "store"
@@ -69,10 +70,10 @@ using namespace boost::filesystem;
 static bool create_file(const path& file_path)
 {
     // Disallow create with existing file.
-    if (bc::ifstream(file_path.string()).good())
+    if (system::ifstream(file_path.string()).good())
         return false;
 
-    bc::ofstream file(file_path.string());
+    system::ofstream file(file_path.string());
 
     if (!file.good())
         return false;

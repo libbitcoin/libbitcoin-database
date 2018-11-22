@@ -20,7 +20,7 @@
 #define LIBBITCOIN_DATABASE_HASH_TABLE_IPP
 
 #include <cstddef>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
 #include <bitcoin/database/primitives/list.hpp>

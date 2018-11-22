@@ -21,7 +21,7 @@
 
 #include <cstddef>
 #include <boost/filesystem.hpp>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/file_storage.hpp>
 #include <bitcoin/database/primitives/hash_table.hpp>
@@ -74,27 +74,28 @@ public:
     transaction_result get(file_offset link) const;
 
     /// Fetch transaction by its hash.
-    transaction_result get(const hash_digest& hash) const;
+    transaction_result get(const system::hash_digest& hash) const;
 
     /// Populate tx metadata for the given block context.
-    void get_block_metadata(const chain::transaction& tx, uint32_t forks,
-        size_t fork_height) const;
+    void get_block_metadata(const system::chain::transaction& tx,
+        uint32_t forks, size_t fork_height) const;
 
     /// Populate tx metadata for the given transaction pool context.
-    void get_pool_metadata(const chain::transaction& tx, uint32_t forks) const;
+    void get_pool_metadata(const system::chain::transaction& tx,
+        uint32_t forks) const;
 
     /// Populate output metadata for the specified point and given context.
-    bool get_output(const chain::output_point& point, size_t fork_height,
-        bool candidate) const;
+    bool get_output(const system::chain::output_point& point,
+        size_t fork_height, bool candidate) const;
 
     // Writers.
     // ------------------------------------------------------------------------
 
     /// Store a transaction not associated with a block.
-    bool store(const chain::transaction& tx, uint32_t forks);
+    bool store(const system::chain::transaction& tx, uint32_t forks);
 
     /// Store a set of transactions (potentially from an unconfirmed block).
-    bool store(const chain::transaction::list& transactions);
+    bool store(const system::chain::transaction::list& transactions);
 
     /// Mark outputs spent by the candidate tx.
     bool candidate(file_offset link);
@@ -103,8 +104,8 @@ public:
     bool uncandidate(file_offset link);
 
     /// Promote the set of transactions associated with a block to confirmed.
-    bool confirm(const chain::transaction::list& transactions, size_t height,
-        uint32_t median_time_past);
+    bool confirm(const system::chain::transaction::list& transactions,
+        size_t height, uint32_t median_time_past);
 
     /// Promote the transaction to confirmed.
     bool confirm(file_offset link, size_t height, uint32_t median_time_past,
@@ -114,7 +115,7 @@ public:
     bool unconfirm(file_offset link);
 
 private:
-    typedef hash_digest key_type;
+    typedef system::hash_digest key_type;
     typedef array_index index_type;
     typedef file_offset link_type;
     typedef slab_manager<link_type> manager_type;
@@ -122,7 +123,7 @@ private:
 
     // Store a transaction.
     //-------------------------------------------------------------------------
-    bool storize(const chain::transaction& tx, size_t height,
+    bool storize(const system::chain::transaction& tx, size_t height,
         uint32_t median_time_past, size_t position);
 
     // Update the candidate state of the tx.
@@ -130,14 +131,15 @@ private:
     bool candidate(file_offset link, bool positive);
 
     // Update the candidate spent of the output.
-    bool candidate_spend(const chain::output_point& point, bool positive);
+    bool candidate_spend(const system::chain::output_point& point,
+        bool positive);
 
     // Update the candidate metadata of the existing tx.
     bool candidize(link_type link, bool candidate);
 
     // Update the spender height of the output.
     //-------------------------------------------------------------------------
-    bool confirmed_spend(const chain::output_point& point,
+    bool confirmed_spend(const system::chain::output_point& point,
         size_t spender_height);
 
     // Promote metadata of the existing tx to confirmed.
@@ -152,7 +154,7 @@ private:
     unspent_outputs cache_;
 
     // This provides atomicity for height and position.
-    mutable shared_mutex metadata_mutex_;
+    mutable system::shared_mutex metadata_mutex_;
 };
 
 } // namespace database

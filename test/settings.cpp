@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default_context__expected)
 
 BOOST_AUTO_TEST_CASE(settings__construct__none_context__expected)
 {
-    database::settings configuration(config::settings::none);
+    database::settings configuration(system::config::settings::none);
     BOOST_REQUIRE_EQUAL(configuration.directory, "blockchain");
     BOOST_REQUIRE(configuration.index_addresses);
     BOOST_REQUIRE(!configuration.flush_writes);
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__none_context__expected)
 
 BOOST_AUTO_TEST_CASE(settings__construct__mainnet_context__expected)
 {
-    database::settings configuration(config::settings::mainnet);
+    database::settings configuration(system::config::settings::mainnet);
     BOOST_REQUIRE_EQUAL(configuration.directory, "blockchain");
     BOOST_REQUIRE(configuration.index_addresses);
     BOOST_REQUIRE(!configuration.flush_writes);
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__mainnet_context__expected)
 
 BOOST_AUTO_TEST_CASE(settings__construct__testnet_context__expected)
 {
-    database::settings configuration(config::settings::testnet);
+    database::settings configuration(system::config::settings::testnet);
     BOOST_REQUIRE_EQUAL(configuration.directory, "blockchain");
     BOOST_REQUIRE(configuration.index_addresses);
     BOOST_REQUIRE(!configuration.flush_writes);

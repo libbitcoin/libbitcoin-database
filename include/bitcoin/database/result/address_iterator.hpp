@@ -20,7 +20,7 @@
 #define LIBBITCOIN_DATABASE_ADDRESS_ITERATOR_HPP
 
 #include <cstddef>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/list_element.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
@@ -39,9 +39,9 @@ public:
     // std::iterator_traits
     //-------------------------------------------------------------------------
 
-    typedef chain::payment_record pointer;
-    typedef chain::payment_record reference;
-    typedef chain::payment_record value_type;
+    typedef system::chain::payment_record pointer;
+    typedef system::chain::payment_record reference;
+    typedef system::chain::payment_record value_type;
     typedef ptrdiff_t difference_type;
     typedef std::output_iterator_tag iterator_category;
     typedef address_iterator iterator;

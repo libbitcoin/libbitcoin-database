@@ -18,14 +18,15 @@
  */
 #include <bitcoin/database/verify.hpp>
 
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/databases/block_database.hpp>
 #include <bitcoin/database/databases/transaction_database.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-using namespace bc::chain;
+using namespace bc::system;
+using namespace bc::system::chain;
 
 #ifndef NDEBUG
 static hash_digest get_block(const block_database& blocks,

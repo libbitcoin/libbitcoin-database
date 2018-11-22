@@ -21,7 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/list_element.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
@@ -34,7 +34,7 @@ namespace database {
 class BCD_API transaction_result
 {
 public:
-    typedef hash_digest key_type;
+    typedef system::hash_digest key_type;
     typedef file_offset link_type;
     typedef slab_manager<link_type> manager;
     typedef list_element<const manager, link_type, key_type>
@@ -53,7 +53,7 @@ public:
     static const uint16_t unconfirmed;
 
     transaction_result(const const_element_type& element,
-        shared_mutex& metadata_mutex);
+        system::shared_mutex& metadata_mutex);
 
     /// True if this transaction result is valid (found).
     operator bool() const;
@@ -62,7 +62,7 @@ public:
     file_offset link() const;
 
     /// The transaction hash (from cache).
-    hash_digest hash() const;
+    system::hash_digest hash() const;
 
     /// The height of the block of the tx, or forks if unconfirmed.
     size_t height() const;
@@ -80,10 +80,10 @@ public:
     bool is_spent(size_t fork_height, bool candidate) const;
 
     /// The output at the specified index within this transaction.
-    chain::output output(uint32_t index) const;
+    system::chain::output output(uint32_t index) const;
 
     /// The transaction, optionally including witness.
-    chain::transaction transaction(bool witness=true) const;
+    system::chain::transaction transaction(bool witness=true) const;
 
     /// Iterate over the input set.
     inpoint_iterator begin() const;
@@ -99,7 +99,7 @@ private:
     const const_element_type element_;
 
     // Metadata values are kept consistent by mutex.
-    shared_mutex& metadata_mutex_;
+    system::shared_mutex& metadata_mutex_;
 };
 
 } // namespace database

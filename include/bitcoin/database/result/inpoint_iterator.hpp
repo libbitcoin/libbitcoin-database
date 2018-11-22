@@ -21,7 +21,7 @@
 
 #include <cstddef>
 #include <vector>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/list_element.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
@@ -35,14 +35,15 @@ public:
     // Definition for constructor type (avoids circular reference).
     //-------------------------------------------------------------------------
     typedef slab_manager<file_offset> manager;
-    typedef list_element<const manager, file_offset, hash_digest> const_element;
+    typedef list_element<const manager, file_offset, system::hash_digest>
+        const_element;
 
     // std::iterator_traits
     //-------------------------------------------------------------------------
 
-    typedef chain::point pointer;
-    typedef chain::point reference;
-    typedef chain::point value_type;
+    typedef system::chain::point pointer;
+    typedef system::chain::point reference;
+    typedef system::chain::point value_type;
     typedef ptrdiff_t difference_type;
     typedef std::output_iterator_tag iterator_category;
     typedef inpoint_iterator iterator;

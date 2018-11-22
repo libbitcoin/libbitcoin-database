@@ -29,8 +29,9 @@
     "Failed to initialize database files.\n"
 
 using namespace bc;
-using namespace bc::chain;
 using namespace bc::database;
+using namespace bc::system;
+using namespace bc::system::chain;
 using namespace boost::filesystem;
 using namespace boost::system;
 using boost::format;
@@ -60,7 +61,8 @@ int main(int argc, char** argv)
 
     // This creates default configuration database only!
     const database::settings configuration;
-    const bc::settings bitcoin_configuration(bc::config::settings::mainnet);
+    const system::settings bitcoin_configuration(
+        system::config::settings::mainnet);
 
     if (!data_base(configuration).create(bitcoin_configuration.genesis_block))
     {
