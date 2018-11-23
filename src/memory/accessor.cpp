@@ -26,7 +26,9 @@
 namespace libbitcoin {
 namespace database {
 
-accessor::accessor(system::upgrade_mutex& mutex)
+using namespace bc::system;
+
+accessor::accessor(upgrade_mutex& mutex)
   : mutex_(mutex), data_(nullptr)
 {
     ///////////////////////////////////////////////////////////////////////////

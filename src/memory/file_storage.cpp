@@ -48,6 +48,8 @@ static_assert(sizeof(void*) == sizeof(uint64_t), "Not a 64 bit system!");
 namespace libbitcoin {
 namespace database {
 
+using namespace bc::system;
+
 #define FAIL -1
 #define INVALID_HANDLE -1
 
@@ -289,7 +291,7 @@ bool file_storage::closed() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::shared_lock lock(mutex_);
+    shared_lock lock(mutex_);
     return closed_;
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -301,7 +303,7 @@ size_t file_storage::size() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::shared_lock lock(mutex_);
+    shared_lock lock(mutex_);
     return file_size_;
     ///////////////////////////////////////////////////////////////////////////
 }

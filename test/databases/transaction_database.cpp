@@ -396,7 +396,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__confirm2__single_transaction_not_in_d
 
     const auto tx1_reloaded = instance.get(hash1);
 
-    BOOST_REQUIRE_EQUAL(tx1_reloaded.height(), bc::system::machine::rule_fork::unverified);
+    BOOST_REQUIRE_EQUAL(tx1_reloaded.height(), machine::rule_fork::unverified);
     BOOST_REQUIRE_EQUAL(tx1_reloaded.median_time_past(), 0u);
     BOOST_REQUIRE_EQUAL(tx1_reloaded.position(), transaction_result::unconfirmed);
     BOOST_REQUIRE(!tx1_reloaded.candidate());
@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__confirm2__single_transaction_with_inp
 
     BOOST_REQUIRE(!instance.get(hash2).transaction().outputs().front().metadata.candidate_spend);
 
-    BOOST_REQUIRE_EQUAL(instance.get(hash1).height(), bc::system::machine::rule_fork::unverified);
+    BOOST_REQUIRE_EQUAL(instance.get(hash1).height(), machine::rule_fork::unverified);
     BOOST_REQUIRE(!instance.get(hash1).transaction().outputs().front().metadata.spent(123, false));
 
     // Setup end
@@ -515,7 +515,7 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__confirm2__single_transacti
 
     BOOST_REQUIRE(!instance.get(hash2).transaction().outputs().front().metadata.candidate_spend);
 
-    BOOST_REQUIRE_EQUAL(instance.get(hash1).height(), bc::system::machine::rule_fork::unverified);
+    BOOST_REQUIRE_EQUAL(instance.get(hash1).height(), machine::rule_fork::unverified);
     BOOST_REQUIRE(!instance.get(hash1).transaction().outputs().front().metadata.spent(123, false));
 
     // Setup end
@@ -602,7 +602,7 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__confirm1__single_transacti
 
     BOOST_REQUIRE(!instance.get(hash2).transaction().outputs().front().metadata.candidate_spend);
 
-    BOOST_REQUIRE_EQUAL(instance.get(hash1).height(), bc::system::machine::rule_fork::unverified);
+    BOOST_REQUIRE_EQUAL(instance.get(hash1).height(), machine::rule_fork::unverified);
     BOOST_REQUIRE(!instance.get(hash1).transaction().outputs().front().metadata.spent(123, false));
 
     // Setup end
@@ -740,7 +740,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__unconfirm__single_confirmed__success)
 
     const auto tx2_reloaded = instance.get(hash2);
 
-    BOOST_REQUIRE_EQUAL(tx2_reloaded.height(), bc::system::machine::rule_fork::unverified);
+    BOOST_REQUIRE_EQUAL(tx2_reloaded.height(), machine::rule_fork::unverified);
     BOOST_REQUIRE_EQUAL(tx2_reloaded.median_time_past(), 0u);
     BOOST_REQUIRE_EQUAL(tx2_reloaded.position(), transaction_result::unconfirmed);
     BOOST_REQUIRE(!tx2_reloaded.candidate());
@@ -756,7 +756,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__unconfirm__single_confirmed__success)
 
 
     BOOST_REQUIRE_EQUAL(tx1_reloaded.transaction().outputs().front().metadata.confirmed_spend_height,
-        bc::system::machine::rule_fork::unverified);
+        machine::rule_fork::unverified);
     BOOST_REQUIRE(!tx1_reloaded.transaction().outputs().front().metadata.spent(123, false));
 }
 
@@ -812,7 +812,7 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__unconfirm__single_confirme
 
     const auto tx2_reloaded = instance.get(hash2);
 
-    BOOST_REQUIRE_EQUAL(tx2_reloaded.height(), bc::system::machine::rule_fork::unverified);
+    BOOST_REQUIRE_EQUAL(tx2_reloaded.height(), machine::rule_fork::unverified);
     BOOST_REQUIRE_EQUAL(tx2_reloaded.median_time_past(), 0u);
     BOOST_REQUIRE_EQUAL(tx2_reloaded.position(), transaction_result::unconfirmed);
     BOOST_REQUIRE(!tx2_reloaded.candidate());
@@ -828,7 +828,7 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__unconfirm__single_confirme
 
 
     BOOST_REQUIRE_EQUAL(tx1_reloaded.transaction().outputs().front().metadata.confirmed_spend_height,
-        bc::system::machine::rule_fork::unverified);
+        machine::rule_fork::unverified);
     BOOST_REQUIRE(!tx1_reloaded.transaction().outputs().front().metadata.spent(123, false));
 }
 
