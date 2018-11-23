@@ -134,13 +134,18 @@ Link record_manager<Link>::allocate(size_t count)
 template <typename Link>
 memory_ptr record_manager<Link>::get(Link link) const
 {
-    // If record >= count() then we should still be within the file. The
-    // condition implies a block has been unconfirmed while reading it.
+    BITCOIN_ASSERT_MSG(link < count(), "Read past end of file.");
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     memory->increment(header_size_ + link_to_position(link));
     return memory;
+}
+
+template <typename Link>
+bool record_manager<Link>::past_eof(Link link) const
+{
+    return link >= count();
 }
 
 // privates

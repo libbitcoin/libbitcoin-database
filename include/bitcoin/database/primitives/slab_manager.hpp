@@ -57,6 +57,9 @@ public:
     /// Allocate a slab and return its position, commit after writing.
     Link allocate(size_t size);
 
+    /// Check if link is past eof
+    bool past_eof(Link link) const;
+
     /// Return memory object for the slab at the specified position.
     memory_ptr get(Link position) const;
 

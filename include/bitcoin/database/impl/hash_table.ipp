@@ -93,6 +93,9 @@ template <typename Manager, typename Index, typename Link, typename Key>
 typename hash_table<Manager, Index, Link, Key>::const_value_type
 hash_table<Manager, Index, Link, Key>::find(Link link) const
 {
+    if (manager_.past_eof(link))
+        return { manager_, not_found, list_mutex_ };
+
     return { manager_, link, list_mutex_ };
 }
 
@@ -100,7 +103,7 @@ template <typename Manager, typename Index, typename Link, typename Key>
 typename hash_table<Manager, Index, Link, Key>::const_value_type
 hash_table<Manager, Index, Link, Key>::terminator() const
 {
-    return find(not_found);
+    return { manager_, not_found, list_mutex_ };
 }
 
 template <typename Manager, typename Index, typename Link, typename Key>

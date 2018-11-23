@@ -58,6 +58,9 @@ public:
     /// Change the number of records of this container (truncation).
     void set_count(Link value);
 
+    /// Check if link is past eof
+    bool past_eof(Link link) const;
+
     /// Allocate records and return first logical index, commit after writing.
     Link allocate(size_t count);
 

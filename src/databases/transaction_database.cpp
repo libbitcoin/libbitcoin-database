@@ -139,7 +139,6 @@ bool transaction_database::close()
 
 transaction_result transaction_database::get(file_offset offset) const
 {
-    // This is not guarded for an invalid offset.
     return { hash_table_.find(offset), metadata_mutex_ };
 }
 
