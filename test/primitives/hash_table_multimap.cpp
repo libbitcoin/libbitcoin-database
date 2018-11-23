@@ -65,13 +65,66 @@ BOOST_AUTO_TEST_CASE(hash_table_multimap__construct__always__expected)
         serial.write_byte(99);
     };
 
+    const auto writer2 = [](byte_serializer& serial)
+    {
+        serial.write_byte(100);
+        serial.write_byte(40);
+        serial.write_byte(9);
+    };
+
     auto element = multimap.allocator();
-    /*const auto link =*/ element.create(writer);
+    const auto link = element.create(writer);
     multimap.link(key, element);
 
-    BOOST_REQUIRE(multimap.find(key));
+    auto found = multimap.find(key);
+    BOOST_REQUIRE(found);
+    BOOST_REQUIRE(multimap.find(link));
+
+    // Second element on the same key
+    auto element2 = multimap.allocator();
+    const auto link2 = element2.create(writer2);
+    multimap.link(key, element2);
+
+    const auto found2 = multimap.find(key);
+    BOOST_REQUIRE(found2);
+    BOOST_REQUIRE(multimap.find(link2));
+
+    // elements in index are correctly linked
+    BOOST_REQUIRE_EQUAL(found2.next(), found.link());
+
+    // read the two elements
+    const auto reader = [](byte_deserializer& deserial)
+    {
+        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 110u);
+        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 4u);
+        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 99u);
+    };
+
+    const auto reader2 = [](byte_deserializer& deserial)
+    {
+        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 100u);
+        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 40u);
+        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 9u);
+    };
+
+    found.read(reader);
+    found2.read(reader2);
+
+    // stored elements from index
+    BOOST_REQUIRE(index.get(link));
+    BOOST_REQUIRE(index.get(link2));
+
+    // Unlink once
     BOOST_REQUIRE(multimap.unlink(key));
+
+    BOOST_REQUIRE(multimap.find(key));
+    BOOST_REQUIRE(multimap.find(link));
+
+    // unlink the second time
+    BOOST_REQUIRE(multimap.unlink(key));
+
     BOOST_REQUIRE(!multimap.find(key));
+    BOOST_REQUIRE(!multimap.find(link));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
