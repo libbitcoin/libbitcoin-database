@@ -475,8 +475,42 @@ BOOST_AUTO_TEST_CASE(data_base__push_block__not_existing___fails)
     // setup ends
     
     BOOST_REQUIRE_EQUAL(instance.push_block(block1, 1), error::operation_failed);
+
+    // test conditions
+
     test_heights(instance, 0u, 0u);
 }
+
+BOOST_AUTO_TEST_CASE(data_base__push_block__incorrect_height___fails)
+{
+   create_directory(DIRECTORY);
+   database::settings settings;
+   settings.directory = DIRECTORY;
+   settings.index_addresses = false;
+   settings.flush_writes = false;
+   settings.file_growth_rate = 42;
+   settings.block_table_buckets = 42;
+   settings.transaction_table_buckets = 42;
+   settings.address_table_buckets = 42;
+
+   data_base_accessor instance(settings);
+
+   static const auto bc_settings = bc::settings(bc::config::settings::mainnet);
+   const chain::block genesis = bc_settings.genesis_block;
+   BOOST_REQUIRE(instance.create(genesis));
+
+   const auto block1 = read_block(MAINNET_BLOCK1);
+   store_block_transactions(instance, block1, 1);
+
+   BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
+   BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
+   test_heights(instance, 1u, 0u);
+
+   // setup ends
+
+   BOOST_REQUIRE_EQUAL(instance.push_block(block1, 2), error::store_block_invalid_height);
+}
+
 
 BOOST_AUTO_TEST_CASE(data_base__push_block_and_update__already_candidated___success)
 {
