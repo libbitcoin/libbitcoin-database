@@ -607,8 +607,9 @@ BOOST_AUTO_TEST_CASE(data_base__pop_header_not_top___fails)
    const auto block1 = read_block(MAINNET_BLOCK1);
 
    // setup ends
-   
-   BOOST_REQUIRE_EQUAL(instance.pop_header(const_cast<header&>(block1.header()), 1), error::operation_failed);
+
+   chain::header out_header;
+   BOOST_REQUIRE_EQUAL(instance.pop_header(out_header, 1), error::operation_failed);
 }
 
 BOOST_AUTO_TEST_CASE(data_base__pop_header__existing___success)
@@ -636,11 +637,13 @@ BOOST_AUTO_TEST_CASE(data_base__pop_header__existing___success)
    BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
 
    // setup ends
-   
-   BOOST_REQUIRE_EQUAL(instance.pop_header(const_cast<header&>(block1.header()), 1), error::success);
+
+   chain::header out_header;
+   BOOST_REQUIRE_EQUAL(instance.pop_header(out_header, 1), error::success);
 
    // test conditions
 
+   BOOST_REQUIRE(out_header.hash() == block1.header().hash());
    test_heights(instance, 0u, 0u);
 }
 
