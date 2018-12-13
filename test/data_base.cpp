@@ -328,6 +328,10 @@ public:
         return data_base::store(tx, forks);
     }
     
+    code pop_header(chain::header& out_header, size_t height) 
+    {
+        return data_base::pop_header(out_header, height);
+    }
 };
 
 static void
@@ -515,7 +519,7 @@ BOOST_AUTO_TEST_CASE(data_base__push_block__incorrect_height___fails)
 #endif
 }
 
-BOOST_AUTO_TEST_CASE(data_base__push_block__missing_parent___fails)
+BOOST_AUTO_TEST_CASE(data_base__push_header__missing_parent___fails)
 {
    create_directory(DIRECTORY);
    database::settings settings;
@@ -580,6 +584,64 @@ BOOST_AUTO_TEST_CASE(data_base__push_block_and_update__already_candidated___succ
 
    test_heights(instance, 1u, 1u);
    test_block_exists(instance, 1, block1, settings.index_addresses, false);
+}
+
+BOOST_AUTO_TEST_CASE(data_base__pop_header_not_top___fails)
+{
+   create_directory(DIRECTORY);
+   database::settings settings;
+   settings.directory = DIRECTORY;
+   settings.index_addresses = false;
+   settings.flush_writes = false;
+   settings.file_growth_rate = 42;
+   settings.block_table_buckets = 42;
+   settings.transaction_table_buckets = 42;
+   settings.address_table_buckets = 42;
+  
+   data_base_accessor instance(settings); 
+   
+   static const auto bc_settings = bc::settings(bc::config::settings::mainnet);
+   const chain::block genesis = bc_settings.genesis_block;
+   BOOST_REQUIRE(instance.create(genesis));
+   
+   const auto block1 = read_block(MAINNET_BLOCK1);
+
+   // setup ends
+   
+   BOOST_REQUIRE_EQUAL(instance.pop_header(const_cast<header&>(block1.header()), 1), error::operation_failed);
+}
+
+BOOST_AUTO_TEST_CASE(data_base__pop_header__existing___success)
+{
+   create_directory(DIRECTORY);
+   database::settings settings;
+   settings.directory = DIRECTORY;
+   settings.index_addresses = false;
+   settings.flush_writes = false;
+   settings.file_growth_rate = 42;
+   settings.block_table_buckets = 42;
+   settings.transaction_table_buckets = 42;
+   settings.address_table_buckets = 42;
+  
+   data_base_accessor instance(settings); 
+   
+   static const auto bc_settings = bc::settings(bc::config::settings::mainnet);
+   const chain::block genesis = bc_settings.genesis_block;
+   BOOST_REQUIRE(instance.create(genesis));
+   
+   const auto block1 = read_block(MAINNET_BLOCK1);
+   store_block_transactions(instance, block1, 1);
+
+   BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
+   BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
+
+   // setup ends
+   
+   BOOST_REQUIRE_EQUAL(instance.pop_header(const_cast<header&>(block1.header()), 1), error::success);
+
+   // test conditions
+
+   test_heights(instance, 0u, 0u);
 }
 
 BOOST_AUTO_TEST_CASE(data_base__push_all_and_update__already_candidated___success)
@@ -662,13 +724,6 @@ BOOST_AUTO_TEST_CASE(data_base__push_all_and_update__already_candidated___succes
 //    test_block_exists(instance, 0, block0, settings.index_addresses);
 //    BOOST_REQUIRE(instance.blocks().top(height, false));
 //    BOOST_REQUIRE_EQUAL(height, 0);
-
-//    // This tests a missing parent, not a database failure.
-//    // A database failure would prevent subsequent read/write operations.
-//    std::cout << "push block #1 (store_block_missing_parent)" << std::endl;
-//    auto invalid_block1 = read_block(MAINNET_BLOCK1);
-//    invalid_block1.set_header(chain::header{});
-//    BOOST_REQUIRE_EQUAL(instance.push(invalid_block1, 1), error::store_block_missing_parent);
 
 //    std::cout << "push block #1" << std::endl;
 //    const auto block1 = read_block(MAINNET_BLOCK1);

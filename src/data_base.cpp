@@ -573,7 +573,7 @@ code data_base::pop_header(chain::header& out_header, size_t height)
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(write_mutex_);
 
-    if ((verify_top(*blocks_, height, true)))
+    if ((ec = verify_top(*blocks_, height, true)))
         return ec;
 
     const auto result = blocks_->get(height, true);
