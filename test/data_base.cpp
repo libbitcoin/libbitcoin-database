@@ -508,7 +508,11 @@ BOOST_AUTO_TEST_CASE(data_base__push_block__incorrect_height___fails)
 
    // setup ends
 
+#ifndef NDEBUG
    BOOST_REQUIRE_EQUAL(instance.push_block(block1, 2), error::store_block_invalid_height);
+#elseif
+   BOOST_REQUIRE_EQUAL(instance.push_block(block1, 2), error::operation_failed);
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(data_base__push_block__missing_parent___fails)
@@ -535,7 +539,11 @@ BOOST_AUTO_TEST_CASE(data_base__push_block__missing_parent___fails)
 
    // setup ends
 
+#ifndef NDEBUG
    BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::store_block_missing_parent);
+#elseif
+   BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::operation_failed);
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(data_base__push_block_and_update__already_candidated___success)
