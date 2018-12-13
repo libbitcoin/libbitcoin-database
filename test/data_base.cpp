@@ -78,7 +78,7 @@ test_block_exists(const data_base& interface, size_t height,
                    continue;
 
                const auto addresses = input.addresses();
-               const auto& prevout = input.previous_output();
+               // const auto& prevout = input.previous_output();
                ////const auto address = prevout.metadata.cache.addresses();
 
                for (const payment_address& address: addresses)
@@ -134,85 +134,83 @@ test_block_exists(const data_base& interface, size_t height,
    }
 }
 
-// static void
-// test_block_not_exists(const data_base& interface, const block& block0,
-//    bool index_addresses)
-// {
-//    const auto& address_store = interface.history();
+static void
+test_block_not_exists(const data_base& interface, const block& block0,
+                          bool index_addresses)
+{
+   const auto& address_store = interface.addresses();
 
-//    // Popped blocks still exist in the block hash table, but not confirmed.
-//    const auto block_hash = block0.hash();
-//    const auto result = interface.blocks().get(block_hash);
-//    BOOST_REQUIRE(!is_confirmed(result.state()));
+   // Popped blocks still exist in the block hash table, but not confirmed.
+   const auto block_hash = block0.hash();
+   const auto result = interface.blocks().get(block_hash);
+   BOOST_REQUIRE(!is_confirmed(result.state()));
 
-//    for (size_t i = 0; i < block0.transactions().size(); ++i)
-//    {
-//        const auto& tx = block0.transactions()[i];
-//        const auto tx_hash = tx.hash();
+   for (size_t i = 0; i < block0.transactions().size(); ++i)
+   {
+       const auto& tx = block0.transactions()[i];
+       const auto tx_hash = tx.hash();
 
-//        if (!tx.is_coinbase())
-//        {
-//            for (size_t j = 0; j < tx.inputs().size(); ++j)
-//            {
-//                const auto& input = tx.inputs()[j];
-//                input_point spend{ tx_hash, static_cast<uint32_t>(j) };
-//                auto r0_spend = interface.spends().get(input.previous_output());
-//                BOOST_REQUIRE(!r0_spend.is_valid());
+       if (!tx.is_coinbase())
+       {
+           for (size_t j = 0; j < tx.inputs().size(); ++j)
+           {
+               const auto& input = tx.inputs()[j];
+               // auto r0_spend = interface.spends().get(input.previous_output());
+               // BOOST_REQUIRE(!r0_spend.is_valid());
 
-//                if (!index_addresses)
-//                    continue;
+               if (!index_addresses)
+                   continue;
 
-//                const auto addresses = input.addresses();
-//                ////const auto& prevout = input.previous_output();
-//                ////const auto address = prevout.metadata.cache.addresses();
+               const auto addresses = input.addresses();
+               ////const auto& prevout = input.previous_output();
+               ////const auto address = prevout.metadata.cache.addresses();
 
-//                for (const auto& address: addresses)
-//                {
-//                    auto history = address_store.get(address.hash(), 0, 0);
-//                    auto found = false;
+               for (const auto& address: addresses)
+               {
+                   auto history = address_store.get(address.hash());
+                   auto found = false;
 
-//                    for (const auto& row: history)
-//                    {
-//                        if (row.point() == spend)
-//                        {
-//                            found = true;
-//                            break;
-//                        }
-//                    }
+                   for (const payment_record& row: history)
+                   {
+                       if (row.hash() == tx_hash && row.index() == j)
+                       {
+                           found = true;
+                           break;
+                       }
+                   }
 
-//                    BOOST_REQUIRE(!found);
-//                }
-//            }
-//        }
+                   BOOST_REQUIRE(!found);
+               }
+           }
+       }
 
-//        if (!index_addresses)
-//            return;
+       if (!index_addresses)
+           return;
 
-//        for (size_t j = 0; j < tx.outputs().size(); ++j)
-//        {
-//            const auto& output = tx.outputs()[j];
-//            output_point outpoint{ tx_hash, static_cast<uint32_t>(j) };
-//            const auto addresses = output.addresses();
+       for (size_t j = 0; j < tx.outputs().size(); ++j)
+       {
+           const auto& output = tx.outputs()[j];
+           const auto addresses = output.addresses();
 
-//            for (const auto& address: addresses)
-//            {
-//                auto history = address_store.get(address.hash(), 0, 0);
-//                auto found = false;
+           for (const auto& address: addresses)
+           {
+               auto history = address_store.get(address.hash());
+               auto found = false;
 
-//                for (const auto& row: history)
-//                {
-//                    if (row.point() == outpoint)
-//                    {
-//                        found = true;
-//                        break;
-//                    }
-//                }
+               for (const auto& row: history)
+               {
+                   if (row.hash() == tx_hash && row.index() == j)
+                   {
+                       found = true;
+                       break;
+                   }
+               }
 
-//                BOOST_REQUIRE(!found);
-//            }
-//        }
-//    }
-// }
+               BOOST_REQUIRE(!found);
+           }
+       }
+   }
+}
 
 static chain_state::data
 data_for_chain_state()
@@ -332,6 +330,12 @@ public:
     {
         return data_base::pop_header(out_header, height);
     }
+    bool pop_above(header_const_ptr_list_ptr headers,
+                   const config::checkpoint& fork_point)
+    {
+        return data_base::pop_above(headers, fork_point);
+    }
+    
 };
 
 static void
@@ -345,32 +349,6 @@ test_heights(const data_base& instance, size_t candidate_height_in, size_t confi
     BOOST_REQUIRE_EQUAL(candidate_height, candidate_height_in);
     BOOST_REQUIRE_EQUAL(confirmed_height, confirmed_height_in);   
 }
-
-// static code pop_above_result(data_base_accessor& instance,
-//    block_const_ptr_list_ptr out_blocks, const config::checkpoint& fork_point,
-//    dispatcher& dispatch)
-// {
-//    std::promise<code> promise;
-//    const auto handler = [&promise](code ec)
-//    {
-//        promise.set_value(ec);
-//    };
-//    instance.pop_above(out_blocks, fork_point, dispatch, handler);
-//    return promise.get_future().get();
-// }
-
-// static code push_all_result(data_base_accessor& instance,
-//    block_const_ptr_list_const_ptr in_blocks, size_t index, size_t height,
-//    dispatcher& dispatch)
-// {
-//    std::promise<code> promise;
-//    const auto handler = [&promise](code ec)
-//    {
-//        promise.set_value(ec);
-//    };
-//    instance.push_next(in_blocks, index, height, dispatch, handler);
-//    return promise.get_future().get();
-// }
 
 BOOST_AUTO_TEST_CASE(data_base__create__block_transactions_index_interaction__success)
 {
@@ -702,6 +680,144 @@ BOOST_AUTO_TEST_CASE(data_base__push_all_and_update__already_candidated___succes
    test_block_exists(instance, 1, *block1_ptr, settings.index_addresses, false);
    test_block_exists(instance, 2, *block2_ptr, settings.index_addresses, false);
    test_block_exists(instance, 3, *block3_ptr, settings.index_addresses, false);
+}
+
+BOOST_AUTO_TEST_CASE(data_base__pop_above_missing_forkpoint_hash___fails)
+{
+   create_directory(DIRECTORY);
+   database::settings settings;
+   settings.directory = DIRECTORY;
+   settings.index_addresses = false;
+   settings.flush_writes = false;
+   settings.file_growth_rate = 42;
+   settings.block_table_buckets = 42;
+   settings.transaction_table_buckets = 42;
+   settings.address_table_buckets = 42;
+  
+   data_base_accessor instance(settings); 
+   
+   static const auto bc_settings = bc::settings(bc::config::settings::mainnet);
+   const chain::block genesis = bc_settings.genesis_block;
+   BOOST_REQUIRE(instance.create(genesis));
+   
+   const auto block1 = read_block(MAINNET_BLOCK1);
+   auto out_headers = std::make_shared<header_const_ptr_list>(header_const_ptr_list{});
+
+   // setup ends
+   
+   BOOST_REQUIRE(!instance.pop_above(out_headers, config::checkpoint(block1.hash(), 0)));
+}
+
+BOOST_AUTO_TEST_CASE(data_base__pop_above__wrong_forkpoint_height___fails)
+{
+   create_directory(DIRECTORY);
+   database::settings settings;
+   settings.directory = DIRECTORY;
+   settings.index_addresses = false;
+   settings.flush_writes = false;
+   settings.file_growth_rate = 42;
+   settings.block_table_buckets = 42;
+   settings.transaction_table_buckets = 42;
+   settings.address_table_buckets = 42;
+  
+   data_base_accessor instance(settings); 
+   
+   static const auto bc_settings = bc::settings(bc::config::settings::mainnet);
+   const chain::block genesis = bc_settings.genesis_block;
+   BOOST_REQUIRE(instance.create(genesis));
+   
+   const auto block1 = read_block(MAINNET_BLOCK1);
+   auto out_headers = std::make_shared<header_const_ptr_list>(header_const_ptr_list{});
+
+   // setup ends
+   
+   BOOST_REQUIRE(!instance.pop_above(out_headers, config::checkpoint(genesis.hash(), 10)));
+}
+
+BOOST_AUTO_TEST_CASE(data_base__pop_above__pop_zero___success)
+{
+   create_directory(DIRECTORY);
+   database::settings settings;
+   settings.directory = DIRECTORY;
+   settings.index_addresses = false;
+   settings.flush_writes = false;
+   settings.file_growth_rate = 42;
+   settings.block_table_buckets = 42;
+   settings.transaction_table_buckets = 42;
+   settings.address_table_buckets = 42;
+  
+   data_base_accessor instance(settings); 
+   
+   static const auto bc_settings = bc::settings(bc::config::settings::mainnet);
+   const chain::block genesis = bc_settings.genesis_block;
+   BOOST_REQUIRE(instance.create(genesis));
+   
+   const auto block1 = read_block(MAINNET_BLOCK1);
+   auto out_headers = std::make_shared<header_const_ptr_list>(header_const_ptr_list{});
+
+   // setup ends
+   
+   BOOST_REQUIRE(instance.pop_above(out_headers, config::checkpoint(genesis.hash(), 0)));
+
+   // test conditions
+
+   test_heights(instance, 0u, 0u);   
+}
+
+BOOST_AUTO_TEST_CASE(data_base__pop_above__candidated_not_confirmed___success)
+{
+   create_directory(DIRECTORY);
+   database::settings settings;
+   settings.directory = DIRECTORY;
+   settings.index_addresses = false;
+   settings.flush_writes = false;
+   settings.file_growth_rate = 42;
+   settings.block_table_buckets = 42;
+   settings.transaction_table_buckets = 42;
+   settings.address_table_buckets = 42;
+  
+   data_base_accessor instance(settings); 
+   
+   static const auto bc_settings = bc::settings(bc::config::settings::mainnet);
+   const chain::block genesis = bc_settings.genesis_block;
+   BOOST_REQUIRE(instance.create(genesis));
+   
+   const auto block1 = read_block(MAINNET_BLOCK1);
+
+   block_const_ptr block1_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK1));
+   block_const_ptr block2_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK2));
+   block_const_ptr block3_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK3));
+   const auto blocks_push_ptr = std::make_shared<const block_const_ptr_list>(block_const_ptr_list{
+           block1_ptr, block2_ptr, block3_ptr });
+   store_block_transactions(instance, *block1_ptr, 1);
+   store_block_transactions(instance, *block2_ptr, 1);
+   store_block_transactions(instance, *block3_ptr, 1);
+
+   const auto headers_push_ptr = std::make_shared<const header_const_ptr_list>(header_const_ptr_list{
+           std::make_shared<const message::header>(block1_ptr->header()),
+               std::make_shared<const message::header>(block2_ptr->header()),
+               std::make_shared<const message::header>(block3_ptr->header())
+               });
+      
+   BOOST_REQUIRE(instance.push_all(headers_push_ptr, config::checkpoint(genesis.hash(), 0)));
+   for(const auto block_ptr: *blocks_push_ptr) {
+       BOOST_REQUIRE_EQUAL(instance.candidate(*block_ptr), error::success);
+   }
+
+   test_heights(instance, 3u, 0u);
+
+   // setup ends
+   
+   auto out_headers = std::make_shared<header_const_ptr_list>(header_const_ptr_list{});   
+   BOOST_REQUIRE(instance.pop_above(out_headers, config::checkpoint(genesis.hash(), 0)));
+
+   // test conditions
+
+   BOOST_REQUIRE_EQUAL(out_headers->size(), 3);
+   test_heights(instance, 0u, 0u);
+   test_block_not_exists(instance, *block1_ptr, settings.index_addresses);
+   test_block_not_exists(instance, *block2_ptr, settings.index_addresses);
+   test_block_not_exists(instance, *block3_ptr, settings.index_addresses);
 }
 
 // BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
