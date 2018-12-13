@@ -330,12 +330,24 @@ public:
     {
         return data_base::pop_header(out_header, height);
     }
+
+    code pop_block(chain::block& out_block, size_t height)
+    {
+        return data_base::pop_block(out_block, height);
+    }
+
     bool pop_above(header_const_ptr_list_ptr headers,
                    const config::checkpoint& fork_point)
     {
         return data_base::pop_above(headers, fork_point);
     }
-    
+
+    bool pop_above(block_const_ptr_list_ptr blocks,
+        const config::checkpoint& fork_point)
+    {
+        return data_base::pop_above(blocks, fork_point);
+    }
+
 };
 
 static void
@@ -590,7 +602,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_header_not_top___fails)
    BOOST_REQUIRE_EQUAL(instance.pop_header(out_header, 1), error::operation_failed);
 }
 
-BOOST_AUTO_TEST_CASE(data_base__pop_header__existing___success)
+BOOST_AUTO_TEST_CASE(data_base__pop_header__candidate___success)
 {
    create_directory(DIRECTORY);
    database::settings settings;
@@ -623,6 +635,69 @@ BOOST_AUTO_TEST_CASE(data_base__pop_header__existing___success)
 
    BOOST_REQUIRE(out_header.hash() == block1.header().hash());
    test_heights(instance, 0u, 0u);
+}
+
+BOOST_AUTO_TEST_CASE(data_base__pop_block_not_top___fails)
+{
+   create_directory(DIRECTORY);
+   database::settings settings;
+   settings.directory = DIRECTORY;
+   settings.index_addresses = false;
+   settings.flush_writes = false;
+   settings.file_growth_rate = 42;
+   settings.block_table_buckets = 42;
+   settings.transaction_table_buckets = 42;
+   settings.address_table_buckets = 42;
+
+   data_base_accessor instance(settings);
+
+   static const auto bc_settings = bc::settings(bc::config::settings::mainnet);
+   const chain::block genesis = bc_settings.genesis_block;
+   BOOST_REQUIRE(instance.create(genesis));
+
+   const auto block1 = read_block(MAINNET_BLOCK1);
+
+   // setup ends
+
+   chain::block out_block;
+   BOOST_REQUIRE_EQUAL(instance.pop_block(out_block, 1), error::operation_failed);
+}
+
+BOOST_AUTO_TEST_CASE(data_base__pop_block__confirmed___success)
+{
+   create_directory(DIRECTORY);
+   database::settings settings;
+   settings.directory = DIRECTORY;
+   settings.index_addresses = false;
+   settings.flush_writes = false;
+   settings.file_growth_rate = 42;
+   settings.block_table_buckets = 42;
+   settings.transaction_table_buckets = 42;
+   settings.address_table_buckets = 42;
+
+   data_base_accessor instance(settings);
+
+   static const auto bc_settings = bc::settings(bc::config::settings::mainnet);
+   const chain::block genesis = bc_settings.genesis_block;
+   BOOST_REQUIRE(instance.create(genesis));
+
+   const auto block1 = read_block(MAINNET_BLOCK1);
+   store_block_transactions(instance, block1, 1);
+
+   BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
+   BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
+   BOOST_REQUIRE_EQUAL(instance.push_block(block1, 1), error::success);
+
+   // setup ends
+
+   chain::block out_block;
+   BOOST_REQUIRE_EQUAL(instance.pop_block(out_block, 1), error::success);
+
+   // test conditions
+
+   BOOST_REQUIRE(out_block.hash() == block1.hash());
+   test_block_not_exists(instance, block1, settings.index_addresses);
+   test_heights(instance, 1u, 0u);
 }
 
 BOOST_AUTO_TEST_CASE(data_base__push_all_and_update__already_candidated___success)
@@ -827,88 +902,123 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__candidated_not_confirmed___success)
    test_block_not_exists(instance, *block3_ptr, settings.index_addresses);
 }
 
-// BOOST_AUTO_TEST_CASE(data_base__pushpop__test)
-// {
-//    std::cout << "begin data_base push/pop test" << std::endl;
+#ifndef NDEBUG
+BOOST_AUTO_TEST_CASE(data_base__pop_above2__wrong_forkpoint_height___fails)
+{
+   create_directory(DIRECTORY);
+   database::settings settings;
+   settings.directory = DIRECTORY;
+   settings.index_addresses = false;
+   settings.flush_writes = false;
+   settings.file_growth_rate = 42;
+   settings.block_table_buckets = 42;
+   settings.transaction_table_buckets = 42;
+   settings.address_table_buckets = 42;
 
-//    create_directory(DIRECTORY);
-//    database::settings settings;
-//    settings.directory = DIRECTORY;
-//    settings.index_addresses = true;
-//    settings.flush_writes = false;
-//    settings.file_growth_rate = 42;
-//    settings.block_table_buckets = 42;
-//    settings.transaction_table_buckets = 42;
-//    settings.address_table_buckets = 42;
+   data_base_accessor instance(settings);
 
-//    size_t height;
-//    threadpool pool(1);
-//    dispatcher dispatch(pool, "test");
-//    data_base_accessor instance(settings);
-//    const auto block0 = block::genesis_mainnet();
-//    BOOST_REQUIRE(instance.create(block0));
-//    test_block_exists(instance, 0, block0, settings.index_addresses);
-//    BOOST_REQUIRE(instance.blocks().top(height, false));
-//    BOOST_REQUIRE_EQUAL(height, 0);
+   static const auto bc_settings = bc::settings(bc::config::settings::mainnet);
+   const chain::block genesis = bc_settings.genesis_block;
+   BOOST_REQUIRE(instance.create(genesis));
 
-//    std::cout << "push block #1" << std::endl;
-//    const auto block1 = read_block(MAINNET_BLOCK1);
-//    test_block_not_exists(instance, block1, settings.index_addresses);
-//    BOOST_REQUIRE_EQUAL(instance.push(block1, 1), error::success);
-//    test_block_exists(instance, 0, block0, settings.index_addresses);
-//    BOOST_REQUIRE(instance.blocks().top(height, false));
-//    BOOST_REQUIRE_EQUAL(height, 1u);
-//    test_block_exists(instance, 1, block1, settings.index_addresses);
+   const auto block1 = read_block(MAINNET_BLOCK1);
+   auto out_blocks = std::make_shared<block_const_ptr_list>(block_const_ptr_list{});
 
-//    std::cout << "push_all blocks #2 & #3" << std::endl;
-//    const auto block2_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK2));
-//    const auto block3_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK3));
-//    const auto blocks_push_ptr = std::make_shared<const block_const_ptr_list>(block_const_ptr_list{ block2_ptr, block3_ptr });
-//    test_block_not_exists(instance, *block2_ptr, settings.index_addresses);
-//    test_block_not_exists(instance, *block3_ptr, settings.index_addresses);
-//    BOOST_REQUIRE_EQUAL(push_all_result(instance, blocks_push_ptr, 0, 2, dispatch), error::success);
-//    test_block_exists(instance, 1, block1, settings.index_addresses);
-//    BOOST_REQUIRE(instance.blocks().top(height, false));
-//    BOOST_REQUIRE_EQUAL(height, 3u);
-//    test_block_exists(instance, 3, *block3_ptr, settings.index_addresses);
-//    test_block_exists(instance, 2, *block2_ptr, settings.index_addresses);
+   // setup ends
 
-//    std::cout << "insert block #2 (store_block_invalid_height)" << std::endl;
-//    BOOST_REQUIRE_EQUAL(instance.push(*block2_ptr, 2), error::store_block_invalid_height);
+    BOOST_REQUIRE(!instance.pop_above(out_blocks, config::checkpoint(genesis.hash(), 10)));
+}
+#endif
 
-//    std::cout << "pop_above block 1 (blocks #2 & #3)" << std::endl;
-//    const auto blocks_popped_ptr = std::make_shared<block_const_ptr_list>();
-//    BOOST_REQUIRE_EQUAL(pop_above_result(instance, blocks_popped_ptr, { block1.hash(), 1 }, dispatch), error::success);
-//    BOOST_REQUIRE(instance.blocks().top(height, false));
-//    BOOST_REQUIRE_EQUAL(height, 1u);
-//    BOOST_REQUIRE_EQUAL(blocks_popped_ptr->size(), 2u);
-//    BOOST_REQUIRE(*(*blocks_popped_ptr)[0] == *block2_ptr);
-//    BOOST_REQUIRE(*(*blocks_popped_ptr)[1] == *block3_ptr);
-//    test_block_not_exists(instance, *block3_ptr, settings.index_addresses);
-//    test_block_not_exists(instance, *block2_ptr, settings.index_addresses);
-//    test_block_exists(instance, 1, block1, settings.index_addresses);
-//    test_block_exists(instance, 0, block0, settings.index_addresses);
+BOOST_AUTO_TEST_CASE(data_base__pop_above2__pop_zero___success)
+{
+   create_directory(DIRECTORY);
+   database::settings settings;
+   settings.directory = DIRECTORY;
+   settings.index_addresses = false;
+   settings.flush_writes = false;
+   settings.file_growth_rate = 42;
+   settings.block_table_buckets = 42;
+   settings.transaction_table_buckets = 42;
+   settings.address_table_buckets = 42;
 
-//    std::cout << "push block #3 (store_block_invalid_height)" << std::endl;
-//    BOOST_REQUIRE_EQUAL(instance.push(*block3_ptr, 3), error::store_block_invalid_height);
+   data_base_accessor instance(settings);
 
-//    std::cout << "insert block #2" << std::endl;
-//    BOOST_REQUIRE_EQUAL(instance.push(*block2_ptr, 2), error::success);
-//    BOOST_REQUIRE(instance.blocks().top(height, false));
-//    BOOST_REQUIRE_EQUAL(height, 2u);
+   static const auto bc_settings = bc::settings(bc::config::settings::mainnet);
+   const chain::block genesis = bc_settings.genesis_block;
+   BOOST_REQUIRE(instance.create(genesis));
 
-//    std::cout << "pop_above block 0 (block #1 & #2)" << std::endl;
-//    blocks_popped_ptr->clear();
-//    BOOST_REQUIRE_EQUAL(pop_above_result(instance, blocks_popped_ptr, { block0.hash(), 0 }, dispatch), error::success);
-//    BOOST_REQUIRE(instance.blocks().top(height, false));
-//    BOOST_REQUIRE_EQUAL(height, 0u);
-//    BOOST_REQUIRE(*(*blocks_popped_ptr)[0] == block1);
-//    BOOST_REQUIRE(*(*blocks_popped_ptr)[1] == *block2_ptr);
-//    test_block_not_exists(instance, block1, settings.index_addresses);
-//    test_block_not_exists(instance, *block2_ptr, settings.index_addresses);
-//    test_block_exists(instance, 0, block0, settings.index_addresses);
+   const auto block1 = read_block(MAINNET_BLOCK1);
+   auto out_blocks = std::make_shared<block_const_ptr_list>(block_const_ptr_list{});
 
-//    std::cout << "end push/pop test" << std::endl;
-// }
+   // setup ends
+
+   BOOST_REQUIRE(instance.pop_above(out_blocks, config::checkpoint(genesis.hash(), 0)));
+
+   // test conditions
+
+   test_heights(instance, 0u, 0u);
+}
+
+BOOST_AUTO_TEST_CASE(data_base__pop_above2__confirmed___success)
+{
+   create_directory(DIRECTORY);
+   database::settings settings;
+   settings.directory = DIRECTORY;
+   settings.index_addresses = false;
+   settings.flush_writes = false;
+   settings.file_growth_rate = 42;
+   settings.block_table_buckets = 42;
+   settings.transaction_table_buckets = 42;
+   settings.address_table_buckets = 42;
+
+   data_base_accessor instance(settings);
+
+   static const auto bc_settings = bc::settings(bc::config::settings::mainnet);
+   const chain::block genesis = bc_settings.genesis_block;
+   BOOST_REQUIRE(instance.create(genesis));
+
+   const auto block1 = read_block(MAINNET_BLOCK1);
+
+   block_const_ptr block1_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK1));
+   block_const_ptr block2_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK2));
+   block_const_ptr block3_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK3));
+   const auto blocks_push_ptr = std::make_shared<const block_const_ptr_list>(block_const_ptr_list{
+           block1_ptr, block2_ptr, block3_ptr });
+   store_block_transactions(instance, *block1_ptr, 1);
+   store_block_transactions(instance, *block2_ptr, 1);
+   store_block_transactions(instance, *block3_ptr, 1);
+
+   const auto headers_push_ptr = std::make_shared<const header_const_ptr_list>(header_const_ptr_list{
+           std::make_shared<const message::header>(block1_ptr->header()),
+               std::make_shared<const message::header>(block2_ptr->header()),
+               std::make_shared<const message::header>(block3_ptr->header())
+               });
+
+   BOOST_REQUIRE(instance.push_all(headers_push_ptr, config::checkpoint(genesis.hash(), 0)));
+   for(const auto block_ptr: *blocks_push_ptr) {
+       BOOST_REQUIRE_EQUAL(instance.candidate(*block_ptr), error::success);
+   }
+
+   BOOST_REQUIRE(instance.push_all(blocks_push_ptr, config::checkpoint(genesis.hash(), 0)));
+   BOOST_REQUIRE_EQUAL(instance.update(*block1_ptr, 1), error::success);
+   BOOST_REQUIRE_EQUAL(instance.update(*block2_ptr, 2), error::success);
+   BOOST_REQUIRE_EQUAL(instance.update(*block3_ptr, 3), error::success);
+
+   test_heights(instance, 3u, 3u);
+
+   // setup ends
+
+   auto out_blocks = std::make_shared<block_const_ptr_list>(block_const_ptr_list{});
+   BOOST_REQUIRE(instance.pop_above(out_blocks, config::checkpoint(genesis.hash(), 0)));
+
+   // test conditions
+
+   BOOST_REQUIRE_EQUAL(out_blocks->size(), 3);
+   test_heights(instance, 3u, 0u);
+   test_block_not_exists(instance, *block1_ptr, settings.index_addresses);
+   test_block_not_exists(instance, *block2_ptr, settings.index_addresses);
+   test_block_not_exists(instance, *block3_ptr, settings.index_addresses);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
