@@ -61,7 +61,9 @@ BOOST_FIXTURE_TEST_SUITE(block_database_tests, block_database_directory_setup_fi
 BOOST_AUTO_TEST_CASE(block_database__test)
 {
     // TODO: replace.
-    static const auto settings = bc::settings(bc::config::settings::mainnet);
+    static const auto settings = system::settings(
+        system::config::settings::mainnet);
+
     chain::block block0 = settings.genesis_block;
     block0.set_transactions(
     {
@@ -203,12 +205,12 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     BOOST_REQUIRE(!instance.get(0, true));
     BOOST_REQUIRE(instance.get(0, false));
     BOOST_REQUIRE_EQUAL(instance.get(0, false).state(), block_state::valid | block_state::confirmed);
-    
+
     // Check heights for candidate and confirmed index
     BOOST_REQUIRE(!instance.top(candidate_height, true));
     BOOST_REQUIRE(instance.top(confirmed_height, false));
     BOOST_REQUIRE_EQUAL(confirmed_height, 3u);
-    
+
     // Fetch block 0 by hash.
     const auto result0 = instance.get(h0);
 
