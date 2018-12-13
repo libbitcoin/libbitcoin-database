@@ -704,10 +704,16 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above_missing_forkpoint_hash___fails)
    auto out_headers = std::make_shared<header_const_ptr_list>(header_const_ptr_list{});
 
    // setup ends
-   
-   BOOST_REQUIRE(!instance.pop_above(out_headers, config::checkpoint(block1.hash(), 0)));
+
+   auto result = instance.pop_above(out_headers, config::checkpoint(block1.hash(), 0));
+#ifndef NDEBUG
+   BOOST_REQUIRE(!result);
+#else
+   BOOST_REQUIRE(result);
+#endif
 }
 
+#ifndef NDEBUG
 BOOST_AUTO_TEST_CASE(data_base__pop_above__wrong_forkpoint_height___fails)
 {
    create_directory(DIRECTORY);
@@ -730,9 +736,10 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__wrong_forkpoint_height___fails)
    auto out_headers = std::make_shared<header_const_ptr_list>(header_const_ptr_list{});
 
    // setup ends
-   
-   BOOST_REQUIRE(!instance.pop_above(out_headers, config::checkpoint(genesis.hash(), 10)));
+
+    BOOST_REQUIRE(!instance.pop_above(out_headers, config::checkpoint(genesis.hash(), 10)));
 }
+#endif
 
 BOOST_AUTO_TEST_CASE(data_base__pop_above__pop_zero___success)
 {
