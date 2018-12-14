@@ -155,6 +155,28 @@ code verify_push(const block_database& blocks, const block& block,
     return error::success;
 }
 
+code verify_confirm(const block_database& blocks, const hash_digest& block_hash,
+                    size_t height)
+{
+#ifndef NDEBUG
+    // confirming to top
+    if (get_next_block(blocks, false) != height)
+        return error::store_block_invalid_height;
+
+    const auto block = blocks.get(block_hash, true);
+
+    if (!block)
+        return error::not_found;
+
+    // previous block in confirmed index is parent
+    if (get_previous_block(blocks, height, false) !=
+        block.header().previous_block_hash())
+        return error::store_block_missing_parent;
+#endif
+
+    return error::success;
+}
+    
 code verify_update(const block_database& blocks, const block& block,
     size_t height)
 {

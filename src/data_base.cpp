@@ -324,6 +324,21 @@ code data_base::reorganize(const config::checkpoint& fork_point,
     return result ? error::success : error::operation_failed;
 }
 
+code data_base::confirm(const hash_digest& block_hash,
+                        const size_t height)
+{   
+    code ec;
+
+    if ((ec = verify_confirm(*blocks_, block_hash, height)))
+        return error::operation_failed;
+    
+    // confirm
+    if (!blocks_->index(block_hash, height, false))
+        return error::operation_failed;
+    
+    return error::success;
+}
+
 // Add missing transactions for an existing block header.
 // This allows parallel write when write flushing is not enabled.
 code data_base::update(const chain::block& block, size_t height)

@@ -48,6 +48,9 @@ system::code verify_push(const block_database& blocks,
 system::code verify_push(const block_database& blocks,
     const system::chain::block& block, size_t height);
 
+system::code verify_confirm(const block_database& blocks,
+    const system::hash_digest& block_hash,size_t height);
+
 system::code verify_update(const block_database& blocks,
     const system::chain::block& block, size_t height);
 

@@ -1021,4 +1021,128 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__confirmed___success)
    test_block_not_exists(instance, *block3_ptr, settings.index_addresses);
 }
 
+/// Confirm
+
+BOOST_AUTO_TEST_CASE(data_base__confirm__not_existing___fails)
+{
+    create_directory(DIRECTORY);
+    database::settings settings;
+    settings.directory = DIRECTORY;
+    settings.index_addresses = false;
+    settings.flush_writes = false;
+    settings.file_growth_rate = 42;
+    settings.block_table_buckets = 42;
+    settings.transaction_table_buckets = 42;
+    settings.address_table_buckets = 42;
+
+    data_base_accessor instance(settings);
+
+    static const auto bc_settings = bc::settings(bc::config::settings::mainnet);
+    const chain::block genesis = bc_settings.genesis_block;
+    BOOST_REQUIRE(instance.create(genesis));
+
+    const auto block1 = read_block(MAINNET_BLOCK1);
+    store_block_transactions(instance, block1, 1);
+
+    // setup ends
+
+    BOOST_REQUIRE_EQUAL(instance.confirm(block1.hash(), 1), error::operation_failed);
+
+    // test conditions
+
+    test_heights(instance, 0u, 0u);
+}
+
+BOOST_AUTO_TEST_CASE(data_base__confirm__incorrect_height___fails)
+{
+   create_directory(DIRECTORY);
+   database::settings settings;
+   settings.directory = DIRECTORY;
+   settings.index_addresses = false;
+   settings.flush_writes = false;
+   settings.file_growth_rate = 42;
+   settings.block_table_buckets = 42;
+   settings.transaction_table_buckets = 42;
+   settings.address_table_buckets = 42;
+
+   data_base_accessor instance(settings);
+
+   static const auto bc_settings = bc::settings(bc::config::settings::mainnet);
+   const chain::block genesis = bc_settings.genesis_block;
+   BOOST_REQUIRE(instance.create(genesis));
+
+   const auto block1 = read_block(MAINNET_BLOCK1);
+   store_block_transactions(instance, block1, 1);
+
+   BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
+   BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
+   test_heights(instance, 1u, 0u);
+
+   // setup ends
+
+   BOOST_REQUIRE_EQUAL(instance.confirm(block1.hash(), 2), error::operation_failed);
+}
+
+BOOST_AUTO_TEST_CASE(data_base__confirm__missing_parent___fails)
+{
+   create_directory(DIRECTORY);
+   database::settings settings;
+   settings.directory = DIRECTORY;
+   settings.index_addresses = false;
+   settings.flush_writes = false;
+   settings.file_growth_rate = 42;
+   settings.block_table_buckets = 42;
+   settings.transaction_table_buckets = 42;
+   settings.address_table_buckets = 42;
+
+   data_base_accessor instance(settings);
+
+   static const auto bc_settings = bc::settings(bc::config::settings::mainnet);
+   const chain::block genesis = bc_settings.genesis_block;
+   BOOST_REQUIRE(instance.create(genesis));
+
+   auto block1 = read_block(MAINNET_BLOCK1);
+   store_block_transactions(instance, block1, 1);
+   block1.set_header(chain::header{});
+
+   // setup ends
+
+   BOOST_REQUIRE_EQUAL(instance.confirm(block1.hash(), 1), error::operation_failed);
+}
+
+BOOST_AUTO_TEST_CASE(data_base__confirm__already_candidated___success)
+{
+   create_directory(DIRECTORY);
+   database::settings settings;
+   settings.directory = DIRECTORY;
+   settings.index_addresses = false;
+   settings.flush_writes = false;
+   settings.file_growth_rate = 42;
+   settings.block_table_buckets = 42;
+   settings.transaction_table_buckets = 42;
+   settings.address_table_buckets = 42;
+
+   data_base_accessor instance(settings);
+
+   static const auto bc_settings = bc::settings(bc::config::settings::mainnet);
+   const chain::block genesis = bc_settings.genesis_block;
+   BOOST_REQUIRE(instance.create(genesis));
+
+   const auto block1 = read_block(MAINNET_BLOCK1);
+   store_block_transactions(instance, block1, 1);
+
+   BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
+   BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
+   test_heights(instance, 1u, 0u);
+
+   // setup ends
+
+   BOOST_REQUIRE_EQUAL(instance.confirm(block1.hash(), 1), error::success);
+
+   // test conditions
+
+   test_heights(instance, 1u, 1u);
+   BOOST_REQUIRE(instance.blocks().get(1, false).hash() == block1.hash());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

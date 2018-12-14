@@ -111,6 +111,11 @@ public:
         system::block_const_ptr_list_const_ptr incoming,
         system::block_const_ptr_list_ptr outgoing);
 
+    // BLOCK ORGANIZER (confirm)
+    /// Confirm a block that is already in candidate index and parent
+    /// is already confirmed
+    code confirm(const hash_digest& block_hash, const size_t height);
+    
     // TRANSACTION ORGANIZER (store)
     /// Store unconfirmed tx/payments that was verified with the given forks.
     system::code store(const system::chain::transaction& tx, uint32_t forks);
