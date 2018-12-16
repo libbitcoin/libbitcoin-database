@@ -163,7 +163,7 @@ code verify_confirm(const block_database& blocks, const hash_digest& block_hash,
     if (get_next_block(blocks, false) != height)
         return error::store_block_invalid_height;
 
-    const auto block = blocks.get(block_hash, true);
+    const auto block = blocks.get(block_hash);
 
     if (!block)
         return error::not_found;
