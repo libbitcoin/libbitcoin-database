@@ -25,7 +25,7 @@
 #include <memory>
 #include <utility>
 #include <boost/filesystem.hpp>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/result/block_result.hpp>
 #include <bitcoin/database/settings.hpp>
@@ -37,9 +37,10 @@ namespace database {
 
 using namespace std::placeholders;
 using namespace boost::filesystem;
-using namespace bc::chain;
-using namespace bc::machine;
-using namespace bc::wallet;
+using namespace bc::system;
+using namespace bc::system::chain;
+using namespace bc::system::machine;
+using namespace bc::system::wallet;
 
 #define NAME "data_base"
 

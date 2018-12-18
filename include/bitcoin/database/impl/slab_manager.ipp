@@ -20,7 +20,7 @@
 #define LIBBITCOIN_DATABASE_SLAB_MANAGER_IPP
 
 #include <cstddef>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
@@ -47,7 +47,7 @@ bool slab_manager<Link>::create()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    system::unique_lock lock(mutex_);
 
     // Existing slabs size is incorrect for new file.
     if (payload_size_ != sizeof(Link))
@@ -65,7 +65,7 @@ bool slab_manager<Link>::start()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    system::unique_lock lock(mutex_);
 
     read_size();
     const auto minimum = header_size_ + payload_size_;
@@ -80,7 +80,7 @@ void slab_manager<Link>::commit()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    system::unique_lock lock(mutex_);
     write_size();
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -90,7 +90,7 @@ size_t slab_manager<Link>::payload_size() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    shared_lock lock(mutex_);
+    system::shared_lock lock(mutex_);
     return payload_size_;
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -102,7 +102,7 @@ Link slab_manager<Link>::allocate(size_t size)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    system::unique_lock lock(mutex_);
 
     // Always write after the last slab.
     const auto next_slab_position = payload_size_;
@@ -141,7 +141,7 @@ void slab_manager<Link>::read_size()
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     memory->increment(header_size_);
-    auto deserial = make_unsafe_deserializer(memory->buffer());
+    auto deserial = system::make_unsafe_deserializer(memory->buffer());
     payload_size_ = deserial.template read_little_endian<Link>();
 }
 
@@ -154,7 +154,7 @@ void slab_manager<Link>::write_size() const
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     memory->increment(header_size_);
-    auto serial = make_unsafe_serializer(memory->buffer());
+    auto serial = system::make_unsafe_serializer(memory->buffer());
     serial.template write_little_endian<Link>(payload_size_);
 }
 

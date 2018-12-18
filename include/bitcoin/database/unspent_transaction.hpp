@@ -24,7 +24,7 @@
 #include <memory>
 #include <unordered_map>
 #include <boost/functional/hash_fwd.hpp>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -34,7 +34,7 @@ namespace database {
 class BCD_API unspent_transaction
 {
 public:
-    typedef std::unordered_map<uint32_t, chain::output> output_map;
+    typedef std::unordered_map<uint32_t, system::chain::output> output_map;
     typedef std::shared_ptr<output_map> output_map_ptr;
 
     // Move/copy constructors.
@@ -42,17 +42,17 @@ public:
     unspent_transaction(const unspent_transaction& other);
 
     /// Constructors.
-    explicit unspent_transaction(const hash_digest& hash);
-    explicit unspent_transaction(const chain::output_point& point);
-    explicit unspent_transaction(const chain::transaction& tx, size_t height,
-        uint32_t median_time_past, bool confirmed);
+    explicit unspent_transaction(const system::hash_digest& hash);
+    explicit unspent_transaction(const system::chain::output_point& point);
+    explicit unspent_transaction(const system::chain::transaction& tx,
+        size_t height, uint32_t median_time_past, bool confirmed);
 
     /// Properties.
     size_t height() const;
     uint32_t median_time_past() const;
     bool is_coinbase() const;
     bool is_confirmed() const;
-    const hash_digest& hash() const;
+    const system::hash_digest& hash() const;
 
     /// Access to outputs is mutable and unprotected (not thread safe).
     output_map_ptr outputs() const;
@@ -69,7 +69,7 @@ private:
     uint32_t median_time_past_;
     bool is_coinbase_;
     bool is_confirmed_;
-    hash_digest hash_;
+    system::hash_digest hash_;
 
     // This is not thead safe and is publicly reachable.
     // The outputs can be changed without affecting the bimapping.
@@ -91,7 +91,7 @@ struct hash<bc::database::unspent_transaction>
 {
     size_t operator()(const bc::database::unspent_transaction& unspent) const
     {
-        return boost::hash<bc::hash_digest>()(unspent.hash());
+        return boost::hash<bc::system::hash_digest>()(unspent.hash());
     }
 };
 

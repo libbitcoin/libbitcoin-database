@@ -20,7 +20,7 @@
 #define LIBBITCOIN_DATABASE_SLAB_MANAGER_HPP
 
 #include <cstddef>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/storage.hpp>
@@ -33,7 +33,7 @@ namespace database {
 /// track of the current end pointer so new slabs can be allocated.
 template <typename Link>
 class slab_manager
-  : noncopyable
+  : system::noncopyable
 {
 public:
     // This cast is a VC++ workaround is OK because Link must be unsigned.
@@ -73,7 +73,7 @@ private:
 
     // Payload size is protected by mutex.
     size_t payload_size_;
-    mutable shared_mutex mutex_;
+    mutable system::shared_mutex mutex_;
 };
 
 } // namespace database

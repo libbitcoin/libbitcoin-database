@@ -25,7 +25,7 @@
 #include <boost/bimap.hpp>
 #include <boost/bimap/set_of.hpp>
 #include <boost/bimap/unordered_set_of.hpp>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/unspent_transaction.hpp>
 
@@ -35,7 +35,7 @@ namespace database {
 /// This class is thread safe.
 /// A circular-by-age hash table of [point, output].
 class BCD_API unspent_outputs
-  : noncopyable
+  : system::noncopyable
 {
 public:
     // Construct a cache with the specified transaction count limit.
@@ -54,17 +54,17 @@ public:
     float hit_rate() const;
 
     /// Add outputs to cache, unconfirmed height is forks (purges matching tx).
-    void add(const chain::transaction& tx, size_t height,
+    void add(const system::chain::transaction& tx, size_t height,
         uint32_t median_time_past, bool confirmed);
 
     /// Remove outputs from the cache (tx has been reorganized out).
-    void remove(const hash_digest& tx_hash);
+    void remove(const system::hash_digest& tx_hash);
 
     /// Remove one output from the cache (has been confirmed spent).
-    void remove(const chain::output_point& point);
+    void remove(const system::chain::output_point& point);
 
     /// Populate output if cached/unspent relative to fork height.
-    bool populate(const chain::output_point& point,
+    bool populate(const system::chain::output_point& point,
         size_t fork_height=max_size_t) const;
 
 private:
@@ -82,7 +82,7 @@ private:
     // These are protected by mutex.
     uint32_t sequence_;
     unspent_transactions unspent_;
-    mutable upgrade_mutex mutex_;
+    mutable system::upgrade_mutex mutex_;
 };
 
 } // namespace database

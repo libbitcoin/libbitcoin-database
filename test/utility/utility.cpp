@@ -28,6 +28,7 @@
 
 using namespace bc;
 using namespace bc::database;
+using namespace bc::system;
 using namespace boost::filesystem;
 using namespace boost::system;
 
@@ -35,7 +36,7 @@ namespace test {
 
 bool create(const path& file_path)
 {
-    bc::ofstream file(file_path.string());
+    system::ofstream file(file_path.string());
 
     if (!file.good())
         return false;
@@ -46,7 +47,7 @@ bool create(const path& file_path)
 
 bool exists(const path& file_path)
 {
-    bc::ifstream file(file_path.string());
+    system::ifstream file(file_path.string());
     return file.good();
 }
 

@@ -24,7 +24,7 @@
 #include <functional>
 #include <memory>
 #include <boost/filesystem.hpp>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/databases/address_database.hpp>
 #include <bitcoin/database/databases/block_database.hpp>
@@ -41,7 +41,7 @@ class BCD_API data_base
   : public store
 {
 public:
-    typedef std::function<void(const code&)> result_handler;
+    typedef std::function<void(const system::code&)> result_handler;
 
     data_base(const settings& settings);
 
@@ -49,7 +49,7 @@ public:
     // ------------------------------------------------------------------------
 
     /// Create and open all databases.
-    bool create(const chain::block& genesis);
+    bool create(const system::chain::block& genesis);
 
     // Expose polymorphic create method from base.
     using store::create;
@@ -79,44 +79,45 @@ public:
 
     // INITCHAIN (genesis)
     /// Push the block through candidacy and confirmation, without indexing.
-    code push(const chain::block& block, size_t height=0,
+    system::code push(const system::chain::block& block, size_t height=0,
         uint32_t median_time_past=0);
 
     // HEADER ORGANIZER (reorganize)
     /// Reorganize the header index to the specified fork point.
-    code reorganize(const config::checkpoint& fork_point,
-        header_const_ptr_list_const_ptr incoming,
-        header_const_ptr_list_ptr outgoing);
+    system::code reorganize(const system::config::checkpoint& fork_point,
+        system::header_const_ptr_list_const_ptr incoming,
+        system::header_const_ptr_list_ptr outgoing);
 
     // BLOCK ORGANIZER (update)
     /// Update the stored block with txs.
-    code update(const chain::block& block, size_t height);
+    system::code update(const system::chain::block& block, size_t height);
 
     // BLOCK ORGANIZER (update, invalidate)
     /// Set header validation state and metadata.
-    code invalidate(const chain::header& header, const code& error);
+    system::code invalidate(const system::chain::header& header,
+        const system::code& error);
 
     // BLOCK ORGANIZER (candidate)
     /// Mark candidate block, txs and outputs spent by them as candidate.
-    code candidate(const chain::block& block);
+    system::code candidate(const system::chain::block& block);
 
     // BLOCK ORGANIZER (candidate)
     /// Add payments of transactions of the block to the payment index.
-    code index(const chain::block& block);
+    system::code index(const system::chain::block& block);
 
     // BLOCK ORGANIZER (reorganize)
     /// Reorganize the block index to the specified fork point.
-    code reorganize(const config::checkpoint& fork_point,
-        block_const_ptr_list_const_ptr incoming,
-        block_const_ptr_list_ptr outgoing);
+    system::code reorganize(const system::config::checkpoint& fork_point,
+        system::block_const_ptr_list_const_ptr incoming,
+        system::block_const_ptr_list_ptr outgoing);
 
     // TRANSACTION ORGANIZER (store)
     /// Store unconfirmed tx/payments that was verified with the given forks.
-    code store(const chain::transaction& tx, uint32_t forks);
+    system::code store(const system::chain::transaction& tx, uint32_t forks);
 
     // TRANSACTION ORGANIZER (store)
     /// Add payments of the transaction to the payment index.
-    code index(const chain::transaction& tx);
+    system::code index(const system::chain::transaction& tx);
 
 protected:
     void start();
@@ -126,23 +127,23 @@ protected:
     // Header reorganization.
     // ------------------------------------------------------------------------
 
-    bool push_all(header_const_ptr_list_const_ptr headers,
-        const config::checkpoint& fork_point);
-    bool pop_above(header_const_ptr_list_ptr headers,
-        const config::checkpoint& fork_point);
-    code push_header(const chain::header& header, size_t height,
+    bool push_all(system::header_const_ptr_list_const_ptr headers,
+        const system::config::checkpoint& fork_point);
+    bool pop_above(system::header_const_ptr_list_ptr headers,
+        const system::config::checkpoint& fork_point);
+    system::code push_header(const system::chain::header& header, size_t height,
         uint32_t median_time_past);
-    code pop_header(chain::header& out_header, size_t height);
+    system::code pop_header(system::chain::header& out_header, size_t height);
 
     // Block reorganization.
     // ------------------------------------------------------------------------
 
-    bool push_all(block_const_ptr_list_const_ptr blocks,
-        const config::checkpoint& fork_point);
-    bool pop_above(block_const_ptr_list_ptr headers,
-        const config::checkpoint& fork_point);
-    code push_block(const chain::block& block, size_t height);
-    code pop_block(chain::block& out_block, size_t height);
+    bool push_all(system::block_const_ptr_list_const_ptr blocks,
+        const system::config::checkpoint& fork_point);
+    bool pop_above(system::block_const_ptr_list_ptr headers,
+        const system::config::checkpoint& fork_point);
+    system::code push_block(const system::chain::block& block, size_t height);
+    system::code pop_block(system::chain::block& out_block, size_t height);
 
 
     // Databases.
@@ -153,13 +154,14 @@ protected:
     std::shared_ptr<address_database> addresses_;
 
 private:
-    chain::transaction::list to_transactions(const block_result& result) const;
+    system::chain::transaction::list to_transactions(
+        const block_result& result) const;
 
     std::atomic<bool> closed_;
     const settings& settings_;
 
     // Used to prevent unsafe concurrent writes.
-    mutable shared_mutex write_mutex_;
+    mutable system::shared_mutex write_mutex_;
 };
 
 } // namespace database

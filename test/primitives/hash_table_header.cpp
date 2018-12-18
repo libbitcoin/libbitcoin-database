@@ -25,6 +25,7 @@
 
 using namespace bc;
 using namespace bc::database;
+using namespace bc::system;
 
 BOOST_AUTO_TEST_SUITE(hash_table_header_tests)
 

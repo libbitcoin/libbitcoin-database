@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_IPP
 #define LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_IPP
 
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
@@ -63,7 +63,7 @@ bool hash_table_header<Index, Link>::create()
     memset(memory->buffer(), (uint8_t)empty, file_size);
 
     // Overwrite the start of the buffer with the bucket count.
-    auto serial = make_unsafe_serializer(memory->buffer());
+    auto serial = system::make_unsafe_serializer(memory->buffer());
     serial.template write_little_endian<Index>(buckets_);
     return true;
 }
@@ -79,7 +79,7 @@ bool hash_table_header<Index, Link>::start()
     const auto memory = file_.access();
 
     // Does not require atomicity (no concurrency during start).
-    auto deserial = make_unsafe_deserializer(memory->buffer());
+    auto deserial = system::make_unsafe_deserializer(memory->buffer());
     return deserial.template read_little_endian<Index>() == buckets_;
 }
 
@@ -91,11 +91,11 @@ Link hash_table_header<Index, Link>::read(Index index) const
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     memory->increment(link(index));
-    auto deserial = make_unsafe_deserializer(memory->buffer());
+    auto deserial = system::make_unsafe_deserializer(memory->buffer());
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    shared_lock lock(mutex_);
+    system::shared_lock lock(mutex_);
     return deserial.template read_little_endian<Link>();
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -108,11 +108,11 @@ void hash_table_header<Index, Link>::write(Index index, Link value)
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     memory->increment(link(index));
-    auto serial = make_unsafe_serializer(memory->buffer());
+    auto serial = system::make_unsafe_serializer(memory->buffer());
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    system::unique_lock lock(mutex_);
     serial.template write_little_endian<Link>(value);
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -139,7 +139,7 @@ size_t hash_table_header<Index, Link>::size(Index buckets)
     //  [ [ row[0]           ] ]
     //  [ [      ...         ] ]
     //  [ [ row[buckets - 1] ] ] <=
-    //  
+    //
     return link(buckets);
 }
 

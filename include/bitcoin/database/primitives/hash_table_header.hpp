@@ -20,7 +20,7 @@
 #define LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_HPP
 
 #include <functional>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
@@ -36,7 +36,7 @@ namespace database {
 ///
 template <typename Index, typename Link>
 class hash_table_header
-  : noncopyable
+  : system::noncopyable
 {
 public:
     /// A hash of the key reduced to the domain of the divisor.
@@ -76,7 +76,7 @@ private:
 
     storage& file_;
     Index buckets_;
-    mutable shared_mutex mutex_;
+    mutable system::shared_mutex mutex_;
 };
 
 } // namespace database

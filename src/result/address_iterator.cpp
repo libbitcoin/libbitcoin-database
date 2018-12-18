@@ -21,7 +21,8 @@
 namespace libbitcoin {
 namespace database {
 
-using namespace bc::chain;
+using namespace bc::system;
+using namespace bc::system::chain;
 
 address_iterator::address_iterator(const const_element& element)
   : element_(element)

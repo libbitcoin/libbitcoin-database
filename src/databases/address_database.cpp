@@ -22,7 +22,7 @@
 #include <cstddef>
 #include <tuple>
 #include <utility>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_multimap.hpp>
 
@@ -37,7 +37,8 @@
 namespace libbitcoin {
 namespace database {
 
-using namespace bc::chain;
+using namespace bc::system;
+using namespace bc::system::chain;
 
 // Total size of address storage (using tx link vs. hash for point).
 static const auto value_size = payment_record::satoshi_fixed_size(false);

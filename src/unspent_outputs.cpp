@@ -19,12 +19,13 @@
 #include <bitcoin/database/unspent_outputs.hpp>
 
 #include <cstddef>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-using namespace bc::chain;
+using namespace bc::system;
+using namespace bc::system::chain;
 
 // This does not differentiate indexed-block transactions. These are treated as
 // unconfirmed, so this optimizes only for a top height fork point and tx pool.

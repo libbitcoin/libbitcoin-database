@@ -21,7 +21,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <boost/filesystem.hpp>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/result/transaction_result.hpp>
@@ -29,8 +29,9 @@
 namespace libbitcoin {
 namespace database {
 
-using namespace bc::chain;
-using namespace bc::machine;
+using namespace bc::system;
+using namespace bc::system::chain;
+using namespace bc::system::machine;
 
 // Record format (v4):
 // ----------------------------------------------------------------------------

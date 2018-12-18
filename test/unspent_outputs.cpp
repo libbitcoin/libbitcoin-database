@@ -21,8 +21,9 @@
 #include <bitcoin/database.hpp>
 
 using namespace bc;
-using namespace bc::chain;
 using namespace bc::database;
+using namespace bc::system;
+using namespace bc::system::chain;
 
 BOOST_AUTO_TEST_SUITE(unspent_outputs_tests)
 

@@ -107,28 +107,28 @@ endif()
 set( boost_CPPFLAGS "-I${Boost_INCLUDE_DIR}" )
 set( boost_LDFLAGS "-L${Boost_LIBRARY_DIR}" )
 
-# Find bitcoin
+# Find bitcoin-system
 #------------------------------------------------------------------------------
-find_package( Bitcoin 4.0.0 REQUIRED )
+find_package( Bitcoin-System 4.0.0 REQUIRED )
 
 # Define project common includes directories
 #------------------------------------------------------------------------------
 if (BUILD_SHARED_LIBS)
     include_directories( SYSTEM
-        ${bitcoin_INCLUDE_DIRS} )
+        ${bitcoin_system_INCLUDE_DIRS} )
 else()
     include_directories( SYSTEM
-        ${bitcoin_STATIC_INCLUDE_DIRS} )
+        ${bitcoin_system_STATIC_INCLUDE_DIRS} )
 endif()
 
 # Define project common library directories
 #------------------------------------------------------------------------------
 if (BUILD_SHARED_LIBS)
     link_directories( 
-        ${bitcoin_LIBRARY_DIRS} )
+        ${bitcoin_system_LIBRARY_DIRS} )
 else()
     link_directories( 
-        ${bitcoin_STATIC_LIBRARY_DIRS} )
+        ${bitcoin_system_STATIC_LIBRARY_DIRS} )
 endif()
 
 # Define project common libraries/linker flags.
@@ -137,12 +137,12 @@ if (BUILD_SHARED_LIBS)
     link_libraries( 
         "-fstack-protector"
         "-fstack-protector-all"
-        ${bitcoin_LIBRARIES} )
+        ${bitcoin_system_LIBRARIES} )
 else()
     link_libraries( 
         "-fstack-protector"
         "-fstack-protector-all"
-        ${bitcoin_STATIC_LIBRARIES} )
+        ${bitcoin_system_STATIC_LIBRARIES} )
 endif()
 
 # Define ${CANONICAL_LIB_NAME} project.
@@ -173,11 +173,11 @@ add_library( ${CANONICAL_LIB_NAME}
 if (BUILD_SHARED_LIBS)
     target_include_directories( ${CANONICAL_LIB_NAME} PRIVATE
         "../../include"
-        ${bitcoin_INCLUDE_DIRS} )
+        ${bitcoin_system_INCLUDE_DIRS} )
 else()
     target_include_directories( ${CANONICAL_LIB_NAME} PRIVATE
         "../../include"
-        ${bitcoin_STATIC_INCLUDE_DIRS} )
+        ${bitcoin_system_STATIC_INCLUDE_DIRS} )
 endif()
 
 target_include_directories( ${CANONICAL_LIB_NAME} PUBLIC
@@ -187,10 +187,10 @@ target_include_directories( ${CANONICAL_LIB_NAME} PUBLIC
 #------------------------------------------------------------------------------
 if (BUILD_SHARED_LIBS)
     target_link_libraries( ${CANONICAL_LIB_NAME}
-        ${bitcoin_LIBRARIES} )
+        ${bitcoin_system_LIBRARIES} )
 else()
     target_link_libraries( ${CANONICAL_LIB_NAME}
-        ${bitcoin_STATIC_LIBRARIES} )
+        ${bitcoin_system_STATIC_LIBRARIES} )
 endif()
 
 # Define libbitcoin-database-test project.

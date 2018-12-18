@@ -23,6 +23,7 @@
 
 using namespace bc;
 using namespace bc::database;
+using namespace bc::system;
 
 // Test directory
 #define DIRECTORY "file_storage"

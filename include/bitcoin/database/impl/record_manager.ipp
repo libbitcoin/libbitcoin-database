@@ -20,7 +20,7 @@
 #define LIBBITCOIN_DATABASE_RECORD_MANAGER_IPP
 
 #include <cstddef>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
@@ -49,7 +49,7 @@ bool record_manager<Link>::create()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    system::unique_lock lock(mutex_);
 
     // Existing file record count is nonzero.
     if (record_count_ != 0)
@@ -67,7 +67,7 @@ bool record_manager<Link>::start()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    system::unique_lock lock(mutex_);
 
     read_count();
     const auto minimum = header_size_ + link_to_position(record_count_);
@@ -82,7 +82,7 @@ void record_manager<Link>::commit()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    system::unique_lock lock(mutex_);
     write_count();
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -92,7 +92,7 @@ Link record_manager<Link>::count() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    shared_lock lock(mutex_);
+    system::shared_lock lock(mutex_);
     return record_count_;
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -102,7 +102,7 @@ void record_manager<Link>::set_count(Link value)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    system::unique_lock lock(mutex_);
     BITCOIN_ASSERT(value <= record_count_);
     record_count_ = value;
     ///////////////////////////////////////////////////////////////////////////
@@ -115,7 +115,7 @@ Link record_manager<Link>::allocate(size_t count)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    system::unique_lock lock(mutex_);
 
     // Always write after the last index.
     const auto next_record_index = record_count_;
@@ -154,7 +154,7 @@ void record_manager<Link>::read_count()
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     memory->increment(header_size_);
-    auto deserial = make_unsafe_deserializer(memory->buffer());
+    auto deserial = system::make_unsafe_deserializer(memory->buffer());
     record_count_ = deserial.template read_little_endian<Link>();
 }
 
@@ -167,7 +167,7 @@ void record_manager<Link>::write_count()
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     memory->increment(header_size_);
-    auto serial = make_unsafe_serializer(memory->buffer());
+    auto serial = system::make_unsafe_serializer(memory->buffer());
     serial.template write_little_endian<Link>(record_count_);
 }
 

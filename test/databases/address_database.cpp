@@ -25,8 +25,9 @@
 using namespace boost::system;
 using namespace boost::filesystem;
 using namespace bc;
-using namespace bc::chain;
 using namespace bc::database;
+using namespace bc::system;
+using namespace bc::system::chain;
 
 #define DIRECTORY "address_database"
 

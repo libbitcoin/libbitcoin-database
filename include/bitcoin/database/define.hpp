@@ -23,7 +23,7 @@
 #include <cstdint>
 #include <tuple>
 #include <vector>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 
 // Now we use the generic helper definitions in libbitcoin to
 // define BCD_API and BCD_INTERNAL.
@@ -51,8 +51,8 @@ namespace database {
 typedef uint32_t array_index;
 typedef uint64_t file_offset;
 typedef std::vector<file_offset> link_list;
-typedef bc::serializer<uint8_t*> byte_serializer;
-typedef bc::deserializer<uint8_t*, false> byte_deserializer;
+typedef bc::system::serializer<uint8_t*> byte_serializer;
+typedef bc::system::deserializer<uint8_t*, false> byte_deserializer;
 typedef std::array<uint8_t, 0> empty_key;
 static_assert(std::tuple_size<empty_key>::value == 0, "non-empty empty key");
 

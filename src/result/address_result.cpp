@@ -19,13 +19,15 @@
 #include <bitcoin/database/result/address_result.hpp>
 
 #include <cstdint>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/result/address_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
+
+using namespace bc::system;
 
 address_result::address_result(const const_value_type& element,
     const short_hash& hash)

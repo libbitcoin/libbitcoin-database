@@ -64,7 +64,7 @@ hash_table_multimap<Index, Link, Key>::find(const Key& key) const
     {
         // Critical Section.
         ///////////////////////////////////////////////////////////////////////
-        shared_lock lock(root_mutex_);
+        system::shared_lock lock(root_mutex_);
         first = deserial.template read_little_endian<Link>();
         ///////////////////////////////////////////////////////////////////////
     };
@@ -87,7 +87,7 @@ hash_table_multimap<Index, Link, Key>::find(Link link) const
     {
         // Critical Section.
         ///////////////////////////////////////////////////////////////////////
-        shared_lock lock(root_mutex_);
+        system::shared_lock lock(root_mutex_);
         first = deserial.template read_little_endian<Link>();
         ///////////////////////////////////////////////////////////////////////
     };

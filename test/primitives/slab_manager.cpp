@@ -23,6 +23,7 @@
 
 using namespace bc;
 using namespace bc::database;
+using namespace bc::system;
 
 BOOST_AUTO_TEST_SUITE(slab_manager_tests)
 

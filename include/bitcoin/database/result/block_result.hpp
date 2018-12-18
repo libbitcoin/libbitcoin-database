@@ -21,7 +21,7 @@
 
 #include <cstdint>
 #include <cstddef>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/list_element.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
@@ -36,29 +36,29 @@ namespace database {
 class BCD_API block_result
 {
 public:
-    typedef hash_digest key_type;
+    typedef system::hash_digest key_type;
     typedef array_index link_type;
     typedef record_manager<link_type> manager;
     typedef list_element<const manager, link_type, key_type>
         const_element_type;
 
     block_result(const const_element_type& element,
-        shared_mutex& metadata_mutex, const manager& index_manager);
+        system::shared_mutex& metadata_mutex, const manager& index_manager);
 
     /// True if the requested block exists.
     operator bool() const;
 
     /// An error code if block state is invalid (otherwise error::success).
-    code error() const;
+    system::code error() const;
 
     /// The link for the block slab.
     array_index link() const;
 
     /// The block header hash (from cache).
-    hash_digest hash() const;
+    system::hash_digest hash() const;
 
     /// The block header.
-    const chain::header& header() const;
+    const system::chain::header& header() const;
 
     /// The header.bits of this block.
     uint32_t bits() const;
@@ -89,7 +89,7 @@ public:
     transaction_iterator end() const;
 
 private:
-    chain::header header_;
+    system::chain::header header_;
     uint32_t median_time_past_;
     uint32_t height_;
     uint8_t state_;
@@ -102,7 +102,7 @@ private:
     const manager& index_manager_;
 
     // Metadata values are kept consistent by mutex.
-    shared_mutex& metadata_mutex_;
+    system::shared_mutex& metadata_mutex_;
 };
 
 } // namespace database

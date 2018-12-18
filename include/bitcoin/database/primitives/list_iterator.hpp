@@ -21,7 +21,7 @@
 
 #include <iterator>
 #include <utility>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/list_element.hpp>
 
@@ -46,7 +46,7 @@ public:
     list_iterator(value_type element);
 
     /// Create a storage iterator starting at first.
-    list_iterator(Manager& manager, Link first, shared_mutex& mutex);
+    list_iterator(Manager& manager, Link first, system::shared_mutex& mutex);
 
     list_iterator& operator++();
     list_iterator operator++(int);

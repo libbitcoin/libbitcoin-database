@@ -20,11 +20,13 @@
 
 #include <cstdint>
 #include <cstddef>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
+
+using namespace bc::system;
 
 accessor::accessor(upgrade_mutex& mutex)
   : mutex_(mutex), data_(nullptr)

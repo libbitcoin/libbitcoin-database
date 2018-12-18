@@ -24,10 +24,11 @@ namespace libbitcoin {
 namespace database {
 
 using namespace boost::filesystem;
+using namespace bc::system;
 
 settings::settings()
   : directory("blockchain"),
-  
+
     index_addresses(true),
     flush_writes(false),
     file_growth_rate(5),

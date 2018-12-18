@@ -29,8 +29,8 @@ class storage
 {
 public:
     storage();
-    storage(bc::data_chunk&& initial);
-    storage(const bc::data_chunk& initial);
+    storage(bc::system::data_chunk&& initial);
+    storage(const bc::system::data_chunk& initial);
     ~storage();
 
     bool open();
@@ -44,8 +44,8 @@ public:
 
 private:
     bool closed_;
-    bc::data_chunk buffer_;
-    mutable bc::upgrade_mutex mutex_;
+    bc::system::data_chunk buffer_;
+    mutable bc::system::upgrade_mutex mutex_;
 };
 
 }
