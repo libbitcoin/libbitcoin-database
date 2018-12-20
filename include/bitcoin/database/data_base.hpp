@@ -25,7 +25,6 @@
 #include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/system.hpp>
-#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/databases/address_database.hpp>
 #include <bitcoin/database/databases/block_database.hpp>
 #include <bitcoin/database/databases/transaction_database.hpp>
@@ -112,9 +111,9 @@ public:
         system::block_const_ptr_list_ptr outgoing);
 
     // BLOCK ORGANIZER (confirm)
-    /// Confirm a block that is already in candidate index and parent
-    /// is already confirmed
-    code confirm(const hash_digest& block_hash, const size_t height);
+    /// Confirm candidate block with confirmed parent.
+    system::code confirm(const system::hash_digest& block_hash,
+        const size_t height);
     
     // TRANSACTION ORGANIZER (store)
     /// Store unconfirmed tx/payments that was verified with the given forks.

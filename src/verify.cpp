@@ -156,7 +156,7 @@ code verify_push(const block_database& blocks, const block& block,
 }
 
 code verify_confirm(const block_database& blocks, const hash_digest& block_hash,
-                    size_t height)
+    size_t height)
 {
 #ifndef NDEBUG
     // confirming to top

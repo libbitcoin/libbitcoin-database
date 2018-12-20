@@ -325,7 +325,7 @@ code data_base::reorganize(const config::checkpoint& fork_point,
 }
 
 code data_base::confirm(const hash_digest& block_hash,
-                        const size_t height)
+    const size_t height)
 {   
     code ec;
 
