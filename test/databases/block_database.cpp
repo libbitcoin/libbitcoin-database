@@ -61,8 +61,7 @@ BOOST_FIXTURE_TEST_SUITE(block_database_tests, block_database_directory_setup_fi
 BOOST_AUTO_TEST_CASE(block_database__test)
 {
     // TODO: replace.
-    static const auto settings = system::settings(
-        system::config::settings::mainnet);
+    static const auto settings = system::settings(system::config::settings::mainnet);
 
     chain::block block0 = settings.genesis_block;
     block0.set_transactions(
@@ -236,8 +235,9 @@ BOOST_AUTO_TEST_CASE(block_database__test)
 
     // no metadata for missing blocks
     instance.get_header_metadata(block4a.header());
-    BOOST_REQUIRE_EQUAL(block4b.header().metadata.candidate, block_state::missing);
-    BOOST_REQUIRE_EQUAL(block4b.header().metadata.confirmed, block_state::missing);
+
+    BOOST_REQUIRE(!block4b.header().metadata.candidate);
+    BOOST_REQUIRE(!block4b.header().metadata.confirmed);
 
     // Try a fork event.
     instance.store(block4a.header(), 4, 0);
