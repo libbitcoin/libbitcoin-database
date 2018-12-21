@@ -1115,4 +1115,131 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__already_candidated___success)
         BOOST_REQUIRE(!instance.transactions().get(offset).candidate());
 }
 
+/// update
+
+BOOST_AUTO_TEST_CASE(data_base__update__incorrect_height__fails)
+{
+    create_directory(DIRECTORY);
+    bc::database::settings settings;
+    settings.directory = DIRECTORY;
+    settings.index_addresses = false;
+    settings.flush_writes = false;
+    settings.file_growth_rate = 42;
+    settings.block_table_buckets = 42;
+    settings.transaction_table_buckets = 42;
+    settings.address_table_buckets = 42;
+
+    data_base_accessor instance(settings);
+
+    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
+
+    const auto block1 = read_block(MAINNET_BLOCK1);
+    store_block_transactions(instance, block1, 1);
+
+    BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
+    BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
+
+    // setup ends
+
+    BOOST_REQUIRE_EQUAL(instance.update(block1, 2), error::not_found);
+}
+
+BOOST_AUTO_TEST_CASE(data_base__update__new_transactions__success)
+{
+    create_directory(DIRECTORY);
+    bc::database::settings settings;
+    settings.directory = DIRECTORY;
+    settings.index_addresses = false;
+    settings.flush_writes = false;
+    settings.file_growth_rate = 42;
+    settings.block_table_buckets = 42;
+    settings.transaction_table_buckets = 42;
+    settings.address_table_buckets = 42;
+
+    data_base_accessor instance(settings);
+
+    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
+
+    auto block1 = read_block(MAINNET_BLOCK1);
+    store_block_transactions(instance, block1, 1);
+
+    BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
+    BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
+
+    transaction tx1;
+    data_chunk wire_tx1;
+    BOOST_REQUIRE(decode_base16(wire_tx1, TRANSACTION1));
+    BOOST_REQUIRE(tx1.from_data(wire_tx1));
+
+    block1.set_transactions(
+    {
+      tx1
+    });
+
+    // setup ends
+
+    BOOST_REQUIRE_EQUAL(instance.update(block1, 1), error::success);
+
+    // new transactions are not candidated
+    const auto& found = instance.transactions().get(tx1.hash());
+    BOOST_REQUIRE(found);
+    BOOST_REQUIRE(!instance.transactions().get(tx1.hash()).candidate());
+
+    // get block and check block_result can access transactions
+    const auto& block_result = instance.blocks().get(block1.hash());
+    for (const auto& offset: block_result)
+        BOOST_REQUIRE(!instance.transactions().get(offset).candidate());
+}
+
+// invalidate
+
+BOOST_AUTO_TEST_CASE(data_base__invalidate__missing_block__fails)
+{
+}
+
+BOOST_AUTO_TEST_CASE(data_base__invalidate__existing__success)
+{
+}
+
+// index block
+
+BOOST_AUTO_TEST_CASE(data_base__index__disabled__success)
+{
+}
+
+// index transactions
+
+BOOST_AUTO_TEST_CASE(data_base__index2__disabled__success)
+{
+}
+
+/// reorganize headers
+
+BOOST_AUTO_TEST_CASE(data_base__reorganize__too_many_headers__failure)
+{
+}
+
+BOOST_AUTO_TEST_CASE(data_base__reorganize__pop_and_push__success)
+{
+    // verify outgoing have right headers
+    // verify outgoing are all NOT in candidate index
+    // verify incoming are all in candidate index
+}
+
+/// reorganize blocks
+
+BOOST_AUTO_TEST_CASE(data_base__reorganize2__too_many_blocks__failure)
+{
+}
+
+BOOST_AUTO_TEST_CASE(data_base__reorganize2__pop_and_push__success)
+{
+    // verify outgoing have right blocks
+    // verify outgoing are all NOT in candidate index
+    // verify incoming are all in candidate index
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
