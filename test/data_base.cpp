@@ -1117,6 +1117,7 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__already_candidated___success)
 
 /// update
 
+#ifndef NDEBUG
 BOOST_AUTO_TEST_CASE(data_base__update__incorrect_height__fails)
 {
     create_directory(DIRECTORY);
@@ -1144,6 +1145,7 @@ BOOST_AUTO_TEST_CASE(data_base__update__incorrect_height__fails)
 
     BOOST_REQUIRE_EQUAL(instance.update(block1, 2), error::not_found);
 }
+#endif
 
 BOOST_AUTO_TEST_CASE(data_base__update__new_transactions__success)
 {
@@ -1173,10 +1175,7 @@ BOOST_AUTO_TEST_CASE(data_base__update__new_transactions__success)
     BOOST_REQUIRE(decode_base16(wire_tx1, TRANSACTION1));
     BOOST_REQUIRE(tx1.from_data(wire_tx1));
 
-    block1.set_transactions(
-    {
-      tx1
-    });
+    block1.set_transactions({ tx1 });
 
     // setup ends
 
@@ -1195,12 +1194,97 @@ BOOST_AUTO_TEST_CASE(data_base__update__new_transactions__success)
 
 // invalidate
 
-BOOST_AUTO_TEST_CASE(data_base__invalidate__missing_block__fails)
+#ifndef NDEBUG
+BOOST_AUTO_TEST_CASE(data_base__invalidate__missing_header__fails)
 {
+    create_directory(DIRECTORY);
+    bc::database::settings settings;
+    settings.directory = DIRECTORY;
+    settings.index_addresses = false;
+    settings.flush_writes = false;
+    settings.file_growth_rate = 42;
+    settings.block_table_buckets = 42;
+    settings.transaction_table_buckets = 42;
+    settings.address_table_buckets = 42;
+
+    data_base_accessor instance(settings);
+
+    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
+
+    const auto block1 = read_block(MAINNET_BLOCK1);
+
+    // setup ends
+    BOOST_REQUIRE_EQUAL(instance.invalidate(block1.header(), error::success), error::not_found);
+}
+#endif
+
+BOOST_AUTO_TEST_CASE(data_base__invalidate__validate__success)
+{
+    create_directory(DIRECTORY);
+    bc::database::settings settings;
+    settings.directory = DIRECTORY;
+    settings.index_addresses = false;
+    settings.flush_writes = false;
+    settings.file_growth_rate = 42;
+    settings.block_table_buckets = 42;
+    settings.transaction_table_buckets = 42;
+    settings.address_table_buckets = 42;
+
+    data_base_accessor instance(settings);
+
+    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
+
+    const auto block1 = read_block(MAINNET_BLOCK1);
+    store_block_transactions(instance, block1, 1);
+
+    BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
+    // BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
+    // test_heights(instance, 1u, 0u);
+
+    // setup ends
+
+    chain::header header_result = block1.header();
+    BOOST_REQUIRE_EQUAL(instance.invalidate(header_result, error::success), error::success);
+
+    BOOST_REQUIRE_EQUAL(header_result.metadata.error, error::success);
+    BOOST_REQUIRE(header_result.metadata.validated);
+    BOOST_REQUIRE((instance.blocks().get(header_result.hash()).state() & block_state::valid) != 0);
 }
 
-BOOST_AUTO_TEST_CASE(data_base__invalidate__existing__success)
+BOOST_AUTO_TEST_CASE(data_base__invalidate__invalidate__success)
 {
+    create_directory(DIRECTORY);
+    bc::database::settings settings;
+    settings.directory = DIRECTORY;
+    settings.index_addresses = false;
+    settings.flush_writes = false;
+    settings.file_growth_rate = 42;
+    settings.block_table_buckets = 42;
+    settings.transaction_table_buckets = 42;
+    settings.address_table_buckets = 42;
+
+    data_base_accessor instance(settings);
+
+    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
+
+    const auto block1 = read_block(MAINNET_BLOCK1);
+    store_block_transactions(instance, block1, 1);
+
+    BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
+    // BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
+    // test_heights(instance, 1u, 0u);
+
+    // setup ends
+
+    chain::header header_result = block1.header();
+    BOOST_REQUIRE_EQUAL(instance.invalidate(header_result, error::invalid_proof_of_work), error::success);
+
+    BOOST_REQUIRE_EQUAL(header_result.metadata.error, error::invalid_proof_of_work);
+    BOOST_REQUIRE(header_result.metadata.validated);
+    BOOST_REQUIRE((instance.blocks().get(header_result.hash()).state() & block_state::valid) == 0);
 }
 
 // index block
