@@ -1128,7 +1128,7 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__already_candidated___success)
     test_block_exists(instance, 1, block1, settings.index_addresses, false);
 
     for (const auto& offset: block_result)
-        BOOST_REQUIRE_EQUAL(instance.transactions().get(offset).candidate(), false);
+        BOOST_REQUIRE(!instance.transactions().get(offset).candidate());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
