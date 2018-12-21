@@ -331,10 +331,20 @@ code data_base::confirm(const hash_digest& block_hash,
 
     if ((ec = verify_confirm(*blocks_, block_hash, height)))
         return error::operation_failed;
+
+    const auto block = blocks().get(block_hash);
     
-    // confirm
+    // index block as confirmed
     if (!blocks_->index(block_hash, height, false))
         return error::operation_failed;
+
+    // Mark block txs as confirmed.
+    transaction::list transactions;
+    for (const auto& offset: block)
+        transactions.push_back(transactions_->get(offset).transaction());
+
+    if (!transactions_->confirm(transactions, height, block.median_time_past()))
+            return error::operation_failed;
     
     return error::success;
 }

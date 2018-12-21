@@ -1112,6 +1112,9 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__already_candidated___success)
     BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
     BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
     test_heights(instance, 1u, 0u);
+    BOOST_REQUIRE_EQUAL(instance.update(block1, 1), error::success);
+    BOOST_REQUIRE_EQUAL(block1.transactions().size(), 1);
+    BOOST_REQUIRE_EQUAL(instance.blocks().get(1, true).transaction_count(), 1);
 
     // setup ends
 
@@ -1120,7 +1123,12 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__already_candidated___success)
     // test conditions
 
     test_heights(instance, 1u, 1u);
-    BOOST_REQUIRE(instance.blocks().get(1, false).hash() == block1.hash());
+    const auto& block_result = instance.blocks().get(1, false);
+    BOOST_REQUIRE(block_result.hash() == block1.hash());
+    test_block_exists(instance, 1, block1, settings.index_addresses, false);
+
+    for (const auto& offset: block_result)
+        BOOST_REQUIRE_EQUAL(instance.transactions().get(offset).candidate(), false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
