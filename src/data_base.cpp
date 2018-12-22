@@ -325,7 +325,7 @@ code data_base::reorganize(const config::checkpoint& fork_point,
 }
 
 code data_base::confirm(const hash_digest& block_hash,
-    const size_t height)
+    size_t height)
 {   
     code ec;
 
@@ -334,7 +334,7 @@ code data_base::confirm(const hash_digest& block_hash,
 
     const auto block = blocks().get(block_hash);
     
-    // index block as confirmed
+    // Index block as confirmed.
     if (!blocks_->index(block_hash, height, false))
         return error::operation_failed;
 

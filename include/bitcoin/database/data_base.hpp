@@ -113,7 +113,7 @@ public:
     // BLOCK ORGANIZER (confirm)
     /// Confirm candidate block with confirmed parent.
     system::code confirm(const system::hash_digest& block_hash,
-        const size_t height);
+        size_t height);
     
     // TRANSACTION ORGANIZER (store)
     /// Store unconfirmed tx/payments that was verified with the given forks.

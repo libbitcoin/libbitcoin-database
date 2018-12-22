@@ -37,8 +37,8 @@ static void test_block_exists(const data_base& interface, size_t height,
 {
     const auto& address_store = interface.addresses();
     const auto block_hash = block.hash();
-    auto result = interface.blocks().get(height, candidate);
-    auto result_by_hash = interface.blocks().get(block_hash);
+    const auto result = interface.blocks().get(height, candidate);
+    const auto result_by_hash = interface.blocks().get(block_hash);
 
     BOOST_REQUIRE(result);
     BOOST_REQUIRE(result_by_hash);
@@ -237,7 +237,9 @@ static block read_block(const std::string hex)
     return result;
 }
 
-static void store_block_transactions(data_base& instance, const block& block, size_t forks) {
+static void store_block_transactions(data_base& instance, const block& block,
+    size_t forks)
+{
     for (const auto& tx: block.transactions())
         instance.store(tx, forks);
 }
@@ -305,9 +307,9 @@ public:
         return data_base::push_all(headers, fork_point);
     }
     
-    code push_header(const header& header, size_t height, uint32_t mtp)
+    code push_header(const header& header, size_t height, uint32_t median_time_past)
     {
-        return data_base::push_header(header, height, mtp);
+        return data_base::push_header(header, height, median_time_past);
     }
 
     code push_block(const block& block, size_t height)
@@ -341,19 +343,18 @@ public:
     {
         return data_base::pop_above(blocks, fork_point);
     }
-
 };
 
-static void test_heights(const data_base& instance, size_t candidate_height_in,
-    size_t confirmed_height_in)
+static void test_heights(const data_base& instance, size_t check_candidate_height,
+    size_t check_confirmed_height)
 {    
     size_t candidate_height = 0u;
     size_t confirmed_height = 0u;
     BOOST_REQUIRE(instance.blocks().top(candidate_height, true));
     BOOST_REQUIRE(instance.blocks().top(confirmed_height, false));
     
-    BOOST_REQUIRE_EQUAL(candidate_height, candidate_height_in);
-    BOOST_REQUIRE_EQUAL(confirmed_height, confirmed_height_in);   
+    BOOST_REQUIRE_EQUAL(candidate_height, check_candidate_height);
+    BOOST_REQUIRE_EQUAL(confirmed_height, check_confirmed_height);
 }
 
 BOOST_AUTO_TEST_CASE(data_base__create__block_transactions_index_interaction__success)
@@ -437,7 +438,7 @@ BOOST_AUTO_TEST_CASE(data_base__push__adds_to_blocks_and_transactions_validates_
 // BLOCK ORGANIZER tests
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(data_base__push_block__not_existing___fails)
+BOOST_AUTO_TEST_CASE(data_base__push_block__not_existing___failure)
 {
     create_directory(DIRECTORY);
     bc::database::settings settings;
@@ -466,7 +467,7 @@ BOOST_AUTO_TEST_CASE(data_base__push_block__not_existing___fails)
     test_heights(instance, 0u, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(data_base__push_block__incorrect_height___fails)
+BOOST_AUTO_TEST_CASE(data_base__push_block__incorrect_height___failure)
 {
     create_directory(DIRECTORY);
     bc::database::settings settings;
@@ -499,7 +500,7 @@ BOOST_AUTO_TEST_CASE(data_base__push_block__incorrect_height___fails)
 #endif
 }
 
-BOOST_AUTO_TEST_CASE(data_base__push_header__missing_parent___fails)
+BOOST_AUTO_TEST_CASE(data_base__push_header__missing_parent___failure)
 {
     create_directory(DIRECTORY);
     bc::database::settings settings;
@@ -564,7 +565,7 @@ BOOST_AUTO_TEST_CASE(data_base__push_block_and_update__already_candidated___succ
     test_block_exists(instance, 1, block1, settings.index_addresses, false);
 }
 
-BOOST_AUTO_TEST_CASE(data_base__pop_header_not_top___fails)
+BOOST_AUTO_TEST_CASE(data_base__pop_header_not_top___failure)
 {
     create_directory(DIRECTORY);
     bc::database::settings settings;
@@ -623,7 +624,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_header__candidate___success)
     test_heights(instance, 0u, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(data_base__pop_block_not_top___fails)
+BOOST_AUTO_TEST_CASE(data_base__pop_block_not_top___failure)
 {
     create_directory(DIRECTORY);
     bc::database::settings settings;
@@ -742,7 +743,7 @@ BOOST_AUTO_TEST_CASE(data_base__push_all_and_update__already_candidated___succes
     test_block_exists(instance, 3, *block3_ptr, settings.index_addresses, false);
 }
 
-BOOST_AUTO_TEST_CASE(data_base__pop_above_missing_forkpoint_hash___fails)
+BOOST_AUTO_TEST_CASE(data_base__pop_above_missing_forkpoint_hash___failure)
 {
     create_directory(DIRECTORY);
     bc::database::settings settings;
@@ -773,7 +774,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above_missing_forkpoint_hash___fails)
 }
 
 #ifndef NDEBUG
-BOOST_AUTO_TEST_CASE(data_base__pop_above__wrong_forkpoint_height___fails)
+BOOST_AUTO_TEST_CASE(data_base__pop_above__wrong_forkpoint_height___failure)
 {
     create_directory(DIRECTORY);
     bc::database::settings settings;
@@ -853,7 +854,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__candidated_not_confirmed___success)
     block_const_ptr block1_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK1));
     block_const_ptr block2_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK2));
     block_const_ptr block3_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK3));
-    const auto blocks_push_ptr = std::make_shared<const block_const_ptr_list>(block_const_ptr_list{block1_ptr, block2_ptr, block3_ptr });
+    const auto blocks_push_ptr = std::make_shared<const block_const_ptr_list>(block_const_ptr_list{ block1_ptr, block2_ptr, block3_ptr });
     store_block_transactions(instance, *block1_ptr, 1);
     store_block_transactions(instance, *block2_ptr, 1);
     store_block_transactions(instance, *block3_ptr, 1);
@@ -886,7 +887,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__candidated_not_confirmed___success)
 }
 
 #ifndef NDEBUG
-BOOST_AUTO_TEST_CASE(data_base__pop_above2__wrong_forkpoint_height___fails)
+BOOST_AUTO_TEST_CASE(data_base__pop_above2__wrong_forkpoint_height___failure)
 {
     create_directory(DIRECTORY);
     bc::database::settings settings;
@@ -1005,7 +1006,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__confirmed___success)
 
 /// Confirm
 
-BOOST_AUTO_TEST_CASE(data_base__confirm__not_existing___fails)
+BOOST_AUTO_TEST_CASE(data_base__confirm__not_existing___failure)
 {
     create_directory(DIRECTORY);
     bc::database::settings settings;
@@ -1034,7 +1035,7 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__not_existing___fails)
     test_heights(instance, 0u, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(data_base__confirm__incorrect_height___fails)
+BOOST_AUTO_TEST_CASE(data_base__confirm__incorrect_height___failure)
 {
     create_directory(DIRECTORY);
     bc::database::settings settings;
@@ -1063,7 +1064,7 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__incorrect_height___fails)
     BOOST_REQUIRE_EQUAL(instance.confirm(block1.hash(), 2), error::operation_failed);
 }
 
-BOOST_AUTO_TEST_CASE(data_base__confirm__missing_parent___fails)
+BOOST_AUTO_TEST_CASE(data_base__confirm__missing_parent___failure)
 {
     create_directory(DIRECTORY);
     bc::database::settings settings;
