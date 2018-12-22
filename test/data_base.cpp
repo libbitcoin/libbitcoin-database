@@ -297,17 +297,20 @@ public:
     {
     }
 
-    bool push_all(block_const_ptr_list_const_ptr blocks, const config::checkpoint& fork_point)
+    bool push_all(block_const_ptr_list_const_ptr blocks,
+        const config::checkpoint& fork_point)
     {
         return data_base::push_all(blocks, fork_point);
     }
 
-    bool push_all(header_const_ptr_list_const_ptr headers, const config::checkpoint& fork_point)
+    bool push_all(header_const_ptr_list_const_ptr headers,
+        const config::checkpoint& fork_point)
     {
         return data_base::push_all(headers, fork_point);
     }
     
-    code push_header(const header& header, size_t height, uint32_t median_time_past)
+    code push_header(const header& header, size_t height,
+        uint32_t median_time_past)
     {
         return data_base::push_header(header, height, median_time_past);
     }
@@ -345,8 +348,8 @@ public:
     }
 };
 
-static void test_heights(const data_base& instance, size_t check_candidate_height,
-    size_t check_confirmed_height)
+static void test_heights(const data_base& instance,
+    size_t check_candidate_height, size_t check_confirmed_height)
 {    
     size_t candidate_height = 0u;
     size_t confirmed_height = 0u;
@@ -708,7 +711,7 @@ BOOST_AUTO_TEST_CASE(data_base__push_all_and_update__already_candidated___succes
     block_const_ptr block1_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK1));
     block_const_ptr block2_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK2));
     block_const_ptr block3_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK3));
-    const auto blocks_push_ptr = std::make_shared<const block_const_ptr_list>(block_const_ptr_list{block1_ptr, block2_ptr, block3_ptr });
+    const auto blocks_push_ptr = std::make_shared<const block_const_ptr_list>(block_const_ptr_list{ block1_ptr, block2_ptr, block3_ptr });
     
     store_block_transactions(instance, *block1_ptr, 1);
     store_block_transactions(instance, *block2_ptr, 1);
@@ -761,7 +764,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above_missing_forkpoint_hash___failure)
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
    
     const auto block1 = read_block(MAINNET_BLOCK1);
-    auto out_headers = std::make_shared<header_const_ptr_list>(header_const_ptr_list());
+    const auto out_headers = std::make_shared<header_const_ptr_list>();
 
     // setup ends
 
@@ -793,7 +796,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__wrong_forkpoint_height___failure)
     BOOST_REQUIRE(instance.create(genesis));
    
     const auto block1 = read_block(MAINNET_BLOCK1);
-    auto out_headers = std::make_shared<header_const_ptr_list>(header_const_ptr_list());
+    const auto out_headers = std::make_shared<header_const_ptr_list>();
 
     // setup ends
 
@@ -820,7 +823,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__pop_zero___success)
     BOOST_REQUIRE(instance.create(genesis));
    
     const auto block1 = read_block(MAINNET_BLOCK1);
-    auto out_headers = std::make_shared<header_const_ptr_list>(header_const_ptr_list());
+    const auto out_headers = std::make_shared<header_const_ptr_list>();
 
     // setup ends
    
@@ -874,7 +877,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__candidated_not_confirmed___success)
 
     // setup ends
    
-    auto out_headers = std::make_shared<header_const_ptr_list>(header_const_ptr_list());   
+    const auto out_headers = std::make_shared<header_const_ptr_list>();
     BOOST_REQUIRE(instance.pop_above(out_headers, config::checkpoint(genesis.hash(), 0)));
 
     // test conditions
@@ -906,7 +909,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__wrong_forkpoint_height___failure)
     BOOST_REQUIRE(instance.create(genesis));
 
     const auto block1 = read_block(MAINNET_BLOCK1);
-    auto out_blocks = std::make_shared<block_const_ptr_list>(block_const_ptr_list());
+    const auto out_blocks = std::make_shared<block_const_ptr_list>();
 
     // setup ends
 
@@ -933,7 +936,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__pop_zero___success)
     BOOST_REQUIRE(instance.create(genesis));
 
     const auto block1 = read_block(MAINNET_BLOCK1);
-    auto out_blocks = std::make_shared<block_const_ptr_list>(block_const_ptr_list());
+    const auto out_blocks = std::make_shared<block_const_ptr_list>();
 
     // setup ends
 
@@ -967,7 +970,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__confirmed___success)
     block_const_ptr block1_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK1));
     block_const_ptr block2_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK2));
     block_const_ptr block3_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK3));
-    const auto blocks_push_ptr = std::make_shared<const block_const_ptr_list>(block_const_ptr_list{block1_ptr, block2_ptr, block3_ptr });
+    const auto blocks_push_ptr = std::make_shared<const block_const_ptr_list>(block_const_ptr_list{ block1_ptr, block2_ptr, block3_ptr });
     store_block_transactions(instance, *block1_ptr, 1);
     store_block_transactions(instance, *block2_ptr, 1);
     store_block_transactions(instance, *block3_ptr, 1);
@@ -992,7 +995,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__confirmed___success)
 
     // setup ends
 
-    auto out_blocks = std::make_shared<block_const_ptr_list>(block_const_ptr_list());
+    const auto out_blocks = std::make_shared<block_const_ptr_list>();
     BOOST_REQUIRE(instance.pop_above(out_blocks, config::checkpoint(genesis.hash(), 0)));
 
     // test conditions
