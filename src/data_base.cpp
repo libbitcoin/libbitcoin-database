@@ -339,11 +339,9 @@ code data_base::confirm(const hash_digest& block_hash,
         return error::operation_failed;
 
     // Mark block txs as confirmed.
-    transaction::list transactions;
-    for (const auto& offset: block)
-        transactions.push_back(transactions_->get(offset).transaction());
-
-    if (!transactions_->confirm(transactions, height, block.median_time_past()))
+    u_int32_t position = 0;
+    for (const auto& tx_offset: block)
+        if (!transactions_->confirm(tx_offset, height, block.median_time_past(), position++))
             return error::operation_failed;
     
     return error::success;
