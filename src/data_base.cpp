@@ -324,26 +324,25 @@ code data_base::reorganize(const config::checkpoint& fork_point,
     return result ? error::success : error::operation_failed;
 }
 
-code data_base::confirm(const hash_digest& block_hash,
-    size_t height)
-{   
+code data_base::confirm(const hash_digest& block_hash, size_t height)
+{
     code ec;
-
     if ((ec = verify_confirm(*blocks_, block_hash, height)))
         return error::operation_failed;
 
     const auto block = blocks().get(block_hash);
-    
+    const auto time = block.median_time_past();
+    size_t position = 0;
+
+    // Mark block txs as confirmed.
+    for (const auto tx_offset: block)
+        if (!transactions_->confirm(tx_offset, height, time, position++))
+            return error::operation_failed;
+
     // Index block as confirmed.
     if (!blocks_->index(block_hash, height, false))
         return error::operation_failed;
 
-    // Mark block txs as confirmed.
-    u_int32_t position = 0;
-    for (const auto& tx_offset: block)
-        if (!transactions_->confirm(tx_offset, height, block.median_time_past(), position++))
-            return error::operation_failed;
-    
     return error::success;
 }
 
