@@ -133,8 +133,8 @@ static void test_block_exists(const data_base& interface, size_t height,
     }
 }
 
-static void test_block_not_exists(const data_base& interface, const block& block0,
-    bool index_addresses)
+static void test_block_not_exists(const data_base& interface,
+    const block& block0, bool index_addresses)
 {
     const auto& address_store = interface.addresses();
 
@@ -223,7 +223,7 @@ static chain_state::data data_for_chain_state()
 static void set_state(block& block)
 {
     auto state = std::make_shared<chain_state>(
-        chain_state{ data_for_chain_state(), {}, 0, 0, bc::system::settings() });
+        chain_state{ data_for_chain_state(), {}, 0, 0, {} });
     block.header().metadata.state = state;
 }
 
