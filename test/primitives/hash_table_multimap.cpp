@@ -87,7 +87,6 @@ BOOST_AUTO_TEST_CASE(hash_table_multimap__construct__always__expected)
 
     const auto found2 = multimap.find(key);
     BOOST_REQUIRE(found2);
-    BOOST_REQUIRE(multimap.find(link2));
 
     // elements in index are correctly linked
     BOOST_REQUIRE_EQUAL(found2.next(), found.link());

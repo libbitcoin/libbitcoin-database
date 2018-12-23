@@ -324,6 +324,28 @@ code data_base::reorganize(const config::checkpoint& fork_point,
     return result ? error::success : error::operation_failed;
 }
 
+code data_base::confirm(const hash_digest& block_hash, size_t height)
+{
+    code ec;
+    if ((ec = verify_confirm(*blocks_, block_hash, height)))
+        return error::operation_failed;
+
+    const auto block = blocks().get(block_hash);
+    const auto time = block.median_time_past();
+    size_t position = 0;
+
+    // Mark block txs as confirmed.
+    for (const auto tx_offset: block)
+        if (!transactions_->confirm(tx_offset, height, time, position++))
+            return error::operation_failed;
+
+    // Index block as confirmed.
+    if (!blocks_->index(block_hash, height, false))
+        return error::operation_failed;
+
+    return error::success;
+}
+
 // Add missing transactions for an existing block header.
 // This allows parallel write when write flushing is not enabled.
 code data_base::update(const chain::block& block, size_t height)
@@ -573,7 +595,7 @@ code data_base::pop_header(chain::header& out_header, size_t height)
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(write_mutex_);
 
-    if ((verify_top(*blocks_, height, true)))
+    if ((ec = verify_top(*blocks_, height, true)))
         return ec;
 
     const auto result = blocks_->get(height, true);
