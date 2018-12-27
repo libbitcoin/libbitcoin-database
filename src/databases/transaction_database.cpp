@@ -426,12 +426,21 @@ bool transaction_database::confirm(const transaction::list& transactions,
 {
     uint32_t position = 0;
     for (const auto& tx: transactions)
+    {
         if (!confirm(tx.metadata.link, height, median_time_past, position++))
             return false;
+
+        const auto confirmed = (position != transaction_result::unconfirmed);
+
+        // TODO: It may be more costly to populate the tx than the cache benefit.
+        if (!cache_.disabled())
+            cache_.add(tx, height, median_time_past, confirmed);
+    }
 
     return true;
 }
 
+// This does not populate output cache since it would require reading the tx.
 bool transaction_database::confirm(file_offset link, size_t height,
     uint32_t median_time_past, size_t position)
 {
@@ -444,12 +453,6 @@ bool transaction_database::confirm(file_offset link, size_t height,
     for (const auto inpoint: result)
         if (!confirmed_spend(inpoint, height))
             return false;
-
-    const auto confirmed = position != transaction_result::unconfirmed;
-
-    // TODO: It may be more costly to populate the tx than the cache benefit.
-    if (!cache_.disabled())
-        cache_.add(result.transaction(), height, median_time_past, confirmed);
 
     // Promote the tx that already exists.
     return confirmize(link, height, median_time_past, position);
