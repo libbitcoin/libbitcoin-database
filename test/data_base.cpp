@@ -346,6 +346,16 @@ public:
     {
         return data_base::pop_above(blocks, fork_point);
     }
+
+    code index(const chain::block& block)
+    {
+        return data_base::index(block);
+    }
+
+    code index(const chain::transaction& tx)
+    {
+        return data_base::index(tx);
+    }
 };
 
 static void test_heights(const data_base& instance,
@@ -1118,7 +1128,7 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__already_candidated___success)
 /// update
 
 #ifndef NDEBUG
-BOOST_AUTO_TEST_CASE(data_base__update__incorrect_height__fails)
+BOOST_AUTO_TEST_CASE(data_base__update__incorrect_height__failure)
 {
     create_directory(DIRECTORY);
     bc::database::settings settings;
@@ -1195,7 +1205,7 @@ BOOST_AUTO_TEST_CASE(data_base__update__new_transactions__success)
 // invalidate
 
 #ifndef NDEBUG
-BOOST_AUTO_TEST_CASE(data_base__invalidate__missing_header__fails)
+BOOST_AUTO_TEST_CASE(data_base__invalidate__missing_header__failure)
 {
     create_directory(DIRECTORY);
     bc::database::settings settings;
@@ -1240,8 +1250,6 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__validate__success)
     store_block_transactions(instance, block1, 1);
 
     BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
-    // BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
-    // test_heights(instance, 1u, 0u);
 
     // setup ends
 
@@ -1250,7 +1258,7 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__validate__success)
 
     BOOST_REQUIRE_EQUAL(header_result.metadata.error, error::success);
     BOOST_REQUIRE(header_result.metadata.validated);
-    BOOST_REQUIRE((instance.blocks().get(header_result.hash()).state() & block_state::valid) != 0);
+    BOOST_REQUIRE_EQUAL((instance.blocks().get(header_result.hash()).state() & block_state::valid), block_state::valid);
 }
 
 BOOST_AUTO_TEST_CASE(data_base__invalidate__invalidate__success)
@@ -1274,8 +1282,6 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__invalidate__success)
     store_block_transactions(instance, block1, 1);
 
     BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
-    // BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
-    // test_heights(instance, 1u, 0u);
 
     // setup ends
 
@@ -1284,39 +1290,130 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__invalidate__success)
 
     BOOST_REQUIRE_EQUAL(header_result.metadata.error, error::invalid_proof_of_work);
     BOOST_REQUIRE(header_result.metadata.validated);
-    BOOST_REQUIRE((instance.blocks().get(header_result.hash()).state() & block_state::valid) == 0);
+    BOOST_REQUIRE((instance.blocks().get(header_result.hash()).state() & block_state::valid) != block_state::valid);
 }
 
 // index block
 
-BOOST_AUTO_TEST_CASE(data_base__index__disabled__success)
-{
-}
+//// BOOST_AUTO_TEST_CASE(data_base__index__enabled__success)
+//// {
+////     create_directory(DIRECTORY);
+////     bc::database::settings settings;
+////     settings.directory = DIRECTORY;
+////     settings.index_addresses = false;
+////     settings.flush_writes = false;
+////     settings.file_growth_rate = 42;
+////     settings.block_table_buckets = 42;
+////     settings.transaction_table_buckets = 42;
+////     settings.address_table_buckets = 42;
+
+////     data_base_accessor instance(settings);
+
+////     static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+////     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
+
+////     const auto block1 = read_block(MAINNET_BLOCK1);
+////     store_block_transactions(instance, block1, 1);
+
+////     BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
+////     BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
+////     BOOST_REQUIRE_EQUAL(instance.update(block1, 1), error::success);
+
+////     // setup ends
+
+////     BOOST_REQUIRE_EQUAL(instance.index(block1), error::success);
+
+////     // When address_database::index is implemented, enable this test
+////     BOOST_REQUIRE(instance.addresses().get(block1.transactions()[0].outputs()[0].address().hash()));
+//// }
 
 // index transactions
 
-BOOST_AUTO_TEST_CASE(data_base__index2__disabled__success)
-{
-}
+//// BOOST_AUTO_TEST_CASE(data_base__index2__enabled__success)
+//// {
+////     create_directory(DIRECTORY);
+////     bc::database::settings settings;
+////     settings.directory = DIRECTORY;
+////     settings.index_addresses = false;
+////     settings.flush_writes = false;
+////     settings.file_growth_rate = 42;
+////     settings.block_table_buckets = 42;
+////     settings.transaction_table_buckets = 42;
+////     settings.address_table_buckets = 42;
+
+////     data_base_accessor instance(settings);
+
+////     static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+////     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
+
+////     const auto block1 = read_block(MAINNET_BLOCK1);
+////     store_block_transactions(instance, block1, 1);
+
+////     // setup ends
+
+////     BOOST_REQUIRE_EQUAL(instance.index(block1.transactions()[0]), error::success);
+
+////     // When address_database::index is implemented, enable this test
+////     BOOST_REQUIRE(instance.addresses().get(block1.transactions()[0].outputs()[0].address().hash()));
+//// }
 
 /// reorganize headers
 
-BOOST_AUTO_TEST_CASE(data_base__reorganize__too_many_headers__failure)
-{
-}
-
 BOOST_AUTO_TEST_CASE(data_base__reorganize__pop_and_push__success)
 {
+    create_directory(DIRECTORY);
+    bc::database::settings settings;
+    settings.directory = DIRECTORY;
+    settings.index_addresses = false;
+    settings.flush_writes = false;
+    settings.file_growth_rate = 42;
+    settings.block_table_buckets = 42;
+    settings.transaction_table_buckets = 42;
+    settings.address_table_buckets = 42;
+
+    data_base_accessor instance(settings);
+
+    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const chain::block& genesis = bc_settings.genesis_block;
+    BOOST_REQUIRE(instance.create(genesis));
+
+    const auto& block1 = read_block(MAINNET_BLOCK1);
+    BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
+    store_block_transactions(instance, block1, 1);
+    BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
+    test_heights(instance, 1u, 0u);
+
+    auto block2 = read_block(MAINNET_BLOCK2);
+    auto block2_header = block2.header();
+    block2_header.set_previous_block_hash(genesis.hash());
+    block2.set_header(block2_header);
+    const auto& block3 = read_block(MAINNET_BLOCK3);
+    
+    const auto outgoing_headers = std::make_shared<header_const_ptr_list>();
+    const auto incoming_headers = std::make_shared<const header_const_ptr_list>(header_const_ptr_list
+    {
+        std::make_shared<const message::header>(block2.header()),
+        std::make_shared<const message::header>(block3.header())
+    });
+
+    // setup ends
+    
+    BOOST_REQUIRE_EQUAL(instance.reorganize(config::checkpoint(genesis.hash(), 0), incoming_headers, outgoing_headers), error::success);
+
+    // test conditions
+    
+    test_heights(instance, 2u, 0u);
     // verify outgoing have right headers
+    BOOST_REQUIRE_EQUAL(outgoing_headers->size(), 1);
+    BOOST_REQUIRE(outgoing_headers->front()->hash() == block1.hash());
     // verify outgoing are all NOT in candidate index
+    BOOST_REQUIRE((instance.blocks().get(outgoing_headers->front()->hash()).state() & block_state::candidate) == 0);
     // verify incoming are all in candidate index
+    for (const auto& header_ptr: *incoming_headers)
+        BOOST_REQUIRE((instance.blocks().get(header_ptr->hash()).state() & block_state::candidate) != 0);
 }
 
 /// reorganize blocks
-
-BOOST_AUTO_TEST_CASE(data_base__reorganize2__too_many_blocks__failure)
-{
-}
 
 BOOST_AUTO_TEST_CASE(data_base__reorganize2__pop_and_push__success)
 {
