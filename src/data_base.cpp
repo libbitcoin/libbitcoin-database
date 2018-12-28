@@ -225,7 +225,7 @@ const address_database& data_base::addresses() const
 // Public writers.
 // ----------------------------------------------------------------------------
 
-code data_base::index(const transaction& tx)
+code data_base::catalog(const transaction& tx)
 {
     code ec;
 
@@ -244,7 +244,7 @@ code data_base::index(const transaction& tx)
     if (!begin_write())
         return error::store_lock_failure;
 
-    addresses_->index(tx);
+    addresses_->catalog(tx);
     addresses_->commit();
 
     return end_write() ? error::success : error::store_lock_failure;
@@ -252,7 +252,7 @@ code data_base::index(const transaction& tx)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-code data_base::index(const block& block)
+code data_base::catalog(const block& block)
 {
     code ec;
     if (!settings_.index_addresses)
@@ -272,7 +272,7 @@ code data_base::index(const block& block)
     // Existence check prevents duplicated indexing.
     for (const auto& tx: block.transactions())
         if (!tx.metadata.existed)
-            addresses_->index(tx);
+            addresses_->catalog(tx);
 
     addresses_->commit();
 
