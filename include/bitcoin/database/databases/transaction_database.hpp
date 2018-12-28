@@ -103,16 +103,16 @@ public:
     /// Unmark outputs formerly spent by the candidate tx.
     bool uncandidate(file_offset link);
 
-    /// Promote the set of transactions associated with a block to confirmed.
-    bool confirm(const system::chain::transaction::list& transactions,
-        size_t height, uint32_t median_time_past);
-
-    /// Promote the transaction to confirmed.
+    /// Promote the transaction to confirmed (uncached).
     bool confirm(file_offset link, size_t height, uint32_t median_time_past,
         size_t position);
 
-    /// Demote the transaction to pooled.
-    bool unconfirm(file_offset link);
+    /// Promote the set of transactions associated with a block to confirmed.
+    bool confirm(const system::chain::block& block, size_t height,
+        uint32_t median_time_past);
+
+    /// Demote the set of transactions associated with a block to pooled.
+    bool unconfirm(const system::chain::block& block);
 
 private:
     typedef system::hash_digest key_type;
@@ -135,7 +135,7 @@ private:
         bool positive);
 
     // Update the candidate metadata of the existing tx.
-    bool candidize(link_type link, bool candidate);
+    bool candidize(link_type link, bool positive);
 
     // Update the spender height of the output.
     //-------------------------------------------------------------------------

@@ -334,11 +334,12 @@ code data_base::confirm(const hash_digest& block_hash, size_t height)
     const auto time = block.median_time_past();
     size_t position = 0;
 
-    // Mark block txs as confirmed.
+    // Mark block txs as confirmed without reading transactions.
     for (const auto tx_offset: block)
         if (!transactions_->confirm(tx_offset, height, time, position++))
             return error::operation_failed;
 
+    // TODO: optimize using link.
     // Index block as confirmed.
     if (!blocks_->index(block_hash, height, false))
         return error::operation_failed;
@@ -486,13 +487,14 @@ code data_base::push(const block& block, size_t height,
         return error::operation_failed;
 
     // Confirm all transactions (candidate state transition not requried).
-    if (!transactions_->confirm(block.transactions(), height, median_time_past))
+    if (!transactions_->confirm(block, height, median_time_past))
         return error::operation_failed;
 
     // Promote validation state to valid (presumed valid).
     if (!blocks_->validate(block.hash(), error::success))
         return error::operation_failed;
 
+    // TODO: optimize using link.
     // Push header reference onto the confirmed index and set confirmed state.
     if (!blocks_->index(block.hash(), height, false))
         return error::operation_failed;
@@ -578,6 +580,7 @@ code data_base::push_header(const chain::header& header, size_t height,
     if (!header.metadata.exists)
         blocks_->store(header, height, median_time_past);
 
+    // TODO: optimize using link.
     blocks_->index(header.hash(), height, true);
     blocks_->commit();
 
@@ -612,6 +615,7 @@ code data_base::pop_header(chain::header& out_header, size_t height)
         if (!transactions_->uncandidate(link))
             return error::operation_failed;
 
+    // TODO: optimize using link.
     // Unindex the candidate header.
     if (!blocks_->unindex(result.hash(), height, true))
         return error::operation_failed;
@@ -696,12 +700,10 @@ code data_base::push_block(const block& block, size_t height)
         return error::store_lock_failure;
 
     // Confirm txs (and thereby also address indexes), spend prevouts.
-    uint32_t position = 0;
-    for (const auto& tx: block.transactions())
-        if (!transactions_->confirm(tx.metadata.link, height, median_time_past,
-            position++))
-            return error::operation_failed;
+    if (!transactions_->confirm(block, height, median_time_past))
+        return error::operation_failed;
 
+    // TODO: optimize using link.
     // Confirm candidate block (candidate index unchanged).
     if (!blocks_->index(block.hash(), height, false))
         return error::operation_failed;
@@ -738,10 +740,10 @@ code data_base::pop_block(chain::block& out_block, size_t height)
         return error::store_lock_failure;
 
     // Deconfirm txs (and thereby also address indexes), unspend prevouts.
-    for (const auto& tx: out_block.transactions())
-        if (!transactions_->unconfirm(tx.metadata.link))
-            return error::operation_failed;
+    if (!transactions_->unconfirm(out_block))
+        return error::operation_failed;
 
+    // TODO: optimize using link.
     // Unconfirm confirmed block (candidate index unchanged).
     if (!blocks_->unindex(result.hash(), height, false))
         return error::operation_failed;
