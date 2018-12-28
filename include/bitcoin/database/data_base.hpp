@@ -102,7 +102,7 @@ public:
 
     // BLOCK ORGANIZER (candidate)
     /// Add payments of transactions of the block to the payment index.
-    system::code index(const system::chain::block& block);
+    system::code catalog(const system::chain::block& block);
 
     // BLOCK ORGANIZER (reorganize)
     /// Reorganize the block index to the specified fork point.
@@ -121,7 +121,7 @@ public:
 
     // TRANSACTION ORGANIZER (store)
     /// Add payments of the transaction to the payment index.
-    system::code index(const system::chain::transaction& tx);
+    system::code catalog(const system::chain::transaction& tx);
 
 protected:
     void start();

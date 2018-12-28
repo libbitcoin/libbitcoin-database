@@ -256,14 +256,18 @@ bool transaction_database::get_output(const output_point& point,
 // Store new unconfirmed tx and set tx link metadata in any case.
 bool transaction_database::store(const chain::transaction& tx, uint32_t forks)
 {
+    // Cache the unspent outputs of the unconfirmed transaction.
+    cache_.add(tx, forks, no_time, false);
+
     return storize(tx, forks, no_time, transaction_result::unconfirmed);
 }
 
-// Store each new tx of the unconfirmed block and set tx link metadata for all.
+// Store each tx and set tx link metadata for all.
 bool transaction_database::store(const transaction::list& transactions)
 {
     for (const auto& tx: transactions)
-        if (!store(tx, rule_fork::unverified))
+        if (!storize(tx, rule_fork::unverified, no_time,
+            transaction_result::unconfirmed))
             return false;
 
     return true;
@@ -279,11 +283,10 @@ bool transaction_database::storize(const chain::transaction& tx, size_t height,
     // Assume the caller has not tested for existence (true for block update).
     if (tx.metadata.link == transaction::validation::unlinked)
     {
-        // TODO: create an optimal tx.link getter for this.
-        const auto result = get(tx.hash());
+        const auto element = hash_table_.find(tx.hash());
 
-        if (result)
-            tx.metadata.link = result.link();
+        if (element)
+            tx.metadata.link = element.link();
     }
 
     // This allows address indexer to bypass indexing despite link existence.
@@ -325,7 +328,7 @@ bool transaction_database::candidate(file_offset link, bool positive)
 {
     const auto result = get(link);
 
-    if (!result || !candidize(link, positive))
+    if (!result)
         return false;
 
     // Spend or unspend the candidate tx's previous outputs.
@@ -333,7 +336,7 @@ bool transaction_database::candidate(file_offset link, bool positive)
         if (!candidate_spend(inpoint, positive))
             return false;
 
-    return true;
+    return candidize(link, positive);
 }
 
 bool transaction_database::uncandidate(file_offset link)
@@ -396,7 +399,7 @@ bool transaction_database::candidate_spend(const chain::output_point& point,
 }
 
 // private
-bool transaction_database::candidize(link_type link, bool candidate)
+bool transaction_database::candidize(link_type link, bool positive)
 {
     const auto element = hash_table_.find(link);
 
@@ -409,7 +412,7 @@ bool transaction_database::candidize(link_type link, bool candidate)
         ///////////////////////////////////////////////////////////////////////
         unique_lock lock(metadata_mutex_);
         serial.skip(height_size + position_size);
-        serial.write_byte(candidate ? transaction_result::candidate_true :
+        serial.write_byte(positive ? transaction_result::candidate_true :
             transaction_result::candidate_false);
         ///////////////////////////////////////////////////////////////////////
     };
@@ -421,45 +424,60 @@ bool transaction_database::candidize(link_type link, bool candidate)
 // Confirm/Unconfirm.
 // ----------------------------------------------------------------------------
 
-bool transaction_database::confirm(const transaction::list& transactions,
-    size_t height, uint32_t median_time_past)
+// This does not add to the output cache since it would require reading the tx.
+// This also does not confirm unconfirmed cached outputs (should not exist).
+// This also does not remove cached items on unconfirmation (should not call).
+bool transaction_database::confirm(file_offset link, size_t height,
+    uint32_t median_time_past, size_t position)
+{
+    // Avoid population of prevouts for coinbase (confirmation optimization).
+    if (position != 0)
+    {
+        const auto result = get(link);
+
+        if (!result)
+            return false;
+
+        // Spend or unspend the tx's previous outputs.
+        for (const auto inpoint: result)
+            if (!confirmed_spend(inpoint, height))
+                return false;
+    }
+
+    // Promote or demote the tx.
+    return confirmize(link, height, median_time_past, position);
+}
+
+bool transaction_database::confirm(const block& block, size_t height,
+    uint32_t median_time_past)
 {
     uint32_t position = 0;
-    for (const auto& tx: transactions)
+    for (const auto& tx: block.transactions())
+    {
         if (!confirm(tx.metadata.link, height, median_time_past, position++))
             return false;
+
+        // Cache the unspent outputs of the confirmed transaction.
+        cache_.add(tx, height, median_time_past, true);
+    }
 
     return true;
 }
 
-bool transaction_database::confirm(file_offset link, size_t height,
-    uint32_t median_time_past, size_t position)
+bool transaction_database::unconfirm(const block& block)
 {
-    const auto result = get(link);
-
-    if (!result)
-        return false;
-
-    // Spend or unspend the tx's previous outputs.
-    for (const auto inpoint: result)
-        if (!confirmed_spend(inpoint, height))
+    uint32_t position = 0;
+    for (const auto& tx: block.transactions())
+    {
+        if (!confirm(tx.metadata.link, rule_fork::unverified, no_time,
+            transaction_result::unconfirmed))
             return false;
 
-    const auto confirmed = position != transaction_result::unconfirmed;
+        // Uncache the unspent outputs of the unconfirmed transaction.
+        cache_.remove(tx.hash());
+    }
 
-    // TODO: It may be more costly to populate the tx than the cache benefit.
-    if (!cache_.disabled())
-        cache_.add(result.transaction(), height, median_time_past, confirmed);
-
-    // Promote the tx that already exists.
-    return confirmize(link, height, median_time_past, position);
-}
-
-bool transaction_database::unconfirm(file_offset link)
-{
-    // The tx was verified under a now unknown chain state, so set unverified.
-    return confirm(link, rule_fork::unverified, no_time,
-        transaction_result::unconfirmed);
+    return true;
 }
 
 // private
@@ -469,12 +487,6 @@ bool transaction_database::confirmed_spend(const output_point& point,
     // This just simplifies calling by allowing coinbase to be included.
     if (point.is_null())
         return true;
-
-    const auto unspend = (spender_height & output::validation::unspent) != 0;
-
-    // When unspending could restore the spend to the cache, but not worth it.
-    if (unspend && !cache_.disabled())
-        cache_.remove(point);
 
     const auto element = hash_table_.find(point.hash());
 
@@ -498,7 +510,7 @@ bool transaction_database::confirmed_spend(const output_point& point,
 
     element.read(reader);
 
-    // Limit to confirmed transactions at or below the spender height.
+    // Limit to confirmed prevouts at or below the spender height.
     if (position == transaction_result::unconfirmed || height > spender_height)
         return false;
 

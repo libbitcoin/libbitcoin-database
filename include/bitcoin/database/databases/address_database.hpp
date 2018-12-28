@@ -73,7 +73,7 @@ public:
     //-------------------------------------------------------------------------
 
     /// Add a row for each payment recorded in the transaction.
-    void index(const system::chain::transaction& tx);
+    void catalog(const system::chain::transaction& tx);
 
 private:
     typedef system::short_hash key_type;

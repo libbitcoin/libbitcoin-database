@@ -123,7 +123,7 @@ address_result address_database::get(const short_hash& hash) const
 // ----------------------------------------------------------------------------
 
 // Confirmation of payment is dynamically derived from current tx state.
-void address_database::index(const chain::transaction& tx)
+void address_database::catalog(const chain::transaction& tx)
 {
     // TODO: loop over payments, relying only on output scripts, adding rows.
     ////const auto writer = [&](byte_serializer& serial)
