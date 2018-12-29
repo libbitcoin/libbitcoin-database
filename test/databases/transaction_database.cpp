@@ -1124,19 +1124,23 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__confirmed_at_height__conf
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    static const transaction tx1{ locktime, version, {}, { { 1201, {} } } };
 
-    instance.store(tx1, 100);
-    instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
+    instance.store({ tx1 });
+    static const auto settings = system::settings(system::config::settings::mainnet);
+    chain::block block0 = settings.genesis_block;
+    // get transaction so confirm argument has the link
+    block0.set_transactions({ instance.get(tx1.hash()).transaction() });
+    instance.confirm(block0, 123, 456);
 
     output_point point{ tx1.hash(), 0 };
 
     BOOST_REQUIRE(instance.get_output(point, 123, false));
-    BOOST_REQUIRE(!point.metadata.coinbase);
+    BOOST_REQUIRE(point.metadata.coinbase);
     BOOST_REQUIRE(!point.metadata.candidate);
     BOOST_REQUIRE(point.metadata.confirmed);
     BOOST_REQUIRE_EQUAL(point.metadata.height, 123);
-    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);
+    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 456);
     BOOST_REQUIRE(!point.metadata.spent);
 }
 
@@ -1151,20 +1155,11 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__get_output__confirmed_at_h
 
    static const transaction tx1{ locktime, version, {}, { { 1201, {} } } };
 
-   // TODO: these two calls are now incompatible.
-   // store(tx) is usable only for tx pool txs.
-   // confirm(link) is usable only for optimizing confirmation of a block
-   // populated from without use of unspent output caching.
-   // The combination below mixes these two scenarios. As a result
-   // point.metadata.confirmed is false because the output cache still retains
-   // the unconfirmed output, since it cannot be confirmed within the cache.
    instance.store({tx1});
    static const auto settings = system::settings(system::config::settings::mainnet);
    chain::block block0 = settings.genesis_block;
-
-   // get transaction so confirm has the link
+   // get transaction so confirm argument has the link
    block0.set_transactions({ instance.get(tx1.hash()).transaction() });
-
    instance.confirm(block0, 123, 456);
 
    output_point point{ tx1.hash(), 0 };
@@ -1187,19 +1182,26 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__unconfirmed_at_height__un
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    // tx1 is not confirmed as it is at coinbase position, so we test
+    // with tx2
+    static const transaction tx1{ locktime, version, {}, { { 1201, {} } } };
+    static const transaction tx2{ locktime, version, {}, { { 1202, {} } } };
 
-    instance.store(tx1, 100);
-    instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
+    instance.store({tx1, tx2});
+    static const auto settings = system::settings(system::config::settings::mainnet);
+    chain::block block0 = settings.genesis_block;
+    // get transaction so confirm argument has the link
+    block0.set_transactions({ instance.get(tx1.hash()).transaction(), instance.get(tx2.hash()).transaction() });
+    instance.confirm(block0, 123, 456);
 
-    output_point point{ tx1.hash(), 0 };
+    output_point point{ tx2.hash(), 0 };
 
     BOOST_REQUIRE(instance.get_output(point, 100, false));
     BOOST_REQUIRE(!point.metadata.coinbase);
     BOOST_REQUIRE(!point.metadata.candidate);
     BOOST_REQUIRE(!point.metadata.confirmed);
     BOOST_REQUIRE_EQUAL(point.metadata.height, 123);
-    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);
+    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 456);
     BOOST_REQUIRE(!point.metadata.spent);
 }
 
@@ -1212,49 +1214,39 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__prevout_spent__spent)
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
-    static const transaction tx2{ locktime, version, { { { tx1.hash(), 0 }, {}, 0 } }, { { 1100, {} } } };
+    static const transaction tx1{ locktime, version, {}, { { 1201, {} } } };
+    static const transaction tx2{ locktime, version, {}, { { 1202, {} } } };
+    static const transaction tx3{ locktime, version, { { { tx1.hash(), 0 }, {}, 0 } }, { { 1100, {} } } };
 
-    instance.store({ tx1, tx2 });
-    instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
-    instance.confirm(instance.get(tx2.hash()).link(), 1230, 1560, 1780);
+    instance.store({ tx1, tx2, tx3 });
+    static const auto settings = system::settings(system::config::settings::mainnet);
+    chain::block block0 = settings.genesis_block;
+    // get transaction so confirm argument has the link
+    block0.set_transactions({ instance.get(tx1.hash()).transaction() });
+    instance.confirm(block0, 123, 456);
 
-    output_point point{ tx1.hash(), 0 };
-
-    BOOST_REQUIRE(instance.get_output(point, 1230, false));
-    BOOST_REQUIRE(!point.metadata.coinbase);
-    BOOST_REQUIRE(!point.metadata.candidate);
-    BOOST_REQUIRE(point.metadata.confirmed);
-    BOOST_REQUIRE_EQUAL(point.metadata.height, 123);
-    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);
-    BOOST_REQUIRE(point.metadata.spent);
-}
-
-BOOST_AUTO_TEST_CASE(transaction_database__get_output__prevout_unspent_at_height__spent)
-{
-    uint32_t version = 2345u;
-    uint32_t locktime = 0xffffffff;
-
-    test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
-    BOOST_REQUIRE(instance.create());
-
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
-    static const transaction tx2{ locktime, version, { { { tx1.hash(), 0 }, {}, 0 } }, { { 1100, {} } } };
-
-    instance.store({ tx1, tx2 });
-    instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
-    instance.confirm(instance.get(tx2.hash()).link(), 1230, 1560, 1780);
+    auto header1 = block0.header();
+    header1.set_nonce(4);
+    block block1(header1, { instance.get(tx2.hash()).transaction(), instance.get(tx3.hash()).transaction() });
+    instance.confirm(block1, 1230, 4560);
 
     output_point point{ tx1.hash(), 0 };
 
     BOOST_REQUIRE(instance.get_output(point, 1229, false));
-    BOOST_REQUIRE(!point.metadata.coinbase);
+    BOOST_REQUIRE(point.metadata.coinbase);
     BOOST_REQUIRE(!point.metadata.candidate);
     BOOST_REQUIRE(point.metadata.confirmed);
     BOOST_REQUIRE_EQUAL(point.metadata.height, 123);
-    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);
+    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 456);
     BOOST_REQUIRE(!point.metadata.spent);
+
+    BOOST_REQUIRE(instance.get_output(point, 1230, false));
+    BOOST_REQUIRE(point.metadata.coinbase);
+    BOOST_REQUIRE(!point.metadata.candidate);
+    BOOST_REQUIRE(point.metadata.confirmed);
+    BOOST_REQUIRE_EQUAL(point.metadata.height, 123);
+    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 456);
+    BOOST_REQUIRE(point.metadata.spent);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
