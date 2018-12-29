@@ -444,6 +444,7 @@ code data_base::candidate(const block& block)
 }
 
 // Reorganize blocks.
+// Header metadata median_time_past must be set on all incoming blocks.
 code data_base::reorganize(const config::checkpoint& fork_point,
     block_const_ptr_list_const_ptr incoming,
     block_const_ptr_list_ptr outgoing)
@@ -685,8 +686,7 @@ bool data_base::pop_above(block_const_ptr_list_ptr blocks,
 code data_base::push_block(const block& block, size_t height)
 {
     code ec;
-    BITCOIN_ASSERT(block.header().metadata.state);
-    auto median_time_past = block.header().metadata.state->median_time_past();
+    const auto median_time_past = block.header().metadata.median_time_past;
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////

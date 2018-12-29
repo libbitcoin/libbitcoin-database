@@ -210,6 +210,7 @@ void block_database::get_header_metadata(const chain::header& header) const
     header.metadata.validated = is_valid(state) || is_failed(state);
     header.metadata.candidate = is_candidate(state);
     header.metadata.confirmed = is_confirmed(state);
+    header.metadata.median_time_past = result.median_time_past();
 }
 
 // Store.
