@@ -776,8 +776,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__unconfirm__single_confirmed__success)
    BOOST_REQUIRE(!tx1_reloaded.transaction().outputs().front().metadata.candidate_spend);
 
 
-   BOOST_REQUIRE_EQUAL(tx1_reloaded.transaction().outputs().front().metadata.confirmed_spend_height,
-       machine::rule_fork::unverified);
+   BOOST_REQUIRE_EQUAL(tx1_reloaded.transaction().outputs().front().metadata.confirmed_spend_height, machine::rule_fork::unverified);
    BOOST_REQUIRE(!tx1_reloaded.transaction().outputs().front().metadata.spent(123, false));
 }
 
@@ -853,8 +852,7 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__unconfirm__single_confirme
    BOOST_REQUIRE(!tx1_reloaded.transaction().outputs().front().metadata.candidate_spend);
 
 
-   BOOST_REQUIRE_EQUAL(tx1_reloaded.transaction().outputs().front().metadata.confirmed_spend_height,
-       machine::rule_fork::unverified);
+   BOOST_REQUIRE_EQUAL(tx1_reloaded.transaction().outputs().front().metadata.confirmed_spend_height, machine::rule_fork::unverified);
    BOOST_REQUIRE(!tx1_reloaded.transaction().outputs().front().metadata.spent(123, false));
 }
 
@@ -1129,6 +1127,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__confirmed_at_height__conf
     instance.store({ tx1 });
     static const auto settings = system::settings(system::config::settings::mainnet);
     chain::block block0 = settings.genesis_block;
+
     // get transaction so confirm argument has the link
     block0.set_transactions({ instance.get(tx1.hash()).transaction() });
     instance.confirm(block0, 123, 456);
@@ -1158,6 +1157,7 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__get_output__confirmed_at_h
    instance.store({tx1});
    static const auto settings = system::settings(system::config::settings::mainnet);
    chain::block block0 = settings.genesis_block;
+
    // get transaction so confirm argument has the link
    block0.set_transactions({ instance.get(tx1.hash()).transaction() });
    instance.confirm(block0, 123, 456);
@@ -1190,6 +1190,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__unconfirmed_at_height__un
     instance.store({tx1, tx2});
     static const auto settings = system::settings(system::config::settings::mainnet);
     chain::block block0 = settings.genesis_block;
+
     // get transaction so confirm argument has the link
     block0.set_transactions({ instance.get(tx1.hash()).transaction(), instance.get(tx2.hash()).transaction() });
     instance.confirm(block0, 123, 456);
@@ -1221,6 +1222,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__prevout_spent__spent)
     instance.store({ tx1, tx2, tx3 });
     static const auto settings = system::settings(system::config::settings::mainnet);
     chain::block block0 = settings.genesis_block;
+
     // get transaction so confirm argument has the link
     block0.set_transactions({ instance.get(tx1.hash()).transaction() });
     instance.confirm(block0, 123, 456);
