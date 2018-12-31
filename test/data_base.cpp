@@ -347,14 +347,14 @@ public:
         return data_base::pop_above(blocks, fork_point);
     }
 
-    code index(const chain::block& block)
+    code catalog(const chain::block& block)
     {
-        return data_base::index(block);
+        return data_base::catalog(block);
     }
 
-    code index(const chain::transaction& tx)
+    code catalog(const chain::transaction& tx)
     {
-        return data_base::index(tx);
+        return data_base::catalog(tx);
     }
 };
 
@@ -1142,7 +1142,7 @@ BOOST_AUTO_TEST_CASE(data_base__update__incorrect_height__failure)
 
     data_base_accessor instance(settings);
 
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
 
     const auto block1 = read_block(MAINNET_BLOCK1);
@@ -1171,7 +1171,7 @@ BOOST_AUTO_TEST_CASE(data_base__update__new_transactions__success)
 
     data_base_accessor instance(settings);
 
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
 
     auto block1 = read_block(MAINNET_BLOCK1);
@@ -1373,7 +1373,7 @@ BOOST_AUTO_TEST_CASE(data_base__reorganize__pop_and_push__success)
 
     data_base_accessor instance(settings);
 
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     const chain::block& genesis = bc_settings.genesis_block;
     BOOST_REQUIRE(instance.create(genesis));
 
@@ -1382,12 +1382,14 @@ BOOST_AUTO_TEST_CASE(data_base__reorganize__pop_and_push__success)
     store_block_transactions(instance, block1, 1);
     BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
     test_heights(instance, 1u, 0u);
-
     auto block2 = read_block(MAINNET_BLOCK2);
     auto block2_header = block2.header();
     block2_header.set_previous_block_hash(genesis.hash());
     block2.set_header(block2_header);
-    const auto& block3 = read_block(MAINNET_BLOCK3);
+    auto block3 = read_block(MAINNET_BLOCK3);
+    auto block3_header = block3.header();
+    block3_header.set_previous_block_hash(block2.hash());
+    block3.set_header(block3_header);
     
     const auto outgoing_headers = std::make_shared<header_const_ptr_list>();
     const auto incoming_headers = std::make_shared<const header_const_ptr_list>(header_const_ptr_list
@@ -1403,23 +1405,97 @@ BOOST_AUTO_TEST_CASE(data_base__reorganize__pop_and_push__success)
     // test conditions
     
     test_heights(instance, 2u, 0u);
+
     // verify outgoing have right headers
     BOOST_REQUIRE_EQUAL(outgoing_headers->size(), 1);
     BOOST_REQUIRE(outgoing_headers->front()->hash() == block1.hash());
-    // verify outgoing are all NOT in candidate index
+
+    // verify outgoing headers are NOT in candidate index
     BOOST_REQUIRE((instance.blocks().get(outgoing_headers->front()->hash()).state() & block_state::candidate) == 0);
-    // verify incoming are all in candidate index
+
+    // verify incoming are headers are in candidate index
     for (const auto& header_ptr: *incoming_headers)
         BOOST_REQUIRE((instance.blocks().get(header_ptr->hash()).state() & block_state::candidate) != 0);
+
+    // verify candidate top header
+    BOOST_REQUIRE(instance.blocks().get(2, true).hash() == block3.hash());
 }
 
 /// reorganize blocks
 
 BOOST_AUTO_TEST_CASE(data_base__reorganize2__pop_and_push__success)
 {
-    // verify outgoing have right blocks
-    // verify outgoing are all NOT in candidate index
-    // verify incoming are all in candidate index
+    create_directory(DIRECTORY);
+    bc::database::settings settings;
+    settings.directory = DIRECTORY;
+    settings.index_addresses = false;
+    settings.flush_writes = false;
+    settings.file_growth_rate = 42;
+    settings.block_table_buckets = 42;
+    settings.transaction_table_buckets = 42;
+    settings.address_table_buckets = 42;
+
+    data_base_accessor instance(settings);
+
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const chain::block& genesis = bc_settings.genesis_block;
+    BOOST_REQUIRE(instance.create(genesis));
+
+    const auto& block1 = read_block(MAINNET_BLOCK1);
+    chain::header block1_header;
+    store_block_transactions(instance, block1, 1);
+    auto block2 = read_block(MAINNET_BLOCK2);
+    auto block2_header = block2.header();
+    block2_header.set_previous_block_hash(genesis.hash());
+    block2.set_header(block2_header);
+    auto block3 = read_block(MAINNET_BLOCK3);
+    auto block3_header = block3.header();
+    block3_header.set_previous_block_hash(block2.hash());
+    block3.set_header(block3_header);
+
+    // candidate header #1, validate it, then pop it from candidate,
+    // and finally confirm it
+    BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
+    BOOST_REQUIRE_EQUAL(instance.invalidate(block1.header(), error::success), error::success);
+    BOOST_REQUIRE_EQUAL(instance.pop_header(block1_header, 1), error::success);
+    BOOST_REQUIRE_EQUAL(instance.push_block(block1, 1), error::success);
+
+    // candidate header #2
+    BOOST_REQUIRE_EQUAL(instance.push_header(block2.header(), 1, 100), error::success);
+    BOOST_REQUIRE_EQUAL(instance.invalidate(block2.header(), error::success), error::success);
+
+    // candidate header #3
+    BOOST_REQUIRE_EQUAL(instance.push_header(block3.header(), 2, 100), error::success);
+    BOOST_REQUIRE_EQUAL(instance.invalidate(block3.header(), error::success), error::success);
+    
+    const auto outgoing_blocks = std::make_shared<block_const_ptr_list>();
+    const auto incoming_blocks = std::make_shared<const block_const_ptr_list>(block_const_ptr_list
+    {
+        std::make_shared<const message::block>(block2),
+        std::make_shared<const message::block>(block3)
+    });
+
+    // setup ends
+    
+    BOOST_REQUIRE_EQUAL(instance.reorganize(config::checkpoint(genesis.hash(), 0), incoming_blocks, outgoing_blocks), error::success);
+
+    // // test conditions
+    
+    // test_heights(instance, 0u, 2u);
+
+    // // verify outgoing have right blocks
+    // BOOST_REQUIRE_EQUAL(outgoing_blocks->size(), 1);
+    // BOOST_REQUIRE(outgoing_blocks->front()->hash() == block1.hash());
+
+    // // verify outgoing blocks are NOT in candidate index
+    // BOOST_REQUIRE((instance.blocks().get(outgoing_blocks->front()->hash()).state() & block_state::candidate) == 0);
+
+    // // verify incoming are blocks are in candidate index
+    // for (const auto& header_ptr: *incoming_blocks)
+    //     BOOST_REQUIRE((instance.blocks().get(header_ptr->hash()).state() & block_state::candidate) != 0);
+
+    // // verify candidate top header
+    // BOOST_REQUIRE(instance.blocks().get(2, true).hash() == block3.hash());
 }
 
 
