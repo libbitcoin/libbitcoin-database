@@ -243,12 +243,12 @@ BOOST_AUTO_TEST_CASE(transaction_database__candidate__with_input_in_db__candidat
         { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
     };
 
-    chain::output::list tx1_outputs
+    const chain::output::list tx1_outputs
     {
         { 1200, {} }
     };
 
-    chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
+    const chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
     BOOST_REQUIRE(tx1.is_coinbase());
     const auto hash1 = tx1.hash();
     instance.store(tx1, 1);
@@ -258,17 +258,17 @@ BOOST_AUTO_TEST_CASE(transaction_database__candidate__with_input_in_db__candidat
     BOOST_REQUIRE(result1.transaction().hash() == hash1);
 
     // tx2: spends coinbase, tx1 as input, dummy output
-    chain::input::list tx2_inputs
+    const chain::input::list tx2_inputs
     {
         { { hash1, 0 }, {}, 0 }
     };
 
-    chain::output::list tx2_outputs
+    const chain::output::list tx2_outputs
     {
         { 1200, {} }
     };
 
-    chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
+    const chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
     const auto hash2 = tx2.hash();
     instance.store(tx2, 1);
 
@@ -327,12 +327,12 @@ BOOST_AUTO_TEST_CASE(transaction_database__uncandidate__with_input_in_db__candid
         { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
     };
 
-    chain::output::list tx1_outputs
+    const chain::output::list tx1_outputs
     {
         { 1200, {} }
     };
 
-    chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
+    const chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
     BOOST_REQUIRE(tx1.is_coinbase());
     const auto hash1 = tx1.hash();
     instance.store(tx1, 1);
@@ -342,17 +342,17 @@ BOOST_AUTO_TEST_CASE(transaction_database__uncandidate__with_input_in_db__candid
     BOOST_REQUIRE(result1.transaction().hash() == hash1);
 
     // tx2: spends coinbase, tx1 as input, dummy output
-    chain::input::list tx2_inputs
+    const chain::input::list tx2_inputs
     {
         { { hash1, 0 }, {}, 0 }
     };
 
-    chain::output::list tx2_outputs
+    const chain::output::list tx2_outputs
     {
         { 1200, {} }
     };
 
-    chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
+    const chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
     const auto hash2 = tx2.hash();
     instance.store(tx2, 1);
 
@@ -417,28 +417,28 @@ BOOST_AUTO_TEST_CASE(transaction_database__confirm2__single_transaction_with_inp
         { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
     };
 
-    chain::output::list tx1_outputs
+    const chain::output::list tx1_outputs
     {
         { 1200, {} }
     };
 
-    chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
+    const chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
     BOOST_REQUIRE(tx1.is_coinbase());
     const auto hash1 = tx1.hash();
     instance.store({tx1});
 
     // tx2: spends coinbase, tx1 as input, dummy output
-    chain::input::list tx2_inputs
+    const chain::input::list tx2_inputs
     {
         { { hash1, 0 }, {}, 0 }
     };
 
-    chain::output::list tx2_outputs
+    const chain::output::list tx2_outputs
     {
         { 1200, {} }
     };
 
-    chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
+    const chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
     const auto hash2 = tx2.hash();
     instance.store(tx2, 1);
 
@@ -488,12 +488,12 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__confirm2__single_transacti
         { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
     };
 
-    chain::output::list tx1_outputs
+    const chain::output::list tx1_outputs
     {
         { 1200, {} }
     };
 
-    chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
+    const chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
     BOOST_REQUIRE(tx1.is_coinbase());
     const auto hash1 = tx1.hash();
     instance.store({tx1});
@@ -504,12 +504,12 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__confirm2__single_transacti
         { { hash1, 0 }, {}, 0 }
     };
 
-    chain::output::list tx2_outputs
+    const chain::output::list tx2_outputs
     {
         { 1200, {} }
     };
 
-    chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
+    const chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
     const auto hash2 = tx2.hash();
     instance.store(tx2, 1);
 
@@ -559,29 +559,29 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__confirm1__block_transactio
        { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
    };
 
-   chain::output::list tx1_outputs
+   const chain::output::list tx1_outputs
    {
        { 1200, {} }
    };
 
-   chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
+   const chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
    BOOST_REQUIRE(tx1.is_coinbase());
    const auto hash1 = tx1.hash();
    instance.store({tx1});
 
    // tx2: coinbase for block0
-   chain::input::list tx2_inputs
+   const chain::input::list tx2_inputs
    {
        { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
    };
 
-   chain::output::list tx2_outputs
+   const chain::output::list tx2_outputs
    {
        { 1201, {} }
    };
 
    // tx3: spends coinbase, tx1/1 as input, dummy output
-   chain::input::list tx3_inputs
+   const chain::input::list tx3_inputs
    {
        { { hash1, 0 }, {}, 0 }
    };
@@ -591,11 +591,11 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__confirm1__block_transactio
        { 1200, {} }
    };
 
-   chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
+   const chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
    const auto hash2 = tx2.hash();
    instance.store(tx2, 1);
 
-   chain::transaction tx3(version, locktime, tx3_inputs, tx3_outputs);
+   const chain::transaction tx3(version, locktime, tx3_inputs, tx3_outputs);
    const auto hash3 = tx3.hash();
    instance.store(tx3, 1);
 
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__confirm1__block_transactio
    BOOST_REQUIRE_EQUAL(instance.get(hash1).height(), machine::rule_fork::unverified);
    BOOST_REQUIRE(!instance.get(hash1).transaction().outputs().front().metadata.spent(123, false));
 
-    static const auto settings = system::settings(system::config::settings::mainnet);
+    const auto settings = system::settings(system::config::settings::mainnet);
     chain::block block0 = settings.genesis_block;
     block0.set_transactions({ tx2, tx3 });
 
@@ -670,31 +670,31 @@ BOOST_AUTO_TEST_CASE(transaction_database__unconfirm__block_with_unconfirmed_txs
        { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
    };
 
-   chain::output::list tx1_outputs
+   const chain::output::list tx1_outputs
    {
        { 1200, {} }
    };
 
-   chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
+   const chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
    BOOST_REQUIRE(tx1.is_coinbase());
    const auto hash1 = tx1.hash();
    instance.store(tx1, 1);
 
    // tx2: spends coinbase, tx1 as input, dummy output
-   chain::input::list tx2_inputs
+   const chain::input::list tx2_inputs
    {
        { { hash1, 0 }, {}, 0 }
    };
 
-   chain::output::list tx2_outputs
+   const chain::output::list tx2_outputs
    {
        { 1200, {} }
    };
 
-   chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
+   const chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
    instance.store(tx2, 1);
 
-   static const auto settings = system::settings(system::config::settings::mainnet);
+   const auto settings = system::settings(system::config::settings::mainnet);
    chain::block block0 = settings.genesis_block;
    block0.set_transactions({ tx1, tx2 });
    
@@ -719,7 +719,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__unconfirm__single_confirmed__success)
        { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
    };
 
-   chain::output::list tx1_outputs
+   const chain::output::list tx1_outputs
    {
        { 1200, {} }
    };
@@ -730,17 +730,17 @@ BOOST_AUTO_TEST_CASE(transaction_database__unconfirm__single_confirmed__success)
    instance.store(tx1, 1);
 
    // tx2: spends coinbase, tx1 as input, dummy output
-   chain::input::list tx2_inputs
+   const chain::input::list tx2_inputs
    {
        { { hash1, 0 }, {}, 0 }
    };
 
-   chain::output::list tx2_outputs
+   const chain::output::list tx2_outputs
    {
        { 1200, {} }
    };
 
-   chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
+   const chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
    const auto hash2 = tx2.hash();
    instance.store(tx2, 1);
 
@@ -750,7 +750,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__unconfirm__single_confirmed__success)
    BOOST_REQUIRE_EQUAL(instance.get(hash1).transaction().outputs().front().metadata.confirmed_spend_height, 123);
    BOOST_REQUIRE(instance.get(hash1).transaction().outputs().front().metadata.spent(123, false));
 
-   static const auto settings = system::settings(system::config::settings::mainnet);
+   const auto settings = system::settings(system::config::settings::mainnet);
    chain::block block0 = settings.genesis_block;
    block0.set_transactions({tx2});
    
@@ -795,28 +795,28 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__unconfirm__single_confirme
        { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
    };
 
-   chain::output::list tx1_outputs
+   const chain::output::list tx1_outputs
    {
        { 1200, {} }
    };
 
-   chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
+   const chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
    BOOST_REQUIRE(tx1.is_coinbase());
    const auto hash1 = tx1.hash();
    instance.store(tx1, 1);
 
    // tx2: spends coinbase, tx1 as input, dummy output
-   chain::input::list tx2_inputs
+   const chain::input::list tx2_inputs
    {
        { { hash1, 0 }, {}, 0 }
    };
 
-   chain::output::list tx2_outputs
+   const chain::output::list tx2_outputs
    {
        { 1200, {} }
    };
 
-   chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
+   const chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
    const auto hash2 = tx2.hash();
    instance.store(tx2, 1);
 
@@ -826,7 +826,7 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__unconfirm__single_confirme
    BOOST_REQUIRE_EQUAL(instance.get(hash1).transaction().outputs().front().metadata.confirmed_spend_height, 123);
    BOOST_REQUIRE(instance.get(hash1).transaction().outputs().front().metadata.spent(123, false));
 
-   static const auto settings = system::settings(system::config::settings::mainnet);
+   const auto settings = system::settings(system::config::settings::mainnet);
    chain::block block0 = settings.genesis_block;
    block0.set_transactions({tx2});
 
@@ -869,7 +869,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__nonexisting__not_
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx(version, locktime, {}, {});
+    const transaction tx(version, locktime, {}, {});
 
     // setup end
 
@@ -890,8 +890,8 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__no_bip34_and_spen
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
-    static const transaction tx2{ locktime, version, { { { tx1.hash(), 0 }, {}, 0 } }, { { 1100, {} } } };
+    const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    const transaction tx2{ locktime, version, { { { tx1.hash(), 0 }, {}, 0 } }, { { 1100, {} } } };
 
     instance.store({ tx1, tx2 });
     instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
@@ -916,7 +916,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__no_bip34_and_not_
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
 
     instance.store(tx1, 100);
 
@@ -939,7 +939,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__confirmed_and_for
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
 
     instance.store(tx1, 100);
 
@@ -963,7 +963,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__confirmed__unveri
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
 
     instance.store(tx1, 100);
     instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
@@ -990,7 +990,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__nonexisting__not_f
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx(version, locktime, {}, {});
+    const transaction tx(version, locktime, {}, {});
 
     // setup end
 
@@ -1010,7 +1010,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__confirmed__unverif
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
 
     instance.store(tx1, 100);
     instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
@@ -1048,7 +1048,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__not_found__false)
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1(version, locktime, {}, {});
+    const transaction tx1(version, locktime, {}, {});
 
     // setup end
 
@@ -1065,7 +1065,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__genesis__false)
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1(version, locktime, {}, {});
+    const transaction tx1(version, locktime, {}, {});
     instance.store(tx1, 0);
 
     // setup end
@@ -1082,7 +1082,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__no_output_at_index__false
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
 
     instance.store(tx1, 100);
 
@@ -1098,7 +1098,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__unconfirmed_at_fork_heigh
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
 
     instance.store(tx1, 100);
 
@@ -1122,10 +1122,10 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__confirmed_at_height__conf
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1201, {} } } };
+    const transaction tx1{ locktime, version, {}, { { 1201, {} } } };
 
     instance.store({ tx1 });
-    static const auto settings = system::settings(system::config::settings::mainnet);
+    const auto settings = system::settings(system::config::settings::mainnet);
     chain::block block0 = settings.genesis_block;
 
     // get transaction so confirm argument has the link
@@ -1152,10 +1152,10 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__get_output__confirmed_at_h
    transaction_database instance(file_path, 1000, 50, 100);
    BOOST_REQUIRE(instance.create());
 
-   static const transaction tx1{ locktime, version, {}, { { 1201, {} } } };
+   const transaction tx1{ locktime, version, {}, { { 1201, {} } } };
 
    instance.store({tx1});
-   static const auto settings = system::settings(system::config::settings::mainnet);
+   const auto settings = system::settings(system::config::settings::mainnet);
    chain::block block0 = settings.genesis_block;
 
    // get transaction so confirm argument has the link
@@ -1184,11 +1184,11 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__unconfirmed_at_height__un
 
     // tx1 is not confirmed as it is at coinbase position, so we test
     // with tx2
-    static const transaction tx1{ locktime, version, {}, { { 1201, {} } } };
-    static const transaction tx2{ locktime, version, {}, { { 1202, {} } } };
+    const transaction tx1{ locktime, version, {}, { { 1201, {} } } };
+    const transaction tx2{ locktime, version, {}, { { 1202, {} } } };
 
     instance.store({tx1, tx2});
-    static const auto settings = system::settings(system::config::settings::mainnet);
+    const auto settings = system::settings(system::config::settings::mainnet);
     chain::block block0 = settings.genesis_block;
 
     // get transaction so confirm argument has the link
@@ -1215,12 +1215,12 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__prevout_spent__spent)
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1201, {} } } };
-    static const transaction tx2{ locktime, version, {}, { { 1202, {} } } };
-    static const transaction tx3{ locktime, version, { { { tx1.hash(), 0 }, {}, 0 } }, { { 1100, {} } } };
+    const transaction tx1{ locktime, version, {}, { { 1201, {} } } };
+    const transaction tx2{ locktime, version, {}, { { 1202, {} } } };
+    const transaction tx3{ locktime, version, { { { tx1.hash(), 0 }, {}, 0 } }, { { 1100, {} } } };
 
     instance.store({ tx1, tx2, tx3 });
-    static const auto settings = system::settings(system::config::settings::mainnet);
+    const auto settings = system::settings(system::config::settings::mainnet);
     chain::block block0 = settings.genesis_block;
 
     // get transaction so confirm argument has the link
