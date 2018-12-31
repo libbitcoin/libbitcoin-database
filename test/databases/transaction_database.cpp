@@ -243,12 +243,12 @@ BOOST_AUTO_TEST_CASE(transaction_database__candidate__with_input_in_db__candidat
         { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
     };
 
-    chain::output::list tx1_outputs
+    const chain::output::list tx1_outputs
     {
         { 1200, {} }
     };
 
-    chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
+    const chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
     BOOST_REQUIRE(tx1.is_coinbase());
     const auto hash1 = tx1.hash();
     instance.store(tx1, 1);
@@ -258,17 +258,17 @@ BOOST_AUTO_TEST_CASE(transaction_database__candidate__with_input_in_db__candidat
     BOOST_REQUIRE(result1.transaction().hash() == hash1);
 
     // tx2: spends coinbase, tx1 as input, dummy output
-    chain::input::list tx2_inputs
+    const chain::input::list tx2_inputs
     {
         { { hash1, 0 }, {}, 0 }
     };
 
-    chain::output::list tx2_outputs
+    const chain::output::list tx2_outputs
     {
         { 1200, {} }
     };
 
-    chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
+    const chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
     const auto hash2 = tx2.hash();
     instance.store(tx2, 1);
 
@@ -327,12 +327,12 @@ BOOST_AUTO_TEST_CASE(transaction_database__uncandidate__with_input_in_db__candid
         { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
     };
 
-    chain::output::list tx1_outputs
+    const chain::output::list tx1_outputs
     {
         { 1200, {} }
     };
 
-    chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
+    const chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
     BOOST_REQUIRE(tx1.is_coinbase());
     const auto hash1 = tx1.hash();
     instance.store(tx1, 1);
@@ -342,17 +342,17 @@ BOOST_AUTO_TEST_CASE(transaction_database__uncandidate__with_input_in_db__candid
     BOOST_REQUIRE(result1.transaction().hash() == hash1);
 
     // tx2: spends coinbase, tx1 as input, dummy output
-    chain::input::list tx2_inputs
+    const chain::input::list tx2_inputs
     {
         { { hash1, 0 }, {}, 0 }
     };
 
-    chain::output::list tx2_outputs
+    const chain::output::list tx2_outputs
     {
         { 1200, {} }
     };
 
-    chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
+    const chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
     const auto hash2 = tx2.hash();
     instance.store(tx2, 1);
 
@@ -417,28 +417,28 @@ BOOST_AUTO_TEST_CASE(transaction_database__confirm2__single_transaction_with_inp
         { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
     };
 
-    chain::output::list tx1_outputs
+    const chain::output::list tx1_outputs
     {
         { 1200, {} }
     };
 
-    chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
+    const chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
     BOOST_REQUIRE(tx1.is_coinbase());
     const auto hash1 = tx1.hash();
     instance.store({tx1});
 
     // tx2: spends coinbase, tx1 as input, dummy output
-    chain::input::list tx2_inputs
+    const chain::input::list tx2_inputs
     {
         { { hash1, 0 }, {}, 0 }
     };
 
-    chain::output::list tx2_outputs
+    const chain::output::list tx2_outputs
     {
         { 1200, {} }
     };
 
-    chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
+    const chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
     const auto hash2 = tx2.hash();
     instance.store(tx2, 1);
 
@@ -488,12 +488,12 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__confirm2__single_transacti
         { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
     };
 
-    chain::output::list tx1_outputs
+    const chain::output::list tx1_outputs
     {
         { 1200, {} }
     };
 
-    chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
+    const chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
     BOOST_REQUIRE(tx1.is_coinbase());
     const auto hash1 = tx1.hash();
     instance.store({tx1});
@@ -504,12 +504,12 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__confirm2__single_transacti
         { { hash1, 0 }, {}, 0 }
     };
 
-    chain::output::list tx2_outputs
+    const chain::output::list tx2_outputs
     {
         { 1200, {} }
     };
 
-    chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
+    const chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
     const auto hash2 = tx2.hash();
     instance.store(tx2, 1);
 
@@ -544,293 +544,317 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__confirm2__single_transacti
     BOOST_REQUIRE(tx1_reloaded.transaction().outputs().front().metadata.spent(123, false));
 }
 
-////BOOST_AUTO_TEST_CASE(transaction_database_with_cache__confirm1__single_transaction_with_inputs_in_db__success)
-////{
-////    uint32_t version = 2345u;
-////    uint32_t locktime = 0xffffffff;
-////
-////    test::create(file_path);
-////    transaction_database instance(file_path, 1000, 50, 100);
-////    BOOST_REQUIRE(instance.create());
-////
-////    // tx1: coinbase transaction
-////    const chain::input::list tx1_inputs
-////    {
-////        { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
-////    };
-////
-////    chain::output::list tx1_outputs
-////    {
-////        { 1200, {} },
-////        { 1200, {} },
-////    };
-////
-////    chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
-////    BOOST_REQUIRE(tx1.is_coinbase());
-////    const auto hash1 = tx1.hash();
-////    instance.store({tx1});
-////
-////    // tx2: spends coinbase, tx1/0 as input, dummy output
-////    chain::input::list tx2_inputs
-////    {
-////        { { hash1, 0 }, {}, 0 }
-////    };
-////
-////    chain::output::list tx2_outputs
-////    {
-////        { 1200, {} }
-////    };
-////
-////    // tx3: spends coinbase, tx1/1 as input, dummy output
-////    chain::input::list tx3_inputs
-////    {
-////        { { hash1, 1 }, {}, 0 }
-////    };
-////
-////    chain::output::list tx3_outputs
-////    {
-////        { 1200, {} }
-////    };
-////
-////    chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
-////    const auto hash2 = tx2.hash();
-////    instance.store(tx2, 1);
-////
-////    chain::transaction tx3(version, locktime, tx3_inputs, tx3_outputs);
-////    const auto hash3 = tx3.hash();
-////    instance.store(tx3, 1);
-////
-////    BOOST_REQUIRE(!instance.get(hash2).transaction().outputs().front().metadata.candidate_spend);
-////
-////    BOOST_REQUIRE_EQUAL(instance.get(hash1).height(), machine::rule_fork::unverified);
-////    BOOST_REQUIRE(!instance.get(hash1).transaction().outputs().front().metadata.spent(123, false));
-////
-////    // Setup end
-////
-////    const bool confirm1 = instance.confirm(instance.get(hash1).link(), 23, 56, 89);
-////    BOOST_REQUIRE(confirm1);
-////    const bool confirm2_3 = instance.confirm({tx2, tx3}, 123, 456);
-////    BOOST_REQUIRE(confirm2_3);
-////
-////    const auto tx2_reloaded = instance.get(hash2);
-////
-////    BOOST_REQUIRE_EQUAL(tx2_reloaded.height(), 123);
-////    BOOST_REQUIRE_EQUAL(tx2_reloaded.median_time_past(), 456);
-////    BOOST_REQUIRE_EQUAL(tx2_reloaded.position(), 0);
-////    BOOST_REQUIRE(!tx2_reloaded.candidate());
-////    BOOST_REQUIRE(!tx2_reloaded.transaction().outputs().front().metadata.candidate_spend);
-////
-////    const auto tx3_reloaded = instance.get(hash3);
-////
-////    BOOST_REQUIRE_EQUAL(tx3_reloaded.height(), 123);
-////    BOOST_REQUIRE_EQUAL(tx3_reloaded.median_time_past(), 456);
-////    BOOST_REQUIRE_EQUAL(tx3_reloaded.position(), 1);
-////    BOOST_REQUIRE(!tx3_reloaded.candidate());
-////    BOOST_REQUIRE(!tx3_reloaded.transaction().outputs().front().metadata.candidate_spend);
-////
-////    const auto tx1_reloaded = instance.get(hash1);
-////
-////    BOOST_REQUIRE_EQUAL(tx1_reloaded.height(), 23);
-////    BOOST_REQUIRE_EQUAL(tx1_reloaded.median_time_past(), 56);
-////    BOOST_REQUIRE_EQUAL(tx1_reloaded.position(), 89);
-////    BOOST_REQUIRE(!tx1_reloaded.candidate());
-////
-////    BOOST_REQUIRE_EQUAL(tx1_reloaded.transaction().outputs().front().metadata.confirmed_spend_height, 123);
-////    BOOST_REQUIRE(tx1_reloaded.transaction().outputs().front().metadata.spent(123, false));
-////}
+BOOST_AUTO_TEST_CASE(transaction_database_with_cache__confirm1__block_transactions_with_inputs_in_db__success)
+{
+   uint32_t version = 2345u;
+   uint32_t locktime = 0xffffffff;
+
+   test::create(file_path);
+   transaction_database instance(file_path, 1000, 50, 100);
+   BOOST_REQUIRE(instance.create());
+
+   // tx1: coinbase transaction
+   const chain::input::list tx1_inputs
+   {
+       { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
+   };
+
+   const chain::output::list tx1_outputs
+   {
+       { 1200, {} }
+   };
+
+   const chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
+   BOOST_REQUIRE(tx1.is_coinbase());
+   const auto hash1 = tx1.hash();
+   instance.store({tx1});
+
+   // tx2: coinbase for block0
+   const chain::input::list tx2_inputs
+   {
+       { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
+   };
+
+   const chain::output::list tx2_outputs
+   {
+       { 1201, {} }
+   };
+
+   // tx3: spends coinbase, tx1/1 as input, dummy output
+   const chain::input::list tx3_inputs
+   {
+       { { hash1, 0 }, {}, 0 }
+   };
+
+   chain::output::list tx3_outputs
+   {
+       { 1200, {} }
+   };
+
+   const chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
+   const auto hash2 = tx2.hash();
+   instance.store(tx2, 1);
+
+   const chain::transaction tx3(version, locktime, tx3_inputs, tx3_outputs);
+   const auto hash3 = tx3.hash();
+   instance.store(tx3, 1);
+
+   BOOST_REQUIRE(!instance.get(hash2).transaction().outputs().front().metadata.candidate_spend);
+
+   BOOST_REQUIRE_EQUAL(instance.get(hash1).height(), machine::rule_fork::unverified);
+   BOOST_REQUIRE(!instance.get(hash1).transaction().outputs().front().metadata.spent(123, false));
+
+    const auto settings = system::settings(system::config::settings::mainnet);
+    chain::block block0 = settings.genesis_block;
+    block0.set_transactions({ tx2, tx3 });
+
+    // Setup end
+
+   const bool confirm1 = instance.confirm(instance.get(hash1).link(), 23, 56, 89);
+   BOOST_REQUIRE(confirm1);
+
+   const auto tx1_reloaded = instance.get(hash1);
+
+   BOOST_REQUIRE_EQUAL(tx1_reloaded.height(), 23);
+   BOOST_REQUIRE_EQUAL(tx1_reloaded.median_time_past(), 56);
+   BOOST_REQUIRE_EQUAL(tx1_reloaded.position(), 89);
+   BOOST_REQUIRE(!tx1_reloaded.candidate());
+
+   const bool confirm2_3 = instance.confirm(block0, 123, 456);
+   BOOST_REQUIRE(confirm2_3);
+
+   const auto tx2_reloaded = instance.get(hash2);
+
+   BOOST_REQUIRE_EQUAL(tx2_reloaded.height(), 123);
+   BOOST_REQUIRE_EQUAL(tx2_reloaded.median_time_past(), 456);
+   BOOST_REQUIRE_EQUAL(tx2_reloaded.position(), 0);
+   BOOST_REQUIRE(!tx2_reloaded.candidate());
+   BOOST_REQUIRE(!tx2_reloaded.transaction().outputs().front().metadata.candidate_spend);
+
+   const auto tx3_reloaded = instance.get(hash3);
+
+   BOOST_REQUIRE_EQUAL(tx3_reloaded.height(), 123);
+   BOOST_REQUIRE_EQUAL(tx3_reloaded.median_time_past(), 456);
+   BOOST_REQUIRE_EQUAL(tx3_reloaded.position(), 1);
+   BOOST_REQUIRE(!tx3_reloaded.candidate());
+   BOOST_REQUIRE(!tx3_reloaded.transaction().outputs().front().metadata.candidate_spend);
+
+   const auto tx1_reloaded2 = instance.get(hash1);
+
+   BOOST_REQUIRE_EQUAL(tx1_reloaded2.height(), 23);
+   BOOST_REQUIRE_EQUAL(tx1_reloaded2.median_time_past(), 56);
+   BOOST_REQUIRE_EQUAL(tx1_reloaded2.position(), 89);
+   BOOST_REQUIRE(!tx1_reloaded2.candidate());
+
+   BOOST_REQUIRE_EQUAL(tx1_reloaded2.output(0).metadata.confirmed_spend_height, 123);
+   
+   BOOST_REQUIRE(tx1_reloaded2.transaction().outputs().front().metadata.spent(123, false));
+   BOOST_REQUIRE(tx1_reloaded2.is_spent(123, false));
+}
 
 // Unconfirm
 // ----------------------------------------------------------------------------
 
-////BOOST_AUTO_TEST_CASE(transaction_database__unconfirm__single_unconfirmed__success)
-////{
-////    uint32_t version = 2345u;
-////    uint32_t locktime = 0xffffffff;
-////
-////    test::create(file_path);
-////    transaction_database instance(file_path, 1000, 50, 0);
-////    BOOST_REQUIRE(instance.create());
-////
-////    // tx1: coinbase transaction
-////    const chain::input::list tx1_inputs
-////    {
-////        { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
-////    };
-////
-////    chain::output::list tx1_outputs
-////    {
-////        { 1200, {} }
-////    };
-////
-////    chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
-////    BOOST_REQUIRE(tx1.is_coinbase());
-////    const auto hash1 = tx1.hash();
-////
-////    // tx2: spends coinbase, tx1 as input, dummy output
-////    chain::input::list tx2_inputs
-////    {
-////        { { hash1, 0 }, {}, 0 }
-////    };
-////
-////    chain::output::list tx2_outputs
-////    {
-////        { 1200, {} }
-////    };
-////
-////    chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
-////    const auto hash2 = tx2.hash();
-////
-////    instance.store({tx1, tx2});
-////
-////    // Setup end
-////
-////    const bool result = instance.unconfirm(instance.get(hash2).link());
-////    BOOST_REQUIRE(!result);
-////}
+BOOST_AUTO_TEST_CASE(transaction_database__unconfirm__block_with_unconfirmed_txs__success)
+{
+   uint32_t version = 2345u;
+   uint32_t locktime = 0xffffffff;
 
-////BOOST_AUTO_TEST_CASE(transaction_database__unconfirm__single_confirmed__success)
-////{
-////    uint32_t version = 2345u;
-////    uint32_t locktime = 0xffffffff;
-////
-////    test::create(file_path);
-////    transaction_database instance(file_path, 1000, 50, 0);
-////    BOOST_REQUIRE(instance.create());
-////
-////    // tx1: coinbase transaction
-////    const chain::input::list tx1_inputs
-////    {
-////        { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
-////    };
-////
-////    chain::output::list tx1_outputs
-////    {
-////        { 1200, {} }
-////    };
-////
-////    chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
-////    BOOST_REQUIRE(tx1.is_coinbase());
-////    const auto hash1 = tx1.hash();
-////
-////    // tx2: spends coinbase, tx1 as input, dummy output
-////    chain::input::list tx2_inputs
-////    {
-////        { { hash1, 0 }, {}, 0 }
-////    };
-////
-////    chain::output::list tx2_outputs
-////    {
-////        { 1200, {} }
-////    };
-////
-////    chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
-////    const auto hash2 = tx2.hash();
-////
-////    instance.store({tx1, tx2});
-////    instance.confirm(instance.get(tx1.hash()).link(), 23, 56, 0);
-////    instance.confirm(instance.get(tx2.hash()).link(), 123, 156, 0);
-////
-////    BOOST_REQUIRE_EQUAL(instance.get(hash1).transaction().outputs().front().metadata.confirmed_spend_height, 123);
-////    BOOST_REQUIRE(instance.get(hash1).transaction().outputs().front().metadata.spent(123, false));
-////
-////    // Setup end
-////
-////    const bool result = instance.unconfirm(instance.get(hash2).link());
-////    BOOST_REQUIRE(result);
-////
-////    const auto tx2_reloaded = instance.get(hash2);
-////
-////    BOOST_REQUIRE_EQUAL(tx2_reloaded.height(), machine::rule_fork::unverified);
-////    BOOST_REQUIRE_EQUAL(tx2_reloaded.median_time_past(), 0u);
-////    BOOST_REQUIRE_EQUAL(tx2_reloaded.position(), transaction_result::unconfirmed);
-////    BOOST_REQUIRE(!tx2_reloaded.candidate());
-////    BOOST_REQUIRE(!tx2_reloaded.transaction().outputs().front().metadata.candidate_spend);
-////
-////    const auto tx1_reloaded = instance.get(hash1);
-////
-////    BOOST_REQUIRE_EQUAL(tx1_reloaded.height(), 23);
-////    BOOST_REQUIRE_EQUAL(tx1_reloaded.median_time_past(), 56);
-////    BOOST_REQUIRE_EQUAL(tx1_reloaded.position(), 0);
-////    BOOST_REQUIRE(!tx1_reloaded.candidate());
-////    BOOST_REQUIRE(!tx1_reloaded.transaction().outputs().front().metadata.candidate_spend);
-////
-////
-////    BOOST_REQUIRE_EQUAL(tx1_reloaded.transaction().outputs().front().metadata.confirmed_spend_height,
-////        machine::rule_fork::unverified);
-////    BOOST_REQUIRE(!tx1_reloaded.transaction().outputs().front().metadata.spent(123, false));
-////}
+   test::create(file_path);
+   transaction_database instance(file_path, 1000, 50, 0);
+   BOOST_REQUIRE(instance.create());
 
-////BOOST_AUTO_TEST_CASE(transaction_database_with_cache__unconfirm__single_confirmed__success)
-////{
-////    uint32_t version = 2345u;
-////    uint32_t locktime = 0xffffffff;
-////
-////    test::create(file_path);
-////    transaction_database instance(file_path, 1000, 50, 100);
-////    BOOST_REQUIRE(instance.create());
-////
-////    // tx1: coinbase transaction
-////    const chain::input::list tx1_inputs
-////    {
-////        { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
-////    };
-////
-////    chain::output::list tx1_outputs
-////    {
-////        { 1200, {} }
-////    };
-////
-////    chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
-////    BOOST_REQUIRE(tx1.is_coinbase());
-////    const auto hash1 = tx1.hash();
-////
-////    // tx2: spends coinbase, tx1 as input, dummy output
-////    chain::input::list tx2_inputs
-////    {
-////        { { hash1, 0 }, {}, 0 }
-////    };
-////
-////    chain::output::list tx2_outputs
-////    {
-////        { 1200, {} }
-////    };
-////
-////    chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
-////    const auto hash2 = tx2.hash();
-////
-////    instance.store({tx1, tx2});
-////    instance.confirm(instance.get(tx1.hash()).link(), 23, 56, 0);
-////    instance.confirm(instance.get(tx2.hash()).link(), 123, 156, 0);
-////
-////    BOOST_REQUIRE_EQUAL(instance.get(hash1).transaction().outputs().front().metadata.confirmed_spend_height, 123);
-////    BOOST_REQUIRE(instance.get(hash1).transaction().outputs().front().metadata.spent(123, false));
-////
-////    // Setup end
-////
-////    const bool result = instance.unconfirm(instance.get(hash2).link());
-////    BOOST_REQUIRE(result);
-////
-////    const auto tx2_reloaded = instance.get(hash2);
-////
-////    BOOST_REQUIRE_EQUAL(tx2_reloaded.height(), machine::rule_fork::unverified);
-////    BOOST_REQUIRE_EQUAL(tx2_reloaded.median_time_past(), 0u);
-////    BOOST_REQUIRE_EQUAL(tx2_reloaded.position(), transaction_result::unconfirmed);
-////    BOOST_REQUIRE(!tx2_reloaded.candidate());
-////    BOOST_REQUIRE(!tx2_reloaded.transaction().outputs().front().metadata.candidate_spend);
-////
-////    const auto tx1_reloaded = instance.get(hash1);
-////
-////    BOOST_REQUIRE_EQUAL(tx1_reloaded.height(), 23);
-////    BOOST_REQUIRE_EQUAL(tx1_reloaded.median_time_past(), 56);
-////    BOOST_REQUIRE_EQUAL(tx1_reloaded.position(), 0);
-////    BOOST_REQUIRE(!tx1_reloaded.candidate());
-////    BOOST_REQUIRE(!tx1_reloaded.transaction().outputs().front().metadata.candidate_spend);
-////
-////
-////    BOOST_REQUIRE_EQUAL(tx1_reloaded.transaction().outputs().front().metadata.confirmed_spend_height,
-////        machine::rule_fork::unverified);
-////    BOOST_REQUIRE(!tx1_reloaded.transaction().outputs().front().metadata.spent(123, false));
-////}
+   // tx1: coinbase transaction
+   const chain::input::list tx1_inputs
+   {
+       { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
+   };
+
+   const chain::output::list tx1_outputs
+   {
+       { 1200, {} }
+   };
+
+   const chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
+   BOOST_REQUIRE(tx1.is_coinbase());
+   const auto hash1 = tx1.hash();
+   instance.store(tx1, 1);
+
+   // tx2: spends coinbase, tx1 as input, dummy output
+   const chain::input::list tx2_inputs
+   {
+       { { hash1, 0 }, {}, 0 }
+   };
+
+   const chain::output::list tx2_outputs
+   {
+       { 1200, {} }
+   };
+
+   const chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
+   instance.store(tx2, 1);
+
+   const auto settings = system::settings(system::config::settings::mainnet);
+   chain::block block0 = settings.genesis_block;
+   block0.set_transactions({ tx1, tx2 });
+   
+   // Setup end
+
+   const bool result = instance.unconfirm(block0);
+   BOOST_REQUIRE(!result);
+}
+
+BOOST_AUTO_TEST_CASE(transaction_database__unconfirm__single_confirmed__success)
+{
+   uint32_t version = 2345u;
+   uint32_t locktime = 0xffffffff;
+
+   test::create(file_path);
+   transaction_database instance(file_path, 1000, 50, 0);
+   BOOST_REQUIRE(instance.create());
+
+   // tx1: coinbase transaction
+   const chain::input::list tx1_inputs
+   {
+       { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
+   };
+
+   const chain::output::list tx1_outputs
+   {
+       { 1200, {} }
+   };
+
+   chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
+   BOOST_REQUIRE(tx1.is_coinbase());
+   const auto hash1 = tx1.hash();
+   instance.store(tx1, 1);
+
+   // tx2: spends coinbase, tx1 as input, dummy output
+   const chain::input::list tx2_inputs
+   {
+       { { hash1, 0 }, {}, 0 }
+   };
+
+   const chain::output::list tx2_outputs
+   {
+       { 1200, {} }
+   };
+
+   const chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
+   const auto hash2 = tx2.hash();
+   instance.store(tx2, 1);
+
+   instance.confirm(instance.get(tx1.hash()).link(), 23, 56, 1);
+   instance.confirm(instance.get(tx2.hash()).link(), 123, 156, 1);
+
+   BOOST_REQUIRE_EQUAL(instance.get(hash1).transaction().outputs().front().metadata.confirmed_spend_height, 123);
+   BOOST_REQUIRE(instance.get(hash1).transaction().outputs().front().metadata.spent(123, false));
+
+   const auto settings = system::settings(system::config::settings::mainnet);
+   chain::block block0 = settings.genesis_block;
+   block0.set_transactions({tx2});
+   
+   // Setup end
+
+   const bool result = instance.unconfirm(block0);
+   BOOST_REQUIRE(result);
+
+   const auto tx2_reloaded = instance.get(hash2);
+
+   BOOST_REQUIRE_EQUAL(tx2_reloaded.height(), machine::rule_fork::unverified);
+   BOOST_REQUIRE_EQUAL(tx2_reloaded.median_time_past(), 0u);
+   BOOST_REQUIRE_EQUAL(tx2_reloaded.position(), transaction_result::unconfirmed);
+   BOOST_REQUIRE(!tx2_reloaded.candidate());
+   BOOST_REQUIRE(!tx2_reloaded.transaction().outputs().front().metadata.candidate_spend);
+
+   const auto tx1_reloaded = instance.get(hash1);
+
+   BOOST_REQUIRE_EQUAL(tx1_reloaded.height(), 23);
+   BOOST_REQUIRE_EQUAL(tx1_reloaded.median_time_past(), 56);
+   BOOST_REQUIRE_EQUAL(tx1_reloaded.position(), 1);
+   BOOST_REQUIRE(!tx1_reloaded.candidate());
+   BOOST_REQUIRE(!tx1_reloaded.transaction().outputs().front().metadata.candidate_spend);
+
+
+   BOOST_REQUIRE_EQUAL(tx1_reloaded.transaction().outputs().front().metadata.confirmed_spend_height, machine::rule_fork::unverified);
+   BOOST_REQUIRE(!tx1_reloaded.transaction().outputs().front().metadata.spent(123, false));
+}
+
+BOOST_AUTO_TEST_CASE(transaction_database_with_cache__unconfirm__single_confirmed__success)
+{
+   uint32_t version = 2345u;
+   uint32_t locktime = 0xffffffff;
+
+   test::create(file_path);
+   transaction_database instance(file_path, 1000, 50, 100);
+   BOOST_REQUIRE(instance.create());
+
+   // tx1: coinbase transaction
+   const chain::input::list tx1_inputs
+   {
+       { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
+   };
+
+   const chain::output::list tx1_outputs
+   {
+       { 1200, {} }
+   };
+
+   const chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
+   BOOST_REQUIRE(tx1.is_coinbase());
+   const auto hash1 = tx1.hash();
+   instance.store(tx1, 1);
+
+   // tx2: spends coinbase, tx1 as input, dummy output
+   const chain::input::list tx2_inputs
+   {
+       { { hash1, 0 }, {}, 0 }
+   };
+
+   const chain::output::list tx2_outputs
+   {
+       { 1200, {} }
+   };
+
+   const chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
+   const auto hash2 = tx2.hash();
+   instance.store(tx2, 1);
+
+   instance.confirm(instance.get(tx1.hash()).link(), 23, 56, 1);
+   instance.confirm(instance.get(tx2.hash()).link(), 123, 156, 1);
+
+   BOOST_REQUIRE_EQUAL(instance.get(hash1).transaction().outputs().front().metadata.confirmed_spend_height, 123);
+   BOOST_REQUIRE(instance.get(hash1).transaction().outputs().front().metadata.spent(123, false));
+
+   const auto settings = system::settings(system::config::settings::mainnet);
+   chain::block block0 = settings.genesis_block;
+   block0.set_transactions({tx2});
+
+   // Setup end
+
+   const bool result = instance.unconfirm(block0);
+   BOOST_REQUIRE(result);
+
+   const auto tx2_reloaded = instance.get(hash2);
+
+   BOOST_REQUIRE_EQUAL(tx2_reloaded.height(), machine::rule_fork::unverified);
+   BOOST_REQUIRE_EQUAL(tx2_reloaded.median_time_past(), 0u);
+   BOOST_REQUIRE_EQUAL(tx2_reloaded.position(), transaction_result::unconfirmed);
+   BOOST_REQUIRE(!tx2_reloaded.candidate());
+   BOOST_REQUIRE(!tx2_reloaded.transaction().outputs().front().metadata.candidate_spend);
+
+   const auto tx1_reloaded = instance.get(hash1);
+
+   BOOST_REQUIRE_EQUAL(tx1_reloaded.height(), 23);
+   BOOST_REQUIRE_EQUAL(tx1_reloaded.median_time_past(), 56);
+   BOOST_REQUIRE_EQUAL(tx1_reloaded.position(), 1);
+   BOOST_REQUIRE(!tx1_reloaded.candidate());
+   BOOST_REQUIRE(!tx1_reloaded.transaction().outputs().front().metadata.candidate_spend);
+
+
+   BOOST_REQUIRE_EQUAL(tx1_reloaded.transaction().outputs().front().metadata.confirmed_spend_height, machine::rule_fork::unverified);
+   BOOST_REQUIRE(!tx1_reloaded.transaction().outputs().front().metadata.spent(123, false));
+}
 
 
 // Queries - get_block_metadata
@@ -845,7 +869,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__nonexisting__not_
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx(version, locktime, {}, {});
+    const transaction tx(version, locktime, {}, {});
 
     // setup end
 
@@ -866,8 +890,8 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__no_bip34_and_spen
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
-    static const transaction tx2{ locktime, version, { { { tx1.hash(), 0 }, {}, 0 } }, { { 1100, {} } } };
+    const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    const transaction tx2{ locktime, version, { { { tx1.hash(), 0 }, {}, 0 } }, { { 1100, {} } } };
 
     instance.store({ tx1, tx2 });
     instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
@@ -892,7 +916,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__no_bip34_and_not_
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
 
     instance.store(tx1, 100);
 
@@ -915,7 +939,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__confirmed_and_for
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
 
     instance.store(tx1, 100);
 
@@ -939,7 +963,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__confirmed__unveri
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
 
     instance.store(tx1, 100);
     instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
@@ -966,7 +990,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__nonexisting__not_f
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx(version, locktime, {}, {});
+    const transaction tx(version, locktime, {}, {});
 
     // setup end
 
@@ -986,7 +1010,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__confirmed__unverif
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
 
     instance.store(tx1, 100);
     instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
@@ -1024,7 +1048,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__not_found__false)
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1(version, locktime, {}, {});
+    const transaction tx1(version, locktime, {}, {});
 
     // setup end
 
@@ -1041,7 +1065,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__genesis__false)
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1(version, locktime, {}, {});
+    const transaction tx1(version, locktime, {}, {});
     instance.store(tx1, 0);
 
     // setup end
@@ -1058,7 +1082,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__no_output_at_index__false
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
 
     instance.store(tx1, 100);
 
@@ -1074,7 +1098,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__unconfirmed_at_fork_heigh
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
 
     instance.store(tx1, 100);
 
@@ -1098,53 +1122,56 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__confirmed_at_height__conf
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    const transaction tx1{ locktime, version, {}, { { 1201, {} } } };
 
-    instance.store(tx1, 100);
-    instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
+    instance.store({ tx1 });
+    const auto settings = system::settings(system::config::settings::mainnet);
+    chain::block block0 = settings.genesis_block;
+
+    // get transaction so confirm argument has the link
+    block0.set_transactions({ instance.get(tx1.hash()).transaction() });
+    instance.confirm(block0, 123, 456);
 
     output_point point{ tx1.hash(), 0 };
 
     BOOST_REQUIRE(instance.get_output(point, 123, false));
-    BOOST_REQUIRE(!point.metadata.coinbase);
+    BOOST_REQUIRE(point.metadata.coinbase);
     BOOST_REQUIRE(!point.metadata.candidate);
     BOOST_REQUIRE(point.metadata.confirmed);
     BOOST_REQUIRE_EQUAL(point.metadata.height, 123);
-    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);
+    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 456);
     BOOST_REQUIRE(!point.metadata.spent);
 }
 
-////BOOST_AUTO_TEST_CASE(transaction_database_with_cache__get_output__confirmed_at_height__confirmed)
-////{
-////    uint32_t version = 2345u;
-////    uint32_t locktime = 0xffffffff;
-////
-////    test::create(file_path);
-////    transaction_database instance(file_path, 1000, 50, 100);
-////    BOOST_REQUIRE(instance.create());
-////
-////    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
-////
-////    // TODO: these two calls are now incompatible.
-////    // store(tx) is usable only for tx pool txs.
-////    // confirm(link) is usable only for optimizing confirmation of a block
-////    // populated from without use of unspent output caching.
-////    // The combination below mixes these two scenarios. As a result
-////    // point.metadata.confirmed is false because the output cache still retains
-////    // the unconfirmed output, since it cannot be confirmed within the cache.
-////    instance.store(tx1, 100);
-////    instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
-////
-////    output_point point{ tx1.hash(), 0 };
-////
-////    BOOST_REQUIRE(instance.get_output(point, 123, false));
-////    BOOST_REQUIRE(!point.metadata.coinbase);
-////    BOOST_REQUIRE(!point.metadata.candidate);
-////    BOOST_REQUIRE(point.metadata.confirmed);
-////    BOOST_REQUIRE_EQUAL(point.metadata.height, 123);
-////    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);
-////    BOOST_REQUIRE(!point.metadata.spent);
-////}
+BOOST_AUTO_TEST_CASE(transaction_database_with_cache__get_output__confirmed_at_height__confirmed)
+{
+   uint32_t version = 2345u;
+   uint32_t locktime = 0xffffffff;
+
+   test::create(file_path);
+   transaction_database instance(file_path, 1000, 50, 100);
+   BOOST_REQUIRE(instance.create());
+
+   const transaction tx1{ locktime, version, {}, { { 1201, {} } } };
+
+   instance.store({tx1});
+   const auto settings = system::settings(system::config::settings::mainnet);
+   chain::block block0 = settings.genesis_block;
+
+   // get transaction so confirm argument has the link
+   block0.set_transactions({ instance.get(tx1.hash()).transaction() });
+   instance.confirm(block0, 123, 456);
+
+   output_point point{ tx1.hash(), 0 };
+
+   BOOST_REQUIRE(instance.get_output(point, 123, false));
+   BOOST_REQUIRE(!point.metadata.coinbase);
+   BOOST_REQUIRE(!point.metadata.candidate);
+   BOOST_REQUIRE(point.metadata.confirmed);
+   BOOST_REQUIRE_EQUAL(point.metadata.height, 123);
+   BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 456);
+   BOOST_REQUIRE(!point.metadata.spent);
+}
 
 BOOST_AUTO_TEST_CASE(transaction_database__get_output__unconfirmed_at_height__unconfirmed)
 {
@@ -1155,19 +1182,27 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__unconfirmed_at_height__un
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
+    // tx1 is not confirmed as it is at coinbase position, so we test
+    // with tx2
+    const transaction tx1{ locktime, version, {}, { { 1201, {} } } };
+    const transaction tx2{ locktime, version, {}, { { 1202, {} } } };
 
-    instance.store(tx1, 100);
-    instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
+    instance.store({tx1, tx2});
+    const auto settings = system::settings(system::config::settings::mainnet);
+    chain::block block0 = settings.genesis_block;
 
-    output_point point{ tx1.hash(), 0 };
+    // get transaction so confirm argument has the link
+    block0.set_transactions({ instance.get(tx1.hash()).transaction(), instance.get(tx2.hash()).transaction() });
+    instance.confirm(block0, 123, 456);
+
+    output_point point{ tx2.hash(), 0 };
 
     BOOST_REQUIRE(instance.get_output(point, 100, false));
     BOOST_REQUIRE(!point.metadata.coinbase);
     BOOST_REQUIRE(!point.metadata.candidate);
     BOOST_REQUIRE(!point.metadata.confirmed);
     BOOST_REQUIRE_EQUAL(point.metadata.height, 123);
-    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);
+    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 456);
     BOOST_REQUIRE(!point.metadata.spent);
 }
 
@@ -1180,49 +1215,40 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__prevout_spent__spent)
     transaction_database instance(file_path, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
-    static const transaction tx2{ locktime, version, { { { tx1.hash(), 0 }, {}, 0 } }, { { 1100, {} } } };
+    const transaction tx1{ locktime, version, {}, { { 1201, {} } } };
+    const transaction tx2{ locktime, version, {}, { { 1202, {} } } };
+    const transaction tx3{ locktime, version, { { { tx1.hash(), 0 }, {}, 0 } }, { { 1100, {} } } };
 
-    instance.store({ tx1, tx2 });
-    instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
-    instance.confirm(instance.get(tx2.hash()).link(), 1230, 1560, 1780);
+    instance.store({ tx1, tx2, tx3 });
+    const auto settings = system::settings(system::config::settings::mainnet);
+    chain::block block0 = settings.genesis_block;
 
-    output_point point{ tx1.hash(), 0 };
+    // get transaction so confirm argument has the link
+    block0.set_transactions({ instance.get(tx1.hash()).transaction() });
+    instance.confirm(block0, 123, 456);
 
-    BOOST_REQUIRE(instance.get_output(point, 1230, false));
-    BOOST_REQUIRE(!point.metadata.coinbase);
-    BOOST_REQUIRE(!point.metadata.candidate);
-    BOOST_REQUIRE(point.metadata.confirmed);
-    BOOST_REQUIRE_EQUAL(point.metadata.height, 123);
-    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);
-    BOOST_REQUIRE(point.metadata.spent);
-}
-
-BOOST_AUTO_TEST_CASE(transaction_database__get_output__prevout_unspent_at_height__spent)
-{
-    uint32_t version = 2345u;
-    uint32_t locktime = 0xffffffff;
-
-    test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
-    BOOST_REQUIRE(instance.create());
-
-    static const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
-    static const transaction tx2{ locktime, version, { { { tx1.hash(), 0 }, {}, 0 } }, { { 1100, {} } } };
-
-    instance.store({ tx1, tx2 });
-    instance.confirm(instance.get(tx1.hash()).link(), 123, 156, 178);
-    instance.confirm(instance.get(tx2.hash()).link(), 1230, 1560, 1780);
+    auto header1 = block0.header();
+    header1.set_nonce(4);
+    block block1(header1, { instance.get(tx2.hash()).transaction(), instance.get(tx3.hash()).transaction() });
+    instance.confirm(block1, 1230, 4560);
 
     output_point point{ tx1.hash(), 0 };
 
     BOOST_REQUIRE(instance.get_output(point, 1229, false));
-    BOOST_REQUIRE(!point.metadata.coinbase);
+    BOOST_REQUIRE(point.metadata.coinbase);
     BOOST_REQUIRE(!point.metadata.candidate);
     BOOST_REQUIRE(point.metadata.confirmed);
     BOOST_REQUIRE_EQUAL(point.metadata.height, 123);
-    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 156);
+    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 456);
     BOOST_REQUIRE(!point.metadata.spent);
+
+    BOOST_REQUIRE(instance.get_output(point, 1230, false));
+    BOOST_REQUIRE(point.metadata.coinbase);
+    BOOST_REQUIRE(!point.metadata.candidate);
+    BOOST_REQUIRE(point.metadata.confirmed);
+    BOOST_REQUIRE_EQUAL(point.metadata.height, 123);
+    BOOST_REQUIRE_EQUAL(point.metadata.median_time_past, 456);
+    BOOST_REQUIRE(point.metadata.spent);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
