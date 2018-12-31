@@ -262,6 +262,7 @@ code data_base::catalog(const block& block)
     ///////////////////////////////////////////////////////////////////////////
     conditional_lock lock(flush_each_write());
 
+    const auto start = asio::steady_clock::now();
     if ((ec = verify_exists(*blocks_, block.header())))
         return ec;
 
@@ -276,6 +277,7 @@ code data_base::catalog(const block& block)
 
     addresses_->commit();
 
+    block.metadata.catalog = asio::steady_clock::now() - start;
     return end_write() ? error::success : error::store_lock_failure;
     //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     ///////////////////////////////////////////////////////////////////////////
@@ -327,6 +329,7 @@ code data_base::reorganize(const config::checkpoint& fork_point,
 code data_base::confirm(const hash_digest& block_hash, size_t height)
 {
     code ec;
+
     if ((ec = verify_confirm(*blocks_, block_hash, height)))
         return error::operation_failed;
 
@@ -357,6 +360,7 @@ code data_base::update(const chain::block& block, size_t height)
     ///////////////////////////////////////////////////////////////////////////
     conditional_lock lock(flush_each_write());
 
+    const auto start = asio::steady_clock::now();
     if ((ec = verify_update(*blocks_, block, height)))
         return ec;
 
@@ -377,6 +381,7 @@ code data_base::update(const chain::block& block, size_t height)
 
     commit();
 
+    block.metadata.associate = asio::steady_clock::now() - start;
     return end_write() ? error::success : error::store_lock_failure;
     //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     ///////////////////////////////////////////////////////////////////////////
@@ -417,6 +422,7 @@ code data_base::candidate(const block& block)
     ///////////////////////////////////////////////////////////////////////////
     conditional_lock lock(flush_each_write());
 
+    const auto start = asio::steady_clock::now();
     if ((ec = verify_not_failed(*blocks_, block)))
         return ec;
 
@@ -439,6 +445,7 @@ code data_base::candidate(const block& block)
     header.metadata.error = error::success;
     header.metadata.validated = true;
 
+    block.metadata.candidate = asio::steady_clock::now() - start;
     return end_write() ? error::success : error::store_lock_failure;
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -692,6 +699,7 @@ code data_base::push_block(const block& block, size_t height)
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(write_mutex_);
 
+    const auto start = asio::steady_clock::now();
     if ((ec = verify_push(*blocks_, block, height)))
         return ec;
 
@@ -710,6 +718,7 @@ code data_base::push_block(const block& block, size_t height)
 
     commit();
 
+    block.metadata.confirm = asio::steady_clock::now() - start;
     return end_write() ? error::success : error::store_lock_failure;
     //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     ///////////////////////////////////////////////////////////////////////////
