@@ -73,7 +73,7 @@ void unspent_outputs::add(const transaction& tx, size_t height,
 
     if (tx.is_coinbase())
     {
-        LOG_DEBUG(LOG_DATABASE)
+        LOG_VERBOSE(LOG_DATABASE)
             << "Output cache hit rate: " << hit_rate() << ", size: " << size();
     }
 
