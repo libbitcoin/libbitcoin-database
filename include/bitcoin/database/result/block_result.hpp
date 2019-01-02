@@ -58,7 +58,7 @@ public:
     system::hash_digest hash() const;
 
     /// The block header (requeried each call).
-    system::chain::header header() const;
+    system::chain::header header(bool metadata=false) const;
 
     /// The header.bits of this block.
     uint32_t bits() const;
@@ -87,6 +87,9 @@ public:
     /// Iterate over the transaction link set.
     transaction_iterator begin() const;
     transaction_iterator end() const;
+
+    /// Set metadata onto the given header.
+    void block_result::set_metadata(const system::chain::header& header) const;
 
 private:
     system::chain::header header_;
