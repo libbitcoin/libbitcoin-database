@@ -54,11 +54,11 @@ public:
     /// The link for the block slab.
     array_index link() const;
 
-    /// The block header hash (from cache).
+    /// The block header hash (requeried each call).
     system::hash_digest hash() const;
 
-    /// The block header.
-    const system::chain::header& header() const;
+    /// The block header (requeried each call).
+    system::chain::header header() const;
 
     /// The header.bits of this block.
     uint32_t bits() const;
