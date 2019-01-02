@@ -222,8 +222,7 @@ static chain_state::data data_for_chain_state()
 
 static void set_state(block& block)
 {
-    auto state = std::make_shared<chain_state>(
-        chain_state{ data_for_chain_state(), {}, 0, 0, {} });
+    const auto state = std::make_shared<chain_state>(chain_state{ data_for_chain_state(), {}, 0, 0, {} });
     block.header().metadata.state = state;
 }
 
@@ -383,7 +382,7 @@ BOOST_AUTO_TEST_CASE(data_base__create__block_transactions_index_interaction__su
   
     data_base instance(settings); 
    
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
    
     test_heights(instance, 0u, 0u);
@@ -410,7 +409,7 @@ BOOST_AUTO_TEST_CASE(data_base__create__genesis_block_available__success)
 
     data_base instance(settings); 
 
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     const chain::block& genesis = bc_settings.genesis_block;    
     BOOST_REQUIRE(instance.create(genesis));
 
@@ -430,7 +429,7 @@ BOOST_AUTO_TEST_CASE(data_base__push__adds_to_blocks_and_transactions_validates_
   
     data_base instance(settings); 
    
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
 
     const auto block1 = read_block(MAINNET_BLOCK1);   
@@ -461,7 +460,7 @@ BOOST_AUTO_TEST_CASE(data_base__push_block__not_existing___failure)
     
     data_base_accessor instance(settings); 
     
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
     
     const auto block1 = read_block(MAINNET_BLOCK1);
@@ -489,7 +488,7 @@ BOOST_AUTO_TEST_CASE(data_base__push_block__incorrect_height___failure)
 
     data_base_accessor instance(settings);
 
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
 
     const auto block1 = read_block(MAINNET_BLOCK1);
@@ -521,7 +520,7 @@ BOOST_AUTO_TEST_CASE(data_base__push_header__missing_parent___failure)
 
     data_base_accessor instance(settings);
 
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
 
     auto block1 = read_block(MAINNET_BLOCK1);
@@ -550,7 +549,7 @@ BOOST_AUTO_TEST_CASE(data_base__push_block_and_update__already_candidated___succ
   
     data_base_accessor instance(settings); 
    
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
    
     const auto block1 = read_block(MAINNET_BLOCK1);
@@ -584,7 +583,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_header_not_top___failure)
   
     data_base_accessor instance(settings); 
    
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
    
     const auto block1 = read_block(MAINNET_BLOCK1);
@@ -608,7 +607,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_header__candidate___success)
   
     data_base_accessor instance(settings); 
    
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
    
     const auto block1 = read_block(MAINNET_BLOCK1);
@@ -641,7 +640,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_block_not_top___failure)
 
     data_base_accessor instance(settings);
 
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
 
     const auto block1 = read_block(MAINNET_BLOCK1);
@@ -665,7 +664,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_block__confirmed___success)
 
     data_base_accessor instance(settings);
 
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
 
     const auto block1 = read_block(MAINNET_BLOCK1);
@@ -700,7 +699,7 @@ BOOST_AUTO_TEST_CASE(data_base__push_all_and_update__already_candidated___succes
     
     data_base_accessor instance(settings); 
     
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     const chain::block& genesis = bc_settings.genesis_block;
     BOOST_REQUIRE(instance.create(genesis));
     
@@ -757,7 +756,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above_missing_forkpoint_hash___failure)
   
     data_base_accessor instance(settings); 
    
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
    
     const auto block1 = read_block(MAINNET_BLOCK1);
@@ -787,7 +786,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__wrong_forkpoint_height___failure)
   
     data_base_accessor instance(settings); 
    
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     const chain::block& genesis = bc_settings.genesis_block;
     BOOST_REQUIRE(instance.create(genesis));
    
@@ -813,7 +812,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__pop_zero___success)
   
     data_base_accessor instance(settings); 
    
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     const chain::block& genesis = bc_settings.genesis_block;
     BOOST_REQUIRE(instance.create(genesis));
    
@@ -842,7 +841,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__candidated_not_confirmed___success)
   
     data_base_accessor instance(settings); 
    
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     const chain::block& genesis = bc_settings.genesis_block;
     BOOST_REQUIRE(instance.create(genesis));
    
@@ -897,7 +896,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__wrong_forkpoint_height___failure)
 
     data_base_accessor instance(settings);
 
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     const chain::block& genesis = bc_settings.genesis_block;
     BOOST_REQUIRE(instance.create(genesis));
 
@@ -923,7 +922,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__pop_zero___success)
 
     data_base_accessor instance(settings);
 
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     const chain::block& genesis = bc_settings.genesis_block;
     BOOST_REQUIRE(instance.create(genesis));
 
@@ -952,7 +951,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__confirmed___success)
 
     data_base_accessor instance(settings);
 
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     const chain::block& genesis = bc_settings.genesis_block;
     BOOST_REQUIRE(instance.create(genesis));
 
@@ -1015,7 +1014,7 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__not_existing___failure)
 
     data_base_accessor instance(settings);
 
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
 
     const auto block1 = read_block(MAINNET_BLOCK1);
@@ -1043,7 +1042,7 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__incorrect_height___failure)
 
     data_base_accessor instance(settings);
 
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
 
     const auto block1 = read_block(MAINNET_BLOCK1);
@@ -1071,7 +1070,7 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__missing_parent___failure)
 
     data_base_accessor instance(settings);
 
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
 
     auto block1 = read_block(MAINNET_BLOCK1);
@@ -1096,7 +1095,7 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__already_candidated___success)
 
     data_base_accessor instance(settings);
 
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
 
     const auto block1 = read_block(MAINNET_BLOCK1);
@@ -1219,7 +1218,7 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__missing_header__failure)
 
     data_base_accessor instance(settings);
 
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
 
     const auto block1 = read_block(MAINNET_BLOCK1);
@@ -1243,7 +1242,7 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__validate__success)
 
     data_base_accessor instance(settings);
 
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
 
     const auto block1 = read_block(MAINNET_BLOCK1);
@@ -1275,7 +1274,7 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__invalidate__success)
 
     data_base_accessor instance(settings);
 
-    static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+    const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
 
     const auto block1 = read_block(MAINNET_BLOCK1);
@@ -1293,9 +1292,9 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__invalidate__success)
     BOOST_REQUIRE((instance.blocks().get(header_result.hash()).state() & block_state::valid) != block_state::valid);
 }
 
-// index block
+// catalog block
 
-//// BOOST_AUTO_TEST_CASE(data_base__index__enabled__success)
+//// BOOST_AUTO_TEST_CASE(data_base__catalog__enabled__success)
 //// {
 ////     create_directory(DIRECTORY);
 ////     bc::database::settings settings;
@@ -1309,7 +1308,7 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__invalidate__success)
 
 ////     data_base_accessor instance(settings);
 
-////     static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+////     const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
 ////     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
 
 ////     const auto block1 = read_block(MAINNET_BLOCK1);
@@ -1321,15 +1320,15 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__invalidate__success)
 
 ////     // setup ends
 
-////     BOOST_REQUIRE_EQUAL(instance.index(block1), error::success);
+////     BOOST_REQUIRE_EQUAL(instance.catalog(block1), error::success);
 
-////     // When address_database::index is implemented, enable this test
+////     // When address_database::catalog is implemented, enable this test
 ////     BOOST_REQUIRE(instance.addresses().get(block1.transactions()[0].outputs()[0].address().hash()));
 //// }
 
-// index transactions
+// catalog transactions
 
-//// BOOST_AUTO_TEST_CASE(data_base__index2__enabled__success)
+//// BOOST_AUTO_TEST_CASE(data_base__catalog2__enabled__success)
 //// {
 ////     create_directory(DIRECTORY);
 ////     bc::database::settings settings;
@@ -1343,7 +1342,7 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__invalidate__success)
 
 ////     data_base_accessor instance(settings);
 
-////     static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
+////     const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
 ////     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
 
 ////     const auto block1 = read_block(MAINNET_BLOCK1);
@@ -1351,9 +1350,9 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__invalidate__success)
 
 ////     // setup ends
 
-////     BOOST_REQUIRE_EQUAL(instance.index(block1.transactions()[0]), error::success);
+////     BOOST_REQUIRE_EQUAL(instance.catalog(block1.transactions()[0]), error::success);
 
-////     // When address_database::index is implemented, enable this test
+////     // When address_database::catalog is implemented, enable this test
 ////     BOOST_REQUIRE(instance.addresses().get(block1.transactions()[0].outputs()[0].address().hash()));
 //// }
 
