@@ -1406,18 +1406,18 @@ BOOST_AUTO_TEST_CASE(data_base__reorganize__pop_and_push__success)
     
     test_heights(instance, 2u, 0u);
 
-    // verify outgoing have right headers
+    // Verify outgoing have right headers.
     BOOST_REQUIRE_EQUAL(outgoing_headers->size(), 1);
     BOOST_REQUIRE(outgoing_headers->front()->hash() == block1.hash());
 
-    // verify outgoing headers are NOT in candidate index
+    // Verify outgoing headers are NOT in candidate index.
     BOOST_REQUIRE((instance.blocks().get(outgoing_headers->front()->hash()).state() & block_state::candidate) == 0);
 
-    // verify incoming are headers are in candidate index
+    // Verify incoming are headers are in candidate index.
     for (const auto& header_ptr: *incoming_headers)
         BOOST_REQUIRE((instance.blocks().get(header_ptr->hash()).state() & block_state::candidate) != 0);
 
-    // verify candidate top header
+    // Verify candidate top header.
     BOOST_REQUIRE(instance.blocks().get(2, true).hash() == block3.hash());
 }
 
@@ -1441,6 +1441,8 @@ BOOST_AUTO_TEST_CASE(data_base__reorganize2__pop_and_push__success)
     const chain::block& genesis = bc_settings.genesis_block;
     BOOST_REQUIRE(instance.create(genesis));
 
+    test_heights(instance, 0u, 0u);
+
     const auto& block1 = read_block(MAINNET_BLOCK1);
     chain::header block1_header;
     store_block_transactions(instance, block1, 1);
@@ -1453,21 +1455,30 @@ BOOST_AUTO_TEST_CASE(data_base__reorganize2__pop_and_push__success)
     block3_header.set_previous_block_hash(block2.hash());
     block3.set_header(block3_header);
 
-    // candidate header #1, validate it, then pop it from candidate,
-    // and finally confirm it
+    // Candidate header #1, validate it, then pop it from candidate,
+    // and finally confirm it.
     BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
     BOOST_REQUIRE_EQUAL(instance.invalidate(block1.header(), error::success), error::success);
     BOOST_REQUIRE_EQUAL(instance.pop_header(block1_header, 1), error::success);
     BOOST_REQUIRE_EQUAL(instance.push_block(block1, 1), error::success);
 
-    // candidate header #2
+    test_heights(instance, 0u, 1u);
+
+    // Candidate header #2, validate and associate transactions.
     BOOST_REQUIRE_EQUAL(instance.push_header(block2.header(), 1, 100), error::success);
     BOOST_REQUIRE_EQUAL(instance.invalidate(block2.header(), error::success), error::success);
+    BOOST_REQUIRE_EQUAL(instance.update(block2, 1), error::success);
 
-    // candidate header #3
+    test_heights(instance, 1u, 1u);
+
+    // Candidate header #3, validate and associate transactions.
     BOOST_REQUIRE_EQUAL(instance.push_header(block3.header(), 2, 100), error::success);
     BOOST_REQUIRE_EQUAL(instance.invalidate(block3.header(), error::success), error::success);
-    
+    BOOST_REQUIRE_EQUAL(instance.update(block3, 2), error::success);
+
+    test_heights(instance, 2u, 1u);
+
+
     const auto outgoing_blocks = std::make_shared<block_const_ptr_list>();
     const auto incoming_blocks = std::make_shared<const block_const_ptr_list>(block_const_ptr_list
     {
@@ -1479,23 +1490,23 @@ BOOST_AUTO_TEST_CASE(data_base__reorganize2__pop_and_push__success)
     
     BOOST_REQUIRE_EQUAL(instance.reorganize(config::checkpoint(genesis.hash(), 0), incoming_blocks, outgoing_blocks), error::success);
 
-    // // test conditions
+    // test conditions
     
-    // test_heights(instance, 0u, 2u);
+    test_heights(instance, 2u, 2u);
 
-    // // verify outgoing have right blocks
-    // BOOST_REQUIRE_EQUAL(outgoing_blocks->size(), 1);
-    // BOOST_REQUIRE(outgoing_blocks->front()->hash() == block1.hash());
+    // Verify outgoing have right blocks.
+    BOOST_REQUIRE_EQUAL(outgoing_blocks->size(), 1);
+    BOOST_REQUIRE(outgoing_blocks->front()->hash() == block1.hash());
 
-    // // verify outgoing blocks are NOT in candidate index
-    // BOOST_REQUIRE((instance.blocks().get(outgoing_blocks->front()->hash()).state() & block_state::candidate) == 0);
+    // Verify outgoing blocks are NOT in candidate index.
+    BOOST_REQUIRE((instance.blocks().get(outgoing_blocks->front()->hash()).state() & block_state::candidate) == 0);
 
-    // // verify incoming are blocks are in candidate index
-    // for (const auto& header_ptr: *incoming_blocks)
-    //     BOOST_REQUIRE((instance.blocks().get(header_ptr->hash()).state() & block_state::candidate) != 0);
+    // Verify incoming are blocks are in confirmed index.
+    for (const auto& block_ptr: *incoming_blocks)
+        BOOST_REQUIRE((instance.blocks().get(block_ptr->hash()).state() & block_state::confirmed) != 0);
 
-    // // verify candidate top header
-    // BOOST_REQUIRE(instance.blocks().get(2, true).hash() == block3.hash());
+    // Verify top block on confirmed index.
+    BOOST_REQUIRE(instance.blocks().get(2, true).hash() == block3.hash());
 }
 
 
