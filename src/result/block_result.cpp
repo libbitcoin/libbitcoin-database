@@ -64,17 +64,16 @@ block_result::block_result(const const_element_type& element,
     if (!element_)
         return;
 
-    auto hash = element_.key();
-
-    // Each of the three atomic sets could be guarded independently.
     const auto reader = [&](byte_deserializer& deserial)
     {
+        // These are never updated.
+        header_.from_data(deserial, element_.key(), false);
+        median_time_past_ = deserial.read_4_bytes_little_endian();
+        height_ = deserial.read_4_bytes_little_endian();
+
         // Critical Section.
         ///////////////////////////////////////////////////////////////////////
         shared_lock lock(metadata_mutex_);
-        header_.from_data(deserial, std::move(hash), false);
-        median_time_past_ = deserial.read_4_bytes_little_endian();
-        height_ = deserial.read_4_bytes_little_endian();
         state_ = deserial.read_byte();
         checksum_ = deserial.read_4_bytes_little_endian();
         tx_start_ = deserial.read_4_bytes_little_endian();
@@ -82,8 +81,8 @@ block_result::block_result(const const_element_type& element,
         ///////////////////////////////////////////////////////////////////////
     };
 
-     // Reads are not deferred for updatable values as atomicity is required.
-     element.read(reader);
+    // Reads not deferred for updatable values as consistency is required.
+    element_.read(reader);
 }
 
 block_result::operator bool() const
@@ -103,16 +102,26 @@ array_index block_result::link() const
     return element_.link();
 }
 
+// This is read each time it is invoked, so caller should cache.
 hash_digest block_result::hash() const
 {
-    // This is read each time it is invoked, so caller should cache.
     return element_ ? element_.key() : null_hash;
 }
 
-const chain::header& block_result::header() const
+// This is read each time it is invoked, so caller should cache.
+chain::header block_result::header() const
 {
-    // TODO: populate all metadata or only use methods?
-    return header_;
+    if (!element_)
+        return {};
+
+    chain::header header;
+    const auto reader = [&](byte_deserializer& deserial)
+    {
+        header.from_data(deserial, element_.key(), false);
+    };
+
+    element_.read(reader);
+    return header;
 }
 
 uint32_t block_result::bits() const
