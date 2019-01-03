@@ -36,7 +36,6 @@ public:
     /// Properties.
     boost::filesystem::path directory;
     bool flush_writes;
-    bool index_addresses;
     uint32_t cache_capacity;
     uint16_t file_growth_rate;
     uint32_t block_table_buckets;

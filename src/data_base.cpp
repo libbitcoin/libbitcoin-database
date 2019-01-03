@@ -58,11 +58,11 @@ using namespace bc::system::wallet;
 // Construct.
 // ----------------------------------------------------------------------------
 
-data_base::data_base(const settings& settings)
+data_base::data_base(const settings& settings, bool catalog)
   : closed_(true),
+    catalog_(catalog),
     settings_(settings),
-    database::store(settings.directory, settings.index_addresses,
-        settings.flush_writes)
+    database::store(settings.directory, catalog, settings.flush_writes)
 {
     LOG_DEBUG(LOG_DATABASE)
         << "Buckets: "
@@ -96,7 +96,7 @@ bool data_base::create(const block& genesis)
     // These leave the databases open.
     auto created = blocks_->create() && transactions_->create();
 
-    if (settings_.index_addresses)
+    if (catalog_)
         created &= addresses_->create();
 
     created &= push(genesis) == error::success;
@@ -121,7 +121,7 @@ bool data_base::open()
 
     auto opened = blocks_->open() && transactions_->open();
 
-    if (settings_.index_addresses)
+    if (catalog_)
         opened &= addresses_->open();
 
     if (!opened)
@@ -155,7 +155,7 @@ void data_base::start()
         settings_.file_growth_rate,
         settings_.cache_capacity);
 
-    if (settings_.index_addresses)
+    if (catalog_)
     {
         addresses_ = std::make_shared<address_database>(
             address_table,
@@ -170,7 +170,7 @@ void data_base::start()
 // protected
 void data_base::commit()
 {
-    if (settings_.index_addresses)
+    if (catalog_)
         addresses_->commit();
 
     transactions_->commit();
@@ -189,7 +189,7 @@ bool data_base::flush() const
 
     auto flushed = blocks_->flush() && transactions_->flush();
 
-    if (settings_.index_addresses)
+    if (catalog_)
         flushed &= addresses_->flush();
 
     LOG_DEBUG(LOG_DATABASE)
@@ -210,7 +210,7 @@ bool data_base::close()
 
     auto closed = blocks_->close() && transactions_->close();
 
-    if (settings_.index_addresses)
+    if (catalog_)
         closed &= addresses_->close();
 
     return closed && store::close();
@@ -247,7 +247,7 @@ code data_base::catalog(const transaction& tx)
     code ec;
 
     // Existence check prevents duplicated indexing.
-    if (!settings_.index_addresses || tx.metadata.existed)
+    if (!catalog_ || tx.metadata.existed)
         return ec;
 
     // Critical Section
@@ -272,7 +272,7 @@ code data_base::catalog(const transaction& tx)
 code data_base::catalog(const block& block)
 {
     code ec;
-    if (!settings_.index_addresses)
+    if (!catalog_)
         return ec;
 
     // Critical Section

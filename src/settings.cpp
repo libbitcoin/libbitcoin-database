@@ -29,7 +29,6 @@ using namespace bc::system;
 settings::settings()
   : directory("blockchain"),
 
-    index_addresses(true),
     flush_writes(false),
     cache_capacity(0),
     file_growth_rate(5),

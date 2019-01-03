@@ -42,7 +42,7 @@ class BCD_API data_base
 public:
     typedef std::function<void(const system::code&)> result_handler;
 
-    data_base(const settings& settings);
+    data_base(const settings& settings, bool catalog=false);
 
     // Open and close.
     // ------------------------------------------------------------------------
@@ -162,6 +162,7 @@ private:
         const block_result& result) const;
 
     std::atomic<bool> closed_;
+    const bool catalog_;
     const settings& settings_;
 
     // Used to prevent unsafe concurrent writes.
