@@ -292,7 +292,7 @@ class data_base_accessor
   : public data_base
 {
 public:
-    data_base_accessor(const bc::database::settings& settings)
+    data_base_accessor(const bc::database::settings& settings, bool catalog=false)
       : data_base(settings)
     {
     }
@@ -1133,7 +1133,6 @@ BOOST_AUTO_TEST_CASE(data_base__update__incorrect_height__failure)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -1162,7 +1161,6 @@ BOOST_AUTO_TEST_CASE(data_base__update__new_transactions__success)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -1210,7 +1208,6 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__missing_header__failure)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -1234,7 +1231,6 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__validate__success)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -1267,7 +1263,6 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__invalidate__success)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -1302,14 +1297,13 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__invalidate__success)
 ////     create_directory(DIRECTORY);
 ////     bc::database::settings settings;
 ////     settings.directory = DIRECTORY;
-////     settings.index_addresses = false;
 ////     settings.flush_writes = false;
 ////     settings.file_growth_rate = 42;
 ////     settings.block_table_buckets = 42;
 ////     settings.transaction_table_buckets = 42;
 ////     settings.address_table_buckets = 42;
 
-////     data_base_accessor instance(settings);
+////     data_base_accessor instance(settings, true);
 
 ////     const auto bc_settings = bc::system::settings(config::settings::mainnet);
 ////     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
@@ -1336,14 +1330,13 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__invalidate__success)
 ////     create_directory(DIRECTORY);
 ////     bc::database::settings settings;
 ////     settings.directory = DIRECTORY;
-////     settings.index_addresses = false;
 ////     settings.flush_writes = false;
 ////     settings.file_growth_rate = 42;
 ////     settings.block_table_buckets = 42;
 ////     settings.transaction_table_buckets = 42;
 ////     settings.address_table_buckets = 42;
 
-////     data_base_accessor instance(settings);
+////     data_base_accessor instance(settings, true);
 
 ////     const auto bc_settings = bc::system::settings(config::settings::mainnet);
 ////     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
@@ -1366,7 +1359,6 @@ BOOST_AUTO_TEST_CASE(data_base__reorganize__pop_and_push__success)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -1432,7 +1424,6 @@ BOOST_AUTO_TEST_CASE(data_base__reorganize2__pop_and_push__success)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
