@@ -89,7 +89,7 @@ public:
     transaction_iterator end() const;
 
     /// Set metadata onto the given header.
-    void block_result::set_metadata(const system::chain::header& header) const;
+    void set_metadata(const system::chain::header& header) const;
 
 private:
     system::chain::header header_;
