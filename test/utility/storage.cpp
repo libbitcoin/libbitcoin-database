@@ -91,7 +91,12 @@ bool storage::closed() const
     return closed_;
 }
 
-size_t storage::size() const
+size_t storage::capacity() const
+{
+    return logical();
+}
+
+size_t storage::logical() const
 {
     shared_lock lock(mutex_);
     return buffer_.size();

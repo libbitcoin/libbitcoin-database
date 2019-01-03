@@ -37,7 +37,8 @@ public:
     bool flush() const;
     bool close();
     bool closed() const;
-    size_t size() const;
+    size_t capacity() const;
+    size_t logical() const;
     bc::database::memory_ptr access();
     bc::database::memory_ptr resize(size_t size);
     bc::database::memory_ptr reserve(size_t size);

@@ -43,8 +43,8 @@ public:
     typedef boost::filesystem::path path;
 
     /// Construct the database.
-    transaction_database(const path& map_filename, size_t buckets,
-        size_t expansion, size_t cache_capacity);
+    transaction_database(const path& map_filename, size_t table_minimum,
+        size_t buckets, size_t expansion, size_t cache_capacity);
 
     /// Close the database (all threads must first be stopped).
     ~transaction_database();

@@ -131,21 +131,38 @@ bool data_base::open()
     return opened;
 }
 
+// TODO: simplify interface by passing settings reference to databases.
+
 // protected
 void data_base::start()
 {
-    blocks_ = std::make_shared<block_database>(block_table, candidate_index,
-        confirmed_index, transaction_index, settings_.block_table_buckets,
+    blocks_ = std::make_shared<block_database>(
+        block_table,
+        candidate_index,
+        confirmed_index,
+        transaction_index,
+        settings_.block_table_size,
+        settings_.candidate_index_size,
+        settings_.confirmed_index_size,
+        settings_.transaction_index_size,
+        settings_.block_table_buckets,
         settings_.file_growth_rate);
 
-    transactions_ = std::make_shared<transaction_database>(transaction_table,
-        settings_.transaction_table_buckets, settings_.file_growth_rate,
+    transactions_ = std::make_shared<transaction_database>(
+        transaction_table,
+        settings_.transaction_table_size,
+        settings_.block_table_buckets,
+        settings_.file_growth_rate,
         settings_.cache_capacity);
 
     if (settings_.index_addresses)
     {
-        addresses_ = std::make_shared<address_database>(address_table,
-            address_rows, settings_.address_table_buckets,
+        addresses_ = std::make_shared<address_database>(
+            address_table,
+            address_rows,
+            settings_.address_table_size,
+            settings_.address_index_size,
+            settings_.address_table_buckets,
             settings_.file_growth_rate);
     }
 }

@@ -31,13 +31,22 @@ settings::settings()
 
     index_addresses(true),
     flush_writes(false),
+    cache_capacity(0),
     file_growth_rate(5),
 
     // Hash table sizes (must be configured).
     block_table_buckets(0),
     transaction_table_buckets(0),
     address_table_buckets(0),
-    cache_capacity(0)
+
+    // Minimum file sizes.
+    block_table_size(1),
+    candidate_index_size(1),
+    confirmed_index_size(1),
+    transaction_index_size(1),
+    transaction_table_size(1),
+    address_index_size(1),
+    address_table_size(1)
 {
 }
 
@@ -51,6 +60,13 @@ settings::settings(config::settings context)
             block_table_buckets = 650000;
             transaction_table_buckets = 110000000;
             address_table_buckets = 107000000;
+            block_table_size = 80000000;
+            candidate_index_size = 3000000;
+            confirmed_index_size = 3000000;
+            transaction_index_size = 3000000000;
+            transaction_table_size = 220000000000;
+            address_index_size = 100000000000;
+            address_table_size = 100000000;
             break;
         }
 
@@ -60,6 +76,13 @@ settings::settings(config::settings context)
             block_table_buckets = 650000;
             transaction_table_buckets = 110000000;
             address_table_buckets = 107000000;
+            block_table_size = 42;
+            candidate_index_size = 42;
+            confirmed_index_size = 42;
+            transaction_index_size = 42;
+            transaction_table_size = 42;
+            address_index_size = 42;
+            address_table_size = 42;
             break;
         }
 
@@ -69,6 +92,13 @@ settings::settings(config::settings context)
             block_table_buckets = 650000;
             transaction_table_buckets = 110000000;
             address_table_buckets = 107000000;
+            block_table_size = 42;
+            candidate_index_size = 42;
+            confirmed_index_size = 42;
+            transaction_index_size = 42;
+            transaction_table_size = 42;
+            address_index_size = 42;
+            address_table_size = 42;
             break;
         }
 

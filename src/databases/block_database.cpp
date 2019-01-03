@@ -76,20 +76,24 @@ static const auto block_size = header_size + median_time_past_size +
 // The block database keys off of block hash and has block value.
 block_database::block_database(const path& map_filename,
     const path& candidate_index_filename, const path& confirmed_index_filename,
-    const path& tx_index_filename, size_t buckets, size_t expansion)
-  : hash_table_file_(map_filename, expansion),
+    const path& tx_index_filename, size_t table_minimum,
+    size_t candidate_index_minimum, size_t confirmed_index_minimum,
+    size_t tx_index_minimum, size_t buckets, size_t expansion)
+  : hash_table_file_(map_filename, table_minimum, expansion),
     hash_table_(hash_table_file_, buckets, block_size),
 
     // Array storage.
-    candidate_index_file_(candidate_index_filename, expansion),
+    candidate_index_file_(candidate_index_filename,
+        candidate_index_minimum, expansion),
     candidate_index_(candidate_index_file_, 0, sizeof(link_type)),
 
     // Array storage.
-    confirmed_index_file_(confirmed_index_filename, expansion),
+    confirmed_index_file_(confirmed_index_filename,
+        confirmed_index_minimum, expansion),
     confirmed_index_(confirmed_index_file_, 0, sizeof(link_type)),
 
     // Array storage.
-    tx_index_file_(tx_index_filename, expansion),
+    tx_index_file_(tx_index_filename, tx_index_minimum, expansion),
     tx_index_(tx_index_file_, 0, sizeof(file_offset))
 {
 }
