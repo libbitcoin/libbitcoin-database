@@ -151,7 +151,7 @@ void data_base::start()
     transactions_ = std::make_shared<transaction_database>(
         transaction_table,
         settings_.transaction_table_size,
-        settings_.block_table_buckets,
+        settings_.transaction_table_buckets,
         settings_.file_growth_rate,
         settings_.cache_capacity);
 
