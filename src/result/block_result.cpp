@@ -108,8 +108,22 @@ hash_digest block_result::hash() const
     return element_ ? element_.key() : null_hash;
 }
 
+void block_result::set_metadata(const chain::header& header) const
+{
+    if ((header.metadata.exists = element_))
+    {
+        const auto state = this->state();
+        header.metadata.error = error();
+        header.metadata.candidate = is_candidate(state);
+        header.metadata.confirmed = is_confirmed(state);
+        header.metadata.validated = is_valid(state) || is_failed(state);
+        header.metadata.populated = transaction_count() != 0;
+        header.metadata.median_time_past = median_time_past();
+    }
+}
+
 // This is read each time it is invoked, so caller should cache.
-chain::header block_result::header() const
+chain::header block_result::header(bool metadata) const
 {
     if (!element_)
         return {};
@@ -121,6 +135,10 @@ chain::header block_result::header() const
     };
 
     element_.read(reader);
+
+    if (metadata)
+        set_metadata(header);
+
     return header;
 }
 
