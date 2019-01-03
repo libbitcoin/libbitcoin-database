@@ -44,10 +44,11 @@ class BCD_API file_storage
 public:
     typedef boost::filesystem::path path;
     static const size_t default_expansion;
+    static const uint64_t default_capacity;
 
     /// Construct a database (start is currently called, may throw).
     file_storage(const path& filename);
-    file_storage(const path& filename, size_t expansion);
+    file_storage(const path& filename, size_t minimum, size_t expansion);
 
     /// Close the database.
     ~file_storage();
@@ -64,8 +65,11 @@ public:
     /// Determine if the database is closed.
     bool closed() const;
 
-    /// The current physical (vs. logical) size of the map.
-    size_t size() const;
+    /// The current capacity for mapped data.
+    size_t capacity() const;
+
+    /// The current logical size of mapped data.
+    size_t logical() const;
 
     /// Get protected shared access to memory, starting at first byte.
     memory_ptr access();
@@ -73,12 +77,12 @@ public:
     /// Throws runtime_error if insufficient space.
     /// Resize the logical map to the specified size, return access.
     /// Increase or shrink the physical size to match the logical size.
-    memory_ptr resize(size_t size);
+    memory_ptr resize(size_t required);
 
     /// Throws runtime_error if insufficient space.
     /// Resize the logical map to the specified size, return access.
     /// Increase the physical size to at least the logical size.
-    memory_ptr reserve(size_t size);
+    memory_ptr reserve(size_t required);
 
 private:
     static size_t file_size(int file_handle);
@@ -93,7 +97,7 @@ private:
     bool truncate(size_t size);
     bool truncate_mapped(size_t size);
     bool validate(size_t size);
-    memory_ptr reserve(size_t size, size_t growth_ratio);
+    memory_ptr reserve(size_t required, size_t minimum, size_t expansion);
 
     void log_mapping() const;
     void log_resizing(size_t size) const;
@@ -103,13 +107,14 @@ private:
 
     // File system.
     const int file_handle_;
+    const size_t minimum_;
     const size_t expansion_;
     const boost::filesystem::path filename_;
 
     // Protected by mutex.
     bool closed_;
     uint8_t* data_;
-    size_t file_size_;
+    size_t capacity_;
     size_t logical_size_;
     mutable system::upgrade_mutex mutex_;
 };

@@ -37,11 +37,18 @@ public:
     boost::filesystem::path directory;
     bool flush_writes;
     bool index_addresses;
+    uint32_t cache_capacity;
     uint16_t file_growth_rate;
     uint32_t block_table_buckets;
     uint32_t transaction_table_buckets;
     uint32_t address_table_buckets;
-    uint32_t cache_capacity;
+    uint64_t block_table_size;
+    uint64_t candidate_index_size;
+    uint64_t confirmed_index_size;
+    uint64_t transaction_index_size;
+    uint64_t transaction_table_size;
+    uint64_t address_index_size;
+    uint64_t address_table_size;
 };
 
 } // namespace database

@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__store1__single_transactions__success)
     BOOST_REQUIRE(tx2.from_data(wire_tx2));
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const auto hash1 = tx1.hash();
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__store2__list_of_transactions__success
     BOOST_REQUIRE(tx2.from_data(wire_tx2));
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const auto hash1 = tx1.hash();
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__store1__single_unconfirmed__success)
     BOOST_REQUIRE(tx1.from_data(wire_tx1));
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const auto hash1 = tx1.hash();
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__store2__list_of_unconfirmed__success)
     BOOST_REQUIRE(tx2.from_data(wire_tx2));
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const auto hash1 = tx1.hash();
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__candidate__with_no_input_in_db__candi
     BOOST_REQUIRE(tx1.from_data(wire_tx1));
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const auto hash1 = tx1.hash();
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__candidate__with_input_in_db__candidat
     uint32_t locktime = 0xffffffff;
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     // tx1: coinbase transaction
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__uncandidate__with_no_input_in_db__fal
     BOOST_REQUIRE(tx1.from_data(wire_tx1));
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const auto hash1 = tx1.hash();
@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__uncandidate__with_input_in_db__candid
     uint32_t locktime = 0xffffffff;
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     // tx1: coinbase transaction
@@ -382,7 +382,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__confirm2__single_transaction_not_in_d
     BOOST_REQUIRE(tx1.from_data(wire_tx1));
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const auto hash1 = tx1.hash();
@@ -408,7 +408,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__confirm2__single_transaction_with_inp
     uint32_t locktime = 0xffffffff;
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     // tx1: coinbase transaction
@@ -479,7 +479,7 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__confirm2__single_transacti
     uint32_t locktime = 0xffffffff;
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 100);
+    transaction_database instance(file_path, 1, 1000, 50, 100);
     BOOST_REQUIRE(instance.create());
 
     // tx1: coinbase transaction
@@ -550,7 +550,7 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__confirm1__block_transactio
    uint32_t locktime = 0xffffffff;
 
    test::create(file_path);
-   transaction_database instance(file_path, 1000, 50, 100);
+   transaction_database instance(file_path, 1, 1000, 50, 100);
    BOOST_REQUIRE(instance.create());
 
    // tx1: coinbase transaction
@@ -661,7 +661,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__unconfirm__block_with_unconfirmed_txs
    uint32_t locktime = 0xffffffff;
 
    test::create(file_path);
-   transaction_database instance(file_path, 1000, 50, 0);
+   transaction_database instance(file_path, 1, 1000, 50, 0);
    BOOST_REQUIRE(instance.create());
 
    // tx1: coinbase transaction
@@ -710,7 +710,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__unconfirm__single_confirmed__success)
    uint32_t locktime = 0xffffffff;
 
    test::create(file_path);
-   transaction_database instance(file_path, 1000, 50, 0);
+   transaction_database instance(file_path, 1, 1000, 50, 0);
    BOOST_REQUIRE(instance.create());
 
    // tx1: coinbase transaction
@@ -786,7 +786,7 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__unconfirm__single_confirme
    uint32_t locktime = 0xffffffff;
 
    test::create(file_path);
-   transaction_database instance(file_path, 1000, 50, 100);
+   transaction_database instance(file_path, 1, 1000, 50, 100);
    BOOST_REQUIRE(instance.create());
 
    // tx1: coinbase transaction
@@ -866,7 +866,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__nonexisting__not_
     uint32_t locktime = 0xffffffff;
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const transaction tx(version, locktime, {}, {});
@@ -887,7 +887,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__no_bip34_and_spen
     uint32_t locktime = 0xffffffff;
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
@@ -913,7 +913,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__no_bip34_and_not_
     uint32_t locktime = 0xffffffff;
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
@@ -936,7 +936,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__confirmed_and_for
     uint32_t locktime = 0xffffffff;
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
@@ -960,7 +960,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_block_metadata__confirmed__unveri
     uint32_t locktime = 0xffffffff;
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
@@ -987,7 +987,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__nonexisting__not_f
     uint32_t locktime = 0xffffffff;
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const transaction tx(version, locktime, {}, {});
@@ -1007,7 +1007,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__confirmed__unverif
     uint32_t locktime = 0xffffffff;
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
@@ -1031,7 +1031,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_pool_metadata__confirmed__unverif
 BOOST_AUTO_TEST_CASE(transaction_database__get_output__null_point__false)
 {
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     // setup end
@@ -1045,7 +1045,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__not_found__false)
     uint32_t locktime = 0xffffffff;
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const transaction tx1(version, locktime, {}, {});
@@ -1062,7 +1062,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__genesis__false)
     uint32_t locktime = 0xffffffff;
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const transaction tx1(version, locktime, {}, {});
@@ -1079,7 +1079,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__no_output_at_index__false
     uint32_t locktime = 0xffffffff;
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
@@ -1095,7 +1095,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__unconfirmed_at_fork_heigh
     uint32_t locktime = 0xffffffff;
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const transaction tx1{ locktime, version, {}, { { 1200, {} } } };
@@ -1119,7 +1119,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__confirmed_at_height__conf
     uint32_t locktime = 0xffffffff;
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const transaction tx1{ locktime, version, {}, { { 1201, {} } } };
@@ -1149,7 +1149,7 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__get_output__confirmed_at_h
    uint32_t locktime = 0xffffffff;
 
    test::create(file_path);
-   transaction_database instance(file_path, 1000, 50, 100);
+   transaction_database instance(file_path, 1, 1000, 50, 100);
    BOOST_REQUIRE(instance.create());
 
    const transaction tx1{ locktime, version, {}, { { 1201, {} } } };
@@ -1179,7 +1179,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__unconfirmed_at_height__un
     uint32_t locktime = 0xffffffff;
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     // tx1 is not confirmed as it is at coinbase position, so we test
@@ -1212,7 +1212,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__get_output__prevout_spent__spent)
     uint32_t locktime = 0xffffffff;
 
     test::create(file_path);
-    transaction_database instance(file_path, 1000, 50, 0);
+    transaction_database instance(file_path, 1, 1000, 50, 0);
     BOOST_REQUIRE(instance.create());
 
     const transaction tx1{ locktime, version, {}, { { 1201, {} } } };

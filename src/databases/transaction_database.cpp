@@ -86,8 +86,9 @@ static constexpr auto no_time = 0u;
 
 // Transactions uses a hash table index, O(1).
 transaction_database::transaction_database(const path& map_filename,
-    size_t buckets, size_t expansion, size_t cache_capacity)
-  : hash_table_file_(map_filename, expansion),
+    size_t table_minimum, size_t buckets, size_t expansion,
+    size_t cache_capacity)
+  : hash_table_file_(map_filename, table_minimum, expansion),
     hash_table_(hash_table_file_, buckets),
     cache_(cache_capacity)
 {

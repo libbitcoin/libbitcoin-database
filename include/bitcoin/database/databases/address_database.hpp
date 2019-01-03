@@ -40,7 +40,8 @@ public:
 
     /// Construct the database.
     address_database(const path& lookup_filename, const path& rows_filename,
-        size_t buckets, size_t expansion);
+        size_t table_minimum, size_t index_minimum, size_t buckets,
+        size_t expansion);
 
     /// Close the database (all threads must first be stopped).
     ~address_database();

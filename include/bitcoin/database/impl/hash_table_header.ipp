@@ -72,7 +72,7 @@ template <typename Index, typename Link>
 bool hash_table_header<Index, Link>::start()
 {
     // File is too small for the number of buckets in the header.
-    if (file_.size() < link(buckets_))
+    if (file_.capacity() < link(buckets_))
         return false;
 
     // The accessor must remain in scope until the end of the block.

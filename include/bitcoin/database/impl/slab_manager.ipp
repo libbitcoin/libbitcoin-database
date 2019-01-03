@@ -71,7 +71,7 @@ bool slab_manager<Link>::start()
     const auto minimum = header_size_ + payload_size_;
 
     // Slabs size does not exceed file size.
-    return minimum <= file_.size();
+    return minimum <= file_.capacity();
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -136,7 +136,7 @@ memory_ptr slab_manager<Link>::get(Link link) const
 template <typename Link>
 void slab_manager<Link>::read_size()
 {
-    BITCOIN_ASSERT(header_size_ + sizeof(Link) <= file_.size());
+    BITCOIN_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
@@ -149,7 +149,7 @@ void slab_manager<Link>::read_size()
 template <typename Link>
 void slab_manager<Link>::write_size() const
 {
-    BITCOIN_ASSERT(header_size_ + sizeof(Link) <= file_.size());
+    BITCOIN_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();

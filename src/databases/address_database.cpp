@@ -46,14 +46,15 @@ static const auto value_size = payment_record::satoshi_fixed_size(false);
 // History uses a hash table index, O(1).
 // The hash table stores indexes to the first element of unkeyed linked lists.
 address_database::address_database(const path& lookup_filename,
-    const path& rows_filename, size_t buckets, size_t expansion)
-  : hash_table_file_(lookup_filename, expansion),
+    const path& rows_filename, size_t table_minimum, size_t index_minimum,
+    size_t buckets, size_t expansion)
+  : hash_table_file_(lookup_filename, table_minimum, expansion),
 
     // THIS sizeof(link_type) IS ASSUMED BY hash_table_multimap.
     hash_table_(hash_table_file_, buckets, sizeof(link_type)),
 
     // Linked-list storage for multimap.
-    address_index_file_(rows_filename, expansion),
+    address_index_file_(rows_filename, index_minimum, expansion),
     address_index_(address_index_file_, 0,
         hash_table_multimap<key_type, index_type, link_type>::size(value_size)),
 

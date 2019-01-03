@@ -73,7 +73,7 @@ bool record_manager<Link>::start()
     const auto minimum = header_size_ + link_to_position(record_count_);
 
     // Records size does not exceed file size.
-    return minimum <= file_.size();
+    return minimum <= file_.capacity();
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -149,7 +149,7 @@ memory_ptr record_manager<Link>::get(Link link) const
 template <typename Link>
 void record_manager<Link>::read_count()
 {
-    BITCOIN_ASSERT(header_size_ + sizeof(Link) <= file_.size());
+    BITCOIN_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
@@ -162,7 +162,7 @@ void record_manager<Link>::read_count()
 template <typename Link>
 void record_manager<Link>::write_count()
 {
-    BITCOIN_ASSERT(header_size_ + sizeof(Link) <= file_.size());
+    BITCOIN_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();

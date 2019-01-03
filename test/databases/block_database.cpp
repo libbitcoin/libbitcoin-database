@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     test::create(candidate_index);
     test::create(confirmed_index);
     test::create(tx_index);
-    block_database instance(block_table, candidate_index, confirmed_index, tx_index, 1000, 50);
+    block_database instance(block_table, candidate_index, confirmed_index, tx_index, 1, 1, 1, 1, 1000, 50);
     BOOST_REQUIRE(instance.create());
 
     size_t candidate_height = 0;

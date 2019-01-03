@@ -43,19 +43,22 @@ public:
     /// Determine if the database is closed.
     virtual bool closed() const = 0;
 
-    /// The current physical (vs. logical) size of the map.
-    virtual size_t size() const = 0;
+    /// The current capacity for mapped data.
+    virtual size_t capacity() const = 0;
+
+    /// The current logical size of mapped data.
+    virtual size_t logical() const = 0;
 
     /// Get protected shared access to memory, starting at first byte.
     virtual memory_ptr access() = 0;
 
     /// Resize the logical map to the specified size, return access.
     /// Increase or shrink the physical size to match the logical size.
-    virtual memory_ptr resize(size_t size) = 0;
+    virtual memory_ptr resize(size_t required) = 0;
 
     /// Resize the logical map to the specified size, return access.
     /// Increase the physical size to at least the logical size.
-    virtual memory_ptr reserve(size_t size) = 0;
+    virtual memory_ptr reserve(size_t required) = 0;
 };
 
 } // namespace database

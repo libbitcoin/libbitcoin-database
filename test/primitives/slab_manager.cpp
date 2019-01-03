@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(slab_manager__construct__one_slab__expected)
     const auto link1 = manager.allocate(slab1_size);
     BOOST_REQUIRE_EQUAL(link1, link_size);
 
-    BOOST_REQUIRE_GE(file.size(), link_size + slab1_size);
+    BOOST_REQUIRE_GE(file.capacity(), link_size + slab1_size);
 
     manager.commit();
 }
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(slab_manager__construct__one_slab_offset__expected)
     const auto link1 = manager.allocate(slab1_size);
     BOOST_REQUIRE_EQUAL(link1, link_size);
 
-    BOOST_REQUIRE_GE(file.size(), offset + link_size + slab1_size);
+    BOOST_REQUIRE_GE(file.capacity(), offset + link_size + slab1_size);
 }
 
 BOOST_AUTO_TEST_CASE(slab_manager__allocate__two_slabs__expected)
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(slab_manager__allocate__two_slabs__expected)
     const auto link2 = manager.allocate(slab2_size);
     BOOST_REQUIRE_EQUAL(link2, link_size + slab1_size);
 
-    BOOST_REQUIRE_GE(file.size(), link_size + slab1_size + slab2_size);
+    BOOST_REQUIRE_GE(file.capacity(), link_size + slab1_size + slab2_size);
 }
 
 BOOST_AUTO_TEST_CASE(slab_manager__payload_size__one_slab_with_offset__expected)

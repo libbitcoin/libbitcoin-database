@@ -47,6 +47,14 @@ BOOST_AUTO_TEST_CASE(file_storage__constructor1__always__leaves_file)
     BOOST_REQUIRE(test::exists(file));
 }
 
+BOOST_AUTO_TEST_CASE(file_storage__constructor2__always__leaves_file)
+{
+    static const std::string file = DIRECTORY "/" + TEST_NAME;
+    BOOST_REQUIRE(test::create(file));
+    file_storage instance(file, 42, 42);
+    BOOST_REQUIRE(test::exists(file));
+}
+
 BOOST_AUTO_TEST_CASE(file_storage__open__from_closed__success)
 {
     static const std::string file = DIRECTORY "/" + TEST_NAME;
@@ -81,12 +89,12 @@ BOOST_AUTO_TEST_CASE(file_storage__close__from_opened__success)
     BOOST_REQUIRE(instance.close());
 }
 
-BOOST_AUTO_TEST_CASE(file_storage__size__one_byte__1)
+BOOST_AUTO_TEST_CASE(file_storage__size__default__default_capacity)
 {
     static const std::string file = DIRECTORY "/" + TEST_NAME;
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file);
-    BOOST_REQUIRE_EQUAL(instance.size(), 1u);
+    BOOST_REQUIRE_EQUAL(instance.capacity(), file_storage::default_capacity);
 }
 
 BOOST_AUTO_TEST_CASE(file_storage__resize__closed__throws_runtime_error)
@@ -97,7 +105,7 @@ BOOST_AUTO_TEST_CASE(file_storage__resize__closed__throws_runtime_error)
     BOOST_REQUIRE_THROW(instance.resize(42), std::runtime_error);
 }
 
-// TODO: externally verify file size.
+// TODO: externally verify open/closed file size 42.
 BOOST_AUTO_TEST_CASE(file_storage__resize__open__expected)
 {
     static const std::string file = DIRECTORY "/" + TEST_NAME;
@@ -105,6 +113,7 @@ BOOST_AUTO_TEST_CASE(file_storage__resize__open__expected)
     file_storage instance(file);
     BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(instance.resize(42));
+    BOOST_REQUIRE_EQUAL(instance.capacity(), 42u);
 }
 
 BOOST_AUTO_TEST_CASE(file_storage__reserve__closed__throws_runtime_error)
@@ -115,14 +124,37 @@ BOOST_AUTO_TEST_CASE(file_storage__reserve__closed__throws_runtime_error)
     BOOST_REQUIRE_THROW(instance.reserve(42), std::runtime_error);
 }
 
-// TODO: externally verify file size.
-BOOST_AUTO_TEST_CASE(file_storage__reserve__open__expected)
+// TODO: externally verify open file size 150, closed file size 100.
+BOOST_AUTO_TEST_CASE(file_storage__reserve__open_default_minimum__expected_file_size)
 {
     static const std::string file = DIRECTORY "/" + TEST_NAME;
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file);
     BOOST_REQUIRE(instance.open());
+    BOOST_REQUIRE(instance.reserve(100));
+    BOOST_REQUIRE_EQUAL(instance.capacity(), 150u);
+}
+
+// TODO: externally verify open file size 100, closed file size 42.
+BOOST_AUTO_TEST_CASE(file_storage__reserve__minimum_no_expansion__expected_file_size)
+{
+    static const std::string file = DIRECTORY "/" + TEST_NAME;
+    BOOST_REQUIRE(test::create(file));
+    file_storage instance(file, 100, 0);
+    BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(instance.reserve(42));
+    BOOST_REQUIRE_EQUAL(instance.capacity(), 100u);
+}
+
+// TODO: externally verify open file size 142, closed file size 100.
+BOOST_AUTO_TEST_CASE(file_storage__reserve__no_minimum_expansion__expected_file_size)
+{
+    static const std::string file = DIRECTORY "/" + TEST_NAME;
+    BOOST_REQUIRE(test::create(file));
+    file_storage instance(file, 0, 42);
+    BOOST_REQUIRE(instance.open());
+    BOOST_REQUIRE(instance.reserve(100));
+    BOOST_REQUIRE_EQUAL(instance.capacity(), 142u);
 }
 
 // Causes boost assert.
@@ -168,15 +200,15 @@ BOOST_AUTO_TEST_CASE(file_storage__write__read__expected)
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file);
     BOOST_REQUIRE(instance.open());
-    auto memory = instance.reserve(file.size());
+    auto memory = instance.reserve(sizeof(uint64_t));
     BOOST_REQUIRE(memory);
     auto serial = make_unsafe_serializer(memory->buffer());
-    serial.write_8_bytes_big_endian(expected);
+    serial.write_big_endian<uint64_t>(expected);
     memory.reset();
     BOOST_REQUIRE(instance.flush());
     memory = instance.access();
     auto deserial = make_unsafe_deserializer(memory->buffer());
-    BOOST_REQUIRE_EQUAL(deserial.read_8_bytes_big_endian(), expected);
+    BOOST_REQUIRE_EQUAL(deserial.read_big_endian<uint64_t>(), expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
