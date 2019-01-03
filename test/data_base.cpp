@@ -33,7 +33,7 @@ using namespace boost::system;
 using namespace boost::filesystem;
 
 static void test_block_exists(const data_base& interface, size_t height,
-    const block& block, bool index_addresses, bool candidate)
+    const block& block, bool catalog, bool candidate)
 {
     const auto& address_store = interface.addresses();
     const auto block_hash = block.hash();
@@ -73,7 +73,7 @@ static void test_block_exists(const data_base& interface, size_t height,
                 input_point spend{ tx_hash, j };
                 BOOST_REQUIRE_EQUAL(spend.index(), j);
 
-                if (!index_addresses)
+                if (!catalog)
                     continue;
 
                 const auto addresses = input.addresses();
@@ -100,7 +100,7 @@ static void test_block_exists(const data_base& interface, size_t height,
             }
         }
 
-        if (!index_addresses)
+        if (!catalog)
             return;
 
         for (size_t j = 0; j < tx.outputs().size(); ++j)
@@ -365,7 +365,6 @@ BOOST_AUTO_TEST_CASE(data_base__create__block_transactions_index_interaction__su
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -393,20 +392,19 @@ BOOST_AUTO_TEST_CASE(data_base__create__genesis_block_available__success)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
     settings.address_table_buckets = 42;
-  
+
     data_base instance(settings); 
-   
+
     static const auto bc_settings = bc::system::settings(bc::system::config::settings::mainnet);
     const chain::block& genesis = bc_settings.genesis_block;    
     BOOST_REQUIRE(instance.create(genesis));
 
-    test_block_exists(instance, 0, genesis, settings.index_addresses, false);
+    test_block_exists(instance, 0, genesis, false, false);
 }
 
 BOOST_AUTO_TEST_CASE(data_base__push__adds_to_blocks_and_transactions_validates_and_confirms__success)
@@ -414,7 +412,6 @@ BOOST_AUTO_TEST_CASE(data_base__push__adds_to_blocks_and_transactions_validates_
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -434,7 +431,7 @@ BOOST_AUTO_TEST_CASE(data_base__push__adds_to_blocks_and_transactions_validates_
 
     // test conditions
    
-    test_block_exists(instance, 1, block1, settings.index_addresses, false);
+    test_block_exists(instance, 1, block1, false, false);
     test_heights(instance, 1u, 1u);
 }
 
@@ -446,7 +443,6 @@ BOOST_AUTO_TEST_CASE(data_base__push_block__not_existing___failure)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -475,7 +471,6 @@ BOOST_AUTO_TEST_CASE(data_base__push_block__incorrect_height___failure)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -508,7 +503,6 @@ BOOST_AUTO_TEST_CASE(data_base__push_header__missing_parent___failure)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -538,7 +532,6 @@ BOOST_AUTO_TEST_CASE(data_base__push_block_and_update__already_candidated___succ
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -565,7 +558,7 @@ BOOST_AUTO_TEST_CASE(data_base__push_block_and_update__already_candidated___succ
     // test conditions
 
     test_heights(instance, 1u, 1u);
-    test_block_exists(instance, 1, block1, settings.index_addresses, false);
+    test_block_exists(instance, 1, block1, false, false);
 }
 
 BOOST_AUTO_TEST_CASE(data_base__pop_header_not_top___failure)
@@ -573,7 +566,6 @@ BOOST_AUTO_TEST_CASE(data_base__pop_header_not_top___failure)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -598,7 +590,6 @@ BOOST_AUTO_TEST_CASE(data_base__pop_header__candidate___success)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -632,7 +623,6 @@ BOOST_AUTO_TEST_CASE(data_base__pop_block_not_top___failure)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -657,7 +647,6 @@ BOOST_AUTO_TEST_CASE(data_base__pop_block__confirmed___success)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -684,7 +673,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_block__confirmed___success)
     // test conditions
 
     BOOST_REQUIRE(out_block.hash() == block1.hash());
-    test_block_not_exists(instance, block1, settings.index_addresses);
+    test_block_not_exists(instance, block1, false);
     test_heights(instance, 1u, 0u);
 }
 
@@ -693,7 +682,6 @@ BOOST_AUTO_TEST_CASE(data_base__push_all_and_update__already_candidated___succes
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -708,9 +696,9 @@ BOOST_AUTO_TEST_CASE(data_base__push_all_and_update__already_candidated___succes
     
     const auto block1 = read_block(MAINNET_BLOCK1);
     
-    block_const_ptr block1_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK1));
-    block_const_ptr block2_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK2));
-    block_const_ptr block3_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK3));
+    const auto block1_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK1));
+    const auto block2_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK2));
+    const auto block3_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK3));
     const auto blocks_push_ptr = std::make_shared<const block_const_ptr_list>(block_const_ptr_list{ block1_ptr, block2_ptr, block3_ptr });
     
     store_block_transactions(instance, *block1_ptr, 1);
@@ -741,9 +729,9 @@ BOOST_AUTO_TEST_CASE(data_base__push_all_and_update__already_candidated___succes
     // test conditions
     
     test_heights(instance, 3u, 3u);
-    test_block_exists(instance, 1, *block1_ptr, settings.index_addresses, false);
-    test_block_exists(instance, 2, *block2_ptr, settings.index_addresses, false);
-    test_block_exists(instance, 3, *block3_ptr, settings.index_addresses, false);
+    test_block_exists(instance, 1, *block1_ptr, false, false);
+    test_block_exists(instance, 2, *block2_ptr, false, false);
+    test_block_exists(instance, 3, *block3_ptr, false, false);
 }
 
 BOOST_AUTO_TEST_CASE(data_base__pop_above_missing_forkpoint_hash___failure)
@@ -751,7 +739,6 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above_missing_forkpoint_hash___failure)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -782,7 +769,6 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__wrong_forkpoint_height___failure)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -809,7 +795,6 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__pop_zero___success)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -839,7 +824,6 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__candidated_not_confirmed___success)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -854,9 +838,9 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__candidated_not_confirmed___success)
    
     const auto block1 = read_block(MAINNET_BLOCK1);
 
-    block_const_ptr block1_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK1));
-    block_const_ptr block2_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK2));
-    block_const_ptr block3_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK3));
+    const auto block1_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK1));
+    const auto block2_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK2));
+    const auto block3_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK3));
     const auto blocks_push_ptr = std::make_shared<const block_const_ptr_list>(block_const_ptr_list{ block1_ptr, block2_ptr, block3_ptr });
     store_block_transactions(instance, *block1_ptr, 1);
     store_block_transactions(instance, *block2_ptr, 1);
@@ -884,9 +868,9 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__candidated_not_confirmed___success)
 
     BOOST_REQUIRE_EQUAL(out_headers->size(), 3);
     test_heights(instance, 0u, 0u);
-    test_block_not_exists(instance, *block1_ptr, settings.index_addresses);
-    test_block_not_exists(instance, *block2_ptr, settings.index_addresses);
-    test_block_not_exists(instance, *block3_ptr, settings.index_addresses);
+    test_block_not_exists(instance, *block1_ptr, false);
+    test_block_not_exists(instance, *block2_ptr, false);
+    test_block_not_exists(instance, *block3_ptr, false);
 }
 
 #ifndef NDEBUG
@@ -895,7 +879,6 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__wrong_forkpoint_height___failure)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -922,7 +905,6 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__pop_zero___success)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -952,7 +934,6 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__confirmed___success)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -967,9 +948,9 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__confirmed___success)
 
     const auto block1 = read_block(MAINNET_BLOCK1);
 
-    block_const_ptr block1_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK1));
-    block_const_ptr block2_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK2));
-    block_const_ptr block3_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK3));
+    const auto block1_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK1));
+    const auto block2_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK2));
+    const auto block3_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK3));
     const auto blocks_push_ptr = std::make_shared<const block_const_ptr_list>(block_const_ptr_list{ block1_ptr, block2_ptr, block3_ptr });
     store_block_transactions(instance, *block1_ptr, 1);
     store_block_transactions(instance, *block2_ptr, 1);
@@ -983,6 +964,8 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__confirmed___success)
     });
 
     BOOST_REQUIRE(instance.push_all(headers_push_ptr, config::checkpoint(genesis.hash(), 0)));
+
+    // TODO: remove loop.
     for (const auto block_ptr: *blocks_push_ptr) 
         BOOST_REQUIRE_EQUAL(instance.candidate(*block_ptr), error::success);
 
@@ -1002,9 +985,9 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__confirmed___success)
 
     BOOST_REQUIRE_EQUAL(out_blocks->size(), 3);
     test_heights(instance, 3u, 0u);
-    test_block_not_exists(instance, *block1_ptr, settings.index_addresses);
-    test_block_not_exists(instance, *block2_ptr, settings.index_addresses);
-    test_block_not_exists(instance, *block3_ptr, settings.index_addresses);
+    test_block_not_exists(instance, *block1_ptr, false);
+    test_block_not_exists(instance, *block2_ptr, false);
+    test_block_not_exists(instance, *block3_ptr, false);
 }
 
 /// Confirm
@@ -1014,7 +997,6 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__not_existing___failure)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -1043,7 +1025,6 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__incorrect_height___failure)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -1072,7 +1053,6 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__missing_parent___failure)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -1098,7 +1078,6 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__already_candidated___success)
     create_directory(DIRECTORY);
     bc::database::settings settings;
     settings.directory = DIRECTORY;
-    settings.index_addresses = false;
     settings.flush_writes = false;
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
@@ -1129,8 +1108,9 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__already_candidated___success)
     test_heights(instance, 1u, 1u);
     const auto& block_result = instance.blocks().get(1, false);
     BOOST_REQUIRE(block_result.hash() == block1.hash());
-    test_block_exists(instance, 1, block1, settings.index_addresses, false);
+    test_block_exists(instance, 1, block1, false, false);
 
+    // TODO: remove loop.
     for (const auto& offset: block_result)
         BOOST_REQUIRE(!instance.transactions().get(offset).candidate());
 }
