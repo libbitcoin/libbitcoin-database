@@ -53,10 +53,10 @@ BOOST_AUTO_TEST_CASE(hash_table_multimap__find__not_existing__not_found)
     // Create the multimap.
     record_multimap multimap(table, index);
 
-    // Test finding missing element
+    // Test finding missing element.
     BOOST_REQUIRE(!multimap.find(key));
 
-    // Test finding element past eof
+    // Test finding element past eof.
     BOOST_REQUIRE(!multimap.find(10u));
 }
 
@@ -109,14 +109,14 @@ BOOST_AUTO_TEST_CASE(hash_table_multimap__construct__always__expected)
     const auto link = element.create(writer);
     multimap.link(key, element);
 
-    auto found = multimap.find(key);
+    const auto found = multimap.find(key);
     BOOST_REQUIRE(found);
-    auto found_from_link = multimap.find(link);
+    const auto found_from_link = multimap.find(link);
     BOOST_REQUIRE(found_from_link);
     BOOST_REQUIRE_EQUAL(found_from_link.link(), link);
 
 
-    // Second element on the same key
+    // Second element on the same key.
     auto element2 = multimap.allocator();
     const auto link2 = element2.create(writer2);
     multimap.link(key, element2);
@@ -124,10 +124,10 @@ BOOST_AUTO_TEST_CASE(hash_table_multimap__construct__always__expected)
     const auto found2 = multimap.find(key);
     BOOST_REQUIRE(found2);
 
-    // elements in index are correctly linked
+    // Elements in index are correctly linked.
     BOOST_REQUIRE_EQUAL(found2.next(), found.link());
 
-    // read the two elements
+    // Read the two elements.
     const auto reader = [](byte_deserializer& deserial)
     {
         BOOST_REQUIRE_EQUAL(deserial.read_byte(), 110u);
@@ -145,17 +145,17 @@ BOOST_AUTO_TEST_CASE(hash_table_multimap__construct__always__expected)
     found.read(reader);
     found2.read(reader2);
 
-    // stored elements from index
+    // Stored elements from index.
     BOOST_REQUIRE(index.get(link));
     BOOST_REQUIRE(index.get(link2));
 
-    // Unlink once
+    // Unlink once.
     BOOST_REQUIRE(multimap.unlink(key));
 
     BOOST_REQUIRE(multimap.find(key));
     BOOST_REQUIRE(multimap.find(link));
 
-    // unlink the second time
+    // Unlink the second time.
     BOOST_REQUIRE(multimap.unlink(key));
 
     BOOST_REQUIRE(!multimap.find(key));
