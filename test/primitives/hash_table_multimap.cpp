@@ -55,9 +55,6 @@ BOOST_AUTO_TEST_CASE(hash_table_multimap__find__not_existing__not_found)
 
     // Test finding missing element.
     BOOST_REQUIRE(!multimap.find(key));
-
-    // Test finding element past eof.
-    BOOST_REQUIRE(!multimap.find(10u));
 }
 
 BOOST_AUTO_TEST_CASE(hash_table_multimap__construct__always__expected)
