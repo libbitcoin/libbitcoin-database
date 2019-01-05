@@ -195,9 +195,10 @@ bool file_storage::open()
     std::string error_name;
 
     // Initialize data_.
+    // For unknown reason madvise(minimum_) with large value fails on linux.
     if (!map(capacity_))
         error_name = "map";
-    else if (madvise(data_, minimum_, MADV_RANDOM) == FAIL)
+    else if (madvise(data_, 0, MADV_RANDOM) == FAIL)
         error_name = "madvise";
     else
         closed_ = false;
