@@ -59,12 +59,14 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    // This creates default configuration database only!
+    // This creates a default configuration database only!
+    const auto catalog = false;
     const database::settings configuration;
     const system::settings bitcoin_configuration(
         system::config::settings::mainnet);
 
-    if (!data_base(configuration).create(bitcoin_configuration.genesis_block))
+    if (!data_base(configuration, catalog).create(
+        bitcoin_configuration.genesis_block))
     {
         std::cerr << BS_INITCHAIN_FAIL;
         return -1;

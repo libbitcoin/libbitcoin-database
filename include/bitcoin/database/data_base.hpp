@@ -42,7 +42,7 @@ class BCD_API data_base
 public:
     typedef std::function<void(const system::code&)> result_handler;
 
-    data_base(const settings& settings, bool catalog=false);
+    data_base(const settings& settings, bool catalog);
 
     // Open and close.
     // ------------------------------------------------------------------------
