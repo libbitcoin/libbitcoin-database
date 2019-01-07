@@ -95,8 +95,7 @@ hash_table<Manager, Index, Link, Key>::find(Link link) const
 {
     // Ensure requested position is within the file.
     // We avoid a runtime error here to optimize out the past_eof locks.
-    BITCOIN_ASSERT_MSG(link == not_found || !manager_.past_eof(link),
-        "Read past end of file.");
+    BITCOIN_ASSERT_MSG(!manager_.past_eof(link), "Read past end of file.");
 
     return { manager_, link, list_mutex_ };
 }

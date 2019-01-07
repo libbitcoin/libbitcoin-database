@@ -174,12 +174,13 @@ bool block_database::top(size_t& out_height, bool candidate) const
 block_result block_database::get(size_t height, bool candidate) const
 {
     auto& manager = candidate ? candidate_index_ : confirmed_index_;
-    const auto link = height < manager.count() ? read_index(height, manager) :
-        hash_table_.not_found;
+    const auto element = height < manager.count()
+        ? hash_table_.find(read_index(height, manager))
+        : hash_table_.terminator();
 
     return
     {
-        hash_table_.find(link),
+        element,
         metadata_mutex_,
         tx_index_
     };
@@ -441,9 +442,6 @@ bool block_database::unindex(const hash_digest& DEBUG_ONLY(hash), size_t height,
 
     // Unconfirmation implies that block is indexed, so use index.
     auto element = hash_table_.find(read_index(height, manager));
-
-    if (!element)
-        return false;
 
     BITCOIN_ASSERT(hash == element.key());
 
