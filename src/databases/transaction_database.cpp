@@ -165,7 +165,7 @@ void transaction_database::get_block_metadata(const chain::transaction& tx,
     // any duplicate of an unspent tx as invalid (with two exceptions).
     // BIP34 active renders BIP30 moot as duplicates are presumed impossible.
     //*************************************************************************
-    if (!bip34 && result.is_spent(fork_height, true))
+    if (!bip34 && result.is_candidate_spent(fork_height))
     {
         // The original tx will not be queryable independent of the block.
         // The original tx's block linkage is unbroken by accepting duplicate.
@@ -204,12 +204,10 @@ void transaction_database::get_pool_metadata(const chain::transaction& tx,
 
 // Metadata should be defaulted by caller.
 bool transaction_database::get_output(const output_point& point,
-    size_t fork_height, bool candidate) const
+    size_t fork_height) const
 {
+    // Metadata should be defaulted by caller.
     auto& prevout = point.metadata;
-    prevout.height = 0;
-    prevout.median_time_past = 0;
-    prevout.spent = false;
 
     // If the input is a coinbase there is no prevout to populate.
     if (point.is_null())
@@ -237,15 +235,22 @@ bool transaction_database::get_output(const output_point& point,
     if (!prevout.cache.is_valid())
         return false;
 
-    // Populate the output metadata.
     const auto position = result.position();
-    prevout.candidate = result.candidate();
-    prevout.coinbase = position == 0;
-    prevout.confirmed = position != transaction_result::unconfirmed &&
-        height <= fork_height;
+    static const auto unconfirmed = transaction_result::unconfirmed;
+
+    // Populate output metadata relative to the fork point.
     prevout.height = height;
     prevout.median_time_past = result.median_time_past();
-    prevout.spent = prevout.cache.metadata.spent(fork_height, candidate);
+    prevout.coinbase = position == 0;
+    prevout.candidate = result.candidate();
+    prevout.confirmed = position != unconfirmed && height <= fork_height;
+    prevout.candidate_spent = prevout.cache.metadata.candidate_spent;
+    prevout.confirmed_spent = prevout.cache.metadata.confirmed_spent_height <=
+        fork_height;
+
+    // May have a candidate or confirmed spend of a confirmed, but must not
+    // have a confirmed spend of a candidate.
+    BITCOIN_ASSERT(!(prevout.confirmed_spent && prevout.candidate));
 
     // Return is redundant with prevout.cache validity.
     return true;
@@ -458,6 +463,7 @@ bool transaction_database::confirm(const block& block, size_t height,
         if (!confirm(tx.metadata.link, height, median_time_past, position++))
             return false;
 
+        // Candidates are not cached but this only affects branch length > 1.
         // Cache the unspent outputs of the confirmed transaction.
         cache_.add(tx, height, median_time_past, true);
     }

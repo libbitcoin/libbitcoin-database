@@ -198,9 +198,10 @@ bool unspent_outputs::populate(const output_point& point,
     const auto height = transaction.height();
 
     // Populate the output metadata.
-    prevout.spent = false;
     prevout.candidate = false;
     prevout.confirmed = transaction.is_confirmed() && height <= fork_height;
+    prevout.candidate_spent = false;
+    prevout.confirmed_spent = false;
     prevout.coinbase = transaction.is_coinbase();
     prevout.height = height;
     prevout.median_time_past = transaction.median_time_past();
