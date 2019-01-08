@@ -640,7 +640,7 @@ BOOST_AUTO_TEST_CASE(transaction_database_with_cache__confirm1__block_transactio
    BOOST_REQUIRE(!tx1_reloaded2.candidate());
    BOOST_REQUIRE_EQUAL(tx1_reloaded2.output(0).metadata.confirmed_spent_height, 123);
    ////   BOOST_REQUIRE(tx1_reloaded2.transaction().outputs().front().metadata.spent(123, false));
-   BOOST_REQUIRE(tx1_reloaded2.is_confirmed_spent(123));
+   BOOST_REQUIRE(tx1_reloaded2.is_candidate_spent(123));
 }
 
 // Unconfirm

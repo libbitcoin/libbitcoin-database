@@ -147,33 +147,33 @@ bool transaction_result::is_candidate_spent(size_t fork_height) const
     return spent;
 }
 
-bool transaction_result::is_confirmed_spent(size_t fork_height) const
-{
-    // Cannot be spent unless confirmed by fork height.
-    if (!((position_ != unconfirmed) && (height_ <= fork_height)))
-        return false;
-
-    BITCOIN_ASSERT(element_);
-    auto spent = true;
-
-    // Spentness is unguarded and will be inconsistent during write.
-    const auto reader = [&](byte_deserializer& deserial)
-    {
-        deserial.skip(metadata_size);
-        const auto outputs = deserial.read_size_little_endian();
-
-        // Search all outputs for an unspent indication.
-        for (auto out = 0u; spent && out < outputs; ++out)
-        {
-            // TODO: This reads full output, which is simple but not optimial.
-            const auto output = output::factory(deserial, false);
-            spent = output.metadata.confirmed_spent_height <= fork_height;
-        }
-    };
-
-    element_.read(reader);
-    return spent;
-}
+////bool transaction_result::is_confirmed_spent(size_t fork_height) const
+////{
+////    // Cannot be spent unless confirmed by fork height.
+////    if (!((position_ != unconfirmed) && (height_ <= fork_height)))
+////        return false;
+////
+////    BITCOIN_ASSERT(element_);
+////    auto spent = true;
+////
+////    // Spentness is unguarded and will be inconsistent during write.
+////    const auto reader = [&](byte_deserializer& deserial)
+////    {
+////        deserial.skip(metadata_size);
+////        const auto outputs = deserial.read_size_little_endian();
+////
+////        // Search all outputs for an unspent indication.
+////        for (auto out = 0u; spent && out < outputs; ++out)
+////        {
+////            // TODO: This reads full output, which is simple but not optimial.
+////            const auto output = output::factory(deserial, false);
+////            spent = output.metadata.confirmed_spent_height <= fork_height;
+////        }
+////    };
+////
+////    element_.read(reader);
+////    return spent;
+////}
 
 // If index is out of range returns default/invalid output (.value not_found).
 chain::output transaction_result::output(uint32_t index) const
