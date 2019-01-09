@@ -195,14 +195,23 @@ bool unspent_outputs::populate(const output_point& point,
         return false;
 
     ++hits_;
-    const auto height = transaction.height();
+    const auto prevout_height = transaction.height();
 
     // Populate the output metadata.
-    prevout.spent = false;
+
+    // Cache retains only confirmed/unconfirmed state unspent output state.
     prevout.candidate = false;
-    prevout.confirmed = transaction.is_confirmed() && height <= fork_height;
+    prevout.candidate_spent = false;
+
+    // Cache removes outputs after they are confirmed spent.
+    prevout.confirmed_spent = false;
+
+    // Unspent output is confirmed only if below the fork point.
+    prevout.confirmed = transaction.is_confirmed() &&
+        prevout_height <= fork_height;
+
+    prevout.height = prevout_height;
     prevout.coinbase = transaction.is_coinbase();
-    prevout.height = height;
     prevout.median_time_past = transaction.median_time_past();
     prevout.cache = output->second;
 

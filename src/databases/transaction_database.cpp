@@ -151,6 +151,8 @@ transaction_result transaction_database::get(const hash_digest& hash) const
 void transaction_database::get_block_metadata(const chain::transaction& tx,
     uint32_t forks, size_t fork_height) const
 {
+    static const auto unlinked = transaction::validation::unlinked;
+    static const auto unconfirmed = transaction_result::unconfirmed;
     const auto result = get(tx.hash());
 
     // Default values are correct for indication of not found.
@@ -165,51 +167,56 @@ void transaction_database::get_block_metadata(const chain::transaction& tx,
     // any duplicate of an unspent tx as invalid (with two exceptions).
     // BIP34 active renders BIP30 moot as duplicates are presumed impossible.
     //*************************************************************************
-    if (!bip34 && result.is_spent(fork_height, true))
+    if (!bip34 && result.is_candidate_spent(fork_height))
     {
         // The original tx will not be queryable independent of the block.
         // The original tx's block linkage is unbroken by accepting duplicate.
         // BIP30 exception blocks are not spent (will not be unlinked here).
-        BITCOIN_ASSERT(tx.metadata.link == transaction::validation::unlinked);
+        BITCOIN_ASSERT(tx.metadata.link == unlinked);
         return;
     }
 
     const auto height = result.height();
-    tx.metadata.existed = tx.metadata.link !=
-        transaction::validation::unlinked;
-    tx.metadata.candidate = result.candidate();
-    tx.metadata.confirmed = result.position() !=
-        transaction_result::unconfirmed && fork_height <= height;
+    const auto is_linked = result.link() != unlinked;
+    const auto has_position = result.position() != unconfirmed;
+    const auto is_confirmed = has_position && fork_height <= height;
+
+    tx.metadata.existed = is_linked;
     tx.metadata.link = result.link();
-    tx.metadata.verified = !tx.metadata.confirmed && height == forks;
+    tx.metadata.candidate = result.candidate();
+    tx.metadata.confirmed = is_confirmed;
+    tx.metadata.verified = !is_confirmed && height == forks;
 }
 
 void transaction_database::get_pool_metadata(const chain::transaction& tx,
     uint32_t forks) const
 {
+    static const auto unlinked = transaction::validation::unlinked;
+    static const auto unconfirmed = transaction_result::unconfirmed;
     const auto result = get(tx.hash());
 
     // Default values presumed correct for indication of not found.
     if (!result)
         return;
 
-    tx.metadata.existed = tx.metadata.link !=
-        transaction::validation::unlinked;
-    tx.metadata.candidate = result.candidate();
-    tx.metadata.confirmed = result.position() !=
-        transaction_result::unconfirmed;
+    const auto height = result.height();
+    const auto is_linked = result.link() != unlinked;
+    const auto is_confirmed = result.position() != unconfirmed;
+
+    tx.metadata.existed = is_linked;
     tx.metadata.link = result.link();
-    tx.metadata.verified = !tx.metadata.confirmed && result.height() == forks;
+    tx.metadata.candidate = result.candidate();
+    tx.metadata.confirmed = is_confirmed;
+    tx.metadata.verified = !is_confirmed && height == forks;
 }
 
 // Metadata should be defaulted by caller.
 bool transaction_database::get_output(const output_point& point,
-    size_t fork_height, bool candidate) const
+    size_t fork_height) const
 {
+    static const auto not_spent = output::validation::not_spent;
+    static const auto unconfirmed = transaction_result::unconfirmed;
     auto& prevout = point.metadata;
-    prevout.height = 0;
-    prevout.median_time_past = 0;
-    prevout.spent = false;
 
     // If the input is a coinbase there is no prevout to populate.
     if (point.is_null())
@@ -228,8 +235,8 @@ bool transaction_database::get_output(const output_point& point,
     // the consequence of satoshi not including it in the utxo set for block
     // database initialization. Only he knows why, probably an oversight.
     //*************************************************************************
-    const auto height = result.height();
-    if (height == 0)
+    const auto prevout_height = result.height();
+    if (prevout_height == 0)
         return false;
 
     // Find the output at the specified index for the found tx.
@@ -237,15 +244,24 @@ bool transaction_database::get_output(const output_point& point,
     if (!prevout.cache.is_valid())
         return false;
 
-    // Populate the output metadata.
     const auto position = result.position();
-    prevout.candidate = result.candidate();
-    prevout.coinbase = position == 0;
-    prevout.confirmed = position != transaction_result::unconfirmed &&
-        height <= fork_height;
-    prevout.height = height;
+    const auto first_position = position == 0;
+    const auto has_position = position != unconfirmed;
+    const auto spender_height = prevout.cache.metadata.confirmed_spent_height;
+
+    // Populate output metadata relative to the fork point.
+    prevout.height = prevout_height;
     prevout.median_time_past = result.median_time_past();
-    prevout.spent = prevout.cache.metadata.spent(fork_height, candidate);
+    prevout.coinbase = first_position;
+    prevout.candidate = result.candidate();
+    prevout.confirmed = has_position && prevout_height <= fork_height;
+    prevout.candidate_spent = prevout.cache.metadata.candidate_spent;
+    prevout.confirmed_spent = spender_height != not_spent &&
+        spender_height <= fork_height;
+
+    // May have a candidate or confirmed spend of a confirmed, but must not
+    // have a confirmed spend of a candidate.
+    BITCOIN_ASSERT(!(prevout.confirmed_spent && prevout.candidate));
 
     // Return is redundant with prevout.cache validity.
     return true;
@@ -458,6 +474,7 @@ bool transaction_database::confirm(const block& block, size_t height,
         if (!confirm(tx.metadata.link, height, median_time_past, position++))
             return false;
 
+        // Candidates are not cached but this only affects branch length > 1.
         // Cache the unspent outputs of the confirmed transaction.
         cache_.add(tx, height, median_time_past, true);
     }

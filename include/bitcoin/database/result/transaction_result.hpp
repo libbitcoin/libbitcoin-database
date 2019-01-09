@@ -76,8 +76,11 @@ public:
     /// The median time past of the block which includes the transaction.
     uint32_t median_time_past() const;
 
-    /// All tx outputs confirmed below fork, or candidate as applicable.
-    bool is_spent(size_t fork_height, bool candidate) const;
+    /// All tx outputs confirmed below fork or as candidates.
+    bool is_candidate_spent(size_t fork_height) const;
+
+    /////// All tx outputs confirmed below fork.
+    ////bool is_confirmed_spent(size_t fork_height) const;
 
     /// The output at the specified index within this transaction.
     system::chain::output output(uint32_t index) const;

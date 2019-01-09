@@ -84,9 +84,9 @@ public:
     void get_pool_metadata(const system::chain::transaction& tx,
         uint32_t forks) const;
 
-    /// Populate output metadata for the specified point and given context.
+    /// Populate output metadata for the specified point and fork point.
     bool get_output(const system::chain::output_point& point,
-        size_t fork_height, bool candidate) const;
+        size_t fork_height) const;
 
     // Writers.
     // ------------------------------------------------------------------------
