@@ -93,6 +93,10 @@ template <typename Manager, typename Index, typename Link, typename Key>
 typename hash_table<Manager, Index, Link, Key>::const_value_type
 hash_table<Manager, Index, Link, Key>::find(Link link) const
 {
+    // Ensure requested position is within the file.
+    // We avoid a runtime error here to optimize out the past_eof locks.
+    BITCOIN_ASSERT_MSG(!manager_.past_eof(link), "Read past end of file.");
+
     return { manager_, link, list_mutex_ };
 }
 
@@ -100,7 +104,7 @@ template <typename Manager, typename Index, typename Link, typename Key>
 typename hash_table<Manager, Index, Link, Key>::const_value_type
 hash_table<Manager, Index, Link, Key>::terminator() const
 {
-    return find(not_found);
+    return { manager_, not_found, list_mutex_ };
 }
 
 template <typename Manager, typename Index, typename Link, typename Key>

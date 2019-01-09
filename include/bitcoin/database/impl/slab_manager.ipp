@@ -130,6 +130,12 @@ memory_ptr slab_manager<Link>::get(Link link) const
     return memory;
 }
 
+template <typename Link>
+bool slab_manager<Link>::past_eof(Link link) const
+{
+    return link >= payload_size();
+}
+
 // privates
 
 // Read the size value from the first 64 bits of the file after the header.

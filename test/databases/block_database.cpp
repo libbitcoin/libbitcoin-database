@@ -58,6 +58,24 @@ struct block_database_directory_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(block_database_tests, block_database_directory_setup_fixture)
 
+BOOST_AUTO_TEST_CASE(block_database__get__not_found__success)
+{
+    const auto block_table = DIRECTORY "/block_table";
+    const auto candidate_index = DIRECTORY "/candidate_index";
+    const auto confirmed_index = DIRECTORY "/confirmed_index";
+    const auto tx_index = DIRECTORY "/tx_index";
+
+    test::create(block_table);
+    test::create(candidate_index);
+    test::create(confirmed_index);
+    test::create(tx_index);
+    block_database instance(block_table, candidate_index, confirmed_index, tx_index, 1, 1, 1, 1, 1000, 50);
+    BOOST_REQUIRE(instance.create());
+
+    BOOST_REQUIRE(!instance.get(0, true));
+    BOOST_REQUIRE(!instance.get(0, false));
+}
+
 BOOST_AUTO_TEST_CASE(block_database__test)
 {
     // TODO: replace.

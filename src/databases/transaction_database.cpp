@@ -345,9 +345,6 @@ bool transaction_database::candidate(file_offset link, bool positive)
 {
     const auto result = get(link);
 
-    if (!result)
-        return false;
-
     // Spend or unspend the candidate tx's previous outputs.
     for (const auto inpoint: result)
         if (!candidate_spend(inpoint, positive))
@@ -419,9 +416,6 @@ bool transaction_database::candidate_spend(const chain::output_point& point,
 bool transaction_database::candidize(link_type link, bool positive)
 {
     const auto element = hash_table_.find(link);
-
-    if (!element)
-        return false;
 
     const auto writer = [&](byte_serializer& serial)
     {
@@ -568,9 +562,6 @@ bool transaction_database::confirmize(link_type link, size_t height,
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(position <= max_uint16);
     const auto element = hash_table_.find(link);
-
-    if (!element)
-        return false;
 
     const auto writer = [&](byte_serializer& serial)
     {
