@@ -174,16 +174,14 @@ bool block_database::top(size_t& out_height, bool candidate) const
 block_result block_database::get(size_t height, bool candidate) const
 {
     auto& manager = candidate ? candidate_index_ : confirmed_index_;
-    const auto element = height < manager.count()
-        ? hash_table_.find(read_index(height, manager))
-        : hash_table_.terminator();
 
-    return
+    if (height < manager.count())
     {
-        element,
-        metadata_mutex_,
-        tx_index_
-    };
+        const auto link = read_index(height, manager);
+        return { hash_table_.find(link), metadata_mutex_, tx_index_ };
+    }
+
+    return { hash_table_.terminator(), metadata_mutex_, tx_index_ };
 }
 
 // Returns any state, including invalid and empty.
