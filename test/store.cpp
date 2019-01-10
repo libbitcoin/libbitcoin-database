@@ -66,23 +66,6 @@ BOOST_AUTO_TEST_CASE(store__construct__flush_each_write_true__expected)
     BOOST_REQUIRE(store.flush_each_write());
 }
 
-using namespace boost::filesystem;
-static bool create_file(const path& file_path)
-{
-    // Disallow create with existing file.
-    if (system::ifstream(file_path.string()).good())
-        return false;
-
-    system::ofstream file(file_path.string());
-
-    if (!file.good())
-        return false;
-
-    // Write one byte so file is nonzero size (for memory map validation).
-    file.put('x');
-    return true;
-}
-
 BOOST_AUTO_TEST_CASE(store__construct__no_indexes__expected_files)
 {
     static const std::string directory = DIRECTORY "/" + TEST_NAME;
