@@ -113,17 +113,17 @@ private:
 
     typedef system::message::compact_block::short_id_list short_id_list;
 
-    uint8_t index(const_element& element, bool positive, bool candidate);
     link_type associate(const system::chain::transaction::list& transactions);
+    void index(const_element& element, bool positive, bool candidate);
     void store(const system::chain::header& header, size_t height,
         uint32_t median_time_past, uint32_t checksum, link_type tx_start,
         size_t tx_count, uint8_t status);
 
     // Index Utilities.
     bool read_top(size_t& out_height, const manager_type& manager) const;
-    link_type read_index(size_t height, const manager_type& manager) const;
-    void pop_index(size_t height, manager_type& manager);
-    void push_index(link_type index, size_t height, manager_type& manager);
+    link_type read_link(size_t height, const manager_type& manager) const;
+    void pop_link(link_type link, size_t height, manager_type& manager);
+    void push_link(link_type link, size_t height, manager_type& manager);
 
     static const size_t prefix_size_;
 

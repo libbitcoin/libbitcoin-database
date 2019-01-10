@@ -75,9 +75,9 @@ hash_table_multimap<Index, Link, Key>::find(const Key& key) const
 
 template <typename Index, typename Link, typename Key>
 typename hash_table_multimap<Index, Link, Key>::const_value_type
-hash_table_multimap<Index, Link, Key>::find(Link link) const
+hash_table_multimap<Index, Link, Key>::get(Link link) const
 {
-    const auto element = map_.find(link);
+    const auto element = map_.get(link);
 
     if (!element)
         return { manager_, element.not_found, list_mutex_ };

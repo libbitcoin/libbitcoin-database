@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(hash_table_multimap__construct__always__expected)
 
     const auto found = multimap.find(key);
     BOOST_REQUIRE(found);
-    const auto found_from_link = multimap.find(link);
+    const auto found_from_link = multimap.get(link);
     BOOST_REQUIRE(found_from_link);
     BOOST_REQUIRE_EQUAL(found_from_link.link(), link);
 
@@ -150,13 +150,13 @@ BOOST_AUTO_TEST_CASE(hash_table_multimap__construct__always__expected)
     BOOST_REQUIRE(multimap.unlink(key));
 
     BOOST_REQUIRE(multimap.find(key));
-    BOOST_REQUIRE(multimap.find(link));
+    BOOST_REQUIRE(multimap.get(link));
 
     // Unlink the second time.
     BOOST_REQUIRE(multimap.unlink(key));
 
     BOOST_REQUIRE(!multimap.find(key));
-    BOOST_REQUIRE(!multimap.find(link));
+    BOOST_REQUIRE(!multimap.get(link));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

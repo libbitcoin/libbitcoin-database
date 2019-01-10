@@ -125,14 +125,14 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__multiple_elements__expected)
     };
 
     // Find, read and verify the new elements (by links).
-    const auto const_element1 = table.find(link1);
+    const auto const_element1 = table.get(link1);
     BOOST_REQUIRE(const_element1);
     BOOST_REQUIRE_EQUAL(const_element1.link(), link1);
     BOOST_REQUIRE_EQUAL(const_element1.next(), slab_map::not_found);
     BOOST_REQUIRE(const_element1.match(key1));
     const_element1.read(reader1);
 
-    const auto const_element2 = table.find(link2);
+    const auto const_element2 = table.get(link2);
     BOOST_REQUIRE(const_element2);
     BOOST_REQUIRE_EQUAL(const_element2.link(), link2);
     BOOST_REQUIRE_EQUAL(const_element2.next(), slab_map::not_found);
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_32_bit__round_trips)
     BOOST_REQUIRE(!table.find(key1));
 
     // Second key2 has been unlinked, but is still present in the store.
-    BOOST_REQUIRE(table.find(link3));
+    BOOST_REQUIRE(table.get(link3));
 
     // There is only one instance of key2 (next is not_found).
     auto const_element = table.find(key2);
@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_64_bit__round_trips)
     BOOST_REQUIRE(!table.find(key1));
 
     // Second key2 has been unlinked, but is still present in the store.
-    BOOST_REQUIRE(table.find(link3));
+    BOOST_REQUIRE(table.get(link3));
 
     // There is only one instance of key2 (next is not_found).
     auto const_element = table.find(key2);
