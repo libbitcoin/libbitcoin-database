@@ -95,7 +95,7 @@ hash_table<Manager, Index, Link, Key>::get(Link link) const
 {
     // Ensure requested position is within the file.
     // We avoid a runtime error here to optimize out the past_eof locks.
-    BITCOIN_ASSERT_MSG(link != not_found && !manager_.past_eof(link),
+    BITCOIN_ASSERT_MSG(!manager_.past_eof(link) || link == not_found,
         "Non-terminating link is past end of file.");
 
     // A not_found link value produces a terminator element.
