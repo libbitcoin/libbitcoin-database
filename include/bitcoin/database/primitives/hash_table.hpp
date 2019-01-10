@@ -86,7 +86,7 @@ public:
     const_value_type find(const Key& key) const;
 
     /// Get the element with the given link from the hash table.
-    const_value_type find(Link link) const;
+    const_value_type get(Link link) const;
 
     /// A not found instance for this table, same as find(not_found).
     const_value_type terminator() const;

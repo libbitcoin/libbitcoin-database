@@ -134,9 +134,10 @@ Link record_manager<Link>::allocate(size_t count)
 template <typename Link>
 memory_ptr record_manager<Link>::get(Link link) const
 {
-    BITCOIN_ASSERT_MSG(link < count(), "Read past end of file.");
+    // Ensure requested position is within the file.
+    // We avoid a runtime error here to optimize out the count lock.
+    BITCOIN_ASSERT_MSG(!past_eof(link), "Read past end of file.");
 
-    // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     memory->increment(header_size_ + link_to_position(link));
     return memory;

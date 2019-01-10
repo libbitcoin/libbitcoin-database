@@ -125,14 +125,14 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__multiple_elements__expected)
     };
 
     // Find, read and verify the new elements (by links).
-    const auto const_element1 = table.find(link1);
+    const auto const_element1 = table.get(link1);
     BOOST_REQUIRE(const_element1);
     BOOST_REQUIRE_EQUAL(const_element1.link(), link1);
     BOOST_REQUIRE_EQUAL(const_element1.next(), slab_map::not_found);
     BOOST_REQUIRE(const_element1.match(key1));
     const_element1.read(reader1);
 
-    const auto const_element2 = table.find(link2);
+    const auto const_element2 = table.get(link2);
     BOOST_REQUIRE(const_element2);
     BOOST_REQUIRE_EQUAL(const_element2.link(), link2);
     BOOST_REQUIRE_EQUAL(const_element2.next(), slab_map::not_found);
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__multiple_elements__expected)
     const_element2.read(reader2);
 }
 
-BOOST_AUTO_TEST_CASE(hash_table__record__unlink_first_stored__expected)
+BOOST_AUTO_TEST_CASE(hash_table__slab__unlink_first_stored__expected)
 {
     // Define hash table type.
     typedef test::tiny_hash key_type;
@@ -194,6 +194,68 @@ BOOST_AUTO_TEST_CASE(hash_table__record__unlink_first_stored__expected)
     BOOST_REQUIRE_EQUAL(const_element2.next(), slab_map::not_found);
     BOOST_REQUIRE(const_element2.match(key2));
     const_element2.read(reader2);
+}
+
+BOOST_AUTO_TEST_CASE(hash_table__get__record_range_of_links__success)
+{
+    // Define hash table type.
+    typedef test::tiny_hash key_type;
+    typedef uint32_t index_type;
+    typedef uint32_t link_type;
+    typedef hash_table<record_manager<link_type>, index_type, link_type, key_type> record_map;
+
+    test::storage file;
+    BOOST_REQUIRE(file.open());
+    record_map table(file, 2u, 4u);
+    BOOST_REQUIRE(table.create());
+
+    const key_type key1{ { 0xde, 0xad, 0xbe, 0xef } };
+    const auto writer1 = [](byte_serializer& serial)
+    {
+        serial.write_byte(110);
+        serial.write_byte(110);
+        serial.write_byte(4);
+        serial.write_byte(88);
+    };
+
+    // Allocate, create and store a new elements.
+    auto element = table.allocator();
+    const auto link1 = element.create(key1, writer1);
+    table.link(element);
+
+    BOOST_REQUIRE(table.get(link1));
+    BOOST_REQUIRE(!table.get(record_map::not_found));
+}
+
+BOOST_AUTO_TEST_CASE(hash_table__get__slab_range_of_links__success)
+{
+    // Define hash table type.
+    typedef test::tiny_hash key_type;
+    typedef uint32_t index_type;
+    typedef uint64_t link_type;
+    typedef hash_table<slab_manager<link_type>, index_type, link_type, key_type> slab_map;
+
+    test::storage file;
+    BOOST_REQUIRE(file.open());
+    slab_map table(file, 100u);
+    BOOST_REQUIRE(table.create());
+
+    const key_type key1{ { 0xde, 0xad, 0xbe, 0xef } };
+    const auto writer1 = [](byte_serializer& serial)
+    {
+        serial.write_byte(110);
+        serial.write_byte(110);
+        serial.write_byte(4);
+        serial.write_byte(88);
+    };
+
+    // Allocate, create and store a new elements.
+    auto element = table.allocator();
+    const auto link1 = element.create(key1, writer1);
+    table.link(element);
+
+    BOOST_REQUIRE(table.get(link1));
+    BOOST_REQUIRE(!table.get(slab_map::not_found));
 }
 
 BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_32_bit__round_trips)
@@ -254,7 +316,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_32_bit__round_trips)
     BOOST_REQUIRE(!table.find(key1));
 
     // Second key2 has been unlinked, but is still present in the store.
-    BOOST_REQUIRE(table.find(link3));
+    BOOST_REQUIRE(table.get(link3));
 
     // There is only one instance of key2 (next is not_found).
     auto const_element = table.find(key2);
@@ -333,7 +395,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_64_bit__round_trips)
     BOOST_REQUIRE(!table.find(key1));
 
     // Second key2 has been unlinked, but is still present in the store.
-    BOOST_REQUIRE(table.find(link3));
+    BOOST_REQUIRE(table.get(link3));
 
     // There is only one instance of key2 (next is not_found).
     auto const_element = table.find(key2);

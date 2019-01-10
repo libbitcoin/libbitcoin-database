@@ -62,7 +62,7 @@ public:
     const_value_type find(const Key& key) const;
 
     /// Get the iterator for the given link from a multimap.
-    const_value_type find(Link link) const;
+    const_value_type get(Link link) const;
 
     /// Add the given element to a multimap.
     /// Multimap elements have empty internal key values.

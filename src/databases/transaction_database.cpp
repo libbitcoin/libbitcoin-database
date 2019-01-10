@@ -137,10 +137,10 @@ bool transaction_database::close()
 // Queries.
 // ----------------------------------------------------------------------------
 
-transaction_result transaction_database::get(file_offset offset) const
+transaction_result transaction_database::get(file_offset link) const
 {
     // This is not guarded for an invalid offset.
-    return { hash_table_.find(offset), metadata_mutex_ };
+    return { hash_table_.get(link), metadata_mutex_ };
 }
 
 transaction_result transaction_database::get(const hash_digest& hash) const
@@ -343,10 +343,8 @@ bool transaction_database::candidate(file_offset link)
 // private
 bool transaction_database::candidate(file_offset link, bool positive)
 {
-    const auto result = get(link);
-
     // Spend or unspend the candidate tx's previous outputs.
-    for (const auto inpoint: result)
+    for (const auto inpoint: get(link))
         if (!candidate_spend(inpoint, positive))
             return false;
 
@@ -415,8 +413,6 @@ bool transaction_database::candidate_spend(const chain::output_point& point,
 // private
 bool transaction_database::candidize(link_type link, bool positive)
 {
-    const auto element = hash_table_.find(link);
-
     const auto writer = [&](byte_serializer& serial)
     {
         // Critical Section
@@ -428,6 +424,7 @@ bool transaction_database::candidize(link_type link, bool positive)
         ///////////////////////////////////////////////////////////////////////
     };
 
+    const auto element = hash_table_.get(link);
     element.write(writer);
     return true;
 }
@@ -561,7 +558,6 @@ bool transaction_database::confirmize(link_type link, size_t height,
 {
     BITCOIN_ASSERT(height <= max_uint32);
     BITCOIN_ASSERT(position <= max_uint16);
-    const auto element = hash_table_.find(link);
 
     const auto writer = [&](byte_serializer& serial)
     {
@@ -575,6 +571,7 @@ bool transaction_database::confirmize(link_type link, size_t height,
         ///////////////////////////////////////////////////////////////////////
     };
 
+    const auto element = hash_table_.get(link);
     element.write(writer);
     return true;
 }
