@@ -225,7 +225,7 @@ void block_database::store(const chain::header& header, size_t height,
     };
 
     auto next = hash_table_.allocator();
-    const auto link = next.create(header.hash(), writer);
+    next.create(header.hash(), writer);
     hash_table_.link(next);
 }
 
