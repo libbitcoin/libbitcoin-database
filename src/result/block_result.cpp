@@ -33,19 +33,6 @@ namespace database {
 using namespace bc::system;
 using namespace bc::system::chain;
 
-static const auto header_size = header::satoshi_fixed_size();
-static constexpr auto median_time_past_size = sizeof(uint32_t);
-static constexpr auto height_size = sizeof(uint32_t);
-static constexpr auto state_size = sizeof(uint8_t);
-static constexpr auto checksum_size = sizeof(uint32_t);
-static constexpr auto tx_start_size = sizeof(uint32_t);
-static constexpr auto tx_count_size = sizeof(uint16_t);
-
-static const auto height_offset = header_size + median_time_past_size;
-static const auto state_offset = height_offset + height_size;
-static const auto checksum_offset = state_offset + state_size;
-static const auto transactions_offset = checksum_offset + checksum_size;
-
 // Placeholder for unimplemented checksum caching.
 static constexpr auto no_checksum = 0u;
 

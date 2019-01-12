@@ -475,7 +475,6 @@ bool transaction_database::confirm(const block& block, size_t height,
 
 bool transaction_database::unconfirm(const block& block)
 {
-    uint32_t position = 0;
     for (const auto& tx: block.transactions())
     {
         if (!confirm(tx.metadata.link, rule_fork::unverified, no_time,

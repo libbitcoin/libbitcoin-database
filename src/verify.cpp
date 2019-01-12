@@ -56,8 +56,9 @@ static size_t get_next_block(const block_database& blocks, bool candidate)
 }
 #endif
 
-code verify(const block_database& blocks, const config::checkpoint& fork_point,
-    bool candidate)
+code verify(const block_database& DEBUG_ONLY(blocks),
+    const config::checkpoint& DEBUG_ONLY(fork_point),
+    bool DEBUG_ONLY(candidate))
 {
 #ifndef NDEBUG
     const auto result = blocks.get(fork_point.hash());
@@ -77,7 +78,8 @@ code verify(const block_database& blocks, const config::checkpoint& fork_point,
     return error::success;
 }
 
-code verify_top(const block_database& blocks, size_t height, bool candidate)
+code verify_top(const block_database& DEBUG_ONLY(blocks),
+    size_t DEBUG_ONLY(height), bool DEBUG_ONLY(candidate))
 {
 #ifndef NDEBUG
     size_t actual_height;
@@ -88,7 +90,8 @@ code verify_top(const block_database& blocks, size_t height, bool candidate)
     return error::success;
 }
 
-code verify_exists(const block_database& blocks, const header& header)
+code verify_exists(const block_database& DEBUG_ONLY(blocks),
+    const header& DEBUG_ONLY(header))
 {
 #ifndef NDEBUG
     if (!blocks.get(header.hash()))
@@ -98,8 +101,8 @@ code verify_exists(const block_database& blocks, const header& header)
     return error::success;
 }
 
-code verify_exists(const transaction_database& transactions,
-    const transaction& tx)
+code verify_exists(const transaction_database& DEBUG_ONLY(transactions),
+    const transaction& DEBUG_ONLY(tx))
 {
 #ifndef NDEBUG
     if (!transactions.get(tx.hash()))
@@ -109,10 +112,10 @@ code verify_exists(const transaction_database& transactions,
     return error::success;
 }
 
-code verify_missing(const transaction_database& transactions,
-    const transaction& tx)
+code verify_missing(const transaction_database& DEBUG_ONLY(transactions),
+    const transaction& DEBUG_ONLY(tx))
 {
-#ifdef NDEBUG
+#ifndef NDEBUG
     if (transactions.get(tx.hash()))
         return error::duplicate_transaction;
 #endif
@@ -121,8 +124,9 @@ code verify_missing(const transaction_database& transactions,
 }
 
 // Headers are pushed to the candidate chain.
-code verify_push(const block_database& blocks, const header& header,
-    size_t height)
+code verify_push(const block_database& DEBUG_ONLY(blocks),
+    const header& DEBUG_ONLY(header),
+    size_t DEBUG_ONLY(height))
 {
 #ifndef NDEBUG
     if (get_next_block(blocks, true) != height)
@@ -137,8 +141,9 @@ code verify_push(const block_database& blocks, const header& header,
 }
 
 // Blocks are pushed to the confirmed chain.
-code verify_push(const block_database& blocks, const block& block,
-    size_t height)
+code verify_push(const block_database& DEBUG_ONLY(blocks),
+    const block& DEBUG_ONLY(block),
+    size_t DEBUG_ONLY(height))
 {
 #ifndef NDEBUG
     if (block.transactions().empty())
@@ -155,8 +160,9 @@ code verify_push(const block_database& blocks, const block& block,
     return error::success;
 }
 
-code verify_confirm(const block_database& blocks, const hash_digest& block_hash,
-    size_t height)
+code verify_confirm(const block_database& DEBUG_ONLY(blocks),
+    const hash_digest& DEBUG_ONLY(block_hash),
+    size_t DEBUG_ONLY(height))
 {
 #ifndef NDEBUG
     // confirming to top
@@ -177,8 +183,9 @@ code verify_confirm(const block_database& blocks, const hash_digest& block_hash,
     return error::success;
 }
     
-code verify_update(const block_database& blocks, const block& block,
-    size_t height)
+code verify_update(const block_database& DEBUG_ONLY(blocks),
+    const block& DEBUG_ONLY(block),
+    size_t DEBUG_ONLY(height))
 {
 #ifndef NDEBUG
     if (block.transactions().empty())
@@ -194,7 +201,8 @@ code verify_update(const block_database& blocks, const block& block,
     return error::success;
 }
 
-code verify_not_failed(const block_database& blocks, const block& block)
+code verify_not_failed(const block_database& DEBUG_ONLY(blocks),
+    const block& DEBUG_ONLY(block))
 {
 #ifndef NDEBUG
     const auto result = blocks.get(block.hash());

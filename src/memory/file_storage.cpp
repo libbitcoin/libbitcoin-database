@@ -422,8 +422,12 @@ size_t file_storage::page() const
     if (errno != 0)
         handle_error("sysconf", filename_);
 
-    BITCOIN_ASSERT(page_size <= max_size_t);
-    return static_cast<size_t>(page_size == -1 ? 0 : page_size);
+    // Check for negative value so that later we can promote to unsigned
+    if (page_size == -1)
+        return 0;
+    
+    BITCOIN_ASSERT(static_cast<uint64_t>(page_size) <= max_size_t);
+    return static_cast<size_t>(page_size);
 #endif
 }
 
