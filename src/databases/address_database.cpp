@@ -115,7 +115,7 @@ bool address_database::close()
 // ----------------------------------------------------------------------------
 
 // TODO: obtain confirmation height from tx record (along with hash).
-address_result address_database::get(const short_hash& hash) const
+address_result address_database::get(const hash_digest& hash) const
 {
     return { address_multimap_.find(hash), hash };
 }
@@ -123,19 +123,57 @@ address_result address_database::get(const short_hash& hash) const
 // Store.
 // ----------------------------------------------------------------------------
 
-// Confirmation of payment is dynamically derived from current tx state.
-void address_database::catalog(const chain::transaction& /* tx */)
+// protected
+void address_database::store(const hash_digest& script_hash, const point& point,
+    file_offset link, bool output)
 {
-    // TODO: loop over payments, relying only on output scripts, adding rows.
-    ////const auto writer = [&](byte_serializer& serial)
-    ////{
-    ////    payment.to_data(serial, false);
-    ////};
+    const auto write = [&](byte_serializer& serial)
+    {
+        const payment_record record{ link, point.index(), point.checksum(),
+            output };
+        record.to_data(serial, false);
+    };
 
-    ////// Write the new payment history.
-    ////auto next = address_multimap_.allocator();
-    ////next.create(writer);
-    ////address_multimap_.link(hash, next);
+    auto element = address_multimap_.allocator();
+    element.create(write);
+    address_multimap_.link(script_hash, element);
+}
+
+// Confirmation of payment is dynamically derived from current tx state.
+void address_database::catalog(const transaction& tx)
+{
+    BITCOIN_ASSERT(tx.metadata.state);
+
+    const auto& tx_hash = tx.hash();
+    const auto link = tx.metadata.link;
+
+    const auto& inputs = tx.inputs();
+    for (uint32_t index = 0; index < inputs.size(); ++index)
+    {
+        const auto& input = inputs[index];
+
+        // Skip coinbase input.
+        if (input.previous_output().is_null())
+            continue;
+
+        BITCOIN_ASSERT(input.previous_output().metadata.cache.is_valid());
+
+        const input_point inpoint{ tx_hash, index };
+        const auto& prevout_script =
+            input.previous_output().metadata.cache.script();
+        const auto& prevout_script_hash =
+            sha256_hash(prevout_script.to_data(false));
+        store(prevout_script_hash, inpoint, link, false);
+    }
+
+    const auto& outputs = tx.outputs();
+    for (uint32_t index = 0; index < outputs.size(); ++index)
+    {
+        const auto& output = outputs[index];
+        const output_point outpoint{ tx_hash, index };
+        const auto& script_hash = sha256_hash(output.script().to_data(false));
+        store(script_hash, outpoint, link, true);
+    }
 }
 
 } // namespace database

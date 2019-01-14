@@ -31,153 +31,371 @@ using namespace bc::system::chain;
 
 #define DIRECTORY "address_database"
 
+#define OUTPUT_SCRIPT0 "dup hash160 [58350574280395ad2c3e2ee20e322073d94e5e40] equalverify checksig"
+#define OUTPUT_SCRIPT1 "dup hash160 [68350574280395ad2c3e2ee20e322073d94e5e40] equalverify checksig"
+#define OUTPUT_SCRIPT2 "dup hash160 [78350574280395ad2c3e2ee20e322073d94e5e40] equalverify checksig"
+#define OUTPUT_SCRIPT3 "dup hash160 [88350574280395ad2c3e2ee20e322073d94e5e40] equalverify checksig"
+
+#define INPUT_SCRIPT1 "ece424a6bb6ddf4db592c0faed60685047a361b1"
+
+static BC_CONSTEXPR auto lookup_filename = DIRECTORY "/address_lookup_file";
+static BC_CONSTEXPR auto rows_filename = DIRECTORY "/address_rows_file";
+
+static chain_state::data data_for_chain_state()
+{
+    chain_state::data value;
+    value.height = 1;
+    value.bits = { 0, { 0 } };
+    value.version = { 1, { 0 } };
+    value.timestamp = { 0, 0, { 0 } };
+    return value;
+}
+
+static void set_state(transaction& tx)
+{
+    const auto state = std::make_shared<chain_state>(
+        chain_state{ data_for_chain_state(), {}, 0, 0, {} });
+    tx.metadata.state = state;
+}
+
 struct address_database_directory_setup_fixture
 {
     address_database_directory_setup_fixture()
     {
         test::clear_path(DIRECTORY);
     }
+
+    ~address_database_directory_setup_fixture()
+    {
+        test::clear_path(DIRECTORY);
+    }
 };
 
-BOOST_FIXTURE_TEST_SUITE(database_tests, address_database_directory_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(address_database_tests, address_database_directory_setup_fixture)
 
-BOOST_AUTO_TEST_CASE(address_database__test)
+class address_database_accessor
+  : public address_database
 {
-    // TODO: replace.
-    ////const short_hash key1 = base16_literal("a006500b7ddfd568e2b036c65a4f4d6aaa0cbd9b");
-    ////static const payment_record output_11{ 65, 110, 4, true };
-    ////static const payment_record output_12{ 238, 4, 8, true };
-    ////static const payment_record output_13{ 65, 8, 6, true };
-    ////static const payment_record input_11{ 71, 0, 0x0a, false };
-    ////static const payment_record input_13{ 60, 0, 0x0b, false };
+public:
+    address_database_accessor(const path& lookup_filename,
+        const path& rows_filename, size_t table_minimum, size_t index_minimum,
+        size_t buckets, size_t expansion)
+      : address_database(lookup_filename, rows_filename, table_minimum,
+          index_minimum, buckets, expansion)
+    {
+    }
 
-    ////const short_hash key2 = base16_literal("9c6b3bdaa612ceab88d49d4431ed58f26e69b90d");
-    ////static const payment_record output_21{ 128, 9, 65, true };
-    ////static const payment_record output_22{ 71, 0, 9, true };
-    ////static const payment_record input_22{ 60, 0, 0x0c, false };
+    void store(const system::hash_digest& hash,
+        const system::chain::point& point, size_t height, bool input)
+    {
+        address_database::store(hash, point, height, input);
+    }
 
-    ////const short_hash key3 = base16_literal("3eb84f6a98478e516325b70fecf9903e1ce7528b");
-    ////static const payment_record output_31{ 217, 0, 34, true };
+    void catalog(const system::chain::transaction& tx)
+    {
+        address_database::catalog(tx);        
+    }
+};
 
-    ////const short_hash key4 = base16_literal("d60db39ca8ce4caf0f7d2b7d3111535d9543473f");
-    ////static const payment_record output_41{ 170, 0, 7990, true };
+BOOST_AUTO_TEST_CASE(address_database__store__two_inputs_two_outputs_two_transactions__success)
+{
+    test::create(lookup_filename);
+    test::create(rows_filename);
+    address_database_accessor instance(
+        lookup_filename, rows_filename, 10, 10, 1000, 50);
+    BOOST_REQUIRE(instance.create());
 
-    ////test::create(DIRECTORY "/address_table");
-    ////test::create(DIRECTORY "/address_rows");
-    ////address_database db(DIRECTORY "/address_table", DIRECTORY "/address_rows", 1000, 50);
-    ////BOOST_REQUIRE(db.create());
+    const hash_digest tx0_hash = sha256_hash(to_chunk("tx0_hash"));
+    const hash_digest tx1_hash = sha256_hash(to_chunk("tx1_hash"));
 
-    ////db.store(key1, output_11);
-    ////db.store(key1, output_12);
-    ////db.store(key1, output_13);
-    ////db.store(key1, input_11);
-    ////db.store(key1, input_13);
-    ////db.store(key2, output_21);
-    ////db.store(key2, output_22);
+    script prevout_script0;
+    prevout_script0.from_string(OUTPUT_SCRIPT0);
+    const auto script_hash0 = sha256_hash(prevout_script0.to_data(false));
 
-    ////auto result1 = db.get(key1);
-    ////BOOST_REQUIRE(result1);
+    script prevout_script1;
+    prevout_script1.from_string(OUTPUT_SCRIPT1);
+    const auto script_hash1 = sha256_hash(prevout_script1.to_data(false));
 
-    ////auto it1 = result1.begin();
-    ////BOOST_REQUIRE(it1 != result1.end());
-    ////auto entry1_0 = *it1;
+    const auto input0 = input_point{ tx0_hash, 7890 };
+    const auto input1 = input_point{ tx1_hash, 7891 };
 
-    ////BOOST_REQUIRE(!entry1_0.is_output());
-    ////BOOST_REQUIRE(entry1_0 == input_13);
+    const auto output0 = output_point{ tx1_hash, 456 };
+    const auto output1 = output_point{ tx1_hash, 457 };
 
-    ////BOOST_REQUIRE(++it1 != result1.end());
-    ////auto entry_1_1 = *it1;
+    // End of setup.
+    
+    instance.store(script_hash0, input0, 1234, false);
+    instance.store(script_hash0, input1, 1235, false);
+    instance.store(script_hash0, output0, 1235, true);
+    instance.store(script_hash1, output1, 1235, true);
 
-    ////BOOST_REQUIRE(!entry_1_1.is_output());
-    ////BOOST_REQUIRE(entry_1_1 == input_11);
+    // Test conditions.
+    
+    const auto result0 = instance.get(script_hash0);
+    auto payments0 = result0.begin();
+        
+    const auto payment = *payments0;
+    BOOST_REQUIRE(payment.is_output());
+    BOOST_REQUIRE_EQUAL(payment.link(), 1235);
+    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE(payment.hash() == null_hash);
+    BOOST_REQUIRE(payment.index() == 456);
 
-    ////BOOST_REQUIRE(++it1 != result1.end());
-    ////auto entry_1_2 = *it1;
+    const auto payment1 = *(++payments0);
+    BOOST_REQUIRE(!payment1.is_output());
+    BOOST_REQUIRE_EQUAL(payment1.link(), 1235);
+    BOOST_REQUIRE_EQUAL(payment1.height(), 0);
+    BOOST_REQUIRE(payment1.hash() == null_hash);
+    BOOST_REQUIRE(payment1.index() == 7891);
 
-    ////BOOST_REQUIRE(entry_1_2.is_output());
-    ////BOOST_REQUIRE(entry_1_2 == output_13);
+    const auto payment2 = *(++payments0);
+    BOOST_REQUIRE(!payment2.is_output());
+    BOOST_REQUIRE_EQUAL(payment2.link(), 1234);
+    BOOST_REQUIRE_EQUAL(payment2.height(), 0);
+    BOOST_REQUIRE(payment2.hash() == null_hash);
+    BOOST_REQUIRE(payment2.index() == 7890);
 
-    ////BOOST_REQUIRE(++it1 != result1.end());
-    ////auto entry_1_3 = *it1;
+    BOOST_REQUIRE(++payments0 == result0.end());
 
-    ////BOOST_REQUIRE(entry_1_3.is_output());
-    ////BOOST_REQUIRE(entry_1_3 == output_12);
+    const auto result1 = instance.get(script_hash1);
+    auto payments1 = result1.begin();
+        
+    const auto payment3 = *payments1;
+    BOOST_REQUIRE(payment3.is_output());
+    BOOST_REQUIRE_EQUAL(payment3.link(), 1235);
+    BOOST_REQUIRE_EQUAL(payment3.height(), 0);
+    BOOST_REQUIRE(payment3.hash() == null_hash);
+    BOOST_REQUIRE(payment3.index() == 457);
 
-    ////BOOST_REQUIRE(++it1 != result1.end());
-    ////auto entry_1_4 = *it1;
+    BOOST_REQUIRE(++payments0 == result0.end());
+}
 
-    ////BOOST_REQUIRE(entry_1_4.is_valid());
-    ////BOOST_REQUIRE(entry_1_4.is_output());
-    ////BOOST_REQUIRE(entry_1_4 == output_11);
+BOOST_AUTO_TEST_CASE(address_database__catalog__coinbase_transaction__success)
+{
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
 
-    ////auto result2 = db.get(key2);
-    ////auto it2 = result2.begin();
+    test::create(lookup_filename);
+    test::create(rows_filename);
+    address_database_accessor instance(
+        lookup_filename, rows_filename, 10, 10, 1000, 50);
+    BOOST_REQUIRE(instance.create());
 
-    ////BOOST_REQUIRE(it2 != result2.end());
-    ////auto entry_2_0 = *it2;
-    ////BOOST_REQUIRE(entry_2_0.is_output());
+    script script0;
+    script0.from_string(OUTPUT_SCRIPT0);
+    const auto script_hash0 = sha256_hash(script0.to_data(false));
 
-    ////BOOST_REQUIRE(++it2 != result2.end());
-    ////auto entry_2_1 = *it2;
-    ////BOOST_REQUIRE(entry_2_1.is_output());
+    const chain::input::list inputs
+    {
+        { chain::point{ null_hash, chain::point::null_index }, {}, 0 }
+    };
 
-    ////db.store(key2, input_22);
-    ////auto result3 = db.get(key2);
-    ////auto it3 = result3.begin();
+    const chain::output::list outputs
+    {
+        { 1200, script0 }
+    };
 
-    ////BOOST_REQUIRE(it3 != result3.end());
-    ////auto entry_3_0 = *it3;
+    chain::transaction tx{ version, locktime, inputs, outputs };
 
-    ////BOOST_REQUIRE(!entry_3_0.is_output());
-    ////BOOST_REQUIRE(entry_3_0 == input_22);
+    set_state(tx);
+    tx.metadata.link = 100;
 
-    ////BOOST_REQUIRE(++it3 != result3.end());
-    ////auto entry_3_1 = *it3;
+    // End of setup.
 
-    ////BOOST_REQUIRE(entry_3_1.is_output());
-    ////BOOST_REQUIRE(entry_3_1 == output_22);
+    instance.catalog(tx);
 
-    ////BOOST_REQUIRE(++it3 != result3.end());
-    ////auto entry_3_2 = *it3;
+    // Test conditions.
 
-    ////BOOST_REQUIRE(entry_3_2.is_output());
-    ////BOOST_REQUIRE(entry_3_2 == output_21);
+    const auto result0 = instance.get(script_hash0);
+    auto payments0 = result0.begin();
 
-    ////db.pop(key2);
-    ////auto result4 = db.get(key2);
-    ////auto it4 = result4.begin();
+    const auto payment = *payments0;
+    BOOST_REQUIRE(payment.is_output());
+    BOOST_REQUIRE_EQUAL(payment.link(), 100);
+    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE(payment.hash() == null_hash);
+    BOOST_REQUIRE(payment.index() == 0);
 
-    ////BOOST_REQUIRE(it4 != result4.end());
-    ////auto entry_4_0 = *it4;
-    ////BOOST_REQUIRE(entry_4_0.is_output());
+    BOOST_REQUIRE(++payments0 == result0.end());
+}
 
-    ////BOOST_REQUIRE(++it4 != result4.end());
-    ////auto entry_4_1 = *it4;
-    ////BOOST_REQUIRE(entry_4_1.is_output());
+BOOST_AUTO_TEST_CASE(address_database__catalog__tx1_spends_from_tx0__success)
+{
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
 
-    ////db.store(key3, output_31);
-    ////auto result5 = db.get(key3);
-    ////auto it5 = result5.begin();
-    ////BOOST_REQUIRE(it5 != result5.end());
-    ////BOOST_REQUIRE(++it5 == result5.end());
+    test::create(lookup_filename);
+    test::create(rows_filename);
+    address_database_accessor instance(
+        lookup_filename, rows_filename, 10, 10, 1000, 50);
+    BOOST_REQUIRE(instance.create());
 
-    ////db.store(key4, output_41);
-    ////auto result6 = db.get(key4);
-    ////auto it6 = result6.begin();
-    ////BOOST_REQUIRE(it6 != result6.end());
-    ////BOOST_REQUIRE(++it6 == result6.end());
+    script script0;
+    script0.from_string(OUTPUT_SCRIPT0);
+    BOOST_REQUIRE(script0.is_valid());
+    const auto script_hash0 = sha256_hash(script0.to_data(false));
 
-    ////db.pop(key3);
-    ////auto result7 = db.get(key3);
-    ////auto it7 = result7.begin();
-    ////BOOST_REQUIRE(it7 == result7.end());
+    script script1;
+    script1.from_string(OUTPUT_SCRIPT1);
+    const auto script_hash1 = sha256_hash(script1.to_data(false));
+    BOOST_REQUIRE(script1.is_valid());
 
-    ////auto result8 = db.get(key4);
-    ////auto it8 = result8.begin();
-    ////BOOST_REQUIRE(it8 != result8.end());
-    ////BOOST_REQUIRE(++it8 == result8.end());
+    script script2;
+    script2.from_string(OUTPUT_SCRIPT2);
+    const auto script_hash2 = sha256_hash(script2.to_data(false));
+    BOOST_REQUIRE(script2.is_valid());
 
-    ////db.commit();
+    script script3;
+    script3.from_string(OUTPUT_SCRIPT3);
+    const auto script_hash3 = sha256_hash(script3.to_data(false));
+    BOOST_REQUIRE(script3.is_valid());
+
+    // Transaction structure. Cryptic but might be helpful in future.
+    // tx0{ inputs0[cb], outputs0[script0,script1,script2] }
+    // tx1{ inputs1[outputs0.script0, outputs0.script2], outputs1[script1,script2,script3]}
+
+    // Expected payments index is:
+    // script0: tx0/outputs:0, tx1/inputs:0
+    // script1: tx0/outputs:1, tx1/outputs:0
+    // script2: tx0/outputs:2, tx1/inputs:1, tx1/outputs:1
+    // script3: tx1/outputs:2
+
+    // Setup first transaction.
+    const chain::input::list inputs0
+    {
+        { chain::point{ null_hash, chain::point::null_index }, {}, 0 },
+    };
+    const chain::output::list outputs0
+    {
+        { 100, script0 },
+        { 101, script1 },
+        { 102, script2 },
+    };
+
+    // Setup metadata for first transaction.
+    chain::transaction tx0{ version, locktime, inputs0, outputs0 };
+    set_state(tx0);
+
+    tx0.metadata.link = 1000;
+    tx0.inputs().front().previous_output().metadata.cache.set_script(script0);
+
+    // Setup second transaction.
+    script input_script;
+    const auto chunk = to_chunk(base16_literal(INPUT_SCRIPT1));
+    BOOST_REQUIRE(input_script.from_data(chunk, false));
+    BOOST_REQUIRE(input_script.is_valid());
+
+    const chain::input::list inputs1
+    {
+        { chain::point{ tx0.hash(), 0 }, input_script, 0 },
+        { chain::point{ tx0.hash(), 1 }, input_script, 0 },
+    };
+    const chain::output::list outputs1
+    {
+        { 200, script1 },
+        { 201, script2 },
+        { 202, script3 },
+    };
+
+    // Setup metadata second transaction.
+    chain::transaction tx1{ version, locktime, inputs1, outputs1 };
+    set_state(tx1);
+    tx1.metadata.link = 2000;
+
+    tx1.inputs()[0].previous_output().metadata.cache.set_script(script0);
+    tx1.inputs()[0].previous_output().metadata.cache.set_value(100);
+    BOOST_REQUIRE(tx1.inputs()[0].previous_output().metadata.cache.is_valid());
+
+    tx1.inputs()[1].previous_output().metadata.cache.set_script(script2);
+    tx1.inputs()[1].previous_output().metadata.cache.set_value(102);
+    BOOST_REQUIRE(tx1.inputs()[1].previous_output().metadata.cache.is_valid());
+
+    // End of setup.
+
+    instance.catalog(tx0);
+    instance.catalog(tx1);
+
+    // Test conditions.
+
+    // Verify script0: tx0/outputs:0, tx1/inputs:0
+    const auto result0 = instance.get(script_hash0);
+    auto payments0 = result0.begin();
+
+    auto payment = *payments0;
+    BOOST_REQUIRE(!payment.is_output());
+    BOOST_REQUIRE_EQUAL(payment.link(), 2000);
+    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE(payment.hash() == null_hash);
+    BOOST_REQUIRE(payment.index() == 0);
+
+    payment = *(++payments0);
+    BOOST_REQUIRE(payment.is_output());
+    BOOST_REQUIRE_EQUAL(payment.link(), 1000);
+    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE(payment.hash() == null_hash);
+    BOOST_REQUIRE(payment.index() == 0);
+
+    BOOST_REQUIRE(++payments0 == result0.end());
+
+    // Verify script1: tx0/outputs:1, tx1/outputs:0
+    const auto result1 = instance.get(script_hash1);
+    auto payments1 = result1.begin();
+
+    payment = *payments1;
+    BOOST_REQUIRE(payment.is_output());
+    BOOST_REQUIRE_EQUAL(payment.link(), 2000);
+    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE(payment.hash() == null_hash);
+    BOOST_REQUIRE(payment.index() == 0);
+
+    payment = *(++payments1);
+    BOOST_REQUIRE(payment.is_output());
+    BOOST_REQUIRE_EQUAL(payment.link(), 1000);
+    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE(payment.hash() == null_hash);
+    BOOST_REQUIRE(payment.index() == 1);
+
+    BOOST_REQUIRE(++payments1 == result1.end());
+
+    // Verify script2: tx0/outputs:2, tx1/inputs:1, tx1/outputs:1
+    const auto result2 = instance.get(script_hash2);
+    auto payments2 = result2.begin();
+
+    payment = *payments2;
+    BOOST_REQUIRE(payment.is_output());
+    BOOST_REQUIRE_EQUAL(payment.link(), 2000);
+    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE(payment.hash() == null_hash);
+    BOOST_REQUIRE(payment.index() == 1);
+
+    payment = *(++payments2);
+    BOOST_REQUIRE(!payment.is_output());
+    BOOST_REQUIRE_EQUAL(payment.link(), 2000);
+    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE(payment.hash() == null_hash);
+    BOOST_REQUIRE(payment.index() == 1);
+
+    payment = *(++payments2);
+    BOOST_REQUIRE(payment.is_output());
+    BOOST_REQUIRE_EQUAL(payment.link(), 1000);
+    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE(payment.hash() == null_hash);
+    BOOST_REQUIRE(payment.index() == 2);
+
+    BOOST_REQUIRE(++payments2 == result2.end());
+
+    // Verify script3: tx1/outputs:2
+    const auto result3 = instance.get(script_hash3);
+    auto payments3 = result3.begin();
+
+    payment = *payments3;
+    BOOST_REQUIRE(payment.is_output());
+    BOOST_REQUIRE_EQUAL(payment.link(), 2000);
+    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE(payment.hash() == null_hash);
+    BOOST_REQUIRE(payment.index() == 2);
+
+    BOOST_REQUIRE(++payments3 == result3.end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
