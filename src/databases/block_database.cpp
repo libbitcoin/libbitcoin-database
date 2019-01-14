@@ -480,8 +480,8 @@ void block_database::pop_link(link_type DEBUG_ONLY(link), size_t height,
 {
     BITCOIN_ASSERT(height < max_uint32);
     BITCOIN_ASSERT(height + 1u == manager.count());
+    BITCOIN_ASSERT(link == read_link(height, manager));
 
-    // TODO: debug verify link by reading top value.
     manager.set_count(static_cast<uint32_t>(height));
 }
 
