@@ -68,7 +68,7 @@ public:
     //-------------------------------------------------------------------------
 
     /// Get the output and input points associated with the address hash.
-    address_result get(const system::short_hash& hash) const;
+    address_result get(const system::hash_digest& hash) const;
 
     // Store.
     //-------------------------------------------------------------------------
@@ -76,8 +76,14 @@ public:
     /// Add a row for each payment recorded in the transaction.
     void catalog(const system::chain::transaction& tx);
 
+protected:
+    /// Store the input|output point as a value for the hash of output
+    /// script as the key
+    void store(const system::hash_digest& hash,
+        const system::chain::point& point, file_offset link, bool output);
+
 private:
-    typedef system::short_hash key_type;
+    typedef system::hash_digest key_type;
     typedef array_index index_type;
     typedef array_index link_type;
     typedef record_manager<link_type> manager_type;
@@ -89,8 +95,9 @@ private:
     // the transaction index with the exception that the tx index stores tx
     // sets by block in a contiguous array, eliminating a need for linked list.
     typedef hash_table_multimap<index_type, link_type, key_type> record_multimap;
-
-    /// Hash table used for start index lookup for linked list by address hash.
+    
+    /// Hash table used for start index lookup for linked list by hash
+    /// of the output script.
     file_storage hash_table_file_;
     record_map hash_table_;
 

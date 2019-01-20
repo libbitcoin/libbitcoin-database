@@ -80,23 +80,23 @@ static void test_block_exists(const data_base& interface, size_t height,
                 // const auto& prevout = input.previous_output();
                 ////const auto address = prevout.metadata.cache.addresses();
 
-                for (const payment_address& address: addresses)
-                {
-                    auto history = address_store.get(address.hash());
-                    auto found = false;
+                // for (const payment_address& address: addresses)
+                // {
+                //     auto history = address_store.get(address.hash());
+                //     auto found = false;
 
-                    for (const payment_record& row: history)
-                    {
-                        if (row.hash() == tx_hash && row.index() == j)
-                        {
-                            BOOST_REQUIRE_EQUAL(row.height(), height);
-                            found = true;
-                            break;
-                        }
-                    }
+                //     for (const payment_record& row: history)
+                //     {
+                //         if (row.hash() == tx_hash && row.index() == j)
+                //         {
+                //             BOOST_REQUIRE_EQUAL(row.height(), height);
+                //             found = true;
+                //             break;
+                //         }
+                //     }
 
-                    BOOST_REQUIRE(found);
-                }
+                //     BOOST_REQUIRE(found);
+                // }
             }
         }
 
@@ -109,26 +109,26 @@ static void test_block_exists(const data_base& interface, size_t height,
             output_point outpoint{ tx_hash, static_cast<uint32_t>(j) };
             const auto addresses = output.addresses();
 
-            for (const payment_address& address: addresses)
-            {
-                auto history = address_store.get(address.hash());
-                auto found = false;
+            // for (const payment_address& address: addresses)
+            // {
+            //     auto history = address_store.get(address.hash());
+            //     auto found = false;
                
-                for (const payment_record& row: history)
-                {
-                    BOOST_REQUIRE(row.is_valid());
+            //     for (const payment_record& row: history)
+            //     {
+            //         BOOST_REQUIRE(row.is_valid());
 
-                    if (row.hash() == tx_hash && row.index() == j)
-                    {
-                        BOOST_REQUIRE_EQUAL(row.height(), height);
-                        BOOST_REQUIRE_EQUAL(row.data(), output.value());
-                        found = true;
-                        break;
-                    }
-                }
+            //         if (row.hash() == tx_hash && row.index() == j)
+            //         {
+            //             BOOST_REQUIRE_EQUAL(row.height(), height);
+            //             BOOST_REQUIRE_EQUAL(row.data(), output.value());
+            //             found = true;
+            //             break;
+            //         }
+            //     }
 
-                BOOST_REQUIRE(found);
-            }
+            //     BOOST_REQUIRE(found);
+            // }
         }
     }
 }
@@ -163,22 +163,22 @@ static void test_block_not_exists(const data_base& interface,
                 ////const auto& prevout = input.previous_output();
                 ////const auto address = prevout.metadata.cache.addresses();
 
-                for (const auto& address: addresses)
-                {
-                    auto history = address_store.get(address.hash());
-                    auto found = false;
+                // for (const auto& address: addresses)
+                // {
+                //     auto history = address_store.get(address.hash());
+                //     auto found = false;
 
-                    for (const payment_record& row: history)
-                    {
-                        if (row.hash() == tx_hash && row.index() == j)
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
+                //     for (const payment_record& row: history)
+                //     {
+                //         if (row.hash() == tx_hash && row.index() == j)
+                //         {
+                //             found = true;
+                //             break;
+                //         }
+                //     }
 
-                    BOOST_REQUIRE(!found);
-                }
+                //     BOOST_REQUIRE(!found);
+                // }
             }
         }
 
@@ -190,22 +190,22 @@ static void test_block_not_exists(const data_base& interface,
             const auto& output = tx.outputs()[j];
             const auto addresses = output.addresses();
 
-            for (const auto& address: addresses)
-            {
-                auto history = address_store.get(address.hash());
-                auto found = false;
+            // for (const auto& address: addresses)
+            // {
+            //     auto history = address_store.get(address.hash());
+            //     auto found = false;
 
-                for (const auto& row: history)
-                {
-                    if (row.hash() == tx_hash && row.index() == j)
-                    {
-                        found = true;
-                        break;
-                    }
-                }
+            //     for (const auto& row: history)
+            //     {
+            //         if (row.hash() == tx_hash && row.index() == j)
+            //         {
+            //             found = true;
+            //             break;
+            //         }
+            //     }
 
-                BOOST_REQUIRE(!found);
-            }
+            //     BOOST_REQUIRE(!found);
+            // }
         }
     }
 }

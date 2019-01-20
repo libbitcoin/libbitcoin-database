@@ -71,7 +71,7 @@ private:
     bool is_confirmed_;
     system::hash_digest hash_;
 
-    // This is not thead safe and is publicly reachable.
+    // This is not thread safe and is publicly reachable.
     // The outputs can be changed without affecting the bimapping.
     mutable output_map_ptr outputs_;
 };
