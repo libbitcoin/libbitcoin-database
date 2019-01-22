@@ -142,7 +142,8 @@ void address_database::store(const hash_digest& script_hash, const point& point,
 // Confirmation of payment is dynamically derived from current tx state.
 void address_database::catalog(const transaction& tx)
 {
-    BITCOIN_ASSERT(tx.metadata.state);
+    BITCOIN_ASSERT(tx.metadata.link);
+    BITCOIN_ASSERT(!tx.metadata.existed);
 
     const auto& tx_hash = tx.hash();
     const auto link = tx.metadata.link;
