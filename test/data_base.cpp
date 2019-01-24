@@ -33,64 +33,54 @@ using namespace boost::system;
 using namespace boost::filesystem;
 
 static void test_outputs_cataloged(const address_database& payments_store,
-    const transaction& tx, bool is_found)
+    const transaction& tx, bool expect_found)
 {
-    for (size_t j = 0; j < tx.outputs().size(); ++j)
-    {
-        const auto& output = tx.outputs()[j];
-        output_point outpoint{ tx.hash(), static_cast<uint32_t>(j) };
-        const auto& script_hash = sha256_hash(output.script().to_data(false));
-        auto payments = payments_store.get(script_hash);
-        auto found = false;
+    uint32_t output_index = 0u;
 
-        for (const payment_record& row: payments)
+    for (const auto& output: tx.outputs())
+    {
+        output_point outpoint{ tx.hash(), output_index };
+        const auto& script_hash = sha256_hash(output.script().to_data(false));
+
+        for (const auto& row: payments_store.get(script_hash))
         {
             BOOST_REQUIRE(row.is_valid());
 
-            if (row.link() == tx.metadata.link && row.index() == j)
+            if (row.link() == tx.metadata.link && row.index() == output_index)
             {
                 BOOST_REQUIRE_EQUAL(row.data(), outpoint.checksum());
-                found = true;
-                break;
+                BOOST_REQUIRE(expect_found);
+                return;
             }
         }
-        if (is_found)
-            BOOST_REQUIRE(found);
-        else
-            BOOST_REQUIRE(!found);
+        BOOST_REQUIRE(!expect_found);
+        ++output_index;
     }
 }
 
 static void test_inputs_cataloged(const address_database& payments_store,
-    const transaction& tx, bool catalog, bool is_found)
+    const transaction& tx, bool expect_found)
 {
-    for (auto j = 0u; j < tx.inputs().size(); ++j)
-    {
-        const auto& input = tx.inputs()[j];
-        input_point spend{ tx.hash(), j };
-        BOOST_REQUIRE_EQUAL(spend.index(), j);
+    uint32_t input_index = 0u;
 
-        if (!catalog)
-            continue;
+    for (const auto& input: tx.inputs())
+    {
+        input_point spend{ tx.hash(), input_index };
 
         const auto& prevout = input.previous_output();
         const auto& prevout_script = prevout.metadata.cache.script();
         const auto& script_hash = sha256_hash(prevout_script.to_data(false));
 
-        auto payments = payments_store.get(script_hash);
-        auto found = false;
-        for (const payment_record& row: payments)
+        for (const auto& row: payments_store.get(script_hash))
         {
-            if (row.link() == tx.metadata.link && row.index() == j)
+            if (row.link() == tx.metadata.link && row.index() == input_index)
             {
-                found = true;
-                break;
+                BOOST_REQUIRE(expect_found);
+                return;
             }
         }
-        if (is_found)
-            BOOST_REQUIRE(found);
-        else
-            BOOST_REQUIRE(!found);
+        BOOST_REQUIRE(!expect_found);
+        ++input_index;
     }
 }
 
@@ -113,9 +103,10 @@ static void test_block_exists(const data_base& interface, size_t height,
 
     // TODO: test tx offsets (vs. tx hashes).
 
-    for (size_t i = 0; i < block.transactions().size(); ++i)
+    uint32_t tx_position = 0u;
+
+    for (const auto& tx: block.transactions())
     {
-        const auto& tx = block.transactions()[i];
         const auto tx_hash = tx.hash();
         ////BOOST_REQUIRE(result.transaction_hash(i) == tx_hash);
         ////BOOST_REQUIRE(result_by_hash.transaction_hash(i) == tx_hash);
@@ -125,43 +116,45 @@ static void test_block_exists(const data_base& interface, size_t height,
         BOOST_REQUIRE(result_by_hash);
         BOOST_REQUIRE(result_tx.transaction().hash() == tx_hash);
         BOOST_REQUIRE_EQUAL(result_tx.height(), height);
-        BOOST_REQUIRE_EQUAL(result_tx.position(), i);
+        BOOST_REQUIRE_EQUAL(result_tx.position(), tx_position);
 
         if (!catalog)
             return;
 
         if (!tx.is_coinbase())
         {
-            test_inputs_cataloged(payments_store, tx, catalog, true);
+            test_inputs_cataloged(payments_store, tx, true);
         }
 
         test_outputs_cataloged(payments_store, tx, true);
+        ++tx_position;
     }
 }
 
 static void test_block_not_exists(const data_base& interface,
-    const block& block0, bool catalog)
+    const block& block, bool catalog)
 {
     const auto& payments_store = interface.addresses();
 
     // Popped blocks still exist in the block hash table, but not confirmed.
-    const auto block_hash = block0.hash();
+    const auto block_hash = block.hash();
     const auto result = interface.blocks().get(block_hash);
     BOOST_REQUIRE(!is_confirmed(result.state()));
 
-    for (size_t i = 0; i < block0.transactions().size(); ++i)
-    {
-        const auto& tx = block0.transactions()[i];
+    uint32_t tx_position = 0u;
 
+    for (const auto& tx: block.transactions())
+    {
         if (!catalog)
             return;
 
         if (!tx.is_coinbase())
         {
-            test_inputs_cataloged(payments_store, tx, catalog, true);
+            test_inputs_cataloged(payments_store, tx, true);
         }
 
         test_outputs_cataloged(payments_store, tx, true);
+        ++tx_position;
     }
 }
 

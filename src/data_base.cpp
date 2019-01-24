@@ -487,6 +487,8 @@ code data_base::reorganize(const config::checkpoint& fork_point,
 code data_base::push(const block& block, size_t height,
     uint32_t median_time_past)
 {
+    code ec;
+
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(write_mutex_);
@@ -518,8 +520,9 @@ code data_base::push(const block& block, size_t height,
     if (!blocks_->validate(block.hash(), error::success))
         return error::operation_failed;
 
-    if (catalog(block))
+    if ((ec = catalog(block))) {
         return error::operation_failed;
+    }
 
     // TODO: optimize using link.
     // Push header reference onto the confirmed index and set confirmed state.

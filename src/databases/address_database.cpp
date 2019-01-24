@@ -145,7 +145,7 @@ void address_database::catalog(const transaction& tx)
     BITCOIN_ASSERT(tx.metadata.link);
     BITCOIN_ASSERT(!tx.metadata.existed);
 
-    const auto& tx_hash = tx.hash();
+    const auto tx_hash = tx.hash();
     const auto link = tx.metadata.link;
 
     const auto& inputs = tx.inputs();
