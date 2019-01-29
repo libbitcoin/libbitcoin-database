@@ -35,12 +35,12 @@ using namespace boost::filesystem;
 static void test_outputs_cataloged(const address_database& payments_store,
     const transaction& tx, bool expect_found)
 {
-    uint32_t output_index = 0u;
+    uint32_t output_index = 0;
 
     for (const auto& output: tx.outputs())
     {
         output_point outpoint{ tx.hash(), output_index };
-        const auto& script_hash = sha256_hash(output.script().to_data(false));
+        const auto script_hash = sha256_hash(output.script().to_data(false));
 
         for (const auto& row: payments_store.get(script_hash))
         {
@@ -53,6 +53,7 @@ static void test_outputs_cataloged(const address_database& payments_store,
                 return;
             }
         }
+
         BOOST_REQUIRE(!expect_found);
         ++output_index;
     }
@@ -61,7 +62,7 @@ static void test_outputs_cataloged(const address_database& payments_store,
 static void test_inputs_cataloged(const address_database& payments_store,
     const transaction& tx, bool expect_found)
 {
-    uint32_t input_index = 0u;
+    uint32_t input_index = 0;
 
     for (const auto& input: tx.inputs())
     {
@@ -69,7 +70,7 @@ static void test_inputs_cataloged(const address_database& payments_store,
 
         const auto& prevout = input.previous_output();
         const auto& prevout_script = prevout.metadata.cache.script();
-        const auto& script_hash = sha256_hash(prevout_script.to_data(false));
+        const auto script_hash = sha256_hash(prevout_script.to_data(false));
 
         for (const auto& row: payments_store.get(script_hash))
         {
@@ -79,6 +80,7 @@ static void test_inputs_cataloged(const address_database& payments_store,
                 return;
             }
         }
+
         BOOST_REQUIRE(!expect_found);
         ++input_index;
     }
@@ -103,7 +105,7 @@ static void test_block_exists(const data_base& interface, size_t height,
 
     // TODO: test tx offsets (vs. tx hashes).
 
-    uint32_t tx_position = 0u;
+    uint32_t tx_position = 0;
 
     for (const auto& tx: block.transactions())
     {
@@ -141,13 +143,13 @@ static void test_block_not_exists(const data_base& interface,
     const auto result = interface.blocks().get(block_hash);
     BOOST_REQUIRE(!is_confirmed(result.state()));
 
-    uint32_t tx_position = 0u;
+    uint32_t tx_position = 0;
+
+    if (!catalog)
+        return;
 
     for (const auto& tx: block.transactions())
     {
-        if (!catalog)
-            return;
-
         if (!tx.is_coinbase())
         {
             test_inputs_cataloged(payments_store, tx, true);
@@ -1064,7 +1066,7 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__already_candidated___success)
     // test conditions
 
     test_heights(instance, 1u, 1u);
-    const auto& block_result = instance.blocks().get(1, false);
+    const auto block_result = instance.blocks().get(1, false);
     BOOST_REQUIRE(block_result.hash() == block1.hash());
     test_block_exists(instance, 1, block1, false, false);
 
@@ -1138,12 +1140,12 @@ BOOST_AUTO_TEST_CASE(data_base__update__new_transactions__success)
     BOOST_REQUIRE_EQUAL(instance.update(block1, 1), error::success);
 
     // new transactions are not candidated
-    const auto& found = instance.transactions().get(tx1.hash());
+    const auto found = instance.transactions().get(tx1.hash());
     BOOST_REQUIRE(found);
     BOOST_REQUIRE(!instance.transactions().get(tx1.hash()).candidate());
 
     // get block and check block_result can access transactions
-    const auto& block_result = instance.blocks().get(block1.hash());
+    const auto block_result = instance.blocks().get(block1.hash());
     for (const auto& offset: block_result)
         BOOST_REQUIRE(!instance.transactions().get(offset).candidate());
 }
@@ -1318,7 +1320,7 @@ BOOST_AUTO_TEST_CASE(data_base__reorganize__pop_and_push__success)
     const chain::block& genesis = bc_settings.genesis_block;
     BOOST_REQUIRE(instance.create(genesis));
 
-    const auto& block1 = read_block(MAINNET_BLOCK1);
+    const auto block1 = read_block(MAINNET_BLOCK1);
     BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
     store_block_transactions(instance, block1, 1);
     BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
@@ -1385,7 +1387,7 @@ BOOST_AUTO_TEST_CASE(data_base__reorganize2__pop_and_push__success)
 
     test_heights(instance, 0u, 0u);
 
-    const auto& block1 = read_block(MAINNET_BLOCK1);
+    const auto block1 = read_block(MAINNET_BLOCK1);
     chain::header block1_header;
     store_block_transactions(instance, block1, 1);
     auto block2 = read_block(MAINNET_BLOCK2);

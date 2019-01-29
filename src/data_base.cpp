@@ -521,7 +521,7 @@ code data_base::push(const block& block, size_t height,
         return error::operation_failed;
 
     if ((ec = catalog(block))) {
-        return error::operation_failed;
+        return ec;
     }
 
     // TODO: optimize using link.
