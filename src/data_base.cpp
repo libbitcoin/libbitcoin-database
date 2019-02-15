@@ -520,9 +520,8 @@ code data_base::push(const block& block, size_t height,
     if (!blocks_->validate(block.hash(), error::success))
         return error::operation_failed;
 
-    if ((ec = catalog(block))) {
+    if ((ec = catalog(block)))
         return ec;
-    }
 
     // TODO: optimize using link.
     // Push header reference onto the confirmed index and set confirmed state.
