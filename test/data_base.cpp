@@ -32,10 +32,64 @@ using namespace bc::database;
 using namespace boost::system;
 using namespace boost::filesystem;
 
+static void test_outputs_cataloged(const address_database& payments_store,
+    const transaction& tx, bool expect_found)
+{
+    uint32_t output_index = 0;
+
+    for (const auto& output: tx.outputs())
+    {
+        output_point outpoint{ tx.hash(), output_index };
+        const auto script_hash = sha256_hash(output.script().to_data(false));
+
+        for (const auto& row: payments_store.get(script_hash))
+        {
+            BOOST_REQUIRE(row.is_valid());
+
+            if (row.link() == tx.metadata.link && row.index() == output_index)
+            {
+                BOOST_REQUIRE_EQUAL(row.data(), outpoint.checksum());
+                BOOST_REQUIRE(expect_found);
+                return;
+            }
+        }
+
+        BOOST_REQUIRE(!expect_found);
+        ++output_index;
+    }
+}
+
+static void test_inputs_cataloged(const address_database& payments_store,
+    const transaction& tx, bool expect_found)
+{
+    uint32_t input_index = 0;
+
+    for (const auto& input: tx.inputs())
+    {
+        input_point spend{ tx.hash(), input_index };
+
+        const auto& prevout = input.previous_output();
+        const auto& prevout_script = prevout.metadata.cache.script();
+        const auto script_hash = sha256_hash(prevout_script.to_data(false));
+
+        for (const auto& row: payments_store.get(script_hash))
+        {
+            if (row.link() == tx.metadata.link && row.index() == input_index)
+            {
+                BOOST_REQUIRE(expect_found);
+                return;
+            }
+        }
+
+        BOOST_REQUIRE(!expect_found);
+        ++input_index;
+    }
+}
+
 static void test_block_exists(const data_base& interface, size_t height,
     const block& block, bool catalog, bool candidate)
 {
-    const auto& address_store = interface.addresses();
+    const auto& payments_store = interface.addresses();
     const auto block_hash = block.hash();
     const auto result = interface.blocks().get(height, candidate);
     const auto result_by_hash = interface.blocks().get(block_hash);
@@ -51,9 +105,10 @@ static void test_block_exists(const data_base& interface, size_t height,
 
     // TODO: test tx offsets (vs. tx hashes).
 
-    for (size_t i = 0; i < block.transactions().size(); ++i)
+    uint32_t tx_position = 0;
+
+    for (const auto& tx: block.transactions())
     {
-        const auto& tx = block.transactions()[i];
         const auto tx_hash = tx.hash();
         ////BOOST_REQUIRE(result.transaction_hash(i) == tx_hash);
         ////BOOST_REQUIRE(result_by_hash.transaction_hash(i) == tx_hash);
@@ -63,150 +118,45 @@ static void test_block_exists(const data_base& interface, size_t height,
         BOOST_REQUIRE(result_by_hash);
         BOOST_REQUIRE(result_tx.transaction().hash() == tx_hash);
         BOOST_REQUIRE_EQUAL(result_tx.height(), height);
-        BOOST_REQUIRE_EQUAL(result_tx.position(), i);
-
-        if (!tx.is_coinbase())
-        {
-            for (auto j = 0u; j < tx.inputs().size(); ++j)
-            {
-                const auto& input = tx.inputs()[j];
-                input_point spend{ tx_hash, j };
-                BOOST_REQUIRE_EQUAL(spend.index(), j);
-
-                if (!catalog)
-                    continue;
-
-                const auto addresses = input.addresses();
-                // const auto& prevout = input.previous_output();
-                ////const auto address = prevout.metadata.cache.addresses();
-
-                // for (const payment_address& address: addresses)
-                // {
-                //     auto history = address_store.get(address.hash());
-                //     auto found = false;
-
-                //     for (const payment_record& row: history)
-                //     {
-                //         if (row.hash() == tx_hash && row.index() == j)
-                //         {
-                //             BOOST_REQUIRE_EQUAL(row.height(), height);
-                //             found = true;
-                //             break;
-                //         }
-                //     }
-
-                //     BOOST_REQUIRE(found);
-                // }
-            }
-        }
+        BOOST_REQUIRE_EQUAL(result_tx.position(), tx_position);
 
         if (!catalog)
             return;
 
-        for (size_t j = 0; j < tx.outputs().size(); ++j)
+        if (!tx.is_coinbase())
         {
-            const auto& output = tx.outputs()[j];
-            output_point outpoint{ tx_hash, static_cast<uint32_t>(j) };
-            const auto addresses = output.addresses();
-
-            // for (const payment_address& address: addresses)
-            // {
-            //     auto history = address_store.get(address.hash());
-            //     auto found = false;
-               
-            //     for (const payment_record& row: history)
-            //     {
-            //         BOOST_REQUIRE(row.is_valid());
-
-            //         if (row.hash() == tx_hash && row.index() == j)
-            //         {
-            //             BOOST_REQUIRE_EQUAL(row.height(), height);
-            //             BOOST_REQUIRE_EQUAL(row.data(), output.value());
-            //             found = true;
-            //             break;
-            //         }
-            //     }
-
-            //     BOOST_REQUIRE(found);
-            // }
+            test_inputs_cataloged(payments_store, tx, true);
         }
+
+        test_outputs_cataloged(payments_store, tx, true);
+        ++tx_position;
     }
 }
 
 static void test_block_not_exists(const data_base& interface,
-    const block& block0, bool index_addresses)
+    const block& block, bool catalog)
 {
-    const auto& address_store = interface.addresses();
+    const auto& payments_store = interface.addresses();
 
     // Popped blocks still exist in the block hash table, but not confirmed.
-    const auto block_hash = block0.hash();
+    const auto block_hash = block.hash();
     const auto result = interface.blocks().get(block_hash);
     BOOST_REQUIRE(!is_confirmed(result.state()));
 
-    for (size_t i = 0; i < block0.transactions().size(); ++i)
-    {
-        const auto& tx = block0.transactions()[i];
-        const auto tx_hash = tx.hash();
+    uint32_t tx_position = 0;
 
+    if (!catalog)
+        return;
+
+    for (const auto& tx: block.transactions())
+    {
         if (!tx.is_coinbase())
         {
-            for (size_t j = 0; j < tx.inputs().size(); ++j)
-            {
-                const auto& input = tx.inputs()[j];
-                // auto r0_spend = interface.spends().get(input.previous_output());
-                // BOOST_REQUIRE(!r0_spend.is_valid());
-
-                if (!index_addresses)
-                    continue;
-
-                const auto addresses = input.addresses();
-                ////const auto& prevout = input.previous_output();
-                ////const auto address = prevout.metadata.cache.addresses();
-
-                // for (const auto& address: addresses)
-                // {
-                //     auto history = address_store.get(address.hash());
-                //     auto found = false;
-
-                //     for (const payment_record& row: history)
-                //     {
-                //         if (row.hash() == tx_hash && row.index() == j)
-                //         {
-                //             found = true;
-                //             break;
-                //         }
-                //     }
-
-                //     BOOST_REQUIRE(!found);
-                // }
-            }
+            test_inputs_cataloged(payments_store, tx, true);
         }
 
-        if (!index_addresses)
-            return;
-
-        for (size_t j = 0; j < tx.outputs().size(); ++j)
-        {
-            const auto& output = tx.outputs()[j];
-            const auto addresses = output.addresses();
-
-            // for (const auto& address: addresses)
-            // {
-            //     auto history = address_store.get(address.hash());
-            //     auto found = false;
-
-            //     for (const auto& row: history)
-            //     {
-            //         if (row.hash() == tx_hash && row.index() == j)
-            //         {
-            //             found = true;
-            //             break;
-            //         }
-            //     }
-
-            //     BOOST_REQUIRE(!found);
-            // }
-        }
+        test_outputs_cataloged(payments_store, tx, true);
+        ++tx_position;
     }
 }
 
@@ -408,13 +358,13 @@ BOOST_AUTO_TEST_CASE(data_base__create__genesis_block_available__success)
     settings.transaction_table_buckets = 42;
     settings.address_table_buckets = 42;
 
-    data_base instance(settings, true); 
+    data_base instance(settings, true);
    
     const auto bc_settings = bc::system::settings(config::settings::mainnet);
     const chain::block& genesis = bc_settings.genesis_block;    
     BOOST_REQUIRE(instance.create(genesis));
 
-    test_block_exists(instance, 0, genesis, false, false);
+    test_block_exists(instance, 0, genesis, true, false);
 }
 
 BOOST_AUTO_TEST_CASE(data_base__push__adds_to_blocks_and_transactions_validates_and_confirms__success)
@@ -428,7 +378,7 @@ BOOST_AUTO_TEST_CASE(data_base__push__adds_to_blocks_and_transactions_validates_
     settings.transaction_table_buckets = 42;
     settings.address_table_buckets = 42;
   
-    data_base instance(settings, false);
+    data_base instance(settings, true);
    
     const auto bc_settings = bc::system::settings(config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
@@ -441,7 +391,7 @@ BOOST_AUTO_TEST_CASE(data_base__push__adds_to_blocks_and_transactions_validates_
 
     // test conditions
    
-    test_block_exists(instance, 1, block1, false, false);
+    test_block_exists(instance, 1, block1, true, false);
     test_heights(instance, 1u, 1u);
 }
 
@@ -1116,7 +1066,7 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__already_candidated___success)
     // test conditions
 
     test_heights(instance, 1u, 1u);
-    const auto& block_result = instance.blocks().get(1, false);
+    const auto block_result = instance.blocks().get(1, false);
     BOOST_REQUIRE(block_result.hash() == block1.hash());
     test_block_exists(instance, 1, block1, false, false);
 
@@ -1190,12 +1140,12 @@ BOOST_AUTO_TEST_CASE(data_base__update__new_transactions__success)
     BOOST_REQUIRE_EQUAL(instance.update(block1, 1), error::success);
 
     // new transactions are not candidated
-    const auto& found = instance.transactions().get(tx1.hash());
+    const auto found = instance.transactions().get(tx1.hash());
     BOOST_REQUIRE(found);
     BOOST_REQUIRE(!instance.transactions().get(tx1.hash()).candidate());
 
     // get block and check block_result can access transactions
-    const auto& block_result = instance.blocks().get(block1.hash());
+    const auto block_result = instance.blocks().get(block1.hash());
     for (const auto& offset: block_result)
         BOOST_REQUIRE(!instance.transactions().get(offset).candidate());
 }
@@ -1292,65 +1242,64 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__invalidate__success)
 
 // catalog block
 
-//// BOOST_AUTO_TEST_CASE(data_base__catalog__enabled__success)
-//// {
-////     create_directory(DIRECTORY);
-////     bc::database::settings settings;
-////     settings.directory = DIRECTORY;
-////     settings.flush_writes = false;
-////     settings.file_growth_rate = 42;
-////     settings.block_table_buckets = 42;
-////     settings.transaction_table_buckets = 42;
-////     settings.address_table_buckets = 42;
+BOOST_AUTO_TEST_CASE(data_base__catalog__enabled__success)
+{
+    create_directory(DIRECTORY);
+    bc::database::settings settings;
+    settings.directory = DIRECTORY;
+    settings.flush_writes = false;
+    settings.file_growth_rate = 42;
+    settings.block_table_buckets = 42;
+    settings.transaction_table_buckets = 42;
+    settings.address_table_buckets = 42;
 
-////     data_base_accessor instance(settings, true);
+    data_base_accessor instance(settings, true);
 
-////     const auto bc_settings = bc::system::settings(config::settings::mainnet);
-////     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
+    const auto bc_settings = bc::system::settings(config::settings::mainnet);
+    BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
 
-////     const auto block1 = read_block(MAINNET_BLOCK1);
-////     store_block_transactions(instance, block1, 1);
+    const auto block1 = read_block(MAINNET_BLOCK1);
+    store_block_transactions(instance, block1, 1);
 
-////     BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
-////     BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
-////     BOOST_REQUIRE_EQUAL(instance.update(block1, 1u), error::success);
+    BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
+    // setup ends
 
-////     // setup ends
+    BOOST_REQUIRE_EQUAL(instance.catalog(block1), error::success);
 
-////     BOOST_REQUIRE_EQUAL(instance.catalog(block1), error::success);
-
-////     // When address_database::catalog is implemented, enable this test
-////     BOOST_REQUIRE(instance.addresses().get(block1.transactions()[0].outputs()[0].address().hash()));
-//// }
+    // Coinbase transactions' inputs are not cataloged
+    BOOST_REQUIRE(block1.transactions().front().is_coinbase());
+    test_outputs_cataloged(instance.addresses(), block1.transactions().front(), true);
+}
 
 // catalog transactions
 
-//// BOOST_AUTO_TEST_CASE(data_base__catalog2__enabled__success)
-//// {
-////     create_directory(DIRECTORY);
-////     bc::database::settings settings;
-////     settings.directory = DIRECTORY;
-////     settings.flush_writes = false;
-////     settings.file_growth_rate = 42;
-////     settings.block_table_buckets = 42;
-////     settings.transaction_table_buckets = 42;
-////     settings.address_table_buckets = 42;
+BOOST_AUTO_TEST_CASE(data_base__catalog2__enabled__success)
+{
+    create_directory(DIRECTORY);
+    bc::database::settings settings;
+    settings.directory = DIRECTORY;
+    settings.flush_writes = false;
+    settings.file_growth_rate = 42;
+    settings.block_table_buckets = 42;
+    settings.transaction_table_buckets = 42;
+    settings.address_table_buckets = 42;
 
-////     data_base_accessor instance(settings, true);
+    data_base_accessor instance(settings, true);
 
-////     const auto bc_settings = bc::system::settings(config::settings::mainnet);
-////     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
+    const auto bc_settings = bc::system::settings(config::settings::mainnet);
+    BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
 
-////     const auto block1 = read_block(MAINNET_BLOCK1);
-////     store_block_transactions(instance, block1, 1);
+    const auto block1 = read_block(MAINNET_BLOCK1);
+    store_block_transactions(instance, block1, 1);
 
-////     // setup ends
+    // setup ends
 
-////     BOOST_REQUIRE_EQUAL(instance.catalog(block1.transactions()[0]), error::success);
+    BOOST_REQUIRE_EQUAL(instance.catalog(block1.transactions()[0]), error::success);
 
-////     // When address_database::catalog is implemented, enable this test
-////     BOOST_REQUIRE(instance.addresses().get(block1.transactions()[0].outputs()[0].address().hash()));
-//// }
+    // Coinbase transactions' inputs are not cataloged
+    BOOST_REQUIRE(block1.transactions().front().is_coinbase());
+    test_outputs_cataloged(instance.addresses(), block1.transactions().front(), true);
+}
 
 /// reorganize headers
 
@@ -1371,7 +1320,7 @@ BOOST_AUTO_TEST_CASE(data_base__reorganize__pop_and_push__success)
     const chain::block& genesis = bc_settings.genesis_block;
     BOOST_REQUIRE(instance.create(genesis));
 
-    const auto& block1 = read_block(MAINNET_BLOCK1);
+    const auto block1 = read_block(MAINNET_BLOCK1);
     BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
     store_block_transactions(instance, block1, 1);
     BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
@@ -1438,7 +1387,7 @@ BOOST_AUTO_TEST_CASE(data_base__reorganize2__pop_and_push__success)
 
     test_heights(instance, 0u, 0u);
 
-    const auto& block1 = read_block(MAINNET_BLOCK1);
+    const auto block1 = read_block(MAINNET_BLOCK1);
     chain::header block1_header;
     store_block_transactions(instance, block1, 1);
     auto block2 = read_block(MAINNET_BLOCK2);

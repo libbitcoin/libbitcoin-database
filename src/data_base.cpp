@@ -483,11 +483,12 @@ code data_base::reorganize(const config::checkpoint& fork_point,
     return result ? error::success : error::operation_failed;
 }
 
-// TODO: index payments.
 // Store, update, validate and confirm the presumed valid block.
 code data_base::push(const block& block, size_t height,
     uint32_t median_time_past)
 {
+    code ec;
+
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(write_mutex_);
@@ -518,6 +519,10 @@ code data_base::push(const block& block, size_t height,
     // Promote validation state to valid (presumed valid).
     if (!blocks_->validate(block.hash(), error::success))
         return error::operation_failed;
+
+    if ((ec = catalog(block))) {
+        return ec;
+    }
 
     // TODO: optimize using link.
     // Push header reference onto the confirmed index and set confirmed state.
