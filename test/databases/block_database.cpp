@@ -167,10 +167,10 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     BOOST_REQUIRE(!instance.get(0, true));
 
     // Add blocks 0-4 to candidate index
-    instance.index(h0, 0, true);
-    instance.index(h1, 1, true);
-    instance.index(h2, 2, true);
-    instance.index(h3, 3, true);
+    instance.promote(h0, 0, true);
+    instance.promote(h1, 1, true);
+    instance.promote(h2, 2, true);
+    instance.promote(h3, 3, true);
 
     // Check heights for candidate and confirmed index
     BOOST_REQUIRE(instance.top(candidate_height, true));
@@ -182,16 +182,16 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     BOOST_REQUIRE_EQUAL(instance.get(0, true).state(), block_state::candidate);
 
     // unindex block 0 without clearing top should fail
-    BOOST_REQUIRE(!instance.unindex(h0, 2, true));
+    BOOST_REQUIRE(!instance.demote(h0, 2, true));
 
     // get 4a without indexing it should fail
     BOOST_REQUIRE(!instance.get(h4a));
 
     // unindex block 0 - 4 from candidate index
-    instance.unindex(h3, 3, true);
-    instance.unindex(h2, 2, true);
-    instance.unindex(h1, 1, true);
-    instance.unindex(h0, 0, true);
+    instance.demote(h3, 3, true);
+    instance.demote(h2, 2, true);
+    instance.demote(h1, 1, true);
+    instance.demote(h0, 0, true);
 
     //validate block 1
     BOOST_REQUIRE(instance.validate(h1, error::success));
@@ -199,12 +199,12 @@ BOOST_AUTO_TEST_CASE(block_database__test)
 
     // Add blocks 0-4 to confirmed index (with required validation)
     BOOST_REQUIRE(instance.validate(h0, error::success));
-    instance.index(h0, 0, false);
-    instance.index(h1, 1, false);
+    instance.promote(h0, 0, false);
+    instance.promote(h1, 1, false);
     BOOST_REQUIRE(instance.validate(h2, error::success));
-    instance.index(h2, 2, false);
+    instance.promote(h2, 2, false);
     BOOST_REQUIRE(instance.validate(h3, error::success));
-    instance.index(h3, 3, false);
+    instance.promote(h3, 3, false);
 
     // block 0 stored, not updated, tx_count is not yet set
     BOOST_REQUIRE_EQUAL(instance.get(h0).transaction_count(), 0);
@@ -264,9 +264,9 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     instance.update(block5a);
 
     BOOST_REQUIRE(instance.validate(h4a, error::success));
-    instance.index(h4a, 4, false);
+    instance.promote(h4a, 4, false);
     BOOST_REQUIRE(instance.validate(h5a, error::success));
-    instance.index(h5a, 5, false);
+    instance.promote(h5a, 5, false);
 
     // Fetch blocks 4/5.
     const auto result4a = instance.get(h4a);
@@ -275,8 +275,8 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     // Unlink blocks 4a/5a.
     BOOST_REQUIRE(instance.top(confirmed_height, false));
     BOOST_REQUIRE_EQUAL(confirmed_height, 5u);
-    instance.unindex(h5a, 5, false);
-    instance.unindex(h4a, 4, false);
+    instance.demote(h5a, 5, false);
+    instance.demote(h4a, 4, false);
     BOOST_REQUIRE(instance.top(confirmed_height, false));
     BOOST_REQUIRE_EQUAL(confirmed_height, 3u);
 
@@ -294,9 +294,9 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     instance.store(block4b.header(), 4, 0);
     instance.store(block5b.header(), 5, 0);
     BOOST_REQUIRE(instance.validate(h4b, error::success));
-    instance.index(h4b, 4, false);
+    instance.promote(h4b, 4, false);
     BOOST_REQUIRE(instance.validate(h5b, error::success));
-    instance.index(h5b, 5, false);
+    instance.promote(h5b, 5, false);
     instance.update(block4b);
     instance.update(block5b);
 

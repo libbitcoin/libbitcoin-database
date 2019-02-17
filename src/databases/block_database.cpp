@@ -375,7 +375,7 @@ static uint8_t update_confirmation_state(uint8_t original, bool positive,
     return confirmation_state | validation_state;
 }
 
-void block_database::index(const_element& element, bool positive,
+void block_database::mote(const_element& element, bool positive,
     bool candidate)
 {
     uint8_t original;
@@ -406,7 +406,7 @@ void block_database::index(const_element& element, bool positive,
     element.write(updater);
 }
 
-bool block_database::index(const hash_digest& hash, size_t height,
+bool block_database::promote(const hash_digest& hash, size_t height,
     bool candidate)
 {
     BITCOIN_ASSERT(height != max_uint32);
@@ -421,12 +421,12 @@ bool block_database::index(const hash_digest& hash, size_t height,
     if (!element)
         return false;
 
-    index(element, true, candidate);
+    mote(element, true, candidate);
     push_link(element.link(), height, manager);
     return true;
 }
 
-bool block_database::unindex(const hash_digest& hash, size_t height,
+bool block_database::demote(const hash_digest& hash, size_t height,
     bool candidate)
 {
     BITCOIN_ASSERT(height != max_uint32);
@@ -441,7 +441,7 @@ bool block_database::unindex(const hash_digest& hash, size_t height,
     if (!element)
         return false;
 
-    index(element, false, candidate);
+    mote(element, false, candidate);
     pop_link(element.link(), height, manager);
     return true;
 }

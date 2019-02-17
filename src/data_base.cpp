@@ -360,8 +360,8 @@ code data_base::confirm(const hash_digest& block_hash, size_t height)
             return error::operation_failed;
 
     // TODO: optimize using link.
-    // Index block as confirmed.
-    if (!blocks_->index(block_hash, height, false))
+    // Promote block to confirmed.
+    if (!blocks_->promote(block_hash, height, false))
         return error::operation_failed;
 
     return error::success;
@@ -501,7 +501,7 @@ code data_base::push(const block& block, size_t height,
     blocks_->store(block.header(), height, median_time_past);
 
     // Push header reference onto the candidate index and set candidate state.
-    if (!blocks_->index(block.hash(), height, true))
+    if (!blocks_->promote(block.hash(), height, true))
         return error::operation_failed;
 
     // Store any missing txs as unconfirmed, set tx link metadata for all.
@@ -525,7 +525,7 @@ code data_base::push(const block& block, size_t height,
 
     // TODO: optimize using link.
     // Push header reference onto the confirmed index and set confirmed state.
-    if (!blocks_->index(block.hash(), height, false))
+    if (!blocks_->promote(block.hash(), height, false))
         return error::operation_failed;
 
     commit();
@@ -610,7 +610,7 @@ code data_base::push_header(const chain::header& header, size_t height,
         blocks_->store(header, height, median_time_past);
 
     // TODO: optimize using link.
-    blocks_->index(header.hash(), height, true);
+    blocks_->promote(header.hash(), height, true);
     blocks_->commit();
 
     return end_write() ? error::success : error::store_lock_failure;
@@ -645,8 +645,8 @@ code data_base::pop_header(chain::header& out_header, size_t height)
             return error::operation_failed;
 
     // TODO: optimize using link.
-    // Unindex the candidate header.
-    if (!blocks_->unindex(result.hash(), height, true))
+    // Demote the candidate header.
+    if (!blocks_->demote(result.hash(), height, true))
         return error::operation_failed;
 
     // Commit everything that was changed and return header.
@@ -734,7 +734,7 @@ code data_base::push_block(const block& block, size_t height)
 
     // TODO: optimize using link.
     // Confirm candidate block (candidate index unchanged).
-    if (!blocks_->index(block.hash(), height, false))
+    if (!blocks_->promote(block.hash(), height, false))
         return error::operation_failed;
 
     commit();
@@ -774,8 +774,8 @@ code data_base::pop_block(chain::block& out_block, size_t height)
         return error::operation_failed;
 
     // TODO: optimize using link.
-    // Unconfirm confirmed block (candidate index unchanged).
-    if (!blocks_->unindex(result.hash(), height, false))
+    // Demote the confirmed block (candidate index unchanged).
+    if (!blocks_->demote(result.hash(), height, false))
         return error::operation_failed;
 
     commit();
