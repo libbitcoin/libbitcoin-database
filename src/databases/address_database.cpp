@@ -127,10 +127,16 @@ address_result address_database::get(const hash_digest& hash) const
 void address_database::store(const hash_digest& script_hash, const point& point,
     file_offset link, bool output)
 {
+    const payment_record record
+    {
+        link,
+        point.index(),
+        point.checksum(),
+        output
+    };
+
     const auto write = [&](byte_serializer& serial)
     {
-        const payment_record record{ link, point.index(), point.checksum(),
-            output };
         record.to_data(serial, false);
     };
 
