@@ -154,7 +154,7 @@ void address_database::catalog(const transaction& tx)
     const auto tx_hash = tx.hash();
     const auto link = tx.metadata.link;
     const auto& inputs = tx.inputs();
-    BITCOIN_ASSERT(inputs.size() < max_uint32);
+    BITCOIN_ASSERT(inputs.size() <= max_uint32);
 
     for (uint32_t index = 0; index < inputs.size(); ++index)
     {
@@ -173,7 +173,7 @@ void address_database::catalog(const transaction& tx)
     }
 
     const auto& outputs = tx.outputs();
-    BITCOIN_ASSERT(outputs.size() < max_uint32);
+    BITCOIN_ASSERT(outputs.size() <= max_uint32);
 
     for (uint32_t index = 0; index < outputs.size(); ++index)
     {
