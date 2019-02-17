@@ -144,11 +144,13 @@ void address_database::catalog(const transaction& tx)
 {
     BITCOIN_ASSERT(tx.metadata.link);
     BITCOIN_ASSERT(!tx.metadata.existed);
+    BITCOIN_ASSERT(outputs.size() < max_uint32);
 
     const auto tx_hash = tx.hash();
     const auto link = tx.metadata.link;
-
     const auto& inputs = tx.inputs();
+    BITCOIN_ASSERT(inputs.size() < max_uint32);
+
     for (uint32_t index = 0; index < inputs.size(); ++index)
     {
         const auto& input = inputs[index];
@@ -160,19 +162,20 @@ void address_database::catalog(const transaction& tx)
         BITCOIN_ASSERT(input.previous_output().metadata.cache.is_valid());
 
         const input_point inpoint{ tx_hash, index };
-        const auto& prevout_script =
-            input.previous_output().metadata.cache.script();
-        const auto& prevout_script_hash =
-            sha256_hash(prevout_script.to_data(false));
-        store(prevout_script_hash, inpoint, link, false);
+        const auto& script = input.previous_output().metadata.cache.script();
+        const auto script_hash = sha256_hash(script.to_data(false));
+        store(script_hash, inpoint, link, false);
     }
 
     const auto& outputs = tx.outputs();
+    BITCOIN_ASSERT(outputs.size() < max_uint32);
+
     for (uint32_t index = 0; index < outputs.size(); ++index)
     {
         const auto& output = outputs[index];
         const output_point outpoint{ tx_hash, index };
-        const auto& script_hash = sha256_hash(output.script().to_data(false));
+        const auto& script = output.script();
+        const auto script_hash = sha256_hash(script.to_data(false));
         store(script_hash, outpoint, link, true);
     }
 }
