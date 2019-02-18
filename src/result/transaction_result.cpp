@@ -108,7 +108,7 @@ size_t transaction_result::height() const
 
 size_t transaction_result::position() const
 {
-    // Position is unconfirmed unless if block-associated.
+    // Position is unconfirmed unless block-associated.
     return position_;
 }
 
