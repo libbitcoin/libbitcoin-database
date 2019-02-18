@@ -375,7 +375,7 @@ static uint8_t update_confirmation_state(uint8_t original, bool positive,
     return confirmation_state | validation_state;
 }
 
-void block_database::mote(const_element& element, bool positive,
+void block_database::promote(const_element& element, bool positive,
     bool candidate)
 {
     uint8_t original;
@@ -421,7 +421,7 @@ bool block_database::promote(const hash_digest& hash, size_t height,
     if (!element)
         return false;
 
-    mote(element, true, candidate);
+    promote(element, true, candidate);
     push_link(element.link(), height, manager);
     return true;
 }
@@ -441,7 +441,7 @@ bool block_database::demote(const hash_digest& hash, size_t height,
     if (!element)
         return false;
 
-    mote(element, false, candidate);
+    promote(element, false, candidate);
     pop_link(element.link(), height, manager);
     return true;
 }
