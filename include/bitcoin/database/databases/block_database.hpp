@@ -114,7 +114,7 @@ private:
     typedef system::message::compact_block::short_id_list short_id_list;
 
     link_type associate(const system::chain::transaction::list& transactions);
-    void mote(const_element& element, bool positive, bool candidate);
+    void promote(const_element& element, bool positive, bool candidate);
     void store(const system::chain::header& header, size_t height,
         uint32_t median_time_past, uint32_t checksum, link_type tx_start,
         size_t tx_count, uint8_t status);
