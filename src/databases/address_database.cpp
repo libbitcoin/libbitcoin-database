@@ -114,9 +114,9 @@ bool address_database::close()
 // Queries.
 // ----------------------------------------------------------------------------
 
-// TODO: obtain confirmation height from tx record (along with hash).
 address_result address_database::get(const hash_digest& hash) const
 {
+    // This does not populate hash or height, caller can dereference link.
     return { address_multimap_.find(hash), hash };
 }
 
