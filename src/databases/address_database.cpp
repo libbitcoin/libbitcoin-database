@@ -114,9 +114,9 @@ bool address_database::close()
 // Queries.
 // ----------------------------------------------------------------------------
 
-// TODO: obtain confirmation height from tx record (along with hash).
 address_result address_database::get(const hash_digest& hash) const
 {
+    // This does not populate hash or height, caller can dereference link.
     return { address_multimap_.find(hash), hash };
 }
 
@@ -127,10 +127,16 @@ address_result address_database::get(const hash_digest& hash) const
 void address_database::store(const hash_digest& script_hash, const point& point,
     file_offset link, bool output)
 {
+    const payment_record record
+    {
+        link,
+        point.index(),
+        point.checksum(),
+        output
+    };
+
     const auto write = [&](byte_serializer& serial)
     {
-        const payment_record record{ link, point.index(), point.checksum(),
-            output };
         record.to_data(serial, false);
     };
 
@@ -147,8 +153,9 @@ void address_database::catalog(const transaction& tx)
 
     const auto tx_hash = tx.hash();
     const auto link = tx.metadata.link;
-
     const auto& inputs = tx.inputs();
+    BITCOIN_ASSERT(inputs.size() <= max_uint32);
+
     for (uint32_t index = 0; index < inputs.size(); ++index)
     {
         const auto& input = inputs[index];
@@ -160,19 +167,20 @@ void address_database::catalog(const transaction& tx)
         BITCOIN_ASSERT(input.previous_output().metadata.cache.is_valid());
 
         const input_point inpoint{ tx_hash, index };
-        const auto& prevout_script =
-            input.previous_output().metadata.cache.script();
-        const auto& prevout_script_hash =
-            sha256_hash(prevout_script.to_data(false));
-        store(prevout_script_hash, inpoint, link, false);
+        const auto& script = input.previous_output().metadata.cache.script();
+        const auto script_hash = sha256_hash(script.to_data(false));
+        store(script_hash, inpoint, link, false);
     }
 
     const auto& outputs = tx.outputs();
+    BITCOIN_ASSERT(outputs.size() <= max_uint32);
+
     for (uint32_t index = 0; index < outputs.size(); ++index)
     {
         const auto& output = outputs[index];
         const output_point outpoint{ tx_hash, index };
-        const auto& script_hash = sha256_hash(output.script().to_data(false));
+        const auto& script = output.script();
+        const auto script_hash = sha256_hash(script.to_data(false));
         store(script_hash, outpoint, link, true);
     }
 }

@@ -98,10 +98,10 @@ public:
     bool validate(const system::hash_digest& hash, const system::code& error);
 
     /// Promote pooled|candidate block to candidate|confirmed respectively.
-    bool index(const system::hash_digest& hash, size_t height, bool candidate);
+    bool promote(const system::hash_digest& hash, size_t height, bool candidate);
 
     /// Demote candidate|confirmed header to pooled|pooled (not candidate).
-    bool unindex(const system::hash_digest& hash, size_t height,
+    bool demote(const system::hash_digest& hash, size_t height,
         bool candidate);
 
 private:
@@ -114,7 +114,7 @@ private:
     typedef system::message::compact_block::short_id_list short_id_list;
 
     link_type associate(const system::chain::transaction::list& transactions);
-    void index(const_element& element, bool positive, bool candidate);
+    void mote(const_element& element, bool positive, bool candidate);
     void store(const system::chain::header& header, size_t height,
         uint32_t median_time_past, uint32_t checksum, link_type tx_start,
         size_t tx_count, uint8_t status);

@@ -27,15 +27,15 @@ using namespace bc::system::chain;
 address_iterator::address_iterator(const const_element& element)
   : element_(element)
 {
+    // Because it is common to not return all addresses, based on a total count
+    // and/or height limitation, and because the set is contained in a
+    // discontiguous list, we do not prepopulate the full set here. However,
+    // this behavior can be modified within this iterator as desired
     populate();
 }
 
 void address_iterator::populate()
 {
-    // Because it is common to not return all addresses, based on a total count
-    // and/or height limitation, and because the set is contained in a
-    // discontiguous list, we do not prepopulate the full set here. However,
-    // this behavior can be modified within this iterator as desired.
     if (!element_.terminal())
     {
         element_.read([&](byte_deserializer& deserial)

@@ -101,8 +101,7 @@ BOOST_AUTO_TEST_CASE(address_database__store__two_inputs_two_outputs_two_transac
 {
     test::create(lookup_filename);
     test::create(rows_filename);
-    address_database_accessor instance(
-        lookup_filename, rows_filename, 10, 10, 1000, 50);
+    address_database_accessor instance(lookup_filename, rows_filename, 10, 10, 1000, 50);
     BOOST_REQUIRE(instance.create());
 
     const hash_digest tx0_hash = sha256_hash(to_chunk("tx0_hash"));
@@ -123,35 +122,35 @@ BOOST_AUTO_TEST_CASE(address_database__store__two_inputs_two_outputs_two_transac
     const auto output1 = output_point{ tx1_hash, 457 };
 
     // End of setup.
-    
+
     instance.store(script_hash0, input0, 1234, false);
     instance.store(script_hash0, input1, 1235, false);
     instance.store(script_hash0, output0, 1235, true);
     instance.store(script_hash1, output1, 1235, true);
 
     // Test conditions.
-    
+
     const auto result0 = instance.get(script_hash0);
     auto payments0 = result0.begin();
-        
+
     const auto payment = *payments0;
     BOOST_REQUIRE(payment.is_output());
     BOOST_REQUIRE_EQUAL(payment.link(), 1235);
-    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE_EQUAL(payment.height(), payment_record::unconfirmed);
     BOOST_REQUIRE(payment.hash() == null_hash);
     BOOST_REQUIRE(payment.index() == 456);
 
     const auto payment1 = *(++payments0);
     BOOST_REQUIRE(!payment1.is_output());
     BOOST_REQUIRE_EQUAL(payment1.link(), 1235);
-    BOOST_REQUIRE_EQUAL(payment1.height(), 0);
+    BOOST_REQUIRE_EQUAL(payment1.height(), payment_record::unconfirmed);
     BOOST_REQUIRE(payment1.hash() == null_hash);
     BOOST_REQUIRE(payment1.index() == 7891);
 
     const auto payment2 = *(++payments0);
     BOOST_REQUIRE(!payment2.is_output());
     BOOST_REQUIRE_EQUAL(payment2.link(), 1234);
-    BOOST_REQUIRE_EQUAL(payment2.height(), 0);
+    BOOST_REQUIRE_EQUAL(payment2.height(), payment_record::unconfirmed);
     BOOST_REQUIRE(payment2.hash() == null_hash);
     BOOST_REQUIRE(payment2.index() == 7890);
 
@@ -159,11 +158,11 @@ BOOST_AUTO_TEST_CASE(address_database__store__two_inputs_two_outputs_two_transac
 
     const auto result1 = instance.get(script_hash1);
     auto payments1 = result1.begin();
-        
+
     const auto payment3 = *payments1;
     BOOST_REQUIRE(payment3.is_output());
     BOOST_REQUIRE_EQUAL(payment3.link(), 1235);
-    BOOST_REQUIRE_EQUAL(payment3.height(), 0);
+    BOOST_REQUIRE_EQUAL(payment3.height(), payment_record::unconfirmed);
     BOOST_REQUIRE(payment3.hash() == null_hash);
     BOOST_REQUIRE(payment3.index() == 457);
 
@@ -177,8 +176,7 @@ BOOST_AUTO_TEST_CASE(address_database__catalog__coinbase_transaction__success)
 
     test::create(lookup_filename);
     test::create(rows_filename);
-    address_database_accessor instance(
-        lookup_filename, rows_filename, 10, 10, 1000, 50);
+    address_database_accessor instance(lookup_filename, rows_filename, 10, 10, 1000, 50);
     BOOST_REQUIRE(instance.create());
 
     script script0;
@@ -212,7 +210,7 @@ BOOST_AUTO_TEST_CASE(address_database__catalog__coinbase_transaction__success)
     const auto payment = *payments0;
     BOOST_REQUIRE(payment.is_output());
     BOOST_REQUIRE_EQUAL(payment.link(), 100);
-    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE_EQUAL(payment.height(), payment_record::unconfirmed);
     BOOST_REQUIRE(payment.hash() == null_hash);
     BOOST_REQUIRE(payment.index() == 0);
 
@@ -226,8 +224,7 @@ BOOST_AUTO_TEST_CASE(address_database__catalog__tx1_spends_from_tx0__success)
 
     test::create(lookup_filename);
     test::create(rows_filename);
-    address_database_accessor instance(
-        lookup_filename, rows_filename, 10, 10, 1000, 50);
+    address_database_accessor instance(lookup_filename, rows_filename, 10, 10, 1000, 50);
     BOOST_REQUIRE(instance.create());
 
     script script0;
@@ -324,14 +321,14 @@ BOOST_AUTO_TEST_CASE(address_database__catalog__tx1_spends_from_tx0__success)
     auto payment = *payments0;
     BOOST_REQUIRE(!payment.is_output());
     BOOST_REQUIRE_EQUAL(payment.link(), 2000);
-    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE_EQUAL(payment.height(), payment_record::unconfirmed);
     BOOST_REQUIRE(payment.hash() == null_hash);
     BOOST_REQUIRE(payment.index() == 0);
 
     payment = *(++payments0);
     BOOST_REQUIRE(payment.is_output());
     BOOST_REQUIRE_EQUAL(payment.link(), 1000);
-    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE_EQUAL(payment.height(), payment_record::unconfirmed);
     BOOST_REQUIRE(payment.hash() == null_hash);
     BOOST_REQUIRE(payment.index() == 0);
 
@@ -344,14 +341,14 @@ BOOST_AUTO_TEST_CASE(address_database__catalog__tx1_spends_from_tx0__success)
     payment = *payments1;
     BOOST_REQUIRE(payment.is_output());
     BOOST_REQUIRE_EQUAL(payment.link(), 2000);
-    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE_EQUAL(payment.height(), payment_record::unconfirmed);
     BOOST_REQUIRE(payment.hash() == null_hash);
     BOOST_REQUIRE(payment.index() == 0);
 
     payment = *(++payments1);
     BOOST_REQUIRE(payment.is_output());
     BOOST_REQUIRE_EQUAL(payment.link(), 1000);
-    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE_EQUAL(payment.height(), payment_record::unconfirmed);
     BOOST_REQUIRE(payment.hash() == null_hash);
     BOOST_REQUIRE(payment.index() == 1);
 
@@ -364,21 +361,21 @@ BOOST_AUTO_TEST_CASE(address_database__catalog__tx1_spends_from_tx0__success)
     payment = *payments2;
     BOOST_REQUIRE(payment.is_output());
     BOOST_REQUIRE_EQUAL(payment.link(), 2000);
-    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE_EQUAL(payment.height(), payment_record::unconfirmed);
     BOOST_REQUIRE(payment.hash() == null_hash);
     BOOST_REQUIRE(payment.index() == 1);
 
     payment = *(++payments2);
     BOOST_REQUIRE(!payment.is_output());
     BOOST_REQUIRE_EQUAL(payment.link(), 2000);
-    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE_EQUAL(payment.height(), payment_record::unconfirmed);
     BOOST_REQUIRE(payment.hash() == null_hash);
     BOOST_REQUIRE(payment.index() == 1);
 
     payment = *(++payments2);
     BOOST_REQUIRE(payment.is_output());
     BOOST_REQUIRE_EQUAL(payment.link(), 1000);
-    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE_EQUAL(payment.height(), payment_record::unconfirmed);
     BOOST_REQUIRE(payment.hash() == null_hash);
     BOOST_REQUIRE(payment.index() == 2);
 
@@ -391,7 +388,7 @@ BOOST_AUTO_TEST_CASE(address_database__catalog__tx1_spends_from_tx0__success)
     payment = *payments3;
     BOOST_REQUIRE(payment.is_output());
     BOOST_REQUIRE_EQUAL(payment.link(), 2000);
-    BOOST_REQUIRE_EQUAL(payment.height(), 0);
+    BOOST_REQUIRE_EQUAL(payment.height(), payment_record::unconfirmed);
     BOOST_REQUIRE(payment.hash() == null_hash);
     BOOST_REQUIRE(payment.index() == 2);
 
