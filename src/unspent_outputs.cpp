@@ -89,8 +89,9 @@ void unspent_outputs::add(const transaction& tx, size_t height,
     if (unspent_.size() >= capacity_)
         unspent_.right.erase(unspent_.right.begin());
 
-    // TODO: promote the unconfirmed tx cache instead of replacing it.
-    // A confirmed tx may replace the same unconfirmed tx here.
+    // TODO: promote the unconfirmed/deconfirmed tx cache instead of
+    // replacing it.  A confirmed tx may replace the same
+    // unconfirmed/deconfirmed tx here.
     unspent_.insert(
     {
         unspent_transaction{ tx, height, median_time_past, confirmed },

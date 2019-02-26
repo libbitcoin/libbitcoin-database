@@ -48,6 +48,7 @@ static constexpr auto metadata_size = height_size + position_size +
 const uint8_t transaction_result::candidate_true = 1;
 const uint8_t transaction_result::candidate_false = 0;
 const uint16_t transaction_result::unconfirmed = max_uint16;
+const uint16_t transaction_result::deconfirmed = max_uint16 - 1;
 const uint32_t transaction_result::unverified = rule_fork::unverified;
 
 transaction_result::transaction_result(const const_element_type& element,
@@ -109,6 +110,7 @@ size_t transaction_result::height() const
 size_t transaction_result::position() const
 {
     // Position is unconfirmed unless block-associated.
+    // Position is deconfirmed if block reorganized.
     return position_;
 }
 
@@ -120,6 +122,7 @@ uint32_t transaction_result::median_time_past() const
 bool transaction_result::is_candidate_spent(size_t fork_height) const
 {
     // Cannot be spent unless candidate or confirmed by fork height.
+    // Deconfirmed implies confirmed in the past, so don't skip checks.
     if (!candidate_ &&
         ((position_ == unconfirmed) || (height_ > fork_height)))
         return false;
@@ -224,6 +227,7 @@ chain::transaction transaction_result::transaction(bool witness) const
     // TODO: populate all metadata or use methods?
     tx.metadata.link = element_.link();
     tx.metadata.existed = true;
+    tx.metadata.cataloged = position_ != unconfirmed;
     return tx;
 }
 
