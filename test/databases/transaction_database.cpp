@@ -753,9 +753,7 @@ BOOST_AUTO_TEST_CASE(transaction_database__unconfirm__spent_across_blocks__succe
    instance.store(tx2, 1);
 
    instance.confirm(instance.get(tx1.hash()).link(), 23, 56, 1);
-   tx1.metadata.confirmed = true;
    instance.confirm(instance.get(tx2.hash()).link(), 123, 156, 1);
-   tx2.metadata.confirmed = true;
 
    const auto result1 = instance.get(hash1);
    BOOST_REQUIRE(result1);

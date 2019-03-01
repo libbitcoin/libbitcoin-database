@@ -539,9 +539,8 @@ bool transaction_database::confirmed_spend(const output_point& point,
         return false;
 
     // Use not_spent as the spender_height for output.
-    if (spender_height == rule_fork::unverified) {
+    if (spender_height == rule_fork::unverified)
         spender_height = output::validation::not_spent;
-    }
 
     const auto writer = [&](byte_serializer& serial)
     {
