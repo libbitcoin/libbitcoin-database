@@ -247,7 +247,7 @@ code data_base::catalog(const transaction& tx)
     code ec;
 
     // Existence check prevents duplicated indexing.
-    if (!catalog_ || tx.metadata.existed)
+    if (!catalog_ || tx.metadata.cataloged)
         return ec;
 
     // Critical Section
@@ -289,7 +289,7 @@ code data_base::catalog(const block& block)
 
     // Existence check prevents duplicated indexing.
     for (const auto& tx: block.transactions())
-        if (!tx.metadata.existed)
+        if (!tx.metadata.cataloged)
             addresses_->catalog(tx);
 
     addresses_->commit();

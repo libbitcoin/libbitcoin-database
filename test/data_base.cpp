@@ -53,10 +53,11 @@ static void test_outputs_cataloged(const address_database& payments_store,
                 return;
             }
         }
-
-        BOOST_REQUIRE(!expect_found);
         ++output_index;
     }
+
+    // Reached only if expected to not found output in address database.
+    BOOST_REQUIRE(!expect_found);    
 }
 
 static void test_inputs_cataloged(const address_database& payments_store,
@@ -80,10 +81,11 @@ static void test_inputs_cataloged(const address_database& payments_store,
                 return;
             }
         }
-
-        BOOST_REQUIRE(!expect_found);
         ++input_index;
     }
+
+    // Reached only if expected to not found output in address database.
+    BOOST_REQUIRE(!expect_found);    
 }
 
 static void test_block_exists(const data_base& interface, size_t height,
@@ -238,6 +240,11 @@ BOOST_FIXTURE_TEST_SUITE(data_base_tests, data_base_setup_fixture)
 "6c5b1629ecf97fff95d7a4bbdac87cc26099ada28066c6ff1eb9191223cd897194a08d0c272" \
 "6c5747f1db49e8cf90e75dc3e3550ae9b30086f3cd5aaac00000000"
 
+#define INPUT1 "0 [51]"
+#define OUTPUT1 "hash160 [da1745e9b549bd0bfa1a569971c77eba30cd5a4b] equal"
+#define INPUT2 "[1.] [0.51]"
+#define OUTPUT2 "hash160 [da1745e9b549bd0bfa1a569971c77eba30cd5a4b] equal"
+
 class data_base_accessor
   : public data_base
 {
@@ -385,11 +392,11 @@ BOOST_AUTO_TEST_CASE(data_base__push__adds_to_blocks_and_transactions_validates_
 
     const auto block1 = read_block(MAINNET_BLOCK1);   
 
-    // setup ends
+    // Setup ends.
    
     BOOST_REQUIRE_EQUAL(instance.push(block1, 1), error::success);
 
-    // test conditions
+    // Test conditions.
    
     test_block_exists(instance, 1, block1, true, false);
     test_heights(instance, 1u, 1u);
@@ -417,11 +424,11 @@ BOOST_AUTO_TEST_CASE(data_base__push_block__not_existing___failure)
     const auto block1 = read_block(MAINNET_BLOCK1);
     store_block_transactions(instance, block1, 1);
     
-    // setup ends
+    // Setup ends.
     
     BOOST_REQUIRE_EQUAL(instance.push_block(block1, 1), error::operation_failed);
 
-    // test conditions
+    // Test conditions.
 
     test_heights(instance, 0u, 0u);
 }
@@ -449,7 +456,7 @@ BOOST_AUTO_TEST_CASE(data_base__push_block__incorrect_height___failure)
     BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
     test_heights(instance, 1u, 0u);
 
-    // setup ends
+    // Setup ends.
 
 #ifndef NDEBUG
     BOOST_REQUIRE_EQUAL(instance.push_block(block1, 2), error::store_block_invalid_height);
@@ -478,7 +485,7 @@ BOOST_AUTO_TEST_CASE(data_base__push_header__missing_parent___failure)
     store_block_transactions(instance, block1, 1);
     block1.set_header(chain::header{});
 
-    // setup ends
+    // Setup ends.
 
 #ifndef NDEBUG
     BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::store_block_missing_parent);
@@ -510,12 +517,12 @@ BOOST_AUTO_TEST_CASE(data_base__push_block_and_update__already_candidated___succ
     BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
     test_heights(instance, 1u, 0u);
 
-    // setup ends
+    // Setup ends.
    
     BOOST_REQUIRE_EQUAL(instance.push_block(block1, 1), error::success);
     BOOST_REQUIRE_EQUAL(instance.update(block1, 1), error::success);
 
-    // test conditions
+    // Test conditions.
 
     test_heights(instance, 1u, 1u);
     test_block_exists(instance, 1, block1, false, false);
@@ -539,7 +546,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_header_not_top___failure)
    
     const auto block1 = read_block(MAINNET_BLOCK1);
 
-    // setup ends
+    // Setup ends.
 
     chain::header out_header;
     BOOST_REQUIRE_EQUAL(instance.pop_header(out_header, 1), error::operation_failed);
@@ -567,12 +574,12 @@ BOOST_AUTO_TEST_CASE(data_base__pop_header__candidate___success)
     BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
     BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
 
-    // setup ends
+    // Setup ends.
 
     chain::header out_header;
     BOOST_REQUIRE_EQUAL(instance.pop_header(out_header, 1), error::success);
 
-    // test conditions
+    // Test conditions.
 
     BOOST_REQUIRE(out_header.hash() == block1.header().hash());
     test_heights(instance, 0u, 0u);
@@ -596,7 +603,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_block_not_top___failure)
 
     const auto block1 = read_block(MAINNET_BLOCK1);
 
-    // setup ends
+    // Setup ends.
 
     chain::block out_block;
     BOOST_REQUIRE_EQUAL(instance.pop_block(out_block, 1), error::operation_failed);
@@ -625,12 +632,12 @@ BOOST_AUTO_TEST_CASE(data_base__pop_block__confirmed___success)
     BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
     BOOST_REQUIRE_EQUAL(instance.push_block(block1, 1), error::success);
 
-    // setup ends
+    // Setup ends.
 
     chain::block out_block;
     BOOST_REQUIRE_EQUAL(instance.pop_block(out_block, 1), error::success);
 
-    // test conditions
+    // Test conditions.
 
     BOOST_REQUIRE(out_block.hash() == block1.hash());
     test_block_not_exists(instance, block1, false);
@@ -679,14 +686,14 @@ BOOST_AUTO_TEST_CASE(data_base__push_all_and_update__already_candidated___succes
     
     test_heights(instance, 3u, 0u);
     
-    // setup ends
+    // Setup ends.
     
     BOOST_REQUIRE(instance.push_all(blocks_push_ptr, config::checkpoint(genesis.hash(), 0)));
     BOOST_REQUIRE_EQUAL(instance.update(*block1_ptr, 1), error::success);
     BOOST_REQUIRE_EQUAL(instance.update(*block2_ptr, 2), error::success);
     BOOST_REQUIRE_EQUAL(instance.update(*block3_ptr, 3), error::success);
     
-    // test conditions
+    // Test conditions.
     
     test_heights(instance, 3u, 3u);
     test_block_exists(instance, 1, *block1_ptr, false, false);
@@ -713,7 +720,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above_missing_forkpoint_hash___failure)
     const auto block1 = read_block(MAINNET_BLOCK1);
     const auto out_headers = std::make_shared<header_const_ptr_list>();
 
-    // setup ends
+    // Setup ends.
 
     const auto result = instance.pop_above(out_headers, config::checkpoint(block1.hash(), 0));
 #ifndef NDEBUG
@@ -744,7 +751,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__wrong_forkpoint_height___failure)
     const auto block1 = read_block(MAINNET_BLOCK1);
     const auto out_headers = std::make_shared<header_const_ptr_list>();
 
-    // setup ends
+    // Setup ends.
 
     BOOST_REQUIRE(!instance.pop_above(out_headers, config::checkpoint(genesis.hash(), 10)));
 }
@@ -770,11 +777,11 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__pop_zero___success)
     const auto block1 = read_block(MAINNET_BLOCK1);
     const auto out_headers = std::make_shared<header_const_ptr_list>();
 
-    // setup ends
+    // Setup ends.
    
     BOOST_REQUIRE(instance.pop_above(out_headers, config::checkpoint(genesis.hash(), 0)));
 
-    // test conditions
+    // Test conditions.
 
     test_heights(instance, 0u, 0u);   
 }
@@ -819,12 +826,12 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__candidated_not_confirmed___success)
 
     test_heights(instance, 3u, 0u);
 
-    // setup ends
+    // Setup ends.
    
     const auto out_headers = std::make_shared<header_const_ptr_list>();
     BOOST_REQUIRE(instance.pop_above(out_headers, config::checkpoint(genesis.hash(), 0)));
 
-    // test conditions
+    // Test conditions.
 
     BOOST_REQUIRE_EQUAL(out_headers->size(), 3);
     test_heights(instance, 0u, 0u);
@@ -854,7 +861,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__wrong_forkpoint_height___failure)
     const auto block1 = read_block(MAINNET_BLOCK1);
     const auto out_blocks = std::make_shared<block_const_ptr_list>();
 
-    // setup ends
+    // Setup ends.
 
     BOOST_REQUIRE(!instance.pop_above(out_blocks, config::checkpoint(genesis.hash(), 10)));
 }
@@ -880,11 +887,11 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__pop_zero___success)
     const auto block1 = read_block(MAINNET_BLOCK1);
     const auto out_blocks = std::make_shared<block_const_ptr_list>();
 
-    // setup ends
+    // Setup ends.
 
     BOOST_REQUIRE(instance.pop_above(out_blocks, config::checkpoint(genesis.hash(), 0)));
 
-    // test conditions
+    // Test conditions.
 
     test_heights(instance, 0u, 0u);
 }
@@ -936,12 +943,12 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__confirmed___success)
 
     test_heights(instance, 3u, 3u);
 
-    // setup ends
+    // Setup ends.
 
     const auto out_blocks = std::make_shared<block_const_ptr_list>();
     BOOST_REQUIRE(instance.pop_above(out_blocks, config::checkpoint(genesis.hash(), 0)));
 
-    // test conditions
+    // Test conditions.
 
     BOOST_REQUIRE_EQUAL(out_blocks->size(), 3);
     test_heights(instance, 3u, 0u);
@@ -971,11 +978,11 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__not_existing___failure)
     const auto block1 = read_block(MAINNET_BLOCK1);
     store_block_transactions(instance, block1, 1);
 
-    // setup ends
+    // Setup ends.
 
     BOOST_REQUIRE_EQUAL(instance.confirm(block1.hash(), 1), error::operation_failed);
 
-    // test conditions
+    // Test conditions.
 
     test_heights(instance, 0u, 0u);
 }
@@ -1003,7 +1010,7 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__incorrect_height___failure)
     BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
     test_heights(instance, 1u, 0u);
 
-    // setup ends
+    // Setup ends.
 
     BOOST_REQUIRE_EQUAL(instance.confirm(block1.hash(), 2), error::operation_failed);
 }
@@ -1028,7 +1035,7 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__missing_parent___failure)
     store_block_transactions(instance, block1, 1);
     block1.set_header(chain::header{});
 
-    // setup ends
+    // Setup ends.
 
     BOOST_REQUIRE_EQUAL(instance.confirm(block1.hash(), 1), error::operation_failed);
 }
@@ -1059,11 +1066,11 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__already_candidated___success)
     BOOST_REQUIRE_EQUAL(block1.transactions().size(), 1);
     BOOST_REQUIRE_EQUAL(instance.blocks().get(1, true).transaction_count(), 1);
 
-    // setup ends
+    // Setup ends.
 
     BOOST_REQUIRE_EQUAL(instance.confirm(block1.hash(), 1), error::success);
 
-    // test conditions
+    // Test conditions.
 
     test_heights(instance, 1u, 1u);
     const auto block_result = instance.blocks().get(1, false);
@@ -1100,7 +1107,7 @@ BOOST_AUTO_TEST_CASE(data_base__update__incorrect_height__failure)
     BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
     BOOST_REQUIRE_EQUAL(instance.candidate(block1), error::success);
 
-    // setup ends
+    // Setup ends.
 
     BOOST_REQUIRE_EQUAL(instance.update(block1, 2), error::not_found);
 }
@@ -1135,16 +1142,16 @@ BOOST_AUTO_TEST_CASE(data_base__update__new_transactions__success)
 
     block1.set_transactions({ tx1 });
 
-    // setup ends
+    // Setup ends.
 
     BOOST_REQUIRE_EQUAL(instance.update(block1, 1), error::success);
 
-    // new transactions are not candidated
+    // New transactions are not candidated.
     const auto found = instance.transactions().get(tx1.hash());
     BOOST_REQUIRE(found);
     BOOST_REQUIRE(!instance.transactions().get(tx1.hash()).candidate());
 
-    // get block and check block_result can access transactions
+    // Get block and check block_result can access transactions.
     const auto block_result = instance.blocks().get(block1.hash());
     for (const auto& offset: block_result)
         BOOST_REQUIRE(!instance.transactions().get(offset).candidate());
@@ -1171,7 +1178,7 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__missing_header__failure)
 
     const auto block1 = read_block(MAINNET_BLOCK1);
 
-    // setup ends
+    // Setup ends.
     BOOST_REQUIRE_EQUAL(instance.invalidate(block1.header(), error::success), error::not_found);
 }
 #endif
@@ -1197,7 +1204,7 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__validate__success)
 
     BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
 
-    // setup ends
+    // Setup ends.
 
     const auto header_result = block1.header();
     BOOST_REQUIRE_EQUAL(instance.invalidate(header_result, error::success), error::success);
@@ -1229,7 +1236,7 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__invalidate__success)
 
     BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
 
-    // setup ends
+    // Setup ends.
 
     const auto header_result = block1.header();
     BOOST_REQUIRE_EQUAL(instance.invalidate(header_result, error::invalid_proof_of_work), error::success);
@@ -1262,13 +1269,18 @@ BOOST_AUTO_TEST_CASE(data_base__catalog__enabled__success)
     store_block_transactions(instance, block1, 1);
 
     BOOST_REQUIRE_EQUAL(instance.push_header(block1.header(), 1, 100), error::success);
-    // setup ends
+
+    // Setup ends.
 
     BOOST_REQUIRE_EQUAL(instance.catalog(block1), error::success);
 
-    // Coinbase transactions' inputs are not cataloged
+    // Coinbase transaction inputs are not cataloged
     BOOST_REQUIRE(block1.transactions().front().is_coinbase());
+    test_inputs_cataloged(instance.addresses(), block1.transactions().front(), false);
     test_outputs_cataloged(instance.addresses(), block1.transactions().front(), true);
+
+    // Second catalog attempt should fail.
+    BOOST_REQUIRE(!instance.catalog(block1));
 }
 
 // catalog transactions
@@ -1292,13 +1304,144 @@ BOOST_AUTO_TEST_CASE(data_base__catalog2__enabled__success)
     const auto block1 = read_block(MAINNET_BLOCK1);
     store_block_transactions(instance, block1, 1);
 
-    // setup ends
+    // Setup ends.
 
     BOOST_REQUIRE_EQUAL(instance.catalog(block1.transactions()[0]), error::success);
 
-    // Coinbase transactions' inputs are not cataloged
+    // Coinbase transaction inputs are not cataloged.
     BOOST_REQUIRE(block1.transactions().front().is_coinbase());
+    test_inputs_cataloged(instance.addresses(), block1.transactions().front(), false);
+
+    // Outputs are cataloged.
     test_outputs_cataloged(instance.addresses(), block1.transactions().front(), true);
+}
+
+BOOST_AUTO_TEST_CASE(data_base__catalog2__catalog_after_read__success)
+{
+    create_directory(DIRECTORY);
+    bc::database::settings settings;
+    settings.directory = DIRECTORY;
+    settings.flush_writes = false;
+    settings.file_growth_rate = 42;
+    settings.block_table_buckets = 42;
+    settings.transaction_table_buckets = 42;
+    settings.address_table_buckets = 42;
+
+    data_base_accessor instance(settings, true);
+
+    const auto bc_settings = bc::system::settings(config::settings::mainnet);
+    BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
+
+    const auto block1 = read_block(MAINNET_BLOCK2);
+    store_block_transactions(instance, block1, 1);
+    BOOST_REQUIRE_EQUAL(instance.catalog(block1.transactions()[0]), error::success);
+    auto reloaded_result = instance.transactions().get(block1.transactions()[0].hash());
+    auto reloaded = reloaded_result.transaction();
+
+    // Setup ends.
+
+    BOOST_REQUIRE_EQUAL(instance.catalog(reloaded), error::success);
+    
+    // Coinbase transaction inputs are not cataloged.
+    BOOST_REQUIRE(block1.transactions().front().is_coinbase());
+    test_inputs_cataloged(instance.addresses(), block1.transactions().front(), false);
+
+    // Outputs are cataloged.
+    test_outputs_cataloged(instance.addresses(), block1.transactions().front(), true);
+
+    // Second catalog attempt should fail.
+    BOOST_REQUIRE(!instance.catalog(reloaded));
+}
+
+BOOST_AUTO_TEST_CASE(data_base__catalog2__catalog_inputs_and_ouputs__success)
+{
+    create_directory(DIRECTORY);
+    bc::database::settings settings;
+    settings.directory = DIRECTORY;
+    settings.flush_writes = false;
+    settings.file_growth_rate = 42;
+    settings.block_table_buckets = 42;
+    settings.transaction_table_buckets = 42;
+    settings.address_table_buckets = 42;
+
+    data_base_accessor instance(settings, true);
+
+    const auto bc_settings = bc::system::settings(config::settings::mainnet);
+    BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
+
+    uint32_t version = 2345u;
+    uint32_t locktime = 0xffffffff;
+    
+    script script_input1;
+    BOOST_REQUIRE(script_input1.from_string(INPUT1));
+
+    // tx1: coinbase transaction
+    const chain::input::list tx1_inputs
+    {
+        { chain::point{ null_hash, chain::point::null_index }, script_input1, 0 }
+    };
+    
+    script script_output1;
+    BOOST_REQUIRE(script_output1.from_string(OUTPUT1));
+    const chain::output::list tx1_outputs
+    {
+        { 1200, script_output1 }
+    };
+
+    const chain::transaction tx1(version, locktime, tx1_inputs, tx1_outputs);
+    BOOST_REQUIRE(tx1.is_coinbase());
+    const auto hash1 = tx1.hash();
+    instance.store(tx1, 1);
+    
+    script script_input2;
+    BOOST_REQUIRE(script_input2.from_string(INPUT2));
+
+    // tx2: spends coinbase, tx1 as input
+    const chain::input::list tx2_inputs
+    {
+        { { hash1, 0 }, script_input2, 0 }
+    };
+
+    // Set output cache for prevout so catalog has access to the script.
+    tx2_inputs.front().previous_output().metadata.cache = tx1_outputs.front();
+
+    script script_output2;
+    BOOST_REQUIRE(script_output2.from_string(OUTPUT2));
+
+    const chain::output::list tx2_outputs
+    {
+        { 1200, script_output2 }
+    };
+    
+    const chain::transaction tx2(version, locktime, tx2_inputs, tx2_outputs);
+    instance.store(tx2, 1);
+    BOOST_REQUIRE(tx2.inputs().front().previous_output().metadata.cache.is_valid());
+
+    test_inputs_cataloged(instance.addresses(), tx1, false);
+    test_outputs_cataloged(instance.addresses(), tx1, false);
+
+    test_inputs_cataloged(instance.addresses(), tx2, false);
+    test_outputs_cataloged(instance.addresses(), tx2, false);
+
+    // Setup ends.
+    
+    BOOST_REQUIRE_EQUAL(instance.catalog(tx1), error::success);
+
+    BOOST_REQUIRE(!tx1.metadata.cataloged);
+    BOOST_REQUIRE(tx1.is_coinbase());
+    test_inputs_cataloged(instance.addresses(), tx1, false);
+    test_outputs_cataloged(instance.addresses(), tx1, true);
+
+    test_inputs_cataloged(instance.addresses(), tx2, false);
+    test_outputs_cataloged(instance.addresses(), tx2, false);
+
+    BOOST_REQUIRE_EQUAL(instance.catalog(tx2), error::success);
+
+    test_inputs_cataloged(instance.addresses(), tx1, false);
+    test_outputs_cataloged(instance.addresses(), tx1, true);
+    BOOST_REQUIRE(!tx2.is_coinbase());
+    test_inputs_cataloged(instance.addresses(), tx2, true);
+    test_outputs_cataloged(instance.addresses(), tx2, true);
 }
 
 /// reorganize headers
@@ -1341,11 +1484,11 @@ BOOST_AUTO_TEST_CASE(data_base__reorganize__pop_and_push__success)
         std::make_shared<const message::header>(block3.header())
     });
 
-    // setup ends
+    // Setup ends.
     
     BOOST_REQUIRE_EQUAL(instance.reorganize(config::checkpoint(genesis.hash(), 0), incoming_headers, outgoing_headers), error::success);
 
-    // test conditions
+    // Test conditions.
     
     test_heights(instance, 2u, 0u);
 
@@ -1430,11 +1573,11 @@ BOOST_AUTO_TEST_CASE(data_base__reorganize2__pop_and_push__success)
         std::make_shared<const message::block>(block3)
     });
 
-    // setup ends
+    // Setup ends.
     
     BOOST_REQUIRE_EQUAL(instance.reorganize(config::checkpoint(genesis.hash(), 0), incoming_blocks, outgoing_blocks), error::success);
 
-    // test conditions
+    // Test conditions.
     
     test_heights(instance, 2u, 2u);
 
