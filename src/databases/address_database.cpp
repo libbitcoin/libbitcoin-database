@@ -124,7 +124,7 @@ address_result address_database::get(const hash_digest& hash) const
 // ----------------------------------------------------------------------------
 
 // protected
-void address_database::store(const hash_digest& script_hash, const point& point,
+void address_database::store(const hash_digest& key, const point& point,
     file_offset link, bool output)
 {
     const payment_record record
@@ -142,7 +142,7 @@ void address_database::store(const hash_digest& script_hash, const point& point,
 
     auto element = address_multimap_.allocator();
     element.create(write);
-    address_multimap_.link(script_hash, element);
+    address_multimap_.link(key, element);
 }
 
 // Confirmation of payment is dynamically derived from current tx state.
@@ -168,8 +168,8 @@ void address_database::catalog(const transaction& tx)
 
         const input_point inpoint{ tx_hash, index };
         const auto& script = input.previous_output().metadata.cache.script();
-        const auto script_hash = sha256_hash(script.to_data(false));
-        store(script_hash, inpoint, link, false);
+        const auto key = sha256_hash(script.to_data(false));
+        store(key, inpoint, link, false);
     }
 
     const auto& outputs = tx.outputs();
@@ -180,8 +180,8 @@ void address_database::catalog(const transaction& tx)
         const auto& output = outputs[index];
         const output_point outpoint{ tx_hash, index };
         const auto& script = output.script();
-        const auto script_hash = sha256_hash(script.to_data(false));
-        store(script_hash, outpoint, link, true);
+        const auto key = sha256_hash(script.to_data(false));
+        store(key, outpoint, link, true);
     }
 }
 
