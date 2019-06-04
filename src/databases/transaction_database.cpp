@@ -36,7 +36,7 @@ using namespace bc::system::machine;
 // Record format (v4):
 // ----------------------------------------------------------------------------
 // [ height/forks/code:4 - atomic1  ] (code if invalid)
-// [ position:2          - atomic1  ] (unconfirmed sentinel, could store state)
+// [ position:2          - atomic1  ] (unconfirmed/deconfirmed sentinel, could store state)
 // [ candidate:1         - atomic1  ] (candidate(1))
 // [ median_time_past:4  - atomic1  ] (zero if unconfirmed)
 // [ output_count:varint - const    ] (tx starts here)
@@ -153,6 +153,7 @@ void transaction_database::get_block_metadata(const chain::transaction& tx,
 {
     static const auto unlinked = transaction::validation::unlinked;
     static const auto unconfirmed = transaction_result::unconfirmed;
+    static const auto deconfirmed = transaction_result::deconfirmed;
     const auto result = get(tx.hash());
 
     // Default values are correct for indication of not found.
@@ -178,13 +179,17 @@ void transaction_database::get_block_metadata(const chain::transaction& tx,
 
     const auto height = result.height();
     const auto is_linked = result.link() != unlinked;
-    const auto has_position = result.position() != unconfirmed;
+    const auto has_position = result.position() != unconfirmed &&
+        result.position() != deconfirmed;
     const auto is_confirmed = has_position && fork_height <= height;
+    const auto is_cataloged =  result.position() != unconfirmed &&
+        fork_height <= height;
 
     tx.metadata.existed = is_linked;
     tx.metadata.link = result.link();
     tx.metadata.candidate = result.candidate();
     tx.metadata.confirmed = is_confirmed;
+    tx.metadata.cataloged = is_cataloged;
     tx.metadata.verified = !is_confirmed && height == forks;
 }
 
@@ -193,6 +198,7 @@ void transaction_database::get_pool_metadata(const chain::transaction& tx,
 {
     static const auto unlinked = transaction::validation::unlinked;
     static const auto unconfirmed = transaction_result::unconfirmed;
+    static const auto deconfirmed = transaction_result::deconfirmed;
     const auto result = get(tx.hash());
 
     // Default values presumed correct for indication of not found.
@@ -201,12 +207,15 @@ void transaction_database::get_pool_metadata(const chain::transaction& tx,
 
     const auto height = result.height();
     const auto is_linked = result.link() != unlinked;
-    const auto is_confirmed = result.position() != unconfirmed;
+    const auto is_confirmed = result.position() != unconfirmed &&
+        result.position() != deconfirmed;
+    const auto is_cataloged =  result.position() != unconfirmed;
 
     tx.metadata.existed = is_linked;
     tx.metadata.link = result.link();
     tx.metadata.candidate = result.candidate();
     tx.metadata.confirmed = is_confirmed;
+    tx.metadata.cataloged = is_cataloged;
     tx.metadata.verified = !is_confirmed && height == forks;
 }
 
@@ -216,6 +225,7 @@ bool transaction_database::get_output(const output_point& point,
 {
     static const auto not_spent = output::validation::not_spent;
     static const auto unconfirmed = transaction_result::unconfirmed;
+    static const auto deconfirmed = transaction_result::deconfirmed;
     auto& prevout = point.metadata;
 
     // If the input is a coinbase there is no prevout to populate.
@@ -246,7 +256,8 @@ bool transaction_database::get_output(const output_point& point,
 
     const auto position = result.position();
     const auto first_position = position == 0;
-    const auto has_position = position != unconfirmed;
+    const auto has_position = position != unconfirmed &&
+        position != deconfirmed;
     const auto spender_height = prevout.cache.metadata.confirmed_spent_height;
 
     // Populate output metadata relative to the fork point.
@@ -473,12 +484,13 @@ bool transaction_database::confirm(const block& block, size_t height,
     return true;
 }
 
+// Should only be called for a confirmed block
 bool transaction_database::unconfirm(const block& block)
 {
     for (const auto& tx: block.transactions())
     {
         if (!confirm(tx.metadata.link, rule_fork::unverified, no_time,
-            transaction_result::unconfirmed))
+            transaction_result::deconfirmed))
             return false;
 
         // Uncache the unspent outputs of the unconfirmed transaction.
@@ -525,6 +537,10 @@ bool transaction_database::confirmed_spend(const output_point& point,
     // The index is not in the transaction.
     if (point.index() >= outputs)
         return false;
+
+    // Use not_spent as the spender_height for output.
+    if (spender_height == rule_fork::unverified)
+        spender_height = output::validation::not_spent;
 
     const auto writer = [&](byte_serializer& serial)
     {

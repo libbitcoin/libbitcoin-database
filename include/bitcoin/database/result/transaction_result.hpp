@@ -52,6 +52,9 @@ public:
     /// This is unconfirmed tx position sentinel.
     static const uint16_t unconfirmed;
 
+    /// This is deconfirmed tx position sentinel.
+    static const uint16_t deconfirmed;
+
     transaction_result(const const_element_type& element,
         system::shared_mutex& metadata_mutex);
 
@@ -64,10 +67,10 @@ public:
     /// The transaction hash (from cache).
     system::hash_digest hash() const;
 
-    /// The height of the block of the tx, or forks if unconfirmed.
+    /// The height of the block of the tx, or forks if unconfirmed or deconfirmed.
     size_t height() const;
 
-    /// The ordinal position of the tx in a block, or unconfirmed.
+    /// The ordinal position of the tx in a block, or unconfirmed or deconfirmed.
     size_t position() const;
 
     /// The transaction is in a candidate block.

@@ -6,7 +6,7 @@
 
 *Bitcoin High Performance Blockchain Database*
 
-Make sure you have installed [libbitcoin](https://github.com/libbitcoin/libbitcoin) beforehand according to its build instructions.
+Make sure you have installed [libbitcoin](https://github.com/libbitcoin/libbitcoin-system) beforehand according to its build instructions.
 
 ```sh
 $ ./autogen.sh
