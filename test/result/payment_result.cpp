@@ -22,9 +22,9 @@
 using namespace bc;
 using namespace bc::database;
 
-BOOST_AUTO_TEST_SUITE(address_iterator_tests)
+BOOST_AUTO_TEST_SUITE(payment_result_tests)
 
-BOOST_AUTO_TEST_CASE(address_iterator__method__vector__expectation)
+BOOST_AUTO_TEST_CASE(payment_result__method__vector__expectation)
 {
     BOOST_REQUIRE(true);
 }

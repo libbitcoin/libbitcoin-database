@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/databases/address_database.hpp>
+#include <bitcoin/database/databases/payment_database.hpp>
 
 #include <cstdint>
 #include <cstddef>
@@ -40,12 +40,12 @@ namespace database {
 using namespace bc::system;
 using namespace bc::system::chain;
 
-// Total size of address storage (using tx link vs. hash for point).
+// Total size of payment storage (using tx link vs. hash for point).
 static const auto value_size = payment_record::satoshi_fixed_size(false);
 
 // History uses a hash table index, O(1).
 // The hash table stores indexes to the first element of unkeyed linked lists.
-address_database::address_database(const path& lookup_filename,
+payment_database::payment_database(const path& lookup_filename,
     const path& rows_filename, size_t table_minimum, size_t index_minimum,
     size_t buckets, size_t expansion)
   : hash_table_file_(lookup_filename, table_minimum, expansion),
@@ -54,15 +54,15 @@ address_database::address_database(const path& lookup_filename,
     hash_table_(hash_table_file_, buckets, sizeof(link_type)),
 
     // Linked-list storage for multimap.
-    address_index_file_(rows_filename, index_minimum, expansion),
-    address_index_(address_index_file_, 0,
+    payment_index_file_(rows_filename, index_minimum, expansion),
+    payment_index_(payment_index_file_, 0,
         hash_table_multimap<key_type, index_type, link_type>::size(value_size)),
 
-    address_multimap_(hash_table_, address_index_)
+    payment_multimap_(hash_table_, payment_index_)
 {
 }
 
-address_database::~address_database()
+payment_database::~payment_database()
 {
     close();
 }
@@ -70,61 +70,61 @@ address_database::~address_database()
 // Startup and shutdown.
 // ----------------------------------------------------------------------------
 
-bool address_database::create()
+bool payment_database::create()
 {
     if (!hash_table_file_.open() ||
-        !address_index_file_.open())
+        !payment_index_file_.open())
         return false;
 
     // No need to call open after create.
     return
         hash_table_.create() &&
-        address_index_.create();
+        payment_index_.create();
 }
 
-bool address_database::open()
+bool payment_database::open()
 {
     return
         hash_table_file_.open() &&
-        address_index_file_.open() &&
+        payment_index_file_.open() &&
         hash_table_.start() &&
-        address_index_.start();
+        payment_index_.start();
 }
 
-void address_database::commit()
+void payment_database::commit()
 {
     hash_table_.commit();
-    address_index_.commit();
+    payment_index_.commit();
 }
 
-bool address_database::flush() const
+bool payment_database::flush() const
 {
     return
         hash_table_file_.flush() &&
-        address_index_file_.flush();
+        payment_index_file_.flush();
 }
 
-bool address_database::close()
+bool payment_database::close()
 {
     return
         hash_table_file_.close() &&
-        address_index_file_.close();
+        payment_index_file_.close();
 }
 
 // Queries.
 // ----------------------------------------------------------------------------
 
-address_result address_database::get(const hash_digest& hash) const
+payment_result payment_database::get(const hash_digest& hash) const
 {
     // This does not populate hash or height, caller can dereference link.
-    return { address_multimap_.find(hash), hash };
+    return { payment_multimap_.find(hash), hash };
 }
 
 // Store.
 // ----------------------------------------------------------------------------
 
 // protected
-void address_database::store(const hash_digest& key, const point& point,
+void payment_database::store(const hash_digest& key, const point& point,
     file_offset link, uint64_t value, bool output)
 {
     const payment_record record
@@ -140,13 +140,13 @@ void address_database::store(const hash_digest& key, const point& point,
         record.to_data(serial, false);
     };
 
-    auto element = address_multimap_.allocator();
+    auto element = payment_multimap_.allocator();
     element.create(write);
-    address_multimap_.link(key, element);
+    payment_multimap_.link(key, element);
 }
 
 // Confirmation of payment is dynamically derived from current tx state.
-void address_database::catalog(const transaction& tx)
+void payment_database::catalog(const transaction& tx)
 {
     BITCOIN_ASSERT(tx.metadata.link);
     BITCOIN_ASSERT(!tx.metadata.cataloged);
@@ -159,17 +159,18 @@ void address_database::catalog(const transaction& tx)
     for (uint32_t index = 0; index < inputs.size(); ++index)
     {
         const auto& input = inputs[index];
+        const auto& prevout = input.previous_output();
 
         // Skip coinbase input.
-        if (input.previous_output().is_null())
+        if (prevout.is_null())
             continue;
 
-        BITCOIN_ASSERT(input.previous_output().metadata.cache.is_valid());
+        BITCOIN_ASSERT(prevout.metadata.cache.is_valid());
 
         const input_point inpoint{ tx_hash, index };
-        const auto& script = input.previous_output().metadata.cache.script();
-        const auto key = sha256_hash(script.to_data(false));
-        store(key, inpoint, link, inpoint.checksum(), false);
+        const auto& script = prevout.metadata.cache.script();
+        const auto key = script.to_payments_key();
+        store(key, inpoint, link, prevout.checksum(), false);
     }
 
     const auto& outputs = tx.outputs();
@@ -179,8 +180,7 @@ void address_database::catalog(const transaction& tx)
     {
         const auto& output = outputs[index];
         const output_point outpoint{ tx_hash, index };
-        const auto& script = output.script();
-        const auto key = sha256_hash(script.to_data(false));
+        const auto key = output.script().to_payments_key();
         store(key, outpoint, link, output.value(), true);
     }
 }

@@ -25,7 +25,7 @@
 #include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/system.hpp>
-#include <bitcoin/database/databases/address_database.hpp>
+#include <bitcoin/database/databases/payment_database.hpp>
 #include <bitcoin/database/databases/block_database.hpp>
 #include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/define.hpp>
@@ -71,7 +71,7 @@ public:
     const transaction_database& transactions() const;
 
     /// Invalid if indexes not initialized.
-    const address_database& addresses() const;
+    const payment_database& payments() const;
 
     // Node writers.
     // ------------------------------------------------------------------------
@@ -101,7 +101,7 @@ public:
     system::code candidate(const system::chain::block& block);
 
     // BLOCK ORGANIZER (candidate)
-    /// Add payments of transactions of the block to the payment index.
+    /// Add transaction payments of the block to the payment index.
     system::code catalog(const system::chain::block& block);
 
     // BLOCK ORGANIZER (reorganize)
@@ -116,11 +116,11 @@ public:
         size_t height);
     
     // TRANSACTION ORGANIZER (store)
-    /// Store unconfirmed tx/payments that was verified with the given forks.
+    /// Store unconfirmed tx/payments that were verified with the given forks.
     system::code store(const system::chain::transaction& tx, uint32_t forks);
 
     // TRANSACTION ORGANIZER (store)
-    /// Add payments of the transaction to the payment index.
+    /// Add transaction payment to the payment index.
     system::code catalog(const system::chain::transaction& tx);
 
 protected:
@@ -155,7 +155,7 @@ protected:
 
     std::shared_ptr<block_database> blocks_;
     std::shared_ptr<transaction_database> transactions_;
-    std::shared_ptr<address_database> addresses_;
+    std::shared_ptr<payment_database> payments_;
 
 private:
     system::chain::transaction::list to_transactions(

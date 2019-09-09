@@ -39,8 +39,8 @@ const std::string store::CANDIDATE_INDEX = "candidate_index";
 const std::string store::CONFIRMED_INDEX = "confirmed_index";
 const std::string store::TRANSACTION_INDEX = "transaction_index";
 const std::string store::TRANSACTION_TABLE = "transaction_table";
-const std::string store::ADDRESS_TABLE = "address_table";
-const std::string store::ADDRESS_ROWS = "address_rows";
+const std::string store::PAYMENT_TABLE = "payment_table";
+const std::string store::PAYMENT_ROWS = "payment_rows";
 
 // Create a single file with one byte of arbitrary data.
 static bool create_file(const path& file_path)
@@ -77,8 +77,8 @@ store::store(const path& prefix, bool with_indexes, bool flush_each_write)
     transaction_table(prefix / TRANSACTION_TABLE),
 
     // Optional indexes.
-    address_table(prefix / ADDRESS_TABLE),
-    address_rows(prefix / ADDRESS_ROWS)
+    payment_table(prefix / PAYMENT_TABLE),
+    payment_rows(prefix / PAYMENT_ROWS)
 {
 }
 
@@ -103,8 +103,8 @@ bool store::create()
 
     return
         created &&
-        create_file(address_table) &&
-        create_file(address_rows);
+        create_file(payment_table) &&
+        create_file(payment_rows);
 }
 
 bool store::open()

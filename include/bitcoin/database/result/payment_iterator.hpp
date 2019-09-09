@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_ADDRESS_ITERATOR_HPP
-#define LIBBITCOIN_DATABASE_ADDRESS_ITERATOR_HPP
+#ifndef LIBBITCOIN_DATABASE_PAYMENT_ITERATOR_HPP
+#define LIBBITCOIN_DATABASE_PAYMENT_ITERATOR_HPP
 
 #include <cstddef>
 #include <bitcoin/system.hpp>
@@ -28,7 +28,7 @@
 namespace libbitcoin {
 namespace database {
 
-class BCD_API address_iterator
+class BCD_API payment_iterator
 {
 public:
     // Definition for underlying type (avoids circular reference).
@@ -44,23 +44,23 @@ public:
     typedef system::chain::payment_record value_type;
     typedef ptrdiff_t difference_type;
     typedef std::output_iterator_tag iterator_category;
-    typedef address_iterator iterator;
-    typedef address_iterator const_iterator;
+    typedef payment_iterator iterator;
+    typedef payment_iterator const_iterator;
 
     // Constructors.
     //-------------------------------------------------------------------------
 
-    address_iterator(const const_element& element);
+    payment_iterator(const const_element& element);
 
     // Operators.
     //-------------------------------------------------------------------------
 
     pointer operator->() const;
     reference operator*() const;
-    address_iterator& operator++();
-    address_iterator operator++(int);
-    bool operator==(const address_iterator& other) const;
-    bool operator!=(const address_iterator& other) const;
+    payment_iterator& operator++();
+    payment_iterator operator++(int);
+    bool operator==(const payment_iterator& other) const;
+    bool operator!=(const payment_iterator& other) const;
 
 private:
     void populate();

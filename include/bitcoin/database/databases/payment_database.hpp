@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_ADDRESS_DATABASE_HPP
-#define LIBBITCOIN_DATABASE_ADDRESS_DATABASE_HPP
+#ifndef LIBBITCOIN_DATABASE_PAYMENT_DATABASE_HPP
+#define LIBBITCOIN_DATABASE_PAYMENT_DATABASE_HPP
 
 #include <boost/filesystem.hpp>
 #include <bitcoin/system.hpp>
@@ -26,30 +26,30 @@
 #include <bitcoin/database/primitives/hash_table.hpp>
 #include <bitcoin/database/primitives/hash_table_multimap.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
-#include <bitcoin/database/result/address_result.hpp>
+#include <bitcoin/database/result/payment_result.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/// This is a record multimap where the key is the Bitcoin address hash,
-/// which returns several rows giving the history for that address.
-class BCD_API address_database
+/// This is a record multimap where the key is the Bitcoin payment hash,
+/// which returns several rows giving the history for that payment.
+class BCD_API payment_database
 {
 public:
     typedef boost::filesystem::path path;
 
     /// Construct the database.
-    address_database(const path& lookup_filename, const path& rows_filename,
+    payment_database(const path& lookup_filename, const path& rows_filename,
         size_t table_minimum, size_t index_minimum, size_t buckets,
         size_t expansion);
 
     /// Close the database (all threads must first be stopped).
-    ~address_database();
+    ~payment_database();
 
     // Startup and shutdown.
     // ----------------------------------------------------------------------------
 
-    /// Initialize a new address database.
+    /// Initialize a new payment database.
     bool create();
 
     /// Call before using the database.
@@ -67,8 +67,8 @@ public:
     // Queries.
     //-------------------------------------------------------------------------
 
-    /// Get the output and input points associated with the address hash.
-    address_result get(const system::hash_digest& hash) const;
+    /// Get the output and input points associated with the payment hash.
+    payment_result get(const system::hash_digest& hash) const;
 
     // Store.
     //-------------------------------------------------------------------------
@@ -103,9 +103,9 @@ private:
     record_map hash_table_;
 
     /// History rows.
-    file_storage address_index_file_;
-    manager_type address_index_;
-    record_multimap address_multimap_;
+    file_storage payment_index_file_;
+    manager_type payment_index_;
+    record_multimap payment_multimap_;
 };
 
 } // namespace database
