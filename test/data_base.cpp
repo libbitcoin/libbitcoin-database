@@ -40,15 +40,15 @@ static void test_outputs_cataloged(const payment_database& payments_store,
     for (const auto& output: tx.outputs())
     {
         output_point outpoint{ tx.hash(), output_index };
-        const auto script_hash = sha256_hash(output.script().to_data(false));
+        const auto key = output.script().to_payments_key();
 
-        for (const auto& row: payments_store.get(script_hash))
+        for (const auto& row: payments_store.get(key))
         {
             BOOST_REQUIRE(row.is_valid());
 
             if (row.link() == tx.metadata.link && row.index() == output_index)
             {
-                BOOST_REQUIRE_EQUAL(row.data(), outpoint.checksum());
+                BOOST_REQUIRE_EQUAL(row.data(), output.value());
                 BOOST_REQUIRE(expect_found);
                 return;
             }
