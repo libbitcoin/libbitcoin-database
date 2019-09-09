@@ -80,7 +80,8 @@ protected:
     /// Store the input|output point as a value for the hash of output
     /// script as the key
     void store(const system::hash_digest& hash,
-        const system::chain::point& point, file_offset link, bool output);
+        const system::chain::point& point, file_offset link, uint64_t value,
+        bool output);
 
 private:
     typedef system::hash_digest key_type;

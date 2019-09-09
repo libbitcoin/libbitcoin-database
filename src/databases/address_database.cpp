@@ -125,13 +125,13 @@ address_result address_database::get(const hash_digest& hash) const
 
 // protected
 void address_database::store(const hash_digest& key, const point& point,
-    file_offset link, bool output)
+    file_offset link, uint64_t value, bool output)
 {
     const payment_record record
     {
         link,
         point.index(),
-        point.checksum(),
+        value, // value or checksum
         output
     };
 
@@ -169,7 +169,7 @@ void address_database::catalog(const transaction& tx)
         const input_point inpoint{ tx_hash, index };
         const auto& script = input.previous_output().metadata.cache.script();
         const auto key = sha256_hash(script.to_data(false));
-        store(key, inpoint, link, false);
+        store(key, inpoint, link, inpoint.checksum(), false);
     }
 
     const auto& outputs = tx.outputs();
@@ -181,7 +181,7 @@ void address_database::catalog(const transaction& tx)
         const output_point outpoint{ tx_hash, index };
         const auto& script = output.script();
         const auto key = sha256_hash(script.to_data(false));
-        store(key, outpoint, link, true);
+        store(key, outpoint, link, output.value(), true);
     }
 }
 
