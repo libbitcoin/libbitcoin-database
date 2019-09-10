@@ -32,7 +32,7 @@ using namespace bc::database;
 using namespace boost::system;
 using namespace boost::filesystem;
 
-static void test_outputs_cataloged(const address_database& payments_store,
+static void test_outputs_cataloged(const payment_database& payments_store,
     const transaction& tx, bool expect_found)
 {
     uint32_t output_index = 0;
@@ -40,15 +40,15 @@ static void test_outputs_cataloged(const address_database& payments_store,
     for (const auto& output: tx.outputs())
     {
         output_point outpoint{ tx.hash(), output_index };
-        const auto script_hash = sha256_hash(output.script().to_data(false));
+        const auto key = output.script().to_payments_key();
 
-        for (const auto& row: payments_store.get(script_hash))
+        for (const auto& row: payments_store.get(key))
         {
             BOOST_REQUIRE(row.is_valid());
 
             if (row.link() == tx.metadata.link && row.index() == output_index)
             {
-                BOOST_REQUIRE_EQUAL(row.data(), outpoint.checksum());
+                BOOST_REQUIRE_EQUAL(row.data(), output.value());
                 BOOST_REQUIRE(expect_found);
                 return;
             }
@@ -56,11 +56,11 @@ static void test_outputs_cataloged(const address_database& payments_store,
         ++output_index;
     }
 
-    // Reached only if expected to not found output in address database.
+    // Reached only if expected to not found output in payment database.
     BOOST_REQUIRE(!expect_found);    
 }
 
-static void test_inputs_cataloged(const address_database& payments_store,
+static void test_inputs_cataloged(const payment_database& payments_store,
     const transaction& tx, bool expect_found)
 {
     uint32_t input_index = 0;
@@ -84,14 +84,14 @@ static void test_inputs_cataloged(const address_database& payments_store,
         ++input_index;
     }
 
-    // Reached only if expected to not found output in address database.
+    // Reached only if expected to not found output in payment database.
     BOOST_REQUIRE(!expect_found);    
 }
 
 static void test_block_exists(const data_base& interface, size_t height,
     const block& block, bool catalog, bool candidate)
 {
-    const auto& payments_store = interface.addresses();
+    const auto& payments_store = interface.payments();
     const auto block_hash = block.hash();
     const auto result = interface.blocks().get(height, candidate);
     const auto result_by_hash = interface.blocks().get(block_hash);
@@ -138,7 +138,7 @@ static void test_block_exists(const data_base& interface, size_t height,
 static void test_block_not_exists(const data_base& interface,
     const block& block, bool catalog)
 {
-    const auto& payments_store = interface.addresses();
+    const auto& payments_store = interface.payments();
 
     // Popped blocks still exist in the block hash table, but not confirmed.
     const auto block_hash = block.hash();
@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE(data_base__create__block_transactions_index_interaction__su
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
   
     data_base instance(settings, false); 
    
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE(data_base__create__genesis_block_available__success)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base instance(settings, true);
    
@@ -383,7 +383,7 @@ BOOST_AUTO_TEST_CASE(data_base__push__adds_to_blocks_and_transactions_validates_
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
   
     data_base instance(settings, true);
    
@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(data_base__push_block__not_existing___failure)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
     
     data_base_accessor instance(settings); 
     
@@ -442,7 +442,7 @@ BOOST_AUTO_TEST_CASE(data_base__push_block__incorrect_height___failure)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings);
 
@@ -474,7 +474,7 @@ BOOST_AUTO_TEST_CASE(data_base__push_header__missing_parent___failure)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings);
 
@@ -503,7 +503,7 @@ BOOST_AUTO_TEST_CASE(data_base__push_block_and_update__already_candidated___succ
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
   
     data_base_accessor instance(settings); 
    
@@ -537,7 +537,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_header_not_top___failure)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
   
     data_base_accessor instance(settings); 
    
@@ -561,7 +561,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_header__candidate___success)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
   
     data_base_accessor instance(settings); 
    
@@ -594,7 +594,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_block_not_top___failure)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings);
 
@@ -618,7 +618,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_block__confirmed___success)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings);
 
@@ -653,7 +653,7 @@ BOOST_AUTO_TEST_CASE(data_base__push_all_and_update__already_candidated___succes
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
     
     data_base_accessor instance(settings); 
     
@@ -710,7 +710,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above_missing_forkpoint_hash___failure)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
   
     data_base_accessor instance(settings); 
    
@@ -740,7 +740,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__wrong_forkpoint_height___failure)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
   
     data_base_accessor instance(settings); 
    
@@ -766,7 +766,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__pop_zero___success)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
   
     data_base_accessor instance(settings); 
    
@@ -795,7 +795,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__candidated_not_confirmed___success)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
   
     data_base_accessor instance(settings); 
    
@@ -850,7 +850,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__wrong_forkpoint_height___failure)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings);
 
@@ -876,7 +876,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__pop_zero___success)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings);
 
@@ -905,7 +905,7 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__confirmed___success)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings);
 
@@ -968,7 +968,7 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__not_existing___failure)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings);
 
@@ -996,7 +996,7 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__incorrect_height___failure)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings);
 
@@ -1024,7 +1024,7 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__missing_parent___failure)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings);
 
@@ -1049,7 +1049,7 @@ BOOST_AUTO_TEST_CASE(data_base__confirm__already_candidated___success)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings);
 
@@ -1094,7 +1094,7 @@ BOOST_AUTO_TEST_CASE(data_base__update__incorrect_height__failure)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings);
 
@@ -1122,7 +1122,7 @@ BOOST_AUTO_TEST_CASE(data_base__update__new_transactions__success)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings);
 
@@ -1169,7 +1169,7 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__missing_header__failure)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings);
 
@@ -1192,7 +1192,7 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__validate__success)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings);
 
@@ -1224,7 +1224,7 @@ BOOST_AUTO_TEST_CASE(data_base__invalidate__invalidate__success)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings);
 
@@ -1258,7 +1258,7 @@ BOOST_AUTO_TEST_CASE(data_base__catalog__enabled__success)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings, true);
 
@@ -1276,8 +1276,8 @@ BOOST_AUTO_TEST_CASE(data_base__catalog__enabled__success)
 
     // Coinbase transaction inputs are not cataloged
     BOOST_REQUIRE(block1.transactions().front().is_coinbase());
-    test_inputs_cataloged(instance.addresses(), block1.transactions().front(), false);
-    test_outputs_cataloged(instance.addresses(), block1.transactions().front(), true);
+    test_inputs_cataloged(instance.payments(), block1.transactions().front(), false);
+    test_outputs_cataloged(instance.payments(), block1.transactions().front(), true);
 
     // Second catalog attempt should fail.
     BOOST_REQUIRE(!instance.catalog(block1));
@@ -1294,7 +1294,7 @@ BOOST_AUTO_TEST_CASE(data_base__catalog2__enabled__success)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings, true);
 
@@ -1310,10 +1310,10 @@ BOOST_AUTO_TEST_CASE(data_base__catalog2__enabled__success)
 
     // Coinbase transaction inputs are not cataloged.
     BOOST_REQUIRE(block1.transactions().front().is_coinbase());
-    test_inputs_cataloged(instance.addresses(), block1.transactions().front(), false);
+    test_inputs_cataloged(instance.payments(), block1.transactions().front(), false);
 
     // Outputs are cataloged.
-    test_outputs_cataloged(instance.addresses(), block1.transactions().front(), true);
+    test_outputs_cataloged(instance.payments(), block1.transactions().front(), true);
 }
 
 BOOST_AUTO_TEST_CASE(data_base__catalog2__catalog_after_read__success)
@@ -1325,7 +1325,7 @@ BOOST_AUTO_TEST_CASE(data_base__catalog2__catalog_after_read__success)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings, true);
 
@@ -1344,10 +1344,10 @@ BOOST_AUTO_TEST_CASE(data_base__catalog2__catalog_after_read__success)
     
     // Coinbase transaction inputs are not cataloged.
     BOOST_REQUIRE(block1.transactions().front().is_coinbase());
-    test_inputs_cataloged(instance.addresses(), block1.transactions().front(), false);
+    test_inputs_cataloged(instance.payments(), block1.transactions().front(), false);
 
     // Outputs are cataloged.
-    test_outputs_cataloged(instance.addresses(), block1.transactions().front(), true);
+    test_outputs_cataloged(instance.payments(), block1.transactions().front(), true);
 
     // Second catalog attempt should fail.
     BOOST_REQUIRE(!instance.catalog(reloaded));
@@ -1362,7 +1362,7 @@ BOOST_AUTO_TEST_CASE(data_base__catalog2__catalog_inputs_and_ouputs__success)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings, true);
 
@@ -1417,11 +1417,11 @@ BOOST_AUTO_TEST_CASE(data_base__catalog2__catalog_inputs_and_ouputs__success)
     instance.store(tx2, 1);
     BOOST_REQUIRE(tx2.inputs().front().previous_output().metadata.cache.is_valid());
 
-    test_inputs_cataloged(instance.addresses(), tx1, false);
-    test_outputs_cataloged(instance.addresses(), tx1, false);
+    test_inputs_cataloged(instance.payments(), tx1, false);
+    test_outputs_cataloged(instance.payments(), tx1, false);
 
-    test_inputs_cataloged(instance.addresses(), tx2, false);
-    test_outputs_cataloged(instance.addresses(), tx2, false);
+    test_inputs_cataloged(instance.payments(), tx2, false);
+    test_outputs_cataloged(instance.payments(), tx2, false);
 
     // Setup ends.
     
@@ -1429,19 +1429,19 @@ BOOST_AUTO_TEST_CASE(data_base__catalog2__catalog_inputs_and_ouputs__success)
 
     BOOST_REQUIRE(!tx1.metadata.cataloged);
     BOOST_REQUIRE(tx1.is_coinbase());
-    test_inputs_cataloged(instance.addresses(), tx1, false);
-    test_outputs_cataloged(instance.addresses(), tx1, true);
+    test_inputs_cataloged(instance.payments(), tx1, false);
+    test_outputs_cataloged(instance.payments(), tx1, true);
 
-    test_inputs_cataloged(instance.addresses(), tx2, false);
-    test_outputs_cataloged(instance.addresses(), tx2, false);
+    test_inputs_cataloged(instance.payments(), tx2, false);
+    test_outputs_cataloged(instance.payments(), tx2, false);
 
     BOOST_REQUIRE_EQUAL(instance.catalog(tx2), error::success);
 
-    test_inputs_cataloged(instance.addresses(), tx1, false);
-    test_outputs_cataloged(instance.addresses(), tx1, true);
+    test_inputs_cataloged(instance.payments(), tx1, false);
+    test_outputs_cataloged(instance.payments(), tx1, true);
     BOOST_REQUIRE(!tx2.is_coinbase());
-    test_inputs_cataloged(instance.addresses(), tx2, true);
-    test_outputs_cataloged(instance.addresses(), tx2, true);
+    test_inputs_cataloged(instance.payments(), tx2, true);
+    test_outputs_cataloged(instance.payments(), tx2, true);
 }
 
 /// reorganize headers
@@ -1455,7 +1455,7 @@ BOOST_AUTO_TEST_CASE(data_base__reorganize__pop_and_push__success)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings);
 
@@ -1520,7 +1520,7 @@ BOOST_AUTO_TEST_CASE(data_base__reorganize2__pop_and_push__success)
     settings.file_growth_rate = 42;
     settings.block_table_buckets = 42;
     settings.transaction_table_buckets = 42;
-    settings.address_table_buckets = 42;
+    settings.payment_table_buckets = 42;
 
     data_base_accessor instance(settings);
 

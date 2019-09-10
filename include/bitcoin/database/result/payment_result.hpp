@@ -16,21 +16,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_ADDRESS_RESULT_HPP
-#define LIBBITCOIN_DATABASE_ADDRESS_RESULT_HPP
+#ifndef LIBBITCOIN_DATABASE_PAYMENT_RESULT_HPP
+#define LIBBITCOIN_DATABASE_PAYMENT_RESULT_HPP
 
 #include <cstddef>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/list_element.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
-#include <bitcoin/database/result/address_iterator.hpp>
+#include <bitcoin/database/result/payment_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/// Partially-deferred address result.
-class BCD_API address_result
+/// Partially-deferred payment result.
+class BCD_API payment_result
 {
 public:
     typedef empty_key key_type;
@@ -38,7 +38,7 @@ public:
     typedef record_manager<link_type> manager;
     typedef list_element<const manager, link_type, key_type> const_value_type;
 
-    address_result(const const_value_type& element,
+    payment_result(const const_value_type& element,
         const system::hash_digest& hash);
 
     /// True if the requested block exists.
@@ -47,9 +47,9 @@ public:
     /// The key of the query mapping to sha256 hash of output script.
     const system::hash_digest& hash() const;
 
-    /// Iterate over the address metadata set.
-    address_iterator begin() const;
-    address_iterator end() const;
+    /// Iterate over the payment metadata set.
+    payment_iterator begin() const;
+    payment_iterator end() const;
 
 private:
     system::hash_digest hash_;

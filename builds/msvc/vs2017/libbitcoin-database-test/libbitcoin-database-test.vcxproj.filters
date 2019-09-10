@@ -33,10 +33,10 @@
     <ClCompile Include="..\..\..\..\test\data_base.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\databases\address_database.cpp">
+    <ClCompile Include="..\..\..\..\test\databases\block_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\databases\block_database.cpp">
+    <ClCompile Include="..\..\..\..\test\databases\payment_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\databases\transaction_database.cpp">
@@ -75,13 +75,13 @@
     <ClCompile Include="..\..\..\..\test\primitives\slab_manager.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\result\address_iterator.cpp">
-      <Filter>src\result</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\result\address_result.cpp">
-      <Filter>src\result</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\result\block_result.cpp">
+      <Filter>src\result</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\result\payment_iterator.cpp">
+      <Filter>src\result</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\result\payment_result.cpp">
       <Filter>src\result</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\result\transaction_iterator.cpp">

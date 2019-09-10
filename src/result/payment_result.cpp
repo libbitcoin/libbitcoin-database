@@ -16,41 +16,41 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/result/address_result.hpp>
+#include <bitcoin/database/result/payment_result.hpp>
 
 #include <cstdint>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/result/address_iterator.hpp>
+#include <bitcoin/database/result/payment_iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 using namespace bc::system;
 
-address_result::address_result(const const_value_type& element,
+payment_result::payment_result(const const_value_type& element,
     const hash_digest& hash)
   : hash_(hash), element_(element)
 {
 }
 
-address_result::operator bool() const
+payment_result::operator bool() const
 {
     return element_;
 }
 
-const hash_digest& address_result::hash() const
+const hash_digest& payment_result::hash() const
 {
     return hash_;
 }
 
-address_iterator address_result::begin() const
+payment_iterator payment_result::begin() const
 {
     return { element_ };
 }
 
-address_iterator address_result::end() const
+payment_iterator payment_result::end() const
 {
     return { element_.terminator() };
 }

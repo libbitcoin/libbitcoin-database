@@ -41,17 +41,17 @@ src_libbitcoin_database_la_SOURCES = \
     src/unspent_outputs.cpp \
     src/unspent_transaction.cpp \
     src/verify.cpp \
-    src/databases/address_database.cpp \
     src/databases/block_database.cpp \
+    src/databases/payment_database.cpp \
     src/databases/transaction_database.cpp \
     src/memory/accessor.cpp \
     src/memory/file_storage.cpp \
     src/mman-win32/mman.c \
     src/mman-win32/mman.h \
-    src/result/address_iterator.cpp \
-    src/result/address_result.cpp \
     src/result/block_result.cpp \
     src/result/inpoint_iterator.cpp \
+    src/result/payment_iterator.cpp \
+    src/result/payment_result.cpp \
     src/result/transaction_iterator.cpp \
     src/result/transaction_result.cpp
 
@@ -72,8 +72,8 @@ test_libbitcoin_database_test_SOURCES = \
     test/store.cpp \
     test/unspent_outputs.cpp \
     test/unspent_transaction.cpp \
-    test/databases/address_database.cpp \
     test/databases/block_database.cpp \
+    test/databases/payment_database.cpp \
     test/databases/transaction_database.cpp \
     test/memory/accessor.cpp \
     test/memory/file_storage.cpp \
@@ -85,9 +85,9 @@ test_libbitcoin_database_test_SOURCES = \
     test/primitives/list_iterator.cpp \
     test/primitives/record_manager.cpp \
     test/primitives/slab_manager.cpp \
-    test/result/address_iterator.cpp \
-    test/result/address_result.cpp \
     test/result/block_result.cpp \
+    test/result/payment_iterator.cpp \
+    test/result/payment_result.cpp \
     test/result/transaction_iterator.cpp \
     test/result/transaction_result.cpp \
     test/utility/storage.cpp \
@@ -129,8 +129,8 @@ include_bitcoin_database_HEADERS = \
 
 include_bitcoin_database_databasesdir = ${includedir}/bitcoin/database/databases
 include_bitcoin_database_databases_HEADERS = \
-    include/bitcoin/database/databases/address_database.hpp \
     include/bitcoin/database/databases/block_database.hpp \
+    include/bitcoin/database/databases/payment_database.hpp \
     include/bitcoin/database/databases/transaction_database.hpp
 
 include_bitcoin_database_impldir = ${includedir}/bitcoin/database/impl
@@ -164,10 +164,10 @@ include_bitcoin_database_primitives_HEADERS = \
 
 include_bitcoin_database_resultdir = ${includedir}/bitcoin/database/result
 include_bitcoin_database_result_HEADERS = \
-    include/bitcoin/database/result/address_iterator.hpp \
-    include/bitcoin/database/result/address_result.hpp \
     include/bitcoin/database/result/block_result.hpp \
     include/bitcoin/database/result/inpoint_iterator.hpp \
+    include/bitcoin/database/result/payment_iterator.hpp \
+    include/bitcoin/database/result/payment_result.hpp \
     include/bitcoin/database/result/transaction_iterator.hpp \
     include/bitcoin/database/result/transaction_result.hpp
 

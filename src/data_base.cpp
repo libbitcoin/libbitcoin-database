@@ -49,7 +49,7 @@ using namespace bc::system::wallet;
 // (2) blocks_.get(spender_height)->transactions().
 // (3) (transactions()->inputs()->previous_output() == outpoint)->inpoint.
 // This has the same average cost as 1 output-query + 1/2 block-query.
-// This will reduce server indexing by 30% (address indexing only).
+// This will reduce server indexing by 30% (payment indexing only).
 // Could make index optional, redirecting queries if not present.
 
 // A failure after begin_write is returned without calling end_write.
@@ -68,7 +68,7 @@ data_base::data_base(const settings& settings, bool catalog)
         << "Buckets: "
         << "block [" << settings.block_table_buckets << "], "
         << "transaction [" << settings.transaction_table_buckets << "], "
-        << "address [" << settings.address_table_buckets << "]";
+        << "payment [" << settings.payment_table_buckets << "]";
 }
 
 data_base::~data_base()
@@ -97,7 +97,7 @@ bool data_base::create(const block& genesis)
     auto created = blocks_->create() && transactions_->create();
 
     if (catalog_)
-        created &= addresses_->create();
+        created &= payments_->create();
 
     created &= push(genesis) == error::success;
 
@@ -122,7 +122,7 @@ bool data_base::open()
     auto opened = blocks_->open() && transactions_->open();
 
     if (catalog_)
-        opened &= addresses_->open();
+        opened &= payments_->open();
 
     if (!opened)
         return false;
@@ -157,12 +157,12 @@ void data_base::start()
 
     if (catalog_)
     {
-        addresses_ = std::make_shared<address_database>(
-            address_table,
-            address_rows,
-            settings_.address_table_size,
-            settings_.address_index_size,
-            settings_.address_table_buckets,
+        payments_ = std::make_shared<payment_database>(
+            payment_table,
+            payment_rows,
+            settings_.payment_table_size,
+            settings_.payment_index_size,
+            settings_.payment_table_buckets,
             settings_.file_growth_rate);
     }
 }
@@ -171,7 +171,7 @@ void data_base::start()
 void data_base::commit()
 {
     if (catalog_)
-        addresses_->commit();
+        payments_->commit();
 
     transactions_->commit();
     blocks_->commit();
@@ -190,7 +190,7 @@ bool data_base::flush() const
     auto flushed = blocks_->flush() && transactions_->flush();
 
     if (catalog_)
-        flushed &= addresses_->flush();
+        flushed &= payments_->flush();
 
     LOG_DEBUG(LOG_DATABASE)
         << "Write flushed to disk: "
@@ -211,7 +211,7 @@ bool data_base::close()
     auto closed = blocks_->close() && transactions_->close();
 
     if (catalog_)
-        closed &= addresses_->close();
+        closed &= payments_->close();
 
     return closed && store::close();
     // Unlock exclusive file access and conditionally the global flush lock.
@@ -232,11 +232,10 @@ const transaction_database& data_base::transactions() const
     return *transactions_;
 }
 
-// TODO: rename addresses to payments generally.
 // Invalid if indexes not initialized.
-const address_database& data_base::addresses() const
+const payment_database& data_base::payments() const
 {
-    return *addresses_;
+    return *payments_;
 }
 
 // Public writers.
@@ -261,8 +260,8 @@ code data_base::catalog(const transaction& tx)
     if (!begin_write())
         return error::store_lock_failure;
 
-    addresses_->catalog(tx);
-    addresses_->commit();
+    payments_->catalog(tx);
+    payments_->commit();
 
     return end_write() ? error::success : error::store_lock_failure;
     //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -290,9 +289,9 @@ code data_base::catalog(const block& block)
     // Existence check prevents duplicated indexing.
     for (const auto& tx: block.transactions())
         if (!tx.metadata.cataloged)
-            addresses_->catalog(tx);
+            payments_->catalog(tx);
 
-    addresses_->commit();
+    payments_->commit();
 
     block.metadata.catalog = asio::steady_clock::now() - start;
     return end_write() ? error::success : error::store_lock_failure;
@@ -728,7 +727,7 @@ code data_base::push_block(const block& block, size_t height)
     if (!begin_write())
         return error::store_lock_failure;
 
-    // Confirm txs (and thereby also address indexes), spend prevouts.
+    // Confirm txs (and thereby also payment indexes), spend prevouts.
     if (!transactions_->confirm(block, height, median_time_past))
         return error::operation_failed;
 
@@ -769,7 +768,7 @@ code data_base::pop_block(chain::block& out_block, size_t height)
     if (!begin_write())
         return error::store_lock_failure;
 
-    // Deconfirm txs (and thereby also address indexes), unspend prevouts.
+    // Deconfirm txs (and thereby also payment indexes), unspend prevouts.
     if (!transactions_->unconfirm(out_block))
         return error::operation_failed;
 
@@ -789,57 +788,6 @@ code data_base::pop_block(chain::block& out_block, size_t height)
 // Utilities.
 // ----------------------------------------------------------------------------
 // protected
-
-////// TODO: add segwit address indexing.
-////void data_base::push_inputs(const transaction& tx)
-////{
-////    if (tx.is_coinbase())
-////        return;
-////
-////    uint32_t index = 0;
-////    const auto& inputs = tx.inputs();
-////    const auto link = tx.metadata.link;
-////
-////    for (const auto& input: inputs)
-////    {
-////        const auto& prevout = input.previous_output();
-////        const payment_record in{ link, index++, prevout.checksum(), false };
-////
-////        if (prevout.metadata.cache.is_valid())
-////        {
-////            // This results in a complete and unambiguous history for the
-////            // address since standard outputs contain unambiguous address data.
-////            for (const auto& address: prevout.metadata.cache.addresses())
-////                addresses_->store(address.hash(), in);
-////        }
-////        else
-////        {
-////            // For any p2pk spend this creates no record (insufficient data).
-////            // For any p2kh spend this creates the ambiguous p2sh address,
-////            // which significantly expands the size of the history store.
-////            // These are tradeoffs when no prevout is cached (checkpoint sync).
-////            for (const auto& address: input.addresses())
-////                addresses_->store(address.hash(), in);
-////        }
-////    }
-////}
-
-////// TODO: add segwit address indexing.
-////void data_base::push_outputs(const transaction& tx)
-////{
-////    uint32_t index = 0;
-////    const auto& outputs = tx.outputs();
-////    const auto link = tx.metadata.link;
-////
-////    for (const auto& output: outputs)
-////    {
-////        const payment_record out{ link, index++, output.value(), true };
-////
-////        // Standard outputs contain unambiguous address data.
-////        for (const auto& address: output.addresses())
-////            addresses_->store(address.hash(), out);
-////    }
-////}
 
 // Private (assumes valid result links).
 transaction::list data_base::to_transactions(const block_result& result) const

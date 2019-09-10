@@ -76,16 +76,16 @@ BOOST_AUTO_TEST_CASE(store__construct__no_indexes__expected_files)
     static const std::string confirmed_index = directory + "/" + store::CONFIRMED_INDEX;
     static const std::string tx_index = directory + "/" + store::TRANSACTION_INDEX;
     static const std::string tx_table = directory + "/" + store::TRANSACTION_TABLE;
-    static const std::string address_table = directory + "/" + store::ADDRESS_TABLE;
-    static const std::string address_rows = directory + "/" + store::ADDRESS_ROWS;
+    static const std::string payment_table = directory + "/" + store::PAYMENT_TABLE;
+    static const std::string payment_rows = directory + "/" + store::PAYMENT_ROWS;
 
     BOOST_REQUIRE(!test::exists(block_table));
     BOOST_REQUIRE(!test::exists(candidate_index));
     BOOST_REQUIRE(!test::exists(confirmed_index));
     BOOST_REQUIRE(!test::exists(tx_index));
     BOOST_REQUIRE(!test::exists(tx_table));
-    BOOST_REQUIRE(!test::exists(address_table));
-    BOOST_REQUIRE(!test::exists(address_rows));
+    BOOST_REQUIRE(!test::exists(payment_table));
+    BOOST_REQUIRE(!test::exists(payment_rows));
 
     BOOST_REQUIRE(store.create());
 
@@ -94,8 +94,8 @@ BOOST_AUTO_TEST_CASE(store__construct__no_indexes__expected_files)
     BOOST_REQUIRE(test::exists(confirmed_index));
     BOOST_REQUIRE(test::exists(tx_index));
     BOOST_REQUIRE(test::exists(tx_table));
-    BOOST_REQUIRE(!test::exists(address_table));
-    BOOST_REQUIRE(!test::exists(address_rows));
+    BOOST_REQUIRE(!test::exists(payment_table));
+    BOOST_REQUIRE(!test::exists(payment_rows));
 
     BOOST_REQUIRE(store.close());
 }
@@ -110,16 +110,16 @@ BOOST_AUTO_TEST_CASE(store__construct__indexes__expected_files)
     static const std::string confirmed_index = directory + "/" + store::CONFIRMED_INDEX;
     static const std::string tx_index = directory + "/" + store::TRANSACTION_INDEX;
     static const std::string tx_table = directory + "/" + store::TRANSACTION_TABLE;
-    static const std::string address_table = directory + "/" + store::ADDRESS_TABLE;
-    static const std::string address_rows = directory + "/" + store::ADDRESS_ROWS;
+    static const std::string payment_table = directory + "/" + store::PAYMENT_TABLE;
+    static const std::string payment_rows = directory + "/" + store::PAYMENT_ROWS;
 
     BOOST_REQUIRE(!test::exists(block_table));
     BOOST_REQUIRE(!test::exists(candidate_index));
     BOOST_REQUIRE(!test::exists(confirmed_index));
     BOOST_REQUIRE(!test::exists(tx_index));
     BOOST_REQUIRE(!test::exists(tx_table));
-    BOOST_REQUIRE(!test::exists(address_table));
-    BOOST_REQUIRE(!test::exists(address_rows));
+    BOOST_REQUIRE(!test::exists(payment_table));
+    BOOST_REQUIRE(!test::exists(payment_rows));
 
     BOOST_REQUIRE(store.create());
 
@@ -128,8 +128,8 @@ BOOST_AUTO_TEST_CASE(store__construct__indexes__expected_files)
     BOOST_REQUIRE(test::exists(confirmed_index));
     BOOST_REQUIRE(test::exists(tx_index));
     BOOST_REQUIRE(test::exists(tx_table));
-    BOOST_REQUIRE(test::exists(address_table));
-    BOOST_REQUIRE(test::exists(address_rows));
+    BOOST_REQUIRE(test::exists(payment_table));
+    BOOST_REQUIRE(test::exists(payment_rows));
 
     BOOST_REQUIRE(store.close());
 }

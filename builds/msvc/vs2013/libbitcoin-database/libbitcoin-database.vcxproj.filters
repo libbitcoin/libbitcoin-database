@@ -54,10 +54,10 @@
     <ClCompile Include="..\..\..\..\src\data_base.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\databases\address_database.cpp">
+    <ClCompile Include="..\..\..\..\src\databases\block_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\databases\block_database.cpp">
+    <ClCompile Include="..\..\..\..\src\databases\payment_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\databases\transaction_database.cpp">
@@ -72,16 +72,16 @@
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c">
       <Filter>src\mman-win32</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\result\address_iterator.cpp">
-      <Filter>src\result</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\result\address_result.cpp">
-      <Filter>src\result</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\result\block_result.cpp">
       <Filter>src\result</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\result\inpoint_iterator.cpp">
+      <Filter>src\result</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\result\payment_iterator.cpp">
+      <Filter>src\result</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\result\payment_result.cpp">
       <Filter>src\result</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\result\transaction_iterator.cpp">
@@ -116,10 +116,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\data_base.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\address_database.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\block_database.hpp">
       <Filter>include\bitcoin\database\databases</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\block_database.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\payment_database.hpp">
       <Filter>include\bitcoin\database\databases</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\transaction_database.hpp">
@@ -164,16 +164,16 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_manager.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\address_iterator.hpp">
-      <Filter>include\bitcoin\database\result</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\address_result.hpp">
-      <Filter>include\bitcoin\database\result</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\block_result.hpp">
       <Filter>include\bitcoin\database\result</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\inpoint_iterator.hpp">
+      <Filter>include\bitcoin\database\result</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\payment_iterator.hpp">
+      <Filter>include\bitcoin\database\result</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\payment_result.hpp">
       <Filter>include\bitcoin\database\result</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_iterator.hpp">

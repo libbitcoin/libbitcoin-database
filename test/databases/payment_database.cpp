@@ -29,7 +29,7 @@ using namespace bc::database;
 using namespace bc::system;
 using namespace bc::system::chain;
 
-#define DIRECTORY "address_database"
+#define DIRECTORY "payment_database"
 
 #define OUTPUT_SCRIPT0 "dup hash160 [58350574280395ad2c3e2ee20e322073d94e5e40] equalverify checksig"
 #define OUTPUT_SCRIPT1 "dup hash160 [68350574280395ad2c3e2ee20e322073d94e5e40] equalverify checksig"
@@ -38,8 +38,8 @@ using namespace bc::system::chain;
 
 #define INPUT_SCRIPT1 "ece424a6bb6ddf4db592c0faed60685047a361b1"
 
-static BC_CONSTEXPR auto lookup_filename = DIRECTORY "/address_lookup_file";
-static BC_CONSTEXPR auto rows_filename = DIRECTORY "/address_rows_file";
+static BC_CONSTEXPR auto lookup_filename = DIRECTORY "/payment_lookup_file";
+static BC_CONSTEXPR auto rows_filename = DIRECTORY "/payment_rows_file";
 
 static chain_state::data data_for_chain_state()
 {
@@ -58,50 +58,51 @@ static void set_state(transaction& tx)
     tx.metadata.state = state;
 }
 
-struct address_database_directory_setup_fixture
+struct payment_database_directory_setup_fixture
 {
-    address_database_directory_setup_fixture()
+    payment_database_directory_setup_fixture()
     {
         test::clear_path(DIRECTORY);
     }
 
-    ~address_database_directory_setup_fixture()
+    ~payment_database_directory_setup_fixture()
     {
         test::clear_path(DIRECTORY);
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE(address_database_tests, address_database_directory_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(payment_database_tests, payment_database_directory_setup_fixture)
 
-class address_database_accessor
-  : public address_database
+class payment_database_accessor
+  : public payment_database
 {
 public:
-    address_database_accessor(const path& lookup_filename,
+    payment_database_accessor(const path& lookup_filename,
         const path& rows_filename, size_t table_minimum, size_t index_minimum,
         size_t buckets, size_t expansion)
-      : address_database(lookup_filename, rows_filename, table_minimum,
+      : payment_database(lookup_filename, rows_filename, table_minimum,
           index_minimum, buckets, expansion)
     {
     }
 
     void store(const system::hash_digest& hash,
-        const system::chain::point& point, size_t height, bool input)
+        const system::chain::point& point, size_t height, uint64_t value,
+        bool input)
     {
-        address_database::store(hash, point, height, input);
+        payment_database::store(hash, point, height, value, input);
     }
 
     void catalog(const system::chain::transaction& tx)
     {
-        address_database::catalog(tx);        
+        payment_database::catalog(tx);        
     }
 };
 
-BOOST_AUTO_TEST_CASE(address_database__store__two_inputs_two_outputs_two_transactions__success)
+BOOST_AUTO_TEST_CASE(payment_database__store__two_inputs_two_outputs_two_transactions__success)
 {
     test::create(lookup_filename);
     test::create(rows_filename);
-    address_database_accessor instance(lookup_filename, rows_filename, 10, 10, 1000, 50);
+    payment_database_accessor instance(lookup_filename, rows_filename, 10, 10, 1000, 50);
     BOOST_REQUIRE(instance.create());
 
     const hash_digest tx0_hash = sha256_hash(to_chunk("tx0_hash"));
@@ -123,10 +124,10 @@ BOOST_AUTO_TEST_CASE(address_database__store__two_inputs_two_outputs_two_transac
 
     // End of setup.
 
-    instance.store(script_hash0, input0, 1234, false);
-    instance.store(script_hash0, input1, 1235, false);
-    instance.store(script_hash0, output0, 1235, true);
-    instance.store(script_hash1, output1, 1235, true);
+    instance.store(script_hash0, input0, 1234, 4321, false);
+    instance.store(script_hash0, input1, 1235, 4321, false);
+    instance.store(script_hash0, output0, 1235, 5321, true);
+    instance.store(script_hash1, output1, 1235, 5321, true);
 
     // Test conditions.
 
@@ -169,14 +170,14 @@ BOOST_AUTO_TEST_CASE(address_database__store__two_inputs_two_outputs_two_transac
     BOOST_REQUIRE(++payments0 == result0.end());
 }
 
-BOOST_AUTO_TEST_CASE(address_database__catalog__coinbase_transaction__success)
+BOOST_AUTO_TEST_CASE(payment_database__catalog__coinbase_transaction__success)
 {
     uint32_t version = 2345u;
     uint32_t locktime = 0xffffffff;
 
     test::create(lookup_filename);
     test::create(rows_filename);
-    address_database_accessor instance(lookup_filename, rows_filename, 10, 10, 1000, 50);
+    payment_database_accessor instance(lookup_filename, rows_filename, 10, 10, 1000, 50);
     BOOST_REQUIRE(instance.create());
 
     script script0;
@@ -217,14 +218,14 @@ BOOST_AUTO_TEST_CASE(address_database__catalog__coinbase_transaction__success)
     BOOST_REQUIRE(++payments0 == result0.end());
 }
 
-BOOST_AUTO_TEST_CASE(address_database__catalog__tx1_spends_from_tx0__success)
+BOOST_AUTO_TEST_CASE(payment_database__catalog__tx1_spends_from_tx0__success)
 {
     uint32_t version = 2345u;
     uint32_t locktime = 0xffffffff;
 
     test::create(lookup_filename);
     test::create(rows_filename);
-    address_database_accessor instance(lookup_filename, rows_filename, 10, 10, 1000, 50);
+    payment_database_accessor instance(lookup_filename, rows_filename, 10, 10, 1000, 50);
     BOOST_REQUIRE(instance.create());
 
     script script0;
