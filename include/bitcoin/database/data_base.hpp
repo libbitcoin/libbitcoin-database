@@ -25,8 +25,9 @@
 #include <memory>
 #include <boost/filesystem.hpp>
 #include <bitcoin/system.hpp>
-#include <bitcoin/database/databases/payment_database.hpp>
 #include <bitcoin/database/databases/block_database.hpp>
+#include <bitcoin/database/databases/filter_database.hpp>
+#include <bitcoin/database/databases/payment_database.hpp>
 #include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/settings.hpp>
@@ -69,6 +70,9 @@ public:
     const block_database& blocks() const;
 
     const transaction_database& transactions() const;
+
+    /// Invalid if neutrino not initialized.
+    const filter_database& neutrino_filters() const;
 
     /// Invalid if indexes not initialized.
     const payment_database& payments() const;
@@ -155,6 +159,7 @@ protected:
 
     std::shared_ptr<block_database> blocks_;
     std::shared_ptr<transaction_database> transactions_;
+    std::shared_ptr<filter_database> neutrino_filters_;
     std::shared_ptr<payment_database> payments_;
 
 private:

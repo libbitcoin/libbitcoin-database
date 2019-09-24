@@ -39,6 +39,7 @@ public:
     static const std::string BLOCK_TABLE;
     static const std::string CANDIDATE_INDEX;
     static const std::string CONFIRMED_INDEX;
+    static const std::string NEUTRINO_FILTER_TABLE;
     static const std::string TRANSACTION_INDEX;
     static const std::string TRANSACTION_TABLE;
     static const std::string PAYMENT_TABLE;
@@ -47,7 +48,8 @@ public:
     // Construct.
     // ------------------------------------------------------------------------
 
-    store(const path& prefix, bool with_indexes, bool flush_each_write=false);
+    store(const path& prefix, bool with_indexes, bool with_neutrino,
+        bool flush_each_write=false);
 
     // Open and close.
     // ------------------------------------------------------------------------
@@ -83,6 +85,9 @@ public:
     const path transaction_index;
     const path transaction_table;
 
+    /// Optional store.
+    const path neutrino_filter_table;
+
     /// Optional indexes.
     const path payment_table;
     const path payment_rows;
@@ -95,6 +100,7 @@ protected:
 private:
     const path prefix_;
     const bool with_indexes_;
+    const bool with_neutrino_;
     const bool flush_each_write_;
     mutable system::flush_lock flush_lock_;
     mutable system::interprocess_lock exclusive_lock_;

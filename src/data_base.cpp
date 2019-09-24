@@ -62,7 +62,8 @@ data_base::data_base(const settings& settings, bool catalog)
   : closed_(true),
     catalog_(catalog),
     settings_(settings),
-    database::store(settings.directory, catalog, settings.flush_writes)
+    database::store(settings.directory, catalog,
+        settings.neutrino_filter_support, settings.flush_writes)
 {
     LOG_DEBUG(LOG_DATABASE)
         << "Buckets: "
@@ -96,6 +97,9 @@ bool data_base::create(const block& genesis)
     // These leave the databases open.
     auto created = blocks_->create() && transactions_->create();
 
+    if (settings_.neutrino_filter_support)
+        created &= neutrino_filters_->create();
+
     if (catalog_)
         created &= payments_->create();
 
@@ -120,6 +124,9 @@ bool data_base::open()
     start();
 
     auto opened = blocks_->open() && transactions_->open();
+
+    if (settings_.neutrino_filter_support)
+        opened &= neutrino_filters_->open();
 
     if (catalog_)
         opened &= payments_->open();
@@ -155,6 +162,16 @@ void data_base::start()
         settings_.file_growth_rate,
         settings_.cache_capacity);
 
+    if (settings_.neutrino_filter_support)
+    {
+        neutrino_filters_ = std::make_shared<filter_database>(
+            neutrino_filter_table,
+            settings_.neutrino_filter_table_size,
+            settings_.neutrino_filter_table_buckets,
+            settings_.file_growth_rate,
+            0u);
+    }
+
     if (catalog_)
     {
         payments_ = std::make_shared<payment_database>(
@@ -173,6 +190,9 @@ void data_base::commit()
     if (catalog_)
         payments_->commit();
 
+    if (settings_.neutrino_filter_support)
+        neutrino_filters_->commit();
+
     transactions_->commit();
     blocks_->commit();
 }
@@ -188,6 +208,9 @@ bool data_base::flush() const
     ////    return true;
 
     auto flushed = blocks_->flush() && transactions_->flush();
+
+    if (settings_.neutrino_filter_support)
+        flushed &= neutrino_filters_->flush();
 
     if (catalog_)
         flushed &= payments_->flush();
@@ -210,6 +233,9 @@ bool data_base::close()
 
     auto closed = blocks_->close() && transactions_->close();
 
+    if (settings_.neutrino_filter_support)
+        closed &= neutrino_filters_->close();
+
     if (catalog_)
         closed &= payments_->close();
 
@@ -230,6 +256,12 @@ const block_database& data_base::blocks() const
 const transaction_database& data_base::transactions() const
 {
     return *transactions_;
+}
+
+// Invalid if neutrino filters not initialized.
+const filter_database& data_base::neutrino_filters() const
+{
+    return *neutrino_filters_;
 }
 
 // Invalid if indexes not initialized.
