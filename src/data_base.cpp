@@ -423,6 +423,8 @@ code data_base::update(const chain::block& block, size_t height)
     if (!transactions_->store(block.transactions()))
         return error::operation_failed;
 
+    // Store the block's filter data (header, filter).
+
     // Update the block's transaction associations (not its state).
     if (!blocks_->update(block))
         return error::operation_failed;

@@ -107,28 +107,30 @@ filter_result filter_database::get(const system::hash_digest& hash) const
 // ----------------------------------------------------------------------------
 
 // Store new filter_data.
-bool filter_database::store(const system::chain::block_filter& filter)
+bool filter_database::store(const system::hash_digest& block_hash,
+    const system::chain::block_filter& block_filter)
 {
-    if (filter.filter_type() != filter_type_)
+    if (block_filter.filter_type() != filter_type_)
         return false;
 
-    return storize(filter);
+    return storize(block_hash, block_filter);
 }
 
 // private
-bool filter_database::storize(const system::chain::block_filter& filter)
+bool filter_database::storize(const system::hash_digest& block_hash,
+    const system::chain::block_filter& block_filter)
 {
     const auto writer = [&](byte_serializer& serial)
     {
-        filter.to_data(serial, false);
+        block_filter.to_data(serial, false);
     };
 
     // Transactions are variable-sized.
-    const auto size = filter.serialized_size(false);
+    const auto size = block_filter.serialized_size(false);
 
     // Write the new transaction.
     auto next = hash_table_.allocator();
-    filter.metadata.link = next.create(filter.block_hash(), writer, size);
+    block_filter.metadata.link = next.create(block_hash, writer, size);
     hash_table_.link(next);
     return true;
 }

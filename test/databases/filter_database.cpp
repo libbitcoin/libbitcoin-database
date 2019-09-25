@@ -33,8 +33,8 @@ using namespace bc::system;
 using namespace bc::system::chain;
 
 #define DIRECTORY "filter_database"
-#define HASH1 "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"
-#define HASH2 "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"
+#define HASH "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"
+#define HEADER "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"
 #define FILTER "001a2b3c"
 
 static BC_CONSTEXPR auto file_path = DIRECTORY "/filter_table";
@@ -60,20 +60,19 @@ BOOST_AUTO_TEST_CASE(filter_database__store__single_filter_without_matching_type
 
     block_filter data(
         16u,
-        hash_literal(HASH1),
-        hash_literal(HASH2),
+        hash_literal(HEADER),
         to_chunk(base16_literal(FILTER)));
 
     test::create(file_path);
     filter_database instance(file_path, 1, 1000, 50, filter_type);
     BOOST_REQUIRE(instance.create());
 
-    const auto hash = data.block_hash();
+    const auto hash = hash_literal(HASH);
     BOOST_REQUIRE(!instance.get(hash));
 
     // Setup end
 
-    BOOST_REQUIRE_EQUAL(false, instance.store(data));
+    BOOST_REQUIRE_EQUAL(false, instance.store(hash, data));
     BOOST_REQUIRE(!instance.get(hash));
 }
 
@@ -83,29 +82,33 @@ BOOST_AUTO_TEST_CASE(filter_database__store__single_filter__success)
 
     block_filter data(
         filter_type,
-        hash_literal(HASH1),
-        hash_literal(HASH2),
+        hash_literal(HEADER),
         to_chunk(base16_literal(FILTER)));
 
     test::create(file_path);
     filter_database instance(file_path, 1, 1000, 50, filter_type);
     BOOST_REQUIRE(instance.create());
 
-    const auto hash = data.block_hash();
+    const auto hash = hash_literal(HASH);
     BOOST_REQUIRE(!instance.get(hash));
 
     // Setup end
 
-    BOOST_REQUIRE_EQUAL(true, instance.store(data));
+    BOOST_REQUIRE_EQUAL(true, instance.store(hash, data));
 
     const auto result = instance.get(hash);
     BOOST_REQUIRE(result);
-    BOOST_REQUIRE(result.block_filter().block_hash() == hash);
+    BOOST_REQUIRE(result.block_hash() == hash);
+
+    const auto block_filter = result.block_filter();
+    BOOST_REQUIRE(data.filter_type() == block_filter.filter_type());
+    BOOST_REQUIRE(data.header() == block_filter.header());
+    BOOST_REQUIRE(data.filter() == block_filter.filter());
 
     // Verify computed hash and get via link
     const auto result2 = instance.get(result.link());
     BOOST_REQUIRE(result2);
-    BOOST_REQUIRE(result2.block_filter().block_hash() == hash);
+    BOOST_REQUIRE(result2.block_hash() == hash);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

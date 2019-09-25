@@ -108,11 +108,10 @@ chain::block_filter filter_result::block_filter() const
 {
     BITCOIN_ASSERT(element_);
     chain::block_filter filter;
-    auto key = block_hash();
 
     const auto reader = [&](byte_deserializer& deserial)
     {
-        filter.from_data(deserial, filter_type_, std::move(key));
+        filter.from_data(deserial, filter_type_);
     };
 
     element_.read(reader);
