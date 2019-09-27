@@ -39,6 +39,8 @@
 // [ checksum/code:4    - atomic2 ] (optional, zero if not cached, code if invalid)
 // [ tx_start:4         - atomic3 ] (array index into the transaction_index, or zero)
 // [ tx_count:2         - atomic3 ] (atomic with start, zero if block unpopulated)
+// Optional by configuration
+// [ neutrino_filter:4  - atomic4 ] (array index into the appropriate filter_database, or zero)
 
 // Record format (v3) [variable bytes] (median_time_past added in v3.3):
 // Below excludes block height index (array).
@@ -62,14 +64,17 @@ static constexpr auto state_size = sizeof(uint8_t);
 static constexpr auto checksum_size = sizeof(uint32_t);
 static constexpr auto tx_start_size = sizeof(uint32_t);
 static constexpr auto tx_count_size = sizeof(uint16_t);
+static constexpr auto neutrino_filter_size = sizeof(uint32_t);
 
 static const auto height_offset = header_size + median_time_past_size;
 static const auto state_offset = height_offset + height_size;
 static const auto checksum_offset = state_offset + state_size;
 static const auto transactions_offset = checksum_offset + checksum_size;
+static const auto neutrino_filter_offset = transactions_offset +
+    tx_start_size + tx_count_size;
 
-// Total size of block header and metadata storage.
-static const auto block_size = header_size + median_time_past_size +
+// Total size of block header and metadata storage wihtout neutrino filter offset.
+static const auto base_block_size = header_size + median_time_past_size +
     height_size + state_size + checksum_size + tx_start_size + tx_count_size;
 
 // Blocks uses a hash table and two array indexes, all O(1).
@@ -78,9 +83,12 @@ block_database::block_database(const path& map_filename,
     const path& candidate_index_filename, const path& confirmed_index_filename,
     const path& tx_index_filename, size_t table_minimum,
     size_t candidate_index_minimum, size_t confirmed_index_minimum,
-    size_t tx_index_minimum, size_t buckets, size_t expansion)
-  : hash_table_file_(map_filename, table_minimum, expansion),
-    hash_table_(hash_table_file_, buckets, block_size),
+    size_t tx_index_minimum, size_t buckets, size_t expansion,
+    bool neutrino_filters)
+  : support_neutrino_filter_(neutrino_filters),
+    hash_table_file_(map_filename, table_minimum, expansion),
+    hash_table_(hash_table_file_, buckets, support_neutrino_filter_ ?
+        base_block_size + neutrino_filter_size : base_block_size),
 
     // Array storage.
     candidate_index_file_(candidate_index_filename,
@@ -96,6 +104,7 @@ block_database::block_database(const path& map_filename,
     tx_index_file_(tx_index_filename, tx_index_minimum, expansion),
     tx_index_(tx_index_file_, 0, sizeof(file_offset))
 {
+
 }
 
 block_database::~block_database()
@@ -275,6 +284,8 @@ bool block_database::update(const chain::block& block)
 
     BITCOIN_ASSERT(tx_start <= max_uint32);
     BITCOIN_ASSERT(tx_count <= max_uint16);
+    BITCOIN_ASSERT(!support_neutrino_filter_ ? true :
+        (block.header().metadata.filter_data->metadata.link <= max_uint32));
 
     const auto updater = [&](byte_serializer& serial)
     {
@@ -285,6 +296,14 @@ bool block_database::update(const chain::block& block)
         unique_lock lock(metadata_mutex_);
         serial.write_4_bytes_little_endian(static_cast<uint32_t>(tx_start));
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(tx_count));
+
+        if (support_neutrino_filter_)
+        {
+            const auto filter = block.header().metadata.filter_data;
+            if (filter)
+                serial.write_4_bytes_little_endian(static_cast<uint32_t>(
+                    filter->metadata.link));
+        }
         ///////////////////////////////////////////////////////////////////////
     };
 

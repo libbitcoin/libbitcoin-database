@@ -153,7 +153,8 @@ void data_base::start()
         settings_.confirmed_index_size,
         settings_.transaction_index_size,
         settings_.block_table_buckets,
-        settings_.file_growth_rate);
+        settings_.file_growth_rate,
+        settings_.neutrino_filter_support);
 
     transactions_ = std::make_shared<transaction_database>(
         transaction_table,

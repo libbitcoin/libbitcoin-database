@@ -88,10 +88,14 @@ public:
     transaction_iterator begin() const;
     transaction_iterator end() const;
 
+    // The offset to the filter within the filter database.
+    file_offset neutrino_filter() const;
+
     /// Set metadata onto the given header.
     void set_metadata(const system::chain::header& header) const;
 
 private:
+    bool support_neutrino_filter_;
     system::chain::header header_;
     uint32_t median_time_past_;
     uint32_t height_;

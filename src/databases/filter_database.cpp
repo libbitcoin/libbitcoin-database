@@ -98,10 +98,10 @@ filter_result filter_database::get(file_offset link) const
     return { hash_table_.get(link), metadata_mutex_, filter_type_ };
 }
 
-filter_result filter_database::get(const system::hash_digest& hash) const
-{
-    return { hash_table_.find(hash), metadata_mutex_, filter_type_ };
-}
+//filter_result filter_database::get(const system::hash_digest& hash) const
+//{
+//    return { hash_table_.find(hash), metadata_mutex_, filter_type_ };
+//}
 
 // Store.
 // ----------------------------------------------------------------------------
@@ -117,7 +117,7 @@ bool filter_database::store(const system::hash_digest& block_hash,
 }
 
 // private
-bool filter_database::storize(const system::hash_digest& block_hash,
+bool filter_database::storize(const system::hash_digest& /*block_hash*/,
     const system::chain::block_filter& block_filter)
 {
     const auto writer = [&](byte_serializer& serial)
@@ -130,7 +130,7 @@ bool filter_database::storize(const system::hash_digest& block_hash,
 
     // Write the new transaction.
     auto next = hash_table_.allocator();
-    block_filter.metadata.link = next.create(block_hash, writer, size);
+    block_filter.metadata.link = next.create(block_filter.header(), writer, size);
     hash_table_.link(next);
     return true;
 }

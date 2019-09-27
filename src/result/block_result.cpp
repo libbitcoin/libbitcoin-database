@@ -36,6 +36,22 @@ using namespace bc::system::chain;
 // Placeholder for unimplemented checksum caching.
 static constexpr auto no_checksum = 0u;
 
+static const auto header_size = header::satoshi_fixed_size();
+static constexpr auto median_time_past_size = sizeof(uint32_t);
+static constexpr auto height_size = sizeof(uint32_t);
+static constexpr auto state_size = sizeof(uint8_t);
+static constexpr auto checksum_size = sizeof(uint32_t);
+static constexpr auto tx_start_size = sizeof(uint32_t);
+static constexpr auto tx_count_size = sizeof(uint16_t);
+static constexpr auto neutrino_filter_size = sizeof(uint32_t);
+
+static const auto height_offset = header_size + median_time_past_size;
+static const auto state_offset = height_offset + height_size;
+static const auto checksum_offset = state_offset + state_size;
+static const auto transactions_offset = checksum_offset + checksum_size;
+static const auto neutrino_filter_offset = transactions_offset +
+    tx_start_size + tx_count_size;
+
 block_result::block_result(const const_element_type& element,
     shared_mutex& metadata_mutex, const manager& index_manager)
   : height_(0),
@@ -177,6 +193,27 @@ transaction_iterator block_result::begin() const
 transaction_iterator block_result::end() const
 {
     return { index_manager_, tx_start_, 0 };
+}
+
+// This is read each time it is invoked, so caller should cache.
+file_offset block_result::neutrino_filter() const
+{
+    file_offset offset = system::chain::block_filter::validation::unlinked;
+
+    if (!element_)
+        return offset;
+
+    if (!support_neutrino_filter_)
+        return offset;
+
+    const auto reader = [&](byte_deserializer& deserial)
+    {
+        deserial.skip(neutrino_filter_offset);
+        offset = deserial.read_4_bytes_little_endian();
+    };
+
+    element_.read(reader);
+    return offset;
 }
 
 } // namespace database

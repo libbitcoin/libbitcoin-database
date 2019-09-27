@@ -56,7 +56,7 @@ public:
     uint8_t filter_type() const;
 
     /// The block hash
-    system::hash_digest block_hash() const;
+    // system::hash_digest block_hash() const;
 
     /// The filter header
     system::hash_digest header() const;

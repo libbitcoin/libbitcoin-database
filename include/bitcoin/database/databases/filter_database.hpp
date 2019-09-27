@@ -76,7 +76,9 @@ public:
     filter_result get(file_offset link) const;
 
     /// Fetch filter by its block hash.
-    filter_result get(const system::hash_digest& hash) const;
+    // Disabled due to optimization removing block_hash.
+    // Currently stores header as as hash, not used for retrieval.
+    // filter_result get(const system::hash_digest& hash) const;
 
     // Writers.
     // ------------------------------------------------------------------------

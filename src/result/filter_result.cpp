@@ -34,8 +34,8 @@ namespace database {
 using namespace bc::system;
 using namespace bc::system::chain;
 
-static constexpr auto header_size = hash_size;
-static constexpr auto filter_offset = header_size;
+//static constexpr auto header_size = hash_size;
+//static constexpr auto filter_offset = header_size;
 
 filter_result::filter_result(const const_element_type& element,
     shared_mutex& metadata_mutex, uint8_t filter_type)
@@ -62,28 +62,34 @@ uint8_t filter_result::filter_type() const
     return filter_type_;
 }
 
-hash_digest filter_result::block_hash() const
+//hash_digest filter_result::block_hash() const
+//{
+//    // This is read each time it is invoked, so caller should cache.
+//    return element_ ? element_.key() : null_hash;
+//}
+
+hash_digest filter_result::header() const
 {
     // This is read each time it is invoked, so caller should cache.
     return element_ ? element_.key() : null_hash;
 }
 
-hash_digest filter_result::header() const
-{
-    // This is read each time it is invoked, so caller should cache.
-    if (!element_)
-        return null_hash;
-
-    hash_digest header;
-
-    const auto reader = [&](byte_deserializer& deserial)
-    {
-        header = deserial.read_hash();
-    };
-
-    element_.read(reader);
-    return header;
-}
+//hash_digest filter_result::header() const
+//{
+//    // This is read each time it is invoked, so caller should cache.
+//    if (!element_)
+//        return null_hash;
+//
+//    hash_digest header;
+//
+//    const auto reader = [&](byte_deserializer& deserial)
+//    {
+//        header = deserial.read_hash();
+//    };
+//
+//    element_.read(reader);
+//    return header;
+//}
 
 system::data_chunk filter_result::filter() const
 {
@@ -95,7 +101,7 @@ system::data_chunk filter_result::filter() const
 
     const auto reader = [&](byte_deserializer& deserial)
     {
-        deserial.skip(filter_offset);
+        // deserial.skip(filter_offset);
         size_t size = deserial.read_size_little_endian();
         filter = deserial.read_bytes(size);
     };
@@ -112,6 +118,7 @@ chain::block_filter filter_result::block_filter() const
     const auto reader = [&](byte_deserializer& deserial)
     {
         filter.from_data(deserial, filter_type_);
+        filter.set_header(header());
     };
 
     element_.read(reader);
