@@ -120,13 +120,17 @@ bool filter_database::store(const system::hash_digest& block_hash,
 bool filter_database::storize(const system::hash_digest& /*block_hash*/,
     const system::chain::block_filter& block_filter)
 {
+    const auto& filter = block_filter.filter();
+
     const auto writer = [&](byte_serializer& serial)
     {
-        block_filter.to_data(serial, false);
+        serial.write_size_little_endian(filter.size());
+        serial.write_bytes(filter);
     };
 
-    // Transactions are variable-sized.
-    const auto size = block_filter.serialized_size(false);
+    // Filters are variable-sized.
+    const auto size = system::message::variable_uint_size(filter.size()) +
+        filter.size();
 
     // Write the new transaction.
     auto next = hash_table_.allocator();

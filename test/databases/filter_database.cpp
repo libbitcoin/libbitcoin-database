@@ -60,6 +60,7 @@ BOOST_AUTO_TEST_CASE(filter_database__store__single_filter_without_matching_type
 
     block_filter data(
         16u,
+        hash_literal(HASH),
         hash_literal(HEADER),
         to_chunk(base16_literal(FILTER)));
 
@@ -82,6 +83,7 @@ BOOST_AUTO_TEST_CASE(filter_database__store__single_filter__success)
 
     block_filter data(
         filter_type,
+        hash_literal(HASH),
         hash_literal(HEADER),
         to_chunk(base16_literal(FILTER)));
 

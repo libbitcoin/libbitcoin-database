@@ -34,9 +34,6 @@ namespace database {
 using namespace bc::system;
 using namespace bc::system::chain;
 
-//static constexpr auto header_size = hash_size;
-//static constexpr auto filter_offset = header_size;
-
 filter_result::filter_result(const const_element_type& element,
     shared_mutex& metadata_mutex, uint8_t filter_type)
   : filter_type_(filter_type),
@@ -74,23 +71,6 @@ hash_digest filter_result::header() const
     return element_ ? element_.key() : null_hash;
 }
 
-//hash_digest filter_result::header() const
-//{
-//    // This is read each time it is invoked, so caller should cache.
-//    if (!element_)
-//        return null_hash;
-//
-//    hash_digest header;
-//
-//    const auto reader = [&](byte_deserializer& deserial)
-//    {
-//        header = deserial.read_hash();
-//    };
-//
-//    element_.read(reader);
-//    return header;
-//}
-
 system::data_chunk filter_result::filter() const
 {
     // This is read each time it is invoked, so caller should cache.
@@ -101,7 +81,6 @@ system::data_chunk filter_result::filter() const
 
     const auto reader = [&](byte_deserializer& deserial)
     {
-        // deserial.skip(filter_offset);
         size_t size = deserial.read_size_little_endian();
         filter = deserial.read_bytes(size);
     };
@@ -113,18 +92,11 @@ system::data_chunk filter_result::filter() const
 chain::block_filter filter_result::block_filter() const
 {
     BITCOIN_ASSERT(element_);
-    chain::block_filter filter;
-
-    const auto reader = [&](byte_deserializer& deserial)
-    {
-        filter.from_data(deserial, filter_type_);
-        filter.set_header(header());
-    };
-
-    element_.read(reader);
-
-    filter.metadata.link = element_.link();
-    return filter;
+    chain::block_filter result;
+    result.set_filter(filter());
+    result.set_header(header());
+    result.metadata.link = element_.link();
+    return result;
 }
 
 } // namespace database
