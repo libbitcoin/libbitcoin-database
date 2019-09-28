@@ -542,6 +542,15 @@ code data_base::push(const block& block, size_t height,
     if (!transactions_->store(block.transactions()))
         return error::operation_failed;
 
+    if (settings_.neutrino_filter_support)
+    {
+        auto filter = block.header().metadata.filter_data;
+        if (!filter)
+            return error::operation_failed;
+
+        neutrino_filters_->store(block.hash(), *filter);
+    }
+
     // Populate transaction references from link metadata.
     if (!blocks_->update(block))
         return error::operation_failed;
