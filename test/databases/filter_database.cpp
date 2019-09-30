@@ -68,12 +68,12 @@ BOOST_AUTO_TEST_CASE(filter_database__store__single_filter_without_matching_type
     filter_database instance(file_path, 1, 1000, 50, filter_type);
     BOOST_REQUIRE(instance.create());
 
-    const auto hash = hash_literal(HASH);
+    // const auto hash = hash_literal(HASH);
     // BOOST_REQUIRE(!instance.get(hash));
 
     // Setup end
 
-    BOOST_REQUIRE_EQUAL(false, instance.store(hash, data));
+    BOOST_REQUIRE_EQUAL(false, instance.store(data));
     // BOOST_REQUIRE(!instance.get(hash));
 }
 
@@ -91,12 +91,12 @@ BOOST_AUTO_TEST_CASE(filter_database__store__single_filter__success)
     filter_database instance(file_path, 1, 1000, 50, filter_type);
     BOOST_REQUIRE(instance.create());
 
-    const auto hash = hash_literal(HASH);
+    // const auto hash = hash_literal(HASH);
     // BOOST_REQUIRE(!instance.get(hash));
 
     // Setup end
 
-    BOOST_REQUIRE_EQUAL(true, instance.store(hash, data));
+    BOOST_REQUIRE_EQUAL(true, instance.store(data));
     BOOST_REQUIRE(data.metadata.link != block_filter::validation::unlinked);
 
     const auto result = instance.get(data.metadata.link);
