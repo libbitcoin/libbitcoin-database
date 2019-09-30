@@ -97,15 +97,13 @@ bool store::create()
     error_code ec;
     create_directories(prefix_, ec);
 
-    auto created = !ec &&
+    const auto created = !ec &&
         create_file(block_table) &&
         create_file(candidate_index) &&
         create_file(confirmed_index) &&
         create_file(transaction_index) &&
-        create_file(transaction_table);
-
-    if (with_neutrino_)
-        created = created && create_file(neutrino_filter_table);
+        create_file(transaction_table) &&
+        (with_neutrino_ ? create_file(neutrino_filter_table) : true);
 
     if (!with_indexes_)
         return created;

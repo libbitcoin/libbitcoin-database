@@ -84,8 +84,7 @@ public:
     // ------------------------------------------------------------------------
 
     /// Store a filter and filter header associated with a block hash.
-    bool store(const system::hash_digest& block_hash,
-        const system::chain::block_filter& block_filter);
+    bool store(const system::chain::block_filter& block_filter);
 
 private:
     typedef system::hash_digest key_type;
@@ -96,8 +95,7 @@ private:
 
     // Store filter data.
     //-------------------------------------------------------------------------
-    bool storize(const system::hash_digest& block_hash,
-        const system::chain::block_filter& block_filter);
+    bool storize(const system::chain::block_filter& block_filter);
 
     // Identifier of the filters being stored (assumes uniform storage).
     uint8_t filter_type_;

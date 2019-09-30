@@ -249,8 +249,9 @@ class data_base_accessor
   : public data_base
 {
 public:
-    data_base_accessor(const bc::database::settings& settings, bool catalog=false)
-      : data_base(settings, catalog)
+    data_base_accessor(const bc::database::settings& settings,
+        bool catalog=false, bool neutrino_filter_support = false)
+      : data_base(settings, catalog, neutrino_filter_support)
     {
     }
 
@@ -338,7 +339,7 @@ BOOST_AUTO_TEST_CASE(data_base__create__block_transactions_index_interaction__su
     settings.transaction_table_buckets = 42;
     settings.payment_table_buckets = 42;
   
-    data_base instance(settings, false); 
+    data_base instance(settings, false, false);
    
     const auto bc_settings = bc::system::settings(config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));
@@ -365,7 +366,7 @@ BOOST_AUTO_TEST_CASE(data_base__create__genesis_block_available__success)
     settings.transaction_table_buckets = 42;
     settings.payment_table_buckets = 42;
 
-    data_base instance(settings, true);
+    data_base instance(settings, true, false);
    
     const auto bc_settings = bc::system::settings(config::settings::mainnet);
     const chain::block& genesis = bc_settings.genesis_block;    
@@ -385,7 +386,7 @@ BOOST_AUTO_TEST_CASE(data_base__push__adds_to_blocks_and_transactions_validates_
     settings.transaction_table_buckets = 42;
     settings.payment_table_buckets = 42;
   
-    data_base instance(settings, true);
+    data_base instance(settings, true, false);
    
     const auto bc_settings = bc::system::settings(config::settings::mainnet);
     BOOST_REQUIRE(instance.create(bc_settings.genesis_block));

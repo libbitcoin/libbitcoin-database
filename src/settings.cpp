@@ -47,8 +47,7 @@ settings::settings()
     payment_index_size(1),
     payment_table_size(1),
 
-    // Neutrino filter support
-    neutrino_filter_support(false),
+    // Neutrino filter database
     neutrino_filter_table_buckets(0),
     neutrino_filter_table_size(1)
 {

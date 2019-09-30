@@ -81,7 +81,7 @@ system::data_chunk filter_result::filter() const
 
     const auto reader = [&](byte_deserializer& deserial)
     {
-        size_t size = deserial.read_size_little_endian();
+        const auto size = deserial.read_size_little_endian();
         filter = deserial.read_bytes(size);
     };
 

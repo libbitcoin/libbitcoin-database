@@ -43,7 +43,8 @@ class BCD_API data_base
 public:
     typedef std::function<void(const system::code&)> result_handler;
 
-    data_base(const settings& settings, bool catalog);
+    data_base(const settings& settings, bool catalog,
+        bool neutrino_filter_support);
 
     // Open and close.
     // ------------------------------------------------------------------------
@@ -168,6 +169,7 @@ private:
 
     std::atomic<bool> closed_;
     const bool catalog_;
+    const bool neutrino_filter_support_;
     const settings& settings_;
 
     // Used to prevent unsafe concurrent writes.

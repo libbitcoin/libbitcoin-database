@@ -32,12 +32,15 @@
 namespace libbitcoin {
 namespace database {
 
+using namespace bc::system;
+using namespace bc::system::chain;
+
 // Record format (v4):
 // ----------------------------------------------------------------------------
 // [ filter_header:32    - const    ]
 // [ filter:varint       - const    ]
 
-static constexpr auto filter_header_size = system::hash_size;
+static constexpr auto filter_header_size = hash_size;
 
 // Filter uses a hash table index, O(1).
 filter_database::filter_database(const path& map_filename,
@@ -98,7 +101,7 @@ filter_result filter_database::get(file_offset link) const
     return { hash_table_.get(link), metadata_mutex_, filter_type_ };
 }
 
-//filter_result filter_database::get(const system::hash_digest& hash) const
+//filter_result filter_database::get(const hash_digest& hash) const
 //{
 //    return { hash_table_.find(hash), metadata_mutex_, filter_type_ };
 //}
@@ -107,18 +110,16 @@ filter_result filter_database::get(file_offset link) const
 // ----------------------------------------------------------------------------
 
 // Store new filter_data.
-bool filter_database::store(const system::hash_digest& block_hash,
-    const system::chain::block_filter& block_filter)
+bool filter_database::store(const block_filter& block_filter)
 {
     if (block_filter.filter_type() != filter_type_)
         return false;
 
-    return storize(block_hash, block_filter);
+    return storize(block_filter);
 }
 
 // private
-bool filter_database::storize(const system::hash_digest& /*block_hash*/,
-    const system::chain::block_filter& block_filter)
+bool filter_database::storize(const block_filter& block_filter)
 {
     const auto& filter = block_filter.filter();
 
@@ -129,10 +130,10 @@ bool filter_database::storize(const system::hash_digest& /*block_hash*/,
     };
 
     // Filters are variable-sized.
-    const auto size = system::message::variable_uint_size(filter.size()) +
+    const auto size = message::variable_uint_size(filter.size()) +
         filter.size();
 
-    // Write the new transaction.
+    // Write the new filter entry.
     auto next = hash_table_.allocator();
     block_filter.metadata.link = next.create(block_filter.header(), writer, size);
     hash_table_.link(next);

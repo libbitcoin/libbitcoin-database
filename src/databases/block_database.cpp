@@ -73,7 +73,7 @@ static const auto transactions_offset = checksum_offset + checksum_size;
 static const auto neutrino_filter_offset = transactions_offset +
     tx_start_size + tx_count_size;
 
-// Total size of block header and metadata storage wihtout neutrino filter offset.
+// Total size of block header and metadata storage without neutrino filter offset.
 static const auto base_block_size = header_size + median_time_past_size +
     height_size + state_size + checksum_size + tx_start_size + tx_count_size;
 
@@ -189,7 +189,8 @@ block_result block_database::get(size_t height, bool candidate) const
         // A not_found link value produces a terminator element.
         hash_table_.get(read_link(height, manager)),
         metadata_mutex_,
-        tx_index_
+        tx_index_,
+        support_neutrino_filter_
     };
 }
 
@@ -200,7 +201,8 @@ block_result block_database::get(const hash_digest& hash) const
     {
         hash_table_.find(hash),
         metadata_mutex_,
-        tx_index_
+        tx_index_,
+        support_neutrino_filter_
     };
 }
 
@@ -284,7 +286,7 @@ bool block_database::update(const chain::block& block)
 
     BITCOIN_ASSERT(tx_start <= max_uint32);
     BITCOIN_ASSERT(tx_count <= max_uint16);
-    BITCOIN_ASSERT(!support_neutrino_filter_ ? true :
+    BITCOIN_ASSERT(!support_neutrino_filter_ ||
         (block.header().metadata.filter_data->metadata.link <= max_uint32));
 
     const auto updater = [&](byte_serializer& serial)
