@@ -43,7 +43,8 @@ public:
         const_element_type;
 
     block_result(const const_element_type& element,
-        system::shared_mutex& metadata_mutex, const manager& index_manager);
+        system::shared_mutex& metadata_mutex, const manager& index_manager,
+        bool neutrino_filter_support);
 
     /// True if the requested block exists.
     operator bool() const;
@@ -88,6 +89,9 @@ public:
     transaction_iterator begin() const;
     transaction_iterator end() const;
 
+    // The offset to the filter within the filter database.
+    file_offset neutrino_filter() const;
+
     /// Set metadata onto the given header.
     void set_metadata(const system::chain::header& header) const;
 
@@ -99,6 +103,7 @@ private:
     uint32_t checksum_;
     array_index tx_start_;
     size_t tx_count_;
+    file_offset neutrino_filter_;
 
     // These classes are thread safe.
     const const_element_type element_;

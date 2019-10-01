@@ -48,6 +48,8 @@ public:
     uint64_t transaction_table_size;
     uint64_t payment_index_size;
     uint64_t payment_table_size;
+    uint32_t neutrino_filter_table_buckets;
+    uint64_t neutrino_filter_table_size;
 };
 
 } // namespace database

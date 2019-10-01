@@ -58,11 +58,14 @@ using namespace bc::system::wallet;
 // Construct.
 // ----------------------------------------------------------------------------
 
-data_base::data_base(const settings& settings, bool catalog)
+data_base::data_base(const settings& settings, bool catalog,
+    bool neutrino_filter_support)
   : closed_(true),
     catalog_(catalog),
+    neutrino_filter_support_(neutrino_filter_support),
     settings_(settings),
-    database::store(settings.directory, catalog, settings.flush_writes)
+    database::store(settings.directory, catalog, neutrino_filter_support,
+        settings.flush_writes)
 {
     LOG_DEBUG(LOG_DATABASE)
         << "Buckets: "
@@ -96,6 +99,9 @@ bool data_base::create(const block& genesis)
     // These leave the databases open.
     auto created = blocks_->create() && transactions_->create();
 
+    if (neutrino_filter_support_)
+        created &= neutrino_filters_->create();
+
     if (catalog_)
         created &= payments_->create();
 
@@ -120,6 +126,9 @@ bool data_base::open()
     start();
 
     auto opened = blocks_->open() && transactions_->open();
+
+    if (neutrino_filter_support_)
+        opened &= neutrino_filters_->open();
 
     if (catalog_)
         opened &= payments_->open();
@@ -146,7 +155,8 @@ void data_base::start()
         settings_.confirmed_index_size,
         settings_.transaction_index_size,
         settings_.block_table_buckets,
-        settings_.file_growth_rate);
+        settings_.file_growth_rate,
+        neutrino_filter_support_);
 
     transactions_ = std::make_shared<transaction_database>(
         transaction_table,
@@ -154,6 +164,16 @@ void data_base::start()
         settings_.transaction_table_buckets,
         settings_.file_growth_rate,
         settings_.cache_capacity);
+
+    if (neutrino_filter_support_)
+    {
+        neutrino_filters_ = std::make_shared<filter_database>(
+            neutrino_filter_table,
+            settings_.neutrino_filter_table_size,
+            settings_.neutrino_filter_table_buckets,
+            settings_.file_growth_rate,
+            0u);
+    }
 
     if (catalog_)
     {
@@ -173,6 +193,9 @@ void data_base::commit()
     if (catalog_)
         payments_->commit();
 
+    if (neutrino_filter_support_)
+        neutrino_filters_->commit();
+
     transactions_->commit();
     blocks_->commit();
 }
@@ -188,6 +211,9 @@ bool data_base::flush() const
     ////    return true;
 
     auto flushed = blocks_->flush() && transactions_->flush();
+
+    if (neutrino_filter_support_)
+        flushed &= neutrino_filters_->flush();
 
     if (catalog_)
         flushed &= payments_->flush();
@@ -210,6 +236,9 @@ bool data_base::close()
 
     auto closed = blocks_->close() && transactions_->close();
 
+    if (neutrino_filter_support_)
+        closed &= neutrino_filters_->close();
+
     if (catalog_)
         closed &= payments_->close();
 
@@ -230,6 +259,12 @@ const block_database& data_base::blocks() const
 const transaction_database& data_base::transactions() const
 {
     return *transactions_;
+}
+
+// Invalid if neutrino filters not initialized.
+const filter_database& data_base::neutrino_filters() const
+{
+    return *neutrino_filters_;
 }
 
 // Invalid if indexes not initialized.
@@ -391,6 +426,8 @@ code data_base::update(const chain::block& block, size_t height)
     if (!transactions_->store(block.transactions()))
         return error::operation_failed;
 
+    // Store the block's filter data (header, filter).
+
     // Update the block's transaction associations (not its state).
     if (!blocks_->update(block))
         return error::operation_failed;
@@ -506,6 +543,15 @@ code data_base::push(const block& block, size_t height,
     // Store any missing txs as unconfirmed, set tx link metadata for all.
     if (!transactions_->store(block.transactions()))
         return error::operation_failed;
+
+    if (neutrino_filter_support_)
+    {
+        const auto filter = block.header().metadata.filter_data;
+        if (!filter)
+            return error::operation_failed;
+
+        neutrino_filters_->store(*filter);
+    }
 
     // Populate transaction references from link metadata.
     if (!blocks_->update(block))

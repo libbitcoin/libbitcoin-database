@@ -45,7 +45,11 @@ settings::settings()
     transaction_index_size(1),
     transaction_table_size(1),
     payment_index_size(1),
-    payment_table_size(1)
+    payment_table_size(1),
+
+    // Neutrino filter database
+    neutrino_filter_table_buckets(0),
+    neutrino_filter_table_size(1)
 {
 }
 
@@ -66,6 +70,8 @@ settings::settings(config::settings context)
             transaction_table_size = 220000000000;
             payment_index_size = 100000000000;
             payment_table_size = 100000000;
+            neutrino_filter_table_buckets = 650000;
+            neutrino_filter_table_size = 80000000;
             break;
         }
 
@@ -82,6 +88,8 @@ settings::settings(config::settings context)
             transaction_table_size = 42;
             payment_index_size = 42;
             payment_table_size = 42;
+            neutrino_filter_table_buckets = 650000;
+            neutrino_filter_table_size = 42;
             break;
         }
 
@@ -98,6 +106,8 @@ settings::settings(config::settings context)
             transaction_table_size = 42;
             payment_index_size = 42;
             payment_table_size = 42;
+            neutrino_filter_table_buckets = 650000;
+            neutrino_filter_table_size = 42;
             break;
         }
 

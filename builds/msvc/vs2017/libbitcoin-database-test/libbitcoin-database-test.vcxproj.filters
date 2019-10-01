@@ -36,6 +36,9 @@
     <ClCompile Include="..\..\..\..\test\databases\block_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\databases\filter_database.cpp">
+      <Filter>src\databases</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\databases\payment_database.cpp">
       <Filter>src\databases</Filter>
     </ClCompile>
@@ -76,6 +79,9 @@
       <Filter>src\primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\result\block_result.cpp">
+      <Filter>src\result</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\result\filter_result.cpp">
       <Filter>src\result</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\result\payment_iterator.cpp">

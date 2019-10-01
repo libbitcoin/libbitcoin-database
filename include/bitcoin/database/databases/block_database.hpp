@@ -46,7 +46,7 @@ public:
         const path& confirmed_index_filename, const path& tx_index_filename,
         size_t table_minimum, size_t candidate_index_minimum,
         size_t confirmed_index_minimum, size_t tx_index_minimum,
-        size_t buckets, size_t expansion);
+        size_t buckets, size_t expansion, bool neutrino_filters);
 
     /// Close the database (all threads must first be stopped).
     ~block_database();
@@ -128,6 +128,7 @@ private:
     static const size_t prefix_size_;
 
     // Hash table used for looking up block headers by hash.
+    bool support_neutrino_filter_;
     file_storage hash_table_file_;
     record_map hash_table_;
 

@@ -37,13 +37,15 @@ using namespace bc::system::chain;
 static constexpr auto no_checksum = 0u;
 
 block_result::block_result(const const_element_type& element,
-    shared_mutex& metadata_mutex, const manager& index_manager)
+    shared_mutex& metadata_mutex, const manager& index_manager,
+    bool neutrino_filter_support)
   : height_(0),
     median_time_past_(0),
     state_(block_state::missing),
     checksum_(no_checksum),
     tx_start_(0),
     tx_count_(0),
+    neutrino_filter_(system::chain::block_filter::validation::unlinked),
     element_(element),
     index_manager_(index_manager),
     metadata_mutex_(metadata_mutex)
@@ -65,6 +67,8 @@ block_result::block_result(const const_element_type& element,
         checksum_ = deserial.read_4_bytes_little_endian();
         tx_start_ = deserial.read_4_bytes_little_endian();
         tx_count_ = deserial.read_2_bytes_little_endian();
+        if (neutrino_filter_support)
+            neutrino_filter_ = deserial.read_4_bytes_little_endian();
         ///////////////////////////////////////////////////////////////////////
     };
 
@@ -177,6 +181,11 @@ transaction_iterator block_result::begin() const
 transaction_iterator block_result::end() const
 {
     return { index_manager_, tx_start_, 0 };
+}
+
+file_offset block_result::neutrino_filter() const
+{
+    return neutrino_filter_;
 }
 
 } // namespace database

@@ -25,6 +25,7 @@
 #include <bitcoin/database/verify.hpp>
 #include <bitcoin/database/version.hpp>
 #include <bitcoin/database/databases/block_database.hpp>
+#include <bitcoin/database/databases/filter_database.hpp>
 #include <bitcoin/database/databases/payment_database.hpp>
 #include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
@@ -40,6 +41,7 @@
 #include <bitcoin/database/primitives/record_manager.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
 #include <bitcoin/database/result/block_result.hpp>
+#include <bitcoin/database/result/filter_result.hpp>
 #include <bitcoin/database/result/inpoint_iterator.hpp>
 #include <bitcoin/database/result/payment_iterator.hpp>
 #include <bitcoin/database/result/payment_result.hpp>
