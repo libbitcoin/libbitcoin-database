@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(filter_database__store__single_filter_without_matching_type
 
 BOOST_AUTO_TEST_CASE(filter_database__store__single_filter__success)
 {
-    uint8_t filter_type = 0u;
+    uint8_t filter_type = 150u;
 
     block_filter data(
         filter_type,
@@ -104,6 +104,7 @@ BOOST_AUTO_TEST_CASE(filter_database__store__single_filter__success)
     // BOOST_REQUIRE(result.block_hash() == hash);
 
     const auto block_filter = result.block_filter();
+    BOOST_REQUIRE(data.filter_type() == result.filter_type());
     BOOST_REQUIRE(data.filter_type() == block_filter.filter_type());
     BOOST_REQUIRE(data.header() == block_filter.header());
     BOOST_REQUIRE(data.filter() == block_filter.filter());

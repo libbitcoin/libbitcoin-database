@@ -93,6 +93,7 @@ chain::block_filter filter_result::block_filter() const
 {
     BITCOIN_ASSERT(element_);
     chain::block_filter result;
+    result.set_filter_type(filter_type());
     result.set_filter(filter());
     result.set_header(header());
     result.metadata.link = element_.link();
