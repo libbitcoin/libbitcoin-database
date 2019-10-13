@@ -100,7 +100,24 @@ bool data_base::create(const block& genesis)
     auto created = blocks_->create() && transactions_->create();
 
     if (neutrino_filter_support_)
+    {
         created &= neutrino_filters_->create();
+
+        // While I think it would be better to keep all filter calculation
+        // at the blockchain level, this is exposed and utilized by node and
+        // server without a wrapper from blockchain.
+        const auto& header = genesis.header();
+        if (!header.metadata.filter_data)
+        {
+            // populate if absent
+            const auto filter = neutrino::compute_filter(genesis);
+            const auto filter_header = neutrino::compute_filter_header(
+                null_hash, filter);
+
+            header.metadata.filter_data = std::make_shared<block_filter>(
+                neutrino_filter_type, genesis.hash(), filter_header, filter);
+        }
+    }
 
     if (catalog_)
         created &= payments_->create();
