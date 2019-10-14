@@ -503,6 +503,18 @@ code data_base::candidate(const block& block)
     if (!begin_write())
         return error::store_lock_failure;
 
+    if (neutrino_filter_support_)
+    {
+        const auto filter = header.metadata.filter_data;
+        if (!filter)
+            return error::operation_failed;
+
+        neutrino_filters_->store(*filter);
+
+        if (!blocks_->update_neutrino_filter(block.hash(), (*filter).metadata.link))
+            return error::operation_failed;
+    }
+
     // Set candidate validation state to valid.
     if (!blocks_->validate(header.hash(), error::success))
         return error::operation_failed;
@@ -561,15 +573,6 @@ code data_base::push(const block& block, size_t height,
     if (!transactions_->store(block.transactions()))
         return error::operation_failed;
 
-    if (neutrino_filter_support_)
-    {
-        const auto filter = block.header().metadata.filter_data;
-        if (!filter)
-            return error::operation_failed;
-
-        neutrino_filters_->store(*filter);
-    }
-
     // Populate transaction references from link metadata.
     if (!blocks_->update(block))
         return error::operation_failed;
@@ -577,6 +580,20 @@ code data_base::push(const block& block, size_t height,
     // Confirm all transactions (candidate state transition not requried).
     if (!transactions_->confirm(block, height, median_time_past))
         return error::operation_failed;
+
+    if (neutrino_filter_support_)
+    {
+        BITCOIN_ASSERT(block.header().metadata.filter_data != nullptr);
+
+        const auto filter = block.header().metadata.filter_data;
+        if (!filter)
+            return error::operation_failed;
+
+        neutrino_filters_->store(*filter);
+
+        if (!blocks_->update_neutrino_filter(block.hash(), (*filter).metadata.link))
+            return error::operation_failed;
+    }
 
     // Promote validation state to valid (presumed valid).
     if (!blocks_->validate(block.hash(), error::success))

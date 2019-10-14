@@ -94,6 +94,10 @@ public:
     /// Populate pooled block transaction references, state is unchanged.
     bool update(const system::chain::block& block);
 
+    /// Populate filter reference, state is unchanged.
+    bool update_neutrino_filter(const system::hash_digest& hash,
+        file_offset link);
+
     /// Promote pooled block to valid|invalid and set code.
     bool validate(const system::hash_digest& hash, const system::code& error);
 
