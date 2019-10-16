@@ -172,7 +172,7 @@ void data_base::start()
             settings_.neutrino_filter_table_size,
             settings_.neutrino_filter_table_buckets,
             settings_.file_growth_rate,
-            0u);
+            neutrino_filter_type);
     }
 
     if (catalog_)
@@ -486,19 +486,6 @@ code data_base::candidate(const block& block)
     if (!begin_write())
         return error::store_lock_failure;
 
-    if (neutrino_filter_support_)
-    {
-        const auto filter = header.metadata.filter_data;
-        BITCOIN_ASSERT(filter);
-        if (!filter)
-            return error::operation_failed;
-
-        neutrino_filters_->store(*filter);
-
-        if (!blocks_->update_neutrino_filter(block.hash(), (*filter).metadata.link))
-            return error::operation_failed;
-    }
-
     // Set candidate validation state to valid.
     if (!blocks_->validate(header.hash(), error::success))
         return error::operation_failed;
@@ -565,11 +552,21 @@ code data_base::push(const block& block, size_t height,
     if (!transactions_->confirm(block, height, median_time_past))
         return error::operation_failed;
 
+    // Promote validation state to valid (presumed valid).
+    if (!blocks_->validate(block.hash(), error::success))
+        return error::operation_failed;
+
+    if ((ec = catalog(block)))
+        return ec;
+
     if (neutrino_filter_support_)
     {
         auto previous_filter_header = null_hash;
 
-        if (height == 0)
+        // TODO: define blockchain initializer to host genesis
+        // block filter calculation and metadata attachment so as to
+        // keep all calculation within the blockchain project.
+        if (height != 0)
         {
             const auto result_block_previous = blocks().get(
                 block.header().previous_block_hash());
@@ -600,13 +597,6 @@ code data_base::push(const block& block, size_t height,
             block_filter.metadata.link))
             return error::operation_failed;
     }
-
-    // Promote validation state to valid (presumed valid).
-    if (!blocks_->validate(block.hash(), error::success))
-        return error::operation_failed;
-
-    if ((ec = catalog(block)))
-        return ec;
 
     // TODO: optimize using link.
     // Push header reference onto the confirmed index and set confirmed state.
@@ -816,6 +806,26 @@ code data_base::push_block(const block& block, size_t height)
     // Confirm txs (and thereby also payment indexes), spend prevouts.
     if (!transactions_->confirm(block, height, median_time_past))
         return error::operation_failed;
+
+    if (neutrino_filter_support_)
+    {
+        const auto neutrino_filter = block.header().metadata.neutrino_filter;
+
+        BITCOIN_ASSERT(neutrino_filter);
+        if (!neutrino_filter)
+            return error::operation_failed;
+
+        if ((*neutrino_filter).metadata.link ==
+            block_filter::validation::unlinked)
+            neutrino_filters_->store(*neutrino_filter);
+
+        BITCOIN_ASSERT((*neutrino_filter).metadata.link !=
+            block_filter::validation::unlinked);
+
+        if (!blocks_->update_neutrino_filter(block.hash(),
+            (*neutrino_filter).metadata.link))
+            return error::operation_failed;
+    }
 
     // TODO: optimize using link.
     // Confirm candidate block (candidate index unchanged).

@@ -324,6 +324,7 @@ bool block_database::update_neutrino_filter(const hash_digest& hash,
     if (!support_neutrino_filter_)
         return false;
 
+    BITCOIN_ASSERT(link <= max_uint32);
     auto element = hash_table_.find(hash);
 
     if (!element)
