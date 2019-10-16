@@ -100,24 +100,7 @@ bool data_base::create(const block& genesis)
     auto created = blocks_->create() && transactions_->create();
 
     if (neutrino_filter_support_)
-    {
         created &= neutrino_filters_->create();
-
-        // While I think it would be better to keep all filter calculation
-        // at the blockchain level, this is exposed and utilized by node and
-        // server without a wrapper from blockchain.
-        const auto& header = genesis.header();
-        if (!header.metadata.filter_data)
-        {
-            // populate if absent
-            const auto filter = neutrino::compute_filter(genesis);
-            const auto filter_header = neutrino::compute_filter_header(
-                null_hash, filter);
-
-            header.metadata.filter_data = std::make_shared<block_filter>(
-                neutrino_filter_type, genesis.hash(), filter_header, filter);
-        }
-    }
 
     if (catalog_)
         created &= payments_->create();
@@ -506,6 +489,7 @@ code data_base::candidate(const block& block)
     if (neutrino_filter_support_)
     {
         const auto filter = header.metadata.filter_data;
+        BITCOIN_ASSERT(filter);
         if (!filter)
             return error::operation_failed;
 
@@ -583,15 +567,37 @@ code data_base::push(const block& block, size_t height,
 
     if (neutrino_filter_support_)
     {
-        BITCOIN_ASSERT(block.header().metadata.filter_data != nullptr);
+        auto previous_filter_header = null_hash;
 
-        const auto filter = block.header().metadata.filter_data;
-        if (!filter)
+        if (height == 0)
+        {
+            const auto result_block_previous = blocks().get(
+                block.header().previous_block_hash());
+
+            if (!result_block_previous)
+                return error::operation_failed;
+
+            const auto result_filter = neutrino_filters().get(
+                result_block_previous.neutrino_filter());
+
+            if (!result_filter)
+                return error::operation_failed;
+
+            previous_filter_header = result_filter.header();
+        }
+
+        const auto filter = neutrino::compute_filter(block);
+        const auto filter_header = neutrino::compute_filter_header(
+            previous_filter_header, filter);
+
+        block_filter block_filter(neutrino_filter_type, block.hash(),
+            filter_header, filter);
+
+        if (!neutrino_filters_->store(block_filter))
             return error::operation_failed;
 
-        neutrino_filters_->store(*filter);
-
-        if (!blocks_->update_neutrino_filter(block.hash(), (*filter).metadata.link))
+        if (!blocks_->update_neutrino_filter(block.hash(),
+            block_filter.metadata.link))
             return error::operation_failed;
     }
 
