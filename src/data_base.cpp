@@ -559,44 +559,8 @@ code data_base::push(const block& block, size_t height,
     if ((ec = catalog(block)))
         return ec;
 
-    if (neutrino_filter_support_)
-    {
-        auto previous_filter_header = null_hash;
-
-        // TODO: define blockchain initializer to host genesis
-        // block filter calculation and metadata attachment so as to
-        // keep all calculation within the blockchain project.
-        if (height != 0)
-        {
-            const auto result_block_previous = blocks().get(
-                block.header().previous_block_hash());
-
-            if (!result_block_previous)
-                return error::operation_failed;
-
-            const auto result_filter = neutrino_filters().get(
-                result_block_previous.neutrino_filter());
-
-            if (!result_filter)
-                return error::operation_failed;
-
-            previous_filter_header = result_filter.header();
-        }
-
-        const auto filter = neutrino::compute_filter(block);
-        const auto filter_header = neutrino::compute_filter_header(
-            previous_filter_header, filter);
-
-        block_filter block_filter(neutrino_filter_type, block.hash(),
-            filter_header, filter);
-
-        if (!neutrino_filters_->store(block_filter))
-            return error::operation_failed;
-
-        if (!blocks_->update_neutrino_filter(block.hash(),
-            block_filter.metadata.link))
-            return error::operation_failed;
-    }
+    if ((ec = update_neutrino_filter(block)))
+        return ec;
 
     // TODO: optimize using link.
     // Push header reference onto the confirmed index and set confirmed state.
@@ -807,25 +771,8 @@ code data_base::push_block(const block& block, size_t height)
     if (!transactions_->confirm(block, height, median_time_past))
         return error::operation_failed;
 
-    if (neutrino_filter_support_)
-    {
-        const auto neutrino_filter = block.header().metadata.neutrino_filter;
-
-        BITCOIN_ASSERT(neutrino_filter);
-        if (!neutrino_filter)
-            return error::operation_failed;
-
-        if ((*neutrino_filter).metadata.link ==
-            block_filter::validation::unlinked)
-            neutrino_filters_->store(*neutrino_filter);
-
-        BITCOIN_ASSERT((*neutrino_filter).metadata.link !=
-            block_filter::validation::unlinked);
-
-        if (!blocks_->update_neutrino_filter(block.hash(),
-            (*neutrino_filter).metadata.link))
-            return error::operation_failed;
-    }
+    if ((ec = update_neutrino_filter(block)))
+        return ec;
 
     // TODO: optimize using link.
     // Confirm candidate block (candidate index unchanged).
@@ -879,6 +826,28 @@ code data_base::pop_block(chain::block& out_block, size_t height)
     return end_write() ? error::success : error::store_lock_failure;
     //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     ///////////////////////////////////////////////////////////////////////////
+}
+
+system::code data_base::update_neutrino_filter(const block& block)
+{
+    if (!neutrino_filter_support_)
+        return error::success;
+
+    const auto entry = block.header().metadata.neutrino_filter;
+
+    BITCOIN_ASSERT(entry);
+    if (!entry)
+        return error::operation_failed;
+
+    if ((*entry).metadata.link == block_filter::validation::unlinked)
+        neutrino_filters_->store(*entry);
+
+    BITCOIN_ASSERT((*entry).metadata.link != block_filter::validation::unlinked);
+
+    if (!blocks_->update_neutrino_filter(block.hash(), (*entry).metadata.link))
+        return error::operation_failed;
+
+    return error::success;
 }
 
 // Utilities.
