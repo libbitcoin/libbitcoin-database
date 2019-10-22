@@ -286,8 +286,6 @@ bool block_database::update(const chain::block& block)
 
     BITCOIN_ASSERT(tx_start <= max_uint32);
     BITCOIN_ASSERT(tx_count <= max_uint16);
-    BITCOIN_ASSERT(!support_neutrino_filter_ ||
-        (block.header().metadata.filter_data->metadata.link <= max_uint32));
 
     const auto updater = [&](byte_serializer& serial)
     {
@@ -298,14 +296,6 @@ bool block_database::update(const chain::block& block)
         unique_lock lock(metadata_mutex_);
         serial.write_4_bytes_little_endian(static_cast<uint32_t>(tx_start));
         serial.write_2_bytes_little_endian(static_cast<uint16_t>(tx_count));
-
-        if (support_neutrino_filter_)
-        {
-            const auto filter = block.header().metadata.filter_data;
-            if (filter)
-                serial.write_4_bytes_little_endian(static_cast<uint32_t>(
-                    filter->metadata.link));
-        }
         ///////////////////////////////////////////////////////////////////////
     };
 
@@ -325,6 +315,34 @@ static uint8_t update_validation_state(uint8_t original, bool positive)
 
     // Merge the new validation state with existing confirmation state.
     return confirmation_state | validation_state;
+}
+
+// Update a block record with foreign key.
+bool block_database::update_neutrino_filter(const hash_digest& hash,
+    file_offset link)
+{
+    if (!support_neutrino_filter_)
+        return false;
+
+    BITCOIN_ASSERT(link <= max_uint32);
+    auto element = hash_table_.find(hash);
+
+    if (!element)
+        return false;
+
+    const auto updater = [&](byte_serializer& serial)
+    {
+        serial.skip(neutrino_filter_offset);
+
+        // Critical Section.
+        ///////////////////////////////////////////////////////////////////////
+        unique_lock lock(metadata_mutex_);
+        serial.write_4_bytes_little_endian(static_cast<uint32_t>(link));
+        ///////////////////////////////////////////////////////////////////////
+    };
+
+    element.write(updater);
+    return true;
 }
 
 // Promote unvalidated block to valid|invalid based on error value.

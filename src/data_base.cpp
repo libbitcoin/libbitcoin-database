@@ -172,7 +172,7 @@ void data_base::start()
             settings_.neutrino_filter_table_size,
             settings_.neutrino_filter_table_buckets,
             settings_.file_growth_rate,
-            0u);
+            neutrino_filter_type);
     }
 
     if (catalog_)
@@ -544,15 +544,6 @@ code data_base::push(const block& block, size_t height,
     if (!transactions_->store(block.transactions()))
         return error::operation_failed;
 
-    if (neutrino_filter_support_)
-    {
-        const auto filter = block.header().metadata.filter_data;
-        if (!filter)
-            return error::operation_failed;
-
-        neutrino_filters_->store(*filter);
-    }
-
     // Populate transaction references from link metadata.
     if (!blocks_->update(block))
         return error::operation_failed;
@@ -566,6 +557,9 @@ code data_base::push(const block& block, size_t height,
         return error::operation_failed;
 
     if ((ec = catalog(block)))
+        return ec;
+
+    if ((ec = update_neutrino_filter(block)))
         return ec;
 
     // TODO: optimize using link.
@@ -777,6 +771,9 @@ code data_base::push_block(const block& block, size_t height)
     if (!transactions_->confirm(block, height, median_time_past))
         return error::operation_failed;
 
+    if ((ec = update_neutrino_filter(block)))
+        return ec;
+
     // TODO: optimize using link.
     // Confirm candidate block (candidate index unchanged).
     if (!blocks_->promote(block.hash(), height, false))
@@ -829,6 +826,28 @@ code data_base::pop_block(chain::block& out_block, size_t height)
     return end_write() ? error::success : error::store_lock_failure;
     //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     ///////////////////////////////////////////////////////////////////////////
+}
+
+system::code data_base::update_neutrino_filter(const block& block)
+{
+    if (!neutrino_filter_support_)
+        return error::success;
+
+    const auto entry = block.header().metadata.neutrino_filter;
+
+    BITCOIN_ASSERT(entry);
+    if (!entry)
+        return error::operation_failed;
+
+    if ((*entry).metadata.link == block_filter::validation::unlinked)
+        neutrino_filters_->store(*entry);
+
+    BITCOIN_ASSERT((*entry).metadata.link != block_filter::validation::unlinked);
+
+    if (!blocks_->update_neutrino_filter(block.hash(), (*entry).metadata.link))
+        return error::operation_failed;
+
+    return error::success;
 }
 
 // Utilities.

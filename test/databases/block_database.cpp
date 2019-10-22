@@ -359,64 +359,56 @@ BOOST_AUTO_TEST_CASE(block_database__with_filter__test)
     });
     const auto h0 = block0.hash();
     auto& header0 = block0.header();
-    header0.metadata.filter_data = std::make_shared<chain::block_filter>();
-    header0.metadata.filter_data->metadata.link = 427u;
+    const file_offset link0 = 427u;
 
 
     BOOST_REQUIRE_EQUAL(block0.transactions().size(), 2);
 
     auto header1 = block0.header();
     header1.set_nonce(4);
-    header1.metadata.filter_data = std::make_shared<chain::block_filter>();
-    header1.metadata.filter_data->metadata.link = 1u;
+    const file_offset link1 = 1u;
     block block1(header1, { random_tx(2), random_tx(3), random_tx(4), random_tx(5) });
     const auto h1 = block1.hash();
     BOOST_REQUIRE(h0 != h1);
 
     auto header2 = block0.header();
     header2.set_nonce(110);
-    header2.metadata.filter_data = std::make_shared<chain::block_filter>();
-    header2.metadata.filter_data->metadata.link = 2u;
+    const file_offset link2 = 2u;
     block block2(header2, { random_tx(6), random_tx(7), random_tx(8), random_tx(9), random_tx(10) });
     const auto h2 = block2.hash();
     BOOST_REQUIRE(h0 != h2);
 
     auto header3 = block0.header();
     header3.set_nonce(88);
-    header3.metadata.filter_data = std::make_shared<chain::block_filter>();
-    header3.metadata.filter_data->metadata.link = 3u;
+    const file_offset link3 = 3u;
     block block3(header3, { random_tx(11), random_tx(12), random_tx(13) });
     const auto h3 = block3.hash();
     BOOST_REQUIRE(h0 != h3);
 
     auto header4a = block0.header();
     header4a.set_nonce(63);
-    header4a.metadata.filter_data = std::make_shared<chain::block_filter>();
-    header4a.metadata.filter_data->metadata.link = 41u;
+    const file_offset link4a = 41u;
     block block4a(header4a, { random_tx(14), random_tx(15), random_tx(16) });
     const auto h4a = block4a.hash();
     BOOST_REQUIRE(h0 != h4a);
 
     auto header4b = block0.header();
     header4b.set_nonce(633);
-    header4b.metadata.filter_data = std::make_shared<chain::block_filter>();
-    header4b.metadata.filter_data->metadata.link = 42u;
+    const file_offset link4b = 42u;
     block block4b(header4b, { random_tx(22), random_tx(23), random_tx(24) });
     const auto h4b = block4b.hash();
     BOOST_REQUIRE(h0 != h4b);
 
     auto header5a = block0.header();
     header5a.set_nonce(99);
-    header5a.metadata.filter_data = std::make_shared<chain::block_filter>();
-    header5a.metadata.filter_data->metadata.link = 51u;
+    const file_offset link5a = 51u;
     block block5a(header5a, { random_tx(17), random_tx(18), random_tx(19), random_tx(20), random_tx(21) });
     const auto h5a = block5a.hash();
     BOOST_REQUIRE(h0 != h5a);
 
     auto header5b = block0.header();
     header5b.set_nonce(222);
-    header5b.metadata.filter_data = std::make_shared<chain::block_filter>();
-    header5b.metadata.filter_data->metadata.link = 52u;
+    const file_offset link5b = 52u;
     block block5b(header5b, { random_tx(25), random_tx(26), random_tx(27), random_tx(28), random_tx(29) });
     const auto h5b = block5b.hash();
     BOOST_REQUIRE(h0 != h5b);
@@ -487,11 +479,15 @@ BOOST_AUTO_TEST_CASE(block_database__with_filter__test)
 
     // Add blocks 0-4 to confirmed index (with required validation)
     BOOST_REQUIRE(instance.validate(h0, error::success));
+    instance.update_neutrino_filter(h0, link0);
     instance.promote(h0, 0, false);
+    instance.update_neutrino_filter(h1, link1);
     instance.promote(h1, 1, false);
     BOOST_REQUIRE(instance.validate(h2, error::success));
+    instance.update_neutrino_filter(h2, link2);
     instance.promote(h2, 2, false);
     BOOST_REQUIRE(instance.validate(h3, error::success));
+    instance.update_neutrino_filter(h3, link3);
     instance.promote(h3, 3, false);
 
     // block 0 stored, not updated, tx_count is not yet set
@@ -524,7 +520,7 @@ BOOST_AUTO_TEST_CASE(block_database__with_filter__test)
     BOOST_REQUIRE_EQUAL(*it0++, 0u);
     BOOST_REQUIRE_EQUAL(*it0++, 1u);
     BOOST_REQUIRE(it0 == result0.end());
-    BOOST_REQUIRE_EQUAL(427u, result0.neutrino_filter());
+    BOOST_REQUIRE_EQUAL(link0, result0.neutrino_filter());
 
     // Fetch block 2 by hash.
     const auto result2 = instance.get(h2);
@@ -539,7 +535,7 @@ BOOST_AUTO_TEST_CASE(block_database__with_filter__test)
     BOOST_REQUIRE_EQUAL(*it2++, 9u);
     BOOST_REQUIRE_EQUAL(*it2++, 10u);
     BOOST_REQUIRE(it2 == result2.end());
-    BOOST_REQUIRE_EQUAL(2u, result2.neutrino_filter());
+    BOOST_REQUIRE_EQUAL(link2, result2.neutrino_filter());
 
     // no metadata for missing blocks
     instance.get_header_metadata(block4a.header());
@@ -554,16 +550,18 @@ BOOST_AUTO_TEST_CASE(block_database__with_filter__test)
     instance.update(block5a);
 
     BOOST_REQUIRE(instance.validate(h4a, error::success));
+    instance.update_neutrino_filter(h4a, link4a);
     instance.promote(h4a, 4, false);
     BOOST_REQUIRE(instance.validate(h5a, error::success));
+    instance.update_neutrino_filter(h5a, link5a);
     instance.promote(h5a, 5, false);
 
     // Fetch blocks 4/5.
     const auto result4a = instance.get(h4a);
     const auto result5a = instance.get(h5a);
 
-    BOOST_REQUIRE_EQUAL(41u, result4a.neutrino_filter());
-    BOOST_REQUIRE_EQUAL(51u, result5a.neutrino_filter());
+    BOOST_REQUIRE_EQUAL(link4a, result4a.neutrino_filter());
+    BOOST_REQUIRE_EQUAL(link5a, result5a.neutrino_filter());
 
     // Unlink blocks 4a/5a.
     BOOST_REQUIRE(instance.top(confirmed_height, false));
@@ -576,7 +574,7 @@ BOOST_AUTO_TEST_CASE(block_database__with_filter__test)
     // Block 3 exists.
     const auto result3 = instance.get(3, false);
     BOOST_REQUIRE(result3);
-    BOOST_REQUIRE_EQUAL(3u, result3.neutrino_filter());
+    BOOST_REQUIRE_EQUAL(link3, result3.neutrino_filter());
 
     // Blocks 4a/5a are missing (verify index guard).
     const auto result4 = instance.get(4, false);
@@ -588,8 +586,10 @@ BOOST_AUTO_TEST_CASE(block_database__with_filter__test)
     instance.store(block4b.header(), 4, 0);
     instance.store(block5b.header(), 5, 0);
     BOOST_REQUIRE(instance.validate(h4b, error::success));
+    instance.update_neutrino_filter(h4b, link4b);
     instance.promote(h4b, 4, false);
     BOOST_REQUIRE(instance.validate(h5b, error::success));
+    instance.update_neutrino_filter(h5b, link5b);
     instance.promote(h5b, 5, false);
     instance.update(block4b);
     instance.update(block5b);
@@ -604,8 +604,8 @@ BOOST_AUTO_TEST_CASE(block_database__with_filter__test)
     const auto result5b = instance.get(5, false);
     BOOST_REQUIRE(result5b);
     BOOST_REQUIRE(result5b.hash() == h5b);
-    BOOST_REQUIRE_EQUAL(42u, result4b.neutrino_filter());
-    BOOST_REQUIRE_EQUAL(52u, result5b.neutrino_filter());
+    BOOST_REQUIRE_EQUAL(link4b, result4b.neutrino_filter());
+    BOOST_REQUIRE_EQUAL(link5b, result5b.neutrino_filter());
 
     // Test also fetch by hash.
     const auto result_h5b = instance.get(h5b);

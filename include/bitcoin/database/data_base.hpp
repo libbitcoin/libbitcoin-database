@@ -154,6 +154,10 @@ protected:
     system::code push_block(const system::chain::block& block, size_t height);
     system::code pop_block(system::chain::block& out_block, size_t height);
 
+    // Neutrino filter update.
+    // ------------------------------------------------------------------------
+
+    system::code update_neutrino_filter(const system::chain::block& block);
 
     // Databases.
     // ------------------------------------------------------------------------
