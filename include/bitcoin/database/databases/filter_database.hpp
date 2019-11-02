@@ -80,6 +80,10 @@ public:
     // Currently stores header as as hash, not used for retrieval.
     // filter_result get(const system::hash_digest& hash) const;
 
+    system::hash_list checkpoints() const;
+
+    bool set_checkpoints(system::hash_list&& checkpoints);
+
     // Writers.
     // ------------------------------------------------------------------------
 
@@ -106,6 +110,8 @@ private:
 
     // This provides atomicity for height and position.
     mutable system::shared_mutex metadata_mutex_;
+
+    system::atomic<system::hash_list> checkpoints_;
 };
 
 } // namespace database
