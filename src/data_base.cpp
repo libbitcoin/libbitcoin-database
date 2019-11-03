@@ -133,6 +133,13 @@ bool data_base::open()
     if (catalog_)
         opened &= payments_->open();
 
+    if (opened && neutrino_filter_support_)
+    {
+        opened = (error::success == initialize_filter_checkpoints(
+            *neutrino_filters_,
+            std::bind(&data_base::neutrino_filter_extractor, _1, _2)));
+    }
+
     if (!opened)
         return false;
 
@@ -516,7 +523,17 @@ code data_base::reorganize(const config::checkpoint& fork_point,
         pop_above(outgoing, fork_point) &&
         push_all(incoming, fork_point);
 
-    return result ? error::success : error::operation_failed;
+    system::code ec = result ? error::success : error::operation_failed;
+
+    if (neutrino_filter_support_ && (ec == error::success))
+    {
+        filter_database& neutrino = *neutrino_filters_;
+        ec = update_filter_checkpoints(neutrino,
+            std::bind(&data_base::neutrino_filter_extractor, _1, _2),
+            fork_point, incoming, outgoing);
+    }
+
+    return ec;
 }
 
 // Store, update, validate and confirm the presumed valid block.
@@ -848,6 +865,116 @@ system::code data_base::update_neutrino_filter(const block& block)
         return error::operation_failed;
 
     return error::success;
+}
+
+system::code data_base::neutrino_filter_extractor(const block_result& result,
+    file_offset& offset)
+{
+    if (!result)
+        return error::operation_failed;
+
+    offset = result.neutrino_filter();
+    return error::success;
+}
+
+system::code data_base::initialize_filter_checkpoints(
+    filter_database& database, filter_key_extractor extractor)
+{
+    system::code ec = error::success;
+    const auto interval = compact_filter_checkpoint_interval;
+    size_t height = 0u;
+
+    if (!blocks().top(height, false))
+        return error::operation_failed;
+
+    const auto count = height / interval;
+
+    hash_list checkpoints;
+    checkpoints.reserve(count);
+
+    for (size_t i = interval; i <= height; i = ceiling_add(i, interval))
+    {
+        const auto result_block = blocks().get(i, false);
+
+        if (!result_block)
+            return error::operation_failed;
+
+        file_offset key = 0u;
+        if ((ec = extractor(result_block, key)))
+            return ec;
+
+        const auto result_filter = database.get(key);
+
+        if (!result_filter)
+            return error::operation_failed;
+
+        checkpoints.push_back(result_filter.header());
+    }
+
+    database.set_checkpoints(std::move(checkpoints));
+    return ec;
+}
+
+system::code data_base::update_filter_checkpoints(filter_database& database,
+    filter_key_extractor extractor,
+    const system::config::checkpoint& fork_point,
+    system::block_const_ptr_list_const_ptr incoming,
+    system::block_const_ptr_list_ptr outgoing)
+{
+    system::code ec = error::success;
+    auto detected_change = false;
+    const auto interval = compact_filter_checkpoint_interval;
+    auto checkpoints = database.checkpoints();
+
+    if (outgoing->size() > 0)
+    {
+        auto previous_height = ceiling_add(fork_point.height(), outgoing->size());
+        auto previous_checkpoint_count = (previous_height / interval);
+        auto fork_height_checkpoint_count = (fork_point.height() / interval);
+
+        if (previous_checkpoint_count > fork_height_checkpoint_count)
+        {
+            detected_change = true;
+            checkpoints.resize(floor_subtract(checkpoints.size(),
+                (previous_checkpoint_count - fork_height_checkpoint_count)));
+        }
+    }
+
+    if (incoming->size() > 0)
+    {
+        auto height = ceiling_add(fork_point.height(), incoming->size());
+        auto checkpoint_count = (height / interval);
+
+        if (checkpoints.size() < checkpoint_count)
+        {
+            detected_change = true;
+            auto last_height = checkpoints.size() * interval;
+
+            for (auto i = last_height; i <= height; i = ceiling_add(i, interval))
+            {
+                const auto result_block = blocks().get(i, false);
+
+                if (!result_block)
+                    return error::operation_failed;
+
+                file_offset key = 0u;
+                if ((ec = extractor(result_block, key)))
+                    return ec;
+
+                const auto result_filter = database.get(key);
+
+                if (!result_filter)
+                    return error::operation_failed;
+
+                checkpoints.push_back(result_filter.header());
+            }
+        }
+    }
+
+    if (detected_change)
+        database.set_checkpoints(std::move(checkpoints));
+
+    return ec;
 }
 
 // Utilities.

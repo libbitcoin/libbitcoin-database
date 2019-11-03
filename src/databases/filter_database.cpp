@@ -101,6 +101,17 @@ filter_result filter_database::get(file_offset link) const
     return { hash_table_.get(link), metadata_mutex_, filter_type_ };
 }
 
+hash_list filter_database::checkpoints() const
+{
+    return checkpoints_.load();
+}
+
+bool filter_database::set_checkpoints(hash_list&& checkpoints)
+{
+    checkpoints_.store(std::forward<hash_list>(checkpoints));
+    return true;
+}
+
 //filter_result filter_database::get(const hash_digest& hash) const
 //{
 //    return { hash_table_.find(hash), metadata_mutex_, filter_type_ };

@@ -129,6 +129,9 @@ public:
     system::code catalog(const system::chain::transaction& tx);
 
 protected:
+    typedef std::function<system::code(const block_result&, file_offset&)>
+        filter_key_extractor;
+
     void start();
     void commit();
     bool flush() const override;
@@ -158,6 +161,20 @@ protected:
     // ------------------------------------------------------------------------
 
     system::code update_neutrino_filter(const system::chain::block& block);
+    static system::code neutrino_filter_extractor(const block_result& result,
+        file_offset& offset);
+
+    // Filter checkpoint update.
+    // ------------------------------------------------------------------------
+
+    system::code initialize_filter_checkpoints(filter_database& database,
+        filter_key_extractor extractor);
+
+    system::code update_filter_checkpoints(filter_database& database,
+        filter_key_extractor extractor,
+        const system::config::checkpoint& fork_point,
+        system::block_const_ptr_list_const_ptr incoming,
+        system::block_const_ptr_list_ptr outgoing);
 
     // Databases.
     // ------------------------------------------------------------------------
