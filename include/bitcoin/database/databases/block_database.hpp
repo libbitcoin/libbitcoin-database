@@ -92,7 +92,7 @@ public:
         uint32_t median_time_past);
 
     /// Populate pooled block transaction references, state is unchanged.
-    bool update(const system::chain::block& block);
+    bool update_transactions(const system::chain::block& block);
 
     /// Populate filter reference, state is unchanged.
     bool update_neutrino_filter(const system::hash_digest& hash,

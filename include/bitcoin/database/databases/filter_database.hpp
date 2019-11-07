@@ -77,7 +77,7 @@ public:
 
     /// Fetch filter by its block hash.
     // Disabled due to optimization removing block_hash.
-    // Currently stores header as as hash, not used for retrieval.
+    // Currently stores header as hash, not used for retrieval.
     // filter_result get(const system::hash_digest& hash) const;
 
     system::hash_list checkpoints() const;
@@ -104,6 +104,7 @@ private:
     // Identifier of the filters being stored (assumes uniform storage).
     uint8_t filter_type_;
 
+    // TODO: eliminate hash table.
     // Hash table used for looking up filters by block hash.
     file_storage hash_table_file_;
     slab_map hash_table_;

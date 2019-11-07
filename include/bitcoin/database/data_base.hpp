@@ -43,8 +43,7 @@ class BCD_API data_base
 public:
     typedef std::function<void(const system::code&)> result_handler;
 
-    data_base(const settings& settings, bool catalog,
-        bool neutrino_filter_support);
+    data_base(const settings& settings, bool catalog, bool filter);
 
     // Open and close.
     // ------------------------------------------------------------------------
@@ -105,10 +104,6 @@ public:
     /// Mark candidate block, txs and outputs spent by them as candidate.
     system::code candidate(const system::chain::block& block);
 
-    // BLOCK ORGANIZER (candidate)
-    /// Add transaction payments of the block to the payment index.
-    system::code catalog(const system::chain::block& block);
-
     // BLOCK ORGANIZER (reorganize)
     /// Reorganize the block index to the specified fork point.
     system::code reorganize(const system::config::checkpoint& fork_point,
@@ -119,7 +114,7 @@ public:
     /// Confirm candidate block with confirmed parent.
     system::code confirm(const system::hash_digest& block_hash,
         size_t height);
-    
+
     // TRANSACTION ORGANIZER (store)
     /// Store unconfirmed tx/payments that were verified with the given forks.
     system::code store(const system::chain::transaction& tx, uint32_t forks);
@@ -157,31 +152,27 @@ protected:
     system::code push_block(const system::chain::block& block, size_t height);
     system::code pop_block(system::chain::block& out_block, size_t height);
 
-    // Neutrino filter update.
+    /// Add transaction payments of the block to the payment index.
+    system::code catalog(const system::chain::block& block);
+
+    // Neutrino filters.
     // ------------------------------------------------------------------------
 
-    system::code update_neutrino_filter(const system::chain::block& block);
-    static system::code neutrino_filter_extractor(const block_result& result,
-        file_offset& offset);
-
-    // Filter checkpoint update.
-    // ------------------------------------------------------------------------
-
-    system::code initialize_filter_checkpoints(filter_database& database,
-        filter_key_extractor extractor);
-
-    system::code update_filter_checkpoints(filter_database& database,
-        filter_key_extractor extractor,
+    system::code populate_filter_cache(filter_database& database);
+    system::code update_filter_cache(filter_database& database,
         const system::config::checkpoint& fork_point,
         system::block_const_ptr_list_const_ptr incoming,
         system::block_const_ptr_list_ptr outgoing);
+
+    // Add neutrino filter to the filters index.
+    system::code filter(const system::chain::block& block);
 
     // Databases.
     // ------------------------------------------------------------------------
 
     std::shared_ptr<block_database> blocks_;
     std::shared_ptr<transaction_database> transactions_;
-    std::shared_ptr<filter_database> neutrino_filters_;
+    std::shared_ptr<filter_database> filters_;
     std::shared_ptr<payment_database> payments_;
 
 private:
@@ -190,7 +181,7 @@ private:
 
     std::atomic<bool> closed_;
     const bool catalog_;
-    const bool neutrino_filter_support_;
+    const bool filter_;
     const settings& settings_;
 
     // Used to prevent unsafe concurrent writes.

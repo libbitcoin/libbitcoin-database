@@ -104,7 +104,6 @@ block_database::block_database(const path& map_filename,
     tx_index_file_(tx_index_filename, tx_index_minimum, expansion),
     tx_index_(tx_index_file_, 0, sizeof(file_offset))
 {
-
 }
 
 block_database::~block_database()
@@ -273,7 +272,7 @@ block_database::link_type block_database::associate(
 // These are used to atomically update metadata.
 
 // Populate transaction references, state is unchanged.
-bool block_database::update(const chain::block& block)
+bool block_database::update_transactions(const chain::block& block)
 {
     auto element = hash_table_.find(block.hash());
 
@@ -317,7 +316,7 @@ static uint8_t update_validation_state(uint8_t original, bool positive)
     return confirmation_state | validation_state;
 }
 
-// Update a block record with foreign key.
+// Populate neutrino filter link.
 bool block_database::update_neutrino_filter(const hash_digest& hash,
     file_offset link)
 {
