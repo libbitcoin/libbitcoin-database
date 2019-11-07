@@ -210,10 +210,10 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     BOOST_REQUIRE_EQUAL(instance.get(h0).transaction_count(), 0);
 
     // Update blocks
-    instance.update(block0);
-    instance.update(block1);
-    instance.update(block2);
-    instance.update(block3);
+    instance.update_transactions(block0);
+    instance.update_transactions(block1);
+    instance.update_transactions(block2);
+    instance.update_transactions(block3);
 
     // Updated blocks set tx_count
     BOOST_REQUIRE_EQUAL(instance.get(h0).transaction_count(), 2);
@@ -260,8 +260,8 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     // Try a fork event.
     instance.store(block4a.header(), 4, 0);
     instance.store(block5a.header(), 5, 0);
-    instance.update(block4a);
-    instance.update(block5a);
+    instance.update_transactions(block4a);
+    instance.update_transactions(block5a);
 
     BOOST_REQUIRE(instance.validate(h4a, error::success));
     instance.promote(h4a, 4, false);
@@ -297,8 +297,8 @@ BOOST_AUTO_TEST_CASE(block_database__test)
     instance.promote(h4b, 4, false);
     BOOST_REQUIRE(instance.validate(h5b, error::success));
     instance.promote(h5b, 5, false);
-    instance.update(block4b);
-    instance.update(block5b);
+    instance.update_transactions(block4b);
+    instance.update_transactions(block5b);
 
     BOOST_REQUIRE(instance.top(confirmed_height, false));
     BOOST_REQUIRE_EQUAL(confirmed_height, 5u);
@@ -494,10 +494,10 @@ BOOST_AUTO_TEST_CASE(block_database__with_filter__test)
     BOOST_REQUIRE_EQUAL(instance.get(h0).transaction_count(), 0);
 
     // Update blocks
-    instance.update(block0);
-    instance.update(block1);
-    instance.update(block2);
-    instance.update(block3);
+    instance.update_transactions(block0);
+    instance.update_transactions(block1);
+    instance.update_transactions(block2);
+    instance.update_transactions(block3);
 
     // Updated blocks set tx_count
     BOOST_REQUIRE_EQUAL(instance.get(h0).transaction_count(), 2);
@@ -546,8 +546,8 @@ BOOST_AUTO_TEST_CASE(block_database__with_filter__test)
     // Try a fork event.
     instance.store(block4a.header(), 4, 0);
     instance.store(block5a.header(), 5, 0);
-    instance.update(block4a);
-    instance.update(block5a);
+    instance.update_transactions(block4a);
+    instance.update_transactions(block5a);
 
     BOOST_REQUIRE(instance.validate(h4a, error::success));
     instance.update_neutrino_filter(h4a, link4a);
@@ -591,8 +591,8 @@ BOOST_AUTO_TEST_CASE(block_database__with_filter__test)
     BOOST_REQUIRE(instance.validate(h5b, error::success));
     instance.update_neutrino_filter(h5b, link5b);
     instance.promote(h5b, 5, false);
-    instance.update(block4b);
-    instance.update(block5b);
+    instance.update_transactions(block4b);
+    instance.update_transactions(block5b);
 
     BOOST_REQUIRE(instance.top(confirmed_height, false));
     BOOST_REQUIRE_EQUAL(confirmed_height, 5u);

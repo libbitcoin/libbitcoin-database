@@ -58,14 +58,12 @@ using namespace bc::system::wallet;
 // Construct.
 // ----------------------------------------------------------------------------
 
-data_base::data_base(const settings& settings, bool catalog,
-    bool neutrino_filter_support)
+data_base::data_base(const settings& settings, bool catalog, bool filter)
   : closed_(true),
     catalog_(catalog),
-    neutrino_filter_support_(neutrino_filter_support),
+    filter_(filter),
     settings_(settings),
-    database::store(settings.directory, catalog, neutrino_filter_support,
-        settings.flush_writes)
+    database::store(settings.directory, catalog, filter_, settings.flush_writes)
 {
     LOG_DEBUG(LOG_DATABASE)
         << "Buckets: "
@@ -99,8 +97,8 @@ bool data_base::create(const block& genesis)
     // These leave the databases open.
     auto created = blocks_->create() && transactions_->create();
 
-    if (neutrino_filter_support_)
-        created &= neutrino_filters_->create();
+    if (filter_)
+        created &= filters_->create();
 
     if (catalog_)
         created &= payments_->create();
@@ -127,18 +125,11 @@ bool data_base::open()
 
     auto opened = blocks_->open() && transactions_->open();
 
-    if (neutrino_filter_support_)
-        opened &= neutrino_filters_->open();
+    if (filter_)
+        opened &= filters_->open() && populate_filter_cache(*filters_);
 
     if (catalog_)
         opened &= payments_->open();
-
-    if (opened && neutrino_filter_support_)
-    {
-        opened = (error::success == initialize_filter_checkpoints(
-            *neutrino_filters_,
-            std::bind(&data_base::neutrino_filter_extractor, _1, _2)));
-    }
 
     if (!opened)
         return false;
@@ -163,7 +154,7 @@ void data_base::start()
         settings_.transaction_index_size,
         settings_.block_table_buckets,
         settings_.file_growth_rate,
-        neutrino_filter_support_);
+        filter_);
 
     transactions_ = std::make_shared<transaction_database>(
         transaction_table,
@@ -172,9 +163,9 @@ void data_base::start()
         settings_.file_growth_rate,
         settings_.cache_capacity);
 
-    if (neutrino_filter_support_)
+    if (filter_)
     {
-        neutrino_filters_ = std::make_shared<filter_database>(
+        filters_ = std::make_shared<filter_database>(
             neutrino_filter_table,
             settings_.neutrino_filter_table_size,
             settings_.neutrino_filter_table_buckets,
@@ -200,8 +191,8 @@ void data_base::commit()
     if (catalog_)
         payments_->commit();
 
-    if (neutrino_filter_support_)
-        neutrino_filters_->commit();
+    if (filter_)
+        filters_->commit();
 
     transactions_->commit();
     blocks_->commit();
@@ -219,8 +210,8 @@ bool data_base::flush() const
 
     auto flushed = blocks_->flush() && transactions_->flush();
 
-    if (neutrino_filter_support_)
-        flushed &= neutrino_filters_->flush();
+    if (filter_)
+        flushed &= filters_->flush();
 
     if (catalog_)
         flushed &= payments_->flush();
@@ -243,8 +234,8 @@ bool data_base::close()
 
     auto closed = blocks_->close() && transactions_->close();
 
-    if (neutrino_filter_support_)
-        closed &= neutrino_filters_->close();
+    if (filter_)
+        closed &= filters_->close();
 
     if (catalog_)
         closed &= payments_->close();
@@ -271,7 +262,7 @@ const transaction_database& data_base::transactions() const
 // Invalid if neutrino filters not initialized.
 const filter_database& data_base::neutrino_filters() const
 {
-    return *neutrino_filters_;
+    return *filters_;
 }
 
 // Invalid if indexes not initialized.
@@ -310,25 +301,16 @@ code data_base::catalog(const transaction& tx)
     ///////////////////////////////////////////////////////////////////////////
 }
 
+// Called from candidate and push.
 code data_base::catalog(const block& block)
 {
     code ec;
     if (!catalog_)
         return ec;
 
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    conditional_lock lock(flush_each_write());
-
     const auto start = asio::steady_clock::now();
-    if ((ec = verify_exists(*blocks_, block.header())))
-        return ec;
 
-    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    if (!begin_write())
-        return error::store_lock_failure;
-
-    // Existence check prevents duplicated indexing.
+    // Existence checks prevent duplicated indexing.
     for (const auto& tx: block.transactions())
         if (!tx.metadata.cataloged)
             payments_->catalog(tx);
@@ -336,9 +318,40 @@ code data_base::catalog(const block& block)
     payments_->commit();
 
     block.metadata.catalog = asio::steady_clock::now() - start;
-    return end_write() ? error::success : error::store_lock_failure;
-    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ///////////////////////////////////////////////////////////////////////////
+    return error::success;
+}
+
+// Called from candidate and push.
+system::code data_base::filter(const block& block)
+{
+    code ec;
+    if (!filter_)
+        return ec;
+
+    const auto start = asio::steady_clock::now();
+
+    const auto neutrino_filter = block.header().metadata.neutrino_filter;
+
+    if (!neutrino_filter)
+        return error::operation_failed;
+
+    const auto link = neutrino_filter->metadata.link;
+    const auto exists = link != block_filter::validation::unlinked;
+
+    // Existence check prevents duplicated indexing.
+    if (!exists)
+    {
+        if (!filters_->store(*neutrino_filter))
+            return error::operation_failed;
+
+        if (!blocks_->update_neutrino_filter(block.hash(), link))
+            return error::operation_failed;
+    }
+
+    filters_->commit();
+
+    block.metadata.filter = asio::steady_clock::now() - start;
+    return error::success;
 }
 
 code data_base::store(const transaction& tx, uint32_t forks)
@@ -436,10 +449,10 @@ code data_base::update(const chain::block& block, size_t height)
     // Store the block's filter data (header, filter).
 
     // Update the block's transaction associations (not its state).
-    if (!blocks_->update(block))
+    if (!blocks_->update_transactions(block))
         return error::operation_failed;
 
-    commit();
+    transactions_->commit();
 
     block.metadata.associate = asio::steady_clock::now() - start;
     return end_write() ? error::success : error::store_lock_failure;
@@ -502,6 +515,12 @@ code data_base::candidate(const block& block)
         if (!transactions_->candidate(tx.metadata.link))
             return error::operation_failed;
 
+    if ((ec = filter(block)))
+        return ec;
+
+    if ((ec = catalog(block)))
+        return ec;
+
     header.metadata.error = error::success;
     header.metadata.validated = true;
 
@@ -523,17 +542,13 @@ code data_base::reorganize(const config::checkpoint& fork_point,
         pop_above(outgoing, fork_point) &&
         push_all(incoming, fork_point);
 
-    system::code ec = result ? error::success : error::operation_failed;
+    if (!result)
+        return error::operation_failed;
 
-    if (neutrino_filter_support_ && (ec == error::success))
-    {
-        filter_database& neutrino = *neutrino_filters_;
-        ec = update_filter_checkpoints(neutrino,
-            std::bind(&data_base::neutrino_filter_extractor, _1, _2),
-            fork_point, incoming, outgoing);
-    }
+    if (filter_)
+        return update_filter_cache(*filters_, fork_point, incoming, outgoing);
 
-    return ec;
+    return error::success;
 }
 
 // Store, update, validate and confirm the presumed valid block.
@@ -562,7 +577,7 @@ code data_base::push(const block& block, size_t height,
         return error::operation_failed;
 
     // Populate transaction references from link metadata.
-    if (!blocks_->update(block))
+    if (!blocks_->update_transactions(block))
         return error::operation_failed;
 
     // Confirm all transactions (candidate state transition not requried).
@@ -573,10 +588,10 @@ code data_base::push(const block& block, size_t height,
     if (!blocks_->validate(block.hash(), error::success))
         return error::operation_failed;
 
-    if ((ec = catalog(block)))
+    if ((ec = filter(block)))
         return ec;
 
-    if ((ec = update_neutrino_filter(block)))
+    if ((ec = catalog(block)))
         return ec;
 
     // TODO: optimize using link.
@@ -584,7 +599,8 @@ code data_base::push(const block& block, size_t height,
     if (!blocks_->promote(block.hash(), height, false))
         return error::operation_failed;
 
-    commit();
+    blocks_->commit();
+    transactions_->commit();
 
     return end_write() ? error::success : error::store_lock_failure;
     //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -705,8 +721,8 @@ code data_base::pop_header(chain::header& out_header, size_t height)
     if (!blocks_->demote(result.hash(), height, true))
         return error::operation_failed;
 
-    // Commit everything that was changed and return header.
     blocks_->commit();
+
     out_header = result.header();
     BITCOIN_ASSERT(out_header.is_valid());
 
@@ -788,15 +804,12 @@ code data_base::push_block(const block& block, size_t height)
     if (!transactions_->confirm(block, height, median_time_past))
         return error::operation_failed;
 
-    if ((ec = update_neutrino_filter(block)))
-        return ec;
-
     // TODO: optimize using link.
     // Confirm candidate block (candidate index unchanged).
     if (!blocks_->promote(block.hash(), height, false))
         return error::operation_failed;
 
-    commit();
+    blocks_->commit();
 
     block.metadata.confirm = asio::steady_clock::now() - start;
     return end_write() ? error::success : error::store_lock_failure;
@@ -837,7 +850,7 @@ code data_base::pop_block(chain::block& out_block, size_t height)
     if (!blocks_->demote(result.hash(), height, false))
         return error::operation_failed;
 
-    commit();
+    blocks_->commit();
 
     BITCOIN_ASSERT(out_block.is_valid());
     return end_write() ? error::success : error::store_lock_failure;
@@ -845,136 +858,97 @@ code data_base::pop_block(chain::block& out_block, size_t height)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-system::code data_base::update_neutrino_filter(const block& block)
+system::code data_base::populate_filter_cache(filter_database& database)
 {
-    if (!neutrino_filter_support_)
-        return error::success;
-
-    const auto entry = block.header().metadata.neutrino_filter;
-
-    BITCOIN_ASSERT(entry);
-    if (!entry)
-        return error::operation_failed;
-
-    if ((*entry).metadata.link == block_filter::validation::unlinked)
-        neutrino_filters_->store(*entry);
-
-    BITCOIN_ASSERT((*entry).metadata.link != block_filter::validation::unlinked);
-
-    if (!blocks_->update_neutrino_filter(block.hash(), (*entry).metadata.link))
-        return error::operation_failed;
-
-    return error::success;
-}
-
-system::code data_base::neutrino_filter_extractor(const block_result& result,
-    file_offset& offset)
-{
-    if (!result)
-        return error::operation_failed;
-
-    offset = result.neutrino_filter();
-    return error::success;
-}
-
-system::code data_base::initialize_filter_checkpoints(
-    filter_database& database, filter_key_extractor extractor)
-{
-    system::code ec = error::success;
-    const auto interval = compact_filter_checkpoint_interval;
+    constexpr auto interval = compact_filter_checkpoint_interval;
     size_t height = 0u;
 
     if (!blocks().top(height, false))
         return error::operation_failed;
 
-    const auto count = height / interval;
-
     hash_list checkpoints;
-    checkpoints.reserve(count);
+    checkpoints.reserve(height / interval);
 
-    for (size_t i = interval; i <= height; i = ceiling_add(i, interval))
+    for (auto index = interval; index <= height;
+        index = ceiling_add(index, interval))
     {
-        const auto result_block = blocks().get(i, false);
+        const auto block_result = blocks().get(index, false);
 
-        if (!result_block)
+        if (!block_result)
             return error::operation_failed;
 
-        file_offset key = 0u;
-        if ((ec = extractor(result_block, key)))
-            return ec;
+        const auto filter_result = database.get(
+            block_result.neutrino_filter());
 
-        const auto result_filter = database.get(key);
-
-        if (!result_filter)
+        if (!filter_result)
             return error::operation_failed;
 
-        checkpoints.push_back(result_filter.header());
+        checkpoints.push_back(filter_result.header());
     }
 
     database.set_checkpoints(std::move(checkpoints));
-    return ec;
+    return error::success;
 }
 
-system::code data_base::update_filter_checkpoints(filter_database& database,
-    filter_key_extractor extractor,
+// TODO: incorporate into reorg loops using safe cache object, adding a call
+// each to push_block/pop_block (or promote/demote).
+system::code data_base::update_filter_cache(filter_database& database,
     const system::config::checkpoint& fork_point,
     system::block_const_ptr_list_const_ptr incoming,
     system::block_const_ptr_list_ptr outgoing)
 {
-    system::code ec = error::success;
-    auto detected_change = false;
-    const auto interval = compact_filter_checkpoint_interval;
+    constexpr auto interval = compact_filter_checkpoint_interval;
     auto checkpoints = database.checkpoints();
+    auto changed = false;
 
-    if (outgoing->size() > 0)
+    if (!outgoing->empty())
     {
-        auto previous_height = ceiling_add(fork_point.height(), outgoing->size());
-        auto previous_checkpoint_count = (previous_height / interval);
-        auto fork_height_checkpoint_count = (fork_point.height() / interval);
+        const auto previous_height = ceiling_add(fork_point.height(),
+            outgoing->size());
+        const auto previous_count = previous_height / interval;
+        const auto fork_height_count = fork_point.height() / interval;
 
-        if (previous_checkpoint_count > fork_height_checkpoint_count)
+        if (previous_count > fork_height_count)
         {
-            detected_change = true;
+            changed = true;
             checkpoints.resize(floor_subtract(checkpoints.size(),
-                (previous_checkpoint_count - fork_height_checkpoint_count)));
+                previous_count - fork_height_count));
         }
     }
 
-    if (incoming->size() > 0)
+    if (!incoming->empty())
     {
         auto height = ceiling_add(fork_point.height(), incoming->size());
-        auto checkpoint_count = (height / interval);
+        auto checkpoint_count = height / interval;
 
         if (checkpoints.size() < checkpoint_count)
         {
-            detected_change = true;
-            auto last_height = checkpoints.size() * interval;
+            changed = true;
+            const auto last_height = checkpoints.size() * interval;
 
-            for (auto i = last_height; i <= height; i = ceiling_add(i, interval))
+            for (auto index = last_height; index <= height;
+                index = ceiling_add(index, interval))
             {
-                const auto result_block = blocks().get(i, false);
+                const auto block_result = blocks().get(index, false);
 
-                if (!result_block)
+                if (!block_result)
                     return error::operation_failed;
 
-                file_offset key = 0u;
-                if ((ec = extractor(result_block, key)))
-                    return ec;
+                const auto filter_result = database.get(
+                    block_result.neutrino_filter());
 
-                const auto result_filter = database.get(key);
-
-                if (!result_filter)
+                if (!filter_result)
                     return error::operation_failed;
 
-                checkpoints.push_back(result_filter.header());
+                checkpoints.push_back(filter_result.header());
             }
         }
     }
 
-    if (detected_change)
+    if (changed)
         database.set_checkpoints(std::move(checkpoints));
 
-    return ec;
+    return error::success;
 }
 
 // Utilities.
