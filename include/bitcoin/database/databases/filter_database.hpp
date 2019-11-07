@@ -77,7 +77,7 @@ public:
 
     /// Fetch filter by its block hash.
     // Disabled due to optimization removing block_hash.
-    // Currently stores header as as hash, not used for retrieval.
+    // Currently stores header as hash, not used for retrieval.
     // filter_result get(const system::hash_digest& hash) const;
 
     system::hash_list checkpoints() const;
