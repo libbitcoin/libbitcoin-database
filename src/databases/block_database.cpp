@@ -317,7 +317,7 @@ static uint8_t update_validation_state(uint8_t original, bool positive)
     return confirmation_state | validation_state;
 }
 
-// Update a block record with foreign key.
+// Populate neutrino filter link.
 bool block_database::update_neutrino_filter(const hash_digest& hash,
     file_offset link)
 {
