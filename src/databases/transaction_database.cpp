@@ -317,7 +317,7 @@ bool transaction_database::storize(const chain::transaction& tx, size_t height,
             tx.metadata.link = element.link();
     }
 
-    // This allows address indexer to bypass indexing despite link existence.
+    // This allows payment indexer to bypass indexing despite link existence.
     tx.metadata.existed = tx.metadata.link != transaction::validation::unlinked;
 
     // If the transaction already exists just return (with link set).

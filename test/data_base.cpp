@@ -56,7 +56,7 @@ static void test_outputs_cataloged(const payment_database& payments_store,
         ++output_index;
     }
 
-    // Reached only if expected to not found output in payment database.
+    // Reached only if we expect to not find output in payment database.
     BOOST_REQUIRE(!expect_found);    
 }
 
@@ -71,9 +71,9 @@ static void test_inputs_cataloged(const payment_database& payments_store,
 
         const auto& prevout = input.previous_output();
         const auto& prevout_script = prevout.metadata.cache.script();
-        const auto script_hash = sha256_hash(prevout_script.to_data(false));
+        const auto key = prevout_script.to_payments_key();
 
-        for (const auto& row: payments_store.get(script_hash))
+        for (const auto& row: payments_store.get(key))
         {
             if (row.link() == tx.metadata.link && row.index() == input_index)
             {
@@ -84,7 +84,7 @@ static void test_inputs_cataloged(const payment_database& payments_store,
         ++input_index;
     }
 
-    // Reached only if expected to not found output in payment database.
+    // Reached only if we expect to not find output in payment database.
     BOOST_REQUIRE(!expect_found);    
 }
 

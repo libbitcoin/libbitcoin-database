@@ -27,7 +27,7 @@ using namespace bc::system::chain;
 payment_iterator::payment_iterator(const const_element& element)
   : element_(element)
 {
-    // Because it is common to not return all paymentes, based on a total count
+    // Because it is common to not return all payments, based on a total count
     // and/or height limitation, and because the set is contained in a
     // discontiguous list, we do not prepopulate the full set here. However,
     // this behavior can be modified within this iterator as desired
