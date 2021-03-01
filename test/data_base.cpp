@@ -56,7 +56,7 @@ static void test_outputs_cataloged(const payment_database& payments_store,
         ++output_index;
     }
 
-    // Reached only if we expect to not find output in payment database.
+    // Reached only if output is not expected in the payment database.
     BOOST_REQUIRE(!expect_found);    
 }
 
@@ -84,7 +84,7 @@ static void test_inputs_cataloged(const payment_database& payments_store,
         ++input_index;
     }
 
-    // Reached only if we expect to not find output in payment database.
+    // Reached only if output is not expected in the payment database.
     BOOST_REQUIRE(!expect_found);    
 }
 
