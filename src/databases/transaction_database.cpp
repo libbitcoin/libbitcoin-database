@@ -92,6 +92,7 @@ transaction_database::transaction_database(const path& map_filename,
     hash_table_(hash_table_file_, buckets),
     cache_(cache_capacity)
 {
+    // TODO: C4267: 'argument': conversion from 'size_t' to 'Index', possible loss of data.
 }
 
 transaction_database::~transaction_database()
@@ -559,6 +560,8 @@ bool transaction_database::confirmed_spend(const output_point& point,
         // Critical Section
         ///////////////////////////////////////////////////////////////////////
         unique_lock lock(metadata_mutex_);
+
+        // TODO: C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data.
         serial.write_4_bytes_little_endian(spender_height);
         ///////////////////////////////////////////////////////////////////////
     };

@@ -104,6 +104,7 @@ block_database::block_database(const path& map_filename,
     tx_index_file_(tx_index_filename, tx_index_minimum, expansion),
     tx_index_(tx_index_file_, 0, sizeof(file_offset))
 {
+    // TODO: C4267: 'argument': conversion from 'size_t' to 'Index', possible loss of data.
 }
 
 block_database::~block_database()

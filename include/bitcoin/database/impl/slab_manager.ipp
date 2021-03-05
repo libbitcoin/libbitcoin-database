@@ -113,6 +113,8 @@ Link slab_manager<Link>::allocate(size_t size)
         return not_allocated;
 
     payload_size_ += size;
+
+    // TODO: C4267: 'return': conversion from 'size_t' to 'Link', possible loss of data.
     return next_slab_position;
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -161,6 +163,8 @@ void slab_manager<Link>::write_size() const
     const auto memory = file_.access();
     memory->increment(header_size_);
     auto serial = system::make_unsafe_serializer(memory->buffer());
+
+    // TODO: C4267: 'argument': conversion from 'size_t' to 'Integer', possible loss of data.
     serial.template write_little_endian<Link>(payload_size_);
 }
 

@@ -193,6 +193,7 @@ static void store_block_transactions(data_base& instance, const block& block,
     size_t forks)
 {
     for (const auto& tx: block.transactions())
+        // TODO: C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data.
         instance.store(tx, forks);
 }
 

@@ -50,6 +50,7 @@ filter_database::filter_database(const path& map_filename,
     hash_table_file_(map_filename, table_minimum, expansion),
     hash_table_(hash_table_file_, buckets)
 {
+    // TODO: C4267: 'argument': conversion from 'size_t' to 'Index', possible loss of data.
 }
 
 filter_database::~filter_database()
