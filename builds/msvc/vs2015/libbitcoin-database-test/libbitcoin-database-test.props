@@ -12,9 +12,7 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>$(RepoRoot)include\;(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DisableSpecificWarnings>4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <EnablePREfast>false</EnablePREfast>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0600;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(DefaultLinkage)' == 'dynamic'">BOOST_TEST_DYN_LINK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <PostBuildEvent Condition="'$(DebugOrRelease)' == 'release'">
@@ -52,10 +50,9 @@
   <!-- Messages -->
 
   <Target Name="LinkageInfo" BeforeTargets="PrepareForBuild">
-    <Message Text="Linkage-secp256k1  : $(Linkage-secp256k1)" Importance="high"/>
-    <Message Text="Linkage-_system    : $(Linkage-libbitcoin-system)" Importance="high"/>
-    <Message Text="Linkage-_database  : $(Linkage-libbitcoin-database)" Importance="high"/>
+    <Message Text="Linkage-secp256k1 : $(Linkage-secp256k1)" Importance="high"/>
+    <Message Text="Linkage-_system   : $(Linkage-libbitcoin-system)" Importance="high"/>
+    <Message Text="Linkage-_database : $(Linkage-libbitcoin-database)" Importance="high"/>
   </Target>
 
 </Project>
-

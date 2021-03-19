@@ -13,7 +13,6 @@
     <ClCompile>
       <AdditionalIncludeDirectories>$(RepoRoot)include\;(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0600;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
 
@@ -47,9 +46,9 @@
   <!-- Messages -->
 
   <Target Name="LinkageInfo" BeforeTargets="PrepareForBuild">
-    <Message Text="Linkage-secp256k1  : $(Linkage-secp256k1)" Importance="high"/>
-    <Message Text="Linkage-_system    : $(Linkage-libbitcoin-system)" Importance="high"/>
-    <Message Text="Linkage-_database  : $(Linkage-libbitcoin-database)" Importance="high"/>
+    <Message Text="Linkage-secp256k1 : $(Linkage-secp256k1)" Importance="high"/>
+    <Message Text="Linkage-_system   : $(Linkage-libbitcoin-system)" Importance="high"/>
+    <Message Text="Linkage-_database : $(Linkage-libbitcoin-database)" Importance="high"/>
   </Target>
 
 </Project>

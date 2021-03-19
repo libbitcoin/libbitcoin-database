@@ -119,6 +119,8 @@ Link record_manager<Link>::allocate(size_t count)
 
     // Always write after the last index.
     const auto next_record_index = record_count_;
+
+    // TODO: C4267: 'argument': conversion from 'size_t' to 'Link', possible loss of data.
     const size_t position = link_to_position(record_count_ + count);
     const size_t required_size = header_size_ + position;
 
@@ -126,6 +128,7 @@ Link record_manager<Link>::allocate(size_t count)
     if (!file_.reserve(required_size))
         return 0;
 
+    // TODO: C4267: '+=': conversion from 'size_t' to 'Link', possible loss of data.
     record_count_ += count;
     return next_record_index;
     ///////////////////////////////////////////////////////////////////////////

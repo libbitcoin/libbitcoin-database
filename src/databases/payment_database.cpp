@@ -60,6 +60,7 @@ payment_database::payment_database(const path& lookup_filename,
 
     payment_multimap_(hash_table_, payment_index_)
 {
+    // TODO: C4267: 'argument': conversion from 'size_t' to 'Index', possible loss of data.
 }
 
 payment_database::~payment_database()
