@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_HPP
 #define LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_HPP
 
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/memory/memory_map.hpp>
 
 namespace libbitcoin {

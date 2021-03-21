@@ -26,7 +26,7 @@
 #include <utility>
 #include <boost/filesystem.hpp>
 #include <boost/range/adaptor/reversed.hpp>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/store.hpp>
