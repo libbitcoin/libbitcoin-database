@@ -1,5 +1,5 @@
 ###############################################################################
-#  Copyright (c) 2014-2015 libbitcoin-database developers (see COPYING).
+#  Copyright (c) 2014-2020 libbitcoin-database developers (see COPYING).
 #
 #         GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY
 #
@@ -32,8 +32,8 @@ doc_DATA = \
 # src/libbitcoin-database.la => ${libdir}
 #------------------------------------------------------------------------------
 lib_LTLIBRARIES = src/libbitcoin-database.la
-src_libbitcoin_database_la_CPPFLAGS = -I${srcdir}/include ${bitcoin_BUILD_CPPFLAGS}
-src_libbitcoin_database_la_LIBADD = ${bitcoin_LIBS}
+src_libbitcoin_database_la_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD_CPPFLAGS}
+src_libbitcoin_database_la_LIBADD = ${bitcoin_system_LIBS}
 src_libbitcoin_database_la_SOURCES = \
     src/data_base.cpp \
     src/settings.cpp \
@@ -65,8 +65,8 @@ if WITH_TESTS
 TESTS = libbitcoin-database-test_runner.sh
 
 check_PROGRAMS = test/libbitcoin-database-test
-test_libbitcoin_database_test_CPPFLAGS = -I${srcdir}/include ${bitcoin_BUILD_CPPFLAGS}
-test_libbitcoin_database_test_LDADD = src/libbitcoin-database.la ${boost_unit_test_framework_LIBS} ${bitcoin_LIBS}
+test_libbitcoin_database_test_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD_CPPFLAGS}
+test_libbitcoin_database_test_LDADD = src/libbitcoin-database.la ${boost_unit_test_framework_LIBS} ${bitcoin_system_LIBS}
 test_libbitcoin_database_test_SOURCES = \
     test/block_database.cpp \
     test/data_base.cpp \
@@ -86,8 +86,8 @@ endif WITH_TESTS
 if WITH_TOOLS
 
 noinst_PROGRAMS = tools/initchain/initchain
-tools_initchain_initchain_CPPFLAGS = -I${srcdir}/include ${bitcoin_BUILD_CPPFLAGS}
-tools_initchain_initchain_LDADD = src/libbitcoin-database.la ${bitcoin_LIBS}
+tools_initchain_initchain_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD_CPPFLAGS}
+tools_initchain_initchain_LDADD = src/libbitcoin-database.la ${bitcoin_system_LIBS}
 tools_initchain_initchain_SOURCES = \
     tools/initchain/initchain.cpp
 
