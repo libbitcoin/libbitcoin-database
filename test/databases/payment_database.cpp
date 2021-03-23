@@ -79,7 +79,7 @@ class payment_database_accessor
 public:
     payment_database_accessor(const path& lookup_filename,
         const path& rows_filename, size_t table_minimum, size_t index_minimum,
-        size_t buckets, size_t expansion)
+        uint32_t buckets, size_t expansion)
       : payment_database(lookup_filename, rows_filename, table_minimum,
           index_minimum, buckets, expansion)
     {

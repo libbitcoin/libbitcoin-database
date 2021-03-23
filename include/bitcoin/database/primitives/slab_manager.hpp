@@ -52,7 +52,7 @@ public:
     void commit();
 
     /// Get the size of all slabs and size prefix (excludes header).
-    size_t payload_size() const;
+    Link payload_size() const;
 
     /// Allocate a slab and return its position, commit after writing.
     Link allocate(size_t size);
@@ -72,10 +72,10 @@ private:
 
     // This class is thread and remap safe.
     storage& file_;
-    const size_t header_size_;
+    const Link header_size_;
 
     // Payload size is protected by mutex.
-    size_t payload_size_;
+    Link payload_size_;
     mutable system::shared_mutex mutex_;
 };
 

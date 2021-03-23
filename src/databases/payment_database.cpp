@@ -47,7 +47,7 @@ static const auto value_size = payment_record::satoshi_fixed_size(false);
 // The hash table stores indexes to the first element of unkeyed linked lists.
 payment_database::payment_database(const path& lookup_filename,
     const path& rows_filename, size_t table_minimum, size_t index_minimum,
-    size_t buckets, size_t expansion)
+    uint32_t buckets, size_t expansion)
   : hash_table_file_(lookup_filename, table_minimum, expansion),
 
     // THIS sizeof(link_type) IS ASSUMED BY hash_table_multimap.

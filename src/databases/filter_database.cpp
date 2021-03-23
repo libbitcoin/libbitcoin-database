@@ -44,7 +44,7 @@ static constexpr auto filter_header_size = hash_size;
 
 // Filter uses a hash table index, O(1).
 filter_database::filter_database(const path& map_filename,
-    size_t table_minimum, size_t buckets, size_t expansion,
+    size_t table_minimum, uint32_t buckets, size_t expansion,
     uint8_t filter_type)
   : filter_type_(filter_type),
     hash_table_file_(map_filename, table_minimum, expansion),

@@ -82,8 +82,8 @@ private:
 
     // This class is thread and remap safe.
     storage& file_;
-    const size_t header_size_;
-    const size_t record_size_;
+    const Link header_size_;
+    const Link record_size_;
 
     // Record count is protected by mutex.
     Link record_count_;
