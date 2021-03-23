@@ -86,7 +86,7 @@ static constexpr auto no_time = 0u;
 
 // Transactions uses a hash table index, O(1).
 transaction_database::transaction_database(const path& map_filename,
-    size_t table_minimum, size_t buckets, size_t expansion,
+    size_t table_minimum, uint32_t buckets, size_t expansion,
     size_t cache_capacity)
   : hash_table_file_(map_filename, table_minimum, expansion),
     hash_table_(hash_table_file_, buckets),
@@ -506,10 +506,11 @@ bool transaction_database::confirmed_spend(const output_point& point,
     size_t spender_height)
 {
     // This just simplifies calling by allowing coinbase to be included.
-    if (point.is_null())
+    if (point.is_null() || spender_height > max_uint32)
         return true;
 
     const auto element = hash_table_.find(point.hash());
+    auto spend_height = static_cast<uint32_t>(spender_height);
 
     if (!element)
         return false;
@@ -532,7 +533,7 @@ bool transaction_database::confirmed_spend(const output_point& point,
     element.read(reader);
 
     // Limit to confirmed prevouts at or below the spender height.
-    if (position == transaction_result::unconfirmed || height > spender_height)
+    if (position == transaction_result::unconfirmed || height > spend_height)
         return false;
 
     // The index is not in the transaction.
@@ -540,8 +541,8 @@ bool transaction_database::confirmed_spend(const output_point& point,
         return false;
 
     // Use not_spent as the spender_height for output.
-    if (spender_height == rule_fork::unverified)
-        spender_height = output::validation::not_spent;
+    if (spend_height == rule_fork::unverified)
+        spend_height = output::validation::not_spent;
 
     const auto writer = [&](byte_serializer& serial)
     {
@@ -561,8 +562,7 @@ bool transaction_database::confirmed_spend(const output_point& point,
         ///////////////////////////////////////////////////////////////////////
         unique_lock lock(metadata_mutex_);
 
-        // TODO: C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data.
-        serial.write_4_bytes_little_endian(spender_height);
+        serial.write_4_bytes_little_endian(spend_height);
         ///////////////////////////////////////////////////////////////////////
     };
 

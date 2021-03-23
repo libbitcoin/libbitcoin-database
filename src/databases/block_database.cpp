@@ -83,7 +83,7 @@ block_database::block_database(const path& map_filename,
     const path& candidate_index_filename, const path& confirmed_index_filename,
     const path& tx_index_filename, size_t table_minimum,
     size_t candidate_index_minimum, size_t confirmed_index_minimum,
-    size_t tx_index_minimum, size_t buckets, size_t expansion,
+    size_t tx_index_minimum, uint32_t buckets, size_t expansion,
     bool neutrino_filters)
   : support_neutrino_filter_(neutrino_filters),
     hash_table_file_(map_filename, table_minimum, expansion),

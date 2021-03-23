@@ -46,7 +46,7 @@ public:
 
     /// Construct the database.
     filter_database(const path& map_filename, size_t table_minimum,
-        size_t buckets, size_t expansion, uint8_t filter_type);
+        uint32_t buckets, size_t expansion, uint8_t filter_type);
 
     /// Close the database (all threads must first be stopped).
     ~filter_database();

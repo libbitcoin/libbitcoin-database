@@ -60,6 +60,15 @@ const size_t file_storage::default_expansion = 50;
 // The default minimum file size.
 const uint64_t file_storage::default_capacity = 1;
 
+int file_storage::close_file(int file_handle)
+{
+#ifdef _WIN32
+    return _close(file_handle);
+#else
+    return ::close(file_handle);
+#endif
+}
+
 size_t file_storage::file_size(int file_handle)
 {
     if (file_handle == INVALID_HANDLE)
@@ -92,9 +101,11 @@ size_t file_storage::file_size(int file_handle)
 int file_storage::open_file(const path& filename)
 {
 #ifdef _WIN32
-    // TODO: C4996: '_wopen': This function or variable may be unsafe. Consider using _wsopen_s instead.
-    int handle = _wopen(filename.wstring().c_str(),
-        (O_RDWR | _O_BINARY | _O_RANDOM), (_S_IREAD | _S_IWRITE));
+    int handle;
+    if (_wsopen_s(&handle, filename.wstring().c_str(),
+        (O_RDWR | _O_BINARY | _O_RANDOM), _SH_DENYWR,
+        (_S_IREAD | _S_IWRITE)) == FAIL)
+        handle = INVALID_HANDLE;
 #else
     int handle = ::open(filename.string().c_str(),
         (O_RDWR), (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH));
@@ -281,9 +292,7 @@ bool file_storage::close()
         error_name = "ftruncate";
     else if (fsync(file_handle_) == FAIL)
         error_name = "fsync";
-
-    // TODO: C4996: 'close': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _close.
-    else if (::close(file_handle_) == FAIL)
+    else if (close_file(file_handle_) == FAIL)
         error_name = "close";
 
     mutex_.unlock();
@@ -379,11 +388,10 @@ memory_ptr file_storage::reserve(size_t required, size_t minimum,
 
     if (required > capacity_)
     {
-        // TODO: C4244: 'initializing': conversion from 'double' to 'size_t', possible loss of data.
-        // TODO: C4244: 'initializing': conversion from 'double' to 'const size_t', possible loss of data.
-        // TODO: manage overflow (requires ceiling_multiply).
+        const auto resize = static_cast<size_t>(required * 
+            ((expansion + 100.0) / 100.0));
+
         // Expansion is an integral number that represents a real number factor.
-        const size_t resize = required * ((expansion + 100.0) / 100.0);
         const size_t target = std::max(minimum, resize);
 
         mutex_.unlock_upgrade_and_lock();

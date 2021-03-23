@@ -40,7 +40,7 @@ public:
 
     /// Construct the database.
     payment_database(const path& lookup_filename, const path& rows_filename,
-        size_t table_minimum, size_t index_minimum, size_t buckets,
+        size_t table_minimum, size_t index_minimum, uint32_t buckets,
         size_t expansion);
 
     /// Close the database (all threads must first be stopped).

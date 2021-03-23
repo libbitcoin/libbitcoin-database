@@ -38,10 +38,12 @@ template <typename Link>
 record_manager<Link>::record_manager(storage& file, size_t header_size,
     size_t record_size)
   : file_(file),
-    header_size_(header_size),
-    record_size_(record_size),
+    header_size_(static_cast<Link>(header_size)),
+    record_size_(static_cast<Link>(record_size)),
     record_count_(0)
 {
+    BITCOIN_ASSERT(header_size < not_allocated);
+    BITCOIN_ASSERT(record_size < not_allocated);
 }
 
 template <typename Link>
@@ -113,23 +115,23 @@ void record_manager<Link>::set_count(Link value)
 template <typename Link>
 Link record_manager<Link>::allocate(size_t count)
 {
+    BITCOIN_ASSERT(count < not_allocated);
+    const auto records = static_cast<Link>(count);
+
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     system::unique_lock lock(mutex_);
 
     // Always write after the last index.
     const auto next_record_index = record_count_;
-
-    // TODO: C4267: 'argument': conversion from 'size_t' to 'Link', possible loss of data.
-    const size_t position = link_to_position(record_count_ + count);
-    const size_t required_size = header_size_ + position;
+    const auto position = link_to_position(record_count_ + records);
+    const auto required_size = header_size_ + position;
 
     // Currently throws runtime_error if insufficient space.
     if (!file_.reserve(required_size))
-        return 0;
+        return not_allocated;
 
-    // TODO: C4267: '+=': conversion from 'size_t' to 'Link', possible loss of data.
-    record_count_ += count;
+    record_count_ += records;
     return next_record_index;
     ///////////////////////////////////////////////////////////////////////////
 }

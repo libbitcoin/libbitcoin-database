@@ -30,7 +30,7 @@ using namespace bc::database;
 using namespace bc::system;
 using namespace bc::system::chain;
 
-transaction random_tx(size_t fudge)
+transaction random_tx(uint32_t fudge)
 {
     static const auto settings = system::settings(
         system::config::settings::mainnet);
