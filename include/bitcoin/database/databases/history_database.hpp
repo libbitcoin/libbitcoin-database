@@ -21,7 +21,7 @@
 
 #include <memory>
 #include <boost/filesystem.hpp>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory_map.hpp>
 #include <bitcoin/database/primitives/record_multimap.hpp>

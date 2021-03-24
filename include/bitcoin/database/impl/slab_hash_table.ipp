@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_SLAB_HASH_TABLE_IPP
 #define LIBBITCOIN_DATABASE_SLAB_HASH_TABLE_IPP
 
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include "../impl/remainder.ipp"
 #include "../impl/slab_row.ipp"

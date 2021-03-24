@@ -26,7 +26,7 @@ using namespace bc;
 using namespace bc::chain;
 using namespace bc::database;
 
-transaction random_tx(size_t fudge)
+transaction random_tx(uint32_t fudge)
 {
     static const auto genesis = block::genesis_mainnet();
     auto result = genesis.transactions()[0];

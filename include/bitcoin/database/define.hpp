@@ -21,7 +21,7 @@
 
 #include <cstdint>
 #include <vector>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 
 // Now we use the generic helper definitions in libbitcoin to
 // define BCD_API and BCD_INTERNAL.

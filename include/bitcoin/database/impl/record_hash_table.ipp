@@ -20,7 +20,7 @@
 #define LIBBITCOIN_DATABASE_RECORD_HASH_TABLE_IPP
 
 #include <string>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include "../impl/record_row.ipp"
 #include "../impl/remainder.ipp"

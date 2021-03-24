@@ -19,7 +19,7 @@
 #include <bitcoin/database/unspent_outputs.hpp>
 
 #include <cstddef>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 
 namespace libbitcoin {
 namespace database {
