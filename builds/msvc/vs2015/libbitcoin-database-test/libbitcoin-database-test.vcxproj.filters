@@ -13,17 +13,20 @@
     <Filter Include="src\databases">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000001}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\memory">
+    <Filter Include="src\locks">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\primitives">
+    <Filter Include="src\memory">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\result">
+    <Filter Include="src\primitives">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\utility">
+    <Filter Include="src\result">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\utility">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000006}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -44,6 +47,15 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\databases\transaction_database.cpp">
       <Filter>src\databases</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\locks\file_lock.cpp">
+      <Filter>src\locks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\locks\flush_lock.cpp">
+      <Filter>src\locks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\locks\interprocess_lock.cpp">
+      <Filter>src\locks</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\main.cpp">
       <Filter>src</Filter>
@@ -102,6 +114,9 @@
     <ClCompile Include="..\..\..\..\test\store.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\test.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\unspent_outputs.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -116,6 +131,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\test\test.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\test\utility\storage.hpp">
       <Filter>src\utility</Filter>
     </ClInclude>

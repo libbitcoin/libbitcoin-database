@@ -76,6 +76,9 @@
     <ClCompile Include="..\..\..\..\test\databases\filter_database.cpp" />
     <ClCompile Include="..\..\..\..\test\databases\payment_database.cpp" />
     <ClCompile Include="..\..\..\..\test\databases\transaction_database.cpp" />
+    <ClCompile Include="..\..\..\..\test\locks\file_lock.cpp" />
+    <ClCompile Include="..\..\..\..\test\locks\flush_lock.cpp" />
+    <ClCompile Include="..\..\..\..\test\locks\interprocess_lock.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\accessor.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\file_storage.cpp" />
@@ -95,12 +98,14 @@
     <ClCompile Include="..\..\..\..\test\result\transaction_result.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
     <ClCompile Include="..\..\..\..\test\store.cpp" />
+    <ClCompile Include="..\..\..\..\test\test.cpp" />
     <ClCompile Include="..\..\..\..\test\unspent_outputs.cpp" />
     <ClCompile Include="..\..\..\..\test\unspent_transaction.cpp" />
     <ClCompile Include="..\..\..\..\test\utility\storage.cpp" />
     <ClCompile Include="..\..\..\..\test\utility\utility.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\test\test.hpp" />
     <ClInclude Include="..\..\..\..\test\utility\storage.hpp" />
     <ClInclude Include="..\..\..\..\test\utility\utility.hpp" />
   </ItemGroup>

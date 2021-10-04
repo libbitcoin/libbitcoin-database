@@ -45,6 +45,12 @@ src_libbitcoin_database_la_SOURCES = \
     src/databases/filter_database.cpp \
     src/databases/payment_database.cpp \
     src/databases/transaction_database.cpp \
+    src/locks/conditional_lock.cpp \
+    src/locks/file_lock.cpp \
+    src/locks/flush_lock.cpp \
+    src/locks/interprocess_lock.cpp \
+    src/locks/scope_lock.cpp \
+    src/locks/sequential_lock.cpp \
     src/memory/accessor.cpp \
     src/memory/file_storage.cpp \
     src/mman-win32/mman.c \
@@ -72,12 +78,17 @@ test_libbitcoin_database_test_SOURCES = \
     test/main.cpp \
     test/settings.cpp \
     test/store.cpp \
+    test/test.cpp \
+    test/test.hpp \
     test/unspent_outputs.cpp \
     test/unspent_transaction.cpp \
     test/databases/block_database.cpp \
     test/databases/filter_database.cpp \
     test/databases/payment_database.cpp \
     test/databases/transaction_database.cpp \
+    test/locks/file_lock.cpp \
+    test/locks/flush_lock.cpp \
+    test/locks/interprocess_lock.cpp \
     test/memory/accessor.cpp \
     test/memory/file_storage.cpp \
     test/primitives/hash_table.cpp \
@@ -148,6 +159,16 @@ include_bitcoin_database_impl_HEADERS = \
     include/bitcoin/database/impl/list_iterator.ipp \
     include/bitcoin/database/impl/record_manager.ipp \
     include/bitcoin/database/impl/slab_manager.ipp
+
+include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks
+include_bitcoin_database_locks_HEADERS = \
+    include/bitcoin/database/locks/conditional_lock.hpp \
+    include/bitcoin/database/locks/file_lock.hpp \
+    include/bitcoin/database/locks/flush_lock.hpp \
+    include/bitcoin/database/locks/interprocess_lock.hpp \
+    include/bitcoin/database/locks/locks.hpp \
+    include/bitcoin/database/locks/scope_lock.hpp \
+    include/bitcoin/database/locks/sequential_lock.hpp
 
 include_bitcoin_database_memorydir = ${includedir}/bitcoin/database/memory
 include_bitcoin_database_memory_HEADERS = \

@@ -28,6 +28,13 @@
 #include <bitcoin/database/databases/filter_database.hpp>
 #include <bitcoin/database/databases/payment_database.hpp>
 #include <bitcoin/database/databases/transaction_database.hpp>
+#include <bitcoin/database/locks/conditional_lock.hpp>
+#include <bitcoin/database/locks/file_lock.hpp>
+#include <bitcoin/database/locks/flush_lock.hpp>
+#include <bitcoin/database/locks/interprocess_lock.hpp>
+#include <bitcoin/database/locks/locks.hpp>
+#include <bitcoin/database/locks/scope_lock.hpp>
+#include <bitcoin/database/locks/sequential_lock.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/file_storage.hpp>
 #include <bitcoin/database/memory/memory.hpp>

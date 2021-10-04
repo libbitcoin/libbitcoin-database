@@ -78,6 +78,12 @@
     <ClCompile Include="..\..\..\..\src\databases\filter_database.cpp" />
     <ClCompile Include="..\..\..\..\src\databases\payment_database.cpp" />
     <ClCompile Include="..\..\..\..\src\databases\transaction_database.cpp" />
+    <ClCompile Include="..\..\..\..\src\locks\conditional_lock.cpp" />
+    <ClCompile Include="..\..\..\..\src\locks\file_lock.cpp" />
+    <ClCompile Include="..\..\..\..\src\locks\flush_lock.cpp" />
+    <ClCompile Include="..\..\..\..\src\locks\interprocess_lock.cpp" />
+    <ClCompile Include="..\..\..\..\src\locks\scope_lock.cpp" />
+    <ClCompile Include="..\..\..\..\src\locks\sequential_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\accessor.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\file_storage.cpp" />
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c" />
@@ -103,6 +109,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\payment_database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\transaction_database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\conditional_lock.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\file_lock.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\flush_lock.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\interprocess_lock.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\locks.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\scope_lock.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\sequential_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\file_storage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp" />
