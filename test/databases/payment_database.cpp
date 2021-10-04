@@ -38,8 +38,8 @@ using namespace bc::system::chain;
 
 #define INPUT_SCRIPT1 "ece424a6bb6ddf4db592c0faed60685047a361b1"
 
-static BC_CONSTEXPR auto lookup_filename = DIRECTORY "/payment_lookup_file";
-static BC_CONSTEXPR auto rows_filename = DIRECTORY "/payment_rows_file";
+static constexpr auto lookup_filename = DIRECTORY "/payment_lookup_file";
+static constexpr auto rows_filename = DIRECTORY "/payment_rows_file";
 
 static chain_state::data data_for_chain_state()
 {

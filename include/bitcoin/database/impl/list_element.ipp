@@ -79,7 +79,7 @@ void list_element<Manager, Link, Key>::initialize(const Key& key,
 template <typename Manager, typename Link, typename Key>
 Link list_element<Manager, Link, Key>::create(write_function write)
 {
-    BC_CONSTEXPR empty_key unkeyed{};
+    constexpr empty_key unkeyed{};
     link_ = manager_.allocate(1);
     initialize(unkeyed, write);
     return link_;

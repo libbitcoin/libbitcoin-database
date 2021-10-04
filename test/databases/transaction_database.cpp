@@ -33,7 +33,7 @@ using namespace bc::system::chain;
 #define TRANSACTION1 "0100000001537c9d05b5f7d67b09e5108e3bd5e466909cc9403ddd98bc42973f366fe729410600000000ffffffff0163000000000000001976a914fe06e7b4c88a719e92373de489c08244aee4520b88ac00000000"
 #define TRANSACTION2 "010000000147811c3fc0c0e750af5d0ea7343b16ea2d0c291c002e3db778669216eb689de80000000000ffffffff0118ddf505000000001976a914575c2f0ea88fcbad2389a372d942dea95addc25b88ac00000000"
 
-static BC_CONSTEXPR auto file_path = DIRECTORY "/tx_table";
+static constexpr auto file_path = DIRECTORY "/tx_table";
 
 struct transaction_database_directory_setup_fixture
 {
