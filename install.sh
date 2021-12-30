@@ -111,7 +111,7 @@ make_jobs()
     shift 1
 
     SEQUENTIAL=1
-    # Avoid setting -j1 (causes problems on Travis).
+    # Avoid setting -j1 (causes problems on single threaded systems [TRAVIS]).
     if [[ $JOBS > $SEQUENTIAL ]]; then
         make -j"$JOBS" "$@"
     else
@@ -684,8 +684,8 @@ build_from_local()
     make_current_directory "$JOBS" "${CONFIGURATION[@]}"
 }
 
-# Because Travis alread has downloaded the primary repo.
-build_from_travis()
+# Because continuous integration services has downloaded the primary repository.
+build_from_ci()
 {
     local ACCOUNT=$1
     local REPO=$2
@@ -694,9 +694,9 @@ build_from_travis()
     local OPTIONS=$5
     shift 5
 
-    # The primary build is not downloaded if we are running in Travis.
-    if [[ $TRAVIS == true ]]; then
-        build_from_local "Local $TRAVIS_REPO_SLUG" "$JOBS" "${OPTIONS[@]}" "$@"
+    # The primary build is not downloaded if we are running on a continuous integration system.
+    if [[ $CI == true ]]; then
+        build_from_local "Local $CI_REPOSITORY" "$JOBS" "${OPTIONS[@]}" "$@"
         make_tests "$JOBS"
     else
         build_from_github "$ACCOUNT" "$REPO" "$BRANCH" "$JOBS" "${OPTIONS[@]}" "$@"
@@ -716,7 +716,7 @@ build_all()
     build_from_tarball_boost "$BOOST_URL" "$BOOST_ARCHIVE" bzip2 . "$PARALLEL" "$BUILD_BOOST" "${BOOST_OPTIONS[@]}"
     build_from_github libbitcoin secp256k1 version7 "$PARALLEL" "${SECP256K1_OPTIONS[@]}" "$@"
     build_from_github libbitcoin libbitcoin-system master "$PARALLEL" "${BITCOIN_SYSTEM_OPTIONS[@]}" "$@"
-    build_from_travis libbitcoin libbitcoin-database master "$PARALLEL" "${BITCOIN_DATABASE_OPTIONS[@]}" "$@"
+    build_from_ci libbitcoin libbitcoin-database master "$PARALLEL" "${BITCOIN_DATABASE_OPTIONS[@]}" "$@"
 }
 
 
