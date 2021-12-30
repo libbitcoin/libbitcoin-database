@@ -23,9 +23,9 @@ IF NOT EXIST "%nuget_pkg_path%" (
   )
 )
 
-call :init libbitcoin libbitcoin-system master
+call :init evoskuil libbitcoin-system master
 IF %ERRORLEVEL% NEQ 0 (
-  call :failure "Initializing repository libbitcoin libbitcoin-system master failed."
+  call :failure "Initializing repository evoskuil libbitcoin-system master failed."
   exit /b 1
 )
 call :bld_repo libbitcoin-database

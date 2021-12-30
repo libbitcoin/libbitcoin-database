@@ -714,9 +714,9 @@ build_from_ci()
 build_all()
 {
     build_from_tarball_boost "$BOOST_URL" "$BOOST_ARCHIVE" bzip2 . "$PARALLEL" "$BUILD_BOOST" "${BOOST_OPTIONS[@]}"
-    build_from_github libbitcoin secp256k1 version7 "$PARALLEL" "${SECP256K1_OPTIONS[@]}" "$@"
-    build_from_github libbitcoin libbitcoin-system master "$PARALLEL" "${BITCOIN_SYSTEM_OPTIONS[@]}" "$@"
-    build_from_ci libbitcoin libbitcoin-database master "$PARALLEL" "${BITCOIN_DATABASE_OPTIONS[@]}" "$@"
+    build_from_github evoskuil secp256k1 version8 "$PARALLEL" "${SECP256K1_OPTIONS[@]}" "$@"
+    build_from_github evoskuil libbitcoin-system master "$PARALLEL" "${BITCOIN_SYSTEM_OPTIONS[@]}" "$@"
+    build_from_ci evoskuil libbitcoin-database master "$PARALLEL" "${BITCOIN_DATABASE_OPTIONS[@]}" "$@"
 }
 
 
