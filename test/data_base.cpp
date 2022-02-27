@@ -665,9 +665,9 @@ BOOST_AUTO_TEST_CASE(data_base__push_all_and_update__already_candidated___succes
 
     const auto block1 = read_block(MAINNET_BLOCK1);
 
-    const auto block1_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK1));
-    const auto block2_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK2));
-    const auto block3_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK3));
+    const auto block1_ptr = std::make_shared<const messages::block>(read_block(MAINNET_BLOCK1));
+    const auto block2_ptr = std::make_shared<const messages::block>(read_block(MAINNET_BLOCK2));
+    const auto block3_ptr = std::make_shared<const messages::block>(read_block(MAINNET_BLOCK3));
     const auto blocks_push_ptr = std::make_shared<const block_const_ptr_list>(block_const_ptr_list{ block1_ptr, block2_ptr, block3_ptr });
 
     store_block_transactions(instance, *block1_ptr, 1);
@@ -676,9 +676,9 @@ BOOST_AUTO_TEST_CASE(data_base__push_all_and_update__already_candidated___succes
 
     const auto headers_push_ptr = std::make_shared<const header_const_ptr_list>(header_const_ptr_list
     {
-        std::make_shared<const message::header>(block1_ptr->header()),
-        std::make_shared<const message::header>(block2_ptr->header()),
-        std::make_shared<const message::header>(block3_ptr->header())
+        std::make_shared<const messages::header>(block1_ptr->header()),
+        std::make_shared<const messages::header>(block2_ptr->header()),
+        std::make_shared<const messages::header>(block3_ptr->header())
     });
 
     BOOST_REQUIRE(instance.push_all(headers_push_ptr, config::checkpoint(genesis.hash(), 0)));
@@ -808,9 +808,9 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__candidated_not_confirmed___success)
 
     const auto block1 = read_block(MAINNET_BLOCK1);
 
-    const auto block1_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK1));
-    const auto block2_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK2));
-    const auto block3_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK3));
+    const auto block1_ptr = std::make_shared<const messages::block>(read_block(MAINNET_BLOCK1));
+    const auto block2_ptr = std::make_shared<const messages::block>(read_block(MAINNET_BLOCK2));
+    const auto block3_ptr = std::make_shared<const messages::block>(read_block(MAINNET_BLOCK3));
     const auto blocks_push_ptr = std::make_shared<const block_const_ptr_list>(block_const_ptr_list{ block1_ptr, block2_ptr, block3_ptr });
     store_block_transactions(instance, *block1_ptr, 1);
     store_block_transactions(instance, *block2_ptr, 1);
@@ -818,9 +818,9 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above__candidated_not_confirmed___success)
 
     const auto headers_push_ptr = std::make_shared<const header_const_ptr_list>(header_const_ptr_list
     {
-        std::make_shared<const message::header>(block1_ptr->header()),
-        std::make_shared<const message::header>(block2_ptr->header()),
-        std::make_shared<const message::header>(block3_ptr->header())
+        std::make_shared<const messages::header>(block1_ptr->header()),
+        std::make_shared<const messages::header>(block2_ptr->header()),
+        std::make_shared<const messages::header>(block3_ptr->header())
     });
 
     BOOST_REQUIRE(instance.push_all(headers_push_ptr, config::checkpoint(genesis.hash(), 0)));
@@ -920,9 +920,9 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__confirmed___success)
 
     const auto block1 = read_block(MAINNET_BLOCK1);
 
-    const auto block1_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK1));
-    const auto block2_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK2));
-    const auto block3_ptr = std::make_shared<const message::block>(read_block(MAINNET_BLOCK3));
+    const auto block1_ptr = std::make_shared<const messages::block>(read_block(MAINNET_BLOCK1));
+    const auto block2_ptr = std::make_shared<const messages::block>(read_block(MAINNET_BLOCK2));
+    const auto block3_ptr = std::make_shared<const messages::block>(read_block(MAINNET_BLOCK3));
     const auto blocks_push_ptr = std::make_shared<const block_const_ptr_list>(block_const_ptr_list{ block1_ptr, block2_ptr, block3_ptr });
     store_block_transactions(instance, *block1_ptr, 1);
     store_block_transactions(instance, *block2_ptr, 1);
@@ -930,9 +930,9 @@ BOOST_AUTO_TEST_CASE(data_base__pop_above2__confirmed___success)
 
     const auto headers_push_ptr = std::make_shared<const header_const_ptr_list>(header_const_ptr_list
     {
-        std::make_shared<const message::header>(block1_ptr->header()),
-        std::make_shared<const message::header>(block2_ptr->header()),
-        std::make_shared<const message::header>(block3_ptr->header())
+        std::make_shared<const messages::header>(block1_ptr->header()),
+        std::make_shared<const messages::header>(block2_ptr->header()),
+        std::make_shared<const messages::header>(block3_ptr->header())
     });
 
     BOOST_REQUIRE(instance.push_all(headers_push_ptr, config::checkpoint(genesis.hash(), 0)));
@@ -1491,8 +1491,8 @@ BOOST_AUTO_TEST_CASE(data_base__reorganize__pop_and_push__success)
     const auto outgoing_headers = std::make_shared<header_const_ptr_list>();
     const auto incoming_headers = std::make_shared<const header_const_ptr_list>(header_const_ptr_list
     {
-        std::make_shared<const message::header>(block2.header()),
-        std::make_shared<const message::header>(block3.header())
+        std::make_shared<const messages::header>(block2.header()),
+        std::make_shared<const messages::header>(block3.header())
     });
 
     // Setup ends.
@@ -1580,8 +1580,8 @@ BOOST_AUTO_TEST_CASE(data_base__reorganize2__pop_and_push__success)
     const auto outgoing_blocks = std::make_shared<block_const_ptr_list>();
     const auto incoming_blocks = std::make_shared<const block_const_ptr_list>(block_const_ptr_list
     {
-        std::make_shared<const message::block>(block2),
-        std::make_shared<const message::block>(block3)
+        std::make_shared<const messages::block>(block2),
+        std::make_shared<const messages::block>(block3)
     });
 
     // Setup ends.

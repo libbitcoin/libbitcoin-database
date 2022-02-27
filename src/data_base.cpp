@@ -650,7 +650,7 @@ bool data_base::pop_above(header_const_ptr_list_ptr headers,
     // Pop all headers above the fork point.
     for (size_t height = top; height > fork; --height)
     {
-        const auto next = std::make_shared<message::header>();
+        const auto next = std::make_shared<messages::header>();
         if ((ec = pop_header(*next, height)))
             return false;
 
@@ -773,7 +773,7 @@ bool data_base::pop_above(block_const_ptr_list_ptr blocks,
     // Pop all blocks above the fork point.
     for (size_t height = top; height > fork; --height)
     {
-        const auto next = std::make_shared<message::block>();
+        const auto next = std::make_shared<messages::block>();
         if ((ec = pop_block(*next, height)))
             return false;
 

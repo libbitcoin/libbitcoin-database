@@ -142,7 +142,7 @@ bool filter_database::storize(const block_filter& block_filter)
     };
 
     // Filters are variable-sized.
-    const auto size = message::variable_uint_size(filter.size()) +
+    const auto size = messages::variable_uint_size(filter.size()) +
         filter.size();
 
     // Write the new filter entry.

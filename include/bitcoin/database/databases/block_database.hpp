@@ -115,7 +115,7 @@ private:
     typedef list_element<const manager_type, link_type, key_type> const_element;
     typedef hash_table<manager_type, array_index, link_type, key_type> record_map;
 
-    typedef system::message::compact_block::short_id_list short_id_list;
+    typedef system::messages::compact_block::short_id_list short_id_list;
 
     link_type associate(const system::chain::transaction::list& transactions);
     void promote(const_element& element, bool positive, bool candidate);
