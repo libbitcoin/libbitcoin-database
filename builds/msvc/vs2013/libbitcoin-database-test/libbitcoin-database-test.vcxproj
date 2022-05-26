@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
- |  Copyright (c) 2014-2020 libbitcoin-database developers (see COPYING).
+ |  Copyright (c) 2014-2021 libbitcoin-database developers (see COPYING).
  |
  |         GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY
  |
@@ -127,5 +127,8 @@
     <ProjectReference Include="..\libbitcoin-database\libbitcoin-database.vcxproj">
       <Project>{62D7FBEE-4D52-424A-8938-59756E13D9F5}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="..\..\debug.natvis" />
   </ItemGroup>
 </Project>
