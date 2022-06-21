@@ -30,7 +30,7 @@ else ()
   set( libdir "\${exec_prefix}/lib" )
   set( includedir "\${exec_prefix}/include" )
 
-  set( PACKAGE_VERSION "4.0.0" )
+  set( PACKAGE_VERSION "3.7.0" )
   set( VERSION "${PACKAGE_VERSION}" )
 endif ()
 
@@ -59,6 +59,9 @@ add_compile_options( "-Wno-missing-braces" )
 
 # Ignore comments within comments or commenting of backslash extended lines.
 add_compile_options( "-Wno-comment" )
+
+# Suppress warning for copy of implicitly generated copy constructor.
+add_compile_options( "-Wno-deprecated-copy" )
 
 # Conflict in stdlib under clang.
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -109,7 +112,7 @@ set( boost_LDFLAGS "-L${Boost_LIBRARY_DIR}" )
 
 # Find bitcoin-system
 #------------------------------------------------------------------------------
-find_package( Bitcoin-System 4.0.0 REQUIRED )
+find_package( Bitcoin-System 3.7.0 REQUIRED )
 
 # Define project common includes directories
 #------------------------------------------------------------------------------
