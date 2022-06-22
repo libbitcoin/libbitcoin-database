@@ -949,8 +949,8 @@ SECP256K1_OPTIONS=(
 # Define bitcoin-system options.
 #------------------------------------------------------------------------------
 BITCOIN_SYSTEM_OPTIONS=(
-"--without-tests" \
-"--without-examples" \
+"-Dwith-tests=no" \
+"-Dwith-examples=no" \
 "${with_boost}" \
 "${with_pkgconfigdir}")
 
