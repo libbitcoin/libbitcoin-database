@@ -750,10 +750,10 @@ build_all()
     build_from_tarball_boost "$BOOST_ARCHIVE" "$PARALLEL" "$BUILD_BOOST" "${BOOST_OPTIONS[@]}"
     create_from_github libbitcoin secp256k1 version7
     build_from_github secp256k1 "$PARALLEL" false "${SECP256K1_OPTIONS[@]}" "$@"
-    create_from_github libbitcoin libbitcoin-system version3
+    create_from_github pmienk libbitcoin-system install-cmake-v3
     build_from_github libbitcoin-system "$PARALLEL" false "${BITCOIN_SYSTEM_OPTIONS[@]}" "$@"
     if [[ ! ($CI == true) ]]; then
-        create_from_github libbitcoin libbitcoin-database version3
+        create_from_github pmienk libbitcoin-database install-cmake-v3
         build_from_github libbitcoin-database "$PARALLEL" true "${BITCOIN_DATABASE_OPTIONS[@]}" "$@"
     else
         push_directory "$PRESUMED_CI_PROJECT_PATH"
