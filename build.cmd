@@ -25,9 +25,9 @@ IF NOT EXIST "%nuget_pkg_path%" (
   )
 )
 
-call :init evoskuil libbitcoin-system master
+call :init libbitcoin libbitcoin-system master
 IF %ERRORLEVEL% NEQ 0 (
-  call :failure "Initializing repository evoskuil libbitcoin-system master failed."
+  call :failure "Initializing repository libbitcoin libbitcoin-system master failed."
   exit /b 1
 )
 call :bld_repo libbitcoin-database
@@ -69,7 +69,7 @@ IF %ERRORLEVEL% NEQ 0 (
   exit /b 1
 )
 call cd /d "%path_base%\%~1\builds\msvc\%proj_version%"
-call "%msbuild_exe%" %msbuild_args% %~1.sln
+call "%msbuild_exe%" %msbuild_args% %~1.sln /p:PreBuildEventUseInBuild=false /p:PostBuildEventUseInBuild=false
 IF %ERRORLEVEL% NEQ 0 (
   call :failure "%msbuild_exe% %msbuild_args% %~1.sln failed."
   exit /b 1
@@ -86,7 +86,7 @@ IF %ERRORLEVEL% NEQ 0 (
   exit /b 1
 )
 call cd /d "%path_base%\%~1\builds\msvc\%proj_version%"
-call "%msbuild_exe%" %msbuild_args% /target:%~1:Rebuild %~1.sln
+call "%msbuild_exe%" %msbuild_args% /target:%~1:Rebuild %~1.sln /p:PreBuildEventUseInBuild=false /p:PostBuildEventUseInBuild=false
 IF %ERRORLEVEL% NEQ 0 (
   call :failure "%msbuild_exe% %msbuild_args% /target:%~1:Rebuild %~1.sln"
   exit /b 1
