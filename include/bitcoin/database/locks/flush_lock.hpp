@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_LOCKS_FLUSH_LOCK_HPP
 #define LIBBITCOIN_DATABASE_LOCKS_FLUSH_LOCK_HPP
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/locks/file_lock.hpp>
@@ -27,21 +27,21 @@
 namespace libbitcoin {
 namespace database {
 
-/// This class is not thread safe, and does not throw.
+/// This class is not thread safe.
 class BCD_API flush_lock
   : file_lock
 {
 public:
-    flush_lock(const boost::filesystem::path& file) noexcept;
+    flush_lock(const std::filesystem::path& file) NOEXCEPT;
 
     /// False if file exists.
-    bool try_lock() const noexcept;
+    bool try_lock() const NOEXCEPT;
 
     /// False if file exists or fails to create.
-    bool lock() noexcept;
+    bool lock() NOEXCEPT;
 
     /// False if file does not exist or fails to delete.
-    bool unlock() noexcept;
+    bool unlock() NOEXCEPT;
 };
 
 } // namespace database

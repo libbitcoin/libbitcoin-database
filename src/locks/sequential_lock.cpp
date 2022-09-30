@@ -18,35 +18,38 @@
  */
 #include <bitcoin/database/locks/sequential_lock.hpp>
 
+#include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
+
 namespace libbitcoin {
 namespace database {
-
-sequential_lock::sequential_lock()
-  : sequence_(0)
+    
+sequential_lock::sequential_lock() NOEXCEPT
+  : sequence_(zero)
 {
 }
 
-sequential_lock::handle sequential_lock::begin_read() const
+sequential_lock::handle sequential_lock::begin_read() const NOEXCEPT
 {
     // Start read lock.
     return sequence_.load();
 }
 
-bool sequential_lock::is_read_valid(handle value) const
+bool sequential_lock::is_read_valid(handle value) const NOEXCEPT
 {
     // Test read lock.
     return value == sequence_.load();
 }
 
 // Failure does not prevent a subsequent begin or end resetting the lock state.
-bool sequential_lock::begin_write()
+bool sequential_lock::begin_write() NOEXCEPT
 {
     // Start write lock.
     return is_write_locked(++sequence_);
 }
 
 // Failure does not prevent a subsequent begin or end resetting the lock state.
-bool sequential_lock::end_write()
+bool sequential_lock::end_write() NOEXCEPT
 {
     // End write lock.
     return !is_write_locked(++sequence_);

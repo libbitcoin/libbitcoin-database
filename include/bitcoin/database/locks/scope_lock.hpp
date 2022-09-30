@@ -20,7 +20,7 @@
 #define LIBBITCOIN_DATABASE_LOCKS_SCOPE_LOCK_HPP
 
 #include <memory>
-#include <boost/thread.hpp>
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -29,19 +29,23 @@ namespace database {
 
 /// This class is thread safe.
 /// Reserve exclusive access to a resource while this object is in scope.
-class BCT_API scope_lock
+class BCD_API scope_lock
 {
 public:
     typedef std::shared_ptr<scope_lock> ptr;
 
     /// Lock using the specified mutex reference.
-    scope_lock(boost::shared_mutex& mutex);
+    scope_lock(std::shared_mutex& mutex) NOEXCEPT;
+    scope_lock(scope_lock&&) = delete;
+    scope_lock(const scope_lock&) = delete;
+    scope_lock& operator=(scope_lock&&) = delete;
+    scope_lock& operator=(const scope_lock&) = delete;
 
     /// Unlock.
-    virtual ~scope_lock();
+    virtual ~scope_lock() NOEXCEPT;
 
 private:
-    boost::shared_mutex& mutex_;
+    std::shared_mutex& mutex_;
 };
 
 } // namespace database

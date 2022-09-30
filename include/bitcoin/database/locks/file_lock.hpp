@@ -20,32 +20,32 @@
 #define LIBBITCOIN_DATABASE_LOCKS_FILE_LOCK_HPP
 
 #include <string>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/// This class is not thread safe, and does not throw.
+/// This class is not thread safe.
 class BCD_API file_lock
 {
 public:
-    file_lock(const boost::filesystem::path& file) noexcept;
+    file_lock(const std::filesystem::path& file) NOEXCEPT;
 
-    std::string file() const noexcept;
+    std::string file() const NOEXCEPT;
 
     /// True if file exists.
-    bool exists() const noexcept;
+    bool exists() const NOEXCEPT;
 
     /// True if file exists or was created.
-    bool create() noexcept;
+    bool create() NOEXCEPT;
 
     /// True if file does not exist or was deleted.
-    bool destroy() noexcept;
+    bool destroy() NOEXCEPT;
 
 private:
-    const boost::filesystem::path file_;
+    const std::filesystem::path file_;
 };
 
 } // namespace database

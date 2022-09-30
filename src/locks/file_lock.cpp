@@ -19,43 +19,43 @@
 #include <bitcoin/database/locks/file_lock.hpp>
 
 #include <string>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
-    
-// C++17: use std::filesystem.
-file_lock::file_lock(const boost::filesystem::path& file) noexcept
+
+file_lock::file_lock(const std::filesystem::path& file) NOEXCEPT
   : file_(file)
 {
 }
 
-bool file_lock::exists() const noexcept
+bool file_lock::exists() const NOEXCEPT
 {
     system::ifstream stream(file_);
     return stream.good();
 }
 
 // This is non-const as it alters state (externally but may become internal).
-bool file_lock::create() noexcept
+bool file_lock::create() NOEXCEPT
 {
     system::ofstream stream(file_);
     return stream.good();
 }
 
 // This is non-const as it alters state (externally but may become internal).
-bool file_lock::destroy() noexcept
+bool file_lock::destroy() NOEXCEPT
 {
     // C++17: use std::filesystem.
     // remove returns false if file did not exist though error_code is false if
     // file did not exist. use of error_code overload also precludes exception.
-    boost::system::error_code ec;
-    boost::filesystem::remove(system::to_extended_path(file_), ec);
+    std::error_code ec;
+    std::filesystem::remove(system::to_extended_path(file_), ec);
     return !ec;
 }
 
-std::string file_lock::file() const noexcept
+std::string file_lock::file() const NOEXCEPT
 {
     return file_.string();
 }
