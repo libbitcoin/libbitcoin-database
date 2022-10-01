@@ -24,6 +24,7 @@
 #endif
 #include <filesystem>
 #include <boost/interprocess/detail/os_file_functions.hpp>
+#include <boost/thread/shared_mutex.hpp>
 #include <bitcoin/system.hpp>
 
 namespace libbitcoin {
@@ -32,6 +33,7 @@ namespace database {
 namespace interprocess = boost::interprocess;
 namespace ipcdetail = interprocess::ipcdetail;
 using file_handle_t = interprocess::file_handle_t;
+using upgrade_mutex = boost::upgrade_mutex;
 
 #if defined(HAVE_MSC)
 const file_handle_t invalid = interprocess::winapi::invalid_handle_value;

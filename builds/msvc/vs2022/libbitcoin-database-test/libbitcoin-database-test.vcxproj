@@ -70,12 +70,6 @@
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\test\block_state.cpp" />
-    <ClCompile Include="..\..\..\..\test\data_base.cpp" />
-    <ClCompile Include="..\..\..\..\test\databases\block_database.cpp" />
-    <ClCompile Include="..\..\..\..\test\databases\filter_database.cpp" />
-    <ClCompile Include="..\..\..\..\test\databases\payment_database.cpp" />
-    <ClCompile Include="..\..\..\..\test\databases\transaction_database.cpp" />
     <ClCompile Include="..\..\..\..\test\locks\file_lock.cpp" />
     <ClCompile Include="..\..\..\..\test\locks\flush_lock.cpp" />
     <ClCompile Include="..\..\..\..\test\locks\interprocess_lock.cpp" />
@@ -90,17 +84,8 @@
     <ClCompile Include="..\..\..\..\test\primitives\list_iterator.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\record_manager.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\slab_manager.cpp" />
-    <ClCompile Include="..\..\..\..\test\result\block_result.cpp" />
-    <ClCompile Include="..\..\..\..\test\result\filter_result.cpp" />
-    <ClCompile Include="..\..\..\..\test\result\payment_iterator.cpp" />
-    <ClCompile Include="..\..\..\..\test\result\payment_result.cpp" />
-    <ClCompile Include="..\..\..\..\test\result\transaction_iterator.cpp" />
-    <ClCompile Include="..\..\..\..\test\result\transaction_result.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
-    <ClCompile Include="..\..\..\..\test\store.cpp" />
     <ClCompile Include="..\..\..\..\test\test.cpp" />
-    <ClCompile Include="..\..\..\..\test\unspent_outputs.cpp" />
-    <ClCompile Include="..\..\..\..\test\unspent_transaction.cpp" />
     <ClCompile Include="..\..\..\..\test\utility\storage.cpp" />
     <ClCompile Include="..\..\..\..\test\utility\utility.cpp" />
   </ItemGroup>
