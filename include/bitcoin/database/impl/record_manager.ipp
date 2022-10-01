@@ -19,8 +19,9 @@
 #ifndef LIBBITCOIN_DATABASE_RECORD_MANAGER_IPP
 #define LIBBITCOIN_DATABASE_RECORD_MANAGER_IPP
 
-#include <cstddef>
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
@@ -42,8 +43,8 @@ record_manager<Link>::record_manager(storage& file, size_t header_size,
     record_size_(static_cast<Link>(record_size)),
     record_count_(0)
 {
-    BITCOIN_ASSERT(header_size < not_allocated);
-    BITCOIN_ASSERT(record_size < not_allocated);
+    BC_ASSERT(header_size < not_allocated);
+    BC_ASSERT(record_size < not_allocated);
 }
 
 template <typename Link>
@@ -51,7 +52,7 @@ bool record_manager<Link>::create()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::unique_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
 
     // Existing file record count is nonzero.
     if (record_count_ != 0)
@@ -69,7 +70,7 @@ bool record_manager<Link>::start()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::unique_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
 
     read_count();
     const auto minimum = header_size_ + link_to_position(record_count_);
@@ -84,7 +85,7 @@ void record_manager<Link>::commit()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::unique_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
     write_count();
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -94,7 +95,7 @@ Link record_manager<Link>::count() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::shared_lock lock(mutex_);
+    std::shared_lock lock(mutex_);
     return record_count_;
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -104,8 +105,8 @@ void record_manager<Link>::set_count(Link value)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::unique_lock lock(mutex_);
-    BITCOIN_ASSERT(value <= record_count_);
+    std::unique_lock lock(mutex_);
+    BC_ASSERT(value <= record_count_);
     record_count_ = value;
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -115,12 +116,12 @@ void record_manager<Link>::set_count(Link value)
 template <typename Link>
 Link record_manager<Link>::allocate(size_t count)
 {
-    BITCOIN_ASSERT(count < not_allocated);
+    BC_ASSERT(count < not_allocated);
     const auto records = static_cast<Link>(count);
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::unique_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
 
     // Always write after the last index.
     const auto next_record_index = record_count_;
@@ -141,7 +142,7 @@ memory_ptr record_manager<Link>::get(Link link) const
 {
     // Ensure requested position is within the file.
     // We avoid a runtime error here to optimize out the count lock.
-    BITCOIN_ASSERT_MSG(!past_eof(link), "Read past end of file.");
+    BC_ASSERT_MSG(!past_eof(link), "Read past end of file.");
 
     const auto memory = file_.access();
     memory->increment(header_size_ + link_to_position(link));
@@ -160,7 +161,7 @@ bool record_manager<Link>::past_eof(Link link) const
 template <typename Link>
 void record_manager<Link>::read_count()
 {
-    BITCOIN_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
+    BC_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
@@ -173,7 +174,7 @@ void record_manager<Link>::read_count()
 template <typename Link>
 void record_manager<Link>::write_count()
 {
-    BITCOIN_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
+    BC_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();

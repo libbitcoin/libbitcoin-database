@@ -19,7 +19,11 @@
 #ifndef LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_IPP
 #define LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_IPP
 
+#include <cstring>
+#include <functional>
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
@@ -60,7 +64,7 @@ bool hash_table_header<Index, Link>::create()
     const auto memory = file_.resize(file_size);
 
     // Speed-optimized fill implementation.
-    memset(memory->buffer(), (uint8_t)empty, file_size);
+    std::memset(memory->buffer(), (uint8_t)empty, file_size);
 
     // Overwrite the start of the buffer with the bucket count.
     auto serial = system::make_unsafe_serializer(memory->buffer());
@@ -86,7 +90,7 @@ bool hash_table_header<Index, Link>::start()
 template <typename Index, typename Link>
 Link hash_table_header<Index, Link>::read(Index index) const
 {
-    BITCOIN_ASSERT(index < buckets_);
+    BC_ASSERT(index < buckets_);
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
@@ -95,7 +99,7 @@ Link hash_table_header<Index, Link>::read(Index index) const
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::shared_lock lock(mutex_);
+    std::shared_lock lock(mutex_);
     return deserial.template read_little_endian<Link>();
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -103,7 +107,7 @@ Link hash_table_header<Index, Link>::read(Index index) const
 template <typename Index, typename Link>
 void hash_table_header<Index, Link>::write(Index index, Link value)
 {
-    BITCOIN_ASSERT(index < buckets_);
+    BC_ASSERT(index < buckets_);
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
@@ -112,7 +116,7 @@ void hash_table_header<Index, Link>::write(Index index, Link value)
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::unique_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
     serial.template write_little_endian<Link>(value);
     ///////////////////////////////////////////////////////////////////////////
 }

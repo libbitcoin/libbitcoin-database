@@ -19,8 +19,8 @@
 #ifndef LIBBITCOIN_DATABASE_HASH_TABLE_IPP
 #define LIBBITCOIN_DATABASE_HASH_TABLE_IPP
 
-#include <cstddef>
 #include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
 #include <bitcoin/database/primitives/list.hpp>
@@ -95,7 +95,7 @@ hash_table<Manager, Index, Link, Key>::get(Link link) const
 {
     // Ensure requested position is within the file.
     // We avoid a runtime error here to optimize out the past_eof locks.
-    BITCOIN_ASSERT_MSG(!manager_.past_eof(link) || link == not_found,
+    BC_ASSERT_MSG(!manager_.past_eof(link) || link == not_found,
         "Non-terminating link is past end of file.");
 
     // A not_found link value produces a terminator element.

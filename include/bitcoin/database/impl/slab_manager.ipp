@@ -19,8 +19,9 @@
 #ifndef LIBBITCOIN_DATABASE_SLAB_MANAGER_IPP
 #define LIBBITCOIN_DATABASE_SLAB_MANAGER_IPP
 
-#include <cstddef>
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
@@ -40,8 +41,8 @@ slab_manager<Link>::slab_manager(storage& file, size_t header_size)
     header_size_(static_cast<Link>(header_size)),
     payload_size_(sizeof(Link))
 {
-    BITCOIN_ASSERT(header_size < not_allocated);
-    BITCOIN_ASSERT(sizeof(Link) < not_allocated);
+    BC_ASSERT(header_size < not_allocated);
+    BC_ASSERT(sizeof(Link) < not_allocated);
 }
 
 template <typename Link>
@@ -49,7 +50,7 @@ bool slab_manager<Link>::create()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::unique_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
 
     // Existing slabs size is incorrect for new file.
     if (payload_size_ != sizeof(Link))
@@ -67,7 +68,7 @@ bool slab_manager<Link>::start()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::unique_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
 
     read_size();
     const auto minimum = header_size_ + payload_size_;
@@ -82,7 +83,7 @@ void slab_manager<Link>::commit()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::unique_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
     write_size();
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -92,7 +93,7 @@ Link slab_manager<Link>::payload_size() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::shared_lock lock(mutex_);
+    std::shared_lock lock(mutex_);
     return payload_size_;
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -102,12 +103,12 @@ Link slab_manager<Link>::payload_size() const
 template <typename Link>
 Link slab_manager<Link>::allocate(size_t size)
 {
-    BITCOIN_ASSERT(size < not_allocated);
+    BC_ASSERT(size < not_allocated);
     const auto slab_size = static_cast<Link>(size);
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::unique_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
 
     // Always write after the last slab.
     const auto next_slab_position = payload_size_;
@@ -128,7 +129,7 @@ memory_ptr slab_manager<Link>::get(Link link) const
 {
     // Ensure requested position is within the file.
     // We avoid a runtime error here to optimize out the payload_size lock.
-    BITCOIN_ASSERT_MSG(link < payload_size(), "Read past end of file.");
+    BC_ASSERT_MSG(link < payload_size(), "Read past end of file.");
 
     const auto memory = file_.access();
     memory->increment(header_size_ + link);
@@ -147,7 +148,7 @@ bool slab_manager<Link>::past_eof(Link link) const
 template <typename Link>
 void slab_manager<Link>::read_size()
 {
-    BITCOIN_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
+    BC_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
@@ -160,7 +161,7 @@ void slab_manager<Link>::read_size()
 template <typename Link>
 void slab_manager<Link>::write_size() const
 {
-    BITCOIN_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
+    BC_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();

@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_LIST_HPP
 #define LIBBITCOIN_DATABASE_LIST_HPP
 
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/list_element.hpp>
@@ -39,7 +40,7 @@ public:
     typedef list_element<const Manager, Link, Key> const_value_type;
 
     /// Create a storage iterator starting at first.
-    list(Manager& manager, Link first, system::shared_mutex& mutex);
+    list(Manager& manager, Link first, std::shared_mutex& mutex);
 
     bool empty() const;
     const_value_type front() const;
@@ -49,7 +50,7 @@ public:
 private:
     const Link first_;
     Manager& manager_;
-    system::shared_mutex& mutex_;
+    std::shared_mutex& mutex_;
 };
 
 } // namespace database

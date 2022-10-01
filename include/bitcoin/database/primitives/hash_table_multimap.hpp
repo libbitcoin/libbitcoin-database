@@ -19,9 +19,9 @@
 #ifndef LIBBITCOIN_DATABASE_HASH_TABLE_MULTIMAP_HPP
 #define LIBBITCOIN_DATABASE_HASH_TABLE_MULTIMAP_HPP
 
-#include <cstdint>
-#include <string>
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
+#include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table.hpp>
@@ -74,8 +74,8 @@ public:
 private:
     table& map_;
     manager& manager_;
-    mutable system::shared_mutex root_mutex_;
-    mutable system::shared_mutex list_mutex_;
+    mutable upgrade_mutex root_mutex_;
+    mutable std::shared_mutex list_mutex_;
 };
 
 } // namespace database

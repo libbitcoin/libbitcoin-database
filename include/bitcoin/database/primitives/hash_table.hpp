@@ -19,8 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_HASH_TABLE_HPP
 #define LIBBITCOIN_DATABASE_HASH_TABLE_HPP
 
-#include <cstddef>
-#include <cstdint>
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -104,8 +103,8 @@ private:
 
     hash_table_header<Index, Link> header_;
     Manager manager_;
-    mutable system::shared_mutex root_mutex_;
-    mutable system::shared_mutex list_mutex_;
+    mutable std::shared_mutex root_mutex_;
+    mutable std::shared_mutex list_mutex_;
 };
 
 } // namespace database

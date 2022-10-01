@@ -19,7 +19,9 @@
 #ifndef LIBBITCOIN_DATABASE_LIST_IPP
 #define LIBBITCOIN_DATABASE_LIST_IPP
 
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/list_element.hpp>
 #include <bitcoin/database/primitives/list_iterator.hpp>
 
@@ -28,7 +30,7 @@ namespace database {
 
 template <typename Manager, typename Link, typename Key>
 list<Manager, Link, Key>::list(Manager& manager, Link first,
-    system::shared_mutex& mutex)
+    std::shared_mutex& mutex)
   : first_(first), manager_(manager), mutex_(mutex)
 {
 }

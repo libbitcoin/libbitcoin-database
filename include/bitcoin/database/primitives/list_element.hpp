@@ -19,9 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_LIST_ELEMENT_HPP
 #define LIBBITCOIN_DATABASE_LIST_ELEMENT_HPP
 
-#include <cstddef>
-#include <cstdint>
-#include <utility>
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -43,10 +41,10 @@ public:
     static size_t size(size_t value_size);
 
     /// Construct for a new element.
-    list_element(Manager& manager, system::shared_mutex& mutex);
+    list_element(Manager& manager, std::shared_mutex& mutex);
 
     /// Construct for an existing element.
-    list_element(Manager& manager, Link link, system::shared_mutex& mutex);
+    list_element(Manager& manager, Link link, std::shared_mutex& mutex);
 
     /// Allocate and populate a new unkeyed record element.
     Link create(write_function write);
@@ -103,7 +101,7 @@ private:
 
     Link link_;
     Manager& manager_;
-    system::shared_mutex& mutex_;
+    std::shared_mutex& mutex_;
 };
 
 } // namespace database

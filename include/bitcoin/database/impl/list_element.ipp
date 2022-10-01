@@ -20,7 +20,7 @@
 #define LIBBITCOIN_DATABASE_LIST_ELEMENT_IPP
 
 #include <algorithm>
-#include <cstddef>
+#include <shared_mutex>
 #include <tuple>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -48,14 +48,14 @@ size_t list_element<Manager, Link, Key>::size(size_t value_size)
 // Parameterizing Manager allows const and non-const.
 template <typename Manager, typename Link, typename Key>
 list_element<Manager, Link, Key>::list_element(Manager& manager,
-    system::shared_mutex& mutex)
+    std::shared_mutex& mutex)
   : manager_(manager), link_(not_found), mutex_(mutex)
 {
 }
 
 template <typename Manager, typename Link, typename Key>
 list_element<Manager, Link, Key>::list_element(Manager& manager, Link link,
-    system::shared_mutex& mutex)
+    std::shared_mutex& mutex)
   : manager_(manager), link_(link), mutex_(mutex)
 {
 }
@@ -66,7 +66,7 @@ template <typename Manager, typename Link, typename Key>
 void list_element<Manager, Link, Key>::initialize(const Key& key,
     write_function write)
 {
-    const auto memory = data(0);
+    const auto memory = data(zero);
     auto serial = system::make_unsafe_serializer(memory->buffer());
 
     // Limited to tuple|iterator Key types.
@@ -80,7 +80,7 @@ template <typename Manager, typename Link, typename Key>
 Link list_element<Manager, Link, Key>::create(write_function write)
 {
     constexpr empty_key unkeyed{};
-    link_ = manager_.allocate(1);
+    link_ = manager_.allocate(one);
     initialize(unkeyed, write);
     return link_;
 }
@@ -90,7 +90,7 @@ template <typename Manager, typename Link, typename Key>
 Link list_element<Manager, Link, Key>::create(const Key& key,
     write_function write)
 {
-    link_ = manager_.allocate(1);
+    link_ = manager_.allocate(one);
     initialize(key, write);
     return link_;
 }
@@ -156,14 +156,14 @@ void list_element<Manager, Link, Key>::read(read_function reader) const
 template <typename Manager, typename Link, typename Key>
 bool list_element<Manager, Link, Key>::match(const Key& key) const
 {
-    const auto memory = data(0);
+    const auto memory = data(zero);
     return std::equal(key.begin(), key.end(), memory->buffer());
 }
 
 template <typename Manager, typename Link, typename Key>
 Key list_element<Manager, Link, Key>::key() const
 {
-    const auto memory = data(0);
+    const auto memory = data(zero);
     auto deserial = system::make_unsafe_deserializer(memory->buffer());
 
     // Limited to tuple Key types (see deserializer to generalize).
@@ -224,7 +224,7 @@ bool list_element<Manager, Link, Key>::operator!=(list_element other) const
 template <typename Manager, typename Link, typename Key>
 memory_ptr list_element<Manager, Link, Key>::data(size_t bytes) const
 {
-    BITCOIN_ASSERT(link_ != not_found);
+    BC_ASSERT(link_ != not_found);
     auto memory = manager_.get(link_);
     memory->increment(bytes);
     return memory;

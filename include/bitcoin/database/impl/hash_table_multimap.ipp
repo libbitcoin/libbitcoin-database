@@ -19,6 +19,8 @@
 #ifndef LIBBITCOIN_DATABASE_HASH_TABLE_MULTIMAP_IPP
 #define LIBBITCOIN_DATABASE_HASH_TABLE_MULTIMAP_IPP
 
+#include <shared_mutex>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hash_table.hpp>
 #include <bitcoin/database/primitives/list.hpp>
@@ -64,7 +66,7 @@ hash_table_multimap<Index, Link, Key>::find(const Key& key) const
     {
         // Critical Section.
         ///////////////////////////////////////////////////////////////////////
-        system::shared_lock lock(root_mutex_);
+        std::shared_lock lock(root_mutex_);
         first = deserial.template read_little_endian<Link>();
         ///////////////////////////////////////////////////////////////////////
     };
@@ -87,7 +89,7 @@ hash_table_multimap<Index, Link, Key>::get(Link link) const
     {
         // Critical Section.
         ///////////////////////////////////////////////////////////////////////
-        system::shared_lock lock(root_mutex_);
+        std::shared_lock lock(root_mutex_);
         first = deserial.template read_little_endian<Link>();
         ///////////////////////////////////////////////////////////////////////
     };

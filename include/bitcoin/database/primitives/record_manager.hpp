@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_RECORD_MANAGER_HPP
 #define LIBBITCOIN_DATABASE_RECORD_MANAGER_HPP
 
-#include <cstddef>
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -34,7 +34,6 @@ namespace database {
 /// It also provides logical record mapping to the record memory address.
 template <typename Link>
 class record_manager
-  : system::noncopyable
 {
 public:
     // This cast is a VC++ workaround is OK because Link must be unsigned.
@@ -87,7 +86,7 @@ private:
 
     // Record count is protected by mutex.
     Link record_count_;
-    mutable system::shared_mutex mutex_;
+    mutable std::shared_mutex mutex_;
 };
 
 } // namespace database

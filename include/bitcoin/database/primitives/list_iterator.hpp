@@ -19,8 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_LIST_ITERATOR_HPP
 #define LIBBITCOIN_DATABASE_LIST_ITERATOR_HPP
 
-#include <iterator>
-#include <utility>
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/list_element.hpp>
@@ -46,7 +45,7 @@ public:
     list_iterator(value_type element);
 
     /// Create a storage iterator starting at first.
-    list_iterator(Manager& manager, Link first, system::shared_mutex& mutex);
+    list_iterator(Manager& manager, Link first, std::shared_mutex& mutex);
 
     list_iterator& operator++();
     list_iterator operator++(int);
