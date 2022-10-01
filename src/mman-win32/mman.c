@@ -73,13 +73,14 @@ static DWORD protect_file(int prot)
 
 /* public interface */
 
-void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off)
-{
+/* unreferenced formal parameter */
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable: 4293)
+#pragma warning(disable: 4100)
 #endif
 
+void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off)
+{
     const DWORD access  = protect_file(prot);
     const DWORD protect = protect_page(prot);
 
@@ -89,10 +90,6 @@ void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off)
     const DWORD max_hi  = large ? (DWORD)((max >> 32) & MAXDWORD) : (DWORD)0;
     const DWORD file_lo = large ? (DWORD)((off)       & MAXDWORD) : (DWORD)off;
     const DWORD file_hi = large ? (DWORD)((off >> 32) & MAXDWORD) : (DWORD)0;
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
     if (len == 0 || (flags & MAP_FIXED) != 0 || prot == PROT_EXEC)
     {
@@ -176,6 +173,11 @@ int msync(void* addr, size_t len, int flags)
     return -1;
 }
 
+/* unreferenced formal parameter */
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 int mlock(const void* addr, size_t len)
 {
     if (VirtualLock((LPVOID)addr, len) != FALSE)
@@ -239,7 +241,7 @@ int ftruncate(int fd, oft__ size)
     big.QuadPart = (LONGLONG)size;
 
     const HANDLE handle = (HANDLE)_get_osfhandle(fd);
-    const position = SetFilePointerEx(handle, big, NULL, FILE_BEGIN);
+    const BOOL position = SetFilePointerEx(handle, big, NULL, FILE_BEGIN);
 
     if (position == INVALID_SET_FILE_POINTER || SetEndOfFile(handle) == FALSE)
     {

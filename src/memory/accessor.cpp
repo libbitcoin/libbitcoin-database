@@ -18,8 +18,6 @@
  */
 #include <bitcoin/database/memory/accessor.hpp>
 
-#include <cstdint>
-#include <cstddef>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -28,7 +26,7 @@ namespace database {
 
 using namespace bc::system;
 
-accessor::accessor(upgrade_mutex& mutex)
+accessor::accessor(upgrade_mutex& mutex) NOEXCEPT
   : mutex_(mutex), data_(nullptr)
 {
     ///////////////////////////////////////////////////////////////////////////
@@ -36,28 +34,28 @@ accessor::accessor(upgrade_mutex& mutex)
     mutex_.lock_upgrade();
 }
 
-uint8_t* accessor::buffer()
+uint8_t* accessor::buffer() NOEXCEPT
 {
     return data_;
 }
 
 // Assign a buffer to this upgradable allocator.
-void accessor::assign(uint8_t* data)
+void accessor::assign(uint8_t* data) NOEXCEPT
 {
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     mutex_.unlock_upgrade_and_lock_shared();
     data_ = data;
 }
 
-void accessor::increment(size_t value)
+void accessor::increment(size_t value) NOEXCEPT
 {
-    BITCOIN_ASSERT_MSG(data_ != nullptr, "Buffer not assigned.");
-    BITCOIN_ASSERT((size_t)data_ <= bc::max_size_t - value);
+    BC_ASSERT_MSG(data_ != nullptr, "Buffer not assigned.");
+    BC_ASSERT((size_t)data_ <= bc::max_size_t - value);
 
     data_ += value;
 }
 
-accessor::~accessor()
+accessor::~accessor() NOEXCEPT
 {
     mutex_.unlock_shared();
     // End Critical Section

@@ -30,7 +30,7 @@ namespace database {
 
 /// This class is not thread safe, and does not throw.
 /// TODO: create critical sections around lock/unlock.
-class BCD_API interprocess_lock
+class BCD_API interprocess_lock final
   : file_lock
 {
 public:
@@ -42,7 +42,7 @@ public:
     interprocess_lock& operator=(const interprocess_lock&) = delete;
 
     /// Destruction calls unlock.
-    virtual ~interprocess_lock() NOEXCEPT;
+    ~interprocess_lock() NOEXCEPT;
 
     /// Creates the file and acquires exclusive access.
     /// Returns false if failed to acquire lock or lock already held.

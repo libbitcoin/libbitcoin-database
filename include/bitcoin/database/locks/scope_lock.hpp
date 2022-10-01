@@ -29,7 +29,7 @@ namespace database {
 
 /// This class is thread safe.
 /// Reserve exclusive access to a resource while this object is in scope.
-class BCD_API scope_lock
+class BCD_API scope_lock final
 {
 public:
     typedef std::shared_ptr<scope_lock> ptr;
@@ -42,7 +42,7 @@ public:
     scope_lock& operator=(const scope_lock&) = delete;
 
     /// Unlock.
-    virtual ~scope_lock() NOEXCEPT;
+    ~scope_lock() NOEXCEPT;
 
 private:
     std::shared_mutex& mutex_;

@@ -24,20 +24,20 @@
 namespace libbitcoin {
 namespace database {
 
-conditional_lock::conditional_lock(bool lock)
+conditional_lock::conditional_lock(bool lock) NOEXCEPT
   : conditional_lock(lock ? std::make_shared<boost::shared_mutex>() : nullptr)
 {
 }
 
 conditional_lock::conditional_lock(
-    std::shared_ptr<boost::shared_mutex> mutex_ptr)
+    std::shared_ptr<boost::shared_mutex> mutex_ptr) NOEXCEPT
   : mutex_ptr_(mutex_ptr)
 {
     if (mutex_ptr_)
         mutex_ptr->lock();
 }
 
-conditional_lock::~conditional_lock()
+conditional_lock::~conditional_lock() NOEXCEPT
 {
     if (mutex_ptr_)
         mutex_ptr_->unlock();

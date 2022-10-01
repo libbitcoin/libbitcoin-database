@@ -16,19 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_FILE_STORAGE_HPP
-#define LIBBITCOIN_DATABASE_FILE_STORAGE_HPP
+#ifndef LIBBITCOIN_DATABASE_MEMORY_FILE_STORAGE_HPP
+#define LIBBITCOIN_DATABASE_MEMORY_FILE_STORAGE_HPP
 
-#ifndef _WIN32
-#include <sys/mman.h>
-#endif
-#include <atomic>
-#include <cstddef>
-#include <cstdint>
-#include <memory>
 #include <string>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <bitcoin/system.hpp>
+#include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/storage.hpp>
@@ -38,86 +32,93 @@ namespace database {
 
 /// This class is thread safe, allowing concurent read and write.
 /// A change to the size of the memory map waits on and locks read and write.
-class BCD_API file_storage
+class BCD_API file_storage final
   : public storage
 {
 public:
-    typedef boost::filesystem::path path;
+    typedef std::filesystem::path path;
     static const size_t default_expansion;
     static const uint64_t default_capacity;
 
     /// Construct a database (start is currently called, may throw).
-    file_storage(const path& filename);
-    file_storage(const path& filename, size_t minimum, size_t expansion);
+    file_storage(const path& filename) NOEXCEPT;
+    file_storage(const path& filename, size_t minimum,
+        size_t expansion) NOEXCEPT;
+
+    file_storage(file_storage&&) = delete;
+    file_storage(const file_storage&) = delete;
+    file_storage& operator=(file_storage&&) = delete;
+    file_storage& operator=(const file_storage&) = delete;
 
     /// Close the database.
-    ~file_storage();
+    ~file_storage() NOEXCEPT;
 
     /// Open and map database files, must be closed.
-    bool open();
+    bool open() NOEXCEPT override;
 
     /// Flush the memory map to disk, idempotent.
-    bool flush() const;
+    bool flush() const NOEXCEPT override;
 
     /// Unmap and release files, restartable, idempotent.
-    bool close();
+    bool close() NOEXCEPT override;
 
     /// Determine if the database is closed.
-    bool closed() const;
+    bool closed() const NOEXCEPT override;
 
     /// The current capacity for mapped data.
-    size_t capacity() const;
+    size_t capacity() const NOEXCEPT override;
 
     /// The current logical size of mapped data.
-    size_t logical() const;
+    size_t logical() const NOEXCEPT override;
 
     /// Get protected shared access to memory, starting at first byte.
-    memory_ptr access();
+    memory_ptr access() NOEXCEPT(false) override;
 
     /// Throws runtime_error if insufficient space.
     /// Resize the logical map to the specified size, return access.
     /// Increase or shrink the physical size to match the logical size.
-    memory_ptr resize(size_t required);
+    memory_ptr resize(size_t required) NOEXCEPT(false) override;
 
     /// Throws runtime_error if insufficient space.
     /// Resize the logical map to the specified size, return access.
     /// Increase the physical size to at least the logical size.
-    memory_ptr reserve(size_t required);
+    memory_ptr reserve(size_t required) NOEXCEPT(false) override;
 
 private:
-    static size_t file_size(int file_handle);
-    static int close_file(int file_handle);
-    static int open_file(const boost::filesystem::path& filename);
+    static size_t file_size(int file_handle) NOEXCEPT;
+    static int close_file(int file_handle) NOEXCEPT;
+    static int open_file(const std::filesystem::path& filename) NOEXCEPT;
     static bool handle_error(const std::string& context,
-        const boost::filesystem::path& filename);
+        const std::filesystem::path& filename) NOEXCEPT;
 
-    size_t page() const;
-    bool unmap();
-    bool map(size_t size);
-    bool remap(size_t size);
-    bool truncate(size_t size);
-    bool truncate_mapped(size_t size);
-    bool validate(size_t size);
-    memory_ptr reserve(size_t required, size_t minimum, size_t expansion);
+    size_t page() const NOEXCEPT;
+    bool unmap() NOEXCEPT;
+    bool map(size_t size) NOEXCEPT;
+    bool remap(size_t size) NOEXCEPT;
+    bool truncate(size_t size) NOEXCEPT;
+    bool truncate_mapped(size_t size) NOEXCEPT;
+    bool validate(size_t size) NOEXCEPT;
+    memory_ptr reserve(size_t required, size_t minimum,
+        size_t expansion) NOEXCEPT(false);
 
-    void log_mapping() const;
-    void log_resizing(size_t size) const;
-    void log_flushed() const;
-    void log_unmapping() const;
-    void log_unmapped() const;
+    void log_mapping() const NOEXCEPT;
+    void log_resizing(size_t size) const NOEXCEPT;
+    void log_flushed() const NOEXCEPT;
+    void log_unmapping() const NOEXCEPT;
+    void log_unmapped() const NOEXCEPT;
 
     // File system.
     const int file_handle_;
     const size_t minimum_;
     const size_t expansion_;
-    const boost::filesystem::path filename_;
+    const std::filesystem::path filename_;
 
     // Protected by mutex.
     bool closed_;
     uint8_t* data_;
     size_t capacity_;
     size_t logical_size_;
-    mutable system::upgrade_mutex mutex_;
+    mutable upgrade_mutex mutex_;
 };
 
 } // namespace database

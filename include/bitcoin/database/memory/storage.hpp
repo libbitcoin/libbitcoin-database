@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_STORAGE_HPP
-#define LIBBITCOIN_DATABASE_STORAGE_HPP
+#ifndef LIBBITCOIN_DATABASE_MEMORY_STORAGE_HPP
+#define LIBBITCOIN_DATABASE_MEMORY_STORAGE_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -28,7 +28,6 @@ namespace database {
 
 /// The implementation must be thread safe, allowing concurent read and write.
 class BCD_API storage
-  : system::noncopyable
 {
 public:
     /// Open and map database files, must be closed.
