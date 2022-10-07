@@ -1,4 +1,4 @@
-/* mman-win32 derived from code.google.com/p/mman-win32 (MIT License). */
+/* mman-win32 based on code.google.com/p/mman-win32 (MIT License). */
 
 #include "mman.h"
 
@@ -146,6 +146,7 @@ int madvise(void* addr, size_t len, int advice)
     return 0;
 }
 
+// Unused.
 int mprotect(void* addr, size_t len, int prot)
 {
     DWORD old_protect = 0;
@@ -178,6 +179,7 @@ int msync(void* addr, size_t len, int flags)
 #pragma warning(pop)
 #endif
 
+// Unused.
 int mlock(const void* addr, size_t len)
 {
     if (VirtualLock((LPVOID)addr, len) != FALSE)
@@ -190,6 +192,7 @@ int mlock(const void* addr, size_t len)
     return -1;
 }
 
+// Unused.
 int munlock(const void* addr, size_t len)
 {
     if (VirtualUnlock((LPVOID)addr, len) != FALSE)

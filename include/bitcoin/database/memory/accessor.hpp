@@ -27,18 +27,16 @@
 namespace libbitcoin {
 namespace database {
 
-/// This class provides shared/protected read/write access to a memory buffer.
-/// The call caller must know the buffer size as it is unprotected/unmanaged.
+/// Shared read/write access to a memory buffer.
+/// The caller must know the buffer size as it is unguarded/unmanaged.
 class BCD_API accessor final
   : public memory
 {
 public:
-    /// Assign a null upgradeable buffer pointer.
+    DELETE4(accessor);
+
+    /// The mutex precludes concurrent
     accessor(upgrade_mutex& mutex) NOEXCEPT;
-    accessor(accessor&&) = delete;
-    accessor(const accessor&) = delete;
-    accessor& operator=(accessor&&) = delete;
-    accessor& operator=(const accessor&) = delete;
 
     /// Free the buffer pointer lock.
     ~accessor() NOEXCEPT;
@@ -47,10 +45,11 @@ public:
     uint8_t* buffer() NOEXCEPT;
 
     /// Set the buffer pointer and lock for shared access.
+    /// The mutex is upgraded and remains locked until destruct.
     void assign(uint8_t* data) NOEXCEPT;
 
     /// Advance the buffer pointer a specified number of bytes.
-    void increment(size_t value) NOEXCEPT;
+    void increment(size_t size) NOEXCEPT;
 
 private:
     upgrade_mutex& mutex_;

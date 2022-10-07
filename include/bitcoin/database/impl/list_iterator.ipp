@@ -19,68 +19,60 @@
 #ifndef LIBBITCOIN_DATABASE_LIST_ITERATOR_IPP
 #define LIBBITCOIN_DATABASE_LIST_ITERATOR_IPP
 
-#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/list_element.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-template <typename Manager, typename Link, typename Key>
-list_iterator<Manager, Link, Key>::list_iterator(value_type element)
+TEMPLATE
+CLASS::list_iterator(value_type element) NOEXCEPT
   : element_(element)
 {
 }
 
-template <typename Manager, typename Link, typename Key>
-list_iterator<Manager, Link, Key>::list_iterator(Manager& manager,
-    Link first, std::shared_mutex& mutex)
+TEMPLATE
+CLASS::list_iterator(Manager& manager, Link first,
+    shared_mutex& mutex) NOEXCEPT
   : element_(manager, first, mutex)
 {
 }
 
-template <typename Manager, typename Link, typename Key>
-list_iterator<Manager, Link, Key>&
-list_iterator<Manager, Link, Key>::operator++()
+TEMPLATE
+CLASS& CLASS::operator++() NOEXCEPT
 {
     element_.jump_next();
     return *this;
 }
 
-template <typename Manager, typename Link, typename Key>
-list_iterator<Manager, Link, Key>
-list_iterator<Manager, Link, Key>::operator++(int)
+TEMPLATE
+CLASS CLASS::operator++(int) NOEXCEPT
 {
     auto copy = *this;
     element_.jump_next();
     return copy;
 }
 
-template <typename Manager, typename Link, typename Key>
-typename list_iterator<Manager, Link, Key>::pointer
-list_iterator<Manager, Link, Key>::operator*() const
+TEMPLATE
+typename CLASS::pointer CLASS::operator*() const NOEXCEPT
 {
     return element_;
 }
 
-template <typename Manager, typename Link, typename Key>
-typename list_iterator<Manager, Link, Key>::reference
-list_iterator<Manager, Link, Key>::operator->() const
+TEMPLATE
+typename CLASS::reference CLASS::operator->() const NOEXCEPT
 {
     return element_;
 }
 
-template <typename Manager, typename Link, typename Key>
-bool list_iterator<Manager, Link, Key>::operator==(
-    const list_iterator& other) const
+TEMPLATE
+bool CLASS::operator==(const list_iterator& other) const NOEXCEPT
 {
     return element_ == other.element_;
 }
 
-template <typename Manager, typename Link, typename Key>
-bool list_iterator<Manager, Link, Key>::operator!=(
-    const list_iterator& other) const
+TEMPLATE
+bool CLASS::operator!=(const list_iterator& other) const NOEXCEPT
 {
     return element_ != other.element_;
 }

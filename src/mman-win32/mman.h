@@ -1,5 +1,4 @@
-
-/* mman-win32 from code.google.com/p/mman-win32 (MIT License). */
+/* mman-win32 based on code.google.com/p/mman-win32 (MIT License). */
 
 #ifndef LIBBITCOIN_DATABASE_MMAN_H
 #define LIBBITCOIN_DATABASE_MMAN_H
@@ -10,7 +9,6 @@
 #include <stddef.h>
 typedef size_t oft__;
 
-/* mman-win32 based on code.google.com/p/mman-win32 (MIT License). */
 #ifdef __cplusplus
 extern "C" {
 #endif

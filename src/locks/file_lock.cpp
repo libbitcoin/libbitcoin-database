@@ -25,6 +25,9 @@
 
 namespace libbitcoin {
 namespace database {
+    
+// locks, make_shared, .string
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 file_lock::file_lock(const std::filesystem::path& file) NOEXCEPT
   : file_(file)
@@ -47,7 +50,6 @@ bool file_lock::create() NOEXCEPT
 // This is non-const as it alters state (externally but may become internal).
 bool file_lock::destroy() NOEXCEPT
 {
-    // C++17: use std::filesystem.
     // remove returns false if file did not exist though error_code is false if
     // file did not exist. use of error_code overload also precludes exception.
     std::error_code ec;
@@ -59,6 +61,8 @@ std::string file_lock::file() const NOEXCEPT
 {
     return file_.string();
 }
+
+BC_POP_WARNING()
 
 } // namespace database
 } // namespace libbitcoin

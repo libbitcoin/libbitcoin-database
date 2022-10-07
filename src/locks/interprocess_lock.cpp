@@ -36,7 +36,6 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 interprocess_lock::interprocess_lock(const std::filesystem::path& file) NOEXCEPT
   : file_lock(file), handle_(invalid)
 {
-    // This is a behavior change, we no longer open file (or throw) here.
 }
 
 interprocess_lock::~interprocess_lock() NOEXCEPT

@@ -30,6 +30,8 @@ namespace database {
 class BCD_API conditional_lock final
 {
 public:
+    DELETE4(conditional_lock);
+
     /// Conditional lock using internally-managed mutex pointer.
     conditional_lock(bool lock) NOEXCEPT;
 

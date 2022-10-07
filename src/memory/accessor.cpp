@@ -18,6 +18,7 @@
  */
 #include <bitcoin/database/memory/accessor.hpp>
 
+#include <iterator>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -25,6 +26,9 @@ namespace libbitcoin {
 namespace database {
 
 using namespace bc::system;
+
+// locks, advance
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 accessor::accessor(upgrade_mutex& mutex) NOEXCEPT
   : mutex_(mutex), data_(nullptr)
@@ -39,7 +43,6 @@ uint8_t* accessor::buffer() NOEXCEPT
     return data_;
 }
 
-// Assign a buffer to this upgradable allocator.
 void accessor::assign(uint8_t* data) NOEXCEPT
 {
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -47,12 +50,12 @@ void accessor::assign(uint8_t* data) NOEXCEPT
     data_ = data;
 }
 
-void accessor::increment(size_t value) NOEXCEPT
+void accessor::increment(size_t size) NOEXCEPT
 {
-    BC_ASSERT_MSG(data_ != nullptr, "Buffer not assigned.");
-    BC_ASSERT((size_t)data_ <= bc::max_size_t - value);
+    BC_ASSERT_MSG(!is_null(data_), "unassigned buffer");
+    BC_ASSERT_MSG(reinterpret_cast<size_t>(data_) < max_size_t - size, "overflow");
 
-    data_ += value;
+    std::advance(data_, size);
 }
 
 accessor::~accessor() NOEXCEPT
@@ -61,6 +64,8 @@ accessor::~accessor() NOEXCEPT
     // End Critical Section
     ///////////////////////////////////////////////////////////////////////////
 }
+
+BC_POP_WARNING()
 
 } // namespace database
 } // namespace libbitcoin

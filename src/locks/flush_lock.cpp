@@ -49,7 +49,7 @@ bool flush_lock::unlock() NOEXCEPT
 {
     if (try_lock())
         return false;
-
+    
     return destroy();
 }
 

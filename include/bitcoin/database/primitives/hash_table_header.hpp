@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_HPP
 #define LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_HPP
 
-#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
@@ -31,56 +30,70 @@ namespace database {
 ///
 ///  [  size:Index  ]
 ///  [ [ row:Link ] ]
-///  [ [      ...     ] ]
+///  [ [    ...   ] ]
 ///  [ [ row:Link ] ]
 ///
-template <typename Index, typename Link>
+template <typename Index, typename Link,
+    if_unsigned_integer<Index> = true,
+    if_unsigned_integer<Link> = true>
 class hash_table_header
 {
 public:
+    /// Empty cell (null pointer) sentinel.
+    static constexpr Link empty = system::maximum<Link>;
+
     /// A hash of the key reduced to the domain of the divisor.
     template <typename Key>
-    static Index remainder(const Key& key, Index divisor);
-
-    // Empty cell (null pointer) sentinel.
-    static const Link empty;
+    static constexpr Index remainder(const Key& key, Index divisor) NOEXCEPT
+    {
+        return divisor == 0 ? 0 : system::djb2_hash(key) % divisor;
+    }
 
     /// The hash table header byte size for a given bucket count.
-    static size_t size(Index buckets);
+    static size_t size(Index buckets) NOEXCEPT;
 
     /// Construct a hash table header.
-    hash_table_header(storage& file, Index buckets);
+    hash_table_header(storage& file, Index buckets) NOEXCEPT;
 
     /// Allocate the hash table and populate with empty values.
-    bool create();
+    bool create() NOEXCEPT;
 
     /// Should be called before use. Validates the size from the file.
-    bool start();
+    bool start() NOEXCEPT;
 
     /// Read item value.
-    Link read(Index index) const;
+    Link read(Index index) const NOEXCEPT;
 
     /// Write value to item.
-    void write(Index index, Link value);
+    void write(Index index, Link value) NOEXCEPT;
 
     /// The hash table header bucket count.
-    Index buckets() const;
+    Index buckets() const NOEXCEPT;
 
     /// The hash table header byte size.
-    size_t size();
+    size_t size() NOEXCEPT;
 
 private:
     // Position in the memory map relative the header end.
-    static file_offset link(Index index);
+    static file_offset link(Index index) NOEXCEPT;
 
     storage& file_;
     Index buckets_;
-    mutable std::shared_mutex mutex_;
+    mutable shared_mutex mutex_;
 };
 
 } // namespace database
 } // namespace libbitcoin
 
+
+#define TEMPLATE \
+template <typename Index, typename Link, \
+if_unsigned_integer<Index> If1, if_unsigned_integer<Link> If2>
+#define CLASS hash_table_header<Index, Link, If1, If2>
+
 #include <bitcoin/database/impl/hash_table_header.ipp>
+
+#undef CLASS
+#undef TEMPLATE
 
 #endif

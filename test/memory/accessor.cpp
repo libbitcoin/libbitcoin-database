@@ -16,18 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <boost/test/unit_test.hpp>
-#include <bitcoin/database.hpp>
-
-using namespace bc;
-using namespace bc::database;
-using namespace bc::system;
+#include "../test.hpp"
 
 BOOST_AUTO_TEST_SUITE(accessor_tests)
 
 BOOST_AUTO_TEST_CASE(accessor_constructor__always__buffer_nullptr)
 {
-    shared_mutex mutex;
+    upgrade_mutex mutex;
     accessor instance(mutex);
     BOOST_REQUIRE(instance.buffer() == nullptr);
 }
@@ -36,7 +31,7 @@ BOOST_AUTO_TEST_CASE(accessor_increment__nonzero__expected_offset)
 {
     uint8_t value;
     auto buffer = &value;
-    shared_mutex mutex;
+    upgrade_mutex mutex;
     accessor instance(mutex);
     instance.assign(buffer);
     const auto offset = 42u;
@@ -48,7 +43,7 @@ BOOST_AUTO_TEST_CASE(accessor_assign__nonzero__expected_buffer)
 {
     uint8_t value;
     auto expected = &value;
-    shared_mutex mutex;
+    upgrade_mutex mutex;
     accessor instance(mutex);
     instance.assign(expected);
     BOOST_REQUIRE_EQUAL(instance.buffer(), expected);

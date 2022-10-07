@@ -20,8 +20,7 @@
 #define LIBBITCOIN_DATABASE_LIST_ELEMENT_IPP
 
 #include <algorithm>
-#include <shared_mutex>
-#include <tuple>
+#include <iterator>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -38,46 +37,42 @@ namespace database {
 // [ Link ]
 // [ payload... ]
 
-// static
-template <typename Manager, typename Link, typename Key>
-size_t list_element<Manager, Link, Key>::size(size_t value_size)
-{
-    return std::tuple_size<Key>::value + sizeof(Link) + value_size;
-}
-
 // Parameterizing Manager allows const and non-const.
-template <typename Manager, typename Link, typename Key>
-list_element<Manager, Link, Key>::list_element(Manager& manager,
-    std::shared_mutex& mutex)
+TEMPLATE
+CLASS::list_element(Manager& manager, shared_mutex& mutex) NOEXCEPT
   : manager_(manager), link_(not_found), mutex_(mutex)
 {
 }
 
-template <typename Manager, typename Link, typename Key>
-list_element<Manager, Link, Key>::list_element(Manager& manager, Link link,
-    std::shared_mutex& mutex)
+TEMPLATE
+CLASS::list_element(Manager& manager, Link link, shared_mutex& mutex) NOEXCEPT
   : manager_(manager), link_(link), mutex_(mutex)
 {
 }
 
+// TODO: pass extent of the write.
 // private
 // Populate a new (unlinked) element with key and value data.
-template <typename Manager, typename Link, typename Key>
-void list_element<Manager, Link, Key>::initialize(const Key& key,
-    write_function write)
+TEMPLATE
+void CLASS::initialize(const Key& key, auto& write) NOEXCEPT
 {
+    using namespace system;
     const auto memory = data(zero);
-    auto serial = system::make_unsafe_serializer(memory->buffer());
+    auto start = memory->buffer();
 
     // Limited to tuple|iterator Key types.
-    serial.write_forward(key);
-    serial.skip(sizeof(Link));
-    serial.write_delegated(write);
+    unsafe_array_cast<uint8_t, key_size>(start) = key;
+    std::advance(start, key_size + link_size);
+
+    const auto size = 42u;
+    const auto end = std::next(start, size);
+    write::bytes::copy writer({ start, end });
+    write(writer);
 }
 
 // This call assumes the manager is a record_manager.
-template <typename Manager, typename Link, typename Key>
-Link list_element<Manager, Link, Key>::create(write_function write)
+TEMPLATE
+Link CLASS::create(auto& write) NOEXCEPT
 {
     constexpr empty_key unkeyed{};
     link_ = manager_.allocate(one);
@@ -86,9 +81,8 @@ Link list_element<Manager, Link, Key>::create(write_function write)
 }
 
 // This call assumes the manager is a record_manager.
-template <typename Manager, typename Link, typename Key>
-Link list_element<Manager, Link, Key>::create(const Key& key,
-    write_function write)
+TEMPLATE
+Link CLASS::create(const Key& key, auto& write) NOEXCEPT
 {
     link_ = manager_.allocate(one);
     initialize(key, write);
@@ -96,26 +90,31 @@ Link list_element<Manager, Link, Key>::create(const Key& key,
 }
 
 // This call assumes the manager is a slab_manager.
-template <typename Manager, typename Link, typename Key>
-Link list_element<Manager, Link, Key>::create(const Key& key,
-    write_function write, size_t value_size)
+TEMPLATE
+Link CLASS::create(const Key& key, auto& write, size_t value_size) NOEXCEPT
 {
     link_ = manager_.allocate(size(value_size));
     initialize(key, write);
     return link_;
 }
 
-template <typename Manager, typename Link, typename Key>
-void list_element<Manager, Link, Key>::write(write_function writer) const
+// TODO: pass extent of the write.
+TEMPLATE
+void CLASS::write(auto& write) const NOEXCEPT
 {
-    const auto memory = data(std::tuple_size<Key>::value + sizeof(Link));
-    auto serial = system::make_unsafe_serializer(memory->buffer());
-    writer(serial);
+    using namespace system;
+    const auto size = 42u;
+
+    const auto memory = data(key_size + link_size);
+    const auto start = memory->buffer();
+    const auto end = std::next(start, size);
+    write::bytes::copy writer({ start, end });
+    write(writer);
 }
 
 // Jump to the next element in the list.
-template <typename Manager, typename Link, typename Key>
-bool list_element<Manager, Link, Key>::jump_next()
+TEMPLATE
+bool CLASS::jump_next() NOEXCEPT
 {
     if (link_ == not_found)
         return false;
@@ -125,104 +124,116 @@ bool list_element<Manager, Link, Key>::jump_next()
 }
 
 // Convert the instance into a terminator.
-template <typename Manager, typename Link, typename Key>
-void list_element<Manager, Link, Key>::terminate()
+TEMPLATE
+void CLASS::terminate() NOEXCEPT
 {
     link_ = not_found;
 }
 
 // Populate next link value.
-template <typename Manager, typename Link, typename Key>
-void list_element<Manager, Link, Key>::set_next(Link next) const
+TEMPLATE
+void CLASS::set_next(Link next) const NOEXCEPT
 {
-    const auto memory = data(std::tuple_size<Key>::value);
-    auto serial = system::make_unsafe_serializer(memory->buffer());
+    const auto memory = data(key_size);
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::unique_lock lock(mutex_);
-    serial.template write_little_endian<Link>(next);
+    std::unique_lock lock(mutex_);
+    system::unsafe_to_little_endian<Link>(memory->buffer(), next);
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename Manager, typename Link, typename Key>
-void list_element<Manager, Link, Key>::read(read_function reader) const
+// TODO: pass extent of the read.
+TEMPLATE
+void CLASS::read(auto& read) const NOEXCEPT
 {
-    const auto memory = data(std::tuple_size<Key>::value + sizeof(Link));
-    auto deserial = system::make_unsafe_deserializer(memory->buffer());
-    reader(deserial);
+    using namespace system;
+    const auto size = 42u;
+
+    const auto memory = data(key_size + link_size);
+    const auto start = memory->buffer();
+    const auto end = std::next(start, size);
+    read::bytes::copy reader({ start, end });
+    read(reader);
 }
 
-template <typename Manager, typename Link, typename Key>
-bool list_element<Manager, Link, Key>::match(const Key& key) const
+TEMPLATE
+bool CLASS::match(const Key& key) const NOEXCEPT
 {
     const auto memory = data(zero);
     return std::equal(key.begin(), key.end(), memory->buffer());
 }
 
-template <typename Manager, typename Link, typename Key>
-Key list_element<Manager, Link, Key>::key() const
+TEMPLATE
+Key CLASS::key() const NOEXCEPT
 {
-    const auto memory = data(zero);
-    auto deserial = system::make_unsafe_deserializer(memory->buffer());
-
     // Limited to tuple Key types (see deserializer to generalize).
-    return deserial.template read_forward<Key>();
+    const auto memory = data(zero);
+    return system::unsafe_array_cast<uint8_t, key_size>(memory->buffer());
 }
 
-template <typename Manager, typename Link, typename Key>
-Link list_element<Manager, Link, Key>::link() const
+TEMPLATE
+Link CLASS::link() const NOEXCEPT
 {
     return link_;
 }
 
-template <typename Manager, typename Link, typename Key>
-Link list_element<Manager, Link, Key>::next() const
+TEMPLATE
+Link CLASS::next() const NOEXCEPT
 {
-    const auto memory = data(std::tuple_size<Key>::value);
-    auto deserial = system::make_unsafe_deserializer(memory->buffer());
+    const auto memory = data(key_size);
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::shared_lock lock(mutex_);
-    return deserial.template read_little_endian<Link>();
+    std::shared_lock lock(mutex_);
+    return system::unsafe_from_little_endian<Link>(memory->buffer());
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename Manager, typename Link, typename Key>
-list_element<Manager, Link, Key>
-list_element<Manager, Link, Key>::terminator() const
+TEMPLATE
+CLASS CLASS::terminator() const NOEXCEPT
 {
     return { manager_, mutex_ };
 }
 
-template <typename Manager, typename Link, typename Key>
-bool list_element<Manager, Link, Key>::terminal() const
+TEMPLATE
+bool CLASS::terminal() const NOEXCEPT
 {
     return link_ == not_found;
 }
 
-template <typename Manager, typename Link, typename Key>
-list_element<Manager, Link, Key>::operator bool() const
+// operators
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+CLASS::operator bool() const NOEXCEPT
 {
     return !terminal();
 }
 
-template <typename Manager, typename Link, typename Key>
-bool list_element<Manager, Link, Key>::operator==(list_element other) const
+////TEMPLATE
+////CLASS::operator !() const NOEXCEPT
+////{
+////    return terminal();
+////}
+
+TEMPLATE
+bool CLASS::operator==(list_element other) const NOEXCEPT
 {
     return link_ == other.link_;
 }
 
-template <typename Manager, typename Link, typename Key>
-bool list_element<Manager, Link, Key>::operator!=(list_element other) const
+TEMPLATE
+bool CLASS::operator!=(list_element other) const NOEXCEPT
 {
     return !(link_ == other.link_);
 }
 
 // private
-template <typename Manager, typename Link, typename Key>
-memory_ptr list_element<Manager, Link, Key>::data(size_t bytes) const
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+memory_ptr CLASS::data(size_t bytes) const NOEXCEPT
 {
     BC_ASSERT(link_ != not_found);
     auto memory = manager_.get(link_);

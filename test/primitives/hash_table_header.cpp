@@ -16,16 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <boost/test/unit_test.hpp>
-
-#include <algorithm>
-#include <cstdint>
-#include <bitcoin/database.hpp>
+#include "../test.hpp"
 #include "../utility/storage.hpp"
-
-using namespace bc;
-using namespace bc::database;
-using namespace bc::system;
 
 BOOST_AUTO_TEST_SUITE(hash_table_header_tests)
 
@@ -64,9 +56,8 @@ BOOST_AUTO_TEST_CASE(hash_table_header__create__always__sets_bucket_count)
     header_type header(file, expected);
     BOOST_REQUIRE(file.open());
     BOOST_REQUIRE(header.create());
-
-    auto deserial = make_unsafe_deserializer(file.access()->buffer());
-    BOOST_REQUIRE_EQUAL(deserial.template read_little_endian<index_type>(), expected);
+    const auto value = system::unsafe_from_little_endian<index_type>(file.access()->buffer());
+    BOOST_REQUIRE_EQUAL(value, expected);
 }
 
 BOOST_AUTO_TEST_CASE(hash_table_header__create__always__fills_empty_buckets)
@@ -82,7 +73,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__create__always__fills_empty_buckets)
 
     const auto buffer = file.access()->buffer();
     const auto start = buffer + sizeof(index_type);
-    const auto empty = [](uint8_t byte) { return byte == (uint8_t)header_type::empty; };
+    const auto empty = [](uint8_t byte) { return byte == narrow_cast<uint8_t>(header_type::empty); };
     BOOST_REQUIRE(std::all_of(start, buffer + header.size(), empty));
 }
 

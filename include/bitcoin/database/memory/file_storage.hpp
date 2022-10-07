@@ -31,24 +31,21 @@ namespace libbitcoin {
 namespace database {
 
 /// This class is thread safe, allowing concurent read and write.
-/// A change to the size of the memory map waits on and locks read and write.
+/// A change to memory map size waits on and blocks read/write.
 class BCD_API file_storage final
   : public storage
 {
 public:
+    DELETE4(file_storage);
+
     typedef std::filesystem::path path;
     static const size_t default_expansion;
     static const uint64_t default_capacity;
 
-    /// Construct a database (start is currently called, may throw).
+    /// Construct a database.
     file_storage(const path& filename) NOEXCEPT;
     file_storage(const path& filename, size_t minimum,
         size_t expansion) NOEXCEPT;
-
-    file_storage(file_storage&&) = delete;
-    file_storage(const file_storage&) = delete;
-    file_storage& operator=(file_storage&&) = delete;
-    file_storage& operator=(const file_storage&) = delete;
 
     /// Close the database.
     ~file_storage() NOEXCEPT;

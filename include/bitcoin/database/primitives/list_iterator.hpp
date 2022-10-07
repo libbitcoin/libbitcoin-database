@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_LIST_ITERATOR_HPP
 #define LIBBITCOIN_DATABASE_LIST_ITERATOR_HPP
 
-#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/list_element.hpp>
@@ -30,7 +29,9 @@ namespace database {
 /// Const iterator for list_element.
 /// Manager dynamically traverses store-based list.
 /// Mutex provides read safety for link traversal during unlink.
-template <typename Manager, typename Link, typename Key>
+template <typename Manager, typename Link, typename Key,
+    if_unsigned_integer<Link> = true,
+    if_integral_array<Key> = true>
 class list_iterator
 {
 public:
@@ -42,17 +43,18 @@ public:
     typedef std::output_iterator_tag iterator_category;
 
     /// Create a storage iterator starting at the given element.
-    list_iterator(value_type element);
+    list_iterator(value_type element) NOEXCEPT;
 
     /// Create a storage iterator starting at first.
-    list_iterator(Manager& manager, Link first, std::shared_mutex& mutex);
+    list_iterator(Manager& manager, Link first,
+        shared_mutex& mutex) NOEXCEPT;
 
-    list_iterator& operator++();
-    list_iterator operator++(int);
-    pointer operator*() const;
-    reference operator->() const;
-    bool operator==(const list_iterator& other) const;
-    bool operator!=(const list_iterator& other) const;
+    list_iterator& operator++() NOEXCEPT;
+    list_iterator operator++(int) NOEXCEPT;
+    pointer operator*() const NOEXCEPT;
+    reference operator->() const NOEXCEPT;
+    bool operator==(const list_iterator& other) const NOEXCEPT;
+    bool operator!=(const list_iterator& other) const NOEXCEPT;
 
 private:
     value_type element_;
@@ -61,6 +63,14 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
+#define TEMPLATE \
+template <typename Manager, typename Link, typename Key,\
+if_unsigned_integer<Link> If1, if_integral_array<Key> If2>
+#define CLASS list_iterator<Manager, Link, Key, If1, If2>
+
 #include <bitcoin/database/impl/list_iterator.ipp>
+
+#undef CLASS
+#undef TEMPLATE
 
 #endif

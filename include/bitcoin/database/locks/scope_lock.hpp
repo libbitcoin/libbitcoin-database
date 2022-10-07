@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_LOCKS_SCOPE_LOCK_HPP
 
 #include <memory>
-#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -32,20 +31,18 @@ namespace database {
 class BCD_API scope_lock final
 {
 public:
+    DELETE4(scope_lock);
+
     typedef std::shared_ptr<scope_lock> ptr;
 
     /// Lock using the specified mutex reference.
-    scope_lock(std::shared_mutex& mutex) NOEXCEPT;
-    scope_lock(scope_lock&&) = delete;
-    scope_lock(const scope_lock&) = delete;
-    scope_lock& operator=(scope_lock&&) = delete;
-    scope_lock& operator=(const scope_lock&) = delete;
+    scope_lock(shared_mutex& mutex) NOEXCEPT;
 
     /// Unlock.
     ~scope_lock() NOEXCEPT;
 
 private:
-    std::shared_mutex& mutex_;
+    shared_mutex& mutex_;
 };
 
 } // namespace database

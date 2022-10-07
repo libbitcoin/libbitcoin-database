@@ -71,7 +71,7 @@ int file_storage::close_file(int file_handle) NOEXCEPT
 size_t file_storage::file_size(int file_handle) NOEXCEPT
 {
     if (file_handle == INVALID_HANDLE)
-        return 0;
+        return zero;
 
     // TODO: it may be possible to collapse this given newer WIN32 API.
     // This is required because off_t is defined as long, which is 32|64 bits
@@ -80,17 +80,17 @@ size_t file_storage::file_size(int file_handle) NOEXCEPT
 #if defined(HAVE_X64)
     struct _stat64 sbuf;
     if (_fstat64(file_handle, &sbuf) == FAIL)
-        return 0;
+        return zero;
 #else
     struct _stat32 sbuf;
     if (_fstat32(file_handle, &sbuf) == FAIL)
-        return 0;
+        return zero;
 #endif
 #else
     // Limited to 32 bit files on 32 bit systems, see linux.die.net/man/2/open
     struct stat sbuf;
     if (fstat(file_handle, &sbuf) == FAIL)
-        return 0;
+        return zero;
 #endif
 
     // Convert signed to unsigned size.
@@ -118,6 +118,7 @@ int file_storage::open_file(const path& filename) NOEXCEPT
     BC_POP_WARNING()
 }
 
+// streams
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 bool file_storage::handle_error(const std::string& context,
@@ -174,7 +175,6 @@ file_storage::file_storage(const path& filename) NOEXCEPT
 {
 }
 
-// mmap documentation: tinyurl.com/hnbw8t5
 file_storage::file_storage(const path& filename, size_t minimum,
     size_t expansion) NOEXCEPT
   : file_handle_(open_file(filename)),
@@ -201,7 +201,7 @@ file_storage::~file_storage() NOEXCEPT
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // Map the database file and signal start.
-// Open is not idempotent (should be called on single thread).
+// Open is not idempotent (call on single thread).
 bool file_storage::open() NOEXCEPT
 {
     // Critical Section
@@ -220,10 +220,11 @@ bool file_storage::open() NOEXCEPT
     std::string error_name;
 
     // Initialize data_.
+    // man7.org/linux/man-pages/man2/madvise.2.html
     // For unknown reason madvise(minimum_) with large value fails on linux.
     if (!map(capacity_))
         error_name = "map";
-    else if (madvise(data_, 0, MADV_RANDOM) == FAIL)
+    else if (::madvise(data_, 0, MADV_RANDOM) == FAIL)
         error_name = "madvise";
     else
         closed_ = false;
@@ -257,7 +258,8 @@ bool file_storage::flush() const NOEXCEPT
     mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    if (msync(data_, logical_size_, MS_SYNC) == FAIL)
+    // man7.org/linux/man-pages/man2/msync.2.html
+    if (::msync(data_, logical_size_, MS_SYNC) == FAIL)
         error_name = "flush";
 
     mutex_.unlock();
@@ -295,15 +297,19 @@ bool file_storage::close() NOEXCEPT
 
     closed_ = true;
 
+    // man7.org/linux/man-pages/man2/msync.2.html
+    // man7.org/linux/man-pages/man2/munmap.2.html
+    // man7.org/linux/man-pages/man2/ftruncate.2.html
+    // man7.org/linux/man-pages/man2/fsync.2.html
     if (logical_size_ > capacity_)
         error_name = "fit";
-    else if (msync(data_, logical_size_, MS_SYNC) == FAIL)
+    else if (::msync(data_, logical_size_, MS_SYNC) == FAIL)
         error_name = "msync";
-    else if (munmap(data_, capacity_) == FAIL)
+    else if (::munmap(data_, capacity_) == FAIL)
         error_name = "munmap";
-    else if (ftruncate(file_handle_, logical_size_) == FAIL)
+    else if (::ftruncate(file_handle_, logical_size_) == FAIL)
         error_name = "ftruncate";
-    else if (fsync(file_handle_) == FAIL)
+    else if (::fsync(file_handle_) == FAIL)
         error_name = "fsync";
     else if (close_file(file_handle_) == FAIL)
         error_name = "close";
@@ -369,7 +375,7 @@ memory_ptr file_storage::access() NOEXCEPT(false)
 // Throws runtime_exception if insufficient space.
 memory_ptr file_storage::resize(size_t required) NOEXCEPT(false)
 {
-    return reserve(required, 0, 0);
+    return reserve(required, zero, zero);
 }
 
 // Throws runtime_exception if insufficient space.
@@ -459,7 +465,8 @@ size_t file_storage::page() const NOEXCEPT
 
 bool file_storage::unmap() NOEXCEPT
 {
-    const auto success = (munmap(data_, capacity_) != FAIL);
+    // man7.org/linux/man-pages/man2/munmap.2.html
+    const auto success = (::munmap(data_, capacity_) != FAIL);
     capacity_ = zero;
     data_ = nullptr;
     return success;
@@ -470,7 +477,8 @@ bool file_storage::map(size_t size) NOEXCEPT
     if (is_zero(size))
         return false;
 
-    data_ = pointer_cast<uint8_t>(mmap(nullptr, size, PROT_READ | PROT_WRITE,
+    // man7.org/linux/man-pages/man2/mmap.2.html
+    data_ = pointer_cast<uint8_t>(::mmap(nullptr, size, PROT_READ | PROT_WRITE,
         MAP_SHARED, file_handle_, 0));
 
     return validate(size);
@@ -479,7 +487,8 @@ bool file_storage::map(size_t size) NOEXCEPT
 bool file_storage::remap(size_t size) NOEXCEPT
 {
 #ifdef MREMAP_MAYMOVE
-    data_ = pointer_cast<uint8_t>(mremap(data_, capacity_, size,
+    // man7.org/linux/man-pages/man2/mremap.2.html
+    data_ = pointer_cast<uint8_t>(::mremap(data_, capacity_, size,
         MREMAP_MAYMOVE));
 
     return validate(size);
@@ -490,7 +499,8 @@ bool file_storage::remap(size_t size) NOEXCEPT
 
 bool file_storage::truncate(size_t size) NOEXCEPT
 {
-    return ftruncate(file_handle_, size) != FAIL;
+    // man7.org/linux/man-pages/man2/ftruncate.2.html
+    return ::ftruncate(file_handle_, size) != FAIL;
 }
 
 bool file_storage::truncate_mapped(size_t size) NOEXCEPT

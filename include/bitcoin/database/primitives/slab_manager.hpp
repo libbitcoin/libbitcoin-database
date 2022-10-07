@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_SLAB_MANAGER_HPP
 #define LIBBITCOIN_DATABASE_SLAB_MANAGER_HPP
 
-#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -31,43 +30,43 @@ namespace database {
 /// The slab manager represents a growing collection of various sized
 /// slabs of data on disk. It will resize the file accordingly and keep
 /// track of the current end pointer so new slabs can be allocated.
-template <typename Link>
+template <typename Link,
+    if_unsigned_integer<Link> = true>
 class slab_manager
 {
 public:
-    // This cast is a VC++ workaround is OK because Link must be unsigned.
-    //static constexpr Link empty = std::numeric_limits<Link>::max();
-    static const Link not_allocated = (Link)bc::max_uint64;
+    static const Link not_allocated =
+        system::possible_narrow_cast<Link>(max_uint64);
 
-    slab_manager(storage& file, size_t header_size);
+    slab_manager(storage& file, size_t header_size) NOEXCEPT;
 
     /// Create slab manager.
-    bool create();
+    bool create() NOEXCEPT;
 
     /// Prepare manager for use.
-    bool start();
+    bool start() NOEXCEPT;
 
     /// Commit total slabs size to the file.
-    void commit();
+    void commit() NOEXCEPT;
 
     /// Get the size of all slabs and size prefix (excludes header).
-    Link payload_size() const;
+    Link payload_size() const NOEXCEPT;
 
     /// Allocate a slab and return its position, commit after writing.
-    Link allocate(size_t size);
+    Link allocate(size_t size) NOEXCEPT;
 
     /// Check if link is past eof
-    bool past_eof(Link link) const;
+    bool past_eof(Link link) const NOEXCEPT;
 
     /// Return memory object for the slab at the specified position.
-    memory_ptr get(Link position) const;
+    memory_ptr get(Link position) const NOEXCEPT;
 
 private:
     // Read the size of the data from the file.
-    void read_size();
+    void read_size() NOEXCEPT;
 
     // Write the size of the data from the file.
-    void write_size() const;
+    void write_size() const NOEXCEPT;
 
     // This class is thread and remap safe.
     storage& file_;
@@ -75,12 +74,18 @@ private:
 
     // Payload size is protected by mutex.
     Link payload_size_;
-    mutable std::shared_mutex mutex_;
+    mutable shared_mutex mutex_;
 };
 
 } // namespace database
 } // namespace libbitcoin
 
+#define TEMPLATE template <typename Link, if_unsigned_integer<Link> If>
+#define CLASS slab_manager<Link, If>
+
 #include <bitcoin/database/impl/slab_manager.ipp>
+
+#undef CLASS
+#undef TEMPLATE
 
 #endif

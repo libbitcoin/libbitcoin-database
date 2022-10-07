@@ -29,17 +29,14 @@ namespace libbitcoin {
 namespace database {
 
 /// This class is not thread safe, and does not throw.
-/// TODO: create critical sections around lock/unlock.
 class BCD_API interprocess_lock final
   : file_lock
 {
 public:
+    DELETE4(interprocess_lock);
+
     /// Construction does not touch the file.
     interprocess_lock(const std::filesystem::path& file) NOEXCEPT;
-    interprocess_lock(interprocess_lock&&) = delete;
-    interprocess_lock(const interprocess_lock&) = delete;
-    interprocess_lock& operator=(interprocess_lock&&) = delete;
-    interprocess_lock& operator=(const interprocess_lock&) = delete;
 
     /// Destruction calls unlock.
     ~interprocess_lock() NOEXCEPT;

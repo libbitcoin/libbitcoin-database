@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_LIST_ELEMENT_HPP
 #define LIBBITCOIN_DATABASE_LIST_ELEMENT_HPP
 
-#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -29,84 +28,102 @@ namespace database {
 
 /// A hash table key-conflict row, implemented as a linked list.
 /// Link cannot exceed 64 bits. A default Key creates an unkeyed list.
-template <typename Manager, typename Link, typename Key>
+template <typename Manager, typename Link, typename Key,
+    if_unsigned_integer<Link> = true,
+    if_integral_array<Key> = true>
 class list_element
 {
 public:
-    typedef byte_serializer::functor write_function;
-    typedef byte_deserializer::functor read_function;
-    static const auto not_found = (Link)bc::max_uint64;
+    static constexpr auto not_found = system::possible_narrow_cast<Link>(
+        max_uint64);
 
     /// The stored size of a value with the given size.
-    static size_t size(size_t value_size);
+    static constexpr size_t size(size_t value_size) NOEXCEPT
+    {
+        return array_count<Key> + sizeof(Link) + value_size;
+    }
 
     /// Construct for a new element.
-    list_element(Manager& manager, std::shared_mutex& mutex);
+    list_element(Manager& manager, shared_mutex& mutex) NOEXCEPT;
 
     /// Construct for an existing element.
-    list_element(Manager& manager, Link link, std::shared_mutex& mutex);
+    list_element(Manager& manager, Link link, shared_mutex& mutex) NOEXCEPT;
 
     /// Allocate and populate a new unkeyed record element.
-    Link create(write_function write);
+    Link create(auto& write) NOEXCEPT;
 
     /// Allocate and populate a new keyed record element.
-    Link create(const Key& key, write_function write);
+    Link create(const Key& key, auto& write) NOEXCEPT;
 
     /// Allocate and populate a new keyed slab element.
-    Link create(const Key& key, write_function write, size_t value_size);
+    Link create(const Key& key, auto& write, size_t value_size) NOEXCEPT;
 
     /// Update this element to the next element (read next from file).
-    bool jump_next();
+    bool jump_next() NOEXCEPT;
 
     /// Convert the instance into a terminator.
-    void terminate();
+    void terminate() NOEXCEPT;
 
     /// Connect the next element (write to file).
-    void set_next(Link next) const;
+    void set_next(Link next) const NOEXCEPT;
 
     /// Write to the state of the element (write to file).
-    void write(write_function writer) const;
+    void write(auto& write) const NOEXCEPT;
 
     /// Read from the state of the element.
-    void read(read_function reader) const;
+    void read(auto& read) const NOEXCEPT;
 
     /// True if the element key (read from file) matches the parameter.
-    bool match(const Key& key) const;
+    bool match(const Key& key) const NOEXCEPT;
 
     /// The key of this element (read from file).
-    Key key() const;
+    Key key() const NOEXCEPT;
 
     /// The address of this element.
-    Link link() const;
+    Link link() const NOEXCEPT;
 
     /// The address of the next element (read from file).
-    Link next() const;
+    Link next() const NOEXCEPT;
 
     /// A list terminator for this instance.
-    list_element terminator() const;
+    list_element terminator() const NOEXCEPT;
 
     /// The element is terminal (not found, cannot be read).
-    bool terminal() const;
+    bool terminal() const NOEXCEPT;
 
     /// Cast operator, true if element was found (not terminal).
-    operator bool() const;
+    operator bool() const NOEXCEPT;
+
+    /////// Cast operator, true if element was not found (terminal).
+    ////operator !() const NOEXCEPT;
 
     /// Equality comparison operators, compares link value only.
-    bool operator==(list_element other) const;
-    bool operator!=(list_element other) const;
+    bool operator==(list_element other) const NOEXCEPT;
+    bool operator!=(list_element other) const NOEXCEPT;
 
 private:
-    memory_ptr data(size_t bytes) const;
-    void initialize(const Key& key, write_function write);
+    static constexpr auto link_size = sizeof(Link);
+    static constexpr auto key_size = size_of<Key>();
+
+    memory_ptr data(size_t bytes) const NOEXCEPT;
+    void initialize(const Key& key, auto& write) NOEXCEPT;
 
     Link link_;
     Manager& manager_;
-    std::shared_mutex& mutex_;
+    shared_mutex& mutex_;
 };
 
 } // namespace database
 } // namespace libbitcoin
 
+#define TEMPLATE \
+template <typename Manager, typename Link, typename Key,\
+if_unsigned_integer<Link> If1, if_integral_array<Key> If2>
+#define CLASS list_element<Manager, Link, Key, If1, If2>
+
 #include <bitcoin/database/impl/list_element.ipp>
+
+#undef CLASS
+#undef TEMPLATE
 
 #endif

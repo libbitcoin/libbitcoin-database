@@ -26,6 +26,7 @@
 namespace libbitcoin {
 namespace database {
 
+/// Data storage interface for a single memory-mapped file.
 /// The implementation must be thread safe, allowing concurent read and write.
 class BCD_API storage
 {
@@ -36,7 +37,7 @@ public:
     /// Flush the memory map to disk, idempotent.
     virtual bool flush() const = 0;
 
-    /// Unmap and release files, restartable, idempotent.
+    /// Unmap and release files, idempotent and restartable.
     virtual bool close() = 0;
 
     /// Determine if the database is closed.
@@ -48,15 +49,15 @@ public:
     /// The current logical size of mapped data.
     virtual size_t logical() const = 0;
 
-    /// Get protected shared access to memory, starting at first byte.
+    /// Get protected shared access to memory.
     virtual memory_ptr access() = 0;
 
-    /// Resize the logical map to the specified size, return access.
-    /// Increase or shrink the physical size to match the logical size.
+    /// Change logical size to specified size, return access.
+    /// Increases or shrinks capacity to match logical size.
     virtual memory_ptr resize(size_t required) = 0;
 
-    /// Resize the logical map to the specified size, return access.
-    /// Increase the physical size to at least the logical size.
+    /// Increase the logical size to specified size, return access.
+    /// Increases capacity to at least logical size, as necessary.
     virtual memory_ptr reserve(size_t required) = 0;
 };
 
