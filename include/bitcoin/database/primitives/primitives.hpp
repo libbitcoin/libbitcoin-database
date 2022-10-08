@@ -16,32 +16,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MEMORY_MEMORY_HPP
-#define LIBBITCOIN_DATABASE_MEMORY_MEMORY_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
 
-#include <memory>
-#include <bitcoin/system.hpp>
-#include <bitcoin/database/define.hpp>
-
-namespace libbitcoin {
-namespace database {
-
-/// This interface defines remap safe unrestricted access to a memory map.
-class BCD_API memory
-{
-public:
-    typedef std::shared_ptr<memory> ptr;
-
-    /// Get the address indicated by the pointer.
-    virtual uint8_t* buffer() = 0;
-
-    /// Increment the pointer the specified number of bytes within the record.
-    virtual void increment(size_t value) = 0;
-};
-
-typedef memory::ptr memory_ptr;
-
-} // namespace database
-} // namespace libbitcoin
+#include <bitcoin/database/primitives/hash_table.hpp>
+#include <bitcoin/database/primitives/hash_table_header.hpp>
+#include <bitcoin/database/primitives/hash_table_multimap.hpp>
+#include <bitcoin/database/primitives/list.hpp>
+#include <bitcoin/database/primitives/list_element.hpp>
+#include <bitcoin/database/primitives/list_iterator.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
+#include <bitcoin/database/primitives/slab_manager.hpp>
 
 #endif

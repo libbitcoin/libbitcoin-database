@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_LIST_ELEMENT_HPP
-#define LIBBITCOIN_DATABASE_LIST_ELEMENT_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_LIST_ELEMENT_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_LIST_ELEMENT_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -118,7 +118,7 @@ template <typename Manager, typename Link, typename Key,\
 if_unsigned_integer<Link> If1, if_integral_array<Key> If2>
 #define CLASS list_element<Manager, Link, Key, If1, If2>
 
-#include <bitcoin/database/impl/list_element.ipp>
+#include <bitcoin/database/impl/primitives/list_element.ipp>
 
 #undef CLASS
 #undef TEMPLATE

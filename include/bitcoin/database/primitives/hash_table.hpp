@@ -16,8 +16,8 @@
 /// You should have received a copy of the GNU Affero General Public License
 /// along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_HASH_TABLE_HPP
-#define LIBBITCOIN_DATABASE_HASH_TABLE_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASH_TABLE_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_HASH_TABLE_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
@@ -116,7 +116,7 @@ if_unsigned_integer<Index> If1, if_unsigned_integer<Link> If2, \
 if_integral_array<Key> If3>
 #define CLASS hash_table<Manager, Index, Link, Key, If1, If2, If3>
 
-#include <bitcoin/database/impl/hash_table.ipp>
+#include <bitcoin/database/impl/primitives/hash_table.ipp>
 
 #undef CLASS
 #undef TEMPLATE

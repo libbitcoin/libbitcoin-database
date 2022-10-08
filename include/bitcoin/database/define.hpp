@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_DEFINE_HPP
 
 #include <array>
-#include <cstdint>
 #include <functional>
 #include <shared_mutex>
 #include <tuple>

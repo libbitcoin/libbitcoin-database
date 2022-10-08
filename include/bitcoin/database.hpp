@@ -36,6 +36,7 @@
 #include <bitcoin/database/primitives/list.hpp>
 #include <bitcoin/database/primitives/list_element.hpp>
 #include <bitcoin/database/primitives/list_iterator.hpp>
+#include <bitcoin/database/primitives/primitives.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
 

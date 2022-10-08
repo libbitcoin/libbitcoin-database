@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_RECORD_MANAGER_HPP
-#define LIBBITCOIN_DATABASE_RECORD_MANAGER_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_RECORD_MANAGER_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_RECORD_MANAGER_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -95,7 +95,7 @@ private:
 #define TEMPLATE template <typename Link, if_unsigned_integer<Link> If>
 #define CLASS record_manager<Link, If>
 
-#include <bitcoin/database/impl/record_manager.ipp>
+#include <bitcoin/database/impl/primitives/record_manager.ipp>
 
 #undef CLASS
 #undef TEMPLATE

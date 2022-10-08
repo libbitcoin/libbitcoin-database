@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_LIST_ITERATOR_HPP
-#define LIBBITCOIN_DATABASE_LIST_ITERATOR_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_LIST_ITERATOR_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_LIST_ITERATOR_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -68,7 +68,7 @@ template <typename Manager, typename Link, typename Key,\
 if_unsigned_integer<Link> If1, if_integral_array<Key> If2>
 #define CLASS list_iterator<Manager, Link, Key, If1, If2>
 
-#include <bitcoin/database/impl/list_iterator.ipp>
+#include <bitcoin/database/impl/primitives/list_iterator.ipp>
 
 #undef CLASS
 #undef TEMPLATE

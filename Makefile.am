@@ -106,16 +106,16 @@ include_bitcoin_database_HEADERS = \
     include/bitcoin/database/settings.hpp \
     include/bitcoin/database/version.hpp
 
-include_bitcoin_database_impldir = ${includedir}/bitcoin/database/impl
-include_bitcoin_database_impl_HEADERS = \
-    include/bitcoin/database/impl/hash_table.ipp \
-    include/bitcoin/database/impl/hash_table_header.ipp \
-    include/bitcoin/database/impl/hash_table_multimap.ipp \
-    include/bitcoin/database/impl/list.ipp \
-    include/bitcoin/database/impl/list_element.ipp \
-    include/bitcoin/database/impl/list_iterator.ipp \
-    include/bitcoin/database/impl/record_manager.ipp \
-    include/bitcoin/database/impl/slab_manager.ipp
+include_bitcoin_database_impl_primitivesdir = ${includedir}/bitcoin/database/impl/primitives
+include_bitcoin_database_impl_primitives_HEADERS = \
+    include/bitcoin/database/impl/primitives/hash_table.ipp \
+    include/bitcoin/database/impl/primitives/hash_table_header.ipp \
+    include/bitcoin/database/impl/primitives/hash_table_multimap.ipp \
+    include/bitcoin/database/impl/primitives/list.ipp \
+    include/bitcoin/database/impl/primitives/list_element.ipp \
+    include/bitcoin/database/impl/primitives/list_iterator.ipp \
+    include/bitcoin/database/impl/primitives/record_manager.ipp \
+    include/bitcoin/database/impl/primitives/slab_manager.ipp
 
 include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks
 include_bitcoin_database_locks_HEADERS = \
@@ -142,6 +142,7 @@ include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/list.hpp \
     include/bitcoin/database/primitives/list_element.hpp \
     include/bitcoin/database/primitives/list_iterator.hpp \
+    include/bitcoin/database/primitives/primitives.hpp \
     include/bitcoin/database/primitives/record_manager.hpp \
     include/bitcoin/database/primitives/slab_manager.hpp
 

@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_SLAB_MANAGER_HPP
-#define LIBBITCOIN_DATABASE_SLAB_MANAGER_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_SLAB_MANAGER_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_SLAB_MANAGER_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -63,8 +63,8 @@ public:
 
 private:
     // Read the size of the data from the file.
-    void read_size() NOEXCEPT;
 
+    void read_size() NOEXCEPT;
     // Write the size of the data from the file.
     void write_size() const NOEXCEPT;
 
@@ -83,7 +83,7 @@ private:
 #define TEMPLATE template <typename Link, if_unsigned_integer<Link> If>
 #define CLASS slab_manager<Link, If>
 
-#include <bitcoin/database/impl/slab_manager.ipp>
+#include <bitcoin/database/impl/primitives/slab_manager.ipp>
 
 #undef CLASS
 #undef TEMPLATE

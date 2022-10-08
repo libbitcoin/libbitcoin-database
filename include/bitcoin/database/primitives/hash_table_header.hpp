@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_HPP
-#define LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASH_TABLE_HEADER_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_HASH_TABLE_HEADER_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/memory/storage.hpp>
@@ -91,7 +91,7 @@ template <typename Index, typename Link, \
 if_unsigned_integer<Index> If1, if_unsigned_integer<Link> If2>
 #define CLASS hash_table_header<Index, Link, If1, If2>
 
-#include <bitcoin/database/impl/hash_table_header.ipp>
+#include <bitcoin/database/impl/primitives/hash_table_header.ipp>
 
 #undef CLASS
 #undef TEMPLATE
