@@ -20,12 +20,12 @@
 
 struct file_lock_setup_fixture
 {
-    file_lock_setup_fixture()
+    file_lock_setup_fixture() noexcept
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
 
-    ~file_lock_setup_fixture()
+    ~file_lock_setup_fixture() noexcept
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }

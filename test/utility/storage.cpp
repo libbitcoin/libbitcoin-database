@@ -28,37 +28,37 @@ namespace test {
 
 // This is a trivial working storage interface implementation.
 storage::storage() NOEXCEPT
-  : closed_(true)
+  : mapped_(false)
 {
 }
 
 storage::storage(data_chunk&& initial) NOEXCEPT
-  : closed_(true), buffer_(std::move(initial))
+  : mapped_(false), buffer_(std::move(initial))
 {
 }
 
 storage::storage(const data_chunk& initial) NOEXCEPT
-  : closed_(true), buffer_(initial)
+  : mapped_(false), buffer_(initial)
 {
 }
 
 storage::~storage() NOEXCEPT
 {
-    close();
+    unmap();
 }
 
-bool storage::open() NOEXCEPT
+bool storage::map() NOEXCEPT
 {
     mutex_.lock_upgrade();
 
-    if (!closed_)
+    if (mapped_)
     {
         mutex_.unlock_upgrade();
         return true;
     }
 
     mutex_.unlock_upgrade_and_lock();
-    closed_ = false;
+    mapped_ = true;
     mutex_.unlock();
     return true;
 }
@@ -68,26 +68,26 @@ bool storage::flush() const NOEXCEPT
     return true;
 }
 
-bool storage::close() NOEXCEPT
+bool storage::unmap() NOEXCEPT
 {
     mutex_.lock_upgrade();
 
-    if (closed_)
+    if (!mapped_)
     {
         mutex_.unlock_upgrade();
         return true;
     }
 
     mutex_.unlock_upgrade_and_lock();
-    closed_ = true;
+    mapped_ = false;
     mutex_.unlock();
     return true;
 }
 
-bool storage::closed() const NOEXCEPT
+bool storage::mapped() const NOEXCEPT
 {
     std::shared_lock lock(mutex_);
-    return closed_;
+    return mapped_;
 }
 
 size_t storage::capacity() const NOEXCEPT
@@ -101,19 +101,19 @@ size_t storage::logical() const NOEXCEPT
     return buffer_.size();
 }
 
-memory_ptr storage::access() NOEXCEPT
+memory_ptr storage::access() NOEXCEPT(false)
 {
     const auto memory = std::make_shared<accessor>(mutex_);
     memory->assign(buffer_.data());
     return memory;
 }
 
-memory_ptr storage::resize(size_t size) NOEXCEPT
+memory_ptr storage::resize(size_t size) NOEXCEPT(false)
 {
     return reserve(size);
 }
 
-memory_ptr storage::reserve(size_t size) NOEXCEPT
+memory_ptr storage::reserve(size_t size) NOEXCEPT(false)
 {
     const auto memory = std::make_shared<accessor>(mutex_);
 

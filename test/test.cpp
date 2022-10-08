@@ -59,8 +59,10 @@ bool create(const std::filesystem::path& file_path) NOEXCEPT
     // Creates and returns true if file already existed (and no error).
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     std::ofstream file(to_extended_path(file_path));
-    return file.good();
+    const auto good = file.good();
+    file.close();
     BC_POP_WARNING()
+    return good;
 }
 
 bool exists(const std::filesystem::path& file_path) NOEXCEPT
@@ -68,8 +70,10 @@ bool exists(const std::filesystem::path& file_path) NOEXCEPT
     // Returns true only if file existed.
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     std::ifstream file(to_extended_path(file_path));
-    return file.good();
+    const auto good = file.good();
+    file.close();
     BC_POP_WARNING()
+    return good;
 }
 
 bool remove(const std::filesystem::path& file_path) NOEXCEPT

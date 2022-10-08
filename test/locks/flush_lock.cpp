@@ -20,12 +20,12 @@
 
 struct flush_lock_setup_fixture
 {
-    flush_lock_setup_fixture()
+    flush_lock_setup_fixture() noexcept
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
 
-    ~flush_lock_setup_fixture()
+    ~flush_lock_setup_fixture() noexcept
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }

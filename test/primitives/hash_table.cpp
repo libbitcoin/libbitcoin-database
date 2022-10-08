@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__one_element__round_trips)
 
     // Create the file and initialize hash table.
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
     slab_map table(file, 100u);
     BOOST_REQUIRE(table.create());
 
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__multiple_elements__expected)
 
     // Create the file and initialize hash table.
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
     slab_map table(file, 100u);
     BOOST_REQUIRE(table.create());
 
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__unlink_first_stored__expected)
 
     // Create the file and initialize hash table.
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
     slab_map table(file, 100u);
     BOOST_REQUIRE(table.create());
 
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__unlink_first_stored__expected)
 
     // Find, read and verify the new elements (by keys).
     const auto const_element1 = table.find(key1);
-    BOOST_REQUIRE_EQUAL(const_element1, false);
+    BOOST_REQUIRE(!const_element1);
 
     const auto const_element2 = table.find(key2);
     BOOST_REQUIRE(const_element2);
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(hash_table__get__record_range_of_links__success)
     typedef hash_table<record_manager<link_type>, index_type, link_type, key_type> record_map;
 
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
     record_map table(file, 2u, 4u);
     BOOST_REQUIRE(table.create());
 
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(hash_table__get__record_range_of_links__success)
     table.link(element);
 
     BOOST_REQUIRE(table.get(link1));
-    BOOST_REQUIRE_EQUAL(table.get(record_map::not_found), false);
+    BOOST_REQUIRE(!table.get(record_map::not_found));
 }
 
 BOOST_AUTO_TEST_CASE(hash_table__get__slab_range_of_links__success)
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(hash_table__get__slab_range_of_links__success)
     typedef hash_table<slab_manager<link_type>, index_type, link_type, key_type> slab_map;
 
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
     slab_map table(file, 100u);
     BOOST_REQUIRE(table.create());
 
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_32_bit__round_trips)
     typedef hash_table<record_manager<link_type>, index_type, link_type, key_type> record_map;
 
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
     record_map table(file, 2u, 4u);
     BOOST_REQUIRE(table.create());
 
@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_64_bit__round_trips)
 
     // Create the file and initialize hash table.
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
     record_map table(file, 2u, 7u);
     BOOST_REQUIRE(table.create());
 

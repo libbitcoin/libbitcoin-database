@@ -211,12 +211,6 @@ CLASS::operator bool() const NOEXCEPT
     return !terminal();
 }
 
-////TEMPLATE
-////CLASS::operator !() const NOEXCEPT
-////{
-////    return terminal();
-////}
-
 TEMPLATE
 bool CLASS::operator==(list_element other) const NOEXCEPT
 {

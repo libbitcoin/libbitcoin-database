@@ -36,13 +36,13 @@ BOOST_AUTO_TEST_CASE(hash_table_multimap__find__not_existing__not_found)
     const key_type key{ { 0xde, 0xad, 0xbe, 0xef } };
 
     test::storage hash_table_file;
-    BOOST_REQUIRE(hash_table_file.open());
+    BOOST_REQUIRE(hash_table_file.map());
     record_map table(hash_table_file, 100u, sizeof(link_type));
     BOOST_REQUIRE(table.create());
 
     // Create the file and initialize index.
     test::storage index_file;
-    BOOST_REQUIRE(index_file.open());
+    BOOST_REQUIRE(index_file.map());
     record_manager index(index_file, 0, record_multimap::size(value_size));
 
     // Create the multimap.
@@ -67,13 +67,13 @@ BOOST_AUTO_TEST_CASE(hash_table_multimap__construct__always__expected)
 
     // Create the file and initialize hash table.
     test::storage hash_table_file;
-    BOOST_REQUIRE(hash_table_file.open());
+    BOOST_REQUIRE(hash_table_file.map());
     record_map table(hash_table_file, 100u, sizeof(link_type));
     BOOST_REQUIRE(table.create());
 
     // Create the file and initialize index.
     test::storage index_file;
-    BOOST_REQUIRE(index_file.open());
+    BOOST_REQUIRE(index_file.map());
     record_manager index(index_file, 0, record_multimap::size(value_size));
 
     // Create the multimap.

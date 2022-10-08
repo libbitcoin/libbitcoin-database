@@ -42,25 +42,25 @@ public:
     static const size_t default_expansion;
     static const uint64_t default_capacity;
 
-    /// Construct a database.
+    /// Open database file.
     file_storage(const path& filename) NOEXCEPT;
     file_storage(const path& filename, size_t minimum,
         size_t expansion) NOEXCEPT;
 
-    /// Close the database.
+    /// Close the database file.
     ~file_storage() NOEXCEPT;
 
-    /// Open and map database files, must be closed.
-    bool open() NOEXCEPT override;
+    /// Map file to memory, must be unmapped, not idempotent.
+    bool map() NOEXCEPT override;
 
-    /// Flush the memory map to disk, idempotent.
+    /// Flush memory map to disk if mapped, idempotent.
     bool flush() const NOEXCEPT override;
 
-    /// Unmap and release files, restartable, idempotent.
-    bool close() NOEXCEPT override;
+    /// Unmap file, must be mapped, restartable.
+    bool unmap() NOEXCEPT override;
 
-    /// Determine if the database is closed.
-    bool closed() const NOEXCEPT override;
+    /// Determine if the file is mapped.
+    bool mapped() const NOEXCEPT override;
 
     /// The current capacity for mapped data.
     size_t capacity() const NOEXCEPT override;
@@ -68,7 +68,7 @@ public:
     /// The current logical size of mapped data.
     size_t logical() const NOEXCEPT override;
 
-    /// Get protected shared access to memory, starting at first byte.
+    /// Get protected shared access to memory.
     memory_ptr access() NOEXCEPT(false) override;
 
     /// Throws runtime_error if insufficient space.
@@ -89,7 +89,7 @@ private:
         const std::filesystem::path& filename) NOEXCEPT;
 
     size_t page() const NOEXCEPT;
-    bool unmap() NOEXCEPT;
+    bool unmap_() NOEXCEPT;
     bool map(size_t size) NOEXCEPT;
     bool remap(size_t size) NOEXCEPT;
     bool truncate(size_t size) NOEXCEPT;
@@ -111,7 +111,7 @@ private:
     const std::filesystem::path filename_;
 
     // Protected by mutex.
-    bool closed_;
+    bool mapped_;
     uint8_t* data_;
     size_t capacity_;
     size_t logical_size_;

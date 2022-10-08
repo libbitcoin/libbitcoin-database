@@ -94,9 +94,6 @@ public:
     /// Cast operator, true if element was found (not terminal).
     operator bool() const NOEXCEPT;
 
-    /////// Cast operator, true if element was not found (terminal).
-    ////operator !() const NOEXCEPT;
-
     /// Equality comparison operators, compares link value only.
     bool operator==(list_element other) const NOEXCEPT;
     bool operator!=(list_element other) const NOEXCEPT;

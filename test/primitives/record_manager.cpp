@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(record_manager__construct__one_record__expected)
     typedef uint64_t link_type;
 
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
 
     const auto record_size = 10u;
     const auto link_size = sizeof(link_type);
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(record_manager__construct__one_record_offset__expected)
     typedef uint64_t link_type;
 
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
 
     const auto offset = 42;
     const auto record_size = 10u;
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(record_manager__allocate__two_records__expected)
     typedef uint64_t link_type;
 
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
 
     const auto record_size = 10u;
     const auto link_size = sizeof(link_type);
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(record_manager__count__multiple_records_with_offset__expect
     typedef uint64_t link_type;
 
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
 
     const auto record_size = 10u;
     // const auto link_size = sizeof(link_type);
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(record_manager__set_count__multiple_records_with_offset__ex
     typedef uint32_t link_type;
 
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
 
     const auto record_size = 10u;
     // const auto link_size = sizeof(link_type);
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(record_manager__set_count__multiple_records_with_offset__ex
 BOOST_AUTO_TEST_CASE(record_manager__get__read_write__expected)
 {
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
 
     uint64_t value = 0x0102030405060708;
     record_manager<uint32_t> manager(file, 0, sizeof(value));

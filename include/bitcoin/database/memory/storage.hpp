@@ -31,34 +31,34 @@ namespace database {
 class BCD_API storage
 {
 public:
-    /// Open and map database files, must be closed.
-    virtual bool open() = 0;
+    /// Map file to memory, must be unmapped, not idempotent.
+    virtual bool map() NOEXCEPT = 0;
 
-    /// Flush the memory map to disk, idempotent.
-    virtual bool flush() const = 0;
+    /// Flush memory map to disk if mapped, idempotent.
+    virtual bool flush() const NOEXCEPT = 0;
 
-    /// Unmap and release files, idempotent and restartable.
-    virtual bool close() = 0;
+    /// Unmap file, must be mapped, restartable.
+    virtual bool unmap() NOEXCEPT = 0;
 
-    /// Determine if the database is closed.
-    virtual bool closed() const = 0;
+    /// Determine if the file is mapped.
+    virtual bool mapped() const NOEXCEPT = 0;
 
     /// The current capacity for mapped data.
-    virtual size_t capacity() const = 0;
+    virtual size_t capacity() const NOEXCEPT = 0;
 
     /// The current logical size of mapped data.
-    virtual size_t logical() const = 0;
+    virtual size_t logical() const NOEXCEPT = 0;
 
     /// Get protected shared access to memory.
-    virtual memory_ptr access() = 0;
+    virtual memory_ptr access() NOEXCEPT(false) = 0;
 
     /// Change logical size to specified size, return access.
     /// Increases or shrinks capacity to match logical size.
-    virtual memory_ptr resize(size_t required) = 0;
+    virtual memory_ptr resize(size_t required) NOEXCEPT(false) = 0;
 
     /// Increase the logical size to specified size, return access.
     /// Increases capacity to at least logical size, as necessary.
-    virtual memory_ptr reserve(size_t required) = 0;
+    virtual memory_ptr reserve(size_t required) NOEXCEPT(false) = 0;
 };
 
 } // namespace database

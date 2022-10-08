@@ -37,18 +37,18 @@ public:
     storage(const data_chunk& initial) NOEXCEPT;
     ~storage() NOEXCEPT;
 
-    bool open() NOEXCEPT override;
+    bool map() NOEXCEPT override;
     bool flush() const NOEXCEPT override;
-    bool close() NOEXCEPT override;
-    bool closed() const NOEXCEPT override;
+    bool unmap() NOEXCEPT override;
+    bool mapped() const NOEXCEPT override;
     size_t capacity() const NOEXCEPT override;
     size_t logical() const NOEXCEPT override;
-    memory_ptr access() NOEXCEPT override;
-    memory_ptr resize(size_t size) NOEXCEPT override;
-    memory_ptr reserve(size_t size) NOEXCEPT override;
+    memory_ptr access() NOEXCEPT(false) override;
+    memory_ptr resize(size_t size) NOEXCEPT(false) override;
+    memory_ptr reserve(size_t size) NOEXCEPT(false) override;
 
 private:
-    bool closed_;
+    bool mapped_;
     data_chunk buffer_;
     mutable upgrade_mutex mutex_;
 };

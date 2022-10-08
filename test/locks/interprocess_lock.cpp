@@ -20,12 +20,12 @@
 
 struct interprocess_lock_setup_fixture
 {
-    interprocess_lock_setup_fixture()
+    interprocess_lock_setup_fixture() noexcept
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
 
-    ~interprocess_lock_setup_fixture()
+    ~interprocess_lock_setup_fixture() noexcept
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
