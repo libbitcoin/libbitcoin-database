@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
- |  Copyright (c) 2014-2020 libbitcoin-database developers (see COPYING).
+ |  Copyright (c) 2014-2021 libbitcoin-database developers (see COPYING).
  |
  |         GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY
  |
@@ -8,31 +8,34 @@
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="include">
-      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000005}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000006}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\database">
+    <Filter Include="include\bitcoin">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000007}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\database\databases">
+    <Filter Include="include\bitcoin\database">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000008}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\database\impl">
+    <Filter Include="include\bitcoin\database\databases">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000009}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\database\memory">
+    <Filter Include="include\bitcoin\database\impl">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000A}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\database\primitives">
+    <Filter Include="include\bitcoin\database\locks">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000B}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\database\result">
+    <Filter Include="include\bitcoin\database\memory">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000C}</UniqueIdentifier>
     </Filter>
-    <Filter Include="resource">
+    <Filter Include="include\bitcoin\database\primitives">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\result">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resource">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000F}</UniqueIdentifier>
     </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000000}</UniqueIdentifier>
@@ -40,14 +43,17 @@
     <Filter Include="src\databases">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000001}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\memory">
+    <Filter Include="src\locks">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\mman-win32">
+    <Filter Include="src\memory">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\result">
+    <Filter Include="src\mman-win32">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\result">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000005}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -65,6 +71,24 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\databases\transaction_database.cpp">
       <Filter>src\databases</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\locks\conditional_lock.cpp">
+      <Filter>src\locks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\locks\file_lock.cpp">
+      <Filter>src\locks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\locks\flush_lock.cpp">
+      <Filter>src\locks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\locks\interprocess_lock.cpp">
+      <Filter>src\locks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\locks\scope_lock.cpp">
+      <Filter>src\locks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\locks\sequential_lock.cpp">
+      <Filter>src\locks</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\memory\accessor.cpp">
       <Filter>src\memory</Filter>
@@ -136,6 +160,27 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp">
       <Filter>include\bitcoin\database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\conditional_lock.hpp">
+      <Filter>include\bitcoin\database\locks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\file_lock.hpp">
+      <Filter>include\bitcoin\database\locks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\flush_lock.hpp">
+      <Filter>include\bitcoin\database\locks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\interprocess_lock.hpp">
+      <Filter>include\bitcoin\database\locks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\locks.hpp">
+      <Filter>include\bitcoin\database\locks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\scope_lock.hpp">
+      <Filter>include\bitcoin\database\locks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\sequential_lock.hpp">
+      <Filter>include\bitcoin\database\locks</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
@@ -242,5 +287,8 @@
       <Filter>include\bitcoin\database\impl</Filter>
     </None>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="..\..\debug.natvis" />
   </ItemGroup>
 </Project>

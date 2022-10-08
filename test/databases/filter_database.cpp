@@ -37,7 +37,7 @@ using namespace bc::system::chain;
 #define HEADER "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"
 #define FILTER "001a2b3c"
 
-static BC_CONSTEXPR auto file_path = DIRECTORY "/filter_table";
+static constexpr auto file_path = DIRECTORY "/filter_table";
 
 struct filter_database_directory_setup_fixture
 {
