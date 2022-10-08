@@ -88,3 +88,12 @@ static_assert(is_zero(std::tuple_size<empty_key>::value));
 } // namespace libbitcoin
 
 #endif
+
+// hash_table_header
+// list_element
+// hash_table          -> hash_table_header, list_element
+// hash_table_multimap -> hash_table, list_element, record_manager
+// list                -> list_element, list_iterator
+// list_iterator       -> list_element
+// record_manager
+// slab_manager
