@@ -39,14 +39,4 @@
 #include <bitcoin/database/primitives/record_manager.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
 
-// hash_table_header
-// list_element
-// hash_table          -> hash_table_header, list_element
-// hash_table_multimap -> hash_table, list_element, record_manager
-// list                -> list_element, list_iterator
-// list_iterator       -> list_element
-// record_manager
-// slab_manager
-
-
 #endif
