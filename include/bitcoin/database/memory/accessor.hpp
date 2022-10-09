@@ -42,14 +42,14 @@ public:
     ~accessor() NOEXCEPT;
 
     /// Get the buffer pointer.
-    uint8_t* buffer() NOEXCEPT;
+    uint8_t* buffer() NOEXCEPT override;
 
     /// Set the buffer pointer and lock for shared access.
     /// The mutex is upgraded and remains locked until destruct.
     void assign(uint8_t* data) NOEXCEPT;
 
     /// Advance the buffer pointer a specified number of bytes.
-    void increment(size_t size) NOEXCEPT;
+    void increment(size_t size) NOEXCEPT override;
 
 private:
     upgrade_mutex& mutex_;

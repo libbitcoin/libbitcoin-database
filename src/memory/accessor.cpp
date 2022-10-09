@@ -45,6 +45,8 @@ uint8_t* accessor::buffer() NOEXCEPT
 
 void accessor::assign(uint8_t* data) NOEXCEPT
 {
+    BC_ASSERT_MSG(!is_null(data), "null buffer");
+
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     mutex_.unlock_upgrade_and_lock_shared();
     data_ = data;
@@ -60,7 +62,10 @@ void accessor::increment(size_t size) NOEXCEPT
 
 accessor::~accessor() NOEXCEPT
 {
-    mutex_.unlock_shared();
+    if (is_null(data_))
+        mutex_.unlock_upgrade();
+    else
+        mutex_.unlock_shared();
     // End Critical Section
     ///////////////////////////////////////////////////////////////////////////
 }
