@@ -21,6 +21,8 @@
 
 #include <algorithm>
 #include <iterator>
+#include <mutex>
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>

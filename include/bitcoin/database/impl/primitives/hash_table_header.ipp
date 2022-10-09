@@ -21,6 +21,7 @@
 
 #include <cstring>
 #include <functional>
+#include <mutex>
 #include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>

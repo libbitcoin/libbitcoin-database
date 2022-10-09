@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_SLAB_MANAGER_IPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_SLAB_MANAGER_IPP
 
+#include <mutex>
 #include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
