@@ -27,26 +27,26 @@ BOOST_AUTO_TEST_CASE(accessor_constructor__always__buffer_nullptr)
     BOOST_REQUIRE(instance.buffer() == nullptr);
 }
 
-BOOST_AUTO_TEST_CASE(accessor_increment__nonzero__expected_offset)
-{
-    uint8_t value;
-    auto buffer = &value;
-    upgrade_mutex mutex;
-    accessor instance(mutex);
-    instance.assign(buffer);
-    const auto offset = 42u;
-    instance.increment(offset);
-    BOOST_REQUIRE_EQUAL(instance.buffer(), buffer + offset);
-}
-
 BOOST_AUTO_TEST_CASE(accessor_assign__nonzero__expected_buffer)
 {
-    uint8_t value;
+    uint8_t value{};
     auto expected = &value;
     upgrade_mutex mutex;
     accessor instance(mutex);
     instance.assign(expected);
     BOOST_REQUIRE_EQUAL(instance.buffer(), expected);
+}
+
+BOOST_AUTO_TEST_CASE(accessor_increment__nonzero__expected_offset)
+{
+    constexpr auto offset = 42u;
+    uint8_t value{};
+    auto buffer = &value;
+    upgrade_mutex mutex;
+    accessor instance(mutex);
+    instance.assign(buffer);
+    instance.increment(offset);
+    BOOST_REQUIRE_EQUAL(instance.buffer(), std::next(buffer, offset));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
