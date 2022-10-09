@@ -16,68 +16,63 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_HASH_TABLE_IPP
-#define LIBBITCOIN_DATABASE_HASH_TABLE_IPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASH_TABLE_IPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_HASH_TABLE_IPP
 
-#include <cstddef>
 #include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/hash_table_header.hpp>
-#include <bitcoin/database/primitives/list.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-template <typename Manager, typename Index, typename Link, typename Key>
-const Link hash_table<Manager, Index, Link, Key>::not_found = 
-    hash_table_header<Index, Link>::empty;
+TEMPLATE
+const Link CLASS::not_found = hash_table_header<Index, Link>::empty;
 
-template <typename Manager, typename Index, typename Link, typename Key>
-hash_table<Manager, Index, Link, Key>::hash_table(storage& file,
-    Index buckets)
+TEMPLATE
+CLASS::hash_table(storage& file, Index buckets) NOEXCEPT
   : header_(file, buckets),
     manager_(file, hash_table_header<Index, Link>::size(buckets))
 {
 }
 
-template <typename Manager, typename Index, typename Link, typename Key>
-hash_table<Manager, Index, Link, Key>::hash_table(storage& file,
-    Index buckets, size_t value_size)
+TEMPLATE
+CLASS::hash_table(storage& file, Index buckets, size_t value_size) NOEXCEPT
   : header_(file, buckets),
     manager_(file, hash_table_header<Index, Link>::size(buckets),
         value_type::size(value_size))
 {
 }
 
-template <typename Manager, typename Index, typename Link, typename Key>
-bool hash_table<Manager, Index, Link, Key>::create()
+TEMPLATE
+bool CLASS::create() NOEXCEPT
 {
     return header_.create() && manager_.create();
 }
 
-template <typename Manager, typename Index, typename Link, typename Key>
-bool hash_table<Manager, Index, Link, Key>::start()
+TEMPLATE
+bool CLASS::start() NOEXCEPT
 {
     return header_.start() && manager_.start();
 }
 
-template <typename Manager, typename Index, typename Link, typename Key>
-void hash_table<Manager, Index, Link, Key>::commit()
+TEMPLATE
+void CLASS::commit() NOEXCEPT
 {
     return manager_.commit();
 }
 
-template <typename Manager, typename Index, typename Link, typename Key>
-typename hash_table<Manager, Index, Link, Key>::value_type
-hash_table<Manager, Index, Link, Key>::allocator()
+TEMPLATE
+typename CLASS::value_type
+CLASS::allocator() NOEXCEPT
 {
     return { manager_, list_mutex_ };
 }
 
-template <typename Manager, typename Index, typename Link, typename Key>
-typename hash_table<Manager, Index, Link, Key>::const_value_type
-hash_table<Manager, Index, Link, Key>::find(const Key& key) const
+TEMPLATE
+typename CLASS::const_value_type
+CLASS::find(const Key& key) const NOEXCEPT
 {
     list<const Manager, Link, Key> list(manager_, bucket_value(key),
         list_mutex_);
@@ -89,28 +84,28 @@ hash_table<Manager, Index, Link, Key>::find(const Key& key) const
     return *list.end();
 }
 
-template <typename Manager, typename Index, typename Link, typename Key>
-typename hash_table<Manager, Index, Link, Key>::const_value_type
-hash_table<Manager, Index, Link, Key>::get(Link link) const
+TEMPLATE
+typename CLASS::const_value_type
+CLASS::get(Link link) const NOEXCEPT
 {
     // Ensure requested position is within the file.
     // We avoid a runtime error here to optimize out the past_eof locks.
-    BITCOIN_ASSERT_MSG(!manager_.past_eof(link) || link == not_found,
+    BC_ASSERT_MSG(!manager_.past_eof(link) || link == not_found,
         "Non-terminating link is past end of file.");
 
     // A not_found link value produces a terminator element.
     return { manager_, link, list_mutex_ };
 }
 
-template <typename Manager, typename Index, typename Link, typename Key>
-typename hash_table<Manager, Index, Link, Key>::const_value_type
-hash_table<Manager, Index, Link, Key>::terminator() const
+TEMPLATE
+typename CLASS::const_value_type
+CLASS::terminator() const NOEXCEPT
 {
     return { manager_, not_found, list_mutex_ };
 }
 
-template <typename Manager, typename Index, typename Link, typename Key>
-void hash_table<Manager, Index, Link, Key>::link(value_type& element)
+TEMPLATE
+void CLASS::link(value_type& element) NOEXCEPT
 {
     const auto index = bucket_index(element.key());
 
@@ -127,8 +122,8 @@ void hash_table<Manager, Index, Link, Key>::link(value_type& element)
 
 // Unlink the first of matching key value.
 // Unlink is not executed concurrently with writes.
-template <typename Manager, typename Index, typename Link, typename Key>
-bool hash_table<Manager, Index, Link, Key>::unlink(const Key& key)
+TEMPLATE
+bool CLASS::unlink(const Key& key) NOEXCEPT
 {
     const auto index = bucket_index(key);
 
@@ -178,22 +173,22 @@ bool hash_table<Manager, Index, Link, Key>::unlink(const Key& key)
 }
 
 // private
-template <typename Manager, typename Index, typename Link, typename Key>
-Link hash_table<Manager, Index, Link, Key>::bucket_value(Index index) const
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+Link CLASS::bucket_value(Index index) const NOEXCEPT
 {
     return header_.read(index);
 }
 
-// private
-template <typename Manager, typename Index, typename Link, typename Key>
-Link hash_table<Manager, Index, Link, Key>::bucket_value(const Key& key) const
+TEMPLATE
+Link CLASS::bucket_value(const Key& key) const NOEXCEPT
 {
     return header_.read(bucket_index(key));
 }
 
-// private
-template <typename Manager, typename Index, typename Link, typename Key>
-Index hash_table<Manager, Index, Link, Key>::bucket_index(const Key& key) const
+TEMPLATE
+Index CLASS::bucket_index(const Key& key) const NOEXCEPT
 {
     return hash_table_header<Index, Link>::remainder(key, header_.buckets());
 }

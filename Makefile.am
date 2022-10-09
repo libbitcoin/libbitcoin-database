@@ -35,16 +35,7 @@ lib_LTLIBRARIES = src/libbitcoin-database.la
 src_libbitcoin_database_la_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD_CPPFLAGS}
 src_libbitcoin_database_la_LIBADD = ${bitcoin_system_LIBS}
 src_libbitcoin_database_la_SOURCES = \
-    src/data_base.cpp \
     src/settings.cpp \
-    src/store.cpp \
-    src/unspent_outputs.cpp \
-    src/unspent_transaction.cpp \
-    src/verify.cpp \
-    src/databases/block_database.cpp \
-    src/databases/filter_database.cpp \
-    src/databases/payment_database.cpp \
-    src/databases/transaction_database.cpp \
     src/locks/conditional_lock.cpp \
     src/locks/file_lock.cpp \
     src/locks/flush_lock.cpp \
@@ -54,14 +45,7 @@ src_libbitcoin_database_la_SOURCES = \
     src/memory/accessor.cpp \
     src/memory/file_storage.cpp \
     src/mman-win32/mman.c \
-    src/mman-win32/mman.h \
-    src/result/block_result.cpp \
-    src/result/filter_result.cpp \
-    src/result/inpoint_iterator.cpp \
-    src/result/payment_iterator.cpp \
-    src/result/payment_result.cpp \
-    src/result/transaction_iterator.cpp \
-    src/result/transaction_result.cpp
+    src/mman-win32/mman.h
 
 # local: test/libbitcoin-database-test
 #------------------------------------------------------------------------------
@@ -73,19 +57,10 @@ check_PROGRAMS = test/libbitcoin-database-test
 test_libbitcoin_database_test_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD_CPPFLAGS}
 test_libbitcoin_database_test_LDADD = src/libbitcoin-database.la ${boost_unit_test_framework_LIBS} ${bitcoin_system_LIBS}
 test_libbitcoin_database_test_SOURCES = \
-    test/block_state.cpp \
-    test/data_base.cpp \
     test/main.cpp \
     test/settings.cpp \
-    test/store.cpp \
     test/test.cpp \
     test/test.hpp \
-    test/unspent_outputs.cpp \
-    test/unspent_transaction.cpp \
-    test/databases/block_database.cpp \
-    test/databases/filter_database.cpp \
-    test/databases/payment_database.cpp \
-    test/databases/transaction_database.cpp \
     test/locks/file_lock.cpp \
     test/locks/flush_lock.cpp \
     test/locks/interprocess_lock.cpp \
@@ -99,12 +74,6 @@ test_libbitcoin_database_test_SOURCES = \
     test/primitives/list_iterator.cpp \
     test/primitives/record_manager.cpp \
     test/primitives/slab_manager.cpp \
-    test/result/block_result.cpp \
-    test/result/filter_result.cpp \
-    test/result/payment_iterator.cpp \
-    test/result/payment_result.cpp \
-    test/result/transaction_iterator.cpp \
-    test/result/transaction_result.cpp \
     test/utility/storage.cpp \
     test/utility/storage.hpp \
     test/utility/utility.cpp \
@@ -132,33 +101,21 @@ include_bitcoin_HEADERS = \
 
 include_bitcoin_databasedir = ${includedir}/bitcoin/database
 include_bitcoin_database_HEADERS = \
-    include/bitcoin/database/block_state.hpp \
-    include/bitcoin/database/data_base.hpp \
+    include/bitcoin/database/boost.hpp \
     include/bitcoin/database/define.hpp \
     include/bitcoin/database/settings.hpp \
-    include/bitcoin/database/store.hpp \
-    include/bitcoin/database/unspent_outputs.hpp \
-    include/bitcoin/database/unspent_transaction.hpp \
-    include/bitcoin/database/verify.hpp \
     include/bitcoin/database/version.hpp
 
-include_bitcoin_database_databasesdir = ${includedir}/bitcoin/database/databases
-include_bitcoin_database_databases_HEADERS = \
-    include/bitcoin/database/databases/block_database.hpp \
-    include/bitcoin/database/databases/filter_database.hpp \
-    include/bitcoin/database/databases/payment_database.hpp \
-    include/bitcoin/database/databases/transaction_database.hpp
-
-include_bitcoin_database_impldir = ${includedir}/bitcoin/database/impl
-include_bitcoin_database_impl_HEADERS = \
-    include/bitcoin/database/impl/hash_table.ipp \
-    include/bitcoin/database/impl/hash_table_header.ipp \
-    include/bitcoin/database/impl/hash_table_multimap.ipp \
-    include/bitcoin/database/impl/list.ipp \
-    include/bitcoin/database/impl/list_element.ipp \
-    include/bitcoin/database/impl/list_iterator.ipp \
-    include/bitcoin/database/impl/record_manager.ipp \
-    include/bitcoin/database/impl/slab_manager.ipp
+include_bitcoin_database_impl_primitivesdir = ${includedir}/bitcoin/database/impl/primitives
+include_bitcoin_database_impl_primitives_HEADERS = \
+    include/bitcoin/database/impl/primitives/hash_table.ipp \
+    include/bitcoin/database/impl/primitives/hash_table_header.ipp \
+    include/bitcoin/database/impl/primitives/hash_table_multimap.ipp \
+    include/bitcoin/database/impl/primitives/list.ipp \
+    include/bitcoin/database/impl/primitives/list_element.ipp \
+    include/bitcoin/database/impl/primitives/list_iterator.ipp \
+    include/bitcoin/database/impl/primitives/record_manager.ipp \
+    include/bitcoin/database/impl/primitives/slab_manager.ipp
 
 include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks
 include_bitcoin_database_locks_HEADERS = \
@@ -185,18 +142,9 @@ include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/list.hpp \
     include/bitcoin/database/primitives/list_element.hpp \
     include/bitcoin/database/primitives/list_iterator.hpp \
+    include/bitcoin/database/primitives/primitives.hpp \
     include/bitcoin/database/primitives/record_manager.hpp \
     include/bitcoin/database/primitives/slab_manager.hpp
-
-include_bitcoin_database_resultdir = ${includedir}/bitcoin/database/result
-include_bitcoin_database_result_HEADERS = \
-    include/bitcoin/database/result/block_result.hpp \
-    include/bitcoin/database/result/filter_result.hpp \
-    include/bitcoin/database/result/inpoint_iterator.hpp \
-    include/bitcoin/database/result/payment_iterator.hpp \
-    include/bitcoin/database/result/payment_result.hpp \
-    include/bitcoin/database/result/transaction_iterator.hpp \
-    include/bitcoin/database/result/transaction_result.hpp
 
 
 # Custom make targets.

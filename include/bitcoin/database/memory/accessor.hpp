@@ -16,41 +16,43 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_ACCESSOR_HPP
-#define LIBBITCOIN_DATABASE_ACCESSOR_HPP
+#ifndef LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_HPP
+#define LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_HPP
 
-#include <cstddef>
-#include <cstdint>
 #include <bitcoin/system.hpp>
+#include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/// This class provides shared/protected read/write access to a memory buffer.
-/// The call caller must know the buffer size as it is unprotected/unmanaged.
-class BCD_API accessor
-  : public memory, system::noncopyable
+/// Shared read/write access to a memory buffer.
+/// The caller must know the buffer size as it is unguarded/unmanaged.
+class BCD_API accessor final
+  : public memory
 {
 public:
-    /// Assign a null upgradeable buffer pointer.
-    accessor(system::upgrade_mutex& mutex);
+    DELETE4(accessor);
+
+    /// The mutex precludes concurrent
+    accessor(upgrade_mutex& mutex) NOEXCEPT;
 
     /// Free the buffer pointer lock.
-    ~accessor();
+    ~accessor() NOEXCEPT;
 
     /// Get the buffer pointer.
-    uint8_t* buffer();
+    uint8_t* buffer() NOEXCEPT;
 
     /// Set the buffer pointer and lock for shared access.
-    void assign(uint8_t* data);
+    /// The mutex is upgraded and remains locked until destruct.
+    void assign(uint8_t* data) NOEXCEPT;
 
     /// Advance the buffer pointer a specified number of bytes.
-    void increment(size_t value);
+    void increment(size_t size) NOEXCEPT;
 
 private:
-    system::upgrade_mutex& mutex_;
+    upgrade_mutex& mutex_;
     uint8_t* data_;
 };
 

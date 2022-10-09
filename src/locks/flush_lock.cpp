@@ -16,25 +16,27 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/concurrent/flush_lock.hpp>
+#include <bitcoin/database/locks/flush_lock.hpp>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
+#include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
-namespace network {
-
-flush_lock::flush_lock(const boost::filesystem::path& file) noexcept
+namespace database {
+    
+flush_lock::flush_lock(const std::filesystem::path& file) NOEXCEPT
   : file_lock(file)
 {
 }
 
-bool flush_lock::try_lock() const noexcept
+bool flush_lock::try_lock() const NOEXCEPT
 {
     return !exists();
 }
 
 // This is non-const as it alters state (externally but may become internal).
-bool flush_lock::lock() noexcept
+bool flush_lock::lock() NOEXCEPT
 {
     if (!try_lock())
         return false;
@@ -43,13 +45,13 @@ bool flush_lock::lock() noexcept
 }
 
 // This is non-const as it alters state (externally but may become internal).
-bool flush_lock::unlock() noexcept
+bool flush_lock::unlock() NOEXCEPT
 {
     if (try_lock())
         return false;
-
+    
     return destroy();
 }
 
-} // namespace network
+} // namespace database
 } // namespace libbitcoin

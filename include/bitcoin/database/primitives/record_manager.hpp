@@ -16,10 +16,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_RECORD_MANAGER_HPP
-#define LIBBITCOIN_DATABASE_RECORD_MANAGER_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_RECORD_MANAGER_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_RECORD_MANAGER_HPP
 
-#include <cstddef>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -32,53 +31,53 @@ namespace database {
 /// data referenced by an index. The file will be resized accordingly
 /// and the total number of records updated so new chunks can be allocated.
 /// It also provides logical record mapping to the record memory address.
-template <typename Link>
+template <typename Link,
+    if_unsigned_integer<Link> = true>
 class record_manager
-  : system::noncopyable
 {
 public:
-    // This cast is a VC++ workaround is OK because Link must be unsigned.
-    //static constexpr Link empty = std::numeric_limits<Link>::max();
-    static const Link not_allocated = (Link)bc::max_uint64;
+    static const Link not_allocated =
+        system::possible_narrow_cast<Link>(max_uint64);
 
-    record_manager(storage& file, size_t header_size, size_t record_size);
+    record_manager(storage& file, size_t header_size,
+        size_t record_size) NOEXCEPT;
 
     /// Create record manager.
-    bool create();
+    bool create() NOEXCEPT;
 
     /// Prepare manager for usage.
-    bool start();
+    bool start() NOEXCEPT;
 
     /// Commit record count to the file.
-    void commit();
+    void commit() NOEXCEPT;
 
     /// The number of records in this container.
-    Link count() const;
+    Link count() const NOEXCEPT;
 
     /// Change the number of records of this container (truncation).
-    void set_count(Link value);
+    void set_count(Link value) NOEXCEPT;
 
     /// Check if link is past eof
-    bool past_eof(Link link) const;
+    bool past_eof(Link link) const NOEXCEPT;
 
     /// Allocate records and return first logical index, commit after writing.
-    Link allocate(size_t count);
+    Link allocate(size_t count) NOEXCEPT;
 
     /// Return memory object for the record at the specified index.
-    memory_ptr get(Link link) const;
+    memory_ptr get(Link link) const NOEXCEPT;
 
 private:
     // The record index of a disk position.
-    Link position_to_link(file_offset position) const;
+    Link position_to_link(file_offset position) const NOEXCEPT;
 
     // The disk position of a record index.
-    file_offset link_to_position(Link link) const;
+    file_offset link_to_position(Link link) const NOEXCEPT;
 
     // Read the count of the records from the file.
-    void read_count();
+    void read_count() NOEXCEPT;
 
     // Write the count of the records from the file.
-    void write_count();
+    void write_count() NOEXCEPT;
 
     // This class is thread and remap safe.
     storage& file_;
@@ -87,12 +86,18 @@ private:
 
     // Record count is protected by mutex.
     Link record_count_;
-    mutable system::shared_mutex mutex_;
+    mutable shared_mutex mutex_;
 };
 
 } // namespace database
 } // namespace libbitcoin
 
-#include <bitcoin/database/impl/record_manager.ipp>
+#define TEMPLATE template <typename Link, if_unsigned_integer<Link> If>
+#define CLASS record_manager<Link, If>
+
+#include <bitcoin/database/impl/primitives/record_manager.ipp>
+
+#undef CLASS
+#undef TEMPLATE
 
 #endif

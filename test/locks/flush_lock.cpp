@@ -17,18 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
-#include <bitcoin/database.hpp>
-
-using namespace bc::database;
 
 struct flush_lock_setup_fixture
 {
-    flush_lock_setup_fixture()
+    flush_lock_setup_fixture() noexcept
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
 
-    ~flush_lock_setup_fixture()
+    ~flush_lock_setup_fixture() noexcept
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }

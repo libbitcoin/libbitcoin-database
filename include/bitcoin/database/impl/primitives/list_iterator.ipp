@@ -16,44 +16,68 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/locks/sequential_lock.hpp>
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_LIST_ITERATOR_IPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_LIST_ITERATOR_IPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
-    
-sequential_lock::sequential_lock() NOEXCEPT
-  : sequence_(zero)
+
+TEMPLATE
+CLASS::list_iterator(value_type element) NOEXCEPT
+  : element_(element)
 {
 }
 
-sequential_lock::handle sequential_lock::begin_read() const NOEXCEPT
+TEMPLATE
+CLASS::list_iterator(Manager& manager, Link first,
+    shared_mutex& mutex) NOEXCEPT
+  : element_(manager, first, mutex)
 {
-    // Start read lock.
-    return sequence_.load();
 }
 
-bool sequential_lock::is_read_valid(handle value) const NOEXCEPT
+TEMPLATE
+CLASS& CLASS::operator++() NOEXCEPT
 {
-    // Test read lock.
-    return value == sequence_.load();
+    element_.jump_next();
+    return *this;
 }
 
-// Failure does not prevent a subsequent begin or end resetting the lock state.
-bool sequential_lock::begin_write() NOEXCEPT
+TEMPLATE
+CLASS CLASS::operator++(int) NOEXCEPT
 {
-    // Start write lock.
-    return is_write_locked(++sequence_);
+    auto copy = *this;
+    element_.jump_next();
+    return copy;
 }
 
-// Failure does not prevent a subsequent begin or end resetting the lock state.
-bool sequential_lock::end_write() NOEXCEPT
+TEMPLATE
+typename CLASS::pointer CLASS::operator*() const NOEXCEPT
 {
-    // End write lock.
-    return !is_write_locked(++sequence_);
+    return element_;
+}
+
+TEMPLATE
+typename CLASS::reference CLASS::operator->() const NOEXCEPT
+{
+    return element_;
+}
+
+TEMPLATE
+bool CLASS::operator==(const list_iterator& other) const NOEXCEPT
+{
+    return element_ == other.element_;
+}
+
+TEMPLATE
+bool CLASS::operator!=(const list_iterator& other) const NOEXCEPT
+{
+    return element_ != other.element_;
 }
 
 } // namespace database
 } // namespace libbitcoin
+
+#endif

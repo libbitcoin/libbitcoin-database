@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_STORAGE_HPP
-#define LIBBITCOIN_DATABASE_STORAGE_HPP
+#ifndef LIBBITCOIN_DATABASE_MEMORY_STORAGE_HPP
+#define LIBBITCOIN_DATABASE_MEMORY_STORAGE_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -26,39 +26,39 @@
 namespace libbitcoin {
 namespace database {
 
+/// Data storage interface for a single memory-mapped file.
 /// The implementation must be thread safe, allowing concurent read and write.
 class BCD_API storage
-  : system::noncopyable
 {
 public:
-    /// Open and map database files, must be closed.
-    virtual bool open() = 0;
+    /// Map file to memory, must be unmapped, not idempotent.
+    virtual bool map() NOEXCEPT = 0;
 
-    /// Flush the memory map to disk, idempotent.
-    virtual bool flush() const = 0;
+    /// Flush memory map to disk if mapped, idempotent.
+    virtual bool flush() const NOEXCEPT = 0;
 
-    /// Unmap and release files, restartable, idempotent.
-    virtual bool close() = 0;
+    /// Unmap file, must be mapped, restartable.
+    virtual bool unmap() NOEXCEPT = 0;
 
-    /// Determine if the database is closed.
-    virtual bool closed() const = 0;
+    /// Determine if the file is mapped.
+    virtual bool mapped() const NOEXCEPT = 0;
 
     /// The current capacity for mapped data.
-    virtual size_t capacity() const = 0;
+    virtual size_t capacity() const NOEXCEPT = 0;
 
     /// The current logical size of mapped data.
-    virtual size_t logical() const = 0;
+    virtual size_t logical() const NOEXCEPT = 0;
 
-    /// Get protected shared access to memory, starting at first byte.
-    virtual memory_ptr access() = 0;
+    /// Get protected shared access to memory.
+    virtual memory_ptr access() NOEXCEPT(false) = 0;
 
-    /// Resize the logical map to the specified size, return access.
-    /// Increase or shrink the physical size to match the logical size.
-    virtual memory_ptr resize(size_t required) = 0;
+    /// Change logical size to specified size, return access.
+    /// Increases or shrinks capacity to match logical size.
+    virtual memory_ptr resize(size_t required) NOEXCEPT(false) = 0;
 
-    /// Resize the logical map to the specified size, return access.
-    /// Increase the physical size to at least the logical size.
-    virtual memory_ptr reserve(size_t required) = 0;
+    /// Increase the logical size to specified size, return access.
+    /// Increases capacity to at least logical size, as necessary.
+    virtual memory_ptr reserve(size_t required) NOEXCEPT(false) = 0;
 };
 
 } // namespace database

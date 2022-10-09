@@ -154,16 +154,7 @@ endif()
 # Define ${CANONICAL_LIB_NAME} project.
 #------------------------------------------------------------------------------
 add_library( ${CANONICAL_LIB_NAME}
-    "../../src/data_base.cpp"
     "../../src/settings.cpp"
-    "../../src/store.cpp"
-    "../../src/unspent_outputs.cpp"
-    "../../src/unspent_transaction.cpp"
-    "../../src/verify.cpp"
-    "../../src/databases/block_database.cpp"
-    "../../src/databases/filter_database.cpp"
-    "../../src/databases/payment_database.cpp"
-    "../../src/databases/transaction_database.cpp"
     "../../src/locks/conditional_lock.cpp"
     "../../src/locks/file_lock.cpp"
     "../../src/locks/flush_lock.cpp"
@@ -173,14 +164,7 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/memory/accessor.cpp"
     "../../src/memory/file_storage.cpp"
     "../../src/mman-win32/mman.c"
-    "../../src/mman-win32/mman.h"
-    "../../src/result/block_result.cpp"
-    "../../src/result/filter_result.cpp"
-    "../../src/result/inpoint_iterator.cpp"
-    "../../src/result/payment_iterator.cpp"
-    "../../src/result/payment_result.cpp"
-    "../../src/result/transaction_iterator.cpp"
-    "../../src/result/transaction_result.cpp" )
+    "../../src/mman-win32/mman.h" )
 
 # ${CANONICAL_LIB_NAME} project specific include directories.
 #------------------------------------------------------------------------------
@@ -211,19 +195,10 @@ endif()
 #------------------------------------------------------------------------------
 if (with-tests)
     add_executable( libbitcoin-database-test
-        "../../test/block_state.cpp"
-        "../../test/data_base.cpp"
         "../../test/main.cpp"
         "../../test/settings.cpp"
-        "../../test/store.cpp"
         "../../test/test.cpp"
         "../../test/test.hpp"
-        "../../test/unspent_outputs.cpp"
-        "../../test/unspent_transaction.cpp"
-        "../../test/databases/block_database.cpp"
-        "../../test/databases/filter_database.cpp"
-        "../../test/databases/payment_database.cpp"
-        "../../test/databases/transaction_database.cpp"
         "../../test/locks/file_lock.cpp"
         "../../test/locks/flush_lock.cpp"
         "../../test/locks/interprocess_lock.cpp"
@@ -237,12 +212,6 @@ if (with-tests)
         "../../test/primitives/list_iterator.cpp"
         "../../test/primitives/record_manager.cpp"
         "../../test/primitives/slab_manager.cpp"
-        "../../test/result/block_result.cpp"
-        "../../test/result/filter_result.cpp"
-        "../../test/result/payment_iterator.cpp"
-        "../../test/result/payment_result.cpp"
-        "../../test/result/transaction_iterator.cpp"
-        "../../test/result/transaction_result.cpp"
         "../../test/utility/storage.cpp"
         "../../test/utility/storage.hpp"
         "../../test/utility/utility.cpp"

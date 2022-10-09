@@ -19,9 +19,9 @@
 #ifndef LIBBITCOIN_DATABASE_LOCKS_INTERPROCESS_LOCK_HPP
 #define LIBBITCOIN_DATABASE_LOCKS_INTERPROCESS_LOCK_HPP
 
-#include <boost/filesystem.hpp>
-#include <boost/interprocess/detail/os_file_functions.hpp>
+#include <filesystem>
 #include <bitcoin/system.hpp>
+#include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/locks/file_lock.hpp>
 
@@ -29,32 +29,31 @@ namespace libbitcoin {
 namespace database {
 
 /// This class is not thread safe, and does not throw.
-/// TODO: create critical sections around lock/unlock.
-class BCD_API interprocess_lock
-  : file_lock, system::noncopyable
+class BCD_API interprocess_lock final
+  : file_lock
 {
 public:
-    // TODO: may need to implement move construct/assign.
+    DELETE4(interprocess_lock);
 
     /// Construction does not touch the file.
-    interprocess_lock(const boost::filesystem::path& file) noexcept;
+    interprocess_lock(const std::filesystem::path& file) NOEXCEPT;
 
     /// Destruction calls unlock.
-    virtual ~interprocess_lock() noexcept;
+    ~interprocess_lock() NOEXCEPT;
 
     /// Creates the file and acquires exclusive access.
     /// Returns false if failed to acquire lock or lock already held.
-    bool lock() noexcept;
+    bool lock() NOEXCEPT;
 
     /// Releases access (if locked) and deletes the file.
     /// Returns true if lock not held or succesfully unlocked and deleted.
-    bool unlock() noexcept;
+    bool unlock() NOEXCEPT;
 
 private:
-    boost::database::file_handle_t handle_;
+    file_handle_t handle_;
 };
 
-} // namespace network
+} // namespace database
 } // namespace libbitcoin
 
 #endif

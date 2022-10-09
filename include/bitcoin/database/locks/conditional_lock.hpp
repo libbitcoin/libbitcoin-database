@@ -27,17 +27,19 @@
 namespace libbitcoin {
 namespace database {
 
-class BCD_API conditional_lock
+class BCD_API conditional_lock final
 {
 public:
+    DELETE4(conditional_lock);
+
     /// Conditional lock using internally-managed mutex pointer.
-    conditional_lock(bool lock);
+    conditional_lock(bool lock) NOEXCEPT;
 
     /// Conditional lock using parameterized mutex pointer (may be null).
-    conditional_lock(std::shared_ptr<boost::shared_mutex> mutex_ptr);
+    conditional_lock(std::shared_ptr<boost::shared_mutex> mutex_ptr) NOEXCEPT;
 
     /// Unlock.
-    virtual ~conditional_lock();
+    ~conditional_lock() NOEXCEPT;
 
 private:
     const std::shared_ptr<boost::shared_mutex> mutex_ptr_;

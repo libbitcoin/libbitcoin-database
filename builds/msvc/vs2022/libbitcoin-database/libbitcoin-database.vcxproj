@@ -73,11 +73,6 @@
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\src\data_base.cpp" />
-    <ClCompile Include="..\..\..\..\src\databases\block_database.cpp" />
-    <ClCompile Include="..\..\..\..\src\databases\filter_database.cpp" />
-    <ClCompile Include="..\..\..\..\src\databases\payment_database.cpp" />
-    <ClCompile Include="..\..\..\..\src\databases\transaction_database.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\conditional_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\file_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\flush_lock.cpp" />
@@ -87,27 +82,11 @@
     <ClCompile Include="..\..\..\..\src\memory\accessor.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\file_storage.cpp" />
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c" />
-    <ClCompile Include="..\..\..\..\src\result\block_result.cpp" />
-    <ClCompile Include="..\..\..\..\src\result\filter_result.cpp" />
-    <ClCompile Include="..\..\..\..\src\result\inpoint_iterator.cpp" />
-    <ClCompile Include="..\..\..\..\src\result\payment_iterator.cpp" />
-    <ClCompile Include="..\..\..\..\src\result\payment_result.cpp" />
-    <ClCompile Include="..\..\..\..\src\result\transaction_iterator.cpp" />
-    <ClCompile Include="..\..\..\..\src\result\transaction_result.cpp" />
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
-    <ClCompile Include="..\..\..\..\src\store.cpp" />
-    <ClCompile Include="..\..\..\..\src\unspent_outputs.cpp" />
-    <ClCompile Include="..\..\..\..\src\unspent_transaction.cpp" />
-    <ClCompile Include="..\..\..\..\src\verify.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\block_state.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\data_base.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\block_database.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\filter_database.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\payment_database.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\databases\transaction_database.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\boost.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\conditional_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\file_lock.hpp" />
@@ -126,32 +105,22 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\list.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\list_element.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\list_iterator.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\primitives.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_manager.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\block_result.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\filter_result.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\inpoint_iterator.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\payment_iterator.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\payment_result.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_iterator.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\result\transaction_result.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\store.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\unspent_outputs.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\unspent_transaction.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\verify.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp" />
     <ClInclude Include="..\..\..\..\src\mman-win32\mman.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\hash_table.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\hash_table_header.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\hash_table_multimap.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\list.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\list_element.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\list_iterator.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\record_manager.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\slab_manager.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hash_table.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hash_table_header.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hash_table_multimap.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\list.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\list_element.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\list_iterator.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\record_manager.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\slab_manager.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
@@ -160,13 +129,10 @@
     <Import Project="$(NuGetPackageRoot)boost.1.78.0\build\boost.targets" Condition="Exists('$(NuGetPackageRoot)boost.1.78.0\build\boost.targets')" />
     <Import Project="$(NuGetPackageRoot)boost_chrono-vc143.1.78.0\build\boost_chrono-vc143.targets" Condition="Exists('$(NuGetPackageRoot)boost_chrono-vc143.1.78.0\build\boost_chrono-vc143.targets')" />
     <Import Project="$(NuGetPackageRoot)boost_container-vc143.1.78.0\build\boost_container-vc143.targets" Condition="Exists('$(NuGetPackageRoot)boost_container-vc143.1.78.0\build\boost_container-vc143.targets')" />
-    <Import Project="$(NuGetPackageRoot)boost_date_time-vc143.1.78.0\build\boost_date_time-vc143.targets" Condition="Exists('$(NuGetPackageRoot)boost_date_time-vc143.1.78.0\build\boost_date_time-vc143.targets')" />
-    <Import Project="$(NuGetPackageRoot)boost_filesystem-vc143.1.78.0\build\boost_filesystem-vc143.targets" Condition="Exists('$(NuGetPackageRoot)boost_filesystem-vc143.1.78.0\build\boost_filesystem-vc143.targets')" />
     <Import Project="$(NuGetPackageRoot)boost_iostreams-vc143.1.78.0\build\boost_iostreams-vc143.targets" Condition="Exists('$(NuGetPackageRoot)boost_iostreams-vc143.1.78.0\build\boost_iostreams-vc143.targets')" />
     <Import Project="$(NuGetPackageRoot)boost_json-vc143.1.78.0\build\boost_json-vc143.targets" Condition="Exists('$(NuGetPackageRoot)boost_json-vc143.1.78.0\build\boost_json-vc143.targets')" />
     <Import Project="$(NuGetPackageRoot)boost_locale-vc143.1.78.0\build\boost_locale-vc143.targets" Condition="Exists('$(NuGetPackageRoot)boost_locale-vc143.1.78.0\build\boost_locale-vc143.targets')" />
     <Import Project="$(NuGetPackageRoot)boost_program_options-vc143.1.78.0\build\boost_program_options-vc143.targets" Condition="Exists('$(NuGetPackageRoot)boost_program_options-vc143.1.78.0\build\boost_program_options-vc143.targets')" />
-    <Import Project="$(NuGetPackageRoot)boost_regex-vc143.1.78.0\build\boost_regex-vc143.targets" Condition="Exists('$(NuGetPackageRoot)boost_regex-vc143.1.78.0\build\boost_regex-vc143.targets')" />
     <Import Project="$(NuGetPackageRoot)boost_system-vc143.1.78.0\build\boost_system-vc143.targets" Condition="Exists('$(NuGetPackageRoot)boost_system-vc143.1.78.0\build\boost_system-vc143.targets')" />
     <Import Project="$(NuGetPackageRoot)boost_thread-vc143.1.78.0\build\boost_thread-vc143.targets" Condition="Exists('$(NuGetPackageRoot)boost_thread-vc143.1.78.0\build\boost_thread-vc143.targets')" />
     <Import Project="$(NuGetPackageRoot)secp256k1_vc143.0.1.0.20\build\native\secp256k1_vc143.targets" Condition="Exists('$(NuGetPackageRoot)secp256k1_vc143.0.1.0.20\build\native\secp256k1_vc143.targets')" />
@@ -178,13 +144,10 @@
     <Error Condition="!Exists('$(NuGetPackageRoot)boost.1.78.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)boost.1.78.0\build\boost.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)boost_chrono-vc143.1.78.0\build\boost_chrono-vc143.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)boost_chrono-vc143.1.78.0\build\boost_chrono-vc143.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)boost_container-vc143.1.78.0\build\boost_container-vc143.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)boost_container-vc143.1.78.0\build\boost_container-vc143.targets'))" />
-    <Error Condition="!Exists('$(NuGetPackageRoot)boost_date_time-vc143.1.78.0\build\boost_date_time-vc143.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)boost_date_time-vc143.1.78.0\build\boost_date_time-vc143.targets'))" />
-    <Error Condition="!Exists('$(NuGetPackageRoot)boost_filesystem-vc143.1.78.0\build\boost_filesystem-vc143.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)boost_filesystem-vc143.1.78.0\build\boost_filesystem-vc143.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)boost_iostreams-vc143.1.78.0\build\boost_iostreams-vc143.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)boost_iostreams-vc143.1.78.0\build\boost_iostreams-vc143.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)boost_json-vc143.1.78.0\build\boost_json-vc143.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)boost_json-vc143.1.78.0\build\boost_json-vc143.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)boost_locale-vc143.1.78.0\build\boost_locale-vc143.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)boost_locale-vc143.1.78.0\build\boost_locale-vc143.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)boost_program_options-vc143.1.78.0\build\boost_program_options-vc143.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)boost_program_options-vc143.1.78.0\build\boost_program_options-vc143.targets'))" />
-    <Error Condition="!Exists('$(NuGetPackageRoot)boost_regex-vc143.1.78.0\build\boost_regex-vc143.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)boost_regex-vc143.1.78.0\build\boost_regex-vc143.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)boost_system-vc143.1.78.0\build\boost_system-vc143.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)boost_system-vc143.1.78.0\build\boost_system-vc143.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)boost_thread-vc143.1.78.0\build\boost_thread-vc143.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)boost_thread-vc143.1.78.0\build\boost_thread-vc143.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)secp256k1_vc143.0.1.0.20\build\native\secp256k1_vc143.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)secp256k1_vc143.0.1.0.20\build\native\secp256k1_vc143.targets'))" />

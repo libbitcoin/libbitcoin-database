@@ -18,15 +18,14 @@
  */
 #include <bitcoin/database/settings.hpp>
 
-#include <boost/filesystem.hpp>
+#include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-using namespace boost::filesystem;
 using namespace bc::system;
 
-settings::settings()
+settings::settings() NOEXCEPT
   : directory("blockchain"),
 
     flush_writes(false),
@@ -53,12 +52,12 @@ settings::settings()
 {
 }
 
-settings::settings(config::settings context)
+settings::settings(chain::selection context) NOEXCEPT
   : settings()
 {
     switch (context)
     {
-        case config::settings::mainnet:
+        case chain::selection::mainnet:
         {
             block_table_buckets = 650000;
             transaction_table_buckets = 110000000;
@@ -75,7 +74,7 @@ settings::settings(config::settings context)
             break;
         }
 
-        case config::settings::testnet:
+        case chain::selection::testnet:
         {
             // TODO: optimize for testnet.
             block_table_buckets = 650000;
@@ -93,7 +92,7 @@ settings::settings(config::settings context)
             break;
         }
 
-        case config::settings::regtest:
+        case chain::selection::regtest:
         {
             // TODO: optimize for regtest.
             block_table_buckets = 650000;
@@ -112,7 +111,7 @@ settings::settings(config::settings context)
         }
 
         default:
-        case config::settings::none:
+        case chain::selection::none:
         {
         }
     }

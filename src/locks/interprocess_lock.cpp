@@ -18,73 +18,27 @@
  */
 #include <bitcoin/database/locks/interprocess_lock.hpp>
 
-#ifdef _MSC_VER
-#include <windows.h>
-#endif
-#include <boost/interprocess/detail/os_file_functions.hpp>
+#include <filesystem>
 #include <bitcoin/system.hpp>
+#include <bitcoin/database/boost.hpp>
+#include <bitcoin/database/define.hpp>
+#include <bitcoin/database/locks/file_lock.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-using namespace boost::filesystem;
-using namespace boost::interprocess;
-static const auto invalid = ipcdetail::invalid_file();
-
-// local
-// ----------------------------------------------------------------------------
-// ipcdetail::open_existing_file has been changed to a TCHAR template in boost
-// v1.76.0, and compiles to wchar_t (UNICODE defined), so this can be removed.
-// boost.org/doc/libs/1_76_0/boost/interprocess/detail/os_file_functions.hpp
-
-#ifdef _MSC_VER
-
-static file_handle_t open_existing_file(const path& file) noexcept
-{
-    // This is why we're here.
-    const auto filename = system::to_extended_path(file);
-
-    static const auto access = FILE_FLAG_OVERLAPPED | FILE_FLAG_WRITE_THROUGH;
-    static const auto mode = FILE_SHARE_READ | FILE_SHARE_WRITE |
-        FILE_SHARE_DELETE;
-
-    for (auto attempt = 0; attempt < 3u; ++attempt)
-    {
-        // ipcdetail::open_existing_file calls CreateFileA in Win32 :<.
-        const auto handle = CreateFileW(filename.c_str(), access, mode, NULL,
-            OPEN_EXISTING, 0u, NULL);
-        
-        if (handle != INVALID_HANDLE_VALUE)
-            return handle;
-
-        if (GetLastError() != ERROR_SHARING_VIOLATION)
-            return handle;
-
-        Sleep(250);
-    }
-
-    return INVALID_HANDLE_VALUE;
-}
-
-#else
-
-static file_handle_t open_existing_file(const path& file) noexcept
-{
-    return ipcdetail::open_existing_file(file.string().c_str(), read_write);
-}
-
-#endif
+// ipcdetail functions do not throw (but are unannotated).
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // construct/destruct
 // ----------------------------------------------------------------------------
 
-interprocess_lock::interprocess_lock(const path& file) noexcept
+interprocess_lock::interprocess_lock(const std::filesystem::path& file) NOEXCEPT
   : file_lock(file), handle_(invalid)
 {
-    // This is a behavior change, we no longer open file (or throw) here.
 }
 
-interprocess_lock::~interprocess_lock() noexcept
+interprocess_lock::~interprocess_lock() NOEXCEPT
 {
     unlock();
 }
@@ -94,7 +48,7 @@ interprocess_lock::~interprocess_lock() noexcept
 
 // Lock is not idempotent, returns false if already locked (or error).
 // This succeeds if no other process has exclusive or sharable ownership.
-bool interprocess_lock::lock() noexcept
+bool interprocess_lock::lock() NOEXCEPT
 {
     // A valid handle guarantees file existence and ownership.
     if (handle_ != invalid)
@@ -106,16 +60,9 @@ bool interprocess_lock::lock() noexcept
 
     // Get a handle to the file.
     const auto handle = open_existing_file(file());
+    bool result;
 
     // Obtain exclusive access to the file.
-    // This is process-exclusive in linux/macOS, globally-exclusive in win32.
-    // "An exclusive lock excludes all other locks, both shared and exclusive.
-    // A single process can hold only one type of lock on a file region."
-    // linux.die.net/man/2/fcntl
-    // "If the locking process opens the file a second time it cannot access
-    // the specified region through this second handle until it unlocks it."
-    // docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-lockfileex
-    bool result;
     if (ipcdetail::try_acquire_file_lock(handle, result) && result)
     {
         handle_ = handle;
@@ -144,6 +91,8 @@ bool interprocess_lock::unlock() noexcept
     handle_ = invalid;
     return result;
 }
+
+BC_POP_WARNING()
 
 } // namespace database
 } // namespace libbitcoin

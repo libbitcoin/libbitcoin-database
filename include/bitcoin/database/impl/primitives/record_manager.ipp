@@ -16,11 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_RECORD_MANAGER_IPP
-#define LIBBITCOIN_DATABASE_RECORD_MANAGER_IPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_RECORD_MANAGER_IPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_RECORD_MANAGER_IPP
 
-#include <cstddef>
+#include <mutex>
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
@@ -33,43 +35,43 @@ namespace libbitcoin {
 namespace database {
 
 // TODO: guard against overflows.
-
-template <typename Link>
-record_manager<Link>::record_manager(storage& file, size_t header_size,
-    size_t record_size)
+    
+TEMPLATE
+CLASS::record_manager(storage& file, size_t header_size,
+    size_t record_size) NOEXCEPT
   : file_(file),
     header_size_(static_cast<Link>(header_size)),
     record_size_(static_cast<Link>(record_size)),
     record_count_(0)
 {
-    BITCOIN_ASSERT(header_size < not_allocated);
-    BITCOIN_ASSERT(record_size < not_allocated);
+    BC_ASSERT(header_size < not_allocated);
+    BC_ASSERT(record_size < not_allocated);
 }
 
-template <typename Link>
-bool record_manager<Link>::create()
+TEMPLATE
+bool CLASS::create() NOEXCEPT
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::unique_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
 
     // Existing file record count is nonzero.
-    if (record_count_ != 0)
+    if (!is_zero(record_count_))
         return false;
 
-    // This currently throws if there is insufficient space.
+    // Throws if there is insufficient space.
     file_.resize(header_size_ + link_to_position(record_count_));
     write_count();
     return true;
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename Link>
-bool record_manager<Link>::start()
+TEMPLATE
+bool CLASS::start() NOEXCEPT
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::unique_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
 
     read_count();
     const auto minimum = header_size_ + link_to_position(record_count_);
@@ -79,48 +81,48 @@ bool record_manager<Link>::start()
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename Link>
-void record_manager<Link>::commit()
+TEMPLATE
+void CLASS::commit() NOEXCEPT
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::unique_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
     write_count();
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename Link>
-Link record_manager<Link>::count() const
+TEMPLATE
+Link CLASS::count() const NOEXCEPT
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::shared_lock lock(mutex_);
+    std::shared_lock lock(mutex_);
     return record_count_;
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename Link>
-void record_manager<Link>::set_count(Link value)
+TEMPLATE
+void CLASS::set_count(Link value) NOEXCEPT
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::unique_lock lock(mutex_);
-    BITCOIN_ASSERT(value <= record_count_);
+    std::unique_lock lock(mutex_);
+    BC_ASSERT(value <= record_count_);
     record_count_ = value;
     ///////////////////////////////////////////////////////////////////////////
 }
 
 // Return the next index, regardless of the number created.
 // The file is thread safe, the critical section is to protect record_count_.
-template <typename Link>
-Link record_manager<Link>::allocate(size_t count)
+TEMPLATE
+Link CLASS::allocate(size_t count) NOEXCEPT
 {
-    BITCOIN_ASSERT(count < not_allocated);
+    BC_ASSERT(count < not_allocated);
     const auto records = static_cast<Link>(count);
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::unique_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
 
     // Always write after the last index.
     const auto next_record_index = record_count_;
@@ -136,20 +138,20 @@ Link record_manager<Link>::allocate(size_t count)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename Link>
-memory_ptr record_manager<Link>::get(Link link) const
+TEMPLATE
+memory_ptr CLASS::get(Link link) const NOEXCEPT
 {
     // Ensure requested position is within the file.
     // We avoid a runtime error here to optimize out the count lock.
-    BITCOIN_ASSERT_MSG(!past_eof(link), "Read past end of file.");
+    BC_ASSERT_MSG(!past_eof(link), "Read past end of file.");
 
     const auto memory = file_.access();
     memory->increment(header_size_ + link_to_position(link));
     return memory;
 }
 
-template <typename Link>
-bool record_manager<Link>::past_eof(Link link) const
+TEMPLATE
+bool CLASS::past_eof(Link link) const NOEXCEPT
 {
     return link >= count();
 }
@@ -157,39 +159,37 @@ bool record_manager<Link>::past_eof(Link link) const
 // privates
 
 // Read the count value from the first 32 bits of the file after the header.
-template <typename Link>
-void record_manager<Link>::read_count()
+TEMPLATE
+void CLASS::read_count() NOEXCEPT
 {
-    BITCOIN_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
+    BC_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     memory->increment(header_size_);
-    auto deserial = system::make_unsafe_deserializer(memory->buffer());
-    record_count_ = deserial.template read_little_endian<Link>();
+    record_count_ = system::unsafe_from_little_endian<Link>(memory->buffer());
 }
 
 // Write the count value to the first 32 bits of the file after the header.
-template <typename Link>
-void record_manager<Link>::write_count()
+TEMPLATE
+void CLASS::write_count() NOEXCEPT
 {
-    BITCOIN_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
+    BC_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     memory->increment(header_size_);
-    auto serial = system::make_unsafe_serializer(memory->buffer());
-    serial.template write_little_endian<Link>(record_count_);
+    system::unsafe_to_little_endian<Link>(memory->buffer(), record_count_);
 }
 
-template <typename Link>
-Link record_manager<Link>::position_to_link(file_offset position) const
+TEMPLATE
+Link CLASS::position_to_link(file_offset position) const NOEXCEPT
 {
     return (position - sizeof(Link)) / record_size_;
 }
 
-template <typename Link>
-file_offset record_manager<Link>::link_to_position(Link link) const
+TEMPLATE
+file_offset CLASS::link_to_position(Link link) const NOEXCEPT
 {
     return sizeof(Link) + link * record_size_;
 }

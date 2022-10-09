@@ -10,44 +10,20 @@
     <Filter Include="src">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000000}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\databases">
+    <Filter Include="src\locks">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000001}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\locks">
+    <Filter Include="src\memory">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\memory">
+    <Filter Include="src\primitives">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\primitives">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000004}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\result">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000005}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\utility">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000006}</UniqueIdentifier>
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000004}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\test\block_state.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\data_base.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\databases\block_database.cpp">
-      <Filter>src\databases</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\databases\filter_database.cpp">
-      <Filter>src\databases</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\databases\payment_database.cpp">
-      <Filter>src\databases</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\databases\transaction_database.cpp">
-      <Filter>src\databases</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\locks\file_lock.cpp">
       <Filter>src\locks</Filter>
     </ClCompile>
@@ -90,37 +66,10 @@
     <ClCompile Include="..\..\..\..\test\primitives\slab_manager.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\result\block_result.cpp">
-      <Filter>src\result</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\result\filter_result.cpp">
-      <Filter>src\result</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\result\payment_iterator.cpp">
-      <Filter>src\result</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\result\payment_result.cpp">
-      <Filter>src\result</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\result\transaction_iterator.cpp">
-      <Filter>src\result</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\result\transaction_result.cpp">
-      <Filter>src\result</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\settings.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\store.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\unspent_outputs.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\unspent_transaction.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\utility\storage.cpp">

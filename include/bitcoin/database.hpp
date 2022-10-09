@@ -15,19 +15,10 @@
  */
 
 #include <bitcoin/system.hpp>
-#include <bitcoin/database/block_state.hpp>
-#include <bitcoin/database/data_base.hpp>
+#include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/settings.hpp>
-#include <bitcoin/database/store.hpp>
-#include <bitcoin/database/unspent_outputs.hpp>
-#include <bitcoin/database/unspent_transaction.hpp>
-#include <bitcoin/database/verify.hpp>
 #include <bitcoin/database/version.hpp>
-#include <bitcoin/database/databases/block_database.hpp>
-#include <bitcoin/database/databases/filter_database.hpp>
-#include <bitcoin/database/databases/payment_database.hpp>
-#include <bitcoin/database/databases/transaction_database.hpp>
 #include <bitcoin/database/locks/conditional_lock.hpp>
 #include <bitcoin/database/locks/file_lock.hpp>
 #include <bitcoin/database/locks/flush_lock.hpp>
@@ -45,14 +36,8 @@
 #include <bitcoin/database/primitives/list.hpp>
 #include <bitcoin/database/primitives/list_element.hpp>
 #include <bitcoin/database/primitives/list_iterator.hpp>
+#include <bitcoin/database/primitives/primitives.hpp>
 #include <bitcoin/database/primitives/record_manager.hpp>
 #include <bitcoin/database/primitives/slab_manager.hpp>
-#include <bitcoin/database/result/block_result.hpp>
-#include <bitcoin/database/result/filter_result.hpp>
-#include <bitcoin/database/result/inpoint_iterator.hpp>
-#include <bitcoin/database/result/payment_iterator.hpp>
-#include <bitcoin/database/result/payment_result.hpp>
-#include <bitcoin/database/result/transaction_iterator.hpp>
-#include <bitcoin/database/result/transaction_result.hpp>
 
 #endif

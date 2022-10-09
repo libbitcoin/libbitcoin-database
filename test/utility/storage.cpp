@@ -16,105 +16,104 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "../test.hpp"
 #include "storage.hpp"
 
-#include <utility>
+#include <memory>
+#include <shared_mutex>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database.hpp>
-
-using namespace bc;
-using namespace bc::database;
-using namespace bc::system;
 
 namespace test {
 
 // This is a trivial working storage interface implementation.
-storage::storage()
-  : closed_(true)
+storage::storage() NOEXCEPT
+  : mapped_(false)
 {
 }
 
-storage::storage(data_chunk&& initial)
-  : closed_(true), buffer_(std::move(initial))
+storage::storage(data_chunk&& initial) NOEXCEPT
+  : mapped_(false), buffer_(std::move(initial))
 {
 }
 
-storage::storage(const data_chunk& initial)
-  : closed_(true), buffer_(initial)
+storage::storage(const data_chunk& initial) NOEXCEPT
+  : mapped_(false), buffer_(initial)
 {
 }
 
-storage::~storage()
+storage::~storage() NOEXCEPT
 {
-    close();
+    unmap();
 }
 
-bool storage::open()
+bool storage::map() NOEXCEPT
 {
     mutex_.lock_upgrade();
 
-    if (!closed_)
+    if (mapped_)
     {
         mutex_.unlock_upgrade();
         return true;
     }
 
     mutex_.unlock_upgrade_and_lock();
-    closed_ = false;
+    mapped_ = true;
     mutex_.unlock();
     return true;
 }
 
-bool storage::flush() const
+bool storage::flush() const NOEXCEPT
 {
     return true;
 }
 
-bool storage::close()
+bool storage::unmap() NOEXCEPT
 {
     mutex_.lock_upgrade();
 
-    if (closed_)
+    if (!mapped_)
     {
         mutex_.unlock_upgrade();
         return true;
     }
 
     mutex_.unlock_upgrade_and_lock();
-    closed_ = true;
+    mapped_ = false;
     mutex_.unlock();
     return true;
 }
 
-bool storage::closed() const
+bool storage::mapped() const NOEXCEPT
 {
-    shared_lock lock(mutex_);
-    return closed_;
+    std::shared_lock lock(mutex_);
+    return mapped_;
 }
 
-size_t storage::capacity() const
+size_t storage::capacity() const NOEXCEPT
 {
     return logical();
 }
 
-size_t storage::logical() const
+size_t storage::logical() const NOEXCEPT
 {
-    shared_lock lock(mutex_);
+    std::shared_lock lock(mutex_);
     return buffer_.size();
 }
 
-memory_ptr storage::access()
+memory_ptr storage::access() NOEXCEPT(false)
 {
     const auto memory = std::make_shared<accessor>(mutex_);
     memory->assign(buffer_.data());
     return memory;
 }
 
-memory_ptr storage::resize(size_t size)
+memory_ptr storage::resize(size_t size) NOEXCEPT(false)
 {
     return reserve(size);
 }
 
-memory_ptr storage::reserve(size_t size)
+memory_ptr storage::reserve(size_t size) NOEXCEPT(false)
 {
     const auto memory = std::make_shared<accessor>(mutex_);
 

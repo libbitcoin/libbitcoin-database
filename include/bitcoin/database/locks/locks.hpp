@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_LOCKS_HPP
 #define LIBBITCOIN_DATABASE_LOCKS_HPP
 
- #include <bitcoin/database/locks/conditional_lock.hpp>
  #include <bitcoin/database/locks/file_lock.hpp>
  #include <bitcoin/database/locks/flush_lock.hpp>
  #include <bitcoin/database/locks/interprocess_lock.hpp>

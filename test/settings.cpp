@@ -16,9 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <boost/test/unit_test.hpp>
-
-#include <bitcoin/database.hpp>
+#include "test.hpp"
 
 using namespace bc;
 
@@ -41,7 +39,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default_context__expected)
 
 BOOST_AUTO_TEST_CASE(settings__construct__none_context__expected)
 {
-    database::settings configuration(system::config::settings::none);
+    database::settings configuration(system::chain::selection::none);
     BOOST_REQUIRE_EQUAL(configuration.directory, "blockchain");
     BOOST_REQUIRE(!configuration.flush_writes);
     BOOST_REQUIRE_EQUAL(configuration.file_growth_rate, 5u);
@@ -53,7 +51,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__none_context__expected)
 
 BOOST_AUTO_TEST_CASE(settings__construct__mainnet_context__expected)
 {
-    database::settings configuration(system::config::settings::mainnet);
+    database::settings configuration(system::chain::selection::mainnet);
     BOOST_REQUIRE_EQUAL(configuration.directory, "blockchain");
     BOOST_REQUIRE(!configuration.flush_writes);
     BOOST_REQUIRE_EQUAL(configuration.file_growth_rate, 5u);
@@ -65,7 +63,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__mainnet_context__expected)
 
 BOOST_AUTO_TEST_CASE(settings__construct__testnet_context__expected)
 {
-    database::settings configuration(system::config::settings::testnet);
+    database::settings configuration(system::chain::selection::testnet);
     BOOST_REQUIRE_EQUAL(configuration.directory, "blockchain");
     BOOST_REQUIRE(!configuration.flush_writes);
     BOOST_REQUIRE_EQUAL(configuration.file_growth_rate, 5u);

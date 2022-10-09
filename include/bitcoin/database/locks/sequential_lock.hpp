@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_LOCKS_SEQUENTIAL_LOCK_HPP
 
 #include <atomic>
-#include <cstddef>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -34,19 +33,18 @@ class BCD_API sequential_lock
 public:
     typedef size_t handle;
 
-    /// Determine if the given handle is a write-locked handle.
-    static bool is_write_locked(handle value)
+    static constexpr bool is_write_locked(handle value) NOEXCEPT
     {
         return is_odd(value);
     }
 
-    sequential_lock();
+    sequential_lock() NOEXCEPT;
 
-    handle begin_read() const;
-    bool is_read_valid(handle value) const;
+    handle begin_read() const NOEXCEPT;
+    bool is_read_valid(handle value) const NOEXCEPT;
 
-    bool begin_write();
-    bool end_write();
+    bool begin_write() NOEXCEPT;
+    bool end_write() NOEXCEPT;
 
 private:
     std::atomic<size_t> sequence_;

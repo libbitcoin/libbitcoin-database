@@ -16,46 +16,44 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_LIST_IPP
-#define LIBBITCOIN_DATABASE_LIST_IPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_LIST_IPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_LIST_IPP
 
 #include <bitcoin/system.hpp>
-#include <bitcoin/database/primitives/list_element.hpp>
-#include <bitcoin/database/primitives/list_iterator.hpp>
+#include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-template <typename Manager, typename Link, typename Key>
-list<Manager, Link, Key>::list(Manager& manager, Link first,
-    system::shared_mutex& mutex)
+TEMPLATE
+CLASS::list(Manager& manager, Link first, shared_mutex& mutex) NOEXCEPT
   : first_(first), manager_(manager), mutex_(mutex)
 {
 }
 
-template <typename Manager, typename Link, typename Key>
-bool list<Manager, Link, Key>::empty() const
+TEMPLATE
+bool CLASS::empty() const NOEXCEPT
 {
     return begin() == end();
 }
 
-template <typename Manager, typename Link, typename Key>
-typename list<Manager, Link, Key>::const_value_type
-list<Manager, Link, Key>::front() const
+TEMPLATE
+typename CLASS::const_value_type
+CLASS::front() const NOEXCEPT
 {
     return *begin();
 }
 
-template <typename Manager, typename Link, typename Key>
-typename list<Manager, Link, Key>::const_iterator
-list<Manager, Link, Key>::begin() const
+TEMPLATE
+typename CLASS::const_iterator
+CLASS::begin() const NOEXCEPT
 {
     return { manager_, first_, mutex_ };
 }
 
-template <typename Manager, typename Link, typename Key>
-typename list<Manager, Link, Key>::const_iterator
-list<Manager, Link, Key>::end() const
+TEMPLATE
+typename CLASS::const_iterator
+CLASS::end() const NOEXCEPT
 {
     return { manager_, const_value_type::not_found, mutex_ };
 }

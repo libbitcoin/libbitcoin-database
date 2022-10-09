@@ -20,10 +20,14 @@
 #define LIBBITCOIN_DATABASE_DEFINE_HPP
 
 #include <array>
-#include <cstdint>
+#include <functional>
+#include <shared_mutex>
 #include <tuple>
 #include <vector>
 #include <bitcoin/system.hpp>
+
+/// Attributes.
+/// ---------------------------------------------------------------------------
 
 // Now we use the generic helper definitions in libbitcoin to
 // define BCD_API and BCD_INTERNAL.
@@ -42,21 +46,53 @@
     #define BCD_INTERNAL BC_HELPER_DLL_LOCAL
 #endif
 
-// Log name.
+/// Class helpers.
+/// ---------------------------------------------------------------------------
+
+/// Used when defining only the destructor.
+#define DELETE4(class_name) \
+    class_name(class_name&&) = delete; \
+    class_name(const class_name&) = delete; \
+    class_name& operator=(class_name&&) = delete; \
+    class_name& operator=(const class_name&) = delete
+
+/// Logging.
+/// ---------------------------------------------------------------------------
 #define LOG_DATABASE "database"
+
+#define LOG_INFO(name) std::cout << name << " : "
+#define LOG_DEBUG(name) std::cout << name << " : "
+#define LOG_VERBOSE(name) std::cout << name << " : "
+#define LOG_ERROR(name) std::cerr << name << " : "
+#define LOG_WARNING(name) std::cerr << name << " : "
+#define LOG_FATAL(name) std::cerr << name << " : "
+
+/// Types.
+/// ---------------------------------------------------------------------------
 
 namespace libbitcoin {
 namespace database {
 
+using shared_mutex = std::shared_mutex;
+
 typedef uint32_t array_index;
 typedef uint64_t file_offset;
 typedef std::vector<file_offset> link_list;
-typedef bc::system::serializer<uint8_t*> byte_serializer;
-typedef bc::system::deserializer<uint8_t*, false> byte_deserializer;
-typedef std::array<uint8_t, 0> empty_key;
-static_assert(std::tuple_size<empty_key>::value == 0, "non-empty empty key");
+typedef std::array<uint8_t,zero> empty_key;
+////typedef std::function<void(system::reader)> read_bytes;
+////typedef std::function<void(system::writer)> write_bytes;
+static_assert(is_zero(std::tuple_size<empty_key>::value));
 
 } // namespace database
 } // namespace libbitcoin
 
 #endif
+
+// hash_table_header
+// list_element
+// hash_table          -> hash_table_header, list_element
+// hash_table_multimap -> hash_table, list_element, record_manager
+// list                -> list_element, list_iterator
+// list_iterator       -> list_element
+// record_manager
+// slab_manager

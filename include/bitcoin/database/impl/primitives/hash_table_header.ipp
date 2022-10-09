@@ -16,60 +16,46 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_IPP
-#define LIBBITCOIN_DATABASE_HASH_TABLE_HEADER_IPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASH_TABLE_HEADER_IPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_HASH_TABLE_HEADER_IPP
 
+#include <cstring>
+#include <functional>
+#include <mutex>
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-template <typename Index, typename Link>
-template <typename Key>
-inline Index hash_table_header<Index, Link>::remainder(const Key& key,
-    Index divisor)
-{
-    // TODO: implement std::hash replacement to prevent store drift.
-    return divisor == 0 ? 0 : std::hash<Key>()(key) % divisor;
-}
-
-// Link must be unsigned (see static assertions below).
-// HACK: This is a VC++ workaround, otherwise std::numeric_limits<Link>::max().
-template <typename Index, typename Link>
-const Link hash_table_header<Index, Link>::empty = (Link)bc::max_uint64;
-
-template <typename Index, typename Link>
-hash_table_header<Index, Link>::hash_table_header(storage& file, Index buckets)
+TEMPLATE
+CLASS::hash_table_header(storage& file, Index buckets) NOEXCEPT
   : file_(file), buckets_(buckets)
 {
-    static_assert(std::is_unsigned<Link>::value,
-        "Hash table header requires unsigned value type.");
-
-    static_assert(std::is_unsigned<Index>::value,
-        "Hash table header requires unsigned index type.");
 }
 
-template <typename Index, typename Link>
-bool hash_table_header<Index, Link>::create()
+TEMPLATE
+bool CLASS::create() NOEXCEPT
 {
+    constexpr auto fill = system::narrow_cast<uint8_t>(empty);
     const auto file_size = size(buckets_);
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.resize(file_size);
 
     // Speed-optimized fill implementation.
-    memset(memory->buffer(), (uint8_t)empty, file_size);
+    std::memset(memory->buffer(), fill, file_size);
 
     // Overwrite the start of the buffer with the bucket count.
-    auto serial = system::make_unsafe_serializer(memory->buffer());
-    serial.template write_little_endian<Index>(buckets_);
+    system::unsafe_to_little_endian<Index>(memory->buffer(), buckets_);
     return true;
 }
 
-template <typename Index, typename Link>
-bool hash_table_header<Index, Link>::start()
+TEMPLATE
+bool CLASS::start() NOEXCEPT
 {
     // File is too small for the number of buckets in the header.
     if (file_.capacity() < link(buckets_))
@@ -79,59 +65,56 @@ bool hash_table_header<Index, Link>::start()
     const auto memory = file_.access();
 
     // Does not require atomicity (no concurrency during start).
-    auto deserial = system::make_unsafe_deserializer(memory->buffer());
-    return deserial.template read_little_endian<Index>() == buckets_;
+    return system::unsafe_from_little_endian<Index>(memory->buffer()) == buckets_;
 }
 
-template <typename Index, typename Link>
-Link hash_table_header<Index, Link>::read(Index index) const
+TEMPLATE
+Link CLASS::read(Index index) const NOEXCEPT
 {
-    BITCOIN_ASSERT(index < buckets_);
+    BC_ASSERT(index < buckets_);
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     memory->increment(link(index));
-    auto deserial = system::make_unsafe_deserializer(memory->buffer());
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::shared_lock lock(mutex_);
-    return deserial.template read_little_endian<Link>();
+    std::shared_lock lock(mutex_);
+    return system::unsafe_from_little_endian<Link>(memory->buffer());
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename Index, typename Link>
-void hash_table_header<Index, Link>::write(Index index, Link value)
+TEMPLATE
+void CLASS::write(Index index, Link value) NOEXCEPT
 {
-    BITCOIN_ASSERT(index < buckets_);
+    BC_ASSERT(index < buckets_);
 
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.access();
     memory->increment(link(index));
-    auto serial = system::make_unsafe_serializer(memory->buffer());
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::unique_lock lock(mutex_);
-    serial.template write_little_endian<Link>(value);
+    std::unique_lock lock(mutex_);
+    system::unsafe_to_little_endian<Link>(memory->buffer(), value);
     ///////////////////////////////////////////////////////////////////////////
 }
 
-template <typename Index, typename Link>
-Index hash_table_header<Index, Link>::buckets() const
+TEMPLATE
+Index CLASS::buckets() const NOEXCEPT
 {
     return buckets_;
 }
 
-template <typename Index, typename Link>
-size_t hash_table_header<Index, Link>::size()
+TEMPLATE
+size_t CLASS::size() NOEXCEPT
 {
     return size(buckets_);
 }
 
 // static
-template <typename Index, typename Link>
-size_t hash_table_header<Index, Link>::size(Index buckets)
+TEMPLATE
+size_t CLASS::size(Index buckets) NOEXCEPT
 {
     // Header byte size is file link of last bucket + 1:
     //
@@ -143,9 +126,9 @@ size_t hash_table_header<Index, Link>::size(Index buckets)
     return link(buckets);
 }
 
-// static
-template <typename Index, typename Link>
-file_offset hash_table_header<Index, Link>::link(Index index)
+// static, private
+TEMPLATE
+file_offset CLASS::link(Index index) NOEXCEPT
 {
     // File link of indexed bucket is:
     //

@@ -16,20 +16,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
 
-// Sponsored in part by Digital Contract Design, LLC
+#include <bitcoin/database/primitives/hash_table.hpp>
+#include <bitcoin/database/primitives/hash_table_header.hpp>
+#include <bitcoin/database/primitives/hash_table_multimap.hpp>
+#include <bitcoin/database/primitives/list.hpp>
+#include <bitcoin/database/primitives/list_element.hpp>
+#include <bitcoin/database/primitives/list_iterator.hpp>
+#include <bitcoin/database/primitives/record_manager.hpp>
+#include <bitcoin/database/primitives/slab_manager.hpp>
 
-#include <boost/test/unit_test.hpp>
-#include <bitcoin/database.hpp>
-
-using namespace bc;
-using namespace bc::database;
-
-BOOST_AUTO_TEST_SUITE(filter_result_tests)
-
-BOOST_AUTO_TEST_CASE(filter_result__method__vector__expectation)
-{
-    BOOST_REQUIRE(true);
-}
-
-BOOST_AUTO_TEST_SUITE_END()
+#endif

@@ -19,8 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_SETTINGS_HPP
 #define LIBBITCOIN_DATABASE_SETTINGS_HPP
 
-#include <cstdint>
-#include <boost/filesystem.hpp>
+#include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -30,11 +29,11 @@ namespace database {
 class BCD_API settings
 {
 public:
-    settings();
-    settings(system::config::settings context);
+    settings() NOEXCEPT;
+    settings(system::chain::selection context) NOEXCEPT;
 
     /// Properties.
-    boost::filesystem::path directory;
+    std::filesystem::path directory;
     bool flush_writes;
     uint32_t cache_capacity;
     uint16_t file_growth_rate;

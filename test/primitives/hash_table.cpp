@@ -16,14 +16,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <boost/test/unit_test.hpp>
+#include "../test.hpp"
 
-#include <bitcoin/database.hpp>
 #include "../utility/storage.hpp"
 #include "../utility/utility.hpp"
-
-using namespace bc;
-using namespace bc::database;
 
 BOOST_AUTO_TEST_SUITE(hash_table_tests)
 
@@ -37,7 +33,7 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__one_element__round_trips)
 
     // Create the file and initialize hash table.
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
     slab_map table(file, 100u);
     BOOST_REQUIRE(table.create());
 
@@ -46,11 +42,11 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__one_element__round_trips)
 
     const key_type key{ { 0xde, 0xad, 0xbe, 0xef } };
 
-    const auto writer = [](byte_serializer& serial)
+    const auto writer = [](system::writer& sink)
     {
-        serial.write_byte(110);
-        serial.write_byte(4);
-        serial.write_byte(99);
+        sink.write_byte(110);
+        sink.write_byte(4);
+        sink.write_byte(99);
     };
 
     // Allocate, create and store a new element.
@@ -58,11 +54,11 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__one_element__round_trips)
     const auto link = element.create(key, writer, 3);
     table.link(element);
 
-    const auto reader = [](byte_deserializer& deserial)
+    const auto reader = [](system::reader& source)
     {
-        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 110u);
-        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 4u);
-        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 99u);
+        BOOST_REQUIRE_EQUAL(source.read_byte(), 110u);
+        BOOST_REQUIRE_EQUAL(source.read_byte(), 4u);
+        BOOST_REQUIRE_EQUAL(source.read_byte(), 99u);
     };
 
     // Find, read and verify the new element (by key).
@@ -88,22 +84,22 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__multiple_elements__expected)
 
     // Create the file and initialize hash table.
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
     slab_map table(file, 100u);
     BOOST_REQUIRE(table.create());
 
     const key_type key1{ { 0xde, 0xad, 0xbe, 0xef } };
     const key_type key2{ { 0xba, 0xad, 0xbe, 0xef } };
 
-    const auto writer1 = [](byte_serializer& serial)
+    const auto writer1 = [](system::writer& sink)
     {
-        serial.write_byte(42);
-        serial.write_byte(24);
+        sink.write_byte(42);
+        sink.write_byte(24);
     };
 
-    const auto writer2 = [](byte_serializer& serial)
+    const auto writer2 = [](system::writer& sink)
     {
-        serial.write_byte(44);
+        sink.write_byte(44);
     };
 
     // Allocate, create and store a new elements.
@@ -113,15 +109,15 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__multiple_elements__expected)
     const auto link2 = element.create(key2, writer2, 1);
     table.link(element);
 
-    const auto reader1 = [](byte_deserializer& deserial)
+    const auto reader1 = [](system::reader& source)
     {
-        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 42);
-        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 24);
+        BOOST_REQUIRE_EQUAL(source.read_byte(), 42);
+        BOOST_REQUIRE_EQUAL(source.read_byte(), 24);
     };
 
-    const auto reader2 = [](byte_deserializer& deserial)
+    const auto reader2 = [](system::reader& source)
     {
-        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 44);
+        BOOST_REQUIRE_EQUAL(source.read_byte(), 44);
     };
 
     // Find, read and verify the new elements (by links).
@@ -150,22 +146,22 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__unlink_first_stored__expected)
 
     // Create the file and initialize hash table.
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
     slab_map table(file, 100u);
     BOOST_REQUIRE(table.create());
 
     const key_type key1{ { 0xde, 0xad, 0xbe, 0xef } };
     const key_type key2{ { 0xba, 0xad, 0xbe, 0xef } };
 
-    const auto writer1 = [](byte_serializer& serial)
+    const auto writer1 = [](system::writer& sink)
     {
-        serial.write_byte(42);
-        serial.write_byte(24);
+        sink.write_byte(42);
+        sink.write_byte(24);
     };
 
-    const auto writer2 = [](byte_serializer& serial)
+    const auto writer2 = [](system::writer& sink)
     {
-        serial.write_byte(44);
+        sink.write_byte(44);
     };
 
     // Allocate, create and store a new elements.
@@ -179,9 +175,9 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__unlink_first_stored__expected)
     BOOST_REQUIRE(table.unlink(key1));
     BOOST_REQUIRE(!table.unlink(key1));
 
-    const auto reader2 = [](byte_deserializer& deserial)
+    const auto reader2 = [](system::reader& source)
     {
-        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 44);
+        BOOST_REQUIRE_EQUAL(source.read_byte(), 44);
     };
 
     // Find, read and verify the new elements (by keys).
@@ -205,17 +201,17 @@ BOOST_AUTO_TEST_CASE(hash_table__get__record_range_of_links__success)
     typedef hash_table<record_manager<link_type>, index_type, link_type, key_type> record_map;
 
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
     record_map table(file, 2u, 4u);
     BOOST_REQUIRE(table.create());
 
     const key_type key1{ { 0xde, 0xad, 0xbe, 0xef } };
-    const auto writer1 = [](byte_serializer& serial)
+    const auto writer1 = [](system::writer& sink)
     {
-        serial.write_byte(110);
-        serial.write_byte(110);
-        serial.write_byte(4);
-        serial.write_byte(88);
+        sink.write_byte(110);
+        sink.write_byte(110);
+        sink.write_byte(4);
+        sink.write_byte(88);
     };
 
     // Allocate, create and store a new elements.
@@ -236,17 +232,17 @@ BOOST_AUTO_TEST_CASE(hash_table__get__slab_range_of_links__success)
     typedef hash_table<slab_manager<link_type>, index_type, link_type, key_type> slab_map;
 
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
     slab_map table(file, 100u);
     BOOST_REQUIRE(table.create());
 
     const key_type key1{ { 0xde, 0xad, 0xbe, 0xef } };
-    const auto writer1 = [](byte_serializer& serial)
+    const auto writer1 = [](system::writer& sink)
     {
-        serial.write_byte(110);
-        serial.write_byte(110);
-        serial.write_byte(4);
-        serial.write_byte(88);
+        sink.write_byte(110);
+        sink.write_byte(110);
+        sink.write_byte(4);
+        sink.write_byte(88);
     };
 
     // Allocate, create and store a new elements.
@@ -267,7 +263,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_32_bit__round_trips)
     typedef hash_table<record_manager<link_type>, index_type, link_type, key_type> record_map;
 
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
     record_map table(file, 2u, 4u);
     BOOST_REQUIRE(table.create());
 
@@ -275,20 +271,20 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_32_bit__round_trips)
     const key_type key2{ { 0xb0, 0x0b, 0xb0, 0x0b } };
     const key_type invalid{ { 0x00, 0x01, 0x02, 0x03 } };
 
-    const auto writer1 = [](byte_serializer& serial)
+    const auto writer1 = [](system::writer& sink)
     {
-        serial.write_byte(110);
-        serial.write_byte(110);
-        serial.write_byte(4);
-        serial.write_byte(88);
+        sink.write_byte(110);
+        sink.write_byte(110);
+        sink.write_byte(4);
+        sink.write_byte(88);
     };
 
-    const auto writer2 = [](byte_serializer& serial)
+    const auto writer2 = [](system::writer& sink)
     {
-        serial.write_byte(99);
-        serial.write_byte(98);
-        serial.write_byte(97);
-        serial.write_byte(96);
+        sink.write_byte(99);
+        sink.write_byte(98);
+        sink.write_byte(97);
+        sink.write_byte(96);
     };
 
     // Allocate, create and store a new elements.
@@ -304,12 +300,12 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_32_bit__round_trips)
     BOOST_REQUIRE(table.unlink(key2));
     BOOST_REQUIRE(!table.unlink(invalid));
 
-    const auto reader = [](byte_deserializer& deserial)
+    const auto reader = [](system::reader& source)
     {
-        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 99);
-        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 98);
-        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 97);
-        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 96);
+        BOOST_REQUIRE_EQUAL(source.read_byte(), 99);
+        BOOST_REQUIRE_EQUAL(source.read_byte(), 98);
+        BOOST_REQUIRE_EQUAL(source.read_byte(), 97);
+        BOOST_REQUIRE_EQUAL(source.read_byte(), 96);
     };
 
     // Key1 has been unlinked.
@@ -337,7 +333,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_64_bit__round_trips)
 
     // Create the file and initialize hash table.
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
     record_map table(file, 2u, 7u);
     BOOST_REQUIRE(table.create());
 
@@ -345,26 +341,26 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_64_bit__round_trips)
     const key_type key2{ { 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b } };
     const key_type invalid{ { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 } };
 
-    const auto writer1 = [](byte_serializer& serial)
+    const auto writer1 = [](system::writer& sink)
     {
-        serial.write_byte(110);
-        serial.write_byte(110);
-        serial.write_byte(4);
-        serial.write_byte(88);
-        serial.write_byte(110);
-        serial.write_byte(110);
-        serial.write_byte(4);
+        sink.write_byte(110);
+        sink.write_byte(110);
+        sink.write_byte(4);
+        sink.write_byte(88);
+        sink.write_byte(110);
+        sink.write_byte(110);
+        sink.write_byte(4);
     };
 
-    const auto writer2 = [](byte_serializer& serial)
+    const auto writer2 = [](system::writer& sink)
     {
-        serial.write_byte(99);
-        serial.write_byte(98);
-        serial.write_byte(97);
-        serial.write_byte(96);
-        serial.write_byte(95);
-        serial.write_byte(94);
-        serial.write_byte(93);
+        sink.write_byte(99);
+        sink.write_byte(98);
+        sink.write_byte(97);
+        sink.write_byte(96);
+        sink.write_byte(95);
+        sink.write_byte(94);
+        sink.write_byte(93);
     };
 
     // Allocate, create and store a new elements.
@@ -380,15 +376,15 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_64_bit__round_trips)
     BOOST_REQUIRE(table.unlink(key2));
     BOOST_REQUIRE(!table.unlink(invalid));
 
-    const auto reader = [](byte_deserializer& deserial)
+    const auto reader = [](system::reader& source)
     {
-        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 99);
-        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 98);
-        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 97);
-        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 96);
-        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 95);
-        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 94);
-        BOOST_REQUIRE_EQUAL(deserial.read_byte(), 93);
+        BOOST_REQUIRE_EQUAL(source.read_byte(), 99);
+        BOOST_REQUIRE_EQUAL(source.read_byte(), 98);
+        BOOST_REQUIRE_EQUAL(source.read_byte(), 97);
+        BOOST_REQUIRE_EQUAL(source.read_byte(), 96);
+        BOOST_REQUIRE_EQUAL(source.read_byte(), 95);
+        BOOST_REQUIRE_EQUAL(source.read_byte(), 94);
+        BOOST_REQUIRE_EQUAL(source.read_byte(), 93);
     };
 
     // Key1 has been unlinked.

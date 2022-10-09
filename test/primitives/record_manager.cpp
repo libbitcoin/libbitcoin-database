@@ -16,14 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <boost/test/unit_test.hpp>
-
-#include <bitcoin/database.hpp>
+#include "../test.hpp"
 #include "../utility/storage.hpp"
-
-using namespace bc;
-using namespace bc::database;
-using namespace bc::system;
 
 BOOST_AUTO_TEST_SUITE(record_manager_tests)
 
@@ -32,7 +26,7 @@ BOOST_AUTO_TEST_CASE(record_manager__construct__one_record__expected)
     typedef uint64_t link_type;
 
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
 
     const auto record_size = 10u;
     const auto link_size = sizeof(link_type);
@@ -53,7 +47,7 @@ BOOST_AUTO_TEST_CASE(record_manager__construct__one_record_offset__expected)
     typedef uint64_t link_type;
 
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
 
     const auto offset = 42;
     const auto record_size = 10u;
@@ -72,7 +66,7 @@ BOOST_AUTO_TEST_CASE(record_manager__allocate__two_records__expected)
     typedef uint64_t link_type;
 
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
 
     const auto record_size = 10u;
     const auto link_size = sizeof(link_type);
@@ -93,7 +87,7 @@ BOOST_AUTO_TEST_CASE(record_manager__count__multiple_records_with_offset__expect
     typedef uint64_t link_type;
 
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
 
     const auto record_size = 10u;
     // const auto link_size = sizeof(link_type);
@@ -112,7 +106,7 @@ BOOST_AUTO_TEST_CASE(record_manager__set_count__multiple_records_with_offset__ex
     typedef uint32_t link_type;
 
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
 
     const auto record_size = 10u;
     // const auto link_size = sizeof(link_type);
@@ -129,7 +123,7 @@ BOOST_AUTO_TEST_CASE(record_manager__set_count__multiple_records_with_offset__ex
 BOOST_AUTO_TEST_CASE(record_manager__get__read_write__expected)
 {
     test::storage file;
-    BOOST_REQUIRE(file.open());
+    BOOST_REQUIRE(file.map());
 
     uint64_t value = 0x0102030405060708;
     record_manager<uint32_t> manager(file, 0, sizeof(value));
@@ -137,35 +131,29 @@ BOOST_AUTO_TEST_CASE(record_manager__get__read_write__expected)
 
     const auto link1 = manager.allocate(1);
     auto memory = manager.get(link1);
-    auto serial1 = make_unsafe_serializer(memory->buffer());
-    serial1.write_little_endian(value + 0);
+    system::unsafe_to_little_endian(memory->buffer(), value + 0);
     memory.reset();
 
     const auto link2 = manager.allocate(1);
     memory = manager.get(link2);
-    auto serial2 = make_unsafe_serializer(memory->buffer());
-    serial2.write_little_endian(value + 1);
+    system::unsafe_to_little_endian(memory->buffer(), value + 1);
     memory.reset();
 
     const auto link3 = manager.allocate(1);
     memory = manager.get(link3);
-    auto serial3 = make_unsafe_serializer(memory->buffer());
-    serial3.write_little_endian(value + 2);
+    system::unsafe_to_little_endian(memory->buffer(), value + 2);
     memory.reset();
 
     memory = manager.get(link1);
-    auto deserial1 = make_unsafe_deserializer(memory->buffer());
-    BOOST_REQUIRE_EQUAL(deserial1.template read_little_endian<uint64_t>(), value + 0);
+    BOOST_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint64_t>(memory->buffer()), value + 0);
     memory.reset();
 
     memory = manager.get(link2);
-    auto deserial2 = make_unsafe_deserializer(memory->buffer());
-    BOOST_REQUIRE_EQUAL(deserial2.template read_little_endian<uint64_t>(), value + 1);
+    BOOST_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint64_t>(memory->buffer()), value + 1);
     memory.reset();
 
     memory = manager.get(link3);
-    auto deserial3 = make_unsafe_deserializer(memory->buffer());
-    BOOST_REQUIRE_EQUAL(deserial3.template read_little_endian<uint64_t>(), value + 2);
+    BOOST_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint64_t>(memory->buffer()), value + 2);
     memory.reset();
 }
 
