@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -16,62 +16,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <iostream>
-#include <boost/format.hpp>
-#include <boost/filesystem.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database.hpp>
 
-#define BS_INITCHAIN_DIR_NEW \
-    "Failed to create directory %1% with error, '%2%'.\n"
-#define BS_INITCHAIN_DIR_EXISTS \
-    "Failed because the directory %1% already exists.\n"
-#define BS_INITCHAIN_FAIL \
-    "Failed to initialize database files.\n"
-
-using namespace bc;
-using namespace bc::database;
-using namespace bc::system;
-using namespace bc::system::chain;
-using namespace boost::filesystem;
-using namespace boost::system;
-using boost::format;
-
-// Create a new mainnet database.
-int main(int argc, char** argv)
+int main(int, char**)
 {
-    std::string prefix("mainnet");
-
-    if (argc > 1)
-        prefix = argv[1];
-
-    if (argc > 2 && std::string("--clean") == argv[2])
-        remove_all(prefix);
-
-    error_code code;
-    if (!create_directories(prefix, code))
-    {
-        if (code.value() == 0)
-            std::cerr << format(BS_INITCHAIN_DIR_EXISTS) % prefix;
-        else
-            std::cerr << format(BS_INITCHAIN_DIR_NEW) % prefix %
-                code.message();
-
-        return -1;
-    }
-
-    // This creates a default configuration database only!
-    const auto catalog = false;
-    const auto neutrino_filter_support = false;
-    const database::settings configuration;
-    const system::settings bitcoin_configuration(
-        system::config::settings::mainnet);
-
-    if (!data_base(configuration, catalog, neutrino_filter_support).create(
-        bitcoin_configuration.genesis_block))
-    {
-        std::cerr << BS_INITCHAIN_FAIL;
-        return -1;
-    }
-
     return 0;
 }
