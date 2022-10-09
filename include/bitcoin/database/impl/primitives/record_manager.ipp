@@ -40,8 +40,8 @@ TEMPLATE
 CLASS::record_manager(storage& file, size_t header_size,
     size_t record_size) NOEXCEPT
   : file_(file),
-    header_size_(static_cast<Link>(header_size)),
-    record_size_(static_cast<Link>(record_size)),
+    header_size_(system::possible_narrow_cast<Link>(header_size)),
+    record_size_(system::possible_narrow_cast<Link>(record_size)),
     record_count_(0)
 {
     BC_ASSERT(header_size < not_allocated);
@@ -118,7 +118,7 @@ TEMPLATE
 Link CLASS::allocate(size_t count) NOEXCEPT
 {
     BC_ASSERT(count < not_allocated);
-    const auto records = static_cast<Link>(count);
+    const auto records = system::possible_narrow_cast<Link>(count);
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////

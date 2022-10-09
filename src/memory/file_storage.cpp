@@ -447,8 +447,8 @@ size_t file_storage::page() const NOEXCEPT
     if (page_size == -1)
         return 0;
 
-    BC_ASSERT(sign_cast<uint64_t>(page_size) <= max_size_t);
-    return static_cast<size_t>(page_size);
+    BC_ASSERT(possible_narrow_sign_cast<uint64_t>(page_size) <= max_size_t);
+    return possible_narrow_sign_cast<size_t>(page_size);
 #endif
 }
 
