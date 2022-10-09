@@ -123,7 +123,7 @@ bool file_storage::handle_error(const std::string&, const path&) NOEXCEPT
 {
     // TODO: it may be possible to collapse this given newer WIN32 API.
 #if defined(HAVE_MSC)
-    /////const auto error = GetLastError();
+    ////const auto error = GetLastError();
 #else
     ////const auto error = errno;
 #endif
@@ -220,7 +220,7 @@ bool file_storage::map() NOEXCEPT
 
     // Initialize data_.
     // man7.org/linux/man-pages/man2/madvise.2.html
-    // For unknown reason madvise(minimum_) with large value fails on linux.
+    // madvise with large value fails on linux.
     if (!map(capacity_))
         error_name = "map";
     else if (::madvise(data_, 0, MADV_RANDOM) == FAIL)
@@ -258,7 +258,9 @@ bool file_storage::flush() const NOEXCEPT
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     // man7.org/linux/man-pages/man2/msync.2.html
-    if (::msync(data_, logical_size_, MS_SYNC) == FAIL)
+    // macos msync fails with zero logical size.
+    if (!is_zero(logical_size_) &&
+        ::msync(data_, logical_size_, MS_SYNC) == FAIL)
         error_name = "flush";
 
     mutex_.unlock();
@@ -292,15 +294,17 @@ bool file_storage::unmap() NOEXCEPT
     mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    mapped_ = true;
+    mapped_ = false;
 
+    // macos msync fails with zero logical size.
     // man7.org/linux/man-pages/man2/msync.2.html
     // man7.org/linux/man-pages/man2/munmap.2.html
     // man7.org/linux/man-pages/man2/ftruncate.2.html
     // man7.org/linux/man-pages/man2/fsync.2.html
     if (logical_size_ > capacity_)
         error_name = "fit";
-    else if (::msync(data_, logical_size_, MS_SYNC) == FAIL)
+    else if (!is_zero(logical_size_) &&
+        ::msync(data_, logical_size_, MS_SYNC) == FAIL)
         error_name = "msync";
     else if (::munmap(data_, capacity_) == FAIL)
         error_name = "munmap";
