@@ -36,23 +36,23 @@ class list_iterator
 {
 public:
     // std::iterator_traits
-    typedef ptrdiff_t difference_type;
-    typedef list_element<Manager, Link, Key> value_type;
-    typedef const value_type& pointer;
-    typedef const value_type& reference;
-    typedef std::output_iterator_tag iterator_category;
+    using iterator_category = std::output_iterator_tag;
+    using value_type = list_element<Manager, Link, Key>;
+    using difference_type = ptrdiff_t;
+    using pointer = const value_type&;
+    using reference = const value_type&;
 
     /// Create a storage iterator starting at the given element.
-    list_iterator(value_type element) NOEXCEPT;
+    list_iterator(const value_type& element) NOEXCEPT;
 
     /// Create a storage iterator starting at first.
     list_iterator(Manager& manager, Link first,
         shared_mutex& mutex) NOEXCEPT;
 
-    list_iterator& operator++() NOEXCEPT;
-    list_iterator operator++(int) NOEXCEPT;
     pointer operator*() const NOEXCEPT;
     reference operator->() const NOEXCEPT;
+    list_iterator& operator++() NOEXCEPT;
+    list_iterator operator++(int) NOEXCEPT;
     bool operator==(const list_iterator& other) const NOEXCEPT;
     bool operator!=(const list_iterator& other) const NOEXCEPT;
 

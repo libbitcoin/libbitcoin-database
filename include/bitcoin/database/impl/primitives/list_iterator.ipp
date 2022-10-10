@@ -26,7 +26,7 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-CLASS::list_iterator(value_type element) NOEXCEPT
+CLASS::list_iterator(const value_type& element) NOEXCEPT
   : element_(element)
 {
 }
