@@ -102,14 +102,12 @@ Link CLASS::create(const Key& key, auto& write, size_t value_size) NOEXCEPT
 
 // TODO: pass extent of the write.
 TEMPLATE
-void CLASS::write(auto& write) const NOEXCEPT
+void CLASS::write(auto& write, size_t limit) const NOEXCEPT
 {
     using namespace system;
-    const auto size = 42u;
-
     const auto memory = data(key_size + link_size);
     const auto start = memory->buffer();
-    const auto end = std::next(start, size);
+    const auto end = std::next(start, limit);
     write::bytes::copy writer({ start, end });
     write(writer);
 }
@@ -147,14 +145,12 @@ void CLASS::set_next(Link next) const NOEXCEPT
 
 // TODO: pass extent of the read.
 TEMPLATE
-void CLASS::read(auto& read) const NOEXCEPT
+void CLASS::read(auto& read, size_t limit) const NOEXCEPT
 {
     using namespace system;
-    const auto size = 42u;
-
     const auto memory = data(key_size + link_size);
     const auto start = memory->buffer();
-    const auto end = std::next(start, size);
+    const auto end = std::next(start, limit);
     read::bytes::copy reader({ start, end });
     read(reader);
 }

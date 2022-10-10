@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__create__always__fills_empty_buckets)
 
     const auto buffer = file.access()->buffer();
     const auto start = buffer + sizeof(index_type);
-    const auto empty = [](uint8_t byte) { return byte == narrow_cast<uint8_t>(header_type::empty); };
+    const auto empty = [](uint8_t byte) NOEXCEPT { return byte == narrow_cast<uint8_t>(header_type::empty); };
     BOOST_REQUIRE(std::all_of(start, buffer + header.size(), empty));
 }
 

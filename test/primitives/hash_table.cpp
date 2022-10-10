@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__one_element__round_trips)
 
     const key_type key{ { 0xde, 0xad, 0xbe, 0xef } };
 
-    const auto writer = [](system::writer& sink)
+    const auto writer = [](system::writer& sink) NOEXCEPT
     {
         sink.write_byte(110);
         sink.write_byte(4);
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__one_element__round_trips)
     const auto link = element.create(key, writer, 3);
     table.link(element);
 
-    const auto reader = [](system::reader& source)
+    const auto reader = [](system::reader& source) NOEXCEPT
     {
         BOOST_REQUIRE_EQUAL(source.read_byte(), 110u);
         BOOST_REQUIRE_EQUAL(source.read_byte(), 4u);
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__one_element__round_trips)
     BOOST_REQUIRE_EQUAL(const_element.next(), slab_map::not_found);
     BOOST_REQUIRE(const_element.key() == key);
     BOOST_REQUIRE(const_element.match(key));
-    const_element.read(reader);
+    const_element.read(reader, 3);
 
     // Not required when discarding.
     table.commit();
@@ -91,13 +91,13 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__multiple_elements__expected)
     const key_type key1{ { 0xde, 0xad, 0xbe, 0xef } };
     const key_type key2{ { 0xba, 0xad, 0xbe, 0xef } };
 
-    const auto writer1 = [](system::writer& sink)
+    const auto writer1 = [](system::writer& sink) NOEXCEPT
     {
         sink.write_byte(42);
         sink.write_byte(24);
     };
 
-    const auto writer2 = [](system::writer& sink)
+    const auto writer2 = [](system::writer& sink) NOEXCEPT
     {
         sink.write_byte(44);
     };
@@ -109,13 +109,13 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__multiple_elements__expected)
     const auto link2 = element.create(key2, writer2, 1);
     table.link(element);
 
-    const auto reader1 = [](system::reader& source)
+    const auto reader1 = [](system::reader& source) NOEXCEPT
     {
         BOOST_REQUIRE_EQUAL(source.read_byte(), 42);
         BOOST_REQUIRE_EQUAL(source.read_byte(), 24);
     };
 
-    const auto reader2 = [](system::reader& source)
+    const auto reader2 = [](system::reader& source) NOEXCEPT
     {
         BOOST_REQUIRE_EQUAL(source.read_byte(), 44);
     };
@@ -126,14 +126,14 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__multiple_elements__expected)
     BOOST_REQUIRE_EQUAL(const_element1.link(), link1);
     BOOST_REQUIRE_EQUAL(const_element1.next(), slab_map::not_found);
     BOOST_REQUIRE(const_element1.match(key1));
-    const_element1.read(reader1);
+    const_element1.read(reader1, 2);
 
     const auto const_element2 = table.get(link2);
     BOOST_REQUIRE(const_element2);
     BOOST_REQUIRE_EQUAL(const_element2.link(), link2);
     BOOST_REQUIRE_EQUAL(const_element2.next(), slab_map::not_found);
     BOOST_REQUIRE(const_element2.match(key2));
-    const_element2.read(reader2);
+    const_element2.read(reader2, 1);
 }
 
 BOOST_AUTO_TEST_CASE(hash_table__slab__unlink_first_stored__expected)
@@ -153,13 +153,13 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__unlink_first_stored__expected)
     const key_type key1{ { 0xde, 0xad, 0xbe, 0xef } };
     const key_type key2{ { 0xba, 0xad, 0xbe, 0xef } };
 
-    const auto writer1 = [](system::writer& sink)
+    const auto writer1 = [](system::writer& sink) NOEXCEPT
     {
         sink.write_byte(42);
         sink.write_byte(24);
     };
 
-    const auto writer2 = [](system::writer& sink)
+    const auto writer2 = [](system::writer& sink) NOEXCEPT
     {
         sink.write_byte(44);
     };
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__unlink_first_stored__expected)
     BOOST_REQUIRE(table.unlink(key1));
     BOOST_REQUIRE(!table.unlink(key1));
 
-    const auto reader2 = [](system::reader& source)
+    const auto reader2 = [](system::reader& source) NOEXCEPT
     {
         BOOST_REQUIRE_EQUAL(source.read_byte(), 44);
     };
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__unlink_first_stored__expected)
     BOOST_REQUIRE_EQUAL(const_element2.link(), link2);
     BOOST_REQUIRE_EQUAL(const_element2.next(), slab_map::not_found);
     BOOST_REQUIRE(const_element2.match(key2));
-    const_element2.read(reader2);
+    const_element2.read(reader2, 1);
 }
 
 BOOST_AUTO_TEST_CASE(hash_table__get__record_range_of_links__success)
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(hash_table__get__record_range_of_links__success)
     BOOST_REQUIRE(table.create());
 
     const key_type key1{ { 0xde, 0xad, 0xbe, 0xef } };
-    const auto writer1 = [](system::writer& sink)
+    const auto writer1 = [](system::writer& sink) NOEXCEPT
     {
         sink.write_byte(110);
         sink.write_byte(110);
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(hash_table__get__slab_range_of_links__success)
     BOOST_REQUIRE(table.create());
 
     const key_type key1{ { 0xde, 0xad, 0xbe, 0xef } };
-    const auto writer1 = [](system::writer& sink)
+    const auto writer1 = [](system::writer& sink) NOEXCEPT
     {
         sink.write_byte(110);
         sink.write_byte(110);
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_32_bit__round_trips)
     const key_type key2{ { 0xb0, 0x0b, 0xb0, 0x0b } };
     const key_type invalid{ { 0x00, 0x01, 0x02, 0x03 } };
 
-    const auto writer1 = [](system::writer& sink)
+    const auto writer1 = [](system::writer& sink) NOEXCEPT
     {
         sink.write_byte(110);
         sink.write_byte(110);
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_32_bit__round_trips)
         sink.write_byte(88);
     };
 
-    const auto writer2 = [](system::writer& sink)
+    const auto writer2 = [](system::writer& sink) NOEXCEPT
     {
         sink.write_byte(99);
         sink.write_byte(98);
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_32_bit__round_trips)
     BOOST_REQUIRE(table.unlink(key2));
     BOOST_REQUIRE(!table.unlink(invalid));
 
-    const auto reader = [](system::reader& source)
+    const auto reader = [](system::reader& source) NOEXCEPT
     {
         BOOST_REQUIRE_EQUAL(source.read_byte(), 99);
         BOOST_REQUIRE_EQUAL(source.read_byte(), 98);
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_32_bit__round_trips)
     BOOST_REQUIRE_EQUAL(const_element.link(), link2);
     BOOST_REQUIRE_EQUAL(const_element.next(), record_map::not_found);
     BOOST_REQUIRE(const_element.match(key2));
-    const_element.read(reader);
+    const_element.read(reader, 4);
 }
 
 BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_64_bit__round_trips)
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_64_bit__round_trips)
     const key_type key2{ { 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b, 0xb0, 0x0b } };
     const key_type invalid{ { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 } };
 
-    const auto writer1 = [](system::writer& sink)
+    const auto writer1 = [](system::writer& sink) NOEXCEPT
     {
         sink.write_byte(110);
         sink.write_byte(110);
@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_64_bit__round_trips)
         sink.write_byte(4);
     };
 
-    const auto writer2 = [](system::writer& sink)
+    const auto writer2 = [](system::writer& sink) NOEXCEPT
     {
         sink.write_byte(99);
         sink.write_byte(98);
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_64_bit__round_trips)
     BOOST_REQUIRE(table.unlink(key2));
     BOOST_REQUIRE(!table.unlink(invalid));
 
-    const auto reader = [](system::reader& source)
+    const auto reader = [](system::reader& source) NOEXCEPT
     {
         BOOST_REQUIRE_EQUAL(source.read_byte(), 99);
         BOOST_REQUIRE_EQUAL(source.read_byte(), 98);
@@ -399,7 +399,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_64_bit__round_trips)
     BOOST_REQUIRE_EQUAL(const_element.link(), link2);
     BOOST_REQUIRE_EQUAL(const_element.next(), record_map::not_found);
     BOOST_REQUIRE(const_element.match(key2));
-    const_element.read(reader);
+    const_element.read(reader, 7);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

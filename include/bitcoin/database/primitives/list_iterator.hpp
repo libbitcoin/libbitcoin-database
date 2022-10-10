@@ -49,6 +49,7 @@ public:
     list_iterator(Manager& manager, Link first,
         shared_mutex& mutex) NOEXCEPT;
 
+    /// Operators.
     pointer operator*() const NOEXCEPT;
     reference operator->() const NOEXCEPT;
     list_iterator& operator++() NOEXCEPT;

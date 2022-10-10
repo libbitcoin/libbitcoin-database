@@ -33,10 +33,10 @@ public:
     typedef std::shared_ptr<memory> ptr;
 
     /// Get the address indicated by the pointer.
-    virtual uint8_t* buffer() = 0;
+    virtual uint8_t* buffer() NOEXCEPT = 0;
 
     /// Increment the pointer the specified number of bytes within the record.
-    virtual void increment(size_t value) = 0;
+    virtual void increment(size_t value) NOEXCEPT = 0;
 };
 
 typedef memory::ptr memory_ptr;

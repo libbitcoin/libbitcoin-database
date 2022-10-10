@@ -83,14 +83,14 @@ BOOST_AUTO_TEST_CASE(hash_table_multimap__construct__always__expected)
     BOOST_REQUIRE(!multimap.find(key));
     BOOST_REQUIRE(!multimap.unlink(key));
 
-    const auto writer1 = [](system::writer& sink)
+    const auto writer1 = [](system::writer& sink) NOEXCEPT
     {
         sink.write_byte(110);
         sink.write_byte(4);
         sink.write_byte(99);
     };
 
-    const auto writer2 = [](system::writer& sink)
+    const auto writer2 = [](system::writer& sink) NOEXCEPT
     {
         sink.write_byte(100);
         sink.write_byte(40);
@@ -120,22 +120,22 @@ BOOST_AUTO_TEST_CASE(hash_table_multimap__construct__always__expected)
     BOOST_REQUIRE_EQUAL(found2.next(), found.link());
 
     // Read the two elements.
-    const auto reader1 = [](system::reader& source)
+    const auto reader1 = [](system::reader& source) NOEXCEPT
     {
         BOOST_REQUIRE_EQUAL(source.read_byte(), 110u);
         BOOST_REQUIRE_EQUAL(source.read_byte(), 4u);
         BOOST_REQUIRE_EQUAL(source.read_byte(), 99u);
     };
 
-    const auto reader2 = [](system::reader& source)
+    const auto reader2 = [](system::reader& source) NOEXCEPT
     {
         BOOST_REQUIRE_EQUAL(source.read_byte(), 100u);
         BOOST_REQUIRE_EQUAL(source.read_byte(), 40u);
         BOOST_REQUIRE_EQUAL(source.read_byte(), 9u);
     };
 
-    found.read(reader1);
-    found2.read(reader2);
+    found.read(reader1, 3);
+    found2.read(reader2, 3);
 
     // Stored elements from index.
     BOOST_REQUIRE(index.get(link));

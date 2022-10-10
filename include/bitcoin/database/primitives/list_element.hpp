@@ -34,8 +34,7 @@ template <typename Manager, typename Link, typename Key,
 class list_element
 {
 public:
-    static constexpr auto not_found = system::possible_narrow_cast<Link>(
-        max_uint64);
+    static constexpr auto not_found = system::bit_all<Link>;
 
     /// The stored size of a value with the given size.
     static constexpr size_t size(size_t value_size) NOEXCEPT
@@ -43,10 +42,10 @@ public:
         return array_count<Key> + sizeof(Link) + value_size;
     }
 
-    /// Construct for a new element.
+    /// Construct a new element.
     list_element(Manager& manager, shared_mutex& mutex) NOEXCEPT;
 
-    /// Construct for an existing element.
+    /// Construct an existing element.
     list_element(Manager& manager, Link link, shared_mutex& mutex) NOEXCEPT;
 
     /// Allocate and populate a new unkeyed record element.
@@ -68,10 +67,10 @@ public:
     void set_next(Link next) const NOEXCEPT;
 
     /// Write to the state of the element (write to file).
-    void write(auto& write) const NOEXCEPT;
+    void write(auto& write, size_t limit) const NOEXCEPT;
 
     /// Read from the state of the element.
-    void read(auto& read) const NOEXCEPT;
+    void read(auto& read, size_t limit) const NOEXCEPT;
 
     /// True if the element key (read from file) matches the parameter.
     bool match(const Key& key) const NOEXCEPT;

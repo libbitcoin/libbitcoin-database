@@ -57,7 +57,7 @@ CLASS::find(const Key& key) const NOEXCEPT
         return { manager_, element.not_found, list_mutex_ };
 
     Link first;
-    const auto read_bytes = [&](auto& reader)
+    const auto read_bytes = [&](auto& reader) NOEXCEPT
     {
         // Critical Section.
         ///////////////////////////////////////////////////////////////////////
@@ -66,7 +66,7 @@ CLASS::find(const Key& key) const NOEXCEPT
         ///////////////////////////////////////////////////////////////////////
     };
 
-    element.read(read_bytes);
+    element.read(read_bytes, sizeof(Link));
     return { manager_, first, list_mutex_ };
 }
 
@@ -80,7 +80,7 @@ CLASS::get(Link link) const NOEXCEPT
         return { manager_, element.not_found, list_mutex_ };
 
     Link first;
-    const auto read_bytes = [&](auto& reader)
+    const auto read_bytes = [&](auto& reader) NOEXCEPT
     {
         // Critical Section.
         ///////////////////////////////////////////////////////////////////////
@@ -89,14 +89,14 @@ CLASS::get(Link link) const NOEXCEPT
         ///////////////////////////////////////////////////////////////////////
     };
 
-    element.read(read_bytes);
+    element.read(read_bytes, sizeof(Link));
     return { manager_, first, list_mutex_ };
 }
 
 TEMPLATE
 void CLASS::link(const Key& key, value_type& element) NOEXCEPT
 {
-    const auto write_bytes = [&](auto& writer)
+    const auto write_bytes = [&](auto& writer) NOEXCEPT
     {
         writer.template write_little_endian<Link>(element.link());
     };
@@ -125,20 +125,20 @@ void CLASS::link(const Key& key, value_type& element) NOEXCEPT
     else
     {
         Link first;
-        const auto read_bytes = [&](auto& reader)
+        const auto read_bytes = [&](auto& reader) NOEXCEPT
         {
             // This could be a terminator if previously unlinked.
             first = reader.template read_little_endian<Link>();
         };
 
         // Read the address of the existing first list element.
-        root.read(read_bytes);
+        root.read(read_bytes, sizeof(Link));
 
         // Commit linkage to the existing first list element.
         element.set_next(first);
 
         // "link" existing root to the new first element.
-        root.write(write_bytes);
+        root.write(write_bytes, sizeof(Link));
     }
 
     root_mutex_.unlock();
@@ -165,14 +165,14 @@ bool CLASS::unlink(const Key& key) NOEXCEPT
     }
 
     Link link;
-    const auto read_bytes = [&](auto& reader)
+    const auto read_bytes = [&](auto& reader) NOEXCEPT
     {
         // This could be a terminator if previously unlinked.
         link = reader.template read_little_endian<Link>();
     };
 
     // Read the address of the existing first list element.
-    root.read(read_bytes);
+    root.read(read_bytes, sizeof(Link));
 
     value_type first{ manager_, link, list_mutex_ };
 
@@ -186,7 +186,7 @@ bool CLASS::unlink(const Key& key) NOEXCEPT
 
     // This may leave an empty root element in place, but presumably that will
     // become resused in the future as the transaction is re-confirmed.
-    const auto write_bytes = [&](auto& writer)
+    const auto write_bytes = [&](auto& writer) NOEXCEPT
     {
         // Skip over the first element pointed to by the root.
         writer.template write_little_endian<Link>(first.next());
@@ -194,7 +194,7 @@ bool CLASS::unlink(const Key& key) NOEXCEPT
 
     root_mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    root.write(write_bytes);
+    root.write(write_bytes, sizeof(Link));
 
     root_mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
