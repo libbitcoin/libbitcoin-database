@@ -30,6 +30,8 @@
 #include <bitcoin/database/memory/file_storage.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/storage.hpp>
+#include <bitcoin/database/primitives/element.hpp>
+#include <bitcoin/database/primitives/primitives.hpp>
 #include <bitcoin/database/primitives_/hash_table.hpp>
 #include <bitcoin/database/primitives_/hash_table_header.hpp>
 #include <bitcoin/database/primitives_/hash_table_multimap.hpp>

@@ -106,6 +106,10 @@ include_bitcoin_database_HEADERS = \
     include/bitcoin/database/settings.hpp \
     include/bitcoin/database/version.hpp
 
+include_bitcoin_database_impl_primitivesdir = ${includedir}/bitcoin/database/impl/primitives
+include_bitcoin_database_impl_primitives_HEADERS = \
+    include/bitcoin/database/impl/primitives/element.ipp
+
 include_bitcoin_database_impl_primitives_dir = ${includedir}/bitcoin/database/impl/primitives_
 include_bitcoin_database_impl_primitives__HEADERS = \
     include/bitcoin/database/impl/primitives_/hash_table.ipp \
@@ -133,6 +137,11 @@ include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/file_storage.hpp \
     include/bitcoin/database/memory/memory.hpp \
     include/bitcoin/database/memory/storage.hpp
+
+include_bitcoin_database_primitivesdir = ${includedir}/bitcoin/database/primitives
+include_bitcoin_database_primitives_HEADERS = \
+    include/bitcoin/database/primitives/element.hpp \
+    include/bitcoin/database/primitives/primitives.hpp
 
 include_bitcoin_database_primitives_dir = ${includedir}/bitcoin/database/primitives_
 include_bitcoin_database_primitives__HEADERS = \

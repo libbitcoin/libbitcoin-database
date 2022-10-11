@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASH_TABLE_MULTIMAP_IPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_HASH_TABLE_MULTIMAP_IPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES__HASH_TABLE_MULTIMAP_IPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES__HASH_TABLE_MULTIMAP_IPP
 
 #include <shared_mutex>
 #include <bitcoin/database/define.hpp>

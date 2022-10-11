@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES__LIST_ELEMENT_IPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES__LIST_ELEMENT_IPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_IPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_IPP
 
 #include <algorithm>
 #include <iterator>
@@ -29,6 +29,7 @@
 
 namespace libbitcoin {
 namespace database {
+namespace primitives {
 
 // Element is a block of store memory with the following layout.
 // An empty-valued key is used for simple (non-hash-table) linked lists.
@@ -233,6 +234,7 @@ memory_ptr CLASS::data(size_t bytes) const NOEXCEPT
     return memory;
 }
 
+} // namespace primitives
 } // namespace database
 } // namespace libbitcoin
 

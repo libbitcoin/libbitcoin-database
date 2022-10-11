@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES__LIST_ELEMENT_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES__LIST_ELEMENT_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -25,6 +25,7 @@
 
 namespace libbitcoin {
 namespace database {
+namespace primitives {
 
 /// A hash table key-conflict row, implemented as a linked list.
 /// Link cannot exceed 64 bits. A default Key creates an unkeyed list.
@@ -109,6 +110,7 @@ private:
     shared_mutex& mutex_;
 };
 
+} // namespace primitives
 } // namespace database
 } // namespace libbitcoin
 
@@ -117,7 +119,7 @@ template <typename Manager, typename Link, typename Key,\
 if_unsigned_integer<Link> If1, if_integral_array<Key> If2>
 #define CLASS list_element<Manager, Link, Key, If1, If2>
 
-#include <bitcoin/database/impl/primitives_/list_element.ipp>
+#include <bitcoin/database/impl/primitives/element.ipp>
 
 #undef CLASS
 #undef TEMPLATE
