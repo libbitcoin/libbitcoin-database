@@ -30,14 +30,14 @@
 #include <bitcoin/database/memory/file_storage.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/storage.hpp>
-#include <bitcoin/database/primitives/hash_table.hpp>
-#include <bitcoin/database/primitives/hash_table_header.hpp>
-#include <bitcoin/database/primitives/hash_table_multimap.hpp>
-#include <bitcoin/database/primitives/list.hpp>
-#include <bitcoin/database/primitives/list_element.hpp>
-#include <bitcoin/database/primitives/list_iterator.hpp>
-#include <bitcoin/database/primitives/primitives.hpp>
-#include <bitcoin/database/primitives/record_manager.hpp>
-#include <bitcoin/database/primitives/slab_manager.hpp>
+#include <bitcoin/database/primitives_/hash_table.hpp>
+#include <bitcoin/database/primitives_/hash_table_header.hpp>
+#include <bitcoin/database/primitives_/hash_table_multimap.hpp>
+#include <bitcoin/database/primitives_/list.hpp>
+#include <bitcoin/database/primitives_/list_element.hpp>
+#include <bitcoin/database/primitives_/list_iterator.hpp>
+#include <bitcoin/database/primitives_/primitives.hpp>
+#include <bitcoin/database/primitives_/record_manager.hpp>
+#include <bitcoin/database/primitives_/slab_manager.hpp>
 
 #endif

@@ -83,7 +83,7 @@ private:
 #define TEMPLATE template <typename Link, if_unsigned_integer<Link> If>
 #define CLASS slab_manager<Link, If>
 
-#include <bitcoin/database/impl/primitives/slab_manager.ipp>
+#include <bitcoin/database/impl/primitives_/slab_manager.ipp>
 
 #undef CLASS
 #undef TEMPLATE

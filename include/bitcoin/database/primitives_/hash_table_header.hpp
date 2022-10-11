@@ -91,7 +91,7 @@ template <typename Index, typename Link, \
 if_unsigned_integer<Index> If1, if_unsigned_integer<Link> If2>
 #define CLASS hash_table_header<Index, Link, If1, If2>
 
-#include <bitcoin/database/impl/primitives/hash_table_header.ipp>
+#include <bitcoin/database/impl/primitives_/hash_table_header.ipp>
 
 #undef CLASS
 #undef TEMPLATE

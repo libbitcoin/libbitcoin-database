@@ -95,7 +95,7 @@ private:
 #define TEMPLATE template <typename Link, if_unsigned_integer<Link> If>
 #define CLASS record_manager<Link, If>
 
-#include <bitcoin/database/impl/primitives/record_manager.ipp>
+#include <bitcoin/database/impl/primitives_/record_manager.ipp>
 
 #undef CLASS
 #undef TEMPLATE

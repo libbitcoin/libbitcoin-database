@@ -106,16 +106,16 @@ include_bitcoin_database_HEADERS = \
     include/bitcoin/database/settings.hpp \
     include/bitcoin/database/version.hpp
 
-include_bitcoin_database_impl_primitivesdir = ${includedir}/bitcoin/database/impl/primitives
-include_bitcoin_database_impl_primitives_HEADERS = \
-    include/bitcoin/database/impl/primitives/hash_table.ipp \
-    include/bitcoin/database/impl/primitives/hash_table_header.ipp \
-    include/bitcoin/database/impl/primitives/hash_table_multimap.ipp \
-    include/bitcoin/database/impl/primitives/list.ipp \
-    include/bitcoin/database/impl/primitives/list_element.ipp \
-    include/bitcoin/database/impl/primitives/list_iterator.ipp \
-    include/bitcoin/database/impl/primitives/record_manager.ipp \
-    include/bitcoin/database/impl/primitives/slab_manager.ipp
+include_bitcoin_database_impl_primitives_dir = ${includedir}/bitcoin/database/impl/primitives_
+include_bitcoin_database_impl_primitives__HEADERS = \
+    include/bitcoin/database/impl/primitives_/hash_table.ipp \
+    include/bitcoin/database/impl/primitives_/hash_table_header.ipp \
+    include/bitcoin/database/impl/primitives_/hash_table_multimap.ipp \
+    include/bitcoin/database/impl/primitives_/list.ipp \
+    include/bitcoin/database/impl/primitives_/list_element.ipp \
+    include/bitcoin/database/impl/primitives_/list_iterator.ipp \
+    include/bitcoin/database/impl/primitives_/record_manager.ipp \
+    include/bitcoin/database/impl/primitives_/slab_manager.ipp
 
 include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks
 include_bitcoin_database_locks_HEADERS = \
@@ -134,17 +134,17 @@ include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/memory.hpp \
     include/bitcoin/database/memory/storage.hpp
 
-include_bitcoin_database_primitivesdir = ${includedir}/bitcoin/database/primitives
-include_bitcoin_database_primitives_HEADERS = \
-    include/bitcoin/database/primitives/hash_table.hpp \
-    include/bitcoin/database/primitives/hash_table_header.hpp \
-    include/bitcoin/database/primitives/hash_table_multimap.hpp \
-    include/bitcoin/database/primitives/list.hpp \
-    include/bitcoin/database/primitives/list_element.hpp \
-    include/bitcoin/database/primitives/list_iterator.hpp \
-    include/bitcoin/database/primitives/primitives.hpp \
-    include/bitcoin/database/primitives/record_manager.hpp \
-    include/bitcoin/database/primitives/slab_manager.hpp
+include_bitcoin_database_primitives_dir = ${includedir}/bitcoin/database/primitives_
+include_bitcoin_database_primitives__HEADERS = \
+    include/bitcoin/database/primitives_/hash_table.hpp \
+    include/bitcoin/database/primitives_/hash_table_header.hpp \
+    include/bitcoin/database/primitives_/hash_table_multimap.hpp \
+    include/bitcoin/database/primitives_/list.hpp \
+    include/bitcoin/database/primitives_/list_element.hpp \
+    include/bitcoin/database/primitives_/list_iterator.hpp \
+    include/bitcoin/database/primitives_/primitives.hpp \
+    include/bitcoin/database/primitives_/record_manager.hpp \
+    include/bitcoin/database/primitives_/slab_manager.hpp
 
 
 # Custom make targets.

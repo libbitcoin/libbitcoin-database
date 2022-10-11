@@ -23,9 +23,9 @@
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/hash_table_header.hpp>
-#include <bitcoin/database/primitives/list.hpp>
-#include <bitcoin/database/primitives/list_element.hpp>
+#include <bitcoin/database/primitives_/hash_table_header.hpp>
+#include <bitcoin/database/primitives_/list.hpp>
+#include <bitcoin/database/primitives_/list_element.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
@@ -116,7 +116,7 @@ if_unsigned_integer<Index> If1, if_unsigned_integer<Link> If2, \
 if_integral_array<Key> If3>
 #define CLASS hash_table<Manager, Index, Link, Key, If1, If2, If3>
 
-#include <bitcoin/database/impl/primitives/hash_table.ipp>
+#include <bitcoin/database/impl/primitives_/hash_table.ipp>
 
 #undef CLASS
 #undef TEMPLATE
