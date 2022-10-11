@@ -20,7 +20,7 @@
 
 BOOST_AUTO_TEST_SUITE(iterable_tests)
 
-BOOST_AUTO_TEST_CASE(iterable__method__vector__expectation)
+BOOST_AUTO_TEST_CASE(iterable_test)
 {
     BOOST_REQUIRE(true);
 }

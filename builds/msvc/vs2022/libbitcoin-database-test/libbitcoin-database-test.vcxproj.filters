@@ -19,8 +19,11 @@
     <Filter Include="src\primitives">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\utility">
+    <Filter Include="src\primitives_">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\utility">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000005}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -42,29 +45,38 @@
     <ClCompile Include="..\..\..\..\test\memory\file_storage.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\hash_table.cpp">
+    <ClCompile Include="..\..\..\..\test\primitives\element.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\hash_table_header.cpp">
+    <ClCompile Include="..\..\..\..\test\primitives\iterable.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\hash_table_multimap.cpp">
+    <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\list.cpp">
-      <Filter>src\primitives</Filter>
+    <ClCompile Include="..\..\..\..\test\primitives_\hash_table.cpp">
+      <Filter>src\primitives_</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\list_element.cpp">
-      <Filter>src\primitives</Filter>
+    <ClCompile Include="..\..\..\..\test\primitives_\hash_table_header.cpp">
+      <Filter>src\primitives_</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\list_iterator.cpp">
-      <Filter>src\primitives</Filter>
+    <ClCompile Include="..\..\..\..\test\primitives_\hash_table_multimap.cpp">
+      <Filter>src\primitives_</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\record_manager.cpp">
-      <Filter>src\primitives</Filter>
+    <ClCompile Include="..\..\..\..\test\primitives_\list.cpp">
+      <Filter>src\primitives_</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\slab_manager.cpp">
-      <Filter>src\primitives</Filter>
+    <ClCompile Include="..\..\..\..\test\primitives_\list_element.cpp">
+      <Filter>src\primitives_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\primitives_\list_iterator.cpp">
+      <Filter>src\primitives_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\primitives_\record_manager.cpp">
+      <Filter>src\primitives_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\primitives_\slab_manager.cpp">
+      <Filter>src\primitives_</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\settings.cpp">
       <Filter>src</Filter>

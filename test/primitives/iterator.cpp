@@ -16,11 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
+#include "../test.hpp"
 
-#include <bitcoin/database/primitives/element.hpp>
-#include <bitcoin/database/primitives/iterable.hpp>
-#include <bitcoin/database/primitives/iterator.hpp>
+BOOST_AUTO_TEST_SUITE(iterator_tests)
 
-#endif
+BOOST_AUTO_TEST_CASE(iterator_test)
+{
+    BOOST_REQUIRE(true);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

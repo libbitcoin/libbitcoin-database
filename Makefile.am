@@ -66,14 +66,17 @@ test_libbitcoin_database_test_SOURCES = \
     test/locks/interprocess_lock.cpp \
     test/memory/accessor.cpp \
     test/memory/file_storage.cpp \
-    test/primitives/hash_table.cpp \
-    test/primitives/hash_table_header.cpp \
-    test/primitives/hash_table_multimap.cpp \
-    test/primitives/list.cpp \
-    test/primitives/list_element.cpp \
-    test/primitives/list_iterator.cpp \
-    test/primitives/record_manager.cpp \
-    test/primitives/slab_manager.cpp \
+    test/primitives/element.cpp \
+    test/primitives/iterable.cpp \
+    test/primitives/iterator.cpp \
+    test/primitives_/hash_table.cpp \
+    test/primitives_/hash_table_header.cpp \
+    test/primitives_/hash_table_multimap.cpp \
+    test/primitives_/list.cpp \
+    test/primitives_/list_element.cpp \
+    test/primitives_/list_iterator.cpp \
+    test/primitives_/record_manager.cpp \
+    test/primitives_/slab_manager.cpp \
     test/utility/storage.cpp \
     test/utility/storage.hpp \
     test/utility/utility.cpp \
@@ -108,7 +111,9 @@ include_bitcoin_database_HEADERS = \
 
 include_bitcoin_database_impl_primitivesdir = ${includedir}/bitcoin/database/impl/primitives
 include_bitcoin_database_impl_primitives_HEADERS = \
-    include/bitcoin/database/impl/primitives/element.ipp
+    include/bitcoin/database/impl/primitives/element.ipp \
+    include/bitcoin/database/impl/primitives/iterable.ipp \
+    include/bitcoin/database/impl/primitives/iterator.ipp
 
 include_bitcoin_database_impl_primitives_dir = ${includedir}/bitcoin/database/impl/primitives_
 include_bitcoin_database_impl_primitives__HEADERS = \
@@ -141,6 +146,8 @@ include_bitcoin_database_memory_HEADERS = \
 include_bitcoin_database_primitivesdir = ${includedir}/bitcoin/database/primitives
 include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/element.hpp \
+    include/bitcoin/database/primitives/iterable.hpp \
+    include/bitcoin/database/primitives/iterator.hpp \
     include/bitcoin/database/primitives/primitives.hpp
 
 include_bitcoin_database_primitives_dir = ${includedir}/bitcoin/database/primitives_
