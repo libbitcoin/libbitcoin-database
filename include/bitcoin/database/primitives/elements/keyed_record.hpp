@@ -16,37 +16,35 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ITERABLE_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_ITERABLE_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_RECORD_ELEMENTS_KEYED_RECORD_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_RECORD_ELEMENTS_KEYED_RECORD_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/elements/element.hpp>
-#include <bitcoin/database/primitives/iterator.hpp>
+#include <bitcoin/database/primitives_/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 namespace primitives {
 
-/// Iterable wrapper for element.
-template <typename Manager, typename Key, typename Link,
-    if_key<Key> = true, if_link<Link> = true>
-class iterable
+template <typename Link, typename Key, size_t Size,
+    if_link<Link> = true, if_key<Key> = true>
+class keyed_record
+  : public element<record_manager<Link /*, Size*/>, Link>
 {
 public:
-    typedef iterator<const Manager, Key, Link> iterator;
-    typedef element<const Manager, Key, Link> value_type;
+    keyed_record(record_manager<Link>& manager) NOEXCEPT;
+    keyed_record(record_manager<Link>& manager, Link link) NOEXCEPT;
 
-    iterable(Manager& manager, Link start) NOEXCEPT;
+    Link create(Link next, const Key& key, auto& write) NOEXCEPT;
+    void read(auto& read) const NOEXCEPT;
 
-    bool empty() const NOEXCEPT;
-    value_type front() const NOEXCEPT;
-    iterator begin() const NOEXCEPT;
-    iterator end() const NOEXCEPT;
+    bool match(const Key& key) const NOEXCEPT;
+    Key key() const NOEXCEPT;
 
 private:
-    const Link start_;
-    const Manager& manager_;
+    constexpr auto key_size = array_count<Key>;
 };
 
 } // namespace primitives
@@ -54,11 +52,11 @@ private:
 } // namespace libbitcoin
 
 #define TEMPLATE \
-template <typename Manager, typename Key, typename Link,\
-if_key<Key> If1, if_link<Link> If2>
-#define CLASS iterable<Manager, Key, Link, If1, If2>
+template <typename Link, typename Key, size_t Size,\
+if_link<Link> If1, if_key<Key> If2>
+#define CLASS keyed_record<Link, Key, Size, If1, If2>
 
-#include <bitcoin/database/impl/primitives/iterable.ipp>
+#include <bitcoin/database/impl/primitives/elements/keyed_record.ipp>
 
 #undef CLASS
 #undef TEMPLATE

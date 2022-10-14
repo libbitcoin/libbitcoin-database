@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__one_element__round_trips)
 
     // Create the file and initialize hash table.
     test::storage file;
-    BOOST_REQUIRE(file.map());
+    BOOST_REQUIRE(file.load_map());
     slab_map table(file, 100u);
     BOOST_REQUIRE(table.create());
 
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__multiple_elements__expected)
 
     // Create the file and initialize hash table.
     test::storage file;
-    BOOST_REQUIRE(file.map());
+    BOOST_REQUIRE(file.load_map());
     slab_map table(file, 100u);
     BOOST_REQUIRE(table.create());
 
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(hash_table__slab__unlink_first_stored__expected)
 
     // Create the file and initialize hash table.
     test::storage file;
-    BOOST_REQUIRE(file.map());
+    BOOST_REQUIRE(file.load_map());
     slab_map table(file, 100u);
     BOOST_REQUIRE(table.create());
 
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(hash_table__get__record_range_of_links__success)
     typedef hash_table<record_manager<link_type>, index_type, link_type, key_type> record_map;
 
     test::storage file;
-    BOOST_REQUIRE(file.map());
+    BOOST_REQUIRE(file.load_map());
     record_map table(file, 2u, 4u);
     BOOST_REQUIRE(table.create());
 
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(hash_table__get__slab_range_of_links__success)
     typedef hash_table<slab_manager<link_type>, index_type, link_type, key_type> slab_map;
 
     test::storage file;
-    BOOST_REQUIRE(file.map());
+    BOOST_REQUIRE(file.load_map());
     slab_map table(file, 100u);
     BOOST_REQUIRE(table.create());
 
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_32_bit__round_trips)
     typedef hash_table<record_manager<link_type>, index_type, link_type, key_type> record_map;
 
     test::storage file;
-    BOOST_REQUIRE(file.map());
+    BOOST_REQUIRE(file.load_map());
     record_map table(file, 2u, 4u);
     BOOST_REQUIRE(table.create());
 
@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE(hash_table__record__multiple_elements_64_bit__round_trips)
 
     // Create the file and initialize hash table.
     test::storage file;
-    BOOST_REQUIRE(file.map());
+    BOOST_REQUIRE(file.load_map());
     record_map table(file, 2u, 7u);
     BOOST_REQUIRE(table.create());
 

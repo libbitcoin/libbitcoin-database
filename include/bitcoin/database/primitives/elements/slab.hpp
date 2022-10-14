@@ -16,42 +16,40 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/memory/accessor.hpp>
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_RECORD_ELEMENTS_SLAB_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_RECORD_ELEMENTS_SLAB_HPP
 
-#include <iterator>
 #include <bitcoin/system.hpp>
-#include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/primitives/elements/element.hpp>
+#include <bitcoin/database/primitives_/slab_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
+namespace primitives {
 
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
-accessor::accessor(std::shared_mutex& mutex) NOEXCEPT
-    : data_(nullptr), shared_lock_(mutex)
+template <typename Link, if_link<Link> = true>
+class slab
+  : public element<slab_manager<Link>, Link>
 {
-}
+public:
+    slab(slab_manager<Link>& manager) NOEXCEPT;
+    slab(slab_manager<Link>& manager, Link link) NOEXCEPT;
 
-void accessor::assign(uint8_t* data) NOEXCEPT
-{
-    BC_ASSERT_MSG(!is_null(data), "null buffer");
-    data_ = data;
-}
+    Link create(Link next, auto& write, size_t limit) NOEXCEPT;
+    void read(auto& read, size_t limit) const NOEXCEPT;
+};
 
-uint8_t* accessor::buffer() NOEXCEPT
-{
-    return data_;
-}
-
-void accessor::increment(size_t size) NOEXCEPT
-{
-    BC_ASSERT_MSG(!is_null(data_), "unassigned buffer");
-    BC_ASSERT(reinterpret_cast<size_t>(data_) < max_size_t - size);
-    std::advance(data_, size);
-}
-
-BC_POP_WARNING()
-
+} // namespace primitives
 } // namespace database
 } // namespace libbitcoin
+
+#define TEMPLATE template <typename Link, if_link<Link> If>
+#define CLASS slab<Link, If>
+
+#include <bitcoin/database/impl/primitives/elements/slab.ipp>
+
+#undef CLASS
+#undef TEMPLATE
+
+#endif

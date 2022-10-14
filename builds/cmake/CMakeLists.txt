@@ -162,6 +162,7 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/locks/scope_lock.cpp"
     "../../src/locks/sequential_lock.cpp"
     "../../src/memory/accessor.cpp"
+    "../../src/memory/file.cpp"
     "../../src/memory/file_storage.cpp"
     "../../src/mman-win32/mman.c"
     "../../src/mman-win32/mman.h" )

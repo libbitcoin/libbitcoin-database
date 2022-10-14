@@ -9,10 +9,6 @@
 #include <errno.h>
 #include <io.h>
 
-#ifndef FILE_MAP_EXECUTE
-    #define FILE_MAP_EXECUTE 0x0020
-#endif
-
 /* local utilities */
 
 static const int large = (sizeof(oft__) > sizeof(DWORD));
@@ -79,7 +75,7 @@ static DWORD protect_file(int prot)
 #pragma warning(disable: 4100)
 #endif
 
-void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off)
+void* mmap(void* addr, size_t len, int prot, int flags, int fd, oft__ off)
 {
     const DWORD access  = protect_file(prot);
     const DWORD protect = protect_page(prot);
@@ -98,7 +94,7 @@ void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off)
     }
 
     const HANDLE handle = ((flags & MAP_ANONYMOUS) == 0) ? 
-        (HANDLE)_get_osfhandle(fildes) : INVALID_HANDLE_VALUE;
+        (HANDLE)_get_osfhandle(fd) : INVALID_HANDLE_VALUE;
 
     if ((flags & MAP_ANONYMOUS) == 0 && handle == INVALID_HANDLE_VALUE)
     {
@@ -117,7 +113,6 @@ void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off)
 
     const LPVOID map = MapViewOfFile(mapping, access, file_hi, file_lo, len);
 
-    /* TODO: verify mapping handle may be closed here and then use the map. */
     if (map == NULL || CloseHandle(mapping) == FALSE)
     {
         errno = last_error(EPERM);
@@ -126,6 +121,17 @@ void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off)
 
     errno = 0;
     return map;
+}
+
+/* Hack: fd parameter used to pass file descripter, not linux compatible. */
+/* Hack: There is no mremap equivalent, so munmap and mmap to achieve same. */
+void* mremap_(void* addr, size_t old_size, size_t new_size, int prot,
+    int flags, int fd)
+{
+    if (munmap(addr, old_size) == -1)
+        return MAP_FAILED;
+
+    return mmap(NULL, new_size, prot, flags, fd, 0);
 }
 
 int munmap(void* addr, size_t len)
@@ -142,11 +148,12 @@ int munmap(void* addr, size_t len)
 
 int madvise(void* addr, size_t len, int advice)
 {
-    /* Not implemented, but should not fail (optimization). */
+    /* Not implemented. */
+    errno = 0;
     return 0;
 }
 
-// Unused.
+/* unused */
 int mprotect(void* addr, size_t len, int prot)
 {
     DWORD old_protect = 0;
@@ -179,7 +186,7 @@ int msync(void* addr, size_t len, int flags)
 #pragma warning(pop)
 #endif
 
-// Unused.
+/* unused */
 int mlock(const void* addr, size_t len)
 {
     if (VirtualLock((LPVOID)addr, len) != FALSE)
@@ -192,7 +199,7 @@ int mlock(const void* addr, size_t len)
     return -1;
 }
 
-// Unused.
+/* unused */
 int munlock(const void* addr, size_t len)
 {
     if (VirtualUnlock((LPVOID)addr, len) != FALSE)

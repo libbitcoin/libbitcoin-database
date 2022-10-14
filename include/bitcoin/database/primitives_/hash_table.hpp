@@ -102,8 +102,8 @@ private:
 
     hash_table_header<Index, Link> header_;
     Manager manager_;
-    mutable upgrade_mutex root_mutex_;
     mutable shared_mutex list_mutex_;
+    mutable boost::upgrade_mutex root_mutex_;
 };
 
 } // namespace database

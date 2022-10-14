@@ -36,7 +36,9 @@ extern "C" {
 /* Flags for madvise (stub). */
 #define MADV_RANDOM     0
 
-void* mmap(void* addr, size_t len, int prot, int flags, int fildes, oft__ off);
+void* mmap(void* addr, size_t len, int prot, int flags, int fd, oft__ off);
+void* mremap_(void* addr, size_t old_size, size_t new_size, int prot,
+	int flags, int fd);
 int munmap(void* addr, size_t len);
 int madvise(void* addr, size_t len, int advice);
 int mprotect(void* addr, size_t len, int prot);
@@ -51,7 +53,7 @@ int ftruncate(int fd, oft__ size);
 #endif
 
 #else
-typedef int make_iso_compiler_not_complain;
+typedef int make_compiler_not_complain;
 #endif
 
 #endif

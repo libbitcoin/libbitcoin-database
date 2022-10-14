@@ -62,7 +62,7 @@ bool CLASS::start() NOEXCEPT
         return false;
 
     // The accessor must remain in scope until the end of the block.
-    const auto memory = file_.access();
+    const auto memory = file_.get();
 
     // Does not require atomicity (no concurrency during start).
     return system::unsafe_from_little_endian<Index>(memory->buffer()) == buckets_;
@@ -74,7 +74,7 @@ Link CLASS::read(Index index) const NOEXCEPT
     BC_ASSERT(index < buckets_);
 
     // The accessor must remain in scope until the end of the block.
-    const auto memory = file_.access();
+    const auto memory = file_.get();
     memory->increment(link(index));
 
     // Critical Section
@@ -90,7 +90,7 @@ void CLASS::write(Index index, Link value) NOEXCEPT
     BC_ASSERT(index < buckets_);
 
     // The accessor must remain in scope until the end of the block.
-    const auto memory = file_.access();
+    const auto memory = file_.get();
     memory->increment(link(index));
 
     // Critical Section

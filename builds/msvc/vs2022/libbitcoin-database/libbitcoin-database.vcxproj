@@ -80,6 +80,7 @@
     <ClCompile Include="..\..\..\..\src\locks\scope_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\sequential_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\accessor.cpp" />
+    <ClCompile Include="..\..\..\..\src\memory\file.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\file_storage.cpp" />
     <ClCompile Include="..\..\..\..\src\mman-win32\mman.c" />
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
@@ -96,13 +97,20 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\scope_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\sequential_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\file.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\file_storage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\storage.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\element.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\elements\element.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\elements\keyed_record.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\elements\keyed_slab.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\elements\record.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\elements\slab.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\iterable.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\iterator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\primitives.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_manager.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives_\hash_table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives_\hash_table_header.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives_\hash_table_multimap.hpp" />
@@ -117,9 +125,15 @@
     <ClInclude Include="..\..\..\..\src\mman-win32\mman.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\element.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\elements\element.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\elements\keyed_record.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\elements\keyed_slab.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\elements\record.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\elements\slab.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\iterable.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\iterator.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\record_manager.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\slab_manager.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives_\hash_table.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives_\hash_table_header.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives_\hash_table_multimap.ipp" />

@@ -20,13 +20,14 @@
 #define STORAGE_HPP
 
 #include "../test.hpp"
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database.hpp>
 
 namespace test {
 
 // Fake a thread safe memory map implementation.
-class storage
+class storage final
   : public database::storage
 {
 public:
@@ -37,20 +38,25 @@ public:
     storage(const data_chunk& initial) NOEXCEPT;
     ~storage() NOEXCEPT;
 
-    bool map() NOEXCEPT override;
-    bool flush() const NOEXCEPT override;
-    bool unmap() NOEXCEPT override;
-    bool mapped() const NOEXCEPT override;
+    bool close() NOEXCEPT override;
+    bool load_map() NOEXCEPT override;
+    bool flush_map() const NOEXCEPT override;
+    bool unload_map() NOEXCEPT override;
+    bool is_mapped() const NOEXCEPT override;
+    bool is_closed() const NOEXCEPT override;
+    size_t size() const NOEXCEPT override;
     size_t capacity() const NOEXCEPT override;
     size_t logical() const NOEXCEPT override;
-    memory_ptr access() NOEXCEPT(false) override;
-    memory_ptr resize(size_t size) NOEXCEPT(false) override;
-    memory_ptr reserve(size_t size) NOEXCEPT(false) override;
+    memory_ptr get() THROWS override;
+    memory_ptr resize(size_t size) THROWS override;
+    memory_ptr reserve(size_t size) THROWS override;
 
 private:
     bool mapped_;
+    bool closed_;
     data_chunk buffer_;
-    mutable upgrade_mutex mutex_;
+    mutable std::shared_mutex field_mutex_;
+    mutable std::shared_mutex map_mutex_;
 };
 
 }

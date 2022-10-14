@@ -26,13 +26,13 @@
 namespace libbitcoin {
 namespace database {
 
-/// This interface defines remap safe unrestricted access to a memory map.
+/// Protected memory access.
 class BCD_API memory
 {
 public:
     typedef std::shared_ptr<memory> ptr;
 
-    /// Get the address indicated by the pointer.
+    /// Get the buffer pointer.
     virtual uint8_t* buffer() NOEXCEPT = 0;
 
     /// Increment the pointer the specified number of bytes within the record.

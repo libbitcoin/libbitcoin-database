@@ -18,26 +18,20 @@
  */
 #include <bitcoin/database/memory/file_storage.hpp>
 
-#include <iostream>
-
 #if defined(HAVE_MSC)
-    #include <io.h>
     #include "../mman-win32/mman.h"
 #else
-    #include <unistd.h>
-    #include <stddef.h>
     #include <sys/mman.h>
+    #include <sys/stat.h>
+    #include <sys/types.h>
 #endif
-#include <algorithm>
 #include <fcntl.h>
 #include <memory>
 #include <shared_mutex>
-#include <string>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
+#include <bitcoin/database/memory/file.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
 // file_storage is able to support 32 bit, but because the database
@@ -47,487 +41,321 @@ static_assert(sizeof(void*) == sizeof(uint64_t), "Not a 64 bit system!");
 namespace libbitcoin {
 namespace database {
 
-using namespace bc::system;
-
-#define FAIL -1
-#define INVALID_HANDLE -1
-
-// The percentage increase, e.g. 50 is 150% of the target size.
-const size_t file_storage::default_expansion = 50;
-
-// The default minimum file size.
-const uint64_t file_storage::default_capacity = 1;
-
-int file_storage::close_file(int file_handle) NOEXCEPT
-{
-    // TODO: it may be possible to collapse this given newer WIN32 API.
-#if defined(HAVE_MSC)
-    return _close(file_handle);
-#else
-    return ::close(file_handle);
-#endif
-}
-
-size_t file_storage::file_size(int file_handle) NOEXCEPT
-{
-    if (file_handle == INVALID_HANDLE)
-        return zero;
-
-    // TODO: it may be possible to collapse this given newer WIN32 API.
-    // This is required because off_t is defined as long, which is 32|64 bits
-    // in msvc and 64 bits in linux/osx, and stat contains off_t.
-#if defined(HAVE_MSC)
-#if defined(HAVE_X64)
-    struct _stat64 sbuf;
-    if (_fstat64(file_handle, &sbuf) == FAIL)
-        return zero;
-#else
-    struct _stat32 sbuf;
-    if (_fstat32(file_handle, &sbuf) == FAIL)
-        return zero;
-#endif
-#else
-    // Limited to 32 bit files on 32 bit systems, see linux.die.net/man/2/open
-    struct stat sbuf;
-    if (fstat(file_handle, &sbuf) == FAIL)
-        return zero;
-#endif
-
-    return sign_cast<size_t>(sbuf.st_size);
-}
-
-int file_storage::open_file(const path& filename) NOEXCEPT
-{
-    // _wsopen_s and wstring do not throw (but are unannotated).
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
-#if defined(HAVE_MSC)
-    int handle;
-    if (_wsopen_s(&handle, filename.wstring().c_str(),
-        (O_RDWR | _O_BINARY | _O_RANDOM), _SH_DENYWR,
-        (_S_IREAD | _S_IWRITE)) == FAIL)
-        handle = INVALID_HANDLE;
-#else
-    int handle = ::open(filename.string().c_str(),
-        (O_RDWR), (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH));
-#endif
-    return handle;
-
-    BC_POP_WARNING()
-}
-
-// streams
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-bool file_storage::handle_error(const std::string&, const path&) NOEXCEPT
-{
-    // TODO: it may be possible to collapse this given newer WIN32 API.
-#if defined(HAVE_MSC)
-    ////const auto error = GetLastError();
-#else
-    ////const auto error = errno;
-#endif
-    ////LOG_FATAL(LOG_DATABASE)
-    ////    << "The file failed to " << context << ": " << filename << " : "
-    ////    << error;
-    return false;
-}
+using namespace system;
 
-void file_storage::log_mapping() const NOEXCEPT
-{
-    ////LOG_DEBUG(LOG_DATABASE)
-    ////    << "Mapping: " << filename_ << " [" << capacity_ << "] ("
-    ////    << page() << ")";
-}
-
-void file_storage::log_resizing(size_t) const NOEXCEPT
-{
-    ////LOG_DEBUG(LOG_DATABASE)
-    ////    << "Resizing: " << filename_ << " [" << size << "]";
-}
-
-void file_storage::log_flushed() const NOEXCEPT
-{
-    ////LOG_DEBUG(LOG_DATABASE)
-    ////    << "Flushed: " << filename_ << " [" << logical_size_ << "]";
-}
-
-void file_storage::log_unmapping() const NOEXCEPT
-{
-    ////LOG_DEBUG(LOG_DATABASE)
-    ////    << "Unmapping: " << filename_ << " [" << logical_size_ << "]";
-}
-
-void file_storage::log_unmapped() const NOEXCEPT
-{
-    ////LOG_DEBUG(LOG_DATABASE)
-    ////    << "Unmapped: " << filename_ << " [" << logical_size_ << ", "
-    ////    << capacity_ << "]";
-}
-
-BC_POP_WARNING()
-
-// opens file
-file_storage::file_storage(const path& filename) NOEXCEPT
-  : file_storage(filename, default_capacity, default_expansion)
-{
-}
+#define FAIL -1
+#define INVALID_DESCRIPTOR -1
 
 file_storage::file_storage(const path& filename, size_t minimum,
     size_t expansion) NOEXCEPT
-  : file_handle_(open_file(filename)),
+  : filename_(filename),
     minimum_(minimum),
     expansion_(expansion),
-    filename_(filename),
+    map_(nullptr),
     mapped_(false),
-    data_(nullptr),
-    capacity_(file_size(file_handle_)),
-    logical_size_(capacity_)
+    file_descriptor_(open_file(filename)),
+    logical_(size()),
+    capacity_(zero)
 {
+    // LOG START WARNING (will be handled in load_map() when called).
+    BC_ASSERT_MSG(file_descriptor_ != INVALID_DESCRIPTOR, "file failed to open");
 }
 
-// Database threads must be joined before close is invoked.
 file_storage::~file_storage() NOEXCEPT
 {
-    constexpr auto error_name = "close";
-
-    if (close_file(file_handle_) == FAIL)
-        handle_error(error_name, filename_);
+    // LOG STOP WARNINGS (handled if unload_map() and close() were called).
+    BC_ASSERT_MSG(!mapped_, "file mapped at destruct");
+    BC_ASSERT_MSG(is_null(map_), "map defined at destruct");
+    BC_ASSERT_MSG(is_zero(logical_), "logical nonzero at destruct");
+    BC_ASSERT_MSG(is_zero(capacity_), "capacity nonzero at destruct");
+    BC_ASSERT_MSG(file_descriptor_ == INVALID_DESCRIPTOR, "file open at destruct");
 }
 
-// Startup and shutdown.
+// Explicit close is required for error capture.
+bool file_storage::close() NOEXCEPT
+{
+    std::unique_lock field_lock(field_mutex_);
+
+    // SEQUENCE ERROR (close_without_unmap)
+    if (mapped_)
+        return false;
+
+    if (map_mutex_.try_lock())
+    {
+        if (file_descriptor_ == INVALID_DESCRIPTOR)
+        {
+            map_mutex_.unlock();
+            return true;
+        }
+
+        // STORE CORRUPTION (close_failure)
+        const auto closed = close_file(file_descriptor_);
+        file_descriptor_ = INVALID_DESCRIPTOR;
+        logical_ = zero;
+        map_mutex_.unlock();
+        return closed;
+    }
+
+    // SEQUENCE ERROR (close_while_locked)
+    return false;
+}
+
+// Map, flush, unmap.
 // ----------------------------------------------------------------------------
 
-// mutex_ methods may throw boost::lock_error, terminating the process.
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+// Each accessor holds a shared lock on map_mutex_ (read/write access to map).
+// Exclusive lock on map_mutex_ ensures there are no open accessor objects.
+// map_ field requires exclusive lock on map_mutex_ for read(flush)/write.
+// Fields except map_ require exclusive lock on field_mutex_ for write.
+// Fields except map_ require at least shared lock on field_mutex_ for read.
 
-bool file_storage::map() NOEXCEPT
+bool file_storage::load_map() NOEXCEPT
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    mutex_.lock_upgrade();
+    std::unique_lock field_lock(field_mutex_);
 
-    if (mapped_)
+    if (map_mutex_.try_lock())
     {
-        mutex_.unlock_upgrade();
-        //---------------------------------------------------------------------
-        return false;
-    }
+        // reads logical_, writes capacity_/map_
+        if (mapped_ || !map())
+        {
+            // SEQUENCE ERROR (load_while_mapped) | STORE CORRUPTION (map_failure)
+            map_mutex_.unlock();
+            return false;
+        }
 
-    mutex_.unlock_upgrade_and_lock();
-    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    std::string error_name;
-
-    // Initialize data_.
-    // man7.org/linux/man-pages/man2/madvise.2.html
-    // madvise with large value fails on linux.
-    if (!map(capacity_))
-        error_name = "map";
-    else if (::madvise(data_, 0, MADV_RANDOM) == FAIL)
-        error_name = "madvise";
-    else
         mapped_ = true;
-
-    mutex_.unlock();
-    ///////////////////////////////////////////////////////////////////////////
-
-    // Keep logging out of the critical section.
-    if (!error_name.empty())
-        return handle_error(error_name, filename_);
-
-    log_mapping();
-    return true;
-}
-
-bool file_storage::flush() const NOEXCEPT
-{
-    std::string error_name;
-
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    mutex_.lock_upgrade();
-
-    if (!mapped_)
-    {
-        mutex_.unlock_upgrade();
-        //---------------------------------------------------------------------
+        map_mutex_.unlock();
         return true;
     }
 
-    mutex_.unlock_upgrade_and_lock();
-    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-    // man7.org/linux/man-pages/man2/msync.2.html
-    // macos msync fails with zero logical size.
-    if (!is_zero(logical_size_) &&
-        ::msync(data_, logical_size_, MS_SYNC) == FAIL)
-        error_name = "flush";
-
-    mutex_.unlock();
-    ///////////////////////////////////////////////////////////////////////////
-
-    if (!error_name.empty())
-        return handle_error(error_name, filename_);
-
-    ////log_flushed();
-    return true;
+    // SEQUENCE ERROR (close_while_locked)
+    return false;
 }
 
-bool file_storage::unmap() NOEXCEPT
+bool file_storage::flush_map() const NOEXCEPT
 {
-    std::string error_name;
+    std::shared_lock field_lock(field_mutex_);
 
-    ////if (mapped_)
-    ////    log_unmapping();
-
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    mutex_.lock_upgrade();
-
-    if (!mapped_)
+    if (map_mutex_.try_lock())
     {
-        mutex_.unlock_upgrade();
-        //---------------------------------------------------------------------
+        // SEQUENCE ERROR (flush_while_unmapped) | STORE CORRUPTION (flush_failure)
+        // reads logical_/capacity_, flushes map_
+        const auto result = mapped_ && flush();
+        map_mutex_.unlock();
+        return result;
+    }
+
+    // SEQUENCE ERROR (close_while_locked)
+    return false;
+}
+
+bool file_storage::unload_map() NOEXCEPT
+{
+    std::unique_lock field_lock(field_mutex_);
+
+    if (map_mutex_.try_lock())
+    {
+        BC_ASSERT_MSG(logical_ <= capacity_, "logical size exceeds capacity");
+
+        // reads logical_, writes capacity_/map_
+        if (!mapped_ || !unmap())
+        {
+            // SEQUENCE ERROR (unload_while_unmapped) | STORE CORRUPTION (unmap_failure)
+            map_mutex_.unlock();
+            return false;
+        }
+
+        map_mutex_.unlock();
+        mapped_ = false;
         return true;
     }
 
-    mutex_.unlock_upgrade_and_lock();
-    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-    mapped_ = false;
-
-    // macos msync fails with zero logical size.
-    // man7.org/linux/man-pages/man2/msync.2.html
-    // man7.org/linux/man-pages/man2/munmap.2.html
-    // man7.org/linux/man-pages/man2/ftruncate.2.html
-    // man7.org/linux/man-pages/man2/fsync.2.html
-    if (logical_size_ > capacity_)
-        error_name = "fit";
-    else if (!is_zero(logical_size_) &&
-        ::msync(data_, logical_size_, MS_SYNC) == FAIL)
-        error_name = "msync";
-    else if (::munmap(data_, capacity_) == FAIL)
-        error_name = "munmap";
-    else if (::ftruncate(file_handle_, logical_size_) == FAIL)
-        error_name = "ftruncate";
-    else if (::fsync(file_handle_) == FAIL)
-        error_name = "fsync";
-
-    mutex_.unlock();
-    ///////////////////////////////////////////////////////////////////////////
-
-    if (!error_name.empty())
-        return handle_error(error_name, filename_);
-
-    log_unmapped();
-    return true;
-}
-
-bool file_storage::mapped() const NOEXCEPT
-{
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    std::shared_lock lock(mutex_);
-    return mapped_;
-    ///////////////////////////////////////////////////////////////////////////
+    // SEQUENCE ERROR (close_while_locked)
+    return false;
 }
 
 // Operations.
 // ----------------------------------------------------------------------------
 
-size_t file_storage::capacity() const NOEXCEPT
-{
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    std::shared_lock lock(mutex_);
-    return capacity_;
-    ///////////////////////////////////////////////////////////////////////////
-}
-
-size_t file_storage::logical() const NOEXCEPT
-{
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    std::shared_lock lock(mutex_);
-    return logical_size_;
-    ///////////////////////////////////////////////////////////////////////////
-}
-
-BC_POP_WARNING()
-
-memory_ptr file_storage::access() NOEXCEPT(false)
-{
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    auto memory = std::make_shared<accessor>(mutex_);
-
-    if (!mapped_)
-    {
-        memory.reset();
-        throw runtime_exception("Access failure, store closed.");
-    }
-
-    // Critical section does not end until this shared pointer is freed.
-    memory->assign(data_);
-    return memory;
-}
-
-memory_ptr file_storage::resize(size_t required) NOEXCEPT(false)
-{
-    return reserve(required, zero, zero);
-}
-
-memory_ptr file_storage::reserve(size_t required) NOEXCEPT(false)
-{
-    return reserve(required, minimum_, expansion_);
-}
-
+// private
 memory_ptr file_storage::reserve(size_t required, size_t minimum,
-    size_t expansion) NOEXCEPT(false)
+    size_t expansion) NOEXCEPT
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    auto memory = std::make_shared<accessor>(mutex_);
+    field_mutex_.lock_upgrade();
 
     if (!mapped_)
     {
-        memory.reset();
-        handle_error("reserve", filename_);
-        throw runtime_exception("Reserve failure, store already closed.");
+        // LOG SEQUENCE ERROR (reserve_while_unmapped)
+        field_mutex_.unlock_upgrade();
+        return nullptr;
     }
 
     if (required > capacity_)
     {
-        BC_PUSH_WARNING(NO_STATIC_CAST)
-        const auto resize = required * ((expansion + 100.0) / 100.0);
-        const auto target = std::max(minimum, static_cast<size_t>(resize));
-        BC_POP_WARNING()
+        // TODO: use timed lock and have caller loop with message.
+        // Block until all memory objects are freed (potential deadlock).
+        std::unique_lock map_lock(map_mutex_);
 
-        // accessor construction sets mutex_ upgrade lock
-        mutex_.unlock_upgrade_and_lock();
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-        // All existing database pointers are invalidated by this call.
-        if (!truncate_mapped(target))
+        // writes capacity_/map_
+        if (!remap(get_resize(required, minimum, expansion)))
         {
-            mutex_.unlock();
-            handle_error("resize", filename_);
-            throw runtime_exception("Resize failure, disk space may be low.");
+            // LOG STORE CORRUPTION (remap_failure)
+            field_mutex_.unlock_upgrade();
+            return nullptr;
         }
-
-        //---------------------------------------------------------------------
-        mutex_.unlock_and_lock_upgrade();
     }
 
-    logical_size_ = required;
+    // No thread can intervene here because of the field_mutex_ upgrade lock.
+    // This ensures that the returned object is of the required map size.
+    auto memory = std::make_shared<accessor>(map_mutex_);
+    memory->assign(map_);
 
-    // Critical section does not end until this shared pointer is freed.
-    memory->assign(data_);
+    field_mutex_.unlock_upgrade_and_lock();
+    logical_ = required;
+    field_mutex_.unlock();
     return memory;
 }
 
-// privates
-// ----------------------------------------------------------------------------
-
-size_t file_storage::page() const NOEXCEPT
+memory_ptr file_storage::get() NOEXCEPT
 {
-#if defined(HAVE_MSC)
-    SYSTEM_INFO configuration;
-    GetSystemInfo(&configuration);
-    return configuration.dwPageSize;
-#else
-    errno = 0;
-    const auto page_size = sysconf(_SC_PAGESIZE);
+    auto memory = std::make_shared<accessor>(map_mutex_);
 
-    // -1 is both a return code and a potentially valid value, so use errno.
-    if (errno != 0)
-        handle_error("sysconf", filename_);
+    if (!mapped_)
+    {
+        // SEQUENCE ERROR (get_while_unmapped)
+        memory.reset();
+        return nullptr;
+    }
 
-    // Check for negative value so that later we can promote to unsigned
-    if (page_size == -1)
-        return 0;
-
-    BC_ASSERT(possible_narrow_sign_cast<uint64_t>(page_size) <= max_size_t);
-    return possible_narrow_sign_cast<size_t>(page_size);
-#endif
+    memory->assign(map_);
+    return memory;
 }
 
-bool file_storage::unmap_() NOEXCEPT
+memory_ptr file_storage::reserve(size_t required) NOEXCEPT
 {
-    // man7.org/linux/man-pages/man2/munmap.2.html
-    const auto success = (::munmap(data_, capacity_) != FAIL);
+    return reserve(required, minimum_, expansion_);
+}
+
+memory_ptr file_storage::resize(size_t required) NOEXCEPT
+{
+    return reserve(required, zero, zero);
+}
+
+bool file_storage::is_mapped() const NOEXCEPT
+{
+    std::shared_lock field_lock(field_mutex_);
+    return mapped_;
+}
+
+bool file_storage::is_closed() const NOEXCEPT
+{
+    std::shared_lock field_lock(field_mutex_);
+    return file_descriptor_ != INVALID_DESCRIPTOR;
+}
+
+size_t file_storage::logical() const NOEXCEPT
+{
+    std::shared_lock field_lock(field_mutex_);
+    return logical_;
+}
+
+size_t file_storage::capacity() const NOEXCEPT
+{
+    std::shared_lock field_lock(field_mutex_);
+    return capacity_;
+}
+
+size_t file_storage::size() const NOEXCEPT
+{
+    std::shared_lock field_lock(field_mutex_);
+    return is_closed() ? zero : file_size(file_descriptor_);
+}
+
+// private, mman wrappers, not thread safe
+// ----------------------------------------------------------------------------
+
+// Flush failure does not halt process, flush does not ensure file integrity.
+bool file_storage::flush() const NOEXCEPT
+{
+    // macos msync fails with zero logical size.
+    return is_zero(logical_) ||
+        ::msync(map_, logical_, MS_SYNC) != FAIL;
+}
+
+// Trims to logical size, can be zero.
+bool file_storage::unmap() NOEXCEPT
+{
+    // fsync is required to ensure file integrity (cache cleared).
+    const auto success = flush()
+        && (::munmap(map_, capacity_) != FAIL)
+        && (::ftruncate(file_descriptor_, logical_) != FAIL)
+        && (::fsync(file_descriptor_) != FAIL);
+
     capacity_ = zero;
-    data_ = nullptr;
+    map_ = nullptr;
     return success;
 }
 
-bool file_storage::map(size_t size) NOEXCEPT
+// Mapping has no effect on logical size.
+bool file_storage::map() NOEXCEPT
 {
-    // Cannot map empty file, so expand to minimum capacity.
+    auto size = logical_;
+
+    // Cannot map empty file, so expand to minimum capacity if zero.
     if (is_zero(size))
     {
         size = minimum_;
-        truncate(size);
+        if (::ftruncate(file_descriptor_, minimum_) == FAIL)
+            return false;
+
         capacity_ = size;
     }
 
-    // man7.org/linux/man-pages/man2/mmap.2.html
-    data_ = pointer_cast<uint8_t>(::mmap(nullptr, size, PROT_READ | PROT_WRITE,
-        MAP_SHARED, file_handle_, 0));
+    map_ = pointer_cast<uint8_t>(::mmap(nullptr, size, PROT_READ | PROT_WRITE,
+        MAP_SHARED, file_descriptor_, 0));
 
-    return validate(size);
+    return finalize(size);
 }
 
+// Remapping has no effect on logical size, sets map_/capacity_.
 bool file_storage::remap(size_t size) NOEXCEPT
 {
-#if defined(MREMAP_MAYMOVE)
-    // man7.org/linux/man-pages/man2/mremap.2.html
-    data_ = pointer_cast<uint8_t>(::mremap(data_, capacity_, size,
+    // Cannot remap empty file, so expand to minimum capacity if zero.
+    if (is_zero(size))
+        size = minimum_;
+
+    if (::ftruncate(file_descriptor_, size) == FAIL)
+        return false;
+    
+// mman-win32 mremap hack (umap/map) requires flags and file descriptor.
+#if defined (HAVE_MSC)
+    map_ = pointer_cast<uint8_t>(::mremap_(map_, capacity_, size,
+        PROT_READ | PROT_WRITE, MAP_SHARED, file_descriptor_));
+#else
+    map_ = pointer_cast<uint8_t>(::mremap(map_, capacity_, size,
         MREMAP_MAYMOVE));
-
-    return validate(size);
-#else
-    return unmap_() && map(size);
-#endif
-}
-
-bool file_storage::truncate(size_t size) NOEXCEPT
-{
-    // man7.org/linux/man-pages/man2/ftruncate.2.html
-    return ::ftruncate(file_handle_, size) != FAIL;
-}
-
-bool file_storage::truncate_mapped(size_t size) NOEXCEPT
-{
-    log_resizing(size);
-
-#if !defined(MREMAP_MAYMOVE)
-    if (!unmap_())
-        return false;
 #endif
 
-    if (!truncate(size))
-        return false;
-
-#if !defined(MREMAP_MAYMOVE)
-    return map(size);
-#else
-    return remap(size);
-#endif
+    return finalize(size);
 }
 
-bool file_storage::validate(size_t size) NOEXCEPT
+bool file_storage::finalize(size_t size) NOEXCEPT
 {
-    if (data_ == MAP_FAILED)
+    // TODO: madvise with large length value fails on linux, is 0 sufficient?
+    if (map_ == MAP_FAILED || ::madvise(map_, 0, MADV_RANDOM) == FAIL)
     {
         capacity_ = zero;
-        data_ = nullptr;
+        map_ = nullptr;
         return false;
     }
 
     capacity_ = size;
     return true;
 }
+
+BC_POP_WARNING()
 
 } // namespace database
 } // namespace libbitcoin

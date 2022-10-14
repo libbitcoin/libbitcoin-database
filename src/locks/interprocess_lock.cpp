@@ -75,7 +75,7 @@ bool interprocess_lock::lock() NOEXCEPT
 
 // Unlock is idempotent, returns true if unlocked on return (or success).
 // This may leave the lock file behind, which is not a problem.
-bool interprocess_lock::unlock() noexcept
+bool interprocess_lock::unlock() NOEXCEPT
 {
     // An invalid handle guarantees lack of ownership, but file may exist.
     // Do not delete the file unless we own it.

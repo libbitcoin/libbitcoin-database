@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_MEMORY_FILE_STORAGE_HPP
 #define LIBBITCOIN_DATABASE_MEMORY_FILE_STORAGE_HPP
 
-#include <string>
 #include <filesystem>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
@@ -30,92 +29,101 @@
 namespace libbitcoin {
 namespace database {
 
-/// This class is thread safe, allowing concurent read and write.
-/// A change to memory map size waits on and blocks read/write.
+/// Thread safe access to a memory-mapped file.
 class BCD_API file_storage final
   : public storage
 {
 public:
     DELETE4(file_storage);
 
-    typedef std::filesystem::path path;
-    static const size_t default_expansion;
-    static const uint64_t default_capacity;
-
-    /// Open database file.
-    file_storage(const path& filename) NOEXCEPT;
-    file_storage(const path& filename, size_t minimum,
-        size_t expansion) NOEXCEPT;
+    /// Open/create database file.
+    file_storage(const std::filesystem::path& filename, size_t minimum=1,
+        size_t expansion=50) NOEXCEPT;
 
     /// Close the database file.
+    /// File should be explicitly unmapped before destruct.
     ~file_storage() NOEXCEPT;
 
-    /// Map file to memory, must be unmapped, not idempotent.
-    bool map() NOEXCEPT override;
+    /// Close file, idempotent.
+    bool close() NOEXCEPT override;
 
-    /// Flush memory map to disk if mapped, idempotent.
-    bool flush() const NOEXCEPT override;
+    /// Map file to memory, must be unmapped.
+    bool load_map() NOEXCEPT override;
 
-    /// Unmap file, must be mapped, restartable.
-    bool unmap() NOEXCEPT override;
+    /// Flush logical size of memory map to disk, must be mapped.
+    bool flush_map() const NOEXCEPT override;
 
-    /// Determine if the file is mapped.
-    bool mapped() const NOEXCEPT override;
+    /// Flush, unmap and truncate to logical, restartable, idempotent.
+    bool unload_map() NOEXCEPT override;
 
-    /// The current capacity for mapped data.
-    size_t capacity() const NOEXCEPT override;
+    /// True if the file is mapped.
+    bool is_mapped() const NOEXCEPT override;
 
-    /// The current logical size of mapped data.
+    /// True if the file is closed (or failed to open).
+    bool is_closed() const NOEXCEPT override;
+
+    /// The current size of the persistent file (zero if closed).
+    size_t size() const NOEXCEPT override;
+
+    /// The current logical size of the memory map (zero if closed).
     size_t logical() const NOEXCEPT override;
 
-    /// Get protected shared access to memory.
-    memory_ptr access() NOEXCEPT(false) override;
+    /// The current capacity of the memory map (zero if unmapped).
+    size_t capacity() const NOEXCEPT override;
 
-    /// Throws runtime_error if insufficient space.
-    /// Resize the logical map to the specified size, return access.
-    /// Increase or shrink the physical size to match the logical size.
-    memory_ptr resize(size_t required) NOEXCEPT(false) override;
+    /// Get protected read/write access to start of memory map.
+    memory_ptr get() NOEXCEPT override;
 
-    /// Throws runtime_error if insufficient space.
-    /// Resize the logical map to the specified size, return access.
-    /// Increase the physical size to at least the logical size.
-    memory_ptr reserve(size_t required) NOEXCEPT(false) override;
+    /// Returns nullptr on failure (unmapped or disk full).
+    /// Change logical size to the specified total size, return access.
+    /// Increases or shrinks the capacity/file size to match required size.
+    memory_ptr resize(size_t required) NOEXCEPT override;
+
+    /// Returns nullptr on failure (unmapped or disk full).
+    /// Increase logical size to the specified total size, return access.
+    /// Increases the capacity/file size to at least the required size.
+    memory_ptr reserve(size_t required) NOEXCEPT override;
+
+protected:
+    static constexpr size_t get_resize(size_t required, size_t minimum,
+        size_t expansion) NOEXCEPT
+    {
+        BC_PUSH_WARNING(NO_STATIC_CAST)
+        const auto resize = required * ((expansion + 100.0) / 100.0);
+        const auto target = std::max(minimum, static_cast<size_t>(resize));
+        BC_POP_WARNING()
+
+        BC_ASSERT_MSG(target >= required, "unexpected truncation");
+        return target;
+    }
 
 private:
-    static size_t file_size(int file_handle) NOEXCEPT;
-    static int close_file(int file_handle) NOEXCEPT;
-    static int open_file(const std::filesystem::path& filename) NOEXCEPT;
-    static bool handle_error(const std::string& context,
-        const std::filesystem::path& filename) NOEXCEPT;
+    using path = std::filesystem::path;
 
-    size_t page() const NOEXCEPT;
-    bool unmap_() NOEXCEPT;
-    bool map(size_t size) NOEXCEPT;
+    // Mapping utilities.
+    bool flush() const NOEXCEPT;
+    bool unmap() NOEXCEPT;
+    bool map() NOEXCEPT;
     bool remap(size_t size) NOEXCEPT;
-    bool truncate(size_t size) NOEXCEPT;
-    bool truncate_mapped(size_t size) NOEXCEPT;
-    bool validate(size_t size) NOEXCEPT;
+    bool finalize(size_t size) NOEXCEPT;
     memory_ptr reserve(size_t required, size_t minimum,
-        size_t expansion) NOEXCEPT(false);
+        size_t expansion) NOEXCEPT;
 
-    void log_mapping() const NOEXCEPT;
-    void log_resizing(size_t size) const NOEXCEPT;
-    void log_flushed() const NOEXCEPT;
-    void log_unmapping() const NOEXCEPT;
-    void log_unmapped() const NOEXCEPT;
-
-    // File system.
-    const int file_handle_;
+    // Constants.
+    const std::filesystem::path filename_;
     const size_t minimum_;
     const size_t expansion_;
-    const std::filesystem::path filename_;
 
     // Protected by mutex.
+    uint8_t* map_;
+    mutable std::shared_mutex map_mutex_;
+
+    // mutex->file_descriptor_->logical_.
+    mutable boost::upgrade_mutex field_mutex_;
     bool mapped_;
-    uint8_t* data_;
+    int file_descriptor_;
+    size_t logical_;
     size_t capacity_;
-    size_t logical_size_;
-    mutable upgrade_mutex mutex_;
 };
 
 } // namespace database

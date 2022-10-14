@@ -145,7 +145,7 @@ memory_ptr CLASS::get(Link link) const NOEXCEPT
     // We avoid a runtime error here to optimize out the count lock.
     BC_ASSERT_MSG(!past_eof(link), "Read past end of file.");
 
-    const auto memory = file_.access();
+    const auto memory = file_.get();
     memory->increment(header_size_ + link_to_position(link));
     return memory;
 }
@@ -165,7 +165,7 @@ void CLASS::read_count() NOEXCEPT
     BC_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
 
     // The accessor must remain in scope until the end of the block.
-    const auto memory = file_.access();
+    const auto memory = file_.get();
     memory->increment(header_size_);
     record_count_ = system::unsafe_from_little_endian<Link>(memory->buffer());
 }
@@ -177,7 +177,7 @@ void CLASS::write_count() NOEXCEPT
     BC_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
 
     // The accessor must remain in scope until the end of the block.
-    const auto memory = file_.access();
+    const auto memory = file_.get();
     memory->increment(header_size_);
     system::unsafe_to_little_endian<Link>(memory->buffer(), record_count_);
 }

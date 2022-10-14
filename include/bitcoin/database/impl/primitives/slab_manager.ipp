@@ -16,40 +16,61 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_HPP
-#define LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_SLAB_MANAGER_IPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_SLAB_MANAGER_IPP
 
+#include <mutex>
 #include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
 namespace database {
+namespace primitives {
 
-/// Shared access to a memory buffer, mutex prevents memory remap.
-/// Caller must know the buffer size as it is unguarded/unmanaged.
-class BCD_API accessor final
-  : public memory
+TEMPLATE
+CLASS::slab_manager(Storage& file) NOEXCEPT
+  : file_(file), size_(file_.logical())
 {
-public:
-    /// Mutex guards against remap while object is in scope.
-    accessor(std::shared_mutex& mutex) NOEXCEPT;
+}
 
-    /// Set the buffer pointer.
-    void assign(uint8_t* data) NOEXCEPT;
+TEMPLATE
+Link CLASS::size() const NOEXCEPT
+{
+    std::shared_lock lock(mutex_);
+    return file_.is_closed() ? eof : size_;
+}
 
-    /// Get the buffer pointer (unguarded except for remap).
-    uint8_t* buffer() NOEXCEPT override;
+TEMPLATE
+Link CLASS::allocate(size_t size) NOEXCEPT
+{
+    BC_ASSERT_MSG(size < eof, "size excess");
+    const auto slab = system::possible_narrow_cast<Link>(size);
 
-    /// Advance the buffer pointer a specified number of bytes.
-    void increment(size_t size) NOEXCEPT override;
+    std::unique_lock lock(mutex_);
+    if (!file_.reserve(size_ + slab))
+        return eof;
 
-private:
-    uint8_t* data_;
-    std::shared_lock<std::shared_mutex> shared_lock_;
-};
+    const auto next = size_;
+    size_ += slab;
+    return next;
+}
 
+TEMPLATE
+memory_ptr CLASS::get(Link position) const NOEXCEPT
+{
+    BC_ASSERT_MSG(link < eof, "link excess");
+    const auto memory = file_.access();
+
+    if (memory)
+        memory->increment(position);
+
+    return memory;
+}
+
+} // namespace primitives
 } // namespace database
 } // namespace libbitcoin
 

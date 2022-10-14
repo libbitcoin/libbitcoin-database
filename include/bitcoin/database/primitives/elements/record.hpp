@@ -16,41 +16,41 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_HPP
-#define LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_RECORD_ELEMENTS_RECORD_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_RECORD_ELEMENTS_RECORD_HPP
 
-#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/elements/element.hpp>
+#include <bitcoin/database/primitives_/record_manager.hpp>
 
 namespace libbitcoin {
 namespace database {
+namespace primitives {
 
-/// Shared access to a memory buffer, mutex prevents memory remap.
-/// Caller must know the buffer size as it is unguarded/unmanaged.
-class BCD_API accessor final
-  : public memory
+template <typename Link, size_t Size,
+    if_link<Link> = true>
+class record
+  : public element<record_manager<Link, Size>, Link>
 {
 public:
-    /// Mutex guards against remap while object is in scope.
-    accessor(std::shared_mutex& mutex) NOEXCEPT;
+    record(record_manager<Link>& manager) NOEXCEPT;
+    record(record_manager<Link>& manager, Link link) NOEXCEPT;
 
-    /// Set the buffer pointer.
-    void assign(uint8_t* data) NOEXCEPT;
-
-    /// Get the buffer pointer (unguarded except for remap).
-    uint8_t* buffer() NOEXCEPT override;
-
-    /// Advance the buffer pointer a specified number of bytes.
-    void increment(size_t size) NOEXCEPT override;
-
-private:
-    uint8_t* data_;
-    std::shared_lock<std::shared_mutex> shared_lock_;
+    Link create(Link next, auto& write) NOEXCEPT;
+    void read(auto& read) const NOEXCEPT;
 };
 
+} // namespace primitives
 } // namespace database
 } // namespace libbitcoin
+
+#define TEMPLATE template <typename Link, size_t Size, if_link<Link> If>
+#define CLASS record<Link, Size, If>
+
+#include <bitcoin/database/impl/primitives/elements/record.ipp>
+
+#undef CLASS
+#undef TEMPLATE
 
 #endif

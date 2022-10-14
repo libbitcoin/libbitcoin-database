@@ -26,39 +26,47 @@
 namespace libbitcoin {
 namespace database {
 
-/// Data storage interface for a single memory-mapped file.
-/// The implementation must be thread safe, allowing concurent read and write.
+/// Mapped memory abstraction of a file.
 class BCD_API storage
 {
 public:
-    /// Map file to memory, must be unmapped, not idempotent.
-    virtual bool map() NOEXCEPT = 0;
+    /// Close file, idempotent.
+    virtual bool close() NOEXCEPT = 0;
 
-    /// Flush memory map to disk if mapped, idempotent.
-    virtual bool flush() const NOEXCEPT = 0;
+    /// Map file to memory, must be unmapped.
+    virtual bool load_map() NOEXCEPT = 0;
 
-    /// Unmap file, must be mapped, restartable.
-    virtual bool unmap() NOEXCEPT = 0;
+    /// Flush logical size of memory map to disk, must be mapped.
+    virtual bool flush_map() const NOEXCEPT = 0;
 
-    /// Determine if the file is mapped.
-    virtual bool mapped() const NOEXCEPT = 0;
+    /// Flush, unmap and truncate to logical, restartable, idempotent.
+    virtual bool unload_map() NOEXCEPT = 0;
 
-    /// The current capacity for mapped data.
-    virtual size_t capacity() const NOEXCEPT = 0;
+    /// True if the file is mapped.
+    virtual bool is_mapped() const NOEXCEPT = 0;
 
-    /// The current logical size of mapped data.
+    /// True if the file is closed (or failed to open).
+    virtual bool is_closed() const NOEXCEPT = 0;
+
+    /// The current size of the persistent file (zero if closed).
+    virtual size_t size() const NOEXCEPT = 0;
+
+    /// The current logical size of the memory map (zero if closed).
     virtual size_t logical() const NOEXCEPT = 0;
 
-    /// Get protected shared access to memory.
-    virtual memory_ptr access() NOEXCEPT(false) = 0;
+    /// The current capacity of the memory map (zero if unmapped).
+    virtual size_t capacity() const NOEXCEPT = 0;
 
-    /// Change logical size to specified size, return access.
-    /// Increases or shrinks capacity to match logical size.
-    virtual memory_ptr resize(size_t required) NOEXCEPT(false) = 0;
+    /// Get protected read/write access to start of memory map.
+    virtual memory_ptr get() THROWS = 0;
 
-    /// Increase the logical size to specified size, return access.
-    /// Increases capacity to at least logical size, as necessary.
-    virtual memory_ptr reserve(size_t required) NOEXCEPT(false) = 0;
+    /// Change logical size to the specified total size, return access.
+    /// Increases or shrinks the capacity/file size to match required size.
+    virtual memory_ptr resize(size_t required) THROWS = 0;
+
+    /// Increase logical size to the specified total size, return access.
+    /// Increases the capacity/file size to at least the required size.
+    virtual memory_ptr reserve(size_t required) THROWS = 0;
 };
 
 } // namespace database

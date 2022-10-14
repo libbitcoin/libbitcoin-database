@@ -74,8 +74,8 @@ public:
 private:
     table& map_;
     manager& manager_;
-    mutable upgrade_mutex root_mutex_;
     mutable shared_mutex list_mutex_;
+    mutable boost::upgrade_mutex root_mutex_;
 };
 
 } // namespace database

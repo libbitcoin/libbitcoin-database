@@ -16,42 +16,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/memory/accessor.hpp>
+#ifndef LIBBITCOIN_DATABASE_MEMORY_FILE_HPP
+#define LIBBITCOIN_DATABASE_MEMORY_FILE_HPP
 
-#include <iterator>
+#include <filesystem>
 #include <bitcoin/system.hpp>
-#include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
-accessor::accessor(std::shared_mutex& mutex) NOEXCEPT
-    : data_(nullptr), shared_lock_(mutex)
-{
-}
-
-void accessor::assign(uint8_t* data) NOEXCEPT
-{
-    BC_ASSERT_MSG(!is_null(data), "null buffer");
-    data_ = data;
-}
-
-uint8_t* accessor::buffer() NOEXCEPT
-{
-    return data_;
-}
-
-void accessor::increment(size_t size) NOEXCEPT
-{
-    BC_ASSERT_MSG(!is_null(data_), "unassigned buffer");
-    BC_ASSERT(reinterpret_cast<size_t>(data_) < max_size_t - size);
-    std::advance(data_, size);
-}
-
-BC_POP_WARNING()
+/// Basic file system utilities, not thread safe.
+BCD_API int open_file(const std::filesystem::path& filename) NOEXCEPT;
+BCD_API bool close_file(int file_descriptor) NOEXCEPT;
+BCD_API size_t file_size(int file_descriptor) NOEXCEPT;
+BCD_API size_t page_size() NOEXCEPT;
 
 } // namespace database
 } // namespace libbitcoin
+
+#endif

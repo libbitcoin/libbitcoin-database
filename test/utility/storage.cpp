@@ -20,74 +20,114 @@
 #include "storage.hpp"
 
 #include <memory>
+#include <mutex>
 #include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database.hpp>
 
 namespace test {
 
+// locks may throw.
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 // This is a trivial working storage interface implementation.
 storage::storage() NOEXCEPT
-  : mapped_(false)
+  : mapped_(false), closed_(false), buffer_{}
 {
 }
-
+    
 storage::storage(data_chunk&& initial) NOEXCEPT
-  : mapped_(false), buffer_(std::move(initial))
+  : mapped_(false), closed_(false), buffer_(std::move(initial))
 {
 }
 
 storage::storage(const data_chunk& initial) NOEXCEPT
-  : mapped_(false), buffer_(initial)
+  : mapped_(false), closed_(false), buffer_(initial)
 {
 }
 
 storage::~storage() NOEXCEPT
 {
-    unmap();
 }
 
-bool storage::map() NOEXCEPT
+bool storage::close() NOEXCEPT
 {
-    mutex_.lock_upgrade();
+    std::unique_lock field_lock(field_mutex_);
+    std::unique_lock map_lock(map_mutex_);
+    closed_ = true;
+    buffer_.clear();
+    return true;
+}
 
-    if (mapped_)
-    {
-        mutex_.unlock_upgrade();
-        return true;
-    }
-
-    mutex_.unlock_upgrade_and_lock();
+bool storage::load_map() NOEXCEPT
+{
+    std::unique_lock field_lock(field_mutex_);
+    std::unique_lock map_lock(map_mutex_);
+    const auto mapped = mapped_;
     mapped_ = true;
-    mutex_.unlock();
-    return true;
+    return !mapped;
 }
 
-bool storage::flush() const NOEXCEPT
+bool storage::flush_map() const NOEXCEPT
 {
-    return true;
+    std::shared_lock field_lock(field_mutex_);
+    std::unique_lock map_lock(map_mutex_);
+    return mapped_;
 }
 
-bool storage::unmap() NOEXCEPT
+bool storage::unload_map() NOEXCEPT
 {
-    mutex_.lock_upgrade();
+    std::unique_lock field_lock(field_mutex_);
+    std::unique_lock map_lock(map_mutex_);
+    const auto mapped = mapped_;
+    mapped_ = false;
+    return mapped;
+}
 
-    if (!mapped_)
+// Physical grows at same rate as logical (not time optimized).
+// Allocation is never reduced in case of downsize (not space optimized).
+memory_ptr storage::reserve(size_t size) THROWS
+{
+    std::unique_lock field_lock(field_mutex_);
+
+    if (size != buffer_.size())
     {
-        mutex_.unlock_upgrade();
-        return true;
+        std::unique_lock map_lock(map_mutex_);
+        buffer_.resize(size);
     }
 
-    mutex_.unlock_upgrade_and_lock();
-    mapped_ = false;
-    mutex_.unlock();
-    return true;
+    // No thread can intervene here because of the field_mutex_ lock.
+    return get();
 }
 
-bool storage::mapped() const NOEXCEPT
+memory_ptr storage::resize(size_t size) THROWS
 {
-    std::shared_lock lock(mutex_);
+    return reserve(size);
+}
+
+memory_ptr storage::get() THROWS
+{
+    const auto memory = std::make_shared<accessor>(map_mutex_);
+    memory->assign(buffer_.data());
+    return memory;
+}
+
+bool storage::is_mapped() const NOEXCEPT
+{
+    std::shared_lock field_lock(field_mutex_);
     return mapped_;
+}
+
+bool storage::is_closed() const NOEXCEPT
+{
+    std::shared_lock field_lock(field_mutex_);
+    return closed_;
+}
+
+size_t storage::logical() const NOEXCEPT
+{
+    std::shared_lock field_lock(field_mutex_);
+    return buffer_.size();
 }
 
 size_t storage::capacity() const NOEXCEPT
@@ -95,39 +135,11 @@ size_t storage::capacity() const NOEXCEPT
     return logical();
 }
 
-size_t storage::logical() const NOEXCEPT
+size_t storage::size() const NOEXCEPT
 {
-    std::shared_lock lock(mutex_);
-    return buffer_.size();
+    return logical();
 }
 
-memory_ptr storage::access() NOEXCEPT(false)
-{
-    const auto memory = std::make_shared<accessor>(mutex_);
-    memory->assign(buffer_.data());
-    return memory;
-}
-
-memory_ptr storage::resize(size_t size) NOEXCEPT(false)
-{
-    return reserve(size);
-}
-
-memory_ptr storage::reserve(size_t size) NOEXCEPT(false)
-{
-    const auto memory = std::make_shared<accessor>(mutex_);
-
-    // Physical grows at same rate as logical (not time optimized).
-    // Allocation is never reduced in case of downsize (not space optimized).
-    if (size != buffer_.size())
-    {
-        mutex_.unlock_upgrade_and_lock();
-        buffer_.resize(size);
-        mutex_.unlock_and_lock_upgrade();
-    }
-
-    memory->assign(buffer_.data());
-    return memory;
-}
+BC_POP_WARNING()
 
 } // namespace test

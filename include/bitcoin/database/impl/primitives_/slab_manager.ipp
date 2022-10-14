@@ -132,7 +132,7 @@ memory_ptr CLASS::get(Link link) const NOEXCEPT
     // We avoid a runtime error here to optimize out the payload_size lock.
     BC_ASSERT_MSG(link < payload_size(), "Read past end of file.");
 
-    const auto memory = file_.access();
+    const auto memory = file_.get();
     memory->increment(header_size_ + link);
     return memory;
 }
@@ -152,7 +152,7 @@ void CLASS::read_size() NOEXCEPT
     BC_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
 
     // The accessor must remain in scope until the end of the block.
-    const auto memory = file_.access();
+    const auto memory = file_.get();
     memory->increment(header_size_);
     payload_size_ = system::unsafe_from_little_endian<Link>(memory->buffer());
 }
@@ -164,7 +164,7 @@ void CLASS::write_size() const NOEXCEPT
     BC_ASSERT(header_size_ + sizeof(Link) <= file_.capacity());
 
     // The accessor must remain in scope until the end of the block.
-    const auto memory = file_.access();
+    const auto memory = file_.get();
     memory->increment(header_size_);
     system::unsafe_to_little_endian<Link>(memory->buffer(), payload_size_);
 }
