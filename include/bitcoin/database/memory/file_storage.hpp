@@ -36,21 +36,26 @@ class BCD_API file_storage final
 public:
     DELETE4(file_storage);
 
-    /// Open/create database file.
     file_storage(const std::filesystem::path& filename, size_t minimum=1,
         size_t expansion=50) NOEXCEPT;
 
-    /// Close the database file.
     /// File should be explicitly unmapped before destruct.
     ~file_storage() NOEXCEPT;
 
-    /// Close file, idempotent.
+    /// Open file, must be closed.
+    bool open() NOEXCEPT override;
+
+    /// Close file, must be unmapped, idempotent.
     bool close() NOEXCEPT override;
+
+    /// True if the file is closed (or failed to open).
+    bool is_open() const NOEXCEPT override;
 
     /// Map file to memory, must be unmapped.
     bool load_map() NOEXCEPT override;
 
     /// Flush logical size of memory map to disk, must be mapped.
+    /// Requires exclusive access to memory map.
     bool flush_map() const NOEXCEPT override;
 
     /// Flush, unmap and truncate to logical, restartable, idempotent.
@@ -58,9 +63,6 @@ public:
 
     /// True if the file is mapped.
     bool is_mapped() const NOEXCEPT override;
-
-    /// True if the file is closed (or failed to open).
-    bool is_closed() const NOEXCEPT override;
 
     /// The current size of the persistent file (zero if closed).
     size_t size() const NOEXCEPT override;
@@ -118,12 +120,12 @@ private:
     uint8_t* map_;
     mutable std::shared_mutex map_mutex_;
 
-    // mutex->file_descriptor_->logical_.
-    mutable boost::upgrade_mutex field_mutex_;
+    // Protected by mutex.
     bool mapped_;
-    int file_descriptor_;
     size_t logical_;
     size_t capacity_;
+    int file_descriptor_;
+    mutable boost::upgrade_mutex field_mutex_;
 };
 
 } // namespace database

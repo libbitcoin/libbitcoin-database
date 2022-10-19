@@ -63,6 +63,7 @@ BOOST_AUTO_TEST_CASE(file_storage__load_map__unmapped__true)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file);
+    BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(instance.load_map());
     BOOST_REQUIRE(instance.unload_map());
     BOOST_REQUIRE(instance.close());
@@ -73,6 +74,7 @@ BOOST_AUTO_TEST_CASE(file_storage__load_map__mapped__false)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file);
+    BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(instance.load_map());
     BOOST_REQUIRE(!instance.load_map());
     BOOST_REQUIRE(instance.unload_map());
@@ -84,6 +86,7 @@ BOOST_AUTO_TEST_CASE(file_storage__unload_map__unmapped__false)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file);
+    BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(!instance.unload_map());
     BOOST_REQUIRE(instance.close());
 }
@@ -93,6 +96,7 @@ BOOST_AUTO_TEST_CASE(file_storage__unload_map__mapped__true)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file);
+    BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(instance.load_map());
     BOOST_REQUIRE(instance.unload_map());
     BOOST_REQUIRE(instance.close());
@@ -103,6 +107,7 @@ BOOST_AUTO_TEST_CASE(file_storage__capacity__default__expected)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file);
+    BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE_EQUAL(instance.capacity(), zero);
     BOOST_REQUIRE(instance.load_map());
     BOOST_REQUIRE_EQUAL(instance.capacity(), 1u);
@@ -115,6 +120,7 @@ BOOST_AUTO_TEST_CASE(file_storage__resize__unmapped__false)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file);
+    BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(!instance.resize(42));
     BOOST_REQUIRE(instance.close());
 }
@@ -125,6 +131,7 @@ BOOST_AUTO_TEST_CASE(file_storage__resize__mapped__expected)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file);
+    BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(instance.load_map());
     BOOST_REQUIRE(instance.resize(42));
     BOOST_REQUIRE_EQUAL(instance.capacity(), 42u);
@@ -137,6 +144,7 @@ BOOST_AUTO_TEST_CASE(file_storage__reserve__unmapped__false)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file);
+    BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(!instance.reserve(42));
     BOOST_REQUIRE(instance.close());
 }
@@ -147,6 +155,7 @@ BOOST_AUTO_TEST_CASE(file_storage__reserve__mapped__expected_capacity)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file);
+    BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(instance.load_map());
     BOOST_REQUIRE(instance.reserve(100));
     BOOST_REQUIRE_EQUAL(instance.capacity(), 150u);
@@ -160,6 +169,7 @@ BOOST_AUTO_TEST_CASE(file_storage__reserve__minimum_no_expansion__expected_capac
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file, 100, 0);
+    BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(instance.load_map());
     BOOST_REQUIRE(instance.reserve(42));
     BOOST_REQUIRE_EQUAL(instance.capacity(), 100u);
@@ -175,6 +185,7 @@ BOOST_AUTO_TEST_CASE(file_storage__reserve__no_minimum_expansion__expected_capac
 
     // map will fail if minimum is zero.
     file_storage instance(file, 1, 42);
+    BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(instance.load_map());
     BOOST_REQUIRE(instance.reserve(100));
     BOOST_REQUIRE_EQUAL(instance.capacity(), 142u);
@@ -187,6 +198,7 @@ BOOST_AUTO_TEST_CASE(file_storage__get__unmapped__false)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file);
+    BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(!instance.get());
     BOOST_REQUIRE(instance.close());
 }
@@ -197,6 +209,7 @@ BOOST_AUTO_TEST_CASE(file_storage__get__mapped__success)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file);
+    BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(instance.load_map());
     BOOST_REQUIRE(instance.get());
     BOOST_REQUIRE(instance.unload_map());
@@ -208,6 +221,7 @@ BOOST_AUTO_TEST_CASE(file_storage__flush_map__unmapped__false)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file);
+    BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(!instance.flush_map());
     BOOST_REQUIRE(instance.close());
 }
@@ -217,6 +231,7 @@ BOOST_AUTO_TEST_CASE(file_storage__flush_map__mapped__true)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file);
+    BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(instance.load_map());
     BOOST_REQUIRE(instance.flush_map());
     BOOST_REQUIRE(instance.unload_map());
@@ -229,6 +244,7 @@ BOOST_AUTO_TEST_CASE(file_storage__write__read__expected)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file);
+    BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(instance.load_map());
     auto memory = instance.reserve(sizeof(uint64_t));
     BOOST_REQUIRE(memory);
@@ -248,6 +264,7 @@ BOOST_AUTO_TEST_CASE(file_storage__unload_map__pending_accessor__false)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file);
+    BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(instance.load_map());
     auto memory = instance.get();
     BOOST_REQUIRE(memory);
@@ -262,6 +279,7 @@ BOOST_AUTO_TEST_CASE(file_storage__close__pending_map__false)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     file_storage instance(file);
+    BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(instance.load_map());
     auto memory = instance.get();
     BOOST_REQUIRE(memory);

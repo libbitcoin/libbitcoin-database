@@ -30,8 +30,14 @@ namespace database {
 class BCD_API storage
 {
 public:
+    /// Open file.
+    virtual bool open() NOEXCEPT = 0;
+
     /// Close file, idempotent.
     virtual bool close() NOEXCEPT = 0;
+
+    /// True if the file is open.
+    virtual bool is_open() const NOEXCEPT = 0;
 
     /// Map file to memory, must be unmapped.
     virtual bool load_map() NOEXCEPT = 0;
@@ -45,9 +51,6 @@ public:
     /// True if the file is mapped.
     virtual bool is_mapped() const NOEXCEPT = 0;
 
-    /// True if the file is closed (or failed to open).
-    virtual bool is_closed() const NOEXCEPT = 0;
-
     /// The current size of the persistent file (zero if closed).
     virtual size_t size() const NOEXCEPT = 0;
 
@@ -58,15 +61,15 @@ public:
     virtual size_t capacity() const NOEXCEPT = 0;
 
     /// Get protected read/write access to start of memory map.
-    virtual memory_ptr get() THROWS = 0;
+    virtual memory_ptr get() NOEXCEPT = 0;
 
     /// Change logical size to the specified total size, return access.
     /// Increases or shrinks the capacity/file size to match required size.
-    virtual memory_ptr resize(size_t required) THROWS = 0;
+    virtual memory_ptr resize(size_t required) NOEXCEPT = 0;
 
     /// Increase logical size to the specified total size, return access.
     /// Increases the capacity/file size to at least the required size.
-    virtual memory_ptr reserve(size_t required) THROWS = 0;
+    virtual memory_ptr reserve(size_t required) NOEXCEPT = 0;
 };
 
 } // namespace database

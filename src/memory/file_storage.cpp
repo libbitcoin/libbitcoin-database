@@ -55,12 +55,10 @@ file_storage::file_storage(const path& filename, size_t minimum,
     expansion_(expansion),
     map_(nullptr),
     mapped_(false),
-    file_descriptor_(open_file(filename)),
-    logical_(size()),
-    capacity_(zero)
+    logical_(zero),
+    capacity_(zero),
+    file_descriptor_(INVALID_DESCRIPTOR)
 {
-    // LOG START WARNING (will be handled in load_map() when called).
-    BC_ASSERT_MSG(file_descriptor_ != INVALID_DESCRIPTOR, "file failed to open");
 }
 
 file_storage::~file_storage() NOEXCEPT
@@ -73,33 +71,45 @@ file_storage::~file_storage() NOEXCEPT
     BC_ASSERT_MSG(file_descriptor_ == INVALID_DESCRIPTOR, "file open at destruct");
 }
 
-// Explicit close is required for error capture.
+bool file_storage::open() NOEXCEPT
+{
+    std::unique_lock field_lock(field_mutex_);
+
+    // SEQUENCE ERROR (open_while_open)
+    if (file_descriptor_ != INVALID_DESCRIPTOR)
+        return false;
+
+    file_descriptor_ = open_file(filename_);
+    logical_ = file_size(file_descriptor_);
+
+    // STORE CORRUPTION (open_failure)
+    return file_descriptor_ != INVALID_DESCRIPTOR;
+}
+
 bool file_storage::close() NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    // SEQUENCE ERROR (close_without_unmap)
+    // SEQUENCE ERROR (close_while_mapped)
     if (mapped_)
         return false;
 
-    if (map_mutex_.try_lock())
-    {
-        if (file_descriptor_ == INVALID_DESCRIPTOR)
-        {
-            map_mutex_.unlock();
-            return true;
-        }
+    // idempotent
+    if (file_descriptor_ == INVALID_DESCRIPTOR)
+        return true;
 
-        // STORE CORRUPTION (close_failure)
-        const auto closed = close_file(file_descriptor_);
-        file_descriptor_ = INVALID_DESCRIPTOR;
-        logical_ = zero;
-        map_mutex_.unlock();
-        return closed;
-    }
+    const auto descriptor = file_descriptor_;
+    file_descriptor_ = INVALID_DESCRIPTOR;
+    logical_ = zero;
 
-    // SEQUENCE ERROR (close_while_locked)
-    return false;
+    // STORE CORRUPTION (close_failure)
+    return close_file(descriptor);
+}
+
+bool file_storage::is_open() const NOEXCEPT
+{
+    std::shared_lock field_lock(field_mutex_);
+    return file_descriptor_ != INVALID_DESCRIPTOR;
 }
 
 // Map, flush, unmap.
@@ -117,10 +127,9 @@ bool file_storage::load_map() NOEXCEPT
 
     if (map_mutex_.try_lock())
     {
-        // reads logical_, writes capacity_/map_
         if (mapped_ || !map())
         {
-            // SEQUENCE ERROR (load_while_mapped) | STORE CORRUPTION (map_failure)
+            // SEQUENCE ERROR (map_while_mapped) | STORE CORRUPTION (map_failure)
             map_mutex_.unlock();
             return false;
         }
@@ -130,24 +139,7 @@ bool file_storage::load_map() NOEXCEPT
         return true;
     }
 
-    // SEQUENCE ERROR (close_while_locked)
-    return false;
-}
-
-bool file_storage::flush_map() const NOEXCEPT
-{
-    std::shared_lock field_lock(field_mutex_);
-
-    if (map_mutex_.try_lock())
-    {
-        // SEQUENCE ERROR (flush_while_unmapped) | STORE CORRUPTION (flush_failure)
-        // reads logical_/capacity_, flushes map_
-        const auto result = mapped_ && flush();
-        map_mutex_.unlock();
-        return result;
-    }
-
-    // SEQUENCE ERROR (close_while_locked)
+    // SEQUENCE ERROR (map_while_locked)
     return false;
 }
 
@@ -159,10 +151,9 @@ bool file_storage::unload_map() NOEXCEPT
     {
         BC_ASSERT_MSG(logical_ <= capacity_, "logical size exceeds capacity");
 
-        // reads logical_, writes capacity_/map_
         if (!mapped_ || !unmap())
         {
-            // SEQUENCE ERROR (unload_while_unmapped) | STORE CORRUPTION (unmap_failure)
+            // SEQUENCE ERROR (unmap_while_unmapped) | STORE CORRUPTION (unmap_failure)
             map_mutex_.unlock();
             return false;
         }
@@ -172,12 +163,36 @@ bool file_storage::unload_map() NOEXCEPT
         return true;
     }
 
-    // SEQUENCE ERROR (close_while_locked)
+    // SEQUENCE ERROR (unmap_while_locked)
     return false;
+}
+
+bool file_storage::is_mapped() const NOEXCEPT
+{
+    std::shared_lock field_lock(field_mutex_);
+    return mapped_;
 }
 
 // Operations.
 // ----------------------------------------------------------------------------
+
+bool file_storage::flush_map() const NOEXCEPT
+{
+    std::shared_lock field_lock(field_mutex_);
+
+    if (!mapped_)
+    {
+        // SEQUENCE ERROR (flush_while_unmapped)
+        return false;
+    }
+
+    // Join store threads before calling, ensuring no outstanding memory object
+    // or reservation in process.
+    std::unique_lock map_lock(map_mutex_);
+
+    // STORE CORRUPTION (flush_failure)
+    return flush();
+}
 
 // private
 memory_ptr file_storage::reserve(size_t required, size_t minimum,
@@ -187,7 +202,7 @@ memory_ptr file_storage::reserve(size_t required, size_t minimum,
 
     if (!mapped_)
     {
-        // LOG SEQUENCE ERROR (reserve_while_unmapped)
+        // SEQUENCE ERROR (reserve_while_unmapped)
         field_mutex_.unlock_upgrade();
         return nullptr;
     }
@@ -198,10 +213,9 @@ memory_ptr file_storage::reserve(size_t required, size_t minimum,
         // Block until all memory objects are freed (potential deadlock).
         std::unique_lock map_lock(map_mutex_);
 
-        // writes capacity_/map_
         if (!remap(get_resize(required, minimum, expansion)))
         {
-            // LOG STORE CORRUPTION (remap_failure)
+            // STORE CORRUPTION (remap_failure)
             field_mutex_.unlock_upgrade();
             return nullptr;
         }
@@ -243,18 +257,6 @@ memory_ptr file_storage::resize(size_t required) NOEXCEPT
     return reserve(required, zero, zero);
 }
 
-bool file_storage::is_mapped() const NOEXCEPT
-{
-    std::shared_lock field_lock(field_mutex_);
-    return mapped_;
-}
-
-bool file_storage::is_closed() const NOEXCEPT
-{
-    std::shared_lock field_lock(field_mutex_);
-    return file_descriptor_ != INVALID_DESCRIPTOR;
-}
-
 size_t file_storage::logical() const NOEXCEPT
 {
     std::shared_lock field_lock(field_mutex_);
@@ -270,7 +272,7 @@ size_t file_storage::capacity() const NOEXCEPT
 size_t file_storage::size() const NOEXCEPT
 {
     std::shared_lock field_lock(field_mutex_);
-    return is_closed() ? zero : file_size(file_descriptor_);
+    return is_open() ? file_size(file_descriptor_) : zero;
 }
 
 // private, mman wrappers, not thread safe

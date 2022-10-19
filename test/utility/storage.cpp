@@ -50,6 +50,14 @@ storage::~storage() NOEXCEPT
 {
 }
 
+bool storage::open() NOEXCEPT
+{
+    std::unique_lock field_lock(field_mutex_);
+    std::unique_lock map_lock(map_mutex_);
+    closed_ = false;
+    return true;
+}
+
 bool storage::close() NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
@@ -57,6 +65,12 @@ bool storage::close() NOEXCEPT
     closed_ = true;
     buffer_.clear();
     return true;
+}
+
+bool storage::is_open() const NOEXCEPT
+{
+    std::shared_lock field_lock(field_mutex_);
+    return !closed_;
 }
 
 bool storage::load_map() NOEXCEPT
@@ -84,9 +98,15 @@ bool storage::unload_map() NOEXCEPT
     return mapped;
 }
 
+bool storage::is_mapped() const NOEXCEPT
+{
+    std::shared_lock field_lock(field_mutex_);
+    return mapped_;
+}
+
 // Physical grows at same rate as logical (not time optimized).
 // Allocation is never reduced in case of downsize (not space optimized).
-memory_ptr storage::reserve(size_t size) THROWS
+memory_ptr storage::reserve(size_t size) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
@@ -100,28 +120,16 @@ memory_ptr storage::reserve(size_t size) THROWS
     return get();
 }
 
-memory_ptr storage::resize(size_t size) THROWS
+memory_ptr storage::resize(size_t size) NOEXCEPT
 {
     return reserve(size);
 }
 
-memory_ptr storage::get() THROWS
+memory_ptr storage::get() NOEXCEPT
 {
     const auto memory = std::make_shared<accessor>(map_mutex_);
     memory->assign(buffer_.data());
     return memory;
-}
-
-bool storage::is_mapped() const NOEXCEPT
-{
-    std::shared_lock field_lock(field_mutex_);
-    return mapped_;
-}
-
-bool storage::is_closed() const NOEXCEPT
-{
-    std::shared_lock field_lock(field_mutex_);
-    return closed_;
 }
 
 size_t storage::logical() const NOEXCEPT
