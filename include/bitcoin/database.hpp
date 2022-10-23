@@ -31,23 +31,14 @@
 #include <bitcoin/database/memory/map.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/storage.hpp>
-////#include <bitcoin/database/primitives/element.hpp>
-////#include <bitcoin/database/primitives/iterable.hpp>
-////#include <bitcoin/database/primitives/iterator.hpp>
-////#include <bitcoin/database/primitives/manager.hpp>
-////#include <bitcoin/database/primitives/primitives.hpp>
-////#include <bitcoin/database/primitives/elements/keyed_record.hpp>
-////#include <bitcoin/database/primitives/elements/keyed_slab.hpp>
-////#include <bitcoin/database/primitives/elements/record.hpp>
-////#include <bitcoin/database/primitives/elements/slab.hpp>
-#include <bitcoin/database/primitives_/hash_table.hpp>
-#include <bitcoin/database/primitives_/hash_table_header.hpp>
-#include <bitcoin/database/primitives_/hash_table_multimap.hpp>
-#include <bitcoin/database/primitives_/list.hpp>
-#include <bitcoin/database/primitives_/list_element.hpp>
-#include <bitcoin/database/primitives_/list_iterator.hpp>
-#include <bitcoin/database/primitives_/primitives.hpp>
-#include <bitcoin/database/primitives_/record_manager.hpp>
-#include <bitcoin/database/primitives_/slab_manager.hpp>
+#include <bitcoin/database/primitives/element.hpp>
+#include <bitcoin/database/primitives/iterable.hpp>
+#include <bitcoin/database/primitives/iterator.hpp>
+#include <bitcoin/database/primitives/manager.hpp>
+#include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/primitives/elements/keyed_record.hpp>
+#include <bitcoin/database/primitives/elements/keyed_slab.hpp>
+#include <bitcoin/database/primitives/elements/record.hpp>
+#include <bitcoin/database/primitives/elements/slab.hpp>
 
 #endif

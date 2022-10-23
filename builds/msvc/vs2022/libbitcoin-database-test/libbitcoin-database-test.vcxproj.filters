@@ -19,12 +19,6 @@
     <Filter Include="src\primitives">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\primitives_">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000004}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\utility">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000005}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\test\locks\file_lock.cpp">
@@ -54,52 +48,22 @@
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives_\hash_table.cpp">
-      <Filter>src\primitives_</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives_\hash_table_header.cpp">
-      <Filter>src\primitives_</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives_\hash_table_multimap.cpp">
-      <Filter>src\primitives_</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives_\list.cpp">
-      <Filter>src\primitives_</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives_\list_element.cpp">
-      <Filter>src\primitives_</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives_\list_iterator.cpp">
-      <Filter>src\primitives_</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives_\record_manager.cpp">
-      <Filter>src\primitives_</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives_\slab_manager.cpp">
-      <Filter>src\primitives_</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\settings.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\storage.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\utility\storage.cpp">
-      <Filter>src\utility</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\utility\utility.cpp">
-      <Filter>src\utility</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\test\test.hpp">
+    <ClInclude Include="..\..\..\..\test\storage.hpp">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\test\utility\storage.hpp">
-      <Filter>src\utility</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\test\utility\utility.hpp">
-      <Filter>src\utility</Filter>
+    <ClInclude Include="..\..\..\..\test\test.hpp">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -16,13 +16,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef STORAGE_HPP
-#define STORAGE_HPP
+#ifndef LIBBITCOIN_DATABASE_TEST_STORAGE_HPP
+#define LIBBITCOIN_DATABASE_TEST_STORAGE_HPP
 
-#include "../test.hpp"
-#include <shared_mutex>
-#include <bitcoin/system.hpp>
-#include <bitcoin/database.hpp>
+#include "test.hpp"
 
 namespace test {
 

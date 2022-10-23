@@ -197,6 +197,8 @@ if (with-tests)
     add_executable( libbitcoin-database-test
         "../../test/main.cpp"
         "../../test/settings.cpp"
+        "../../test/storage.cpp"
+        "../../test/storage.hpp"
         "../../test/test.cpp"
         "../../test/test.hpp"
         "../../test/locks/file_lock.cpp"
@@ -206,19 +208,7 @@ if (with-tests)
         "../../test/memory/map.cpp"
         "../../test/primitives/element.cpp"
         "../../test/primitives/iterable.cpp"
-        "../../test/primitives/iterator.cpp"
-        "../../test/primitives_/hash_table.cpp"
-        "../../test/primitives_/hash_table_header.cpp"
-        "../../test/primitives_/hash_table_multimap.cpp"
-        "../../test/primitives_/list.cpp"
-        "../../test/primitives_/list_element.cpp"
-        "../../test/primitives_/list_iterator.cpp"
-        "../../test/primitives_/record_manager.cpp"
-        "../../test/primitives_/slab_manager.cpp"
-        "../../test/utility/storage.cpp"
-        "../../test/utility/storage.hpp"
-        "../../test/utility/utility.cpp"
-        "../../test/utility/utility.hpp" )
+        "../../test/primitives/iterator.cpp" )
 
     add_test( NAME libbitcoin-database-test COMMAND libbitcoin-database-test
             --run_test=*

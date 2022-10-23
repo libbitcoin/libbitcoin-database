@@ -79,23 +79,13 @@
     <ClCompile Include="..\..\..\..\test\primitives\element.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\iterable.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives_\hash_table.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives_\hash_table_header.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives_\hash_table_multimap.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives_\list.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives_\list_element.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives_\list_iterator.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives_\record_manager.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives_\slab_manager.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
+    <ClCompile Include="..\..\..\..\test\storage.cpp" />
     <ClCompile Include="..\..\..\..\test\test.cpp" />
-    <ClCompile Include="..\..\..\..\test\utility\storage.cpp" />
-    <ClCompile Include="..\..\..\..\test\utility\utility.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\test\storage.hpp" />
     <ClInclude Include="..\..\..\..\test\test.hpp" />
-    <ClInclude Include="..\..\..\..\test\utility\storage.hpp" />
-    <ClInclude Include="..\..\..\..\test\utility\utility.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

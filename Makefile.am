@@ -59,6 +59,8 @@ test_libbitcoin_database_test_LDADD = src/libbitcoin-database.la ${boost_unit_te
 test_libbitcoin_database_test_SOURCES = \
     test/main.cpp \
     test/settings.cpp \
+    test/storage.cpp \
+    test/storage.hpp \
     test/test.cpp \
     test/test.hpp \
     test/locks/file_lock.cpp \
@@ -68,19 +70,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/memory/map.cpp \
     test/primitives/element.cpp \
     test/primitives/iterable.cpp \
-    test/primitives/iterator.cpp \
-    test/primitives_/hash_table.cpp \
-    test/primitives_/hash_table_header.cpp \
-    test/primitives_/hash_table_multimap.cpp \
-    test/primitives_/list.cpp \
-    test/primitives_/list_element.cpp \
-    test/primitives_/list_iterator.cpp \
-    test/primitives_/record_manager.cpp \
-    test/primitives_/slab_manager.cpp \
-    test/utility/storage.cpp \
-    test/utility/storage.hpp \
-    test/utility/utility.cpp \
-    test/utility/utility.hpp
+    test/primitives/iterator.cpp
 
 endif WITH_TESTS
 
@@ -127,17 +117,6 @@ include_bitcoin_database_impl_primitives_elements_HEADERS = \
     include/bitcoin/database/impl/primitives/elements/record.ipp \
     include/bitcoin/database/impl/primitives/elements/slab.ipp
 
-include_bitcoin_database_impl_primitives_dir = ${includedir}/bitcoin/database/impl/primitives_
-include_bitcoin_database_impl_primitives__HEADERS = \
-    include/bitcoin/database/impl/primitives_/hash_table.ipp \
-    include/bitcoin/database/impl/primitives_/hash_table_header.ipp \
-    include/bitcoin/database/impl/primitives_/hash_table_multimap.ipp \
-    include/bitcoin/database/impl/primitives_/list.ipp \
-    include/bitcoin/database/impl/primitives_/list_element.ipp \
-    include/bitcoin/database/impl/primitives_/list_iterator.ipp \
-    include/bitcoin/database/impl/primitives_/record_manager.ipp \
-    include/bitcoin/database/impl/primitives_/slab_manager.ipp
-
 include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks
 include_bitcoin_database_locks_HEADERS = \
     include/bitcoin/database/locks/conditional_lock.hpp \
@@ -170,18 +149,6 @@ include_bitcoin_database_primitives_elements_HEADERS = \
     include/bitcoin/database/primitives/elements/keyed_slab.hpp \
     include/bitcoin/database/primitives/elements/record.hpp \
     include/bitcoin/database/primitives/elements/slab.hpp
-
-include_bitcoin_database_primitives_dir = ${includedir}/bitcoin/database/primitives_
-include_bitcoin_database_primitives__HEADERS = \
-    include/bitcoin/database/primitives_/hash_table.hpp \
-    include/bitcoin/database/primitives_/hash_table_header.hpp \
-    include/bitcoin/database/primitives_/hash_table_multimap.hpp \
-    include/bitcoin/database/primitives_/list.hpp \
-    include/bitcoin/database/primitives_/list_element.hpp \
-    include/bitcoin/database/primitives_/list_iterator.hpp \
-    include/bitcoin/database/primitives_/primitives.hpp \
-    include/bitcoin/database/primitives_/record_manager.hpp \
-    include/bitcoin/database/primitives_/slab_manager.hpp
 
 
 # Custom make targets.

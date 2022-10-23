@@ -109,15 +109,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\iterator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\primitives.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives_\hash_table.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives_\hash_table_header.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives_\hash_table_multimap.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives_\list.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives_\list_element.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives_\list_iterator.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives_\primitives.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives_\record_manager.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives_\slab_manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp" />
     <ClInclude Include="..\..\..\..\src\mman-win32\mman.h" />
@@ -132,14 +123,6 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\iterable.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\iterator.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\manager.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives_\hash_table.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives_\hash_table_header.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives_\hash_table_multimap.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives_\list.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives_\list_element.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives_\list_iterator.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives_\record_manager.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives_\slab_manager.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
