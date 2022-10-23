@@ -27,6 +27,10 @@ namespace libbitcoin {
 namespace database {
 
 /// Basic file system utilities, not thread safe.
+BCD_API bool clear_path(const std::filesystem::path& directory) NOEXCEPT;
+BCD_API bool create_file(const std::filesystem::path& filename) NOEXCEPT;
+BCD_API bool file_exists(const std::filesystem::path& filename) NOEXCEPT;
+BCD_API bool remove_file(const std::filesystem::path& filename) NOEXCEPT;
 BCD_API int open_file(const std::filesystem::path& filename) NOEXCEPT;
 BCD_API bool close_file(int file_descriptor) NOEXCEPT;
 BCD_API size_t file_size(int file_descriptor) NOEXCEPT;

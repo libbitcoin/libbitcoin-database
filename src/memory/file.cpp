@@ -23,6 +23,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <filesystem>
+#include <iostream>
+#include <system_error>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -30,12 +32,55 @@ namespace libbitcoin {
 namespace database {
 
 using namespace system;
+using namespace std::filesystem;
 
-int open_file(const std::filesystem::path& filename) NOEXCEPT
+bool clear_path(const path& directory) NOEXCEPT
+{
+    // remove_all returns count removed, and error code if fails.
+    // create_directories returns true if path exists or created.
+    // used for setup, with no expectations of file/directory existence.
+    std::error_code ec;
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    remove_all(directory, ec);
+    return !ec && create_directories(directory, ec);
+    BC_POP_WARNING()
+}
+
+bool create_file(const path& filename) NOEXCEPT
+{
+    // Creates and returns true if file already existed (and no error).
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    std::ofstream file(filename);
+    const auto good = file.good();
+    file.close();
+    BC_POP_WARNING()
+    return good;
+}
+
+bool file_exists(const path& filename) NOEXCEPT
+{
+    // Returns true only if file existed.
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    std::ifstream file(filename);
+    const auto good = file.good();
+    file.close();
+    BC_POP_WARNING()
+    return good;
+}
+
+bool remove_file(const path& filename) NOEXCEPT
+{
+    // Deletes and returns false if file did not exist (or error).
+    code ec;
+    return remove(filename, ec);
+}
+
+// File descriptor functions required for memory mapping.
+
+int open_file(const path& filename) NOEXCEPT
 {
     // _wsopen_s and wstring do not throw (but are unannotated).
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
 #if defined(HAVE_MSC)
     int file_descriptor;
     if (_wsopen_s(&file_descriptor, filename.wstring().c_str(),
@@ -47,7 +92,6 @@ int open_file(const std::filesystem::path& filename) NOEXCEPT
         (O_RDWR), (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH));
 #endif
     return file_descriptor;
-
     BC_POP_WARNING()
 }
 
