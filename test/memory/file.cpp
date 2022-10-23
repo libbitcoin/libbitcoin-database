@@ -85,6 +85,29 @@ BOOST_AUTO_TEST_CASE(file__remove_file__exists__true_removed)
     BOOST_REQUIRE(!test::exists(TEST_PATH));
 }
 
+BOOST_AUTO_TEST_CASE(file__rename_file__missing__false)
+{
+    BOOST_REQUIRE(!rename_file(TEST_PATH, TEST_PATH));
+}
+
+BOOST_AUTO_TEST_CASE(file__rename_file__exists_to_self__true)
+{
+    BOOST_REQUIRE(test::create(TEST_PATH));
+    BOOST_REQUIRE(rename_file(TEST_PATH, TEST_PATH));
+}
+
+BOOST_AUTO_TEST_CASE(file__rename_file__exists__true)
+{
+    const std::string target = TEST_PATH + "_";
+    BOOST_REQUIRE(test::create(TEST_PATH));
+    BOOST_REQUIRE(rename_file(TEST_PATH, target));
+    BOOST_REQUIRE(test::exists(target));
+    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BOOST_REQUIRE(rename_file(target, TEST_PATH));
+    BOOST_REQUIRE(!test::exists(target));
+    BOOST_REQUIRE(test::exists(TEST_PATH));
+}
+
 BOOST_AUTO_TEST_CASE(file__open_file__missing__failure)
 {
 	BOOST_REQUIRE_EQUAL(open_file(TEST_PATH), -1);

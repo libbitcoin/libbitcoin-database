@@ -71,8 +71,16 @@ bool file_exists(const path& filename) NOEXCEPT
 bool remove_file(const path& filename) NOEXCEPT
 {
     // Deletes and returns false if file did not exist (or error).
-    code ec;
+    std::error_code ec;
     return remove(filename, ec);
+}
+
+bool rename_file(const path& from, const path& to) NOEXCEPT
+{
+    // en.cppreference.com/w/cpp/filesystem/rename
+    std::error_code ec;
+    rename(from, to, ec);
+    return !ec;
 }
 
 // File descriptor functions required for memory mapping.
