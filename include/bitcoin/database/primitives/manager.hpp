@@ -29,7 +29,7 @@ namespace database {
     
 /// Linked list abstraction over storage for given link and record sizes.
 template <typename Link, size_t Size,
-    if_link<Link> = true>
+    if_link<Link> = true, if_nonzero<Size> = true>
 class manager
 {
 public:
@@ -77,8 +77,9 @@ using slab_manager = manager<Link, one>;
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, size_t Size, if_link<Link> If>
-#define CLASS manager<Link, Size, If>
+#define TEMPLATE template <typename Link, size_t Size, \
+if_link<Link> If1, if_nonzero<Size> If2>
+#define CLASS manager<Link, Size, If1, If2>
 
 #include <bitcoin/database/impl/primitives/manager.ipp>
 
