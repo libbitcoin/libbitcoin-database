@@ -56,7 +56,7 @@ bool clear(const std::filesystem::path& file_directory) NOEXCEPT
 
 bool create(const std::filesystem::path& file_path) NOEXCEPT
 {
-    // Creates and returns true if file already existed (and no error).
+    // Creates and returns true if file existed or not (and no error).
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     std::ofstream file(to_extended_path(file_path));
     const auto good = file.good();
