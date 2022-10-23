@@ -83,17 +83,16 @@ public:
     memory_ptr get(size_t offset=zero) NOEXCEPT override;
 
 protected:
-    ////static constexpr size_t get_resize(size_t required, size_t minimum,
-    ////    size_t expansion) NOEXCEPT
-    ////{
-    ////    BC_PUSH_WARNING(NO_STATIC_CAST)
-    ////    const auto resize = required * ((expansion + 100.0) / 100.0);
-    ////    const auto target = std::max(minimum, static_cast<size_t>(resize));
-    ////    BC_POP_WARNING()
-    ////
-    ////    BC_ASSERT_MSG(target >= required, "unexpected truncation");
-    ////    return target;
-    ////}
+    size_t to_capacity(size_t required) const NOEXCEPT
+    {
+        BC_PUSH_WARNING(NO_STATIC_CAST)
+        const auto resize = required * ((expansion_ + 100.0) / 100.0);
+        const auto target = std::max(minimum_, static_cast<size_t>(resize));
+        BC_POP_WARNING()
+    
+        BC_ASSERT_MSG(target >= required, "unexpected truncation");
+        return target;
+    }
 
 private:
     using path = std::filesystem::path;

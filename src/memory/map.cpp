@@ -247,7 +247,7 @@ size_t map::allocate(size_t chunk) NOEXCEPT
         }
 
         // remap_failure
-        if (!remap_(size))
+        if (!remap_(to_capacity(size)))
         {
             map_mutex_.unlock();
             field_mutex_.unlock_upgrade();
