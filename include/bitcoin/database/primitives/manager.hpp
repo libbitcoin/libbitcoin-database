@@ -53,11 +53,13 @@ public:
 private:
     static constexpr Link position_to_link(size_t position) NOEXCEPT
     {
-        return position / Size;
+        // This may be a narrow cast (size_t is generalized to any size).
+        return system::possible_narrow_cast<Link>(position / Size);
     }
 
     static constexpr size_t link_to_position(Link link) NOEXCEPT
     {
+        // This should never be a narrow cast (size_t can handle any Link).
         return link * Size;
     }
 
