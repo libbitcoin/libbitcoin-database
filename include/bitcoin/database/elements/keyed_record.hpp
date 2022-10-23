@@ -44,7 +44,7 @@ public:
 
 private:
     using base = element<record_manager<Link, Size>, Link>;
-    static constexpr auto key_size = array_count<Key>;
+    static constexpr auto key_size = size_of<Key>;
 };
 
 } // namespace database
