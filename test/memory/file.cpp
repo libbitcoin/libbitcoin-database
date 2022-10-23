@@ -16,32 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MEMORY_MEMORY_HPP
-#define LIBBITCOIN_DATABASE_MEMORY_MEMORY_HPP
+#include "../test.hpp"
 
-#include <memory>
-#include <bitcoin/system.hpp>
-#include <bitcoin/database/define.hpp>
+BOOST_AUTO_TEST_SUITE(file_tests)
 
-namespace libbitcoin {
-namespace database {
-
-/// Protected memory access interface.
-class BCD_API memory
+BOOST_AUTO_TEST_CASE(file_test)
 {
-public:
-    typedef std::shared_ptr<memory> ptr;
+	BOOST_REQUIRE(true);
+}
 
-    /// Get the byte pointer.
-    virtual uint8_t* data() NOEXCEPT = 0;
-
-    /// Increment the pointer the specified number of bytes within the record.
-    virtual void increment(size_t value) NOEXCEPT = 0;
-};
-
-typedef memory::ptr memory_ptr;
-
-} // namespace database
-} // namespace libbitcoin
-
-#endif
+BOOST_AUTO_TEST_SUITE_END()

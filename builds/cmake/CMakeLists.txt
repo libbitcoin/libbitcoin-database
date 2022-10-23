@@ -206,6 +206,7 @@ if (with-tests)
         "../../test/locks/flush_lock.cpp"
         "../../test/locks/interprocess_lock.cpp"
         "../../test/memory/accessor.cpp"
+        "../../test/memory/file.cpp"
         "../../test/memory/map.cpp"
         "../../test/primitives/element.cpp"
         "../../test/primitives/iterable.cpp"

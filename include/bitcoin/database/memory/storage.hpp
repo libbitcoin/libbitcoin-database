@@ -26,7 +26,7 @@
 namespace libbitcoin {
 namespace database {
 
-/// Mapped memory abstraction of a file.
+/// Mapped memory interface.
 class BCD_API storage
 {
 public:

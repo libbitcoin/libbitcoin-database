@@ -42,6 +42,9 @@
     <ClCompile Include="..\..\..\..\test\memory\accessor.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\memory\file.cpp">
+      <Filter>src\memory</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\memory\map.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
