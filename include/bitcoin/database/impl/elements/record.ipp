@@ -34,7 +34,7 @@ CLASS::record(record_manager<Link, Size>& manager) NOEXCEPT
 
 TEMPLATE
 CLASS::record(record_manager<Link, Size>& manager, Link link) NOEXCEPT
-  : element<record_manager<Link, Size>, Link>(manager, link)
+  : element<record_manager<Link, Size>>(manager, link)
 {
 }
 
@@ -47,7 +47,7 @@ Link CLASS::create(Link next, auto& write) NOEXCEPT
     system::write::bytes::copy writer({ start, std::next(start, size) });
     writer.write_little_endian<Link>(next);
     write(writer);
-    return base::link();
+    return base::self();
 }
 
 

@@ -27,10 +27,12 @@
 namespace libbitcoin {
 namespace database {
 
+/// Size includes Key but not Link (Key is treated as part of element value).
 template <typename Link, typename Key, size_t Size,
-    if_link<Link> = true, if_key<Key> = true>
+    if_link<Link> = true, if_key<Key> = true,
+    if_greater<Size, array_count<Key>> = true>
 class keyed_record
-  : public element<record_manager<Link, Size>, Link>
+  : public element<record_manager<Link, Size>>
 {
 public:
     keyed_record(record_manager<Link, Size>& manager) NOEXCEPT;
@@ -43,8 +45,8 @@ public:
     Key key() const NOEXCEPT;
 
 private:
-    using base = element<record_manager<Link, Size>, Link>;
-    static constexpr auto key_size = size_of<Key>;
+    using base = element<record_manager<Link, Size>>;
+    static constexpr auto key_size = array_count<Key>;
 };
 
 } // namespace database
@@ -52,8 +54,8 @@ private:
 
 #define TEMPLATE \
 template <typename Link, typename Key, size_t Size,\
-if_link<Link> If1, if_key<Key> If2>
-#define CLASS keyed_record<Link, Key, Size, If1, If2>
+if_link<Link> If1, if_key<Key> If2, if_greater<Size, array_count<Key>> If3>
+#define CLASS keyed_record<Link, Key, Size, If1, If2, If3>
 
 #include <bitcoin/database/impl/elements/keyed_record.ipp>
 

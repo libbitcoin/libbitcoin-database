@@ -21,11 +21,26 @@
 
 BOOST_AUTO_TEST_SUITE(manager_tests)
 
-BOOST_AUTO_TEST_CASE(manager__size__empty__zero)
+BOOST_AUTO_TEST_CASE(manager__size__empty_slab__zero)
 {
     test::storage file;
-    manager<uint32_t, one> instance(file);
+    const manager<uint32_t, 1> instance(file);
     BOOST_REQUIRE(is_zero(instance.size()));
+}
+
+BOOST_AUTO_TEST_CASE(manager__size__empty_record__zero)
+{
+    test::storage file;
+    const manager<uint32_t, 42> instance(file);
+    BOOST_REQUIRE(is_zero(instance.size()));
+}
+
+BOOST_AUTO_TEST_CASE(manager__size__one_record__expected)
+{
+    data_chunk buffer(9, 0xff);
+    test::storage file(buffer);
+    const manager<uint32_t, 5> instance(file);
+    BOOST_REQUIRE(instance.size());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

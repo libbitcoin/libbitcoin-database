@@ -32,18 +32,19 @@ namespace database {
 // Derived elements provide write append and random access read to memory map.
 
 /// Forward linked list element.
-template <typename Manager, typename Link,
-    if_link<Link> = true>
+template <typename Manager>
 class element
 {
 public:
-    static constexpr auto eof = system::bit_all<Link>;
+    using link = typename Manager::link;
+
+    static constexpr auto eof = system::bit_all<link>;
 
     /// Advance this to next element.
     bool advance() NOEXCEPT;
 
     /// The storage-relative pointer to this element (or eof).
-    Link link() const NOEXCEPT;
+    link self() const NOEXCEPT;
 
     /// True if the element is an eof indicator.
     operator bool() const NOEXCEPT;
@@ -53,22 +54,22 @@ public:
     bool operator!=(element other) const NOEXCEPT;
 
 protected:
-    element(Manager& manager, Link link) NOEXCEPT;
+    element(Manager& manager, link value) NOEXCEPT;
 
     memory_ptr get() const NOEXCEPT;
     memory_ptr get(size_t offset) const NOEXCEPT;
     memory_ptr allocate(size_t size) const NOEXCEPT;
 
 private:
-    Link link_;
     Manager& manager_;
+    link link_;
 };
 
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Manager, typename Link, if_link<Link> If>
-#define CLASS element<Manager, Link, If>
+#define TEMPLATE template <typename Manager>
+#define CLASS element<Manager>
 
 #include <bitcoin/database/impl/primitives/element.ipp>
 

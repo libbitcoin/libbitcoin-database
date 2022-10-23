@@ -30,7 +30,7 @@ namespace database {
 template <typename Link, typename Key,
     if_link<Link> = true, if_key<Key> = true>
 class keyed_slab
-  : public element<slab_manager<Link>, Link>
+  : public element<slab_manager<Link>>
 {
 public:
     keyed_slab(slab_manager<Link>& manager) NOEXCEPT;
@@ -43,8 +43,8 @@ public:
     Key key() const NOEXCEPT;
 
 private:
-    using base = element<slab_manager<Link>, Link>;
-    static constexpr auto key_size = size_of<Key>;
+    using base = element<slab_manager<Link>>;
+    static constexpr auto key_size = array_count<Key>;
 };
 
 } // namespace database

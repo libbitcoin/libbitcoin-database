@@ -27,10 +27,11 @@
 namespace libbitcoin {
 namespace database {
 
+// Size excludes Link bytes.
 template <typename Link, size_t Size,
     if_link<Link> = true>
 class record
-  : public element<record_manager<Link, Size>, Link>
+  : public element<record_manager<Link, Size>>
 {
 public:
     record(record_manager<Link, Size>& manager) NOEXCEPT;
@@ -40,7 +41,7 @@ public:
     void read(auto& read) const NOEXCEPT;
 
 private:
-    using base = element<record_manager<Link, Size>, Link>;
+    using base = element<record_manager<Link, Size>>;
 };
 
 } // namespace database

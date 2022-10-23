@@ -34,7 +34,7 @@ CLASS::slab(slab_manager<Link>& manager) NOEXCEPT
 
 TEMPLATE
 CLASS::slab(slab_manager<Link>& manager, Link link) NOEXCEPT
-  : element<slab_manager<Link>, Link>(manager, link)
+  : element<slab_manager<Link>>(manager, link)
 {
 }
 
@@ -47,7 +47,7 @@ Link CLASS::create(Link next, auto& write, size_t limit) NOEXCEPT
     system::write::bytes::copy writer({ start, std::next(start, size) });
     writer.write_little_endian<Link>(next);
     write(writer);
-    return base::link();
+    return base::self();
 }
 
 TEMPLATE

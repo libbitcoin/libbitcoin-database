@@ -29,10 +29,14 @@ namespace database {
     
 /// Linked list abstraction over storage for given link and record sizes.
 template <typename Link, size_t Size,
-    if_link<Link> = true, if_nonzero<Size> = true>
+    if_link<Link> = true>
 class manager
 {
 public:
+    /// Expose for public extraction.
+    using link = Link;
+
+    /// End of file sentinel.
     static constexpr auto eof = system::bit_all<Link>;
 
     /// Manage byte storage device.
@@ -51,16 +55,17 @@ public:
     memory_ptr get(Link link) const NOEXCEPT;
 
 private:
+    // Slabs don't use record offsetting (size_ one eliminates conversion).
+    static constexpr auto size_ = is_zero(Size) ? one : sizeof(Link) + Size;
+
     static constexpr Link position_to_link(size_t position) NOEXCEPT
     {
-        // This may be a narrow cast (size_t is generalized to any size).
-        return system::possible_narrow_cast<Link>(position / Size);
+        return system::possible_narrow_cast<Link>(position / size_);
     }
 
     static constexpr size_t link_to_position(Link link) NOEXCEPT
     {
-        // This should never be a narrow cast (size_t can handle any Link).
-        return link * Size;
+        return link * size_;
     }
 
     // Thread and remap safe.
@@ -70,16 +75,15 @@ private:
 template <typename Link, size_t Size>
 using record_manager = manager<Link, Size>;
 
-// One byte "record" implies slab manager.
+// Zero byte "record" implies slab manager.
 template <typename Link>
-using slab_manager = manager<Link, one>;
+using slab_manager = manager<Link, zero>;
 
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, size_t Size, \
-if_link<Link> If1, if_nonzero<Size> If2>
-#define CLASS manager<Link, Size, If1, If2>
+#define TEMPLATE template <typename Link, size_t Size, if_link<Link> If>
+#define CLASS manager<Link, Size, If>
 
 #include <bitcoin/database/impl/primitives/manager.ipp>
 

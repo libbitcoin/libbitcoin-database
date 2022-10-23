@@ -27,20 +27,21 @@ namespace libbitcoin {
 namespace database {
 
 /// Element forward iterator.
-template <typename Manager, typename Link,
-    if_link<Link> = true>
+template <typename Manager>
 class iterator
 {
 public:
+    using link = typename Manager::link;
+
     // std::iterator_traits
     using iterator_category = std::output_iterator_tag;
-    using value_type = element<Manager, Link>;
+    using value_type = element<Manager>;
     using difference_type = ptrdiff_t;
     using pointer = const value_type&;
     using reference = const value_type&;
 
     iterator(const value_type& element) NOEXCEPT;
-    iterator(Manager& manager, Link start) NOEXCEPT;
+    iterator(Manager& manager, link start) NOEXCEPT;
 
     iterator& operator++() NOEXCEPT;
     iterator operator++(int) NOEXCEPT;
@@ -50,7 +51,7 @@ public:
     bool operator!=(const iterator& other) const NOEXCEPT;
 
 private:
-    static constexpr auto link_size = sizeof(Link);
+    static constexpr auto link_size = sizeof(link);
 
     value_type element_;
 };
@@ -59,8 +60,8 @@ private:
 } // namespace libbitcoin
 
 #define TEMPLATE \
-template <typename Manager, typename Link, if_link<Link> If>
-#define CLASS iterator<Manager, Link, If>
+template <typename Manager>
+#define CLASS iterator<Manager>
 
 #include <bitcoin/database/impl/primitives/iterator.ipp>
 

@@ -26,7 +26,8 @@
 
 namespace libbitcoin {
 namespace database {
-
+    
+// Size excludes Link and Key.
 TEMPLATE
 CLASS::keyed_record(record_manager<Link, Size>& manager) NOEXCEPT
   : keyed_record(manager, base::eof)
@@ -35,29 +36,31 @@ CLASS::keyed_record(record_manager<Link, Size>& manager) NOEXCEPT
 
 TEMPLATE
 CLASS::keyed_record(record_manager<Link, Size>& manager, Link link) NOEXCEPT
-  : element<record_manager<Link, Size>, Link>(manager, link)
+  : element<record_manager<Link, Size>>(manager, link)
 {
 }
 
 TEMPLATE
 Link CLASS::create(Link next, const Key& key, auto& write) NOEXCEPT
 {
-    constexpr auto size = sizeof(Link) + key_size + Size;
+    // Size includes Key but not Link (Key is treated as part of element value).
+    constexpr auto size = sizeof(Link) + Size;
     const auto memory = base::allocate(one);
     auto start = memory->data();
     system::write::bytes::copy writer({ start, std::next(start, size) });
     writer.write_little_endian<Link>(next);
     writer.write_bytes(key);
     write(writer);
-    return base::link();
+    return base::self();
 }
 
 TEMPLATE
 void CLASS::read(auto& read) const NOEXCEPT
 {
+    constexpr auto size = Size - key_size;
     const auto memory = base::get(sizeof(Link) + key_size);
     const auto start = memory->data();
-    system::read::bytes::copy reader({ start, std::next(start, Size) });
+    system::read::bytes::copy reader({ start, std::next(start, size) });
     read(reader);
 }
 

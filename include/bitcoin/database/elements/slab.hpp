@@ -27,9 +27,10 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename Link, if_link<Link> = true>
+template <typename Link,
+    if_link<Link> = true>
 class slab
-  : public element<slab_manager<Link>, Link>
+  : public element<slab_manager<Link>>
 {
 public:
     slab(slab_manager<Link>& manager) NOEXCEPT;
@@ -39,7 +40,7 @@ public:
     void read(auto& read, size_t limit) const NOEXCEPT;
 
 private:
-    using base = element<slab_manager<Link>, Link>;
+    using base = element<slab_manager<Link>>;
 };
 
 } // namespace database

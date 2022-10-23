@@ -35,7 +35,7 @@ CLASS::keyed_slab(slab_manager<Link>& manager) NOEXCEPT
 
 TEMPLATE
 CLASS::keyed_slab(slab_manager<Link>& manager, Link link) NOEXCEPT
-  : element<slab_manager<Link>, Link>(manager, link)
+  : element<slab_manager<Link>>(manager, link)
 {
 }
 
@@ -50,7 +50,7 @@ Link CLASS::create(Link next, const Key& key, auto& write,
     writer.write_little_endian<Link>(next);
     writer.write_bytes(key);
     write(writer);
-    return base::link();
+    return base::selflink();
 }
 
 TEMPLATE

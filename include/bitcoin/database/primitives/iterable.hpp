@@ -28,15 +28,16 @@ namespace libbitcoin {
 namespace database {
 
 /// Element forward iterable.
-template <typename Manager, typename Link,
-    if_link<Link> = true>
+template <typename Manager>
 class iterable
 {
 public:
-    typedef iterator<const Manager, Link> iterator;
-    typedef element<const Manager, Link> value_type;
+    using link = typename Manager::link;
 
-    iterable(Manager& manager, Link start) NOEXCEPT;
+    typedef iterator<const Manager> iterator;
+    typedef element<const Manager> value_type;
+
+    iterable(Manager& manager, link start) NOEXCEPT;
 
     value_type front() const NOEXCEPT;
     iterator begin() const NOEXCEPT;
@@ -45,15 +46,15 @@ public:
 
 private:
     const Manager& manager_;
-    const Link start_;
+    const link start_;
 };
 
 } // namespace database
 } // namespace libbitcoin
 
 #define TEMPLATE \
-template <typename Manager, typename Link, if_link<Link> If>
-#define CLASS iterable<Manager, Link, If>
+template <typename Manager>
+#define CLASS iterable<Manager>
 
 #include <bitcoin/database/impl/primitives/iterable.ipp>
 

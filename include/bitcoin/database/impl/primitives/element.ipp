@@ -32,12 +32,12 @@ bool CLASS::advance() NOEXCEPT
         return false;
 
     const auto memory = get();
-    link_ = system::unsafe_from_little_endian<Link>(memory->data());
+    link_ = system::unsafe_from_little_endian<link>(memory->data());
     return true;
 }
 
 TEMPLATE
-Link CLASS::link() const NOEXCEPT
+typename CLASS::link CLASS::self() const NOEXCEPT
 {
     return link_;
 }
@@ -64,8 +64,8 @@ bool CLASS::operator!=(element other) const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-CLASS::element(Manager& manager, Link link) NOEXCEPT
-  : manager_(manager), link_(link)
+CLASS::element(Manager& manager, link value) NOEXCEPT
+  : manager_(manager), link_(value)
 {
 }
 

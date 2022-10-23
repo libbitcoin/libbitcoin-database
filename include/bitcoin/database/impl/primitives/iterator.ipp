@@ -32,7 +32,7 @@ CLASS::iterator(const value_type& element) NOEXCEPT
 }
 
 TEMPLATE
-CLASS::iterator(Manager& manager, Link start) NOEXCEPT
+CLASS::iterator(Manager& manager, link start) NOEXCEPT
   : element_(manager, start)
 {
 }

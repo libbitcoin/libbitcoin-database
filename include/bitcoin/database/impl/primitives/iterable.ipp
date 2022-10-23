@@ -26,7 +26,7 @@ namespace libbitcoin {
 namespace database {
     
 TEMPLATE
-CLASS::iterable(Manager& manager, Link start) NOEXCEPT
+CLASS::iterable(Manager& manager, link start) NOEXCEPT
   : manager_(manager), start_(start)
 {
 }
