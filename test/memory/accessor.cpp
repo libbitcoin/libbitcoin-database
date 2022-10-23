@@ -20,33 +20,51 @@
 
 BOOST_AUTO_TEST_SUITE(accessor_tests)
 
-BOOST_AUTO_TEST_CASE(accessor_constructor__always__buffer_nullptr)
+BOOST_AUTO_TEST_CASE(accessor__construct_upgrade_mutex__unassigned__null_data)
+{
+    boost::upgrade_mutex mutex;
+    accessor instance(mutex);
+    BOOST_REQUIRE(is_null(instance.data()));
+}
+
+BOOST_AUTO_TEST_CASE(accessor__construct_shared_mutex__unassigned__null_data)
 {
     std::shared_mutex mutex;
     accessor instance(mutex);
-    BOOST_REQUIRE(instance.data() == nullptr);
+    BOOST_REQUIRE(is_null(instance.data()));
 }
 
-BOOST_AUTO_TEST_CASE(accessor_assign__nonzero__expected_buffer)
+BOOST_AUTO_TEST_CASE(accessor__assign__data__expected)
 {
-    uint8_t value{};
-    auto expected = &value;
+    data_chunk chunk{};
+    auto expected = chunk.data();
     std::shared_mutex mutex;
     accessor instance(mutex);
     instance.assign(expected);
     BOOST_REQUIRE_EQUAL(instance.data(), expected);
 }
 
-BOOST_AUTO_TEST_CASE(accessor_increment__nonzero__expected_offset)
+BOOST_AUTO_TEST_CASE(accessor__increment__nonzero__expected_offset)
 {
     constexpr auto offset = 42u;
-    uint8_t value{};
-    auto buffer = &value;
+    data_chunk chunk(add1(offset), 0x00);
+    chunk[offset] = 0xff;
+    auto buffer = chunk.data();
     std::shared_mutex mutex;
     accessor instance(mutex);
     instance.assign(buffer);
     instance.increment(offset);
+    BOOST_REQUIRE_EQUAL(*instance.data(), chunk[offset]);
     BOOST_REQUIRE_EQUAL(instance.data(), std::next(buffer, offset));
+}
+
+BOOST_AUTO_TEST_CASE(accessor__destruct__shared_lock__released)
+{
+    boost::upgrade_mutex mutex;
+    auto access = std::make_shared<accessor<boost::upgrade_mutex>>(mutex);
+    BOOST_REQUIRE(!mutex.try_lock());
+    access.reset();
+    BOOST_REQUIRE(mutex.try_lock());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
