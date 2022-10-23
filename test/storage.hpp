@@ -29,7 +29,6 @@ class storage final
 {
 public:
     storage() NOEXCEPT;
-    storage(data_chunk&& initial) NOEXCEPT;
     storage(const data_chunk& initial) NOEXCEPT;
 
     // storage interface

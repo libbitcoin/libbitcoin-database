@@ -29,11 +29,6 @@ storage::storage() NOEXCEPT
   : buffer_{}
 {
 }
-    
-storage::storage(data_chunk&& initial) NOEXCEPT
-  : buffer_(std::move(initial))
-{
-}
 
 storage::storage(const data_chunk& initial) NOEXCEPT
   : buffer_(initial)
