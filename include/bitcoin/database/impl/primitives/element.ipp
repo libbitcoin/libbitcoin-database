@@ -19,15 +19,11 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_IPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_IPP
 
-#include <algorithm>
-#include <iterator>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
-namespace primitives {
 
 TEMPLATE
 bool CLASS::advance() NOEXCEPT
@@ -87,7 +83,13 @@ memory_ptr CLASS::get(size_t offset) const NOEXCEPT
     return memory;
 }
 
-} // namespace primitives
+TEMPLATE
+memory_ptr CLASS::allocate(size_t size) const NOEXCEPT
+{
+    link_ = manager_.allocate(size);
+    return manager_.get(link_);
+}
+
 } // namespace database
 } // namespace libbitcoin
 

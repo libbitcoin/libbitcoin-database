@@ -26,7 +26,6 @@
 
 namespace libbitcoin {
 namespace database {
-namespace primitives {
 
 template <typename Link, size_t Size,
     if_link<Link> = true>
@@ -39,9 +38,11 @@ public:
 
     Link create(Link next, auto& write) NOEXCEPT;
     void read(auto& read) const NOEXCEPT;
+
+private:
+    using base = element<record_manager<Link, Size>, Link>;
 };
 
-} // namespace primitives
 } // namespace database
 } // namespace libbitcoin
 

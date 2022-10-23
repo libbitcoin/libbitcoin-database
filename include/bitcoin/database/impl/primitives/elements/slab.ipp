@@ -25,12 +25,10 @@
 
 namespace libbitcoin {
 namespace database {
-namespace primitives {
 
 TEMPLATE
 CLASS::slab(slab_manager<Link>& manager) NOEXCEPT
-  : element<slab_manager<Link>, Link>(manager,
-      element<slab_manager<Link>, Link>::eof)
+  : slab(manager, base::eof)
 {
 }
 
@@ -44,25 +42,23 @@ TEMPLATE
 Link CLASS::create(Link next, auto& write, size_t limit) NOEXCEPT
 {
     const auto size = sizeof(Link) + limit;
-    link_ = manager_.allocate(size);
-    const auto memory = get();
+    const auto memory = base::allocate(size);
     auto start = memory->data();
     system::write::bytes::copy writer({ start, std::next(start, size) });
     writer.write_little_endian<Link>(next);
     write(writer);
-    return link_;
+    return base::link();
 }
 
 TEMPLATE
 void CLASS::read(auto& read, size_t limit) const NOEXCEPT
 {
-    const auto memory = get(sizeof(Link));
+    const auto memory = base::get(sizeof(Link));
     const auto start = memory->data();
     system::read::bytes::copy reader({ start, std::next(start, limit) });
     read(reader);
 }
 
-} // namespace primitives
 } // namespace database
 } // namespace libbitcoin
 

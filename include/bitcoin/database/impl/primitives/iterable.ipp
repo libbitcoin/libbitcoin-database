@@ -24,7 +24,6 @@
 
 namespace libbitcoin {
 namespace database {
-namespace primitives {
     
 TEMPLATE
 CLASS::iterable(Manager& manager, Link start) NOEXCEPT
@@ -61,7 +60,6 @@ bool CLASS::empty() const NOEXCEPT
     return begin() == end();
 }
 
-} // namespace primitives
 } // namespace database
 } // namespace libbitcoin
 

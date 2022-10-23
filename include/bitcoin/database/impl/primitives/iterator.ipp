@@ -24,7 +24,6 @@
 
 namespace libbitcoin {
 namespace database {
-namespace primitives {
 
 TEMPLATE
 CLASS::iterator(const value_type& element) NOEXCEPT
@@ -77,7 +76,6 @@ bool CLASS::operator!=(const iterator& other) const NOEXCEPT
     return element_ != other.element_;
 }
 
-} // namespace primitives
 } // namespace database
 } // namespace libbitcoin
 

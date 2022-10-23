@@ -26,12 +26,10 @@
 
 namespace libbitcoin {
 namespace database {
-namespace primitives {
 
 TEMPLATE
 CLASS::keyed_slab(slab_manager<Link>& manager) NOEXCEPT
-  : element<slab_manager<Link>, Link>(manager,
-      element<slab_manager<Link>, Link>::eof)
+  : keyed_slab(manager, base::eof)
 {
 }
 
@@ -46,20 +44,19 @@ Link CLASS::create(Link next, const Key& key, auto& write,
     size_t limit) NOEXCEPT
 {
     const auto size = sizeof(Link) + key_size + limit;
-    link_ = manager_.allocate(size);
-    const auto memory = get();
+    const auto memory = base::allocate(size);
     auto start = memory->data();
     system::write::bytes::copy writer({ start, std::next(start, size) });
     writer.write_little_endian<Link>(next);
     writer.write_bytes(key);
     write(writer);
-    return link_;
+    return base::link();
 }
 
 TEMPLATE
 void CLASS::read(auto& read, size_t limit) const NOEXCEPT
 {
-    const auto memory = get(sizeof(Link) + key_size);
+    const auto memory = base::get(sizeof(Link) + key_size);
     const auto start = memory->data();
     system::read::bytes::copy reader({ start, std::next(start, limit) });
     read(reader);
@@ -68,18 +65,17 @@ void CLASS::read(auto& read, size_t limit) const NOEXCEPT
 TEMPLATE
 bool CLASS::match(const Key& key) const NOEXCEPT
 {
-    const auto memory = get(sizeof(Link));
+    const auto memory = base::get(sizeof(Link));
     return std::equal(key.begin(), key.end(), memory->data());
 }
 
 TEMPLATE
 Key CLASS::key() const NOEXCEPT
 {
-    const auto memory = get(sizeof(Link));
+    const auto memory = base::get(sizeof(Link));
     return system::unsafe_array_cast<uint8_t, key_size>(memory->data());
 }
 
-} // namespace primitives
 } // namespace database
 } // namespace libbitcoin
 

@@ -39,7 +39,7 @@ public:
     map(const std::filesystem::path& filename, size_t minimum=1,
         size_t expansion=50) NOEXCEPT;
 
-    /// File should be explicitly unmapped before destruct.
+    /// Destruct for debug assertion only.
     ~map() NOEXCEPT;
 
     /// Open file, must be closed.

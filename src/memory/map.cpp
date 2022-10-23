@@ -33,6 +33,7 @@
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/file.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/memory/storage.hpp>
 
 // map is able to support 32 bit, but because the database
 // requires a larger file this is neither validated nor supported.

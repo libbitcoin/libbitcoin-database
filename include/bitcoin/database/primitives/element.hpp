@@ -25,7 +25,6 @@
 
 namespace libbitcoin {
 namespace database {
-namespace primitives {
 
 // keyed:   [[link][key][value]]
 // unkeyed: [[link][]   [value]]
@@ -58,12 +57,13 @@ protected:
 
     memory_ptr get() const NOEXCEPT;
     memory_ptr get(size_t offset) const NOEXCEPT;
+    memory_ptr allocate(size_t size) const NOEXCEPT;
 
+private:
     Link link_;
     Manager& manager_;
 };
 
-} // namespace primitives
 } // namespace database
 } // namespace libbitcoin
 

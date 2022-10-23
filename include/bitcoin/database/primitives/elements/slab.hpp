@@ -26,7 +26,6 @@
 
 namespace libbitcoin {
 namespace database {
-namespace primitives {
 
 template <typename Link, if_link<Link> = true>
 class slab
@@ -38,9 +37,11 @@ public:
 
     Link create(Link next, auto& write, size_t limit) NOEXCEPT;
     void read(auto& read, size_t limit) const NOEXCEPT;
+
+private:
+    using base = element<slab_manager<Link>, Link>;
 };
 
-} // namespace primitives
 } // namespace database
 } // namespace libbitcoin
 

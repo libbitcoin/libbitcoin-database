@@ -26,7 +26,6 @@
 
 namespace libbitcoin {
 namespace database {
-namespace primitives {
 
 template <typename Link, typename Key,
     if_link<Link> = true, if_key<Key> = true>
@@ -44,10 +43,10 @@ public:
     Key key() const NOEXCEPT;
 
 private:
-    constexpr auto key_size = array_count<Key>;
+    using base = element<slab_manager<Link>, Link>;
+    static constexpr auto key_size = array_count<Key>;
 };
 
-} // namespace primitives
 } // namespace database
 } // namespace libbitcoin
 

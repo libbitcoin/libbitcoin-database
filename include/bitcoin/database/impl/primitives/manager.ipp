@@ -21,12 +21,9 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
 namespace database {
-namespace primitives {
     
 TEMPLATE
 CLASS::manager(storage& file) NOEXCEPT
@@ -72,7 +69,6 @@ memory_ptr CLASS::get(Link link) const NOEXCEPT
     return file_.data(link_to_position(link));
 }
 
-} // namespace primitives
 } // namespace database
 } // namespace libbitcoin
 
