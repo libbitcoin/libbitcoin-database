@@ -201,6 +201,7 @@ if (with-tests)
         "../../test/storage.hpp"
         "../../test/test.cpp"
         "../../test/test.hpp"
+        "../../test/elements/elements.cpp"
         "../../test/locks/file_lock.cpp"
         "../../test/locks/flush_lock.cpp"
         "../../test/locks/interprocess_lock.cpp"

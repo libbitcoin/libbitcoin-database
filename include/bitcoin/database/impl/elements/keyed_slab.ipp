@@ -16,9 +16,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENTS_SLAB_IPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENTS_SLAB_IPP
+#ifndef LIBBITCOIN_DATABASE_ELEMENTS_KEYED_SLAB_IPP
+#define LIBBITCOIN_DATABASE_ELEMENTS_KEYED_SLAB_IPP
 
+#include <algorithm>
 #include <iterator>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -27,25 +28,27 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-CLASS::slab(slab_manager<Link>& manager) NOEXCEPT
-  : slab(manager, base::eof)
+CLASS::keyed_slab(slab_manager<Link>& manager) NOEXCEPT
+  : keyed_slab(manager, base::eof)
 {
 }
 
 TEMPLATE
-CLASS::slab(slab_manager<Link>& manager, Link link) NOEXCEPT
+CLASS::keyed_slab(slab_manager<Link>& manager, Link link) NOEXCEPT
   : element<slab_manager<Link>, Link>(manager, link)
 {
 }
 
 TEMPLATE
-Link CLASS::create(Link next, auto& write, size_t limit) NOEXCEPT
+Link CLASS::create(Link next, const Key& key, auto& write,
+    size_t limit) NOEXCEPT
 {
-    const auto size = sizeof(Link) + limit;
+    const auto size = sizeof(Link) + key_size + limit;
     const auto memory = base::allocate(size);
     auto start = memory->data();
     system::write::bytes::copy writer({ start, std::next(start, size) });
     writer.write_little_endian<Link>(next);
+    writer.write_bytes(key);
     write(writer);
     return base::link();
 }
@@ -53,10 +56,24 @@ Link CLASS::create(Link next, auto& write, size_t limit) NOEXCEPT
 TEMPLATE
 void CLASS::read(auto& read, size_t limit) const NOEXCEPT
 {
-    const auto memory = base::get(sizeof(Link));
+    const auto memory = base::get(sizeof(Link) + key_size);
     const auto start = memory->data();
     system::read::bytes::copy reader({ start, std::next(start, limit) });
     read(reader);
+}
+
+TEMPLATE
+bool CLASS::match(const Key& key) const NOEXCEPT
+{
+    const auto memory = base::get(sizeof(Link));
+    return std::equal(key.begin(), key.end(), memory->data());
+}
+
+TEMPLATE
+Key CLASS::key() const NOEXCEPT
+{
+    const auto memory = base::get(sizeof(Link));
+    return system::unsafe_array_cast<uint8_t, key_size>(memory->data());
 }
 
 } // namespace database

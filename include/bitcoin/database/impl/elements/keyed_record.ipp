@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENTS_KEYED_RECORD_IPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENTS_KEYED_RECORD_IPP
+#ifndef LIBBITCOIN_DATABASE_ELEMENTS_KEYED_RECORD_IPP
+#define LIBBITCOIN_DATABASE_ELEMENTS_KEYED_RECORD_IPP
 
 #include <algorithm>
 #include <iterator>

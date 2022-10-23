@@ -16,12 +16,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
+#ifndef LIBBITCOIN_DATABASE_ELEMENTS_ELEMENTS_HPP
+#define LIBBITCOIN_DATABASE_ELEMENTS_ELEMENTS_HPP
 
-#include <bitcoin/database/primitives/element.hpp>
-#include <bitcoin/database/primitives/iterable.hpp>
-#include <bitcoin/database/primitives/iterator.hpp>
-#include <bitcoin/database/primitives/manager.hpp>
+#include <bitcoin/database/elements/keyed_record.hpp>
+#include <bitcoin/database/elements/keyed_slab.hpp>
+#include <bitcoin/database/elements/record.hpp>
+#include <bitcoin/database/elements/slab.hpp>
 
 #endif

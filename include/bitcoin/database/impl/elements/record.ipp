@@ -16,42 +16,51 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_RECORD_ELEMENTS_RECORD_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_RECORD_ELEMENTS_RECORD_HPP
+#ifndef LIBBITCOIN_DATABASE_ELEMENTS_RECORD_IPP
+#define LIBBITCOIN_DATABASE_ELEMENTS_RECORD_IPP
 
+#include <iterator>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/element.hpp>
-#include <bitcoin/database/primitives/manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-template <typename Link, size_t Size,
-    if_link<Link> = true>
-class record
-  : public element<record_manager<Link, Size>, Link>
+TEMPLATE
+CLASS::record(record_manager<Link, Size>& manager) NOEXCEPT
+  : record(manager, base::eof)
 {
-public:
-    record(record_manager<Link, Size>& manager) NOEXCEPT;
-    record(record_manager<Link, Size>& manager, Link link) NOEXCEPT;
+}
 
-    Link create(Link next, auto& write) NOEXCEPT;
-    void read(auto& read) const NOEXCEPT;
+TEMPLATE
+CLASS::record(record_manager<Link, Size>& manager, Link link) NOEXCEPT
+  : element<record_manager<Link, Size>, Link>(manager, link)
+{
+}
 
-private:
-    using base = element<record_manager<Link, Size>, Link>;
-};
+TEMPLATE
+Link CLASS::create(Link next, auto& write) NOEXCEPT
+{
+    constexpr auto size = sizeof(Link) + Size;
+    const auto memory = base::allocate(one);
+    auto start = memory->data();
+    system::write::bytes::copy writer({ start, std::next(start, size) });
+    writer.write_little_endian<Link>(next);
+    write(writer);
+    return base::link();
+}
+
+
+TEMPLATE
+void CLASS::read(auto& read) const NOEXCEPT
+{
+    const auto memory = base::get(sizeof(Link));
+    const auto start = memory->data();
+    system::read::bytes::copy reader({ start, std::next(start, Size) });
+    read(reader);
+}
 
 } // namespace database
 } // namespace libbitcoin
-
-#define TEMPLATE template <typename Link, size_t Size, if_link<Link> If>
-#define CLASS record<Link, Size, If>
-
-#include <bitcoin/database/impl/primitives/elements/record.ipp>
-
-#undef CLASS
-#undef TEMPLATE
 
 #endif

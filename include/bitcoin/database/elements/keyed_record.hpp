@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_RECORD_ELEMENTS_SLAB_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_RECORD_ELEMENTS_SLAB_HPP
+#ifndef LIBBITCOIN_DATABASE_ELEMENTS_KEYED_RECORD_HPP
+#define LIBBITCOIN_DATABASE_ELEMENTS_KEYED_RECORD_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -27,28 +27,35 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename Link, if_link<Link> = true>
-class slab
-  : public element<slab_manager<Link>, Link>
+template <typename Link, typename Key, size_t Size,
+    if_link<Link> = true, if_key<Key> = true>
+class keyed_record
+  : public element<record_manager<Link, Size>, Link>
 {
 public:
-    slab(slab_manager<Link>& manager) NOEXCEPT;
-    slab(slab_manager<Link>& manager, Link link) NOEXCEPT;
+    keyed_record(record_manager<Link, Size>& manager) NOEXCEPT;
+    keyed_record(record_manager<Link, Size>& manager, Link link) NOEXCEPT;
 
-    Link create(Link next, auto& write, size_t limit) NOEXCEPT;
-    void read(auto& read, size_t limit) const NOEXCEPT;
+    Link create(Link next, const Key& key, auto& write) NOEXCEPT;
+    void read(auto& read) const NOEXCEPT;
+
+    bool match(const Key& key) const NOEXCEPT;
+    Key key() const NOEXCEPT;
 
 private:
-    using base = element<slab_manager<Link>, Link>;
+    using base = element<record_manager<Link, Size>, Link>;
+    static constexpr auto key_size = array_count<Key>;
 };
 
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, if_link<Link> If>
-#define CLASS slab<Link, If>
+#define TEMPLATE \
+template <typename Link, typename Key, size_t Size,\
+if_link<Link> If1, if_key<Key> If2>
+#define CLASS keyed_record<Link, Key, Size, If1, If2>
 
-#include <bitcoin/database/impl/primitives/elements/slab.ipp>
+#include <bitcoin/database/impl/elements/keyed_record.ipp>
 
 #undef CLASS
 #undef TEMPLATE

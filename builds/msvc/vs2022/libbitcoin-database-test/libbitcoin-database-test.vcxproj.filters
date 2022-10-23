@@ -10,17 +10,23 @@
     <Filter Include="src">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000000}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\locks">
+    <Filter Include="src\elements">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000001}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\memory">
+    <Filter Include="src\locks">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\primitives">
+    <Filter Include="src\memory">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\primitives">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000004}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\test\elements\elements.cpp">
+      <Filter>src\elements</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\locks\file_lock.cpp">
       <Filter>src\locks</Filter>
     </ClCompile>

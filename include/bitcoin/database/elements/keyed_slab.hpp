@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_RECORD_ELEMENTS_KEYED_RECORD_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_RECORD_ELEMENTS_KEYED_RECORD_HPP
+#ifndef LIBBITCOIN_DATABASE_ELEMENTS_KEYED_SLAB_HPP
+#define LIBBITCOIN_DATABASE_ELEMENTS_KEYED_SLAB_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -27,23 +27,23 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename Link, typename Key, size_t Size,
+template <typename Link, typename Key,
     if_link<Link> = true, if_key<Key> = true>
-class keyed_record
-  : public element<record_manager<Link, Size>, Link>
+class keyed_slab
+  : public element<slab_manager<Link>, Link>
 {
 public:
-    keyed_record(record_manager<Link, Size>& manager) NOEXCEPT;
-    keyed_record(record_manager<Link, Size>& manager, Link link) NOEXCEPT;
+    keyed_slab(slab_manager<Link>& manager) NOEXCEPT;
+    keyed_slab(slab_manager<Link>& manager, Link link) NOEXCEPT;
 
-    Link create(Link next, const Key& key, auto& write) NOEXCEPT;
-    void read(auto& read) const NOEXCEPT;
+    Link create(Link next, const Key& key, auto& write, size_t limit) NOEXCEPT;
+    void read(auto& read, size_t limit) const NOEXCEPT;
 
     bool match(const Key& key) const NOEXCEPT;
     Key key() const NOEXCEPT;
 
 private:
-    using base = element<record_manager<Link, Size>, Link>;
+    using base = element<slab_manager<Link>, Link>;
     static constexpr auto key_size = array_count<Key>;
 };
 
@@ -51,11 +51,10 @@ private:
 } // namespace libbitcoin
 
 #define TEMPLATE \
-template <typename Link, typename Key, size_t Size,\
-if_link<Link> If1, if_key<Key> If2>
-#define CLASS keyed_record<Link, Key, Size, If1, If2>
+template <typename Link, typename Key, if_link<Link> If1, if_key<Key> If2>
+#define CLASS keyed_slab<Link, Key, If1, If2>
 
-#include <bitcoin/database/impl/primitives/elements/keyed_record.ipp>
+#include <bitcoin/database/impl/elements/keyed_slab.ipp>
 
 #undef CLASS
 #undef TEMPLATE

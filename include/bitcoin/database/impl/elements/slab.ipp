@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENTS_RECORD_IPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENTS_RECORD_IPP
+#ifndef LIBBITCOIN_DATABASE_ELEMENTS_SLAB_IPP
+#define LIBBITCOIN_DATABASE_ELEMENTS_SLAB_IPP
 
 #include <iterator>
 #include <bitcoin/system.hpp>
@@ -27,22 +27,22 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-CLASS::record(record_manager<Link, Size>& manager) NOEXCEPT
-  : record(manager, base::eof)
+CLASS::slab(slab_manager<Link>& manager) NOEXCEPT
+  : slab(manager, base::eof)
 {
 }
 
 TEMPLATE
-CLASS::record(record_manager<Link, Size>& manager, Link link) NOEXCEPT
-  : element<record_manager<Link, Size>, Link>(manager, link)
+CLASS::slab(slab_manager<Link>& manager, Link link) NOEXCEPT
+  : element<slab_manager<Link>, Link>(manager, link)
 {
 }
 
 TEMPLATE
-Link CLASS::create(Link next, auto& write) NOEXCEPT
+Link CLASS::create(Link next, auto& write, size_t limit) NOEXCEPT
 {
-    constexpr auto size = sizeof(Link) + Size;
-    const auto memory = base::allocate(one);
+    const auto size = sizeof(Link) + limit;
+    const auto memory = base::allocate(size);
     auto start = memory->data();
     system::write::bytes::copy writer({ start, std::next(start, size) });
     writer.write_little_endian<Link>(next);
@@ -50,13 +50,12 @@ Link CLASS::create(Link next, auto& write) NOEXCEPT
     return base::link();
 }
 
-
 TEMPLATE
-void CLASS::read(auto& read) const NOEXCEPT
+void CLASS::read(auto& read, size_t limit) const NOEXCEPT
 {
     const auto memory = base::get(sizeof(Link));
     const auto start = memory->data();
-    system::read::bytes::copy reader({ start, std::next(start, Size) });
+    system::read::bytes::copy reader({ start, std::next(start, limit) });
     read(reader);
 }
 

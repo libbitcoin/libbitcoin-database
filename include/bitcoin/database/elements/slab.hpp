@@ -16,12 +16,41 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
+#ifndef LIBBITCOIN_DATABASE_ELEMENTS_SLAB_HPP
+#define LIBBITCOIN_DATABASE_ELEMENTS_SLAB_HPP
 
+#include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/element.hpp>
-#include <bitcoin/database/primitives/iterable.hpp>
-#include <bitcoin/database/primitives/iterator.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
+
+namespace libbitcoin {
+namespace database {
+
+template <typename Link, if_link<Link> = true>
+class slab
+  : public element<slab_manager<Link>, Link>
+{
+public:
+    slab(slab_manager<Link>& manager) NOEXCEPT;
+    slab(slab_manager<Link>& manager, Link link) NOEXCEPT;
+
+    Link create(Link next, auto& write, size_t limit) NOEXCEPT;
+    void read(auto& read, size_t limit) const NOEXCEPT;
+
+private:
+    using base = element<slab_manager<Link>, Link>;
+};
+
+} // namespace database
+} // namespace libbitcoin
+
+#define TEMPLATE template <typename Link, if_link<Link> If>
+#define CLASS slab<Link, If>
+
+#include <bitcoin/database/impl/elements/slab.ipp>
+
+#undef CLASS
+#undef TEMPLATE
 
 #endif

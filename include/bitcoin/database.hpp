@@ -19,6 +19,10 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/version.hpp>
+#include <bitcoin/database/elements/keyed_record.hpp>
+#include <bitcoin/database/elements/keyed_slab.hpp>
+#include <bitcoin/database/elements/record.hpp>
+#include <bitcoin/database/elements/slab.hpp>
 #include <bitcoin/database/locks/conditional_lock.hpp>
 #include <bitcoin/database/locks/file_lock.hpp>
 #include <bitcoin/database/locks/flush_lock.hpp>
@@ -36,9 +40,5 @@
 #include <bitcoin/database/primitives/iterator.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
-#include <bitcoin/database/primitives/elements/keyed_record.hpp>
-#include <bitcoin/database/primitives/elements/keyed_slab.hpp>
-#include <bitcoin/database/primitives/elements/record.hpp>
-#include <bitcoin/database/primitives/elements/slab.hpp>
 
 #endif
