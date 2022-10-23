@@ -28,8 +28,8 @@ namespace database {
 
 // keyed:   [[link][key][value]]
 // unkeyed: [[link][]   [value]]
-// Value may be fixed (slab element) or variable (record element).
-// Manager provides random access read and write append to memory map.
+// Value may be fixed (record element) or variable (slab element) size.
+// Derived elements provide write append and random access read to memory map.
 
 /// Forward linked list element.
 template <typename Manager, typename Link,
