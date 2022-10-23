@@ -80,6 +80,7 @@
     <ClCompile Include="..\..\..\..\test\primitives\element.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\iterable.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\manager.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
     <ClCompile Include="..\..\..\..\test\storage.cpp" />
     <ClCompile Include="..\..\..\..\test\test.cpp" />

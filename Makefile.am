@@ -71,7 +71,8 @@ test_libbitcoin_database_test_SOURCES = \
     test/memory/map.cpp \
     test/primitives/element.cpp \
     test/primitives/iterable.cpp \
-    test/primitives/iterator.cpp
+    test/primitives/iterator.cpp \
+    test/primitives/manager.cpp
 
 endif WITH_TESTS
 
@@ -102,6 +103,7 @@ include_bitcoin_database_HEADERS = \
 
 include_bitcoin_database_elementsdir = ${includedir}/bitcoin/database/elements
 include_bitcoin_database_elements_HEADERS = \
+    include/bitcoin/database/elements/elements.hpp \
     include/bitcoin/database/elements/keyed_record.hpp \
     include/bitcoin/database/elements/keyed_slab.hpp \
     include/bitcoin/database/elements/record.hpp \

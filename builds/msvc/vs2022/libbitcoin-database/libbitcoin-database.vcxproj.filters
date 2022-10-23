@@ -98,6 +98,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\elements\elements.hpp">
+      <Filter>include\bitcoin\database\elements</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\elements\keyed_record.hpp">
       <Filter>include\bitcoin\database\elements</Filter>
     </ClInclude>
@@ -169,9 +172,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\src\mman-win32\mman.h">
       <Filter>src\mman-win32</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\elements\elements.hpp">
-      <Filter>include\bitcoin\database\elements</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

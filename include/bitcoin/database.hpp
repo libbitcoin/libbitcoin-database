@@ -19,6 +19,7 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/version.hpp>
+#include <bitcoin/database/elements/elements.hpp>
 #include <bitcoin/database/elements/keyed_record.hpp>
 #include <bitcoin/database/elements/keyed_slab.hpp>
 #include <bitcoin/database/elements/record.hpp>

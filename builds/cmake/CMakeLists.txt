@@ -209,7 +209,8 @@ if (with-tests)
         "../../test/memory/map.cpp"
         "../../test/primitives/element.cpp"
         "../../test/primitives/iterable.cpp"
-        "../../test/primitives/iterator.cpp" )
+        "../../test/primitives/iterator.cpp"
+        "../../test/primitives/manager.cpp" )
 
     add_test( NAME libbitcoin-database-test COMMAND libbitcoin-database-test
             --run_test=*
