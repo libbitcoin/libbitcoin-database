@@ -47,7 +47,6 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 using namespace system;
 
 #define FAIL -1
-#define INVALID_DESCRIPTOR -1
 
 map::map(const path& filename, size_t minimum,
     size_t expansion) NOEXCEPT
@@ -58,7 +57,7 @@ map::map(const path& filename, size_t minimum,
     mapped_(false),
     logical_(zero),
     capacity_(zero),
-    descriptor_(INVALID_DESCRIPTOR)
+    descriptor_(file::invalid)
 {
 }
 
@@ -69,7 +68,7 @@ map::~map() NOEXCEPT
     BC_ASSERT_MSG(is_null(memory_map_), "map defined at destruct");
     BC_ASSERT_MSG(is_zero(logical_), "logical nonzero at destruct");
     BC_ASSERT_MSG(is_zero(capacity_), "capacity nonzero at destruct");
-    BC_ASSERT_MSG(descriptor_ == INVALID_DESCRIPTOR, "file open at destruct");
+    BC_ASSERT_MSG(descriptor_ == file::invalid, "file open at destruct");
 }
 
 bool map::open() NOEXCEPT
@@ -77,14 +76,14 @@ bool map::open() NOEXCEPT
     std::unique_lock field_lock(field_mutex_);
 
     // open_open
-    if (descriptor_ != INVALID_DESCRIPTOR)
+    if (descriptor_ != file::invalid)
         return false;
 
     descriptor_ = file::open(filename_);
     logical_ = file::size(descriptor_);
 
     // open_failure
-    return descriptor_ != INVALID_DESCRIPTOR;
+    return descriptor_ != file::invalid;
 }
 
 bool map::close() NOEXCEPT
@@ -96,11 +95,11 @@ bool map::close() NOEXCEPT
         return false;
 
     // idempotent (close-closed is ok)
-    if (descriptor_ == INVALID_DESCRIPTOR)
+    if (descriptor_ == file::invalid)
         return true;
 
     const auto descriptor = descriptor_;
-    descriptor_ = INVALID_DESCRIPTOR;
+    descriptor_ = file::invalid;
     logical_ = zero;
 
     // close_failure
@@ -110,7 +109,7 @@ bool map::close() NOEXCEPT
 bool map::is_open() const NOEXCEPT
 {
     std::shared_lock field_lock(field_mutex_);
-    return descriptor_ != INVALID_DESCRIPTOR;
+    return descriptor_ != file::invalid;
 }
 
 // Map, flush, unmap.

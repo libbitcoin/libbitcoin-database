@@ -27,6 +27,8 @@ namespace libbitcoin {
 namespace database {
 namespace file {
 
+constexpr auto invalid = -1;
+
 /// Basic file system utilities, not thread safe.
 BCD_API bool clear(const std::filesystem::path& directory) NOEXCEPT;
 BCD_API bool create(const std::filesystem::path& filename) NOEXCEPT;

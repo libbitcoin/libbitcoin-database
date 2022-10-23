@@ -38,6 +38,8 @@ struct file_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(file_tests, file_setup_fixture)
 
+static_assert(file::invalid == -1);
+
 BOOST_AUTO_TEST_CASE(file__clear__empty__true)
 {
     BOOST_REQUIRE(file::clear(TEST_DIRECTORY));
@@ -117,7 +119,7 @@ BOOST_AUTO_TEST_CASE(file__close__opened__true)
 {
     BOOST_REQUIRE(test::create(TEST_PATH));
     const auto descriptor = file::open(TEST_PATH);
-	BOOST_REQUIRE_NE(descriptor, -1);
+	BOOST_REQUIRE_NE(descriptor, file::invalid);
     BOOST_REQUIRE(file::close(descriptor));
 }
 
@@ -138,7 +140,7 @@ BOOST_AUTO_TEST_CASE(file__size__non_empty__expected)
     file << text;
     file.close();
     const auto descriptor = file::open(TEST_PATH);
-    BOOST_REQUIRE_NE(descriptor, -1);
+    BOOST_REQUIRE_NE(descriptor, file::invalid);
     BOOST_REQUIRE_EQUAL(file::size(descriptor), text.length());
     BOOST_REQUIRE(file::close(descriptor));
 }
