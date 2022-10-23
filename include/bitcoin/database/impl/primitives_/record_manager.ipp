@@ -130,7 +130,7 @@ Link CLASS::allocate(size_t count) NOEXCEPT
     const auto required_size = header_size_ + position;
 
     // Currently throws runtime_error if insufficient space.
-    if (!file_.reserve(required_size))
+    if (!file_.resize(required_size))
         return not_allocated;
 
     record_count_ += records;
@@ -167,7 +167,7 @@ void CLASS::read_count() NOEXCEPT
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.get();
     memory->increment(header_size_);
-    record_count_ = system::unsafe_from_little_endian<Link>(memory->buffer());
+    record_count_ = system::unsafe_from_little_endian<Link>(memory->data());
 }
 
 // Write the count value to the first 32 bits of the file after the header.
@@ -179,7 +179,7 @@ void CLASS::write_count() NOEXCEPT
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.get();
     memory->increment(header_size_);
-    system::unsafe_to_little_endian<Link>(memory->buffer(), record_count_);
+    system::unsafe_to_little_endian<Link>(memory->data(), record_count_);
 }
 
 TEMPLATE

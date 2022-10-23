@@ -38,21 +38,21 @@ public:
     storage(const data_chunk& initial) NOEXCEPT;
     ~storage() NOEXCEPT;
 
-    bool open() NOEXCEPT override;
-    bool close() NOEXCEPT override;
-    bool is_open() const NOEXCEPT override;
+    bool open() NOEXCEPT;
+    bool close() NOEXCEPT;
+    bool is_open() const NOEXCEPT;
 
-    bool load_map() NOEXCEPT override;
-    bool flush_map() const NOEXCEPT override;
-    bool unload_map() NOEXCEPT override;
-    bool is_mapped() const NOEXCEPT override;
+    bool load() NOEXCEPT;
+    bool unload() NOEXCEPT;
+    bool flush() const NOEXCEPT;
+    bool is_mapped() const NOEXCEPT;
 
-    size_t size() const NOEXCEPT override;
+    // storage interface
     size_t capacity() const NOEXCEPT override;
-    size_t logical() const NOEXCEPT override;
-    memory_ptr get() NOEXCEPT override;
-    memory_ptr resize(size_t size) NOEXCEPT override;
-    memory_ptr reserve(size_t size) NOEXCEPT override;
+    size_t size() const NOEXCEPT override;
+    bool resize(size_t size) NOEXCEPT override;
+    size_t allocate(size_t chunk) NOEXCEPT override;
+    memory_ptr get(size_t offset=zero) NOEXCEPT override;
 
 private:
     bool mapped_;

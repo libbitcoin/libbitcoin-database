@@ -29,15 +29,15 @@ namespace database {
 namespace primitives {
 
 TEMPLATE
-CLASS::keyed_record(record_manager<Link>& manager) NOEXCEPT
-  : element<record_manager<Link>, Link>(manager,
-      element<record_manager<Link>, Link>::eof)
+CLASS::keyed_record(record_manager<Link, Size>& manager) NOEXCEPT
+  : element<record_manager<Link, Size>, Link>(manager,
+      element<record_manager<Link, Size>, Link>::eof)
 {
 }
 
 TEMPLATE
-CLASS::keyed_record(record_manager<Link>& manager, Link link) NOEXCEPT
-  : element<record_manager<Link>, Link>(manager, link)
+CLASS::keyed_record(record_manager<Link, Size>& manager, Link link) NOEXCEPT
+  : element<record_manager<Link, Size>, Link>(manager, link)
 {
 }
 
@@ -46,7 +46,7 @@ Link CLASS::create(Link next, const Key& key, auto& write) NOEXCEPT
 {
     link_ = manager_.allocate(one);
     const auto memory = get();
-    auto start = memory->buffer();
+    auto start = memory->data();
     system::write::bytes::copy writer({ start, std::next(start, limit) });
     writer.write_little_endian<Link>(next);
     writer.write_bytes(key);
@@ -58,7 +58,7 @@ TEMPLATE
 void CLASS::read(auto& read) const NOEXCEPT
 {
     const auto memory = get(sizeof(Link) + key_size);
-    const auto start = memory->buffer();
+    const auto start = memory->data();
     system::read::bytes::copy reader({ start, std::next(start, limit) });
     read(reader);
 }
@@ -67,14 +67,14 @@ TEMPLATE
 bool CLASS::match(const Key& key) const NOEXCEPT
 {
     const auto memory = get(sizeof(Link));
-    return std::equal(key.begin(), key.end(), memory->buffer());
+    return std::equal(key.begin(), key.end(), memory->data());
 }
 
 TEMPLATE
 Key CLASS::key() const NOEXCEPT
 {
     const auto memory = get(sizeof(Link));
-    return system::unsafe_array_cast<uint8_t, key_size>(memory->buffer());
+    return system::unsafe_array_cast<uint8_t, key_size>(memory->data());
 }
 
 } // namespace primitives

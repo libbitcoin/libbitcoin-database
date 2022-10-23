@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(accessor_constructor__always__buffer_nullptr)
 {
     std::shared_mutex mutex;
     accessor instance(mutex);
-    BOOST_REQUIRE(instance.buffer() == nullptr);
+    BOOST_REQUIRE(instance.data() == nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(accessor_assign__nonzero__expected_buffer)
@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(accessor_assign__nonzero__expected_buffer)
     std::shared_mutex mutex;
     accessor instance(mutex);
     instance.assign(expected);
-    BOOST_REQUIRE_EQUAL(instance.buffer(), expected);
+    BOOST_REQUIRE_EQUAL(instance.data(), expected);
 }
 
 BOOST_AUTO_TEST_CASE(accessor_increment__nonzero__expected_offset)
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(accessor_increment__nonzero__expected_offset)
     accessor instance(mutex);
     instance.assign(buffer);
     instance.increment(offset);
-    BOOST_REQUIRE_EQUAL(instance.buffer(), std::next(buffer, offset));
+    BOOST_REQUIRE_EQUAL(instance.data(), std::next(buffer, offset));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

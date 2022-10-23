@@ -32,8 +32,8 @@ class BCD_API memory
 public:
     typedef std::shared_ptr<memory> ptr;
 
-    /// Get the buffer pointer.
-    virtual uint8_t* buffer() NOEXCEPT = 0;
+    /// Get the byte pointer.
+    virtual uint8_t* data() NOEXCEPT = 0;
 
     /// Increment the pointer the specified number of bytes within the record.
     virtual void increment(size_t value) NOEXCEPT = 0;

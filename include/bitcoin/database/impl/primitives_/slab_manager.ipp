@@ -116,7 +116,7 @@ Link CLASS::allocate(size_t size) NOEXCEPT
     const auto required_size = header_size_ + payload_size_ + slab_size;
 
     // Throws runtime_error if insufficient space.
-    if (!file_.reserve(required_size))
+    if (!file_.resize(required_size))
         return not_allocated;
 
     payload_size_ += slab_size;
@@ -154,7 +154,7 @@ void CLASS::read_size() NOEXCEPT
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.get();
     memory->increment(header_size_);
-    payload_size_ = system::unsafe_from_little_endian<Link>(memory->buffer());
+    payload_size_ = system::unsafe_from_little_endian<Link>(memory->data());
 }
 
 // Write the size value to the first 64 bits of the file after the header.
@@ -166,7 +166,7 @@ void CLASS::write_size() const NOEXCEPT
     // The accessor must remain in scope until the end of the block.
     const auto memory = file_.get();
     memory->increment(header_size_);
-    system::unsafe_to_little_endian<Link>(memory->buffer(), payload_size_);
+    system::unsafe_to_little_endian<Link>(memory->data(), payload_size_);
 }
 
 } // namespace database

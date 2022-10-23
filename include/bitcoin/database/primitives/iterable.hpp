@@ -21,14 +21,14 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/elements/element.hpp>
+#include <bitcoin/database/primitives/element.hpp>
 #include <bitcoin/database/primitives/iterator.hpp>
 
 namespace libbitcoin {
 namespace database {
 namespace primitives {
 
-/// Iterable wrapper for element.
+/// Element forward iterable.
 template <typename Manager, typename Key, typename Link,
     if_key<Key> = true, if_link<Link> = true>
 class iterable
@@ -39,14 +39,14 @@ public:
 
     iterable(Manager& manager, Link start) NOEXCEPT;
 
-    bool empty() const NOEXCEPT;
     value_type front() const NOEXCEPT;
     iterator begin() const NOEXCEPT;
-    iterator end() const NOEXCEPT;
+    const iterator end() const NOEXCEPT;
+    bool empty() const NOEXCEPT;
 
 private:
-    const Link start_;
     const Manager& manager_;
+    const Link start_;
 };
 
 } // namespace primitives

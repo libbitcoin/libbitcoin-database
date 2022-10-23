@@ -16,42 +16,64 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/memory/accessor.hpp>
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_MANAGER_IPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_MANAGER_IPP
 
-#include <iterator>
 #include <bitcoin/system.hpp>
-#include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
 namespace database {
-
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
-accessor::accessor(std::shared_mutex& mutex) NOEXCEPT
-    : data_(nullptr), shared_lock_(mutex)
+namespace primitives {
+    
+TEMPLATE
+CLASS::manager(storage& file) NOEXCEPT
+  : file_(file)
 {
 }
 
-void accessor::assign(uint8_t* data) NOEXCEPT
+TEMPLATE
+Link CLASS::size() const NOEXCEPT
 {
-    BC_ASSERT_MSG(!is_null(data), "null buffer");
-    data_ = data;
+    return position_to_link(file_.size());
 }
 
-uint8_t* accessor::buffer() NOEXCEPT
+TEMPLATE
+bool CLASS::truncate(Link count) NOEXCEPT
 {
-    return data_;
+    if (count == eof)
+        return false;
+
+    return file_.resize(link_to_position(count));
 }
 
-void accessor::increment(size_t size) NOEXCEPT
+TEMPLATE
+Link CLASS::allocate(Link count) NOEXCEPT
 {
-    BC_ASSERT_MSG(!is_null(data_), "unassigned buffer");
-    BC_ASSERT(reinterpret_cast<size_t>(data_) < max_size_t - size);
-    std::advance(data_, size);
+    if (count == eof)
+        return eof;
+
+    const auto position = file_.allocate(link_to_position(count));
+
+    if (position == storage::eof)
+        return eof;
+
+    return position_to_link(position);
 }
 
-BC_POP_WARNING()
+TEMPLATE
+memory_ptr CLASS::get(Link link) const NOEXCEPT
+{
+    if (link == eof)
+        return {};
 
+    return file_.data(link_to_position(link));
+}
+
+} // namespace primitives
 } // namespace database
 } // namespace libbitcoin
+
+#endif

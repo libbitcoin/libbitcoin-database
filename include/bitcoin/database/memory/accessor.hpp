@@ -29,28 +29,31 @@ namespace database {
 
 /// Shared access to a memory buffer, mutex prevents memory remap.
 /// Caller must know the buffer size as it is unguarded/unmanaged.
-class BCD_API accessor final
+template <typename Mutex>
+class accessor final
   : public memory
 {
 public:
     /// Mutex guards against remap while object is in scope.
-    accessor(std::shared_mutex& mutex) NOEXCEPT;
+    accessor(Mutex& mutex) NOEXCEPT;
 
     /// Set the buffer pointer.
     void assign(uint8_t* data) NOEXCEPT;
 
     /// Get the buffer pointer (unguarded except for remap).
-    uint8_t* buffer() NOEXCEPT override;
+    uint8_t* data() NOEXCEPT override;
 
     /// Advance the buffer pointer a specified number of bytes.
     void increment(size_t size) NOEXCEPT override;
 
 private:
     uint8_t* data_;
-    std::shared_lock<std::shared_mutex> shared_lock_;
+    std::shared_lock<Mutex> shared_lock_;
 };
 
 } // namespace database
 } // namespace libbitcoin
+
+#include <bitcoin/database/impl/memory/accessor.ipp>
 
 #endif

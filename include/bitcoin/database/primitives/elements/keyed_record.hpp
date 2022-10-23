@@ -21,8 +21,8 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/elements/element.hpp>
-#include <bitcoin/database/primitives_/record_manager.hpp>
+#include <bitcoin/database/primitives/element.hpp>
+#include <bitcoin/database/primitives/manager.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -31,11 +31,11 @@ namespace primitives {
 template <typename Link, typename Key, size_t Size,
     if_link<Link> = true, if_key<Key> = true>
 class keyed_record
-  : public element<record_manager<Link /*, Size*/>, Link>
+  : public element<record_manager<Link, Size>, Link>
 {
 public:
-    keyed_record(record_manager<Link>& manager) NOEXCEPT;
-    keyed_record(record_manager<Link>& manager, Link link) NOEXCEPT;
+    keyed_record(record_manager<Link, Size>& manager) NOEXCEPT;
+    keyed_record(record_manager<Link, Size>& manager, Link link) NOEXCEPT;
 
     Link create(Link next, const Key& key, auto& write) NOEXCEPT;
     void read(auto& read) const NOEXCEPT;

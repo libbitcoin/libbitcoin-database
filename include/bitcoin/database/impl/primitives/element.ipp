@@ -16,57 +16,74 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_SLAB_MANAGER_IPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_SLAB_MANAGER_IPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_IPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_IPP
 
-#include <mutex>
-#include <shared_mutex>
+#include <algorithm>
+#include <iterator>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
 namespace database {
 namespace primitives {
 
 TEMPLATE
-CLASS::slab_manager(Storage& file) NOEXCEPT
-  : file_(file), size_(file_.logical())
+bool CLASS::advance() NOEXCEPT
+{
+    if (link_ == eof)
+        return false;
+
+    const auto memory = get();
+    link_ = system::unsafe_from_little_endian<Link>(memory->data());
+    return true;
+}
+
+TEMPLATE
+Link CLASS::link() const NOEXCEPT
+{
+    return link_;
+}
+
+TEMPLATE
+CLASS::operator bool() const NOEXCEPT
+{
+    return link_ != eof;
+}
+
+TEMPLATE
+bool CLASS::operator==(element other) const NOEXCEPT
+{
+    return link_ == other.link_;
+}
+
+TEMPLATE
+bool CLASS::operator!=(element other) const NOEXCEPT
+{
+    return link_ != other.link_;
+}
+
+// protected
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+CLASS::element(Manager& manager, Link link) NOEXCEPT
+  : manager_(manager), link_(link)
 {
 }
 
 TEMPLATE
-Link CLASS::size() const NOEXCEPT
+memory_ptr CLASS::get() const NOEXCEPT
 {
-    std::shared_lock lock(mutex_);
-    return file_.is_closed() ? eof : size_;
+    return manager_.get(link_);
 }
 
 TEMPLATE
-Link CLASS::allocate(size_t size) NOEXCEPT
+memory_ptr CLASS::get(size_t offset) const NOEXCEPT
 {
-    BC_ASSERT_MSG(size < eof, "size excess");
-    const auto slab = system::possible_narrow_cast<Link>(size);
-
-    std::unique_lock lock(mutex_);
-    if (!file_.reserve(size_ + slab))
-        return eof;
-
-    const auto next = size_;
-    size_ += slab;
-    return next;
-}
-
-TEMPLATE
-memory_ptr CLASS::get(Link position) const NOEXCEPT
-{
-    BC_ASSERT_MSG(link < eof, "link excess");
-    const auto memory = file_.access();
-
-    if (memory)
-        memory->increment(position);
-
+    auto memory = manager_.get(link_);
+    memory->increment(offset);
     return memory;
 }
 

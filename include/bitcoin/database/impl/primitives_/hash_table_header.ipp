@@ -44,14 +44,15 @@ bool CLASS::create() NOEXCEPT
     const auto file_size = size(buckets_);
 
     // The accessor must remain in scope until the end of the block.
-    const auto memory = file_.resize(file_size);
+    const auto result = file_.resize(file_size);
+    auto memory = file_.get();
 
     // Speed-optimized fill implementation.
-    std::memset(memory->buffer(), fill, file_size);
+    std::memset(memory->data(), fill, file_size);
 
     // Overwrite the start of the buffer with the bucket count.
-    system::unsafe_to_little_endian<Index>(memory->buffer(), buckets_);
-    return true;
+    system::unsafe_to_little_endian<Index>(memory->data(), buckets_);
+    return result;
 }
 
 TEMPLATE
@@ -65,7 +66,7 @@ bool CLASS::start() NOEXCEPT
     const auto memory = file_.get();
 
     // Does not require atomicity (no concurrency during start).
-    return system::unsafe_from_little_endian<Index>(memory->buffer()) == buckets_;
+    return system::unsafe_from_little_endian<Index>(memory->data()) == buckets_;
 }
 
 TEMPLATE
@@ -80,7 +81,7 @@ Link CLASS::read(Index index) const NOEXCEPT
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     std::shared_lock lock(mutex_);
-    return system::unsafe_from_little_endian<Link>(memory->buffer());
+    return system::unsafe_from_little_endian<Link>(memory->data());
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -96,7 +97,7 @@ void CLASS::write(Index index, Link value) NOEXCEPT
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     std::unique_lock lock(mutex_);
-    system::unsafe_to_little_endian<Link>(memory->buffer(), value);
+    system::unsafe_to_little_endian<Link>(memory->data(), value);
     ///////////////////////////////////////////////////////////////////////////
 }
 

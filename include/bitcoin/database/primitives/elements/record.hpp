@@ -21,8 +21,8 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/elements/element.hpp>
-#include <bitcoin/database/primitives_/record_manager.hpp>
+#include <bitcoin/database/primitives/element.hpp>
+#include <bitcoin/database/primitives/manager.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -34,8 +34,8 @@ class record
   : public element<record_manager<Link, Size>, Link>
 {
 public:
-    record(record_manager<Link>& manager) NOEXCEPT;
-    record(record_manager<Link>& manager, Link link) NOEXCEPT;
+    record(record_manager<Link, Size>& manager) NOEXCEPT;
+    record(record_manager<Link, Size>& manager, Link link) NOEXCEPT;
 
     Link create(Link next, auto& write) NOEXCEPT;
     void read(auto& read) const NOEXCEPT;

@@ -16,37 +16,45 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MEMORY_STORAGE_HPP
-#define LIBBITCOIN_DATABASE_MEMORY_STORAGE_HPP
+#ifndef LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_IPP
+#define LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_IPP
 
+#include <iterator>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/// Mapped memory abstraction of a file.
-class BCD_API storage
+
+template <typename Mutex>
+accessor<Mutex>::accessor(Mutex& mutex) NOEXCEPT
+  : data_(nullptr), shared_lock_(mutex)
 {
-public:
-    static constexpr auto eof = system::bit_all<size_t>;
+}
 
-    /// The current capacity of the memory map (zero if unmapped).
-    virtual size_t capacity() const NOEXCEPT = 0;
+template <typename Mutex>
+void accessor<Mutex>::assign(uint8_t* data) NOEXCEPT
+{
+    BC_ASSERT_MSG(!is_null(data), "null buffer");
+    data_ = data;
+}
 
-    /// The current logical size of the memory map (zero if closed).
-    virtual size_t size() const NOEXCEPT = 0;
+template <typename Mutex>
+uint8_t* accessor<Mutex>::data() NOEXCEPT
+{
+    return data_;
+}
 
-    /// Set logical size to specified (false if size exceeds capacity).
-    virtual bool resize(size_t size) NOEXCEPT = 0;
-
-    /// Allocate bytes and return offset to first allocated (or eof).
-    virtual size_t allocate(size_t chunk) NOEXCEPT = 0;
-
-    /// Get r/w access to start/offset of memory map (or null).
-    virtual memory_ptr get(size_t offset=zero) NOEXCEPT = 0;
-};
+template <typename Mutex>
+void accessor<Mutex>::increment(size_t size) NOEXCEPT
+{
+    BC_ASSERT_MSG(!is_null(data_), "unassigned buffer");
+    BC_ASSERT(reinterpret_cast<size_t>(data_) < max_size_t - size);
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    std::advance(data_, size);
+    BC_POP_WARNING()
+}
 
 } // namespace database
 } // namespace libbitcoin

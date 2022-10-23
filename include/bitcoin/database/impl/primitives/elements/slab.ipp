@@ -46,7 +46,7 @@ Link CLASS::create(Link next, auto& write, size_t limit) NOEXCEPT
     const auto size = sizeof(Link) + limit;
     link_ = manager_.allocate(size);
     const auto memory = get();
-    auto start = memory->buffer();
+    auto start = memory->data();
     system::write::bytes::copy writer({ start, std::next(start, size) });
     writer.write_little_endian<Link>(next);
     write(writer);
@@ -57,7 +57,7 @@ TEMPLATE
 void CLASS::read(auto& read, size_t limit) const NOEXCEPT
 {
     const auto memory = get(sizeof(Link));
-    const auto start = memory->buffer();
+    const auto start = memory->data();
     system::read::bytes::copy reader({ start, std::next(start, limit) });
     read(reader);
 }

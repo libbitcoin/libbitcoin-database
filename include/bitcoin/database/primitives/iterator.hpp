@@ -21,13 +21,13 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/elements/element.hpp>
+#include <bitcoin/database/primitives/element.hpp>
 
 namespace libbitcoin {
 namespace database {
 namespace primitives {
 
-/// Element iterator.
+/// Element forward iterator.
 template <typename Manager, typename Key, typename Link,
     if_key<Key> = true, if_link<Link> = true>
 class iterator

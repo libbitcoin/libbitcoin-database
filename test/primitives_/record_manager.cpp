@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(record_manager__construct__one_record__expected)
     typedef uint64_t link_type;
 
     test::storage file;
-    BOOST_REQUIRE(file.load_map());
+    BOOST_REQUIRE(file.load());
 
     const auto record_size = 10u;
     const auto link_size = sizeof(link_type);
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(record_manager__construct__one_record_offset__expected)
     typedef uint64_t link_type;
 
     test::storage file;
-    BOOST_REQUIRE(file.load_map());
+    BOOST_REQUIRE(file.load());
 
     const auto offset = 42;
     const auto record_size = 10u;
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(record_manager__allocate__two_records__expected)
     typedef uint64_t link_type;
 
     test::storage file;
-    BOOST_REQUIRE(file.load_map());
+    BOOST_REQUIRE(file.load());
 
     const auto record_size = 10u;
     const auto link_size = sizeof(link_type);
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(record_manager__count__multiple_records_with_offset__expect
     typedef uint64_t link_type;
 
     test::storage file;
-    BOOST_REQUIRE(file.load_map());
+    BOOST_REQUIRE(file.load());
 
     const auto record_size = 10u;
     // const auto link_size = sizeof(link_type);
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(record_manager__set_count__multiple_records_with_offset__ex
     typedef uint32_t link_type;
 
     test::storage file;
-    BOOST_REQUIRE(file.load_map());
+    BOOST_REQUIRE(file.load());
 
     const auto record_size = 10u;
     // const auto link_size = sizeof(link_type);
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(record_manager__set_count__multiple_records_with_offset__ex
 BOOST_AUTO_TEST_CASE(record_manager__get__read_write__expected)
 {
     test::storage file;
-    BOOST_REQUIRE(file.load_map());
+    BOOST_REQUIRE(file.load());
 
     uint64_t value = 0x0102030405060708;
     record_manager<uint32_t> manager(file, 0, sizeof(value));
@@ -131,29 +131,29 @@ BOOST_AUTO_TEST_CASE(record_manager__get__read_write__expected)
 
     const auto link1 = manager.allocate(1);
     auto memory = manager.get(link1);
-    system::unsafe_to_little_endian(memory->buffer(), value + 0);
+    system::unsafe_to_little_endian(memory->data(), value + 0);
     memory.reset();
 
     const auto link2 = manager.allocate(1);
     memory = manager.get(link2);
-    system::unsafe_to_little_endian(memory->buffer(), value + 1);
+    system::unsafe_to_little_endian(memory->data(), value + 1);
     memory.reset();
 
     const auto link3 = manager.allocate(1);
     memory = manager.get(link3);
-    system::unsafe_to_little_endian(memory->buffer(), value + 2);
+    system::unsafe_to_little_endian(memory->data(), value + 2);
     memory.reset();
 
     memory = manager.get(link1);
-    BOOST_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint64_t>(memory->buffer()), value + 0);
+    BOOST_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint64_t>(memory->data()), value + 0);
     memory.reset();
 
     memory = manager.get(link2);
-    BOOST_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint64_t>(memory->buffer()), value + 1);
+    BOOST_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint64_t>(memory->data()), value + 1);
     memory.reset();
 
     memory = manager.get(link3);
-    BOOST_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint64_t>(memory->buffer()), value + 2);
+    BOOST_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint64_t>(memory->data()), value + 2);
     memory.reset();
 }
 

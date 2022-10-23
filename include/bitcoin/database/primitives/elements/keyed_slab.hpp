@@ -22,7 +22,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/elements/slab.hpp>
-#include <bitcoin/database/primitives_/slab_manager.hpp>
+#include <bitcoin/database/primitives/manager.hpp>
 
 namespace libbitcoin {
 namespace database {

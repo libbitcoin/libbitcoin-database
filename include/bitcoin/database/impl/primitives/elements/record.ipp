@@ -28,15 +28,15 @@ namespace database {
 namespace primitives {
 
 TEMPLATE
-CLASS::record(record_manager<Link>& manager) NOEXCEPT
-  : element<record_manager<Link>, Link>(manager,
-      element<record_manager<Link>, Link>::eof)
+CLASS::record(record_manager<Link, Size>& manager) NOEXCEPT
+  : element<record_manager<Link, Size>, Link>(manager,
+      element<record_manager<Link, Size>, Link>::eof)
 {
 }
 
 TEMPLATE
-CLASS::record(record_manager<Link>& manager, Link link) NOEXCEPT
-  : element<record_manager<Link>, Link>(manager, link)
+CLASS::record(record_manager<Link, Size>& manager, Link link) NOEXCEPT
+  : element<record_manager<Link, Size>, Link>(manager, link)
 {
 }
 
@@ -46,7 +46,7 @@ Link CLASS::create(Link next, auto& write) NOEXCEPT
     constexpr auto size = sizeof(Link) + Size;
     link_ = manager_.allocate(one);
     const auto memory = get();
-    auto start = memory->buffer();
+    auto start = memory->data();
     system::write::bytes::copy writer({ start, std::next(start, size) });
     writer.write_little_endian<Link>(next);
     write(writer);
@@ -58,7 +58,7 @@ TEMPLATE
 void CLASS::read(auto& read) const NOEXCEPT
 {
     const auto memory = get(sizeof(Link));
-    const auto start = memory->buffer();
+    const auto start = memory->data();
     system::read::bytes::copy reader({ start, std::next(start, Size) });
     read(reader);
 }

@@ -28,14 +28,8 @@ namespace primitives {
     
 TEMPLATE
 CLASS::iterable(Manager& manager, Link start) NOEXCEPT
-  : start_(start), manager_(manager)
+  : manager_(manager), start_(start)
 {
-}
-
-TEMPLATE
-bool CLASS::empty() const NOEXCEPT
-{
-    return begin() == end();
 }
 
 TEMPLATE
@@ -54,11 +48,17 @@ CLASS::begin() const NOEXCEPT
 
 TEMPLATE
 typename CLASS::iterator
-CLASS::end() const NOEXCEPT
+const CLASS::end() const NOEXCEPT
 {
     // manager_ is not const, so recomputed at each iteration if not static.
     static const iterator stop{ manager_, value_type::eof };
     return stop;
+}
+
+TEMPLATE
+bool CLASS::empty() const NOEXCEPT
+{
+    return begin() == end();
 }
 
 } // namespace primitives

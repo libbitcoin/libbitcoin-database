@@ -60,7 +60,7 @@ void CLASS::initialize(const Key& key, auto& write) NOEXCEPT
 {
     using namespace system;
     const auto memory = data(zero);
-    auto start = memory->buffer();
+    auto start = memory->data();
 
     // Limited to tuple|iterator Key types.
     unsafe_array_cast<uint8_t, key_size>(start) = key;
@@ -106,7 +106,7 @@ void CLASS::write(auto& write, size_t limit) const NOEXCEPT
 {
     using namespace system;
     const auto memory = data(key_size + link_size);
-    const auto start = memory->buffer();
+    const auto start = memory->data();
     const auto end = std::next(start, limit);
     write::bytes::copy writer({ start, end });
     write(writer);
@@ -139,7 +139,7 @@ void CLASS::set_next(Link next) const NOEXCEPT
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     std::unique_lock lock(mutex_);
-    system::unsafe_to_little_endian<Link>(memory->buffer(), next);
+    system::unsafe_to_little_endian<Link>(memory->data(), next);
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -149,7 +149,7 @@ void CLASS::read(auto& read, size_t limit) const NOEXCEPT
 {
     using namespace system;
     const auto memory = data(key_size + link_size);
-    const auto start = memory->buffer();
+    const auto start = memory->data();
     const auto end = std::next(start, limit);
     read::bytes::copy reader({ start, end });
     read(reader);
@@ -159,7 +159,7 @@ TEMPLATE
 bool CLASS::match(const Key& key) const NOEXCEPT
 {
     const auto memory = data(zero);
-    return std::equal(key.begin(), key.end(), memory->buffer());
+    return std::equal(key.begin(), key.end(), memory->data());
 }
 
 TEMPLATE
@@ -167,7 +167,7 @@ Key CLASS::key() const NOEXCEPT
 {
     // Limited to tuple Key types (see deserializer to generalize).
     const auto memory = data(zero);
-    return system::unsafe_array_cast<uint8_t, key_size>(memory->buffer());
+    return system::unsafe_array_cast<uint8_t, key_size>(memory->data());
 }
 
 TEMPLATE
@@ -184,7 +184,7 @@ Link CLASS::next() const NOEXCEPT
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     std::shared_lock lock(mutex_);
-    return system::unsafe_from_little_endian<Link>(memory->buffer());
+    return system::unsafe_from_little_endian<Link>(memory->data());
     ///////////////////////////////////////////////////////////////////////////
 }
 

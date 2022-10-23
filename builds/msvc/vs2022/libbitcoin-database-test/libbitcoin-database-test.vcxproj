@@ -75,7 +75,7 @@
     <ClCompile Include="..\..\..\..\test\locks\interprocess_lock.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\accessor.cpp" />
-    <ClCompile Include="..\..\..\..\test\memory\file_storage.cpp" />
+    <ClCompile Include="..\..\..\..\test\memory\map.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\element.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\iterable.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp" />

@@ -48,7 +48,7 @@ Link CLASS::create(Link next, const Key& key, auto& write,
     const auto size = sizeof(Link) + key_size + limit;
     link_ = manager_.allocate(size);
     const auto memory = get();
-    auto start = memory->buffer();
+    auto start = memory->data();
     system::write::bytes::copy writer({ start, std::next(start, size) });
     writer.write_little_endian<Link>(next);
     writer.write_bytes(key);
@@ -60,7 +60,7 @@ TEMPLATE
 void CLASS::read(auto& read, size_t limit) const NOEXCEPT
 {
     const auto memory = get(sizeof(Link) + key_size);
-    const auto start = memory->buffer();
+    const auto start = memory->data();
     system::read::bytes::copy reader({ start, std::next(start, limit) });
     read(reader);
 }
@@ -69,14 +69,14 @@ TEMPLATE
 bool CLASS::match(const Key& key) const NOEXCEPT
 {
     const auto memory = get(sizeof(Link));
-    return std::equal(key.begin(), key.end(), memory->buffer());
+    return std::equal(key.begin(), key.end(), memory->data());
 }
 
 TEMPLATE
 Key CLASS::key() const NOEXCEPT
 {
     const auto memory = get(sizeof(Link));
-    return system::unsafe_array_cast<uint8_t, key_size>(memory->buffer());
+    return system::unsafe_array_cast<uint8_t, key_size>(memory->data());
 }
 
 } // namespace primitives

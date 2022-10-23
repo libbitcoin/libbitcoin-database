@@ -161,9 +161,8 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/locks/interprocess_lock.cpp"
     "../../src/locks/scope_lock.cpp"
     "../../src/locks/sequential_lock.cpp"
-    "../../src/memory/accessor.cpp"
     "../../src/memory/file.cpp"
-    "../../src/memory/file_storage.cpp"
+    "../../src/memory/map.cpp"
     "../../src/mman-win32/mman.c"
     "../../src/mman-win32/mman.h" )
 
@@ -204,7 +203,7 @@ if (with-tests)
         "../../test/locks/flush_lock.cpp"
         "../../test/locks/interprocess_lock.cpp"
         "../../test/memory/accessor.cpp"
-        "../../test/memory/file_storage.cpp"
+        "../../test/memory/map.cpp"
         "../../test/primitives/element.cpp"
         "../../test/primitives/iterable.cpp"
         "../../test/primitives/iterator.cpp"

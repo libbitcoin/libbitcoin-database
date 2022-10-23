@@ -19,14 +19,13 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
 
-#include <bitcoin/database/primitives/elements/element.hpp>
-#include <bitcoin/database/primitives/elements/keyed_record.hpp>
-#include <bitcoin/database/primitives/elements/keyed_slab.hpp>
-#include <bitcoin/database/primitives/elements/record.hpp>
-#include <bitcoin/database/primitives/elements/slab.hpp>
+////#include <bitcoin/database/primitives/elements/keyed_record.hpp>
+////#include <bitcoin/database/primitives/elements/keyed_slab.hpp>
+////#include <bitcoin/database/primitives/elements/record.hpp>
+////#include <bitcoin/database/primitives/elements/slab.hpp>
+#include <bitcoin/database/primitives/element.hpp>
 #include <bitcoin/database/primitives/iterable.hpp>
 #include <bitcoin/database/primitives/iterator.hpp>
-#include <bitcoin/database/primitives/record_manager.hpp>
-#include <bitcoin/database/primitives/slab_manager.hpp>
+#include <bitcoin/database/primitives/manager.hpp>
 
 #endif

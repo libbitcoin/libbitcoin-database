@@ -73,7 +73,7 @@ bool storage::is_open() const NOEXCEPT
     return !closed_;
 }
 
-bool storage::load_map() NOEXCEPT
+bool storage::load() NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
     std::unique_lock map_lock(map_mutex_);
@@ -82,14 +82,14 @@ bool storage::load_map() NOEXCEPT
     return !mapped;
 }
 
-bool storage::flush_map() const NOEXCEPT
+bool storage::flush() const NOEXCEPT
 {
     std::shared_lock field_lock(field_mutex_);
     std::unique_lock map_lock(map_mutex_);
     return mapped_;
 }
 
-bool storage::unload_map() NOEXCEPT
+bool storage::unload() NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
     std::unique_lock map_lock(map_mutex_);
@@ -104,48 +104,38 @@ bool storage::is_mapped() const NOEXCEPT
     return mapped_;
 }
 
-// Physical grows at same rate as logical (not time optimized).
-// Allocation is never reduced in case of downsize (not space optimized).
-memory_ptr storage::reserve(size_t size) NOEXCEPT
+size_t storage::capacity() const NOEXCEPT
 {
-    std::unique_lock field_lock(field_mutex_);
-
-    if (size != buffer_.size())
-    {
-        std::unique_lock map_lock(map_mutex_);
-        buffer_.resize(size);
-    }
-
-    // No thread can intervene here because of the field_mutex_ lock.
-    return get();
+    return size();
 }
 
-memory_ptr storage::resize(size_t size) NOEXCEPT
-{
-    return reserve(size);
-}
-
-memory_ptr storage::get() NOEXCEPT
-{
-    const auto memory = std::make_shared<accessor>(map_mutex_);
-    memory->assign(buffer_.data());
-    return memory;
-}
-
-size_t storage::logical() const NOEXCEPT
+size_t storage::size() const NOEXCEPT
 {
     std::shared_lock field_lock(field_mutex_);
     return buffer_.size();
 }
 
-size_t storage::capacity() const NOEXCEPT
+bool storage::resize(size_t size) NOEXCEPT
 {
-    return logical();
+    const auto overflow = size > buffer_.capacity();
+    buffer_.resize(size);
+    return overflow;
 }
 
-size_t storage::size() const NOEXCEPT
+size_t storage::allocate(size_t chunk) NOEXCEPT
 {
-    return logical();
+    std::unique_lock field_lock(field_mutex_);
+    std::unique_lock map_lock(map_mutex_);
+    buffer_.resize(buffer_.size() + chunk);
+    return buffer_.size();
+}
+
+memory_ptr storage::get(size_t offset) NOEXCEPT
+{
+    const auto memory = std::make_shared<accessor<std::shared_mutex>>(map_mutex_);
+    memory->assign(buffer_.data());
+    memory->increment(offset);
+    return memory;
 }
 
 BC_POP_WARNING()
