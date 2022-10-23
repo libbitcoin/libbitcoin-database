@@ -26,81 +26,24 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // This is a trivial working storage interface implementation.
 storage::storage() NOEXCEPT
-  : mapped_(false), closed_(false), buffer_{}
+  : buffer_{}
 {
 }
     
 storage::storage(data_chunk&& initial) NOEXCEPT
-  : mapped_(false), closed_(false), buffer_(std::move(initial))
+  : buffer_(std::move(initial))
 {
 }
 
 storage::storage(const data_chunk& initial) NOEXCEPT
-  : mapped_(false), closed_(false), buffer_(initial)
+  : buffer_(initial)
 {
-}
-
-storage::~storage() NOEXCEPT
-{
-}
-
-bool storage::open() NOEXCEPT
-{
-    std::unique_lock field_lock(field_mutex_);
-    std::unique_lock map_lock(map_mutex_);
-    closed_ = false;
-    return true;
-}
-
-bool storage::close() NOEXCEPT
-{
-    std::unique_lock field_lock(field_mutex_);
-    std::unique_lock map_lock(map_mutex_);
-    closed_ = true;
-    buffer_.clear();
-    return true;
-}
-
-bool storage::is_open() const NOEXCEPT
-{
-    std::shared_lock field_lock(field_mutex_);
-    return !closed_;
-}
-
-bool storage::load() NOEXCEPT
-{
-    std::unique_lock field_lock(field_mutex_);
-    std::unique_lock map_lock(map_mutex_);
-    const auto mapped = mapped_;
-    mapped_ = true;
-    return !mapped;
-}
-
-bool storage::flush() const NOEXCEPT
-{
-    std::shared_lock field_lock(field_mutex_);
-    std::unique_lock map_lock(map_mutex_);
-    return mapped_;
-}
-
-bool storage::unload() NOEXCEPT
-{
-    std::unique_lock field_lock(field_mutex_);
-    std::unique_lock map_lock(map_mutex_);
-    const auto mapped = mapped_;
-    mapped_ = false;
-    return mapped;
-}
-
-bool storage::is_mapped() const NOEXCEPT
-{
-    std::shared_lock field_lock(field_mutex_);
-    return mapped_;
 }
 
 size_t storage::capacity() const NOEXCEPT
 {
-    return size();
+    std::shared_lock field_lock(field_mutex_);
+    return buffer_.capacity();
 }
 
 size_t storage::size() const NOEXCEPT
@@ -111,6 +54,7 @@ size_t storage::size() const NOEXCEPT
 
 bool storage::resize(size_t size) NOEXCEPT
 {
+    std::unique_lock field_lock(field_mutex_);
     const auto overflow = size > buffer_.capacity();
     buffer_.resize(size);
     return overflow;
@@ -120,8 +64,9 @@ size_t storage::allocate(size_t chunk) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
     std::unique_lock map_lock(map_mutex_);
+    const auto link = buffer_.size();
     buffer_.resize(buffer_.size() + chunk);
-    return buffer_.size();
+    return link;
 }
 
 memory_ptr storage::get(size_t offset) NOEXCEPT

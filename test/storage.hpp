@@ -28,21 +28,9 @@ class storage final
   : public database::storage
 {
 public:
-    DELETE4(storage);
-
     storage() NOEXCEPT;
     storage(data_chunk&& initial) NOEXCEPT;
     storage(const data_chunk& initial) NOEXCEPT;
-    ~storage() NOEXCEPT;
-
-    bool open() NOEXCEPT;
-    bool close() NOEXCEPT;
-    bool is_open() const NOEXCEPT;
-
-    bool load() NOEXCEPT;
-    bool unload() NOEXCEPT;
-    bool flush() const NOEXCEPT;
-    bool is_mapped() const NOEXCEPT;
 
     // storage interface
     size_t capacity() const NOEXCEPT override;
@@ -52,8 +40,6 @@ public:
     memory_ptr get(size_t offset=zero) NOEXCEPT override;
 
 private:
-    bool mapped_;
-    bool closed_;
     data_chunk buffer_;
     mutable std::shared_mutex field_mutex_;
     mutable std::shared_mutex map_mutex_;
