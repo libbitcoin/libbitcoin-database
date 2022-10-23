@@ -24,7 +24,16 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\test\elements\elements.cpp">
+    <ClCompile Include="..\..\..\..\test\elements\keyed_record.cpp">
+      <Filter>src\elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\elements\keyed_slab.cpp">
+      <Filter>src\elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\elements\record.cpp">
+      <Filter>src\elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\elements\slab.cpp">
       <Filter>src\elements</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\locks\file_lock.cpp">

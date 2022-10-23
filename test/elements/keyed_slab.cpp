@@ -18,10 +18,11 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(elements_tests)
+BOOST_AUTO_TEST_SUITE(keyed_slab_tests)
 
-BOOST_AUTO_TEST_CASE(elements_test)
+BOOST_AUTO_TEST_CASE(keyed_slab_test)
 {
+    BOOST_REQUIRE(true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

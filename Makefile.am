@@ -63,7 +63,10 @@ test_libbitcoin_database_test_SOURCES = \
     test/storage.hpp \
     test/test.cpp \
     test/test.hpp \
-    test/elements/elements.cpp \
+    test/elements/keyed_record.cpp \
+    test/elements/keyed_slab.cpp \
+    test/elements/record.cpp \
+    test/elements/slab.cpp \
     test/locks/file_lock.cpp \
     test/locks/flush_lock.cpp \
     test/locks/interprocess_lock.cpp \
