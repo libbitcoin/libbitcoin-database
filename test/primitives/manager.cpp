@@ -17,12 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
+#include "../storage.hpp"
 
 BOOST_AUTO_TEST_SUITE(manager_tests)
 
-BOOST_AUTO_TEST_CASE(manager_test)
+BOOST_AUTO_TEST_CASE(manager__size__empty__zero)
 {
-    BOOST_REQUIRE(true);
+    test::storage file;
+    manager<uint32_t, one> instance(file);
+    BOOST_REQUIRE(is_zero(instance.size()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
