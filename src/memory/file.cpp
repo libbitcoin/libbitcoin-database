@@ -32,7 +32,9 @@ namespace libbitcoin {
 namespace database {
 
 using namespace system;
-using namespace std::filesystem;
+using path = std::filesystem::path;
+
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 bool clear_path(const path& directory) NOEXCEPT
 {
@@ -40,31 +42,25 @@ bool clear_path(const path& directory) NOEXCEPT
     // create_directories returns true if path exists or created.
     // used for setup, with no expectations of file/directory existence.
     std::error_code ec;
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    remove_all(directory, ec);
-    return !ec && create_directories(directory, ec);
-    BC_POP_WARNING()
+    std::filesystem::remove_all(directory, ec);
+    return !ec && std::filesystem::create_directories(directory, ec);
 }
 
 bool create_file(const path& filename) NOEXCEPT
 {
     // Creates and returns true if file already existed (and no error).
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     std::ofstream file(filename);
     const auto good = file.good();
     file.close();
-    BC_POP_WARNING()
     return good;
 }
 
 bool file_exists(const path& filename) NOEXCEPT
 {
     // Returns true only if file existed.
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     std::ifstream file(filename);
     const auto good = file.good();
     file.close();
-    BC_POP_WARNING()
     return good;
 }
 
@@ -72,14 +68,14 @@ bool remove_file(const path& filename) NOEXCEPT
 {
     // Deletes and returns false if file did not exist (or error).
     std::error_code ec;
-    return remove(filename, ec);
+    return std::filesystem::remove(filename, ec);
 }
 
 bool rename_file(const path& from, const path& to) NOEXCEPT
 {
     // en.cppreference.com/w/cpp/filesystem/rename
     std::error_code ec;
-    rename(from, to, ec);
+    std::filesystem::rename(from, to, ec);
     return !ec;
 }
 
@@ -88,7 +84,6 @@ bool rename_file(const path& from, const path& to) NOEXCEPT
 int open_file(const path& filename) NOEXCEPT
 {
     // _wsopen_s and wstring do not throw (but are unannotated).
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #if defined(HAVE_MSC)
     int file_descriptor;
     if (_wsopen_s(&file_descriptor, filename.wstring().c_str(),
@@ -100,7 +95,6 @@ int open_file(const path& filename) NOEXCEPT
         (O_RDWR), (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH));
 #endif
     return file_descriptor;
-    BC_POP_WARNING()
 }
 
 bool close_file(int file_descriptor) NOEXCEPT
@@ -158,6 +152,8 @@ size_t page_size() NOEXCEPT
     return possible_narrow_sign_cast<size_t>(page_size);
 #endif
 }
+
+BC_POP_WARNING()
 
 } // namespace database
 } // namespace libbitcoin
