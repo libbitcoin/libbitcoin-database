@@ -80,8 +80,8 @@ bool map::open() NOEXCEPT
     if (descriptor_ != INVALID_DESCRIPTOR)
         return false;
 
-    descriptor_ = open_file(filename_);
-    logical_ = file_size(descriptor_);
+    descriptor_ = file::open(filename_);
+    logical_ = file::size(descriptor_);
 
     // open_failure
     return descriptor_ != INVALID_DESCRIPTOR;
@@ -104,7 +104,7 @@ bool map::close() NOEXCEPT
     logical_ = zero;
 
     // close_failure
-    return close_file(descriptor);
+    return file::close(descriptor);
 }
 
 bool map::is_open() const NOEXCEPT

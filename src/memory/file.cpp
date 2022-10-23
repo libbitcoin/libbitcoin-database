@@ -30,13 +30,14 @@
 
 namespace libbitcoin {
 namespace database {
+namespace file {
 
 using namespace system;
 using path = std::filesystem::path;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-bool clear_path(const path& directory) NOEXCEPT
+bool clear(const path& directory) NOEXCEPT
 {
     // remove_all returns count removed, and error code if fails.
     // create_directories returns true if path exists or created.
@@ -46,7 +47,7 @@ bool clear_path(const path& directory) NOEXCEPT
     return !ec && std::filesystem::create_directories(directory, ec);
 }
 
-bool create_file(const path& filename) NOEXCEPT
+bool create(const path& filename) NOEXCEPT
 {
     // Creates and returns true if file already existed (and no error).
     std::ofstream file(filename);
@@ -55,7 +56,7 @@ bool create_file(const path& filename) NOEXCEPT
     return good;
 }
 
-bool file_exists(const path& filename) NOEXCEPT
+bool exists(const path& filename) NOEXCEPT
 {
     // Returns true only if file existed.
     std::ifstream file(filename);
@@ -64,14 +65,14 @@ bool file_exists(const path& filename) NOEXCEPT
     return good;
 }
 
-bool remove_file(const path& filename) NOEXCEPT
+bool remove(const path& filename) NOEXCEPT
 {
     // Deletes and returns false if file did not exist (or error).
     std::error_code ec;
     return std::filesystem::remove(filename, ec);
 }
 
-bool rename_file(const path& from, const path& to) NOEXCEPT
+bool rename(const path& from, const path& to) NOEXCEPT
 {
     // en.cppreference.com/w/cpp/filesystem/rename
     std::error_code ec;
@@ -81,7 +82,7 @@ bool rename_file(const path& from, const path& to) NOEXCEPT
 
 // File descriptor functions required for memory mapping.
 
-int open_file(const path& filename) NOEXCEPT
+int open(const path& filename) NOEXCEPT
 {
     // _wsopen_s and wstring do not throw (but are unannotated).
 #if defined(HAVE_MSC)
@@ -97,7 +98,7 @@ int open_file(const path& filename) NOEXCEPT
     return file_descriptor;
 }
 
-bool close_file(int file_descriptor) NOEXCEPT
+bool close(int file_descriptor) NOEXCEPT
 {
     // TODO: it may be possible to collapse this given newer WIN32 API.
 #if defined(HAVE_MSC)
@@ -107,7 +108,7 @@ bool close_file(int file_descriptor) NOEXCEPT
 #endif
 }
 
-size_t file_size(int file_descriptor) NOEXCEPT
+size_t size(int file_descriptor) NOEXCEPT
 {
     if (file_descriptor == -1)
         return zero;
@@ -135,7 +136,7 @@ size_t file_size(int file_descriptor) NOEXCEPT
     return sign_cast<size_t>(sbuf.st_size);
 }
 
-size_t page_size() NOEXCEPT
+size_t page() NOEXCEPT
 {
 #if defined(HAVE_MSC)
     SYSTEM_INFO configuration;
@@ -155,5 +156,6 @@ size_t page_size() NOEXCEPT
 
 BC_POP_WARNING()
 
+} // namespace file
 } // namespace database
 } // namespace libbitcoin

@@ -25,19 +25,21 @@
 
 namespace libbitcoin {
 namespace database {
+namespace file {
 
 /// Basic file system utilities, not thread safe.
-BCD_API bool clear_path(const std::filesystem::path& directory) NOEXCEPT;
-BCD_API bool create_file(const std::filesystem::path& filename) NOEXCEPT;
-BCD_API bool file_exists(const std::filesystem::path& filename) NOEXCEPT;
-BCD_API bool remove_file(const std::filesystem::path& filename) NOEXCEPT;
-BCD_API bool rename_file(const std::filesystem::path& from,
+BCD_API bool clear(const std::filesystem::path& directory) NOEXCEPT;
+BCD_API bool create(const std::filesystem::path& filename) NOEXCEPT;
+BCD_API bool exists(const std::filesystem::path& filename) NOEXCEPT;
+BCD_API bool remove(const std::filesystem::path& filename) NOEXCEPT;
+BCD_API bool rename(const std::filesystem::path& from,
 	const std::filesystem::path& to) NOEXCEPT;
-BCD_API int open_file(const std::filesystem::path& filename) NOEXCEPT;
-BCD_API bool close_file(int file_descriptor) NOEXCEPT;
-BCD_API size_t file_size(int file_descriptor) NOEXCEPT;
-BCD_API size_t page_size() NOEXCEPT;
+BCD_API int open(const std::filesystem::path& filename) NOEXCEPT;
+BCD_API bool close(int file_descriptor) NOEXCEPT;
+BCD_API size_t size(int file_descriptor) NOEXCEPT;
+BCD_API size_t page() NOEXCEPT;
 
+} // namespace file
 } // namespace database
 } // namespace libbitcoin
 
