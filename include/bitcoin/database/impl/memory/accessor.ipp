@@ -26,7 +26,6 @@
 namespace libbitcoin {
 namespace database {
 
-
 template <typename Mutex>
 accessor<Mutex>::accessor(Mutex& mutex) NOEXCEPT
   : data_(nullptr), shared_lock_(mutex)
