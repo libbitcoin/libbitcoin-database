@@ -58,7 +58,7 @@ protected:
 
     memory_ptr get() const NOEXCEPT;
     memory_ptr get(size_t offset) const NOEXCEPT;
-    memory_ptr allocate(size_t size) const NOEXCEPT;
+    memory_ptr allocate(link size) NOEXCEPT;
 
 private:
     Manager& manager_;

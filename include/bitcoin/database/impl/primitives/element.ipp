@@ -79,12 +79,15 @@ TEMPLATE
 memory_ptr CLASS::get(size_t offset) const NOEXCEPT
 {
     auto memory = manager_.get(link_);
-    memory->increment(offset);
+
+    if (memory)
+        memory->increment(offset);
+
     return memory;
 }
 
 TEMPLATE
-memory_ptr CLASS::allocate(size_t size) const NOEXCEPT
+memory_ptr CLASS::allocate(link size) NOEXCEPT
 {
     link_ = manager_.allocate(size);
     return manager_.get(link_);

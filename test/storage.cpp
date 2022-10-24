@@ -26,12 +26,12 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // This is a trivial working storage interface implementation.
 storage::storage() NOEXCEPT
-  : buffer_{}
+  : local_{}, buffer_{ local_ }
 {
 }
 
-storage::storage(const data_chunk& initial) NOEXCEPT
-  : buffer_(initial)
+storage::storage(data_chunk& reference) NOEXCEPT
+  : buffer_(reference)
 {
 }
 
