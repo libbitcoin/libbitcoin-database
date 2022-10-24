@@ -59,8 +59,7 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE \
-template <typename Manager>
+#define TEMPLATE template <typename Manager>
 #define CLASS iterator<Manager>
 
 #include <bitcoin/database/impl/primitives/iterator.ipp>
