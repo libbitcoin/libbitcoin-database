@@ -18,6 +18,8 @@
  */
 #include "test.hpp"
 #include "storage.hpp"
+#include <mutex>
+#include <shared_mutex>
 
 namespace test {
 

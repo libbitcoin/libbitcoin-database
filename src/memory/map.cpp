@@ -25,7 +25,6 @@
     #include <sys/stat.h>
     #include <sys/types.h>
 #endif
-#include <fcntl.h>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
@@ -36,10 +35,6 @@
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/storage.hpp>
 
-// map is able to support 32 bit, but because the database
-// requires a larger file this is neither validated nor supported.
-static_assert(sizeof(void*) == sizeof(uint64_t), "Not a 64 bit system!");
-
 namespace libbitcoin {
 namespace database {
 
@@ -47,10 +42,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 using namespace system;
 
-#define FAIL -1
-
-map::map(const path& filename, size_t minimum,
-    size_t expansion) NOEXCEPT
+map::map(const path& filename, size_t minimum, size_t expansion) NOEXCEPT
   : filename_(filename),
     minimum_(minimum),
     expansion_(expansion),
@@ -284,12 +276,14 @@ memory_ptr map::get(size_t offset) NOEXCEPT
 // private, mman wrappers, not thread safe
 // ----------------------------------------------------------------------------
 
+constexpr auto mman_fail = -1;
+
 // Flush failure does not halt process, flush does not ensure file integrity.
 bool map::flush_() const NOEXCEPT
 {
     // macos msync fails with zero logical size.
     return is_zero(logical_) ||
-        ::msync(memory_map_, logical_, MS_SYNC) != FAIL;
+        ::msync(memory_map_, logical_, MS_SYNC) != mman_fail;
 }
 
 // Trims to logical size, can be zero.
@@ -297,28 +291,26 @@ bool map::unmap_() NOEXCEPT
 {
     // fsync is required to ensure file integrity (cache cleared).
     const auto success = flush_()
-        && (::munmap(memory_map_, capacity_) != FAIL)
-        && (::ftruncate(descriptor_, logical_) != FAIL)
-        && (::fsync(descriptor_) != FAIL);
+        && (::munmap(memory_map_, capacity_) != mman_fail)
+        && (::ftruncate(descriptor_, logical_) != mman_fail)
+        && (::fsync(descriptor_) != mman_fail);
 
     capacity_ = zero;
     memory_map_ = nullptr;
     return success;
 }
 
-// Mapping has no effect on logical size.
+// Mapping has no effect on logical size, always maps max(logical/min) size.
 bool map::map_() NOEXCEPT
 {
     auto size = logical_;
 
-    // Cannot map empty file, so expand to minimum capacity if zero.
-    if (is_zero(size))
+    // Cannot map empty file, and want mininum capacity, so expand as required.
+    if (size < minimum_)
     {
         size = minimum_;
-        if (::ftruncate(descriptor_, minimum_) == FAIL)
+        if (::ftruncate(descriptor_, size) == mman_fail)
             return false;
-
-        capacity_ = size;
     }
 
     memory_map_ = pointer_cast<uint8_t>(::mmap(nullptr, size,
@@ -334,16 +326,26 @@ bool map::remap_(size_t size) NOEXCEPT
     if (is_zero(size))
         size = minimum_;
 
-    if (::ftruncate(descriptor_, size) == FAIL)
+#if !defined(HAVE_MSC) && !defined(MREMAP_MAYMOVE)
+    // macOS: unmap before ftruncate sets new size.
+    if (!unmap_())
         return false;
-    
+#endif
+
+    if (::ftruncate(descriptor_, size) == mman_fail)
+        return false;
+
 // mman-win32 mremap hack (umap/map) requires flags and file descriptor.
-#if defined (HAVE_MSC)
+#if defined(HAVE_MSC)
     memory_map_ = pointer_cast<uint8_t>(::mremap_(memory_map_, capacity_, size,
         PROT_READ | PROT_WRITE, MAP_SHARED, descriptor_));
-#else
+#elif defined(MREMAP_MAYMOVE)
     memory_map_ = pointer_cast<uint8_t>(::mremap(memory_map_, capacity_, size,
         MREMAP_MAYMOVE));
+#else
+    // macOS: does not define mremap or MREMAP_MAYMOVE.
+    memory_map_ = pointer_cast<uint8_t>(::mmap(nullptr, size,
+        PROT_READ | PROT_WRITE, MAP_SHARED, descriptor_, 0));
 #endif
 
     return finalize_(size);
@@ -353,7 +355,7 @@ bool map::finalize_(size_t size) NOEXCEPT
 {
     // TODO: madvise with large length value fails on linux, is 0 sufficient?
     if (memory_map_ == MAP_FAILED ||
-        ::madvise(memory_map_, 0, MADV_RANDOM) == FAIL)
+        ::madvise(memory_map_, 0, MADV_RANDOM) == mman_fail)
     {
         capacity_ = zero;
         memory_map_ = nullptr;
