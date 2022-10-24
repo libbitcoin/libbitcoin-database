@@ -18,7 +18,9 @@
  */
 #include <bitcoin/database/memory/file.hpp>
 
+#if defined(HAVE_MSC)
 #include <io.h>
+#endif
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
