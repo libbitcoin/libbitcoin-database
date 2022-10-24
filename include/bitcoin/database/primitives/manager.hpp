@@ -60,6 +60,7 @@ private:
 
     static constexpr Link position_to_link(size_t position) NOEXCEPT
     {
+        BC_ASSERT(system::is_multiple(position, size_));
         return system::possible_narrow_cast<Link>(position / size_);
     }
 

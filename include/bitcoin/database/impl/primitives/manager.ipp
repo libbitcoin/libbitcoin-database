@@ -66,7 +66,7 @@ memory_ptr CLASS::get(Link link) const NOEXCEPT
     if (link == eof)
         return {};
 
-    return file_.data(link_to_position(link));
+    return file_.get(link_to_position(link));
 }
 
 } // namespace database

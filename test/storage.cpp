@@ -50,9 +50,11 @@ size_t storage::size() const NOEXCEPT
 bool storage::resize(size_t size) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
-    const auto overflow = size > buffer_.capacity();
+    if (size > buffer_.capacity())
+        return false;
+
     buffer_.resize(size);
-    return overflow;
+    return true;
 }
 
 size_t storage::allocate(size_t chunk) NOEXCEPT
