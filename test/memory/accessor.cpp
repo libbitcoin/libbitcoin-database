@@ -36,7 +36,8 @@ BOOST_AUTO_TEST_CASE(accessor__construct_shared_mutex__unassigned__null_data)
 
 BOOST_AUTO_TEST_CASE(accessor__assign__data__expected)
 {
-    data_chunk chunk{};
+    // chunk.data() is nullptr if chunk.empty(), which triggers assertion.
+    data_chunk chunk{ 0x00 };
     auto expected = chunk.data();
     std::shared_mutex mutex;
     accessor instance(mutex);
