@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_SUITE(manager_tests)
 BOOST_AUTO_TEST_CASE(manager__size__empty_slab__zero)
 {
     test::storage file;
-    const manager<uint32_t, 1> instance(file);
+    const manager<uint32_t, zero> instance(file);
     BOOST_REQUIRE(is_zero(instance.size()));
 }
 
