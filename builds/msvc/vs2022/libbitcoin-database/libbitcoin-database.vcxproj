@@ -81,7 +81,7 @@
     <ClCompile Include="..\..\..\..\src\locks\sequential_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\file.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\map.cpp" />
-    <ClCompile Include="..\..\..\..\src\mman-win32\mman.c" />
+    <ClCompile Include="..\..\..\..\src\memory\mman-win32\mman.c" />
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -97,9 +97,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\sequential_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\file.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\memory.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\storage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\map.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\storage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\element.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linkage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\manager.hpp" />
@@ -108,7 +108,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\hash_table_header.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\hash_table_multimap.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp" />
-    <ClInclude Include="..\..\..\..\src\mman-win32\mman.h" />
+    <ClInclude Include="..\..\..\..\src\memory\mman-win32\mman.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\accessor.ipp" />

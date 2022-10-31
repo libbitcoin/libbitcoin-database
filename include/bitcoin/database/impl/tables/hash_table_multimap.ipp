@@ -21,7 +21,6 @@
 ////
 ////#include <shared_mutex>
 ////#include <bitcoin/database/define.hpp>
-////#include <bitcoin/database/memory/memory.hpp>
 ////
 ////namespace libbitcoin {
 ////namespace database {

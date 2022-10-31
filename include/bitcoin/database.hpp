@@ -28,9 +28,9 @@
 #include <bitcoin/database/locks/sequential_lock.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/file.hpp>
+#include <bitcoin/database/memory/interfaces/memory.hpp>
+#include <bitcoin/database/memory/interfaces/storage.hpp>
 #include <bitcoin/database/memory/map.hpp>
-#include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/memory/storage.hpp>
 #include <bitcoin/database/primitives/element.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
 #include <bitcoin/database/primitives/manager.hpp>

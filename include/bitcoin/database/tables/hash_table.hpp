@@ -23,7 +23,8 @@
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/tables/hash_table_header.hpp>
-#include <bitcoin/database/memory/storage.hpp>
+#include <bitcoin/database/memory/interfaces/memory.hpp>
+#include <bitcoin/database/memory/interfaces/storage.hpp>
 
 namespace libbitcoin {
 namespace database {

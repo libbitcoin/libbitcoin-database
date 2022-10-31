@@ -19,7 +19,7 @@
 #include <bitcoin/database/memory/map.hpp>
 
 #if defined(HAVE_MSC)
-    #include "../mman-win32/mman.h"
+    #include "mman-win32/mman.h"
 #else
     #include <sys/mman.h>
     #include <sys/stat.h>
@@ -32,8 +32,6 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/file.hpp>
-#include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/memory/storage.hpp>
 
 namespace libbitcoin {
 namespace database {

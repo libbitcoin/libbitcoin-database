@@ -16,12 +16,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MEMORY_STORAGE_HPP
-#define LIBBITCOIN_DATABASE_MEMORY_STORAGE_HPP
+#ifndef LIBBITCOIN_DATABASE_MEMORY_INTERFACES_STORAGE_HPP
+#define LIBBITCOIN_DATABASE_MEMORY_INTERFACES_STORAGE_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/memory/interfaces/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -45,7 +45,7 @@ public:
     virtual size_t allocate(size_t chunk) NOEXCEPT = 0;
 
     /// Get r/w access to start/offset of memory map (or null).
-    virtual memory_ptr get(size_t offset=zero) NOEXCEPT = 0;
+    virtual memory_ptr get(size_t offset = zero) NOEXCEPT = 0;
 };
 
 } // namespace database

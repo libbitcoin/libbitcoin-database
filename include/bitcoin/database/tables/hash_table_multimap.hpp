@@ -22,7 +22,8 @@
 ////#include <bitcoin/system.hpp>
 ////#include <bitcoin/database/boost.hpp>
 ////#include <bitcoin/database/define.hpp>
-////#include <bitcoin/database/memory/memory.hpp>
+////#include <bitcoin/database/memory/interfaces/memory.hpp>
+////#include <bitcoin/database/memory/interfaces/storage.hpp>
 ////#include <bitcoin/database/tables/hash_table.hpp>
 ////#include <bitcoin/database/tables/list_element.hpp>
 ////#include <bitcoin/database/tables/record_manager.hpp>
