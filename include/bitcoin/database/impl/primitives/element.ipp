@@ -40,13 +40,13 @@ void CLASS::advance() NOEXCEPT
 }
 
 TEMPLATE
-typename Link CLASS::self() const NOEXCEPT
+Link CLASS::self() const NOEXCEPT
 {
     return link_;
 }
 
 TEMPLATE
-typename Link CLASS::get_next() const NOEXCEPT
+Link CLASS::get_next() const NOEXCEPT
 {
     const auto body = get();
     BC_ASSERT_MSG(body, "getting next from eof");
