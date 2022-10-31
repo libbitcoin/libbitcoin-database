@@ -31,7 +31,7 @@ template <size_t Size>
 struct linkage
 {
     using integer = unsigned_type<Size>;
-    using bytes = system::data_array<Size>;
+    using bytes = std_array<uint8_t, Size>;
     static constexpr auto eof = system::bit_all<integer>;
     static constexpr auto size = Size;
 

@@ -260,13 +260,13 @@ size_t map::allocate(size_t chunk) NOEXCEPT
 // This requires a mutable byte pointer and end pointer.
 memory_ptr map::get(size_t offset) NOEXCEPT
 {
-    // TODO: derive objects from copy_sink and copy_source
     auto memory = std::make_shared<accessor<mutex>>(map_mutex_);
 
     // data_unmapped
     if (!mapped_)
         return nullptr;
 
+    // Because end is not record-bound it only guards file access, not records.
     memory->assign(
         std::next(memory_map_, offset),
         std::next(memory_map_, size()));

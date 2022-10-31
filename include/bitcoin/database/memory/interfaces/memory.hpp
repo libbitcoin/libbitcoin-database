@@ -27,7 +27,7 @@ namespace libbitcoin {
 namespace database {
 
 /// Protected memory access interface.
-class BCD_API memory
+class memory
 {
 public:
     typedef std::shared_ptr<memory> ptr;

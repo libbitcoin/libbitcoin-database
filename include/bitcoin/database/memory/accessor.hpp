@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_HPP
 #define LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_HPP
 
+#include <iterator>
 #include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -34,23 +35,28 @@ class accessor final
 {
 public:
     /// Mutex guards against remap while object in scope.
-    accessor(Mutex& mutex) NOEXCEPT;
+    inline accessor(Mutex& mutex) NOEXCEPT;
 
     /// Set the buffer.
-    void assign(uint8_t* begin, uint8_t* end) NOEXCEPT;
+    inline void assign(uint8_t* begin, uint8_t* end) NOEXCEPT;
 
     /// Increment the pointer the specified number of bytes within the record.
-    void increment(size_t value) NOEXCEPT override;
+    inline void increment(size_t bytes) NOEXCEPT override;
 
     /// Get buffer (guarded against remap only).
-    uint8_t* begin() NOEXCEPT override;
-    const uint8_t* end() const NOEXCEPT override;
+    inline uint8_t* begin() NOEXCEPT override;
+    inline const uint8_t* end() const NOEXCEPT override;
 
     /// Cast to r/w slices for use in stream construction.
-    operator system::data_slab() NOEXCEPT;
-    operator system::data_reference() const NOEXCEPT;
+    inline operator system::data_slab() NOEXCEPT;
+    inline operator system::data_reference() const NOEXCEPT;
 
 private:
+    inline ptrdiff_t size() const NOEXCEPT
+    {
+        return std::ranges::distance(begin_, end_);
+    }
+
     uint8_t* begin_{};
     uint8_t* end_{};
     std::shared_lock<Mutex> shared_lock_;

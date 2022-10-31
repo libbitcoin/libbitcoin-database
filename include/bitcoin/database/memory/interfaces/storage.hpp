@@ -27,7 +27,7 @@ namespace libbitcoin {
 namespace database {
 
 /// Mapped memory interface.
-class BCD_API storage
+class storage
 {
 public:
     static constexpr auto eof = system::bit_all<size_t>;
@@ -45,7 +45,7 @@ public:
     virtual size_t allocate(size_t chunk) NOEXCEPT = 0;
 
     /// Get r/w access to start/offset of memory map (or null).
-    virtual memory_ptr get(size_t offset = zero) NOEXCEPT = 0;
+    virtual memory_ptr get(size_t offset=zero) NOEXCEPT = 0;
 };
 
 } // namespace database

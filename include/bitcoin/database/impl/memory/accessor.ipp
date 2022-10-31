@@ -29,48 +29,46 @@ namespace database {
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 TEMPLATE
-CLASS::accessor(Mutex& mutex) NOEXCEPT
+inline CLASS::accessor(Mutex& mutex) NOEXCEPT
   : shared_lock_(mutex)
 {
 }
 
 TEMPLATE
-void CLASS::assign(uint8_t* begin, uint8_t* end) NOEXCEPT
+inline void CLASS::assign(uint8_t* begin, uint8_t* end) NOEXCEPT
 {
-    using namespace system;
-    BC_ASSERT(!is_negative(std::ranges::distance(begin_, end_)));
+    BC_ASSERT(!system::is_negative(size()));
     begin_ = begin;
     end_ = end;
 }
 
 TEMPLATE
-void CLASS::increment(size_t value) NOEXCEPT
+inline void CLASS::increment(size_t bytes) NOEXCEPT
 {
-    using namespace system;
-    BC_ASSERT(value <= limit<size_t>(std::ranges::distance(begin_, end_)));
-    std::advance(begin_, value);
+    BC_ASSERT(!system::is_greater(bytes, size()));
+    std::advance(begin_, bytes);
 }
 
 TEMPLATE
-uint8_t* CLASS::begin() NOEXCEPT
+inline uint8_t* CLASS::begin() NOEXCEPT
 {
     return begin_;
 }
 
 TEMPLATE
-const uint8_t* CLASS::end() const NOEXCEPT
+inline const uint8_t* CLASS::end() const NOEXCEPT
 {
     return end_;
 }
 
 TEMPLATE
-CLASS::operator system::data_slab() NOEXCEPT
+inline CLASS::operator system::data_slab() NOEXCEPT
 {
     return { begin_, end_ };
 }
 
 TEMPLATE
-CLASS::operator system::data_reference() const NOEXCEPT
+inline CLASS::operator system::data_reference() const NOEXCEPT
 {
     return { begin_, end_ };
 }

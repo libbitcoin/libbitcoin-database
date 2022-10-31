@@ -28,14 +28,7 @@
 namespace libbitcoin {
 namespace database {
 
-// keyed:   [[link][key][value]]
-// unkeyed: [[link][]   [value]]
-// Value may be fixed (record element) or variable (slab element) size.
-// Derived elements provide write append and random access read to memory map.
-
-/// Forward linked list element.
-/// Key is always serialized as a byte array.
-/// Link type is determined by manager (slab/bytes or record/index).
+// Key should be constrained to array of Link::byte.
 template <typename Link, typename Key, size_t Size = zero>
 class element
 {
