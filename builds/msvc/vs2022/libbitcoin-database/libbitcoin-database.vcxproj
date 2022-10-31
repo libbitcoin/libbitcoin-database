@@ -88,11 +88,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\boost.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\elements\elements.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\elements\keyed_record.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\elements\keyed_slab.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\elements\record.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\elements\slab.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\conditional_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\file_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\flush_lock.hpp" />
@@ -106,11 +101,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\storage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\element.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\iterable.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\iterator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linkage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\manager.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\primitives.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\hash_table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\hash_table_header.hpp" />
@@ -119,14 +111,8 @@
     <ClInclude Include="..\..\..\..\src\mman-win32\mman.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\elements\keyed_record.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\elements\keyed_slab.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\elements\record.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\elements\slab.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\accessor.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\element.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\iterable.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\iterator.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\linkage.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\manager.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\tables\hash_table.ipp" />

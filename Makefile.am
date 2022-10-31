@@ -63,10 +63,6 @@ test_libbitcoin_database_test_SOURCES = \
     test/storage.hpp \
     test/test.cpp \
     test/test.hpp \
-    test/elements/keyed_record.cpp \
-    test/elements/keyed_slab.cpp \
-    test/elements/record.cpp \
-    test/elements/slab.cpp \
     test/locks/file_lock.cpp \
     test/locks/flush_lock.cpp \
     test/locks/interprocess_lock.cpp \
@@ -74,8 +70,6 @@ test_libbitcoin_database_test_SOURCES = \
     test/memory/file.cpp \
     test/memory/map.cpp \
     test/primitives/element.cpp \
-    test/primitives/iterable.cpp \
-    test/primitives/iterator.cpp \
     test/primitives/linkage.cpp \
     test/primitives/manager.cpp \
     test/tables/hash_table.cpp \
@@ -109,21 +103,6 @@ include_bitcoin_database_HEADERS = \
     include/bitcoin/database/settings.hpp \
     include/bitcoin/database/version.hpp
 
-include_bitcoin_database_elementsdir = ${includedir}/bitcoin/database/elements
-include_bitcoin_database_elements_HEADERS = \
-    include/bitcoin/database/elements/elements.hpp \
-    include/bitcoin/database/elements/keyed_record.hpp \
-    include/bitcoin/database/elements/keyed_slab.hpp \
-    include/bitcoin/database/elements/record.hpp \
-    include/bitcoin/database/elements/slab.hpp
-
-include_bitcoin_database_impl_elementsdir = ${includedir}/bitcoin/database/impl/elements
-include_bitcoin_database_impl_elements_HEADERS = \
-    include/bitcoin/database/impl/elements/keyed_record.ipp \
-    include/bitcoin/database/impl/elements/keyed_slab.ipp \
-    include/bitcoin/database/impl/elements/record.ipp \
-    include/bitcoin/database/impl/elements/slab.ipp
-
 include_bitcoin_database_impl_memorydir = ${includedir}/bitcoin/database/impl/memory
 include_bitcoin_database_impl_memory_HEADERS = \
     include/bitcoin/database/impl/memory/accessor.ipp
@@ -131,8 +110,6 @@ include_bitcoin_database_impl_memory_HEADERS = \
 include_bitcoin_database_impl_primitivesdir = ${includedir}/bitcoin/database/impl/primitives
 include_bitcoin_database_impl_primitives_HEADERS = \
     include/bitcoin/database/impl/primitives/element.ipp \
-    include/bitcoin/database/impl/primitives/iterable.ipp \
-    include/bitcoin/database/impl/primitives/iterator.ipp \
     include/bitcoin/database/impl/primitives/linkage.ipp \
     include/bitcoin/database/impl/primitives/manager.ipp
 
@@ -163,11 +140,8 @@ include_bitcoin_database_memory_HEADERS = \
 include_bitcoin_database_primitivesdir = ${includedir}/bitcoin/database/primitives
 include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/element.hpp \
-    include/bitcoin/database/primitives/iterable.hpp \
-    include/bitcoin/database/primitives/iterator.hpp \
     include/bitcoin/database/primitives/linkage.hpp \
-    include/bitcoin/database/primitives/manager.hpp \
-    include/bitcoin/database/primitives/primitives.hpp
+    include/bitcoin/database/primitives/manager.hpp
 
 include_bitcoin_database_tablesdir = ${includedir}/bitcoin/database/tables
 include_bitcoin_database_tables_HEADERS = \
