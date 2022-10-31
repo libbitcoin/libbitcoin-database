@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(accessor__assign__data__expected)
     std::shared_mutex mutex;
     accessor instance(mutex);
     const auto expected_begin = chunk.data();
-    const auto expected_end = std::next(expected_begin, 1u);
+    const auto expected_end = std::next(expected_begin, chunk.size());
     instance.assign(expected_begin, expected_end);
     BOOST_REQUIRE_EQUAL(instance.begin(), expected_begin);
     BOOST_REQUIRE_EQUAL(instance.end(), expected_end);
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(accessor__cast__data_slab__expected)
     std::shared_mutex mutex;
     accessor instance(mutex);
     auto expected_begin = chunk.data();
-    auto expected_end = std::next(expected_begin, 1u);
+    auto expected_end = std::next(expected_begin, chunk.size());
     instance.assign(expected_begin, expected_end);
     const auto slab = static_cast<system::data_slab>(instance);
     BOOST_REQUIRE_EQUAL(slab.begin(), expected_begin);
@@ -91,11 +91,37 @@ BOOST_AUTO_TEST_CASE(accessor__cast__data_reference__expected)
     std::shared_mutex mutex;
     accessor instance(mutex);
     auto expected_begin = chunk.data();
-    auto expected_end = std::next(expected_begin, 1u);
+    auto expected_end = std::next(expected_begin, chunk.size());
     instance.assign(expected_begin, expected_end);
     const auto reference = static_cast<system::data_reference>(instance);
     BOOST_REQUIRE_EQUAL(reference.begin(), expected_begin);
     BOOST_REQUIRE_EQUAL(reference.end(), expected_end);
+}
+
+BOOST_AUTO_TEST_CASE(accessor__cast__write_read_flip__expected)
+{
+    constexpr auto expected = 0x0102030405060708_u64;
+    constexpr auto size =sizeof(expected);
+    data_chunk chunk(size);
+
+    std::shared_mutex mutex;
+    accessor instance(mutex);
+    instance.assign(chunk.data(), std::next(chunk.data(), size));
+
+    // data_slab cast
+    system::write::bytes::copy writer(instance);
+    writer.write_big_endian(expected);
+    writer.flush();
+
+    // data_reference cast
+    system::read::bytes::copy reader(instance);
+    BOOST_REQUIRE_EQUAL(reader.read_big_endian<uint64_t>(), expected);
+
+    // data_slab cast
+    system::flip::bytes::copy flipper(instance);
+    flipper.write_little_endian(expected);
+    flipper.rewind_bytes(size);
+    BOOST_REQUIRE_EQUAL(flipper.read_little_endian<uint64_t>(), expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
