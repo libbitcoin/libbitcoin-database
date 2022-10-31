@@ -250,26 +250,29 @@ size_t map::allocate(size_t chunk) NOEXCEPT
         map_mutex_.unlock();
     }
 
-    const auto link = logical_;
+    const auto position = logical_;
     field_mutex_.unlock_upgrade_and_lock();
     logical_ = size;
     field_mutex_.unlock();
-    return link;
+
+    return position;
 }
 
+// The memory pointer can be encapsulated into a read/write/flip stream.
+// This requires a mutable byte pointer and end pointer.
 memory_ptr map::get(size_t offset) NOEXCEPT
 {
+    // TODO: derive objects from copy_sink and copy_source
     auto memory = std::make_shared<accessor<mutex>>(map_mutex_);
 
-    // data_unmapped | invalid_offset
-    if (!mapped_ || offset == storage::eof)
-    {
-        memory.reset();
-        return {};
-    }
+    // data_unmapped
+    if (!mapped_)
+        return nullptr;
 
-    memory->assign(memory_map_);
-    memory->increment(offset);
+    memory->assign(
+        std::next(memory_map_, offset),
+        std::next(memory_map_, size()));
+
     return memory;
 }
 

@@ -26,8 +26,8 @@ BOOST_AUTO_TEST_SUITE(manager_tests)
 BOOST_AUTO_TEST_CASE(manager__size__empty_slab__zero)
 {
     test::storage file;
-    const manager<uint32_t, zero> instance(file);
-    BOOST_REQUIRE(is_zero(instance.size()));
+    const manager<linkage<4>, zero> instance(file);
+    BOOST_REQUIRE(is_zero(instance.count()));
 }
 
 BOOST_AUTO_TEST_CASE(manager__size__non_empty_slab__expected)
@@ -37,17 +37,17 @@ BOOST_AUTO_TEST_CASE(manager__size__non_empty_slab__expected)
     test::storage file(buffer);
 
     // Slab sizing is byte-based (arbitrary, links are file offsets).
-    const manager<uint32_t, zero> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.size(), expected);
+    const manager<linkage<4>, zero> instance(file);
+    BOOST_REQUIRE_EQUAL(instance.count(), expected);
 }
 
 BOOST_AUTO_TEST_CASE(manager__allocate__eof_slab__eof_unchanged)
 {
     data_chunk buffer;
     test::storage file(buffer);
-    manager<uint32_t, zero> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.allocate(instance.eof), instance.eof);
-    BOOST_REQUIRE_EQUAL(instance.size(), zero);
+    manager<linkage<4>, zero> instance(file);
+    BOOST_REQUIRE_EQUAL(instance.allocate(linkage<4>::eof), linkage<4>::eof);
+    BOOST_REQUIRE_EQUAL(instance.count(), zero);
 }
 
 BOOST_AUTO_TEST_CASE(manager__allocate__empty_slab__expected)
@@ -55,9 +55,9 @@ BOOST_AUTO_TEST_CASE(manager__allocate__empty_slab__expected)
     constexpr auto expected = 42u;
     data_chunk buffer;
     test::storage file(buffer);
-    manager<uint32_t, zero> instance(file);
+    manager<linkage<4>, zero> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(expected), zero);
-    BOOST_REQUIRE_EQUAL(instance.size(), expected);
+    BOOST_REQUIRE_EQUAL(instance.count(), expected);
 }
 
 BOOST_AUTO_TEST_CASE(manager__allocate__non_empty_slab__expected)
@@ -65,18 +65,18 @@ BOOST_AUTO_TEST_CASE(manager__allocate__non_empty_slab__expected)
     constexpr auto expected = 42u;
     data_chunk buffer(to_half(expected), 0xff);
     test::storage file(buffer);
-    manager<uint32_t, zero> instance(file);
+    manager<linkage<4>, zero> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(to_half(expected)), to_half(expected));
-    BOOST_REQUIRE_EQUAL(instance.size(), expected);
+    BOOST_REQUIRE_EQUAL(instance.count(), expected);
 }
 
 BOOST_AUTO_TEST_CASE(manager__truncate__eof_slab__false_unchanged)
 {
     data_chunk buffer;
     test::storage file(buffer);
-    manager<uint32_t, zero> instance(file);
-    BOOST_REQUIRE(!instance.truncate(instance.eof));
-    BOOST_REQUIRE_EQUAL(instance.size(), zero);
+    manager<linkage<4>, zero> instance(file);
+    BOOST_REQUIRE(!instance.truncate(linkage<4>::eof));
+    BOOST_REQUIRE_EQUAL(instance.count(), zero);
 }
 
 BOOST_AUTO_TEST_CASE(manager__truncate__overflow_slab__false_unchanged)
@@ -84,9 +84,9 @@ BOOST_AUTO_TEST_CASE(manager__truncate__overflow_slab__false_unchanged)
     constexpr auto size = 42u;
     data_chunk buffer(size, 0xff);
     test::storage file(buffer);
-    manager<uint32_t, zero> instance(file);
+    manager<linkage<4>, zero> instance(file);
     BOOST_REQUIRE(!instance.truncate(add1(size)));
-    BOOST_REQUIRE_EQUAL(instance.size(), size);
+    BOOST_REQUIRE_EQUAL(instance.count(), size);
 }
 
 BOOST_AUTO_TEST_CASE(manager__truncate__half_full_slab__true_changed)
@@ -95,13 +95,13 @@ BOOST_AUTO_TEST_CASE(manager__truncate__half_full_slab__true_changed)
     constexpr auto half = to_half(size);
     data_chunk buffer(size, 0xff);
     test::storage file(buffer);
-    manager<uint32_t, zero> instance(file);
+    manager<linkage<4>, zero> instance(file);
     BOOST_REQUIRE(instance.truncate(half));
-    BOOST_REQUIRE_EQUAL(instance.size(), half);
+    BOOST_REQUIRE_EQUAL(instance.count(), half);
 
     // Can "truncate" to capacity limit.
     BOOST_REQUIRE(instance.truncate(size));
-    BOOST_REQUIRE_EQUAL(instance.size(), size);
+    BOOST_REQUIRE_EQUAL(instance.count(), size);
 }
 
 BOOST_AUTO_TEST_CASE(manager__get__eof_slab__eof)
@@ -109,9 +109,9 @@ BOOST_AUTO_TEST_CASE(manager__get__eof_slab__eof)
     constexpr auto size = 14u;
     data_chunk buffer(size, 0xff);
     test::storage file(buffer);
-    manager<uint16_t, zero> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.size(), size);
-    BOOST_REQUIRE(!instance.get(instance.eof));
+    manager<linkage<2>, zero> instance(file);
+    BOOST_REQUIRE_EQUAL(instance.count(), size);
+    BOOST_REQUIRE(!instance.get(linkage<2>::eof));
 }
 
 BOOST_AUTO_TEST_CASE(manager__get__slab__expected)
@@ -124,12 +124,12 @@ BOOST_AUTO_TEST_CASE(manager__get__slab__expected)
     };
 
     test::storage file(buffer);
-    manager<uint16_t, zero> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.size(), size);
-    BOOST_REQUIRE_EQUAL(*instance.get(0)->data(), 0x00_u8);
-    BOOST_REQUIRE_EQUAL(*instance.get(1)->data(), 0x01_u8);
-    BOOST_REQUIRE_EQUAL(*instance.get(2)->data(), 0x02_u8);
-    BOOST_REQUIRE_EQUAL(*instance.get(9)->data(), 0x09_u8);
+    manager<linkage<2>, zero> instance(file);
+    BOOST_REQUIRE_EQUAL(instance.count(), size);
+    BOOST_REQUIRE_EQUAL(*instance.get(0)->begin(), 0x00_u8);
+    BOOST_REQUIRE_EQUAL(*instance.get(1)->begin(), 0x01_u8);
+    BOOST_REQUIRE_EQUAL(*instance.get(2)->begin(), 0x02_u8);
+    BOOST_REQUIRE_EQUAL(*instance.get(9)->begin(), 0x09_u8);
 }
 
 // records
@@ -137,8 +137,8 @@ BOOST_AUTO_TEST_CASE(manager__get__slab__expected)
 BOOST_AUTO_TEST_CASE(manager__size__empty_record__zero)
 {
     test::storage file;
-    const manager<uint32_t, 42> instance(file);
-    BOOST_REQUIRE(is_zero(instance.size()));
+    const manager<linkage<4>, 42> instance(file);
+    BOOST_REQUIRE(is_zero(instance.count()));
 }
 
 BOOST_AUTO_TEST_CASE(manager__size__1_record__expected)
@@ -150,8 +150,8 @@ BOOST_AUTO_TEST_CASE(manager__size__1_record__expected)
     test::storage file(buffer);
 
     // Record sizing is record count-based (links are record counters).
-    const manager<uint32_t, limit> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.size(), 1u);
+    const manager<linkage<4>, limit> instance(file);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
 }
 
 BOOST_AUTO_TEST_CASE(manager__size__33_record__expected)
@@ -161,92 +161,92 @@ BOOST_AUTO_TEST_CASE(manager__size__33_record__expected)
     constexpr auto expected = count * (sizeof(uint32_t) + limit);
     data_chunk buffer(expected, 0xff);
     test::storage file(buffer);
-    const manager<uint32_t, limit> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.size(), 33u);
+    const manager<linkage<4>, limit> instance(file);
+    BOOST_REQUIRE_EQUAL(instance.count(), 33u);
 }
 
 BOOST_AUTO_TEST_CASE(manager__allocate__eof_empty_record__eof_unchanged)
 {
     data_chunk buffer;
     test::storage file(buffer);
-    manager<uint16_t, 5u> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.allocate(instance.eof), instance.eof);
-    BOOST_REQUIRE_EQUAL(instance.size(), zero);
+    manager<linkage<2>, 5u> instance(file);
+    BOOST_REQUIRE_EQUAL(instance.allocate(linkage<2>::eof), linkage<2>::eof);
+    BOOST_REQUIRE_EQUAL(instance.count(), zero);
 }
 
 BOOST_AUTO_TEST_CASE(manager__allocate__eof_non_empty_record__expected)
 {
     data_chunk buffer(7, 0xff);
     test::storage file(buffer);
-    manager<uint16_t, 5u> instance(file);
+    manager<linkage<2>, 5u> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(1), 1u);
-    BOOST_REQUIRE_EQUAL(instance.size(), 2u);
-    BOOST_REQUIRE_EQUAL(instance.allocate(instance.eof), instance.eof);
-    BOOST_REQUIRE_EQUAL(instance.size(), 2u);
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+    BOOST_REQUIRE_EQUAL(instance.allocate(linkage<2>::eof), linkage<2>::eof);
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
 }
 
 BOOST_AUTO_TEST_CASE(manager__allocate__empty_record__expected)
 {
     data_chunk buffer;
     test::storage file(buffer);
-    manager<uint16_t, 5u> instance(file);
+    manager<linkage<2>, 5u> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(1), 0u);
-    BOOST_REQUIRE_EQUAL(instance.size(), 1u);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
     BOOST_REQUIRE_EQUAL(instance.allocate(2), 1u);
-    BOOST_REQUIRE_EQUAL(instance.size(), 3u);
+    BOOST_REQUIRE_EQUAL(instance.count(), 3u);
 }
 
 BOOST_AUTO_TEST_CASE(manager__allocate__non_empty_record__expected)
 {
     data_chunk buffer(7, 0xff);
     test::storage file(buffer);
-    manager<uint16_t, 5u> instance(file);
+    manager<linkage<2>, 5u> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(1), 1u);
-    BOOST_REQUIRE_EQUAL(instance.size(), 2u);
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
     BOOST_REQUIRE_EQUAL(instance.allocate(2), 2u);
-    BOOST_REQUIRE_EQUAL(instance.size(), 4u);
+    BOOST_REQUIRE_EQUAL(instance.count(), 4u);
 }
 
 BOOST_AUTO_TEST_CASE(manager__truncate__eof_record__false_unchanged)
 {
     data_chunk buffer;
     test::storage file(buffer);
-    manager<uint16_t, 5u> instance(file);
-    BOOST_REQUIRE(!instance.truncate(instance.eof));
-    BOOST_REQUIRE_EQUAL(instance.size(), zero);
+    manager<linkage<2>, 5u> instance(file);
+    BOOST_REQUIRE(!instance.truncate(linkage<2>::eof));
+    BOOST_REQUIRE_EQUAL(instance.count(), zero);
 }
 
 BOOST_AUTO_TEST_CASE(manager__truncate__overflow_record__false_unchanged)
 {
     data_chunk buffer(7, 0xff);
     test::storage file(buffer);
-    manager<uint16_t, 5u> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.size(), 1u);
+    manager<linkage<2>, 5u> instance(file);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
     BOOST_REQUIRE(!instance.truncate(2));
-    BOOST_REQUIRE_EQUAL(instance.size(), 1u);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
 }
 
 BOOST_AUTO_TEST_CASE(manager__truncate__half_full_record__true_changed)
 {
     data_chunk buffer(14, 0xff);
     test::storage file(buffer);
-    manager<uint16_t, 5u> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.size(), 2u);
+    manager<linkage<2>, 5u> instance(file);
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
     BOOST_REQUIRE(instance.truncate(1));
-    BOOST_REQUIRE_EQUAL(instance.size(), 1u);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
 
     // Can "truncate" to capacity limit.
     BOOST_REQUIRE(instance.truncate(2));
-    BOOST_REQUIRE_EQUAL(instance.size(), 2u);
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
 }
 
 BOOST_AUTO_TEST_CASE(manager__get__eof_record__eof)
 {
     data_chunk buffer(14, 0xff);
     test::storage file(buffer);
-    manager<uint16_t, 5u> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.size(), 2u);
-    BOOST_REQUIRE(!instance.get(instance.eof));
+    manager<linkage<2>, 5u> instance(file);
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+    BOOST_REQUIRE(!instance.get(linkage<2>::eof));
 }
 
 BOOST_AUTO_TEST_CASE(manager__get__record__expected)
@@ -258,10 +258,10 @@ BOOST_AUTO_TEST_CASE(manager__get__record__expected)
     };
 
     test::storage file(buffer);
-    manager<uint16_t, 6u> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.size(), 2u);
-    BOOST_REQUIRE_EQUAL(*instance.get(0)->data(), 0x00_u8);
-    BOOST_REQUIRE_EQUAL(*instance.get(1)->data(), 0x08_u8);
+    manager<linkage<2>, 6u> instance(file);
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+    BOOST_REQUIRE_EQUAL(*instance.get(0)->begin(), 0x00_u8);
+    BOOST_REQUIRE_EQUAL(*instance.get(1)->begin(), 0x08_u8);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

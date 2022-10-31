@@ -71,8 +71,9 @@ size_t storage::allocate(size_t chunk) NOEXCEPT
 memory_ptr storage::get(size_t offset) NOEXCEPT
 {
     const auto memory = std::make_shared<accessor<std::shared_mutex>>(map_mutex_);
-    memory->assign(buffer_.data());
-    memory->increment(offset);
+    memory->assign(
+        std::next(buffer_.data(), offset),
+        std::next(buffer_.data(), size()));
     return memory;
 }
 

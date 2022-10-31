@@ -20,29 +20,33 @@
 
 BOOST_AUTO_TEST_SUITE(accessor_tests)
 
-BOOST_AUTO_TEST_CASE(accessor__construct_upgrade_mutex__unassigned__null_data)
-{
-    boost::upgrade_mutex mutex;
-    accessor instance(mutex);
-    BOOST_REQUIRE(is_null(instance.data()));
-}
-
 BOOST_AUTO_TEST_CASE(accessor__construct_shared_mutex__unassigned__null_data)
 {
     std::shared_mutex mutex;
     accessor instance(mutex);
-    BOOST_REQUIRE(is_null(instance.data()));
+    BOOST_REQUIRE(is_null(instance.begin()));
+    BOOST_REQUIRE(is_null(instance.end()));
+}
+
+BOOST_AUTO_TEST_CASE(accessor__construct_upgrade_mutex__unassigned__null_data)
+{
+    boost::upgrade_mutex mutex;
+    accessor instance(mutex);
+    BOOST_REQUIRE(is_null(instance.begin()));
+    BOOST_REQUIRE(is_null(instance.end()));
 }
 
 BOOST_AUTO_TEST_CASE(accessor__assign__data__expected)
 {
     // chunk.data() is nullptr if chunk.empty(), which triggers assertion.
     data_chunk chunk{ 0x00 };
-    auto expected = chunk.data();
     std::shared_mutex mutex;
     accessor instance(mutex);
-    instance.assign(expected);
-    BOOST_REQUIRE_EQUAL(instance.data(), expected);
+    const auto expected_begin = chunk.data();
+    const auto expected_end = std::next(expected_begin, 1u);
+    instance.assign(expected_begin, expected_end);
+    BOOST_REQUIRE_EQUAL(instance.begin(), expected_begin);
+    BOOST_REQUIRE_EQUAL(instance.end(), expected_end);
 }
 
 BOOST_AUTO_TEST_CASE(accessor__increment__nonzero__expected_offset)
@@ -50,13 +54,13 @@ BOOST_AUTO_TEST_CASE(accessor__increment__nonzero__expected_offset)
     constexpr auto offset = 42u;
     data_chunk chunk(add1(offset), 0x00);
     chunk[offset] = 0xff;
-    auto buffer = chunk.data();
     std::shared_mutex mutex;
     accessor instance(mutex);
-    instance.assign(buffer);
+    const auto buffer = chunk.data();
+    instance.assign(buffer, std::next(buffer, offset));
     instance.increment(offset);
-    BOOST_REQUIRE_EQUAL(*instance.data(), chunk[offset]);
-    BOOST_REQUIRE_EQUAL(instance.data(), std::next(buffer, offset));
+    BOOST_REQUIRE_EQUAL(*instance.begin(), chunk[offset]);
+    BOOST_REQUIRE_EQUAL(instance.begin(), std::next(buffer, offset));
 }
 
 BOOST_AUTO_TEST_CASE(accessor__destruct__shared_lock__released)

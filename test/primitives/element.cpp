@@ -21,22 +21,22 @@
 
 BOOST_AUTO_TEST_SUITE(element_tests)
 
-template <typename Link>
-class accessor_element
-  : public element<slab_manager<Link>>
+template <typename Link, typename Key, size_t Size>
+class element_
+  : public element<Link, Key, Size>
 {
 public:
-    accessor_element(slab_manager<Link>& manager) NOEXCEPT
-      : accessor_element(manager, base::eof)
+    element_(manager<Link, Size>& manage) NOEXCEPT
+      : element_(manage, Link::eof)
     {
     }
 
-    accessor_element(slab_manager<Link>& manager, Link link) NOEXCEPT
-      : element<slab_manager<Link>>(manager, link)
+    element_(manager<Link, Size>& manage, Link link) NOEXCEPT
+      : element<Link, Key, Size>(manage, link)
     {
     }
 
-    // accessor methods
+    // element_ methods
 
     memory_ptr get_() const NOEXCEPT
     {
@@ -48,154 +48,225 @@ public:
         return base::get(offset);
     }
 
-    memory_ptr allocate_(Link size) NOEXCEPT
-    {
-        return base::allocate(size);
-    }
-
 private:
-    using base = element<slab_manager<Link>>;
+    using base = element<Link, Key, Size>;
 };
 
-BOOST_AUTO_TEST_CASE(element__get__eof_element__nullptr)
+#define DECLARE(link_size, key_size, data_size) \
+using link = linkage<link_size>; \
+using key = data_array<key_size>; \
+using manage = manager<link, data_size>; \
+using access = element_<link, key, data_size>
+
+BOOST_AUTO_TEST_CASE(element__get__eof__nullptr)
 {
+    DECLARE(4, 0, 0);
+
     test::storage file;
-    slab_manager<uint32_t> manager{ file };
-    const accessor_element element{ manager };
+    manage manager{ file };
+    const access element{ manager };
+
     BOOST_REQUIRE(!element.get_());
     BOOST_REQUIRE(!element.get_(1));
 }
 
 BOOST_AUTO_TEST_CASE(element__get__offset__nullptr)
 {
+    DECLARE(4, 0, 0);
+
     data_chunk data(42u, 0xff);
     test::storage file{ data };
-    slab_manager<uint32_t> manager{ file };
-    const accessor_element element{ manager, 0u };
-    BOOST_REQUIRE_EQUAL(*element.get_(41)->data(), 0xff);
+    manage manager{ file };
+    const access element{ manager, 0 };
+
+    BOOST_REQUIRE_EQUAL(*element.get_(41)->begin(), 0xffu);
 }
 
 BOOST_AUTO_TEST_CASE(element__get__no_offset__expected)
 {
+    DECLARE(4, 0, 0);
+
     data_chunk data{ 0x00, 0x01, 0x02, 0x03 };
     test::storage file{ data };
-    slab_manager<uint32_t> manager{ file };
-    const accessor_element element{ manager, 1u };
-    BOOST_REQUIRE_EQUAL(*element.get_()->data(), 0x01);
+    manage manager{ file };
+    const access element{ manager, 1u };
+
+    BOOST_REQUIRE_EQUAL(*element.get_()->begin(), 0x01u);
 }
 
 BOOST_AUTO_TEST_CASE(element__get__offset__expected)
 {
+    DECLARE(4, 0, 0);
+
     data_chunk data{ 0x00, 0x01, 0x02, 0x03 };
     test::storage file{ data };
-    slab_manager<uint32_t> manager{ file };
-    const accessor_element element{ manager, 2u };
-    BOOST_REQUIRE_EQUAL(*element.get_(1)->data(), 0x03);
+    manage manager{ file };
+    const access element{ manager, 2u };
+
+    BOOST_REQUIRE_EQUAL(*element.get_(1)->begin(), 0x03u);
 }
 
-BOOST_AUTO_TEST_CASE(element__allocate__eof_start__expected)
+BOOST_AUTO_TEST_CASE(element__get_next__linked__false)
 {
-    test::storage file;
-    slab_manager<uint32_t> manager{ file };
-    accessor_element element{ manager };
-    BOOST_REQUIRE(element.allocate_(42));
-    BOOST_REQUIRE_EQUAL(element.self(), 0u);
-    BOOST_REQUIRE(element.allocate_(33));
-    BOOST_REQUIRE_EQUAL(element.self(), 0u + 42u);
-    BOOST_REQUIRE(element.allocate_(1));
-    BOOST_REQUIRE_EQUAL(element.self(), 0u + 42u + 33u);
-}
+    DECLARE(1, 0, 0);
 
-BOOST_AUTO_TEST_CASE(element__advance__eof__false)
-{
-    test::storage file;
-    slab_manager<uint8_t> manager{ file };
-    accessor_element element{ manager };
-    BOOST_REQUIRE(!element.advance());
+    data_chunk data{ 0x02, 0x00, 0xff, 0xcc };
+    test::storage file{ data };
+    manage manager{ file };
+    access element{ manager, 0_u8 };
+
+    // First link is zero.
+    BOOST_REQUIRE_EQUAL(element.self(), 0x00u);
+    BOOST_REQUIRE_EQUAL(element.get_next(), 0x02u);
+
+    // Sets self/link to 0x02 (data[0]).
+    element.advance();
+    BOOST_REQUIRE_EQUAL(element.self(), 0x02u);
+    BOOST_REQUIRE_EQUAL(element.get_next(), 0xffu);
 }
 
 BOOST_AUTO_TEST_CASE(element__advance__linked__false)
 {
+    DECLARE(1, 0, 0);
+
     data_chunk data{ 0x02, 0x00, 0xff, 0xcc };
     test::storage file{ data };
-    slab_manager<uint8_t> manager{ file };
-    accessor_element element{ manager, 0_u8 };
+    manage manager{ file };
+    access element{ manager, 0_u8 };
 
-    // Set first link to byte zero.
-    BOOST_REQUIRE_EQUAL(element.self(), 0u);
+    // First link is zero.
+    BOOST_REQUIRE_EQUAL(element.self(), 0x00u);
 
     // Sets self/link to 0x02 (data[0]).
-    BOOST_REQUIRE(element.advance());
-    BOOST_REQUIRE_EQUAL(element.self(), 2u);
+    element.advance();
+    BOOST_REQUIRE(element);
+    BOOST_REQUIRE_EQUAL(element.self(), 0x02u);
 
     // Sets self/link to eof (data[2]).
-    BOOST_REQUIRE(element.advance());
-    BOOST_REQUIRE_EQUAL(element.self(), element.eof);
+    element.advance();
+    BOOST_REQUIRE(!element);
+    BOOST_REQUIRE_EQUAL(element.self(), link::eof);
+}
 
-    // Cannot advance past eof.
-    BOOST_REQUIRE(!element.advance());
+BOOST_AUTO_TEST_CASE(element__get_key__2_bytes__expected)
+{
+    DECLARE(1, 2, 0);
+
+    data_chunk data{ 0x03, 0x11, 0x22, 0xff, 0x33, 0x44 };
+    test::storage file{ data };
+    manage manager{ file };
+    access element{ manager, 0_u8 };
+
+    constexpr key expected1{ 0x11, 0x22 };
+    BOOST_REQUIRE_EQUAL(element.get_key(), expected1);
+
+    element.advance();
+    constexpr key expected2{ 0x33, 0x44 };
+    BOOST_REQUIRE_EQUAL(element.get_key(), expected2);
+
+    element.advance();
+    BOOST_REQUIRE(!element);
+}
+
+BOOST_AUTO_TEST_CASE(element__is_match__2_bytes__expected)
+{
+    DECLARE(1, 2, 5);
+
+    data_chunk data{ 0x01, 0x1a, 0x2a, 0x3a, 0x4a, 0x5a, 0xff, 0x1b, 0x2b, 0x3b, 0x4b, 0x5b };
+    test::storage file{ data };
+    manage manager{ file };
+    access element{ manager, 0_u8 };
+
+    BOOST_REQUIRE(element.is_match({ 0x1a, 0x2a }));
+
+    element.advance();
+    BOOST_REQUIRE(element.is_match({ 0x1b, 0x2b }));
+
+    element.advance();
+    BOOST_REQUIRE(!element);
 }
 
 BOOST_AUTO_TEST_CASE(element__bool__eof__false)
 {
+    DECLARE(1, 0, 0);
+
     test::storage file;
-    slab_manager<uint8_t> manager{ file };
-    accessor_element element{ manager };
+    manage manager{ file };
+    const access element{ manager };
+
     BOOST_REQUIRE(!element);
 }
 
 BOOST_AUTO_TEST_CASE(element__bool__not_eof__true)
 {
+    DECLARE(1, 0, 0);
+
     test::storage file;
-    slab_manager<uint8_t> manager{ file };
-    accessor_element element{ manager, 0x00_u8 };
+    manage manager{ file };
+    const access element{ manager, 0x00_u8 };
+
     BOOST_REQUIRE(element);
 }
 
 BOOST_AUTO_TEST_CASE(element__equality__eof_self__true)
 {
+    DECLARE(1, 0, 0);
+
     test::storage file;
-    slab_manager<uint8_t> manager{ file };
-    accessor_element element{ manager };
+    manage manager{ file };
+    const access element{ manager };
+
     BOOST_REQUIRE(element == element);
     BOOST_REQUIRE(!(element != element));
 }
 
 BOOST_AUTO_TEST_CASE(element__equality__not_eof_self__true)
 {
+    DECLARE(1, 0, 0);
+
     test::storage file;
-    slab_manager<uint8_t> manager{ file };
-    accessor_element element{ manager, 0x00_u8 };
+    manage manager{ file };
+    const access element{ manager, 0x00_u8 };
+
     BOOST_REQUIRE(element == element);
     BOOST_REQUIRE(!(element != element));
 }
 
 BOOST_AUTO_TEST_CASE(element__equality__eof_distinct__true)
 {
+    DECLARE(1, 0, 0);
+
     test::storage file;
-    slab_manager<uint8_t> manager{ file };
-    accessor_element element1{ manager };
-    accessor_element element2{ manager };
+    manage manager{ file };
+    const access element1{ manager };
+    const access element2{ manager };
+
     BOOST_REQUIRE(element1 == element2);
     BOOST_REQUIRE(!(element1 != element2));
 }
 
 BOOST_AUTO_TEST_CASE(element__equality__same_values_distinct__true)
 {
+    DECLARE(1, 0, 0);
+
     test::storage file;
-    slab_manager<uint8_t> manager{ file };
-    accessor_element element1{ manager, 0x01_u8 };
-    accessor_element element2{ manager, 0x01_u8 };
+    manage manager{ file };
+    const access element1{ manager, 0x01_u8 };
+    const access element2{ manager, 0x01_u8 };
+
     BOOST_REQUIRE(element1 == element2);
     BOOST_REQUIRE(!(element1 != element2));
 }
 
 BOOST_AUTO_TEST_CASE(element__equality__different_values__true)
 {
+    DECLARE(1, 0, 0);
+
     test::storage file;
-    slab_manager<uint8_t> manager{ file };
-    accessor_element element1{ manager, 0x01_u8 };
-    accessor_element element2{ manager, 0x02_u8 };
+    manage manager{ file };
+    const access element1{ manager, 0x01_u8 };
+    const access element2{ manager, 0x02_u8 };
+
     BOOST_REQUIRE(element1 != element2);
     BOOST_REQUIRE(!(element1 == element2));
 }

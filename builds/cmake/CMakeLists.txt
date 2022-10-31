@@ -214,7 +214,11 @@ if (with-tests)
         "../../test/primitives/element.cpp"
         "../../test/primitives/iterable.cpp"
         "../../test/primitives/iterator.cpp"
-        "../../test/primitives/manager.cpp" )
+        "../../test/primitives/linkage.cpp"
+        "../../test/primitives/manager.cpp"
+        "../../test/tables/hash_table.cpp"
+        "../../test/tables/hash_table_header.cpp"
+        "../../test/tables/hash_table_multimap.cpp" )
 
     add_test( NAME libbitcoin-database-test COMMAND libbitcoin-database-test
             --run_test=*

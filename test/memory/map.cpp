@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(map__get__mapped__success)
     map instance(file);
     BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(instance.load());
-    BOOST_REQUIRE(instance.get());
+    BOOST_REQUIRE(instance.get(instance.allocate(1)));
     BOOST_REQUIRE(instance.unload());
     BOOST_REQUIRE(instance.close());
 }
@@ -310,12 +310,12 @@ BOOST_AUTO_TEST_CASE(map__write__read__expected)
     BOOST_REQUIRE(instance.load());
     auto memory = instance.get(instance.allocate(sizeof(uint64_t)));
     BOOST_REQUIRE(memory);
-    unsafe_to_little_endian<uint64_t>(memory->data(), expected);
+    unsafe_to_little_endian<uint64_t>(memory->begin(), expected);
     memory.reset();
     BOOST_REQUIRE(instance.flush());
     memory = instance.get();
     BOOST_REQUIRE(memory);
-    BOOST_REQUIRE_EQUAL(unsafe_from_little_endian<uint64_t>(memory->data()), expected);
+    BOOST_REQUIRE_EQUAL(unsafe_from_little_endian<uint64_t>(memory->begin()), expected);
     memory.reset();
     BOOST_REQUIRE(instance.unload());
     BOOST_REQUIRE(instance.close());
@@ -328,7 +328,7 @@ BOOST_AUTO_TEST_CASE(map__unload_map__pending_accessor__false)
     map instance(file);
     BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(instance.load());
-    auto memory = instance.get();
+    auto memory = instance.get(instance.allocate(1));
     BOOST_REQUIRE(memory);
     BOOST_REQUIRE(!instance.unload());
     memory.reset();
@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(map__close__pending_map__false)
     map instance(file);
     BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(instance.load());
-    auto memory = instance.get();
+    auto memory = instance.get(instance.allocate(1));
     BOOST_REQUIRE(memory);
     BOOST_REQUIRE(!instance.close());
     memory.reset();

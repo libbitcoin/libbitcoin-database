@@ -22,6 +22,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/manager.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -32,44 +33,57 @@ namespace database {
 // Derived elements provide write append and random access read to memory map.
 
 /// Forward linked list element.
-template <typename Manager>
+/// Key is always serialized as a byte array.
+/// Link type is determined by manager (slab/bytes or record/index).
+template <typename Link, typename Key, size_t Size = zero>
 class element
 {
 public:
-    using link = typename Manager::link;
+    element(const manager<Link, Size>& manage, Link value) NOEXCEPT;
 
-    static constexpr auto eof = system::bit_all<link>;
+    /// Advance to next element.
+    void advance() NOEXCEPT;
 
-    /// Advance this to next element.
-    bool advance() NOEXCEPT;
+    /// Link of this element (or eof).
+    Link self() const NOEXCEPT;
 
-    /// The storage-relative pointer to this element (or eof).
-    link self() const NOEXCEPT;
+    /// Link to next element (or eof).
+    Link get_next() const NOEXCEPT;
 
-    /// True if the element is an eof indicator.
+    /// The element natural key.
+    Key get_key() const NOEXCEPT;
+
+    /// Natural key matches specified value.
+    bool is_match(const Key& value) const NOEXCEPT;
+
+    /// False if link is eof (and above methods are undefined).
     operator bool() const NOEXCEPT;
 
-    /// Compare element link values (identity only).
-    bool operator==(element other) const NOEXCEPT;
-    bool operator!=(element other) const NOEXCEPT;
+    /// Equality/inequality, compares link value only.
+    bool operator==(const element& other) const NOEXCEPT;
+    bool operator!=(const element& other) const NOEXCEPT;
 
 protected:
-    element(Manager& manager, link value) NOEXCEPT;
-
     memory_ptr get() const NOEXCEPT;
     memory_ptr get(size_t offset) const NOEXCEPT;
-    memory_ptr allocate(link size) NOEXCEPT;
 
 private:
-    Manager& manager_;
-    link link_;
+    template <size_t Bytes>
+    static auto array_cast(memory& buffer) NOEXCEPT
+    {
+        return system::unsafe_array_cast<uint8_t, Bytes>(buffer.begin());
+    }
+
+    const manager<Link, Size>& manager_;
+    Link link_;
 };
 
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Manager>
-#define CLASS element<Manager>
+#define TEMPLATE \
+template <typename Link, typename Key, size_t Size>
+#define CLASS element<Link, Key, Size>
 
 #include <bitcoin/database/impl/primitives/element.ipp>
 

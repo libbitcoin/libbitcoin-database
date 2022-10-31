@@ -32,7 +32,7 @@ CLASS::manager(storage& file) NOEXCEPT
 }
 
 TEMPLATE
-Link CLASS::size() const NOEXCEPT
+Link CLASS::count() const NOEXCEPT
 {
     return position_to_link(file_.size());
 }
@@ -40,33 +40,38 @@ Link CLASS::size() const NOEXCEPT
 TEMPLATE
 bool CLASS::truncate(Link count) NOEXCEPT
 {
-    if (count == eof)
+    if (count.is_eof())
         return false;
 
     return file_.resize(link_to_position(count));
 }
 
+// allocated start and count are known.
+// allocated (link-to-end) byte size is link_to_position(count).
 TEMPLATE
 Link CLASS::allocate(Link count) NOEXCEPT
 {
-    if (count == eof)
-        return eof;
+    if (count.is_eof())
+        return Link::eof;
 
     const auto position = file_.allocate(link_to_position(count));
 
     if (position == storage::eof)
-        return eof;
+        return Link::eof;
 
     return position_to_link(position);
 }
 
+// memory mutex guards against map reduction, so count() is known.
+// count = count() - link, is elements from link to end.
+// link-to-end byte size is link_to_position(count).
 TEMPLATE
-memory_ptr CLASS::get(Link link) const NOEXCEPT
+memory_ptr CLASS::get(Link value) const NOEXCEPT
 {
-    if (link == eof)
-        return {};
+    if (value.is_eof())
+        return nullptr;
 
-    return file_.get(link_to_position(link));
+    return file_.get(link_to_position(value));
 }
 
 } // namespace database

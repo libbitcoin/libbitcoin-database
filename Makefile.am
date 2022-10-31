@@ -76,7 +76,11 @@ test_libbitcoin_database_test_SOURCES = \
     test/primitives/element.cpp \
     test/primitives/iterable.cpp \
     test/primitives/iterator.cpp \
-    test/primitives/manager.cpp
+    test/primitives/linkage.cpp \
+    test/primitives/manager.cpp \
+    test/tables/hash_table.cpp \
+    test/tables/hash_table_header.cpp \
+    test/tables/hash_table_multimap.cpp
 
 endif WITH_TESTS
 
@@ -129,7 +133,14 @@ include_bitcoin_database_impl_primitives_HEADERS = \
     include/bitcoin/database/impl/primitives/element.ipp \
     include/bitcoin/database/impl/primitives/iterable.ipp \
     include/bitcoin/database/impl/primitives/iterator.ipp \
+    include/bitcoin/database/impl/primitives/linkage.ipp \
     include/bitcoin/database/impl/primitives/manager.ipp
+
+include_bitcoin_database_impl_tablesdir = ${includedir}/bitcoin/database/impl/tables
+include_bitcoin_database_impl_tables_HEADERS = \
+    include/bitcoin/database/impl/tables/hash_table.ipp \
+    include/bitcoin/database/impl/tables/hash_table_header.ipp \
+    include/bitcoin/database/impl/tables/hash_table_multimap.ipp
 
 include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks
 include_bitcoin_database_locks_HEADERS = \
@@ -154,8 +165,15 @@ include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/element.hpp \
     include/bitcoin/database/primitives/iterable.hpp \
     include/bitcoin/database/primitives/iterator.hpp \
+    include/bitcoin/database/primitives/linkage.hpp \
     include/bitcoin/database/primitives/manager.hpp \
     include/bitcoin/database/primitives/primitives.hpp
+
+include_bitcoin_database_tablesdir = ${includedir}/bitcoin/database/tables
+include_bitcoin_database_tables_HEADERS = \
+    include/bitcoin/database/tables/hash_table.hpp \
+    include/bitcoin/database/tables/hash_table_header.hpp \
+    include/bitcoin/database/tables/hash_table_multimap.hpp
 
 
 # Custom make targets.

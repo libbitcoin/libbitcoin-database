@@ -26,36 +26,44 @@
 namespace libbitcoin {
 namespace database {
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 template <typename Mutex>
 accessor<Mutex>::accessor(Mutex& mutex) NOEXCEPT
-  : data_(nullptr), shared_lock_(mutex)
+  : shared_lock_(mutex)
 {
 }
 
 template <typename Mutex>
-void accessor<Mutex>::assign(uint8_t* data) NOEXCEPT
+void accessor<Mutex>::assign(uint8_t* begin, const uint8_t* end) NOEXCEPT
 {
-    BC_ASSERT_MSG(!is_null(data), "null buffer");
-    data_ = data;
+    BC_ASSERT(!system::is_negative(std::ranges::distance(begin_, end_)));
+    begin_ = begin;
+    end_ = end;
 }
 
 template <typename Mutex>
-uint8_t* accessor<Mutex>::data() NOEXCEPT
+void accessor<Mutex>::increment(size_t value) NOEXCEPT
 {
-    return data_;
+    BC_ASSERT(value <= system::limit<size_t>(std::ranges::distance(begin_, end_)));
+    std::advance(begin_, value);
 }
 
 template <typename Mutex>
-void accessor<Mutex>::increment(size_t size) NOEXCEPT
+uint8_t* accessor<Mutex>::begin() NOEXCEPT
 {
-    BC_ASSERT_MSG(!is_null(data_), "unassigned buffer");
-    BC_ASSERT(reinterpret_cast<size_t>(data_) < max_size_t - size);
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    std::advance(data_, size);
-    BC_POP_WARNING()
+    return begin_;
+}
+
+template <typename Mutex>
+const uint8_t* accessor<Mutex>::end() const NOEXCEPT
+{
+    return end_;
 }
 
 } // namespace database
 } // namespace libbitcoin
+
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 #endif

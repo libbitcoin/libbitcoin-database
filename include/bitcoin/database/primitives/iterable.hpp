@@ -22,7 +22,7 @@
 ////#include <bitcoin/system.hpp>
 ////#include <bitcoin/database/define.hpp>
 ////#include <bitcoin/database/primitives/element.hpp>
-////#include <bitcoin/database/primitives/iterator.hpp>
+////#include <bitcoin/database/primitives/iterable.hpp>
 ////
 ////namespace libbitcoin {
 ////namespace database {

@@ -87,11 +87,6 @@ typedef std::array<uint8_t,zero> empty_key;
 ////typedef std::function<void(system::writer)> write_bytes;
 static_assert(is_zero(std::tuple_size<empty_key>::value));
 
-template <typename Type>
-using if_key = if_integral_array<Type>;
-template <typename Type>
-using if_link = if_unsigned_integral_integer<Type>;
-
 } // namespace database
 } // namespace libbitcoin
 

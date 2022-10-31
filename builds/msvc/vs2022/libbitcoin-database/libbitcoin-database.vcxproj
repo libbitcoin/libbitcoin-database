@@ -108,9 +108,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\element.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\iterable.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\iterator.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linkage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\primitives.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\hash_table.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\hash_table_header.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\hash_table_multimap.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp" />
     <ClInclude Include="..\..\..\..\src\mman-win32\mman.h" />
   </ItemGroup>
@@ -123,7 +127,11 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\element.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\iterable.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\iterator.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\linkage.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\manager.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\tables\hash_table.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\tables\hash_table_header.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\tables\hash_table_multimap.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

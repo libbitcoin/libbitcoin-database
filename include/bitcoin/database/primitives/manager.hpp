@@ -28,22 +28,17 @@ namespace libbitcoin {
 namespace database {
     
 /// Linked list abstraction over storage for given link and record sizes.
-template <typename Link, size_t Size,
-    if_link<Link> = true>
+template <typename Link, size_t Size>
 class manager
 {
 public:
-    /// Expose for public extraction.
     using link = Link;
-
-    /// End of file sentinel.
-    static constexpr auto eof = system::bit_all<Link>;
 
     /// Manage byte storage device.
     manager(storage& file) NOEXCEPT;
 
     /// The logical record count.
-    Link size() const NOEXCEPT;
+    Link count() const NOEXCEPT;
 
     /// Reduce the number of records (false if not lesser).
     bool truncate(Link count) NOEXCEPT;
@@ -52,21 +47,23 @@ public:
     Link allocate(Link count) NOEXCEPT;
 
     /// Return memory object for record at specified position (null possible).
+    /// Obtaining memory object is considered const access despite fact that
+    /// memory is writeable. Non-const access implies memory map modify.
     memory_ptr get(Link link) const NOEXCEPT;
 
 private:
     // Slabs don't use record offsetting (size_ one eliminates conversion).
-    static constexpr auto size_ = is_zero(Size) ? one : sizeof(Link) + Size;
+    static constexpr auto size_ = is_zero(Size) ? one : Link::size + Size;
 
     static constexpr Link position_to_link(size_t position) NOEXCEPT
     {
         BC_ASSERT(system::is_multiple(position, size_));
-        return system::possible_narrow_cast<Link>(position / size_);
+        return system::possible_narrow_cast<Link::integer>(position / size_);
     }
 
     static constexpr size_t link_to_position(Link link) NOEXCEPT
     {
-        return link * size_;
+        return link.value * size_;
     }
 
     // Thread and remap safe.
@@ -83,8 +80,8 @@ using slab_manager = manager<Link, zero>;
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, size_t Size, if_link<Link> If>
-#define CLASS manager<Link, Size, If>
+#define TEMPLATE template <typename Link, size_t Size>
+#define CLASS manager<Link, Size>
 
 #include <bitcoin/database/impl/primitives/manager.ipp>
 
