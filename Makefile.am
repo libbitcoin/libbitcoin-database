@@ -44,8 +44,8 @@ src_libbitcoin_database_la_SOURCES = \
     src/locks/sequential_lock.cpp \
     src/memory/file.cpp \
     src/memory/map.cpp \
-    src/mman-win32/mman.c \
-    src/mman-win32/mman.h
+    src/memory/mman-win32/mman.c \
+    src/memory/mman-win32/mman.h
 
 # local: test/libbitcoin-database-test
 #------------------------------------------------------------------------------
@@ -133,9 +133,12 @@ include_bitcoin_database_memorydir = ${includedir}/bitcoin/database/memory
 include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/accessor.hpp \
     include/bitcoin/database/memory/file.hpp \
-    include/bitcoin/database/memory/map.hpp \
-    include/bitcoin/database/memory/memory.hpp \
-    include/bitcoin/database/memory/storage.hpp
+    include/bitcoin/database/memory/map.hpp
+
+include_bitcoin_database_memory_interfacesdir = ${includedir}/bitcoin/database/memory/interfaces
+include_bitcoin_database_memory_interfaces_HEADERS = \
+    include/bitcoin/database/memory/interfaces/memory.hpp \
+    include/bitcoin/database/memory/interfaces/storage.hpp
 
 include_bitcoin_database_primitivesdir = ${includedir}/bitcoin/database/primitives
 include_bitcoin_database_primitives_HEADERS = \

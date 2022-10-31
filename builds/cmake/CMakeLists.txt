@@ -163,8 +163,8 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/locks/sequential_lock.cpp"
     "../../src/memory/file.cpp"
     "../../src/memory/map.cpp"
-    "../../src/mman-win32/mman.c"
-    "../../src/mman-win32/mman.h" )
+    "../../src/memory/mman-win32/mman.c"
+    "../../src/memory/mman-win32/mman.h" )
 
 # ${CANONICAL_LIB_NAME} project specific include directories.
 #------------------------------------------------------------------------------

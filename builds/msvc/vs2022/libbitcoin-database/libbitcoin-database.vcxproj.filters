@@ -34,6 +34,9 @@
     <Filter Include="include\bitcoin\database\memory">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000009}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\bitcoin\database\memory\interfaces">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000F}</UniqueIdentifier>
+    </Filter>
     <Filter Include="include\bitcoin\database\primitives">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000A}</UniqueIdentifier>
     </Filter>
@@ -41,7 +44,7 @@
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000B}</UniqueIdentifier>
     </Filter>
     <Filter Include="resource">
-      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000F}</UniqueIdentifier>
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000001}</UniqueIdentifier>
     </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000000}</UniqueIdentifier>
@@ -51,9 +54,6 @@
     </Filter>
     <Filter Include="src\memory">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000002}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\database\memory\interfaces">
-      <UniqueIdentifier>{94f9dd8e-628a-434b-baa0-15d137ff5445}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\memory\mman-win32">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000003}</UniqueIdentifier>
@@ -84,11 +84,11 @@
     <ClCompile Include="..\..\..\..\src\memory\map.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\settings.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\memory\mman-win32\mman.c">
       <Filter>src\memory\mman-win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\settings.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -128,6 +128,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\file.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\memory.hpp">
+      <Filter>include\bitcoin\database\memory\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\storage.hpp">
+      <Filter>include\bitcoin\database\memory\interfaces</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\map.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
@@ -154,12 +160,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp">
       <Filter>include\bitcoin\database</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\storage.hpp">
-      <Filter>include\bitcoin\database\memory\interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\memory.hpp">
-      <Filter>include\bitcoin\database\memory\interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\src\memory\mman-win32\mman.h">
       <Filter>src\memory\mman-win32</Filter>
