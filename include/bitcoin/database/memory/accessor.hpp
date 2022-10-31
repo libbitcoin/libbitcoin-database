@@ -37,7 +37,7 @@ public:
     accessor(Mutex& mutex) NOEXCEPT;
 
     /// Set the buffer.
-    void assign(uint8_t* begin, const uint8_t* end) NOEXCEPT;
+    void assign(uint8_t* begin, uint8_t* end) NOEXCEPT;
 
     /// Increment the pointer the specified number of bytes within the record.
     void increment(size_t value) NOEXCEPT override;
@@ -46,15 +46,25 @@ public:
     uint8_t* begin() NOEXCEPT override;
     const uint8_t* end() const NOEXCEPT override;
 
+    /// Cast to r/w slices for use in stream construction.
+    operator system::data_slab() NOEXCEPT;
+    operator system::data_reference() const NOEXCEPT;
+
 private:
     uint8_t* begin_{};
-    const uint8_t* end_{};
+    uint8_t* end_{};
     std::shared_lock<Mutex> shared_lock_;
 };
 
 } // namespace database
 } // namespace libbitcoin
 
+#define TEMPLATE template <typename Mutex>
+#define CLASS accessor<Mutex>
+
 #include <bitcoin/database/impl/memory/accessor.ipp>
+
+#undef CLASS
+#undef TEMPLATE
 
 #endif

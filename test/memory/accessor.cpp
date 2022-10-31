@@ -72,4 +72,30 @@ BOOST_AUTO_TEST_CASE(accessor__destruct__shared_lock__released)
     BOOST_REQUIRE(mutex.try_lock());
 }
 
+BOOST_AUTO_TEST_CASE(accessor__cast__data_slab__expected)
+{
+    data_chunk chunk{ 0x00 };
+    std::shared_mutex mutex;
+    accessor instance(mutex);
+    auto expected_begin = chunk.data();
+    auto expected_end = std::next(expected_begin, 1u);
+    instance.assign(expected_begin, expected_end);
+    const auto slab = static_cast<system::data_slab>(instance);
+    BOOST_REQUIRE_EQUAL(slab.begin(), expected_begin);
+    BOOST_REQUIRE_EQUAL(slab.end(), expected_end);
+}
+
+BOOST_AUTO_TEST_CASE(accessor__cast__data_reference__expected)
+{
+    data_chunk chunk{ 0x00 };
+    std::shared_mutex mutex;
+    accessor instance(mutex);
+    auto expected_begin = chunk.data();
+    auto expected_end = std::next(expected_begin, 1u);
+    instance.assign(expected_begin, expected_end);
+    const auto reference = static_cast<system::data_reference>(instance);
+    BOOST_REQUIRE_EQUAL(reference.begin(), expected_begin);
+    BOOST_REQUIRE_EQUAL(reference.end(), expected_end);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
