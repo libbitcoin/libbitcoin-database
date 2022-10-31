@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_HPP
 #define LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_HPP
 
-#include <iterator>
 #include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -40,7 +39,7 @@ public:
     /// Set the buffer.
     inline void assign(uint8_t* begin, uint8_t* end) NOEXCEPT;
 
-    /// Increment the pointer the specified number of bytes within the record.
+    /// Increment begin the specified number of bytes.
     inline void increment(size_t bytes) NOEXCEPT override;
 
     /// Get buffer (guarded against remap only).
@@ -52,11 +51,6 @@ public:
     inline operator system::data_reference() const NOEXCEPT;
 
 private:
-    inline ptrdiff_t size() const NOEXCEPT
-    {
-        return std::ranges::distance(begin_, end_);
-    }
-
     uint8_t* begin_{};
     uint8_t* end_{};
     std::shared_lock<Mutex> shared_lock_;

@@ -37,7 +37,7 @@ inline CLASS::accessor(Mutex& mutex) NOEXCEPT
 TEMPLATE
 inline void CLASS::assign(uint8_t* begin, uint8_t* end) NOEXCEPT
 {
-    BC_ASSERT(!system::is_negative(size()));
+    BC_ASSERT(!system::is_negative(std::distance(begin_, end_)));
     begin_ = begin;
     end_ = end;
 }
@@ -45,7 +45,7 @@ inline void CLASS::assign(uint8_t* begin, uint8_t* end) NOEXCEPT
 TEMPLATE
 inline void CLASS::increment(size_t bytes) NOEXCEPT
 {
-    BC_ASSERT(!system::is_greater(bytes, size()));
+    BC_ASSERT(!system::is_greater(bytes, std::distance(begin_, end_)));
     std::advance(begin_, bytes);
 }
 
