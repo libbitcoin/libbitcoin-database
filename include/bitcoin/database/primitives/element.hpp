@@ -28,7 +28,7 @@
 namespace libbitcoin {
 namespace database {
 
-// Key should be constrained to array of Link::byte.
+/// Size non-zero implies record manager (ordinal record links).
 template <typename Link, typename Key, size_t Size = zero>
 class element
 {

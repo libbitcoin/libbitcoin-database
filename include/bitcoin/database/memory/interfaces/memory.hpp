@@ -36,7 +36,7 @@ public:
     virtual uint8_t* begin() NOEXCEPT = 0;
     virtual const uint8_t* end() const NOEXCEPT = 0;
 
-    /// Increment the pointer the specified number of bytes within the record.
+    /// Increment begin the specified number of bytes.
     virtual void increment(size_t value) NOEXCEPT = 0;
 };
 
