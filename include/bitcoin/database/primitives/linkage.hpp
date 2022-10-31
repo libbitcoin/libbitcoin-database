@@ -26,7 +26,6 @@ namespace libbitcoin {
 namespace database {
 
 /// Link serialization is always little-endian.
-/// This provides portability between array and integral representation.
 template <size_t Size>
 struct linkage
 {
@@ -35,16 +34,22 @@ struct linkage
     static constexpr auto eof = system::bit_all<integer>;
     static constexpr auto size = Size;
 
+    /// Construct an eof link.
     constexpr linkage() NOEXCEPT;
+
+    /// Integral and array constructors.
     constexpr linkage(integer other) NOEXCEPT;
     inline linkage(const bytes& other) NOEXCEPT;
 
+    /// Integral and array assignment operators.
     constexpr linkage<Size>& operator=(integer other) NOEXCEPT;
     inline linkage<Size>& operator=(const bytes& other) NOEXCEPT;
 
+    /// Integral and array cast operators.
     constexpr operator integer() const NOEXCEPT;
     inline operator bytes() const NOEXCEPT;
 
+    /// True when value is eof.
     constexpr bool is_eof() const NOEXCEPT;
 
     integer value;

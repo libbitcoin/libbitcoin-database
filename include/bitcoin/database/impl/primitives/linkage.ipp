@@ -27,7 +27,7 @@ namespace database {
 
 TEMPLATE
 constexpr CLASS::linkage() NOEXCEPT
-  : value(0)
+  : value(eof)
 {
 }
 
@@ -39,7 +39,6 @@ constexpr CLASS::linkage(integer other) NOEXCEPT
 
 TEMPLATE
 inline CLASS::linkage(const bytes& other) NOEXCEPT
-  : linkage()
 {
     *this = other;
 }
@@ -54,6 +53,7 @@ constexpr linkage<Size>& CLASS::operator=(integer other) NOEXCEPT
 TEMPLATE
 inline linkage<Size>& CLASS::operator=(const bytes& other) NOEXCEPT
 {
+    value = 0;
     system::unsafe_array_cast<uint8_t, Size>(&value) = other;
     value = system::native_from_little_end(value);
     return *this;
