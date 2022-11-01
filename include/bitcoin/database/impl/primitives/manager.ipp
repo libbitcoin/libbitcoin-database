@@ -52,12 +52,12 @@ TEMPLATE
 Link CLASS::allocate(Link count) NOEXCEPT
 {
     if (count.is_eof())
-        return Link::eof;
+        return count;
 
     const auto position = file_.allocate(link_to_position(count));
 
     if (position == storage::eof)
-        return Link::eof;
+        return Link::terminal;
 
     return position_to_link(position);
 }

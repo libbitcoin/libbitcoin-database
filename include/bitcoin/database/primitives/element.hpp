@@ -63,7 +63,7 @@ protected:
 
 private:
     template <size_t Bytes>
-    static auto array_cast(memory& buffer) NOEXCEPT
+    static auto& array_cast(memory& buffer) NOEXCEPT
     {
         return system::unsafe_array_cast<uint8_t, Bytes>(buffer.begin());
     }

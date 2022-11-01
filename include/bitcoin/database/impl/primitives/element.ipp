@@ -35,7 +35,7 @@ CLASS::element(const manager<Link, Size>& manage, Link value) NOEXCEPT
 TEMPLATE
 void CLASS::advance() NOEXCEPT
 {
-    BC_ASSERT_MSG(!link_.is_eof(), "advancing from eof");
+    BC_ASSERT_MSG(!link_.is_eof(), "advancing from terminal");
     link_ = get_next();
 }
 
@@ -49,7 +49,7 @@ TEMPLATE
 Link CLASS::get_next() const NOEXCEPT
 {
     const auto body = get();
-    BC_ASSERT_MSG(body, "getting next from eof");
+    BC_ASSERT_MSG(body, "getting next from terminal");
 
     return { array_cast<Link::size>(*body) };
 }
@@ -58,7 +58,7 @@ TEMPLATE
 Key CLASS::get_key() const NOEXCEPT
 {
     const auto body = get(Link::size);
-    BC_ASSERT_MSG(body, "getting key from eof");
+    BC_ASSERT_MSG(body, "getting key from terminal");
 
     return array_cast<array_count<Key>>(*body);
 }
@@ -67,7 +67,7 @@ TEMPLATE
 bool CLASS::is_match(const Key& value) const NOEXCEPT
 {
     const auto body = get(Link::size);
-    BC_ASSERT_MSG(body, "comparing key at eof");
+    BC_ASSERT_MSG(body, "comparing key at terminal");
 
     BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
     return std::equal(value.begin(), value.end(), body->begin());
@@ -100,7 +100,7 @@ bool CLASS::operator!=(const element& other) const NOEXCEPT
 TEMPLATE
 memory_ptr CLASS::get() const NOEXCEPT
 {
-    // Returns nullptr if link_ is eof.
+    // Returns nullptr if link_ is terminal.
     return manager_.get(link_);
 }
 

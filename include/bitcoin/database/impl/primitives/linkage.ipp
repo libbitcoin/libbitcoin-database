@@ -27,7 +27,7 @@ namespace database {
 
 TEMPLATE
 constexpr CLASS::linkage() NOEXCEPT
-  : value(eof)
+  : value(terminal)
 {
 }
 
@@ -73,9 +73,9 @@ inline CLASS::operator CLASS::bytes() const NOEXCEPT
 }
 
 TEMPLATE
-constexpr bool CLASS::is_eof() const NOEXCEPT
+constexpr bool CLASS::is_terminal() const NOEXCEPT
 {
-    return value == eof;
+    return value == terminal;
 }
 
 } // namespace database

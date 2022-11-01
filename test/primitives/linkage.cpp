@@ -53,38 +53,38 @@ static_assert(is_same_type<linkage<6>::integer, uint64_t>);
 static_assert(is_same_type<linkage<7>::integer, uint64_t>);
 static_assert(is_same_type<linkage<8>::integer, uint64_t>);
 
-// Expected terminator/eof representations.
-static_assert(linkage<0>::eof == bit_all<size_t>);
-static_assert(linkage<1>::eof == bit_all<uint8_t>);
-static_assert(linkage<2>::eof == bit_all<uint16_t>);
-static_assert(linkage<3>::eof == bit_all<uint32_t>);
-static_assert(linkage<4>::eof == bit_all<uint32_t>);
-static_assert(linkage<5>::eof == bit_all<uint64_t>);
-static_assert(linkage<6>::eof == bit_all<uint64_t>);
-static_assert(linkage<7>::eof == bit_all<uint64_t>);
-static_assert(linkage<8>::eof == bit_all<uint64_t>);
+// Expected terminal representations.
+static_assert(linkage<0>::terminal == 0u);
+static_assert(linkage<1>::terminal == mask_left<uint8_t>(0));
+static_assert(linkage<2>::terminal == mask_left<uint16_t>(0));
+static_assert(linkage<3>::terminal == mask_left<uint32_t>(8));
+static_assert(linkage<4>::terminal == mask_left<uint32_t>(0));
+static_assert(linkage<5>::terminal == mask_left<uint64_t>(24));
+static_assert(linkage<6>::terminal == mask_left<uint64_t>(16));
+static_assert(linkage<7>::terminal == mask_left<uint64_t>(8));
+static_assert(linkage<8>::terminal == mask_left<uint64_t>(0));
 
-// is_eof() method.
-static_assert(linkage<0>{ bit_all<size_t> }.is_eof());
-static_assert(linkage<1>{ 0xff }.is_eof());
-static_assert(linkage<2>{ 0xffff }.is_eof());
-static_assert(linkage<3>{ 0xffffffff }.is_eof());
-static_assert(linkage<4>{ 0xffffffff }.is_eof());
-static_assert(linkage<5>{ 0xffffffffffffffff }.is_eof());
-static_assert(linkage<6>{ 0xffffffffffffffff }.is_eof());
-static_assert(linkage<7>{ 0xffffffffffffffff }.is_eof());
-static_assert(linkage<8>{ 0xffffffffffffffff }.is_eof());
+// is_terminal() method.
+static_assert(linkage<0>{ 0x00 }.is_terminal());
+static_assert(linkage<1>{ 0xff }.is_terminal());
+static_assert(linkage<2>{ 0xffff }.is_terminal());
+static_assert(linkage<3>{ 0x00ffffff }.is_terminal());
+static_assert(linkage<4>{ 0xffffffff }.is_terminal());
+static_assert(linkage<5>{ 0x000000ffffffffff }.is_terminal());
+static_assert(linkage<6>{ 0x0000ffffffffffff }.is_terminal());
+static_assert(linkage<7>{ 0x00ffffffffffffff }.is_terminal());
+static_assert(linkage<8>{ 0xffffffffffffffff }.is_terminal());
 
 // Default constructions (integer() cast operator for equality test).
-static_assert(linkage<0>{} == linkage<0>::eof);
-static_assert(linkage<1>{} == linkage<1>::eof);
-static_assert(linkage<2>{} == linkage<2>::eof);
-static_assert(linkage<3>{} == linkage<3>::eof);
-static_assert(linkage<4>{} == linkage<4>::eof);
-static_assert(linkage<5>{} == linkage<5>::eof);
-static_assert(linkage<6>{} == linkage<6>::eof);
-static_assert(linkage<7>{} == linkage<7>::eof);
-static_assert(linkage<8>{} == linkage<8>::eof);
+static_assert(linkage<0>{} == linkage<0>::terminal);
+static_assert(linkage<1>{} == linkage<1>::terminal);
+static_assert(linkage<2>{} == linkage<2>::terminal);
+static_assert(linkage<3>{} == linkage<3>::terminal);
+static_assert(linkage<4>{} == linkage<4>::terminal);
+static_assert(linkage<5>{} == linkage<5>::terminal);
+static_assert(linkage<6>{} == linkage<6>::terminal);
+static_assert(linkage<7>{} == linkage<7>::terminal);
+static_assert(linkage<8>{} == linkage<8>::terminal);
 
 // Non-default constructions (integer() cast operator for equality test).
 static_assert(linkage<0>{ 42 } == 42_size);

@@ -31,10 +31,11 @@ struct linkage
 {
     using integer = unsigned_type<Size>;
     using bytes = std_array<uint8_t, Size>;
-    static constexpr auto eof = system::bit_all<integer>;
     static constexpr auto size = Size;
+    static constexpr auto terminal = system::mask_left<integer>(
+        to_bits(sizeof(integer) - Size));
 
-    /// Construct an eof link.
+    /// Construct a terminal link.
     constexpr linkage() NOEXCEPT;
 
     /// Integral and array constructors.
@@ -49,8 +50,8 @@ struct linkage
     constexpr operator integer() const NOEXCEPT;
     inline operator bytes() const NOEXCEPT;
 
-    /// True when value is eof.
-    constexpr bool is_eof() const NOEXCEPT;
+    /// True when value is terminal.
+    constexpr bool is_terminal() const NOEXCEPT;
 
     integer value;
 };

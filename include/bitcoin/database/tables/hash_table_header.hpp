@@ -50,7 +50,7 @@ public:
 
 private:
     template <size_t Bytes>
-    static auto array_cast(memory& buffer) NOEXCEPT
+    static auto& array_cast(memory& buffer) NOEXCEPT
     {
         return system::unsafe_array_cast<uint8_t, Bytes>(buffer.begin());
     }
@@ -59,7 +59,7 @@ private:
     {
         // Byte offset of bucket index within header file.
         // [body_size][[bucket[0]...bucket[buckets-1]]]
-        return sizeof(Link) + index * sizeof(Link);
+        return Link::size + index * Link::size;
     }
 
     storage& file_;

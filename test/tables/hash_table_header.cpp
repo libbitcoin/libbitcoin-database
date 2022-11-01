@@ -21,9 +21,67 @@
 
 BOOST_AUTO_TEST_SUITE(hash_table_header_tests)
 
-BOOST_AUTO_TEST_CASE(hash_table_header_test)
+constexpr auto key_size = 10_size;
+constexpr auto link_size = 5_size;
+constexpr auto header_size = 105_size;
+
+// Key size does not factor into header byte size (for search key only).
+constexpr auto links = header_size / link_size;
+static_assert(links == 21u);
+
+// Bucket count is one less than link count, due to header.size field.
+constexpr auto buckets = sub1(links);
+static_assert(buckets == 20u);
+
+using link = linkage<link_size>;
+using key = data_array<key_size>;
+using header = hash_table_header<link, key>;
+
+BOOST_AUTO_TEST_CASE(hash_table_header__create__allocation__expected)
 {
-    BOOST_REQUIRE(true);
+    data_chunk data;
+    test::storage store{ data };
+    header head{ store, buckets };
+    BOOST_REQUIRE(head.create());
+
+    // create() calls allocate, expanding header storage.
+    BOOST_REQUIRE_EQUAL(data.size(), header_size);
+}
+
+BOOST_AUTO_TEST_CASE(hash_table_header__create__get_body_size__zero)
+{
+    data_chunk data;
+    test::storage store{ data };
+    header head{ store, buckets };
+
+    // create() initializes body size to zero.
+    BOOST_REQUIRE(head.create());
+
+    link size{};
+    BOOST_REQUIRE(head.get_body_size(size));
+    BOOST_REQUIRE_EQUAL(size, zero);
+}
+
+BOOST_AUTO_TEST_CASE(hash_table_header__hash__null_key__expected)
+{
+    constexpr key null_key{};
+    const auto expected = system::djb2_hash(null_key) % buckets;
+
+    test::storage store;
+    header head{ store, buckets };
+    BOOST_REQUIRE_EQUAL(head.hash(null_key), expected);
+}
+
+BOOST_AUTO_TEST_CASE(hash_table_header__head__null_key__terminal)
+{
+    constexpr key null_key{};
+
+    test::storage store;
+    header head{ store, buckets };
+
+    // create() allocates and fills buckets with terminal.
+    BOOST_REQUIRE(head.create());
+    BOOST_REQUIRE(head.head(null_key).is_terminal());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

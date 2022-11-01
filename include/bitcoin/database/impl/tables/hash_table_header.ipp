@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_TABLES_HASH_TABLE_HEADER_IPP
 
 #include <algorithm>
-#include <mutex>
 #include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -47,12 +46,12 @@ bool CLASS::create() NOEXCEPT
     if (!is_zero(file_.size())) return false;
 
     // Allocate the file size and get map.
-    const auto header = file_.get(file_.allocate(offset(buckets_)));
+    const auto size = offset(buckets_);
+    const auto header = file_.get(file_.allocate(size));
     if (!header) return false;
 
     // Fill header file with eof (0xff) bytes.
-    constexpr auto fill = system::narrow_cast<uint8_t>(Link::eof);
-    std::fill(header->begin(), header->end(), fill);
+    std::fill_n(header->begin(), size, system::bit_all<uint8_t>);
 
     // Overwrite start of file with initial body "size" (zero).
     return set_body_size(zero);
@@ -90,7 +89,7 @@ TEMPLATE
 Link CLASS::head(Link index) const NOEXCEPT
 {
     const auto header = file_.get(offset(index));
-    if (!header) return Link::eof;
+    if (!header) return Link::terminal;
 
     const auto& head = array_cast<Link::size>(*header);
 
