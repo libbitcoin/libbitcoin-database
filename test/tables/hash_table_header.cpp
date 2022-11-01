@@ -36,6 +36,7 @@ static_assert(buckets == 20u);
 using link = linkage<link_size>;
 using key = data_array<key_size>;
 using header = hash_table_header<link, key>;
+using slab = element<link, key, zero>;
 
 BOOST_AUTO_TEST_CASE(hash_table_header__create__allocation__expected)
 {
@@ -66,13 +67,22 @@ BOOST_AUTO_TEST_CASE(hash_table_header__hash__null_key__expected)
 {
     constexpr key null_key{};
     const auto expected = system::djb2_hash(null_key) % buckets;
+    BOOST_REQUIRE_EQUAL(expected, 9u);
 
     test::storage store;
     header head{ store, buckets };
     BOOST_REQUIRE_EQUAL(head.hash(null_key), expected);
 }
 
-BOOST_AUTO_TEST_CASE(hash_table_header__head__null_key__terminal)
+BOOST_AUTO_TEST_CASE(hash_table_header__head__link__terminal)
+{
+    test::storage store;
+    header head{ store, buckets };
+    BOOST_REQUIRE(head.create());
+    BOOST_REQUIRE(head.head(9).is_terminal());
+}
+
+BOOST_AUTO_TEST_CASE(hash_table_header__head__key__terminal)
 {
     constexpr key null_key{};
 
@@ -82,6 +92,42 @@ BOOST_AUTO_TEST_CASE(hash_table_header__head__null_key__terminal)
     // create() allocates and fills buckets with terminal.
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(head.head(null_key).is_terminal());
+}
+
+BOOST_AUTO_TEST_CASE(hash_table_header__push__link__terminal)
+{
+    test::storage store;
+    header head{ store, buckets };
+    BOOST_REQUIRE(head.create());
+
+    link next{ 42u };
+    constexpr link link_key{ 9u };
+    constexpr link current{ 2u };
+    BOOST_REQUIRE(head.push(current, next, link_key));
+
+    // The terminal value at header[9|null_key] is copied to current.next.
+    BOOST_REQUIRE(next.is_terminal());
+
+    // The current link is copied to header[9|null_key].
+    BOOST_REQUIRE_EQUAL(head.head(link_key), 2u);
+}
+
+BOOST_AUTO_TEST_CASE(hash_table_header__push__key__terminal)
+{
+    test::storage store;
+    header head{ store, buckets };
+    BOOST_REQUIRE(head.create());
+
+    link next{ 42u };
+    constexpr key null_key{};
+    constexpr link current{ 2u };
+    BOOST_REQUIRE(head.push(current, next, null_key));
+
+    // The terminal value at header[9|null_key] is copied to current.next.
+    BOOST_REQUIRE(next.is_terminal());
+
+    // The current link is copied to header[9|null_key].
+    BOOST_REQUIRE_EQUAL(head.head(null_key), 2u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
