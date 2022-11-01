@@ -27,7 +27,7 @@ class element_
 {
 public:
     element_(manager<Link, Size>& manage) NOEXCEPT
-      : element_(manage, Link::eof)
+      : element_(manage, Link::terminal)
     {
     }
 
@@ -58,7 +58,7 @@ using key = data_array<key_size>; \
 using manage = manager<link, data_size>; \
 using access = element_<link, key, data_size>
 
-BOOST_AUTO_TEST_CASE(element__get__eof__nullptr)
+BOOST_AUTO_TEST_CASE(element__get__terminal__nullptr)
 {
     DECLARE(4, 0, 0);
 
@@ -142,10 +142,10 @@ BOOST_AUTO_TEST_CASE(element__advance__linked__false)
     BOOST_REQUIRE(element);
     BOOST_REQUIRE_EQUAL(element.self(), 0x02u);
 
-    // Sets self/link to eof (data[2]).
+    // Sets self/link to terminal (data[2]).
     element.advance();
     BOOST_REQUIRE(!element);
-    BOOST_REQUIRE_EQUAL(element.self(), link::eof);
+    BOOST_REQUIRE_EQUAL(element.self(), link::terminal);
 }
 
 BOOST_AUTO_TEST_CASE(element__get_key__2_bytes__expected)
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(element__is_match__2_bytes__expected)
     BOOST_REQUIRE(!element);
 }
 
-BOOST_AUTO_TEST_CASE(element__bool__eof__false)
+BOOST_AUTO_TEST_CASE(element__bool__terminal__false)
 {
     DECLARE(1, 0, 0);
 
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(element__bool__eof__false)
     BOOST_REQUIRE(!element);
 }
 
-BOOST_AUTO_TEST_CASE(element__bool__not_eof__true)
+BOOST_AUTO_TEST_CASE(element__bool__not_terminal__true)
 {
     DECLARE(1, 0, 0);
 
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(element__bool__not_eof__true)
     BOOST_REQUIRE(element);
 }
 
-BOOST_AUTO_TEST_CASE(element__equality__eof_self__true)
+BOOST_AUTO_TEST_CASE(element__equality__terminal_self__true)
 {
     DECLARE(1, 0, 0);
 
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(element__equality__eof_self__true)
     BOOST_REQUIRE(!(element != element));
 }
 
-BOOST_AUTO_TEST_CASE(element__equality__not_eof_self__true)
+BOOST_AUTO_TEST_CASE(element__equality__not_terminal_self__true)
 {
     DECLARE(1, 0, 0);
 
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(element__equality__not_eof_self__true)
     BOOST_REQUIRE(!(element != element));
 }
 
-BOOST_AUTO_TEST_CASE(element__equality__eof_distinct__true)
+BOOST_AUTO_TEST_CASE(element__equality__terminal_distinct__true)
 {
     DECLARE(1, 0, 0);
 

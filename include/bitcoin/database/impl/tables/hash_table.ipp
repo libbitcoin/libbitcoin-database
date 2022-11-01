@@ -69,7 +69,7 @@ Element CLASS::push(const key& key, link size) NOEXCEPT
 
     // TODO: turn element into writer, capture memory.
     // TODO: stream fault.
-    if (!memory) return at(link::eof);
+    if (!memory) return at(link::terminal);
 
     // TODO: capture void push(...) in writer closure, execute at flush.
     auto& next = system::unsafe_byte_cast<link>(memory->data());

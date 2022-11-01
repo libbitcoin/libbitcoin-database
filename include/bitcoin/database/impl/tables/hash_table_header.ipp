@@ -50,7 +50,7 @@ bool CLASS::create() NOEXCEPT
     const auto header = file_.get(file_.allocate(size));
     if (!header) return false;
 
-    // Fill header file with eof (0xff) bytes.
+    // Fill header file with terminal (0xff) bytes.
     std::fill_n(header->begin(), size, system::bit_all<uint8_t>);
 
     // Overwrite start of file with initial body "size" (zero).

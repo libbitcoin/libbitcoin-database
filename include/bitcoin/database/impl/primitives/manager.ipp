@@ -40,7 +40,7 @@ Link CLASS::count() const NOEXCEPT
 TEMPLATE
 bool CLASS::truncate(Link count) NOEXCEPT
 {
-    if (count.is_eof())
+    if (count.is_terminal())
         return false;
 
     return file_.resize(link_to_position(count));
@@ -51,7 +51,7 @@ bool CLASS::truncate(Link count) NOEXCEPT
 TEMPLATE
 Link CLASS::allocate(Link count) NOEXCEPT
 {
-    if (count.is_eof())
+    if (count.is_terminal())
         return count;
 
     const auto position = file_.allocate(link_to_position(count));
@@ -68,7 +68,7 @@ Link CLASS::allocate(Link count) NOEXCEPT
 TEMPLATE
 memory_ptr CLASS::get(Link value) const NOEXCEPT
 {
-    if (value.is_eof())
+    if (value.is_terminal())
         return nullptr;
 
     return file_.get(link_to_position(value));

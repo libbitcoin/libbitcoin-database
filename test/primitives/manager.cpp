@@ -41,12 +41,12 @@ BOOST_AUTO_TEST_CASE(manager__size__non_empty_slab__expected)
     BOOST_REQUIRE_EQUAL(instance.count(), expected);
 }
 
-BOOST_AUTO_TEST_CASE(manager__allocate__eof_slab__eof_unchanged)
+BOOST_AUTO_TEST_CASE(manager__allocate__terminal_slab__terminal_unchanged)
 {
     data_chunk buffer;
     test::storage file(buffer);
     manager<linkage<4>, zero> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.allocate(linkage<4>::eof), linkage<4>::eof);
+    BOOST_REQUIRE_EQUAL(instance.allocate(linkage<4>::terminal), linkage<4>::terminal);
     BOOST_REQUIRE_EQUAL(instance.count(), zero);
 }
 
@@ -70,12 +70,12 @@ BOOST_AUTO_TEST_CASE(manager__allocate__non_empty_slab__expected)
     BOOST_REQUIRE_EQUAL(instance.count(), expected);
 }
 
-BOOST_AUTO_TEST_CASE(manager__truncate__eof_slab__false_unchanged)
+BOOST_AUTO_TEST_CASE(manager__truncate__terminal_slab__false_unchanged)
 {
     data_chunk buffer;
     test::storage file(buffer);
     manager<linkage<4>, zero> instance(file);
-    BOOST_REQUIRE(!instance.truncate(linkage<4>::eof));
+    BOOST_REQUIRE(!instance.truncate(linkage<4>::terminal));
     BOOST_REQUIRE_EQUAL(instance.count(), zero);
 }
 
@@ -104,14 +104,14 @@ BOOST_AUTO_TEST_CASE(manager__truncate__half_full_slab__true_changed)
     BOOST_REQUIRE_EQUAL(instance.count(), size);
 }
 
-BOOST_AUTO_TEST_CASE(manager__get__eof_slab__eof)
+BOOST_AUTO_TEST_CASE(manager__get__terminal_slab__terminal)
 {
     constexpr auto size = 14u;
     data_chunk buffer(size, 0xff);
     test::storage file(buffer);
     manager<linkage<2>, zero> instance(file);
     BOOST_REQUIRE_EQUAL(instance.count(), size);
-    BOOST_REQUIRE(!instance.get(linkage<2>::eof));
+    BOOST_REQUIRE(!instance.get(linkage<2>::terminal));
 }
 
 BOOST_AUTO_TEST_CASE(manager__get__slab__expected)
@@ -165,23 +165,23 @@ BOOST_AUTO_TEST_CASE(manager__size__33_record__expected)
     BOOST_REQUIRE_EQUAL(instance.count(), 33u);
 }
 
-BOOST_AUTO_TEST_CASE(manager__allocate__eof_empty_record__eof_unchanged)
+BOOST_AUTO_TEST_CASE(manager__allocate__terminal_empty_record__terminal_unchanged)
 {
     data_chunk buffer;
     test::storage file(buffer);
     manager<linkage<2>, 5u> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.allocate(linkage<2>::eof), linkage<2>::eof);
+    BOOST_REQUIRE_EQUAL(instance.allocate(linkage<2>::terminal), linkage<2>::terminal);
     BOOST_REQUIRE_EQUAL(instance.count(), zero);
 }
 
-BOOST_AUTO_TEST_CASE(manager__allocate__eof_non_empty_record__expected)
+BOOST_AUTO_TEST_CASE(manager__allocate__terminal_non_empty_record__expected)
 {
     data_chunk buffer(7, 0xff);
     test::storage file(buffer);
     manager<linkage<2>, 5u> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(1), 1u);
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
-    BOOST_REQUIRE_EQUAL(instance.allocate(linkage<2>::eof), linkage<2>::eof);
+    BOOST_REQUIRE_EQUAL(instance.allocate(linkage<2>::terminal), linkage<2>::terminal);
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
 }
 
@@ -207,12 +207,12 @@ BOOST_AUTO_TEST_CASE(manager__allocate__non_empty_record__expected)
     BOOST_REQUIRE_EQUAL(instance.count(), 4u);
 }
 
-BOOST_AUTO_TEST_CASE(manager__truncate__eof_record__false_unchanged)
+BOOST_AUTO_TEST_CASE(manager__truncate__terminal_record__false_unchanged)
 {
     data_chunk buffer;
     test::storage file(buffer);
     manager<linkage<2>, 5u> instance(file);
-    BOOST_REQUIRE(!instance.truncate(linkage<2>::eof));
+    BOOST_REQUIRE(!instance.truncate(linkage<2>::terminal));
     BOOST_REQUIRE_EQUAL(instance.count(), zero);
 }
 
@@ -240,13 +240,13 @@ BOOST_AUTO_TEST_CASE(manager__truncate__half_full_record__true_changed)
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
 }
 
-BOOST_AUTO_TEST_CASE(manager__get__eof_record__eof)
+BOOST_AUTO_TEST_CASE(manager__get__terminal_record__terminal)
 {
     data_chunk buffer(14, 0xff);
     test::storage file(buffer);
     manager<linkage<2>, 5u> instance(file);
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
-    BOOST_REQUIRE(!instance.get(linkage<2>::eof));
+    BOOST_REQUIRE(!instance.get(linkage<2>::terminal));
 }
 
 BOOST_AUTO_TEST_CASE(manager__get__record__expected)

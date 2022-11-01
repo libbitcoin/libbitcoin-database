@@ -35,7 +35,7 @@ CLASS::element(const manager<Link, Size>& manage, Link value) NOEXCEPT
 TEMPLATE
 void CLASS::advance() NOEXCEPT
 {
-    BC_ASSERT_MSG(!link_.is_eof(), "advancing from terminal");
+    BC_ASSERT_MSG(!link_.is_terminal(), "advancing from terminal");
     link_ = get_next();
 }
 
@@ -77,7 +77,7 @@ bool CLASS::is_match(const Key& value) const NOEXCEPT
 TEMPLATE
 CLASS::operator bool() const NOEXCEPT
 {
-    return !link_.is_eof();
+    return !link_.is_terminal();
 }
 
 TEMPLATE
