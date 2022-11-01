@@ -54,28 +54,35 @@ bool CLASS::create() NOEXCEPT
     std::fill_n(header->begin(), size, system::bit_all<uint8_t>);
 
     // Overwrite start of file with initial body "size" (zero).
-    return set_body_size(zero);
+    return set_body_count(zero) && verify();
 }
 
 TEMPLATE
-bool CLASS::set_body_size(Link size) NOEXCEPT
+bool CLASS::verify() NOEXCEPT
+{
+    // Byte offset vs. byte size, must be same.
+    return offset(buckets_) == file_.size();
+}
+
+TEMPLATE
+bool CLASS::set_body_count(Link count) NOEXCEPT
 {
     // This should only be called at checkpoint/close.
     const auto header = file_.get();
     if (!header) return false;
 
-    array_cast<Link::size>(*header) = size;
+    array_cast<Link::size>(*header) = count;
     return true;
 }
 
 TEMPLATE
-bool CLASS::get_body_size(Link& size) const NOEXCEPT
+bool CLASS::get_body_count(Link& count) const NOEXCEPT
 {
     // This should only be read at startup (checkpoint recovery).
     const auto header = file_.get();
     if (!header) return false;
 
-    size = array_cast<Link::size>(*header);
+    count = array_cast<Link::size>(*header);
     return true;
 }
 

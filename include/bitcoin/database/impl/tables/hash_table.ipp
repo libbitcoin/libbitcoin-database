@@ -34,6 +34,20 @@ CLASS::hash_table(storage& header, storage& body, link buckets) NOEXCEPT
 {
 }
 
+TEMPLATE
+bool CLASS::create() NOEXCEPT
+{
+    return header_.create() && verify();
+}
+
+// TODO: for recovery trim body to count (fail if body.count < count).
+TEMPLATE
+bool CLASS::verify() NOEXCEPT
+{
+    link count{};
+    return header_.get_body_count(count) && (body_.count() == count);
+}
+
 // Return istream that starts [at] key and terminates at Size.
 // Store deserializer accepts istream, using reader to construct object.
 // istream can either be kept alive by retention of memory_ptr or can obtain a

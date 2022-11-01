@@ -37,7 +37,7 @@ public:
     /// Manage byte storage device.
     manager(storage& file) NOEXCEPT;
 
-    /// The logical record count.
+    /// The logical record count or slab size.
     Link count() const NOEXCEPT;
 
     /// Reduce the number of records (false if not lesser).

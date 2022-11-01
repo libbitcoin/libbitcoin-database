@@ -38,8 +38,9 @@ public:
 
     /// Not thread safe.
     bool create() NOEXCEPT;
-    bool set_body_size(Link size) NOEXCEPT;
-    bool get_body_size(Link& size) const NOEXCEPT;
+    bool verify() NOEXCEPT;
+    bool set_body_count(Link count) NOEXCEPT;
+    bool get_body_count(Link& count) const NOEXCEPT;
 
     /// Thread safe.
     Link hash(const Key& key) const NOEXCEPT;

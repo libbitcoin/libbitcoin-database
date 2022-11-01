@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__create__allocation__expected)
     BOOST_REQUIRE_EQUAL(data.size(), header_size);
 }
 
-BOOST_AUTO_TEST_CASE(hash_table_header__create__get_body_size__zero)
+BOOST_AUTO_TEST_CASE(hash_table_header__create__get_body_count__zero)
 {
     data_chunk data;
     test::storage store{ data };
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__create__get_body_size__zero)
     BOOST_REQUIRE(head.create());
 
     link size{};
-    BOOST_REQUIRE(head.get_body_size(size));
+    BOOST_REQUIRE(head.get_body_count(size));
     BOOST_REQUIRE_EQUAL(size, zero);
 }
 

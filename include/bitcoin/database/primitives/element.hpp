@@ -33,6 +33,10 @@ template <typename Link, typename Key, size_t Size = zero>
 class element
 {
 public:
+    static constexpr auto size = Size;
+    using link = Link;
+    using key = Key;
+
     element(const manager<Link, Size>& manage, Link value) NOEXCEPT;
 
     /// Advance to next element.

@@ -39,19 +39,18 @@ public:
     hash_table(storage& header, storage& body, link buckets) NOEXCEPT;
 
     /// Not thread safe.
-    bool create() NOEXCEPT { return false; }
+    bool create() NOEXCEPT;
+    bool verify() NOEXCEPT;
 
     /// Thread safe.
     Element at(link link) const NOEXCEPT;
     Element find(const key& key) const NOEXCEPT;
-
-    // push size records or size slab bytes.
-    // size is contiguous body allocation, only first is linked.
     Element push(const key& key, link size=one) NOEXCEPT;
 
 private:
+    static constexpr auto size = Element::size;
     using header = hash_table_header<link, key>;
-    using manager = typename Element::manager;
+    using manager = manager<link, size>;
 
     // hash/head/push thread safe.
     header header_;
