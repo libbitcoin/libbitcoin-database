@@ -208,67 +208,67 @@ BOOST_AUTO_TEST_CASE(element__is_terminal__not_terminal__tfalse)
     BOOST_REQUIRE(!element.is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(element__equality__terminal_self__true)
-{
-    DECLARE(1, 0, 0);
-
-    test::storage file;
-    manage manager{ file };
-    const access element{ manager };
-
-    BOOST_REQUIRE(element == element);
-    BOOST_REQUIRE(!(element != element));
-}
-
-BOOST_AUTO_TEST_CASE(element__equality__not_terminal_self__true)
-{
-    DECLARE(1, 0, 0);
-
-    test::storage file;
-    manage manager{ file };
-    const access element{ manager, 0x00_u8 };
-
-    BOOST_REQUIRE(element == element);
-    BOOST_REQUIRE(!(element != element));
-}
-
-BOOST_AUTO_TEST_CASE(element__equality__terminal_distinct__true)
-{
-    DECLARE(1, 0, 0);
-
-    test::storage file;
-    manage manager{ file };
-    const access element1{ manager };
-    const access element2{ manager };
-
-    BOOST_REQUIRE(element1 == element2);
-    BOOST_REQUIRE(!(element1 != element2));
-}
-
-BOOST_AUTO_TEST_CASE(element__equality__same_values_distinct__true)
-{
-    DECLARE(1, 0, 0);
-
-    test::storage file;
-    manage manager{ file };
-    const access element1{ manager, 0x01_u8 };
-    const access element2{ manager, 0x01_u8 };
-
-    BOOST_REQUIRE(element1 == element2);
-    BOOST_REQUIRE(!(element1 != element2));
-}
-
-BOOST_AUTO_TEST_CASE(element__equality__different_values__true)
-{
-    DECLARE(1, 0, 0);
-
-    test::storage file;
-    manage manager{ file };
-    const access element1{ manager, 0x01_u8 };
-    const access element2{ manager, 0x02_u8 };
-
-    BOOST_REQUIRE(element1 != element2);
-    BOOST_REQUIRE(!(element1 == element2));
-}
+////BOOST_AUTO_TEST_CASE(element__equality__terminal_self__true)
+////{
+////    DECLARE(1, 0, 0);
+////
+////    test::storage file;
+////    manage manager{ file };
+////    const access element{ manager };
+////
+////    BOOST_REQUIRE(element == element);
+////    BOOST_REQUIRE(!(element != element));
+////}
+////
+////BOOST_AUTO_TEST_CASE(element__equality__not_terminal_self__true)
+////{
+////    DECLARE(1, 0, 0);
+////
+////    test::storage file;
+////    manage manager{ file };
+////    const access element{ manager, 0x00_u8 };
+////
+////    BOOST_REQUIRE(element == element);
+////    BOOST_REQUIRE(!(element != element));
+////}
+////
+////BOOST_AUTO_TEST_CASE(element__equality__terminal_distinct__true)
+////{
+////    DECLARE(1, 0, 0);
+////
+////    test::storage file;
+////    manage manager{ file };
+////    const access element1{ manager };
+////    const access element2{ manager };
+////
+////    BOOST_REQUIRE(element1 == element2);
+////    BOOST_REQUIRE(!(element1 != element2));
+////}
+////
+////BOOST_AUTO_TEST_CASE(element__equality__same_values_distinct__true)
+////{
+////    DECLARE(1, 0, 0);
+////
+////    test::storage file;
+////    manage manager{ file };
+////    const access element1{ manager, 0x01_u8 };
+////    const access element2{ manager, 0x01_u8 };
+////
+////    BOOST_REQUIRE(element1 == element2);
+////    BOOST_REQUIRE(!(element1 != element2));
+////}
+////
+////BOOST_AUTO_TEST_CASE(element__equality__different_values__true)
+////{
+////    DECLARE(1, 0, 0);
+////
+////    test::storage file;
+////    manage manager{ file };
+////    const access element1{ manager, 0x01_u8 };
+////    const access element2{ manager, 0x02_u8 };
+////
+////    BOOST_REQUIRE(element1 != element2);
+////    BOOST_REQUIRE(!(element1 == element2));
+////}
 
 BOOST_AUTO_TEST_SUITE_END()

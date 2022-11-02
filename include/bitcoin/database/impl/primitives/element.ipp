@@ -80,18 +80,6 @@ bool CLASS::is_terminal() const NOEXCEPT
     return link_.is_terminal();
 }
 
-TEMPLATE
-bool CLASS::operator==(const element& other) const NOEXCEPT
-{
-    return other.link_ == link_;
-}
-
-TEMPLATE
-bool CLASS::operator!=(const element& other) const NOEXCEPT
-{
-    return other.link_ != link_;
-}
-
 // protected
 // ----------------------------------------------------------------------------
 // Obtaining memory object is considered const access despite the fact that
@@ -108,7 +96,10 @@ TEMPLATE
 memory_ptr CLASS::get(size_t offset) const NOEXCEPT
 {
     auto body = get();
-    if (body) body->increment(offset);
+
+    if (body)
+        body->increment(offset);
+
     return body;
 }
 

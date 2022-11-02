@@ -57,10 +57,6 @@ public:
     /// True if link is eof (and above methods are undefined).
     bool is_terminal() const NOEXCEPT;
 
-    /// Equality/inequality, compares link value only.
-    bool operator==(const element& other) const NOEXCEPT;
-    bool operator!=(const element& other) const NOEXCEPT;
-
 protected:
     memory_ptr get() const NOEXCEPT;
     memory_ptr get(size_t offset) const NOEXCEPT;
