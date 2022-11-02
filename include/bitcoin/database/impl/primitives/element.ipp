@@ -75,9 +75,9 @@ bool CLASS::is_match(const Key& value) const NOEXCEPT
 }
 
 TEMPLATE
-CLASS::operator bool() const NOEXCEPT
+bool CLASS::is_terminal() const NOEXCEPT
 {
-    return !link_.is_terminal();
+    return link_.is_terminal();
 }
 
 TEMPLATE

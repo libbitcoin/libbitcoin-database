@@ -42,13 +42,16 @@ public:
     /// Increment begin the specified number of bytes.
     inline void increment(size_t bytes) NOEXCEPT override;
 
+    /// The buffer size.
+    inline ptrdiff_t size() const NOEXCEPT override;
+
     /// Get buffer (guarded against remap only).
-    inline uint8_t* begin() NOEXCEPT override;
+    inline value_type* begin() NOEXCEPT override;
     inline const uint8_t* end() const NOEXCEPT override;
 
-    /// Cast to r/w slices for use in stream construction.
-    inline operator system::data_slab() NOEXCEPT;
-    inline operator system::data_reference() const NOEXCEPT;
+    /////// Cast to r/w slices for use in stream construction.
+    ////inline operator system::data_slab() NOEXCEPT;
+    ////inline operator system::data_reference() const NOEXCEPT;
 
 private:
     uint8_t* begin_{};

@@ -30,14 +30,26 @@ namespace database {
 class memory
 {
 public:
+    // for system::device<T>
+    typedef uint8_t value_type;
+
+    // for database::copy_sink
+    typedef value_type* iterator;
+
+    // for database::copy_source
+    typedef const value_type* const_iterator;
+
     typedef std::shared_ptr<memory> ptr;
+
+    /// Increment begin the specified number of bytes.
+    virtual void increment(size_t value) NOEXCEPT = 0;
+
+    /// The buffer size.
+    virtual ptrdiff_t size() const NOEXCEPT = 0;
 
     /// Get buffer.
     virtual uint8_t* begin() NOEXCEPT = 0;
     virtual const uint8_t* end() const NOEXCEPT = 0;
-
-    /// Increment begin the specified number of bytes.
-    virtual void increment(size_t value) NOEXCEPT = 0;
 };
 
 typedef memory::ptr memory_ptr;

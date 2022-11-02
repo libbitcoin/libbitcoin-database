@@ -133,7 +133,9 @@ include_bitcoin_database_memorydir = ${includedir}/bitcoin/database/memory
 include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/accessor.hpp \
     include/bitcoin/database/memory/file.hpp \
-    include/bitcoin/database/memory/map.hpp
+    include/bitcoin/database/memory/map.hpp \
+    include/bitcoin/database/memory/map_sink.hpp \
+    include/bitcoin/database/memory/map_source.hpp
 
 include_bitcoin_database_memory_interfacesdir = ${includedir}/bitcoin/database/memory/interfaces
 include_bitcoin_database_memory_interfaces_HEADERS = \

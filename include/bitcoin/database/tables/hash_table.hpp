@@ -25,6 +25,8 @@
 #include <bitcoin/database/tables/hash_table_header.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
+#include <bitcoin/database/memory/map_sink.hpp>
+#include <bitcoin/database/memory/map_source.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -43,9 +45,9 @@ public:
     bool verify() NOEXCEPT;
 
     /// Thread safe.
-    Element at(link link) const NOEXCEPT;
-    Element find(const key& key) const NOEXCEPT;
-    Element push(const key& key, link size=one) NOEXCEPT;
+    map_source_ptr at(link record) const NOEXCEPT;
+    map_source_ptr find(const key& key) const NOEXCEPT;
+    map_sink_ptr push(const key& key, link size=one) NOEXCEPT;
 
 private:
     static constexpr auto size = Element::size;
@@ -61,7 +63,6 @@ private:
 
 } // namespace database
 } // namespace libbitcoin
-
 
 #define TEMPLATE \
 template <typename Element>

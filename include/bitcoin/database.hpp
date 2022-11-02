@@ -29,6 +29,8 @@
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/file.hpp>
 #include <bitcoin/database/memory/map.hpp>
+#include <bitcoin/database/memory/map_sink.hpp>
+#include <bitcoin/database/memory/map_source.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
 #include <bitcoin/database/primitives/element.hpp>

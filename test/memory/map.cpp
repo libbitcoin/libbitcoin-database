@@ -300,26 +300,26 @@ BOOST_AUTO_TEST_CASE(map__flush_map__mapped__true)
     BOOST_REQUIRE(instance.close());
 }
 
-BOOST_AUTO_TEST_CASE(map__write__read__expected)
-{
-    constexpr uint64_t expected = 0x0102030405060708_u64;
-    const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
-    map instance(file);
-    BOOST_REQUIRE(instance.open());
-    BOOST_REQUIRE(instance.load());
-    auto memory = instance.get(instance.allocate(sizeof(uint64_t)));
-    BOOST_REQUIRE(memory);
-    unsafe_to_little_endian<uint64_t>(memory->begin(), expected);
-    memory.reset();
-    BOOST_REQUIRE(instance.flush());
-    memory = instance.get();
-    BOOST_REQUIRE(memory);
-    BOOST_REQUIRE_EQUAL(unsafe_from_little_endian<uint64_t>(memory->begin()), expected);
-    memory.reset();
-    BOOST_REQUIRE(instance.unload());
-    BOOST_REQUIRE(instance.close());
-}
+////BOOST_AUTO_TEST_CASE(map__write__read__expected)
+////{
+////    constexpr uint64_t expected = 0x0102030405060708_u64;
+////    const std::string file = TEST_PATH;
+////    BOOST_REQUIRE(test::create(file));
+////    map instance(file);
+////    BOOST_REQUIRE(instance.open());
+////    BOOST_REQUIRE(instance.load());
+////    auto memory = instance.get(instance.allocate(sizeof(uint64_t)));
+////    BOOST_REQUIRE(memory);
+////    unsafe_to_little_endian<uint64_t>(memory->begin(), expected);
+////    memory.reset();
+////    BOOST_REQUIRE(instance.flush());
+////    memory = instance.get();
+////    BOOST_REQUIRE(memory);
+////    BOOST_REQUIRE_EQUAL(unsafe_from_little_endian<uint64_t>(memory->begin()), expected);
+////    memory.reset();
+////    BOOST_REQUIRE(instance.unload());
+////    BOOST_REQUIRE(instance.close());
+////}
 
 BOOST_AUTO_TEST_CASE(map__unload_map__pending_accessor__false)
 {

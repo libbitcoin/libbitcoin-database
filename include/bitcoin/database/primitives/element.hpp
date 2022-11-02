@@ -54,8 +54,8 @@ public:
     /// Natural key matches specified value.
     bool is_match(const Key& value) const NOEXCEPT;
 
-    /// False if link is eof (and above methods are undefined).
-    operator bool() const NOEXCEPT;
+    /// True if link is eof (and above methods are undefined).
+    bool is_terminal() const NOEXCEPT;
 
     /// Equality/inequality, compares link value only.
     bool operator==(const element& other) const NOEXCEPT;

@@ -139,12 +139,12 @@ BOOST_AUTO_TEST_CASE(element__advance__linked__false)
 
     // Sets self/link to 0x02 (data[0]).
     element.advance();
-    BOOST_REQUIRE(element);
+    BOOST_REQUIRE(!element.is_terminal());
     BOOST_REQUIRE_EQUAL(element.self(), 0x02u);
 
     // Sets self/link to terminal (data[2]).
     element.advance();
-    BOOST_REQUIRE(!element);
+    BOOST_REQUIRE(element.is_terminal());
     BOOST_REQUIRE_EQUAL(element.self(), link::terminal);
 }
 
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(element__get_key__2_bytes__expected)
     BOOST_REQUIRE_EQUAL(element.get_key(), expected2);
 
     element.advance();
-    BOOST_REQUIRE(!element);
+    BOOST_REQUIRE(element.is_terminal());
 }
 
 BOOST_AUTO_TEST_CASE(element__is_match__2_bytes__expected)
@@ -183,10 +183,10 @@ BOOST_AUTO_TEST_CASE(element__is_match__2_bytes__expected)
     BOOST_REQUIRE(element.is_match({ 0x1b, 0x2b }));
 
     element.advance();
-    BOOST_REQUIRE(!element);
+    BOOST_REQUIRE(element.is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(element__bool__terminal__false)
+BOOST_AUTO_TEST_CASE(element__is_terminal__terminal__true)
 {
     DECLARE(1, 0, 0);
 
@@ -194,10 +194,10 @@ BOOST_AUTO_TEST_CASE(element__bool__terminal__false)
     manage manager{ file };
     const access element{ manager };
 
-    BOOST_REQUIRE(!element);
+    BOOST_REQUIRE(element.is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(element__bool__not_terminal__true)
+BOOST_AUTO_TEST_CASE(element__is_terminal__not_terminal__tfalse)
 {
     DECLARE(1, 0, 0);
 
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(element__bool__not_terminal__true)
     manage manager{ file };
     const access element{ manager, 0x00_u8 };
 
-    BOOST_REQUIRE(element);
+    BOOST_REQUIRE(!element.is_terminal());
 }
 
 BOOST_AUTO_TEST_CASE(element__equality__terminal_self__true)

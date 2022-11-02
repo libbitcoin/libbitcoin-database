@@ -100,6 +100,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\storage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\map.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\map_sink.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\map_source.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\element.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linkage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\manager.hpp" />

@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_TABLES_HASH_TABLE_IPP
 #define LIBBITCOIN_DATABASE_TABLES_HASH_TABLE_IPP
 
+#include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -48,47 +49,36 @@ bool CLASS::verify() NOEXCEPT
     return header_.get_body_count(count) && (body_.count() == count);
 }
 
-// Return istream that starts [at] key and terminates at Size.
-// Store deserializer accepts istream, using reader to construct object.
-// istream can either be kept alive by retention of memory_ptr or can obtain a
-// memory_ptr on each read call, using retained manager/link.
 TEMPLATE
-Element CLASS::at(link link) const NOEXCEPT
+map_source_ptr CLASS::at(link record) const NOEXCEPT
 {
-    // TODO: turn element into reader.
-    // TODO: stream fault if not found.
-    return { body_, link };
+    return std::make_shared<map_source>(body_.get(record));
 }
 
-// Return istream that starts [after] key and terminates at Size.
-// Store deserializer accepts istream, using reader to construct object.
 TEMPLATE
-Element CLASS::find(const key& key) const NOEXCEPT
+map_source_ptr CLASS::find(const key& key) const NOEXCEPT
 {
-    // TODO: turn element into reader.
-    // TODO: stream fault if not found.
-    auto element = at(header_.head(key));
-    for (; element && !element.match(key); element.advance());
-    return element;
+    // Element is a key-matching search iterator.
+    Element element{ body_, header_.head(key) };
+    for (; !element.is_terminal() && !element.match(key); element.advance());
+
+    return element.is_terminal() ?
+        system::to_shared<map_source>() :
+        system::to_shared(body_.get(element.self()));
 }
 
-// Return ostream that starts [after] key and terminates at Size.
-// Store serializer accepts ostream, using writer to emit object.
-// Write the key to the stream before returning.
 TEMPLATE
-Element CLASS::push(const key& key, link size) NOEXCEPT
+map_sink_ptr CLASS::push(const key& key, link size) NOEXCEPT
 {
-    const auto current = body_.allocate(size);
-    auto memory = body_.get(current);
+    const auto record = body_.allocate(size);
 
-    // TODO: turn element into writer, capture memory.
-    // TODO: stream fault.
-    if (!memory) return at(link::terminal);
+    //// auto& next = system::unsafe_byte_cast<link>(memory->data());
+    //// header_.push(record, next, index);
+    ////return { header_, header_.hash(key), current, body_.get(record) };
 
-    // TODO: capture void push(...) in writer closure, execute at flush.
-    auto& next = system::unsafe_byte_cast<link>(memory->data());
-    header_.push(current, next, key);
-
+    return record.is_terminal() ?
+        system::to_shared<map_source>() :
+        system::to_shared(body_.get(record));
 }
 
 } // namespace database

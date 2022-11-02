@@ -37,7 +37,7 @@ inline CLASS::accessor(Mutex& mutex) NOEXCEPT
 TEMPLATE
 inline void CLASS::assign(uint8_t* begin, uint8_t* end) NOEXCEPT
 {
-    BC_ASSERT(!system::is_negative(std::distance(begin_, end_)));
+    BC_ASSERT(!system::is_negative(size()));
     begin_ = begin;
     end_ = end;
 }
@@ -45,8 +45,14 @@ inline void CLASS::assign(uint8_t* begin, uint8_t* end) NOEXCEPT
 TEMPLATE
 inline void CLASS::increment(size_t bytes) NOEXCEPT
 {
-    BC_ASSERT(!system::is_greater(bytes, std::distance(begin_, end_)));
+    BC_ASSERT(!system::is_greater(bytes, size()));
     std::advance(begin_, bytes);
+}
+
+TEMPLATE
+inline ptrdiff_t CLASS::size() const NOEXCEPT
+{
+    return std::distance(begin_, begin_);
 }
 
 TEMPLATE
@@ -61,17 +67,17 @@ inline const uint8_t* CLASS::end() const NOEXCEPT
     return end_;
 }
 
-TEMPLATE
-inline CLASS::operator system::data_slab() NOEXCEPT
-{
-    return { begin_, end_ };
-}
-
-TEMPLATE
-inline CLASS::operator system::data_reference() const NOEXCEPT
-{
-    return { begin_, end_ };
-}
+////TEMPLATE
+////inline CLASS::operator system::data_slab() NOEXCEPT
+////{
+////    return { begin_, end_ };
+////}
+////
+////TEMPLATE
+////inline CLASS::operator system::data_reference() const NOEXCEPT
+////{
+////    return { begin_, end_ };
+////}
 
 } // namespace database
 } // namespace libbitcoin
