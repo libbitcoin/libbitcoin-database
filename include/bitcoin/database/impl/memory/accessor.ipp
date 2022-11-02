@@ -52,7 +52,7 @@ inline void CLASS::increment(size_t bytes) NOEXCEPT
 TEMPLATE
 inline ptrdiff_t CLASS::size() const NOEXCEPT
 {
-    return std::distance(begin_, begin_);
+    return std::distance(begin_, end_);
 }
 
 TEMPLATE
@@ -66,18 +66,6 @@ inline uint8_t* CLASS::end() NOEXCEPT
 {
     return end_;
 }
-
-////TEMPLATE
-////inline CLASS::operator system::data_slab() NOEXCEPT
-////{
-////    return { begin_, end_ };
-////}
-////
-////TEMPLATE
-////inline CLASS::operator system::data_reference() const NOEXCEPT
-////{
-////    return { begin_, end_ };
-////}
 
 } // namespace database
 } // namespace libbitcoin

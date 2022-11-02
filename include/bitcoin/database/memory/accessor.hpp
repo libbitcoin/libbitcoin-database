@@ -49,10 +49,6 @@ public:
     inline value_type* begin() NOEXCEPT override;
     inline uint8_t* end() NOEXCEPT override;
 
-    /////// Cast to r/w slices for use in stream construction.
-    ////inline operator system::data_slab() NOEXCEPT;
-    ////inline operator system::data_reference() const NOEXCEPT;
-
 private:
     uint8_t* begin_{};
     uint8_t* end_{};

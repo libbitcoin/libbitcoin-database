@@ -63,6 +63,63 @@ BOOST_AUTO_TEST_CASE(accessor__increment__nonzero__expected_offset)
     BOOST_REQUIRE_EQUAL(instance.begin(), std::next(buffer, offset));
 }
 
+BOOST_AUTO_TEST_CASE(accessor__size__default__zero)
+{
+    std::shared_mutex mutex;
+    accessor instance(mutex);
+    BOOST_REQUIRE_EQUAL(instance.size(), ptrdiff_t{ 0 });
+}
+
+BOOST_AUTO_TEST_CASE(accessor__size__non_exhausted__expected)
+{
+    constexpr auto offset = 42u;
+    data_chunk chunk(add1(offset), 0x00);
+    chunk[offset] = 0xff;
+    std::shared_mutex mutex;
+    accessor instance(mutex);
+    const auto buffer = chunk.data();
+    instance.assign(buffer, std::next(buffer, offset));
+    BOOST_REQUIRE_EQUAL(instance.size(), system::possible_narrow_and_sign_cast<ptrdiff_t>(offset));
+}
+
+BOOST_AUTO_TEST_CASE(accessor__size__exhausted__zero)
+{
+    constexpr auto offset = 42u;
+    data_chunk chunk(add1(offset), 0x00);
+    chunk[offset] = 0xff;
+    std::shared_mutex mutex;
+    accessor instance(mutex);
+    const auto buffer = chunk.data();
+    instance.assign(buffer, std::next(buffer, offset));
+    instance.increment(offset);
+    BOOST_REQUIRE_EQUAL(instance.size(), ptrdiff_t{ 0 });
+}
+
+BOOST_AUTO_TEST_CASE(accessor__begin_end__default__nullptrs)
+{
+    std::shared_mutex mutex;
+    accessor instance(mutex);
+    BOOST_REQUIRE(is_null(instance.begin()));
+    BOOST_REQUIRE(is_null(instance.end()));
+}
+
+BOOST_AUTO_TEST_CASE(accessor__begin_end__exhaust__expected)
+{
+    constexpr auto offset = 42u;
+    data_chunk chunk(add1(offset), 0x00);
+    chunk[offset] = 0xff;
+    std::shared_mutex mutex;
+    accessor instance(mutex);
+    const auto begin = chunk.data();
+    const auto end = std::next(begin, offset);
+    instance.assign(begin, end);
+    BOOST_REQUIRE_EQUAL(instance.begin(), begin);
+    BOOST_REQUIRE_EQUAL(instance.end(), end);
+    instance.increment(offset);
+    BOOST_REQUIRE_EQUAL(instance.begin(), end);
+    BOOST_REQUIRE_EQUAL(instance.end(), end);
+}
+
 BOOST_AUTO_TEST_CASE(accessor__destruct__shared_lock__released)
 {
     boost::upgrade_mutex mutex;
