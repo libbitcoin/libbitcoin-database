@@ -62,13 +62,13 @@ private:
     static constexpr auto slab = is_zero(record_size);
 
     using header = hash_table_header<link, key>;
-    using manager = manager<link, record_size>;
+    using manage = manager<link, record_size>;
 
     // hash/head/push thread safe.
     header header_;
 
     // Thread safe.
-    manager body_;
+    manage body_;
 };
 
 } // namespace database
