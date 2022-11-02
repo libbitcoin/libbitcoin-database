@@ -38,7 +38,7 @@ public:
 
     /// Not thread safe.
     bool create() NOEXCEPT;
-    bool verify() NOEXCEPT;
+    bool verify() const NOEXCEPT;
     bool set_body_count(Link count) NOEXCEPT;
     bool get_body_count(Link& count) const NOEXCEPT;
 

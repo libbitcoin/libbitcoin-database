@@ -46,8 +46,6 @@ bool CLASS::truncate(Link count) NOEXCEPT
     return file_.resize(link_to_position(count));
 }
 
-// allocated start and count are known.
-// allocated (link-to-end) byte size is link_to_position(count).
 TEMPLATE
 Link CLASS::allocate(Link count) NOEXCEPT
 {
@@ -62,9 +60,6 @@ Link CLASS::allocate(Link count) NOEXCEPT
     return position_to_link(position);
 }
 
-// memory mutex guards against map reduction, so count() is known.
-// count = count() - link, is elements from link to end.
-// link-to-end byte size is link_to_position(count).
 TEMPLATE
 memory_ptr CLASS::get(Link value) const NOEXCEPT
 {

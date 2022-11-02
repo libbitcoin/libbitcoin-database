@@ -49,7 +49,7 @@ public:
 
     /// Get buffer.
     virtual uint8_t* begin() NOEXCEPT = 0;
-    virtual const uint8_t* end() const NOEXCEPT = 0;
+    virtual uint8_t* end() NOEXCEPT = 0;
 };
 
 typedef memory::ptr memory_ptr;

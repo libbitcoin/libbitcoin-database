@@ -60,6 +60,13 @@ static_assert(sizeof(void*) == sizeof(uint64_t), "Not a 64 bit system!");
     class_name& operator=(class_name&&) = delete; \
     class_name& operator=(const class_name&) = delete
 
+/// Used when defining only the destructor.
+#define DEFAULT4(class_name) \
+    class_name(class_name&&) = default; \
+    class_name(const class_name&) = default; \
+    class_name& operator=(class_name&&) = default; \
+    class_name& operator=(const class_name&) = default
+
 /// Logging.
 /// ---------------------------------------------------------------------------
 #define LOG_DATABASE "database"

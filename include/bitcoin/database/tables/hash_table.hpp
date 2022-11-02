@@ -42,17 +42,27 @@ public:
 
     /// Not thread safe.
     bool create() NOEXCEPT;
-    bool verify() NOEXCEPT;
+    bool verify() const NOEXCEPT;
 
     /// Thread safe.
-    map_source_ptr at(link record) const NOEXCEPT;
-    map_source_ptr find(const key& key) const NOEXCEPT;
-    map_sink_ptr push(const key& key, link size=one) NOEXCEPT;
+
+    /// Reader positioned at key.
+    reader_ptr at(link record) const NOEXCEPT;
+
+    /// Reader positioned at data.
+    reader_ptr find(const key& key) const NOEXCEPT;
+
+    /// Reader positioned at data, size .
+    writer_ptr push(const key& key, link size=one) NOEXCEPT;
 
 private:
-    static constexpr auto size = Element::size;
+    static constexpr auto link_size = link::size;
+    static constexpr auto key_size = array_count<key>;
+    static constexpr auto record_size = Element::size;
+    static constexpr auto slab = is_zero(record_size);
+
     using header = hash_table_header<link, key>;
-    using manager = manager<link, size>;
+    using manager = manager<link, record_size>;
 
     // hash/head/push thread safe.
     header header_;

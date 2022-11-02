@@ -256,7 +256,6 @@ size_t map::allocate(size_t chunk) NOEXCEPT
     return position;
 }
 
-// The memory pointer can be encapsulated into a read/write/flip stream.
 // This requires a mutable byte pointer and end pointer.
 memory_ptr map::get(size_t offset) NOEXCEPT
 {

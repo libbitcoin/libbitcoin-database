@@ -41,44 +41,81 @@ bool CLASS::create() NOEXCEPT
     return header_.create() && verify();
 }
 
-// TODO: for recovery trim body to count (fail if body.count < count).
 TEMPLATE
-bool CLASS::verify() NOEXCEPT
+bool CLASS::verify() const NOEXCEPT
 {
     link count{};
     return header_.get_body_count(count) && (body_.count() == count);
 }
 
 TEMPLATE
-map_source_ptr CLASS::at(link record) const NOEXCEPT
+reader_ptr CLASS::at(link record) const NOEXCEPT
 {
-    return std::make_shared<map_source>(body_.get(record));
+    // Directly access element.
+    using namespace system;
+    const auto source = to_shared<reader>(body_.get(record));
+
+    // Skip over link, positioning reader at key.
+    source->skip_bytes(link_size);
+
+    // Caller must not exceed logical slab size.
+    // All elements constrained to file end, records limited to record size.
+    if constexpr (!slab) { source->set_limit(key_size + record_size); }
+    return source;
 }
 
 TEMPLATE
-map_source_ptr CLASS::find(const key& key) const NOEXCEPT
+reader_ptr CLASS::find(const key& key) const NOEXCEPT
 {
-    // Element is a key-matching search iterator.
+    // Search for element.
+    using namespace system;
     Element element{ body_, header_.head(key) };
-    for (; !element.is_terminal() && !element.match(key); element.advance());
+    while (!element.is_terminal() && !element.match(key))
+        element.advance();
 
-    return element.is_terminal() ?
-        system::to_shared<map_source>() :
-        system::to_shared(body_.get(element.self()));
+    if (element.is_terminal())
+        return {};
+
+    const auto source = to_shared<reader>(body_.get(element.self()));
+
+    // Skip over link and key, positioning reader at data.
+    source->skip_bytes(link_size + key_size);
+
+    // Caller must not exceed logical slab size.
+    // All elements constrained to file end, records limited to record size.
+    if constexpr (!slab) { source->set_limit(record_size); }
+    return source;
 }
 
 TEMPLATE
-map_sink_ptr CLASS::push(const key& key, link size) NOEXCEPT
+writer_ptr CLASS::push(const key& key, link size) NOEXCEPT
 {
+    // Create element.
+    using namespace system;
     const auto record = body_.allocate(size);
 
-    //// auto& next = system::unsafe_byte_cast<link>(memory->data());
-    //// header_.push(record, next, index);
-    ////return { header_, header_.hash(key), current, body_.get(record) };
+    if (record.is_terminal())
+        return {};
 
-    return record.is_terminal() ?
-        system::to_shared<map_source>() :
-        system::to_shared(body_.get(record));
+    const auto index = hash_table<Element>::hash(key);
+    const auto finalize = [this, record, index](uint8_t* data) NOEXCEPT
+    {
+        // This can only return false if file is unmapped (ignore return).
+        header_.push(record, unsafe_byte_cast<link>(data), index);
+    };
+
+    const auto sink = to_shared<writer>({ body_.get(record), finalize });
+
+    // size (slab) includes link/key.
+    if constexpr (slab) { sink->set_limit(size); }
+    sink->skip_bytes(link_size);
+
+    // record_size includes key (not link).
+    if constexpr (!slab) { sink->set_limit(record_size); }
+    sink->skip_bytes(key_size);
+
+    // Skipped over link and key, positioning reader at data.
+    return sink;
 }
 
 } // namespace database

@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_MEMORY_MAP_SINK_HPP
 #define LIBBITCOIN_DATABASE_MEMORY_MAP_SINK_HPP
 
+#include <functional>
 #include <memory>
 #include <utility>
 #include <bitcoin/system.hpp>
@@ -28,50 +29,61 @@
 namespace libbitcoin {
 namespace database {
 
-/// Sink for ios::stream, copies bytes to memory_ptr.
+struct sink
+{
+    const memory_ptr ptr;
+    const std::function<void(uint8_t*)> finalize;
+};
+
+/// Sink for ios::stream, copies bytes to/from memory_ptr.
 class map_sink
   : public system::device<memory>
 {
 public:
-    DEFAULT5(map_sink);
+    DEFAULT4(map_sink);
 
     typedef system::device<memory> base;
-    typedef const memory_ptr& container;
+    typedef const sink& container;
     struct category
-      : system::ios::output_seekable, system::ios::direct_tag
+      : system::ios::seekable, system::ios::direct_tag
     {
     };
 
-    map_sink(const memory_ptr& data) NOEXCEPT
-      : base(system::limit<typename base::size_type>(data->size())),
-        container_(data),
-        next_(data->begin())
+    map_sink(const sink& data) NOEXCEPT
+      : base(system::limit<typename base::size_type>(data.ptr->size())),
+        record_(data.ptr),
+        next_(data.ptr->begin()),
+        finalize_(data.finalize)
     {
+    }
+
+    /// Add the record to the hash table.
+    ~map_sink() NOEXCEPT override
+    {
+        // std::function does not allow noexcept qualifier.
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        finalize_(record_->begin());
+        BC_POP_WARNING()
     }
 
 protected:
     typename base::sequence do_sequence() const NOEXCEPT override
     {
         using char_type = typename base::char_type;
-        const auto first = system::pointer_cast<char_type>(&(*container_->begin()));
-        return std::make_pair(first, std::next(first, container_->size()));
+        return std::make_pair(
+            system::pointer_cast<char_type>(record_->begin()),
+            system::pointer_cast<char_type>(record_->end()));
     }
 
 private:
-    const memory::ptr container_;
+    const memory::ptr record_;
     typename memory::iterator next_;
+    const std::function<void(uint8_t*)> finalize_;
 };
 
-namespace write
-{
-    namespace bytes
-    {
-        /// A byte writer that copies data to a memory_ptr.
-        using copy = system::make_streamer<map_sink, system::byte_writer>;
-    }
-}
-
-typedef std::shared_ptr<write::bytes::copy> map_sink_ptr;
+/// A byte reader/writer that copies data from/to a memory_ptr.
+using writer = system::make_streamer<map_sink, system::byte_flipper>;
+typedef std::shared_ptr<writer> writer_ptr;
 
 } // namespace database
 } // namespace libbitcoin

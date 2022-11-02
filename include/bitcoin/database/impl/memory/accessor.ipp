@@ -62,7 +62,7 @@ inline uint8_t* CLASS::begin() NOEXCEPT
 }
 
 TEMPLATE
-inline const uint8_t* CLASS::end() const NOEXCEPT
+inline uint8_t* CLASS::end() NOEXCEPT
 {
     return end_;
 }

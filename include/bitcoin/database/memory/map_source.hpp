@@ -52,17 +52,10 @@ public:
 protected:
     typename base::sequence do_sequence() const NOEXCEPT override
     {
-        // boost input_sequence/output_sequence both require non-const buffer
-        // ptrs, but the data member is const, so we must cast it for direct
-        // devices. As a source the buffer should/must never be mutated.
-        BC_PUSH_WARNING(NO_CONST_CAST)
-        using value_type = typename base::value_type;
-        const auto begin = const_cast<value_type*>(&(*container_->begin()));
-        BC_POP_WARNING()
-            
         using char_type = typename base::char_type;
-        const auto first = system::pointer_cast<char_type>(begin);
-        return std::make_pair(first, std::next(first, container_->size()));
+        return std::make_pair(
+            system::pointer_cast<char_type>(container_->begin()),
+            system::pointer_cast<char_type>(container_->end()));
     }
 
 private:
@@ -70,16 +63,9 @@ private:
     typename memory::const_iterator next_;
 };
 
-namespace read
-{
-    namespace bytes
-    {
-        /// A byte reader that copies data from a memory_ptr.
-        using copy = system::make_streamer<map_source, system::byte_reader>;
-    }
-}
-
-typedef std::shared_ptr<read::bytes::copy> map_source_ptr;
+/// A byte reader that copies data from a memory_ptr.
+using reader = system::make_streamer<map_source, system::byte_reader>;
+typedef std::shared_ptr<reader> reader_ptr;
 
 } // namespace database
 } // namespace libbitcoin

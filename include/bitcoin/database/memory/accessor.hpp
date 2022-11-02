@@ -47,7 +47,7 @@ public:
 
     /// Get buffer (guarded against remap only).
     inline value_type* begin() NOEXCEPT override;
-    inline const uint8_t* end() const NOEXCEPT override;
+    inline uint8_t* end() NOEXCEPT override;
 
     /////// Cast to r/w slices for use in stream construction.
     ////inline operator system::data_slab() NOEXCEPT;
