@@ -58,6 +58,29 @@ using key = data_array<key_size>; \
 using manage = manager<link, data_size>; \
 using access = element_<link, key, data_size>
 
+BOOST_AUTO_TEST_CASE(element__advance_self__linked__false)
+{
+    DECLARE(1, 0, 0);
+
+    data_chunk data{ 0x02, 0x00, 0xff, 0xcc };
+    test::storage file{ data };
+    manage manager{ file };
+    access element{ manager, 0_u8 };
+
+    // First link is zero.
+    BOOST_REQUIRE_EQUAL(element.self(), 0x00u);
+
+    // Sets self/link to 0x02 (data[0]).
+    element.advance();
+    BOOST_REQUIRE(!element.is_terminal());
+    BOOST_REQUIRE_EQUAL(element.self(), 0x02u);
+
+    // Sets self/link to terminal (data[2]).
+    element.advance();
+    BOOST_REQUIRE(element.is_terminal());
+    BOOST_REQUIRE_EQUAL(element.self(), link::terminal);
+}
+
 BOOST_AUTO_TEST_CASE(element__get__terminal__nullptr)
 {
     DECLARE(4, 0, 0);
@@ -123,29 +146,6 @@ BOOST_AUTO_TEST_CASE(element__get_next__linked__false)
     element.advance();
     BOOST_REQUIRE_EQUAL(element.self(), 0x02u);
     BOOST_REQUIRE_EQUAL(element.get_next(), 0xffu);
-}
-
-BOOST_AUTO_TEST_CASE(element__advance__linked__false)
-{
-    DECLARE(1, 0, 0);
-
-    data_chunk data{ 0x02, 0x00, 0xff, 0xcc };
-    test::storage file{ data };
-    manage manager{ file };
-    access element{ manager, 0_u8 };
-
-    // First link is zero.
-    BOOST_REQUIRE_EQUAL(element.self(), 0x00u);
-
-    // Sets self/link to 0x02 (data[0]).
-    element.advance();
-    BOOST_REQUIRE(!element.is_terminal());
-    BOOST_REQUIRE_EQUAL(element.self(), 0x02u);
-
-    // Sets self/link to terminal (data[2]).
-    element.advance();
-    BOOST_REQUIRE(element.is_terminal());
-    BOOST_REQUIRE_EQUAL(element.self(), link::terminal);
 }
 
 BOOST_AUTO_TEST_CASE(element__get_key__2_bytes__expected)
