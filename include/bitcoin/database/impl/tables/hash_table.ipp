@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_TABLES_HASH_TABLE_IPP
 #define LIBBITCOIN_DATABASE_TABLES_HASH_TABLE_IPP
 
-#include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 

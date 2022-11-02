@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_TABLES_HASH_TABLE_HEADER_IPP
 
 #include <algorithm>
-#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
