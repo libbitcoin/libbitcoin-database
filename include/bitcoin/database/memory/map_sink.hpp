@@ -40,8 +40,6 @@ class map_sink
   : public system::device<memory>
 {
 public:
-    DEFAULT4(map_sink);
-
     typedef system::device<memory> base;
     typedef const sink& container;
     struct category
@@ -56,6 +54,11 @@ public:
         finalize_(data.finalize)
     {
     }
+
+    map_sink(map_sink&&) = default;
+    map_sink(const map_sink&) = default;
+    map_sink& operator=(map_sink&&) = delete;
+    map_sink& operator=(const map_sink&) = delete;
 
     /// Add the record to the hash table.
     ~map_sink() NOEXCEPT override
