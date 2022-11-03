@@ -56,10 +56,7 @@ reader_ptr CLASS::at(const link& record) const NOEXCEPT
 
     // Skip over link, positioning reader at key.
     source->skip_bytes(link_size);
-
-    // Caller must not exceed logical slab size.
-    // All items constrained to file end, records limited to record size.
-    if constexpr (!slab) { source->set_limit(key_size + record_size); }
+    if constexpr (!slab) { source->set_limit(record_size); }
     return source;
 }
 
@@ -79,11 +76,9 @@ reader_ptr CLASS::find(const key& key) const NOEXCEPT
     const auto source = std::make_shared<reader>(body_.get(element.self()));
 
     // Skip over link and key, positioning reader at data.
-    source->skip_bytes(link_size + key_size);
-
-    // Caller must not exceed logical slab size.
-    // All items constrained to file end, records limited to record size.
+    source->skip_bytes(link_size);
     if constexpr (!slab) { source->set_limit(record_size); }
+    source->skip_bytes(key_size);
     return source;
 }
 
@@ -109,20 +104,10 @@ writer_ptr CLASS::push(const key& key, const link& size) NOEXCEPT
     // memory_ptr must be defined and memory_ptr->data() must be non-null.
     const auto sink = std::make_shared<writer>(sinker{ body_.get(item), fin });
 
-    if constexpr (slab)
-    {
-        // size (slab) includes link/key.
-        sink->set_limit(size);
-    }
-    else
-    {
-        // record_size includes key but not link_size.
-        sink->set_limit(link_size + record_size);
-    }
-
-    // Skipped over link, write key, writer positioned at data.
-    ////sink->set_limit(size);
+    // Skip over link, write key, positioning writer at data.
+    if constexpr (slab) { sink->set_limit(size); }
     sink->skip_bytes(link_size);
+    if constexpr (!slab) { sink->set_limit(record_size); }
     sink->write_bytes(key);
     return sink;
 }
