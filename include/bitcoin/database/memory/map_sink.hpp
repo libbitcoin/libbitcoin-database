@@ -47,6 +47,7 @@ public:
     {
     };
 
+    /// data.ptr must not be nullptr and data.ptr->begin() must be non-null.
     map_sink(const sinker& data) NOEXCEPT
       : base(system::limit<typename base::size_type>(data.ptr->size())),
         record_(data.ptr),

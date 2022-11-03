@@ -95,26 +95,35 @@ writer_ptr CLASS::push(const key& key, const link& size) NOEXCEPT
 
     if (item.is_terminal())
         return {};
-
+ 
     const auto index = header_.index(key);
     const auto fin = [this, item, index](uint8_t* data) NOEXCEPT
     {
-        // This can only return false if file is unmapped (ignore return).
+        // push only false if file is unmapped (ok to ignore return).
+        BC_PUSH_WARNING(NO_REINTERPRET_CAST)
         header_.push(item, reinterpret_cast<link&>(*data), index);
+        BC_POP_WARNING()
     };
 
-    // Access item (stream should be valid, as link was create).
+    // These are assured by successful allocation above.
+    // memory_ptr must be defined and memory_ptr->data() must be non-null.
     const auto sink = std::make_shared<writer>(sinker{ body_.get(item), fin });
 
-    // size (slab) includes link/key.
-    if constexpr (slab) { sink->set_limit(size); }
+    if constexpr (slab)
+    {
+        // size (slab) includes link/key.
+        sink->set_limit(size);
+    }
+    else
+    {
+        // record_size includes key but not link_size.
+        sink->set_limit(link_size + record_size);
+    }
+
+    // Skipped over link, write key, writer positioned at data.
+    ////sink->set_limit(size);
     sink->skip_bytes(link_size);
-
-    // record_size includes key (not link).
-    if constexpr (!slab) { sink->set_limit(record_size); }
-    sink->skip_bytes(key_size);
-
-    // Skipped over link and key, positioning reader at data.
+    sink->write_bytes(key);
     return sink;
 }
 
