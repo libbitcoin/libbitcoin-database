@@ -81,7 +81,7 @@ constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
     }
     else
     {
-        static constexpr auto record_size = Link::size + Size;
+        constexpr auto record_size = Link::size + Size;
         BC_ASSERT(!is_multiply_overflow(value, record_size));
         return value * record_size;
     }
@@ -99,8 +99,8 @@ constexpr Link CLASS::position_to_link(size_t position) NOEXCEPT
     }
     else
     {
-        static constexpr auto record_size = Link::size + Size;
-        BC_ASSERT(is_multiple(position, record_size));
+        constexpr auto record_size = Link::size + Size;
+        ////BC_ASSERT(is_multiple(position, record_size));
         return { possible_narrow_cast<integer>(position / record_size) };
     }
 }
