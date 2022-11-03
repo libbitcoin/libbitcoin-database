@@ -88,6 +88,7 @@ writer_ptr CLASS::push(const key& key, const link& size) NOEXCEPT
     // Create element.
     const auto item = body_.allocate(size);
 
+    // Allocation failed (nullptr).
     if (item.is_terminal())
         return {};
  
