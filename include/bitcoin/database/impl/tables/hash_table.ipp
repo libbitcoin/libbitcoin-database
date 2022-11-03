@@ -96,7 +96,7 @@ writer_ptr CLASS::push(const key& key, link size) NOEXCEPT
     if (record.is_terminal())
         return {};
 
-    const auto index = hash_table<Element>::hash(key);
+    const auto index = header_.hash(key);
     const auto finalize = [this, record, index](uint8_t* data) NOEXCEPT
     {
         // This can only return false if file is unmapped (ignore return).
