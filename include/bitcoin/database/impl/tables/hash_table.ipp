@@ -29,7 +29,7 @@ namespace database {
 // memory is writeable. Non-const manager access implies memory map modify.
 
 TEMPLATE
-CLASS::hash_table(storage& header, storage& body, link buckets) NOEXCEPT
+CLASS::hash_table(storage& header, storage& body, const link& buckets) NOEXCEPT
   : header_(header, buckets), body_(body)
 {
 }
@@ -44,11 +44,12 @@ TEMPLATE
 bool CLASS::verify() const NOEXCEPT
 {
     link count{};
-    return header_.get_body_count(count) && (body_.count() == count);
+    return header_.verify() && header_.get_body_count(count) &&
+        (body_.count() == count);
 }
 
 TEMPLATE
-reader_ptr CLASS::at(link record) const NOEXCEPT
+reader_ptr CLASS::at(const link& record) const NOEXCEPT
 {
     // Directly access element.
     using namespace system;
@@ -87,7 +88,7 @@ reader_ptr CLASS::find(const key& key) const NOEXCEPT
 }
 
 TEMPLATE
-writer_ptr CLASS::push(const key& key, link size) NOEXCEPT
+writer_ptr CLASS::push(const key& key, const link& size) NOEXCEPT
 {
     // Create element.
     using namespace system;

@@ -35,25 +35,32 @@ template <typename Element>
 class hash_table
 {
 public:
+    static constexpr auto size = Element::size;
     using link = typename Element::link;
     using key = typename Element::key;
 
-    hash_table(storage& header, storage& body, link buckets) NOEXCEPT;
+    hash_table(storage& header, storage& body, const link& buckets) NOEXCEPT;
 
     /// Not thread safe.
+    /// -----------------------------------------------------------------------
+
+    /// Create from empty body/header files (no need to verify).
     bool create() NOEXCEPT;
+
+    /// False if header or body file size incorrect.
     bool verify() const NOEXCEPT;
 
     /// Thread safe.
+    /// -----------------------------------------------------------------------
 
     /// Reader positioned at key.
-    reader_ptr at(link record) const NOEXCEPT;
+    reader_ptr at(const link& record) const NOEXCEPT;
 
     /// Reader positioned at data.
     reader_ptr find(const key& key) const NOEXCEPT;
 
-    /// Reader positioned at data, size .
-    writer_ptr push(const key& key, link size=one) NOEXCEPT;
+    /// Reader positioned at data, size must be one/default for records.
+    writer_ptr push(const key& key, const link& size=one) NOEXCEPT;
 
 private:
     static constexpr auto link_size = link::size;

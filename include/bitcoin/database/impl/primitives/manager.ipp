@@ -38,7 +38,7 @@ Link CLASS::count() const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::truncate(Link count) NOEXCEPT
+bool CLASS::truncate(const Link& count) NOEXCEPT
 {
     if (count.is_terminal())
         return false;
@@ -47,7 +47,7 @@ bool CLASS::truncate(Link count) NOEXCEPT
 }
 
 TEMPLATE
-Link CLASS::allocate(Link count) NOEXCEPT
+Link CLASS::allocate(const Link& count) NOEXCEPT
 {
     if (count.is_terminal())
         return count;
@@ -61,12 +61,48 @@ Link CLASS::allocate(Link count) NOEXCEPT
 }
 
 TEMPLATE
-memory_ptr CLASS::get(Link value) const NOEXCEPT
+memory_ptr CLASS::get(const Link& value) const NOEXCEPT
 {
     if (value.is_terminal())
         return nullptr;
 
     return file_.get(link_to_position(value));
+}
+
+TEMPLATE
+constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
+{
+    using namespace system;
+    const auto value = possible_narrow_cast<size_t>(link.value);
+
+    if constexpr (is_zero(Size))
+    {
+        return value;
+    }
+    else
+    {
+        static constexpr auto record_size = Link::size + Size;
+        BC_ASSERT(!is_multiply_overflow(value, record_size));
+        return value * record_size;
+    }
+}
+
+TEMPLATE
+constexpr Link CLASS::position_to_link(size_t position) NOEXCEPT
+{
+    using namespace system;
+    using integer = typename Link::integer;
+
+    if constexpr (is_zero(Size))
+    {
+        return { possible_narrow_cast<integer>(position) };
+    }
+    else
+    {
+        static constexpr auto record_size = Link::size + Size;
+        BC_ASSERT(is_multiple(position, record_size));
+        return { possible_narrow_cast<integer>(position / record_size) };
+    }
 }
 
 } // namespace database

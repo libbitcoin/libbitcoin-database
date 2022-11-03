@@ -28,6 +28,7 @@ namespace libbitcoin {
 namespace database {
     
 /// Linked list abstraction over storage for given link and record sizes.
+/// slab = is_zero(Size), in which case count/link is bytes otherwise records.
 template <typename Link, size_t Size>
 class manager
 {
@@ -41,42 +42,25 @@ public:
     Link count() const NOEXCEPT;
 
     /// Reduce the number of records (false if not lesser).
-    bool truncate(Link count) NOEXCEPT;
+    bool truncate(const Link& count) NOEXCEPT;
 
     /// Allocate records and return first logical position (eof possible).
-    Link allocate(Link count) NOEXCEPT;
+    /// For record, count is number of records to allocate (link + data).
+    /// For slab count must include bytes (link + data) [key is part of data].
+    Link allocate(const Link& count) NOEXCEPT;
 
     /// Return memory object for record at specified position (null possible).
     /// Obtaining memory object is considered const access despite fact that
     /// memory is writeable. Non-const access implies memory map modify.
-    memory_ptr get(Link link) const NOEXCEPT;
+    memory_ptr get(const Link& link) const NOEXCEPT;
 
 private:
-    // Slabs don't use record offsetting (size_ one eliminates conversion).
-    static constexpr auto size_ = is_zero(Size) ? one : Link::size + Size;
-
-    static constexpr Link position_to_link(size_t position) NOEXCEPT
-    {
-        BC_ASSERT(system::is_multiple(position, size_));
-        return system::possible_narrow_cast<typename Link::integer>(
-            position / size_);
-    }
-
-    static constexpr size_t link_to_position(Link link) NOEXCEPT
-    {
-        return link.value * size_;
-    }
+    static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
+    static constexpr Link position_to_link(size_t position) NOEXCEPT;
 
     // Thread and remap safe.
     storage& file_;
 };
-
-template <typename Link, size_t Size>
-using record_manager = manager<Link, Size>;
-
-// Zero byte "record" implies slab manager.
-template <typename Link>
-using slab_manager = manager<Link, zero>;
 
 } // namespace database
 } // namespace libbitcoin

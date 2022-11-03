@@ -21,9 +21,271 @@
 
 BOOST_AUTO_TEST_SUITE(hash_table_tests)
 
-BOOST_AUTO_TEST_CASE(hash_table_test)
+constexpr auto link_size = 5_size;
+constexpr auto key_size = 10_size;
+constexpr auto header_size = 105_size;
+
+// Key size does not factor into header byte size (for search key only).
+constexpr auto links = header_size / link_size;
+static_assert(links == 21u);
+
+// Bucket count is one less than link count, due to header.size field.
+constexpr auto buckets = sub1(links);
+static_assert(buckets == 20u);
+
+// Record size includes key but not link.
+// Slab allocation includes key and link.
+constexpr auto record_size = key_size + 4_size;
+
+using link = linkage<link_size>;
+using key = data_array<key_size>;
+
+using record_item = element<link, key, record_size>;
+using record_table = hash_table<record_item>;
+
+BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__empty_files__success)
 {
-    BOOST_REQUIRE(true);
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    record_table instance{ head_store, body_store, buckets };
+
+    BOOST_REQUIRE(head_file.empty());
+    BOOST_REQUIRE(body_file.empty());
+
+    BOOST_REQUIRE(!instance.verify());
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.verify());
+
+    BOOST_REQUIRE_EQUAL(head_file.size(), header_size);
+    BOOST_REQUIRE(body_file.empty());
+}
+
+BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__non_empty_head_file__failure)
+{
+    data_chunk head_file{ 0x42 };
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    record_table instance{ head_store, body_store, buckets };
+
+    BOOST_REQUIRE_EQUAL(head_file.size(), one);
+    BOOST_REQUIRE(body_file.empty());
+
+    BOOST_REQUIRE(!instance.verify());
+    BOOST_REQUIRE(!instance.create());
+    BOOST_REQUIRE(!instance.verify());
+
+    BOOST_REQUIRE_EQUAL(head_file.size(), one);
+    BOOST_REQUIRE(body_file.empty());
+}
+
+BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__multiple_element_body_file__failure)
+{
+    constexpr auto body_size = 3u * (link_size + record_size);
+    data_chunk head_file;
+    data_chunk body_file(body_size, 0x42);
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    record_table instance{ head_store, body_store, buckets };
+
+    BOOST_REQUIRE(head_file.empty());
+    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
+
+    BOOST_REQUIRE(!instance.verify());
+    BOOST_REQUIRE(!instance.create());
+    BOOST_REQUIRE(!instance.verify());
+
+    BOOST_REQUIRE_EQUAL(head_file.size(), header_size);
+    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
+}
+
+BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__multiple_fractional_element_body_file__failure)
+{
+    constexpr auto body_size = 3u * (link_size + record_size) + 2u;
+    data_chunk head_file;
+    data_chunk body_file(body_size, 0x42);
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    record_table instance{ head_store, body_store, buckets };
+
+    BOOST_REQUIRE(head_file.empty());
+    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
+
+    BOOST_REQUIRE(!instance.verify());
+    BOOST_REQUIRE(!instance.create());
+    BOOST_REQUIRE(!instance.verify());
+
+    BOOST_REQUIRE_EQUAL(head_file.size(), header_size);
+    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
+}
+
+BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__one_element_body_file__failure)
+{
+    constexpr auto body_size = link_size + record_size;
+    data_chunk head_file;
+    data_chunk body_file(body_size, 0x42);
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    record_table instance{ head_store, body_store, buckets };
+
+    BOOST_REQUIRE(head_file.empty());
+    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
+
+    BOOST_REQUIRE(!instance.verify());
+    BOOST_REQUIRE(!instance.create());
+    BOOST_REQUIRE(!instance.verify());
+
+    BOOST_REQUIRE_EQUAL(head_file.size(), header_size);
+    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
+}
+
+BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__sub_one_element_body_file__success)
+{
+    constexpr auto body_size = sub1(link_size + record_size);
+    data_chunk head_file;
+    data_chunk body_file(body_size, 0x42);
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    record_table instance{ head_store, body_store, buckets };
+
+    BOOST_REQUIRE(head_file.empty());
+    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
+
+    // With records, count rounds down (truncates).
+    // In this case it appears as zero, which is a successful start.
+    // Since truncation is consistent, a fractional record is merely overwritten
+    // upon allocation, or truncated upon close (with map storage).
+    BOOST_REQUIRE(!instance.verify());
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.verify());
+
+    BOOST_REQUIRE_EQUAL(head_file.size(), header_size);
+    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
+}
+
+constexpr auto slab_size = link_size + key_size + 4_size;
+using slab_item = element<link, key, zero>;
+using slab_table = hash_table<slab_item>;
+
+BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__empty_files__success)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    slab_table instance{ head_store, body_store, buckets };
+
+    BOOST_REQUIRE(head_file.empty());
+    BOOST_REQUIRE(body_file.empty());
+
+    BOOST_REQUIRE(!instance.verify());
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.verify());
+
+    BOOST_REQUIRE_EQUAL(head_file.size(), header_size);
+    BOOST_REQUIRE(body_file.empty());
+}
+
+BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__non_empty_head_file__failure)
+{
+    data_chunk head_file{ 0x42 };
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    slab_table instance{ head_store, body_store, buckets };
+
+    BOOST_REQUIRE_EQUAL(head_file.size(), one);
+    BOOST_REQUIRE(body_file.empty());
+
+    BOOST_REQUIRE(!instance.verify());
+    BOOST_REQUIRE(!instance.create());
+    BOOST_REQUIRE(!instance.verify());
+
+    BOOST_REQUIRE_EQUAL(head_file.size(), one);
+    BOOST_REQUIRE(body_file.empty());
+}
+
+BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__multiple_element_body_file__failure)
+{
+    constexpr auto body_size = 3u * slab_size;
+    data_chunk head_file;
+    data_chunk body_file(body_size, 0x42);
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    slab_table instance{ head_store, body_store, buckets };
+
+    BOOST_REQUIRE(head_file.empty());
+    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
+
+    BOOST_REQUIRE(!instance.verify());
+    BOOST_REQUIRE(!instance.create());
+    BOOST_REQUIRE(!instance.verify());
+
+    BOOST_REQUIRE_EQUAL(head_file.size(), header_size);
+    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
+}
+
+BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__multiple_fractional_element_body_file__failure)
+{
+    constexpr auto body_size = 3u * slab_size + 2u;
+    data_chunk head_file;
+    data_chunk body_file(body_size, 0x42);
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    slab_table instance{ head_store, body_store, buckets };
+
+    BOOST_REQUIRE(head_file.empty());
+    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
+
+    BOOST_REQUIRE(!instance.verify());
+    BOOST_REQUIRE(!instance.create());
+    BOOST_REQUIRE(!instance.verify());
+
+    BOOST_REQUIRE_EQUAL(head_file.size(), header_size);
+    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
+}
+
+BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__one_element_body_file__failure)
+{
+    constexpr auto body_size = slab_size;
+    data_chunk head_file;
+    data_chunk body_file(body_size, 0x42);
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    slab_table instance{ head_store, body_store, buckets };
+
+    BOOST_REQUIRE(head_file.empty());
+    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
+
+    BOOST_REQUIRE(!instance.verify());
+    BOOST_REQUIRE(!instance.create());
+    BOOST_REQUIRE(!instance.verify());
+
+    BOOST_REQUIRE_EQUAL(head_file.size(), header_size);
+    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
+}
+
+BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__sub_one_element_body_file__failure)
+{
+    constexpr auto body_size = sub1(slab_size);
+    data_chunk head_file;
+    data_chunk body_file(body_size, 0x42);
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    slab_table instance{ head_store, body_store, buckets };
+
+    BOOST_REQUIRE(head_file.empty());
+    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
+
+    // With slabs, count is not divided, so also not rounded down.
+    BOOST_REQUIRE(!instance.verify());
+    BOOST_REQUIRE(!instance.create());
+    BOOST_REQUIRE(!instance.verify());
+
+    BOOST_REQUIRE_EQUAL(head_file.size(), header_size);
+    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

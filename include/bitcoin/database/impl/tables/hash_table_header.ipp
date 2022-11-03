@@ -27,14 +27,14 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-CLASS::hash_table_header(storage& header, Link buckets) NOEXCEPT
+CLASS::hash_table_header(storage& header, const Link& buckets) NOEXCEPT
   : file_(header), buckets_(buckets)
 {
     BC_ASSERT_MSG(!is_zero(buckets), "no buckets");
 }
 
 TEMPLATE
-Link CLASS::hash(const Key& key) const NOEXCEPT
+Link CLASS::index(const Key& key) const NOEXCEPT
 {
     return system::djb2_hash(key) % buckets_;
 }
@@ -42,7 +42,8 @@ Link CLASS::hash(const Key& key) const NOEXCEPT
 TEMPLATE
 bool CLASS::create() NOEXCEPT
 {
-    if (!is_zero(file_.size())) return false;
+    if (!is_zero(file_.size()))
+        return false;
 
     // Allocate the file size and get map.
     const auto size = offset(buckets_);
@@ -54,7 +55,7 @@ bool CLASS::create() NOEXCEPT
     std::fill_n(header->begin(), size, system::bit_all<uint8_t>);
 
     // Overwrite start of file with initial body "size" (zero).
-    return set_body_count(zero) && verify();
+    return verify() && set_body_count(zero);
 }
 
 TEMPLATE
@@ -65,7 +66,7 @@ bool CLASS::verify() const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set_body_count(Link count) NOEXCEPT
+bool CLASS::set_body_count(const Link& count) NOEXCEPT
 {
     // This should only be called at checkpoint/close.
     const auto header = file_.get();
@@ -91,11 +92,11 @@ bool CLASS::get_body_count(Link& count) const NOEXCEPT
 TEMPLATE
 Link CLASS::head(const Key& key) const NOEXCEPT
 {
-    return head(hash(key));
+    return head(index(key));
 }
 
 TEMPLATE
-Link CLASS::head(Link index) const NOEXCEPT
+Link CLASS::head(const Link& index) const NOEXCEPT
 {
     const auto header = file_.get(offset(index));
     if (!header)
@@ -110,13 +111,13 @@ Link CLASS::head(Link index) const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::push(Link current, Link& next, const Key& key) NOEXCEPT
+bool CLASS::push(const Link& current, Link& next, const Key& key) NOEXCEPT
 {
-    return push(current, next, hash(key));
+    return push(current, next, index(key));
 }
 
 TEMPLATE
-bool CLASS::push(Link current, Link& next, Link index) NOEXCEPT
+bool CLASS::push(const Link& current, Link& next, const Link& index) NOEXCEPT
 {
     // This can only return false if file is unmapped.
     const auto header = file_.get(offset(index));

@@ -28,26 +28,36 @@
 namespace libbitcoin {
 namespace database {
 
-/// The maximum "index" (buckets) is the max value of Link.
-/// The maximum table body "size" is the max value of Link.
 template <typename Link, typename Key>
 class hash_table_header
 {
 public:
-    hash_table_header(storage& header, Link buckets) NOEXCEPT;
+    hash_table_header(storage& header, const Link& buckets) NOEXCEPT;
 
     /// Not thread safe.
+    /// -----------------------------------------------------------------------
+
+    /// Create from empty header file (no need to verify).
     bool create() NOEXCEPT;
+
+    /// False if header file size incorrect.
     bool verify() const NOEXCEPT;
-    bool set_body_count(Link count) NOEXCEPT;
+
+    /// Unsafe if not verified.
+    bool set_body_count(const Link& count) NOEXCEPT;
     bool get_body_count(Link& count) const NOEXCEPT;
 
     /// Thread safe.
-    Link hash(const Key& key) const NOEXCEPT;
-    Link head(Link index) const NOEXCEPT;
+    /// -----------------------------------------------------------------------
+
+    /// Convert natural key to header bucket index.
+    Link index(const Key& key) const NOEXCEPT;
+
+    /// Unsafe if not verified.
     Link head(const Key& key) const NOEXCEPT;
-    bool push(Link current, Link& next, Link index) NOEXCEPT;
-    bool push(Link current, Link& next, const Key& key) NOEXCEPT;
+    Link head(const Link& index) const NOEXCEPT;
+    bool push(const Link& current, Link& next, const Key& key) NOEXCEPT;
+    bool push(const Link& current, Link& next, const Link& index) NOEXCEPT;
 
 private:
     template <size_t Bytes>
@@ -56,7 +66,7 @@ private:
         return system::unsafe_array_cast<uint8_t, Bytes>(buffer.begin());
     }
 
-    static constexpr size_t offset(Link index) NOEXCEPT
+    static constexpr size_t offset(const Link& index) NOEXCEPT
     {
         // Byte offset of bucket index within header file.
         // [body_size][[bucket[0]...bucket[buckets-1]]]

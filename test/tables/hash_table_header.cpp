@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__get_body_count__set_body_count__expected
     BOOST_REQUIRE_EQUAL(size, expected);
 }
 
-BOOST_AUTO_TEST_CASE(hash_table_header__hash__null_key__expected)
+BOOST_AUTO_TEST_CASE(hash_table_header__index__null_key__expected)
 {
     constexpr key null_key{};
     const auto expected = system::djb2_hash(null_key) % buckets;
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__hash__null_key__expected)
 
     test::storage store;
     header head{ store, buckets };
-    BOOST_REQUIRE_EQUAL(head.hash(null_key), expected);
+    BOOST_REQUIRE_EQUAL(head.index(null_key), expected);
 }
 
 BOOST_AUTO_TEST_CASE(hash_table_header__head__link__terminal)
