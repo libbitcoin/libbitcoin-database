@@ -43,6 +43,8 @@ using key = data_array<key_size>;
 using record_item = element<link, key, record_size>;
 using record_table = hash_table<record_item>;
 
+// record_hash_table__create_verify
+
 BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__empty_files__success)
 {
     data_chunk head_file;
@@ -165,6 +167,8 @@ BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__sub_one_element_body_file
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
+// slab_hash_table__create_verify
+
 constexpr auto slab_size = link_size + key_size + 4_size;
 using slab_item = element<link, key, zero>;
 using slab_table = hash_table<slab_item>;
@@ -286,6 +290,106 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__sub_one_element_body_file__
 
     BOOST_REQUIRE_EQUAL(head_file.size(), header_size);
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
+}
+
+// at
+
+BOOST_AUTO_TEST_CASE(record_hash_table__at__empty__exhausted)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    record_table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.verify());
+
+    // at() always returns reader (non-nullptr).
+    // If link was invalid, stream will be empty.
+    // As the file is empty these are empty streams.
+    BOOST_REQUIRE(instance.at(0)->is_exhausted());
+    BOOST_REQUIRE(instance.at(19)->is_exhausted());
+}
+
+BOOST_AUTO_TEST_CASE(slab_hash_table__at__empty__exhausted)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    slab_table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.verify());
+
+    // at() always returns reader (non-nullptr).
+    // If link was invalid, stream will be empty.
+    // As the file is empty these are empty streams.
+    BOOST_REQUIRE(instance.at(0)->is_exhausted());
+    BOOST_REQUIRE(instance.at(19)->is_exhausted());
+}
+
+// find
+
+BOOST_AUTO_TEST_CASE(record_hash_table__find__empty__false)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    record_table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.verify());
+
+    // find() returns nullptr if key not found.
+    BOOST_REQUIRE(!instance.find({ 0x00 }));
+    BOOST_REQUIRE(!instance.find({ 0x42 }));
+}
+
+BOOST_AUTO_TEST_CASE(slab_hash_table__find__empty__false)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    slab_table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.verify());
+
+    // find() returns nullptr if key not found.
+    BOOST_REQUIRE(!instance.find({ 0x00 }));
+    BOOST_REQUIRE(!instance.find({ 0x42 }));
+}
+
+// push
+
+BOOST_AUTO_TEST_CASE(record_hash_table__push__empty__false)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    record_table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.verify());
+
+    // push() returns nullptr if creation failed.
+    BOOST_REQUIRE(instance.push(key{ 0x00 }));
+    BOOST_REQUIRE(instance.push(key{ 0x42 }));
+}
+
+BOOST_AUTO_TEST_CASE(slab_hash_table__push__empty__false)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    slab_table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.verify());
+
+    // push() returns nullptr if creation failed.
+    BOOST_REQUIRE(instance.push(key{ 0x00 }, slab_size));
+    BOOST_REQUIRE(instance.push(key{ 0x42 }, slab_size));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

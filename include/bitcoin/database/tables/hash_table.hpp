@@ -35,7 +35,6 @@ template <typename Element>
 class hash_table
 {
 public:
-    static constexpr auto size = Element::size;
     using link = typename Element::link;
     using key = typename Element::key;
 

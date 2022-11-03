@@ -29,7 +29,7 @@
 namespace libbitcoin {
 namespace database {
 
-struct sink
+struct sinker
 {
     const memory_ptr ptr;
     const std::function<void(uint8_t*)> finalize;
@@ -41,13 +41,13 @@ class map_sink
 {
 public:
     typedef system::device<memory> base;
-    typedef const sink& container;
+    typedef const sinker& container;
     struct category
       : system::ios::seekable, system::ios::direct_tag
     {
     };
 
-    map_sink(const sink& data) NOEXCEPT
+    map_sink(const sinker& data) NOEXCEPT
       : base(system::limit<typename base::size_type>(data.ptr->size())),
         record_(data.ptr),
         next_(data.ptr->begin()),

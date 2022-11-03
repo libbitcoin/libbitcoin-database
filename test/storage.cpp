@@ -71,9 +71,12 @@ size_t storage::allocate(size_t chunk) NOEXCEPT
 memory_ptr storage::get(size_t offset) NOEXCEPT
 {
     const auto memory = std::make_shared<accessor<std::shared_mutex>>(map_mutex_);
+
+    // With offset > size the assignment is negative and stream will be exhausted.
     memory->assign(
         std::next(buffer_.data(), offset),
         std::next(buffer_.data(), size()));
+
     return memory;
 }
 

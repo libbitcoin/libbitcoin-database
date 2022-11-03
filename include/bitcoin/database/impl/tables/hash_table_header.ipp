@@ -102,6 +102,7 @@ Link CLASS::head(const Link& index) const NOEXCEPT
     if (!header)
         return Link::terminal;
 
+    // const head link& as byte array
     const auto& head = array_cast<Link::size>(*header);
 
     mutex_.lock_shared();
@@ -124,6 +125,7 @@ bool CLASS::push(const Link& current, Link& next, const Link& index) NOEXCEPT
     if (!header)
         return false;
 
+    // head link& as byte array
     auto& head = array_cast<Link::size>(*header);
 
     mutex_.lock();

@@ -51,15 +51,14 @@ bool CLASS::verify() const NOEXCEPT
 TEMPLATE
 reader_ptr CLASS::at(const link& record) const NOEXCEPT
 {
-    // Directly access element.
-    using namespace system;
-    const auto source = to_shared<reader>(body_.get(record));
+    // Directly access item (stream valid if link was valid).
+    const auto source = std::make_shared<reader>(body_.get(record));
 
     // Skip over link, positioning reader at key.
     source->skip_bytes(link_size);
 
     // Caller must not exceed logical slab size.
-    // All elements constrained to file end, records limited to record size.
+    // All items constrained to file end, records limited to record size.
     if constexpr (!slab) { source->set_limit(key_size + record_size); }
     return source;
 }
@@ -67,22 +66,23 @@ reader_ptr CLASS::at(const link& record) const NOEXCEPT
 TEMPLATE
 reader_ptr CLASS::find(const key& key) const NOEXCEPT
 {
-    // Search for element.
-    using namespace system;
+    // Search for item.
     Element element{ body_, header_.head(key) };
-    while (!element.is_terminal() && !element.match(key))
+    while (!element.is_terminal() && !element.is_match(key))
         element.advance();
 
+    // Not found (nullptr).
     if (element.is_terminal())
         return {};
 
-    const auto source = to_shared<reader>(body_.get(element.self()));
+    // Access item (stream should be valid, as link was found).
+    const auto source = std::make_shared<reader>(body_.get(element.self()));
 
     // Skip over link and key, positioning reader at data.
     source->skip_bytes(link_size + key_size);
 
     // Caller must not exceed logical slab size.
-    // All elements constrained to file end, records limited to record size.
+    // All items constrained to file end, records limited to record size.
     if constexpr (!slab) { source->set_limit(record_size); }
     return source;
 }
@@ -91,20 +91,20 @@ TEMPLATE
 writer_ptr CLASS::push(const key& key, const link& size) NOEXCEPT
 {
     // Create element.
-    using namespace system;
-    const auto record = body_.allocate(size);
+    const auto item = body_.allocate(size);
 
-    if (record.is_terminal())
+    if (item.is_terminal())
         return {};
 
-    const auto index = header_.hash(key);
-    const auto finalize = [this, record, index](uint8_t* data) NOEXCEPT
+    const auto index = header_.index(key);
+    const auto fin = [this, item, index](uint8_t* data) NOEXCEPT
     {
         // This can only return false if file is unmapped (ignore return).
-        header_.push(record, unsafe_byte_cast<link>(data), index);
+        header_.push(item, reinterpret_cast<link&>(*data), index);
     };
 
-    const auto sink = to_shared<writer>({ body_.get(record), finalize });
+    // Access item (stream should be valid, as link was create).
+    const auto sink = std::make_shared<writer>(sinker{ body_.get(item), fin });
 
     // size (slab) includes link/key.
     if constexpr (slab) { sink->set_limit(size); }
