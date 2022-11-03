@@ -96,10 +96,7 @@ TEMPLATE
 memory_ptr CLASS::get(size_t offset) const NOEXCEPT
 {
     auto body = get();
-
-    if (body)
-        body->increment(offset);
-
+    if (body) body->increment(offset);
     return body;
 }
 

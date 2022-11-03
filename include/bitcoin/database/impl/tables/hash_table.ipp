@@ -43,18 +43,19 @@ bool CLASS::create() NOEXCEPT
 TEMPLATE
 bool CLASS::verify() const NOEXCEPT
 {
-    link count{};
-    return header_.verify() && header_.get_body_count(count) &&
-        (body_.count() == count);
+    return header_.verify() && header_.get_body_count() == body_.count();
 }
 
 TEMPLATE
 reader_ptr CLASS::at(const link& record) const NOEXCEPT
 {
-    // Directly access item (stream valid if link was valid).
-    const auto source = std::make_shared<reader>(body_.get(record));
+    if (record.is_terminal())
+        return {};
 
-    // Skip over link, positioning reader at key.
+    const auto ptr = body_.get(record);
+
+    BC_ASSERT_MSG(!is_null(ptr), "guarded by is_terminal");
+    const auto source = std::make_shared<reader>(ptr);
     source->skip_bytes(link_size);
     if constexpr (!slab) { source->set_limit(record_size); }
     return source;
@@ -63,19 +64,17 @@ reader_ptr CLASS::at(const link& record) const NOEXCEPT
 TEMPLATE
 reader_ptr CLASS::find(const key& key) const NOEXCEPT
 {
-    // Search for item.
     Element element{ body_, header_.head(key) };
     while (!element.is_terminal() && !element.is_match(key))
         element.advance();
 
-    // Not found (nullptr).
     if (element.is_terminal())
         return {};
 
-    // Access item (stream should be valid, as link was found).
-    const auto source = std::make_shared<reader>(body_.get(element.self()));
+    const auto ptr = body_.get(element.self());
 
-    // Skip over link and key, positioning reader at data.
+    BC_ASSERT_MSG(!is_null(ptr), "guarded by is_terminal");
+    const auto source = std::make_shared<reader>(ptr);
     source->skip_bytes(link_size);
     if constexpr (!slab) { source->set_limit(record_size); }
     source->skip_bytes(key_size);
@@ -85,27 +84,22 @@ reader_ptr CLASS::find(const key& key) const NOEXCEPT
 TEMPLATE
 writer_ptr CLASS::push(const key& key, const link& size) NOEXCEPT
 {
-    // Create element.
     const auto item = body_.allocate(size);
 
-    // Allocation failed (nullptr).
     if (item.is_terminal())
         return {};
- 
+
+    const auto ptr = body_.get(item);
     const auto index = header_.index(key);
-    const auto fin = [this, item, index](uint8_t* data) NOEXCEPT
+    const auto fin = [this, item, index](uint8_t& data) NOEXCEPT
     {
-        // push only false if file is unmapped (ok to ignore return).
         BC_PUSH_WARNING(NO_REINTERPRET_CAST)
-        header_.push(item, reinterpret_cast<link&>(*data), index);
+        header_.push(item, reinterpret_cast<link&>(data), index);
         BC_POP_WARNING()
     };
 
-    // These are assured by successful allocation above.
-    // memory_ptr must be defined and memory_ptr->data() must be non-null.
-    const auto sink = std::make_shared<writer>(sinker{ body_.get(item), fin });
-
-    // Skip over link, write key, positioning writer at data.
+    BC_ASSERT_MSG(!is_null(ptr), "guarded by is_terminal");
+    const auto sink = std::make_shared<writer>(sinker{ ptr, fin });
     if constexpr (slab) { sink->set_limit(size); }
     sink->skip_bytes(link_size);
     if constexpr (!slab) { sink->set_limit(record_size); }

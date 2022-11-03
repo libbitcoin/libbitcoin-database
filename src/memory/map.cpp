@@ -256,21 +256,22 @@ size_t map::allocate(size_t chunk) NOEXCEPT
     return position;
 }
 
-// This requires a mutable byte pointer and end pointer.
+// Always returns a valid and bounded memory pointer.
 memory_ptr map::get(size_t offset) NOEXCEPT
 {
-    auto memory = std::make_shared<accessor<mutex>>(map_mutex_);
+    auto ptr = std::make_shared<accessor<mutex>>(map_mutex_);
 
-    // data_unmapped
     if (!mapped_)
-        return nullptr;
+    {
+        // Abort here, this allows unguarded use of get().
+        BC_PUSH_WARNING(THROW_FROM_NOEXCEPT)
+        throw runtime_exception{ "get while unmapped" };
+        BC_POP_WARNING()
+    }
 
     // Because end is not record-bound it only guards file access, not records.
-    memory->assign(
-        std::next(memory_map_, offset),
-        std::next(memory_map_, size()));
-
-    return memory;
+    ptr->assign(std::next(memory_map_, offset), std::next(memory_map_, size()));
+    return ptr;
 }
 
 // private, mman wrappers, not thread safe

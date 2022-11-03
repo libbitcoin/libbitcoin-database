@@ -52,12 +52,12 @@ Link CLASS::allocate(const Link& count) NOEXCEPT
     if (count.is_terminal())
         return count;
 
-    const auto position = file_.allocate(link_to_position(count));
+    const auto start = file_.allocate(link_to_position(count));
 
-    if (position == storage::eof)
+    if (start == storage::eof)
         return Link::terminal;
 
-    return position_to_link(position);
+    return position_to_link(start);
 }
 
 TEMPLATE
@@ -100,7 +100,6 @@ constexpr Link CLASS::position_to_link(size_t position) NOEXCEPT
     else
     {
         constexpr auto record_size = Link::size + Size;
-        ////BC_ASSERT(is_multiple(position, record_size));
         return { possible_narrow_cast<integer>(position / record_size) };
     }
 }

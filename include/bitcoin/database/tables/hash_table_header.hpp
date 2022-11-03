@@ -44,8 +44,8 @@ public:
     bool verify() const NOEXCEPT;
 
     /// Unsafe if not verified.
-    bool set_body_count(const Link& count) NOEXCEPT;
-    bool get_body_count(Link& count) const NOEXCEPT;
+    Link get_body_count() const NOEXCEPT;
+    void set_body_count(const Link& count) NOEXCEPT;
 
     /// Thread safe.
     /// -----------------------------------------------------------------------
@@ -56,8 +56,8 @@ public:
     /// Unsafe if not verified.
     Link head(const Key& key) const NOEXCEPT;
     Link head(const Link& index) const NOEXCEPT;
-    bool push(const Link& current, Link& next, const Key& key) NOEXCEPT;
-    bool push(const Link& current, Link& next, const Link& index) NOEXCEPT;
+    void push(const Link& current, Link& next, const Key& key) NOEXCEPT;
+    void push(const Link& current, Link& next, const Link& index) NOEXCEPT;
 
 private:
     template <size_t Bytes>

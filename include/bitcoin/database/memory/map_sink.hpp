@@ -32,7 +32,7 @@ namespace database {
 struct sinker
 {
     const memory_ptr ptr;
-    const std::function<void(uint8_t*)> finalize;
+    const std::function<void(uint8_t&)> finalize;
 };
 
 /// Sink for ios::stream, copies bytes to/from memory_ptr.
@@ -66,7 +66,7 @@ public:
     {
         // std::function does not allow noexcept qualifier.
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        finalize_(record_->begin());
+        finalize_(*record_->begin());
         BC_POP_WARNING()
     }
 
@@ -82,7 +82,7 @@ protected:
 private:
     const memory::ptr record_;
     typename memory::iterator next_;
-    const std::function<void(uint8_t*)> finalize_;
+    const std::function<void(uint8_t&)> finalize_;
 };
 
 /// A byte reader/writer that copies data from/to a memory_ptr.

@@ -45,48 +45,37 @@ bool CLASS::create() NOEXCEPT
     if (!is_zero(file_.size()))
         return false;
 
-    // Allocate the file size and get map.
     const auto size = offset(buckets_);
-    const auto header = file_.get(file_.allocate(size));
-    if (!header)
+    const auto start = file_.allocate(size);
+    if (start == storage::eof)
         return false;
 
-    // Fill header file with terminal (0xff) bytes.
-    std::fill_n(header->begin(), size, system::bit_all<uint8_t>);
+    const auto ptr = file_.get(start);
+    std::fill_n(ptr->begin(), size, system::bit_all<uint8_t>);
 
-    // Overwrite start of file with initial body "size" (zero).
-    return verify() && set_body_count(zero);
+    const auto valid = verify();
+    if (valid)
+        set_body_count(zero);
+
+    return valid;
 }
 
 TEMPLATE
 bool CLASS::verify() const NOEXCEPT
 {
-    // Byte offset vs. byte size, must be same.
     return offset(buckets_) == file_.size();
 }
 
 TEMPLATE
-bool CLASS::set_body_count(const Link& count) NOEXCEPT
+Link CLASS::get_body_count() const NOEXCEPT
 {
-    // This should only be called at checkpoint/close.
-    const auto header = file_.get();
-    if (!header)
-        return false;
-
-    array_cast<Link::size>(*header) = count;
-    return true;
+    return array_cast<Link::size>(*file_.get());
 }
 
 TEMPLATE
-bool CLASS::get_body_count(Link& count) const NOEXCEPT
+void CLASS::set_body_count(const Link& count) NOEXCEPT
 {
-    // This should only be read at startup (checkpoint recovery).
-    const auto header = file_.get();
-    if (!header)
-        return false;
-
-    count = array_cast<Link::size>(*header);
-    return true;
+    array_cast<Link::size>(*file_.get()) = count;
 }
 
 TEMPLATE
@@ -98,12 +87,7 @@ Link CLASS::head(const Key& key) const NOEXCEPT
 TEMPLATE
 Link CLASS::head(const Link& index) const NOEXCEPT
 {
-    const auto header = file_.get(offset(index));
-    if (!header)
-        return Link::terminal;
-
-    // const head link& as byte array
-    const auto& head = array_cast<Link::size>(*header);
+    const auto& head = array_cast<Link::size>(*file_.get(offset(index)));
 
     mutex_.lock_shared();
     const auto top = head;
@@ -112,27 +96,20 @@ Link CLASS::head(const Link& index) const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::push(const Link& current, Link& next, const Key& key) NOEXCEPT
+void CLASS::push(const Link& current, Link& next, const Key& key) NOEXCEPT
 {
-    return push(current, next, index(key));
+    push(current, next, index(key));
 }
 
 TEMPLATE
-bool CLASS::push(const Link& current, Link& next, const Link& index) NOEXCEPT
+void CLASS::push(const Link& current, Link& next, const Link& index) NOEXCEPT
 {
-    // This can only return false if file is unmapped.
-    const auto header = file_.get(offset(index));
-    if (!header)
-        return false;
-
-    // head link& as byte array
-    auto& head = array_cast<Link::size>(*header);
+    auto& head = array_cast<Link::size>(*file_.get(offset(index)));
 
     mutex_.lock();
     next = head;
     head = current;
     mutex_.unlock();
-    return true;
 }
 
 } // namespace database

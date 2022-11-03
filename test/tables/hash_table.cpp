@@ -292,7 +292,36 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__sub_one_element_body_file__
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-// at
+// at(terminal)
+
+BOOST_AUTO_TEST_CASE(record_hash_table__at__terminal__false)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    record_table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.verify());
+    BOOST_REQUIRE(!instance.at(link::terminal));
+    BOOST_REQUIRE(!instance.at(link::terminal));
+}
+
+BOOST_AUTO_TEST_CASE(slab_hash_table__at__terminal__false)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    slab_table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.verify());
+    BOOST_REQUIRE(!instance.at(link::terminal));
+    BOOST_REQUIRE(!instance.at(link::terminal));
+}
+
+
+// at(exhausted)
 
 BOOST_AUTO_TEST_CASE(record_hash_table__at__empty__exhausted)
 {
@@ -303,10 +332,6 @@ BOOST_AUTO_TEST_CASE(record_hash_table__at__empty__exhausted)
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.verify());
-
-    // at() always returns reader (non-nullptr).
-    // If link was invalid, stream will be empty.
-    // As the file is empty these are empty streams.
     BOOST_REQUIRE(instance.at(0)->is_exhausted());
     BOOST_REQUIRE(instance.at(19)->is_exhausted());
 }
@@ -320,15 +345,11 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__at__empty__exhausted)
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.verify());
-
-    // at() always returns reader (non-nullptr).
-    // If link was invalid, stream will be empty.
-    // As the file is empty these are empty streams.
     BOOST_REQUIRE(instance.at(0)->is_exhausted());
     BOOST_REQUIRE(instance.at(19)->is_exhausted());
 }
 
-// find
+// find(not found)
 
 BOOST_AUTO_TEST_CASE(record_hash_table__find__empty__false)
 {
@@ -339,8 +360,6 @@ BOOST_AUTO_TEST_CASE(record_hash_table__find__empty__false)
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.verify());
-
-    // find() returns nullptr if key not found.
     BOOST_REQUIRE(!instance.find({ 0x00 }));
     BOOST_REQUIRE(!instance.find({ 0x42 }));
 }
@@ -354,15 +373,41 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__find__empty__false)
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.verify());
-
-    // find() returns nullptr if key not found.
     BOOST_REQUIRE(!instance.find({ 0x00 }));
     BOOST_REQUIRE(!instance.find({ 0x42 }));
 }
 
-// push
+// push(terminal)
 
-BOOST_AUTO_TEST_CASE(record_hash_table__push__empty__false)
+BOOST_AUTO_TEST_CASE(record_hash_table__push__terminal_false)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    record_table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.verify());
+    BOOST_REQUIRE(!instance.push(key{ 0x00 }, link::terminal));
+    BOOST_REQUIRE(!instance.push(key{ 0x42 }, link::terminal));
+}
+
+BOOST_AUTO_TEST_CASE(slab_hash_table__push__terminal_false)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    slab_table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.verify());
+    BOOST_REQUIRE(!instance.push(key{ 0x00 }, link::terminal));
+    BOOST_REQUIRE(!instance.push(key{ 0x42 }, link::terminal));
+}
+
+// push(valid)/find(found)
+
+BOOST_AUTO_TEST_CASE(record_hash_table__push_find__empty__true)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -372,12 +417,16 @@ BOOST_AUTO_TEST_CASE(record_hash_table__push__empty__false)
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.verify());
 
-    // push() returns nullptr if creation failed.
+    BOOST_REQUIRE(!instance.find({ 0x00 }));
     BOOST_REQUIRE(instance.push(key{ 0x00 }));
+    BOOST_REQUIRE(instance.find({ 0x00 }));
+
+    BOOST_REQUIRE(!instance.find({ 0x42 }));
     BOOST_REQUIRE(instance.push(key{ 0x42 }));
+    //BOOST_REQUIRE(instance.find({ 0x42 }));
 }
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__push__empty__false)
+BOOST_AUTO_TEST_CASE(slab_hash_table__push_find__empty__true)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -387,9 +436,13 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__push__empty__false)
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.verify());
 
-    // push() returns nullptr if creation failed.
+    BOOST_REQUIRE(!instance.find({ 0x00 }));
     BOOST_REQUIRE(instance.push(key{ 0x00 }, slab_size));
+    BOOST_REQUIRE(instance.find({ 0x00 }));
+
+    BOOST_REQUIRE(!instance.find({ 0x42 }));
     BOOST_REQUIRE(instance.push(key{ 0x42 }, slab_size));
+    //BOOST_REQUIRE(instance.find({ 0x42 }));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

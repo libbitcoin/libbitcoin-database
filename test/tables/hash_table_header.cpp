@@ -70,10 +70,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__get_body_count__create__zero)
     test::storage store{ data };
     header head{ store, buckets };
     BOOST_REQUIRE(head.create());
-
-    link size{};
-    BOOST_REQUIRE(head.get_body_count(size));
-    BOOST_REQUIRE_EQUAL(size, zero);
+    BOOST_REQUIRE_EQUAL(head.get_body_count(), zero);
 }
 
 BOOST_AUTO_TEST_CASE(hash_table_header__get_body_count__set_body_count__expected)
@@ -84,11 +81,8 @@ BOOST_AUTO_TEST_CASE(hash_table_header__get_body_count__set_body_count__expected
     BOOST_REQUIRE(head.create());
 
     constexpr auto expected = 42u;
-    BOOST_REQUIRE(head.set_body_count(expected));
-
-    link size{};
-    BOOST_REQUIRE(head.get_body_count(size));
-    BOOST_REQUIRE_EQUAL(size, expected);
+    head.set_body_count(expected);
+    BOOST_REQUIRE_EQUAL(head.get_body_count(), expected);
 }
 
 BOOST_AUTO_TEST_CASE(hash_table_header__index__null_key__expected)
@@ -132,7 +126,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__push__link__terminal)
     link next{ 42u };
     constexpr link link_key{ 9u };
     constexpr link current{ expected };
-    BOOST_REQUIRE(head.push(current, next, link_key));
+    head.push(current, next, link_key);
 
     // The terminal value at header[9|null_key] is copied to current.next.
     BOOST_REQUIRE(next.is_terminal());
@@ -151,7 +145,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__push__key__terminal)
     link next{ 42u };
     constexpr key null_key{};
     constexpr link current{ expected };
-    BOOST_REQUIRE(head.push(current, next, null_key));
+    head.push(current, next, null_key);
 
     // The terminal value at header[9|null_key] is copied to current.next.
     BOOST_REQUIRE(next.is_terminal());
