@@ -36,7 +36,6 @@ static_assert(buckets == 20u);
 using link = linkage<link_size>;
 using key = data_array<key_size>;
 using header = hash_table_header<link, key>;
-using slab = element<link, key, zero>;
 
 BOOST_AUTO_TEST_CASE(hash_table_header__create__size__expected)
 {
