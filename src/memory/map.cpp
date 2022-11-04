@@ -262,12 +262,7 @@ memory_ptr map::get(size_t offset) NOEXCEPT
     auto ptr = std::make_shared<accessor<mutex>>(map_mutex_);
 
     if (!mapped_)
-    {
-        // Abort here, this allows unguarded use of get().
-        BC_PUSH_WARNING(THROW_FROM_NOEXCEPT)
-        throw runtime_exception{ "get while unmapped" };
-        BC_POP_WARNING()
-    }
+        return nullptr;
 
     // Because end is not record-bound it only guards file access, not records.
     ptr->assign(std::next(memory_map_, offset), std::next(memory_map_, size()));

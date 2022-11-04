@@ -43,7 +43,9 @@ bool CLASS::create() NOEXCEPT
 TEMPLATE
 bool CLASS::verify() const NOEXCEPT
 {
-    return header_.verify() && header_.get_body_count() == body_.count();
+    link count{};
+    return header_.verify() && header_.get_body_count(count) &&
+        count == body_.count();
 }
 
 TEMPLATE
@@ -53,8 +55,9 @@ reader_ptr CLASS::at(const link& record) const NOEXCEPT
         return {};
 
     const auto ptr = body_.get(record);
-
     BC_ASSERT_MSG(!is_null(ptr), "guarded by is_terminal");
+
+    // Stream starts at key, skip to get data.
     const auto source = std::make_shared<reader>(ptr);
     source->skip_bytes(link_size);
     if constexpr (!slab) { source->set_limit(record_size); }
@@ -72,8 +75,9 @@ reader_ptr CLASS::find(const key& key) const NOEXCEPT
         return {};
 
     const auto ptr = body_.get(element.self());
-
     BC_ASSERT_MSG(!is_null(ptr), "guarded by is_terminal");
+
+    // Stream starts at data, rewind to get link.
     const auto source = std::make_shared<reader>(ptr);
     source->skip_bytes(link_size);
     if constexpr (!slab) { source->set_limit(record_size); }
@@ -90,16 +94,21 @@ writer_ptr CLASS::push(const key& key, const link& size) NOEXCEPT
         return {};
 
     const auto ptr = body_.get(item);
+    BC_ASSERT_MSG(!is_null(ptr), "guarded by is_terminal");
+
+    const auto sink = std::make_shared<writer>(ptr);
     const auto index = header_.index(key);
-    const auto fin = [this, item, index](uint8_t& data) NOEXCEPT
+
+    sink->set_finalizer([this, item, index, ptr]() NOEXCEPT
     {
         BC_PUSH_WARNING(NO_REINTERPRET_CAST)
-        header_.push(item, reinterpret_cast<link&>(data), index);
+        using namespace system;
+        auto& next = unsafe_array_cast<uint8_t, link::size>(ptr->begin());
+        return header_.push(item, next, index);
         BC_POP_WARNING()
-    };
+    });
 
-    BC_ASSERT_MSG(!is_null(ptr), "guarded by is_terminal");
-    const auto sink = std::make_shared<writer>(sinker{ ptr, fin });
+    // Stream starts at data, rewind to get link.
     if constexpr (slab) { sink->set_limit(size); }
     sink->skip_bytes(link_size);
     if constexpr (!slab) { sink->set_limit(record_size); }

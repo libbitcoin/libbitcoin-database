@@ -417,13 +417,55 @@ BOOST_AUTO_TEST_CASE(record_hash_table__push_find__empty__true)
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.verify());
 
-    BOOST_REQUIRE(!instance.find({ 0x00 }));
-    BOOST_REQUIRE(instance.push(key{ 0x00 }));
-    BOOST_REQUIRE(instance.find({ 0x00 }));
+    constexpr key key0{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
+    auto stream1 = instance.push(key0);
+    BOOST_REQUIRE(!stream1->is_exhausted());
+    BOOST_REQUIRE(!instance.find(key0));
+    BOOST_REQUIRE(stream1->finalize());
+    BOOST_REQUIRE(instance.find(key0));
+    stream1.reset();
 
-    BOOST_REQUIRE(!instance.find({ 0x42 }));
-    BOOST_REQUIRE(instance.push(key{ 0x42 }));
-    //BOOST_REQUIRE(instance.find({ 0x42 }));
+    constexpr key key1{ 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a };
+    auto stream2 = instance.push(key1);
+    BOOST_REQUIRE(!stream2->is_exhausted());
+    BOOST_REQUIRE(!instance.find(key1));
+    BOOST_REQUIRE(stream2->finalize());
+    BOOST_REQUIRE(instance.find(key1));
+    stream2.reset();
+
+    ////std::cout << head_file << std::endl << std::endl;
+    ////std::cout << body_file << std::endl << std::endl;
+
+    // record
+    // 0000000000 [body logical size]
+    // ---------------------------------
+    // 0000000000 [0] [0->0]
+    // ffffffffff [1]
+    // ffffffffff [2]
+    // ffffffffff [3]
+    // 0100000000 [4] [4->1]
+    // ffffffffff [5]
+    // ffffffffff [6]
+    // ffffffffff [7]
+    // ffffffffff [8]
+    // ffffffffff [9]
+    // ffffffffff [10]
+    // ffffffffff [11]
+    // ffffffffff [12]
+    // ffffffffff [13]
+    // ffffffffff [14]
+    // ffffffffff [15]
+    // ffffffffff [16]
+    // ffffffffff [17]
+    // ffffffffff [18]
+    // ffffffffff [19]
+    // =================================
+    // ffffffffff [0]       [terminator]
+    // 0102030405060708090a [key]
+    // 00000000             [data]
+    // ffffffffff [1]       [terminator]
+    // 1112131415161718191a [key]
+    // 00000000             [data]
 }
 
 BOOST_AUTO_TEST_CASE(slab_hash_table__push_find__empty__true)
@@ -436,13 +478,107 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__push_find__empty__true)
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.verify());
 
-    BOOST_REQUIRE(!instance.find({ 0x00 }));
-    BOOST_REQUIRE(instance.push(key{ 0x00 }, slab_size));
-    BOOST_REQUIRE(instance.find({ 0x00 }));
+    constexpr key key0{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
+    BOOST_REQUIRE(!instance.find(key0));
+    BOOST_REQUIRE(instance.push(key0, slab_size)->finalize());
+    BOOST_REQUIRE(instance.find(key0));
 
-    BOOST_REQUIRE(!instance.find({ 0x42 }));
-    BOOST_REQUIRE(instance.push(key{ 0x42 }, slab_size));
-    //BOOST_REQUIRE(instance.find({ 0x42 }));
+    constexpr key key1{ 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a };
+    BOOST_REQUIRE(!instance.find(key1));
+    BOOST_REQUIRE(instance.push(key1, slab_size)->finalize());
+    BOOST_REQUIRE(instance.find(key1));
+
+    ////std::cout << head_file << std::endl << std::endl;
+    ////std::cout << body_file << std::endl << std::endl;
+ 
+    // slab (same extents as record above)
+    // 0000000000 [body logical size]
+    // ---------------------------------
+    // 0000000000 [0->0x00]
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // 1300000000 [4->0x13]
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // =================================
+    // ffffffffff [0x00]    [terminator]
+    // 0102030405060708090a [key]
+    // 00000000             [data]
+    // ffffffffff [0x13]    [terminator]
+    // 1112131415161718191a [key]
+    // 00000000             [data]
+}
+
+BOOST_AUTO_TEST_CASE(record_hash_table__push_duplicate_key__fine__true)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    record_table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.verify());
+
+    constexpr key key0{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    BOOST_REQUIRE(instance.push(key0)->finalize());
+    BOOST_REQUIRE(instance.find(key0));
+
+    constexpr key key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
+    BOOST_REQUIRE(instance.push(key1)->finalize());
+    BOOST_REQUIRE(instance.find(key1));
+
+    BOOST_REQUIRE(instance.push(key1)->finalize());
+    BOOST_REQUIRE(instance.find(key1));
+
+    ////std::cout << head_file << std::endl << std::endl;
+    ////std::cout << body_file << std::endl << std::endl;
+
+    // 0000000000 [body logical size]
+    // ---------------------------------
+    // 0200000000 [0->2]
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // 0000000000 [9->0]
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // ffffffffff
+    // =================================
+    // ffffffffff [0]       [terminator]
+    // 00000000000000000000 [key]
+    // 00000000             [data]
+    // ffffffffff [1]       [terminator]
+    // 0102030405060708090a [key]
+    // 00000000             [data]
+    // 0100000000 [2->1]    [next]
+    // 0102030405060708090a [key]
+    // 00000000             [data]
 }
 
 BOOST_AUTO_TEST_SUITE_END()

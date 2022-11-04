@@ -64,16 +64,19 @@ BOOST_AUTO_TEST_CASE(hash_table_header__verify__created__false)
     BOOST_REQUIRE(head.verify());
 }
 
-BOOST_AUTO_TEST_CASE(hash_table_header__get_body_count__create__zero)
+BOOST_AUTO_TEST_CASE(hash_table_header__get_body_count__created__zero)
 {
     data_chunk data;
     test::storage store{ data };
     header head{ store, buckets };
     BOOST_REQUIRE(head.create());
-    BOOST_REQUIRE_EQUAL(head.get_body_count(), zero);
+
+    link count{};
+    BOOST_REQUIRE(head.get_body_count(count));
+    BOOST_REQUIRE_EQUAL(count, zero);
 }
 
-BOOST_AUTO_TEST_CASE(hash_table_header__get_body_count__set_body_count__expected)
+BOOST_AUTO_TEST_CASE(hash_table_header__set_body_count__get__expected)
 {
     data_chunk data;
     test::storage store{ data };
@@ -81,8 +84,11 @@ BOOST_AUTO_TEST_CASE(hash_table_header__get_body_count__set_body_count__expected
     BOOST_REQUIRE(head.create());
 
     constexpr auto expected = 42u;
-    head.set_body_count(expected);
-    BOOST_REQUIRE_EQUAL(head.get_body_count(), expected);
+    BOOST_REQUIRE(head.set_body_count(expected));
+
+    link count{};
+    BOOST_REQUIRE(head.get_body_count(count));
+    BOOST_REQUIRE_EQUAL(count, expected);
 }
 
 BOOST_AUTO_TEST_CASE(hash_table_header__index__null_key__expected)
@@ -123,13 +129,13 @@ BOOST_AUTO_TEST_CASE(hash_table_header__push__link__terminal)
     BOOST_REQUIRE(head.create());
 
     constexpr auto expected = 2u;
-    link next{ 42u };
+    typename link::bytes next{ 42u };
     constexpr link link_key{ 9u };
     constexpr link current{ expected };
     head.push(current, next, link_key);
 
     // The terminal value at header[9|null_key] is copied to current.next.
-    BOOST_REQUIRE(next.is_terminal());
+    BOOST_REQUIRE(link{ next }.is_terminal());
 
     // The current link is copied to header[9|null_key].
     BOOST_REQUIRE_EQUAL(head.head(link_key), expected);
@@ -142,13 +148,13 @@ BOOST_AUTO_TEST_CASE(hash_table_header__push__key__terminal)
     BOOST_REQUIRE(head.create());
 
     constexpr auto expected = 2u;
-    link next{ 42u };
+    typename link::bytes next{ 42u };
     constexpr key null_key{};
     constexpr link current{ expected };
     head.push(current, next, null_key);
 
     // The terminal value at header[9|null_key] is copied to current.next.
-    BOOST_REQUIRE(next.is_terminal());
+    BOOST_REQUIRE(link{ next }.is_terminal());
 
     // The current link is copied to header[9|null_key].
     BOOST_REQUIRE_EQUAL(head.head(null_key), expected);

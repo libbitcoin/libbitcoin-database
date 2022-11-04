@@ -32,6 +32,8 @@ template <typename Link, typename Key>
 class hash_table_header
 {
 public:
+    using bytes = typename Link::bytes;
+
     hash_table_header(storage& header, const Link& buckets) NOEXCEPT;
 
     /// Not thread safe.
@@ -44,8 +46,8 @@ public:
     bool verify() const NOEXCEPT;
 
     /// Unsafe if not verified.
-    Link get_body_count() const NOEXCEPT;
-    void set_body_count(const Link& count) NOEXCEPT;
+    bool get_body_count(Link& count) const NOEXCEPT;
+    bool set_body_count(const Link& count) NOEXCEPT;
 
     /// Thread safe.
     /// -----------------------------------------------------------------------
@@ -56,8 +58,8 @@ public:
     /// Unsafe if not verified.
     Link head(const Key& key) const NOEXCEPT;
     Link head(const Link& index) const NOEXCEPT;
-    void push(const Link& current, Link& next, const Key& key) NOEXCEPT;
-    void push(const Link& current, Link& next, const Link& index) NOEXCEPT;
+    bool push(const bytes& current, bytes& next, const Key& key) NOEXCEPT;
+    bool push(const bytes& current, bytes& next, const Link& index) NOEXCEPT;
 
 private:
     template <size_t Bytes>

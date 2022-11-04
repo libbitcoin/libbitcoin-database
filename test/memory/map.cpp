@@ -255,15 +255,15 @@ BOOST_AUTO_TEST_CASE(map__reserve__no_minimum_expansion__expected_capacity)
     BOOST_REQUIRE(instance.close());
 }
 
-////BOOST_AUTO_TEST_CASE(map__get__unmapped__aborts)
-////{
-////    const std::string file = TEST_PATH;
-////    BOOST_REQUIRE(test::create(file));
-////    map instance(file);
-////    BOOST_REQUIRE(instance.open());
-////    BOOST_REQUIRE(!instance.get());
-////    BOOST_REQUIRE(instance.close());
-////}
+BOOST_AUTO_TEST_CASE(map__get__unmapped__false)
+{
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+    map instance(file);
+    BOOST_REQUIRE(instance.open());
+    BOOST_REQUIRE(!instance.get());
+    BOOST_REQUIRE(instance.close());
+}
 
 // TODO: externally verify file size.
 BOOST_AUTO_TEST_CASE(map__get__mapped__success)

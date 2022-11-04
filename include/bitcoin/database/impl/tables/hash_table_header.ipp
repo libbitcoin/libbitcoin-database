@@ -51,13 +51,11 @@ bool CLASS::create() NOEXCEPT
         return false;
 
     const auto ptr = file_.get(start);
+    if (!ptr)
+        return false;
+
     std::fill_n(ptr->begin(), size, system::bit_all<uint8_t>);
-
-    const auto valid = verify();
-    if (valid)
-        set_body_count(zero);
-
-    return valid;
+    return verify() && set_body_count(zero);
 }
 
 TEMPLATE
@@ -67,15 +65,25 @@ bool CLASS::verify() const NOEXCEPT
 }
 
 TEMPLATE
-Link CLASS::get_body_count() const NOEXCEPT
+bool CLASS::get_body_count(Link& count) const NOEXCEPT
 {
-    return array_cast<Link::size>(*file_.get());
+    const auto ptr = file_.get();
+    if (!ptr)
+        return false;
+
+    count = array_cast<Link::size>(*ptr);
+    return true;
 }
 
 TEMPLATE
-void CLASS::set_body_count(const Link& count) NOEXCEPT
+bool CLASS::set_body_count(const Link& count) NOEXCEPT
 {
-    array_cast<Link::size>(*file_.get()) = count;
+    const auto ptr = file_.get();
+    if (!ptr)
+        return false;
+
+    array_cast<Link::size>(*ptr) = count;
+    return true;
 }
 
 TEMPLATE
@@ -87,7 +95,11 @@ Link CLASS::head(const Key& key) const NOEXCEPT
 TEMPLATE
 Link CLASS::head(const Link& index) const NOEXCEPT
 {
-    const auto& head = array_cast<Link::size>(*file_.get(offset(index)));
+    const auto ptr = file_.get(offset(index));
+    if (!ptr)
+        return false;
+
+    const auto& head = array_cast<Link::size>(*ptr);
 
     mutex_.lock_shared();
     const auto top = head;
@@ -96,20 +108,25 @@ Link CLASS::head(const Link& index) const NOEXCEPT
 }
 
 TEMPLATE
-void CLASS::push(const Link& current, Link& next, const Key& key) NOEXCEPT
+bool CLASS::push(const bytes& current, bytes& next, const Key& key) NOEXCEPT
 {
-    push(current, next, index(key));
+    return push(current, next, index(key));
 }
 
 TEMPLATE
-void CLASS::push(const Link& current, Link& next, const Link& index) NOEXCEPT
+bool CLASS::push(const bytes& current, bytes& next, const Link& index) NOEXCEPT
 {
-    auto& head = array_cast<Link::size>(*file_.get(offset(index)));
+    const auto ptr = file_.get(offset(index));
+    if (!ptr)
+        return false;
+
+    auto& head = array_cast<Link::size>(*ptr);
 
     mutex_.lock();
     next = head;
     head = current;
     mutex_.unlock();
+    return true;
 }
 
 } // namespace database
