@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2021 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -19,10 +19,11 @@
 #ifndef LIBBITCOIN_DATABASE_LOCKS_HPP
 #define LIBBITCOIN_DATABASE_LOCKS_HPP
 
- #include <bitcoin/database/locks/file_lock.hpp>
- #include <bitcoin/database/locks/flush_lock.hpp>
- #include <bitcoin/database/locks/interprocess_lock.hpp>
- #include <bitcoin/database/locks/scope_lock.hpp>
- #include <bitcoin/database/locks/sequential_lock.hpp>
+#include <bitcoin/database/locks/conditional_lock.hpp>
+#include <bitcoin/database/locks/file_lock.hpp>
+#include <bitcoin/database/locks/flush_lock.hpp>
+#include <bitcoin/database/locks/interprocess_lock.hpp>
+#include <bitcoin/database/locks/scope_lock.hpp>
+#include <bitcoin/database/locks/sequential_lock.hpp>
 
 #endif

@@ -42,10 +42,10 @@ src_libbitcoin_database_la_SOURCES = \
     src/locks/interprocess_lock.cpp \
     src/locks/scope_lock.cpp \
     src/locks/sequential_lock.cpp \
-    src/memory/accessor.cpp \
-    src/memory/file_storage.cpp \
-    src/mman-win32/mman.c \
-    src/mman-win32/mman.h
+    src/memory/file.cpp \
+    src/memory/map.cpp \
+    src/memory/mman-win32/mman.c \
+    src/memory/mman-win32/mman.h
 
 # local: test/libbitcoin-database-test
 #------------------------------------------------------------------------------
@@ -59,25 +59,22 @@ test_libbitcoin_database_test_LDADD = src/libbitcoin-database.la ${boost_unit_te
 test_libbitcoin_database_test_SOURCES = \
     test/main.cpp \
     test/settings.cpp \
+    test/storage.cpp \
+    test/storage.hpp \
     test/test.cpp \
     test/test.hpp \
     test/locks/file_lock.cpp \
     test/locks/flush_lock.cpp \
     test/locks/interprocess_lock.cpp \
     test/memory/accessor.cpp \
-    test/memory/file_storage.cpp \
-    test/primitives/hash_table.cpp \
-    test/primitives/hash_table_header.cpp \
-    test/primitives/hash_table_multimap.cpp \
-    test/primitives/list.cpp \
-    test/primitives/list_element.cpp \
-    test/primitives/list_iterator.cpp \
-    test/primitives/record_manager.cpp \
-    test/primitives/slab_manager.cpp \
-    test/utility/storage.cpp \
-    test/utility/storage.hpp \
-    test/utility/utility.cpp \
-    test/utility/utility.hpp
+    test/memory/file.cpp \
+    test/memory/map.cpp \
+    test/primitives/element.cpp \
+    test/primitives/linkage.cpp \
+    test/primitives/manager.cpp \
+    test/tables/hash_table.cpp \
+    test/tables/hash_table_header.cpp \
+    test/tables/hash_table_multimap.cpp
 
 endif WITH_TESTS
 
@@ -106,16 +103,21 @@ include_bitcoin_database_HEADERS = \
     include/bitcoin/database/settings.hpp \
     include/bitcoin/database/version.hpp
 
+include_bitcoin_database_impl_memorydir = ${includedir}/bitcoin/database/impl/memory
+include_bitcoin_database_impl_memory_HEADERS = \
+    include/bitcoin/database/impl/memory/accessor.ipp
+
 include_bitcoin_database_impl_primitivesdir = ${includedir}/bitcoin/database/impl/primitives
 include_bitcoin_database_impl_primitives_HEADERS = \
-    include/bitcoin/database/impl/primitives/hash_table.ipp \
-    include/bitcoin/database/impl/primitives/hash_table_header.ipp \
-    include/bitcoin/database/impl/primitives/hash_table_multimap.ipp \
-    include/bitcoin/database/impl/primitives/list.ipp \
-    include/bitcoin/database/impl/primitives/list_element.ipp \
-    include/bitcoin/database/impl/primitives/list_iterator.ipp \
-    include/bitcoin/database/impl/primitives/record_manager.ipp \
-    include/bitcoin/database/impl/primitives/slab_manager.ipp
+    include/bitcoin/database/impl/primitives/element.ipp \
+    include/bitcoin/database/impl/primitives/linkage.ipp \
+    include/bitcoin/database/impl/primitives/manager.ipp
+
+include_bitcoin_database_impl_tablesdir = ${includedir}/bitcoin/database/impl/tables
+include_bitcoin_database_impl_tables_HEADERS = \
+    include/bitcoin/database/impl/tables/hash_table.ipp \
+    include/bitcoin/database/impl/tables/hash_table_header.ipp \
+    include/bitcoin/database/impl/tables/hash_table_multimap.ipp
 
 include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks
 include_bitcoin_database_locks_HEADERS = \
@@ -130,21 +132,27 @@ include_bitcoin_database_locks_HEADERS = \
 include_bitcoin_database_memorydir = ${includedir}/bitcoin/database/memory
 include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/accessor.hpp \
-    include/bitcoin/database/memory/file_storage.hpp \
-    include/bitcoin/database/memory/memory.hpp \
-    include/bitcoin/database/memory/storage.hpp
+    include/bitcoin/database/memory/file.hpp \
+    include/bitcoin/database/memory/map.hpp \
+    include/bitcoin/database/memory/map_sink.hpp \
+    include/bitcoin/database/memory/map_source.hpp
+
+include_bitcoin_database_memory_interfacesdir = ${includedir}/bitcoin/database/memory/interfaces
+include_bitcoin_database_memory_interfaces_HEADERS = \
+    include/bitcoin/database/memory/interfaces/memory.hpp \
+    include/bitcoin/database/memory/interfaces/storage.hpp
 
 include_bitcoin_database_primitivesdir = ${includedir}/bitcoin/database/primitives
 include_bitcoin_database_primitives_HEADERS = \
-    include/bitcoin/database/primitives/hash_table.hpp \
-    include/bitcoin/database/primitives/hash_table_header.hpp \
-    include/bitcoin/database/primitives/hash_table_multimap.hpp \
-    include/bitcoin/database/primitives/list.hpp \
-    include/bitcoin/database/primitives/list_element.hpp \
-    include/bitcoin/database/primitives/list_iterator.hpp \
-    include/bitcoin/database/primitives/primitives.hpp \
-    include/bitcoin/database/primitives/record_manager.hpp \
-    include/bitcoin/database/primitives/slab_manager.hpp
+    include/bitcoin/database/primitives/element.hpp \
+    include/bitcoin/database/primitives/linkage.hpp \
+    include/bitcoin/database/primitives/manager.hpp
+
+include_bitcoin_database_tablesdir = ${includedir}/bitcoin/database/tables
+include_bitcoin_database_tables_HEADERS = \
+    include/bitcoin/database/tables/hash_table.hpp \
+    include/bitcoin/database/tables/hash_table_header.hpp \
+    include/bitcoin/database/tables/hash_table_multimap.hpp
 
 
 # Custom make targets.

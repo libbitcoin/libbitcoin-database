@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -25,6 +25,10 @@
 #include <tuple>
 #include <vector>
 #include <bitcoin/system.hpp>
+
+// map is able to support 32 bit, but because the database
+// requires a larger file this is neither validated nor supported.
+static_assert(sizeof(void*) == sizeof(uint64_t), "Not a 64 bit system!");
 
 /// Attributes.
 /// ---------------------------------------------------------------------------
@@ -55,6 +59,13 @@
     class_name(const class_name&) = delete; \
     class_name& operator=(class_name&&) = delete; \
     class_name& operator=(const class_name&) = delete
+
+/// Used when defining only the destructor.
+#define DEFAULT4(class_name) \
+    class_name(class_name&&) = default; \
+    class_name(const class_name&) = default; \
+    class_name& operator=(class_name&&) = default; \
+    class_name& operator=(const class_name&) = default
 
 /// Logging.
 /// ---------------------------------------------------------------------------

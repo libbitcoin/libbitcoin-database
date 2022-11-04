@@ -79,9 +79,9 @@
     <ClCompile Include="..\..\..\..\src\locks\interprocess_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\scope_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\sequential_lock.cpp" />
-    <ClCompile Include="..\..\..\..\src\memory\accessor.cpp" />
-    <ClCompile Include="..\..\..\..\src\memory\file_storage.cpp" />
-    <ClCompile Include="..\..\..\..\src\mman-win32\mman.c" />
+    <ClCompile Include="..\..\..\..\src\memory\file.cpp" />
+    <ClCompile Include="..\..\..\..\src\memory\map.cpp" />
+    <ClCompile Include="..\..\..\..\src\memory\mman-win32\mman.c" />
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -96,31 +96,30 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\scope_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\sequential_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\file_storage.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\storage.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table_header.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table_multimap.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\list.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\list_element.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\list_iterator.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\primitives.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\record_manager.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\slab_manager.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\file.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\memory.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\storage.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\map.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\map_sink.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\map_source.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\element.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linkage.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\hash_table.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\hash_table_header.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\hash_table_multimap.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp" />
-    <ClInclude Include="..\..\..\..\src\mman-win32\mman.h" />
+    <ClInclude Include="..\..\..\..\src\memory\mman-win32\mman.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hash_table.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hash_table_header.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hash_table_multimap.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\list.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\list_element.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\list_iterator.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\record_manager.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\slab_manager.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\accessor.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\element.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\linkage.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\manager.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\tables\hash_table.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\tables\hash_table_header.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\tables\hash_table_multimap.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

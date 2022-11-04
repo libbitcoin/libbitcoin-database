@@ -19,7 +19,7 @@
     <Filter Include="src\primitives">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\utility">
+    <Filter Include="src\tables">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000004}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -39,55 +39,46 @@
     <ClCompile Include="..\..\..\..\test\memory\accessor.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\memory\file_storage.cpp">
+    <ClCompile Include="..\..\..\..\test\memory\file.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\hash_table.cpp">
+    <ClCompile Include="..\..\..\..\test\memory\map.cpp">
+      <Filter>src\memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\primitives\element.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\hash_table_header.cpp">
+    <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\hash_table_multimap.cpp">
-      <Filter>src\primitives</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\list.cpp">
-      <Filter>src\primitives</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\list_element.cpp">
-      <Filter>src\primitives</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\list_iterator.cpp">
-      <Filter>src\primitives</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\record_manager.cpp">
-      <Filter>src\primitives</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\slab_manager.cpp">
+    <ClCompile Include="..\..\..\..\test\primitives\manager.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\settings.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\storage.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\hash_table.cpp">
+      <Filter>src\tables</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\hash_table_header.cpp">
+      <Filter>src\tables</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\hash_table_multimap.cpp">
+      <Filter>src\tables</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\utility\storage.cpp">
-      <Filter>src\utility</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\utility\utility.cpp">
-      <Filter>src\utility</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\test\test.hpp">
+    <ClInclude Include="..\..\..\..\test\storage.hpp">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\test\utility\storage.hpp">
-      <Filter>src\utility</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\test\utility\utility.hpp">
-      <Filter>src\utility</Filter>
+    <ClInclude Include="..\..\..\..\test\test.hpp">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

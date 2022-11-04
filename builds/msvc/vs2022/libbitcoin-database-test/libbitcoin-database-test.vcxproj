@@ -75,24 +75,21 @@
     <ClCompile Include="..\..\..\..\test\locks\interprocess_lock.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\accessor.cpp" />
-    <ClCompile Include="..\..\..\..\test\memory\file_storage.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives\hash_table.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives\hash_table_header.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives\hash_table_multimap.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives\list.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives\list_element.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives\list_iterator.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives\record_manager.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives\slab_manager.cpp" />
+    <ClCompile Include="..\..\..\..\test\memory\file.cpp" />
+    <ClCompile Include="..\..\..\..\test\memory\map.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\element.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\manager.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
+    <ClCompile Include="..\..\..\..\test\storage.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\hash_table.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\hash_table_header.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\hash_table_multimap.cpp" />
     <ClCompile Include="..\..\..\..\test\test.cpp" />
-    <ClCompile Include="..\..\..\..\test\utility\storage.cpp" />
-    <ClCompile Include="..\..\..\..\test\utility\utility.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\test\storage.hpp" />
     <ClInclude Include="..\..\..\..\test\test.hpp" />
-    <ClInclude Include="..\..\..\..\test\utility\storage.hpp" />
-    <ClInclude Include="..\..\..\..\test\utility\utility.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

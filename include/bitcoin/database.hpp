@@ -27,17 +27,17 @@
 #include <bitcoin/database/locks/scope_lock.hpp>
 #include <bitcoin/database/locks/sequential_lock.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
-#include <bitcoin/database/memory/file_storage.hpp>
-#include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/memory/storage.hpp>
-#include <bitcoin/database/primitives/hash_table.hpp>
-#include <bitcoin/database/primitives/hash_table_header.hpp>
-#include <bitcoin/database/primitives/hash_table_multimap.hpp>
-#include <bitcoin/database/primitives/list.hpp>
-#include <bitcoin/database/primitives/list_element.hpp>
-#include <bitcoin/database/primitives/list_iterator.hpp>
-#include <bitcoin/database/primitives/primitives.hpp>
-#include <bitcoin/database/primitives/record_manager.hpp>
-#include <bitcoin/database/primitives/slab_manager.hpp>
+#include <bitcoin/database/memory/file.hpp>
+#include <bitcoin/database/memory/map.hpp>
+#include <bitcoin/database/memory/map_sink.hpp>
+#include <bitcoin/database/memory/map_source.hpp>
+#include <bitcoin/database/memory/interfaces/memory.hpp>
+#include <bitcoin/database/memory/interfaces/storage.hpp>
+#include <bitcoin/database/primitives/element.hpp>
+#include <bitcoin/database/primitives/linkage.hpp>
+#include <bitcoin/database/primitives/manager.hpp>
+#include <bitcoin/database/tables/hash_table.hpp>
+#include <bitcoin/database/tables/hash_table_header.hpp>
+#include <bitcoin/database/tables/hash_table_multimap.hpp>
 
 #endif

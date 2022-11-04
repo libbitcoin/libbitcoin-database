@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -19,44 +19,51 @@
 #ifndef LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_HPP
 #define LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_HPP
 
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
-#include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/memory/interfaces/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/// Shared read/write access to a memory buffer.
-/// The caller must know the buffer size as it is unguarded/unmanaged.
-class BCD_API accessor final
+/// Shared r/w access to a memory buffer, mutex prevents memory remap.
+template <typename Mutex>
+class accessor final
   : public memory
 {
 public:
-    DELETE4(accessor);
+    /// Mutex guards against remap while object in scope.
+    inline accessor(Mutex& mutex) NOEXCEPT;
 
-    /// The mutex precludes concurrent
-    accessor(upgrade_mutex& mutex) NOEXCEPT;
+    /// Set the buffer.
+    inline void assign(uint8_t* begin, uint8_t* end) NOEXCEPT;
 
-    /// Free the buffer pointer lock.
-    ~accessor() NOEXCEPT;
+    /// Increment begin the specified number of bytes.
+    inline void increment(size_t bytes) NOEXCEPT override;
 
-    /// Get the buffer pointer.
-    uint8_t* buffer() NOEXCEPT;
+    /// The buffer size.
+    inline ptrdiff_t size() const NOEXCEPT override;
 
-    /// Set the buffer pointer and lock for shared access.
-    /// The mutex is upgraded and remains locked until destruct.
-    void assign(uint8_t* data) NOEXCEPT;
-
-    /// Advance the buffer pointer a specified number of bytes.
-    void increment(size_t size) NOEXCEPT;
+    /// Get buffer (guarded against remap only).
+    inline value_type* begin() NOEXCEPT override;
+    inline uint8_t* end() NOEXCEPT override;
 
 private:
-    upgrade_mutex& mutex_;
-    uint8_t* data_;
+    uint8_t* begin_{};
+    uint8_t* end_{};
+    std::shared_lock<Mutex> shared_lock_;
 };
 
 } // namespace database
 } // namespace libbitcoin
+
+#define TEMPLATE template <typename Mutex>
+#define CLASS accessor<Mutex>
+
+#include <bitcoin/database/impl/memory/accessor.ipp>
+
+#undef CLASS
+#undef TEMPLATE
 
 #endif

@@ -161,10 +161,10 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/locks/interprocess_lock.cpp"
     "../../src/locks/scope_lock.cpp"
     "../../src/locks/sequential_lock.cpp"
-    "../../src/memory/accessor.cpp"
-    "../../src/memory/file_storage.cpp"
-    "../../src/mman-win32/mman.c"
-    "../../src/mman-win32/mman.h" )
+    "../../src/memory/file.cpp"
+    "../../src/memory/map.cpp"
+    "../../src/memory/mman-win32/mman.c"
+    "../../src/memory/mman-win32/mman.h" )
 
 # ${CANONICAL_LIB_NAME} project specific include directories.
 #------------------------------------------------------------------------------
@@ -197,25 +197,22 @@ if (with-tests)
     add_executable( libbitcoin-database-test
         "../../test/main.cpp"
         "../../test/settings.cpp"
+        "../../test/storage.cpp"
+        "../../test/storage.hpp"
         "../../test/test.cpp"
         "../../test/test.hpp"
         "../../test/locks/file_lock.cpp"
         "../../test/locks/flush_lock.cpp"
         "../../test/locks/interprocess_lock.cpp"
         "../../test/memory/accessor.cpp"
-        "../../test/memory/file_storage.cpp"
-        "../../test/primitives/hash_table.cpp"
-        "../../test/primitives/hash_table_header.cpp"
-        "../../test/primitives/hash_table_multimap.cpp"
-        "../../test/primitives/list.cpp"
-        "../../test/primitives/list_element.cpp"
-        "../../test/primitives/list_iterator.cpp"
-        "../../test/primitives/record_manager.cpp"
-        "../../test/primitives/slab_manager.cpp"
-        "../../test/utility/storage.cpp"
-        "../../test/utility/storage.hpp"
-        "../../test/utility/utility.cpp"
-        "../../test/utility/utility.hpp" )
+        "../../test/memory/file.cpp"
+        "../../test/memory/map.cpp"
+        "../../test/primitives/element.cpp"
+        "../../test/primitives/linkage.cpp"
+        "../../test/primitives/manager.cpp"
+        "../../test/tables/hash_table.cpp"
+        "../../test/tables/hash_table_header.cpp"
+        "../../test/tables/hash_table_multimap.cpp" )
 
     add_test( NAME libbitcoin-database-test COMMAND libbitcoin-database-test
             --run_test=*
