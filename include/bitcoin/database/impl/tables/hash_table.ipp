@@ -49,13 +49,24 @@ bool CLASS::verify() const NOEXCEPT
 }
 
 TEMPLATE
+CLASS::link CLASS::search(const key& key) const NOEXCEPT
+{
+    Element record{ body_, header_.head(key) };
+    while (!record.is_terminal() && !record.is_match(key))
+        record.advance();
+
+    return record.self();
+}
+
+TEMPLATE
 reader_ptr CLASS::at(const link& record) const NOEXCEPT
 {
     if (record.is_terminal())
         return {};
 
     const auto ptr = body_.get(record);
-    BC_ASSERT_MSG(!is_null(ptr), "guarded by is_terminal");
+    if (!ptr)
+        return {};
 
     // Stream starts at key, skip to get data.
     const auto source = std::make_shared<reader>(ptr);
@@ -67,20 +78,15 @@ reader_ptr CLASS::at(const link& record) const NOEXCEPT
 TEMPLATE
 reader_ptr CLASS::find(const key& key) const NOEXCEPT
 {
-    Element element{ body_, header_.head(key) };
-    while (!element.is_terminal() && !element.is_match(key))
-        element.advance();
-
-    if (element.is_terminal())
+    const auto record = search(key);
+    if (record.is_terminal())
         return {};
 
-    const auto ptr = body_.get(element.self());
-    BC_ASSERT_MSG(!is_null(ptr), "guarded by is_terminal");
+    const auto source = at(record);
+    if (!source)
+        return {};
 
     // Stream starts at data, rewind to get link.
-    const auto source = std::make_shared<reader>(ptr);
-    source->skip_bytes(link_size);
-    if constexpr (!slab) { source->set_limit(record_size); }
     source->skip_bytes(key_size);
     return source;
 }
@@ -89,12 +95,12 @@ TEMPLATE
 writer_ptr CLASS::push(const key& key, const link& size) NOEXCEPT
 {
     const auto item = body_.allocate(size);
-
     if (item.is_terminal())
         return {};
 
     const auto ptr = body_.get(item);
-    BC_ASSERT_MSG(!is_null(ptr), "guarded by is_terminal");
+    if (!ptr)
+        return {};
 
     const auto sink = std::make_shared<writer>(ptr);
     const auto index = header_.index(key);

@@ -51,14 +51,17 @@ public:
 
     /// Thread safe.
     /// -----------------------------------------------------------------------
+    
+    /// Search table for link of the key.
+    link search(const key& key) const NOEXCEPT;
 
     /// Reader positioned at key.
     reader_ptr at(const link& record) const NOEXCEPT;
 
-    /// Reader positioned at data.
+    /// Reader positioned at data, same as at(record(key)).
     reader_ptr find(const key& key) const NOEXCEPT;
 
-    /// Reader positioned at data, size must be one/default for records.
+    /// Reader positioned at data, size is one for records and bytes for slabs.
     writer_ptr push(const key& key, const link& size=one) NOEXCEPT;
 
 private:
