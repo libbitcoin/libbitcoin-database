@@ -55,7 +55,7 @@ Element CLASS::iterator(const key& key) const NOEXCEPT
 }
 
 TEMPLATE
-CLASS::link CLASS::first(const key& key) const NOEXCEPT
+typename CLASS::link CLASS::first(const key& key) const NOEXCEPT
 {
     return iterator(key).self();
 }
