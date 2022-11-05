@@ -66,9 +66,6 @@
     <ClCompile Include="..\..\..\..\test\tables\hash_table_header.cpp">
       <Filter>src\tables</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\hash_table_multimap.cpp">
-      <Filter>src\tables</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <Filter>src</Filter>
     </ClCompile>

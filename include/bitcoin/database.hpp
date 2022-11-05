@@ -38,6 +38,5 @@
 #include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/tables/hash_table.hpp>
 #include <bitcoin/database/tables/hash_table_header.hpp>
-#include <bitcoin/database/tables/hash_table_multimap.hpp>
 
 #endif

@@ -161,9 +161,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\hash_table_header.hpp">
       <Filter>include\bitcoin\database\tables</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\hash_table_multimap.hpp">
-      <Filter>include\bitcoin\database\tables</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
@@ -188,9 +185,6 @@
       <Filter>include\bitcoin\database\impl\tables</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\tables\hash_table_header.ipp">
-      <Filter>include\bitcoin\database\impl\tables</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\tables\hash_table_multimap.ipp">
       <Filter>include\bitcoin\database\impl\tables</Filter>
     </None>
     <None Include="packages.config" />

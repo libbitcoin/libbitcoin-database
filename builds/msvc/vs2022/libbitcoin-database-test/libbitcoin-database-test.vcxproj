@@ -84,7 +84,6 @@
     <ClCompile Include="..\..\..\..\test\storage.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\hash_table.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\hash_table_header.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\hash_table_multimap.cpp" />
     <ClCompile Include="..\..\..\..\test\test.cpp" />
   </ItemGroup>
   <ItemGroup>

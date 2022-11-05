@@ -108,7 +108,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\hash_table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\hash_table_header.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\hash_table_multimap.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp" />
     <ClInclude Include="..\..\..\..\src\memory\mman-win32\mman.h" />
   </ItemGroup>
@@ -119,7 +118,6 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\manager.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\tables\hash_table.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\tables\hash_table_header.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\tables\hash_table_multimap.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

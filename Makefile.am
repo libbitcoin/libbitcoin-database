@@ -73,8 +73,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/primitives/linkage.cpp \
     test/primitives/manager.cpp \
     test/tables/hash_table.cpp \
-    test/tables/hash_table_header.cpp \
-    test/tables/hash_table_multimap.cpp
+    test/tables/hash_table_header.cpp
 
 endif WITH_TESTS
 
@@ -116,8 +115,7 @@ include_bitcoin_database_impl_primitives_HEADERS = \
 include_bitcoin_database_impl_tablesdir = ${includedir}/bitcoin/database/impl/tables
 include_bitcoin_database_impl_tables_HEADERS = \
     include/bitcoin/database/impl/tables/hash_table.ipp \
-    include/bitcoin/database/impl/tables/hash_table_header.ipp \
-    include/bitcoin/database/impl/tables/hash_table_multimap.ipp
+    include/bitcoin/database/impl/tables/hash_table_header.ipp
 
 include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks
 include_bitcoin_database_locks_HEADERS = \
@@ -151,8 +149,7 @@ include_bitcoin_database_primitives_HEADERS = \
 include_bitcoin_database_tablesdir = ${includedir}/bitcoin/database/tables
 include_bitcoin_database_tables_HEADERS = \
     include/bitcoin/database/tables/hash_table.hpp \
-    include/bitcoin/database/tables/hash_table_header.hpp \
-    include/bitcoin/database/tables/hash_table_multimap.hpp
+    include/bitcoin/database/tables/hash_table_header.hpp
 
 
 # Custom make targets.
