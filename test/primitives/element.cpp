@@ -26,21 +26,15 @@ class element_
   : public element<Link, Key, Size>
 {
 public:
-    element_(manager<Link, Size>& manage) NOEXCEPT
-      : element_(manage, Link::terminal)
+    element_(manager<Link, Size>& manage, const Key& key) NOEXCEPT
+      : element_(manage, Link::terminal, key)
     {
     }
 
-    element_(manager<Link, Size>& manage, Link link) NOEXCEPT
-      : element<Link, Key, Size>(manage, link)
+    element_(manager<Link, Size>& manage, const Link& link,
+        const Key& key) NOEXCEPT
+      : element<Link, Key, Size>(manage, link, key)
     {
-    }
-
-    // element_ methods
-
-    memory_ptr get_() const NOEXCEPT
-    {
-        return base::get();
     }
 
     memory_ptr get_(size_t offset) const NOEXCEPT
@@ -56,53 +50,18 @@ private:
 using link = linkage<link_size>; \
 using key = data_array<key_size>; \
 using manage = manager<link, data_size>; \
-using access = element_<link, key, data_size>
+using access = element_<link, key, data_size>; \
+constexpr key key0{}
 
-BOOST_AUTO_TEST_CASE(element__advance_self__linked__false)
-{
-    DECLARE(1, 0, 0);
-
-    data_chunk data{ 0x02, 0x00, 0xff, 0xcc };
-    test::storage file{ data };
-    manage manager{ file };
-    access element{ manager, 0_u8 };
-
-    // First link is zero.
-    BOOST_REQUIRE_EQUAL(element.self(), 0x00u);
-
-    // Sets self/link to 0x02 (data[0]).
-    element.advance();
-    BOOST_REQUIRE(!element.is_terminal());
-    BOOST_REQUIRE_EQUAL(element.self(), 0x02u);
-
-    // Sets self/link to terminal (data[2]).
-    element.advance();
-    BOOST_REQUIRE(element.is_terminal());
-    BOOST_REQUIRE_EQUAL(element.self(), link::terminal);
-}
-
-BOOST_AUTO_TEST_CASE(element__get__terminal__nullptr)
+BOOST_AUTO_TEST_CASE(element__get__empty__nullptr)
 {
     DECLARE(4, 0, 0);
 
     test::storage file;
     manage manager{ file };
-    const access element{ manager };
-
-    BOOST_REQUIRE(!element.get_());
+    const access element{ manager, key0 };
+    BOOST_REQUIRE(!element.get_(0));
     BOOST_REQUIRE(!element.get_(1));
-}
-
-BOOST_AUTO_TEST_CASE(element__get__offset__nullptr)
-{
-    DECLARE(4, 0, 0);
-
-    data_chunk data(42u, 0xff);
-    test::storage file{ data };
-    manage manager{ file };
-    const access element{ manager, 0 };
-
-    BOOST_REQUIRE_EQUAL(*element.get_(41)->begin(), 0xffu);
 }
 
 BOOST_AUTO_TEST_CASE(element__get__no_offset__expected)
@@ -112,100 +71,71 @@ BOOST_AUTO_TEST_CASE(element__get__no_offset__expected)
     data_chunk data{ 0x00, 0x01, 0x02, 0x03 };
     test::storage file{ data };
     manage manager{ file };
-    const access element{ manager, 1u };
-
-    BOOST_REQUIRE_EQUAL(*element.get_()->begin(), 0x01u);
+    const access element{ manager, 1u, key0 };
+    BOOST_REQUIRE_EQUAL(*element.get_(0)->begin(), 0x01u);
 }
 
-BOOST_AUTO_TEST_CASE(element__get__offset__expected)
+BOOST_AUTO_TEST_CASE(element__get__offset1__expected)
 {
     DECLARE(4, 0, 0);
 
     data_chunk data{ 0x00, 0x01, 0x02, 0x03 };
     test::storage file{ data };
     manage manager{ file };
-    const access element{ manager, 2u };
-
+    const access element{ manager, 2u, key0 };
     BOOST_REQUIRE_EQUAL(*element.get_(1)->begin(), 0x03u);
 }
 
-BOOST_AUTO_TEST_CASE(element__get_next__linked__false)
+BOOST_AUTO_TEST_CASE(element__get__offset_to_back__expected)
 {
-    DECLARE(1, 0, 0);
+    DECLARE(4, 0, 0);
 
-    data_chunk data{ 0x02, 0x00, 0xff, 0xcc };
+    data_chunk data(42u, 0xff);
     test::storage file{ data };
     manage manager{ file };
-    access element{ manager, 0_u8 };
-
-    // First link is zero.
-    BOOST_REQUIRE_EQUAL(element.self(), 0x00u);
-    BOOST_REQUIRE_EQUAL(element.get_next(), 0x02u);
-
-    // Sets self/link to 0x02 (data[0]).
-    element.advance();
-    BOOST_REQUIRE_EQUAL(element.self(), 0x02u);
-    BOOST_REQUIRE_EQUAL(element.get_next(), 0xffu);
+    const access element{ manager, 0, key0 };
+    BOOST_REQUIRE_EQUAL(*element.get_(41)->begin(), 0xffu);
 }
 
-BOOST_AUTO_TEST_CASE(element__get_key__2_bytes__expected)
+BOOST_AUTO_TEST_CASE(element__next__self__expected)
 {
-    DECLARE(1, 2, 0);
+    DECLARE(1, 2, 2);
 
-    data_chunk data{ 0x03, 0x11, 0x22, 0xff, 0x33, 0x44 };
+    data_chunk data{ 0x01, 0x1a, 0x2a, 0x02, 0x1a, 0x2a, 0xff, 0xcc, 0xcc };
     test::storage file{ data };
     manage manager{ file };
-    access element{ manager, 0_u8 };
 
-    constexpr key expected1{ 0x11, 0x22 };
-    BOOST_REQUIRE_EQUAL(element.get_key(), expected1);
+    constexpr key key1{ 0x1a, 0x2a };
+    access element1{ manager, 0, key1 };
 
-    element.advance();
-    constexpr key expected2{ 0x33, 0x44 };
-    BOOST_REQUIRE_EQUAL(element.get_key(), expected2);
+    // First link is zero, matched.
+    BOOST_REQUIRE_EQUAL(element1.self(), 0x00u);
 
-    element.advance();
-    BOOST_REQUIRE(element.is_terminal());
+    // Sets self/link to 0x01 (data[3]), matched.
+    BOOST_REQUIRE(element1.next());
+    BOOST_REQUIRE(!element1.self().is_terminal());
+    BOOST_REQUIRE_EQUAL(element1.self(), 0x01u);
+
+    // No more matches.
+    BOOST_REQUIRE(!element1.next());
+    BOOST_REQUIRE_EQUAL(element1.self(), link::terminal);
 }
 
-BOOST_AUTO_TEST_CASE(element__is_match__2_bytes__expected)
+BOOST_AUTO_TEST_CASE(element__next__true__non_terminal)
 {
-    DECLARE(1, 2, 5);
+    DECLARE(1, 2, 2);
 
-    data_chunk data{ 0x01, 0x1a, 0x2a, 0x3a, 0x4a, 0x5a, 0xff, 0x1b, 0x2b, 0x3b, 0x4b, 0x5b };
+    data_chunk data{ 0x01, 0x1a, 0x2a, 0x02, 0x1a, 0x2a, 0xff, 0xcc, 0xcc };
     test::storage file{ data };
     manage manager{ file };
-    access element{ manager, 0_u8 };
 
-    BOOST_REQUIRE(element.is_match({ 0x1a, 0x2a }));
+    constexpr key key1{ 0x1a, 0x2a };
+    access element{ manager, 0, key1 };
 
-    element.advance();
-    BOOST_REQUIRE(element.is_match({ 0x1b, 0x2b }));
-
-    element.advance();
-    BOOST_REQUIRE(element.is_terminal());
-}
-
-BOOST_AUTO_TEST_CASE(element__is_terminal__terminal__true)
-{
-    DECLARE(1, 0, 0);
-
-    test::storage file;
-    manage manager{ file };
-    const access element{ manager };
-
-    BOOST_REQUIRE(element.is_terminal());
-}
-
-BOOST_AUTO_TEST_CASE(element__is_terminal__not_terminal__tfalse)
-{
-    DECLARE(1, 0, 0);
-
-    test::storage file;
-    manage manager{ file };
-    const access element{ manager, 0x00_u8 };
-
-    BOOST_REQUIRE(!element.is_terminal());
+    while (element.next())
+    {
+        BOOST_REQUIRE(!element.self().is_terminal());
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

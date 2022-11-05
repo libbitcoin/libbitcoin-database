@@ -25,7 +25,7 @@ constexpr auto link_size = 5_size;
 constexpr auto key_size = 10_size;
 constexpr auto header_size = 105_size;
 
-// Key size does not factor into header byte size (for search key only).
+// Key size does not factor into header byte size (for first key only).
 constexpr auto links = header_size / link_size;
 static_assert(links == 21u);
 
@@ -318,9 +318,9 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__at__terminal__false)
     BOOST_REQUIRE(!instance.at(link::terminal));
 }
 
-// search(not found)
+// first(not found)
 
-BOOST_AUTO_TEST_CASE(record_hash_table__search__empty__terminal)
+BOOST_AUTO_TEST_CASE(record_hash_table__first__empty__terminal)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -328,11 +328,11 @@ BOOST_AUTO_TEST_CASE(record_hash_table__search__empty__terminal)
     test::storage body_store{ body_file };
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.search({ 0x00 }).is_terminal());
-    BOOST_REQUIRE(instance.search({ 0x42 }).is_terminal());
+    BOOST_REQUIRE(instance.first({ 0x00 }).is_terminal());
+    BOOST_REQUIRE(instance.first({ 0x42 }).is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__search__empty__terminal)
+BOOST_AUTO_TEST_CASE(slab_hash_table__first__empty__terminal)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -340,13 +340,13 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__search__empty__terminal)
     test::storage body_store{ body_file };
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.search({ 0x00 }).is_terminal());
-    BOOST_REQUIRE(instance.search({ 0x42 }).is_terminal());
+    BOOST_REQUIRE(instance.first({ 0x00 }).is_terminal());
+    BOOST_REQUIRE(instance.first({ 0x42 }).is_terminal());
 }
 
-// search(found)
+// first(found)
 
-BOOST_AUTO_TEST_CASE(record_hash_table__search__exists__found)
+BOOST_AUTO_TEST_CASE(record_hash_table__first__exists__found)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -355,10 +355,10 @@ BOOST_AUTO_TEST_CASE(record_hash_table__search__exists__found)
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.push({ 0x42 })->finalize());
-    BOOST_REQUIRE(!instance.search({ 0x42 }).is_terminal());
+    BOOST_REQUIRE(!instance.first({ 0x42 }).is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__search__exists__found)
+BOOST_AUTO_TEST_CASE(slab_hash_table__first__exists__found)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -367,7 +367,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__search__exists__found)
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.push({ 0x42 }, slab_size)->finalize());
-    BOOST_REQUIRE(!instance.search({ 0x42 }).is_terminal());
+    BOOST_REQUIRE(!instance.first({ 0x42 }).is_terminal());
 }
 
 // at(exhausted)

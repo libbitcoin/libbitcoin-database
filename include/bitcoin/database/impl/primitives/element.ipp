@@ -26,79 +26,66 @@
 namespace libbitcoin {
 namespace database {
 
+BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
+
 TEMPLATE
-CLASS::element(const manager<Link, Size>& manage, Link value) NOEXCEPT
-  : manager_(manage), link_(value)
+CLASS::element(const manager<Link, Size>& manage, const Link& start,
+    const Key& key) NOEXCEPT
+  : manager_(manage), link_(start), key_(key)
 {
 }
 
 TEMPLATE
-void CLASS::advance() NOEXCEPT
+bool CLASS::next() NOEXCEPT
 {
-    BC_ASSERT_MSG(!link_.is_terminal(), "advancing from terminal");
-    link_ = get_next();
+    while (!link_.is_terminal())
+    {
+        link_ = get_next();
+        if (is_match())
+            return true;
+    }
+    
+    return false;
 }
 
 TEMPLATE
-Link CLASS::self() const NOEXCEPT
+Link CLASS::self() NOEXCEPT
 {
+    if (!is_match())
+        next();
+
     return link_;
+}
+
+// protected
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+bool CLASS::is_match() const NOEXCEPT
+{
+    const auto body = get(Link::size);
+    if (!body) return false;
+    return std::equal(key_.begin(), key_.end(), body->begin());
 }
 
 TEMPLATE
 Link CLASS::get_next() const NOEXCEPT
 {
-    const auto body = get();
-    BC_ASSERT_MSG(body, "getting next from terminal");
-
+    if (link_.is_terminal()) return link_;
+    auto body = manager_.get(link_);
+    if (!body) return Link::terminal;
     return { array_cast<Link::size>(*body) };
-}
-
-TEMPLATE
-Key CLASS::get_key() const NOEXCEPT
-{
-    const auto body = get(Link::size);
-    BC_ASSERT_MSG(body, "getting key from terminal");
-
-    return array_cast<array_count<Key>>(*body);
-}
-
-TEMPLATE
-bool CLASS::is_match(const Key& value) const NOEXCEPT
-{
-    const auto body = get(Link::size);
-    BC_ASSERT_MSG(body, "comparing key at terminal");
-
-    BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
-    return std::equal(value.begin(), value.end(), body->begin());
-    BC_POP_WARNING()
-}
-
-TEMPLATE
-bool CLASS::is_terminal() const NOEXCEPT
-{
-    return link_.is_terminal();
-}
-
-// protected
-// ----------------------------------------------------------------------------
-// Obtaining memory object is considered const access despite the fact that
-// memory is writeable. Non-const manager access implies memory map modify.
-
-TEMPLATE
-memory_ptr CLASS::get() const NOEXCEPT
-{
-    // Returns nullptr if link_ is terminal.
-    return manager_.get(link_);
 }
 
 TEMPLATE
 memory_ptr CLASS::get(size_t offset) const NOEXCEPT
 {
-    auto body = get();
+    auto body = manager_.get(link_);
     if (body) body->increment(offset);
     return body;
 }
+
+BC_POP_WARNING()
 
 } // namespace database
 } // namespace libbitcoin

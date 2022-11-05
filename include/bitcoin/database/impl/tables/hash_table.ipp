@@ -49,13 +49,15 @@ bool CLASS::verify() const NOEXCEPT
 }
 
 TEMPLATE
-CLASS::link CLASS::search(const key& key) const NOEXCEPT
+Element CLASS::iterator(const key& key) const NOEXCEPT
 {
-    Element record{ body_, header_.head(key) };
-    while (!record.is_terminal() && !record.is_match(key))
-        record.advance();
+    return { body_, header_.head(key), key };
+}
 
-    return record.self();
+TEMPLATE
+CLASS::link CLASS::first(const key& key) const NOEXCEPT
+{
+    return iterator(key).self();
 }
 
 TEMPLATE
@@ -78,7 +80,7 @@ reader_ptr CLASS::at(const link& record) const NOEXCEPT
 TEMPLATE
 reader_ptr CLASS::find(const key& key) const NOEXCEPT
 {
-    const auto record = search(key);
+    const auto record = first(key);
     if (record.is_terminal())
         return {};
 

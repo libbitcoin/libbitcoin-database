@@ -37,28 +37,17 @@ public:
     using link = Link;
     using key = Key;
 
-    element(const manager<Link, Size>& manage, Link value) NOEXCEPT;
+    /// Caller must keep key value in scope.
+    element(const manager<Link, Size>& manage, const Link& start,
+        const Key& key) NOEXCEPT;
 
-    /// Advance to next element.
-    void advance() NOEXCEPT;
-
-    /// Link of this element (or eof).
-    Link self() const NOEXCEPT;
-
-    /// Link to next element (or eof).
-    Link get_next() const NOEXCEPT;
-
-    /// The element natural key.
-    Key get_key() const NOEXCEPT;
-
-    /// Natural key matches specified value.
-    bool is_match(const Key& value) const NOEXCEPT;
-
-    /// True if link is eof (and above methods are undefined).
-    bool is_terminal() const NOEXCEPT;
+    /// Advance to and return next element.
+    bool next() NOEXCEPT;
+    Link self() NOEXCEPT;
 
 protected:
-    memory_ptr get() const NOEXCEPT;
+    bool is_match() const NOEXCEPT;
+    Link get_next() const NOEXCEPT;
     memory_ptr get(size_t offset) const NOEXCEPT;
 
 private:
@@ -70,6 +59,7 @@ private:
 
     const manager<Link, Size>& manager_;
     Link link_;
+    const Key& key_;
 };
 
 } // namespace database

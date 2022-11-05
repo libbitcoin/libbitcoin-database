@@ -51,14 +51,17 @@ public:
 
     /// Thread safe.
     /// -----------------------------------------------------------------------
+
+    /// Search table for links of all keys.
+    Element iterator(const key& key) const NOEXCEPT;
     
-    /// Search table for link of the key.
-    link search(const key& key) const NOEXCEPT;
+    /// Search table for link of first instance of key.
+    link first(const key& key) const NOEXCEPT;
 
     /// Reader positioned at key.
     reader_ptr at(const link& record) const NOEXCEPT;
 
-    /// Reader positioned at data, same as at(record(key)).
+    /// Reader positioned at data, same as at(first(key)).
     reader_ptr find(const key& key) const NOEXCEPT;
 
     /// Reader positioned at data, size is one for records and bytes for slabs.
