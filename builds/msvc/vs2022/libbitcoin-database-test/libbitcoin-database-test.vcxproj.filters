@@ -48,6 +48,12 @@
     <ClCompile Include="..\..\..\..\test\primitives\element.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\primitives\hash_table.cpp">
+      <Filter>src\primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\primitives\hash_table_header.cpp">
+      <Filter>src\primitives</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
@@ -60,10 +66,7 @@
     <ClCompile Include="..\..\..\..\test\storage.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\hash_table.cpp">
-      <Filter>src\tables</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\hash_table_header.cpp">
+    <ClCompile Include="..\..\..\..\test\tables\table.cpp">
       <Filter>src\tables</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">

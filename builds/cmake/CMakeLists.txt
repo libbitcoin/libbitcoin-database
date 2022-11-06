@@ -208,10 +208,11 @@ if (with-tests)
         "../../test/memory/file.cpp"
         "../../test/memory/map.cpp"
         "../../test/primitives/element.cpp"
+        "../../test/primitives/hash_table.cpp"
+        "../../test/primitives/hash_table_header.cpp"
         "../../test/primitives/linkage.cpp"
         "../../test/primitives/manager.cpp"
-        "../../test/tables/hash_table.cpp"
-        "../../test/tables/hash_table_header.cpp" )
+        "../../test/tables/table.cpp" )
 
     add_test( NAME libbitcoin-database-test COMMAND libbitcoin-database-test
             --run_test=*

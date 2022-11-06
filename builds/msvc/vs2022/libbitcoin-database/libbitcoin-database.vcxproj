@@ -103,21 +103,23 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\map_sink.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\map_source.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\element.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table_header.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linkage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\hash_table.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\hash_table_header.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp" />
     <ClInclude Include="..\..\..\..\src\memory\mman-win32\mman.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\accessor.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\element.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hash_table.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hash_table_header.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\linkage.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\manager.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\tables\hash_table.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\tables\hash_table_header.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\tables\table.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

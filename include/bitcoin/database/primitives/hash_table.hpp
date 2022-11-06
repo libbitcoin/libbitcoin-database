@@ -16,13 +16,13 @@
 /// You should have received a copy of the GNU Affero General Public License
 /// along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_HASH_TABLE_HPP
-#define LIBBITCOIN_DATABASE_TABLES_HASH_TABLE_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASH_TABLE_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_HASH_TABLE_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/tables/hash_table_header.hpp>
+#include <bitcoin/database/primitives/hash_table_header.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
 #include <bitcoin/database/memory/map_sink.hpp>
@@ -90,7 +90,7 @@ private:
 template <typename Element>
 #define CLASS hash_table<Element>
 
-#include <bitcoin/database/impl/tables/hash_table.ipp>
+#include <bitcoin/database/impl/primitives/hash_table.ipp>
 
 #undef CLASS
 #undef TEMPLATE
