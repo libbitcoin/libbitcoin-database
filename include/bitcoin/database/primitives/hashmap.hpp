@@ -22,7 +22,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/hashmap_header.hpp>
+#include <bitcoin/database/primitives/header.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
@@ -74,7 +74,7 @@ private:
     static constexpr auto record_size = Iterator::size;
     static constexpr auto slab = is_zero(record_size);
 
-    using header = hashmap_header<link, key>;
+    using header = header<link, key>;
     using manage = manager<link, record_size>;
 
     // hash/head/push thread safe.

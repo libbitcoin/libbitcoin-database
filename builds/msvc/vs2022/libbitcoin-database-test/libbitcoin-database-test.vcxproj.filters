@@ -22,6 +22,15 @@
     <Filter Include="src\tables">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000004}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\tables\archives">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\tables\caches">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000006}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\tables\indexes">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000007}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\test\locks\file_lock.cpp">
@@ -66,8 +75,65 @@
     <ClCompile Include="..\..\..\..\test\storage.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\table.cpp">
-      <Filter>src\tables</Filter>
+    <ClCompile Include="..\..\..\..\test\tables\archives\header.cpp">
+      <Filter>src\tables\archives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\archives\input.cpp">
+      <Filter>src\tables\archives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\archives\output.cpp">
+      <Filter>src\tables\archives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\archives\point.cpp">
+      <Filter>src\tables\archives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\archives\puts.cpp">
+      <Filter>src\tables\archives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\archives\transaction.cpp">
+      <Filter>src\tables\archives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\archives\txs.cpp">
+      <Filter>src\tables\archives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\caches\bootstrap.cpp">
+      <Filter>src\tables\caches</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\caches\buffer.cpp">
+      <Filter>src\tables\caches</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\caches\neutrino.cpp">
+      <Filter>src\tables\caches</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\caches\validated_block.cpp">
+      <Filter>src\tables\caches</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\caches\validated_tx.cpp">
+      <Filter>src\tables\caches</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\indexes\address.cpp">
+      <Filter>src\tables\indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\indexes\candidate_height.cpp">
+      <Filter>src\tables\indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\indexes\confirmed_block.cpp">
+      <Filter>src\tables\indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\indexes\confirmed_height.cpp">
+      <Filter>src\tables\indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\indexes\confirmed_tx.cpp">
+      <Filter>src\tables\indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\indexes\input_tx.cpp">
+      <Filter>src\tables\indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\indexes\output_tx.cpp">
+      <Filter>src\tables\indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\indexes\spent_output.cpp">
+      <Filter>src\tables\indexes</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <Filter>src</Filter>

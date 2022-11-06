@@ -16,9 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "../test.hpp"
-#include "../storage.hpp"
+#include <bitcoin/database/tables/archives/transaction.hpp>
 
-BOOST_AUTO_TEST_SUITE(table_tests)
+#include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
 
-BOOST_AUTO_TEST_SUITE_END()
+namespace libbitcoin {
+namespace database {
+
+} // namespace database
+} // namespace libbitcoin

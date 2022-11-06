@@ -99,9 +99,9 @@ static_assert(is_zero(std::tuple_size<empty_key>::value));
 
 #endif
 
-// hashmap_header
+// header
 // list_element
-// hashmap          -> hashmap_header, list_element
+// hashmap          -> header, list_element
 // hashmap_multimap -> hashmap, list_element, record_manager
 // list                -> list_element, list_iterator
 // list_iterator       -> list_element
