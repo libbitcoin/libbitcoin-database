@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ITERATOR_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_ITERATOR_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -30,7 +30,7 @@ namespace database {
 
 /// Size non-zero implies record manager (ordinal record links).
 template <typename Link, typename Key, size_t Size = zero>
-class element
+class iterator
 {
 public:
     static constexpr auto size = Size;
@@ -38,10 +38,10 @@ public:
     using key = Key;
 
     /// Caller must keep key value in scope.
-    element(const manager<Link, Size>& manage, const Link& start,
+    iterator(const manager<Link, Size>& manage, const Link& start,
         const Key& key) NOEXCEPT;
 
-    /// Advance to and return next element.
+    /// Advance to and return next iterator.
     bool next() NOEXCEPT;
     Link self() NOEXCEPT;
 
@@ -67,9 +67,9 @@ private:
 
 #define TEMPLATE \
 template <typename Link, typename Key, size_t Size>
-#define CLASS element<Link, Key, Size>
+#define CLASS iterator<Link, Key, Size>
 
-#include <bitcoin/database/impl/primitives/element.ipp>
+#include <bitcoin/database/impl/primitives/iterator.ipp>
 
 #undef CLASS
 #undef TEMPLATE

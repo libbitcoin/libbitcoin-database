@@ -29,7 +29,7 @@ namespace database {
 BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
 
 TEMPLATE
-CLASS::element(const manager<Link, Size>& manage, const Link& start,
+CLASS::iterator(const manager<Link, Size>& manage, const Link& start,
     const Key& key) NOEXCEPT
   : manager_(manage), link_(start), key_(key)
 {

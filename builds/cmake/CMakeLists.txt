@@ -207,9 +207,9 @@ if (with-tests)
         "../../test/memory/accessor.cpp"
         "../../test/memory/file.cpp"
         "../../test/memory/map.cpp"
-        "../../test/primitives/element.cpp"
         "../../test/primitives/hash_table.cpp"
         "../../test/primitives/hash_table_header.cpp"
+        "../../test/primitives/iterator.cpp"
         "../../test/primitives/linkage.cpp"
         "../../test/primitives/manager.cpp"
         "../../test/tables/table.cpp" )

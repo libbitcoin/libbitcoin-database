@@ -45,13 +45,13 @@
     <ClCompile Include="..\..\..\..\test\memory\map.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\element.cpp">
-      <Filter>src\primitives</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\hash_table.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\hash_table_header.cpp">
+      <Filter>src\primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp">

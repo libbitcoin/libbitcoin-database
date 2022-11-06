@@ -40,7 +40,7 @@ constexpr auto record_size = key_size + 4_size;
 using link = linkage<link_size>;
 using key = data_array<key_size>;
 
-using record_item = element<link, key, record_size>;
+using record_item = iterator<link, key, record_size>;
 using record_table = hash_table<record_item>;
 
 // record_hash_table__create_verify
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__non_empty_head_file__fail
     BOOST_REQUIRE(body_file.empty());
 }
 
-BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__multiple_element_body_file__failure)
+BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__multiple_iterator_body_file__failure)
 {
     constexpr auto body_size = 3u * (link_size + record_size);
     data_chunk head_file;
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__multiple_element_body_fil
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__multiple_fractional_element_body_file__failure)
+BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__multiple_fractional_iterator_body_file__failure)
 {
     constexpr auto body_size = 3u * (link_size + record_size) + 2u;
     data_chunk head_file;
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__multiple_fractional_eleme
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__one_element_body_file__failure)
+BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__one_iterator_body_file__failure)
 {
     constexpr auto body_size = link_size + record_size;
     data_chunk head_file;
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__one_element_body_file__fa
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__sub_one_element_body_file__success)
+BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__sub_one_iterator_body_file__success)
 {
     constexpr auto body_size = sub1(link_size + record_size);
     data_chunk head_file;
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__sub_one_element_body_file
 // slab_hash_table__create_verify
 
 constexpr auto slab_size = link_size + key_size + 4_size;
-using slab_item = element<link, key, zero>;
+using slab_item = iterator<link, key, zero>;
 using slab_table = hash_table<slab_item>;
 
 BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__empty_files__success)
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__non_empty_head_file__failur
     BOOST_REQUIRE(body_file.empty());
 }
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__multiple_element_body_file__failure)
+BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__multiple_iterator_body_file__failure)
 {
     constexpr auto body_size = 3u * slab_size;
     data_chunk head_file;
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__multiple_element_body_file_
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__multiple_fractional_element_body_file__failure)
+BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__multiple_fractional_iterator_body_file__failure)
 {
     constexpr auto body_size = 3u * slab_size + 2u;
     data_chunk head_file;
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__multiple_fractional_element
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__one_element_body_file__failure)
+BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__one_iterator_body_file__failure)
 {
     constexpr auto body_size = slab_size;
     data_chunk head_file;
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__one_element_body_file__fail
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__sub_one_element_body_file__failure)
+BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__sub_one_iterator_body_file__failure)
 {
     constexpr auto body_size = sub1(slab_size);
     data_chunk head_file;

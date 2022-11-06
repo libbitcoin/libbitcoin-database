@@ -33,9 +33,9 @@
 #include <bitcoin/database/memory/map_source.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
-#include <bitcoin/database/primitives/element.hpp>
 #include <bitcoin/database/primitives/hash_table.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
+#include <bitcoin/database/primitives/iterator.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/tables/table.hpp>

@@ -23,6 +23,7 @@
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/hash_table_header.hpp>
+#include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
 #include <bitcoin/database/memory/map_sink.hpp>
@@ -31,12 +32,12 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename Element>
+template <typename Iterator>
 class hash_table
 {
 public:
-    using link = typename Element::link;
-    using key = typename Element::key;
+    using link = typename Iterator::link;
+    using key = typename Iterator::key;
 
     hash_table(storage& header, storage& body, const link& buckets) NOEXCEPT;
 
@@ -53,7 +54,7 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Search table for links of all keys.
-    Element iterator(const key& key) const NOEXCEPT;
+    Iterator iterator(const key& key) const NOEXCEPT;
     
     /// Search table for link of first instance of key.
     link first(const key& key) const NOEXCEPT;
@@ -70,7 +71,7 @@ public:
 private:
     static constexpr auto link_size = link::size;
     static constexpr auto key_size = array_count<key>;
-    static constexpr auto record_size = Element::size;
+    static constexpr auto record_size = Iterator::size;
     static constexpr auto slab = is_zero(record_size);
 
     using header = hash_table_header<link, key>;
@@ -87,8 +88,8 @@ private:
 } // namespace libbitcoin
 
 #define TEMPLATE \
-template <typename Element>
-#define CLASS hash_table<Element>
+template <typename Iterator>
+#define CLASS hash_table<Iterator>
 
 #include <bitcoin/database/impl/primitives/hash_table.ipp>
 

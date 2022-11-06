@@ -19,21 +19,21 @@
 #include "../test.hpp"
 #include "../storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(element_tests)
+BOOST_AUTO_TEST_SUITE(iterator_tests)
 
 template <typename Link, typename Key, size_t Size>
-class element_
-  : public element<Link, Key, Size>
+class iterator_
+  : public iterator<Link, Key, Size>
 {
 public:
-    element_(manager<Link, Size>& manage, const Key& key) NOEXCEPT
-      : element_(manage, Link::terminal, key)
+    iterator_(manager<Link, Size>& manage, const Key& key) NOEXCEPT
+      : iterator_(manage, Link::terminal, key)
     {
     }
 
-    element_(manager<Link, Size>& manage, const Link& link,
+    iterator_(manager<Link, Size>& manage, const Link& link,
         const Key& key) NOEXCEPT
-      : element<Link, Key, Size>(manage, link, key)
+      : iterator<Link, Key, Size>(manage, link, key)
     {
     }
 
@@ -43,61 +43,61 @@ public:
     }
 
 private:
-    using base = element<Link, Key, Size>;
+    using base = iterator<Link, Key, Size>;
 };
 
 #define DECLARE(link_size, key_size, data_size) \
 using link = linkage<link_size>; \
 using key = data_array<key_size>; \
 using manage = manager<link, data_size>; \
-using access = element_<link, key, data_size>; \
+using access = iterator_<link, key, data_size>; \
 constexpr key key0{}
 
-BOOST_AUTO_TEST_CASE(element__get__empty__nullptr)
+BOOST_AUTO_TEST_CASE(iterator__get__empty__nullptr)
 {
     DECLARE(4, 0, 0);
 
     test::storage file;
     manage manager{ file };
-    const access element{ manager, key0 };
-    BOOST_REQUIRE(!element.get_(0));
-    BOOST_REQUIRE(!element.get_(1));
+    const access iterator{ manager, key0 };
+    BOOST_REQUIRE(!iterator.get_(0));
+    BOOST_REQUIRE(!iterator.get_(1));
 }
 
-BOOST_AUTO_TEST_CASE(element__get__no_offset__expected)
+BOOST_AUTO_TEST_CASE(iterator__get__no_offset__expected)
 {
     DECLARE(4, 0, 0);
 
     data_chunk data{ 0x00, 0x01, 0x02, 0x03 };
     test::storage file{ data };
     manage manager{ file };
-    const access element{ manager, 1u, key0 };
-    BOOST_REQUIRE_EQUAL(*element.get_(0)->begin(), 0x01u);
+    const access iterator{ manager, 1u, key0 };
+    BOOST_REQUIRE_EQUAL(*iterator.get_(0)->begin(), 0x01u);
 }
 
-BOOST_AUTO_TEST_CASE(element__get__offset1__expected)
+BOOST_AUTO_TEST_CASE(iterator__get__offset1__expected)
 {
     DECLARE(4, 0, 0);
 
     data_chunk data{ 0x00, 0x01, 0x02, 0x03 };
     test::storage file{ data };
     manage manager{ file };
-    const access element{ manager, 2u, key0 };
-    BOOST_REQUIRE_EQUAL(*element.get_(1)->begin(), 0x03u);
+    const access iterator{ manager, 2u, key0 };
+    BOOST_REQUIRE_EQUAL(*iterator.get_(1)->begin(), 0x03u);
 }
 
-BOOST_AUTO_TEST_CASE(element__get__offset_to_back__expected)
+BOOST_AUTO_TEST_CASE(iterator__get__offset_to_back__expected)
 {
     DECLARE(4, 0, 0);
 
     data_chunk data(42u, 0xff);
     test::storage file{ data };
     manage manager{ file };
-    const access element{ manager, 0, key0 };
-    BOOST_REQUIRE_EQUAL(*element.get_(41)->begin(), 0xffu);
+    const access iterator{ manager, 0, key0 };
+    BOOST_REQUIRE_EQUAL(*iterator.get_(41)->begin(), 0xffu);
 }
 
-BOOST_AUTO_TEST_CASE(element__next__self__expected)
+BOOST_AUTO_TEST_CASE(iterator__next__self__expected)
 {
     DECLARE(1, 2, 2);
 
@@ -106,22 +106,22 @@ BOOST_AUTO_TEST_CASE(element__next__self__expected)
     manage manager{ file };
 
     constexpr key key1{ 0x1a, 0x2a };
-    access element1{ manager, 0, key1 };
+    access iterator1{ manager, 0, key1 };
 
     // First link is zero, matched.
-    BOOST_REQUIRE_EQUAL(element1.self(), 0x00u);
+    BOOST_REQUIRE_EQUAL(iterator1.self(), 0x00u);
 
     // Sets self/link to 0x01 (data[3]), matched.
-    BOOST_REQUIRE(element1.next());
-    BOOST_REQUIRE(!element1.self().is_terminal());
-    BOOST_REQUIRE_EQUAL(element1.self(), 0x01u);
+    BOOST_REQUIRE(iterator1.next());
+    BOOST_REQUIRE(!iterator1.self().is_terminal());
+    BOOST_REQUIRE_EQUAL(iterator1.self(), 0x01u);
 
     // No more matches.
-    BOOST_REQUIRE(!element1.next());
-    BOOST_REQUIRE_EQUAL(element1.self(), link::terminal);
+    BOOST_REQUIRE(!iterator1.next());
+    BOOST_REQUIRE_EQUAL(iterator1.self(), link::terminal);
 }
 
-BOOST_AUTO_TEST_CASE(element__next__true__non_terminal)
+BOOST_AUTO_TEST_CASE(iterator__next__true__non_terminal)
 {
     DECLARE(1, 2, 2);
 
@@ -130,11 +130,11 @@ BOOST_AUTO_TEST_CASE(element__next__true__non_terminal)
     manage manager{ file };
 
     constexpr key key1{ 0x1a, 0x2a };
-    access element{ manager, 0, key1 };
+    access iterator{ manager, 0, key1 };
 
-    while (element.next())
+    while (iterator.next())
     {
-        BOOST_REQUIRE(!element.self().is_terminal());
+        BOOST_REQUIRE(!iterator.self().is_terminal());
     }
 }
 

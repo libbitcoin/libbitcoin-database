@@ -77,9 +77,9 @@
     <ClCompile Include="..\..\..\..\test\memory\accessor.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\file.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\map.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives\element.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hash_table.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hash_table_header.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\manager.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
