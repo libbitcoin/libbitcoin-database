@@ -30,15 +30,9 @@ namespace database {
 class memory
 {
 public:
-    // for system::device<T>
     typedef uint8_t value_type;
-
-    // for database::copy_sink
     typedef value_type* iterator;
-
-    // for database::copy_source
     typedef const value_type* const_iterator;
-
     typedef std::shared_ptr<memory> ptr;
 
     /// Increment begin the specified number of bytes.

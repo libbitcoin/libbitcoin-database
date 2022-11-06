@@ -137,10 +137,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\map.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\map_sink.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\reader.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\map_source.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\writer.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hashmap.hpp">

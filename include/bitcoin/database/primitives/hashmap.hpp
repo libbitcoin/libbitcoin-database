@@ -26,8 +26,8 @@
 #include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
-#include <bitcoin/database/memory/map_sink.hpp>
-#include <bitcoin/database/memory/map_source.hpp>
+#include <bitcoin/database/memory/reader.hpp>
+#include <bitcoin/database/memory/writer.hpp>
 
 namespace libbitcoin {
 namespace database {

@@ -27,7 +27,7 @@
 namespace libbitcoin {
 namespace database {
 
-/// Shared r/w access to a memory buffer, mutex prevents memory remap.
+/// Shared r/w access to a memory buffer, mutex blocks memory remap.
 template <typename Mutex>
 class accessor final
   : public memory
