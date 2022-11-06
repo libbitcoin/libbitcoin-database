@@ -207,12 +207,12 @@ if (with-tests)
         "../../test/memory/accessor.cpp"
         "../../test/memory/file.cpp"
         "../../test/memory/map.cpp"
-        "../../test/primitives/element.cpp"
+        "../../test/primitives/hashmap.cpp"
+        "../../test/primitives/hashmap_header.cpp"
+        "../../test/primitives/iterator.cpp"
         "../../test/primitives/linkage.cpp"
         "../../test/primitives/manager.cpp"
-        "../../test/tables/hash_table.cpp"
-        "../../test/tables/hash_table_header.cpp"
-        "../../test/tables/hash_table_multimap.cpp" )
+        "../../test/tables/table.cpp" )
 
     add_test( NAME libbitcoin-database-test COMMAND libbitcoin-database-test
             --run_test=*

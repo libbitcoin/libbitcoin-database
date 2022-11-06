@@ -16,14 +16,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "../test.hpp"
-#include "../storage.hpp"
+#ifndef LIBBITCOIN_DATABASE_TABLES_TABLE_IPP
+#define LIBBITCOIN_DATABASE_TABLES_TABLE_IPP
 
-BOOST_AUTO_TEST_SUITE(hash_table_multimap_tests)
+#include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
 
-BOOST_AUTO_TEST_CASE(hash_table_multimap_test)
-{
-    BOOST_REQUIRE(true);
-}
+namespace libbitcoin {
+namespace database {
 
-BOOST_AUTO_TEST_SUITE_END()
+} // namespace database
+} // namespace libbitcoin
+
+#endif

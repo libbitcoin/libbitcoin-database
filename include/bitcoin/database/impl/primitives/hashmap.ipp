@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_HASH_TABLE_IPP
-#define LIBBITCOIN_DATABASE_TABLES_HASH_TABLE_IPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_IPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_IPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -29,7 +29,7 @@ namespace database {
 // memory is writeable. Non-const manager access implies memory map modify.
 
 TEMPLATE
-CLASS::hash_table(storage& header, storage& body, const link& buckets) NOEXCEPT
+CLASS::hashmap(storage& header, storage& body, const link& buckets) NOEXCEPT
   : header_(header, buckets), body_(body)
 {
 }
@@ -49,13 +49,26 @@ bool CLASS::verify() const NOEXCEPT
 }
 
 TEMPLATE
+Iterator CLASS::iterator(const key& key) const NOEXCEPT
+{
+    return { body_, header_.head(key), key };
+}
+
+TEMPLATE
+typename CLASS::link CLASS::first(const key& key) const NOEXCEPT
+{
+    return iterator(key).self();
+}
+
+TEMPLATE
 reader_ptr CLASS::at(const link& record) const NOEXCEPT
 {
     if (record.is_terminal())
         return {};
 
     const auto ptr = body_.get(record);
-    BC_ASSERT_MSG(!is_null(ptr), "guarded by is_terminal");
+    if (!ptr)
+        return {};
 
     // Stream starts at key, skip to get data.
     const auto source = std::make_shared<reader>(ptr);
@@ -67,20 +80,15 @@ reader_ptr CLASS::at(const link& record) const NOEXCEPT
 TEMPLATE
 reader_ptr CLASS::find(const key& key) const NOEXCEPT
 {
-    Element element{ body_, header_.head(key) };
-    while (!element.is_terminal() && !element.is_match(key))
-        element.advance();
-
-    if (element.is_terminal())
+    const auto record = first(key);
+    if (record.is_terminal())
         return {};
 
-    const auto ptr = body_.get(element.self());
-    BC_ASSERT_MSG(!is_null(ptr), "guarded by is_terminal");
+    const auto source = at(record);
+    if (!source)
+        return {};
 
     // Stream starts at data, rewind to get link.
-    const auto source = std::make_shared<reader>(ptr);
-    source->skip_bytes(link_size);
-    if constexpr (!slab) { source->set_limit(record_size); }
     source->skip_bytes(key_size);
     return source;
 }
@@ -89,12 +97,12 @@ TEMPLATE
 writer_ptr CLASS::push(const key& key, const link& size) NOEXCEPT
 {
     const auto item = body_.allocate(size);
-
     if (item.is_terminal())
         return {};
 
     const auto ptr = body_.get(item);
-    BC_ASSERT_MSG(!is_null(ptr), "guarded by is_terminal");
+    if (!ptr)
+        return {};
 
     const auto sink = std::make_shared<writer>(ptr);
     const auto index = header_.index(key);

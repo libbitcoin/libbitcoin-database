@@ -77,14 +77,14 @@
     <ClCompile Include="..\..\..\..\test\memory\accessor.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\file.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\map.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives\element.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\hashmap.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\hashmap_header.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\manager.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
     <ClCompile Include="..\..\..\..\test\storage.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\hash_table.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\hash_table_header.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\hash_table_multimap.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\table.cpp" />
     <ClCompile Include="..\..\..\..\test\test.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -16,29 +16,30 @@
 /// You should have received a copy of the GNU Affero General Public License
 /// along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_HASH_TABLE_HPP
-#define LIBBITCOIN_DATABASE_TABLES_HASH_TABLE_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/tables/hash_table_header.hpp>
+#include <bitcoin/database/primitives/hashmap_header.hpp>
+#include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
-#include <bitcoin/database/memory/map_sink.hpp>
-#include <bitcoin/database/memory/map_source.hpp>
+#include <bitcoin/database/memory/reader.hpp>
+#include <bitcoin/database/memory/writer.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-template <typename Element>
-class hash_table
+template <typename Iterator>
+class hashmap
 {
 public:
-    using link = typename Element::link;
-    using key = typename Element::key;
+    using link = typename Iterator::link;
+    using key = typename Iterator::key;
 
-    hash_table(storage& header, storage& body, const link& buckets) NOEXCEPT;
+    hashmap(storage& header, storage& body, const link& buckets) NOEXCEPT;
 
     /// Not thread safe.
     /// -----------------------------------------------------------------------
@@ -52,22 +53,28 @@ public:
     /// Thread safe.
     /// -----------------------------------------------------------------------
 
+    /// Search table for links of all keys.
+    Iterator iterator(const key& key) const NOEXCEPT;
+    
+    /// Search table for link of first instance of key.
+    link first(const key& key) const NOEXCEPT;
+
     /// Reader positioned at key.
     reader_ptr at(const link& record) const NOEXCEPT;
 
-    /// Reader positioned at data.
+    /// Reader positioned at data, same as at(first(key)).
     reader_ptr find(const key& key) const NOEXCEPT;
 
-    /// Reader positioned at data, size must be one/default for records.
+    /// Reader positioned at data, size is one for records and bytes for slabs.
     writer_ptr push(const key& key, const link& size=one) NOEXCEPT;
 
 private:
     static constexpr auto link_size = link::size;
     static constexpr auto key_size = array_count<key>;
-    static constexpr auto record_size = Element::size;
+    static constexpr auto record_size = Iterator::size;
     static constexpr auto slab = is_zero(record_size);
 
-    using header = hash_table_header<link, key>;
+    using header = hashmap_header<link, key>;
     using manage = manager<link, record_size>;
 
     // hash/head/push thread safe.
@@ -81,10 +88,10 @@ private:
 } // namespace libbitcoin
 
 #define TEMPLATE \
-template <typename Element>
-#define CLASS hash_table<Element>
+template <typename Iterator>
+#define CLASS hashmap<Iterator>
 
-#include <bitcoin/database/impl/tables/hash_table.ipp>
+#include <bitcoin/database/impl/primitives/hashmap.ipp>
 
 #undef CLASS
 #undef TEMPLATE

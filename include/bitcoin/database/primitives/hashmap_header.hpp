@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_HASH_TABLE_HEADER_HPP
-#define LIBBITCOIN_DATABASE_TABLES_HASH_TABLE_HEADER_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_HEADER_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_HEADER_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
@@ -29,12 +29,12 @@ namespace libbitcoin {
 namespace database {
 
 template <typename Link, typename Key>
-class hash_table_header
+class hashmap_header
 {
 public:
     using bytes = typename Link::bytes;
 
-    hash_table_header(storage& header, const Link& buckets) NOEXCEPT;
+    hashmap_header(storage& header, const Link& buckets) NOEXCEPT;
 
     /// Not thread safe.
     /// -----------------------------------------------------------------------
@@ -85,9 +85,9 @@ private:
 
 
 #define TEMPLATE template <typename Link, typename Key>
-#define CLASS hash_table_header<Link, Key>
+#define CLASS hashmap_header<Link, Key>
 
-#include <bitcoin/database/impl/tables/hash_table_header.ipp>
+#include <bitcoin/database/impl/primitives/hashmap_header.ipp>
 
 #undef CLASS
 #undef TEMPLATE

@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ITERATOR_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_ITERATOR_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -30,35 +30,24 @@ namespace database {
 
 /// Size non-zero implies record manager (ordinal record links).
 template <typename Link, typename Key, size_t Size = zero>
-class element
+class iterator
 {
 public:
     static constexpr auto size = Size;
     using link = Link;
     using key = Key;
 
-    element(const manager<Link, Size>& manage, Link value) NOEXCEPT;
+    /// Caller must keep key value in scope.
+    iterator(const manager<Link, Size>& manage, const Link& start,
+        const Key& key) NOEXCEPT;
 
-    /// Advance to next element.
-    void advance() NOEXCEPT;
-
-    /// Link of this element (or eof).
-    Link self() const NOEXCEPT;
-
-    /// Link to next element (or eof).
-    Link get_next() const NOEXCEPT;
-
-    /// The element natural key.
-    Key get_key() const NOEXCEPT;
-
-    /// Natural key matches specified value.
-    bool is_match(const Key& value) const NOEXCEPT;
-
-    /// True if link is eof (and above methods are undefined).
-    bool is_terminal() const NOEXCEPT;
+    /// Advance to and return next iterator.
+    bool next() NOEXCEPT;
+    Link self() NOEXCEPT;
 
 protected:
-    memory_ptr get() const NOEXCEPT;
+    bool is_match() const NOEXCEPT;
+    Link get_next() const NOEXCEPT;
     memory_ptr get(size_t offset) const NOEXCEPT;
 
 private:
@@ -70,6 +59,7 @@ private:
 
     const manager<Link, Size>& manager_;
     Link link_;
+    const Key& key_;
 };
 
 } // namespace database
@@ -77,9 +67,9 @@ private:
 
 #define TEMPLATE \
 template <typename Link, typename Key, size_t Size>
-#define CLASS element<Link, Key, Size>
+#define CLASS iterator<Link, Key, Size>
 
-#include <bitcoin/database/impl/primitives/element.ipp>
+#include <bitcoin/database/impl/primitives/iterator.ipp>
 
 #undef CLASS
 #undef TEMPLATE

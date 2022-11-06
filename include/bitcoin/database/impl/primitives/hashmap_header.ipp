@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_HASH_TABLE_HEADER_IPP
-#define LIBBITCOIN_DATABASE_TABLES_HASH_TABLE_HEADER_IPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_HEADER_IPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_HEADER_IPP
 
 #include <algorithm>
 #include <bitcoin/system.hpp>
@@ -27,7 +27,7 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-CLASS::hash_table_header(storage& header, const Link& buckets) NOEXCEPT
+CLASS::hashmap_header(storage& header, const Link& buckets) NOEXCEPT
   : file_(header), buckets_(buckets)
 {
     BC_ASSERT_MSG(!is_zero(buckets), "no buckets");
