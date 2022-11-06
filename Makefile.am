@@ -69,8 +69,8 @@ test_libbitcoin_database_test_SOURCES = \
     test/memory/accessor.cpp \
     test/memory/file.cpp \
     test/memory/map.cpp \
-    test/primitives/hash_table.cpp \
-    test/primitives/hash_table_header.cpp \
+    test/primitives/hashmap.cpp \
+    test/primitives/hashmap_header.cpp \
     test/primitives/iterator.cpp \
     test/primitives/linkage.cpp \
     test/primitives/manager.cpp \
@@ -109,8 +109,8 @@ include_bitcoin_database_impl_memory_HEADERS = \
 
 include_bitcoin_database_impl_primitivesdir = ${includedir}/bitcoin/database/impl/primitives
 include_bitcoin_database_impl_primitives_HEADERS = \
-    include/bitcoin/database/impl/primitives/hash_table.ipp \
-    include/bitcoin/database/impl/primitives/hash_table_header.ipp \
+    include/bitcoin/database/impl/primitives/hashmap.ipp \
+    include/bitcoin/database/impl/primitives/hashmap_header.ipp \
     include/bitcoin/database/impl/primitives/iterator.ipp \
     include/bitcoin/database/impl/primitives/linkage.ipp \
     include/bitcoin/database/impl/primitives/manager.ipp
@@ -144,8 +144,8 @@ include_bitcoin_database_memory_interfaces_HEADERS = \
 
 include_bitcoin_database_primitivesdir = ${includedir}/bitcoin/database/primitives
 include_bitcoin_database_primitives_HEADERS = \
-    include/bitcoin/database/primitives/hash_table.hpp \
-    include/bitcoin/database/primitives/hash_table_header.hpp \
+    include/bitcoin/database/primitives/hashmap.hpp \
+    include/bitcoin/database/primitives/hashmap_header.hpp \
     include/bitcoin/database/primitives/iterator.hpp \
     include/bitcoin/database/primitives/linkage.hpp \
     include/bitcoin/database/primitives/manager.hpp

@@ -19,7 +19,7 @@
 #include "../test.hpp"
 #include "../storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(hash_table_tests)
+BOOST_AUTO_TEST_SUITE(hashmap_tests)
 
 constexpr auto link_size = 5_size;
 constexpr auto key_size = 10_size;
@@ -41,11 +41,11 @@ using link = linkage<link_size>;
 using key = data_array<key_size>;
 
 using record_item = iterator<link, key, record_size>;
-using record_table = hash_table<record_item>;
+using record_table = hashmap<record_item>;
 
-// record_hash_table__create_verify
+// record_hashmap__create_verify
 
-BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__empty_files__success)
+BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__empty_files__success)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__empty_files__success)
     BOOST_REQUIRE(body_file.empty());
 }
 
-BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__non_empty_head_file__failure)
+BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__non_empty_head_file__failure)
 {
     data_chunk head_file{ 0x42 };
     data_chunk body_file;
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__non_empty_head_file__fail
     BOOST_REQUIRE(body_file.empty());
 }
 
-BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__multiple_iterator_body_file__failure)
+BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__multiple_iterator_body_file__failure)
 {
     constexpr auto body_size = 3u * (link_size + record_size);
     data_chunk head_file;
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__multiple_iterator_body_fi
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__multiple_fractional_iterator_body_file__failure)
+BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__multiple_fractional_iterator_body_file__failure)
 {
     constexpr auto body_size = 3u * (link_size + record_size) + 2u;
     data_chunk head_file;
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__multiple_fractional_itera
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__one_iterator_body_file__failure)
+BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__one_iterator_body_file__failure)
 {
     constexpr auto body_size = link_size + record_size;
     data_chunk head_file;
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__one_iterator_body_file__f
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__sub_one_iterator_body_file__success)
+BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__sub_one_iterator_body_file__success)
 {
     constexpr auto body_size = sub1(link_size + record_size);
     data_chunk head_file;
@@ -167,13 +167,13 @@ BOOST_AUTO_TEST_CASE(record_hash_table__create_verify__sub_one_iterator_body_fil
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-// slab_hash_table__create_verify
+// slab_hashmap__create_verify
 
 constexpr auto slab_size = link_size + key_size + 4_size;
 using slab_item = iterator<link, key, zero>;
-using slab_table = hash_table<slab_item>;
+using slab_table = hashmap<slab_item>;
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__empty_files__success)
+BOOST_AUTO_TEST_CASE(slab_hashmap__create_verify__empty_files__success)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__empty_files__success)
     BOOST_REQUIRE(body_file.empty());
 }
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__non_empty_head_file__failure)
+BOOST_AUTO_TEST_CASE(slab_hashmap__create_verify__non_empty_head_file__failure)
 {
     data_chunk head_file{ 0x42 };
     data_chunk body_file;
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__non_empty_head_file__failur
     BOOST_REQUIRE(body_file.empty());
 }
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__multiple_iterator_body_file__failure)
+BOOST_AUTO_TEST_CASE(slab_hashmap__create_verify__multiple_iterator_body_file__failure)
 {
     constexpr auto body_size = 3u * slab_size;
     data_chunk head_file;
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__multiple_iterator_body_file
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__multiple_fractional_iterator_body_file__failure)
+BOOST_AUTO_TEST_CASE(slab_hashmap__create_verify__multiple_fractional_iterator_body_file__failure)
 {
     constexpr auto body_size = 3u * slab_size + 2u;
     data_chunk head_file;
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__multiple_fractional_iterato
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__one_iterator_body_file__failure)
+BOOST_AUTO_TEST_CASE(slab_hashmap__create_verify__one_iterator_body_file__failure)
 {
     constexpr auto body_size = slab_size;
     data_chunk head_file;
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__one_iterator_body_file__fai
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__sub_one_iterator_body_file__failure)
+BOOST_AUTO_TEST_CASE(slab_hashmap__create_verify__sub_one_iterator_body_file__failure)
 {
     constexpr auto body_size = sub1(slab_size);
     data_chunk head_file;
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__create_verify__sub_one_iterator_body_file_
 
 // at(terminal)
 
-BOOST_AUTO_TEST_CASE(record_hash_table__at__terminal__false)
+BOOST_AUTO_TEST_CASE(record_hashmap__at__terminal__false)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__at__terminal__false)
     BOOST_REQUIRE(!instance.at(link::terminal));
 }
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__at__terminal__false)
+BOOST_AUTO_TEST_CASE(slab_hashmap__at__terminal__false)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__at__terminal__false)
 
 // first(not found)
 
-BOOST_AUTO_TEST_CASE(record_hash_table__first__empty__terminal)
+BOOST_AUTO_TEST_CASE(record_hashmap__first__empty__terminal)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__first__empty__terminal)
     BOOST_REQUIRE(instance.first({ 0x42 }).is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__first__empty__terminal)
+BOOST_AUTO_TEST_CASE(slab_hashmap__first__empty__terminal)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__first__empty__terminal)
 
 // first(found)
 
-BOOST_AUTO_TEST_CASE(record_hash_table__first__exists__found)
+BOOST_AUTO_TEST_CASE(record_hashmap__first__exists__found)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__first__exists__found)
     BOOST_REQUIRE(!instance.first({ 0x42 }).is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__first__exists__found)
+BOOST_AUTO_TEST_CASE(slab_hashmap__first__exists__found)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -372,7 +372,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__first__exists__found)
 
 // at(exhausted)
 
-BOOST_AUTO_TEST_CASE(record_hash_table__at__empty__exhausted)
+BOOST_AUTO_TEST_CASE(record_hashmap__at__empty__exhausted)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__at__empty__exhausted)
     BOOST_REQUIRE(instance.at(19)->is_exhausted());
 }
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__at__empty__exhausted)
+BOOST_AUTO_TEST_CASE(slab_hashmap__at__empty__exhausted)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -398,7 +398,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__at__empty__exhausted)
 
 // find(not found)
 
-BOOST_AUTO_TEST_CASE(record_hash_table__find__empty__false)
+BOOST_AUTO_TEST_CASE(record_hashmap__find__empty__false)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__find__empty__false)
     BOOST_REQUIRE(!instance.find({ 0x42 }));
 }
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__find__empty__false)
+BOOST_AUTO_TEST_CASE(slab_hashmap__find__empty__false)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -424,7 +424,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__find__empty__false)
 
 // push(terminal)
 
-BOOST_AUTO_TEST_CASE(record_hash_table__push__terminal_false)
+BOOST_AUTO_TEST_CASE(record_hashmap__push__terminal_false)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__push__terminal_false)
     BOOST_REQUIRE(!instance.push({ 0x42 }, link::terminal));
 }
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__push__terminal_false)
+BOOST_AUTO_TEST_CASE(slab_hashmap__push__terminal_false)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -450,7 +450,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__push__terminal_false)
 
 // push(1/slab_size)/find(found)
 
-BOOST_AUTO_TEST_CASE(record_hash_table__push_find__empty__true)
+BOOST_AUTO_TEST_CASE(record_hashmap__push_find__empty__true)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -507,7 +507,7 @@ BOOST_AUTO_TEST_CASE(record_hash_table__push_find__empty__true)
     // 00000000             [data]
 }
 
-BOOST_AUTO_TEST_CASE(slab_hash_table__push_find__empty__true)
+BOOST_AUTO_TEST_CASE(slab_hashmap__push_find__empty__true)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -558,7 +558,7 @@ BOOST_AUTO_TEST_CASE(slab_hash_table__push_find__empty__true)
     // 00000000             [data]
 }
 
-BOOST_AUTO_TEST_CASE(record_hash_table__push_duplicate_key__find__true)
+BOOST_AUTO_TEST_CASE(record_hashmap__push_duplicate_key__find__true)
 {
     data_chunk head_file;
     data_chunk body_file;

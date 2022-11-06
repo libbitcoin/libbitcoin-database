@@ -19,7 +19,7 @@
 #include "../test.hpp"
 #include "../storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(hash_table_header_tests)
+BOOST_AUTO_TEST_SUITE(hashmap_header_tests)
 
 constexpr auto key_size = 10_size;
 constexpr auto link_size = 5_size;
@@ -35,9 +35,9 @@ static_assert(buckets == 20u);
 
 using link = linkage<link_size>;
 using key = data_array<key_size>;
-using header = hash_table_header<link, key>;
+using header = hashmap_header<link, key>;
 
-BOOST_AUTO_TEST_CASE(hash_table_header__create__size__expected)
+BOOST_AUTO_TEST_CASE(hashmap_header__create__size__expected)
 {
     data_chunk data;
     test::storage store{ data };
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__create__size__expected)
     BOOST_REQUIRE_EQUAL(data.size(), header_size);
 }
 
-BOOST_AUTO_TEST_CASE(hash_table_header__verify__uncreated__false)
+BOOST_AUTO_TEST_CASE(hashmap_header__verify__uncreated__false)
 {
     data_chunk data;
     test::storage store{ data };
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__verify__uncreated__false)
     BOOST_REQUIRE(!head.verify());
 }
 
-BOOST_AUTO_TEST_CASE(hash_table_header__verify__created__false)
+BOOST_AUTO_TEST_CASE(hashmap_header__verify__created__false)
 {
     data_chunk data;
     test::storage store{ data };
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__verify__created__false)
     BOOST_REQUIRE(head.verify());
 }
 
-BOOST_AUTO_TEST_CASE(hash_table_header__get_body_count__created__zero)
+BOOST_AUTO_TEST_CASE(hashmap_header__get_body_count__created__zero)
 {
     data_chunk data;
     test::storage store{ data };
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__get_body_count__created__zero)
     BOOST_REQUIRE_EQUAL(count, zero);
 }
 
-BOOST_AUTO_TEST_CASE(hash_table_header__set_body_count__get__expected)
+BOOST_AUTO_TEST_CASE(hashmap_header__set_body_count__get__expected)
 {
     data_chunk data;
     test::storage store{ data };
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__set_body_count__get__expected)
     BOOST_REQUIRE_EQUAL(count, expected);
 }
 
-BOOST_AUTO_TEST_CASE(hash_table_header__index__null_key__expected)
+BOOST_AUTO_TEST_CASE(hashmap_header__index__null_key__expected)
 {
     constexpr key null_key{};
     const auto expected = system::djb2_hash(null_key) % buckets;
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__index__null_key__expected)
     BOOST_REQUIRE_EQUAL(head.index(null_key), expected);
 }
 
-BOOST_AUTO_TEST_CASE(hash_table_header__head__link__terminal)
+BOOST_AUTO_TEST_CASE(hashmap_header__head__link__terminal)
 {
     test::storage store;
     header head{ store, buckets };
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__head__link__terminal)
     BOOST_REQUIRE(head.head(9).is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(hash_table_header__head__key__terminal)
+BOOST_AUTO_TEST_CASE(hashmap_header__head__key__terminal)
 {
     constexpr key null_key{};
 
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__head__key__terminal)
     BOOST_REQUIRE(head.head(null_key).is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(hash_table_header__push__link__terminal)
+BOOST_AUTO_TEST_CASE(hashmap_header__push__link__terminal)
 {
     test::storage store;
     header head{ store, buckets };
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(hash_table_header__push__link__terminal)
     BOOST_REQUIRE_EQUAL(head.head(link_key), expected);
 }
 
-BOOST_AUTO_TEST_CASE(hash_table_header__push__key__terminal)
+BOOST_AUTO_TEST_CASE(hashmap_header__push__key__terminal)
 {
     test::storage store;
     header head{ store, buckets };

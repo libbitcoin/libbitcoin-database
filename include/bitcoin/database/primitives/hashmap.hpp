@@ -16,13 +16,13 @@
 /// You should have received a copy of the GNU Affero General Public License
 /// along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASH_TABLE_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_HASH_TABLE_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/hash_table_header.hpp>
+#include <bitcoin/database/primitives/hashmap_header.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
@@ -33,13 +33,13 @@ namespace libbitcoin {
 namespace database {
 
 template <typename Iterator>
-class hash_table
+class hashmap
 {
 public:
     using link = typename Iterator::link;
     using key = typename Iterator::key;
 
-    hash_table(storage& header, storage& body, const link& buckets) NOEXCEPT;
+    hashmap(storage& header, storage& body, const link& buckets) NOEXCEPT;
 
     /// Not thread safe.
     /// -----------------------------------------------------------------------
@@ -74,7 +74,7 @@ private:
     static constexpr auto record_size = Iterator::size;
     static constexpr auto slab = is_zero(record_size);
 
-    using header = hash_table_header<link, key>;
+    using header = hashmap_header<link, key>;
     using manage = manager<link, record_size>;
 
     // hash/head/push thread safe.
@@ -89,9 +89,9 @@ private:
 
 #define TEMPLATE \
 template <typename Iterator>
-#define CLASS hash_table<Iterator>
+#define CLASS hashmap<Iterator>
 
-#include <bitcoin/database/impl/primitives/hash_table.ipp>
+#include <bitcoin/database/impl/primitives/hashmap.ipp>
 
 #undef CLASS
 #undef TEMPLATE

@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASH_TABLE_IPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_HASH_TABLE_IPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_IPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_IPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -29,7 +29,7 @@ namespace database {
 // memory is writeable. Non-const manager access implies memory map modify.
 
 TEMPLATE
-CLASS::hash_table(storage& header, storage& body, const link& buckets) NOEXCEPT
+CLASS::hashmap(storage& header, storage& body, const link& buckets) NOEXCEPT
   : header_(header, buckets), body_(body)
 {
 }

@@ -143,10 +143,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\map_source.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hashmap.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hash_table_header.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hashmap_header.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\iterator.hpp">
@@ -175,10 +175,10 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\accessor.ipp">
       <Filter>include\bitcoin\database\impl\memory</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hash_table.ipp">
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hashmap.ipp">
       <Filter>include\bitcoin\database\impl\primitives</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hash_table_header.ipp">
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hashmap_header.ipp">
       <Filter>include\bitcoin\database\impl\primitives</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\iterator.ipp">
