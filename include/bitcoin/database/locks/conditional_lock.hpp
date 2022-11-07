@@ -20,7 +20,7 @@
 #define LIBBITCOIN_DATABASE_LOCKS_CONDITIONAL_LOCK_HPP
 
 #include <memory>
-#include <boost/thread.hpp>
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -36,13 +36,13 @@ public:
     conditional_lock(bool lock) NOEXCEPT;
 
     /// Conditional lock using parameterized mutex pointer (may be null).
-    conditional_lock(std::shared_ptr<boost::shared_mutex> mutex_ptr) NOEXCEPT;
+    conditional_lock(std::shared_ptr<std::shared_mutex> mutex_ptr) NOEXCEPT;
 
     /// Unlock.
     ~conditional_lock() NOEXCEPT;
 
 private:
-    const std::shared_ptr<boost::shared_mutex> mutex_ptr_;
+    const std::shared_ptr<std::shared_mutex> mutex_ptr_;
 };
 
 } // namespace database

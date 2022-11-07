@@ -18,13 +18,14 @@
  */
 #include <bitcoin/database/locks/scope_lock.hpp>
 
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
     
-scope_lock::scope_lock(shared_mutex& mutex) NOEXCEPT
+scope_lock::scope_lock(std::shared_mutex& mutex) NOEXCEPT
   : mutex_(mutex)
 {
     mutex_.lock();

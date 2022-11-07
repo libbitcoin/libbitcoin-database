@@ -19,11 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_DEFINE_HPP
 #define LIBBITCOIN_DATABASE_DEFINE_HPP
 
-#include <array>
-#include <functional>
-#include <shared_mutex>
-#include <tuple>
-#include <vector>
 #include <bitcoin/system.hpp>
 
 // map is able to support 32 bit, but because the database
@@ -78,32 +73,4 @@ static_assert(sizeof(void*) == sizeof(uint64_t), "Not a 64 bit system!");
 #define LOG_WARNING(name) std::cerr << name << " : "
 #define LOG_FATAL(name) std::cerr << name << " : "
 
-/// Types.
-/// ---------------------------------------------------------------------------
-
-namespace libbitcoin {
-namespace database {
-
-using shared_mutex = std::shared_mutex;
-
-typedef uint32_t array_index;
-typedef uint64_t file_offset;
-typedef std::vector<file_offset> link_list;
-typedef std::array<uint8_t,zero> empty_key;
-////typedef std::function<void(system::reader)> read_bytes;
-////typedef std::function<void(system::writer)> write_bytes;
-static_assert(is_zero(std::tuple_size<empty_key>::value));
-
-} // namespace database
-} // namespace libbitcoin
-
 #endif
-
-// header
-// list_element
-// hashmap          -> header, list_element
-// hashmap_multimap -> hashmap, list_element, record_manager
-// list                -> list_element, list_iterator
-// list_iterator       -> list_element
-// record_manager
-// slab_manager

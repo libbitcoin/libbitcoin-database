@@ -87,7 +87,6 @@
     <ClCompile Include="..\..\..\..\test\tables\archives\header.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\input.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\output.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\archives\point.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\puts.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\transaction.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\txs.cpp" />

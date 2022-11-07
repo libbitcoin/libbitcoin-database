@@ -22,6 +22,7 @@
 #include <bitcoin/database/primitives/hashmap.hpp>
 #include <bitcoin/database/primitives/head.hpp>
 #include <bitcoin/database/primitives/iterator.hpp>
+#include <bitcoin/database/primitives/linkage.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 
 #endif

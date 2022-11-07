@@ -49,7 +49,6 @@ src_libbitcoin_database_la_SOURCES = \
     src/tables/archives/header.cpp \
     src/tables/archives/input.cpp \
     src/tables/archives/output.cpp \
-    src/tables/archives/point.cpp \
     src/tables/archives/puts.cpp \
     src/tables/archives/transaction.cpp \
     src/tables/archives/txs.cpp \
@@ -97,7 +96,6 @@ test_libbitcoin_database_test_SOURCES = \
     test/tables/archives/header.cpp \
     test/tables/archives/input.cpp \
     test/tables/archives/output.cpp \
-    test/tables/archives/point.cpp \
     test/tables/archives/puts.cpp \
     test/tables/archives/transaction.cpp \
     test/tables/archives/txs.cpp \
@@ -189,6 +187,7 @@ include_bitcoin_database_primitives_HEADERS = \
 
 include_bitcoin_database_tablesdir = ${includedir}/bitcoin/database/tables
 include_bitcoin_database_tables_HEADERS = \
+    include/bitcoin/database/tables/schema.hpp \
     include/bitcoin/database/tables/tables.hpp
 
 include_bitcoin_database_tables_archivesdir = ${includedir}/bitcoin/database/tables/archives
@@ -196,7 +195,6 @@ include_bitcoin_database_tables_archives_HEADERS = \
     include/bitcoin/database/tables/archives/header.hpp \
     include/bitcoin/database/tables/archives/input.hpp \
     include/bitcoin/database/tables/archives/output.hpp \
-    include/bitcoin/database/tables/archives/point.hpp \
     include/bitcoin/database/tables/archives/puts.hpp \
     include/bitcoin/database/tables/archives/transaction.hpp \
     include/bitcoin/database/tables/archives/txs.hpp

@@ -40,11 +40,11 @@
 #include <bitcoin/database/primitives/linkage.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/tables/schema.hpp>
 #include <bitcoin/database/tables/tables.hpp>
 #include <bitcoin/database/tables/archives/header.hpp>
 #include <bitcoin/database/tables/archives/input.hpp>
 #include <bitcoin/database/tables/archives/output.hpp>
-#include <bitcoin/database/tables/archives/point.hpp>
 #include <bitcoin/database/tables/archives/puts.hpp>
 #include <bitcoin/database/tables/archives/transaction.hpp>
 #include <bitcoin/database/tables/archives/txs.hpp>

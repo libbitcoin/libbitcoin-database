@@ -117,9 +117,6 @@
     <ClCompile Include="..\..\..\..\src\tables\archives\output.cpp">
       <Filter>src\tables\archives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\tables\archives\point.cpp">
-      <Filter>src\tables\archives</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\tables\archives\puts.cpp">
       <Filter>src\tables\archives</Filter>
     </ClCompile>
@@ -254,9 +251,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\output.hpp">
       <Filter>include\bitcoin\database\tables\archives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\point.hpp">
-      <Filter>include\bitcoin\database\tables\archives</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\puts.hpp">
       <Filter>include\bitcoin\database\tables\archives</Filter>
     </ClInclude>
@@ -304,6 +298,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\spent_output.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\schema.hpp">
+      <Filter>include\bitcoin\database\tables</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\tables.hpp">
       <Filter>include\bitcoin\database\tables</Filter>

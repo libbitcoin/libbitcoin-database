@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_LOCKS_SCOPE_LOCK_HPP
 
 #include <memory>
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -36,13 +37,13 @@ public:
     typedef std::shared_ptr<scope_lock> ptr;
 
     /// Lock using the specified mutex reference.
-    scope_lock(shared_mutex& mutex) NOEXCEPT;
+    scope_lock(std::shared_mutex& mutex) NOEXCEPT;
 
     /// Unlock.
     ~scope_lock() NOEXCEPT;
 
 private:
-    shared_mutex& mutex_;
+    std::shared_mutex& mutex_;
 };
 
 } // namespace database

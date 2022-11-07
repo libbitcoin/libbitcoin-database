@@ -22,7 +22,6 @@
 #include <bitcoin/database/tables/archives/header.hpp>
 #include <bitcoin/database/tables/archives/input.hpp>
 #include <bitcoin/database/tables/archives/output.hpp>
-#include <bitcoin/database/tables/archives/point.hpp>
 #include <bitcoin/database/tables/archives/puts.hpp>
 #include <bitcoin/database/tables/archives/transaction.hpp>
 #include <bitcoin/database/tables/archives/txs.hpp>
@@ -41,5 +40,7 @@
 #include <bitcoin/database/tables/indexes/input_tx.hpp>
 #include <bitcoin/database/tables/indexes/output_tx.hpp>
 #include <bitcoin/database/tables/indexes/spent_output.hpp>
+
+#include <bitcoin/database/tables/schema.hpp>
 
 #endif

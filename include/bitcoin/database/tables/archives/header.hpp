@@ -21,12 +21,21 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-class header
+class BCD_API header
+  : public hashmap<iterator<
+		linkage<schema::header::pk>,
+		keying<schema::header::sk>,
+		schema::header::bytes>>
 {
+public:
+	DEFAULT5(header);
+
+private:
 };
 
 } // namespace database
