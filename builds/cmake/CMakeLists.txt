@@ -228,7 +228,7 @@ if (with-tests)
         "../../test/memory/file.cpp"
         "../../test/memory/map.cpp"
         "../../test/primitives/hashmap.cpp"
-        "../../test/primitives/hashmap_header.cpp"
+        "../../test/primitives/header.cpp"
         "../../test/primitives/iterator.cpp"
         "../../test/primitives/linkage.cpp"
         "../../test/primitives/manager.cpp"

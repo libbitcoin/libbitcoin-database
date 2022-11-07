@@ -57,7 +57,7 @@
     <ClCompile Include="..\..\..\..\test\primitives\hashmap.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\hashmap_header.cpp">
+    <ClCompile Include="..\..\..\..\test\primitives\header.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp">
