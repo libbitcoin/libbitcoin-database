@@ -73,7 +73,7 @@ reader_ptr CLASS::at(const link& record) const NOEXCEPT
     // Stream starts at key, skip to get data.
     const auto source = std::make_shared<reader>(ptr);
     source->skip_bytes(link_size);
-    if constexpr (!slab) { source->set_limit(record_size); }
+    if constexpr (!slab) { source->set_limit(payload_size); }
     return source;
 }
 
@@ -119,7 +119,7 @@ writer_ptr CLASS::push(const key& key, const link& size) NOEXCEPT
     // Stream starts at data, rewind to get link.
     if constexpr (slab) { sink->set_limit(size); }
     sink->skip_bytes(link_size);
-    if constexpr (!slab) { sink->set_limit(record_size); }
+    if constexpr (!slab) { sink->set_limit(payload_size); }
     sink->write_bytes(key);
     return sink;
 }

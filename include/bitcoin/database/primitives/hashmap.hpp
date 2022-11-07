@@ -71,11 +71,11 @@ public:
 private:
     static constexpr auto link_size = link::size;
     static constexpr auto key_size = array_count<key>;
-    static constexpr auto record_size = Iterator::payload;
-    static constexpr auto slab = is_zero(record_size);
+    static constexpr auto payload_size = Iterator::payload;
+    static constexpr auto slab = is_zero(payload_size);
 
     using header = database::head<link, key>;
-    using manager = database::manager<link, record_size>;
+    using manager = database::manager<link, payload_size>;
 
     // hash/head/push thread safe.
     header header_;

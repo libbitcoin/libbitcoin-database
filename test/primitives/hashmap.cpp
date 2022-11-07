@@ -35,13 +35,16 @@ static_assert(buckets == 20u);
 
 // Record size includes key but not link.
 // Slab allocation includes key and link.
-constexpr auto record_size = key_size + 4_size;
+constexpr auto data_size = 4_size;
 
 using link = linkage<link_size>;
 using key = data_array<key_size>;
+using record_table = hashmap<iterator<link, key, data_size>>;
 
-using record_item = iterator<link, key, record_size>;
-using record_table = hashmap<record_item>;
+constexpr auto record_size = link_size + key_size + data_size;
+constexpr auto slab_size = record_size;
+
+using slab_table = hashmap<iterator<link, key, zero>>;
 
 // record_hashmap__create_verify
 
@@ -85,7 +88,7 @@ BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__non_empty_head_file__failure
 
 BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__multiple_iterator_body_file__failure)
 {
-    constexpr auto body_size = 3u * (link_size + record_size);
+    constexpr auto body_size = 3u * record_size;
     data_chunk head_file;
     data_chunk body_file(body_size, 0x42);
     test::storage head_store{ head_file };
@@ -105,7 +108,7 @@ BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__multiple_iterator_body_file_
 
 BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__multiple_fractional_iterator_body_file__failure)
 {
-    constexpr auto body_size = 3u * (link_size + record_size) + 2u;
+    constexpr auto body_size = 3u * record_size + 2u;
     data_chunk head_file;
     data_chunk body_file(body_size, 0x42);
     test::storage head_store{ head_file };
@@ -125,7 +128,7 @@ BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__multiple_fractional_iterator
 
 BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__one_iterator_body_file__failure)
 {
-    constexpr auto body_size = link_size + record_size;
+    constexpr auto body_size = record_size;
     data_chunk head_file;
     data_chunk body_file(body_size, 0x42);
     test::storage head_store{ head_file };
@@ -145,7 +148,7 @@ BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__one_iterator_body_file__fail
 
 BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__sub_one_iterator_body_file__success)
 {
-    constexpr auto body_size = sub1(link_size + record_size);
+    constexpr auto body_size = sub1(record_size);
     data_chunk head_file;
     data_chunk body_file(body_size, 0x42);
     test::storage head_store{ head_file };
@@ -168,10 +171,6 @@ BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__sub_one_iterator_body_file__
 }
 
 // slab_hashmap__create_verify
-
-constexpr auto slab_size = link_size + key_size + 4_size;
-using slab_item = iterator<link, key, zero>;
-using slab_table = hashmap<slab_item>;
 
 BOOST_AUTO_TEST_CASE(slab_hashmap__create_verify__empty_files__success)
 {
