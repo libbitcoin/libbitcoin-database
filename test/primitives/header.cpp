@@ -35,7 +35,7 @@ static_assert(buckets == 20u);
 
 using link = linkage<link_size>;
 using key = data_array<key_size>;
-using header = header<link, key>;
+using header = database::header<link, key>;
 
 BOOST_AUTO_TEST_CASE(header__create__size__expected)
 {

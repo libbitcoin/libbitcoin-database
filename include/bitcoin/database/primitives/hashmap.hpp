@@ -74,14 +74,14 @@ private:
     static constexpr auto record_size = Iterator::size;
     static constexpr auto slab = is_zero(record_size);
 
-    using header = header<link, key>;
-    using manage = manager<link, record_size>;
+    using header = database::header<link, key>;
+    using manager = database::manager<link, record_size>;
 
     // hash/head/push thread safe.
     header header_;
 
     // Thread safe.
-    manage body_;
+    manager body_;
 };
 
 } // namespace database
