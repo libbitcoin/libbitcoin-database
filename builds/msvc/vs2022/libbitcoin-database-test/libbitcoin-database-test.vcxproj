@@ -78,17 +78,13 @@
     <ClCompile Include="..\..\..\..\test\memory\file.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\map.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hashmap.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives\header.cpp">
-      <ObjectFileName>$(IntDir)test_primitives_header.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\primitives\head.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\manager.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
     <ClCompile Include="..\..\..\..\test\storage.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\archives\header.cpp">
-      <ObjectFileName>$(IntDir)test_tables_archives_header.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\archives\header.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\input.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\output.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\point.cpp" />

@@ -25,6 +25,10 @@
 namespace libbitcoin {
 namespace database {
 
+class header
+{
+};
+
 } // namespace database
 } // namespace libbitcoin
 

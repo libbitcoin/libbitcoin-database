@@ -22,7 +22,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/header.hpp>
+#include <bitcoin/database/primitives/head.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
@@ -44,10 +44,10 @@ public:
     /// Not thread safe.
     /// -----------------------------------------------------------------------
 
-    /// Create from empty body/header files (no need to verify).
+    /// Create from empty body/head files (no need to verify).
     bool create() NOEXCEPT;
 
-    /// False if header or body file size incorrect.
+    /// False if head or body file size incorrect.
     bool verify() const NOEXCEPT;
 
     /// Thread safe.
@@ -74,7 +74,7 @@ private:
     static constexpr auto record_size = Iterator::size;
     static constexpr auto slab = is_zero(record_size);
 
-    using header = database::header<link, key>;
+    using header = database::head<link, key>;
     using manager = database::manager<link, record_size>;
 
     // hash/head/push thread safe.

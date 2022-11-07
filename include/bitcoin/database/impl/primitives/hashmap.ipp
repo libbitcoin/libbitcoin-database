@@ -51,7 +51,7 @@ bool CLASS::verify() const NOEXCEPT
 TEMPLATE
 Iterator CLASS::iterator(const key& key) const NOEXCEPT
 {
-    return { body_, header_.head(key), key };
+    return { body_, header_.top(key), key };
 }
 
 TEMPLATE

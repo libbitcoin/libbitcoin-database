@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HEADER_IPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_HEADER_IPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HEAD_IPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_HEAD_IPP
 
 #include <algorithm>
 #include <bitcoin/system.hpp>
@@ -27,8 +27,8 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-CLASS::header(storage& header, const Link& buckets) NOEXCEPT
-  : file_(header), buckets_(buckets)
+CLASS::head(storage& head, const Link& buckets) NOEXCEPT
+  : file_(head), buckets_(buckets)
 {
     BC_ASSERT_MSG(!is_zero(buckets), "no buckets");
 }
@@ -87,13 +87,13 @@ bool CLASS::set_body_count(const Link& count) NOEXCEPT
 }
 
 TEMPLATE
-Link CLASS::head(const Key& key) const NOEXCEPT
+Link CLASS::top(const Key& key) const NOEXCEPT
 {
-    return head(index(key));
+    return top(index(key));
 }
 
 TEMPLATE
-Link CLASS::head(const Link& index) const NOEXCEPT
+Link CLASS::top(const Link& index) const NOEXCEPT
 {
     const auto ptr = file_.get(offset(index));
     if (!ptr)
