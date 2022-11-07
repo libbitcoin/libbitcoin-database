@@ -33,12 +33,12 @@ template <typename Link, typename Key, size_t Size = zero>
 class iterator
 {
 public:
-    static constexpr auto size = Size;
+    static constexpr auto payload = array_count<Key> + Size;
     using link = Link;
     using key = Key;
 
     /// Caller must keep key value in scope.
-    iterator(const manager<Link, Size>& manage, const Link& start,
+    iterator(const manager<Link, payload>& manage, const Link& start,
         const Key& key) NOEXCEPT;
 
     /// Advance to and return next iterator.
@@ -57,7 +57,7 @@ private:
         return system::unsafe_array_cast<uint8_t, Bytes>(buffer.begin());
     }
 
-    const manager<Link, Size>& manager_;
+    const manager<Link, payload>& manager_;
     Link link_;
     const Key& key_;
 };

@@ -71,7 +71,7 @@ public:
 private:
     static constexpr auto link_size = link::size;
     static constexpr auto key_size = array_count<key>;
-    static constexpr auto record_size = Iterator::size;
+    static constexpr auto record_size = Iterator::payload;
     static constexpr auto slab = is_zero(record_size);
 
     using header = database::head<link, key>;

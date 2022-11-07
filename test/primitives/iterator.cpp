@@ -26,12 +26,15 @@ class iterator_
   : public iterator<Link, Key, Size>
 {
 public:
-    iterator_(manager<Link, Size>& manage, const Key& key) NOEXCEPT
+    // Payload is Size plus key size.
+    static constexpr auto payload = iterator<Link, Key, Size>::payload;
+
+    iterator_(const manager<Link, payload>& manage, const Key& key) NOEXCEPT
       : iterator_(manage, Link::terminal, key)
     {
     }
 
-    iterator_(manager<Link, Size>& manage, const Link& link,
+    iterator_(const manager<Link, payload>& manage, const Link& link,
         const Key& key) NOEXCEPT
       : iterator<Link, Key, Size>(manage, link, key)
     {
@@ -49,8 +52,8 @@ private:
 #define DECLARE(link_size, key_size, data_size) \
 using link = linkage<link_size>; \
 using key = data_array<key_size>; \
-using manage = manager<link, data_size>; \
 using access = iterator_<link, key, data_size>; \
+using manage = manager<link, key_size + data_size>; \
 constexpr key key0{}
 
 BOOST_AUTO_TEST_CASE(iterator__get__empty__nullptr)
@@ -99,7 +102,7 @@ BOOST_AUTO_TEST_CASE(iterator__get__offset_to_back__expected)
 
 BOOST_AUTO_TEST_CASE(iterator__next__self__expected)
 {
-    DECLARE(1, 2, 2);
+    DECLARE(1, 2, 0);
 
     data_chunk data{ 0x01, 0x1a, 0x2a, 0x02, 0x1a, 0x2a, 0xff, 0xcc, 0xcc };
     test::storage file{ data };
@@ -123,7 +126,7 @@ BOOST_AUTO_TEST_CASE(iterator__next__self__expected)
 
 BOOST_AUTO_TEST_CASE(iterator__next__true__non_terminal)
 {
-    DECLARE(1, 2, 2);
+    DECLARE(1, 2, 0);
 
     data_chunk data{ 0x01, 0x1a, 0x2a, 0x02, 0x1a, 0x2a, 0xff, 0xcc, 0xcc };
     test::storage file{ data };
