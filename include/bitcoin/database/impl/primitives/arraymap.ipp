@@ -35,7 +35,7 @@ CLASS::arraymap(storage& body) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-Record CLASS::get(const link& link) const NOEXCEPT
+Record CLASS::get(const Link& link) const NOEXCEPT
 {
     return { at(link) };
 }
@@ -51,12 +51,12 @@ bool CLASS::insert(const Record& record) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-reader_ptr CLASS::at(const link& record) const NOEXCEPT
+reader_ptr CLASS::at(const Link& link) const NOEXCEPT
 {
-    if (record.is_terminal())
+    if (link.is_terminal())
         return {};
 
-    const auto ptr = body_.get(link_to_position(record));
+    const auto ptr = body_.get(link_to_position(link));
     if (!ptr)
         return {};
 
@@ -66,7 +66,7 @@ reader_ptr CLASS::at(const link& record) const NOEXCEPT
 }
 
 TEMPLATE
-writer_ptr CLASS::push(const link& size) NOEXCEPT
+writer_ptr CLASS::push(const Link& size) NOEXCEPT
 {
     using namespace system;
     BC_ASSERT(!size.is_terminal());

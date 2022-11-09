@@ -32,20 +32,18 @@ template <typename Link, size_t Size = zero, typename Record = bool>
 class arraymap
 {
 public:
-    using link = typename Link;
-
     arraymap(storage& body) NOEXCEPT;
 
     /// Query interface.
-    Record get(const link& link) const NOEXCEPT;
+    Record get(const Link& link) const NOEXCEPT;
     bool insert(const Record& record) NOEXCEPT;
 
 protected:
     /// Reader positioned at data (only data).
-    reader_ptr at(const link& record) const NOEXCEPT;
+    reader_ptr at(const Link& link) const NOEXCEPT;
 
-    /// Reader positioned at data, size is one for records and bytes for slabs.
-    writer_ptr push(const link& size=one) NOEXCEPT;
+    /// Reader positioned at data, size is count for records, bytes for slabs.
+    writer_ptr push(const Link& size=one) NOEXCEPT;
 
 private:
     static constexpr size_t link_to_position(const Link& link) NOEXCEPT;

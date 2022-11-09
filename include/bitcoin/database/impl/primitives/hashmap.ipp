@@ -101,12 +101,12 @@ reader_ptr CLASS::find(const key& key) const NOEXCEPT
 }
 
 TEMPLATE
-reader_ptr CLASS::at(const link& record) const NOEXCEPT
+reader_ptr CLASS::at(const link& link) const NOEXCEPT
 {
-    if (record.is_terminal())
+    if (link.is_terminal())
         return {};
 
-    const auto ptr = body_.get(record);
+    const auto ptr = body_.get(link);
     if (!ptr)
         return {};
 

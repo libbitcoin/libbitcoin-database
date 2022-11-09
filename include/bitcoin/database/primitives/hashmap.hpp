@@ -55,9 +55,9 @@ protected:
     reader_ptr find(const key& key) const NOEXCEPT;
 
     /// Reader positioned at key.
-    reader_ptr at(const link& record) const NOEXCEPT;
+    reader_ptr at(const link& link) const NOEXCEPT;
 
-    /// Reader positioned at data, size is one for records and bytes for slabs.
+    /// Reader positioned at data, size is count for records, bytes for slabs.
     finalizer_ptr push(const key& key, const link& size=one) NOEXCEPT;
 
 private:
