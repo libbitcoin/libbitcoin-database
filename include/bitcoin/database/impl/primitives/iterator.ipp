@@ -31,7 +31,7 @@ BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
 TEMPLATE
 CLASS::iterator(const manager<Link, payload>& manage, const Link& start,
     const Key& key) NOEXCEPT
-  : manager_(manage), link_(start), key_(key)
+  : manager_(manage), key_(key), link_(start)
 {
 }
 

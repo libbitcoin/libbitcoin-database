@@ -61,6 +61,7 @@ bool storage::resize(size_t size) NOEXCEPT
 
 size_t storage::allocate(size_t chunk) NOEXCEPT
 {
+    BC_ASSERT(!system::is_add_overflow<size_t>(buffer_.size(), chunk));
     std::unique_lock field_lock(field_mutex_);
     std::unique_lock map_lock(map_mutex_);
     const auto link = buffer_.size();
@@ -70,14 +71,14 @@ size_t storage::allocate(size_t chunk) NOEXCEPT
 
 memory_ptr storage::get(size_t offset) NOEXCEPT
 {
-    const auto memory = std::make_shared<accessor<std::shared_mutex>>(map_mutex_);
+    const auto ptr = std::make_shared<accessor<std::shared_mutex>>(map_mutex_);
 
-    // With offset > size the assignment is negative and stream will be exhausted.
-    memory->assign(
+    // With offset > size the assignment is negative (stream is exhausted).
+    ptr->assign(
         std::next(buffer_.data(), offset),
         std::next(buffer_.data(), size()));
 
-    return memory;
+    return ptr;
 }
 
 BC_POP_WARNING()

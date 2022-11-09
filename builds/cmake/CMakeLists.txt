@@ -226,6 +226,7 @@ if (with-tests)
         "../../test/memory/accessor.cpp"
         "../../test/memory/file.cpp"
         "../../test/memory/map.cpp"
+        "../../test/primitives/arraymap.cpp"
         "../../test/primitives/hashmap.cpp"
         "../../test/primitives/head.cpp"
         "../../test/primitives/iterator.cpp"

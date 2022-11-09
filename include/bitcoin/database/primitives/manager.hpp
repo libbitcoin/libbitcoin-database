@@ -29,6 +29,8 @@ namespace database {
     
 /// Linked list abstraction over storage for given link and record sizes.
 /// slab = is_zero(Size), in which case count/link is bytes otherwise records.
+/// Obtaining memory object is considered const access despite the fact that
+/// memory is writeable. Non-const manager access implies memory map modify.
 template <typename Link, size_t Size>
 class manager
 {

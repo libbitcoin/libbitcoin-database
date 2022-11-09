@@ -58,8 +58,8 @@ private:
     }
 
     const manager<Link, payload>& manager_;
-    Link link_;
     const Key& key_;
+    Link link_;
 };
 
 } // namespace database

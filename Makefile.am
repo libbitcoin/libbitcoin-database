@@ -88,6 +88,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/memory/accessor.cpp \
     test/memory/file.cpp \
     test/memory/map.cpp \
+    test/primitives/arraymap.cpp \
     test/primitives/hashmap.cpp \
     test/primitives/head.cpp \
     test/primitives/iterator.cpp \
@@ -146,6 +147,7 @@ include_bitcoin_database_impl_memory_HEADERS = \
 
 include_bitcoin_database_impl_primitivesdir = ${includedir}/bitcoin/database/impl/primitives
 include_bitcoin_database_impl_primitives_HEADERS = \
+    include/bitcoin/database/impl/primitives/arraymap.ipp \
     include/bitcoin/database/impl/primitives/hashmap.ipp \
     include/bitcoin/database/impl/primitives/head.ipp \
     include/bitcoin/database/impl/primitives/iterator.ipp \
@@ -178,6 +180,7 @@ include_bitcoin_database_memory_interfaces_HEADERS = \
 
 include_bitcoin_database_primitivesdir = ${includedir}/bitcoin/database/primitives
 include_bitcoin_database_primitives_HEADERS = \
+    include/bitcoin/database/primitives/arraymap.hpp \
     include/bitcoin/database/primitives/hashmap.hpp \
     include/bitcoin/database/primitives/head.hpp \
     include/bitcoin/database/primitives/iterator.hpp \

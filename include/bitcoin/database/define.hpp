@@ -73,4 +73,13 @@ static_assert(sizeof(void*) == sizeof(uint64_t), "Not a 64 bit system!");
 #define LOG_WARNING(name) std::cerr << name << " : "
 #define LOG_FATAL(name) std::cerr << name << " : "
 
+namespace libbitcoin {
+namespace database {
+
+using code = system::code;
+
+} // namespace database
+} // namespace libbitcoin
+
+
 #endif

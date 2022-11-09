@@ -20,19 +20,15 @@
 #define LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_HPP
 
 #include <bitcoin/system.hpp>
-#include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/head.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
-#include <bitcoin/database/memory/interfaces/memory.hpp>
-#include <bitcoin/database/memory/interfaces/storage.hpp>
-#include <bitcoin/database/memory/reader.hpp>
-#include <bitcoin/database/memory/writer.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-template <typename Iterator>
+template <typename Iterator, typename Record = bool>
 class hashmap
 {
 public:
@@ -53,8 +49,13 @@ public:
     /// Thread safe.
     /// -----------------------------------------------------------------------
 
-    /// Search table for links of all keys.
+    bool exists(const key& key) const NOEXCEPT;
+    Record get(const key& key) const NOEXCEPT;
+    Record get(const link& link) const NOEXCEPT;
     Iterator iterator(const key& key) const NOEXCEPT;
+    bool insert(const key& key, const Record& record) NOEXCEPT;
+
+protected:
     
     /// Search table for link of first instance of key.
     link first(const key& key) const NOEXCEPT;
@@ -88,8 +89,8 @@ private:
 } // namespace libbitcoin
 
 #define TEMPLATE \
-template <typename Iterator>
-#define CLASS hashmap<Iterator>
+template <typename Iterator, typename Record>
+#define CLASS hashmap<Iterator, Record>
 
 #include <bitcoin/database/impl/primitives/hashmap.ipp>
 

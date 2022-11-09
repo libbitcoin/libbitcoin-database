@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_TABLES_SCHEMA_HPP
 #define LIBBITCOIN_DATABASE_TABLES_SCHEMA_HPP
 
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
 
 namespace libbitcoin {
@@ -26,6 +27,7 @@ namespace database {
 	
 template <size_t Size>
 using keying = system::data_array<Size>;
+using hash_digest = system::hash_digest;
 
 namespace schema
 {
@@ -42,7 +44,7 @@ namespace schema
 		constexpr size_t sigops = 3;
 		constexpr size_t flags = 4;
 
-		constexpr size_t identity = 32;
+		constexpr size_t identity = system::hash_size;
 		constexpr size_t foreign_point = tx + index;
 		constexpr size_t natural_point = identity + index;
 	}

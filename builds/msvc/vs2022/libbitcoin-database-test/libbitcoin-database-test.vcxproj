@@ -77,6 +77,7 @@
     <ClCompile Include="..\..\..\..\test\memory\accessor.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\file.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\map.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\arraymap.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hashmap.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\head.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp" />
