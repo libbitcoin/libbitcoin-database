@@ -36,9 +36,7 @@ public:
 
     arraymap(storage& body) NOEXCEPT;
 
-    /// Thread safe.
-    /// -----------------------------------------------------------------------
-
+    /// Query interface.
     Record get(const link& link) const NOEXCEPT;
     bool insert(const Record& record) NOEXCEPT;
 
@@ -50,8 +48,8 @@ protected:
     writer_ptr push(const link& size=one) NOEXCEPT;
 
 private:
-    static constexpr auto payload_size = Size;
-    static constexpr auto slab = is_zero(payload_size);
+    static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
+    static constexpr auto slab = is_zero(Size);
 
     // Thread safe.
     storage& body_;

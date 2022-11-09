@@ -47,12 +47,12 @@ bool CLASS::truncate(const Link& count) NOEXCEPT
 }
 
 TEMPLATE
-Link CLASS::allocate(const Link& count) NOEXCEPT
+Link CLASS::allocate(const Link& size) NOEXCEPT
 {
-    if (count.is_terminal())
-        return count;
+    if (size.is_terminal())
+        return size;
 
-    const auto start = file_.allocate(link_to_position(count));
+    const auto start = file_.allocate(link_to_position(size));
 
     if (start == storage::eof)
         return Link::terminal;

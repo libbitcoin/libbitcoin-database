@@ -31,6 +31,9 @@ CLASS::arraymap(storage& body) NOEXCEPT
 {
 }
 
+// query interface
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 Record CLASS::get(const link& link) const NOEXCEPT
 {
@@ -53,22 +56,23 @@ reader_ptr CLASS::at(const link& record) const NOEXCEPT
     if (record.is_terminal())
         return {};
 
-    const auto ptr = body_.get(record);
+    const auto ptr = body_.get(link_to_position(record));
     if (!ptr)
         return {};
 
     const auto source = std::make_shared<reader>(ptr);
-    if constexpr (!slab) { source->set_limit(payload_size); }
+    if constexpr (!slab) { source->set_limit(Size); }
     return source;
 }
 
 TEMPLATE
 writer_ptr CLASS::push(const link& size) NOEXCEPT
 {
+    using namespace system;
     BC_ASSERT(!size.is_terminal());
-    BC_ASSERT(!system::is_multiply_overflow<size_t>(size, payload_size));
+    BC_ASSERT(!is_multiply_overflow<size_t>(size, Size));
 
-    const auto item = body_.allocate(size);
+    const auto item = body_.allocate(link_to_position(size));
     if (item == storage::eof)
         return {};
 
@@ -78,8 +82,25 @@ writer_ptr CLASS::push(const link& size) NOEXCEPT
 
     const auto sink = std::make_shared<writer>(ptr);
     if constexpr (slab) { sink->set_limit(size); }
-    if constexpr (!slab) { sink->set_limit(size * payload_size); }
+    if constexpr (!slab) { sink->set_limit(size * Size); }
     return sink;
+}
+
+TEMPLATE
+constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
+{
+    using namespace system;
+    const auto value = possible_narrow_cast<size_t>(link.value);
+
+    if constexpr (is_zero(Size))
+    {
+        return value;
+    }
+    else
+    {
+        BC_ASSERT(!is_multiply_overflow(value, Size));
+        return value * Size;
+    }
 }
 
 } // namespace database

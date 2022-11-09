@@ -21,13 +21,13 @@
 
 BOOST_AUTO_TEST_SUITE(arraymap_tests)
 
-template <typename Link, size_t Size = zero, typename Record = bool>
+template <typename Link, size_t Size = zero>
 class arraymap_
-  : public arraymap<Link, Size, Record>
+  : public arraymap<Link, Size>
 {
 public:
     using link = typename Link;
-    using base = arraymap<Link, Size, Record>;
+    using base = arraymap<Link, Size>;
 
     using base::arraymap;
 
@@ -42,31 +42,18 @@ public:
     }
 };
 
-constexpr auto link_size = 5_size;
-constexpr auto header_size = 105_size;
-
-// Key size does not factor into header byte size (for first key only).
-constexpr auto links = header_size / link_size;
-static_assert(links == 21u);
-
-// Bucket count is one less than link count, due to header.size field.
-constexpr auto buckets = sub1(links);
-static_assert(buckets == 20u);
-
-// Record size includes key but not link.
-// Slab allocation includes key and link.
-constexpr auto data_size = 4_size;
-
-constexpr auto record_size = link_size + data_size;
-constexpr auto slab_size = record_size;
-
+// There is no internal linkage, but there is still a primary key domain.
+constexpr size_t link_size = 5;
 using link = linkage<link_size>;
+
+constexpr size_t data_size = 4;
 using record_table = arraymap_<link, data_size>;
 using slab_table = arraymap_<link, zero>;
 
-// record_arraymap__create_verify
+// record arraymap
+// ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(record_arraymap__create_verify__empty_files__success)
+BOOST_AUTO_TEST_CASE(arraymap__record_construct__empty__expected)
 {
     data_chunk body_file;
     test::storage body_store{ body_file };
@@ -74,45 +61,16 @@ BOOST_AUTO_TEST_CASE(record_arraymap__create_verify__empty_files__success)
     BOOST_REQUIRE(body_file.empty());
 }
 
-BOOST_AUTO_TEST_CASE(record_arraymap__create_verify__multiple_iterator_body_file__failure)
+BOOST_AUTO_TEST_CASE(arraymap__record_construct__non_empty__expected)
 {
-    constexpr auto body_size = 3u * record_size;
-    data_chunk body_file(body_size, 0x42);
+    constexpr auto body_size = 12345u;
+    data_chunk body_file(body_size);
     test::storage body_store{ body_file };
     const record_table instance{ body_store };
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(record_arraymap__create_verify__multiple_fractional_iterator_body_file__failure)
-{
-    constexpr auto body_size = 3u * record_size + 2u;
-    data_chunk body_file(body_size, 0x42);
-    test::storage body_store{ body_file };
-    const record_table instance{ body_store };
-    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
-}
-
-BOOST_AUTO_TEST_CASE(record_arraymap__create_verify__one_iterator_body_file__failure)
-{
-    constexpr auto body_size = record_size;
-    data_chunk body_file(body_size, 0x42);
-    test::storage body_store{ body_file };
-    const record_table instance{ body_store };
-    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
-}
-
-BOOST_AUTO_TEST_CASE(record_arraymap__create_verify__sub_one_iterator_body_file__success)
-{
-    constexpr auto body_size = sub1(record_size);
-    data_chunk body_file(body_size, 0x42);
-    test::storage body_store{ body_file };
-    const record_table instance{ body_store };
-    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
-}
-
-// at(terminal)
-
-BOOST_AUTO_TEST_CASE(record_arraymap__at__terminal__false)
+BOOST_AUTO_TEST_CASE(arraymap__record_at__terminal__false)
 {
     data_chunk body_file;
     test::storage body_store{ body_file };
@@ -120,9 +78,7 @@ BOOST_AUTO_TEST_CASE(record_arraymap__at__terminal__false)
     BOOST_REQUIRE(!instance.at_(link::terminal));
 }
 
-// at(exhausted)
-
-BOOST_AUTO_TEST_CASE(record_arraymap__at__empty__exhausted)
+BOOST_AUTO_TEST_CASE(arraymap__record_at__empty__exhausted)
 {
     data_chunk body_file;
     test::storage body_store{ body_file };
@@ -131,9 +87,10 @@ BOOST_AUTO_TEST_CASE(record_arraymap__at__empty__exhausted)
     BOOST_REQUIRE(instance.at_(19)->is_exhausted());
 }
 
-// slab_arraymap__create_verify
+// slab arraymap
+// ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(slab_arraymap__create_verify__empty_files__success)
+BOOST_AUTO_TEST_CASE(arraymap__slab_construct__empty__expected)
 {
     data_chunk body_file;
     test::storage body_store{ body_file };
@@ -141,53 +98,16 @@ BOOST_AUTO_TEST_CASE(slab_arraymap__create_verify__empty_files__success)
     BOOST_REQUIRE(body_file.empty());
 }
 
-BOOST_AUTO_TEST_CASE(slab_arraymap__create_verify__non_empty_head_file__failure)
+BOOST_AUTO_TEST_CASE(arraymap__slab_construct__non_empty__expected)
 {
-    data_chunk body_file;
-    test::storage body_store{ body_file };
-    const slab_table instance{ body_store };
-    BOOST_REQUIRE(body_file.empty());
-}
-
-BOOST_AUTO_TEST_CASE(slab_arraymap__create_verify__multiple_iterator_body_file__failure)
-{
-    constexpr auto body_size = 3u * slab_size;
-    data_chunk body_file(body_size, 0x42);
+    constexpr auto body_size = 12345u;
+    data_chunk body_file(body_size);
     test::storage body_store{ body_file };
     const slab_table instance{ body_store };
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(slab_arraymap__create_verify__multiple_fractional_iterator_body_file__failure)
-{
-    constexpr auto body_size = 3u * slab_size + 2u;
-    data_chunk body_file(body_size, 0x42);
-    test::storage body_store{ body_file };
-    const slab_table instance{ body_store };
-    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
-}
-
-BOOST_AUTO_TEST_CASE(slab_arraymap__create_verify__one_iterator_body_file__failure)
-{
-    constexpr auto body_size = slab_size;
-    data_chunk body_file(body_size, 0x42);
-    test::storage body_store{ body_file };
-    const slab_table instance{ body_store };
-    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
-}
-
-BOOST_AUTO_TEST_CASE(slab_arraymap__create_verify__sub_one_iterator_body_file__failure)
-{
-    constexpr auto body_size = sub1(slab_size);
-    data_chunk body_file(body_size, 0x42);
-    test::storage body_store{ body_file };
-    const slab_table instance{ body_store };
-    BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
-}
-
-// at(terminal)
-
-BOOST_AUTO_TEST_CASE(slab_arraymap__at__terminal__false)
+BOOST_AUTO_TEST_CASE(arraymap__slab_at__terminal__false)
 {
     data_chunk body_file;
     test::storage body_store{ body_file };
@@ -195,15 +115,73 @@ BOOST_AUTO_TEST_CASE(slab_arraymap__at__terminal__false)
     BOOST_REQUIRE(!instance.at_(link::terminal));
 }
 
-// at(exhausted)
-
-BOOST_AUTO_TEST_CASE(slab_arraymap__at__empty__exhausted)
+BOOST_AUTO_TEST_CASE(arraymap__slab_at__empty__exhausted)
 {
     data_chunk body_file;
     test::storage body_store{ body_file };
     const slab_table instance{ body_store };
     BOOST_REQUIRE(instance.at_(0)->is_exhausted());
     BOOST_REQUIRE(instance.at_(19)->is_exhausted());
+}
+
+// push/found/at (protected interface positive tests)
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(arraymap__record_readers__empty__expected)
+{
+    data_chunk body_file;
+    test::storage body_store{ body_file };
+    record_table instance{ body_store };
+
+    auto stream0 = instance.push_();
+    BOOST_REQUIRE_EQUAL(body_file.size(), data_size);
+    BOOST_REQUIRE(!stream0->is_exhausted());
+    BOOST_REQUIRE(instance.at_(0));
+    stream0.reset();
+
+    auto stream1 = instance.push_();
+    BOOST_REQUIRE_EQUAL(body_file.size(), 2u * data_size);
+    BOOST_REQUIRE(!stream1->is_exhausted());
+    BOOST_REQUIRE(instance.at_(1));
+    stream1.reset();
+
+
+    // Past end is valid pointer but exhausted stream.
+    BOOST_REQUIRE(instance.at_(2));
+    BOOST_REQUIRE(instance.at_(2)->is_exhausted());
+
+    // record (assumes zero fill)
+    // =================================
+    // 00000000 [0]
+    // 00000000 [1]
+}
+
+BOOST_AUTO_TEST_CASE(arraymap__slab_readers__empty__expected)
+{
+    data_chunk body_file;
+    test::storage body_store{ body_file };
+    slab_table instance{ body_store };
+
+    auto stream0 = instance.push_(data_size);
+    BOOST_REQUIRE_EQUAL(body_file.size(), data_size);
+    BOOST_REQUIRE(!stream0->is_exhausted());
+    BOOST_REQUIRE(instance.at_(0));
+    stream0.reset();
+
+    auto stream1 = instance.push_(data_size);
+    BOOST_REQUIRE_EQUAL(body_file.size(), 2u * data_size);
+    BOOST_REQUIRE(!stream1->is_exhausted());
+    BOOST_REQUIRE(instance.at_(data_size));
+    stream1.reset();
+
+    // Past end is valid pointer but exhausted stream.
+    BOOST_REQUIRE(instance.at_(2u * data_size));
+    BOOST_REQUIRE(instance.at_(2u * data_size)->is_exhausted());
+
+    // record (assumes zero fill)
+    // =================================
+    // 00000000 [0]
+    // 00000000 [1]
 }
 
 BOOST_AUTO_TEST_SUITE_END()

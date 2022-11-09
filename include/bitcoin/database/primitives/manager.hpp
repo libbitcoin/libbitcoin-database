@@ -47,9 +47,9 @@ public:
     bool truncate(const Link& count) NOEXCEPT;
 
     /// Allocate records and return first logical position (eof possible).
-    /// For record, count is number of records to allocate (link + data).
-    /// For slab count must include bytes (link + data) [key is part of data].
-    Link allocate(const Link& count) NOEXCEPT;
+    /// For record, size is number of records to allocate (link + data).
+    /// For slab size must include bytes (link + data) [key is part of data].
+    Link allocate(const Link& size) NOEXCEPT;
 
     /// Return memory object for record at specified position (null possible).
     /// Obtaining memory object is considered const access despite fact that

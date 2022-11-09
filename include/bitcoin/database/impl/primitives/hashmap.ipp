@@ -31,6 +31,9 @@ CLASS::hashmap(storage& header, storage& body, const link& buckets) NOEXCEPT
 {
 }
 
+// not thread safe
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 bool CLASS::create() NOEXCEPT
 {
@@ -45,16 +48,19 @@ bool CLASS::verify() const NOEXCEPT
         count == body_.count();
 }
 
+// query interface
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 bool CLASS::exists(const key& key) const NOEXCEPT
 {
-    return !first(key).is_terminal();
+    return !iterator(key).self().is_terminal();
 }
 
 TEMPLATE
 Record CLASS::get(const key& key) const NOEXCEPT
 {
-    return { first(key) };
+    return { iterator(key).self() };
 }
 
 TEMPLATE
@@ -80,9 +86,18 @@ bool CLASS::insert(const key& key, const Record& record) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-typename CLASS::link CLASS::first(const key& key) const NOEXCEPT
+reader_ptr CLASS::find(const key& key) const NOEXCEPT
 {
-    return iterator(key).self();
+    const auto record = iterator(key).self();
+    if (record.is_terminal())
+        return {};
+
+    const auto source = at(record);
+    if (!source)
+        return {};
+
+    source->skip_bytes(key_size);
+    return source;
 }
 
 TEMPLATE
@@ -102,25 +117,11 @@ reader_ptr CLASS::at(const link& record) const NOEXCEPT
 }
 
 TEMPLATE
-reader_ptr CLASS::find(const key& key) const NOEXCEPT
+finalizer_ptr CLASS::push(const key& key, const link& size) NOEXCEPT
 {
-    const auto record = first(key);
-    if (record.is_terminal())
-        return {};
-
-    const auto source = at(record);
-    if (!source)
-        return {};
-
-    source->skip_bytes(key_size);
-    return source;
-}
-
-TEMPLATE
-writer_ptr CLASS::push(const key& key, const link& size) NOEXCEPT
-{
+    using namespace system;
     BC_ASSERT(!size.is_terminal());
-    BC_ASSERT(!system::is_multiply_overflow<size_t>(size, payload_size));
+    BC_ASSERT(!is_multiply_overflow<size_t>(size, payload_size));
 
     const auto item = body_.allocate(size);
     if (item.is_terminal())
@@ -130,16 +131,13 @@ writer_ptr CLASS::push(const key& key, const link& size) NOEXCEPT
     if (!ptr)
         return {};
 
-    const auto sink = std::make_shared<writer>(ptr);
+    const auto sink = std::make_shared<finalizer>(ptr);
     const auto index = header_.index(key);
 
     sink->set_finalizer([this, item, index, ptr]() NOEXCEPT
     {
-        BC_PUSH_WARNING(NO_REINTERPRET_CAST)
-        using namespace system;
         auto& next = unsafe_array_cast<uint8_t, link::size>(ptr->begin());
         return header_.push(item, next, index);
-        BC_POP_WARNING()
     });
 
     if constexpr (slab) { sink->set_limit(size); }

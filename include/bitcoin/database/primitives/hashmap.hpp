@@ -37,18 +37,13 @@ public:
 
     hashmap(storage& header, storage& body, const link& buckets) NOEXCEPT;
 
-    /// Not thread safe.
-    /// -----------------------------------------------------------------------
-
-    /// Create from empty body/head files (no need to verify).
+    /// Create from empty body/head files (not thread safe).
     bool create() NOEXCEPT;
 
-    /// False if head or body file size incorrect.
+    /// False if head or body file size incorrect (not thread safe).
     bool verify() const NOEXCEPT;
 
-    /// Thread safe.
-    /// -----------------------------------------------------------------------
-
+    /// Query interface.
     bool exists(const key& key) const NOEXCEPT;
     Record get(const key& key) const NOEXCEPT;
     Record get(const link& link) const NOEXCEPT;
@@ -56,18 +51,14 @@ public:
     bool insert(const key& key, const Record& record) NOEXCEPT;
 
 protected:
-    
-    /// Search table for link of first instance of key.
-    link first(const key& key) const NOEXCEPT;
+    /// Reader positioned at data, same as at(first(key)).
+    reader_ptr find(const key& key) const NOEXCEPT;
 
     /// Reader positioned at key.
     reader_ptr at(const link& record) const NOEXCEPT;
 
-    /// Reader positioned at data, same as at(first(key)).
-    reader_ptr find(const key& key) const NOEXCEPT;
-
     /// Reader positioned at data, size is one for records and bytes for slabs.
-    writer_ptr push(const key& key, const link& size=one) NOEXCEPT;
+    finalizer_ptr push(const key& key, const link& size=one) NOEXCEPT;
 
 private:
     static constexpr auto link_size = link::size;
