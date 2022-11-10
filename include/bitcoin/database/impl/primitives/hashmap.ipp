@@ -70,7 +70,7 @@ Record CLASS::get(const Link& link) const NOEXCEPT
 }
 
 TEMPLATE
-typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
+typename CLASS::iterable CLASS::it(const Key& key) const NOEXCEPT
 {
     return { body_.get(), header_.top(key), key };
 }

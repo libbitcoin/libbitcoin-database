@@ -33,7 +33,7 @@ template <typename Link, typename Key, size_t Size = zero, typename Record = boo
 class hashmap
 {
 public:
-    using iterator = iterator<Link, Key, Size>;
+    using iterable = iterator<Link, Key, Size>;
 
     hashmap(storage& header, storage& body, const Link& buckets) NOEXCEPT;
 
@@ -47,7 +47,7 @@ public:
     bool exists(const Key& key) const NOEXCEPT;
     Record get(const Key& key) const NOEXCEPT;
     Record get(const Link& link) const NOEXCEPT;
-    iterator it(const Key& key) const NOEXCEPT;
+    iterable it(const Key& key) const NOEXCEPT;
     bool insert(const Key& key, const Record& record) NOEXCEPT;
 
 protected:
