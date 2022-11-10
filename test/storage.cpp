@@ -69,7 +69,7 @@ size_t storage::allocate(size_t chunk) NOEXCEPT
     return link;
 }
 
-memory_ptr storage::get(size_t offset) NOEXCEPT
+memory_ptr storage::get(size_t offset) const NOEXCEPT
 {
     const auto ptr = std::make_shared<accessor<std::shared_mutex>>(map_mutex_);
 

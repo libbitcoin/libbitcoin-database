@@ -26,7 +26,7 @@ class arraymap_
   : public arraymap<Link, Size>
 {
 public:
-    using link = typename Link;
+    using link = Link;
     using base = arraymap<Link, Size>;
 
     using base::arraymap;
@@ -144,7 +144,6 @@ BOOST_AUTO_TEST_CASE(arraymap__record_readers__empty__expected)
     BOOST_REQUIRE(!stream1->is_exhausted());
     BOOST_REQUIRE(instance.at_(1));
     stream1.reset();
-
 
     // Past end is valid pointer but exhausted stream.
     BOOST_REQUIRE(instance.at_(2));

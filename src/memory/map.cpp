@@ -257,7 +257,7 @@ size_t map::allocate(size_t chunk) NOEXCEPT
 }
 
 // Always returns a valid and bounded memory pointer.
-memory_ptr map::get(size_t offset) NOEXCEPT
+memory_ptr map::get(size_t offset) const NOEXCEPT
 {
     const auto ptr = std::make_shared<accessor<mutex>>(map_mutex_);
 

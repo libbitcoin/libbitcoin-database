@@ -46,8 +46,8 @@ protected:
     writer_ptr push(const Link& size=one) NOEXCEPT;
 
 private:
+    static constexpr auto is_slab = is_zero(Size);
     static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
-    static constexpr auto slab = is_zero(Size);
 
     // Thread safe.
     storage& body_;

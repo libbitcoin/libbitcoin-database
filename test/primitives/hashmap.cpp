@@ -21,28 +21,26 @@
 
 BOOST_AUTO_TEST_SUITE(hashmap_tests)
 
-template <typename Iterator>
+template <typename Link, typename Key, size_t Size = zero>
 class hashmap_
-  : public hashmap<Iterator>
+  : public hashmap<Link, Key, Size>
 {
 public:
-    using link = typename Iterator::link;
-    using key = typename Iterator::key;
-    using base = hashmap<Iterator>;
+    using base = hashmap<Link, Key, Size>;
 
     using base::hashmap;
 
-    reader_ptr find_(const key& key) const NOEXCEPT
+    reader_ptr find_(const Key& key) const NOEXCEPT
     {
         return base::find(key);
     }
 
-    reader_ptr at_(const link& record) const NOEXCEPT
+    reader_ptr at_(const Link& record) const NOEXCEPT
     {
         return base::at(record);
     }
 
-    finalizer_ptr push_(const key& key, const link& size=one) NOEXCEPT
+    finalizer_ptr push_(const Key& key, const Link& size=bc::one) NOEXCEPT
     {
         return base::push(key, size);
     }
@@ -50,26 +48,24 @@ public:
 
 constexpr size_t link_size = 5;
 constexpr size_t key_size = 10;
-constexpr size_t header_size = 105;
+using link = linkage<link_size>;
+using key = data_array<key_size>;
 
 // Key size does not factor into header byte size (for first key only).
+constexpr size_t header_size = 105;
 constexpr auto links = header_size / link_size;
 static_assert(links == 21u);
 
 // Bucket count is one less than link count, due to header.size field.
-constexpr auto buckets = sub1(links);
+constexpr auto buckets = bc::sub1(links);
 static_assert(buckets == 20u);
 
-// Record size includes key but not link.
-// Slab allocation includes key and link.
 constexpr size_t data_size = 4;
 constexpr auto record_size = link_size + key_size + data_size;
 constexpr auto slab_size = record_size;
 
-using link = linkage<link_size>;
-using key = data_array<key_size>;
-using record_table = hashmap_<iterator<link, key, data_size>>;
-using slab_table = hashmap_<iterator<link, key, zero>>;
+using record_table = hashmap_<link, key, data_size>;
+using slab_table = hashmap_<link, key, zero>;
 
 // record hashmap
 // ----------------------------------------------------------------------------
@@ -404,6 +400,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_readers__empty__expected)
 
     constexpr key key0{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     auto stream0 = instance.push_(key0);
+    BOOST_REQUIRE_EQUAL(body_file.size(), record_size);
     BOOST_REQUIRE(!stream0->is_exhausted());
     BOOST_REQUIRE(!instance.find_(key0));
     BOOST_REQUIRE(stream0->finalize());
@@ -412,6 +409,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_readers__empty__expected)
 
     constexpr key key1{ 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a };
     auto stream1 = instance.push_(key1);
+    BOOST_REQUIRE_EQUAL(body_file.size(), 2u * record_size);
     BOOST_REQUIRE(!stream1->is_exhausted());
     BOOST_REQUIRE(!instance.find_(key1));
     BOOST_REQUIRE(stream1->finalize());
@@ -470,11 +468,13 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_push_find__empty__true)
     constexpr key key0{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     BOOST_REQUIRE(!instance.find_(key0));
     BOOST_REQUIRE(instance.push_(key0, slab_size)->finalize());
+    BOOST_REQUIRE_EQUAL(body_file.size(), slab_size);
     BOOST_REQUIRE(instance.find_(key0));
 
     constexpr key key1{ 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a };
     BOOST_REQUIRE(!instance.find_(key1));
     BOOST_REQUIRE(instance.push_(key1, slab_size)->finalize());
+    BOOST_REQUIRE_EQUAL(body_file.size(), 2u * slab_size);
     BOOST_REQUIRE(instance.find_(key1));
 
     // Past end is valid pointer but exhausted stream.
@@ -528,13 +528,16 @@ BOOST_AUTO_TEST_CASE(hashmap__record_push_duplicate_key__find__true)
 
     constexpr key key0{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
     BOOST_REQUIRE(instance.push_(key0)->finalize());
+    BOOST_REQUIRE_EQUAL(body_file.size(), record_size);
     BOOST_REQUIRE(instance.find_(key0));
 
     constexpr key key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     BOOST_REQUIRE(instance.push_(key1)->finalize());
+    BOOST_REQUIRE_EQUAL(body_file.size(), 2u * record_size);
     BOOST_REQUIRE(instance.find_(key1));
 
     BOOST_REQUIRE(instance.push_(key1)->finalize());
+    BOOST_REQUIRE_EQUAL(body_file.size(), 3u * record_size);
     BOOST_REQUIRE(instance.find_(key1));
 
     ////std::cout << head_file << std::endl << std::endl;

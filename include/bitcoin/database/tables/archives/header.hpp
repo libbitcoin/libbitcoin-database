@@ -27,44 +27,44 @@
 namespace libbitcoin {
 namespace database {
 
-namespace schema
-{
-	namespace header
-	{
-		class record
-		{
-			////bool from_data(reader& source) NOEXCEPT
-			////{
-			////}
+////namespace schema
+////{
+////	namespace header
+////	{
+////		class record
+////		{
+////			////bool from_data(reader& source) NOEXCEPT
+////			////{
+////			////}
+////
+////			////bool to_data(writer& sink) NOEXCEPT
+////			////{
+////			////}
+////
+////			const keying<pk> parent;
+////			const uint32_t version;
+////			const uint32_t time;
+////			const uint32_t bits;
+////			const uint32_t nonce;
+////			const hash_digest root;
+////		};
+////
+////		using element = iterator<linkage<pk>, keying<sk>, bytes>;
+////	}
+////}
 
-			////bool to_data(writer& sink) NOEXCEPT
-			////{
-			////}
-
-			const keying<pk> parent;
-			const uint32_t version;
-			const uint32_t time;
-			const uint32_t bits;
-			const uint32_t nonce;
-			const hash_digest root;
-		};
-
-		using element = iterator<linkage<pk>, keying<sk>, bytes>;
-	}
-}
-
-class BCD_API header
-  : public hashmap<schema::header::element>
-{
-public:
-	DEFAULT5(header);
-
-	using hashmap = hashmap;
-
-
-
-private:
-};
+////class BCD_API header
+////  : public hashmap<schema::header::element>
+////{
+////public:
+////	DEFAULT5(header);
+////
+////	using hashmap = hashmap;
+////
+////
+////
+////private:
+////};
 
 } // namespace database
 } // namespace libbitcoin

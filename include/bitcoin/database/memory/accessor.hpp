@@ -39,14 +39,14 @@ public:
     /// Set the buffer.
     inline void assign(uint8_t* begin, uint8_t* end) NOEXCEPT;
 
-    /// Increment begin the specified number of bytes.
-    inline void increment(size_t bytes) NOEXCEPT override;
+    /// Return an offset from begin, nullptr if end or past end.
+    inline uint8_t* offset(size_t bytes) NOEXCEPT override;
 
-    /// The buffer size.
+    /// The logical buffer size (from begin to end).
     inline ptrdiff_t size() const NOEXCEPT override;
 
-    /// Get buffer (guarded against remap only).
-    inline value_type* begin() NOEXCEPT override;
+    /// Get logical buffer (guarded against remap only).
+    inline uint8_t* begin() NOEXCEPT override;
     inline uint8_t* end() NOEXCEPT override;
 
 private:

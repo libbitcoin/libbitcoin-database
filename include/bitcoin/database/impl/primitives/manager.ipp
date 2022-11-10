@@ -61,6 +61,12 @@ Link CLASS::allocate(const Link& size) NOEXCEPT
 }
 
 TEMPLATE
+memory_ptr CLASS::get() const NOEXCEPT
+{
+    return file_.get();
+}
+
+TEMPLATE
 memory_ptr CLASS::get(const Link& value) const NOEXCEPT
 {
     if (value.is_terminal())
@@ -70,19 +76,24 @@ memory_ptr CLASS::get(const Link& value) const NOEXCEPT
     return file_.get(link_to_position(value));
 }
 
+// private
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
 {
     using namespace system;
     const auto value = possible_narrow_cast<size_t>(link.value);
 
-    if constexpr (is_zero(Size))
+    // Manager keys off of zero Size...
+    if constexpr (is_slab)
     {
         return value;
     }
     else
     {
-        constexpr auto element_size = Link::size + Size;
+        // ...so must add Link + Key to Size.
+        constexpr auto element_size = Link::size + array_count<Key> + Size;
         BC_ASSERT(!is_multiply_overflow(value, element_size));
         return value * element_size;
     }
@@ -94,13 +105,15 @@ constexpr Link CLASS::position_to_link(size_t position) NOEXCEPT
     using namespace system;
     using integer = typename Link::integer;
 
-    if constexpr (is_zero(Size))
+    // Manager keys off of zero Size...
+    if constexpr (is_slab)
     {
         return { possible_narrow_cast<integer>(position) };
     }
     else
     {
-        constexpr auto element_size = Link::size + Size;
+        // ...so must add Link + Key to Size.
+        constexpr auto element_size = Link::size + array_count<Key> + Size;
         return { possible_narrow_cast<integer>(position / element_size) };
     }
 }

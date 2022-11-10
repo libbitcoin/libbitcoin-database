@@ -31,12 +31,10 @@ namespace database {
 /// slab = is_zero(Size), in which case count/link is bytes otherwise records.
 /// Obtaining memory object is considered const access despite the fact that
 /// memory is writeable. Non-const manager access implies memory map modify.
-template <typename Link, size_t Size>
+template <typename Link, typename Key, size_t Size>
 class manager
 {
 public:
-    using link = Link;
-
     /// Manage byte storage device.
     manager(storage& file) NOEXCEPT;
 
@@ -56,7 +54,11 @@ public:
     /// memory is writeable. Non-const access implies memory map modify.
     memory_ptr get(const Link& link) const NOEXCEPT;
 
+    /// Return memory object for the full memory map.
+    memory_ptr get() const NOEXCEPT;
+
 private:
+    static constexpr auto is_slab = is_zero(Size);
     static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
     static constexpr Link position_to_link(size_t position) NOEXCEPT;
 
@@ -67,8 +69,8 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, size_t Size>
-#define CLASS manager<Link, Size>
+#define TEMPLATE template <typename Link, typename Key, size_t Size>
+#define CLASS manager<Link, Key, Size>
 
 #include <bitcoin/database/impl/primitives/manager.ipp>
 

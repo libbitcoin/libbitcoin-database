@@ -26,7 +26,7 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-CLASS::hashmap(storage& header, storage& body, const link& buckets) NOEXCEPT
+CLASS::hashmap(storage& header, storage& body, const Link& buckets) NOEXCEPT
   : header_(header, buckets), body_(body)
 {
 }
@@ -43,7 +43,7 @@ bool CLASS::create() NOEXCEPT
 TEMPLATE
 bool CLASS::verify() const NOEXCEPT
 {
-    link count{};
+    Link count{};
     return header_.verify() && header_.get_body_count(count) &&
         count == body_.count();
 }
@@ -52,31 +52,31 @@ bool CLASS::verify() const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-bool CLASS::exists(const key& key) const NOEXCEPT
+bool CLASS::exists(const Key& key) const NOEXCEPT
 {
-    return !iterator(key).self().is_terminal();
+    return !it(key).self().is_terminal();
 }
 
 TEMPLATE
-Record CLASS::get(const key& key) const NOEXCEPT
+Record CLASS::get(const Key& key) const NOEXCEPT
 {
-    return { iterator(key).self() };
+    return { it(key).self() };
 }
 
 TEMPLATE
-Record CLASS::get(const link& link) const NOEXCEPT
+Record CLASS::get(const Link& link) const NOEXCEPT
 {
     return { at(link) };
 }
 
 TEMPLATE
-Iterator CLASS::iterator(const key& key) const NOEXCEPT
+CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 {
-    return { body_, header_.top(key), key };
+    return { body_.get(), header_.top(key), key };
 }
 
 TEMPLATE
-bool CLASS::insert(const key& key, const Record& record) NOEXCEPT
+bool CLASS::insert(const Key& key, const Record& record) NOEXCEPT
 {
     // record.size() is slab/byte or record allocation.
     return record.to_data(push(key, record.size()));
@@ -86,9 +86,9 @@ bool CLASS::insert(const key& key, const Record& record) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-reader_ptr CLASS::find(const key& key) const NOEXCEPT
+reader_ptr CLASS::find(const Key& key) const NOEXCEPT
 {
-    const auto record = iterator(key).self();
+    const auto record = it(key).self();
     if (record.is_terminal())
         return {};
 
@@ -96,12 +96,12 @@ reader_ptr CLASS::find(const key& key) const NOEXCEPT
     if (!source)
         return {};
 
-    source->skip_bytes(key_size);
+    source->skip_bytes(array_count<Key>);
     return source;
 }
 
 TEMPLATE
-reader_ptr CLASS::at(const link& link) const NOEXCEPT
+reader_ptr CLASS::at(const Link& link) const NOEXCEPT
 {
     if (link.is_terminal())
         return {};
@@ -111,17 +111,17 @@ reader_ptr CLASS::at(const link& link) const NOEXCEPT
         return {};
 
     const auto source = std::make_shared<reader>(ptr);
-    source->skip_bytes(link_size);
-    if constexpr (!slab) { source->set_limit(payload_size); }
+    source->skip_bytes(Link::size);
+    if constexpr (!is_slab) { source->set_limit(Size); }
     return source;
 }
 
 TEMPLATE
-finalizer_ptr CLASS::push(const key& key, const link& size) NOEXCEPT
+finalizer_ptr CLASS::push(const Key& key, const Link& size) NOEXCEPT
 {
     using namespace system;
     BC_ASSERT(!size.is_terminal());
-    BC_ASSERT(!is_multiply_overflow<size_t>(size, payload_size));
+    BC_ASSERT(!is_multiply_overflow<size_t>(size, Size));
 
     const auto item = body_.allocate(size);
     if (item.is_terminal())
@@ -136,13 +136,13 @@ finalizer_ptr CLASS::push(const key& key, const link& size) NOEXCEPT
 
     sink->set_finalizer([this, item, index, ptr]() NOEXCEPT
     {
-        auto& next = unsafe_array_cast<uint8_t, link::size>(ptr->begin());
+        auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
         return header_.push(item, next, index);
     });
 
-    if constexpr (slab) { sink->set_limit(size); }
-    sink->skip_bytes(link_size);
-    if constexpr (!slab) { sink->set_limit(size * payload_size); }
+    if constexpr (is_slab) { sink->set_limit(size); }
+    sink->skip_bytes(Link::size);
+    if constexpr (!is_slab) { sink->set_limit(size * Size); }
     sink->write_bytes(key);
     return sink;
 }

@@ -22,20 +22,20 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/head.hpp>
+#include <bitcoin/database/primitives/iterator.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-template <typename Iterator, typename Record = bool>
+template <typename Link, typename Key, size_t Size = zero, typename Record = bool>
 class hashmap
 {
 public:
-    using link = typename Iterator::link;
-    using key = typename Iterator::key;
+    using iterator = iterator<Link, Key, Size>;
 
-    hashmap(storage& header, storage& body, const link& buckets) NOEXCEPT;
+    hashmap(storage& header, storage& body, const Link& buckets) NOEXCEPT;
 
     /// Create from empty body/head files (not thread safe).
     bool create() NOEXCEPT;
@@ -43,31 +43,27 @@ public:
     /// False if head or body file size incorrect (not thread safe).
     bool verify() const NOEXCEPT;
 
-    /// Query interface.
-    bool exists(const key& key) const NOEXCEPT;
-    Record get(const key& key) const NOEXCEPT;
-    Record get(const link& link) const NOEXCEPT;
-    Iterator iterator(const key& key) const NOEXCEPT;
-    bool insert(const key& key, const Record& record) NOEXCEPT;
+    /// Query interface, iterator is not thread safe.
+    bool exists(const Key& key) const NOEXCEPT;
+    Record get(const Key& key) const NOEXCEPT;
+    Record get(const Link& link) const NOEXCEPT;
+    iterator it(const Key& key) const NOEXCEPT;
+    bool insert(const Key& key, const Record& record) NOEXCEPT;
 
 protected:
     /// Reader positioned at data, same as at(first(key)).
-    reader_ptr find(const key& key) const NOEXCEPT;
+    reader_ptr find(const Key& key) const NOEXCEPT;
 
     /// Reader positioned at key.
-    reader_ptr at(const link& link) const NOEXCEPT;
+    reader_ptr at(const Link& link) const NOEXCEPT;
 
     /// Reader positioned at data, size is count for records, bytes for slabs.
-    finalizer_ptr push(const key& key, const link& size=one) NOEXCEPT;
+    finalizer_ptr push(const Key& key, const Link& size=one) NOEXCEPT;
 
 private:
-    static constexpr auto link_size = link::size;
-    static constexpr auto key_size = array_count<key>;
-    static constexpr auto payload_size = Iterator::payload;
-    static constexpr auto slab = is_zero(payload_size);
-
-    using header = database::head<link, key>;
-    using manager = database::manager<link, payload_size>;
+    static constexpr auto is_slab = is_zero(Size);
+    using header = database::head<Link, Key>;
+    using manager = database::manager<Link, Key, Size>;
 
     // hash/head/push thread safe.
     header header_;
@@ -80,8 +76,8 @@ private:
 } // namespace libbitcoin
 
 #define TEMPLATE \
-template <typename Iterator, typename Record>
-#define CLASS hashmap<Iterator, Record>
+template <typename Link, typename Key, size_t Size, typename Record>
+#define CLASS hashmap<Link, Key, Size, Record>
 
 #include <bitcoin/database/impl/primitives/hashmap.ipp>
 

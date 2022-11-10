@@ -45,10 +45,12 @@ inline void CLASS::assign(uint8_t* begin, uint8_t* end) NOEXCEPT
 }
 
 TEMPLATE
-inline void CLASS::increment(size_t bytes) NOEXCEPT
+inline uint8_t* CLASS::offset(size_t bytes) NOEXCEPT
 {
-    std::advance(begin_, bytes);
-    ////BC_ASSERT(!system::is_negative(size()));
+    if (!system::is_lesser(bytes, size()))
+        return nullptr;
+
+    return std::next(begin_, bytes);
 }
 
 TEMPLATE

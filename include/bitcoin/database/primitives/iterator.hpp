@@ -22,24 +22,18 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
-#include <bitcoin/database/memory/interfaces/storage.hpp>
-#include <bitcoin/database/primitives/manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
+/// This class is not thread safe.
 /// Size non-zero implies record manager (ordinal record links).
 template <typename Link, typename Key, size_t Size = zero>
 class iterator
 {
 public:
-    static constexpr auto payload = array_count<Key> + Size;
-    using link = Link;
-    using key = Key;
-
     /// Caller must keep key value in scope.
-    iterator(const manager<Link, payload>& manage, const Link& start,
-        const Key& key) NOEXCEPT;
+    iterator(const memory_ptr& file, const Link& start, const Key& key) NOEXCEPT;
 
     /// Advance to and return next iterator.
     bool next() NOEXCEPT;
@@ -48,17 +42,16 @@ public:
 protected:
     bool is_match() const NOEXCEPT;
     Link get_next() const NOEXCEPT;
-    memory_ptr get(size_t offset) const NOEXCEPT;
 
 private:
-    template <size_t Bytes>
-    static auto& array_cast(memory& buffer) NOEXCEPT
-    {
-        return system::unsafe_array_cast<uint8_t, Bytes>(buffer.begin());
-    }
+    static constexpr auto is_slab = is_zero(Size);
+    static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
 
-    const manager<Link, payload>& manager_;
+    // These are thread safe.
+    const memory_ptr ptr_;
     const Key& key_;
+
+    // This is not thread safe.
     Link link_;
 };
 
