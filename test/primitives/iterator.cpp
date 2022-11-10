@@ -26,15 +26,7 @@ class iterator_
   : public iterator<Link, Key, Size>
 {
 public:
-    iterator_(const memory_ptr& file, const Key& key) NOEXCEPT
-      : iterator_(file, Link::terminal, key)
-    {
-    }
-
-    iterator_(const memory_ptr& file, const Link& link, const Key& key) NOEXCEPT
-      : iterator<Link, Key, Size>(file, link, key)
-    {
-    }
+    using iterator<Link, Key, Size>::iterator;
 
     bool is_match_() const NOEXCEPT
     {
@@ -58,7 +50,7 @@ BOOST_AUTO_TEST_CASE(iterator__get_next__empty__terminal)
 
     constexpr key key0{};
     test::storage file;
-    const slab_iterate iterator{ file.get(), key0 };
+    const slab_iterate iterator{ file.get(), link::terminal, key0 };
     BOOST_REQUIRE(iterator.get_next_().is_terminal());
 }
 

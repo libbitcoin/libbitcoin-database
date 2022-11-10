@@ -26,20 +26,20 @@ class arraymap_
   : public arraymap<Link, Size>
 {
 public:
-    using link = Link;
-    using base = arraymap<Link, Size>;
+    using arraymap<Link, Size>::arraymap;
 
-    using base::arraymap;
-
-    reader_ptr at_(const link& record) const NOEXCEPT
+    reader_ptr at_(const Link& record) const NOEXCEPT
     {
         return base::at(record);
     }
 
-    writer_ptr push_(const link& size=one) NOEXCEPT
+    writer_ptr push_(const Link& size=one) NOEXCEPT
     {
         return base::push(size);
     }
+
+private:
+    using base = arraymap<Link, Size>;
 };
 
 // There is no internal linkage, but there is still a primary key domain.

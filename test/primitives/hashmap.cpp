@@ -26,9 +26,7 @@ class hashmap_
   : public hashmap<Link, Key, Size>
 {
 public:
-    using base = hashmap<Link, Key, Size>;
-
-    using base::hashmap;
+    using hashmap<Link, Key, Size>::hashmap;
 
     reader_ptr find_(const Key& key) const NOEXCEPT
     {
@@ -44,6 +42,9 @@ public:
     {
         return base::push(key, size);
     }
+
+private:
+    using base = hashmap<Link, Key, Size>;
 };
 
 constexpr size_t link_size = 5;
