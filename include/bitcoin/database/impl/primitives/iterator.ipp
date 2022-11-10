@@ -28,8 +28,9 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-CLASS::iterator(const memory_ptr& file, const Link& start, const Key& key) NOEXCEPT
-  : ptr_(file), key_(key), link_(start)
+CLASS::iterator(const memory_ptr& data, const Link& start,
+    const Key& key) NOEXCEPT
+  : memory_(data), key_(key), link_(start)
 {
 }
 
@@ -64,10 +65,10 @@ bool CLASS::is_match() const NOEXCEPT
     using namespace system;
     BC_ASSERT(!is_multiply_overflow(link_to_position(link_), Link::size));
 
-    if (!ptr_)
+    if (!memory_)
         return false;
 
-    auto link = ptr_->offset(link_to_position(link_) + Link::size);
+    auto link = memory_->offset(link_to_position(link_) + Link::size);
     if (is_null(link))
         return false;
 
@@ -79,10 +80,10 @@ bool CLASS::is_match() const NOEXCEPT
 TEMPLATE
 Link CLASS::get_next() const NOEXCEPT
 {
-    if (link_.is_terminal() || !ptr_)
+    if (link_.is_terminal() || !memory_)
         return Link::terminal;
 
-    auto link = ptr_->offset(link_to_position(link_));
+    auto link = memory_->offset(link_to_position(link_));
     if (is_null(link))
         return Link::terminal;
 

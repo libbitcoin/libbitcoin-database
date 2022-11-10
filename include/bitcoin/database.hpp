@@ -28,6 +28,7 @@
 #include <bitcoin/database/locks/sequential_lock.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/file.hpp>
+#include <bitcoin/database/memory/finalizer.hpp>
 #include <bitcoin/database/memory/map.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/reader.hpp>

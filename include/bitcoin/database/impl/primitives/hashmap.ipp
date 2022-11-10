@@ -27,7 +27,7 @@ namespace database {
 
 TEMPLATE
 CLASS::hashmap(storage& header, storage& body, const Link& buckets) NOEXCEPT
-  : header_(header, buckets), body_(body)
+  : header_(header, buckets), manager_(body)
 {
 }
 
@@ -45,7 +45,7 @@ bool CLASS::verify() const NOEXCEPT
 {
     Link count{};
     return header_.verify() && header_.get_body_count(count) &&
-        count == body_.count();
+        count == manager_.count();
 }
 
 // query interface
@@ -70,20 +70,35 @@ Record CLASS::get(const Link& link) const NOEXCEPT
 }
 
 TEMPLATE
-typename CLASS::iterable CLASS::it(const Key& key) const NOEXCEPT
+typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 {
-    return { body_.get(), header_.top(key), key };
+    return { manager_.get(), header_.top(key), key };
 }
 
 TEMPLATE
 bool CLASS::insert(const Key& key, const Record& record) NOEXCEPT
 {
-    // record.size() is slab/byte or record allocation.
     return record.to_data(push(key, record.size()));
 }
 
 // protected
 // ----------------------------------------------------------------------------
+
+TEMPLATE
+reader_ptr CLASS::at(const Link& link) const NOEXCEPT
+{
+    if (link.is_terminal())
+        return {};
+
+    const auto ptr = manager_.get(link);
+    if (!ptr)
+        return {};
+
+    const auto source = std::make_shared<reader>(ptr);
+    source->skip_bytes(Link::size);
+    if constexpr (!is_slab) { source->set_limit(Record::size); }
+    return source;
+}
 
 TEMPLATE
 reader_ptr CLASS::find(const Key& key) const NOEXCEPT
@@ -101,48 +116,33 @@ reader_ptr CLASS::find(const Key& key) const NOEXCEPT
 }
 
 TEMPLATE
-reader_ptr CLASS::at(const Link& link) const NOEXCEPT
-{
-    if (link.is_terminal())
-        return {};
-
-    const auto ptr = body_.get(link);
-    if (!ptr)
-        return {};
-
-    const auto source = std::make_shared<reader>(ptr);
-    source->skip_bytes(Link::size);
-    if constexpr (!is_slab) { source->set_limit(Record::size); }
-    return source;
-}
-
-TEMPLATE
 finalizer_ptr CLASS::push(const Key& key, const Link& size) NOEXCEPT
 {
-    using namespace system;
+    const auto value = system::possible_narrow_cast<size_t>(size.value);
+    BC_ASSERT(!system::is_multiply_overflow(value, Record::size));
     BC_ASSERT(!size.is_terminal());
-    BC_ASSERT(!is_multiply_overflow<size_t>(size, Record::size));
 
-    const auto item = body_.allocate(size);
+    const auto item = manager_.allocate(value);
     if (item.is_terminal())
         return {};
 
-    const auto ptr = body_.get(item);
+    const auto ptr = manager_.get(item);
     if (!ptr)
         return {};
 
     const auto sink = std::make_shared<finalizer>(ptr);
     const auto index = header_.index(key);
 
+    // Finalization activates the record by updating header and next.
     sink->set_finalizer([this, item, index, ptr]() NOEXCEPT
     {
-        auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
+        auto& next = system::unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
         return header_.push(item, next, index);
     });
 
-    if constexpr (is_slab) { sink->set_limit(size); }
+    if constexpr (is_slab) { sink->set_limit(value); }
     sink->skip_bytes(Link::size);
-    if constexpr (!is_slab) { sink->set_limit(size * Record::size); }
+    if constexpr (!is_slab) { sink->set_limit(value * Record::size); }
     sink->write_bytes(key);
     return sink;
 }

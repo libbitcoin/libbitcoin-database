@@ -21,19 +21,21 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/head.hpp>
 #include <bitcoin/database/primitives/iterator.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
-#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
 
+/// Caution: iterator/reader/finalizer hold body remap lock until disposed.
+/// These handles should be used for serialization and immediately disposed.
 template <typename Link, typename Key, typename Record>
 class hashmap
 {
 public:
-    using iterable = iterator<Link, Key, Record::size>;
+    using iterator = database::iterator<Link, Key, Record::size>;
 
     hashmap(storage& header, storage& body, const Link& buckets) NOEXCEPT;
 
@@ -43,21 +45,21 @@ public:
     /// False if head or body file size incorrect (not thread safe).
     bool verify() const NOEXCEPT;
 
-    /// Query interface, iterable is not thread safe.
+    /// Query interface, iterator is not thread safe.
     bool exists(const Key& key) const NOEXCEPT;
     Record get(const Key& key) const NOEXCEPT;
     Record get(const Link& link) const NOEXCEPT;
-    iterable it(const Key& key) const NOEXCEPT;
+    iterator it(const Key& key) const NOEXCEPT;
     bool insert(const Key& key, const Record& record) NOEXCEPT;
 
 protected:
-    /// Reader positioned at data, same as at(first(key)).
-    reader_ptr find(const Key& key) const NOEXCEPT;
-
     /// Reader positioned at key.
     reader_ptr at(const Link& link) const NOEXCEPT;
 
-    /// Reader positioned at data, size is count for records, bytes for slabs.
+    /// Reader positioned at data.
+    reader_ptr find(const Key& key) const NOEXCEPT;
+
+    /// Reader positioned at data.
     finalizer_ptr push(const Key& key, const Link& size=one) NOEXCEPT;
 
 private:
@@ -69,7 +71,7 @@ private:
     header header_;
 
     // Thread safe.
-    manager body_;
+    manager manager_;
 };
 
 } // namespace database

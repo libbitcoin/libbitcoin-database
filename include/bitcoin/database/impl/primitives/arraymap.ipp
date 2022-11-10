@@ -43,7 +43,6 @@ Record CLASS::get(const Link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::insert(const Record& record) NOEXCEPT
 {
-    // record.size() is slab/byte or record allocation.
     return record.to_data(push(record.size()));
 }
 
@@ -68,11 +67,11 @@ reader_ptr CLASS::at(const Link& link) const NOEXCEPT
 TEMPLATE
 writer_ptr CLASS::push(const Link& size) NOEXCEPT
 {
-    using namespace system;
+    const auto value = system::possible_narrow_cast<size_t>(size.value);
+    BC_ASSERT(!system::is_multiply_overflow(value, Record::size));
     BC_ASSERT(!size.is_terminal());
-    BC_ASSERT(!is_multiply_overflow<size_t>(size, Record::size));
 
-    const auto item = body_.allocate(link_to_position(size));
+    const auto item = body_.allocate(link_to_position(value));
     if (item == storage::eof)
         return {};
 
@@ -81,8 +80,8 @@ writer_ptr CLASS::push(const Link& size) NOEXCEPT
         return {};
 
     const auto sink = std::make_shared<writer>(ptr);
-    if constexpr (is_slab) { sink->set_limit(size); }
-    if constexpr (!is_slab) { sink->set_limit(size * Record::size); }
+    if constexpr (is_slab) { sink->set_limit(value); }
+    if constexpr (!is_slab) { sink->set_limit(value * Record::size); }
     return sink;
 }
 
@@ -92,21 +91,11 @@ writer_ptr CLASS::push(const Link& size) NOEXCEPT
 TEMPLATE
 constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
 {
-    using namespace system;
-    const auto value = possible_narrow_cast<size_t>(link.value);
+    const auto value = system::possible_narrow_cast<size_t>(link.value);
+    BC_ASSERT(!system::is_multiply_overflow(value, Record::size));
 
-    // Iterator keys off of zero Size...
-    if constexpr (is_slab)
-    {
-        return value;
-    }
-    else
-    {
-        // ... and there are no links or keys.
-        constexpr auto element_size = Record::size;
-        BC_ASSERT(!is_multiply_overflow(value, element_size));
-        return value * element_size;
-    }
+    if constexpr (is_slab) { return value; }
+    if constexpr (!is_slab) { return value * Record::size; }
 }
 
 } // namespace database

@@ -116,6 +116,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\sequential_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\file.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\finalizer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\storage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\map.hpp" />

@@ -21,13 +21,13 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/linkage.hpp>
-#include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
-
+    
+/// Caution: reader/writer hold body remap lock until disposed.
+/// These handles should be used for serialization and immediately disposed.
 template <typename Link, typename Record>
 class arraymap
 {
@@ -39,10 +39,10 @@ public:
     bool insert(const Record& record) NOEXCEPT;
 
 protected:
-    /// Reader positioned at data (only data).
+    /// Reader positioned at data.
     reader_ptr at(const Link& link) const NOEXCEPT;
 
-    /// Reader positioned at data, size is count for records, bytes for slabs.
+    /// Reader positioned at data.
     writer_ptr push(const Link& size=one) NOEXCEPT;
 
 private:
