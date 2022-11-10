@@ -37,13 +37,21 @@ CLASS::arraymap(storage& body) NOEXCEPT
 TEMPLATE
 Record CLASS::get(const Link& link) const NOEXCEPT
 {
-    return { at(link) };
+    auto source = at(link);
+    if (!source)
+        return {};
+
+    return Record{}.from_data(*source);
 }
 
 TEMPLATE
 bool CLASS::insert(const Record& record) NOEXCEPT
 {
-    return record.to_data(push(record.size()));
+    auto sink = push(record.count());
+    if (!sink)
+        return false;
+
+    return record.to_data(*sink);
 }
 
 // protected

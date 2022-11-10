@@ -185,4 +185,70 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_readers__empty__expected)
 // Records
 // ----------------------------------------------------------------------------
 
+// Passing link type prevents potential downcast warning.
+template <typename Link>
+class test_record
+{
+public:
+    // record bytes or zero for slab (for template).
+    static constexpr size_t size = sizeof(uint32_t);
+
+    // record count or bytes count for slab (for allocate).
+    static constexpr Link count() NOEXCEPT
+    {
+        return 1;
+    }
+
+    // Avoiding constructor allows struct popuation.
+    test_record from_data(database::reader& source) NOEXCEPT
+    {
+        value = source.read_little_endian<uint32_t>();
+        valid = source;
+        return *this;
+    }
+
+    bool to_data(database::writer& sink) const NOEXCEPT
+    {
+        sink.write_little_endian(value);
+        return sink;
+    }
+
+    uint32_t value{ 0 };
+    bool valid{ true };
+};
+
+using link5 = linkage<5>;
+
+BOOST_AUTO_TEST_CASE(arraymap__get__empty__invalid)
+{
+    data_chunk body_file;
+    test::storage body_store{ body_file };
+    const arraymap<link5, test_record<link5>> instance{ body_store };
+    const auto record = instance.get(0);
+    BOOST_REQUIRE(!record.valid);
+}
+
+BOOST_AUTO_TEST_CASE(arraymap__get__populated__valid)
+{
+    data_chunk body_file{ 0x01, 0x02, 0x03, 0x04 };
+    test::storage body_store{ body_file };
+    const arraymap<link5, test_record<link5>> instance{ body_store };
+    const auto record = instance.get(0);
+    BOOST_REQUIRE(record.valid);
+    BOOST_REQUIRE_EQUAL(record.value, 0x04030201_u32);
+}
+
+BOOST_AUTO_TEST_CASE(arraymap__insert__empty__expected)
+{
+    const data_chunk expected_file{ 0xd4, 0xc3, 0xb2, 0xa1 };
+    data_chunk body_file;
+    test::storage body_store{ body_file };
+    arraymap<link5, test_record<link5>> instance{ body_store };
+    BOOST_REQUIRE(instance.insert({ 0xa1b2c3d4_u32, true }));
+    const auto record = instance.get(0);
+    BOOST_REQUIRE(record.valid);
+    BOOST_REQUIRE_EQUAL(record.value, 0xa1b2c3d4_u32);
+    BOOST_REQUIRE_EQUAL(body_file, expected_file);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
