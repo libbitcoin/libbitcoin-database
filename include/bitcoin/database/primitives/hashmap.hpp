@@ -29,11 +29,11 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename Link, typename Key, size_t Size = zero, typename Record = bool>
+template <typename Link, typename Key, typename Record>
 class hashmap
 {
 public:
-    using iterable = iterator<Link, Key, Size>;
+    using iterable = iterator<Link, Key, Record::size>;
 
     hashmap(storage& header, storage& body, const Link& buckets) NOEXCEPT;
 
@@ -43,7 +43,7 @@ public:
     /// False if head or body file size incorrect (not thread safe).
     bool verify() const NOEXCEPT;
 
-    /// Query interface, iterator is not thread safe.
+    /// Query interface, iterable is not thread safe.
     bool exists(const Key& key) const NOEXCEPT;
     Record get(const Key& key) const NOEXCEPT;
     Record get(const Link& link) const NOEXCEPT;
@@ -61,9 +61,9 @@ protected:
     finalizer_ptr push(const Key& key, const Link& size=one) NOEXCEPT;
 
 private:
-    static constexpr auto is_slab = is_zero(Size);
+    static constexpr auto is_slab = is_zero(Record::size);
     using header = database::head<Link, Key>;
-    using manager = database::manager<Link, Key, Size>;
+    using manager = database::manager<Link, Key, Record::size>;
 
     // hash/head/push thread safe.
     header header_;
@@ -75,9 +75,8 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE \
-template <typename Link, typename Key, size_t Size, typename Record>
-#define CLASS hashmap<Link, Key, Size, Record>
+#define TEMPLATE template <typename Link, typename Key, typename Record>
+#define CLASS hashmap<Link, Key, Record>
 
 #include <bitcoin/database/impl/primitives/hashmap.ipp>
 

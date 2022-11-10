@@ -28,7 +28,7 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename Link, size_t Size = zero, typename Record = bool>
+template <typename Link, typename Record>
 class arraymap
 {
 public:
@@ -46,7 +46,7 @@ protected:
     writer_ptr push(const Link& size=one) NOEXCEPT;
 
 private:
-    static constexpr auto is_slab = is_zero(Size);
+    static constexpr auto is_slab = is_zero(Record::size);
     static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
 
     // Thread safe.
@@ -56,9 +56,8 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE \
-template <typename Link, size_t Size, typename Record>
-#define CLASS arraymap<Link, Size, Record>
+#define TEMPLATE template <typename Link, typename Record>
+#define CLASS arraymap<Link, Record>
 
 #include <bitcoin/database/impl/primitives/arraymap.ipp>
 

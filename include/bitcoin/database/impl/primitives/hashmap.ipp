@@ -112,7 +112,7 @@ reader_ptr CLASS::at(const Link& link) const NOEXCEPT
 
     const auto source = std::make_shared<reader>(ptr);
     source->skip_bytes(Link::size);
-    if constexpr (!is_slab) { source->set_limit(Size); }
+    if constexpr (!is_slab) { source->set_limit(Record::size); }
     return source;
 }
 
@@ -121,7 +121,7 @@ finalizer_ptr CLASS::push(const Key& key, const Link& size) NOEXCEPT
 {
     using namespace system;
     BC_ASSERT(!size.is_terminal());
-    BC_ASSERT(!is_multiply_overflow<size_t>(size, Size));
+    BC_ASSERT(!is_multiply_overflow<size_t>(size, Record::size));
 
     const auto item = body_.allocate(size);
     if (item.is_terminal())
@@ -142,7 +142,7 @@ finalizer_ptr CLASS::push(const Key& key, const Link& size) NOEXCEPT
 
     if constexpr (is_slab) { sink->set_limit(size); }
     sink->skip_bytes(Link::size);
-    if constexpr (!is_slab) { sink->set_limit(size * Size); }
+    if constexpr (!is_slab) { sink->set_limit(size * Record::size); }
     sink->write_bytes(key);
     return sink;
 }

@@ -61,7 +61,7 @@ reader_ptr CLASS::at(const Link& link) const NOEXCEPT
         return {};
 
     const auto source = std::make_shared<reader>(ptr);
-    if constexpr (!is_slab) { source->set_limit(Size); }
+    if constexpr (!is_slab) { source->set_limit(Record::size); }
     return source;
 }
 
@@ -70,7 +70,7 @@ writer_ptr CLASS::push(const Link& size) NOEXCEPT
 {
     using namespace system;
     BC_ASSERT(!size.is_terminal());
-    BC_ASSERT(!is_multiply_overflow<size_t>(size, Size));
+    BC_ASSERT(!is_multiply_overflow<size_t>(size, Record::size));
 
     const auto item = body_.allocate(link_to_position(size));
     if (item == storage::eof)
@@ -82,7 +82,7 @@ writer_ptr CLASS::push(const Link& size) NOEXCEPT
 
     const auto sink = std::make_shared<writer>(ptr);
     if constexpr (is_slab) { sink->set_limit(size); }
-    if constexpr (!is_slab) { sink->set_limit(size * Size); }
+    if constexpr (!is_slab) { sink->set_limit(size * Record::size); }
     return sink;
 }
 
@@ -96,14 +96,14 @@ constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
     const auto value = possible_narrow_cast<size_t>(link.value);
 
     // Iterator keys off of zero Size...
-    if constexpr (is_zero(Size))
+    if constexpr (is_slab)
     {
         return value;
     }
     else
     {
         // ... and there are no links or keys.
-        constexpr auto element_size = Size;
+        constexpr auto element_size = Record::size;
         BC_ASSERT(!is_multiply_overflow(value, element_size));
         return value * element_size;
     }

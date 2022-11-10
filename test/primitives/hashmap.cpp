@@ -21,12 +21,12 @@
 
 BOOST_AUTO_TEST_SUITE(hashmap_tests)
 
-template <typename Link, typename Key, size_t Size = zero>
+template <typename Link, typename Key, typename Record>
 class hashmap_
-  : public hashmap<Link, Key, Size>
+  : public hashmap<Link, Key, Record>
 {
 public:
-    using hashmap<Link, Key, Size>::hashmap;
+    using hashmap<Link, Key, Record>::hashmap;
 
     reader_ptr find_(const Key& key) const NOEXCEPT
     {
@@ -44,29 +44,27 @@ public:
     }
 
 private:
-    using base = hashmap<Link, Key, Size>;
+    using base = hashmap<Link, Key, Record>;
 };
 
-constexpr size_t link_size = 5;
-constexpr size_t key_size = 10;
-using link = linkage<link_size>;
-using key = data_array<key_size>;
+using link5 = linkage<5>;
+using key10 = data_array<10>;
 
 // Key size does not factor into header byte size (for first key only).
 constexpr size_t header_size = 105;
-constexpr auto links = header_size / link_size;
+constexpr auto links = header_size / link5::size;
 static_assert(links == 21u);
 
 // Bucket count is one less than link count, due to header.size field.
 constexpr auto buckets = bc::sub1(links);
 static_assert(buckets == 20u);
 
-constexpr size_t data_size = 4;
-constexpr auto record_size = link_size + key_size + data_size;
-constexpr auto slab_size = record_size;
+struct record0 { static constexpr size_t size = zero; };
+struct record4 { static constexpr size_t size = 4; };
+using slab_table = hashmap_<link5, key10, record0>;
+using record_table = hashmap_<link5, key10, record4>;
 
-using record_table = hashmap_<link, key, data_size>;
-using slab_table = hashmap_<link, key, zero>;
+constexpr auto element_size = link5::size + array_count<key10> + record4::size;
 
 // record hashmap
 // ----------------------------------------------------------------------------
@@ -111,7 +109,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_construct__non_empty_head_file__failure)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_construct__multiple_item_body_file__failure)
 {
-    constexpr auto body_size = 3u * record_size;
+    constexpr auto body_size = 3u * element_size;
     data_chunk head_file;
     data_chunk body_file(body_size, 0x42);
     test::storage head_store{ head_file };
@@ -131,7 +129,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_construct__multiple_item_body_file__failure
 
 BOOST_AUTO_TEST_CASE(hashmap__record_construct__multiple_fractional_item_body_file__failure)
 {
-    constexpr auto body_size = 3u * record_size + 2u;
+    constexpr auto body_size = 3u * element_size + 2u;
     data_chunk head_file;
     data_chunk body_file(body_size, 0x42);
     test::storage head_store{ head_file };
@@ -151,7 +149,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_construct__multiple_fractional_item_body_fi
 
 BOOST_AUTO_TEST_CASE(hashmap__record_construct__one_item_body_file__failure)
 {
-    constexpr auto body_size = record_size;
+    constexpr auto body_size = element_size;
     data_chunk head_file;
     data_chunk body_file(body_size, 0x42);
     test::storage head_store{ head_file };
@@ -171,7 +169,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_construct__one_item_body_file__failure)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_construct__sub_one_item_body_file__success)
 {
-    constexpr auto body_size = sub1(record_size);
+    constexpr auto body_size = sub1(element_size);
     data_chunk head_file;
     data_chunk body_file(body_size, 0x42);
     test::storage head_store{ head_file };
@@ -201,8 +199,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_at__terminal__false)
     test::storage body_store{ body_file };
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.at_(link::terminal));
-    BOOST_REQUIRE(!instance.at_(link::terminal));
+    BOOST_REQUIRE(!instance.at_(link5::terminal));
+    BOOST_REQUIRE(!instance.at_(link5::terminal));
 }
 
 BOOST_AUTO_TEST_CASE(hashmap__record_at__empty__exhausted)
@@ -272,7 +270,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_construct__non_empty_head_file__failure)
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_construct__multiple_item_body_file__failure)
 {
-    constexpr auto body_size = 3u * slab_size;
+    constexpr auto body_size = 3u * element_size;
     data_chunk head_file;
     data_chunk body_file(body_size, 0x42);
     test::storage head_store{ head_file };
@@ -292,7 +290,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_construct__multiple_item_body_file__failure)
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_construct__multiple_fractional_item_body_file__failure)
 {
-    constexpr auto body_size = 3u * slab_size + 2u;
+    constexpr auto body_size = 3u * element_size + 2u;
     data_chunk head_file;
     data_chunk body_file(body_size, 0x42);
     test::storage head_store{ head_file };
@@ -312,7 +310,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_construct__multiple_fractional_item_body_file
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_construct__one_item_body_file__failure)
 {
-    constexpr auto body_size = slab_size;
+    constexpr auto body_size = element_size;
     data_chunk head_file;
     data_chunk body_file(body_size, 0x42);
     test::storage head_store{ head_file };
@@ -332,7 +330,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_construct__one_item_body_file__failure)
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_construct__sub_one_item_body_file__failure)
 {
-    constexpr auto body_size = sub1(slab_size);
+    constexpr auto body_size = sub1(element_size);
     data_chunk head_file;
     data_chunk body_file(body_size, 0x42);
     test::storage head_store{ head_file };
@@ -359,8 +357,8 @@ BOOST_AUTO_TEST_CASE(slab_hashmap__at__terminal__false)
     test::storage body_store{ body_file };
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.at_(link::terminal));
-    BOOST_REQUIRE(!instance.at_(link::terminal));
+    BOOST_REQUIRE(!instance.at_(link5::terminal));
+    BOOST_REQUIRE(!instance.at_(link5::terminal));
 }
 
 BOOST_AUTO_TEST_CASE(slab_hashmap__at__empty__exhausted)
@@ -399,18 +397,18 @@ BOOST_AUTO_TEST_CASE(hashmap__record_readers__empty__expected)
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
-    constexpr key key0{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
+    constexpr key10 key0{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     auto stream0 = instance.push_(key0);
-    BOOST_REQUIRE_EQUAL(body_file.size(), record_size);
+    BOOST_REQUIRE_EQUAL(body_file.size(), element_size);
     BOOST_REQUIRE(!stream0->is_exhausted());
     BOOST_REQUIRE(!instance.find_(key0));
     BOOST_REQUIRE(stream0->finalize());
     BOOST_REQUIRE(instance.find_(key0));
     stream0.reset();
 
-    constexpr key key1{ 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a };
+    constexpr key10 key1{ 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a };
     auto stream1 = instance.push_(key1);
-    BOOST_REQUIRE_EQUAL(body_file.size(), 2u * record_size);
+    BOOST_REQUIRE_EQUAL(body_file.size(), 2u * element_size);
     BOOST_REQUIRE(!stream1->is_exhausted());
     BOOST_REQUIRE(!instance.find_(key1));
     BOOST_REQUIRE(stream1->finalize());
@@ -466,25 +464,25 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_push_find__empty__true)
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
-    constexpr key key0{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
+    constexpr key10 key0{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     BOOST_REQUIRE(!instance.find_(key0));
-    BOOST_REQUIRE(instance.push_(key0, slab_size)->finalize());
-    BOOST_REQUIRE_EQUAL(body_file.size(), slab_size);
+    BOOST_REQUIRE(instance.push_(key0, element_size)->finalize());
+    BOOST_REQUIRE_EQUAL(body_file.size(), element_size);
     BOOST_REQUIRE(instance.find_(key0));
 
-    constexpr key key1{ 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a };
+    constexpr key10 key1{ 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a };
     BOOST_REQUIRE(!instance.find_(key1));
-    BOOST_REQUIRE(instance.push_(key1, slab_size)->finalize());
-    BOOST_REQUIRE_EQUAL(body_file.size(), 2u * slab_size);
+    BOOST_REQUIRE(instance.push_(key1, element_size)->finalize());
+    BOOST_REQUIRE_EQUAL(body_file.size(), 2u * element_size);
     BOOST_REQUIRE(instance.find_(key1));
 
     // Past end is valid pointer but exhausted stream.
     BOOST_REQUIRE(instance.at_(0));
     BOOST_REQUIRE(!instance.at_(0)->is_exhausted());
-    BOOST_REQUIRE(instance.at_(slab_size));
-    BOOST_REQUIRE(!instance.at_(slab_size)->is_exhausted());
-    BOOST_REQUIRE(instance.at_(2u * slab_size));
-    BOOST_REQUIRE(instance.at_(2u * slab_size)->is_exhausted());
+    BOOST_REQUIRE(instance.at_(element_size));
+    BOOST_REQUIRE(!instance.at_(element_size)->is_exhausted());
+    BOOST_REQUIRE(instance.at_(2u * element_size));
+    BOOST_REQUIRE(instance.at_(2u * element_size)->is_exhausted());
  
     // slab (same extents as record above)
     // 0000000000 [body logical size]
@@ -527,18 +525,18 @@ BOOST_AUTO_TEST_CASE(hashmap__record_push_duplicate_key__find__true)
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
-    constexpr key key0{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    constexpr key10 key0{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
     BOOST_REQUIRE(instance.push_(key0)->finalize());
-    BOOST_REQUIRE_EQUAL(body_file.size(), record_size);
+    BOOST_REQUIRE_EQUAL(body_file.size(), element_size);
     BOOST_REQUIRE(instance.find_(key0));
 
-    constexpr key key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
+    constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     BOOST_REQUIRE(instance.push_(key1)->finalize());
-    BOOST_REQUIRE_EQUAL(body_file.size(), 2u * record_size);
+    BOOST_REQUIRE_EQUAL(body_file.size(), 2u * element_size);
     BOOST_REQUIRE(instance.find_(key1));
 
     BOOST_REQUIRE(instance.push_(key1)->finalize());
-    BOOST_REQUIRE_EQUAL(body_file.size(), 3u * record_size);
+    BOOST_REQUIRE_EQUAL(body_file.size(), 3u * element_size);
     BOOST_REQUIRE(instance.find_(key1));
 
     ////std::cout << head_file << std::endl << std::endl;
