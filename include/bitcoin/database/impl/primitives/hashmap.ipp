@@ -25,14 +25,14 @@
 namespace libbitcoin {
 namespace database {
 
-// Obtaining memory object is considered const access despite the fact that
-// memory is writeable. Non-const manager access implies memory map modify.
-
 TEMPLATE
-CLASS::hashmap(storage& header, storage& body, const link& buckets) NOEXCEPT
+CLASS::hashmap(storage& header, storage& body, const Link& buckets) NOEXCEPT
   : header_(header, buckets), body_(body)
 {
 }
+
+// not thread safe
+// ----------------------------------------------------------------------------
 
 TEMPLATE
 bool CLASS::create() NOEXCEPT
@@ -43,44 +43,52 @@ bool CLASS::create() NOEXCEPT
 TEMPLATE
 bool CLASS::verify() const NOEXCEPT
 {
-    link count{};
+    Link count{};
     return header_.verify() && header_.get_body_count(count) &&
         count == body_.count();
 }
 
+// query interface
+// ----------------------------------------------------------------------------
+
 TEMPLATE
-Iterator CLASS::iterator(const key& key) const NOEXCEPT
+bool CLASS::exists(const Key& key) const NOEXCEPT
 {
-    return { body_, header_.head(key), key };
+    return !it(key).self().is_terminal();
 }
 
 TEMPLATE
-typename CLASS::link CLASS::first(const key& key) const NOEXCEPT
+Record CLASS::get(const Key& key) const NOEXCEPT
 {
-    return iterator(key).self();
+    return { it(key).self() };
 }
 
 TEMPLATE
-reader_ptr CLASS::at(const link& record) const NOEXCEPT
+Record CLASS::get(const Link& link) const NOEXCEPT
 {
-    if (record.is_terminal())
-        return {};
-
-    const auto ptr = body_.get(record);
-    if (!ptr)
-        return {};
-
-    // Stream starts at key, skip to get data.
-    const auto source = std::make_shared<reader>(ptr);
-    source->skip_bytes(link_size);
-    if constexpr (!slab) { source->set_limit(record_size); }
-    return source;
+    return { at(link) };
 }
 
 TEMPLATE
-reader_ptr CLASS::find(const key& key) const NOEXCEPT
+typename CLASS::iterable CLASS::it(const Key& key) const NOEXCEPT
 {
-    const auto record = first(key);
+    return { body_.get(), header_.top(key), key };
+}
+
+TEMPLATE
+bool CLASS::insert(const Key& key, const Record& record) NOEXCEPT
+{
+    // record.size() is slab/byte or record allocation.
+    return record.to_data(push(key, record.size()));
+}
+
+// protected
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+reader_ptr CLASS::find(const Key& key) const NOEXCEPT
+{
+    const auto record = it(key).self();
     if (record.is_terminal())
         return {};
 
@@ -88,14 +96,33 @@ reader_ptr CLASS::find(const key& key) const NOEXCEPT
     if (!source)
         return {};
 
-    // Stream starts at data, rewind to get link.
-    source->skip_bytes(key_size);
+    source->skip_bytes(array_count<Key>);
     return source;
 }
 
 TEMPLATE
-writer_ptr CLASS::push(const key& key, const link& size) NOEXCEPT
+reader_ptr CLASS::at(const Link& link) const NOEXCEPT
 {
+    if (link.is_terminal())
+        return {};
+
+    const auto ptr = body_.get(link);
+    if (!ptr)
+        return {};
+
+    const auto source = std::make_shared<reader>(ptr);
+    source->skip_bytes(Link::size);
+    if constexpr (!is_slab) { source->set_limit(Size); }
+    return source;
+}
+
+TEMPLATE
+finalizer_ptr CLASS::push(const Key& key, const Link& size) NOEXCEPT
+{
+    using namespace system;
+    BC_ASSERT(!size.is_terminal());
+    BC_ASSERT(!is_multiply_overflow<size_t>(size, Size));
+
     const auto item = body_.allocate(size);
     if (item.is_terminal())
         return {};
@@ -104,22 +131,18 @@ writer_ptr CLASS::push(const key& key, const link& size) NOEXCEPT
     if (!ptr)
         return {};
 
-    const auto sink = std::make_shared<writer>(ptr);
+    const auto sink = std::make_shared<finalizer>(ptr);
     const auto index = header_.index(key);
 
     sink->set_finalizer([this, item, index, ptr]() NOEXCEPT
     {
-        BC_PUSH_WARNING(NO_REINTERPRET_CAST)
-        using namespace system;
-        auto& next = unsafe_array_cast<uint8_t, link::size>(ptr->begin());
+        auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
         return header_.push(item, next, index);
-        BC_POP_WARNING()
     });
 
-    // Stream starts at data, rewind to get link.
-    if constexpr (slab) { sink->set_limit(size); }
-    sink->skip_bytes(link_size);
-    if constexpr (!slab) { sink->set_limit(record_size); }
+    if constexpr (is_slab) { sink->set_limit(size); }
+    sink->skip_bytes(Link::size);
+    if constexpr (!is_slab) { sink->set_limit(size * Size); }
     sink->write_bytes(key);
     return sink;
 }

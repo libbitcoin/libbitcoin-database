@@ -19,7 +19,7 @@
 #include <bitcoin/database/locks/conditional_lock.hpp>
 
 #include <memory>
-#include <boost/thread.hpp>
+#include <shared_mutex>
 
 namespace libbitcoin {
 namespace database {
@@ -28,12 +28,12 @@ namespace database {
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 conditional_lock::conditional_lock(bool lock) NOEXCEPT
-  : conditional_lock(lock ? std::make_shared<boost::shared_mutex>() : nullptr)
+  : conditional_lock(lock ? std::make_shared<std::shared_mutex>() : nullptr)
 {
 }
 
 conditional_lock::conditional_lock(
-    std::shared_ptr<boost::shared_mutex> mutex_ptr) NOEXCEPT
+    std::shared_ptr<std::shared_mutex> mutex_ptr) NOEXCEPT
   : mutex_ptr_(mutex_ptr)
 {
     if (mutex_ptr_)

@@ -29,12 +29,12 @@ namespace database {
     
 /// Linked list abstraction over storage for given link and record sizes.
 /// slab = is_zero(Size), in which case count/link is bytes otherwise records.
-template <typename Link, size_t Size>
+/// Obtaining memory object is considered const access despite the fact that
+/// memory is writeable. Non-const manager access implies memory map modify.
+template <typename Link, typename Key, size_t Size>
 class manager
 {
 public:
-    using link = Link;
-
     /// Manage byte storage device.
     manager(storage& file) NOEXCEPT;
 
@@ -45,16 +45,20 @@ public:
     bool truncate(const Link& count) NOEXCEPT;
 
     /// Allocate records and return first logical position (eof possible).
-    /// For record, count is number of records to allocate (link + data).
-    /// For slab count must include bytes (link + data) [key is part of data].
-    Link allocate(const Link& count) NOEXCEPT;
+    /// For record, size is number of records to allocate (link + data).
+    /// For slab size must include bytes (link + data) [key is part of data].
+    Link allocate(const Link& size) NOEXCEPT;
 
     /// Return memory object for record at specified position (null possible).
     /// Obtaining memory object is considered const access despite fact that
     /// memory is writeable. Non-const access implies memory map modify.
     memory_ptr get(const Link& link) const NOEXCEPT;
 
+    /// Return memory object for the full memory map.
+    memory_ptr get() const NOEXCEPT;
+
 private:
+    static constexpr auto is_slab = is_zero(Size);
     static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
     static constexpr Link position_to_link(size_t position) NOEXCEPT;
 
@@ -65,8 +69,8 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, size_t Size>
-#define CLASS manager<Link, Size>
+#define TEMPLATE template <typename Link, typename Key, size_t Size>
+#define CLASS manager<Link, Key, Size>
 
 #include <bitcoin/database/impl/primitives/manager.ipp>
 

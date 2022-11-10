@@ -16,9 +16,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "../test.hpp"
-#include "../storage.hpp"
+#include "../../test.hpp"
+#include "../../storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(table_tests)
+BOOST_AUTO_TEST_SUITE(tables_indexes_confirmed_height_tests)
+
+BOOST_AUTO_TEST_CASE(tables_indexes_confirmed_height_test)
+{
+    BOOST_REQUIRE(true);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

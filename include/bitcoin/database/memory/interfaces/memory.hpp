@@ -35,13 +35,13 @@ public:
     typedef const value_type* const_iterator;
     typedef std::shared_ptr<memory> ptr;
 
-    /// Increment begin the specified number of bytes.
-    virtual void increment(size_t value) NOEXCEPT = 0;
+    /// Return an offset from begin, nullptr if end or past end.
+    virtual uint8_t* offset(size_t value) NOEXCEPT = 0;
 
-    /// The buffer size.
+    /// The logical buffer size (from begin to end).
     virtual ptrdiff_t size() const NOEXCEPT = 0;
 
-    /// Get buffer.
+    /// Get logical buffer.
     virtual uint8_t* begin() NOEXCEPT = 0;
     virtual uint8_t* end() NOEXCEPT = 0;
 };

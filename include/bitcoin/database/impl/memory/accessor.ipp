@@ -23,6 +23,8 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
+// Zero/negative size is allowed (automatically handled by bc streams).
+
 namespace libbitcoin {
 namespace database {
 
@@ -37,16 +39,18 @@ inline CLASS::accessor(Mutex& mutex) NOEXCEPT
 TEMPLATE
 inline void CLASS::assign(uint8_t* begin, uint8_t* end) NOEXCEPT
 {
-    BC_ASSERT(!system::is_negative(size()));
     begin_ = begin;
     end_ = end;
+    ////BC_ASSERT(!system::is_negative(size()));
 }
 
 TEMPLATE
-inline void CLASS::increment(size_t bytes) NOEXCEPT
+inline uint8_t* CLASS::offset(size_t bytes) NOEXCEPT
 {
-    BC_ASSERT(!system::is_greater(bytes, size()));
-    std::advance(begin_, bytes);
+    if (!system::is_lesser(bytes, size()))
+        return nullptr;
+
+    return std::next(begin_, bytes);
 }
 
 TEMPLATE

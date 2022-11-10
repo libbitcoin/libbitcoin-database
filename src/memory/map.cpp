@@ -257,15 +257,18 @@ size_t map::allocate(size_t chunk) NOEXCEPT
 }
 
 // Always returns a valid and bounded memory pointer.
-memory_ptr map::get(size_t offset) NOEXCEPT
+memory_ptr map::get(size_t offset) const NOEXCEPT
 {
-    auto ptr = std::make_shared<accessor<mutex>>(map_mutex_);
+    const auto ptr = std::make_shared<accessor<mutex>>(map_mutex_);
 
     if (!mapped_)
         return nullptr;
 
-    // Because end is not record-bound it only guards file access, not records.
-    ptr->assign(std::next(memory_map_, offset), std::next(memory_map_, size()));
+    // With offset > size the assignment is negative (stream is exhausted).
+    ptr->assign(
+        std::next(memory_map_, offset),
+        std::next(memory_map_, size()));
+
     return ptr;
 }
 

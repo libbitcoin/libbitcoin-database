@@ -47,12 +47,12 @@ bool CLASS::truncate(const Link& count) NOEXCEPT
 }
 
 TEMPLATE
-Link CLASS::allocate(const Link& count) NOEXCEPT
+Link CLASS::allocate(const Link& size) NOEXCEPT
 {
-    if (count.is_terminal())
-        return count;
+    if (size.is_terminal())
+        return size;
 
-    const auto start = file_.allocate(link_to_position(count));
+    const auto start = file_.allocate(link_to_position(size));
 
     if (start == storage::eof)
         return Link::terminal;
@@ -61,13 +61,23 @@ Link CLASS::allocate(const Link& count) NOEXCEPT
 }
 
 TEMPLATE
+memory_ptr CLASS::get() const NOEXCEPT
+{
+    return file_.get();
+}
+
+TEMPLATE
 memory_ptr CLASS::get(const Link& value) const NOEXCEPT
 {
     if (value.is_terminal())
         return nullptr;
 
+    // memory.size() may be negative (stream treats as exhausted).
     return file_.get(link_to_position(value));
 }
+
+// private
+// ----------------------------------------------------------------------------
 
 TEMPLATE
 constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
@@ -75,15 +85,17 @@ constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
     using namespace system;
     const auto value = possible_narrow_cast<size_t>(link.value);
 
-    if constexpr (is_zero(Size))
+    // Manager keys off of zero Size...
+    if constexpr (is_slab)
     {
         return value;
     }
     else
     {
-        constexpr auto record_size = Link::size + Size;
-        BC_ASSERT(!is_multiply_overflow(value, record_size));
-        return value * record_size;
+        // ...so must add Link + Key to Size.
+        constexpr auto element_size = Link::size + array_count<Key> + Size;
+        BC_ASSERT(!is_multiply_overflow(value, element_size));
+        return value * element_size;
     }
 }
 
@@ -93,14 +105,16 @@ constexpr Link CLASS::position_to_link(size_t position) NOEXCEPT
     using namespace system;
     using integer = typename Link::integer;
 
-    if constexpr (is_zero(Size))
+    // Manager keys off of zero Size...
+    if constexpr (is_slab)
     {
         return { possible_narrow_cast<integer>(position) };
     }
     else
     {
-        constexpr auto record_size = Link::size + Size;
-        return { possible_narrow_cast<integer>(position / record_size) };
+        // ...so must add Link + Key to Size.
+        constexpr auto element_size = Link::size + array_count<Key> + Size;
+        return { possible_narrow_cast<integer>(position / element_size) };
     }
 }
 

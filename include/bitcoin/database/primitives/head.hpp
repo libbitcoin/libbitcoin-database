@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_HEADER_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_HEADER_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HEAD_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_HEAD_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
@@ -29,20 +29,20 @@ namespace libbitcoin {
 namespace database {
 
 template <typename Link, typename Key>
-class hashmap_header
+class head
 {
 public:
     using bytes = typename Link::bytes;
 
-    hashmap_header(storage& header, const Link& buckets) NOEXCEPT;
+    head(storage& head, const Link& buckets) NOEXCEPT;
 
     /// Not thread safe.
     /// -----------------------------------------------------------------------
 
-    /// Create from empty header file (no need to verify).
+    /// Create from empty head file (no need to verify).
     bool create() NOEXCEPT;
 
-    /// False if header file size incorrect.
+    /// False if head file size incorrect.
     bool verify() const NOEXCEPT;
 
     /// Unsafe if not verified.
@@ -52,12 +52,12 @@ public:
     /// Thread safe.
     /// -----------------------------------------------------------------------
 
-    /// Convert natural key to header bucket index.
+    /// Convert natural key to head bucket index.
     Link index(const Key& key) const NOEXCEPT;
 
     /// Unsafe if not verified.
-    Link head(const Key& key) const NOEXCEPT;
-    Link head(const Link& index) const NOEXCEPT;
+    Link top(const Key& key) const NOEXCEPT;
+    Link top(const Link& index) const NOEXCEPT;
     bool push(const bytes& current, bytes& next, const Key& key) NOEXCEPT;
     bool push(const bytes& current, bytes& next, const Link& index) NOEXCEPT;
 
@@ -70,7 +70,7 @@ private:
 
     static constexpr size_t offset(const Link& index) NOEXCEPT
     {
-        // Byte offset of bucket index within header file.
+        // Byte offset of bucket index within head file.
         // [body_size][[bucket[0]...bucket[buckets-1]]]
         return Link::size + index * Link::size;
     }
@@ -85,9 +85,9 @@ private:
 
 
 #define TEMPLATE template <typename Link, typename Key>
-#define CLASS hashmap_header<Link, Key>
+#define CLASS head<Link, Key>
 
-#include <bitcoin/database/impl/primitives/hashmap_header.ipp>
+#include <bitcoin/database/impl/primitives/head.ipp>
 
 #undef CLASS
 #undef TEMPLATE

@@ -36,7 +36,7 @@ public:
     size_t size() const NOEXCEPT override;
     bool resize(size_t size) NOEXCEPT override;
     size_t allocate(size_t chunk) NOEXCEPT override;
-    memory_ptr get(size_t offset=zero) NOEXCEPT override;
+    memory_ptr get(size_t offset=zero) const NOEXCEPT override;
 
 private:
     data_chunk local_;

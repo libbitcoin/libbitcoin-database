@@ -80,7 +80,7 @@ public:
     size_t allocate(size_t chunk) NOEXCEPT override;
 
     /// Get r/w access to start/offset of memory map (or null).
-    memory_ptr get(size_t offset=zero) NOEXCEPT override;
+    memory_ptr get(size_t offset=zero) const NOEXCEPT override;
 
 protected:
     size_t to_capacity(size_t required) const NOEXCEPT

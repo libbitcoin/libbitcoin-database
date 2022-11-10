@@ -21,31 +21,57 @@
 
 BOOST_AUTO_TEST_SUITE(hashmap_tests)
 
-constexpr auto link_size = 5_size;
-constexpr auto key_size = 10_size;
-constexpr auto header_size = 105_size;
+template <typename Link, typename Key, size_t Size = zero>
+class hashmap_
+  : public hashmap<Link, Key, Size>
+{
+public:
+    using hashmap<Link, Key, Size>::hashmap;
+
+    reader_ptr find_(const Key& key) const NOEXCEPT
+    {
+        return base::find(key);
+    }
+
+    reader_ptr at_(const Link& record) const NOEXCEPT
+    {
+        return base::at(record);
+    }
+
+    finalizer_ptr push_(const Key& key, const Link& size=bc::one) NOEXCEPT
+    {
+        return base::push(key, size);
+    }
+
+private:
+    using base = hashmap<Link, Key, Size>;
+};
+
+constexpr size_t link_size = 5;
+constexpr size_t key_size = 10;
+using link = linkage<link_size>;
+using key = data_array<key_size>;
 
 // Key size does not factor into header byte size (for first key only).
+constexpr size_t header_size = 105;
 constexpr auto links = header_size / link_size;
 static_assert(links == 21u);
 
 // Bucket count is one less than link count, due to header.size field.
-constexpr auto buckets = sub1(links);
+constexpr auto buckets = bc::sub1(links);
 static_assert(buckets == 20u);
 
-// Record size includes key but not link.
-// Slab allocation includes key and link.
-constexpr auto record_size = key_size + 4_size;
+constexpr size_t data_size = 4;
+constexpr auto record_size = link_size + key_size + data_size;
+constexpr auto slab_size = record_size;
 
-using link = linkage<link_size>;
-using key = data_array<key_size>;
+using record_table = hashmap_<link, key, data_size>;
+using slab_table = hashmap_<link, key, zero>;
 
-using record_item = iterator<link, key, record_size>;
-using record_table = hashmap<record_item>;
+// record hashmap
+// ----------------------------------------------------------------------------
 
-// record_hashmap__create_verify
-
-BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__empty_files__success)
+BOOST_AUTO_TEST_CASE(hashmap__record_construct__empty_files__expected)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -64,7 +90,7 @@ BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__empty_files__success)
     BOOST_REQUIRE(body_file.empty());
 }
 
-BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__non_empty_head_file__failure)
+BOOST_AUTO_TEST_CASE(hashmap__record_construct__non_empty_head_file__failure)
 {
     data_chunk head_file{ 0x42 };
     data_chunk body_file;
@@ -83,9 +109,9 @@ BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__non_empty_head_file__failure
     BOOST_REQUIRE(body_file.empty());
 }
 
-BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__multiple_iterator_body_file__failure)
+BOOST_AUTO_TEST_CASE(hashmap__record_construct__multiple_item_body_file__failure)
 {
-    constexpr auto body_size = 3u * (link_size + record_size);
+    constexpr auto body_size = 3u * record_size;
     data_chunk head_file;
     data_chunk body_file(body_size, 0x42);
     test::storage head_store{ head_file };
@@ -103,9 +129,9 @@ BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__multiple_iterator_body_file_
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__multiple_fractional_iterator_body_file__failure)
+BOOST_AUTO_TEST_CASE(hashmap__record_construct__multiple_fractional_item_body_file__failure)
 {
-    constexpr auto body_size = 3u * (link_size + record_size) + 2u;
+    constexpr auto body_size = 3u * record_size + 2u;
     data_chunk head_file;
     data_chunk body_file(body_size, 0x42);
     test::storage head_store{ head_file };
@@ -123,9 +149,9 @@ BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__multiple_fractional_iterator
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__one_iterator_body_file__failure)
+BOOST_AUTO_TEST_CASE(hashmap__record_construct__one_item_body_file__failure)
 {
-    constexpr auto body_size = link_size + record_size;
+    constexpr auto body_size = record_size;
     data_chunk head_file;
     data_chunk body_file(body_size, 0x42);
     test::storage head_store{ head_file };
@@ -143,9 +169,9 @@ BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__one_iterator_body_file__fail
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__sub_one_iterator_body_file__success)
+BOOST_AUTO_TEST_CASE(hashmap__record_construct__sub_one_item_body_file__success)
 {
-    constexpr auto body_size = sub1(link_size + record_size);
+    constexpr auto body_size = sub1(record_size);
     data_chunk head_file;
     data_chunk body_file(body_size, 0x42);
     test::storage head_store{ head_file };
@@ -167,13 +193,46 @@ BOOST_AUTO_TEST_CASE(record_hashmap__create_verify__sub_one_iterator_body_file__
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-// slab_hashmap__create_verify
+BOOST_AUTO_TEST_CASE(hashmap__record_at__terminal__false)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    record_table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(!instance.at_(link::terminal));
+    BOOST_REQUIRE(!instance.at_(link::terminal));
+}
 
-constexpr auto slab_size = link_size + key_size + 4_size;
-using slab_item = iterator<link, key, zero>;
-using slab_table = hashmap<slab_item>;
+BOOST_AUTO_TEST_CASE(hashmap__record_at__empty__exhausted)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    record_table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.at_(0)->is_exhausted());
+    BOOST_REQUIRE(instance.at_(19)->is_exhausted());
+}
 
-BOOST_AUTO_TEST_CASE(slab_hashmap__create_verify__empty_files__success)
+BOOST_AUTO_TEST_CASE(hashmap__record_find__empty__false)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    record_table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(!instance.find_({ 0x00 }));
+    BOOST_REQUIRE(!instance.find_({ 0x42 }));
+}
+
+// slab hashmap
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(hashmap__slab_construct__empty_files__success)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -192,7 +251,7 @@ BOOST_AUTO_TEST_CASE(slab_hashmap__create_verify__empty_files__success)
     BOOST_REQUIRE(body_file.empty());
 }
 
-BOOST_AUTO_TEST_CASE(slab_hashmap__create_verify__non_empty_head_file__failure)
+BOOST_AUTO_TEST_CASE(hashmap__slab_construct__non_empty_head_file__failure)
 {
     data_chunk head_file{ 0x42 };
     data_chunk body_file;
@@ -211,7 +270,7 @@ BOOST_AUTO_TEST_CASE(slab_hashmap__create_verify__non_empty_head_file__failure)
     BOOST_REQUIRE(body_file.empty());
 }
 
-BOOST_AUTO_TEST_CASE(slab_hashmap__create_verify__multiple_iterator_body_file__failure)
+BOOST_AUTO_TEST_CASE(hashmap__slab_construct__multiple_item_body_file__failure)
 {
     constexpr auto body_size = 3u * slab_size;
     data_chunk head_file;
@@ -231,7 +290,7 @@ BOOST_AUTO_TEST_CASE(slab_hashmap__create_verify__multiple_iterator_body_file__f
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(slab_hashmap__create_verify__multiple_fractional_iterator_body_file__failure)
+BOOST_AUTO_TEST_CASE(hashmap__slab_construct__multiple_fractional_item_body_file__failure)
 {
     constexpr auto body_size = 3u * slab_size + 2u;
     data_chunk head_file;
@@ -251,7 +310,7 @@ BOOST_AUTO_TEST_CASE(slab_hashmap__create_verify__multiple_fractional_iterator_b
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(slab_hashmap__create_verify__one_iterator_body_file__failure)
+BOOST_AUTO_TEST_CASE(hashmap__slab_construct__one_item_body_file__failure)
 {
     constexpr auto body_size = slab_size;
     data_chunk head_file;
@@ -271,7 +330,7 @@ BOOST_AUTO_TEST_CASE(slab_hashmap__create_verify__one_iterator_body_file__failur
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(slab_hashmap__create_verify__sub_one_iterator_body_file__failure)
+BOOST_AUTO_TEST_CASE(hashmap__slab_construct__sub_one_item_body_file__failure)
 {
     constexpr auto body_size = sub1(slab_size);
     data_chunk head_file;
@@ -292,20 +351,6 @@ BOOST_AUTO_TEST_CASE(slab_hashmap__create_verify__sub_one_iterator_body_file__fa
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-// at(terminal)
-
-BOOST_AUTO_TEST_CASE(record_hashmap__at__terminal__false)
-{
-    data_chunk head_file;
-    data_chunk body_file;
-    test::storage head_store{ head_file };
-    test::storage body_store{ body_file };
-    record_table instance{ head_store, body_store, buckets };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.at(link::terminal));
-    BOOST_REQUIRE(!instance.at(link::terminal));
-}
-
 BOOST_AUTO_TEST_CASE(slab_hashmap__at__terminal__false)
 {
     data_chunk head_file;
@@ -314,74 +359,8 @@ BOOST_AUTO_TEST_CASE(slab_hashmap__at__terminal__false)
     test::storage body_store{ body_file };
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.at(link::terminal));
-    BOOST_REQUIRE(!instance.at(link::terminal));
-}
-
-// first(not found)
-
-BOOST_AUTO_TEST_CASE(record_hashmap__first__empty__terminal)
-{
-    data_chunk head_file;
-    data_chunk body_file;
-    test::storage head_store{ head_file };
-    test::storage body_store{ body_file };
-    record_table instance{ head_store, body_store, buckets };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.first({ 0x00 }).is_terminal());
-    BOOST_REQUIRE(instance.first({ 0x42 }).is_terminal());
-}
-
-BOOST_AUTO_TEST_CASE(slab_hashmap__first__empty__terminal)
-{
-    data_chunk head_file;
-    data_chunk body_file;
-    test::storage head_store{ head_file };
-    test::storage body_store{ body_file };
-    slab_table instance{ head_store, body_store, buckets };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.first({ 0x00 }).is_terminal());
-    BOOST_REQUIRE(instance.first({ 0x42 }).is_terminal());
-}
-
-// first(found)
-
-BOOST_AUTO_TEST_CASE(record_hashmap__first__exists__found)
-{
-    data_chunk head_file;
-    data_chunk body_file;
-    test::storage head_store{ head_file };
-    test::storage body_store{ body_file };
-    record_table instance{ head_store, body_store, buckets };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.push({ 0x42 })->finalize());
-    BOOST_REQUIRE(!instance.first({ 0x42 }).is_terminal());
-}
-
-BOOST_AUTO_TEST_CASE(slab_hashmap__first__exists__found)
-{
-    data_chunk head_file;
-    data_chunk body_file;
-    test::storage head_store{ head_file };
-    test::storage body_store{ body_file };
-    slab_table instance{ head_store, body_store, buckets };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.push({ 0x42 }, slab_size)->finalize());
-    BOOST_REQUIRE(!instance.first({ 0x42 }).is_terminal());
-}
-
-// at(exhausted)
-
-BOOST_AUTO_TEST_CASE(record_hashmap__at__empty__exhausted)
-{
-    data_chunk head_file;
-    data_chunk body_file;
-    test::storage head_store{ head_file };
-    test::storage body_store{ body_file };
-    record_table instance{ head_store, body_store, buckets };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.at(0)->is_exhausted());
-    BOOST_REQUIRE(instance.at(19)->is_exhausted());
+    BOOST_REQUIRE(!instance.at_(link::terminal));
+    BOOST_REQUIRE(!instance.at_(link::terminal));
 }
 
 BOOST_AUTO_TEST_CASE(slab_hashmap__at__empty__exhausted)
@@ -392,22 +371,8 @@ BOOST_AUTO_TEST_CASE(slab_hashmap__at__empty__exhausted)
     test::storage body_store{ body_file };
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.at(0)->is_exhausted());
-    BOOST_REQUIRE(instance.at(19)->is_exhausted());
-}
-
-// find(not found)
-
-BOOST_AUTO_TEST_CASE(record_hashmap__find__empty__false)
-{
-    data_chunk head_file;
-    data_chunk body_file;
-    test::storage head_store{ head_file };
-    test::storage body_store{ body_file };
-    record_table instance{ head_store, body_store, buckets };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.find({ 0x00 }));
-    BOOST_REQUIRE(!instance.find({ 0x42 }));
+    BOOST_REQUIRE(instance.at_(0)->is_exhausted());
+    BOOST_REQUIRE(instance.at_(19)->is_exhausted());
 }
 
 BOOST_AUTO_TEST_CASE(slab_hashmap__find__empty__false)
@@ -418,39 +383,14 @@ BOOST_AUTO_TEST_CASE(slab_hashmap__find__empty__false)
     test::storage body_store{ body_file };
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.find({ 0x00 }));
-    BOOST_REQUIRE(!instance.find({ 0x42 }));
+    BOOST_REQUIRE(!instance.find_({ 0x00 }));
+    BOOST_REQUIRE(!instance.find_({ 0x42 }));
 }
 
-// push(terminal)
+// push/found/at (protected interface positive tests)
+// ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(record_hashmap__push__terminal_false)
-{
-    data_chunk head_file;
-    data_chunk body_file;
-    test::storage head_store{ head_file };
-    test::storage body_store{ body_file };
-    record_table instance{ head_store, body_store, buckets };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.push({ 0x00 }, link::terminal));
-    BOOST_REQUIRE(!instance.push({ 0x42 }, link::terminal));
-}
-
-BOOST_AUTO_TEST_CASE(slab_hashmap__push__terminal_false)
-{
-    data_chunk head_file;
-    data_chunk body_file;
-    test::storage head_store{ head_file };
-    test::storage body_store{ body_file };
-    slab_table instance{ head_store, body_store, buckets };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.push({ 0x00 }, link::terminal));
-    BOOST_REQUIRE(!instance.push({ 0x42 }, link::terminal));
-}
-
-// push(1/slab_size)/find(found)
-
-BOOST_AUTO_TEST_CASE(record_hashmap__push_find__empty__true)
+BOOST_AUTO_TEST_CASE(hashmap__record_readers__empty__expected)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -460,20 +400,30 @@ BOOST_AUTO_TEST_CASE(record_hashmap__push_find__empty__true)
     BOOST_REQUIRE(instance.create());
 
     constexpr key key0{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
-    auto stream1 = instance.push(key0);
-    BOOST_REQUIRE(!stream1->is_exhausted());
-    BOOST_REQUIRE(!instance.find(key0));
-    BOOST_REQUIRE(stream1->finalize());
-    BOOST_REQUIRE(instance.find(key0));
-    stream1.reset();
+    auto stream0 = instance.push_(key0);
+    BOOST_REQUIRE_EQUAL(body_file.size(), record_size);
+    BOOST_REQUIRE(!stream0->is_exhausted());
+    BOOST_REQUIRE(!instance.find_(key0));
+    BOOST_REQUIRE(stream0->finalize());
+    BOOST_REQUIRE(instance.find_(key0));
+    stream0.reset();
 
     constexpr key key1{ 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a };
-    auto stream2 = instance.push(key1);
-    BOOST_REQUIRE(!stream2->is_exhausted());
-    BOOST_REQUIRE(!instance.find(key1));
-    BOOST_REQUIRE(stream2->finalize());
-    BOOST_REQUIRE(instance.find(key1));
-    stream2.reset();
+    auto stream1 = instance.push_(key1);
+    BOOST_REQUIRE_EQUAL(body_file.size(), 2u * record_size);
+    BOOST_REQUIRE(!stream1->is_exhausted());
+    BOOST_REQUIRE(!instance.find_(key1));
+    BOOST_REQUIRE(stream1->finalize());
+    BOOST_REQUIRE(instance.find_(key1));
+    stream1.reset();
+
+    // Past end is valid pointer but exhausted stream.
+    BOOST_REQUIRE(instance.at_(0));
+    BOOST_REQUIRE(!instance.at_(0)->is_exhausted());
+    BOOST_REQUIRE(instance.at_(1));
+    BOOST_REQUIRE(!instance.at_(1)->is_exhausted());
+    BOOST_REQUIRE(instance.at_(2));
+    BOOST_REQUIRE(instance.at_(2)->is_exhausted());
 
     // record
     // 0000000000 [body logical size]
@@ -507,7 +457,7 @@ BOOST_AUTO_TEST_CASE(record_hashmap__push_find__empty__true)
     // 00000000             [data]
 }
 
-BOOST_AUTO_TEST_CASE(slab_hashmap__push_find__empty__true)
+BOOST_AUTO_TEST_CASE(hashmap__slab_push_find__empty__true)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -517,14 +467,24 @@ BOOST_AUTO_TEST_CASE(slab_hashmap__push_find__empty__true)
     BOOST_REQUIRE(instance.create());
 
     constexpr key key0{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
-    BOOST_REQUIRE(!instance.find(key0));
-    BOOST_REQUIRE(instance.push(key0, slab_size)->finalize());
-    BOOST_REQUIRE(instance.find(key0));
+    BOOST_REQUIRE(!instance.find_(key0));
+    BOOST_REQUIRE(instance.push_(key0, slab_size)->finalize());
+    BOOST_REQUIRE_EQUAL(body_file.size(), slab_size);
+    BOOST_REQUIRE(instance.find_(key0));
 
     constexpr key key1{ 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a };
-    BOOST_REQUIRE(!instance.find(key1));
-    BOOST_REQUIRE(instance.push(key1, slab_size)->finalize());
-    BOOST_REQUIRE(instance.find(key1));
+    BOOST_REQUIRE(!instance.find_(key1));
+    BOOST_REQUIRE(instance.push_(key1, slab_size)->finalize());
+    BOOST_REQUIRE_EQUAL(body_file.size(), 2u * slab_size);
+    BOOST_REQUIRE(instance.find_(key1));
+
+    // Past end is valid pointer but exhausted stream.
+    BOOST_REQUIRE(instance.at_(0));
+    BOOST_REQUIRE(!instance.at_(0)->is_exhausted());
+    BOOST_REQUIRE(instance.at_(slab_size));
+    BOOST_REQUIRE(!instance.at_(slab_size)->is_exhausted());
+    BOOST_REQUIRE(instance.at_(2u * slab_size));
+    BOOST_REQUIRE(instance.at_(2u * slab_size)->is_exhausted());
  
     // slab (same extents as record above)
     // 0000000000 [body logical size]
@@ -558,7 +518,7 @@ BOOST_AUTO_TEST_CASE(slab_hashmap__push_find__empty__true)
     // 00000000             [data]
 }
 
-BOOST_AUTO_TEST_CASE(record_hashmap__push_duplicate_key__find__true)
+BOOST_AUTO_TEST_CASE(hashmap__record_push_duplicate_key__find__true)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -568,15 +528,18 @@ BOOST_AUTO_TEST_CASE(record_hashmap__push_duplicate_key__find__true)
     BOOST_REQUIRE(instance.create());
 
     constexpr key key0{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    BOOST_REQUIRE(instance.push(key0)->finalize());
-    BOOST_REQUIRE(instance.find(key0));
+    BOOST_REQUIRE(instance.push_(key0)->finalize());
+    BOOST_REQUIRE_EQUAL(body_file.size(), record_size);
+    BOOST_REQUIRE(instance.find_(key0));
 
     constexpr key key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
-    BOOST_REQUIRE(instance.push(key1)->finalize());
-    BOOST_REQUIRE(instance.find(key1));
+    BOOST_REQUIRE(instance.push_(key1)->finalize());
+    BOOST_REQUIRE_EQUAL(body_file.size(), 2u * record_size);
+    BOOST_REQUIRE(instance.find_(key1));
 
-    BOOST_REQUIRE(instance.push(key1)->finalize());
-    BOOST_REQUIRE(instance.find(key1));
+    BOOST_REQUIRE(instance.push_(key1)->finalize());
+    BOOST_REQUIRE_EQUAL(body_file.size(), 3u * record_size);
+    BOOST_REQUIRE(instance.find_(key1));
 
     ////std::cout << head_file << std::endl << std::endl;
     ////std::cout << body_file << std::endl << std::endl;

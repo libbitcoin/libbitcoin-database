@@ -19,34 +19,34 @@
 #include "../test.hpp"
 #include "../storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(hashmap_header_tests)
+BOOST_AUTO_TEST_SUITE(head_tests)
 
 constexpr auto key_size = 10_size;
 constexpr auto link_size = 5_size;
-constexpr auto header_size = 105_size;
+constexpr auto head_size = 105_size;
 
-// Key size does not factor into header byte size (for search key only).
-constexpr auto links = header_size / link_size;
+// Key size does not factor into head byte size (for search key only).
+constexpr auto links = head_size / link_size;
 static_assert(links == 21u);
 
-// Bucket count is one less than link count, due to header.size field.
+// Bucket count is one less than link count, due to head.size field.
 constexpr auto buckets = sub1(links);
 static_assert(buckets == 20u);
 
 using link = linkage<link_size>;
 using key = data_array<key_size>;
-using header = hashmap_header<link, key>;
+using header = head<link, key>;
 
-BOOST_AUTO_TEST_CASE(hashmap_header__create__size__expected)
+BOOST_AUTO_TEST_CASE(head__create__size__expected)
 {
     data_chunk data;
     test::storage store{ data };
     header head{ store, buckets };
     BOOST_REQUIRE(head.create());
-    BOOST_REQUIRE_EQUAL(data.size(), header_size);
+    BOOST_REQUIRE_EQUAL(data.size(), head_size);
 }
 
-BOOST_AUTO_TEST_CASE(hashmap_header__verify__uncreated__false)
+BOOST_AUTO_TEST_CASE(head__verify__uncreated__false)
 {
     data_chunk data;
     test::storage store{ data };
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(hashmap_header__verify__uncreated__false)
     BOOST_REQUIRE(!head.verify());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap_header__verify__created__false)
+BOOST_AUTO_TEST_CASE(head__verify__created__false)
 {
     data_chunk data;
     test::storage store{ data };
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(hashmap_header__verify__created__false)
     BOOST_REQUIRE(head.verify());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap_header__get_body_count__created__zero)
+BOOST_AUTO_TEST_CASE(head__get_body_count__created__zero)
 {
     data_chunk data;
     test::storage store{ data };
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(hashmap_header__get_body_count__created__zero)
     BOOST_REQUIRE_EQUAL(count, zero);
 }
 
-BOOST_AUTO_TEST_CASE(hashmap_header__set_body_count__get__expected)
+BOOST_AUTO_TEST_CASE(head__set_body_count__get__expected)
 {
     data_chunk data;
     test::storage store{ data };
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(hashmap_header__set_body_count__get__expected)
     BOOST_REQUIRE_EQUAL(count, expected);
 }
 
-BOOST_AUTO_TEST_CASE(hashmap_header__index__null_key__expected)
+BOOST_AUTO_TEST_CASE(head__index__null_key__expected)
 {
     constexpr key null_key{};
     const auto expected = system::djb2_hash(null_key) % buckets;
@@ -102,15 +102,15 @@ BOOST_AUTO_TEST_CASE(hashmap_header__index__null_key__expected)
     BOOST_REQUIRE_EQUAL(head.index(null_key), expected);
 }
 
-BOOST_AUTO_TEST_CASE(hashmap_header__head__link__terminal)
+BOOST_AUTO_TEST_CASE(head__top__link__terminal)
 {
     test::storage store;
     header head{ store, buckets };
     BOOST_REQUIRE(head.create());
-    BOOST_REQUIRE(head.head(9).is_terminal());
+    BOOST_REQUIRE(head.top(9).is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap_header__head__key__terminal)
+BOOST_AUTO_TEST_CASE(head__top__key__terminal)
 {
     constexpr key null_key{};
 
@@ -119,10 +119,10 @@ BOOST_AUTO_TEST_CASE(hashmap_header__head__key__terminal)
 
     // create() allocates and fills buckets with terminal.
     BOOST_REQUIRE(head.create());
-    BOOST_REQUIRE(head.head(null_key).is_terminal());
+    BOOST_REQUIRE(head.top(null_key).is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap_header__push__link__terminal)
+BOOST_AUTO_TEST_CASE(head__push__link__terminal)
 {
     test::storage store;
     header head{ store, buckets };
@@ -134,14 +134,14 @@ BOOST_AUTO_TEST_CASE(hashmap_header__push__link__terminal)
     constexpr link current{ expected };
     head.push(current, next, link_key);
 
-    // The terminal value at header[9|null_key] is copied to current.next.
+    // The terminal value at head[9|null_key] is copied to current.next.
     BOOST_REQUIRE(link{ next }.is_terminal());
 
-    // The current link is copied to header[9|null_key].
-    BOOST_REQUIRE_EQUAL(head.head(link_key), expected);
+    // The current link is copied to head[9|null_key].
+    BOOST_REQUIRE_EQUAL(head.top(link_key), expected);
 }
 
-BOOST_AUTO_TEST_CASE(hashmap_header__push__key__terminal)
+BOOST_AUTO_TEST_CASE(head__push__key__terminal)
 {
     test::storage store;
     header head{ store, buckets };
@@ -153,11 +153,11 @@ BOOST_AUTO_TEST_CASE(hashmap_header__push__key__terminal)
     constexpr link current{ expected };
     head.push(current, next, null_key);
 
-    // The terminal value at header[9|null_key] is copied to current.next.
+    // The terminal value at head[9|null_key] is copied to current.next.
     BOOST_REQUIRE(link{ next }.is_terminal());
 
-    // The current link is copied to header[9|null_key].
-    BOOST_REQUIRE_EQUAL(head.head(null_key), expected);
+    // The current link is copied to head[9|null_key].
+    BOOST_REQUIRE_EQUAL(head.top(null_key), expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

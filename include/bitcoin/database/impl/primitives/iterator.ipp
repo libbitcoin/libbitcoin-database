@@ -20,18 +20,16 @@
 #define LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_IPP
 
 #include <algorithm>
+#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
-
 TEMPLATE
-CLASS::iterator(const manager<Link, Size>& manage, const Link& start,
-    const Key& key) NOEXCEPT
-  : manager_(manage), link_(start), key_(key)
+CLASS::iterator(const memory_ptr& file, const Link& start, const Key& key) NOEXCEPT
+  : ptr_(file), key_(key), link_(start)
 {
 }
 
@@ -63,29 +61,56 @@ Link CLASS::self() NOEXCEPT
 TEMPLATE
 bool CLASS::is_match() const NOEXCEPT
 {
-    const auto body = get(Link::size);
-    if (!body) return false;
-    return std::equal(key_.begin(), key_.end(), body->begin());
+    using namespace system;
+    BC_ASSERT(!is_multiply_overflow(link_to_position(link_), Link::size));
+
+    if (!ptr_)
+        return false;
+
+    auto link = ptr_->offset(link_to_position(link_) + Link::size);
+    if (is_null(link))
+        return false;
+
+    BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
+    return std::equal(key_.begin(), key_.end(), link);
+    BC_POP_WARNING()
 }
 
 TEMPLATE
 Link CLASS::get_next() const NOEXCEPT
 {
-    if (link_.is_terminal()) return link_;
-    auto body = manager_.get(link_);
-    if (!body) return Link::terminal;
-    return { array_cast<Link::size>(*body) };
+    if (link_.is_terminal() || !ptr_)
+        return Link::terminal;
+
+    auto link = ptr_->offset(link_to_position(link_));
+    if (is_null(link))
+        return Link::terminal;
+
+    return { system::unsafe_array_cast<uint8_t, Link::size>(link) };
 }
+
+// private
+// ----------------------------------------------------------------------------
 
 TEMPLATE
-memory_ptr CLASS::get(size_t offset) const NOEXCEPT
+constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
 {
-    auto body = manager_.get(link_);
-    if (body) body->increment(offset);
-    return body;
-}
+    using namespace system;
+    const auto value = possible_narrow_cast<size_t>(link.value);
 
-BC_POP_WARNING()
+    // Iterator keys off of zero Size...
+    if constexpr (is_slab)
+    {
+        return value;
+    }
+    else
+    {
+        // ...so must add Link + Key to Size.
+        constexpr auto element_size = Link::size + array_count<Key> + Size;
+        BC_ASSERT(!is_multiply_overflow(value, element_size));
+        return value * element_size;
+    }
+}
 
 } // namespace database
 } // namespace libbitcoin

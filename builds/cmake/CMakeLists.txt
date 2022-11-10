@@ -164,7 +164,26 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/memory/file.cpp"
     "../../src/memory/map.cpp"
     "../../src/memory/mman-win32/mman.c"
-    "../../src/memory/mman-win32/mman.h" )
+    "../../src/memory/mman-win32/mman.h"
+    "../../src/tables/archives/header.cpp"
+    "../../src/tables/archives/input.cpp"
+    "../../src/tables/archives/output.cpp"
+    "../../src/tables/archives/puts.cpp"
+    "../../src/tables/archives/transaction.cpp"
+    "../../src/tables/archives/txs.cpp"
+    "../../src/tables/caches/bootstrap.cpp"
+    "../../src/tables/caches/buffer.cpp"
+    "../../src/tables/caches/neutrino.cpp"
+    "../../src/tables/caches/validated_block.cpp"
+    "../../src/tables/caches/validated_tx.cpp"
+    "../../src/tables/indexes/address.cpp"
+    "../../src/tables/indexes/candidate_height.cpp"
+    "../../src/tables/indexes/confirmed_block.cpp"
+    "../../src/tables/indexes/confirmed_height.cpp"
+    "../../src/tables/indexes/confirmed_tx.cpp"
+    "../../src/tables/indexes/input_tx.cpp"
+    "../../src/tables/indexes/output_tx.cpp"
+    "../../src/tables/indexes/spent_output.cpp" )
 
 # ${CANONICAL_LIB_NAME} project specific include directories.
 #------------------------------------------------------------------------------
@@ -207,12 +226,31 @@ if (with-tests)
         "../../test/memory/accessor.cpp"
         "../../test/memory/file.cpp"
         "../../test/memory/map.cpp"
+        "../../test/primitives/arraymap.cpp"
         "../../test/primitives/hashmap.cpp"
-        "../../test/primitives/hashmap_header.cpp"
+        "../../test/primitives/head.cpp"
         "../../test/primitives/iterator.cpp"
         "../../test/primitives/linkage.cpp"
         "../../test/primitives/manager.cpp"
-        "../../test/tables/table.cpp" )
+        "../../test/tables/archives/header.cpp"
+        "../../test/tables/archives/input.cpp"
+        "../../test/tables/archives/output.cpp"
+        "../../test/tables/archives/puts.cpp"
+        "../../test/tables/archives/transaction.cpp"
+        "../../test/tables/archives/txs.cpp"
+        "../../test/tables/caches/bootstrap.cpp"
+        "../../test/tables/caches/buffer.cpp"
+        "../../test/tables/caches/neutrino.cpp"
+        "../../test/tables/caches/validated_block.cpp"
+        "../../test/tables/caches/validated_tx.cpp"
+        "../../test/tables/indexes/address.cpp"
+        "../../test/tables/indexes/candidate_height.cpp"
+        "../../test/tables/indexes/confirmed_block.cpp"
+        "../../test/tables/indexes/confirmed_height.cpp"
+        "../../test/tables/indexes/confirmed_tx.cpp"
+        "../../test/tables/indexes/input_tx.cpp"
+        "../../test/tables/indexes/output_tx.cpp"
+        "../../test/tables/indexes/spent_output.cpp" )
 
     add_test( NAME libbitcoin-database-test COMMAND libbitcoin-database-test
             --run_test=*

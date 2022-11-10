@@ -68,17 +68,17 @@ private:
     typename memory::iterator next_;
 };
 
-/// A byte flipper with custom flush, that accepts an iostream.
+/// A byte flipper with finalization extentions, that accepts an iostream.
 template <typename IOStream = std::iostream>
-class finalizing_flipper
+class finalizer_flipper
   : public system::byte_flipper<IOStream>
 {
 public:
-    DEFAULT5(finalizing_flipper);
+    DEFAULT5(finalizer_flipper);
 
     using finalizer = std::function<bool()>;
 
-    finalizing_flipper(IOStream& stream) NOEXCEPT
+    finalizer_flipper(IOStream& stream) NOEXCEPT
       : system::byte_flipper<IOStream>(stream)
     {
     }
@@ -103,7 +103,11 @@ private:
 };
 
 /// A finalizing byte reader/writer that copies data from/to a memory_ptr.
-using writer = system::make_streamer<map_sink, finalizing_flipper>;
+using finalizer = system::make_streamer<map_sink, finalizer_flipper>;
+typedef std::shared_ptr<finalizer> finalizer_ptr;
+
+/// A byte reader/writer that copies data from/to a memory_ptr.
+using writer = system::make_streamer<map_sink, system::byte_flipper>;
 typedef std::shared_ptr<writer> writer_ptr;
 
 } // namespace database
