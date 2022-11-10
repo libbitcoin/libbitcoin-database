@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_readers__empty__expected)
 // Records
 // ----------------------------------------------------------------------------
 
-// Passing link type prevents potential downcast warning.
+// Passing link type prevents potential downcast warning (for < link5).
 template <typename Link>
 class test_record
 {
@@ -194,12 +194,8 @@ public:
     static constexpr size_t size = sizeof(uint32_t);
 
     // record count or bytes count for slab (for allocate).
-    static constexpr Link count() NOEXCEPT
-    {
-        return 1;
-    }
+    static constexpr Link count() NOEXCEPT { return 1; }
 
-    // Avoiding constructor allows struct popuation.
     test_record from_data(database::reader& source) NOEXCEPT
     {
         value = source.read_little_endian<uint32_t>();
@@ -214,12 +210,12 @@ public:
     }
 
     uint32_t value{ 0 };
-    bool valid{ true };
+    bool valid{ false };
 };
 
 using link5 = linkage<5>;
 
-BOOST_AUTO_TEST_CASE(arraymap__get__empty__invalid)
+BOOST_AUTO_TEST_CASE(arraymap__record_get__empty__invalid)
 {
     data_chunk body_file;
     test::storage body_store{ body_file };
@@ -228,7 +224,7 @@ BOOST_AUTO_TEST_CASE(arraymap__get__empty__invalid)
     BOOST_REQUIRE(!record.valid);
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__get__populated__valid)
+BOOST_AUTO_TEST_CASE(arraymap__record_get__populated__valid)
 {
     data_chunk body_file{ 0x01, 0x02, 0x03, 0x04 };
     test::storage body_store{ body_file };
@@ -238,7 +234,7 @@ BOOST_AUTO_TEST_CASE(arraymap__get__populated__valid)
     BOOST_REQUIRE_EQUAL(record.value, 0x04030201_u32);
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__insert__empty__expected)
+BOOST_AUTO_TEST_CASE(arraymap__record_insert__get__expected)
 {
     const data_chunk expected_file{ 0xd4, 0xc3, 0xb2, 0xa1 };
     data_chunk body_file;
