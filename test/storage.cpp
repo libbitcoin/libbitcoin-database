@@ -61,7 +61,12 @@ bool storage::resize(size_t size) NOEXCEPT
 
 size_t storage::allocate(size_t chunk) NOEXCEPT
 {
-    BC_ASSERT(!system::is_add_overflow<size_t>(buffer_.size(), chunk));
+    if (system::is_add_overflow<size_t>(buffer_.size(), chunk))
+        return storage::eof;
+
+    if (buffer_.size() + chunk > buffer_.max_size())
+        return storage::eof;
+
     std::unique_lock field_lock(field_mutex_);
     std::unique_lock map_lock(map_mutex_);
     const auto link = buffer_.size();

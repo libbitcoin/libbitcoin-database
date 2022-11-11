@@ -240,6 +240,7 @@ size_t map::allocate(size_t chunk) NOEXCEPT
         // remap_failure
         if (!remap_(to_capacity(size)))
         {
+            // Unreachable in test without mocking remap_.
             map_mutex_.unlock();
             field_mutex_.unlock_upgrade();
             return storage::eof;
@@ -323,7 +324,10 @@ bool map::remap_(size_t size) NOEXCEPT
 {
     // Cannot remap empty file, so expand to minimum capacity if zero.
     if (is_zero(size))
+    {
+        // Unreachable in test without mocking map_.
         size = minimum_;
+    }
 
 #if !defined(HAVE_MSC) && !defined(MREMAP_MAYMOVE)
     // macOS: unmap before ftruncate sets new size.

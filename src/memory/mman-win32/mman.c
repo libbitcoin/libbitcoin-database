@@ -82,6 +82,7 @@ void* mmap(void* addr, size_t len, int prot, int flags, int fd, oft__ off)
 
     const oft__ max = off + (oft__)len;
 
+    // 32 bit builds: >> shift too big, undefined behavior (oft__ is size_t).
     const DWORD max_lo  = large ? (DWORD)((max)       & MAXDWORD) : (DWORD)max;
     const DWORD max_hi  = large ? (DWORD)((max >> 32) & MAXDWORD) : (DWORD)0;
     const DWORD file_lo = large ? (DWORD)((off)       & MAXDWORD) : (DWORD)off;

@@ -95,7 +95,15 @@ BOOST_AUTO_TEST_CASE(head__index__null_key__expected)
 {
     constexpr key null_key{};
     const auto expected = system::djb2_hash(null_key) % buckets;
-    BOOST_REQUIRE_EQUAL(expected, 9u);
+
+    if constexpr (build_x32)
+    {
+        BOOST_REQUIRE_EQUAL(expected, 13u);
+    }
+    else if constexpr (build_x64)
+    {
+        BOOST_REQUIRE_EQUAL(expected, 9u);
+    }
 
     test::storage store;
     header head{ store, buckets };

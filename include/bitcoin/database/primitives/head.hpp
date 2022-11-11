@@ -63,12 +63,13 @@ private:
 
     static constexpr size_t offset(const Link& index) NOEXCEPT
     {
-        BC_ASSERT(!system::is_multiply_overflow<size_t>(index, Link::size));
-        BC_ASSERT(!system::is_add_overflow(Link::size, index * Link::size));
+        using namespace system;
+        BC_ASSERT(!is_multiply_overflow<size_t>(index, Link::size));
+        BC_ASSERT(!is_add_overflow(Link::size, index * Link::size));
 
         // Byte offset of bucket index within head file.
         // [body_size][[bucket[0]...bucket[buckets-1]]]
-        return Link::size + index * Link::size;
+        return possible_narrow_cast<size_t>(Link::size + index * Link::size);
     }
 
     storage& file_;
