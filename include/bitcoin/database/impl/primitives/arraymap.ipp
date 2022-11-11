@@ -42,17 +42,19 @@ Record CLASS::get(const Link& link) const NOEXCEPT
     if (!source)
         return {};
 
+    // Use of stream pointer can be eliminated cloning at() here.
     return Record{}.from_data(*source);
 }
 
 TEMPLATE
 template <typename Record, if_equal<Record::size, Size>>
-bool CLASS::insert(const Record& record) NOEXCEPT
+bool CLASS::put(const Record& record) NOEXCEPT
 {
     auto sink = push(record.count());
     if (!sink)
         return false;
 
+    // Use of stream pointer can be eliminated cloning push() here.
     return record.to_data(*sink);
 }
 

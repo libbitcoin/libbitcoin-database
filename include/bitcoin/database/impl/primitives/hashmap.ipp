@@ -58,27 +58,40 @@ bool CLASS::exists(const Key& key) const NOEXCEPT
 }
 
 TEMPLATE
-Record CLASS::get(const Key& key) const NOEXCEPT
-{
-    return { it(key).self() };
-}
-
-TEMPLATE
-Record CLASS::get(const Link& link) const NOEXCEPT
-{
-    return { at(link) };
-}
-
-TEMPLATE
 typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 {
     return { manager_.get(), header_.top(key), key };
 }
 
 TEMPLATE
-bool CLASS::insert(const Key& key, const Record& record) NOEXCEPT
+template <typename Record, if_equal<Record::size, Size>>
+Record CLASS::get(const Key& key) const NOEXCEPT
 {
-    return record.to_data(push(key, record.size()));
+    return get<Record>(it(key).self());
+}
+
+TEMPLATE
+template <typename Record, if_equal<Record::size, Size>>
+Record CLASS::get(const Link& link) const NOEXCEPT
+{
+    auto source = at(link);
+    if (!source)
+        return {};
+
+    // Use of stream pointer can be eliminated cloning at() here.
+    return Record{}.from_data(*source);
+}
+
+TEMPLATE
+template <typename Record, if_equal<Record::size, Size>>
+bool CLASS::put(const Key& key, const Record& record) NOEXCEPT
+{
+    auto sink = push(key, record.count());
+    if (!sink)
+        return false;
+
+    // Use of stream pointer can be eliminated cloning push() here.
+    return record.to_data(*sink);
 }
 
 // protected
@@ -95,8 +108,8 @@ reader_ptr CLASS::at(const Link& link) const NOEXCEPT
         return {};
 
     const auto source = std::make_shared<reader>(ptr);
-    source->skip_bytes(Link::size);
-    if constexpr (!is_slab) { source->set_limit(Record::size); }
+    source->skip_bytes(Link::size + array_count<Key>);
+    if constexpr (!is_slab) { source->set_limit(Size); }
     return source;
 }
 
@@ -111,7 +124,6 @@ reader_ptr CLASS::find(const Key& key) const NOEXCEPT
     if (!source)
         return {};
 
-    source->skip_bytes(array_count<Key>);
     return source;
 }
 
@@ -119,7 +131,7 @@ TEMPLATE
 finalizer_ptr CLASS::push(const Key& key, const Link& size) NOEXCEPT
 {
     const auto value = system::possible_narrow_cast<size_t>(size.value);
-    BC_ASSERT(!system::is_multiply_overflow(value, Record::size));
+    BC_ASSERT(!system::is_multiply_overflow(value, Size));
     BC_ASSERT(!size.is_terminal());
 
     const auto item = manager_.allocate(value);
@@ -140,10 +152,11 @@ finalizer_ptr CLASS::push(const Key& key, const Link& size) NOEXCEPT
         return header_.push(item, next, index);
     });
 
+    // Link (next) commit is deferred until finalize.
     if constexpr (is_slab) { sink->set_limit(value); }
     sink->skip_bytes(Link::size);
-    if constexpr (!is_slab) { sink->set_limit(value * Record::size); }
     sink->write_bytes(key);
+    if constexpr (!is_slab) { sink->set_limit(value * Size); }
     return sink;
 }
 

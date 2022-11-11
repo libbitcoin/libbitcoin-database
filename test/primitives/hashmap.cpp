@@ -21,12 +21,12 @@
 
 BOOST_AUTO_TEST_SUITE(hashmap_tests)
 
-template <typename Link, typename Key, typename Record>
+template <typename Link, typename Key, size_t Size>
 class hashmap_
-  : public hashmap<Link, Key, Record>
+  : public hashmap<Link, Key, Size>
 {
 public:
-    using hashmap<Link, Key, Record>::hashmap;
+    using hashmap<Link, Key, Size>::hashmap;
 
     reader_ptr find_(const Key& key) const NOEXCEPT
     {
@@ -44,7 +44,7 @@ public:
     }
 
 private:
-    using base = hashmap<Link, Key, Record>;
+    using base = hashmap<Link, Key, Size>;
 };
 
 using link5 = linkage<5>;
@@ -61,8 +61,8 @@ static_assert(buckets == 20u);
 
 struct record0 { static constexpr size_t size = zero; };
 struct record4 { static constexpr size_t size = 4; };
-using slab_table = hashmap_<link5, key10, record0>;
-using record_table = hashmap_<link5, key10, record4>;
+using slab_table = hashmap_<link5, key10, record0::size>;
+using record_table = hashmap_<link5, key10, record4::size>;
 
 constexpr auto element_size = link5::size + array_count<key10> + record4::size;
 
@@ -574,6 +574,162 @@ BOOST_AUTO_TEST_CASE(hashmap__record_push_duplicate_key__find__true)
     // 0100000000 [2->1]    [next]
     // 0102030405060708090a [key]
     // 00000000             [data]
+}
+
+// get/put
+// ----------------------------------------------------------------------------
+
+class little_record
+{
+public:
+    // record bytes or zero for slab (for template).
+    static constexpr size_t size = sizeof(uint32_t);
+
+    // record count or bytes count for slab (for allocate).
+    static constexpr link5 count() NOEXCEPT { return 1; }
+
+    little_record from_data(database::reader& source) NOEXCEPT
+    {
+        value = source.read_little_endian<uint32_t>();
+        valid = source;
+        return *this;
+    }
+
+    bool to_data(database::finalizer& sink) const NOEXCEPT
+    {
+        sink.write_little_endian(value);
+        sink.finalize();
+        return sink;
+    }
+
+    uint32_t value{ 0 };
+    bool valid{ false };
+};
+
+class big_record
+{
+public:
+    static constexpr size_t size = sizeof(uint32_t);
+    static constexpr link5 count() NOEXCEPT { return 1; }
+
+    big_record from_data(database::reader& source) NOEXCEPT
+    {
+        value = source.read_big_endian<uint32_t>();
+        valid = source;
+        return *this;
+    }
+
+    bool to_data(database::finalizer& sink) const NOEXCEPT
+    {
+        sink.write_big_endian(value);
+        sink.finalize();
+        return sink;
+    }
+
+    uint32_t value{ 0 };
+    bool valid{ false };
+};
+
+BOOST_AUTO_TEST_CASE(hashmap__record_get__empty__invalid)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    const hashmap<link5, key10, little_record::size> instance{ head_store, body_store, buckets };
+
+    const auto record = instance.get<little_record>(0);
+    BOOST_REQUIRE(!record.valid);
+}
+
+BOOST_AUTO_TEST_CASE(hashmap__record_get__populated__valid)
+{
+    data_chunk head_file;
+    data_chunk body_file
+    {
+        0xa1, 0xa2, 0xa3, 0xa4, 0xa5,
+        0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba,
+        0x01, 0x02, 0x03, 0x04
+    };
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    const hashmap<link5, key10, little_record::size> instance{ head_store, body_store, buckets };
+
+    const auto record = instance.get<little_record>(0);
+    BOOST_REQUIRE(record.valid);
+    BOOST_REQUIRE_EQUAL(record.value, 0x04030201_u32);
+}
+
+BOOST_AUTO_TEST_CASE(hashmap__record_put__get__expected)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+
+    using key1 = system::data_array<1>;
+    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+
+    constexpr key1 key{ 0x42 };
+    BOOST_REQUIRE(instance.put(key, big_record{ 0xa1b2c3d4_u32, true }));
+
+    const auto link_record = instance.get<big_record>(0);
+    BOOST_REQUIRE(link_record.valid);
+    BOOST_REQUIRE_EQUAL(link_record.value, 0xa1b2c3d4_u32);
+
+    const auto key_record = instance.get<big_record>(key);
+    BOOST_REQUIRE(key_record.valid);
+    BOOST_REQUIRE_EQUAL(key_record.value, 0xa1b2c3d4_u32);
+
+    const data_chunk expected_file
+    {
+        0xff, 0xff, 0xff, 0xff, 0xff,
+        0x42,
+        0xa1, 0xb2, 0xc3, 0xd4
+    };
+    BOOST_REQUIRE_EQUAL(body_file, expected_file);
+}
+
+BOOST_AUTO_TEST_CASE(hashmap__record_put__multiple__expected)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+
+    using key1 = system::data_array<1>;
+    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+
+    constexpr key1 key1_big{ 0x41 };
+    constexpr key1 key1_little{ 0x42 };
+    BOOST_REQUIRE(instance.put(key1_big, big_record{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(key1_little, little_record{ 0xa1b2c3d4_u32, true }));
+
+    const auto record1 = instance.get<big_record>(key1_big);
+    BOOST_REQUIRE(record1.valid);
+    BOOST_REQUIRE_EQUAL(record1.value, 0xa1b2c3d4_u32);
+
+    const auto record2 = instance.get<little_record>(key1_little);
+    BOOST_REQUIRE(record2.valid);
+    BOOST_REQUIRE_EQUAL(record2.value, 0xa1b2c3d4_u32);
+
+    // This expecatation relies on the fact of no hash table conflict between 0x41 and 0x42.
+    const data_chunk expected_file
+    {
+        0xff, 0xff, 0xff, 0xff, 0xff,
+        0x41,
+        0xa1, 0xb2, 0xc3, 0xd4,
+
+        0xff, 0xff, 0xff, 0xff, 0xff,
+        0x42,
+        0xd4, 0xc3, 0xb2, 0xa1
+    };
+    BOOST_REQUIRE_EQUAL(body_file, expected_file);
+
+    ////std::cout << head_file << std::endl << std::endl;
+    ////std::cout << body_file << std::endl << std::endl;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

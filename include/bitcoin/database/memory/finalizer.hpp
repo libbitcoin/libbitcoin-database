@@ -52,6 +52,8 @@ public:
     // setting the "next" pointer into beginning of the address space.
     bool finalize() NOEXCEPT
     {
+        if (!*this) return false;
+
         // std::function does not allow for noexcept.
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
         return finalize_();

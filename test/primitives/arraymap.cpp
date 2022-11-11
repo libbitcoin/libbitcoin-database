@@ -182,10 +182,8 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_readers__empty__expected)
     // 00000000 [1]
 }
 
-// insert/get
+// get/put
 // ----------------------------------------------------------------------------
-
-using link5 = linkage<5>;
 
 class little_record
 {
@@ -255,13 +253,13 @@ BOOST_AUTO_TEST_CASE(arraymap__record_get__populated__valid)
     BOOST_REQUIRE_EQUAL(record.value, 0x04030201_u32);
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_insert__get__expected)
+BOOST_AUTO_TEST_CASE(arraymap__record_put__get__expected)
 {
     data_chunk body_file;
     test::storage body_store{ body_file };
     arraymap<link5, big_record::size> instance{ body_store };
 
-    BOOST_REQUIRE(instance.insert<big_record>({ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(big_record{ 0xa1b2c3d4_u32, true }));
 
     const auto record = instance.get<big_record>(0);
     BOOST_REQUIRE(record.valid);
@@ -271,14 +269,14 @@ BOOST_AUTO_TEST_CASE(arraymap__record_insert__get__expected)
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_insert__multiple__expected)
+BOOST_AUTO_TEST_CASE(arraymap__record_put__multiple__expected)
 {
     data_chunk body_file;
     test::storage body_store{ body_file };
     arraymap<link5, big_record::size> instance{ body_store };
 
-    BOOST_REQUIRE(instance.insert<big_record>({ 0xa1b2c3d4_u32, true }));
-    BOOST_REQUIRE(instance.insert<little_record>({ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(big_record{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(little_record{ 0xa1b2c3d4_u32, true }));
 
     const auto record1 = instance.get<big_record>(0);
     BOOST_REQUIRE(record1.valid);
@@ -291,7 +289,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_insert__multiple__expected)
     const data_chunk expected_file{ 0xa1, 0xb2, 0xc3, 0xd4, 0xd4, 0xc3, 0xb2, 0xa1 };
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 }
-// slab little endian
+
 class little_slab
 {
 public:
@@ -338,13 +336,13 @@ public:
     bool valid{ false };
 };
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_insert__get__expected)
+BOOST_AUTO_TEST_CASE(arraymap__slab_put__get__expected)
 {
     data_chunk body_file;
     test::storage body_store{ body_file };
     arraymap<link5, big_slab::size> instance{ body_store };
 
-    BOOST_REQUIRE(instance.insert<big_slab>({ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(big_slab{ 0xa1b2c3d4_u32, true }));
 
     const auto slab = instance.get<big_slab>(zero);
     BOOST_REQUIRE(slab.valid);
@@ -354,14 +352,14 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_insert__get__expected)
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_insert__multiple__expected)
+BOOST_AUTO_TEST_CASE(arraymap__slab_put__multiple__expected)
 {
     data_chunk body_file;
     test::storage body_store{ body_file };
     arraymap<link5, big_slab::size> instance{ body_store };
 
-    BOOST_REQUIRE(instance.insert<big_slab>({ 0xa1b2c3d4_u32, true }));
-    BOOST_REQUIRE(instance.insert<little_slab>({ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(big_slab{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(little_slab{ 0xa1b2c3d4_u32, true }));
 
     const auto slab1 = instance.get<big_slab>(zero);
     BOOST_REQUIRE(slab1.valid);
@@ -408,12 +406,12 @@ BOOST_AUTO_TEST_CASE(arraymap__record_get__excess__false)
     BOOST_REQUIRE(!record.valid);
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_insert__excess__false)
+BOOST_AUTO_TEST_CASE(arraymap__record_put__excess__false)
 {
     data_chunk body_file;
     test::storage body_store{ body_file };
     arraymap<link5, record_excess::size> instance{ body_store };
-    BOOST_REQUIRE(!instance.insert<record_excess>({ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(!instance.put(record_excess{ 0xa1b2c3d4_u32, true }));
 }
 
 // advertises 32 but reads/writes 64
@@ -487,12 +485,12 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_get__file_excess__false)
     BOOST_REQUIRE(!record.valid);
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_insert__excess__false)
+BOOST_AUTO_TEST_CASE(arraymap__slab_put__excess__false)
 {
     data_chunk body_file;
     test::storage body_store{ body_file };
     arraymap<link5, slab_excess::size> instance{ body_store };
-    BOOST_REQUIRE(!instance.insert<slab_excess>({ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(!instance.put(slab_excess{ 0xa1b2c3d4_u32, true }));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

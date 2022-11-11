@@ -31,11 +31,11 @@ namespace database {
 
 /// Caution: iterator/reader/finalizer hold body remap lock until disposed.
 /// These handles should be used for serialization and immediately disposed.
-template <typename Link, typename Key, typename Record>
+template <typename Link, typename Key, size_t Size>
 class hashmap
 {
 public:
-    using iterator = database::iterator<Link, Key, Record::size>;
+    using iterator = database::iterator<Link, Key, Size>;
 
     hashmap(storage& header, storage& body, const Link& buckets) NOEXCEPT;
 
@@ -46,11 +46,18 @@ public:
     bool verify() const NOEXCEPT;
 
     /// Query interface, iterator is not thread safe.
+
     bool exists(const Key& key) const NOEXCEPT;
-    Record get(const Key& key) const NOEXCEPT;
-    Record get(const Link& link) const NOEXCEPT;
     iterator it(const Key& key) const NOEXCEPT;
-    bool insert(const Key& key, const Record& record) NOEXCEPT;
+
+    template <typename Record, if_equal<Record::size, Size> = true>
+    Record get(const Key& key) const NOEXCEPT;
+
+    template <typename Record, if_equal<Record::size, Size> = true>
+    Record get(const Link& link) const NOEXCEPT;
+
+    template <typename Record, if_equal<Record::size, Size> = true>
+    bool put(const Key& key, const Record& record) NOEXCEPT;
 
 protected:
     /// Reader positioned at key.
@@ -63,9 +70,9 @@ protected:
     finalizer_ptr push(const Key& key, const Link& size=one) NOEXCEPT;
 
 private:
-    static constexpr auto is_slab = is_zero(Record::size);
+    static constexpr auto is_slab = is_zero(Size);
     using header = database::head<Link, Key>;
-    using manager = database::manager<Link, Key, Record::size>;
+    using manager = database::manager<Link, Key, Size>;
 
     // hash/head/push thread safe.
     header header_;
@@ -77,8 +84,8 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, typename Key, typename Record>
-#define CLASS hashmap<Link, Key, Record>
+#define TEMPLATE template <typename Link, typename Key, size_t Size>
+#define CLASS hashmap<Link, Key, Size>
 
 #include <bitcoin/database/impl/primitives/hashmap.ipp>
 

@@ -40,7 +40,7 @@ public:
     Record get(const Link& link) const NOEXCEPT;
 
     template <typename Record, if_equal<Record::size, Size> = true>
-    bool insert(const Record& record) NOEXCEPT;
+    bool put(const Record& record) NOEXCEPT;
 
 protected:
     /// Reader positioned at data.
