@@ -40,7 +40,6 @@ public:
     {
     };
 
-    /// data.ptr must not be nullptr and data.ptr->begin() must be non-null.
     map_sink(const memory_ptr& data) NOEXCEPT
       : base(system::limit<typename base::size_type>(data->size())),
         container_(data),
@@ -67,44 +66,6 @@ private:
     const memory::ptr container_;
     typename memory::iterator next_;
 };
-
-/// A byte flipper with finalization extentions, that accepts an iostream.
-template <typename IOStream = std::iostream>
-class finalizer_flipper
-  : public system::byte_flipper<IOStream>
-{
-public:
-    DEFAULT5(finalizer_flipper);
-
-    using finalizer = std::function<bool()>;
-
-    finalizer_flipper(IOStream& stream) NOEXCEPT
-      : system::byte_flipper<IOStream>(stream)
-    {
-    }
-
-    void set_finalizer(finalizer&& functor) NOEXCEPT
-    {
-        finalize_ = std::move(functor);
-    }
-
-    // This is expected to have side effect on the stream buffer, specifically
-    // setting the "next" pointer into beginning of the address space.
-    bool finalize() NOEXCEPT
-    {
-        // std::function does not allow for noexcept.
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        return finalize_();
-        BC_POP_WARNING()
-    }
-
-private:
-    finalizer finalize_;
-};
-
-/// A finalizing byte reader/writer that copies data from/to a memory_ptr.
-using finalizer = system::make_streamer<map_sink, finalizer_flipper>;
-typedef std::shared_ptr<finalizer> finalizer_ptr;
 
 /// A byte reader/writer that copies data from/to a memory_ptr.
 using writer = system::make_streamer<map_sink, system::byte_flipper>;

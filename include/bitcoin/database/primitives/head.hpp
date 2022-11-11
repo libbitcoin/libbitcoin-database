@@ -22,8 +22,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/interfaces/memory.hpp>
-#include <bitcoin/database/memory/interfaces/storage.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -36,26 +35,20 @@ public:
 
     head(storage& head, const Link& buckets) NOEXCEPT;
 
-    /// Not thread safe.
-    /// -----------------------------------------------------------------------
-
-    /// Create from empty head file (no need to verify).
+    /// Create from empty head file (not thread safe).
     bool create() NOEXCEPT;
 
-    /// False if head file size incorrect.
+    /// False if head file size incorrect (not thread safe).
     bool verify() const NOEXCEPT;
 
-    /// Unsafe if not verified.
+    /// Unsafe if verify false (not thread safe).
     bool get_body_count(Link& count) const NOEXCEPT;
     bool set_body_count(const Link& count) NOEXCEPT;
-
-    /// Thread safe.
-    /// -----------------------------------------------------------------------
 
     /// Convert natural key to head bucket index.
     Link index(const Key& key) const NOEXCEPT;
 
-    /// Unsafe if not verified.
+    /// Unsafe if verify false.
     Link top(const Key& key) const NOEXCEPT;
     Link top(const Link& index) const NOEXCEPT;
     bool push(const bytes& current, bytes& next, const Key& key) NOEXCEPT;
@@ -70,9 +63,13 @@ private:
 
     static constexpr size_t offset(const Link& index) NOEXCEPT
     {
+        using namespace system;
+        BC_ASSERT(!is_multiply_overflow<size_t>(index, Link::size));
+        BC_ASSERT(!is_add_overflow(Link::size, index * Link::size));
+
         // Byte offset of bucket index within head file.
         // [body_size][[bucket[0]...bucket[buckets-1]]]
-        return Link::size + index * Link::size;
+        return possible_narrow_cast<size_t>(Link::size + index * Link::size);
     }
 
     storage& file_;

@@ -97,7 +97,7 @@ Link CLASS::top(const Link& index) const NOEXCEPT
 {
     const auto ptr = file_.get(offset(index));
     if (!ptr)
-        return false;
+        return Link::terminal;
 
     const auto& head = array_cast<Link::size>(*ptr);
 

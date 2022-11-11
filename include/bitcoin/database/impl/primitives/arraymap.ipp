@@ -35,16 +35,27 @@ CLASS::arraymap(storage& body) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+template <typename Record, if_equal<Record::size, Size>>
 Record CLASS::get(const Link& link) const NOEXCEPT
 {
-    return { at(link) };
+    auto source = at(link);
+    if (!source)
+        return {};
+
+    // Use of stream pointer can be eliminated by cloning at() here.
+    return Record{}.from_data(*source);
 }
 
 TEMPLATE
-bool CLASS::insert(const Record& record) NOEXCEPT
+template <typename Record, if_equal<Record::size, Size>>
+bool CLASS::put(const Record& record) NOEXCEPT
 {
-    // record.size() is slab/byte or record allocation.
-    return record.to_data(push(record.size()));
+    auto sink = push(record.count());
+    if (!sink)
+        return false;
+
+    // Use of stream pointer can be eliminated by cloning push() here.
+    return record.to_data(*sink);
 }
 
 // protected
@@ -68,11 +79,11 @@ reader_ptr CLASS::at(const Link& link) const NOEXCEPT
 TEMPLATE
 writer_ptr CLASS::push(const Link& size) NOEXCEPT
 {
-    using namespace system;
+    const auto value = system::possible_narrow_cast<size_t>(size.value);
+    BC_ASSERT(!system::is_multiply_overflow(value, Size));
     BC_ASSERT(!size.is_terminal());
-    BC_ASSERT(!is_multiply_overflow<size_t>(size, Size));
 
-    const auto item = body_.allocate(link_to_position(size));
+    const auto item = body_.allocate(link_to_position(value));
     if (item == storage::eof)
         return {};
 
@@ -81,8 +92,8 @@ writer_ptr CLASS::push(const Link& size) NOEXCEPT
         return {};
 
     const auto sink = std::make_shared<writer>(ptr);
-    if constexpr (is_slab) { sink->set_limit(size); }
-    if constexpr (!is_slab) { sink->set_limit(size * Size); }
+    if constexpr (is_slab) { sink->set_limit(value); }
+    if constexpr (!is_slab) { sink->set_limit(value * Size); }
     return sink;
 }
 
@@ -92,21 +103,11 @@ writer_ptr CLASS::push(const Link& size) NOEXCEPT
 TEMPLATE
 constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
 {
-    using namespace system;
-    const auto value = possible_narrow_cast<size_t>(link.value);
+    const auto value = system::possible_narrow_cast<size_t>(link.value);
+    BC_ASSERT(!system::is_multiply_overflow(value, Size));
 
-    // Iterator keys off of zero Size...
-    if constexpr (is_zero(Size))
-    {
-        return value;
-    }
-    else
-    {
-        // ... and there are no links or keys.
-        constexpr auto element_size = Size;
-        BC_ASSERT(!is_multiply_overflow(value, element_size));
-        return value * element_size;
-    }
+    if constexpr (is_slab) { return value; }
+    if constexpr (!is_slab) { return value * Size; }
 }
 
 } // namespace database

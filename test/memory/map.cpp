@@ -173,7 +173,6 @@ BOOST_AUTO_TEST_CASE(map__resize__unmapped__false)
     BOOST_REQUIRE(instance.close());
 }
 
-// TODO: externally verify open/closed file size 42.
 BOOST_AUTO_TEST_CASE(map__resize__mapped__expected)
 {
     constexpr auto size = 42u;
@@ -185,11 +184,13 @@ BOOST_AUTO_TEST_CASE(map__resize__mapped__expected)
     BOOST_REQUIRE_EQUAL(instance.allocate(size), zero);
     constexpr auto capacity = size + to_half(size);
     BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
+    BOOST_REQUIRE(instance.resize(to_half(size)));
+    BOOST_REQUIRE_EQUAL(instance.size(), to_half(size));
     BOOST_REQUIRE(instance.unload());
     BOOST_REQUIRE(instance.close());
 }
 
-BOOST_AUTO_TEST_CASE(map__reserve__unmapped__false)
+BOOST_AUTO_TEST_CASE(map__allocate__unmapped__false)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -199,10 +200,9 @@ BOOST_AUTO_TEST_CASE(map__reserve__unmapped__false)
     BOOST_REQUIRE(instance.close());
 }
 
-// TODO: externally verify open file size 150, closed file size 100.
-BOOST_AUTO_TEST_CASE(map__reserve__mapped__expected_capacity)
+BOOST_AUTO_TEST_CASE(map__allocate__mapped__expected_capacity)
 {
-    constexpr auto size = 100;
+    constexpr auto size = 100u;
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     map instance(file);
@@ -215,11 +215,23 @@ BOOST_AUTO_TEST_CASE(map__reserve__mapped__expected_capacity)
     BOOST_REQUIRE(instance.close());
 }
 
-// TODO: externally verify open file size 100, closed file size 42.
-BOOST_AUTO_TEST_CASE(map__reserve__minimum_no_expansion__expected_capacity)
+BOOST_AUTO_TEST_CASE(map__allocate__add_overflow__eof)
 {
-    constexpr auto size = 42;
-    constexpr auto minimum = 100;
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+    map instance(file);
+    BOOST_REQUIRE(instance.open());
+    BOOST_REQUIRE(instance.load());
+    BOOST_REQUIRE_EQUAL(instance.allocate(100), zero);
+    BOOST_REQUIRE_EQUAL(instance.allocate(max_size_t), storage::eof);
+    BOOST_REQUIRE(instance.unload());
+    BOOST_REQUIRE(instance.close());
+}
+
+BOOST_AUTO_TEST_CASE(map__allocate__minimum_no_expansion__expected_capacity)
+{
+    constexpr auto size = 42u;
+    constexpr auto minimum = 100u;
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     map instance(file, minimum, 0);
@@ -232,13 +244,12 @@ BOOST_AUTO_TEST_CASE(map__reserve__minimum_no_expansion__expected_capacity)
     BOOST_REQUIRE(instance.close());
 }
 
-// TODO: externally verify open file size 142, closed file size 100.
-BOOST_AUTO_TEST_CASE(map__reserve__no_minimum_expansion__expected_capacity)
+BOOST_AUTO_TEST_CASE(map__allocate__no_minimum_expansion__expected_capacity)
 {
     // map will fail if minimum is zero.
-    constexpr auto minimum = 1;
-    constexpr auto rate = 42;
-    constexpr auto size = 100;
+    constexpr auto minimum = 1u;
+    constexpr auto rate = 42u;
+    constexpr auto size = 100u;
 
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -265,7 +276,6 @@ BOOST_AUTO_TEST_CASE(map__get__unmapped__false)
     BOOST_REQUIRE(instance.close());
 }
 
-// TODO: externally verify file size.
 BOOST_AUTO_TEST_CASE(map__get__mapped__success)
 {
     const std::string file = TEST_PATH;

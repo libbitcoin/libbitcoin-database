@@ -36,12 +36,9 @@ src_libbitcoin_database_la_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD
 src_libbitcoin_database_la_LIBADD = ${bitcoin_system_LIBS}
 src_libbitcoin_database_la_SOURCES = \
     src/settings.cpp \
-    src/locks/conditional_lock.cpp \
     src/locks/file_lock.cpp \
     src/locks/flush_lock.cpp \
     src/locks/interprocess_lock.cpp \
-    src/locks/scope_lock.cpp \
-    src/locks/sequential_lock.cpp \
     src/memory/file.cpp \
     src/memory/map.cpp \
     src/memory/mman-win32/mman.c \
@@ -156,18 +153,16 @@ include_bitcoin_database_impl_primitives_HEADERS = \
 
 include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks
 include_bitcoin_database_locks_HEADERS = \
-    include/bitcoin/database/locks/conditional_lock.hpp \
     include/bitcoin/database/locks/file_lock.hpp \
     include/bitcoin/database/locks/flush_lock.hpp \
     include/bitcoin/database/locks/interprocess_lock.hpp \
-    include/bitcoin/database/locks/locks.hpp \
-    include/bitcoin/database/locks/scope_lock.hpp \
-    include/bitcoin/database/locks/sequential_lock.hpp
+    include/bitcoin/database/locks/locks.hpp
 
 include_bitcoin_database_memorydir = ${includedir}/bitcoin/database/memory
 include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/accessor.hpp \
     include/bitcoin/database/memory/file.hpp \
+    include/bitcoin/database/memory/finalizer.hpp \
     include/bitcoin/database/memory/map.hpp \
     include/bitcoin/database/memory/memory.hpp \
     include/bitcoin/database/memory/reader.hpp \

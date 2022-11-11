@@ -21,7 +21,7 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/interfaces/memory.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -33,7 +33,8 @@ class iterator
 {
 public:
     /// Caller must keep key value in scope.
-    iterator(const memory_ptr& file, const Link& start, const Key& key) NOEXCEPT;
+    iterator(const memory_ptr& data, const Link& start,
+        const Key& key) NOEXCEPT;
 
     /// Advance to and return next iterator.
     bool next() NOEXCEPT;
@@ -48,7 +49,7 @@ private:
     static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
 
     // These are thread safe.
-    const memory_ptr ptr_;
+    const memory_ptr memory_;
     const Key& key_;
 
     // This is not thread safe.

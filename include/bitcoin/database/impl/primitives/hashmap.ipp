@@ -27,7 +27,7 @@ namespace database {
 
 TEMPLATE
 CLASS::hashmap(storage& header, storage& body, const Link& buckets) NOEXCEPT
-  : header_(header, buckets), body_(body)
+  : header_(header, buckets), manager_(body)
 {
 }
 
@@ -45,7 +45,13 @@ bool CLASS::verify() const NOEXCEPT
 {
     Link count{};
     return header_.verify() && header_.get_body_count(count) &&
-        count == body_.count();
+        count == manager_.count();
+}
+
+TEMPLATE
+bool CLASS::snap() NOEXCEPT
+{
+    return header_.set_body_count(manager_.count());
 }
 
 // query interface
@@ -58,32 +64,62 @@ bool CLASS::exists(const Key& key) const NOEXCEPT
 }
 
 TEMPLATE
+typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
+{
+    return { manager_.get(), header_.top(key), key };
+}
+
+TEMPLATE
+template <typename Record, if_equal<Record::size, Size>>
 Record CLASS::get(const Key& key) const NOEXCEPT
 {
-    return { it(key).self() };
+    return get<Record>(it(key).self());
 }
 
 TEMPLATE
+template <typename Record, if_equal<Record::size, Size>>
 Record CLASS::get(const Link& link) const NOEXCEPT
 {
-    return { at(link) };
+    auto source = at(link);
+    if (!source)
+        return {};
+
+    // Use of stream pointer can be eliminated by cloning at() here.
+    return Record{}.from_data(*source);
 }
 
 TEMPLATE
-typename CLASS::iterable CLASS::it(const Key& key) const NOEXCEPT
+template <typename Record, if_equal<Record::size, Size>>
+bool CLASS::put(const Key& key, const Record& record) NOEXCEPT
 {
-    return { body_.get(), header_.top(key), key };
-}
+    auto sink = push(key, record.count());
+    if (!sink)
+        return false;
 
-TEMPLATE
-bool CLASS::insert(const Key& key, const Record& record) NOEXCEPT
-{
-    // record.size() is slab/byte or record allocation.
-    return record.to_data(push(key, record.size()));
+    // Use of stream pointer can be eliminated by cloning push() here.
+    const auto result = record.to_data(*sink);
+    sink->finalize();
+    return result;
 }
 
 // protected
 // ----------------------------------------------------------------------------
+
+TEMPLATE
+reader_ptr CLASS::at(const Link& link) const NOEXCEPT
+{
+    if (link.is_terminal())
+        return {};
+
+    const auto ptr = manager_.get(link);
+    if (!ptr)
+        return {};
+
+    const auto source = std::make_shared<reader>(ptr);
+    source->skip_bytes(Link::size + array_count<Key>);
+    if constexpr (!is_slab) { source->set_limit(Size); }
+    return source;
+}
 
 TEMPLATE
 reader_ptr CLASS::find(const Key& key) const NOEXCEPT
@@ -96,54 +132,39 @@ reader_ptr CLASS::find(const Key& key) const NOEXCEPT
     if (!source)
         return {};
 
-    source->skip_bytes(array_count<Key>);
-    return source;
-}
-
-TEMPLATE
-reader_ptr CLASS::at(const Link& link) const NOEXCEPT
-{
-    if (link.is_terminal())
-        return {};
-
-    const auto ptr = body_.get(link);
-    if (!ptr)
-        return {};
-
-    const auto source = std::make_shared<reader>(ptr);
-    source->skip_bytes(Link::size);
-    if constexpr (!is_slab) { source->set_limit(Size); }
     return source;
 }
 
 TEMPLATE
 finalizer_ptr CLASS::push(const Key& key, const Link& size) NOEXCEPT
 {
-    using namespace system;
+    const auto value = system::possible_narrow_cast<size_t>(size.value);
+    BC_ASSERT(!system::is_multiply_overflow(value, Size));
     BC_ASSERT(!size.is_terminal());
-    BC_ASSERT(!is_multiply_overflow<size_t>(size, Size));
 
-    const auto item = body_.allocate(size);
+    const auto item = manager_.allocate(value);
     if (item.is_terminal())
         return {};
 
-    const auto ptr = body_.get(item);
+    const auto ptr = manager_.get(item);
     if (!ptr)
         return {};
 
     const auto sink = std::make_shared<finalizer>(ptr);
     const auto index = header_.index(key);
 
+    // Finalization activates the record by updating header and next.
     sink->set_finalizer([this, item, index, ptr]() NOEXCEPT
     {
-        auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
+        auto& next = system::unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
         return header_.push(item, next, index);
     });
 
-    if constexpr (is_slab) { sink->set_limit(size); }
+    // Link (next) commit is deferred until finalize.
+    if constexpr (is_slab) { sink->set_limit(value); }
     sink->skip_bytes(Link::size);
-    if constexpr (!is_slab) { sink->set_limit(size * Size); }
     sink->write_bytes(key);
+    if constexpr (!is_slab) { sink->set_limit(value * Size); }
     return sink;
 }
 

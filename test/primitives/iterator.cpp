@@ -54,6 +54,25 @@ BOOST_AUTO_TEST_CASE(iterator__get_next__empty__terminal)
     BOOST_REQUIRE(iterator.get_next_().is_terminal());
 }
 
+BOOST_AUTO_TEST_CASE(iterator__get_next__overflow__terminal)
+{
+    using link = linkage<4>;
+    using key = data_array<0>;
+    using slab_iterate = iterator_<link, key, 0>;
+
+    constexpr auto start = 13;
+    constexpr key key0{};
+    data_chunk data
+    {
+        0x00, 0x01, 0x02, 0x03,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00
+    };
+    test::storage file{ data };
+    const slab_iterate iterator{ file.get(), start, key0 };
+    BOOST_REQUIRE(iterator.get_next_().is_terminal());
+}
+
 BOOST_AUTO_TEST_CASE(iterator__get__offset0__expected)
 {
     using link = linkage<4>;

@@ -95,7 +95,15 @@ BOOST_AUTO_TEST_CASE(head__index__null_key__expected)
 {
     constexpr key null_key{};
     const auto expected = system::djb2_hash(null_key) % buckets;
-    BOOST_REQUIRE_EQUAL(expected, 9u);
+
+    if constexpr (build_x32)
+    {
+        BOOST_REQUIRE_EQUAL(expected, 13u);
+    }
+    else if constexpr (build_x64)
+    {
+        BOOST_REQUIRE_EQUAL(expected, 9u);
+    }
 
     test::storage store;
     header head{ store, buckets };
@@ -105,6 +113,26 @@ BOOST_AUTO_TEST_CASE(head__index__null_key__expected)
 BOOST_AUTO_TEST_CASE(head__top__link__terminal)
 {
     test::storage store;
+    header head{ store, buckets };
+    BOOST_REQUIRE(head.create());
+    BOOST_REQUIRE(head.top(9).is_terminal());
+}
+
+class nullptr_storage
+  : public test::storage
+{
+public:
+    using storage::storage;
+
+    memory_ptr get(size_t size) const NOEXCEPT override
+    {
+        if (is_zero(size)) return storage::get(size); else return {};
+    }
+};
+
+BOOST_AUTO_TEST_CASE(head__top__nullptr__terminal)
+{
+    nullptr_storage store;
     header head{ store, buckets };
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(head.top(9).is_terminal());

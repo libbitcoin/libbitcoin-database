@@ -21,28 +21,32 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/linkage.hpp>
-#include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
-
-template <typename Link, size_t Size = zero, typename Record = bool>
+    
+/// Caution: reader/writer hold body remap lock until disposed.
+/// These handles should be used for serialization and immediately disposed.
+template <typename Link, size_t Size>
 class arraymap
 {
 public:
     arraymap(storage& body) NOEXCEPT;
 
     /// Query interface.
+
+    template <typename Record, if_equal<Record::size, Size> = true>
     Record get(const Link& link) const NOEXCEPT;
-    bool insert(const Record& record) NOEXCEPT;
+
+    template <typename Record, if_equal<Record::size, Size> = true>
+    bool put(const Record& record) NOEXCEPT;
 
 protected:
-    /// Reader positioned at data (only data).
+    /// Reader positioned at data.
     reader_ptr at(const Link& link) const NOEXCEPT;
 
-    /// Reader positioned at data, size is count for records, bytes for slabs.
+    /// Reader positioned at data.
     writer_ptr push(const Link& size=one) NOEXCEPT;
 
 private:
@@ -56,9 +60,8 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE \
-template <typename Link, size_t Size, typename Record>
-#define CLASS arraymap<Link, Size, Record>
+#define TEMPLATE template <typename Link, size_t Size>
+#define CLASS arraymap<Link, Size>
 
 #include <bitcoin/database/impl/primitives/arraymap.ipp>
 
