@@ -627,6 +627,18 @@ public:
     bool valid{ false };
 };
 
+BOOST_AUTO_TEST_CASE(hashmap__record_get__terminal__invalid)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    const hashmap<link5, key10, little_record::size> instance{ head_store, body_store, buckets };
+
+    const auto record = instance.get<little_record>(link5::terminal);
+    BOOST_REQUIRE(!record.valid);
+}
+
 BOOST_AUTO_TEST_CASE(hashmap__record_get__empty__invalid)
 {
     data_chunk head_file;
