@@ -19,13 +19,10 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/version.hpp>
-#include <bitcoin/database/locks/conditional_lock.hpp>
 #include <bitcoin/database/locks/file_lock.hpp>
 #include <bitcoin/database/locks/flush_lock.hpp>
 #include <bitcoin/database/locks/interprocess_lock.hpp>
 #include <bitcoin/database/locks/locks.hpp>
-#include <bitcoin/database/locks/scope_lock.hpp>
-#include <bitcoin/database/locks/sequential_lock.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/file.hpp>
 #include <bitcoin/database/memory/finalizer.hpp>

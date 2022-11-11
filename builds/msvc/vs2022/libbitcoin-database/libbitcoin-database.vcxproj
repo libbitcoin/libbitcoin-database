@@ -73,12 +73,9 @@
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\src\locks\conditional_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\file_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\flush_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\interprocess_lock.cpp" />
-    <ClCompile Include="..\..\..\..\src\locks\scope_lock.cpp" />
-    <ClCompile Include="..\..\..\..\src\locks\sequential_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\file.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\map.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\mman-win32\mman.c" />
@@ -107,13 +104,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\boost.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\conditional_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\file_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\flush_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\interprocess_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\locks.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\scope_lock.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\sequential_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\file.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\finalizer.hpp" />

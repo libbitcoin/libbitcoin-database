@@ -78,9 +78,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\src\locks\conditional_lock.cpp">
-      <Filter>src\locks</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\locks\file_lock.cpp">
       <Filter>src\locks</Filter>
     </ClCompile>
@@ -88,12 +85,6 @@
       <Filter>src\locks</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\locks\interprocess_lock.cpp">
-      <Filter>src\locks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\locks\scope_lock.cpp">
-      <Filter>src\locks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\locks\sequential_lock.cpp">
       <Filter>src\locks</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\memory\file.cpp">
@@ -176,9 +167,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\conditional_lock.hpp">
-      <Filter>include\bitcoin\database\locks</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\file_lock.hpp">
       <Filter>include\bitcoin\database\locks</Filter>
     </ClInclude>
@@ -189,12 +177,6 @@
       <Filter>include\bitcoin\database\locks</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\locks.hpp">
-      <Filter>include\bitcoin\database\locks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\scope_lock.hpp">
-      <Filter>include\bitcoin\database\locks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\sequential_lock.hpp">
       <Filter>include\bitcoin\database\locks</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp">

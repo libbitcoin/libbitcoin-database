@@ -155,12 +155,9 @@ endif()
 #------------------------------------------------------------------------------
 add_library( ${CANONICAL_LIB_NAME}
     "../../src/settings.cpp"
-    "../../src/locks/conditional_lock.cpp"
     "../../src/locks/file_lock.cpp"
     "../../src/locks/flush_lock.cpp"
     "../../src/locks/interprocess_lock.cpp"
-    "../../src/locks/scope_lock.cpp"
-    "../../src/locks/sequential_lock.cpp"
     "../../src/memory/file.cpp"
     "../../src/memory/map.cpp"
     "../../src/memory/mman-win32/mman.c"
