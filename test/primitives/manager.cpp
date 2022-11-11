@@ -79,6 +79,15 @@ BOOST_AUTO_TEST_CASE(manager__truncate__half_full_slab__true_changed)
     BOOST_REQUIRE_EQUAL(instance.count(), size);
 }
 
+BOOST_AUTO_TEST_CASE(manager__allocate__eof_slab__terminal_unchanged)
+{
+    data_chunk buffer;
+    test::storage file(buffer);
+    manager<linkage<7>, key1, zero> instance(file);
+    BOOST_REQUIRE_EQUAL(instance.allocate(storage::eof), linkage<7>::terminal);
+    BOOST_REQUIRE_EQUAL(instance.count(), zero);
+}
+
 BOOST_AUTO_TEST_CASE(manager__allocate__terminal_slab__terminal_unchanged)
 {
     data_chunk buffer;
