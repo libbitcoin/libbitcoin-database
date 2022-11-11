@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(accessor__offset__overflow__expected)
     accessor instance(mutex);
     const auto buffer = chunk.data();
     instance.assign(buffer, std::next(buffer, offset));
-    BOOST_REQUIRE(is_null(instance.offset(offset)));
+    BOOST_REQUIRE(is_null(instance.offset(add1(offset))));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

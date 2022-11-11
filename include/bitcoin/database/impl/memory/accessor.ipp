@@ -47,7 +47,7 @@ inline void CLASS::assign(uint8_t* begin, uint8_t* end) NOEXCEPT
 TEMPLATE
 inline uint8_t* CLASS::offset(size_t bytes) NOEXCEPT
 {
-    if (!system::is_lesser(bytes, size()))
+    if (system::is_greater(bytes, size()))
         return nullptr;
 
     return std::next(begin_, bytes);
