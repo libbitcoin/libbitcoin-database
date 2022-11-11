@@ -35,6 +35,7 @@ CLASS::arraymap(storage& body) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+template <typename Record, if_equal<Record::size, Size>>
 Record CLASS::get(const Link& link) const NOEXCEPT
 {
     auto source = at(link);
@@ -45,6 +46,7 @@ Record CLASS::get(const Link& link) const NOEXCEPT
 }
 
 TEMPLATE
+template <typename Record, if_equal<Record::size, Size>>
 bool CLASS::insert(const Record& record) NOEXCEPT
 {
     auto sink = push(record.count());
@@ -68,7 +70,7 @@ reader_ptr CLASS::at(const Link& link) const NOEXCEPT
         return {};
 
     const auto source = std::make_shared<reader>(ptr);
-    if constexpr (!is_slab) { source->set_limit(Record::size); }
+    if constexpr (!is_slab) { source->set_limit(Size); }
     return source;
 }
 
@@ -76,7 +78,7 @@ TEMPLATE
 writer_ptr CLASS::push(const Link& size) NOEXCEPT
 {
     const auto value = system::possible_narrow_cast<size_t>(size.value);
-    BC_ASSERT(!system::is_multiply_overflow(value, Record::size));
+    BC_ASSERT(!system::is_multiply_overflow(value, Size));
     BC_ASSERT(!size.is_terminal());
 
     const auto item = body_.allocate(link_to_position(value));
@@ -89,7 +91,7 @@ writer_ptr CLASS::push(const Link& size) NOEXCEPT
 
     const auto sink = std::make_shared<writer>(ptr);
     if constexpr (is_slab) { sink->set_limit(value); }
-    if constexpr (!is_slab) { sink->set_limit(value * Record::size); }
+    if constexpr (!is_slab) { sink->set_limit(value * Size); }
     return sink;
 }
 
@@ -100,10 +102,10 @@ TEMPLATE
 constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
 {
     const auto value = system::possible_narrow_cast<size_t>(link.value);
-    BC_ASSERT(!system::is_multiply_overflow(value, Record::size));
+    BC_ASSERT(!system::is_multiply_overflow(value, Size));
 
     if constexpr (is_slab) { return value; }
-    if constexpr (!is_slab) { return value * Record::size; }
+    if constexpr (!is_slab) { return value * Size; }
 }
 
 } // namespace database

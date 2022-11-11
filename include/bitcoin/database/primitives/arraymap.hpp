@@ -28,14 +28,18 @@ namespace database {
     
 /// Caution: reader/writer hold body remap lock until disposed.
 /// These handles should be used for serialization and immediately disposed.
-template <typename Link, typename Record>
+template <typename Link, size_t Size>
 class arraymap
 {
 public:
     arraymap(storage& body) NOEXCEPT;
 
     /// Query interface.
+
+    template <typename Record, if_equal<Record::size, Size> = true>
     Record get(const Link& link) const NOEXCEPT;
+
+    template <typename Record, if_equal<Record::size, Size> = true>
     bool insert(const Record& record) NOEXCEPT;
 
 protected:
@@ -46,7 +50,7 @@ protected:
     writer_ptr push(const Link& size=one) NOEXCEPT;
 
 private:
-    static constexpr auto is_slab = is_zero(Record::size);
+    static constexpr auto is_slab = is_zero(Size);
     static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
 
     // Thread safe.
@@ -56,8 +60,8 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, typename Record>
-#define CLASS arraymap<Link, Record>
+#define TEMPLATE template <typename Link, size_t Size>
+#define CLASS arraymap<Link, Size>
 
 #include <bitcoin/database/impl/primitives/arraymap.ipp>
 
