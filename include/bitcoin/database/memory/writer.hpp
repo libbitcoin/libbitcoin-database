@@ -40,7 +40,6 @@ public:
     {
     };
 
-    /// data.ptr must not be nullptr and data.ptr->begin() must be non-null.
     map_sink(const memory_ptr& data) NOEXCEPT
       : base(system::limit<typename base::size_type>(data->size())),
         container_(data),
