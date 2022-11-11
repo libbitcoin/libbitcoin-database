@@ -42,7 +42,7 @@ Record CLASS::get(const Link& link) const NOEXCEPT
     if (!source)
         return {};
 
-    // Use of stream pointer can be eliminated cloning at() here.
+    // Use of stream pointer can be eliminated by cloning at() here.
     return Record{}.from_data(*source);
 }
 
@@ -54,7 +54,7 @@ bool CLASS::put(const Record& record) NOEXCEPT
     if (!sink)
         return false;
 
-    // Use of stream pointer can be eliminated cloning push() here.
+    // Use of stream pointer can be eliminated by cloning push() here.
     return record.to_data(*sink);
 }
 

@@ -45,6 +45,9 @@ public:
     /// False if head or body file size incorrect (not thread safe).
     bool verify() const NOEXCEPT;
 
+    /// Set body size into header (not thread safe).
+    bool snap() NOEXCEPT;
+
     /// Query interface, iterator is not thread safe.
 
     bool exists(const Key& key) const NOEXCEPT;

@@ -48,6 +48,12 @@ bool CLASS::verify() const NOEXCEPT
         count == manager_.count();
 }
 
+TEMPLATE
+bool CLASS::snap() NOEXCEPT
+{
+    return header_.set_body_count(manager_.count());
+}
+
 // query interface
 // ----------------------------------------------------------------------------
 
@@ -78,7 +84,7 @@ Record CLASS::get(const Link& link) const NOEXCEPT
     if (!source)
         return {};
 
-    // Use of stream pointer can be eliminated cloning at() here.
+    // Use of stream pointer can be eliminated by cloning at() here.
     return Record{}.from_data(*source);
 }
 
@@ -90,8 +96,10 @@ bool CLASS::put(const Key& key, const Record& record) NOEXCEPT
     if (!sink)
         return false;
 
-    // Use of stream pointer can be eliminated cloning push() here.
-    return record.to_data(*sink);
+    // Use of stream pointer can be eliminated by cloning push() here.
+    const auto result = record.to_data(*sink);
+    sink->finalize();
+    return result;
 }
 
 // protected

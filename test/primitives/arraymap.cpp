@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_get__excess__false)
 {
     data_chunk body_file{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
     test::storage body_store{ body_file };
-    arraymap<link5, record_excess::size> instance{ body_store };
+    const arraymap<link5, record_excess::size> instance{ body_store };
     const auto record = instance.get<record_excess>(zero);
     BOOST_REQUIRE(!record.valid);
 }
@@ -467,7 +467,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_get__excess__true)
 {
     data_chunk body_file{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
     test::storage body_store{ body_file };
-    arraymap<link5, slab_excess::size> instance{ body_store };
+    const arraymap<link5, slab_excess::size> instance{ body_store };
 
     // Excess read allowed to eof here (reader has only knowledge of size).
     const auto record = instance.get<slab_excess>(zero);
@@ -478,7 +478,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_get__file_excess__false)
 {
     data_chunk body_file{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
     test::storage body_store{ body_file };
-    arraymap<link5, file_excess::size> instance{ body_store };
+    const arraymap<link5, file_excess::size> instance{ body_store };
 
     // Excess read disallowed to here (past eof).
     const auto record = instance.get<file_excess>(zero);
@@ -492,5 +492,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_put__excess__false)
     arraymap<link5, slab_excess::size> instance{ body_store };
     BOOST_REQUIRE(!instance.put(slab_excess{ 0xa1b2c3d4_u32, true }));
 }
+
+////std::cout << body_file << std::endl << std::endl;
 
 BOOST_AUTO_TEST_SUITE_END()
