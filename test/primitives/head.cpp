@@ -118,6 +118,26 @@ BOOST_AUTO_TEST_CASE(head__top__link__terminal)
     BOOST_REQUIRE(head.top(9).is_terminal());
 }
 
+class nullptr_storage
+  : public test::storage
+{
+public:
+    using storage::storage;
+
+    memory_ptr get(size_t size) const NOEXCEPT override
+    {
+        if (is_zero(size)) return storage::get(size); else return {};
+    }
+};
+
+BOOST_AUTO_TEST_CASE(head__top__nullptr__terminal)
+{
+    nullptr_storage store;
+    header head{ store, buckets };
+    BOOST_REQUIRE(head.create());
+    BOOST_REQUIRE(head.top(9).is_terminal());
+}
+
 BOOST_AUTO_TEST_CASE(head__top__key__terminal)
 {
     constexpr key null_key{};

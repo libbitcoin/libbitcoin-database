@@ -24,7 +24,7 @@
 namespace test {
 
 // Fake a thread safe memory map implementation.
-class storage final
+class storage
   : public database::storage
 {
 public:
