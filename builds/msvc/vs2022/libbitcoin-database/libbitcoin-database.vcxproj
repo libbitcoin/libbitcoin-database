@@ -80,6 +80,8 @@
     <ClCompile Include="..\..\..\..\src\memory\map.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\mman-win32\mman.c" />
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
+    <ClCompile Include="..\..\..\..\src\store\query_impl.cpp" />
+    <ClCompile Include="..\..\..\..\src\store\store.cpp" />
     <ClCompile Include="..\..\..\..\src\tables\archives\header.cpp" />
     <ClCompile Include="..\..\..\..\src\tables\archives\input.cpp" />
     <ClCompile Include="..\..\..\..\src\tables\archives\output.cpp" />
@@ -125,6 +127,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\primitives.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\store\query.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\store\query_impl.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\store\store.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\header.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\input.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\output.hpp" />

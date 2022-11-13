@@ -30,9 +30,6 @@ namespace database {
 // ipcdetail functions do not throw (but are unannotated).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// construct/destruct
-// ----------------------------------------------------------------------------
-
 interprocess_lock::interprocess_lock(const std::filesystem::path& file) NOEXCEPT
   : file_lock(file), handle_(invalid)
 {
@@ -40,15 +37,12 @@ interprocess_lock::interprocess_lock(const std::filesystem::path& file) NOEXCEPT
 
 interprocess_lock::~interprocess_lock() NOEXCEPT
 {
-    unlock();
+    try_unlock();
 }
-
-// public
-// ----------------------------------------------------------------------------
 
 // Lock is not idempotent, returns false if already locked (or error).
 // This succeeds if no other process has exclusive or sharable ownership.
-bool interprocess_lock::lock() NOEXCEPT
+bool interprocess_lock::try_lock() NOEXCEPT
 {
     // A valid handle guarantees file existence and ownership.
     if (handle_ != invalid)
@@ -75,7 +69,7 @@ bool interprocess_lock::lock() NOEXCEPT
 
 // Unlock is idempotent, returns true if unlocked on return (or success).
 // This may leave the lock file behind, which is not a problem.
-bool interprocess_lock::unlock() NOEXCEPT
+bool interprocess_lock::try_unlock() NOEXCEPT
 {
     // An invalid handle guarantees lack of ownership, but file may exist.
     // Do not delete the file unless we own it.

@@ -16,41 +16,51 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_LOCKS_INTERPROCESS_LOCK_HPP
-#define LIBBITCOIN_DATABASE_LOCKS_INTERPROCESS_LOCK_HPP
+#ifndef LIBBITCOIN_DATABASE_STORE_HPP
+#define LIBBITCOIN_DATABASE_STORE_HPP
 
-#include <filesystem>
-#include <bitcoin/system.hpp>
+#include <shared_mutex>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/locks/file_lock.hpp>
+#include <bitcoin/database/settings.hpp>
+#include <bitcoin/database/locks/locks.hpp>
+#include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/tables/tables.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/// This class is not thread safe, and does not throw.
-class BCD_API interprocess_lock final
-  : file_lock
+class BCD_API store
 {
 public:
-    DELETE4(interprocess_lock);
+	DELETE5(store);
 
-    /// Construction does not touch the file.
-    interprocess_lock(const std::filesystem::path& file) NOEXCEPT;
+	/// Construct a store from settings.
+	store(const settings& configuration) NOEXCEPT;
 
-    /// Destruction calls try_unlock.
-    ~interprocess_lock() NOEXCEPT;
+	/// Create or open the set of tables, set locks.
+	bool open() NOEXCEPT;
 
-    /// Creates the file and acquires exclusive access.
-    /// Returns false if failed to acquire lock or lock already held.
-    bool try_lock() NOEXCEPT;
+	/// Snapshot the set of tables.
+	/// Pause writes, set body sizes, flush files, copy headers, swap backups.
+	bool snapshot() NOEXCEPT;
 
-    /// Releases access (if locked) and deletes the file.
-    /// Returns true if lock not held or succesfully unlocked and deleted.
-    bool try_unlock() NOEXCEPT;
+	/// Flush and close the set of tables, clear locks.
+	bool close() NOEXCEPT;
 
 private:
-    file_handle_t handle_;
+	// This is thread safe.
+	const settings& configuration_;
+
+	// These are protected by mutex.
+	flush_lock flush_lock_;
+	interprocess_lock process_lock_;
+	boost::upgrade_mutex transactor_mutex_;
+
+	// Header table.
+	map header_head_;
+	map header_body_;
+	header::table header_;
 };
 
 } // namespace database

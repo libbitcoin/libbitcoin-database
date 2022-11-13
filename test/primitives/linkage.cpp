@@ -361,4 +361,20 @@ BOOST_AUTO_TEST_CASE(linkage__construct_bytes__8__expected)
 	BOOST_REQUIRE_EQUAL(instance, expected);
 }
 
+BOOST_AUTO_TEST_CASE(linkage__equality__equal__expected)
+{
+	const linkage<8> left{ data_array<8>{ 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01 } };
+	const linkage<8> right{ data_array<8>{ 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01 } };
+	BOOST_REQUIRE(left == right);
+	BOOST_REQUIRE(!(left != right));
+}
+
+BOOST_AUTO_TEST_CASE(linkage__equality__not_equal__expected)
+{
+	const linkage<8> left{ data_array<8>{ 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x00 } };
+	const linkage<8> right{ data_array<8>{ 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01 } };
+	BOOST_REQUIRE(left != right);
+	BOOST_REQUIRE(!(left == right));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

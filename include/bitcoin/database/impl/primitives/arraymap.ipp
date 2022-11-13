@@ -43,6 +43,7 @@ Record CLASS::get(const Link& link) const NOEXCEPT
         return {};
 
     // Use of stream pointer can be eliminated by cloning at() here.
+    // RECORD.FROM_DATA MUST NOT EXTEND SOURCE LIFETIME - DEADLOCK RISK.
     return Record{}.from_data(*source);
 }
 
@@ -55,6 +56,7 @@ bool CLASS::put(const Record& record) NOEXCEPT
         return false;
 
     // Use of stream pointer can be eliminated by cloning push() here.
+    // RECORD.TO_DATA MUST NOT EXTEND SOURCE LIFETIME - DEADLOCK RISK.
     return record.to_data(*sink);
 }
 
@@ -83,7 +85,7 @@ writer_ptr CLASS::push(const Link& size) NOEXCEPT
     BC_ASSERT(!system::is_multiply_overflow(value, Size));
     BC_ASSERT(!size.is_terminal());
 
-    const auto item = body_.allocate(link_to_position(value));
+    const auto item = body_.allocate(link_to_position(size));
     if (item == storage::eof)
         return {};
 

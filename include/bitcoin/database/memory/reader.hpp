@@ -27,8 +27,9 @@
 
 namespace libbitcoin {
 namespace database {
-
+    
 /// Source for ios::stream, copies bytes from memory_ptr.
+/// MEMBER MEMORY_PTR HOLDS SHARED LOCK ON STORAGE REMAP, DO NOT EXTEND LIFETIME.
 class map_source
   : public system::device<memory>
 {

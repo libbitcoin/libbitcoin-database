@@ -64,6 +64,7 @@ bool CLASS::exists(const Key& key) const NOEXCEPT
 }
 
 TEMPLATE
+// ITERATOR LIFETIME MUST NOT BE EXTENDED BEYOND ENUMERATION - DEADLOCK RISK.
 typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 {
     return { manager_.get(), header_.top(key), key };
@@ -85,6 +86,7 @@ Record CLASS::get(const Link& link) const NOEXCEPT
         return {};
 
     // Use of stream pointer can be eliminated by cloning at() here.
+    // RECORD.FROM_DATA MUST NOT EXTEND SOURCE LIFETIME - DEADLOCK RISK.
     return Record{}.from_data(*source);
 }
 
@@ -97,6 +99,7 @@ bool CLASS::put(const Key& key, const Record& record) NOEXCEPT
         return false;
 
     // Use of stream pointer can be eliminated by cloning push() here.
+    // RECORD.TO_DATA MUST NOT EXTEND SOURCE LIFETIME - DEADLOCK RISK.
     const auto result = record.to_data(*sink);
     sink->finalize();
     return result;
@@ -142,7 +145,7 @@ finalizer_ptr CLASS::push(const Key& key, const Link& size) NOEXCEPT
     BC_ASSERT(!system::is_multiply_overflow(value, Size));
     BC_ASSERT(!size.is_terminal());
 
-    const auto item = manager_.allocate(value);
+    const auto item = manager_.allocate(size);
     if (item.is_terminal())
         return {};
 

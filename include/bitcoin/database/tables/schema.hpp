@@ -26,7 +26,7 @@ namespace libbitcoin {
 namespace database {
 	
 template <size_t Size>
-using keying = system::data_array<Size>;
+using search = system::data_array<Size>;
 using hash_digest = system::hash_digest;
 
 namespace schema
@@ -51,8 +51,8 @@ namespace schema
 
 	namespace context
 	{
-		constexpr size_t flags = c::flags;
 		constexpr size_t height = c::block;
+		constexpr size_t flags = c::flags;
 		constexpr size_t mtp = sizeof(uint32_t);
 
 		constexpr size_t bytes = height + flags + mtp;

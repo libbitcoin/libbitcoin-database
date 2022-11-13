@@ -18,8 +18,6 @@
  */
 #include "test.hpp"
 
-using namespace bc;
-
 BOOST_AUTO_TEST_SUITE(settings_tests)
 
 // constructors

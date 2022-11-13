@@ -16,37 +16,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_LOCKS_FILE_LOCK_HPP
-#define LIBBITCOIN_DATABASE_LOCKS_FILE_LOCK_HPP
+#ifndef LIBBITCOIN_DATABASE_QUERY_HPP
+#define LIBBITCOIN_DATABASE_QUERY_HPP
 
-#include <string>
-#include <filesystem>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
-    
-/// This class is not thread safe, and does not throw.
-class BCD_API file_lock
+
+struct query
 {
-public:
-    /// Construction does not touch the file.
-    file_lock(const std::filesystem::path& file) NOEXCEPT;
+	/// TODO: define all record types.
+	struct foo {};
 
-    std::string file() const NOEXCEPT;
-
-    /// True if file exists.
-    bool exists() const NOEXCEPT;
-
-    /// True if file exists or was created.
-    bool create() NOEXCEPT;
-
-    /// True if file does not exist or was deleted.
-    bool destroy() NOEXCEPT;
-
-private:
-    const std::filesystem::path file_;
+	/// TODO: define all record queries.
+	virtual foo get_foo() const NOEXCEPT = 0;
 };
 
 } // namespace database

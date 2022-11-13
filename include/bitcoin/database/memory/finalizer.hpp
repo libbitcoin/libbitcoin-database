@@ -29,6 +29,7 @@ namespace libbitcoin {
 namespace database {
 
 /// A byte flipper with finalization extentions, that accepts an iostream.
+/// MEMBER MEMORY_PTR HOLDS SHARED LOCK ON STORAGE REMAP, DO NOT EXTEND LIFETIME.
 template <typename IOStream = std::iostream>
 class flipper
   : public system::byte_flipper<IOStream>

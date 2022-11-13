@@ -80,6 +80,7 @@ public:
     size_t allocate(size_t chunk) NOEXCEPT override;
 
     /// Get r/w access to start/offset of memory map (or null).
+    /// MEMORY OBJECT HOLDS SHARED LOCK ON STORAGE REMAP, DO NOT EXTEND LIFETIME.
     memory_ptr get(size_t offset=zero) const NOEXCEPT override;
 
 protected:

@@ -26,46 +26,115 @@
 
 namespace libbitcoin {
 namespace database {
+namespace header {
 
-////namespace schema
-////{
-////	namespace header
-////	{
-////		class record
-////		{
-////			////bool from_data(reader& source) NOEXCEPT
-////			////{
-////			////}
-////
-////			////bool to_data(writer& sink) NOEXCEPT
-////			////{
-////			////}
-////
-////			const keying<pk> parent;
-////			const uint32_t version;
-////			const uint32_t time;
-////			const uint32_t bits;
-////			const uint32_t nonce;
-////			const hash_digest root;
-////		};
-////
-////		using element = iterator<linkage<pk>, keying<sk>, bytes>;
-////	}
-////}
+BC_PUSH_WARNING(NO_METHOD_HIDING)
 
-////class BCD_API header
-////  : public hashmap<schema::header::element>
-////{
-////public:
-////	DEFAULT5(header);
-////
-////	using hashmap = hashmap;
-////
-////
-////
-////private:
-////};
+struct record
+{
+	// Sizes.
+	static constexpr size_t pk = schema::c::block;
+	static constexpr size_t sk = schema::c::identity;
+	static constexpr size_t size =
+		schema::c::block +
+		schema::c::flags +
+		sizeof(uint32_t) +
+		pk +
+		sizeof(uint32_t) +
+		sizeof(uint32_t) +
+		sizeof(uint32_t) +
+		sizeof(uint32_t) +
+		schema::c::identity;
+	static constexpr size_t total = pk + sk + size;
+	static_assert(header::record::size == 62u);
+	static_assert(header::record::total == 97u);
+	static constexpr linkage<pk> count() NOEXCEPT { return 1; }
 
+	// Fields.
+	uint32_t height;
+	uint32_t flags;
+	uint32_t mtp;
+	uint32_t parent_fk;
+	uint32_t version;
+	uint32_t time;
+	uint32_t bits;
+	uint32_t nonce;
+	hash_digest root;
+	bool valid{ false };
+
+	// Serialializers.
+
+	inline record from_data(reader& source) NOEXCEPT
+	{
+		height    = source.read_3_bytes_little_endian();
+		flags     = source.read_4_bytes_little_endian();
+		mtp       = source.read_4_bytes_little_endian();
+		parent_fk = source.read_3_bytes_little_endian();
+		version   = source.read_4_bytes_little_endian();
+		time      = source.read_4_bytes_little_endian();
+		bits      = source.read_4_bytes_little_endian();
+		nonce     = source.read_4_bytes_little_endian();
+		root      = source.read_hash();
+		BC_ASSERT(source.get_position() == total);
+		valid = source;
+		return *this;
+	}
+
+	inline bool to_data(finalizer& sink) const NOEXCEPT
+	{
+		sink.write_3_bytes_little_endian(height);
+		sink.write_4_bytes_little_endian(flags);
+		sink.write_4_bytes_little_endian(mtp);
+		sink.write_3_bytes_little_endian(parent_fk);
+		sink.write_4_bytes_little_endian(version);
+		sink.write_4_bytes_little_endian(time);
+		sink.write_4_bytes_little_endian(bits);
+		sink.write_4_bytes_little_endian(nonce);
+		sink.write_bytes(root);
+		BC_ASSERT(sink.get_position() == total);
+		return sink;
+	}
+};
+
+// Derivations are non-virtual, method-hiding.
+// Generally only readers are extended, as there are no write updates.
+// Use non-derivation to subset properties (must expose size).
+// Use derivation to extend properties.
+
+struct record_height
+{
+	static constexpr size_t size = record::size;
+
+	inline record_height from_data(reader& source) NOEXCEPT
+	{
+		height = source.read_3_bytes_little_endian();
+		valid = source;
+		return *this;
+	}
+
+	uint32_t height;
+	bool valid{ false };
+};
+
+struct record_with_key
+  : public record
+{
+	inline record_with_key from_data(reader& source) NOEXCEPT
+	{
+		source.rewind_bytes(record::sk);
+		key = source.read_hash();
+		record::from_data(source);
+		return *this;
+	}
+
+	hash_digest key;
+};
+
+class BCD_API table : public HASHMAP { public: using HASHMAP::hashmap; };
+
+BC_POP_WARNING()
+
+} // namespace header
 } // namespace database
 } // namespace libbitcoin
 

@@ -16,40 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/locks/flush_lock.hpp>
+#include "../test.hpp"
 
-#include <filesystem>
-#include <bitcoin/system.hpp>
-#include <bitcoin/database/define.hpp>
+BOOST_AUTO_TEST_SUITE(query_tests)
 
-namespace libbitcoin {
-namespace database {
-    
-flush_lock::flush_lock(const std::filesystem::path& file) NOEXCEPT
-  : file_lock(file)
+BOOST_AUTO_TEST_CASE(query_test)
 {
+    BOOST_REQUIRE(true);
 }
 
-flush_lock::~flush_lock() NOEXCEPT
-{
-    try_unlock();
-}
-
-bool flush_lock::try_lock() NOEXCEPT
-{
-    if (exists())
-        return false;
-
-    return create();
-}
-
-bool flush_lock::try_unlock() NOEXCEPT
-{
-    if (!exists())
-        return false;
-
-    return destroy();
-}
-
-} // namespace database
-} // namespace libbitcoin
+BOOST_AUTO_TEST_SUITE_END()

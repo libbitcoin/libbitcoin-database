@@ -28,6 +28,7 @@ namespace database {
 
 /// This class is not thread safe.
 /// Size non-zero implies record manager (ordinal record links).
+/// MEMBER MEMORY_PTR HOLDS SHARED LOCK ON STORAGE REMAP, DO NOT EXTEND LIFETIME.
 template <typename Link, typename Key, size_t Size = zero>
 class iterator
 {

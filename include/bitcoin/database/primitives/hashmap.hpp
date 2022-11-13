@@ -50,26 +50,35 @@ public:
 
     /// Query interface, iterator is not thread safe.
 
+    /// True if an instance of object with key exists.
     bool exists(const Key& key) const NOEXCEPT;
+
+    /// ITERATOR HOLDS SHARED LOCK ON STORAGE REMAP.
     iterator it(const Key& key) const NOEXCEPT;
 
+    /// RECORD.FROM_DATA OBTAINS SHARED LOCK ON STORAGE REMAP.
     template <typename Record, if_equal<Record::size, Size> = true>
     Record get(const Key& key) const NOEXCEPT;
 
+    /// RECORD.FROM_DATA OBTAINS SHARED LOCK ON STORAGE REMAP.
     template <typename Record, if_equal<Record::size, Size> = true>
     Record get(const Link& link) const NOEXCEPT;
 
+    /// RECORD.TO_DATA OBTAINS SHARED LOCK ON STORAGE REMAP.
     template <typename Record, if_equal<Record::size, Size> = true>
     bool put(const Key& key, const Record& record) NOEXCEPT;
 
 protected:
     /// Reader positioned at key.
+    /// READER HOLDS SHARED LOCK ON STORAGE REMAP.
     reader_ptr at(const Link& link) const NOEXCEPT;
 
     /// Reader positioned at data.
+    /// READER HOLDS SHARED LOCK ON STORAGE REMAP.
     reader_ptr find(const Key& key) const NOEXCEPT;
 
     /// Reader positioned at data.
+    /// WRITER HOLDS SHARED LOCK ON STORAGE REMAP.
     finalizer_ptr push(const Key& key, const Link& size=one) NOEXCEPT;
 
 private:
@@ -83,6 +92,9 @@ private:
     // Thread safe.
     manager manager_;
 };
+
+// Use to standardize hashmap declarations, assumes "record" within namespace.
+#define HASHMAP hashmap<linkage<record::pk>, search<record::sk>, record::size>
 
 } // namespace database
 } // namespace libbitcoin

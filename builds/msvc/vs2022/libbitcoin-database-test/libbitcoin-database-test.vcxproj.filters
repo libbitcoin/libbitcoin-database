@@ -19,17 +19,20 @@
     <Filter Include="src\primitives">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables">
+    <Filter Include="src\store">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\archives">
+    <Filter Include="src\tables">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\caches">
+    <Filter Include="src\tables\archives">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000006}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\indexes">
+    <Filter Include="src\tables\caches">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000007}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\tables\indexes">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000008}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -77,6 +80,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\storage.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\store\query_impl.cpp">
+      <Filter>src\store</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\store\store.cpp">
+      <Filter>src\store</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\archives\header.cpp">
       <Filter>src\tables\archives</Filter>

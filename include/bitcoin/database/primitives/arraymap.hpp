@@ -36,17 +36,21 @@ public:
 
     /// Query interface.
 
+    /// RECORD.FROM_DATA OBTAINS SHARED LOCK ON STORAGE REMAP.
     template <typename Record, if_equal<Record::size, Size> = true>
     Record get(const Link& link) const NOEXCEPT;
 
+    /// RECORD.TO_DATA OBTAINS SHARED LOCK ON STORAGE REMAP.
     template <typename Record, if_equal<Record::size, Size> = true>
     bool put(const Record& record) NOEXCEPT;
 
 protected:
     /// Reader positioned at data.
+    /// READER HOLDS SHARED LOCK ON STORAGE REMAP.
     reader_ptr at(const Link& link) const NOEXCEPT;
 
     /// Reader positioned at data.
+    /// WRITER HOLDS SHARED LOCK ON STORAGE REMAP.
     writer_ptr push(const Link& size=one) NOEXCEPT;
 
 private:
@@ -56,6 +60,9 @@ private:
     // Thread safe.
     storage& body_;
 };
+
+// Use to standardize arraymap declarations, assumes "record" within namespace.
+#define ARRAYMAP arraymap<linkage<record::pk>, record::size>
 
 } // namespace database
 } // namespace libbitcoin

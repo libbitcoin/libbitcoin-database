@@ -43,6 +43,8 @@ src_libbitcoin_database_la_SOURCES = \
     src/memory/map.cpp \
     src/memory/mman-win32/mman.c \
     src/memory/mman-win32/mman.h \
+    src/store/query_impl.cpp \
+    src/store/store.cpp \
     src/tables/archives/header.cpp \
     src/tables/archives/input.cpp \
     src/tables/archives/output.cpp \
@@ -91,6 +93,8 @@ test_libbitcoin_database_test_SOURCES = \
     test/primitives/iterator.cpp \
     test/primitives/linkage.cpp \
     test/primitives/manager.cpp \
+    test/store/query_impl.cpp \
+    test/store/store.cpp \
     test/tables/archives/header.cpp \
     test/tables/archives/input.cpp \
     test/tables/archives/output.cpp \
@@ -182,6 +186,12 @@ include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/linkage.hpp \
     include/bitcoin/database/primitives/manager.hpp \
     include/bitcoin/database/primitives/primitives.hpp
+
+include_bitcoin_database_storedir = ${includedir}/bitcoin/database/store
+include_bitcoin_database_store_HEADERS = \
+    include/bitcoin/database/store/query.hpp \
+    include/bitcoin/database/store/query_impl.hpp \
+    include/bitcoin/database/store/store.hpp
 
 include_bitcoin_database_tablesdir = ${includedir}/bitcoin/database/tables
 include_bitcoin_database_tables_HEADERS = \

@@ -33,12 +33,13 @@ struct flush_lock_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(flush_lock_tests, flush_lock_setup_fixture)
 
-BOOST_AUTO_TEST_CASE(flush_lock__try_lock__not_exists__true)
+BOOST_AUTO_TEST_CASE(flush_lock__try_lock__not_exists__true_created)
 {
     BOOST_REQUIRE(!test::exists(TEST_PATH));
 
     flush_lock instance(TEST_PATH);
     BOOST_REQUIRE(instance.try_lock());
+    BOOST_REQUIRE(test::exists(TEST_PATH));
 }
 
 BOOST_AUTO_TEST_CASE(flush_lock__try_lock__exists__false)
@@ -49,37 +50,20 @@ BOOST_AUTO_TEST_CASE(flush_lock__try_lock__exists__false)
     BOOST_REQUIRE(!instance.try_lock());
 }
 
-BOOST_AUTO_TEST_CASE(flush_lock__lock__not_exists__true_created)
+BOOST_AUTO_TEST_CASE(flush_lock__try_unlock__not_exists__false)
 {
     BOOST_REQUIRE(!test::exists(TEST_PATH));
 
     flush_lock instance(TEST_PATH);
-    BOOST_REQUIRE(instance.lock());
-    BOOST_REQUIRE(test::exists(TEST_PATH));
+    BOOST_REQUIRE(!instance.try_unlock());
 }
 
-BOOST_AUTO_TEST_CASE(flush_lock__lock__exists__false)
+BOOST_AUTO_TEST_CASE(flush_lock__try_unlock__exists__true_deleted)
 {
     BOOST_REQUIRE(test::create(TEST_PATH));
 
     flush_lock instance(TEST_PATH);
-    BOOST_REQUIRE(!instance.lock());
-}
-
-BOOST_AUTO_TEST_CASE(flush_lock__unlock__not_exists__false)
-{
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
-
-    flush_lock instance(TEST_PATH);
-    BOOST_REQUIRE(!instance.unlock());
-}
-
-BOOST_AUTO_TEST_CASE(flush_lock__unlock__exists__true_deleted)
-{
-    BOOST_REQUIRE(test::create(TEST_PATH));
-
-    flush_lock instance(TEST_PATH);
-    BOOST_REQUIRE(instance.unlock());
+    BOOST_REQUIRE(instance.try_unlock());
     BOOST_REQUIRE(!test::exists(TEST_PATH));
 }
 
