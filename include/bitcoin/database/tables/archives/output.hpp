@@ -36,7 +36,7 @@ struct slab
 {
     // Sizes.
     static constexpr size_t pk = schema::c::put;
-    static constexpr size_t size = zero;
+    static constexpr size_t size = max_size_t;
     linkage<pk> count() const NOEXCEPT
     {
         return
