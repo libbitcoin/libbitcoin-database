@@ -25,51 +25,51 @@ namespace database {
 
 store::store(const settings& configuration) NOEXCEPT
   : configuration_(configuration),
-	flush_lock_(configuration.directory),
-	process_lock_(configuration.directory),
-	header_head_(configuration.directory),
-	header_body_(configuration.directory),
-	header(header_head_, header_body_, 42)
+    flush_lock_(configuration.directory),
+    process_lock_(configuration.directory),
+    header_head_(configuration.directory),
+    header_body_(configuration.directory),
+    header(header_head_, header_body_, 42)
 {
 }
 
 bool store::open() NOEXCEPT
 {
-	// TODO: log/report transactor/process/flush/open failure code.
-	if (transactor_mutex_.try_lock())
-	{
-		const auto result = process_lock_.try_lock() && flush_lock_.try_lock();
-		// TODO: if (result) open tables.
-		transactor_mutex_.unlock();
-		return result;
-	}
+    // TODO: log/report transactor/process/flush/open failure code.
+    if (transactor_mutex_.try_lock())
+    {
+        const auto result = process_lock_.try_lock() && flush_lock_.try_lock();
+        // TODO: if (result) open tables.
+        transactor_mutex_.unlock();
+        return result;
+    }
 
-	return false;
+    return false;
 }
 
 bool store::snapshot() NOEXCEPT
 {
-	while (!transactor_mutex_.try_lock_for(boost::chrono::seconds(1)))
-	{
-		// TODO: log deadlock_hint
-	}
+    while (!transactor_mutex_.try_lock_for(boost::chrono::seconds(1)))
+    {
+        // TODO: log deadlock_hint
+    }
 
-	transactor_mutex_.unlock();
-	return true;
+    transactor_mutex_.unlock();
+    return true;
 }
 
 bool store::close() NOEXCEPT
 {
-	// TODO: log/report transactor/close/process/flush failure code.
-	if (transactor_mutex_.try_lock())
-	{
-		// TODO: close tables.
-		const auto result = process_lock_.try_unlock() && flush_lock_.try_unlock();
-		transactor_mutex_.unlock();
-		return result;
-	}
+    // TODO: log/report transactor/close/process/flush failure code.
+    if (transactor_mutex_.try_lock())
+    {
+        // TODO: close tables.
+        const auto result = process_lock_.try_unlock() && flush_lock_.try_unlock();
+        transactor_mutex_.unlock();
+        return result;
+    }
 
-	return false;
+    return false;
 }
 
 } // namespace database

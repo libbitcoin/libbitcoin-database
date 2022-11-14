@@ -29,10 +29,10 @@ namespace database {
 class BCD_API query
 {
 public:
-	query(store& store) NOEXCEPT;
+    query(store& store) NOEXCEPT;
 
 private:
-	store& store_;
+    store& store_;
 };
 
 } // namespace database

@@ -20,7 +20,7 @@
 #define LIBBITCOIN_DATABASE_BOOST_HPP
 
 #if defined(HAVE_MSC)
-	#include <windows.h>
+    #include <windows.h>
 #endif
 #include <filesystem>
 #include <boost/interprocess/detail/os_file_functions.hpp>

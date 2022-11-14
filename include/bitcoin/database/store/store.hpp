@@ -33,64 +33,64 @@ namespace database {
 class BCD_API store
 {
 public:
-	DELETE5(store);
+    DELETE5(store);
 
-	/// Construct a store from settings.
-	store(const settings& configuration) NOEXCEPT;
+    /// Construct a store from settings.
+    store(const settings& configuration) NOEXCEPT;
 
-	/// Create or open the set of tables, set locks.
-	bool open() NOEXCEPT;
+    /// Create or open the set of tables, set locks.
+    bool open() NOEXCEPT;
 
-	/// Snapshot the set of tables.
-	/// Pause writes, set body sizes, flush files, copy headers, swap backups.
-	bool snapshot() NOEXCEPT;
+    /// Snapshot the set of tables.
+    /// Pause writes, set body sizes, flush files, copy headers, swap backups.
+    bool snapshot() NOEXCEPT;
 
-	/// Flush and close the set of tables, clear locks.
-	bool close() NOEXCEPT;
+    /// Flush and close the set of tables, clear locks.
+    bool close() NOEXCEPT;
 
 protected:
-	header::table header;
-	////point::table point;
-	////input::table input;
-	////output::table output;
-	////puts::table puts;
-	////transaction::table transaction;
-	////txs::table txs;
+    header::table header;
+    ////point::table point;
+    ////input::table input;
+    ////output::table output;
+    ////puts::table puts;
+    ////transaction::table transaction;
+    ////txs::table txs;
 
 private:
-	// This is thread safe.
-	const settings& configuration_;
+    // This is thread safe.
+    const settings& configuration_;
 
-	// These are protected by mutex.
-	flush_lock flush_lock_;
-	interprocess_lock process_lock_;
-	boost::upgrade_mutex transactor_mutex_;
+    // These are protected by mutex.
+    flush_lock flush_lock_;
+    interprocess_lock process_lock_;
+    boost::upgrade_mutex transactor_mutex_;
 
-	// record hashmap
-	map header_head_;
-	map header_body_;
+    // record hashmap
+    map header_head_;
+    map header_body_;
 
-	////// record hashmap
-	////map point_head_;
-	////map point_body_;
+    ////// record hashmap
+    ////map point_head_;
+    ////map point_body_;
 
-	////// slab hashmap
-	////map input_head_;
-	////map input_body_;
+    ////// slab hashmap
+    ////map input_head_;
+    ////map input_body_;
 
-	////// blob
-	////map output_body_;
+    ////// blob
+    ////map output_body_;
 
-	////// array
-	////map puts_body_;
+    ////// array
+    ////map puts_body_;
 
-	////// record hashmap
-	////map transaction_head_;
-	////map transaction_body_;
+    ////// record hashmap
+    ////map transaction_head_;
+    ////map transaction_body_;
 
-	////// slab hashmap
-	////map txs_head_;
-	////map txs_body_;
+    ////// slab hashmap
+    ////map txs_head_;
+    ////map txs_body_;
 };
 
 } // namespace database

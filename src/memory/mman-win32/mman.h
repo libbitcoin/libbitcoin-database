@@ -38,7 +38,7 @@ extern "C" {
 
 void* mmap(void* addr, size_t len, int prot, int flags, int fd, oft__ off);
 void* mremap_(void* addr, size_t old_size, size_t new_size, int prot,
-	int flags, int fd);
+    int flags, int fd);
 int munmap(void* addr, size_t len);
 int madvise(void* addr, size_t len, int advice);
 int mprotect(void* addr, size_t len, int prot);

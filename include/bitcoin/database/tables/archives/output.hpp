@@ -34,46 +34,46 @@ BC_PUSH_WARNING(NO_METHOD_HIDING)
 
 struct slab
 {
-	// Sizes.
-	static constexpr size_t pk = schema::c::put;
-	static constexpr size_t size = zero;
-	linkage<pk> count() const NOEXCEPT
-	{
-		return
-			variable_size(value) +
-			schema::c::foreign_point +
-			script.serialized_size(true);
-	}
+    // Sizes.
+    static constexpr size_t pk = schema::c::put;
+    static constexpr size_t size = zero;
+    linkage<pk> count() const NOEXCEPT
+    {
+        return
+            variable_size(value) +
+            schema::c::foreign_point +
+            script.serialized_size(true);
+    }
 
-	// Fields.
-	uint32_t transaction_fk;
-	uint32_t index;
-	uint64_t value;
-	system::chain::script script;
-	bool valid{ false };
+    // Fields.
+    uint32_t transaction_fk;
+    uint32_t index;
+    uint64_t value;
+    system::chain::script script;
+    bool valid{ false };
 
-	// Serialializers.
+    // Serialializers.
 
-	inline slab from_data(reader& source) NOEXCEPT
-	{
-		transaction_fk = source.read_4_bytes_little_endian();
-		index = source.read_3_bytes_little_endian();
-		value = source.read_variable();
-		script = system::chain::script(source, true);
-		BC_ASSERT(source.get_position() == count());
-		valid = source;
-		return *this;
-	}
+    inline slab from_data(reader& source) NOEXCEPT
+    {
+        transaction_fk = source.read_4_bytes_little_endian();
+        index = source.read_3_bytes_little_endian();
+        value = source.read_variable();
+        script = system::chain::script(source, true);
+        BC_ASSERT(source.get_position() == count());
+        valid = source;
+        return *this;
+    }
 
-	inline bool to_data(finalizer& sink) const NOEXCEPT
-	{
-		sink.write_4_bytes_little_endian(transaction_fk);
-		sink.write_3_bytes_little_endian(index);
-		sink.write_variable(value);
-		script.to_data(sink, true);
-		BC_ASSERT(sink.get_position() == count());
-		return sink;
-	}
+    inline bool to_data(finalizer& sink) const NOEXCEPT
+    {
+        sink.write_4_bytes_little_endian(transaction_fk);
+        sink.write_3_bytes_little_endian(index);
+        sink.write_variable(value);
+        script.to_data(sink, true);
+        BC_ASSERT(sink.get_position() == count());
+        return sink;
+    }
 };
 
 class BCD_API table : public SLABMAP { public: using SLABMAP::arraymap; };

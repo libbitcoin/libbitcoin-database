@@ -112,14 +112,14 @@ BOOST_AUTO_TEST_CASE(file__rename__exists__true)
 
 BOOST_AUTO_TEST_CASE(file__open__missing__failure)
 {
-	BOOST_REQUIRE_EQUAL(file::open(TEST_PATH), -1);
+    BOOST_REQUIRE_EQUAL(file::open(TEST_PATH), -1);
 }
 
 BOOST_AUTO_TEST_CASE(file__close__opened__true)
 {
     BOOST_REQUIRE(test::create(TEST_PATH));
     const auto descriptor = file::open(TEST_PATH);
-	BOOST_REQUIRE_NE(descriptor, file::invalid);
+    BOOST_REQUIRE_NE(descriptor, file::invalid);
     BOOST_REQUIRE(file::close(descriptor));
 }
 
