@@ -63,7 +63,7 @@ TEMPLATE
 bool CLASS::is_match() const NOEXCEPT
 {
     using namespace system;
-    BC_ASSERT(!is_multiply_overflow(link_to_position(link_), Link::size));
+    BC_ASSERT(!is_add_overflow(link_to_position(link_), Link::size));
 
     if (!memory_)
         return false;
