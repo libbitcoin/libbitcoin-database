@@ -62,7 +62,8 @@ private:
 };
 
 // Use to standardize arraymap declarations, assumes "record" within namespace.
-#define ARRAYMAP arraymap<linkage<record::pk>, record::size>
+#define RECORDMAP arraymap<linkage<record::pk>, record::size>
+#define SLABMAP arraymap<linkage<slab::pk>, slab::size>
 
 } // namespace database
 } // namespace libbitcoin

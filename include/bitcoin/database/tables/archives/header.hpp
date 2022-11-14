@@ -130,7 +130,7 @@ struct record_with_key
 	hash_digest key;
 };
 
-class BCD_API table : public HASHMAP { public: using HASHMAP::hashmap; };
+class BCD_API table : public RECORDHASHMAP { public: using RECORDHASHMAP::hashmap; };
 
 BC_POP_WARNING()
 

@@ -27,9 +27,9 @@ store::store(const settings& configuration) NOEXCEPT
   : configuration_(configuration),
 	flush_lock_(configuration.directory),
 	process_lock_(configuration.directory),
-	header_head_(configuration.directory, configuration.block_table_size),
-	header_body_(configuration.directory, configuration.block_table_size),
-	header_(header_head_, header_body_, configuration.block_table_buckets)
+	header_head_(configuration.directory),
+	header_body_(configuration.directory),
+	header(header_head_, header_body_, 42)
 {
 }
 

@@ -188,6 +188,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\output.hpp">
       <Filter>include\bitcoin\database\tables\archives</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\point.hpp">
+      <Filter>include\bitcoin\database\tables\archives</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\puts.hpp">
       <Filter>include\bitcoin\database\tables\archives</Filter>
     </ClInclude>

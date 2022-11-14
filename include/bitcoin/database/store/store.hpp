@@ -48,6 +48,15 @@ public:
 	/// Flush and close the set of tables, clear locks.
 	bool close() NOEXCEPT;
 
+protected:
+	header::table header;
+	////point::table point;
+	////input::table input;
+	////output::table output;
+	////puts::table puts;
+	////transaction::table transaction;
+	////txs::table txs;
+
 private:
 	// This is thread safe.
 	const settings& configuration_;
@@ -57,10 +66,31 @@ private:
 	interprocess_lock process_lock_;
 	boost::upgrade_mutex transactor_mutex_;
 
-	// Header table.
+	// record hashmap
 	map header_head_;
 	map header_body_;
-	header::table header_;
+
+	////// record hashmap
+	////map point_head_;
+	////map point_body_;
+
+	////// slab hashmap
+	////map input_head_;
+	////map input_body_;
+
+	////// blob
+	////map output_body_;
+
+	////// array
+	////map puts_body_;
+
+	////// record hashmap
+	////map transaction_head_;
+	////map transaction_body_;
+
+	////// slab hashmap
+	////map txs_head_;
+	////map txs_body_;
 };
 
 } // namespace database

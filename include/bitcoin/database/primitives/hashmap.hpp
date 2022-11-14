@@ -94,7 +94,8 @@ private:
 };
 
 // Use to standardize hashmap declarations, assumes "record" within namespace.
-#define HASHMAP hashmap<linkage<record::pk>, search<record::sk>, record::size>
+#define RECORDHASHMAP hashmap<linkage<record::pk>, search<record::sk>, record::size>
+#define SLABHASHMAP hashmap<linkage<slab::pk>, search<slab::sk>, slab::size>
 
 } // namespace database
 } // namespace libbitcoin

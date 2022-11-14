@@ -49,20 +49,26 @@ namespace schema
 		constexpr size_t natural_point = identity + index;
 	}
 
-	namespace context
-	{
-		constexpr size_t height = c::block;
-		constexpr size_t flags = c::flags;
-		constexpr size_t mtp = sizeof(uint32_t);
+	////namespace context
+	////{
+	////	constexpr size_t height = c::block;
+	////	constexpr size_t flags = c::flags;
+	////	constexpr size_t mtp = sizeof(uint32_t);
 
-		constexpr size_t bytes = height + flags + mtp;
-		static_assert(bytes == 11u);
-	}
+	////	constexpr size_t bytes = height + flags + mtp;
+	////	static_assert(bytes == 11u);
+	////}
 
-	// slab_hashmap (natural point)
-	namespace output
+	// record_hashmap (empty)
+	namespace point
 	{
 		constexpr size_t sk = c::natural_point;
+		constexpr size_t pk = c::put;
+	}
+
+	// blob
+	namespace output
+	{
 		constexpr size_t pk = c::put;
 
 		// Also varint length prefixed script (minimum 1).
@@ -72,11 +78,11 @@ namespace schema
 	// slab_hashmap (foreign point)
 	namespace input
 	{
-		constexpr size_t sk = c::foreign_point;
 		constexpr size_t pk = c::put;
+		constexpr size_t sk = c::foreign_point;
 
 		// Also varint length/count prefixed script/witness (minimum 2).
-		constexpr size_t output_nk = output::sk;
+		////constexpr size_t output_nk = output::sk;
 		constexpr size_t sequence = sizeof(uint32_t);
 	}
 
@@ -95,8 +101,8 @@ namespace schema
 	// record_hashmap
 	namespace transaction
 	{
-		constexpr size_t sk = c::identity;
 		constexpr size_t pk = c::tx;
+		constexpr size_t sk = c::identity;
 
 		constexpr size_t coinbase = c::code;
 		constexpr size_t size = c::size;
@@ -113,29 +119,11 @@ namespace schema
 		static_assert(bytes == 29u);
 	}
 
-	// record_hashmap
-	namespace header
-	{
-		constexpr size_t sk = c::identity;
-		constexpr size_t pk = c::block;
-
-		constexpr size_t parent_fk = header::pk;
-		constexpr size_t version = sizeof(uint32_t);
-		constexpr size_t time = sizeof(uint32_t);
-		constexpr size_t bits = sizeof(uint32_t);
-		constexpr size_t nonce = sizeof(uint32_t);
-		constexpr size_t root = c::identity;
-
-		constexpr size_t bytes = context::bytes + parent_fk + version + time +
-			bits + nonce + root;
-		static_assert(bytes == 62u);
-	}
-
 	// slab_hashmap
 	namespace txs
 	{
-		constexpr size_t sk = header::pk;
 		constexpr size_t pk = c::tx;
+		constexpr size_t sk = c::block;
 
 		// Association from header to varint count prefixed tx set (minimum 5).
 		constexpr size_t transaction_fk = transaction::pk;

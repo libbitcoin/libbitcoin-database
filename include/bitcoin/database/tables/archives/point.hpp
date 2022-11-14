@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_ARCHIVES_TXS_HPP
-#define LIBBITCOIN_DATABASE_TABLES_ARCHIVES_TXS_HPP
+#ifndef LIBBITCOIN_DATABASE_TABLES_ARCHIVES_POINT_HPP
+#define LIBBITCOIN_DATABASE_TABLES_ARCHIVES_POINT_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
