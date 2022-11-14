@@ -27,7 +27,7 @@ namespace libbitcoin {
 namespace database {
     
 /// Linked list abstraction over storage for given link and record sizes.
-/// slab = is_zero(Size), in which case count/link is bytes otherwise records.
+/// if slab (Size == max_size_t), count/link is bytes otherwise records.
 /// Obtaining memory object is considered const access despite the fact that
 /// memory is writeable. Non-const manager access implies memory map modify.
 template <typename Link, typename Key, size_t Size>
@@ -59,7 +59,7 @@ public:
     memory_ptr get() const NOEXCEPT;
 
 private:
-    static constexpr auto is_slab = is_zero(Size);
+    static constexpr auto is_slab = (Size == max_size_t);
     static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
     static constexpr Link position_to_link(size_t position) NOEXCEPT;
 

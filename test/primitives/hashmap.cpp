@@ -60,9 +60,9 @@ static_assert(links == 21u);
 constexpr auto buckets = bc::sub1(links);
 static_assert(buckets == 20u);
 
-struct record0 { static constexpr size_t size = zero; };
+struct slab0 { static constexpr size_t size = max_size_t; };
 struct record4 { static constexpr size_t size = 4; };
-using slab_table = hashmap_<link5, key10, record0::size>;
+using slab_table = hashmap_<link5, key10, slab0::size>;
 using record_table = hashmap_<link5, key10, record4::size>;
 
 constexpr auto element_size = link5::size + array_count<key10> + record4::size;
@@ -740,7 +740,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_put__multiple__expected)
 class little_slab
 {
 public:
-    static constexpr size_t size = zero;
+    static constexpr size_t size = max_size_t;
     static constexpr link5 count() NOEXCEPT
     {
         return link5::size + array_count<key1> + sizeof(uint32_t);
@@ -766,7 +766,7 @@ public:
 class big_slab
 {
 public:
-    static constexpr size_t size = zero;
+    static constexpr size_t size = max_size_t;
     static constexpr link5 count() NOEXCEPT
     {
         return link5::size + array_count<key1> + sizeof(uint32_t);
@@ -909,7 +909,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_put__excess__false)
 class slab_excess
 {
 public:
-    static constexpr size_t size = zero;
+    static constexpr size_t size = max_size_t;
     static constexpr link5 count() NOEXCEPT { return sizeof(uint32_t); }
 
     slab_excess from_data(database::reader& source) NOEXCEPT
@@ -933,7 +933,7 @@ public:
 class file_excess
 {
 public:
-    static constexpr size_t size = zero;
+    static constexpr size_t size = max_size_t;
     static constexpr link5 count() NOEXCEPT { return sizeof(uint32_t); }
 
     file_excess from_data(database::reader& source) NOEXCEPT

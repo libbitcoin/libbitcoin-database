@@ -85,7 +85,7 @@ constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
     using namespace system;
     const auto value = possible_narrow_cast<size_t>(link.value);
 
-    // Manager keys off of zero Size...
+    // Manager keys off of max Size...
     if constexpr (is_slab)
     {
         return value;
@@ -105,7 +105,7 @@ constexpr Link CLASS::position_to_link(size_t position) NOEXCEPT
     using namespace system;
     using integer = typename Link::integer;
 
-    // Manager keys off of zero Size...
+    // Manager keys off of max Size...
     if constexpr (is_slab)
     {
         return { possible_narrow_cast<integer>(position) };

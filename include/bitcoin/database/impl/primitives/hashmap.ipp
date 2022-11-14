@@ -142,7 +142,7 @@ TEMPLATE
 finalizer_ptr CLASS::push(const Key& key, const Link& size) NOEXCEPT
 {
     const auto value = system::possible_narrow_cast<size_t>(size.value);
-    BC_ASSERT(!system::is_multiply_overflow(value, Size));
+    BC_ASSERT(is_slab || !system::is_multiply_overflow(value, Size));
     BC_ASSERT(!size.is_terminal());
 
     const auto item = manager_.allocate(size);

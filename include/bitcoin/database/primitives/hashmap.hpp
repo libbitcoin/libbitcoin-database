@@ -82,7 +82,7 @@ protected:
     finalizer_ptr push(const Key& key, const Link& size=one) NOEXCEPT;
 
 private:
-    static constexpr auto is_slab = is_zero(Size);
+    static constexpr auto is_slab = (Size == max_size_t);
     using header = database::head<Link, Key>;
     using manager = database::manager<Link, Key, Size>;
 
