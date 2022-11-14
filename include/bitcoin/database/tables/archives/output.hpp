@@ -30,6 +30,8 @@ namespace output {
 
 BC_PUSH_WARNING(NO_METHOD_HIDING)
 
+// Input/output can both be obtained by pk and tx_fp by navigation from tx.
+
 struct slab
 {
 	// Sizes.

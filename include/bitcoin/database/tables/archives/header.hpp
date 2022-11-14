@@ -34,7 +34,7 @@ struct record
 {
 	// Sizes.
 	static constexpr size_t pk = schema::c::block;
-	static constexpr size_t sk = schema::c::identity;
+	static constexpr size_t sk = schema::c::hash;
 	static constexpr size_t size =
 		schema::c::block +
 		schema::c::flags +
@@ -44,7 +44,7 @@ struct record
 		sizeof(uint32_t) +
 		sizeof(uint32_t) +
 		sizeof(uint32_t) +
-		schema::c::identity;
+		schema::c::hash;
 	static constexpr size_t total = pk + sk + size;
 	static_assert(header::record::size == 62u);
 	static_assert(header::record::total == 97u);
