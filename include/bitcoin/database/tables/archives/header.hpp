@@ -46,8 +46,8 @@ struct record
         sizeof(uint32_t) +
         schema::c::hash;
     static constexpr size_t total = pk + sk + size;
-    static_assert(header::record::size == 62u);
-    static_assert(header::record::total == 97u);
+    static_assert(size == 62u);
+    static_assert(total == 97u);
     static constexpr linkage<pk> count() NOEXCEPT { return 1; }
 
     // Fields.
