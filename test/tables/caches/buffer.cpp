@@ -19,7 +19,7 @@
 #include "../../test.hpp"
 #include "../../storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(tables_caches_buffer_tests)
+BOOST_AUTO_TEST_SUITE(buffer_tests)
 
 BOOST_AUTO_TEST_CASE(tables_caches_buffer_test)
 {
