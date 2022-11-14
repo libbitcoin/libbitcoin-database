@@ -16,21 +16,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_QUERY_HPP
-#define LIBBITCOIN_DATABASE_QUERY_HPP
+#ifndef LIBBITCOIN_DATABASE_QUERY_IMPL_HPP
+#define LIBBITCOIN_DATABASE_QUERY_IMPL_HPP
 
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/store/query.hpp>
+#include <bitcoin/database/store/store.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-struct query
+class BCD_API query
 {
-	/// TODO: define all record types.
-	struct foo {};
+public:
+	query(store& store) NOEXCEPT;
 
-	/// TODO: define all record queries.
-	virtual foo get_foo() const NOEXCEPT = 0;
+private:
+	store& store_;
 };
 
 } // namespace database

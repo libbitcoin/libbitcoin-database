@@ -80,27 +80,8 @@
     <ClCompile Include="..\..\..\..\src\memory\map.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\mman-win32\mman.c" />
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
-    <ClCompile Include="..\..\..\..\src\store\query_impl.cpp" />
+    <ClCompile Include="..\..\..\..\src\store\query.cpp" />
     <ClCompile Include="..\..\..\..\src\store\store.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\archives\header.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\archives\input.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\archives\output.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\archives\puts.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\archives\transaction.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\archives\txs.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\caches\bootstrap.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\caches\buffer.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\caches\neutrino.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\caches\validated_block.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\caches\validated_tx.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\indexes\address.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\indexes\candidate_height.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\indexes\confirmed_block.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\indexes\confirmed_height.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\indexes\confirmed_tx.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\indexes\input_tx.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\indexes\output_tx.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\indexes\spent_output.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp" />
@@ -128,7 +109,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\primitives.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\store\query.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\store\query_impl.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\store\store.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\header.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\input.hpp" />

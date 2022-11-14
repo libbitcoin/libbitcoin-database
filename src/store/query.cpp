@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/store/query_impl.hpp>
+#include <bitcoin/database/store/query.hpp>
 
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/store/query.hpp>
@@ -25,18 +25,9 @@
 namespace libbitcoin {
 namespace database {
 
-query_implementation::query_implementation(store& store) NOEXCEPT
+query::query(store& store) NOEXCEPT
   : store_(store)
 {
-}
-
-query_implementation::~query_implementation() NOEXCEPT
-{
-}
-
-query::foo query_implementation::get_foo() const NOEXCEPT
-{
-	return {};
 }
 
 } // namespace database

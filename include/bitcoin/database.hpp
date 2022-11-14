@@ -40,7 +40,6 @@
 #include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
 #include <bitcoin/database/store/query.hpp>
-#include <bitcoin/database/store/query_impl.hpp>
 #include <bitcoin/database/store/store.hpp>
 #include <bitcoin/database/tables/schema.hpp>
 #include <bitcoin/database/tables/tables.hpp>
