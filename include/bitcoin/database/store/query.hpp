@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_QUERY_IMPL_HPP
-#define LIBBITCOIN_DATABASE_QUERY_IMPL_HPP
+#ifndef LIBBITCOIN_DATABASE_QUERY_HPP
+#define LIBBITCOIN_DATABASE_QUERY_HPP
 
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/store/query.hpp>
