@@ -29,14 +29,12 @@ namespace libbitcoin {
 namespace database {
 namespace point {
 
-BC_PUSH_WARNING(NO_METHOD_HIDING)
-
-// Point records are empty, providing only a sk<->fk compression mapping.
-// Each record is 32+4=36 bytes, enabling 4 byte point.hash storage.
+/// Point records are empty, providing only a sk<->fk compression mapping.
+/// Each record is 32+4=36 bytes, enabling 4 byte point.hash storage.
 
 struct record
 {
-    // Sizes.
+    /// Sizes.
     static constexpr size_t pk = schema::tx;
     static constexpr size_t sk = schema::hash;
     static constexpr size_t minsize = zero;
@@ -47,10 +45,10 @@ struct record
 
     static constexpr linkage<pk> count() NOEXCEPT { return 1; }
 
-    // Fields.
+    /// Fields.
     bool valid{ false };
 
-    // Serialializers.
+    /// Serialializers.
 
     inline record from_data(reader& source) NOEXCEPT
     {
@@ -103,8 +101,6 @@ class BCD_API table
 public:
     using hash_map<record>::hashmap;
 };
-
-BC_POP_WARNING()
 
 } // namespace point
 } // namespace database

@@ -29,13 +29,11 @@ namespace libbitcoin {
 namespace database {
 namespace transaction {
 
-BC_PUSH_WARNING(NO_METHOD_HIDING)
-
-// Transaction is a cononical record hash table.
+/// Transaction is a cononical record hash table.
 
 struct record
 {
-    // Sizes.
+    /// Sizes.
     static constexpr size_t pk = schema::tx;
     static constexpr size_t sk = schema::hash;
     static constexpr size_t minsize =
@@ -55,7 +53,7 @@ struct record
 
     static constexpr linkage<pk> count() NOEXCEPT { return 1; }
 
-    // Fields.
+    /// Fields.
     bool coinbase;
     uint32_t bytes;
     uint32_t weight;
@@ -67,7 +65,7 @@ struct record
     uint32_t outs_fk;
     bool valid{ false };
 
-    // Serialializers.
+    /// Serialializers.
 
     inline record from_data(reader& source) NOEXCEPT
     {
@@ -122,8 +120,6 @@ class BCD_API table
 public:
     using hash_map<record>::hashmap;
 };
-
-BC_POP_WARNING()
 
 } // namespace transaction
 } // namespace database

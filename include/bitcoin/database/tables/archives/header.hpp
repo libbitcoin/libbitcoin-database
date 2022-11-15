@@ -29,13 +29,11 @@ namespace libbitcoin {
 namespace database {
 namespace header {
 
-BC_PUSH_WARNING(NO_METHOD_HIDING)
-
-// Header is a cononical record hash table.
+/// Header is a cononical record hash table.
 
 struct record
 {
-    // Sizes.
+    /// Sizes.
     static constexpr size_t pk = schema::block;
     static constexpr size_t sk = schema::hash;
     static constexpr size_t minsize =
@@ -55,7 +53,7 @@ struct record
 
     static constexpr linkage<pk> count() NOEXCEPT { return 1; }
 
-    // Fields.
+    /// Fields.
     uint32_t height;
     uint32_t flags;
     uint32_t mtp;
@@ -67,7 +65,7 @@ struct record
     hash_digest root;
     bool valid{ false };
 
-    // Serialializers.
+    /// Serialializers.
 
     inline record from_data(reader& source) NOEXCEPT
     {
@@ -115,11 +113,7 @@ struct record
     }
 };
 
-// Derivations are non-virtual, method-hiding.
-// Generally only readers are extended, as there are no write updates.
-// Use non-derivation to subset properties (must expose size).
-// Use derivation to extend properties.
-
+/// Get height only (demo).
 struct record_height
 {
     static constexpr size_t size = record::size;
@@ -135,9 +129,11 @@ struct record_height
     bool valid{ false };
 };
 
+/// Get record with search key (demo).
 struct record_with_key
   : public record
 {
+    BC_PUSH_WARNING(NO_METHOD_HIDING)
     inline record_with_key from_data(reader& source) NOEXCEPT
     {
         source.rewind_bytes(record::sk);
@@ -145,6 +141,7 @@ struct record_with_key
         record::from_data(source);
         return *this;
     }
+    BC_POP_WARNING()
 
     hash_digest key;
 };
@@ -156,8 +153,6 @@ class BCD_API table
 public:
     using hash_map<record>::hashmap;
 };
-
-BC_POP_WARNING()
 
 } // namespace header
 } // namespace database

@@ -29,14 +29,12 @@ namespace libbitcoin {
 namespace database {
 namespace puts {
 
-BC_PUSH_WARNING(NO_METHOD_HIDING)
-
-// Puts is an array of input or output fk records.
-// Multiple may be allocated, put_fks.size() (from tx) determines read extent.
+/// Puts is an array of input or output fk records.
+/// Multiple may be allocated, put_fks.size() (from tx) determines read extent.
 
 struct record
 {
-    // Sizes.
+    /// Sizes.
     static constexpr size_t pk = schema::puts;
     ////static constexpr size_t sk = zero;
     static constexpr size_t minsize = schema::put;
@@ -53,11 +51,11 @@ struct record
         return possible_narrow_cast<out>(put_fks.size());
     }
 
-    // Fields.
+    /// Fields.
     std_vector<uint64_t> put_fks;
     bool valid{ false };
 
-    // Serialializers.
+    /// Serialializers.
 
     inline record from_data(reader& source) NOEXCEPT
     {
@@ -90,8 +88,6 @@ class BCD_API table
 public:
     using array_map<record>::arraymap;
 };
-
-BC_POP_WARNING()
 
 } // namespace puts
 } // namespace database

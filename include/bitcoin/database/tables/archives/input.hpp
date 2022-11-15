@@ -28,15 +28,13 @@
 namespace libbitcoin {
 namespace database {
 namespace input {
-    
-BC_PUSH_WARNING(NO_METHOD_HIDING)
 
-// Input is searchable by point_fk/index (fP) of the output that it spends.
-// This makes input a multimap, as multiple inputs can spend a given output.
+/// Input is searchable by point_fk/index (fP) of the output that it spends.
+/// This makes input a multimap, as multiple inputs can spend a given output.
 
 struct slab
 {
-    // Sizes.
+    /// Sizes.
     static constexpr size_t pk = schema::put;
     static constexpr size_t sk = schema::tx_fp;
     static constexpr size_t minsize =
@@ -60,7 +58,7 @@ struct slab
             witness.serialized_size(true);
     }
 
-    // Fields.
+    /// Fields.
     uint32_t parent_fk; // parent fk *is* a required query.
     uint32_t index;     // own (parent-relative) index not a required query.
     uint32_t sequence;
@@ -68,7 +66,7 @@ struct slab
     system::chain::witness witness;
     bool valid{ false };
 
-    // Serialializers.
+    /// Serialializers.
 
     inline slab from_data(reader& source) NOEXCEPT
     {
@@ -101,8 +99,6 @@ class BCD_API table
 public:
     using hash_map<slab>::hashmap;
 };
-
-BC_POP_WARNING()
 
 } // namespace input
 } // namespace database

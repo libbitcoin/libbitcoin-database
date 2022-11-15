@@ -29,16 +29,14 @@ namespace libbitcoin {
 namespace database {
 namespace output {
 
-BC_PUSH_WARNING(NO_METHOD_HIDING)
-
-// Output is a blob (set of non-searchable slabs).
-// Output can be obtained by fk navigation (eg from tx/index).
+/// Output is a blob (set of non-searchable slabs).
+/// Output can be obtained by fk navigation (eg from tx/index).
 
 struct slab
 {
-    // Sizes.
+    /// Sizes.
     static constexpr size_t pk = schema::put;
-    ////static constexpr size_t sk = zero;
+    static constexpr size_t sk = zero;
     static constexpr size_t minsize =
         schema::tx +
         1u + // variable_size (average 1)
@@ -59,14 +57,14 @@ struct slab
             script.serialized_size(true));
     }
 
-    // Fields.
+    /// Fields.
     uint32_t parent_fk; // parent fk *not* a required query.
     uint32_t index;     // own (parent-relative) index not a required query.
     uint64_t value;
     system::chain::script script;
     bool valid{ false };
 
-    // Serialializers.
+    /// Serialializers.
 
     inline slab from_data(reader& source) NOEXCEPT
     {
@@ -97,8 +95,6 @@ class BCD_API table
 public:
     using array_map<slab>::arraymap;
 };
-
-BC_POP_WARNING()
 
 } // namespace output
 } // namespace database

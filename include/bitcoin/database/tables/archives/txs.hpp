@@ -29,13 +29,11 @@ namespace libbitcoin {
 namespace database {
 namespace txs {
 
-BC_PUSH_WARNING(NO_METHOD_HIDING)
-
-// Txs is a slab hashmap of tx fks (first is count), searchable by header.fk.
+/// Txs is a slab hashmap of tx fks (first is count), searchable by header.fk.
 
 struct slab
 {
-    // Sizes.
+    /// Sizes.
     static constexpr size_t pk = schema::txs;
     static constexpr size_t sk = schema::block;
     static constexpr size_t minsize = zero;
@@ -52,11 +50,11 @@ struct slab
             schema::tx * add1(tx_fks.size()));
     }
 
-    // Fields.
+    /// Fields.
     std_vector<uint32_t> tx_fks;
     bool valid{ false };
 
-    // Serialializers.
+    /// Serialializers.
 
     inline slab from_data(reader& source) NOEXCEPT
     {
@@ -95,8 +93,6 @@ class BCD_API table
 public:
     using hash_map<slab>::hashmap;
 };
-
-BC_POP_WARNING()
 
 } // namespace txs
 } // namespace database
