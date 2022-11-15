@@ -99,6 +99,20 @@ struct record
         BC_ASSERT(sink.get_position() == minrow);
         return sink;
     }
+
+    inline bool operator==(const record& other) const NOEXCEPT
+    {
+        return valid == other.valid
+            && coinbase == other.coinbase
+            && bytes == other.bytes
+            && weight == other.weight
+            && locktime == other.locktime
+            && version == other.version
+            && ins_count == other.ins_count
+            && ins_fk == other.ins_fk
+            && outs_count == other.outs_count
+            && outs_fk == other.outs_fk;
+    }
 };
 
 class BCD_API table : public RECORDHASHMAP { public: using RECORDHASHMAP::hashmap; };

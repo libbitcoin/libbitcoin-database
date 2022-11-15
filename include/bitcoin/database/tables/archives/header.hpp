@@ -99,6 +99,20 @@ struct record
         BC_ASSERT(sink.get_position() == minrow);
         return sink;
     }
+
+    inline bool operator==(const record& other) const NOEXCEPT
+    {
+        return valid == other.valid
+            && height == other.height
+            && flags == other.flags
+            && mtp == other.mtp
+            && parent_fk == other.parent_fk
+            && version == other.version
+            && time == other.time
+            && bits == other.bits
+            && nonce == other.nonce
+            && root == other.root;
+    }
 };
 
 // Derivations are non-virtual, method-hiding.
