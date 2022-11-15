@@ -36,6 +36,7 @@ namespace schema
     constexpr size_t txs = 4;
     constexpr size_t puts = 4;
     constexpr size_t put = 5;
+    constexpr size_t bit = 1;
     constexpr size_t code = 1;
     constexpr size_t size = 3;
     constexpr size_t index = 3;

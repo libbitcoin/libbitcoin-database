@@ -69,14 +69,14 @@ struct record
 
     inline record from_data(reader& source) NOEXCEPT
     {
-        height    = source.read_3_bytes_little_endian();
-        flags     = source.read_4_bytes_little_endian();
-        mtp       = source.read_4_bytes_little_endian();
-        parent_fk = source.read_3_bytes_little_endian();
-        version   = source.read_4_bytes_little_endian();
-        time      = source.read_4_bytes_little_endian();
-        bits      = source.read_4_bytes_little_endian();
-        nonce     = source.read_4_bytes_little_endian();
+        height    = source.read_little_endian<uint32_t, schema::block>();
+        flags     = source.read_little_endian<uint32_t, schema::flags>();
+        mtp       = source.read_little_endian<uint32_t>();
+        parent_fk = source.read_little_endian<uint32_t, schema::block>();
+        version   = source.read_little_endian<uint32_t>();
+        time      = source.read_little_endian<uint32_t>();
+        bits      = source.read_little_endian<uint32_t>();
+        nonce     = source.read_little_endian<uint32_t>();
         root      = source.read_hash();
         BC_ASSERT(source.get_position() == minrow);
         valid = source;
@@ -85,14 +85,14 @@ struct record
 
     inline bool to_data(finalizer& sink) const NOEXCEPT
     {
-        sink.write_3_bytes_little_endian(height);
-        sink.write_4_bytes_little_endian(flags);
-        sink.write_4_bytes_little_endian(mtp);
-        sink.write_3_bytes_little_endian(parent_fk);
-        sink.write_4_bytes_little_endian(version);
-        sink.write_4_bytes_little_endian(time);
-        sink.write_4_bytes_little_endian(bits);
-        sink.write_4_bytes_little_endian(nonce);
+        sink.write_little_endian<uint32_t, schema::block>(height);
+        sink.write_little_endian<uint32_t, schema::flags>(flags);
+        sink.write_little_endian<uint32_t>(mtp);
+        sink.write_little_endian<uint32_t, schema::block>(parent_fk);
+        sink.write_little_endian<uint32_t>(version);
+        sink.write_little_endian<uint32_t>(time);
+        sink.write_little_endian<uint32_t>(bits);
+        sink.write_little_endian<uint32_t>(nonce);
         sink.write_bytes(root);
         BC_ASSERT(sink.get_position() == minrow);
         return sink;
@@ -120,7 +120,7 @@ struct record_height
 
     inline record_height from_data(reader& source) NOEXCEPT
     {
-        height = source.read_3_bytes_little_endian();
+        height = source.read_little_endian<uint32_t, schema::block>();
         valid = source;
         return *this;
     }

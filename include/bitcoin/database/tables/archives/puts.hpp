@@ -36,7 +36,7 @@ struct record
 {
     /// Sizes.
     static constexpr size_t pk = schema::puts;
-    ////static constexpr size_t sk = zero;
+    static constexpr size_t sk = zero;
     static constexpr size_t minsize = schema::put;
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = minsize;
@@ -61,7 +61,7 @@ struct record
     {
         std::for_each(put_fks.begin(), put_fks.end(), [&](auto& fk) NOEXCEPT
         {
-            fk = source.read_5_bytes_little_endian();
+            fk = source.read_little_endian<uint64_t, schema::put>();
         });
 
         BC_ASSERT(source.get_position() == minrow);
@@ -73,7 +73,7 @@ struct record
     {
         std::for_each(put_fks.begin(), put_fks.end(), [&](const auto& fk) NOEXCEPT
         {
-            sink.write_5_bytes_little_endian(fk);
+            sink.write_little_endian<uint64_t, schema::put>(fk);
         });
 
         BC_ASSERT(sink.get_position() == minrow);

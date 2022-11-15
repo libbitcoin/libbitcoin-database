@@ -48,7 +48,7 @@ struct record
     /// Fields.
     bool valid{ false };
 
-    /// Serialializers.
+    /// Serialializers (nops).
 
     inline record from_data(reader& source) NOEXCEPT
     {
@@ -64,10 +64,10 @@ struct record
     }
 };
 
+/// Get search key only.
 struct record_sk
+  : public record
 {
-    static constexpr size_t size = record::size;
-
     inline record_sk from_data(reader& source) NOEXCEPT
     {
         source.rewind_bytes(record::sk);
@@ -80,12 +80,14 @@ struct record_sk
     bool valid{ false };
 };
 
+/// Get primary key only.
 struct record_pk
+  : public record
 {
     inline record_pk from_data(reader& source) NOEXCEPT
     {
         source.rewind_bytes(record::pk + record::sk);
-        pk = source.read_4_bytes_little_endian();
+        pk = source.read_little_endian<uint32_t, record::pk>();
         valid = source;
         return *this;
     }

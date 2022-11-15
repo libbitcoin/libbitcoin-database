@@ -37,7 +37,7 @@ struct record
     static constexpr size_t pk = schema::tx;
     static constexpr size_t sk = schema::hash;
     static constexpr size_t minsize =
-        schema::code +
+        schema::bit +
         schema::size +
         schema::size +
         sizeof(uint32_t) +
@@ -69,15 +69,16 @@ struct record
 
     inline record from_data(reader& source) NOEXCEPT
     {
+        // TODO: coinbase bit can be merged into bytes field (.7GB).
         coinbase   = to_bool(source.read_byte());
-        bytes      = source.read_3_bytes_little_endian();
-        weight     = source.read_3_bytes_little_endian();
-        locktime   = source.read_4_bytes_little_endian();
-        version    = source.read_4_bytes_little_endian();
-        ins_count  = source.read_3_bytes_little_endian();
-        ins_fk     = source.read_4_bytes_little_endian();
-        outs_count = source.read_3_bytes_little_endian();
-        outs_fk    = source.read_4_bytes_little_endian();
+        bytes      = source.read_little_endian<uint32_t, schema::size>();
+        weight     = source.read_little_endian<uint32_t, schema::size>();
+        locktime   = source.read_little_endian<uint32_t>();
+        version    = source.read_little_endian<uint32_t>();
+        ins_count  = source.read_little_endian<uint32_t, schema::index>();
+        ins_fk     = source.read_little_endian<uint32_t, schema::puts>();
+        outs_count = source.read_little_endian<uint32_t, schema::index>();
+        outs_fk    = source.read_little_endian<uint32_t, schema::puts>();
         BC_ASSERT(source.get_position() == minrow);
         valid = source;
         return *this;
@@ -85,15 +86,16 @@ struct record
 
     inline bool to_data(finalizer& sink) const NOEXCEPT
     {
+        // TODO: coinbase bit can be merged into bytes field (.7GB).
         sink.write_byte(to_int<uint8_t>(coinbase));
-        sink.write_3_bytes_little_endian(bytes);
-        sink.write_3_bytes_little_endian(weight);
-        sink.write_4_bytes_little_endian(locktime);
-        sink.write_4_bytes_little_endian(version);
-        sink.write_3_bytes_little_endian(ins_count);
-        sink.write_4_bytes_little_endian(ins_fk);
-        sink.write_3_bytes_little_endian(outs_count);
-        sink.write_4_bytes_little_endian(outs_fk);
+        sink.write_little_endian<uint32_t, schema::size>(bytes);
+        sink.write_little_endian<uint32_t, schema::size>(weight);
+        sink.write_little_endian<uint32_t>(locktime);
+        sink.write_little_endian<uint32_t>(version);
+        sink.write_little_endian<uint32_t, schema::index>(ins_count);
+        sink.write_little_endian<uint32_t, schema::puts>(ins_fk);
+        sink.write_little_endian<uint32_t, schema::index>(outs_count);
+        sink.write_little_endian<uint32_t, schema::puts>(outs_fk);
         BC_ASSERT(sink.get_position() == minrow);
         return sink;
     }

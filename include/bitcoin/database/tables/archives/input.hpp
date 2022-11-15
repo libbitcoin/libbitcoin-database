@@ -70,9 +70,9 @@ struct slab
 
     inline slab from_data(reader& source) NOEXCEPT
     {
-        parent_fk = source.read_4_bytes_little_endian();
+        parent_fk = source.read_little_endian<uint32_t, schema::tx>();
         index     = system::narrow_cast<uint32_t>(source.read_variable());
-        sequence  = source.read_4_bytes_little_endian();
+        sequence  = source.read_little_endian<uint32_t>();
         script    = system::chain::script(source, true);
         witness   = system::chain::witness(source, true);
         BC_ASSERT(source.get_position() == count());
@@ -82,9 +82,9 @@ struct slab
 
     inline bool to_data(finalizer& sink) const NOEXCEPT
     {
-        sink.write_4_bytes_little_endian(parent_fk);
+        sink.write_little_endian<uint32_t, schema::tx>(parent_fk);
         sink.write_variable(index);
-        sink.write_4_bytes_little_endian(sequence);
+        sink.write_little_endian<uint32_t>(sequence);
         script.to_data(sink, true);
         witness.to_data(sink, true);
         BC_ASSERT(sink.get_position() == count());

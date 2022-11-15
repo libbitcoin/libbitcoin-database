@@ -58,10 +58,10 @@ struct slab
 
     inline slab from_data(reader& source) NOEXCEPT
     {
-        tx_fks.resize(source.read_4_bytes_little_endian());
+        tx_fks.resize(source.read_little_endian<uint32_t, schema::tx>());
         std::for_each(tx_fks.begin(), tx_fks.end(), [&](auto& fk) NOEXCEPT
         {
-            fk = source.read_4_bytes_little_endian();
+            fk = source.read_little_endian<uint32_t, schema::tx>();
         });
 
         BC_ASSERT(source.get_position() == count());
@@ -71,17 +71,16 @@ struct slab
 
     inline bool to_data(finalizer& sink) const NOEXCEPT
     {
-        using namespace system;
-        BC_ASSERT(tx_fks.size() < power2<uint64_t>(to_bits(schema::tx)));
-        const auto count = possible_narrow_cast<uint32_t>(tx_fks.size());
+        BC_ASSERT(tx_fks.size() < system::power2<uint64_t>(to_bits(schema::tx)));
+        const auto fks = system::possible_narrow_cast<uint32_t>(tx_fks.size());
 
-        sink.write_4_bytes_little_endian(count);
+        sink.write_little_endian<uint32_t, schema::tx>(fks);
         std::for_each(tx_fks.begin(), tx_fks.end(), [&](const auto& fk) NOEXCEPT
         {
-            sink.write_4_bytes_little_endian(fk);
+            sink.write_little_endian<uint32_t, schema::tx>(fk);
         });
 
-        BC_ASSERT(sink.get_position() == this->count());
+        BC_ASSERT(sink.get_position() == count());
         return sink;
     }
 };
