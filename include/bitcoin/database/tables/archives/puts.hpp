@@ -83,7 +83,13 @@ struct record
     }
 };
 
-class BCD_API table : public RECORDMAP { public: using RECORDMAP::arraymap; };
+/// puts::table
+class BCD_API table
+  : public array_map<record>
+{
+public:
+    using array_map<record>::arraymap;
+};
 
 BC_POP_WARNING()
 

@@ -22,6 +22,8 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/linkage.hpp>
+
 
 namespace libbitcoin {
 namespace database {
@@ -61,9 +63,8 @@ private:
     storage& body_;
 };
 
-// Use to standardize arraymap declarations, assumes "record" within namespace.
-#define RECORDMAP arraymap<linkage<record::pk>, record::size>
-#define SLABMAP arraymap<linkage<slab::pk>, slab::size>
+template <typename Element>
+using array_map = arraymap<linkage<Element::pk>, Element::size>;
 
 } // namespace database
 } // namespace libbitcoin

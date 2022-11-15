@@ -90,7 +90,13 @@ struct slab
     }
 };
 
-class BCD_API table : public SLABMAP { public: using SLABMAP::arraymap; };
+/// output::table
+class BCD_API table
+  : public array_map<slab>
+{
+public:
+    using array_map<slab>::arraymap;
+};
 
 BC_POP_WARNING()
 

@@ -24,6 +24,7 @@
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/head.hpp>
 #include <bitcoin/database/primitives/iterator.hpp>
+#include <bitcoin/database/primitives/linkage.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 
 namespace libbitcoin {
@@ -93,9 +94,9 @@ private:
     manager manager_;
 };
 
-// Use to standardize hashmap declarations, assumes "record" within namespace.
-#define RECORDHASHMAP hashmap<linkage<record::pk>, search<record::sk>, record::size>
-#define SLABHASHMAP hashmap<linkage<slab::pk>, search<slab::sk>, slab::size>
+template <typename Element>
+using hash_map = hashmap<linkage<Element::pk>, system::data_array<Element::sk>,
+    Element::size>;
 
 } // namespace database
 } // namespace libbitcoin

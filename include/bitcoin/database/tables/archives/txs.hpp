@@ -88,7 +88,13 @@ struct slab
     }
 };
 
-class BCD_API table : public SLABHASHMAP { public: using SLABHASHMAP::hashmap; };
+/// txs::table
+class BCD_API table
+  : public hash_map<slab>
+{
+public:
+    using hash_map<slab>::hashmap;
+};
 
 BC_POP_WARNING()
 

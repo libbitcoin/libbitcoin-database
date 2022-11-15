@@ -115,7 +115,13 @@ struct record
     }
 };
 
-class BCD_API table : public RECORDHASHMAP { public: using RECORDHASHMAP::hashmap; };
+/// transaction::table
+class BCD_API table
+  : public hash_map<record>
+{
+public:
+    using hash_map<record>::hashmap;
+};
 
 BC_POP_WARNING()
 
