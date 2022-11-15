@@ -21,8 +21,9 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/tables/schema.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -30,21 +31,21 @@ namespace point {
 
 BC_PUSH_WARNING(NO_METHOD_HIDING)
 
-// point records are empty, providing only a sk<->fk compression mapping.
-// each record is 32+4=36 bytes, enabling 4 byte point.hash storage.
+// Point records are empty, providing only a sk<->fk compression mapping.
+// Each record is 32+4=36 bytes, enabling 4 byte point.hash storage.
+
 struct record
 {
     // Sizes.
-    static constexpr size_t pk = schema::c::tx;
-    static constexpr size_t sk = schema::c::hash;
-    static constexpr size_t size = zero;
-    static constexpr size_t total = pk + sk + size;
-    static_assert(size == 0u);
-    static_assert(total == 36u);
-    static constexpr linkage<pk> count() NOEXCEPT
-    {
-        return total;
-    }
+    static constexpr size_t pk = schema::tx;
+    static constexpr size_t sk = schema::hash;
+    static constexpr size_t minsize = zero;
+    static constexpr size_t minrow = pk + sk + minsize;
+    static constexpr size_t size = minsize;
+    static_assert(minsize == 0u);
+    static_assert(minrow == 36u);
+
+    static constexpr linkage<pk> count() NOEXCEPT { return 1; }
 
     // Fields.
     bool valid{ false };
@@ -53,14 +54,14 @@ struct record
 
     inline record from_data(reader& source) NOEXCEPT
     {
-        BC_ASSERT(source.get_position() == total);
+        BC_ASSERT(source.get_position() == minrow);
         valid = source;
         return *this;
     }
 
     inline bool to_data(finalizer& sink) const NOEXCEPT
     {
-        BC_ASSERT(sink.get_position() == total);
+        BC_ASSERT(sink.get_position() == minrow);
         return sink;
     }
 };

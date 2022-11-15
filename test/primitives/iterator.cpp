@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(iterator__get_next__empty__terminal)
 {
     using link = linkage<4>;
     using key = data_array<0>;
-    using slab_iterate = iterator_<link, key, 0>;
+    using slab_iterate = iterator_<link, key, max_size_t>;
 
     constexpr key key0{};
     test::storage file;
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(iterator__get_next__overflow__terminal)
 {
     using link = linkage<4>;
     using key = data_array<0>;
-    using slab_iterate = iterator_<link, key, 0>;
+    using slab_iterate = iterator_<link, key, max_size_t>;
 
     constexpr auto start = 13;
     constexpr key key0{};
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(iterator__get__offset0__expected)
 {
     using link = linkage<4>;
     using key = data_array<0>;
-    using slab_iterate = iterator_<link, key, 0>;
+    using slab_iterate = iterator_<link, key, max_size_t>;
 
     constexpr auto start = 0;
     constexpr key key0{};
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(iterator__get__offset1__expected)
 {
     using link = linkage<4>;
     using key = data_array<0>;
-    using slab_iterate = iterator_<link, key, 0>;
+    using slab_iterate = iterator_<link, key, max_size_t>;
 
     constexpr auto start = 8;
     constexpr key key0{};
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(iterator__get__offset_to_back__expected)
 {
     using link = linkage<1>;
     using key = data_array<0>;
-    using slab_iterate = iterator_<link, key, 0>;
+    using slab_iterate = iterator_<link, key, max_size_t>;
 
     constexpr auto start = 41;
     constexpr key key0{};
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(iterator__next__true__non_terminal)
 {
     using link = linkage<1>;
     using key = data_array<2>;
-    using slab_iterate = iterator_<link, key, 0>;
+    using slab_iterate = iterator_<link, key, max_size_t>;
     constexpr auto start = 0;
 
     constexpr key key2{ 0x1a, 0x2a };

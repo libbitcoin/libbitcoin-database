@@ -21,12 +21,73 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/tables/schema.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
 namespace database {
+namespace puts {
 
+BC_PUSH_WARNING(NO_METHOD_HIDING)
+
+// Puts is an array of input or output fk records.
+// Multiple may be allocated, put_fks.size() (from tx) determines read extent.
+
+struct record
+{
+    // Sizes.
+    static constexpr size_t pk = schema::puts;
+    ////static constexpr size_t sk = zero;
+    static constexpr size_t minsize = schema::put;
+    static constexpr size_t minrow = minsize;
+    static constexpr size_t size = minsize;
+    static_assert(minsize == 5u);
+    static_assert(minrow == 5u);
+
+    linkage<pk> count() const NOEXCEPT
+    {
+        using namespace system;
+        using out = typename linkage<pk>::integer;
+        BC_ASSERT(put_fks.size() < power2<uint64_t>(to_bits(schema::put)));
+        return possible_narrow_cast<out>(put_fks.size());
+    }
+
+    // Fields.
+    std_vector<uint64_t> put_fks;
+    bool valid{ false };
+
+    // Serialializers.
+
+    inline record from_data(reader& source) NOEXCEPT
+    {
+        std::for_each(put_fks.begin(), put_fks.end(), [&](auto& fk) NOEXCEPT
+        {
+            fk = source.read_5_bytes_little_endian();
+        });
+
+        BC_ASSERT(source.get_position() == minrow);
+        valid = source;
+        return *this;
+    }
+
+    inline bool to_data(finalizer& sink) const NOEXCEPT
+    {
+        std::for_each(put_fks.begin(), put_fks.end(), [&](const auto& fk) NOEXCEPT
+        {
+            sink.write_5_bytes_little_endian(fk);
+        });
+
+        BC_ASSERT(sink.get_position() == minrow);
+        return sink;
+    }
+};
+
+class BCD_API table : public RECORDMAP { public: using RECORDMAP::arraymap; };
+
+BC_POP_WARNING()
+
+} // namespace puts
 } // namespace database
 } // namespace libbitcoin
 

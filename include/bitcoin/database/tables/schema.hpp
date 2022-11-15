@@ -31,103 +31,18 @@ using hash_digest = system::hash_digest;
 
 namespace schema
 {
-    namespace c
-    {
-        constexpr size_t block = 3;
-        constexpr size_t tx = 4;
-        constexpr size_t puts = 4;
-        constexpr size_t put = 5;
-
-        constexpr size_t code = 1;
-        constexpr size_t size = 3;
-        constexpr size_t index = 3;
-        constexpr size_t sigops = 3;
-        constexpr size_t flags = 4;
-
-        constexpr size_t hash = system::hash_size;
-        constexpr size_t foreign_point = tx + index;
-        constexpr size_t natural_point = hash + index;
-    }
-
-    ////namespace context
-    ////{
-    ////    constexpr size_t height = c::block;
-    ////    constexpr size_t flags = c::flags;
-    ////    constexpr size_t mtp = sizeof(uint32_t);
-
-    ////    constexpr size_t bytes = height + flags + mtp;
-    ////    static_assert(bytes == 11u);
-    ////}
-
-    // record_hashmap (empty)
-    namespace point
-    {
-        constexpr size_t sk = c::natural_point;
-        constexpr size_t pk = c::put;
-    }
-
-    // blob
-    namespace output
-    {
-        constexpr size_t pk = c::put;
-
-        // Also varint length prefixed script (minimum 1).
-        constexpr size_t value = sizeof(uint64_t);
-    }
-
-    // slab_hashmap (foreign point)
-    namespace input
-    {
-        constexpr size_t pk = c::put;
-        constexpr size_t sk = c::foreign_point;
-
-        // Also varint length/count prefixed script/witness (minimum 2).
-        ////constexpr size_t output_nk = output::sk;
-        constexpr size_t sequence = sizeof(uint32_t);
-    }
-
-    // array (no sk)
-    namespace puts
-    {
-        constexpr size_t pk = c::puts;
-
-        // Association from 4 byte puts to set of 5 byte put (not counted).
-        constexpr size_t put_fk = c::put;
-
-        constexpr size_t bytes = put_fk;
-        static_assert(bytes == 5u);
-    }
-
-    // record_hashmap
-    namespace transaction
-    {
-        constexpr size_t pk = c::tx;
-        constexpr size_t sk = c::hash;
-
-        constexpr size_t coinbase = c::code;
-        constexpr size_t size = c::size;
-        constexpr size_t weight = c::size;
-        constexpr size_t locktime = sizeof(uint32_t);
-        constexpr size_t version = sizeof(uint32_t);
-        constexpr size_t ins_count = c::index;
-        constexpr size_t ins_fk = puts::pk;
-        constexpr size_t outs_count = c::index;
-        constexpr size_t outs_fk = puts::pk;
-
-        constexpr size_t bytes = coinbase + size + weight + locktime + version +
-            ins_count + ins_fk + outs_count + outs_fk;
-        static_assert(bytes == 29u);
-    }
-
-    // slab_hashmap
-    namespace txs
-    {
-        constexpr size_t pk = c::tx;
-        constexpr size_t sk = c::block;
-
-        // Association from header to varint count prefixed tx set (minimum 5).
-        constexpr size_t transaction_fk = transaction::pk;
-    }
+    constexpr size_t block = 3;
+    constexpr size_t tx = 4;
+    constexpr size_t txs = 4;
+    constexpr size_t puts = 4;
+    constexpr size_t put = 5;
+    constexpr size_t code = 1;
+    constexpr size_t size = 3;
+    constexpr size_t index = 3;
+    constexpr size_t sigops = 3;
+    constexpr size_t flags = 4;
+    constexpr size_t tx_fp = tx + index;
+    constexpr size_t hash = system::hash_size;
 }
 
 } // namespace database

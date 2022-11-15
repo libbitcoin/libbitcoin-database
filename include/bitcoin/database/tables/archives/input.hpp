@@ -21,9 +21,9 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/tables/archives/output.hpp>
-#include <bitcoin/database/tables/schema.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -31,26 +31,38 @@ namespace input {
     
 BC_PUSH_WARNING(NO_METHOD_HIDING)
 
-// Input is searchable by hash_fk/index (fP) of the output that it spends.
-// Input/output can both be obtained by pk and tx_fp by navigation from tx.
+// Input is searchable by point_fk/index (fP) of the output that it spends.
+// This makes input a multimap, as multiple inputs can spend a given output.
 
 struct slab
 {
     // Sizes.
-    static constexpr size_t pk = schema::c::put;
-    static constexpr size_t sk = schema::c::foreign_point;
+    static constexpr size_t pk = schema::put;
+    static constexpr size_t sk = schema::tx_fp;
+    static constexpr size_t minsize =
+        schema::tx +
+        1u + // variable_size (average 1)
+        sizeof(uint32_t) +
+        1u + // variable_size (average 1)
+        1u;  // variable_size (average 1)
+    static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = max_size_t;
+    static_assert(minsize == 11u);
+    static_assert(minrow == 23u);
+
     linkage<pk> count() const NOEXCEPT
     {
         return pk + sk +
-            schema::c::foreign_point +
+            schema::tx +
+            variable_size(index) +
+            sizeof(uint32_t) +
             script.serialized_size(true) +
             witness.serialized_size(true);
     }
 
     // Fields.
-    uint32_t transaction_fk;
-    uint32_t index;
+    uint32_t parent_fk; // parent fk *is* a required query.
+    uint32_t index;     // own (parent-relative) index not a required query.
     uint32_t sequence;
     system::chain::script script;
     system::chain::witness witness;
@@ -60,11 +72,11 @@ struct slab
 
     inline slab from_data(reader& source) NOEXCEPT
     {
-        transaction_fk = source.read_4_bytes_little_endian();
-        index = source.read_3_bytes_little_endian();
-        sequence = source.read_4_bytes_little_endian();
-        script = system::chain::script(source, true);
-        witness = system::chain::witness(source, true);
+        parent_fk = source.read_4_bytes_little_endian();
+        index     = system::narrow_cast<uint32_t>(source.read_variable());
+        sequence  = source.read_4_bytes_little_endian();
+        script    = system::chain::script(source, true);
+        witness   = system::chain::witness(source, true);
         BC_ASSERT(source.get_position() == count());
         valid = source;
         return *this;
@@ -72,8 +84,8 @@ struct slab
 
     inline bool to_data(finalizer& sink) const NOEXCEPT
     {
-        sink.write_4_bytes_little_endian(transaction_fk);
-        sink.write_3_bytes_little_endian(index);
+        sink.write_4_bytes_little_endian(parent_fk);
+        sink.write_variable(index);
         sink.write_4_bytes_little_endian(sequence);
         script.to_data(sink, true);
         witness.to_data(sink, true);

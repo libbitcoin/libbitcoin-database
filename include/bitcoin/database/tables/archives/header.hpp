@@ -21,8 +21,9 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/tables/schema.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -30,24 +31,28 @@ namespace header {
 
 BC_PUSH_WARNING(NO_METHOD_HIDING)
 
+// Header is a cononical record hash table.
+
 struct record
 {
     // Sizes.
-    static constexpr size_t pk = schema::c::block;
-    static constexpr size_t sk = schema::c::hash;
-    static constexpr size_t size =
-        schema::c::block +
-        schema::c::flags +
+    static constexpr size_t pk = schema::block;
+    static constexpr size_t sk = schema::hash;
+    static constexpr size_t minsize =
+        schema::block +
+        schema::flags +
         sizeof(uint32_t) +
         pk +
         sizeof(uint32_t) +
         sizeof(uint32_t) +
         sizeof(uint32_t) +
         sizeof(uint32_t) +
-        schema::c::hash;
-    static constexpr size_t total = pk + sk + size;
-    static_assert(size == 62u);
-    static_assert(total == 97u);
+        schema::hash;
+    static constexpr size_t minrow = pk + sk + minsize;
+    static constexpr size_t size = minsize;
+    static_assert(minsize == 62u);
+    static_assert(minrow == 97u);
+
     static constexpr linkage<pk> count() NOEXCEPT { return 1; }
 
     // Fields.
@@ -75,7 +80,7 @@ struct record
         bits      = source.read_4_bytes_little_endian();
         nonce     = source.read_4_bytes_little_endian();
         root      = source.read_hash();
-        BC_ASSERT(source.get_position() == total);
+        BC_ASSERT(source.get_position() == minrow);
         valid = source;
         return *this;
     }
@@ -91,7 +96,7 @@ struct record
         sink.write_4_bytes_little_endian(bits);
         sink.write_4_bytes_little_endian(nonce);
         sink.write_bytes(root);
-        BC_ASSERT(sink.get_position() == total);
+        BC_ASSERT(sink.get_position() == minrow);
         return sink;
     }
 };

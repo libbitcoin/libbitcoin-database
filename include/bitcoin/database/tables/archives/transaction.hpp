@@ -21,12 +21,91 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/tables/schema.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
 namespace database {
+namespace transaction {
 
+BC_PUSH_WARNING(NO_METHOD_HIDING)
+
+// Transaction is a cononical record hash table.
+
+struct record
+{
+    // Sizes.
+    static constexpr size_t pk = schema::tx;
+    static constexpr size_t sk = schema::hash;
+    static constexpr size_t minsize =
+        schema::code +
+        schema::size +
+        schema::size +
+        sizeof(uint32_t) +
+        sizeof(uint32_t) +
+        schema::index +
+        schema::puts +
+        schema::index +
+        schema::puts;
+    static constexpr size_t minrow = pk + sk + minsize;
+    static constexpr size_t size = minsize;
+    static_assert(minsize == 29u);
+    static_assert(minrow == 65u);
+
+    static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+
+    // Fields.
+    bool coinbase;
+    uint32_t bytes;
+    uint32_t weight;
+    uint32_t locktime;
+    uint32_t version;
+    uint32_t ins_count;
+    uint32_t ins_fk;
+    uint32_t outs_count;
+    uint32_t outs_fk;
+    bool valid{ false };
+
+    // Serialializers.
+
+    inline record from_data(reader& source) NOEXCEPT
+    {
+        coinbase   = to_bool(source.read_byte());
+        bytes      = source.read_3_bytes_little_endian();
+        weight     = source.read_3_bytes_little_endian();
+        locktime   = source.read_4_bytes_little_endian();
+        version    = source.read_4_bytes_little_endian();
+        ins_count  = source.read_3_bytes_little_endian();
+        ins_fk     = source.read_4_bytes_little_endian();
+        outs_count = source.read_3_bytes_little_endian();
+        outs_fk    = source.read_4_bytes_little_endian();
+        BC_ASSERT(source.get_position() == minrow);
+        valid = source;
+        return *this;
+    }
+
+    inline bool to_data(finalizer& sink) const NOEXCEPT
+    {
+        sink.write_byte(to_int<uint8_t>(coinbase));
+        sink.write_3_bytes_little_endian(bytes);
+        sink.write_3_bytes_little_endian(weight);
+        sink.write_4_bytes_little_endian(locktime);
+        sink.write_4_bytes_little_endian(version);
+        sink.write_3_bytes_little_endian(ins_count);
+        sink.write_4_bytes_little_endian(ins_fk);
+        sink.write_3_bytes_little_endian(outs_count);
+        sink.write_4_bytes_little_endian(outs_fk);
+        BC_ASSERT(sink.get_position() == minrow);
+        return sink;
+    }
+};
+
+class BCD_API table : public RECORDHASHMAP { public: using RECORDHASHMAP::hashmap; };
+
+BC_POP_WARNING()
+
+} // namespace transaction
 } // namespace database
 } // namespace libbitcoin
 
