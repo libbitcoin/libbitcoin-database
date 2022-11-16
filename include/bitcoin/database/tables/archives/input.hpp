@@ -99,8 +99,8 @@ struct slab
     }
 };
 
-/// Get search key only.
-struct slab_sk
+/// Get composite search key only.
+struct slab_composite_sk
 {
     static constexpr size_t size = slab::size;
 
@@ -112,6 +112,25 @@ struct slab_sk
     }
 
     search<slab::sk> sk{};
+};
+
+/// Get decomposed search keys only.
+struct slab_decomposed_sk
+{
+    static constexpr size_t size = slab::size;
+    static_assert(schema::tx + schema::index == slab::sk);
+
+    inline bool from_data(reader& source) NOEXCEPT
+    {
+        source.rewind_bytes(slab::sk);
+        point_fk = source.read_little_endian<uint32_t, schema::tx>();
+        point_index = source.read_little_endian<uint32_t, schema::index>();
+        return source;
+    }
+
+    /// Presumed foreign point composition (tx::index).
+    uint32_t point_fk{};
+    uint32_t point_index{};
 };
 
 /// input::table

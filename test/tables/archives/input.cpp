@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(input__put__get__expected)
     BOOST_REQUIRE(element == expected);
 }
 
-BOOST_AUTO_TEST_CASE(input__put__get_sk__expected)
+BOOST_AUTO_TEST_CASE(input__put__get_composite_sk__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
@@ -101,9 +101,23 @@ BOOST_AUTO_TEST_CASE(input__put__get_sk__expected)
     BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 
-    slab_sk element{};
+    slab_composite_sk element{};
     BOOST_REQUIRE(instance.get(slab0_size, element));
     BOOST_REQUIRE_EQUAL(element.sk, key);
+}
+
+BOOST_AUTO_TEST_CASE(input__put__get_decomposed_sk__expected)
+{
+    DECLARE(instance, body_file, 20);
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.put({}, slab{}));
+    BOOST_REQUIRE(instance.put(key, expected));
+    BOOST_REQUIRE_EQUAL(body_file, expected_file);
+
+    slab_decomposed_sk element{};
+    BOOST_REQUIRE(instance.get(slab0_size, element));
+    BOOST_REQUIRE_EQUAL(element.point_fk, 0x44332211_u32);
+    BOOST_REQUIRE_EQUAL(element.point_index, 0x00776655_u32);
 }
 
 BOOST_AUTO_TEST_CASE(input__it__pk__expected)
