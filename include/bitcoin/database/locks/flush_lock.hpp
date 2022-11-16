@@ -26,22 +26,25 @@
 
 namespace libbitcoin {
 namespace database {
-
-/// This class is not thread safe.
-class BCD_API flush_lock
+    
+/// This class is not thread safe, and does not throw.
+class BCD_API flush_lock final
   : file_lock
 {
 public:
+    DELETE4(flush_lock);
+
+    /// Construction does not touch the file.
     flush_lock(const std::filesystem::path& file) NOEXCEPT;
 
-    /// False if file exists.
-    bool try_lock() const NOEXCEPT;
+    /// Destruction calls try_unlock.
+    ~flush_lock() NOEXCEPT;
 
     /// False if file exists or fails to create.
-    bool lock() NOEXCEPT;
+    bool try_lock() NOEXCEPT;
 
     /// False if file does not exist or fails to delete.
-    bool unlock() NOEXCEPT;
+    bool try_unlock() NOEXCEPT;
 };
 
 } // namespace database

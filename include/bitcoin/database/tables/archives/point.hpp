@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_ARCHIVES_PUTS_HPP
-#define LIBBITCOIN_DATABASE_TABLES_ARCHIVES_PUTS_HPP
+#ifndef LIBBITCOIN_DATABASE_TABLES_ARCHIVES_POINT_HPP
+#define LIBBITCOIN_DATABASE_TABLES_ARCHIVES_POINT_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -27,43 +27,31 @@
 
 namespace libbitcoin {
 namespace database {
-namespace puts {
+namespace point {
 
-/// Puts is an array of input or output fk records.
-/// Multiple may be allocated, put_fks.size() (from tx) determines read extent.
+/// Point records are empty, providing only a sk<->fk compression mapping.
+/// Each record is 32+4=36 bytes, enabling 4 byte point.hash storage.
 
 struct record
 {
     /// Sizes.
-    static constexpr size_t pk = schema::puts;
-    static constexpr size_t sk = zero;
-    static constexpr size_t minsize = schema::put;
-    static constexpr size_t minrow = minsize;
+    static constexpr size_t pk = schema::tx;
+    static constexpr size_t sk = schema::hash;
+    static constexpr size_t minsize = zero;
+    static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = minsize;
-    static_assert(minsize == 5u);
-    static_assert(minrow == 5u);
+    static_assert(minsize == 0u);
+    static_assert(minrow == 36u);
 
-    linkage<pk> count() const NOEXCEPT
-    {
-        using namespace system;
-        using out = typename linkage<pk>::integer;
-        BC_ASSERT(put_fks.size() < power2<uint64_t>(to_bits(schema::put)));
-        return possible_narrow_cast<out>(put_fks.size());
-    }
+    static constexpr linkage<pk> count() NOEXCEPT { return 1; }
 
     /// Fields.
-    std_vector<uint64_t> put_fks;
     bool valid{ false };
 
-    /// Serialializers.
+    /// Serialializers (nops).
 
     inline record from_data(reader& source) NOEXCEPT
     {
-        std::for_each(put_fks.begin(), put_fks.end(), [&](auto& fk) NOEXCEPT
-        {
-            fk = source.read_little_endian<uint64_t, schema::put>();
-        });
-
         BC_ASSERT(source.get_position() == minrow);
         valid = source;
         return *this;
@@ -71,25 +59,52 @@ struct record
 
     inline bool to_data(finalizer& sink) const NOEXCEPT
     {
-        std::for_each(put_fks.begin(), put_fks.end(), [&](const auto& fk) NOEXCEPT
-        {
-            sink.write_little_endian<uint64_t, schema::put>(fk);
-        });
-
         BC_ASSERT(sink.get_position() == minrow);
         return sink;
     }
 };
 
-/// puts::table
-class BCD_API table
-  : public array_map<record>
+/// Get search key only.
+struct record_sk
+  : public record
 {
-public:
-    using array_map<record>::arraymap;
+    inline record_sk from_data(reader& source) NOEXCEPT
+    {
+        source.rewind_bytes(record::sk);
+        sk = source.read_hash();
+        valid = source;
+        return *this;
+    }
+
+    hash_digest sk;
+    bool valid{ false };
 };
 
-} // namespace puts
+/// Get primary key only.
+struct record_pk
+  : public record
+{
+    inline record_pk from_data(reader& source) NOEXCEPT
+    {
+        source.rewind_bytes(record::pk + record::sk);
+        pk = source.read_little_endian<uint32_t, record::pk>();
+        valid = source;
+        return *this;
+    }
+
+    uint32_t pk;
+    bool valid{ false };
+};
+
+/// point::table
+class BCD_API table
+  : public hash_map<record>
+{
+public:
+    using hash_map<record>::hashmap;
+};
+
+} // namespace point
 } // namespace database
 } // namespace libbitcoin
 

@@ -56,6 +56,18 @@ struct linkage
     integer value;
 };
 
+template <size_t Size>
+bool operator==(const linkage<Size>& left, const linkage<Size>& right) NOEXCEPT
+{
+    return left.value == right.value;
+}
+
+template <size_t Size>
+bool operator!=(const linkage<Size>& left, const linkage<Size>& right) NOEXCEPT
+{
+    return !(left == right);
+}
+
 } // namespace database
 } // namespace libbitcoin
 

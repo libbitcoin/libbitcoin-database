@@ -16,13 +16,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/tables/caches/validated_block.hpp>
+#include <bitcoin/database/store/query.hpp>
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/store/query.hpp>
+#include <bitcoin/database/store/store.hpp>
 
 namespace libbitcoin {
 namespace database {
+
+query::query(store& store) NOEXCEPT
+  : store_(store)
+{
+}
 
 } // namespace database
 } // namespace libbitcoin

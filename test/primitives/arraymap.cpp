@@ -44,9 +44,9 @@ private:
 
 // There is no internal linkage, but we still have primary key domain.
 using link5 = linkage<5>;
-struct record0 { static constexpr size_t size = zero; };
+struct slab0 { static constexpr size_t size = max_size_t; };
 struct record4 { static constexpr size_t size = 4; };
-using slab_table = arraymap_<link5, record0::size>;
+using slab_table = arraymap_<link5, slab0::size>;
 using record_table = arraymap_<link5, record4::size>;
 
 // record arraymap
@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_put__multiple__expected)
 class little_slab
 {
 public:
-    static constexpr size_t size = zero;
+    static constexpr size_t size = max_size_t;
     static constexpr link5 count() NOEXCEPT { return sizeof(uint32_t); }
 
     little_slab from_data(database::reader& source) NOEXCEPT
@@ -325,7 +325,7 @@ public:
 class big_slab
 {
 public:
-    static constexpr size_t size = zero;
+    static constexpr size_t size = max_size_t;
     static constexpr link5 count() NOEXCEPT { return sizeof(uint32_t); }
 
     big_slab from_data(database::reader& source) NOEXCEPT
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_put__excess__false)
 class slab_excess
 {
 public:
-    static constexpr size_t size = zero;
+    static constexpr size_t size = max_size_t;
     static constexpr link5 count() NOEXCEPT { return sizeof(uint32_t); }
 
     slab_excess from_data(database::reader& source) NOEXCEPT
@@ -451,7 +451,7 @@ public:
 class file_excess
 {
 public:
-    static constexpr size_t size = zero;
+    static constexpr size_t size = max_size_t;
     static constexpr link5 count() NOEXCEPT { return sizeof(uint32_t); }
 
     file_excess from_data(database::reader& source) NOEXCEPT

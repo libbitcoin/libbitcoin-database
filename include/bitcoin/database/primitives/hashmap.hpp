@@ -24,6 +24,7 @@
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/head.hpp>
 #include <bitcoin/database/primitives/iterator.hpp>
+#include <bitcoin/database/primitives/linkage.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 
 namespace libbitcoin {
@@ -50,30 +51,39 @@ public:
 
     /// Query interface, iterator is not thread safe.
 
+    /// True if an instance of object with key exists.
     bool exists(const Key& key) const NOEXCEPT;
+
+    /// ITERATOR HOLDS SHARED LOCK ON STORAGE REMAP.
     iterator it(const Key& key) const NOEXCEPT;
 
+    /// RECORD.FROM_DATA OBTAINS SHARED LOCK ON STORAGE REMAP.
     template <typename Record, if_equal<Record::size, Size> = true>
     Record get(const Key& key) const NOEXCEPT;
 
+    /// RECORD.FROM_DATA OBTAINS SHARED LOCK ON STORAGE REMAP.
     template <typename Record, if_equal<Record::size, Size> = true>
     Record get(const Link& link) const NOEXCEPT;
 
+    /// RECORD.TO_DATA OBTAINS SHARED LOCK ON STORAGE REMAP.
     template <typename Record, if_equal<Record::size, Size> = true>
     bool put(const Key& key, const Record& record) NOEXCEPT;
 
 protected:
     /// Reader positioned at key.
+    /// READER HOLDS SHARED LOCK ON STORAGE REMAP.
     reader_ptr at(const Link& link) const NOEXCEPT;
 
     /// Reader positioned at data.
+    /// READER HOLDS SHARED LOCK ON STORAGE REMAP.
     reader_ptr find(const Key& key) const NOEXCEPT;
 
     /// Reader positioned at data.
+    /// WRITER HOLDS SHARED LOCK ON STORAGE REMAP.
     finalizer_ptr push(const Key& key, const Link& size=one) NOEXCEPT;
 
 private:
-    static constexpr auto is_slab = is_zero(Size);
+    static constexpr auto is_slab = (Size == max_size_t);
     using header = database::head<Link, Key>;
     using manager = database::manager<Link, Key, Size>;
 
@@ -83,6 +93,10 @@ private:
     // Thread safe.
     manager manager_;
 };
+
+template <typename Element>
+using hash_map = hashmap<linkage<Element::pk>, system::data_array<Element::sk>,
+    Element::size>;
 
 } // namespace database
 } // namespace libbitcoin

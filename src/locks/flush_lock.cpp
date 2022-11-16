@@ -30,26 +30,24 @@ flush_lock::flush_lock(const std::filesystem::path& file) NOEXCEPT
 {
 }
 
-bool flush_lock::try_lock() const NOEXCEPT
+flush_lock::~flush_lock() NOEXCEPT
 {
-    return !exists();
+    try_unlock();
 }
 
-// This is non-const as it alters state (externally but may become internal).
-bool flush_lock::lock() NOEXCEPT
+bool flush_lock::try_lock() NOEXCEPT
 {
-    if (!try_lock())
+    if (exists())
         return false;
 
     return create();
 }
 
-// This is non-const as it alters state (externally but may become internal).
-bool flush_lock::unlock() NOEXCEPT
+bool flush_lock::try_unlock() NOEXCEPT
 {
-    if (try_lock())
+    if (!exists())
         return false;
-    
+
     return destroy();
 }
 

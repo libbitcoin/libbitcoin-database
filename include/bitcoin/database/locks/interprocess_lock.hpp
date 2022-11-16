@@ -38,16 +38,16 @@ public:
     /// Construction does not touch the file.
     interprocess_lock(const std::filesystem::path& file) NOEXCEPT;
 
-    /// Destruction calls unlock.
+    /// Destruction calls try_unlock.
     ~interprocess_lock() NOEXCEPT;
 
     /// Creates the file and acquires exclusive access.
     /// Returns false if failed to acquire lock or lock already held.
-    bool lock() NOEXCEPT;
+    bool try_lock() NOEXCEPT;
 
     /// Releases access (if locked) and deletes the file.
     /// Returns true if lock not held or succesfully unlocked and deleted.
-    bool unlock() NOEXCEPT;
+    bool try_unlock() NOEXCEPT;
 
 private:
     file_handle_t handle_;

@@ -30,7 +30,7 @@ using key2 = system::data_array<2>;
 BOOST_AUTO_TEST_CASE(manager__count__empty_slab__zero)
 {
     test::storage file;
-    const manager<linkage<4>, key1, zero> instance(file);
+    const manager<linkage<4>, key1, max_size_t> instance(file);
     BOOST_REQUIRE(is_zero(instance.count()));
 }
 
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(manager__count__non_empty_slab__expected)
     test::storage file(buffer);
 
     // Slab sizing is byte-based (arbitrary, links are file offsets).
-    const manager<linkage<4>, key1, zero> instance(file);
+    const manager<linkage<4>, key1, max_size_t> instance(file);
     BOOST_REQUIRE_EQUAL(instance.count(), expected);
 }
 
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(manager__truncate__terminal_slab__false_unchanged)
 {
     data_chunk buffer;
     test::storage file(buffer);
-    manager<linkage<4>, key1, zero> instance(file);
+    manager<linkage<4>, key1, max_size_t> instance(file);
     BOOST_REQUIRE(!instance.truncate(linkage<4>::terminal));
     BOOST_REQUIRE_EQUAL(instance.count(), zero);
 }
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(manager__truncate__overflow_slab__false_unchanged)
     constexpr auto size = 42u;
     data_chunk buffer(size, 0xff);
     test::storage file(buffer);
-    manager<linkage<4>, key1, zero> instance(file);
+    manager<linkage<4>, key1, max_size_t> instance(file);
     BOOST_REQUIRE(!instance.truncate(add1(size)));
     BOOST_REQUIRE_EQUAL(instance.count(), size);
 }
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(manager__truncate__half_full_slab__true_changed)
     constexpr auto half = to_half(size);
     data_chunk buffer(size, 0xff);
     test::storage file(buffer);
-    manager<linkage<4>, key1, zero> instance(file);
+    manager<linkage<4>, key1, max_size_t> instance(file);
     BOOST_REQUIRE(instance.truncate(half));
     BOOST_REQUIRE_EQUAL(instance.count(), half);
 
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(manager__allocate__eof_slab__terminal_unchanged)
 {
     data_chunk buffer;
     test::storage file(buffer);
-    manager<linkage<7>, key1, zero> instance(file);
+    manager<linkage<7>, key1, max_size_t> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(storage::eof), linkage<7>::terminal);
     BOOST_REQUIRE_EQUAL(instance.count(), zero);
 }
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(manager__allocate__terminal_slab__terminal_unchanged)
 {
     data_chunk buffer;
     test::storage file(buffer);
-    manager<linkage<4>, key1, zero> instance(file);
+    manager<linkage<4>, key1, max_size_t> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(linkage<4>::terminal), linkage<4>::terminal);
     BOOST_REQUIRE_EQUAL(instance.count(), zero);
 }
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(manager__allocate__empty_slab__expected)
     constexpr auto expected = 42u;
     data_chunk buffer;
     test::storage file(buffer);
-    manager<linkage<4>, key1, zero> instance(file);
+    manager<linkage<4>, key1, max_size_t> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(expected), zero);
     BOOST_REQUIRE_EQUAL(instance.count(), expected);
 }
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(manager__allocate__non_empty_slab__expected)
     constexpr auto expected = 42u;
     data_chunk buffer(to_half(expected), 0xff);
     test::storage file(buffer);
-    manager<linkage<4>, key1, zero> instance(file);
+    manager<linkage<4>, key1, max_size_t> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(to_half(expected)), to_half(expected));
     BOOST_REQUIRE_EQUAL(instance.count(), expected);
 }
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(manager__get__terminal_slab__terminal)
     constexpr auto size = 14u;
     data_chunk buffer(size, 0xff);
     test::storage file(buffer);
-    manager<linkage<2>, key1, zero> instance(file);
+    manager<linkage<2>, key1, max_size_t> instance(file);
     BOOST_REQUIRE_EQUAL(instance.count(), size);
     BOOST_REQUIRE(!instance.get(linkage<2>::terminal));
 }
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(manager__get__slab__expected)
     };
 
     test::storage file(buffer);
-    manager<linkage<2>, key1, zero> instance(file);
+    manager<linkage<2>, key1, max_size_t> instance(file);
     BOOST_REQUIRE_EQUAL(instance.count(), size);
     BOOST_REQUIRE_EQUAL(*instance.get(0)->begin(), 0x00_u8);
     BOOST_REQUIRE_EQUAL(*instance.get(1)->begin(), 0x01_u8);

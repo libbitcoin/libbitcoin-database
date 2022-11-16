@@ -19,7 +19,7 @@
 #include "../../test.hpp"
 #include "../../storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(tables_archives_txs_tests)
+BOOST_AUTO_TEST_SUITE(txs_tests)
 
 BOOST_AUTO_TEST_CASE(tables_archives_txs_test)
 {

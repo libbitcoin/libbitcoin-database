@@ -21,10 +21,79 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
 namespace database {
+namespace txs {
 
+/// Txs is a slab hashmap of tx fks (first is count), searchable by header.fk.
+
+struct slab
+{
+    /// Sizes.
+    static constexpr size_t pk = schema::txs;
+    static constexpr size_t sk = schema::block;
+    static constexpr size_t minsize = zero;
+    static constexpr size_t minrow = pk + sk + minsize;
+    static constexpr size_t size = max_size_t;
+    static_assert(minsize == 0u);
+    static_assert(minrow == 7u);
+
+    linkage<pk> count() const NOEXCEPT
+    {
+        using namespace system;
+        using out = typename linkage<pk>::integer;
+        return possible_narrow_cast<out>(pk + sk +
+            schema::tx * add1(tx_fks.size()));
+    }
+
+    /// Fields.
+    std_vector<uint32_t> tx_fks;
+    bool valid{ false };
+
+    /// Serialializers.
+
+    inline slab from_data(reader& source) NOEXCEPT
+    {
+        tx_fks.resize(source.read_little_endian<uint32_t, schema::tx>());
+        std::for_each(tx_fks.begin(), tx_fks.end(), [&](auto& fk) NOEXCEPT
+        {
+            fk = source.read_little_endian<uint32_t, schema::tx>();
+        });
+
+        BC_ASSERT(source.get_position() == count());
+        valid = source;
+        return *this;
+    }
+
+    inline bool to_data(finalizer& sink) const NOEXCEPT
+    {
+        BC_ASSERT(tx_fks.size() < system::power2<uint64_t>(to_bits(schema::tx)));
+        const auto fks = system::possible_narrow_cast<uint32_t>(tx_fks.size());
+
+        sink.write_little_endian<uint32_t, schema::tx>(fks);
+        std::for_each(tx_fks.begin(), tx_fks.end(), [&](const auto& fk) NOEXCEPT
+        {
+            sink.write_little_endian<uint32_t, schema::tx>(fk);
+        });
+
+        BC_ASSERT(sink.get_position() == count());
+        return sink;
+    }
+};
+
+/// txs::table
+class BCD_API table
+  : public hash_map<slab>
+{
+public:
+    using hash_map<slab>::hashmap;
+};
+
+} // namespace txs
 } // namespace database
 } // namespace libbitcoin
 

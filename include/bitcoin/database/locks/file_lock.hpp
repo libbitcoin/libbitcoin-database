@@ -26,11 +26,12 @@
 
 namespace libbitcoin {
 namespace database {
-
-/// This class is not thread safe.
+    
+/// This class is not thread safe, and does not throw.
 class BCD_API file_lock
 {
 public:
+    /// Construction does not touch the file.
     file_lock(const std::filesystem::path& file) NOEXCEPT;
 
     std::string file() const NOEXCEPT;

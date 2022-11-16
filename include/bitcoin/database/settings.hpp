@@ -34,21 +34,11 @@ public:
 
     /// Properties.
     std::filesystem::path directory;
-    bool flush_writes;
-    uint32_t cache_capacity;
-    uint16_t file_growth_rate;
-    uint32_t block_table_buckets;
-    uint32_t transaction_table_buckets;
-    uint32_t payment_table_buckets;
-    uint64_t block_table_size;
-    uint64_t candidate_index_size;
-    uint64_t confirmed_index_size;
-    uint64_t transaction_index_size;
-    uint64_t transaction_table_size;
-    uint64_t payment_index_size;
-    uint64_t payment_table_size;
-    uint32_t neutrino_filter_table_buckets;
-    uint64_t neutrino_filter_table_size;
+    std::filesystem::path head;
+    std::filesystem::path body;
+    uint32_t size;
+    uint16_t growth;
+    uint32_t buckets;
 };
 
 } // namespace database

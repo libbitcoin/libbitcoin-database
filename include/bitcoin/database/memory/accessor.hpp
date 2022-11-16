@@ -26,7 +26,8 @@
 
 namespace libbitcoin {
 namespace database {
-
+    
+/// OBJECT HOLDS SHARED LOCK ON STORAGE REMAP.
 /// Shared r/w access to a memory buffer, mutex blocks memory remap.
 template <typename Mutex>
 class accessor final

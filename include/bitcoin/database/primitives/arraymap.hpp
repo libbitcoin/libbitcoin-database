@@ -22,6 +22,8 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/linkage.hpp>
+
 
 namespace libbitcoin {
 namespace database {
@@ -36,26 +38,33 @@ public:
 
     /// Query interface.
 
+    /// RECORD.FROM_DATA OBTAINS SHARED LOCK ON STORAGE REMAP.
     template <typename Record, if_equal<Record::size, Size> = true>
     Record get(const Link& link) const NOEXCEPT;
 
+    /// RECORD.TO_DATA OBTAINS SHARED LOCK ON STORAGE REMAP.
     template <typename Record, if_equal<Record::size, Size> = true>
     bool put(const Record& record) NOEXCEPT;
 
 protected:
     /// Reader positioned at data.
+    /// READER HOLDS SHARED LOCK ON STORAGE REMAP.
     reader_ptr at(const Link& link) const NOEXCEPT;
 
     /// Reader positioned at data.
+    /// WRITER HOLDS SHARED LOCK ON STORAGE REMAP.
     writer_ptr push(const Link& size=one) NOEXCEPT;
 
 private:
-    static constexpr auto is_slab = is_zero(Size);
+    static constexpr auto is_slab = (Size == max_size_t);
     static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
 
     // Thread safe.
     storage& body_;
 };
+
+template <typename Element>
+using array_map = arraymap<linkage<Element::pk>, Element::size>;
 
 } // namespace database
 } // namespace libbitcoin

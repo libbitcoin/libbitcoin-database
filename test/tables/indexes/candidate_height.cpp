@@ -19,7 +19,7 @@
 #include "../../test.hpp"
 #include "../../storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(tables_indexes_candidate_height_tests)
+BOOST_AUTO_TEST_SUITE(candidate_height_tests)
 
 BOOST_AUTO_TEST_CASE(tables_indexes_candidate_height_test)
 {

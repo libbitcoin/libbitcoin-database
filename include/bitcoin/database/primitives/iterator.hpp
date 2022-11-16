@@ -27,8 +27,9 @@ namespace libbitcoin {
 namespace database {
 
 /// This class is not thread safe.
-/// Size non-zero implies record manager (ordinal record links).
-template <typename Link, typename Key, size_t Size = zero>
+/// Size non-max implies record manager (ordinal record links).
+/// MEMBER MEMORY_PTR HOLDS SHARED LOCK ON STORAGE REMAP, DO NOT EXTEND LIFETIME.
+template <typename Link, typename Key, size_t Size = max_size_t>
 class iterator
 {
 public:
@@ -45,7 +46,7 @@ protected:
     Link get_next() const NOEXCEPT;
 
 private:
-    static constexpr auto is_slab = is_zero(Size);
+    static constexpr auto is_slab = (Size == max_size_t);
     static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
 
     // These are thread safe.

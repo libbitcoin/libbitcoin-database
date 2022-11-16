@@ -43,25 +43,8 @@ src_libbitcoin_database_la_SOURCES = \
     src/memory/map.cpp \
     src/memory/mman-win32/mman.c \
     src/memory/mman-win32/mman.h \
-    src/tables/archives/header.cpp \
-    src/tables/archives/input.cpp \
-    src/tables/archives/output.cpp \
-    src/tables/archives/puts.cpp \
-    src/tables/archives/transaction.cpp \
-    src/tables/archives/txs.cpp \
-    src/tables/caches/bootstrap.cpp \
-    src/tables/caches/buffer.cpp \
-    src/tables/caches/neutrino.cpp \
-    src/tables/caches/validated_block.cpp \
-    src/tables/caches/validated_tx.cpp \
-    src/tables/indexes/address.cpp \
-    src/tables/indexes/candidate_height.cpp \
-    src/tables/indexes/confirmed_block.cpp \
-    src/tables/indexes/confirmed_height.cpp \
-    src/tables/indexes/confirmed_tx.cpp \
-    src/tables/indexes/input_tx.cpp \
-    src/tables/indexes/output_tx.cpp \
-    src/tables/indexes/spent_output.cpp
+    src/store/query.cpp \
+    src/store/store.cpp
 
 # local: test/libbitcoin-database-test
 #------------------------------------------------------------------------------
@@ -91,9 +74,12 @@ test_libbitcoin_database_test_SOURCES = \
     test/primitives/iterator.cpp \
     test/primitives/linkage.cpp \
     test/primitives/manager.cpp \
+    test/store/query.cpp \
+    test/store/store.cpp \
     test/tables/archives/header.cpp \
     test/tables/archives/input.cpp \
     test/tables/archives/output.cpp \
+    test/tables/archives/point.cpp \
     test/tables/archives/puts.cpp \
     test/tables/archives/transaction.cpp \
     test/tables/archives/txs.cpp \
@@ -183,6 +169,11 @@ include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/manager.hpp \
     include/bitcoin/database/primitives/primitives.hpp
 
+include_bitcoin_database_storedir = ${includedir}/bitcoin/database/store
+include_bitcoin_database_store_HEADERS = \
+    include/bitcoin/database/store/query.hpp \
+    include/bitcoin/database/store/store.hpp
+
 include_bitcoin_database_tablesdir = ${includedir}/bitcoin/database/tables
 include_bitcoin_database_tables_HEADERS = \
     include/bitcoin/database/tables/schema.hpp \
@@ -193,6 +184,7 @@ include_bitcoin_database_tables_archives_HEADERS = \
     include/bitcoin/database/tables/archives/header.hpp \
     include/bitcoin/database/tables/archives/input.hpp \
     include/bitcoin/database/tables/archives/output.hpp \
+    include/bitcoin/database/tables/archives/point.hpp \
     include/bitcoin/database/tables/archives/puts.hpp \
     include/bitcoin/database/tables/archives/transaction.hpp \
     include/bitcoin/database/tables/archives/txs.hpp

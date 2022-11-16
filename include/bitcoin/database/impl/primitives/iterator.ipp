@@ -63,7 +63,7 @@ TEMPLATE
 bool CLASS::is_match() const NOEXCEPT
 {
     using namespace system;
-    BC_ASSERT(!is_multiply_overflow(link_to_position(link_), Link::size));
+    BC_ASSERT(!is_add_overflow(link_to_position(link_), Link::size));
 
     if (!memory_)
         return false;
@@ -99,7 +99,7 @@ constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
     using namespace system;
     const auto value = possible_narrow_cast<size_t>(link.value);
 
-    // Iterator keys off of zero Size...
+    // Iterator keys off of max Size...
     if constexpr (is_slab)
     {
         return value;

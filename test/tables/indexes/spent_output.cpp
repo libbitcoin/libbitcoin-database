@@ -19,7 +19,7 @@
 #include "../../test.hpp"
 #include "../../storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(tables_indexes_spent_output_tests)
+BOOST_AUTO_TEST_SUITE(spent_output_tests)
 
 BOOST_AUTO_TEST_CASE(tables_indexes_spent_output_test)
 {
