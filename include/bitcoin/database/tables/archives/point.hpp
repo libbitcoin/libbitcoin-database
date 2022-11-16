@@ -45,55 +45,43 @@ struct record
 
     static constexpr linkage<pk> count() NOEXCEPT { return 1; }
 
-    /// Fields.
-    bool valid{ false };
+    /// Fields (none).
 
     /// Serialializers (nops).
 
-    inline record from_data(reader& source) NOEXCEPT
+    inline bool from_data(const reader& source) NOEXCEPT
     {
-        BC_ASSERT(source.get_position() == minrow);
-        valid = source;
-        return *this;
+        // debug warning if source non-const, but get_position is non-const.
+        ////BC_ASSERT(source.get_position() == minrow);
+        return source;
     }
 
-    inline bool to_data(finalizer& sink) const NOEXCEPT
+    inline bool to_data(const finalizer& sink) const NOEXCEPT
     {
-        BC_ASSERT(sink.get_position() == minrow);
+        // debug warning if sink non-const, but get_position is non-const.
+        ////BC_ASSERT(sink.get_position() == minrow);
         return sink;
+    }
+
+    inline bool operator==(const record&) const NOEXCEPT
+    {
+        return true;
     }
 };
 
 /// Get search key only.
 struct record_sk
-  : public record
 {
-    inline record_sk from_data(reader& source) NOEXCEPT
+    static constexpr size_t size = record::size;
+
+    inline bool from_data(reader& source) NOEXCEPT
     {
         source.rewind_bytes(record::sk);
         sk = source.read_hash();
-        valid = source;
-        return *this;
+        return source;
     }
 
-    hash_digest sk;
-    bool valid{ false };
-};
-
-/// Get primary key only.
-struct record_pk
-  : public record
-{
-    inline record_pk from_data(reader& source) NOEXCEPT
-    {
-        source.rewind_bytes(record::pk + record::sk);
-        pk = source.read_little_endian<uint32_t, record::pk>();
-        valid = source;
-        return *this;
-    }
-
-    uint32_t pk;
-    bool valid{ false };
+    hash_digest sk{};
 };
 
 /// point::table

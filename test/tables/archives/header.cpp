@@ -22,116 +22,144 @@
 BOOST_AUTO_TEST_SUITE(header_tests)
 
 using namespace database::header;
-constexpr hash_digest hash = base16_array("110102030405060708090a0b0c0d0e0f220102030405060708090a0b0c0d0e0f");
-constexpr auto terminal = linkage<record::pk>::terminal;
+constexpr hash_digest key = base16_array("110102030405060708090a0b0c0d0e0f220102030405060708090a0b0c0d0e0f");
+constexpr hash_digest root = base16_array("330102030405060708090a0b0c0d0e0f440102030405060708090a0b0c0d0e0f");
 
 #define DECLARE(instance_, body_file_, buckets_) \
 data_chunk head_file; \
 data_chunk body_file_; \
 test::storage head_store{ head_file }; \
 test::storage body_store{ body_file_ }; \
-hashmap<linkage<record::pk>, search<record::sk>, record::size> instance_{ head_store, body_store, buckets_ }
+hash_map<record> instance_{ head_store, body_store, buckets_ }
 
 constexpr record expected
 {
-    1_u32,
-    2_u32,
-    3_u32,
-    terminal,
-    4_u32,
-    5_u32,
-    6_u32,
-    7_u32,
-    null_hash,
-    true
+    0x00341201_u32, // height
+    0x56341202_u32, // flags
+    0x56341203_u32, // mtp
+    0x00341204_u32, // parent_fk
+    0x56341205_u32, // version
+    0x56341206_u32, // time
+    0x56341207_u32, // bits
+    0x56341208_u32, // nonce
+    root
 };
 const data_chunk expected_file
 {
+    // next
     0xff, 0xff, 0xff,
+
+    // key
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+    // record
+    0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+    // --------------------------------------------------------------------------------------------
+
+    // next
+    0xff, 0xff, 0xff,
+
+    // key
     0x11, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
     0x22, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-    0x01, 0x00, 0x00,
-    0x02, 0x00, 0x00, 0x00,
-    0x03, 0x00, 0x00, 0x00,
-    0xff, 0xff, 0xff,
-    0x04, 0x00, 0x00, 0x00,
-    0x05, 0x00, 0x00, 0x00,
-    0x06, 0x00, 0x00, 0x00,
-    0x07, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+    // record
+    0x01, 0x12, 0x34,
+    0x02, 0x12, 0x34, 0x56,
+    0x03, 0x12, 0x34, 0x56,
+    0x04, 0x12, 0x34,
+    0x05, 0x12, 0x34, 0x56,
+    0x06, 0x12, 0x34, 0x56,
+    0x07, 0x12, 0x34, 0x56,
+    0x08, 0x12, 0x34, 0x56,
+    0x33, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+    0x44, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
 };
 
 BOOST_AUTO_TEST_CASE(header__put__get__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put(hash, expected));
-    BOOST_REQUIRE(instance.get<record>(0) == expected);
-    BOOST_REQUIRE(instance.get<record>(hash) == expected);
+    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 
-    // 000000
-    //
-    // ffffff
-    // ffffff
-    // ffffff
-    // ffffff
-    // ffffff
-    // ffffff
-    // ffffff
-    // ffffff
-    // ffffff
-    // ffffff
-    // ffffff
-    // ffffff
-    // 000000
-    // ffffff
-    // ffffff
-    // ffffff
-    // ffffff
-    // ffffff
-    // ffffff
-    // ffffff
-    //
-    // ffffff    [link]
-    // 110102030405060708090a0b0c0d0e0f220102030405060708090a0b0c0d0e0f [key]
-    // 010000    [height]
-    // 02000000  [flags]
-    // 03000000  [mtp]
-    // ffffff    [parent]
-    // 04000000  [version]
-    // 05000000  [time]
-    // 06000000  [bits]
-    // 07000000  [nonce]
-    // 0000000000000000000000000000000000000000000000000000000000000000 [root]
+    record element{};
+    BOOST_REQUIRE(instance.get(0, element));
+    BOOST_REQUIRE(element == record{});
 
-    ////std::cout << head_file << std::endl << std::endl;
-    ////std::cout << body_file << std::endl << std::endl;
+    BOOST_REQUIRE(instance.get(null_hash, element));
+    BOOST_REQUIRE(element == record{});
+
+    BOOST_REQUIRE(instance.get(1, element));
+    BOOST_REQUIRE(element == expected);
+
+    BOOST_REQUIRE(instance.get(key, element));
+    BOOST_REQUIRE(element == expected);
 }
 
-BOOST_AUTO_TEST_CASE(header__put__get_minimized__expected)
+BOOST_AUTO_TEST_CASE(point__put__get_sk__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put(hash, expected));
+    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put(key, expected));
+    BOOST_REQUIRE_EQUAL(body_file, expected_file);
 
-    const auto element = instance.get<record_height>(0);
-    BOOST_REQUIRE(element.valid);
+    record_sk element{};
+    BOOST_REQUIRE(instance.get(1, element));
+    BOOST_REQUIRE_EQUAL(element.sk, key);
+}
+
+BOOST_AUTO_TEST_CASE(point__it__pk__expected)
+{
+    DECLARE(instance, body_file, 20);
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put(key, expected));
+    BOOST_REQUIRE_EQUAL(body_file, expected_file);
+
+    auto it = instance.it(key);
+    BOOST_REQUIRE_EQUAL(it.self(), 1u);
+    BOOST_REQUIRE(!it.advance());
+}
+
+BOOST_AUTO_TEST_CASE(header__put__get_height__expected)
+{
+    DECLARE(instance, body_file, 20);
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put(key, expected));
+    BOOST_REQUIRE_EQUAL(body_file, expected_file);
+
+    record_height element{};
+    BOOST_REQUIRE(instance.get(1, element));
     BOOST_REQUIRE_EQUAL(element.height, expected.height);
-    BOOST_REQUIRE_EQUAL(body_file, expected_file);
 }
 
-BOOST_AUTO_TEST_CASE(header__put__get_extended__expected)
+BOOST_AUTO_TEST_CASE(header__put__get_with_sk__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put(hash, expected));
-
-    const auto element = instance.get<record_with_key>(hash);
-    BOOST_REQUIRE(element.valid);
-    BOOST_REQUIRE_EQUAL(element.key, hash);
+    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
+
+    record_with_sk element{};
+    BOOST_REQUIRE(instance.get<record_with_sk>(key, element));
+    BOOST_REQUIRE(static_cast<record>(element) == expected);
+    BOOST_REQUIRE_EQUAL(element.sk, key);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

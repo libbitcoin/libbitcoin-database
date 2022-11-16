@@ -194,11 +194,10 @@ public:
     // record count or bytes count for slab (for allocate).
     static constexpr link5 count() NOEXCEPT { return 1; }
 
-    little_record from_data(database::reader& source) NOEXCEPT
+    bool from_data(database::reader& source) NOEXCEPT
     {
         value = source.read_little_endian<uint32_t>();
-        valid = source;
-        return *this;
+        return source;
     }
 
     bool to_data(database::writer& sink) const NOEXCEPT
@@ -208,7 +207,6 @@ public:
     }
 
     uint32_t value{ 0 };
-    bool valid{ false };
 };
 
 class big_record
@@ -217,11 +215,10 @@ public:
     static constexpr size_t size = sizeof(uint32_t);
     static constexpr link5 count() NOEXCEPT { return 1; }
 
-    big_record from_data(database::reader& source) NOEXCEPT
+    bool from_data(database::reader& source) NOEXCEPT
     {
         value = source.read_big_endian<uint32_t>();
-        valid = source;
-        return *this;
+        return source;
     }
 
     bool to_data(database::writer& sink) const NOEXCEPT
@@ -231,7 +228,6 @@ public:
     }
 
     uint32_t value{ 0 };
-    bool valid{ false };
 };
 
 BOOST_AUTO_TEST_CASE(arraymap__record_get__terminal__invalid)
@@ -239,8 +235,9 @@ BOOST_AUTO_TEST_CASE(arraymap__record_get__terminal__invalid)
     data_chunk body_file;
     test::storage body_store{ body_file };
     const arraymap<link5, little_record::size> instance{ body_store };
-    const auto record = instance.get<little_record>(link5::terminal);
-    BOOST_REQUIRE(!record.valid);
+
+    little_record record{};
+    BOOST_REQUIRE(!instance.get(link5::terminal, record));
 }
 
 BOOST_AUTO_TEST_CASE(arraymap__record_get__empty__invalid)
@@ -248,8 +245,9 @@ BOOST_AUTO_TEST_CASE(arraymap__record_get__empty__invalid)
     data_chunk body_file;
     test::storage body_store{ body_file };
     const arraymap<link5, little_record::size> instance{ body_store };
-    const auto record = instance.get<little_record>(0);
-    BOOST_REQUIRE(!record.valid);
+
+    little_record record{};
+    BOOST_REQUIRE(!instance.get(0, record));
 }
 
 BOOST_AUTO_TEST_CASE(arraymap__record_get__populated__valid)
@@ -257,8 +255,9 @@ BOOST_AUTO_TEST_CASE(arraymap__record_get__populated__valid)
     data_chunk body_file{ 0x01, 0x02, 0x03, 0x04 };
     test::storage body_store{ body_file };
     const arraymap<link5, little_record::size> instance{ body_store };
-    const auto record = instance.get<little_record>(0);
-    BOOST_REQUIRE(record.valid);
+
+    little_record record{};
+    BOOST_REQUIRE(instance.get(0, record));
     BOOST_REQUIRE_EQUAL(record.value, 0x04030201_u32);
 }
 
@@ -268,10 +267,10 @@ BOOST_AUTO_TEST_CASE(arraymap__record_put__get__expected)
     test::storage body_store{ body_file };
     arraymap<link5, big_record::size> instance{ body_store };
 
-    BOOST_REQUIRE(instance.put(big_record{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(big_record{ 0xa1b2c3d4_u32 }));
 
-    const auto record = instance.get<big_record>(0);
-    BOOST_REQUIRE(record.valid);
+    big_record record{};
+    BOOST_REQUIRE(instance.get(0, record));
     BOOST_REQUIRE_EQUAL(record.value, 0xa1b2c3d4_u32);
 
     const data_chunk expected_file{ 0xa1, 0xb2, 0xc3, 0xd4 };
@@ -284,15 +283,15 @@ BOOST_AUTO_TEST_CASE(arraymap__record_put__multiple__expected)
     test::storage body_store{ body_file };
     arraymap<link5, big_record::size> instance{ body_store };
 
-    BOOST_REQUIRE(instance.put(big_record{ 0xa1b2c3d4_u32, true }));
-    BOOST_REQUIRE(instance.put(little_record{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(big_record{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(instance.put(little_record{ 0xa1b2c3d4_u32 }));
 
-    const auto record1 = instance.get<big_record>(0);
-    BOOST_REQUIRE(record1.valid);
+    big_record record1{};
+    BOOST_REQUIRE(instance.get(0, record1));
     BOOST_REQUIRE_EQUAL(record1.value, 0xa1b2c3d4_u32);
 
-    const auto record2 = instance.get<little_record>(1);
-    BOOST_REQUIRE(record2.valid);
+    little_record record2{};
+    BOOST_REQUIRE(instance.get(1, record2));
     BOOST_REQUIRE_EQUAL(record2.value, 0xa1b2c3d4_u32);
 
     const data_chunk expected_file{ 0xa1, 0xb2, 0xc3, 0xd4, 0xd4, 0xc3, 0xb2, 0xa1 };
@@ -305,11 +304,10 @@ public:
     static constexpr size_t size = max_size_t;
     static constexpr link5 count() NOEXCEPT { return sizeof(uint32_t); }
 
-    little_slab from_data(database::reader& source) NOEXCEPT
+    bool from_data(database::reader& source) NOEXCEPT
     {
         value = source.read_little_endian<uint32_t>();
-        valid = source;
-        return *this;
+        return source;
     }
 
     bool to_data(database::writer& sink) const NOEXCEPT
@@ -319,7 +317,6 @@ public:
     }
 
     uint32_t value{ 0 };
-    bool valid{ false };
 };
 
 class big_slab
@@ -328,11 +325,10 @@ public:
     static constexpr size_t size = max_size_t;
     static constexpr link5 count() NOEXCEPT { return sizeof(uint32_t); }
 
-    big_slab from_data(database::reader& source) NOEXCEPT
+    bool from_data(database::reader& source) NOEXCEPT
     {
         value = source.read_big_endian<uint32_t>();
-        valid = source;
-        return *this;
+        return source;
     }
 
     bool to_data(database::writer& sink) const NOEXCEPT
@@ -342,7 +338,6 @@ public:
     }
 
     uint32_t value{ 0 };
-    bool valid{ false };
 };
 
 BOOST_AUTO_TEST_CASE(arraymap__slab_put__get__expected)
@@ -351,10 +346,10 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_put__get__expected)
     test::storage body_store{ body_file };
     arraymap<link5, big_slab::size> instance{ body_store };
 
-    BOOST_REQUIRE(instance.put(big_slab{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(big_slab{ 0xa1b2c3d4_u32 }));
 
-    const auto slab = instance.get<big_slab>(zero);
-    BOOST_REQUIRE(slab.valid);
+    big_slab slab{};
+    BOOST_REQUIRE(instance.get(zero, slab));
     BOOST_REQUIRE_EQUAL(slab.value, 0xa1b2c3d4_u32);
 
     const data_chunk expected_file{ 0xa1, 0xb2, 0xc3, 0xd4 };
@@ -367,15 +362,15 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_put__multiple__expected)
     test::storage body_store{ body_file };
     arraymap<link5, big_slab::size> instance{ body_store };
 
-    BOOST_REQUIRE(instance.put(big_slab{ 0xa1b2c3d4_u32, true }));
-    BOOST_REQUIRE(instance.put(little_slab{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(big_slab{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(instance.put(little_slab{ 0xa1b2c3d4_u32 }));
 
-    const auto slab1 = instance.get<big_slab>(zero);
-    BOOST_REQUIRE(slab1.valid);
+    big_slab slab1{};
+    BOOST_REQUIRE(instance.get(zero, slab1));
     BOOST_REQUIRE_EQUAL(slab1.value, 0xa1b2c3d4_u32);
 
-    const auto slab2 = instance.get<little_slab>(big_slab::count());
-    BOOST_REQUIRE(slab2.valid);
+    little_slab slab2{};
+    BOOST_REQUIRE(instance.get(little_slab::count(), slab2));
     BOOST_REQUIRE_EQUAL(slab2.value, 0xa1b2c3d4_u32);
 
     const data_chunk expected_file{ 0xa1, 0xb2, 0xc3, 0xd4, 0xd4, 0xc3, 0xb2, 0xa1 };
@@ -389,11 +384,10 @@ public:
     static constexpr size_t size = sizeof(uint32_t);
     static constexpr link5 count() NOEXCEPT { return 1; }
 
-    record_excess from_data(database::reader& source) NOEXCEPT
+    bool from_data(database::reader& source) NOEXCEPT
     {
         value = source.read_big_endian<uint64_t>();
-        valid = source;
-        return *this;
+        return source;
     }
 
     bool to_data(database::writer& sink) const NOEXCEPT
@@ -403,7 +397,6 @@ public:
     }
 
     uint64_t value{ 0 };
-    bool valid{ false };
 };
 
 BOOST_AUTO_TEST_CASE(arraymap__record_get__excess__false)
@@ -411,8 +404,10 @@ BOOST_AUTO_TEST_CASE(arraymap__record_get__excess__false)
     data_chunk body_file{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
     test::storage body_store{ body_file };
     const arraymap<link5, record_excess::size> instance{ body_store };
-    const auto record = instance.get<record_excess>(zero);
-    BOOST_REQUIRE(!record.valid);
+
+
+    record_excess record{};
+    BOOST_REQUIRE(!instance.get(zero, record));
 }
 
 BOOST_AUTO_TEST_CASE(arraymap__record_put__excess__false)
@@ -420,7 +415,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_put__excess__false)
     data_chunk body_file;
     test::storage body_store{ body_file };
     arraymap<link5, record_excess::size> instance{ body_store };
-    BOOST_REQUIRE(!instance.put(record_excess{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(!instance.put(record_excess{ 0xa1b2c3d4_u32 }));
 }
 
 // advertises 32 but reads/writes 64
@@ -430,11 +425,10 @@ public:
     static constexpr size_t size = max_size_t;
     static constexpr link5 count() NOEXCEPT { return sizeof(uint32_t); }
 
-    slab_excess from_data(database::reader& source) NOEXCEPT
+    bool from_data(database::reader& source) NOEXCEPT
     {
         value = source.read_big_endian<uint64_t>();
-        valid = source;
-        return *this;
+        return source;
     }
 
     bool to_data(database::writer& sink) const NOEXCEPT
@@ -444,7 +438,6 @@ public:
     }
 
     uint64_t value{ 0 };
-    bool valid{ false };
 };
 
 // advertises 32 but reads 65 (file is 64)/writes 64
@@ -454,12 +447,11 @@ public:
     static constexpr size_t size = max_size_t;
     static constexpr link5 count() NOEXCEPT { return sizeof(uint32_t); }
 
-    file_excess from_data(database::reader& source) NOEXCEPT
+    bool from_data(database::reader& source) NOEXCEPT
     {
         value = source.read_big_endian<uint64_t>();
         source.read_byte();
-        valid = source;
-        return *this;
+        return source;
     }
 
     bool to_data(database::writer& sink) const NOEXCEPT
@@ -469,7 +461,6 @@ public:
     }
 
     uint64_t value{ 0 };
-    bool valid{ false };
 };
 
 BOOST_AUTO_TEST_CASE(arraymap__slab_get__excess__true)
@@ -479,8 +470,8 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_get__excess__true)
     const arraymap<link5, slab_excess::size> instance{ body_store };
 
     // Excess read allowed to eof here (reader has only knowledge of size).
-    const auto record = instance.get<slab_excess>(zero);
-    BOOST_REQUIRE(record.valid);
+    slab_excess record{};
+    BOOST_REQUIRE(instance.get(zero, record));
 }
 
 BOOST_AUTO_TEST_CASE(arraymap__slab_get__file_excess__false)
@@ -490,8 +481,8 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_get__file_excess__false)
     const arraymap<link5, file_excess::size> instance{ body_store };
 
     // Excess read disallowed to here (past eof).
-    const auto record = instance.get<file_excess>(zero);
-    BOOST_REQUIRE(!record.valid);
+    file_excess record{};
+    BOOST_REQUIRE(!instance.get<file_excess>(zero, record));
 }
 
 BOOST_AUTO_TEST_CASE(arraymap__slab_put__excess__false)
@@ -499,7 +490,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_put__excess__false)
     data_chunk body_file;
     test::storage body_store{ body_file };
     arraymap<link5, slab_excess::size> instance{ body_store };
-    BOOST_REQUIRE(!instance.put(slab_excess{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(!instance.put(slab_excess{ 0xa1b2c3d4_u32 }));
 }
 
 ////std::cout << body_file << std::endl << std::endl;

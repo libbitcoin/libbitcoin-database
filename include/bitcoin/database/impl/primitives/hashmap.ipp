@@ -72,22 +72,22 @@ typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 
 TEMPLATE
 template <typename Record, if_equal<Record::size, Size>>
-Record CLASS::get(const Key& key) const NOEXCEPT
+bool CLASS::get(const Key& key, Record& record) const NOEXCEPT
 {
-    return get<Record>(it(key).self());
+    return get(it(key).self(), record);
 }
 
 TEMPLATE
 template <typename Record, if_equal<Record::size, Size>>
-Record CLASS::get(const Link& link) const NOEXCEPT
+bool CLASS::get(const Link& link, Record& record) const NOEXCEPT
 {
     auto source = at(link);
     if (!source)
-        return {};
+        return false;
 
     // Use of stream pointer can be eliminated by cloning at() here.
     // RECORD.FROM_DATA MUST NOT EXTEND SOURCE LIFETIME - DEADLOCK RISK.
-    return Record{}.from_data(*source);
+    return record.from_data(*source);
 }
 
 TEMPLATE

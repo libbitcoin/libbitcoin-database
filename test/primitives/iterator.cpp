@@ -146,12 +146,12 @@ BOOST_AUTO_TEST_CASE(iterator__next__self__expected)
     BOOST_REQUIRE_EQUAL(iterator1.self(), 0x00u);
 
     // Sets self/link to 0x01 (data[3]), matched.
-    BOOST_REQUIRE(iterator1.next());
+    BOOST_REQUIRE(iterator1.advance());
     BOOST_REQUIRE(!iterator1.self().is_terminal());
     BOOST_REQUIRE_EQUAL(iterator1.self(), 0x01u);
 
     // No more matches.
-    BOOST_REQUIRE(!iterator1.next());
+    BOOST_REQUIRE(!iterator1.advance());
     BOOST_REQUIRE_EQUAL(iterator1.self(), link::terminal);
 }
 
@@ -173,9 +173,9 @@ BOOST_AUTO_TEST_CASE(iterator__next__true__non_terminal)
     slab_iterate iterator{ file.get(), start, key2 };
 
     BOOST_REQUIRE(!iterator.self().is_terminal());
-    BOOST_REQUIRE(iterator.next());
+    BOOST_REQUIRE(iterator.advance());
     BOOST_REQUIRE(!iterator.self().is_terminal());
-    BOOST_REQUIRE(!iterator.next());
+    BOOST_REQUIRE(!iterator.advance());
     BOOST_REQUIRE(iterator.self().is_terminal());
 }
 

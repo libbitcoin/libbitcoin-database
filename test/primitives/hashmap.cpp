@@ -587,11 +587,10 @@ public:
     // record count or bytes count for slab (for allocate).
     static constexpr link5 count() NOEXCEPT { return 1; }
 
-    little_record from_data(database::reader& source) NOEXCEPT
+    bool from_data(database::reader& source) NOEXCEPT
     {
         value = source.read_little_endian<uint32_t>();
-        valid = source;
-        return *this;
+        return source;
     }
 
     bool to_data(database::finalizer& sink) const NOEXCEPT
@@ -601,7 +600,6 @@ public:
     }
 
     uint32_t value{ 0 };
-    bool valid{ false };
 };
 
 class big_record
@@ -610,11 +608,10 @@ public:
     static constexpr size_t size = sizeof(uint32_t);
     static constexpr link5 count() NOEXCEPT { return 1; }
 
-    big_record from_data(database::reader& source) NOEXCEPT
+    bool from_data(database::reader& source) NOEXCEPT
     {
         value = source.read_big_endian<uint32_t>();
-        valid = source;
-        return *this;
+        return source;
     }
 
     bool to_data(database::finalizer& sink) const NOEXCEPT
@@ -624,7 +621,6 @@ public:
     }
 
     uint32_t value{ 0 };
-    bool valid{ false };
 };
 
 BOOST_AUTO_TEST_CASE(hashmap__record_get__terminal__invalid)
@@ -635,8 +631,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__terminal__invalid)
     test::storage body_store{ body_file };
     const hashmap<link5, key10, little_record::size> instance{ head_store, body_store, buckets };
 
-    const auto record = instance.get<little_record>(link5::terminal);
-    BOOST_REQUIRE(!record.valid);
+    little_record record{};
+    BOOST_REQUIRE(!instance.get(link5::terminal, record));
 }
 
 BOOST_AUTO_TEST_CASE(hashmap__record_get__empty__invalid)
@@ -647,8 +643,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__empty__invalid)
     test::storage body_store{ body_file };
     const hashmap<link5, key10, little_record::size> instance{ head_store, body_store, buckets };
 
-    const auto record = instance.get<little_record>(0);
-    BOOST_REQUIRE(!record.valid);
+    little_record record{};
+    BOOST_REQUIRE(!instance.get(0, record));
 }
 
 BOOST_AUTO_TEST_CASE(hashmap__record_get__populated__valid)
@@ -664,8 +660,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__populated__valid)
     test::storage body_store{ body_file };
     const hashmap<link5, key10, little_record::size> instance{ head_store, body_store, buckets };
 
-    const auto record = instance.get<little_record>(0);
-    BOOST_REQUIRE(record.valid);
+    little_record record{};
+    BOOST_REQUIRE(instance.get(0, record));
     BOOST_REQUIRE_EQUAL(record.value, 0x04030201_u32);
 }
 
@@ -679,14 +675,14 @@ BOOST_AUTO_TEST_CASE(hashmap__record_put__get__expected)
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x42 };
-    BOOST_REQUIRE(instance.put(key, big_record{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(key, big_record{ 0xa1b2c3d4_u32 }));
 
-    const auto link_record = instance.get<big_record>(0);
-    BOOST_REQUIRE(link_record.valid);
+    big_record link_record{};
+    BOOST_REQUIRE(instance.get(0, link_record));
     BOOST_REQUIRE_EQUAL(link_record.value, 0xa1b2c3d4_u32);
 
-    const auto key_record = instance.get<big_record>(key);
-    BOOST_REQUIRE(key_record.valid);
+    big_record key_record{};
+    BOOST_REQUIRE(instance.get(key, key_record));
     BOOST_REQUIRE_EQUAL(key_record.value, 0xa1b2c3d4_u32);
 
     const data_chunk expected_file
@@ -709,15 +705,15 @@ BOOST_AUTO_TEST_CASE(hashmap__record_put__multiple__expected)
 
     constexpr key1 key1_big{ 0x41 };
     constexpr key1 key1_little{ 0x42 };
-    BOOST_REQUIRE(instance.put(key1_big, big_record{ 0xa1b2c3d4_u32, true }));
-    BOOST_REQUIRE(instance.put(key1_little, little_record{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(key1_big, big_record{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(instance.put(key1_little, little_record{ 0xa1b2c3d4_u32 }));
 
-    const auto record1 = instance.get<big_record>(key1_big);
-    BOOST_REQUIRE(record1.valid);
+    big_record record1{};
+    BOOST_REQUIRE(instance.get(key1_big, record1));
     BOOST_REQUIRE_EQUAL(record1.value, 0xa1b2c3d4_u32);
 
-    const auto record2 = instance.get<little_record>(key1_little);
-    BOOST_REQUIRE(record2.valid);
+    little_record record2{};
+    BOOST_REQUIRE(instance.get(key1_little, record2));
     BOOST_REQUIRE_EQUAL(record2.value, 0xa1b2c3d4_u32);
 
     // This expecatation relies on the fact of no hash table conflict between 0x41 and 0x42.
@@ -746,11 +742,10 @@ public:
         return link5::size + array_count<key1> + sizeof(uint32_t);
     }
 
-    little_slab from_data(database::reader& source) NOEXCEPT
+    bool from_data(database::reader& source) NOEXCEPT
     {
         value = source.read_little_endian<uint32_t>();
-        valid = source;
-        return *this;
+        return source;
     }
 
     bool to_data(database::finalizer& sink) const NOEXCEPT
@@ -760,7 +755,6 @@ public:
     }
 
     uint32_t value{ 0 };
-    bool valid{ false };
 };
 
 class big_slab
@@ -772,11 +766,10 @@ public:
         return link5::size + array_count<key1> + sizeof(uint32_t);
     }
 
-    big_slab from_data(database::reader& source) NOEXCEPT
+    bool from_data(database::reader& source) NOEXCEPT
     {
         value = source.read_big_endian<uint32_t>();
-        valid = source;
-        return *this;
+        return source;
     }
 
     bool to_data(database::finalizer& sink) const NOEXCEPT
@@ -786,7 +779,6 @@ public:
     }
 
     uint32_t value{ 0 };
-    bool valid{ false };
 };
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_put__get__expected)
@@ -800,10 +792,10 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_put__get__expected)
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x42 };
-    BOOST_REQUIRE(instance.put(key, big_slab{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(key, big_slab{ 0xa1b2c3d4_u32 }));
 
-    const auto slab = instance.get<big_slab>(zero);
-    BOOST_REQUIRE(slab.valid);
+    big_slab slab{};
+    BOOST_REQUIRE(instance.get(zero, slab));
     BOOST_REQUIRE_EQUAL(slab.value, 0xa1b2c3d4_u32);
 
     const data_chunk expected_file
@@ -827,15 +819,15 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_put__multiple__expected)
 
     constexpr key1 key_big{ 0x41 };
     constexpr key1 key_little{ 0x42 };
-    BOOST_REQUIRE(instance.put(key_big, big_slab{ 0xa1b2c3d4_u32, true }));
-    BOOST_REQUIRE(instance.put(key_little, little_slab{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(key_big, big_slab{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(instance.put(key_little, little_slab{ 0xa1b2c3d4_u32 }));
 
-    const auto slab1 = instance.get<big_slab>(zero);
-    BOOST_REQUIRE(slab1.valid);
+    big_slab slab1{};
+    BOOST_REQUIRE(instance.get(zero, slab1));
     BOOST_REQUIRE_EQUAL(slab1.value, 0xa1b2c3d4_u32);
 
-    const auto slab2 = instance.get<little_slab>(big_slab::count());
-    BOOST_REQUIRE(slab2.valid);
+    little_slab slab2{};
+    BOOST_REQUIRE(instance.get(big_slab::count(), slab2));
     BOOST_REQUIRE_EQUAL(slab2.value, 0xa1b2c3d4_u32);
 
     // This expecatation relies on the fact of no hash table conflict between 0x41 and 0x42.
@@ -859,11 +851,10 @@ public:
     static constexpr size_t size = sizeof(uint32_t);
     static constexpr link5 count() NOEXCEPT { return 1; }
 
-    record_excess from_data(database::reader& source) NOEXCEPT
+    bool from_data(database::reader& source) NOEXCEPT
     {
         value = source.read_big_endian<uint64_t>();
-        valid = source;
-        return *this;
+        return source;
     }
 
     bool to_data(database::finalizer& sink) const NOEXCEPT
@@ -873,7 +864,6 @@ public:
     }
 
     uint64_t value{ 0 };
-    bool valid{ false };
 };
 
 BOOST_AUTO_TEST_CASE(hashmap__record_get__excess__false)
@@ -886,10 +876,10 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__excess__false)
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
-    BOOST_REQUIRE(instance.put(key, big_record{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(key, big_record{ 0xa1b2c3d4_u32 }));
 
-    const auto record = instance.get<record_excess>(zero);
-    BOOST_REQUIRE(!record.valid);
+    record_excess record{};
+    BOOST_REQUIRE(!instance.get(zero, record));
 }
 
 BOOST_AUTO_TEST_CASE(hashmap__record_put__excess__false)
@@ -902,7 +892,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_put__excess__false)
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
-    BOOST_REQUIRE(!instance.put(key, record_excess{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(!instance.put(key, record_excess{ 0xa1b2c3d4_u32 }));
 }
 
 // advertises 32 but reads/writes 64
@@ -912,11 +902,10 @@ public:
     static constexpr size_t size = max_size_t;
     static constexpr link5 count() NOEXCEPT { return sizeof(uint32_t); }
 
-    slab_excess from_data(database::reader& source) NOEXCEPT
+    bool from_data(database::reader& source) NOEXCEPT
     {
         value = source.read_big_endian<uint64_t>();
-        valid = source;
-        return *this;
+        return source;
     }
 
     bool to_data(database::finalizer& sink) const NOEXCEPT
@@ -926,7 +915,6 @@ public:
     }
 
     uint64_t value{ 0 };
-    bool valid{ false };
 };
 
 // advertises 32 but reads 65 (file is 64)/writes 64
@@ -936,12 +924,11 @@ public:
     static constexpr size_t size = max_size_t;
     static constexpr link5 count() NOEXCEPT { return sizeof(uint32_t); }
 
-    file_excess from_data(database::reader& source) NOEXCEPT
+    bool from_data(database::reader& source) NOEXCEPT
     {
         value = source.read_big_endian<uint64_t>();
         source.read_byte();
-        valid = source;
-        return *this;
+        return source;
     }
 
     bool to_data(database::finalizer& sink) const NOEXCEPT
@@ -951,7 +938,6 @@ public:
     }
 
     uint64_t value{ 0 };
-    bool valid{ false };
 };
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_get__excess__true)
@@ -964,12 +950,12 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_get__excess__true)
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
-    BOOST_REQUIRE(instance.put(key, big_slab{ 0xa1b2c3d4_u32, true }));
-    BOOST_REQUIRE(instance.put(key, big_slab{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(key, big_slab{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(instance.put(key, big_slab{ 0xa1b2c3d4_u32 }));
 
     // Excess read allowed to eof here (reader has only knowledge of size).
-    const auto slab = instance.get<slab_excess>(zero);
-    BOOST_REQUIRE(slab.valid);
+    slab_excess slab{};
+    BOOST_REQUIRE(instance.get<slab_excess>(zero, slab));
 }
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_get__file_excess__false)
@@ -982,11 +968,11 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_get__file_excess__false)
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
-    BOOST_REQUIRE(instance.put(key, big_slab{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(key, big_slab{ 0xa1b2c3d4_u32 }));
 
     // Excess read disallowed to here (past eof).
-    const auto slab = instance.get<slab_excess>(zero);
-    BOOST_REQUIRE(!slab.valid);
+    slab_excess slab{};
+    BOOST_REQUIRE(!instance.get<slab_excess>(zero, slab));
 }
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_put__excess__false)
@@ -999,7 +985,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_put__excess__false)
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
-    BOOST_REQUIRE(!instance.put(key, slab_excess{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(!instance.put(key, slab_excess{ 0xa1b2c3d4_u32 }));
 }
 
 BOOST_AUTO_TEST_CASE(hashmap__record_exists__exists__true)
@@ -1013,7 +999,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_exists__exists__true)
 
     constexpr key1 key{ 0x41 };
     BOOST_REQUIRE(!instance.exists(key));
-    BOOST_REQUIRE(instance.put(key, big_record{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(key, big_record{ 0xa1b2c3d4_u32 }));
     BOOST_REQUIRE(instance.exists(key));
 }
 
@@ -1028,7 +1014,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_exists__exists__true)
 
     constexpr key1 key{ 0x41 };
     BOOST_REQUIRE(!instance.exists(key));
-    BOOST_REQUIRE(instance.put(key, big_slab{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(key, big_slab{ 0xa1b2c3d4_u32 }));
     BOOST_REQUIRE(instance.exists(key));
 }
 
@@ -1043,9 +1029,11 @@ BOOST_AUTO_TEST_CASE(hashmap__record_it__exists__non_terminal)
 
     constexpr key1 key{ 0x41 };
     BOOST_REQUIRE(instance.it(key).self().is_terminal());
-    BOOST_REQUIRE(instance.put(key, big_record{ 0xa1b2c3d4_u32, true }));
+    BOOST_REQUIRE(instance.put(key, big_record{ 0xa1b2c3d4_u32 }));
     BOOST_REQUIRE(!instance.it(key).self().is_terminal());
-    BOOST_REQUIRE(instance.get<big_record>(instance.it(key).self()).valid);
+
+    big_record record{};
+    BOOST_REQUIRE(instance.get(instance.it(key).self(), record));
 }
 
 BOOST_AUTO_TEST_CASE(hashmap__record_it__multiple__iterated)
@@ -1061,54 +1049,55 @@ BOOST_AUTO_TEST_CASE(hashmap__record_it__multiple__iterated)
     constexpr key1 key_b{ 0xbb };
     constexpr key1 key_c{ 0xcc };
 
-    BOOST_REQUIRE(instance.put(key_a, big_record{ 0x000000a1_u32, true }));
-    BOOST_REQUIRE(instance.put(key_a, big_record{ 0x000000a2_u32, true }));
-    BOOST_REQUIRE(instance.put(key_a, big_record{ 0x000000a3_u32, true }));
-    BOOST_REQUIRE(instance.put(key_b, big_record{ 0x000000b1_u32, true }));
-    BOOST_REQUIRE(instance.put(key_b, big_record{ 0x000000b2_u32, true }));
-    BOOST_REQUIRE(instance.put(key_b, big_record{ 0x000000b3_u32, true }));
-    BOOST_REQUIRE(instance.put(key_c, big_record{ 0x000000c1_u32, true }));
-    BOOST_REQUIRE(instance.put(key_c, big_record{ 0x000000c2_u32, true }));
-    BOOST_REQUIRE(instance.put(key_c, big_record{ 0x000000c3_u32, true }));
+    BOOST_REQUIRE(instance.put(key_a, big_record{ 0x000000a1_u32 }));
+    BOOST_REQUIRE(instance.put(key_a, big_record{ 0x000000a2_u32 }));
+    BOOST_REQUIRE(instance.put(key_a, big_record{ 0x000000a3_u32 }));
+    BOOST_REQUIRE(instance.put(key_b, big_record{ 0x000000b1_u32 }));
+    BOOST_REQUIRE(instance.put(key_b, big_record{ 0x000000b2_u32 }));
+    BOOST_REQUIRE(instance.put(key_b, big_record{ 0x000000b3_u32 }));
+    BOOST_REQUIRE(instance.put(key_c, big_record{ 0x000000c1_u32 }));
+    BOOST_REQUIRE(instance.put(key_c, big_record{ 0x000000c2_u32 }));
+    BOOST_REQUIRE(instance.put(key_c, big_record{ 0x000000c3_u32 }));
 
     auto it_a = instance.it(key_a);
 
-    BOOST_REQUIRE(instance.get<big_record>(it_a.self()).valid);
-    BOOST_REQUIRE_EQUAL(instance.get<big_record>(it_a.self()).value, 0x000000a3_u32);
-    BOOST_REQUIRE(it_a.next());
-    BOOST_REQUIRE(instance.get<big_record>(it_a.self()).valid);
-    BOOST_REQUIRE_EQUAL(instance.get<big_record>(it_a.self()).value, 0x000000a2_u32);
-    BOOST_REQUIRE(it_a.next());
-    BOOST_REQUIRE(instance.get<big_record>(it_a.self()).valid);
-    BOOST_REQUIRE_EQUAL(instance.get<big_record>(it_a.self()).value, 0x000000a1_u32);
-    BOOST_REQUIRE(!it_a.next());
-    BOOST_REQUIRE(!instance.get<big_record>(it_a.self()).valid);
+    big_record record{};
+    BOOST_REQUIRE(instance.get(it_a.self(), record));
+    BOOST_REQUIRE_EQUAL(record.value, 0x000000a3_u32);
+    BOOST_REQUIRE(it_a.advance());
+    BOOST_REQUIRE(instance.get(it_a.self(), record));
+    BOOST_REQUIRE_EQUAL(record.value, 0x000000a2_u32);
+    BOOST_REQUIRE(it_a.advance());
+    BOOST_REQUIRE(instance.get(it_a.self(), record));
+    BOOST_REQUIRE_EQUAL(record.value, 0x000000a1_u32);
+    BOOST_REQUIRE(!it_a.advance());
+    BOOST_REQUIRE(!instance.get(it_a.self(), record));
 
     auto it_b = instance.it(key_b);
 
-    BOOST_REQUIRE(instance.get<big_record>(it_b.self()).valid);
-    BOOST_REQUIRE_EQUAL(instance.get<big_record>(it_b.self()).value, 0x000000b3_u32);
-    BOOST_REQUIRE(it_b.next());
-    BOOST_REQUIRE(instance.get<big_record>(it_b.self()).valid);
-    BOOST_REQUIRE_EQUAL(instance.get<big_record>(it_b.self()).value, 0x000000b2_u32);
-    BOOST_REQUIRE(it_b.next());
-    BOOST_REQUIRE(instance.get<big_record>(it_b.self()).valid);
-    BOOST_REQUIRE_EQUAL(instance.get<big_record>(it_b.self()).value, 0x000000b1_u32);
-    BOOST_REQUIRE(!it_b.next());
-    BOOST_REQUIRE(!instance.get<big_record>(it_b.self()).valid);
+    BOOST_REQUIRE(instance.get(it_b.self(), record));
+    BOOST_REQUIRE_EQUAL(record.value, 0x000000b3_u32);
+    BOOST_REQUIRE(it_b.advance());
+    BOOST_REQUIRE(instance.get(it_b.self(), record));
+    BOOST_REQUIRE_EQUAL(record.value, 0x000000b2_u32);
+    BOOST_REQUIRE(it_b.advance());
+    BOOST_REQUIRE(instance.get(it_b.self(), record));
+    BOOST_REQUIRE_EQUAL(record.value, 0x000000b1_u32);
+    BOOST_REQUIRE(!it_b.advance());
+    BOOST_REQUIRE(!instance.get(it_b.self(), record));
 
     auto it_c = instance.it(key_c);
 
-    BOOST_REQUIRE(instance.get<big_record>(it_c.self()).valid);
-    BOOST_REQUIRE_EQUAL(instance.get<big_record>(it_c.self()).value, 0x000000c3_u32);
-    BOOST_REQUIRE(it_c.next());
-    BOOST_REQUIRE(instance.get<big_record>(it_c.self()).valid);
-    BOOST_REQUIRE_EQUAL(instance.get<big_record>(it_c.self()).value, 0x000000c2_u32);
-    BOOST_REQUIRE(it_c.next());
-    BOOST_REQUIRE(instance.get<big_record>(it_c.self()).valid);
-    BOOST_REQUIRE_EQUAL(instance.get<big_record>(it_c.self()).value, 0x000000c1_u32);
-    BOOST_REQUIRE(!it_c.next());
-    BOOST_REQUIRE(!instance.get<big_record>(it_c.self()).valid);
+    BOOST_REQUIRE(instance.get(it_c.self(), record));
+    BOOST_REQUIRE_EQUAL(record.value, 0x000000c3_u32);
+    BOOST_REQUIRE(it_c.advance());
+    BOOST_REQUIRE(instance.get(it_c.self(), record));
+    BOOST_REQUIRE_EQUAL(record.value, 0x000000c2_u32);
+    BOOST_REQUIRE(it_c.advance());
+    BOOST_REQUIRE(instance.get(it_c.self(), record));
+    BOOST_REQUIRE_EQUAL(record.value, 0x000000c1_u32);
+    BOOST_REQUIRE(!it_c.advance());
+    BOOST_REQUIRE(!instance.get(it_c.self(), record));
 
     //   [0000000000]
     //[b] 0500000000

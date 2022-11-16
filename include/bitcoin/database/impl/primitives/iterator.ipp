@@ -35,7 +35,7 @@ CLASS::iterator(const memory_ptr& data, const Link& start,
 }
 
 TEMPLATE
-bool CLASS::next() NOEXCEPT
+bool CLASS::advance() NOEXCEPT
 {
     while (!link_.is_terminal())
     {
@@ -51,7 +51,7 @@ TEMPLATE
 Link CLASS::self() NOEXCEPT
 {
     if (!is_match())
-        next();
+        advance();
 
     return link_;
 }

@@ -43,7 +43,7 @@ struct slab
         5u + // variable_size (average 5)
         1u;  // variable_size (average 1)
     static constexpr size_t minrow = minsize;
-    static constexpr size_t size = minsize;
+    static constexpr size_t size = max_size_t;
     static_assert(minsize == 11u);
     static_assert(minrow == 11u);
 
@@ -58,26 +58,24 @@ struct slab
     }
 
     /// Fields.
-    uint32_t parent_fk; // parent fk *not* a required query.
-    uint32_t index;     // own (parent-relative) index not a required query.
-    uint64_t value;
-    system::chain::script script;
-    bool valid{ false };
+    uint32_t parent_fk{}; // parent fk *not* a required query.
+    uint32_t index{};     // own (parent-relative) index not a required query.
+    uint64_t value{};
+    system::chain::script script{};
 
     /// Serialializers.
 
-    inline slab from_data(reader& source) NOEXCEPT
+    inline bool from_data(reader& source) NOEXCEPT
     {
         parent_fk = source.read_little_endian<uint32_t, schema::tx>();
         index     = system::narrow_cast<uint32_t>(source.read_variable());
         value     = source.read_variable();
         script    = system::chain::script(source, true);
         BC_ASSERT(source.get_position() == count());
-        valid = source;
-        return *this;
+        return source;
     }
 
-    inline bool to_data(finalizer& sink) const NOEXCEPT
+    inline bool to_data(writer& sink) const NOEXCEPT
     {
         sink.write_little_endian<uint32_t, schema::tx>(parent_fk);
         sink.write_variable(index);
@@ -85,6 +83,14 @@ struct slab
         script.to_data(sink, true);
         BC_ASSERT(sink.get_position() == count());
         return sink;
+    }
+
+    inline bool operator==(const slab& other) const NOEXCEPT
+    {
+        return parent_fk == other.parent_fk
+            && index == other.index
+            && value == other.value
+            && script == other.script;
     }
 };
 

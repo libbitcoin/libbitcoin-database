@@ -52,32 +52,41 @@ struct record
     }
 
     /// Fields.
-    std_vector<uint64_t> put_fks;
-    bool valid{ false };
+    std_vector<uint64_t> put_fks{};
 
     /// Serialializers.
 
-    inline record from_data(reader& source) NOEXCEPT
+    inline bool from_data(reader& source) NOEXCEPT
     {
+        // Clear the single record limit (file limit remains).
+        source.set_limit();
+
         std::for_each(put_fks.begin(), put_fks.end(), [&](auto& fk) NOEXCEPT
         {
             fk = source.read_little_endian<uint64_t, schema::put>();
         });
 
-        BC_ASSERT(source.get_position() == minrow);
-        valid = source;
-        return *this;
+        BC_ASSERT(source.get_position() == count() * schema::put);
+        return source;
     }
 
-    inline bool to_data(finalizer& sink) const NOEXCEPT
+    inline bool to_data(writer& sink) const NOEXCEPT
     {
+        // Clear the single record limit (file limit remains).
+        sink.set_limit();
+
         std::for_each(put_fks.begin(), put_fks.end(), [&](const auto& fk) NOEXCEPT
         {
             sink.write_little_endian<uint64_t, schema::put>(fk);
         });
 
-        BC_ASSERT(sink.get_position() == minrow);
+        BC_ASSERT(sink.get_position() == count() * schema::put);
         return sink;
+    }
+
+    inline bool operator==(const record& other) const NOEXCEPT
+    {
+        return put_fks == other.put_fks;
     }
 };
 
