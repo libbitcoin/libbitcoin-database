@@ -22,53 +22,114 @@
 BOOST_AUTO_TEST_SUITE(transaction_tests)
 
 using namespace database::transaction;
-constexpr hash_digest hash = base16_array("110102030405060708090a0b0c0d0e0f220102030405060708090a0b0c0d0e0f");
-constexpr auto terminal = linkage<record::pk>::terminal;
+constexpr hash_digest key = base16_array("110102030405060708090a0b0c0d0e0f220102030405060708090a0b0c0d0e0f");
 
 #define DECLARE(instance_, body_file_, buckets_) \
 data_chunk head_file; \
 data_chunk body_file_; \
 test::storage head_store{ head_file }; \
 test::storage body_store{ body_file_ }; \
-hashmap<linkage<record::pk>, search<record::sk>, record::size> instance_{ head_store, body_store, buckets_ }
+hash_map<record> instance_{ head_store, body_store, buckets_ }
 
 constexpr record expected
 {
-    true,
-    1_u32,
-    2_u32,
-    3_u32,
-    4_u32,
-    5_u32,
-    terminal,
-    6_u32,
-    terminal,
-    true
+    true,           // coinbase
+    0x00341201_u32, // bytes
+    0x00341202_u32, // weight
+    0x56341203_u32, // locktime
+    0x56341204_u32, // version
+    0x00341205_u32, // ins_count
+    0x56341206_u32, // ins_fk
+    0x00341207_u32, // outs_count
+    0x56341208_u32  // outs_fk
 };
 const data_chunk expected_file
 {
+    // next
     0xff, 0xff, 0xff, 0xff,
+
+    // key
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+    // record
+    0x00,
+    0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+
+    // --------------------------------------------------------------------------------------------
+
+    // next
+    0xff, 0xff, 0xff, 0xff,
+
+    // key
     0x11, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
     0x22, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+
+    // record
     0x01,
-    0x01, 0x00, 0x00,
-    0x02, 0x00, 0x00,
-    0x03, 0x00, 0x00, 0x00,
-    0x04, 0x00, 0x00, 0x00,
-    0x05, 0x00, 0x00,
-    0xff, 0xff, 0xff, 0xff,
-    0x06, 0x00, 0x00,
-    0xff, 0xff, 0xff, 0xff
+    0x01, 0x12, 0x34,
+    0x02, 0x12, 0x34,
+    0x03, 0x12, 0x34, 0x56,
+    0x04, 0x12, 0x34, 0x56,
+    0x05, 0x12, 0x34,
+    0x06, 0x12, 0x34, 0x56,
+    0x07, 0x12, 0x34,
+    0x08, 0x12, 0x34, 0x56
 };
 
 BOOST_AUTO_TEST_CASE(transaction__put__get__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put(hash, expected));
-    BOOST_REQUIRE(instance.get<record>(0) == expected);
-    BOOST_REQUIRE(instance.get<record>(hash) == expected);
+    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
+
+    record element{};
+    BOOST_REQUIRE(instance.get(0, element));
+    BOOST_REQUIRE(element == record{});
+
+    BOOST_REQUIRE(instance.get(null_hash, element));
+    BOOST_REQUIRE(element == record{});
+
+    BOOST_REQUIRE(instance.get(1, element));
+    BOOST_REQUIRE(element == expected);
+
+    BOOST_REQUIRE(instance.get(key, element));
+    BOOST_REQUIRE(element == expected);
+}
+
+BOOST_AUTO_TEST_CASE(transaction__put__get_sk__expected)
+{
+    DECLARE(instance, body_file, 20);
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put(key, expected));
+    BOOST_REQUIRE_EQUAL(body_file, expected_file);
+
+    record_sk element{};
+    BOOST_REQUIRE(instance.get(1, element));
+    BOOST_REQUIRE_EQUAL(element.sk, key);
+}
+
+BOOST_AUTO_TEST_CASE(transaction__it__pk__expected)
+{
+    DECLARE(instance, body_file, 20);
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put(key, expected));
+    BOOST_REQUIRE_EQUAL(body_file, expected_file);
+
+    auto it = instance.it(key);
+    BOOST_REQUIRE_EQUAL(it.self(), 1u);
+    BOOST_REQUIRE(!it.advance());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

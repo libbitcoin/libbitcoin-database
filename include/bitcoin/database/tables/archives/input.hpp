@@ -59,16 +59,15 @@ struct slab
     }
 
     /// Fields.
-    uint32_t parent_fk; // parent fk *is* a required query.
-    uint32_t index;     // own (parent-relative) index not a required query.
-    uint32_t sequence;
-    system::chain::script script;
-    system::chain::witness witness;
-    bool valid{ false };
+    uint32_t parent_fk{}; // parent fk *is* a required query.
+    uint32_t index{};     // own (parent-relative) index not a required query.
+    uint32_t sequence{};
+    system::chain::script script{};
+    system::chain::witness witness{};
 
     /// Serialializers.
 
-    inline slab from_data(reader& source) NOEXCEPT
+    inline bool from_data(reader& source) NOEXCEPT
     {
         parent_fk = source.read_little_endian<uint32_t, schema::tx>();
         index     = system::narrow_cast<uint32_t>(source.read_variable());
@@ -76,8 +75,7 @@ struct slab
         script    = system::chain::script(source, true);
         witness   = system::chain::witness(source, true);
         BC_ASSERT(source.get_position() == count());
-        valid = source;
-        return *this;
+        return source;
     }
 
     inline bool to_data(finalizer& sink) const NOEXCEPT
@@ -90,6 +88,30 @@ struct slab
         BC_ASSERT(sink.get_position() == count());
         return sink;
     }
+
+    inline bool operator==(const slab& other) const NOEXCEPT
+    {
+        return parent_fk == other.parent_fk
+            && index == other.index
+            && sequence == other.sequence
+            && script == other.script
+            && witness == other.witness;
+    }
+};
+
+/// Get search key only.
+struct slab_sk
+{
+    static constexpr size_t size = slab::size;
+
+    inline bool from_data(reader& source) NOEXCEPT
+    {
+        source.rewind_bytes(slab::sk);
+        sk = source.read_forward<slab::sk>();
+        return source;
+    }
+
+    search<slab::sk> sk{};
 };
 
 /// input::table

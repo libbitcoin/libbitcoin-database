@@ -59,11 +59,11 @@ public:
 
     /// RECORD.FROM_DATA OBTAINS SHARED LOCK ON STORAGE REMAP.
     template <typename Record, if_equal<Record::size, Size> = true>
-    Record get(const Key& key) const NOEXCEPT;
+    bool get(const Key& key, Record& record) const NOEXCEPT;
 
     /// RECORD.FROM_DATA OBTAINS SHARED LOCK ON STORAGE REMAP.
     template <typename Record, if_equal<Record::size, Size> = true>
-    Record get(const Link& link) const NOEXCEPT;
+    bool get(const Link& link, Record& record) const NOEXCEPT;
 
     /// RECORD.TO_DATA OBTAINS SHARED LOCK ON STORAGE REMAP.
     template <typename Record, if_equal<Record::size, Size> = true>

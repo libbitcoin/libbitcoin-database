@@ -38,7 +38,7 @@ public:
         const Key& key) NOEXCEPT;
 
     /// Advance to and return next iterator.
-    bool next() NOEXCEPT;
+    bool advance() NOEXCEPT;
     Link self() NOEXCEPT;
 
 protected:

@@ -21,9 +21,51 @@
 
 BOOST_AUTO_TEST_SUITE(output_tests)
 
-BOOST_AUTO_TEST_CASE(tables_archives_output_test)
+using namespace database::output;
+
+#define DECLARE(instance_, file_) \
+data_chunk file_; \
+test::storage store{ file_ }; \
+array_map<slab> instance_{ store }
+
+const slab expected
 {
-    BOOST_REQUIRE(true);
+    0x56341201_u32,         // parent_fk
+    0x00000042_u32,         // index
+    0xdebc9a7856341202_u64, // value
+    {}                      // script
+};
+constexpr auto slab0_size = 7u;
+const data_chunk expected_file
+{
+    // slab
+    0x00, 0x00, 0x00, 0x00,
+    0x00,
+    0x00,
+    0x00,
+
+    // --------------------------------------------------------------------------------------------
+
+    // slab
+    0x01, 0x12, 0x34, 0x56,
+    0x42,
+    0xff, 0x02, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde,
+    0x00
+};
+
+BOOST_AUTO_TEST_CASE(output__put__get__expected)
+{
+    DECLARE(instance, file);
+    BOOST_REQUIRE(instance.put(slab{}));
+    BOOST_REQUIRE(instance.put(expected));
+    BOOST_REQUIRE_EQUAL(file, expected_file);
+
+    slab element{};
+    BOOST_REQUIRE(instance.get<slab>(0, element));
+    BOOST_REQUIRE(element == slab{});
+
+    BOOST_REQUIRE(instance.get<slab>(slab0_size, element));
+    BOOST_REQUIRE(element == expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

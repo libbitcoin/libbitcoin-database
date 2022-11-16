@@ -51,12 +51,11 @@ struct slab
     }
 
     /// Fields.
-    std_vector<uint32_t> tx_fks;
-    bool valid{ false };
+    std_vector<uint32_t> tx_fks{};
 
     /// Serialializers.
 
-    inline slab from_data(reader& source) NOEXCEPT
+    inline bool from_data(reader& source) NOEXCEPT
     {
         tx_fks.resize(source.read_little_endian<uint32_t, schema::tx>());
         std::for_each(tx_fks.begin(), tx_fks.end(), [&](auto& fk) NOEXCEPT
@@ -65,8 +64,7 @@ struct slab
         });
 
         BC_ASSERT(source.get_position() == count());
-        valid = source;
-        return *this;
+        return source;
     }
 
     inline bool to_data(finalizer& sink) const NOEXCEPT
@@ -82,6 +80,11 @@ struct slab
 
         BC_ASSERT(sink.get_position() == count());
         return sink;
+    }
+
+    inline bool operator==(const slab& other) const NOEXCEPT
+    {
+        return tx_fks == other.tx_fks;
     }
 };
 

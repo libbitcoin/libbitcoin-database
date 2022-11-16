@@ -36,15 +36,15 @@ CLASS::arraymap(storage& body) NOEXCEPT
 
 TEMPLATE
 template <typename Record, if_equal<Record::size, Size>>
-Record CLASS::get(const Link& link) const NOEXCEPT
+bool CLASS::get(const Link& link, Record& record) const NOEXCEPT
 {
     auto source = at(link);
     if (!source)
-        return {};
+        return false;
 
     // Use of stream pointer can be eliminated by cloning at() here.
     // RECORD.FROM_DATA MUST NOT EXTEND SOURCE LIFETIME - DEADLOCK RISK.
-    return Record{}.from_data(*source);
+    return record.from_data(*source);
 }
 
 TEMPLATE

@@ -54,20 +54,19 @@ struct record
     static constexpr linkage<pk> count() NOEXCEPT { return 1; }
 
     /// Fields.
-    bool coinbase;
-    uint32_t bytes;
-    uint32_t weight;
-    uint32_t locktime;
-    uint32_t version;
-    uint32_t ins_count;
-    uint32_t ins_fk;
-    uint32_t outs_count;
-    uint32_t outs_fk;
-    bool valid{ false };
+    bool coinbase{};
+    uint32_t bytes{};
+    uint32_t weight{};
+    uint32_t locktime{};
+    uint32_t version{};
+    uint32_t ins_count{};
+    uint32_t ins_fk{};
+    uint32_t outs_count{};
+    uint32_t outs_fk{};
 
     /// Serialializers.
 
-    inline record from_data(reader& source) NOEXCEPT
+    inline bool from_data(reader& source) NOEXCEPT
     {
         // TODO: coinbase bit can be merged into bytes field (.7GB).
         coinbase   = to_bool(source.read_byte());
@@ -80,8 +79,7 @@ struct record
         outs_count = source.read_little_endian<uint32_t, schema::index>();
         outs_fk    = source.read_little_endian<uint32_t, schema::puts>();
         BC_ASSERT(source.get_position() == minrow);
-        valid = source;
-        return *this;
+        return source;
     }
 
     inline bool to_data(finalizer& sink) const NOEXCEPT
@@ -102,8 +100,7 @@ struct record
 
     inline bool operator==(const record& other) const NOEXCEPT
     {
-        return valid == other.valid
-            && coinbase == other.coinbase
+        return coinbase == other.coinbase
             && bytes == other.bytes
             && weight == other.weight
             && locktime == other.locktime
@@ -113,6 +110,21 @@ struct record
             && outs_count == other.outs_count
             && outs_fk == other.outs_fk;
     }
+};
+
+/// Get search key only (this is generic for all hash tables).
+struct record_sk
+{
+    static constexpr size_t size = record::size;
+
+    inline bool from_data(reader& source) NOEXCEPT
+    {
+        source.rewind_bytes(record::sk);
+        sk = source.read_hash();
+        return source;
+    }
+
+    hash_digest sk{};
 };
 
 /// transaction::table

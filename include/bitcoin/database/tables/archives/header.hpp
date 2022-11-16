@@ -54,20 +54,19 @@ struct record
     static constexpr linkage<pk> count() NOEXCEPT { return 1; }
 
     /// Fields.
-    uint32_t height;
-    uint32_t flags;
-    uint32_t mtp;
-    uint32_t parent_fk;
-    uint32_t version;
-    uint32_t time;
-    uint32_t bits;
-    uint32_t nonce;
-    hash_digest root;
-    bool valid{ false };
+    uint32_t height{};
+    uint32_t flags{};
+    uint32_t mtp{};
+    uint32_t parent_fk{};
+    uint32_t version{};
+    uint32_t time{};
+    uint32_t bits{};
+    uint32_t nonce{};
+    hash_digest root{};
 
     /// Serialializers.
 
-    inline record from_data(reader& source) NOEXCEPT
+    inline bool from_data(reader& source) NOEXCEPT
     {
         height    = source.read_little_endian<uint32_t, schema::block>();
         flags     = source.read_little_endian<uint32_t, schema::flags>();
@@ -79,8 +78,7 @@ struct record
         nonce     = source.read_little_endian<uint32_t>();
         root      = source.read_hash();
         BC_ASSERT(source.get_position() == minrow);
-        valid = source;
-        return *this;
+        return source;
     }
 
     inline bool to_data(finalizer& sink) const NOEXCEPT
@@ -100,8 +98,7 @@ struct record
 
     inline bool operator==(const record& other) const NOEXCEPT
     {
-        return valid == other.valid
-            && height == other.height
+        return height == other.height
             && flags == other.flags
             && mtp == other.mtp
             && parent_fk == other.parent_fk
@@ -113,37 +110,49 @@ struct record
     }
 };
 
+/// Get search key only.
+struct record_sk
+{
+    static constexpr size_t size = record::size;
+
+    inline bool from_data(reader& source) NOEXCEPT
+    {
+        source.rewind_bytes(record::sk);
+        sk = source.read_hash();
+        return source;
+    }
+
+    hash_digest sk{};
+};
+
 /// Get height only (demo).
 struct record_height
 {
     static constexpr size_t size = record::size;
 
-    inline record_height from_data(reader& source) NOEXCEPT
+    inline bool from_data(reader& source) NOEXCEPT
     {
         height = source.read_little_endian<uint32_t, schema::block>();
-        valid = source;
-        return *this;
+        return source;
     }
 
-    uint32_t height;
-    bool valid{ false };
+    uint32_t height{};
 };
 
 /// Get record with search key (demo).
-struct record_with_key
+struct record_with_sk
   : public record
 {
     BC_PUSH_WARNING(NO_METHOD_HIDING)
-    inline record_with_key from_data(reader& source) NOEXCEPT
+    inline bool from_data(reader& source) NOEXCEPT
     {
         source.rewind_bytes(record::sk);
-        key = source.read_hash();
-        record::from_data(source);
-        return *this;
+        sk = source.read_hash();
+        return record::from_data(source);
     }
     BC_POP_WARNING()
 
-    hash_digest key;
+    hash_digest sk {};
 };
 
 /// header::table
