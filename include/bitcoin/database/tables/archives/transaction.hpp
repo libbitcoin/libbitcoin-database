@@ -43,13 +43,12 @@ struct record
         sizeof(uint32_t) +
         sizeof(uint32_t) +
         schema::index +
-        schema::puts +
         schema::index +
         schema::puts;
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = minsize;
-    static_assert(minsize == 29u);
-    static_assert(minrow == 65u);
+    static_assert(minsize == 25u);
+    static_assert(minrow == 61u);
 
     static constexpr linkage<pk> count() NOEXCEPT { return 1; }
 
@@ -60,9 +59,14 @@ struct record
     uint32_t locktime{};
     uint32_t version{};
     uint32_t ins_count{};
-    uint32_t ins_fk{};
     uint32_t outs_count{};
-    uint32_t outs_fk{};
+    uint32_t ins_fk{};
+
+    /// Computed outputs start is based on presumed txs table schema.
+    inline uint32_t outs_fk() const NOEXCEPT
+    {
+        return ins_fk + ins_count * schema::put;
+    }
 
     /// Serialializers.
 
@@ -75,9 +79,8 @@ struct record
         locktime   = source.read_little_endian<uint32_t>();
         version    = source.read_little_endian<uint32_t>();
         ins_count  = source.read_little_endian<uint32_t, schema::index>();
-        ins_fk     = source.read_little_endian<uint32_t, schema::puts>();
         outs_count = source.read_little_endian<uint32_t, schema::index>();
-        outs_fk    = source.read_little_endian<uint32_t, schema::puts>();
+        ins_fk     = source.read_little_endian<uint32_t, schema::puts>();
         BC_ASSERT(source.get_position() == minrow);
         return source;
     }
@@ -91,9 +94,8 @@ struct record
         sink.write_little_endian<uint32_t>(locktime);
         sink.write_little_endian<uint32_t>(version);
         sink.write_little_endian<uint32_t, schema::index>(ins_count);
-        sink.write_little_endian<uint32_t, schema::puts>(ins_fk);
         sink.write_little_endian<uint32_t, schema::index>(outs_count);
-        sink.write_little_endian<uint32_t, schema::puts>(outs_fk);
+        sink.write_little_endian<uint32_t, schema::puts>(ins_fk);
         BC_ASSERT(sink.get_position() == minrow);
         return sink;
     }
@@ -106,9 +108,8 @@ struct record
             && locktime == other.locktime
             && version == other.version
             && ins_count == other.ins_count
-            && ins_fk == other.ins_fk
             && outs_count == other.outs_count
-            && outs_fk == other.outs_fk;
+            && ins_fk == other.ins_fk;
     }
 };
 
@@ -125,6 +126,38 @@ struct record_sk
     }
 
     hash_digest sk{};
+};
+
+/// Get puts only.
+struct record_puts
+{
+    static constexpr size_t size = record::size;
+
+    /// Computed outputs start is based on presumed txs table schema.
+    inline uint32_t outs_fk() const NOEXCEPT
+    {
+        return ins_fk + ins_count * schema::put;
+    }
+
+    inline bool from_data(reader& source) NOEXCEPT
+    {
+        static constexpr size_t skip_size =
+            schema::bit +
+            schema::size +
+            schema::size +
+            sizeof(uint32_t) +
+            sizeof(uint32_t);
+
+        source.skip_bytes(skip_size);
+        ins_count  = source.read_little_endian<uint32_t, schema::index>();
+        outs_count = source.read_little_endian<uint32_t, schema::index>();
+        ins_fk     = source.read_little_endian<uint32_t, schema::puts>();
+        return source;
+    }
+
+    uint32_t ins_count{};
+    uint32_t outs_count{};
+    uint32_t ins_fk{};
 };
 
 /// transaction::table

@@ -39,9 +39,8 @@ constexpr record expected
     0x56341203_u32, // locktime
     0x56341204_u32, // version
     0x00341205_u32, // ins_count
-    0x56341206_u32, // ins_fk
-    0x00341207_u32, // outs_count
-    0x56341208_u32  // outs_fk
+    0x00341206_u32, // outs_count
+    0x56341207_u32  // puts_fk (ins_fk)
 };
 const data_chunk expected_file
 {
@@ -59,7 +58,6 @@ const data_chunk expected_file
     0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00,
 
@@ -79,9 +77,8 @@ const data_chunk expected_file
     0x03, 0x12, 0x34, 0x56,
     0x04, 0x12, 0x34, 0x56,
     0x05, 0x12, 0x34,
-    0x06, 0x12, 0x34, 0x56,
-    0x07, 0x12, 0x34,
-    0x08, 0x12, 0x34, 0x56
+    0x06, 0x12, 0x34,
+    0x07, 0x12, 0x34, 0x56
 };
 
 BOOST_AUTO_TEST_CASE(transaction__put__get__expected)
@@ -104,6 +101,10 @@ BOOST_AUTO_TEST_CASE(transaction__put__get__expected)
 
     BOOST_REQUIRE(instance.get(key, element));
     BOOST_REQUIRE(element == expected);
+
+    BOOST_REQUIRE(!is_multiply_overflow<size_t>(element.ins_count, schema::put));
+    BOOST_REQUIRE(!is_add_overflow<size_t>(element.ins_fk, element.ins_count * schema::put));
+    BOOST_REQUIRE_EQUAL(element.outs_fk(), element.ins_fk + element.ins_count * schema::put);
 }
 
 BOOST_AUTO_TEST_CASE(transaction__put__get_sk__expected)
@@ -117,6 +118,24 @@ BOOST_AUTO_TEST_CASE(transaction__put__get_sk__expected)
     record_sk element{};
     BOOST_REQUIRE(instance.get(1, element));
     BOOST_REQUIRE_EQUAL(element.sk, key);
+}
+
+BOOST_AUTO_TEST_CASE(transaction__put__get_puts__expected)
+{
+    DECLARE(instance, body_file, 20);
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put(key, expected));
+    BOOST_REQUIRE_EQUAL(body_file, expected_file);
+
+    record_puts element{};
+    BOOST_REQUIRE(instance.get(1, element));
+    BOOST_REQUIRE_EQUAL(element.ins_count, 0x00341205_u32);
+    BOOST_REQUIRE_EQUAL(element.outs_count, 0x00341206_u32);
+    BOOST_REQUIRE_EQUAL(element.ins_fk, 0x56341207_u32);
+    BOOST_REQUIRE(!is_multiply_overflow<size_t>(element.ins_count, schema::put));
+    BOOST_REQUIRE(!is_add_overflow<size_t>(element.ins_fk, element.ins_count * schema::put));
+    BOOST_REQUIRE_EQUAL(element.outs_fk(), element.ins_fk + element.ins_count * schema::put);
 }
 
 BOOST_AUTO_TEST_CASE(transaction__it__pk__expected)
