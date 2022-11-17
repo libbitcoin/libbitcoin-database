@@ -64,110 +64,124 @@ bool CLASS::exists(const Key& key) const NOEXCEPT
 }
 
 TEMPLATE
-// ITERATOR LIFETIME MUST NOT BE EXTENDED BEYOND ENUMERATION - DEADLOCK RISK.
 typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 {
     return { manager_.get(), header_.top(key), key };
 }
 
 TEMPLATE
-template <typename Record, if_equal<Record::size, Size>>
-bool CLASS::get(const Key& key, Record& record) const NOEXCEPT
+Link CLASS::allocate(const Link& size) NOEXCEPT
 {
-    return get(it(key).self(), record);
+    return manager_.allocate(size);
 }
 
 TEMPLATE
-template <typename Record, if_equal<Record::size, Size>>
-bool CLASS::get(const Link& link, Record& record) const NOEXCEPT
+bool CLASS::commit(const Key& key, const Link& link) NOEXCEPT
 {
-    auto source = at(link);
-    if (!source)
+    const auto ptr = manager_.get(link);
+    if (!ptr)
         return false;
 
-    // Use of stream pointer can be eliminated by cloning at() here.
-    // RECORD.FROM_DATA MUST NOT EXTEND SOURCE LIFETIME - DEADLOCK RISK.
-    return record.from_data(*source);
+    // Set element search key.
+    system::unsafe_array_cast<uint8_t, array_count<Key>>(std::next(
+        ptr->begin(), Link::size)) = key;
+
+    // Commit element to search index.
+    auto& next = system::unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
+    return header_.push(link, next, header_.index(key));
 }
 
 TEMPLATE
-template <typename Record, if_equal<Record::size, Size>>
-bool CLASS::put(const Key& key, const Record& record) NOEXCEPT
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::get(const Key& key, Element& element) const NOEXCEPT
 {
-    auto sink = push(key, record.count());
-    if (!sink)
-        return false;
-
-    // Use of stream pointer can be eliminated by cloning push() here.
-    // RECORD.TO_DATA MUST NOT EXTEND SOURCE LIFETIME - DEADLOCK RISK.
-    const auto result = record.to_data(*sink);
-    sink->finalize();
-    return result;
+    return get(it(key).self(), element);
 }
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
+{
+    auto source = streamer<reader>(link);
+    return source && element.from_data(*source);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
+{
+    auto sink = streamer<writer>(link);
+    return sink && element.to_data(*sink);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put(const Key& key, const Element& element) NOEXCEPT
+{
+    auto sink = creater(key, element.count());
+    return sink && element.to_data(*sink) && sink->finalize();
+}
+
+////TEMPLATE
+////template <typename Element, if_equal<Element::size, Size>>
+////bool CLASS::put(const Key& key, const Element& element,
+////    const Link& allocation) NOEXCEPT
+////{
+////    auto sink = putter(key, element.count(), allocation);
+////    return sink && element.to_data(*sink) && sink->finalize();
+////}
 
 // protected
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-reader_ptr CLASS::at(const Link& link) const NOEXCEPT
+template <typename Streamer>
+typename Streamer::ptr CLASS::streamer(const Link& link) const NOEXCEPT
 {
-    if (link.is_terminal())
-        return {};
-
     const auto ptr = manager_.get(link);
     if (!ptr)
         return {};
 
-    const auto source = std::make_shared<reader>(ptr);
-    source->skip_bytes(Link::size + array_count<Key>);
-    if constexpr (!is_slab) { source->set_limit(Size); }
-    return source;
+    const auto stream = std::make_shared<Streamer>(ptr);
+    stream->skip_bytes(Link::size + array_count<Key>);
+
+    // Limits to single record or eof for slab (caller can remove limit).
+    if constexpr (!is_slab) { stream->set_limit(Size); }
+    return stream;
 }
 
 TEMPLATE
-reader_ptr CLASS::find(const Key& key) const NOEXCEPT
+reader_ptr CLASS::getter(const Key& key) const NOEXCEPT
 {
-    const auto record = it(key).self();
-    if (record.is_terminal())
-        return {};
-
-    const auto source = at(record);
-    if (!source)
-        return {};
-
-    return source;
+    return streamer<reader>(it(key).self());
 }
 
 TEMPLATE
-finalizer_ptr CLASS::push(const Key& key, const Link& size) NOEXCEPT
+finalizer_ptr CLASS::creater(const Key& key, const Link& size) NOEXCEPT
 {
-    const auto value = system::possible_narrow_cast<size_t>(size.value);
-    BC_ASSERT(is_slab || !system::is_multiply_overflow(value, Size));
-    BC_ASSERT(!size.is_terminal());
+    return committer(key, manager_.allocate(size));
+}
 
-    const auto item = manager_.allocate(size);
-    if (item.is_terminal())
-        return {};
-
-    const auto ptr = manager_.get(item);
+TEMPLATE
+finalizer_ptr CLASS::committer(const Key& key, const Link& link) NOEXCEPT
+{
+    const auto ptr = manager_.get(link);
     if (!ptr)
         return {};
 
     const auto sink = std::make_shared<finalizer>(ptr);
-    const auto index = header_.index(key);
-
-    // Finalization activates the record by updating header and next.
-    sink->set_finalizer([this, item, index, ptr]() NOEXCEPT
-    {
-        auto& next = system::unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
-        return header_.push(item, next, index);
-    });
-
-    // Link (next) commit is deferred until finalize.
-    if constexpr (is_slab) { sink->set_limit(value); }
     sink->skip_bytes(Link::size);
     sink->write_bytes(key);
-    if constexpr (!is_slab) { sink->set_limit(value * Size); }
+
+    const auto index = header_.index(key);
+    sink->set_finalizer([this, link, index, ptr]() NOEXCEPT
+    {
+        auto& next = system::unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
+        return header_.push(link, next, index);
+    });
+
+    // Limits to single record or eof for slab (caller can remove limit).
+    if constexpr (!is_slab) { sink->set_limit(Size); }
     return sink;
 }
 

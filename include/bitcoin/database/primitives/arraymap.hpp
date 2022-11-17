@@ -37,23 +37,17 @@ public:
     arraymap(storage& body) NOEXCEPT;
 
     /// Query interface.
+    /// -----------------------------------------------------------------------
 
-    /// RECORD.FROM_DATA OBTAINS SHARED LOCK ON STORAGE REMAP.
-    template <typename Record, if_equal<Record::size, Size> = true>
-    bool get(const Link& link, Record& record) const NOEXCEPT;
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool get(const Link& link, Element& element) const NOEXCEPT;
 
-    /// RECORD.TO_DATA OBTAINS SHARED LOCK ON STORAGE REMAP.
-    template <typename Record, if_equal<Record::size, Size> = true>
-    bool put(const Record& record) NOEXCEPT;
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool put(const Element& element) NOEXCEPT;
 
 protected:
-    /// Reader positioned at data.
-    /// READER HOLDS SHARED LOCK ON STORAGE REMAP.
-    reader_ptr at(const Link& link) const NOEXCEPT;
-
-    /// Reader positioned at data.
-    /// WRITER HOLDS SHARED LOCK ON STORAGE REMAP.
-    writer_ptr push(const Link& size=one) NOEXCEPT;
+    reader_ptr getter(const Link& link) const NOEXCEPT;
+    writer_ptr creater(const Link& size) NOEXCEPT;
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);

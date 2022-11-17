@@ -30,7 +30,8 @@ namespace database {
 namespace transaction {
 
 /// Transaction is a cononical record hash table.
-
+    
+// TODO: coinbase bit can be merged into bytes field (saving ~.7GB).
 struct record
 {
     /// Sizes.
@@ -72,7 +73,6 @@ struct record
 
     inline bool from_data(reader& source) NOEXCEPT
     {
-        // TODO: coinbase bit can be merged into bytes field (.7GB).
         coinbase   = to_bool(source.read_byte());
         bytes      = source.read_little_endian<uint32_t, schema::size>();
         weight     = source.read_little_endian<uint32_t, schema::size>();
@@ -87,7 +87,6 @@ struct record
 
     inline bool to_data(finalizer& sink) const NOEXCEPT
     {
-        // TODO: coinbase bit can be merged into bytes field (.7GB).
         sink.write_byte(to_int<uint8_t>(coinbase));
         sink.write_little_endian<uint32_t, schema::size>(bytes);
         sink.write_little_endian<uint32_t, schema::size>(weight);
