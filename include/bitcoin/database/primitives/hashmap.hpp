@@ -32,6 +32,9 @@ namespace database {
 
 /// Caution: iterator/reader/finalizer hold body remap lock until disposed.
 /// These handles should be used for serialization and immediately disposed.
+/// Readers and writers are always prepositioned at data, and are limited to
+/// the extent the record/slab size is known (limit can always be removed).
+/// Streams are always initialized from first element byte up to file limit.
 template <typename Link, typename Key, size_t Size>
 class hashmap
 {
@@ -50,37 +53,44 @@ public:
     bool snap() NOEXCEPT;
 
     /// Query interface, iterator is not thread safe.
+    /// -----------------------------------------------------------------------
 
     /// True if an instance of object with key exists.
     bool exists(const Key& key) const NOEXCEPT;
 
-    /// ITERATOR HOLDS SHARED LOCK ON STORAGE REMAP.
+    /// Iterator holds shared lock on storage remap.
     iterator it(const Key& key) const NOEXCEPT;
 
-    /// RECORD.FROM_DATA OBTAINS SHARED LOCK ON STORAGE REMAP.
-    template <typename Record, if_equal<Record::size, Size> = true>
-    bool get(const Key& key, Record& record) const NOEXCEPT;
+    /// Allocate space for element to returned link.
+    Link allocate(const Link& size) NOEXCEPT;
 
-    /// RECORD.FROM_DATA OBTAINS SHARED LOCK ON STORAGE REMAP.
-    template <typename Record, if_equal<Record::size, Size> = true>
-    bool get(const Link& link, Record& record) const NOEXCEPT;
+    /// Commit element set at link to header (becomes searchable).
+    bool commit(const Key& key, const Link& link) NOEXCEPT;
 
-    /// RECORD.TO_DATA OBTAINS SHARED LOCK ON STORAGE REMAP.
-    template <typename Record, if_equal<Record::size, Size> = true>
-    bool put(const Key& key, const Record& record) NOEXCEPT;
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool set(const Link& link, const Element& element) NOEXCEPT;
+
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool get(const Link& link, Element& element) const NOEXCEPT;
+
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool get(const Key& key, Element& element) const NOEXCEPT;
+
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool put(const Key& key, const Element& element) NOEXCEPT;
+
+    ////// In two phase commit, element and allocation sizes not coordinated.
+    ////template <typename Element, if_equal<Element::size, Size> = true>
+    ////bool put(const Key& key, const Element& element,
+    ////    const Link& allocation) NOEXCEPT;
 
 protected:
-    /// Reader positioned at key.
-    /// READER HOLDS SHARED LOCK ON STORAGE REMAP.
-    reader_ptr at(const Link& link) const NOEXCEPT;
+    template <typename Streamer>
+    typename Streamer::ptr streamer(const Link& link) const NOEXCEPT;
 
-    /// Reader positioned at data.
-    /// READER HOLDS SHARED LOCK ON STORAGE REMAP.
-    reader_ptr find(const Key& key) const NOEXCEPT;
-
-    /// Reader positioned at data.
-    /// WRITER HOLDS SHARED LOCK ON STORAGE REMAP.
-    finalizer_ptr push(const Key& key, const Link& size=one) NOEXCEPT;
+    reader_ptr getter(const Key& key) const NOEXCEPT;
+    finalizer_ptr creater(const Key& key, const Link& size) NOEXCEPT;
+    finalizer_ptr committer(const Key& key, const Link& link) NOEXCEPT;
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);

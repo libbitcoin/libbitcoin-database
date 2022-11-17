@@ -35,36 +35,26 @@ CLASS::arraymap(storage& body) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-template <typename Record, if_equal<Record::size, Size>>
-bool CLASS::get(const Link& link, Record& record) const NOEXCEPT
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
-    auto source = at(link);
-    if (!source)
-        return false;
-
-    // Use of stream pointer can be eliminated by cloning at() here.
-    // RECORD.FROM_DATA MUST NOT EXTEND SOURCE LIFETIME - DEADLOCK RISK.
-    return record.from_data(*source);
+    auto source = getter(link);
+    return source && element.from_data(*source);
 }
 
 TEMPLATE
-template <typename Record, if_equal<Record::size, Size>>
-bool CLASS::put(const Record& record) NOEXCEPT
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put(const Element& element) NOEXCEPT
 {
-    auto sink = push(record.count());
-    if (!sink)
-        return false;
-
-    // Use of stream pointer can be eliminated by cloning push() here.
-    // RECORD.TO_DATA MUST NOT EXTEND SOURCE LIFETIME - DEADLOCK RISK.
-    return record.to_data(*sink);
+    auto sink = creater(element.count());
+    return sink && element.to_data(*sink);
 }
 
 // protected
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-reader_ptr CLASS::at(const Link& link) const NOEXCEPT
+reader_ptr CLASS::getter(const Link& link) const NOEXCEPT
 {
     if (link.is_terminal())
         return {};
@@ -73,29 +63,29 @@ reader_ptr CLASS::at(const Link& link) const NOEXCEPT
     if (!ptr)
         return {};
 
+    // Limits to single record or eof for slab (caller can remove limit).
     const auto source = std::make_shared<reader>(ptr);
     if constexpr (!is_slab) { source->set_limit(Size); }
     return source;
 }
 
 TEMPLATE
-writer_ptr CLASS::push(const Link& size) NOEXCEPT
+writer_ptr CLASS::creater(const Link& size) NOEXCEPT
 {
-    const auto value = system::possible_narrow_cast<size_t>(size.value);
-    BC_ASSERT(is_slab || !system::is_multiply_overflow(value, Size));
-    BC_ASSERT(!size.is_terminal());
-
-    const auto item = body_.allocate(link_to_position(size));
-    if (item == storage::eof)
+    const auto link = body_.allocate(link_to_position(size));
+    if (link == storage::eof)
         return {};
 
-    const auto ptr = body_.get(item);
+    const auto ptr = body_.get(link);
     if (!ptr)
         return {};
 
+    // Limits to created records size or slab size (caller can remove limit).
+    const auto limit = system::possible_narrow_cast<size_t>(
+        link_to_position(size.value));
+
     const auto sink = std::make_shared<writer>(ptr);
-    if constexpr (is_slab) { sink->set_limit(value); }
-    if constexpr (!is_slab) { sink->set_limit(value * Size); }
+    sink->set_limit(limit);
     return sink;
 }
 

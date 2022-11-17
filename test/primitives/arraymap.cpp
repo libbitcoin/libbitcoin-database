@@ -28,18 +28,15 @@ class arraymap_
 public:
     using arraymap<Link, Size>::arraymap;
 
-    reader_ptr at_(const Link& record) const NOEXCEPT
+    reader_ptr getter_(const Link& record) const NOEXCEPT
     {
-        return base::at(record);
+        return arraymap<Link, Size>::getter(record);
     }
 
-    writer_ptr push_(const Link& size=one) NOEXCEPT
+    writer_ptr creater_(const Link& size=one) NOEXCEPT
     {
-        return base::push(size);
+        return arraymap<Link, Size>::creater(size);
     }
-
-private:
-    using base = arraymap<Link, Size>;
 };
 
 // There is no internal linkage, but we still have primary key domain.
@@ -69,21 +66,21 @@ BOOST_AUTO_TEST_CASE(arraymap__record_construct__non_empty__expected)
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_at__terminal__false)
+BOOST_AUTO_TEST_CASE(arraymap__record_getter__terminal__false)
 {
     data_chunk body_file;
     test::storage body_store{ body_file };
     const record_table instance{ body_store };
-    BOOST_REQUIRE(!instance.at_(link5::terminal));
+    BOOST_REQUIRE(!instance.getter_(link5::terminal));
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_at__empty__exhausted)
+BOOST_AUTO_TEST_CASE(arraymap__record_getter__empty__exhausted)
 {
     data_chunk body_file;
     test::storage body_store{ body_file };
     const record_table instance{ body_store };
-    BOOST_REQUIRE(instance.at_(0)->is_exhausted());
-    BOOST_REQUIRE(instance.at_(19)->is_exhausted());
+    BOOST_REQUIRE(instance.getter_(0)->is_exhausted());
+    BOOST_REQUIRE(instance.getter_(19)->is_exhausted());
 }
 
 // slab arraymap
@@ -106,21 +103,21 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_construct__non_empty__expected)
     BOOST_REQUIRE_EQUAL(body_file.size(), body_size);
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_at__terminal__false)
+BOOST_AUTO_TEST_CASE(arraymap__slab_getter__terminal__false)
 {
     data_chunk body_file;
     test::storage body_store{ body_file };
     const slab_table instance{ body_store };
-    BOOST_REQUIRE(!instance.at_(link5::terminal));
+    BOOST_REQUIRE(!instance.getter_(link5::terminal));
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_at__empty__exhausted)
+BOOST_AUTO_TEST_CASE(arraymap__slab_getter__empty__exhausted)
 {
     data_chunk body_file;
     test::storage body_store{ body_file };
     const slab_table instance{ body_store };
-    BOOST_REQUIRE(instance.at_(0)->is_exhausted());
-    BOOST_REQUIRE(instance.at_(19)->is_exhausted());
+    BOOST_REQUIRE(instance.getter_(0)->is_exhausted());
+    BOOST_REQUIRE(instance.getter_(19)->is_exhausted());
 }
 
 // push/found/at (protected interface positive tests)
@@ -132,21 +129,21 @@ BOOST_AUTO_TEST_CASE(arraymap__record_readers__empty__expected)
     test::storage body_store{ body_file };
     record_table instance{ body_store };
 
-    auto stream0 = instance.push_();
+    auto stream0 = instance.creater_();
     BOOST_REQUIRE_EQUAL(body_file.size(), record4::size);
     BOOST_REQUIRE(!stream0->is_exhausted());
-    BOOST_REQUIRE(instance.at_(0));
+    BOOST_REQUIRE(instance.getter_(0));
     stream0.reset();
 
-    auto stream1 = instance.push_();
+    auto stream1 = instance.creater_();
     BOOST_REQUIRE_EQUAL(body_file.size(), 2u * record4::size);
     BOOST_REQUIRE(!stream1->is_exhausted());
-    BOOST_REQUIRE(instance.at_(1));
+    BOOST_REQUIRE(instance.getter_(1));
     stream1.reset();
 
     // Past end is valid pointer but exhausted stream.
-    BOOST_REQUIRE(instance.at_(2));
-    BOOST_REQUIRE(instance.at_(2)->is_exhausted());
+    BOOST_REQUIRE(instance.getter_(2));
+    BOOST_REQUIRE(instance.getter_(2)->is_exhausted());
 
     // record (assumes zero fill)
     // =================================
@@ -160,21 +157,21 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_readers__empty__expected)
     test::storage body_store{ body_file };
     slab_table instance{ body_store };
 
-    auto stream0 = instance.push_(record4::size);
+    auto stream0 = instance.creater_(record4::size);
     BOOST_REQUIRE_EQUAL(body_file.size(), record4::size);
     BOOST_REQUIRE(!stream0->is_exhausted());
-    BOOST_REQUIRE(instance.at_(0));
+    BOOST_REQUIRE(instance.getter_(0));
     stream0.reset();
 
-    auto stream1 = instance.push_(record4::size);
+    auto stream1 = instance.creater_(record4::size);
     BOOST_REQUIRE_EQUAL(body_file.size(), 2u * record4::size);
     BOOST_REQUIRE(!stream1->is_exhausted());
-    BOOST_REQUIRE(instance.at_(record4::size));
+    BOOST_REQUIRE(instance.getter_(record4::size));
     stream1.reset();
 
     // Past end is valid pointer but exhausted stream.
-    BOOST_REQUIRE(instance.at_(2u * record4::size));
-    BOOST_REQUIRE(instance.at_(2u * record4::size)->is_exhausted());
+    BOOST_REQUIRE(instance.getter_(2u * record4::size));
+    BOOST_REQUIRE(instance.getter_(2u * record4::size)->is_exhausted());
 
     // record (assumes zero fill)
     // =================================
