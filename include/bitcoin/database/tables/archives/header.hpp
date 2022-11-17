@@ -152,7 +152,7 @@ struct record_with_sk
     }
     BC_POP_WARNING()
 
-    hash_digest sk {};
+    hash_digest sk{};
 };
 
 /// header::table
