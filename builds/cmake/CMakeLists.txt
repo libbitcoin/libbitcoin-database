@@ -162,7 +162,6 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/memory/map.cpp"
     "../../src/memory/mman-win32/mman.c"
     "../../src/memory/mman-win32/mman.h"
-    "../../src/store/query.cpp"
     "../../src/store/store.cpp" )
 
 # ${CANONICAL_LIB_NAME} project specific include directories.

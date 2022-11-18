@@ -71,9 +71,9 @@ inline uint8_t* CLASS::end() NOEXCEPT
     return end_;
 }
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 } // namespace database
 } // namespace libbitcoin
-
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 #endif

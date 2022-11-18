@@ -19,17 +19,21 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_HPP
 #define LIBBITCOIN_DATABASE_QUERY_HPP
 
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/store/query.hpp>
+#include <bitcoin/database/tables/tables.hpp>
 #include <bitcoin/database/store/store.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-class BCD_API query
+template <typename Store>
+class query
 {
 public:
     query(store& store) NOEXCEPT;
+
+    bool get_transaction(const hash_digest& key) NOEXCEPT;
 
 private:
     store& store_;
@@ -37,5 +41,13 @@ private:
 
 } // namespace database
 } // namespace libbitcoin
+
+#define TEMPLATE template <typename Store>
+#define CLASS query<Store>
+
+#include <bitcoin/database/impl/store/query.ipp>
+
+#undef CLASS
+#undef TEMPLATE
 
 #endif

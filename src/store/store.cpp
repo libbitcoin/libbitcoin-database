@@ -49,8 +49,8 @@ namespace database {
 
 store::store(const settings& config) NOEXCEPT
   : configuration_(config),
-    flush_lock_(config.dir / "flush.lock"),
-    process_lock_(config.dir / "process.lock"),
+    flush_lock_(config.dir / "flush.lck"),
+    process_lock_(config.dir / "process.lck"),
 
     header_head_(config.dir / "archive_header.idx"),
     header_body_(config.dir / "archive_header.dat", config.size, config.rate),
@@ -78,6 +78,23 @@ store::store(const settings& config) NOEXCEPT
     txs_body_(config.dir / "archive_txs.dat", config.size, config.rate),
     txs(txs_head_, txs_body_, config.buckets)
 {
+}
+
+bool store::create() NOEXCEPT
+{
+    return file::clear(configuration_.dir)
+        && file::create(configuration_.dir / "archive_header.idx")
+        && file::create(configuration_.dir / "archive_header.dat")
+        && file::create(configuration_.dir / "archive_point.idx")
+        && file::create(configuration_.dir / "archive_point.dat")
+        && file::create(configuration_.dir / "archive_input.idx")
+        && file::create(configuration_.dir / "archive_input.dat")
+        && file::create(configuration_.dir / "archive_output.dat")
+        && file::create(configuration_.dir / "archive_puts.dat")
+        && file::create(configuration_.dir / "archive_tx.idx")
+        && file::create(configuration_.dir / "archive_tx.dat")
+        && file::create(configuration_.dir / "archive_txs.idx")
+        && file::create(configuration_.dir / "archive_txs.dat");
 }
 
 bool store::open() NOEXCEPT

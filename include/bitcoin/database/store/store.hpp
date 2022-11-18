@@ -39,6 +39,9 @@ public:
     /// Construct a store from settings.
     store(const settings& config) NOEXCEPT;
 
+    /// Clear store directory and create the set of empty files.
+    bool create() NOEXCEPT;
+
     /// Create or open the set of tables, set locks.
     bool open() NOEXCEPT;
 
@@ -62,7 +65,6 @@ public:
     /// Close a transaction on this thread.
     void close_transaction() NOEXCEPT;
 
-protected:
     header::table header;
     point::table point;
     input::table input;

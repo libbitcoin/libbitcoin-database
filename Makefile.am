@@ -43,7 +43,6 @@ src_libbitcoin_database_la_SOURCES = \
     src/memory/map.cpp \
     src/memory/mman-win32/mman.c \
     src/memory/mman-win32/mman.h \
-    src/store/query.cpp \
     src/store/store.cpp
 
 # local: test/libbitcoin-database-test
@@ -136,6 +135,10 @@ include_bitcoin_database_impl_primitives_HEADERS = \
     include/bitcoin/database/impl/primitives/iterator.ipp \
     include/bitcoin/database/impl/primitives/linkage.ipp \
     include/bitcoin/database/impl/primitives/manager.ipp
+
+include_bitcoin_database_impl_storedir = ${includedir}/bitcoin/database/impl/store
+include_bitcoin_database_impl_store_HEADERS = \
+    include/bitcoin/database/impl/store/query.ipp
 
 include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks
 include_bitcoin_database_locks_HEADERS = \
