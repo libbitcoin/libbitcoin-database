@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_STORE_HPP
 #define LIBBITCOIN_DATABASE_STORE_HPP
 
+#include <memory>
 #include <shared_mutex>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
@@ -36,7 +37,7 @@ public:
     DELETE5(store);
 
     /// Construct a store from settings.
-    store(const settings& configuration) NOEXCEPT;
+    store(const settings& config) NOEXCEPT;
 
     /// Create or open the set of tables, set locks.
     bool open() NOEXCEPT;
@@ -48,14 +49,27 @@ public:
     /// Flush and close the set of tables, clear locks.
     bool close() NOEXCEPT;
 
+    ////using transactor = std::shared_lock<boost::upgrade_mutex>;
+    /////// Get a transactor object.
+    ////transactor get_transactor() NOEXCEPT
+    ////{
+    ////    return transactor{ transactor_mutex_ };
+    ////}
+
+    /// Open a transaction on this thread.
+    void open_transaction() NOEXCEPT;
+
+    /// Close a transaction on this thread.
+    void close_transaction() NOEXCEPT;
+
 protected:
     header::table header;
-    ////point::table point;
-    ////input::table input;
-    ////output::table output;
-    ////puts::table puts;
-    ////transaction::table transaction;
-    ////txs::table txs;
+    point::table point;
+    input::table input;
+    output::table output;
+    puts::table puts;
+    transaction::table transaction;
+    txs::table txs;
 
 private:
     // This is thread safe.
@@ -70,27 +84,27 @@ private:
     map header_head_;
     map header_body_;
 
-    ////// record hashmap
-    ////map point_head_;
-    ////map point_body_;
+    // record hashmap
+    map point_head_;
+    map point_body_;
 
-    ////// slab hashmap
-    ////map input_head_;
-    ////map input_body_;
+    // slab hashmap
+    map input_head_;
+    map input_body_;
 
-    ////// blob
-    ////map output_body_;
+    // blob
+    map output_body_;
 
-    ////// array
-    ////map puts_body_;
+    // array
+    map puts_body_;
 
-    ////// record hashmap
-    ////map transaction_head_;
-    ////map transaction_body_;
+    // record hashmap
+    map transaction_head_;
+    map transaction_body_;
 
-    ////// slab hashmap
-    ////map txs_head_;
-    ////map txs_body_;
+    // slab hashmap
+    map txs_head_;
+    map txs_body_;
 };
 
 } // namespace database

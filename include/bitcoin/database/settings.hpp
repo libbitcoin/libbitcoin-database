@@ -33,12 +33,10 @@ public:
     settings(system::chain::selection context) NOEXCEPT;
 
     /// Properties.
-    std::filesystem::path directory;
-    std::filesystem::path head;
-    std::filesystem::path body;
-    uint32_t size;
-    uint16_t growth;
+    std::filesystem::path dir;
     uint32_t buckets;
+    uint16_t rate;
+    uint32_t size;
 };
 
 } // namespace database

@@ -37,7 +37,7 @@ public:
     DELETE4(map);
 
     map(const std::filesystem::path& filename, size_t minimum=1,
-        size_t expansion=50) NOEXCEPT;
+        size_t expansion=0) NOEXCEPT;
 
     /// Destruct for debug assertion only.
     ~map() NOEXCEPT;

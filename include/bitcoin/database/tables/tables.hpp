@@ -22,6 +22,7 @@
 #include <bitcoin/database/tables/archives/header.hpp>
 #include <bitcoin/database/tables/archives/input.hpp>
 #include <bitcoin/database/tables/archives/output.hpp>
+#include <bitcoin/database/tables/archives/point.hpp>
 #include <bitcoin/database/tables/archives/puts.hpp>
 #include <bitcoin/database/tables/archives/transaction.hpp>
 #include <bitcoin/database/tables/archives/txs.hpp>

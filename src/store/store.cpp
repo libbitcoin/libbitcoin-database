@@ -18,18 +18,65 @@
  */
 #include <bitcoin/database/store/store.hpp>
 
+#include <memory>
+#include <shared_mutex>
 #include <bitcoin/database/define.hpp>
+
+// Any call to arraymap/hashmap put (or allocate/set/commit) requires a shared
+// lock on the transactor mutex. The store is in a consistent state when all
+// shares are released (no open transactions). Store create, startup, shutdown
+// and snapshotting all require a unique lock on the transactor. Try-locks are
+// used by all but snapshot, as thread coalescence implies all shares released.
+// Snapshot blocks all transaction requests for the store, just as remap blocks
+// all memory access requests for a given memory map (file). Snapshot may be
+// completed with ongoing reads, though threads will be blocked at the p2p and 
+// client-server network interfaces.
+
+// The query inteface can access a store transactor factory, with shared mutex
+// RAII semantics, just as with the memory accessor (though with no methods). A
+// transactor must never exceed its creation scope and must have a provably
+// non-reentrant execution path, just as memory accessors. So transactor issue
+// is protected and lifetime is within the scope of a query call. A transactor
+// is limited to the smallest scope where database integrity is assured.
+
+// The transactor mutex would allow write detection for open/close operations,
+// however it cannot detect read operations. Read/write is guarded at the
+// file level within the tables. However the transactor is overloaded to order
+// calls to the thread-unsafe process_lock_ and flush_lock_.
 
 namespace libbitcoin {
 namespace database {
 
-store::store(const settings& configuration) NOEXCEPT
-  : configuration_(configuration),
-    flush_lock_(configuration.directory),
-    process_lock_(configuration.directory),
-    header_head_(configuration.directory),
-    header_body_(configuration.directory),
-    header(header_head_, header_body_, 42)
+store::store(const settings& config) NOEXCEPT
+  : configuration_(config),
+    flush_lock_(config.dir / "flush.lock"),
+    process_lock_(config.dir / "process.lock"),
+
+    header_head_(config.dir / "archive_header.idx"),
+    header_body_(config.dir / "archive_header.dat", config.size, config.rate),
+    header(header_head_, header_body_, config.buckets),
+
+    point_head_(config.dir / "archive_point.idx"),
+    point_body_(config.dir / "archive_point.dat", config.size, config.rate),
+    point(point_head_, point_body_, config.buckets),
+
+    input_head_(config.dir / "archive_input.idx"),
+    input_body_(config.dir / "archive_input.dat", config.size, config.rate),
+    input(input_head_, input_body_, config.buckets),
+
+    output_body_(config.dir / "archive_output.dat", config.size, config.rate),
+    output(output_body_),
+
+    puts_body_(config.dir / "archive_puts.dat", config.size, config.rate),
+    puts(puts_body_),
+
+    transaction_head_(config.dir / "archive_tx.idx"),
+    transaction_body_(config.dir / "archive_tx.dat", config.size, config.rate),
+    transaction(transaction_head_, transaction_body_, config.buckets),
+
+    txs_head_(config.dir / "archive_txs.idx"),
+    txs_body_(config.dir / "archive_txs.dat", config.size, config.rate),
+    txs(txs_head_, txs_body_, config.buckets)
 {
 }
 
@@ -39,7 +86,9 @@ bool store::open() NOEXCEPT
     if (transactor_mutex_.try_lock())
     {
         const auto result = process_lock_.try_lock() && flush_lock_.try_lock();
+
         // TODO: if (result) open tables.
+
         transactor_mutex_.unlock();
         return result;
     }
@@ -64,12 +113,23 @@ bool store::close() NOEXCEPT
     if (transactor_mutex_.try_lock())
     {
         // TODO: close tables.
+
         const auto result = process_lock_.try_unlock() && flush_lock_.try_unlock();
         transactor_mutex_.unlock();
         return result;
     }
 
     return false;
+}
+
+void store::open_transaction() NOEXCEPT
+{
+    transactor_mutex_.lock_shared();
+}
+
+void store::close_transaction() NOEXCEPT
+{
+    transactor_mutex_.unlock_shared();
 }
 
 } // namespace database
