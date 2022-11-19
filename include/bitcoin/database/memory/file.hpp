@@ -28,18 +28,20 @@ namespace database {
 namespace file {
 
 constexpr auto invalid = -1;
+using path = std::filesystem::path;
 
 /// Basic file system utilities, not thread safe.
-BCD_API bool clear(const std::filesystem::path& directory) NOEXCEPT;
-BCD_API bool create(const std::filesystem::path& filename) NOEXCEPT;
-BCD_API bool exists(const std::filesystem::path& filename) NOEXCEPT;
-BCD_API bool remove(const std::filesystem::path& filename) NOEXCEPT;
-BCD_API bool rename(const std::filesystem::path& from,
-    const std::filesystem::path& to) NOEXCEPT;
-BCD_API int open(const std::filesystem::path& filename) NOEXCEPT;
+BCD_API bool clear(const path& directory) NOEXCEPT;
+BCD_API bool create(const path& filename) NOEXCEPT;
+BCD_API bool copy(const path& to, const uint8_t* data, size_t size) NOEXCEPT;
+BCD_API bool exists(const path& filename) NOEXCEPT;
+BCD_API bool remove(const path& filename) NOEXCEPT;
+BCD_API bool rename(const path& from, const path& to) NOEXCEPT;
+BCD_API int open(const path& filename) NOEXCEPT;
 BCD_API bool close(int file_descriptor) NOEXCEPT;
 BCD_API size_t size(int file_descriptor) NOEXCEPT;
 BCD_API size_t page() NOEXCEPT;
+
 
 } // namespace file
 } // namespace database

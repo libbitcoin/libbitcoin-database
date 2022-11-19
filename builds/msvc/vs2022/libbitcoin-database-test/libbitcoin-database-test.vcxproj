@@ -83,10 +83,9 @@
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\manager.cpp" />
+    <ClCompile Include="..\..\..\..\test\query.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
     <ClCompile Include="..\..\..\..\test\storage.cpp" />
-    <ClCompile Include="..\..\..\..\test\store\query.cpp" />
-    <ClCompile Include="..\..\..\..\test\store\store.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\header.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\input.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\output.cpp" />
@@ -107,6 +106,7 @@
     <ClCompile Include="..\..\..\..\test\tables\indexes\input_tx.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\output_tx.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\spent_output.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\store.cpp" />
     <ClCompile Include="..\..\..\..\test\test.cpp" />
   </ItemGroup>
   <ItemGroup>

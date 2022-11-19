@@ -19,20 +19,17 @@
     <Filter Include="src\primitives">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\store">
+    <Filter Include="src\tables">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables">
+    <Filter Include="src\tables\archives">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\archives">
+    <Filter Include="src\tables\caches">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000006}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\caches">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000007}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\tables\indexes">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000008}</UniqueIdentifier>
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000007}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -75,17 +72,14 @@
     <ClCompile Include="..\..\..\..\test\primitives\manager.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\settings.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\storage.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\store\query.cpp">
-      <Filter>src\store</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\store\store.cpp">
-      <Filter>src\store</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\archives\header.cpp">
       <Filter>src\tables\archives</Filter>
@@ -146,6 +140,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\indexes\spent_output.cpp">
       <Filter>src\tables\indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\store.cpp">
+      <Filter>src\tables</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <Filter>src</Filter>

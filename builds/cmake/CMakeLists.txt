@@ -162,7 +162,7 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/memory/map.cpp"
     "../../src/memory/mman-win32/mman.c"
     "../../src/memory/mman-win32/mman.h"
-    "../../src/store/store.cpp" )
+    "../../src/tables/store.cpp" )
 
 # ${CANONICAL_LIB_NAME} project specific include directories.
 #------------------------------------------------------------------------------
@@ -194,6 +194,7 @@ endif()
 if (with-tests)
     add_executable( libbitcoin-database-test
         "../../test/main.cpp"
+        "../../test/query.cpp"
         "../../test/settings.cpp"
         "../../test/storage.cpp"
         "../../test/storage.hpp"
@@ -211,8 +212,7 @@ if (with-tests)
         "../../test/primitives/iterator.cpp"
         "../../test/primitives/linkage.cpp"
         "../../test/primitives/manager.cpp"
-        "../../test/store/query.cpp"
-        "../../test/store/store.cpp"
+        "../../test/tables/store.cpp"
         "../../test/tables/archives/header.cpp"
         "../../test/tables/archives/input.cpp"
         "../../test/tables/archives/output.cpp"

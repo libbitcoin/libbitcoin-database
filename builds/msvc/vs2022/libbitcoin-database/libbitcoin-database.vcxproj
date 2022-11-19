@@ -80,7 +80,7 @@
     <ClCompile Include="..\..\..\..\src\memory\map.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\mman-win32\mman.c" />
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
-    <ClCompile Include="..\..\..\..\src\store\store.cpp" />
+    <ClCompile Include="..\..\..\..\src\tables\store.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp" />
@@ -106,9 +106,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linkage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\primitives.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\query.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\store\query.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\store\store.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\header.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\input.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\output.hpp" />
@@ -130,6 +129,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\output_tx.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\spent_output.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\schema.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\store.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\tables.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp" />
     <ClInclude Include="..\..\..\..\src\memory\mman-win32\mman.h" />

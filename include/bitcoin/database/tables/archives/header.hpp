@@ -156,7 +156,7 @@ struct record_with_sk
 };
 
 /// header::table
-class BCD_API table
+class table
   : public hash_map<record>
 {
 public:

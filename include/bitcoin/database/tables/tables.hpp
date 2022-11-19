@@ -43,5 +43,6 @@
 #include <bitcoin/database/tables/indexes/spent_output.hpp>
 
 #include <bitcoin/database/tables/schema.hpp>
+#include <bitcoin/database/tables/store.hpp>
 
 #endif

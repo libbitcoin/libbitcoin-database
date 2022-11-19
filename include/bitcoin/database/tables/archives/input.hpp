@@ -134,7 +134,7 @@ struct slab_decomposed_sk
 };
 
 /// input::table
-class BCD_API table
+class table
   : public hash_map<slab>
 {
 public:

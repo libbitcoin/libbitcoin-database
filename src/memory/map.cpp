@@ -25,6 +25,7 @@
     #include <sys/stat.h>
     #include <sys/types.h>
 #endif
+#include <fcntl.h>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
@@ -134,18 +135,19 @@ bool map::load() NOEXCEPT
     return false;
 }
 
+// Suspend writes before calling.
 bool map::flush() const NOEXCEPT
 {
     std::shared_lock field_lock(field_mutex_);
 
+    // flush_unmapped
     if (!mapped_)
-    {
-        // flush_unmapped
         return false;
-    }
 
-    // Join store threads before calling, ensuring no outstanding memory object
-    // or reservation in process.
+    // macos msync fails with zero logical size.
+    if (!is_zero(logical_))
+        return true;
+
     std::unique_lock map_lock(map_mutex_);
 
     // flush_failure
@@ -160,9 +162,16 @@ bool map::unload() NOEXCEPT
     {
         BC_ASSERT_MSG(logical_ <= capacity_, "logical size exceeds capacity");
 
-        if (!mapped_ || !unmap_())
+        // idempotent (unmap-unmapped is ok)
+        if (!mapped_)
         {
-            // unmap_unmapped | unmap_failure
+            map_mutex_.unlock();
+            return true;
+        }
+
+        if (!unmap_())
+        {
+            // unmap_failure
             map_mutex_.unlock();
             return false;
         }
@@ -240,7 +249,6 @@ size_t map::allocate(size_t chunk) NOEXCEPT
         // remap_failure
         if (!remap_(to_capacity(size)))
         {
-            // Unreachable in test without mocking remap_.
             map_mutex_.unlock();
             field_mutex_.unlock_upgrade();
             return storage::eof;
@@ -276,24 +284,51 @@ memory_ptr map::get(size_t offset) const NOEXCEPT
 // private, mman wrappers, not thread safe
 // ----------------------------------------------------------------------------
 
-constexpr auto mman_fail = -1;
+constexpr auto fail = -1;
 
-// Flush failure does not halt process, flush does not ensure file integrity.
 bool map::flush_() const NOEXCEPT
 {
-    // macos msync fails with zero logical size.
-    return is_zero(logical_) ||
-        ::msync(memory_map_, logical_, MS_SYNC) != mman_fail;
+#if defined(HAVE_MSC)
+    return ::msync(memory_map_, logical_, MS_SYNC) != fail &&
+        ::fsync(descriptor_) != fail;
+#elif defined(F_FULLFSYNC)
+    return ::fcntl(descriptor_, F_FULLFSYNC, 0) != fail;
+#else
+    return ::fsync(descriptor_) != fail;
+#endif
 }
 
 // Trims to logical size, can be zero.
 bool map::unmap_() NOEXCEPT
 {
-    // fsync is required to ensure file integrity (cache cleared).
-    const auto success = flush_()
-        && (::munmap(memory_map_, capacity_) != mman_fail)
-        && (::ftruncate(descriptor_, logical_) != mman_fail)
-        && (::fsync(descriptor_) != mman_fail);
+#if defined(HAVE_MSC)
+    // Win32: unmap (and therefore msync) must be called before ftruncate.
+    // Win32: "To flush all the dirty pages plus the metadata for the file and
+    // ensure that they are physically written to disk..."
+    const auto success =
+           (::msync(memory_map_, logical_, MS_SYNC) != fail)
+        && (::munmap(memory_map_, capacity_) != fail)
+        && (::ftruncate(descriptor_, logical_) != fail)
+        && (::fsync(descriptor_) != fail);
+#else
+    // msync should not be required on modern linux, see linus et al.
+    // stackoverflow.com/questions/5902629/mmap-msync-and-linux-process-termination
+    const auto success =
+        && (::ftruncate(descriptor_, logical_) != fail)
+#if defined(F_FULLFSYNC)
+        // non-standard macOS behavior: news.ycombinator.com/item?id=30372218
+        && (::fcntl(descriptor_, F_FULLFSYNC, 0) != fail)
+#else
+        // Linux: fsync "transfers ("flushes") all modified in-core data of
+        // (i.e., modified buffer cache pages for) the file referred to by the
+        // file descriptor fd to the disk device so all changed information
+        // can be retrieved even if the system crashes or is rebooted. This
+        // includes writing through or flushing a disk cache if present. The
+        // call blocks until the device reports that transfer has completed."
+        && (::fsync(descriptor_) != fail)
+#endif
+        && (::munmap(memory_map_, capacity_) != fail);
+#endif
 
     capacity_ = zero;
     memory_map_ = nullptr;
@@ -309,12 +344,12 @@ bool map::map_() NOEXCEPT
     if (size < minimum_)
     {
         size = minimum_;
-        if (::ftruncate(descriptor_, size) == mman_fail)
+        if (::ftruncate(descriptor_, size) == fail)
             return false;
     }
 
     memory_map_ = pointer_cast<uint8_t>(::mmap(nullptr, size,
-        PROT_READ | PROT_WRITE, MAP_SHARED, descriptor_, 0));
+        PROT_READ | PROT_WRITE, MAP_SHARED_VALIDATE | MAP_SYNC, descriptor_, 0));
 
     return finalize_(size);
 }
@@ -324,10 +359,7 @@ bool map::remap_(size_t size) NOEXCEPT
 {
     // Cannot remap empty file, so expand to minimum capacity if zero.
     if (is_zero(size))
-    {
-        // Unreachable in test without mocking map_.
         size = minimum_;
-    }
 
 #if !defined(HAVE_MSC) && !defined(MREMAP_MAYMOVE)
     // macOS: unmap before ftruncate sets new size.
@@ -335,20 +367,21 @@ bool map::remap_(size_t size) NOEXCEPT
         return false;
 #endif
 
-    if (::ftruncate(descriptor_, size) == mman_fail)
+    if (::ftruncate(descriptor_, size) == fail)
         return false;
 
-// mman-win32 mremap hack (umap/map) requires flags and file descriptor.
 #if defined(HAVE_MSC)
+    // mman-win32 mremap hack (umap/map) requires flags and file descriptor.
     memory_map_ = pointer_cast<uint8_t>(::mremap_(memory_map_, capacity_, size,
-        PROT_READ | PROT_WRITE, MAP_SHARED, descriptor_));
+        PROT_READ | PROT_WRITE, MAP_SHARED_VALIDATE | MAP_SYNC, descriptor_));
 #elif defined(MREMAP_MAYMOVE)
     memory_map_ = pointer_cast<uint8_t>(::mremap(memory_map_, capacity_, size,
         MREMAP_MAYMOVE));
 #else
     // macOS: does not define mremap or MREMAP_MAYMOVE.
+    // TODO: see "MREMAP_MAYMOVE" in sqlite for map extension technique.
     memory_map_ = pointer_cast<uint8_t>(::mmap(nullptr, size,
-        PROT_READ | PROT_WRITE, MAP_SHARED, descriptor_, 0));
+        PROT_READ | PROT_WRITE, MAP_SHARED_VALIDATE | MAP_SYNC, descriptor_, 0));
 #endif
 
     return finalize_(size);
@@ -356,9 +389,9 @@ bool map::remap_(size_t size) NOEXCEPT
 
 bool map::finalize_(size_t size) NOEXCEPT
 {
-    // TODO: madvise with large length value fails on linux, is 0 sufficient?
+    // TODO: madvise with large length value fails on linux, does 0 imply all?
     if (memory_map_ == MAP_FAILED ||
-        ::madvise(memory_map_, 0, MADV_RANDOM) == mman_fail)
+        ::madvise(memory_map_, 0, MADV_RANDOM) == fail)
     {
         capacity_ = zero;
         memory_map_ = nullptr;
