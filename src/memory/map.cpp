@@ -314,11 +314,11 @@ bool map::unmap_() NOEXCEPT
     // msync should not be required on modern linux, see linus et al.
     // stackoverflow.com/questions/5902629/mmap-msync-and-linux-process-termination
     const auto success =
-        && (::ftruncate(descriptor_, logical_) != fail)
-#if defined(F_FULLFSYNC)
+           (::ftruncate(descriptor_, logical_) != fail)
+    #if defined(F_FULLFSYNC)
         // non-standard macOS behavior: news.ycombinator.com/item?id=30372218
         && (::fcntl(descriptor_, F_FULLFSYNC, 0) != fail)
-#else
+    #else
         // Linux: fsync "transfers ("flushes") all modified in-core data of
         // (i.e., modified buffer cache pages for) the file referred to by the
         // file descriptor fd to the disk device so all changed information
@@ -326,7 +326,7 @@ bool map::unmap_() NOEXCEPT
         // includes writing through or flushing a disk cache if present. The
         // call blocks until the device reports that transfer has completed."
         && (::fsync(descriptor_) != fail)
-#endif
+    #endif
         && (::munmap(memory_map_, capacity_) != fail);
 #endif
 
