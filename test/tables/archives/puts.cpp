@@ -33,24 +33,24 @@ const record expected1
 {
     std_vector<uint64_t>
     {
-        { 0x0000007856341211_u64 }
+        0x0000007856341211_u64
     }
 };
 const record expected2
 {
     std_vector<uint64_t>
     {
-        { 0x0000007856341221_u64 },
-        { 0x0000007856341222_u64 }
+        0x0000007856341221_u64,
+        0x0000007856341222_u64
     }
 };
 const record expected3
 {
     std_vector<uint64_t>
     {
-        { 0x0000007856341231_u64 },
-        { 0x0000007856341232_u64 },
-        { 0x0000007856341233_u64 }
+        0x0000007856341231_u64,
+        0x0000007856341232_u64,
+        0x0000007856341233_u64
     }
 };
 const data_chunk expected_file

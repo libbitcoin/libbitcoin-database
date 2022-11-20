@@ -349,7 +349,7 @@ bool map::map_() NOEXCEPT
     }
 
     memory_map_ = pointer_cast<uint8_t>(::mmap(nullptr, size,
-        PROT_READ | PROT_WRITE, MAP_SHARED_VALIDATE | MAP_SYNC, descriptor_, 0));
+        PROT_READ | PROT_WRITE, MAP_SHARED, descriptor_, 0));
 
     return finalize_(size);
 }
@@ -373,7 +373,7 @@ bool map::remap_(size_t size) NOEXCEPT
 #if defined(HAVE_MSC)
     // mman-win32 mremap hack (umap/map) requires flags and file descriptor.
     memory_map_ = pointer_cast<uint8_t>(::mremap_(memory_map_, capacity_, size,
-        PROT_READ | PROT_WRITE, MAP_SHARED_VALIDATE | MAP_SYNC, descriptor_));
+        PROT_READ | PROT_WRITE, MAP_SHARED, descriptor_));
 #elif defined(MREMAP_MAYMOVE)
     memory_map_ = pointer_cast<uint8_t>(::mremap(memory_map_, capacity_, size,
         MREMAP_MAYMOVE));
@@ -381,7 +381,7 @@ bool map::remap_(size_t size) NOEXCEPT
     // macOS: does not define mremap or MREMAP_MAYMOVE.
     // TODO: see "MREMAP_MAYMOVE" in sqlite for map extension technique.
     memory_map_ = pointer_cast<uint8_t>(::mmap(nullptr, size,
-        PROT_READ | PROT_WRITE, MAP_SHARED_VALIDATE | MAP_SYNC, descriptor_, 0));
+        PROT_READ | PROT_WRITE, MAP_SHARED, descriptor_, 0));
 #endif
 
     return finalize_(size);
