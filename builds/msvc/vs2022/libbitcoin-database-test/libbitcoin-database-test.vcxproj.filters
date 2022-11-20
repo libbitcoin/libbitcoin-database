@@ -33,6 +33,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\test\error.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\locks\file_lock.cpp">
       <Filter>src\locks</Filter>
     </ClCompile>
