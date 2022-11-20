@@ -38,17 +38,7 @@ public:
 
     struct record
       : public schema::header
-    {
-        uint32_t height{};
-        uint32_t flags{};
-        uint32_t mtp{};
-        uint32_t parent_fk{};
-        uint32_t version{};
-        uint32_t time{};
-        uint32_t bits{};
-        uint32_t nonce{};
-        hash_digest root{};
-        
+    {        
         inline bool from_data(reader& source) NOEXCEPT
         {
             height    = source.read_little_endian<uint32_t, schema::block>();
@@ -91,6 +81,16 @@ public:
                 && nonce     == other.nonce
                 && root      == other.root;
         }
+
+        uint32_t height{};
+        uint32_t flags{};
+        uint32_t mtp{};
+        uint32_t parent_fk{};
+        uint32_t version{};
+        uint32_t time{};
+        uint32_t bits{};
+        uint32_t nonce{};
+        hash_digest root{};
     };
 
     struct record_with_sk

@@ -48,8 +48,6 @@ public:
                 schema::tx * add1(tx_fks.size()));
         }
 
-        std_vector<uint32_t> tx_fks{};
-
         inline bool from_data(reader& source) NOEXCEPT
         {
             tx_fks.resize(source.read_little_endian<uint32_t, schema::tx>());
@@ -81,6 +79,8 @@ public:
         {
             return tx_fks == other.tx_fks;
         }
+
+        std_vector<uint32_t> tx_fks{};
     };
 };
 

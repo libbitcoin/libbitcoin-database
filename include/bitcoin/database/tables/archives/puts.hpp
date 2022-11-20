@@ -49,8 +49,6 @@ public:
             return possible_narrow_cast<out>(put_fks.size());
         }
 
-        std_vector<uint64_t> put_fks{};
-
         inline bool from_data(reader& source) NOEXCEPT
         {
             // Clear the single record limit (file limit remains).
@@ -83,6 +81,8 @@ public:
         {
             return put_fks == other.put_fks;
         }
+
+        std_vector<uint64_t> put_fks{};
     };
 };
 

@@ -39,15 +39,6 @@ public:
     struct record
       : public schema::transaction
     {
-        bool coinbase{};
-        uint32_t bytes{};
-        uint32_t weight{};
-        uint32_t locktime{};
-        uint32_t version{};
-        uint32_t ins_count{};
-        uint32_t outs_count{};
-        uint32_t ins_fk{};
-
         /// Computed outputs start is based on presumed txs table schema.
         inline uint32_t outs_fk() const NOEXCEPT
         {
@@ -93,6 +84,15 @@ public:
                 && outs_count == other.outs_count
                 && ins_fk == other.ins_fk;
         }
+
+        bool coinbase{};
+        uint32_t bytes{};
+        uint32_t weight{};
+        uint32_t locktime{};
+        uint32_t version{};
+        uint32_t ins_count{};
+        uint32_t outs_count{};
+        uint32_t ins_fk{};
     };
 
     struct record_sk

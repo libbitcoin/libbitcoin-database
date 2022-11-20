@@ -50,11 +50,6 @@ public:
                 script.serialized_size(true));
         }
 
-        uint32_t parent_fk{}; // parent fk *not* a required query.
-        uint32_t index{};     // own (parent-relative) index not a required query.
-        uint64_t value{};
-        system::chain::script script{};
-
         inline bool from_data(reader& source) NOEXCEPT
         {
             parent_fk = source.read_little_endian<uint32_t, schema::tx>();
@@ -82,6 +77,11 @@ public:
                 && value == other.value
                 && script == other.script;
         }
+
+        uint32_t parent_fk{}; // parent fk *not* a required query.
+        uint32_t index{};     // own (parent-relative) index not a required query.
+        uint64_t value{};
+        system::chain::script script{};
     };
 };
 

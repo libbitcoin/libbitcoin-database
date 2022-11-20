@@ -50,12 +50,6 @@ public:
                 witness.serialized_size(true);
         }
 
-        uint32_t parent_fk{}; // parent fk *is* a required query.
-        uint32_t index{};     // own (parent-relative) index not a required query.
-        uint32_t sequence{};
-        system::chain::script script{};
-        system::chain::witness witness{};
-
         inline bool from_data(reader& source) NOEXCEPT
         {
             parent_fk = source.read_little_endian<uint32_t, schema::tx>();
@@ -86,6 +80,12 @@ public:
                 && script == other.script
                 && witness == other.witness;
         }
+
+        uint32_t parent_fk{}; // parent fk *is* a required query.
+        uint32_t index{};     // own (parent-relative) index not a required query.
+        uint32_t sequence{};
+        system::chain::script script{};
+        system::chain::witness witness{};
     };
 
     struct slab_composite_sk
