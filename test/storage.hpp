@@ -29,7 +29,7 @@ class storage
 {
 public:
     storage() NOEXCEPT;
-    storage(data_chunk& reference) NOEXCEPT;
+    storage(system::data_chunk& reference) NOEXCEPT;
 
     // storage interface
     size_t capacity() const NOEXCEPT override;
@@ -39,8 +39,8 @@ public:
     memory_ptr get(size_t offset=zero) const NOEXCEPT override;
 
 private:
-    data_chunk local_;
-    data_chunk& buffer_;
+    system::data_chunk local_;
+    system::data_chunk& buffer_;
     mutable std::shared_mutex field_mutex_;
     mutable std::shared_mutex map_mutex_;
 };

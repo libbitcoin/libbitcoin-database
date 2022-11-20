@@ -320,12 +320,12 @@ BOOST_AUTO_TEST_CASE(map__write__read__expected)
     BOOST_REQUIRE(instance.load());
     auto memory = instance.get(instance.allocate(sizeof(uint64_t)));
     BOOST_REQUIRE(memory);
-    unsafe_to_little_endian<uint64_t>(memory->begin(), expected);
+    system::unsafe_to_little_endian<uint64_t>(memory->begin(), expected);
     memory.reset();
     BOOST_REQUIRE(instance.flush());
     memory = instance.get();
     BOOST_REQUIRE(memory);
-    BOOST_REQUIRE_EQUAL(unsafe_from_little_endian<uint64_t>(memory->begin()), expected);
+    BOOST_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint64_t>(memory->begin()), expected);
     memory.reset();
     BOOST_REQUIRE(instance.unload());
     BOOST_REQUIRE(instance.close());

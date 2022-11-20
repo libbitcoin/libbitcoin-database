@@ -38,6 +38,7 @@ struct file_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(file_tests, file_setup_fixture)
 
+using namespace system;
 static_assert(file::invalid == -1);
 
 BOOST_AUTO_TEST_CASE(file__clear__empty__true)

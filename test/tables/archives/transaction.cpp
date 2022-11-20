@@ -21,6 +21,7 @@
 
 BOOST_AUTO_TEST_SUITE(transaction_tests)
 
+using namespace system;
 constexpr hash_digest key = base16_array("110102030405060708090a0b0c0d0e0f220102030405060708090a0b0c0d0e0f");
 
 #define DECLARE(instance_, body_file_, buckets_) \

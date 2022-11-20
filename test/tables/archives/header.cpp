@@ -21,6 +21,7 @@
 
 BOOST_AUTO_TEST_SUITE(header_tests)
 
+using namespace system;
 constexpr hash_digest key = base16_array("110102030405060708090a0b0c0d0e0f220102030405060708090a0b0c0d0e0f");
 constexpr hash_digest root = base16_array("330102030405060708090a0b0c0d0e0f440102030405060708090a0b0c0d0e0f");
 

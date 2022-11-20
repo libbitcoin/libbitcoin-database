@@ -21,6 +21,7 @@
 
 BOOST_AUTO_TEST_SUITE(txs_tests)
 
+using namespace system;
 constexpr search<schema::txs::sk> key = base16_array("112233");
 
 #define DECLARE(instance_, body_file_, buckets_) \

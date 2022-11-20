@@ -21,6 +21,7 @@
 
 BOOST_AUTO_TEST_SUITE(input_tests)
 
+using namespace system;
 constexpr search<table::input::slab::sk> key = base16_array("11223344556677");
 
 #define DECLARE(instance_, body_file_, buckets_) \

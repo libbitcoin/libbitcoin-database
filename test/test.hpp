@@ -50,14 +50,14 @@
 #endif
 
 using namespace bc;
-using namespace bc::system;
+////using namespace bc::system;
 using namespace bc::database;
 
 namespace std {
 
 // data_slice -> base16(data)
 std::ostream& operator<<(std::ostream& stream,
-    const data_slice& slice) NOEXCEPT;
+    const system::data_slice& slice) NOEXCEPT;
 
 // vector<Type> -> join(<<Type)
 template <typename Type>
@@ -66,7 +66,7 @@ std::ostream& operator<<(std::ostream& stream,
 {
     // Ok when testing serialize because only used for error message out.
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    stream << serialize(values);
+    stream << system::serialize(values);
     BC_POP_WARNING()
     return stream;
 }
@@ -78,7 +78,7 @@ std::ostream& operator<<(std::ostream& stream,
 {
     // Ok when testing serialize because only used for error message out.
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    stream << serialize(values);
+    stream << system::serialize(values);
     BC_POP_WARNING()
     return stream;
 }

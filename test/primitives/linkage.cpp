@@ -20,6 +20,8 @@
 
 BOOST_AUTO_TEST_SUITE(linkage_tests)
 
+using namespace system;
+
 // Minimal serialized sizes.
 static_assert(linkage<0>::size == 0);
 static_assert(linkage<1>::size == 1);

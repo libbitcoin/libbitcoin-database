@@ -32,7 +32,7 @@ storage::storage() NOEXCEPT
 {
 }
 
-storage::storage(data_chunk& reference) NOEXCEPT
+storage::storage(system::data_chunk& reference) NOEXCEPT
   : buffer_(reference)
 {
 }

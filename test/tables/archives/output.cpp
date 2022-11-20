@@ -21,6 +21,8 @@
 
 BOOST_AUTO_TEST_SUITE(output_tests)
 
+using namespace system;
+
 #define DECLARE(instance_, file_) \
 data_chunk file_; \
 test::storage store{ file_ }; \
