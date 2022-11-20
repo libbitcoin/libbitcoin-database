@@ -338,18 +338,18 @@ code store::backup() NOEXCEPT
     }
 
     // Export current (index) to first.
-    else if (!file::copy(first / "archive_header.idx", data1->begin(), data1->size()))
+    else if (!file::dump(first / "archive_header.idx", data1->begin(), data1->size()))
         error = system::error::unknown;
-    else if (!file::copy(first / "archive_point.idx", data2->begin(), data2->size()))
+    else if (!file::dump(first / "archive_point.idx", data2->begin(), data2->size()))
         error = system::error::unknown;
-    else if (!file::copy(first / "archive_input.idx", data3->begin(), data3->size()))
+    else if (!file::dump(first / "archive_input.idx", data3->begin(), data3->size()))
         error = system::error::unknown;
-    else if (!file::copy(first / "archive_tx.idx", data4->begin(), data4->size()))
+    else if (!file::dump(first / "archive_tx.idx", data4->begin(), data4->size()))
         error = system::error::unknown;
-    else if (!file::copy(first / "archive_txs.idx", data5->begin(), data5->size()))
+    else if (!file::dump(first / "archive_txs.idx", data5->begin(), data5->size()))
         error = system::error::unknown;
 
-    // Suppress clear error code in favor of first copy code.
+    // Suppress clear error code in favor of first dump code.
     if (error)
         /* bool */ file::clear(first);
 

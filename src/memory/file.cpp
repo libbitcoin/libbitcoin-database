@@ -57,7 +57,7 @@ bool create(const path& filename) NOEXCEPT
     return good;
 }
 
-bool copy(const path& to, const uint8_t* data, size_t size) NOEXCEPT
+bool dump(const path& to, const uint8_t* data, size_t size) NOEXCEPT
 {
     system::ofstream file(to);
     if (!file.good()) return false;
