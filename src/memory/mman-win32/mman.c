@@ -125,7 +125,7 @@ void* mmap(void* addr, size_t len, int prot, int flags, int fd, oft__ off)
 }
 
 /* Hack: fd parameter used to pass file descripter, not linux compatible. */
-/* Hack: There is no mremap equivalent, so munmap and mmap to achieve same. */
+/* Hack: No mremap equivalent, munmap and mmap are required to change size. */
 void* mremap_(void* addr, size_t old_size, size_t new_size, int prot,
     int flags, int fd)
 {
@@ -170,9 +170,14 @@ int mprotect(void* addr, size_t len, int prot)
     return -1;
 }
 
+/* The FlushViewOfFile function does not flush the file metadata, and it does
+not wait to return until the changes are flushed from the underlying hardware
+disk cache and physically written to disk. To flush all the dirty pages plus
+the metadata for the file and ensure that they are physically written to disk,
+call FlushViewOfFile and then call the FlushFileBuffers function [fsync]. */
 int msync(void* addr, size_t len, int flags)
 {
-    if (FlushViewOfFile(addr, len) != FALSE)
+    if (len == 0 || FlushViewOfFile(addr, len) != FALSE)
     {
         errno = 0;
         return 0;
@@ -213,9 +218,6 @@ int munlock(const void* addr, size_t len)
     return -1;
 }
 
-/* Calling fsync() does not necessarily ensure that the entry in the directory
-   containing the file has also reached disk. For that an explicit fsync() on
-   a file descriptor for the directory is also needed. */
 int fsync(int fd)
 {
     const HANDLE handle = (HANDLE)(_get_osfhandle(fd));
@@ -230,7 +232,6 @@ int fsync(int fd)
     return -1;
 }
 
-/* www.gitorious.org/git-win32/mainline/source/9ae6b7513158e0b1523766c9ad4a1ad286a96e2c:win32/ftruncate.c */
 int ftruncate(int fd, oft__ size)
 {
     LARGE_INTEGER big;
@@ -254,6 +255,8 @@ int ftruncate(int fd, oft__ size)
     const HANDLE handle = (HANDLE)_get_osfhandle(fd);
     const BOOL position = SetFilePointerEx(handle, big, NULL, FILE_BEGIN);
 
+    /* UnmapViewOfFile must be called first to unmap all views and call
+    CloseHandle to close file mapping object before can call SetEndOfFile. */
     if (position == INVALID_SET_FILE_POINTER || SetEndOfFile(handle) == FALSE)
     {
         errno = last_error(EIO);

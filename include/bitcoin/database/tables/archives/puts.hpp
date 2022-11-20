@@ -91,7 +91,7 @@ struct record
 };
 
 /// puts::table
-class BCD_API table
+class table
   : public array_map<record>
 {
 public:

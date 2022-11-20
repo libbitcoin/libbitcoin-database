@@ -19,12 +19,12 @@
 #ifndef LIBBITCOIN_DATABASE_TABLES_SCHEMA_HPP
 #define LIBBITCOIN_DATABASE_TABLES_SCHEMA_HPP
 
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/primitives.hpp>
 
 namespace libbitcoin {
 namespace database {
-    
+
 template <size_t Size>
 using search = system::data_array<Size>;
 using hash_digest = system::hash_digest;

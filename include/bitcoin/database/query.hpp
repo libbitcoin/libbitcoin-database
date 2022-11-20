@@ -16,19 +16,37 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/store/query.hpp>
+#ifndef LIBBITCOIN_DATABASE_QUERY_HPP
+#define LIBBITCOIN_DATABASE_QUERY_HPP
 
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/store/query.hpp>
-#include <bitcoin/database/store/store.hpp>
+#include <bitcoin/database/tables/tables.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-query::query(store& store) NOEXCEPT
-  : store_(store)
+template <typename Store>
+class query
 {
-}
+public:
+    query(store& store) NOEXCEPT;
+
+    bool get_transaction(const hash_digest& key) NOEXCEPT;
+
+private:
+    store& store_;
+};
 
 } // namespace database
 } // namespace libbitcoin
+
+#define TEMPLATE template <typename Store>
+#define CLASS query<Store>
+
+#include <bitcoin/database/impl/store/query.ipp>
+
+#undef CLASS
+#undef TEMPLATE
+
+#endif

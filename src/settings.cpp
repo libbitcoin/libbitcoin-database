@@ -26,7 +26,10 @@ namespace database {
 using namespace bc::system;
 
 settings::settings() NOEXCEPT
-  : directory("blockchain")
+  : dir{ "bitcoin" },
+    buckets{ 100 },
+    rate{ 50 },
+    size{ 1 }
 {
 }
 

@@ -19,7 +19,7 @@
 #include <bitcoin/database/memory/file.hpp>
 
 #if defined(HAVE_MSC)
-#include <io.h>
+    #include <io.h>
 #endif
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -35,7 +35,6 @@ namespace database {
 namespace file {
 
 using namespace system;
-using path = std::filesystem::path;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
@@ -52,16 +51,26 @@ bool clear(const path& directory) NOEXCEPT
 bool create(const path& filename) NOEXCEPT
 {
     // Creates and returns true if file already existed (and no error).
-    std::ofstream file(filename);
+    system::ofstream file(filename);
     const auto good = file.good();
     file.close();
     return good;
 }
 
+bool copy(const path& to, const uint8_t* data, size_t size) NOEXCEPT
+{
+    system::ofstream file(to);
+    if (!file.good()) return false;
+    file.write(pointer_cast<const char>(data), size);
+    if (!file.good()) return false;
+    file.close();
+    return file.good();
+}
+
 bool exists(const path& filename) NOEXCEPT
 {
     // Returns true only if file existed.
-    std::ifstream file(filename);
+    system::ifstream file(filename);
     const auto good = file.good();
     file.close();
     return good;

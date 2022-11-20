@@ -160,7 +160,7 @@ struct record_puts
 };
 
 /// transaction::table
-class BCD_API table
+class table
   : public hash_map<record>
 {
 public:

@@ -129,13 +129,13 @@ BOOST_AUTO_TEST_CASE(map__load_map__mapped__false)
     BOOST_REQUIRE(instance.close());
 }
 
-BOOST_AUTO_TEST_CASE(map__unload_map__unmapped__false)
+BOOST_AUTO_TEST_CASE(map__unload_map__unmapped__true)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     map instance(file);
     BOOST_REQUIRE(instance.open());
-    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(instance.unload());
     BOOST_REQUIRE(instance.close());
 }
 
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(map__resize__mapped__expected)
     constexpr auto size = 42u;
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
-    map instance(file);
+    map instance(file, 1, 50);
     BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(instance.load());
     BOOST_REQUIRE_EQUAL(instance.allocate(size), zero);
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(map__allocate__mapped__expected_capacity)
     constexpr auto size = 100u;
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
-    map instance(file);
+    map instance(file, 1, 50);
     BOOST_REQUIRE(instance.open());
     BOOST_REQUIRE(instance.load());
     BOOST_REQUIRE_EQUAL(instance.allocate(size), zero);

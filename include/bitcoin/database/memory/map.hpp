@@ -37,7 +37,7 @@ public:
     DELETE4(map);
 
     map(const std::filesystem::path& filename, size_t minimum=1,
-        size_t expansion=50) NOEXCEPT;
+        size_t expansion=0) NOEXCEPT;
 
     /// Destruct for debug assertion only.
     ~map() NOEXCEPT;
@@ -80,7 +80,6 @@ public:
     size_t allocate(size_t chunk) NOEXCEPT override;
 
     /// Get r/w access to start/offset of memory map (or null).
-    /// MEMORY OBJECT HOLDS SHARED LOCK ON STORAGE REMAP, DO NOT EXTEND LIFETIME.
     memory_ptr get(size_t offset=zero) const NOEXCEPT override;
 
 protected:

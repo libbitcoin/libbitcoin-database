@@ -36,24 +36,24 @@ const slab expected1
 {
     std_vector<uint32_t>
     {
-        { 0x56341211_u32 }
+        0x56341211_u32
     }
 };
 const slab expected2
 {
     std_vector<uint32_t>
     {
-        { 0x56341221_u32 },
-        { 0x56341222_u32 }
+        0x56341221_u32,
+        0x56341222_u32
     }
 };
 const slab expected3
 {
     std_vector<uint32_t>
     {
-        { 0x56341231_u32 },
-        { 0x56341232_u32 },
-        { 0x56341233_u32 }
+        0x56341231_u32,
+        0x56341232_u32,
+        0x56341233_u32
     }
 };
 const data_chunk expected_file

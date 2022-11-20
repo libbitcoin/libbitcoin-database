@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(file__size__empty__zero)
 BOOST_AUTO_TEST_CASE(file__size__non_empty__expected)
 {
     const std::string text = "panopticon";
-    std::ofstream file(TEST_PATH);
+    system::ofstream file(TEST_PATH);
     BOOST_REQUIRE(file.good());
     file << text;
     file.close();

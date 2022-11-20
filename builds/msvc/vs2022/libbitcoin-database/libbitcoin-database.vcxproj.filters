@@ -20,9 +20,12 @@
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000008}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\database\impl\memory">
-      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000E}</UniqueIdentifier>
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000D}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\database\impl\primitives">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\impl\store">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000F}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\database\locks">
@@ -37,11 +40,8 @@
     <Filter Include="include\bitcoin\database\primitives">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000B}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\database\store">
-      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000C}</UniqueIdentifier>
-    </Filter>
     <Filter Include="include\bitcoin\database\tables">
-      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000D}</UniqueIdentifier>
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000C}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\database\tables\archives">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000002}</UniqueIdentifier>
@@ -67,7 +67,7 @@
     <Filter Include="src\memory\mman-win32">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\store">
+    <Filter Include="src\tables">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000003}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -93,11 +93,8 @@
     <ClCompile Include="..\..\..\..\src\settings.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\store\query.cpp">
-      <Filter>src\store</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\store\store.cpp">
-      <Filter>src\store</Filter>
+    <ClCompile Include="..\..\..\..\src\tables\store.cpp">
+      <Filter>src\tables</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -170,14 +167,11 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\primitives.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\query.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\store\query.hpp">
-      <Filter>include\bitcoin\database\store</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\store\store.hpp">
-      <Filter>include\bitcoin\database\store</Filter>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp">
+      <Filter>include\bitcoin\database</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\header.hpp">
       <Filter>include\bitcoin\database\tables\archives</Filter>
@@ -242,6 +236,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\schema.hpp">
       <Filter>include\bitcoin\database\tables</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\store.hpp">
+      <Filter>include\bitcoin\database\tables</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\tables.hpp">
       <Filter>include\bitcoin\database\tables</Filter>
     </ClInclude>
@@ -273,6 +270,9 @@
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\manager.ipp">
       <Filter>include\bitcoin\database\impl\primitives</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\store\query.ipp">
+      <Filter>include\bitcoin\database\impl\store</Filter>
     </None>
     <None Include="packages.config" />
   </ItemGroup>

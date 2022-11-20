@@ -16,26 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_QUERY_HPP
-#define LIBBITCOIN_DATABASE_QUERY_HPP
+#include "test.hpp"
 
-#include <bitcoin/database/define.hpp>
-#include <bitcoin/database/store/query.hpp>
-#include <bitcoin/database/store/store.hpp>
+BOOST_AUTO_TEST_SUITE(query_tests)
 
-namespace libbitcoin {
-namespace database {
-
-class BCD_API query
+BOOST_AUTO_TEST_CASE(query_test)
 {
-public:
-    query(store& store) NOEXCEPT;
+    BOOST_REQUIRE(true);
+}
 
-private:
-    store& store_;
-};
-
-} // namespace database
-} // namespace libbitcoin
-
-#endif
+BOOST_AUTO_TEST_SUITE_END()

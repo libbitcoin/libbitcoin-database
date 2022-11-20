@@ -43,8 +43,7 @@ src_libbitcoin_database_la_SOURCES = \
     src/memory/map.cpp \
     src/memory/mman-win32/mman.c \
     src/memory/mman-win32/mman.h \
-    src/store/query.cpp \
-    src/store/store.cpp
+    src/tables/store.cpp
 
 # local: test/libbitcoin-database-test
 #------------------------------------------------------------------------------
@@ -57,6 +56,7 @@ test_libbitcoin_database_test_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BU
 test_libbitcoin_database_test_LDADD = src/libbitcoin-database.la ${boost_unit_test_framework_LIBS} ${bitcoin_system_LIBS}
 test_libbitcoin_database_test_SOURCES = \
     test/main.cpp \
+    test/query.cpp \
     test/settings.cpp \
     test/storage.cpp \
     test/storage.hpp \
@@ -74,8 +74,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/primitives/iterator.cpp \
     test/primitives/linkage.cpp \
     test/primitives/manager.cpp \
-    test/store/query.cpp \
-    test/store/store.cpp \
+    test/tables/store.cpp \
     test/tables/archives/header.cpp \
     test/tables/archives/input.cpp \
     test/tables/archives/output.cpp \
@@ -121,6 +120,7 @@ include_bitcoin_databasedir = ${includedir}/bitcoin/database
 include_bitcoin_database_HEADERS = \
     include/bitcoin/database/boost.hpp \
     include/bitcoin/database/define.hpp \
+    include/bitcoin/database/query.hpp \
     include/bitcoin/database/settings.hpp \
     include/bitcoin/database/version.hpp
 
@@ -136,6 +136,10 @@ include_bitcoin_database_impl_primitives_HEADERS = \
     include/bitcoin/database/impl/primitives/iterator.ipp \
     include/bitcoin/database/impl/primitives/linkage.ipp \
     include/bitcoin/database/impl/primitives/manager.ipp
+
+include_bitcoin_database_impl_storedir = ${includedir}/bitcoin/database/impl/store
+include_bitcoin_database_impl_store_HEADERS = \
+    include/bitcoin/database/impl/store/query.ipp
 
 include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks
 include_bitcoin_database_locks_HEADERS = \
@@ -169,14 +173,10 @@ include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/manager.hpp \
     include/bitcoin/database/primitives/primitives.hpp
 
-include_bitcoin_database_storedir = ${includedir}/bitcoin/database/store
-include_bitcoin_database_store_HEADERS = \
-    include/bitcoin/database/store/query.hpp \
-    include/bitcoin/database/store/store.hpp
-
 include_bitcoin_database_tablesdir = ${includedir}/bitcoin/database/tables
 include_bitcoin_database_tables_HEADERS = \
     include/bitcoin/database/tables/schema.hpp \
+    include/bitcoin/database/tables/store.hpp \
     include/bitcoin/database/tables/tables.hpp
 
 include_bitcoin_database_tables_archivesdir = ${includedir}/bitcoin/database/tables/archives

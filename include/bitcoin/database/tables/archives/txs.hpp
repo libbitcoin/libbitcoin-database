@@ -89,7 +89,7 @@ struct slab
 };
 
 /// txs::table
-class BCD_API table
+class table
   : public hash_map<slab>
 {
 public:

@@ -85,7 +85,7 @@ struct record_sk
 };
 
 /// point::table
-class BCD_API table
+class table
   : public hash_map<record>
 {
 public:
