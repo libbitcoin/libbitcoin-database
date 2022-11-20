@@ -21,7 +21,6 @@
 
 BOOST_AUTO_TEST_SUITE(point_tests)
 
-using namespace database::point;
 constexpr hash_digest key = base16_array("110102030405060708090a0b0c0d0e0f220102030405060708090a0b0c0d0e0f");
 
 #define DECLARE(instance_, body_file_, buckets_) \
@@ -29,9 +28,9 @@ data_chunk head_file; \
 data_chunk body_file_; \
 test::storage head_store{ head_file }; \
 test::storage body_store{ body_file_ }; \
-hash_map<record> instance_{ head_store, body_store, buckets_ }
+table::point instance_{ head_store, body_store, buckets_ }
 
-constexpr record expected
+constexpr table::point::record expected
 {
 };
 const data_chunk expected_file
@@ -57,16 +56,16 @@ BOOST_AUTO_TEST_CASE(point__put__get__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put({}, table::point::record{}));
     BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 
-    record element{};
+    table::point::record element{};
     BOOST_REQUIRE(instance.get(0, element));
-    BOOST_REQUIRE(element == record{});
+    BOOST_REQUIRE(element == table::point::record{});
 
     BOOST_REQUIRE(instance.get(null_hash, element));
-    BOOST_REQUIRE(element == record{});
+    BOOST_REQUIRE(element == table::point::record{});
 
     BOOST_REQUIRE(instance.get(1, element));
     BOOST_REQUIRE(element == expected);
@@ -79,20 +78,20 @@ BOOST_AUTO_TEST_CASE(point__put__get_sk__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put({}, table::point::record{}));
     BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 
-    record_sk element{};
-    BOOST_REQUIRE(instance.get<record_sk>(1, element));
-    BOOST_REQUIRE_EQUAL(element.sk, key);
+    table::point::record_sk element{};
+    BOOST_REQUIRE(instance.get<table::point::record_sk>(1, element));
+    BOOST_REQUIRE_EQUAL(element.key, key);
 }
 
 BOOST_AUTO_TEST_CASE(point__it__pk__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put({}, table::point::record{}));
     BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 

@@ -21,15 +21,14 @@
 
 BOOST_AUTO_TEST_SUITE(output_tests)
 
-using namespace database::output;
-
 #define DECLARE(instance_, file_) \
 data_chunk file_; \
 test::storage store{ file_ }; \
-array_map<slab> instance_{ store }
+table::output instance_{ store }
 
-const slab expected
+const table::output::slab expected
 {
+    {},                     // schema::output [all const static members]
     0x56341201_u32,         // parent_fk
     0x00000042_u32,         // index
     0xdebc9a7856341202_u64, // value
@@ -56,15 +55,15 @@ const data_chunk expected_file
 BOOST_AUTO_TEST_CASE(output__put__get__expected)
 {
     DECLARE(instance, file);
-    BOOST_REQUIRE(instance.put(slab{}));
+    BOOST_REQUIRE(instance.put(table::output::slab{}));
     BOOST_REQUIRE(instance.put(expected));
     BOOST_REQUIRE_EQUAL(file, expected_file);
 
-    slab element{};
-    BOOST_REQUIRE(instance.get<slab>(0, element));
-    BOOST_REQUIRE(element == slab{});
+    table::output::slab element{};
+    BOOST_REQUIRE(instance.get<table::output::slab>(0, element));
+    BOOST_REQUIRE(element == table::output::slab{});
 
-    BOOST_REQUIRE(instance.get<slab>(slab0_size, element));
+    BOOST_REQUIRE(instance.get<table::output::slab>(slab0_size, element));
     BOOST_REQUIRE(element == expected);
 }
 

@@ -21,7 +21,6 @@
 
 BOOST_AUTO_TEST_SUITE(header_tests)
 
-using namespace database::header;
 constexpr hash_digest key = base16_array("110102030405060708090a0b0c0d0e0f220102030405060708090a0b0c0d0e0f");
 constexpr hash_digest root = base16_array("330102030405060708090a0b0c0d0e0f440102030405060708090a0b0c0d0e0f");
 
@@ -30,10 +29,11 @@ data_chunk head_file; \
 data_chunk body_file_; \
 test::storage head_store{ head_file }; \
 test::storage body_store{ body_file_ }; \
-hash_map<record> instance_{ head_store, body_store, buckets_ }
+table::header instance_{ head_store, body_store, buckets_ }
 
-constexpr record expected
+constexpr table::header::record expected
 {
+    {},             // schema::header [all const static members]
     0x00341201_u32, // height
     0x56341202_u32, // flags
     0x56341203_u32, // mtp
@@ -44,6 +44,7 @@ constexpr record expected
     0x56341208_u32, // nonce
     root
 };
+
 const data_chunk expected_file
 {
     // next
@@ -91,16 +92,16 @@ BOOST_AUTO_TEST_CASE(header__put__get__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put({}, table::header::record{}));
     BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 
-    record element{};
+    table::header::record element{};
     BOOST_REQUIRE(instance.get(0, element));
-    BOOST_REQUIRE(element == record{});
+    BOOST_REQUIRE(element == table::header::record{});
 
     BOOST_REQUIRE(instance.get(null_hash, element));
-    BOOST_REQUIRE(element == record{});
+    BOOST_REQUIRE(element == table::header::record{});
 
     BOOST_REQUIRE(instance.get(1, element));
     BOOST_REQUIRE(element == expected);
@@ -113,20 +114,20 @@ BOOST_AUTO_TEST_CASE(point__put__get_sk__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put({}, table::header::record{}));
     BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 
-    record_sk element{};
+    table::header::record_sk element{};
     BOOST_REQUIRE(instance.get(1, element));
-    BOOST_REQUIRE_EQUAL(element.sk, key);
+    BOOST_REQUIRE_EQUAL(element.key, key);
 }
 
 BOOST_AUTO_TEST_CASE(point__it__pk__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put({}, table::header::record{}));
     BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 
@@ -139,11 +140,11 @@ BOOST_AUTO_TEST_CASE(header__put__get_height__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put({}, table::header::record{}));
     BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 
-    record_height element{};
+    table::header::record_height element{};
     BOOST_REQUIRE(instance.get(1, element));
     BOOST_REQUIRE_EQUAL(element.height, expected.height);
 }
@@ -152,14 +153,14 @@ BOOST_AUTO_TEST_CASE(header__put__get_with_sk__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put({}, table::header::record{}));
     BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 
-    record_with_sk element{};
-    BOOST_REQUIRE(instance.get<record_with_sk>(key, element));
-    BOOST_REQUIRE(static_cast<record>(element) == expected);
-    BOOST_REQUIRE_EQUAL(element.sk, key);
+    table::header::record_with_sk element{};
+    BOOST_REQUIRE(instance.get<table::header::record_with_sk>(key, element));
+    BOOST_REQUIRE(static_cast<table::header::record>(element) == expected);
+    BOOST_REQUIRE_EQUAL(element.key, key);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
