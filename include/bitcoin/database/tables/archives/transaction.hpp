@@ -55,7 +55,7 @@ public:
             ins_count  = source.read_little_endian<uint32_t, schema::index>();
             outs_count = source.read_little_endian<uint32_t, schema::index>();
             ins_fk     = source.read_little_endian<uint32_t, schema::puts_>();
-            BC_ASSERT(source.get_position() == minrow);
+            BC_ASSERT(source.get_read_position() == minrow);
             return source;
         }
 
@@ -69,7 +69,7 @@ public:
             sink.write_little_endian<uint32_t, schema::index>(ins_count);
             sink.write_little_endian<uint32_t, schema::index>(outs_count);
             sink.write_little_endian<uint32_t, schema::puts_>(ins_fk);
-            BC_ASSERT(sink.get_position() == minrow);
+            BC_ASSERT(sink.get_write_position() == minrow);
             return sink;
         }
 

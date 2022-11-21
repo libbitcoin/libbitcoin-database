@@ -56,7 +56,7 @@ public:
                 fk = source.read_little_endian<uint32_t, schema::tx>();
             });
 
-            BC_ASSERT(source.get_position() == count());
+            BC_ASSERT(source.get_read_position() == count());
             return source;
         }
 
@@ -71,7 +71,7 @@ public:
                 sink.write_little_endian<uint32_t, schema::tx>(fk);
             });
 
-            BC_ASSERT(sink.get_position() == count());
+            BC_ASSERT(sink.get_write_position() == count());
             return sink;
         }
 

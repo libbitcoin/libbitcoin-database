@@ -43,14 +43,14 @@ public:
         inline bool from_data(const reader& source) NOEXCEPT
         {
             // debug warning if source non-const, but get_position is non-const.
-            ////BC_ASSERT(source.get_position() == minrow);
+            ////BC_ASSERT(source.get_read_position() == minrow);
             return source;
         }
 
         inline bool to_data(const finalizer& sink) const NOEXCEPT
         {
             // debug warning if sink non-const, but get_position is non-const.
-            ////BC_ASSERT(sink.get_position() == minrow);
+            ////BC_ASSERT(sink.get_write_position() == minrow);
             return sink;
         }
 

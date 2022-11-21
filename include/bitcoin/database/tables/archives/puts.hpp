@@ -59,7 +59,7 @@ public:
                 fk = source.read_little_endian<uint64_t, schema::put>();
             });
 
-            BC_ASSERT(source.get_position() == count() * schema::put);
+            BC_ASSERT(source.get_read_position() == count() * schema::put);
             return source;
         }
 
@@ -73,7 +73,7 @@ public:
                 sink.write_little_endian<uint64_t, schema::put>(fk);
             });
 
-            BC_ASSERT(sink.get_position() == count() * schema::put);
+            BC_ASSERT(sink.get_write_position() == count() * schema::put);
             return sink;
         }
 

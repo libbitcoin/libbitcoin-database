@@ -57,7 +57,7 @@ public:
             sequence  = source.read_little_endian<uint32_t>();
             script    = system::chain::script(source, true);
             witness   = system::chain::witness(source, true);
-            BC_ASSERT(source.get_position() == count());
+            BC_ASSERT(source.get_read_position() == count());
             return source;
         }
 
@@ -68,7 +68,7 @@ public:
             sink.write_little_endian<uint32_t>(sequence);
             script.to_data(sink, true);
             witness.to_data(sink, true);
-            BC_ASSERT(sink.get_position() == count());
+            BC_ASSERT(sink.get_write_position() == count());
             return sink;
         }
 
