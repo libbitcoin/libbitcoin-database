@@ -34,7 +34,7 @@ CLASS::query(store& store) NOEXCEPT
 TEMPLATE
 bool CLASS::get_transaction(const hash_digest& key) NOEXCEPT
 {
-    transaction::record tx{};
+    table::transaction::record tx{};
     if (!store_.tx.get(key, tx))
         return false;
 

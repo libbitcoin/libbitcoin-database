@@ -21,6 +21,8 @@
 
 BOOST_AUTO_TEST_SUITE(iterator_tests)
 
+using namespace system;
+
 template <typename Link, typename Key, size_t Size>
 class iterator_
   : public iterator<Link, Key, Size>

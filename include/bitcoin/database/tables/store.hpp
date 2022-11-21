@@ -87,20 +87,13 @@ public:
     // TODO: define records as public subtypes of tables.
 
     /// Archives.
-    header::table header;
-    point::table point;
-    input::table input;
-    output::table output;
-    puts::table puts;
-    transaction::table tx;
-    txs::table txs;
-    ////table::header header;
-    ////table::point point;
-    ////table::input input;
-    ////table::output output;
-    ////table::puts puts;
-    ////table::tx tx;
-    ////table::txs txs;
+    table::header header;
+    table::point point;
+    table::input input;
+    table::output output;
+    table::puts puts;
+    table::transaction tx;
+    table::txs txs;
 
     /// Indexes.
     ////table::address address;

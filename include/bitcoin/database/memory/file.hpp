@@ -33,7 +33,7 @@ using path = std::filesystem::path;
 /// Basic file system utilities, not thread safe.
 BCD_API bool clear(const path& directory) NOEXCEPT;
 BCD_API bool create(const path& filename) NOEXCEPT;
-BCD_API bool copy(const path& to, const uint8_t* data, size_t size) NOEXCEPT;
+BCD_API bool dump(const path& to, const uint8_t* data, size_t size) NOEXCEPT;
 BCD_API bool exists(const path& filename) NOEXCEPT;
 BCD_API bool remove(const path& filename) NOEXCEPT;
 BCD_API bool rename(const path& from, const path& to) NOEXCEPT;

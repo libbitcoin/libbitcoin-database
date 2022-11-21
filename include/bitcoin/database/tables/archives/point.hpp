@@ -27,72 +27,54 @@
 
 namespace libbitcoin {
 namespace database {
-namespace point {
+namespace table {
 
 /// Point records are empty, providing only a sk<->fk compression mapping.
 /// Each record is 32+4=36 bytes, enabling 4 byte point.hash storage.
-
-struct record
-{
-    /// Sizes.
-    static constexpr size_t pk = schema::tx;
-    static constexpr size_t sk = schema::hash;
-    static constexpr size_t minsize = zero;
-    static constexpr size_t minrow = pk + sk + minsize;
-    static constexpr size_t size = minsize;
-    static_assert(minsize == 0u);
-    static_assert(minrow == 36u);
-
-    static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-
-    /// Fields (none).
-
-    /// Serialializers (nops).
-
-    inline bool from_data(const reader& source) NOEXCEPT
-    {
-        // debug warning if source non-const, but get_position is non-const.
-        ////BC_ASSERT(source.get_position() == minrow);
-        return source;
-    }
-
-    inline bool to_data(const finalizer& sink) const NOEXCEPT
-    {
-        // debug warning if sink non-const, but get_position is non-const.
-        ////BC_ASSERT(sink.get_position() == minrow);
-        return sink;
-    }
-
-    inline bool operator==(const record&) const NOEXCEPT
-    {
-        return true;
-    }
-};
-
-/// Get search key only.
-struct record_sk
-{
-    static constexpr size_t size = record::size;
-
-    inline bool from_data(reader& source) NOEXCEPT
-    {
-        source.rewind_bytes(record::sk);
-        sk = source.read_hash();
-        return source;
-    }
-
-    hash_digest sk{};
-};
-
-/// point::table
-class table
-  : public hash_map<record>
+class point
+  : public hash_map<schema::point>
 {
 public:
-    using hash_map<record>::hashmap;
+    using hash_map<schema::point>::hashmap;
+
+    struct record
+      : public schema::point
+    {
+        inline bool from_data(const reader& source) NOEXCEPT
+        {
+            // debug warning if source non-const, but get_position is non-const.
+            ////BC_ASSERT(source.get_position() == minrow);
+            return source;
+        }
+
+        inline bool to_data(const finalizer& sink) const NOEXCEPT
+        {
+            // debug warning if sink non-const, but get_position is non-const.
+            ////BC_ASSERT(sink.get_position() == minrow);
+            return sink;
+        }
+
+        inline bool operator==(const record&) const NOEXCEPT
+        {
+            return true;
+        }
+    };
+
+    struct record_sk
+      : public schema::point
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.rewind_bytes(sk);
+            key = source.read_hash();
+            return source;
+        }
+
+        hash_digest key{};
+    };
 };
 
-} // namespace point
+} // namespace table
 } // namespace database
 } // namespace libbitcoin
 

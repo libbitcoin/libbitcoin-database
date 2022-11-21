@@ -21,18 +21,19 @@
 
 BOOST_AUTO_TEST_SUITE(input_tests)
 
-using namespace database::input;
-constexpr search<slab::sk> key = base16_array("11223344556677");
+using namespace system;
+constexpr search<table::input::slab::sk> key = base16_array("11223344556677");
 
 #define DECLARE(instance_, body_file_, buckets_) \
 data_chunk head_file; \
 data_chunk body_file_; \
 test::storage head_store{ head_file }; \
 test::storage body_store{ body_file_ }; \
-hash_map<slab> instance_{ head_store, body_store, buckets_ }
+table::input instance_{ head_store, body_store, buckets_ }
 
-const slab expected
+const table::input::slab expected
 {
+    {},             // schema::input [all const static members]
     0x56341201_u32, // parent_fk
     0x00000000_u32, // index
     0x56341202_u32, // sequence
@@ -75,16 +76,16 @@ BOOST_AUTO_TEST_CASE(input__put__get__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, slab{}));
+    BOOST_REQUIRE(instance.put({}, table::input::slab{}));
     BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 
-    slab element{};
+    table::input::slab element{};
     BOOST_REQUIRE(instance.get(0, element));
-    BOOST_REQUIRE(element == slab{});
+    BOOST_REQUIRE(element == table::input::slab{});
 
-    BOOST_REQUIRE(instance.get(search<slab::sk>{}, element));
-    BOOST_REQUIRE(element == slab{});
+    BOOST_REQUIRE(instance.get(search<table::input::slab::sk>{}, element));
+    BOOST_REQUIRE(element == table::input::slab{});
 
     BOOST_REQUIRE(instance.get(slab0_size, element));
     BOOST_REQUIRE(element == expected);
@@ -97,24 +98,24 @@ BOOST_AUTO_TEST_CASE(input__put__get_composite_sk__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, slab{}));
+    BOOST_REQUIRE(instance.put({}, table::input::slab{}));
     BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 
-    slab_composite_sk element{};
+    table::input::slab_composite_sk element{};
     BOOST_REQUIRE(instance.get(slab0_size, element));
-    BOOST_REQUIRE_EQUAL(element.sk, key);
+    BOOST_REQUIRE_EQUAL(element.key, key);
 }
 
 BOOST_AUTO_TEST_CASE(input__put__get_decomposed_sk__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, slab{}));
+    BOOST_REQUIRE(instance.put({}, table::input::slab{}));
     BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 
-    slab_decomposed_sk element{};
+    table::input::slab_decomposed_sk element{};
     BOOST_REQUIRE(instance.get(slab0_size, element));
     BOOST_REQUIRE_EQUAL(element.point_fk, 0x44332211_u32);
     BOOST_REQUIRE_EQUAL(element.point_index, 0x00776655_u32);
@@ -124,7 +125,7 @@ BOOST_AUTO_TEST_CASE(input__it__pk__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, slab{}));
+    BOOST_REQUIRE(instance.put({}, table::input::slab{}));
     BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 

@@ -73,6 +73,7 @@
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\src\error.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\file_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\flush_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\interprocess_lock.cpp" />
@@ -86,6 +87,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\boost.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\error.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\file_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\flush_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\interprocess_lock.hpp" />

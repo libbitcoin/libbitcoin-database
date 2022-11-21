@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
+ * You should have received a dump of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
@@ -38,6 +38,7 @@ struct file_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(file_tests, file_setup_fixture)
 
+using namespace system;
 static_assert(file::invalid == -1);
 
 BOOST_AUTO_TEST_CASE(file__clear__empty__true)
@@ -62,6 +63,55 @@ BOOST_AUTO_TEST_CASE(file__create__exists__true)
 {
     BOOST_REQUIRE(test::create(TEST_PATH));
     BOOST_REQUIRE(file::create(TEST_PATH));
+}
+
+BOOST_AUTO_TEST_CASE(file__dump__empty__created)
+{
+    const data_chunk source(0);
+    BOOST_REQUIRE(!file::exists(TEST_PATH));
+    BOOST_REQUIRE(file::dump(TEST_PATH, source.data(), source.size()));
+    BOOST_REQUIRE(file::exists(TEST_PATH));
+
+    const auto descriptor = file::open(TEST_PATH);
+    BOOST_REQUIRE_NE(descriptor, -1);
+    BOOST_REQUIRE_EQUAL(file::size(descriptor), source.size());
+    BOOST_REQUIRE(file::close(descriptor));
+}
+
+BOOST_AUTO_TEST_CASE(file__dump__missing__expected_size)
+{
+    const data_chunk source(42u);
+    BOOST_REQUIRE(!file::exists(TEST_PATH));
+    BOOST_REQUIRE(file::dump(TEST_PATH, source.data(), source.size()));
+    BOOST_REQUIRE(file::exists(TEST_PATH));
+
+    const auto descriptor = file::open(TEST_PATH);
+    BOOST_REQUIRE_NE(descriptor, -1);
+    BOOST_REQUIRE_EQUAL(file::size(descriptor), source.size());
+    BOOST_REQUIRE(file::close(descriptor));
+}
+
+BOOST_AUTO_TEST_CASE(file__dump__exists__replaced)
+{
+    const data_chunk old(100);
+    BOOST_REQUIRE(!file::exists(TEST_PATH));
+    BOOST_REQUIRE(file::dump(TEST_PATH, old.data(), old.size()));
+    BOOST_REQUIRE(file::exists(TEST_PATH));
+
+    auto descriptor = file::open(TEST_PATH);
+    BOOST_REQUIRE_NE(descriptor, -1);
+    BOOST_REQUIRE_EQUAL(file::size(descriptor), old.size());
+    BOOST_REQUIRE(file::close(descriptor));
+
+    const data_chunk source(42);
+    BOOST_REQUIRE(file::exists(TEST_PATH));
+    BOOST_REQUIRE(file::dump(TEST_PATH, source.data(), source.size()));
+    BOOST_REQUIRE(file::exists(TEST_PATH));
+
+    descriptor = file::open(TEST_PATH);
+    BOOST_REQUIRE_NE(descriptor, -1);
+    BOOST_REQUIRE_EQUAL(file::size(descriptor), source.size());
+    BOOST_REQUIRE(file::close(descriptor));
 }
 
 BOOST_AUTO_TEST_CASE(file__exists__missing__false)

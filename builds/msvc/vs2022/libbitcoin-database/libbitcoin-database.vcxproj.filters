@@ -72,6 +72,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\src\error.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\locks\file_lock.cpp">
       <Filter>src\locks</Filter>
     </ClCompile>
@@ -105,6 +108,9 @@
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp">
+      <Filter>include\bitcoin\database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\error.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\file_lock.hpp">

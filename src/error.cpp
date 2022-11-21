@@ -16,35 +16,22 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TEST_STORAGE_HPP
-#define LIBBITCOIN_DATABASE_TEST_STORAGE_HPP
+#include <bitcoin/database/error.hpp>
 
-#include "test.hpp"
+#include <bitcoin/system.hpp>
 
-namespace test {
+namespace libbitcoin {
+namespace database {
+namespace error {
 
-// Fake a thread safe memory map implementation.
-class storage
-  : public database::storage
+DEFINE_ERROR_T_MESSAGE_MAP(error)
 {
-public:
-    storage() NOEXCEPT;
-    storage(system::data_chunk& reference) NOEXCEPT;
-
-    // storage interface
-    size_t capacity() const NOEXCEPT override;
-    size_t size() const NOEXCEPT override;
-    bool resize(size_t size) NOEXCEPT override;
-    size_t allocate(size_t chunk) NOEXCEPT override;
-    memory_ptr get(size_t offset=zero) const NOEXCEPT override;
-
-private:
-    system::data_chunk local_;
-    system::data_chunk& buffer_;
-    mutable std::shared_mutex field_mutex_;
-    mutable std::shared_mutex map_mutex_;
+    { success, "success" },
+    { unknown, "unknown error" }
 };
 
-}
+DEFINE_ERROR_T_CATEGORY(error, "database", "database code")
 
-#endif
+} // namespace error
+} // namespace database
+} // namespace libbitcoin

@@ -154,6 +154,7 @@ endif()
 # Define ${CANONICAL_LIB_NAME} project.
 #------------------------------------------------------------------------------
 add_library( ${CANONICAL_LIB_NAME}
+    "../../src/error.cpp"
     "../../src/settings.cpp"
     "../../src/locks/file_lock.cpp"
     "../../src/locks/flush_lock.cpp"
@@ -193,6 +194,7 @@ endif()
 #------------------------------------------------------------------------------
 if (with-tests)
     add_executable( libbitcoin-database-test
+        "../../test/error.cpp"
         "../../test/main.cpp"
         "../../test/query.cpp"
         "../../test/settings.cpp"

@@ -21,7 +21,7 @@
 
 BOOST_AUTO_TEST_SUITE(transaction_tests)
 
-using namespace database::transaction;
+using namespace system;
 constexpr hash_digest key = base16_array("110102030405060708090a0b0c0d0e0f220102030405060708090a0b0c0d0e0f");
 
 #define DECLARE(instance_, body_file_, buckets_) \
@@ -29,10 +29,11 @@ data_chunk head_file; \
 data_chunk body_file_; \
 test::storage head_store{ head_file }; \
 test::storage body_store{ body_file_ }; \
-hash_map<record> instance_{ head_store, body_store, buckets_ }
+table::transaction instance_{ head_store, body_store, buckets_ }
 
-constexpr record expected
+constexpr table::transaction::record expected
 {
+    {},             // schema::output [all const static members]
     true,           // coinbase
     0x00341201_u32, // bytes
     0x00341202_u32, // weight
@@ -85,16 +86,16 @@ BOOST_AUTO_TEST_CASE(transaction__put__get__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put({}, table::transaction::record{}));
     BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 
-    record element{};
+    table::transaction::record element{};
     BOOST_REQUIRE(instance.get(0, element));
-    BOOST_REQUIRE(element == record{});
+    BOOST_REQUIRE(element == table::transaction::record{});
 
     BOOST_REQUIRE(instance.get(null_hash, element));
-    BOOST_REQUIRE(element == record{});
+    BOOST_REQUIRE(element == table::transaction::record{});
 
     BOOST_REQUIRE(instance.get(1, element));
     BOOST_REQUIRE(element == expected);
@@ -111,24 +112,24 @@ BOOST_AUTO_TEST_CASE(transaction__put__get_sk__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put({}, table::transaction::record{}));
     BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 
-    record_sk element{};
+    table::transaction::record_sk element{};
     BOOST_REQUIRE(instance.get(1, element));
-    BOOST_REQUIRE_EQUAL(element.sk, key);
+    BOOST_REQUIRE_EQUAL(element.key, key);
 }
 
 BOOST_AUTO_TEST_CASE(transaction__put__get_puts__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put({}, table::transaction::record{}));
     BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 
-    record_puts element{};
+    table::transaction::record_puts element{};
     BOOST_REQUIRE(instance.get(1, element));
     BOOST_REQUIRE_EQUAL(element.ins_count, 0x00341205_u32);
     BOOST_REQUIRE_EQUAL(element.outs_count, 0x00341206_u32);
@@ -142,7 +143,7 @@ BOOST_AUTO_TEST_CASE(transaction__it__pk__expected)
 {
     DECLARE(instance, body_file, 20);
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, record{}));
+    BOOST_REQUIRE(instance.put({}, table::transaction::record{}));
     BOOST_REQUIRE(instance.put(key, expected));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 

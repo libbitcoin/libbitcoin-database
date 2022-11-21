@@ -21,34 +21,37 @@
 
 BOOST_AUTO_TEST_SUITE(txs_tests)
 
-using namespace database::txs;
-constexpr search<slab::sk> key = base16_array("112233");
+using namespace system;
+constexpr search<schema::txs::sk> key = base16_array("112233");
 
 #define DECLARE(instance_, body_file_, buckets_) \
 data_chunk head_file; \
 data_chunk body_file_; \
 test::storage head_store{ head_file }; \
 test::storage body_store{ body_file_ }; \
-hash_map<slab> instance_{ head_store, body_store, buckets_ }
+table::txs instance_{ head_store, body_store, buckets_ }
 
-const slab expected0{};
-const slab expected1
+const table::txs::slab expected0{};
+const table::txs::slab expected1
 {
+    {}, // schema::txs [all const static members]
     std_vector<uint32_t>
     {
         0x56341211_u32
     }
 };
-const slab expected2
+const table::txs::slab expected2
 {
+    {}, // schema::txs [all const static members]
     std_vector<uint32_t>
     {
         0x56341221_u32,
         0x56341222_u32
     }
 };
-const slab expected3
+const table::txs::slab expected3
 {
+    {}, // schema::txs [all const static members]
     std_vector<uint32_t>
     {
         0x56341231_u32,
@@ -125,7 +128,7 @@ BOOST_AUTO_TEST_CASE(txs__put__get__expected)
     BOOST_REQUIRE(instance.put(key, expected3));
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 
-    slab slab{};
+    table::txs::slab slab{};
     BOOST_REQUIRE(instance.get(0, slab));
     BOOST_REQUIRE(slab == expected0);
 

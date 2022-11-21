@@ -35,6 +35,7 @@ lib_LTLIBRARIES = src/libbitcoin-database.la
 src_libbitcoin_database_la_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD_CPPFLAGS}
 src_libbitcoin_database_la_LIBADD = ${bitcoin_system_LIBS}
 src_libbitcoin_database_la_SOURCES = \
+    src/error.cpp \
     src/settings.cpp \
     src/locks/file_lock.cpp \
     src/locks/flush_lock.cpp \
@@ -55,6 +56,7 @@ check_PROGRAMS = test/libbitcoin-database-test
 test_libbitcoin_database_test_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD_CPPFLAGS}
 test_libbitcoin_database_test_LDADD = src/libbitcoin-database.la ${boost_unit_test_framework_LIBS} ${bitcoin_system_LIBS}
 test_libbitcoin_database_test_SOURCES = \
+    test/error.cpp \
     test/main.cpp \
     test/query.cpp \
     test/settings.cpp \
@@ -120,6 +122,7 @@ include_bitcoin_databasedir = ${includedir}/bitcoin/database
 include_bitcoin_database_HEADERS = \
     include/bitcoin/database/boost.hpp \
     include/bitcoin/database/define.hpp \
+    include/bitcoin/database/error.hpp \
     include/bitcoin/database/query.hpp \
     include/bitcoin/database/settings.hpp \
     include/bitcoin/database/version.hpp

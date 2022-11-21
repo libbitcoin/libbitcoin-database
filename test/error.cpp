@@ -16,35 +16,30 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TEST_STORAGE_HPP
-#define LIBBITCOIN_DATABASE_TEST_STORAGE_HPP
-
 #include "test.hpp"
+#include <bitcoin/database.hpp>
 
-namespace test {
+BOOST_AUTO_TEST_SUITE(error_tests)
 
-// Fake a thread safe memory map implementation.
-class storage
-  : public database::storage
+// error_t
+// These test std::error_code equality operator overrides.
+
+BOOST_AUTO_TEST_CASE(error_t__code__success__false_exected_message)
 {
-public:
-    storage() NOEXCEPT;
-    storage(system::data_chunk& reference) NOEXCEPT;
-
-    // storage interface
-    size_t capacity() const NOEXCEPT override;
-    size_t size() const NOEXCEPT override;
-    bool resize(size_t size) NOEXCEPT override;
-    size_t allocate(size_t chunk) NOEXCEPT override;
-    memory_ptr get(size_t offset=zero) const NOEXCEPT override;
-
-private:
-    system::data_chunk local_;
-    system::data_chunk& buffer_;
-    mutable std::shared_mutex field_mutex_;
-    mutable std::shared_mutex map_mutex_;
-};
-
+    constexpr auto value = error::success;
+    const auto ec = code(value);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "success");
 }
 
-#endif
+BOOST_AUTO_TEST_CASE(error_t__code__unknown__true_exected_message)
+{
+    constexpr auto value = error::unknown;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "unknown error");
+}
+
+BOOST_AUTO_TEST_SUITE_END()

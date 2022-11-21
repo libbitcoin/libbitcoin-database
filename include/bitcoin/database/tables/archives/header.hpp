@@ -27,143 +27,114 @@
 
 namespace libbitcoin {
 namespace database {
-namespace header {
+namespace table {
 
 /// Header is a cononical record hash table.
-
-struct record
-{
-    /// Sizes.
-    static constexpr size_t pk = schema::block;
-    static constexpr size_t sk = schema::hash;
-    static constexpr size_t minsize =
-        schema::block +
-        schema::flags +
-        sizeof(uint32_t) +
-        pk +
-        sizeof(uint32_t) +
-        sizeof(uint32_t) +
-        sizeof(uint32_t) +
-        sizeof(uint32_t) +
-        schema::hash;
-    static constexpr size_t minrow = pk + sk + minsize;
-    static constexpr size_t size = minsize;
-    static_assert(minsize == 62u);
-    static_assert(minrow == 97u);
-
-    static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-
-    /// Fields.
-    uint32_t height{};
-    uint32_t flags{};
-    uint32_t mtp{};
-    uint32_t parent_fk{};
-    uint32_t version{};
-    uint32_t time{};
-    uint32_t bits{};
-    uint32_t nonce{};
-    hash_digest root{};
-
-    /// Serialializers.
-
-    inline bool from_data(reader& source) NOEXCEPT
-    {
-        height    = source.read_little_endian<uint32_t, schema::block>();
-        flags     = source.read_little_endian<uint32_t, schema::flags>();
-        mtp       = source.read_little_endian<uint32_t>();
-        parent_fk = source.read_little_endian<uint32_t, schema::block>();
-        version   = source.read_little_endian<uint32_t>();
-        time      = source.read_little_endian<uint32_t>();
-        bits      = source.read_little_endian<uint32_t>();
-        nonce     = source.read_little_endian<uint32_t>();
-        root      = source.read_hash();
-        BC_ASSERT(source.get_position() == minrow);
-        return source;
-    }
-
-    inline bool to_data(finalizer& sink) const NOEXCEPT
-    {
-        sink.write_little_endian<uint32_t, schema::block>(height);
-        sink.write_little_endian<uint32_t, schema::flags>(flags);
-        sink.write_little_endian<uint32_t>(mtp);
-        sink.write_little_endian<uint32_t, schema::block>(parent_fk);
-        sink.write_little_endian<uint32_t>(version);
-        sink.write_little_endian<uint32_t>(time);
-        sink.write_little_endian<uint32_t>(bits);
-        sink.write_little_endian<uint32_t>(nonce);
-        sink.write_bytes(root);
-        BC_ASSERT(sink.get_position() == minrow);
-        return sink;
-    }
-
-    inline bool operator==(const record& other) const NOEXCEPT
-    {
-        return height == other.height
-            && flags == other.flags
-            && mtp == other.mtp
-            && parent_fk == other.parent_fk
-            && version == other.version
-            && time == other.time
-            && bits == other.bits
-            && nonce == other.nonce
-            && root == other.root;
-    }
-};
-
-/// Get search key only.
-struct record_sk
-{
-    static constexpr size_t size = record::size;
-
-    inline bool from_data(reader& source) NOEXCEPT
-    {
-        source.rewind_bytes(record::sk);
-        sk = source.read_hash();
-        return source;
-    }
-
-    hash_digest sk{};
-};
-
-/// Get height only (demo).
-struct record_height
-{
-    static constexpr size_t size = record::size;
-
-    inline bool from_data(reader& source) NOEXCEPT
-    {
-        height = source.read_little_endian<uint32_t, schema::block>();
-        return source;
-    }
-
-    uint32_t height{};
-};
-
-/// Get record with search key (demo).
-struct record_with_sk
-  : public record
-{
-    BC_PUSH_WARNING(NO_METHOD_HIDING)
-    inline bool from_data(reader& source) NOEXCEPT
-    {
-        source.rewind_bytes(record::sk);
-        sk = source.read_hash();
-        return record::from_data(source);
-    }
-    BC_POP_WARNING()
-
-    hash_digest sk{};
-};
-
-/// header::table
-class table
-  : public hash_map<record>
+class header
+  : public hash_map<schema::header>
 {
 public:
-    using hash_map<record>::hashmap;
+    using hash_map<schema::header>::hashmap;
+
+    struct record
+      : public schema::header
+    {        
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            height    = source.read_little_endian<uint32_t, schema::block>();
+            flags     = source.read_little_endian<uint32_t, schema::flags>();
+            mtp       = source.read_little_endian<uint32_t>();
+            parent_fk = source.read_little_endian<uint32_t, schema::block>();
+            version   = source.read_little_endian<uint32_t>();
+            time      = source.read_little_endian<uint32_t>();
+            bits      = source.read_little_endian<uint32_t>();
+            nonce     = source.read_little_endian<uint32_t>();
+            root      = source.read_hash();
+            BC_ASSERT(source.get_position() == minrow);
+            return source;
+        }
+
+        inline bool to_data(finalizer& sink) const NOEXCEPT
+        {
+            sink.write_little_endian<uint32_t, schema::block>(height);
+            sink.write_little_endian<uint32_t, schema::flags>(flags);
+            sink.write_little_endian<uint32_t>(mtp);
+            sink.write_little_endian<uint32_t, schema::block>(parent_fk);
+            sink.write_little_endian<uint32_t>(version);
+            sink.write_little_endian<uint32_t>(time);
+            sink.write_little_endian<uint32_t>(bits);
+            sink.write_little_endian<uint32_t>(nonce);
+            sink.write_bytes(root);
+            BC_ASSERT(sink.get_position() == minrow);
+            return sink;
+        }
+
+        inline bool operator==(const record& other) const NOEXCEPT
+        {
+            return height    == other.height
+                && flags     == other.flags
+                && mtp       == other.mtp
+                && parent_fk == other.parent_fk
+                && version   == other.version
+                && time      == other.time
+                && bits      == other.bits
+                && nonce     == other.nonce
+                && root      == other.root;
+        }
+
+        uint32_t height{};
+        uint32_t flags{};
+        uint32_t mtp{};
+        uint32_t parent_fk{};
+        uint32_t version{};
+        uint32_t time{};
+        uint32_t bits{};
+        uint32_t nonce{};
+        hash_digest root{};
+    };
+
+    struct record_with_sk
+      : public record
+    {
+        BC_PUSH_WARNING(NO_METHOD_HIDING)
+        inline bool from_data(reader& source) NOEXCEPT
+        BC_POP_WARNING()
+        {
+            source.rewind_bytes(sk);
+            key = source.read_hash();
+            return record::from_data(source);
+        }
+
+        hash_digest key{};
+    };
+
+    struct record_sk
+      : public schema::header
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.rewind_bytes(sk);
+            key = source.read_hash();
+            return source;
+        }
+
+        hash_digest key{};
+    };
+
+    struct record_height
+      : public schema::header
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            height = source.read_little_endian<uint32_t, schema::block>();
+            return source;
+        }
+
+        uint32_t height{};
+    };
 };
 
-} // namespace header
+} // namespace table
 } // namespace database
 } // namespace libbitcoin
 

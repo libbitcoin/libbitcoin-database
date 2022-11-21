@@ -21,6 +21,8 @@
 
 BOOST_AUTO_TEST_SUITE(arraymap_tests)
 
+using namespace system;
+
 template <typename Link, size_t Size>
 class arraymap_
   : public arraymap<Link, Size>

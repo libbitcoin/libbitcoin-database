@@ -47,12 +47,16 @@ SEQUENTIAL=1
 if [[ $GIT_CLONE_PARAMS ]]; then
     display_message "Using shell-defined GIT_CLONE_PARAMS value."
 else
-    GIT_CLONE_PARAMS="--depth 1 --single-branch"
+    GIT_CLONE_PARAMS=""
 fi
 
 # The default build directory.
 #------------------------------------------------------------------------------
 BUILD_DIR="build-libbitcoin-database"
+
+# Git clone parameters.
+#------------------------------------------------------------------------------
+GIT_CLONE_PARAMS="--depth 1 --single-branch"
 
 PRESUMED_CI_PROJECT_PATH=$(pwd)
 

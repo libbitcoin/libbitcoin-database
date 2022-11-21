@@ -21,6 +21,8 @@
 
 BOOST_AUTO_TEST_SUITE(head_tests)
 
+using namespace system;
+
 constexpr auto key_size = 10_size;
 constexpr auto link_size = 5_size;
 constexpr auto head_size = 105_size;

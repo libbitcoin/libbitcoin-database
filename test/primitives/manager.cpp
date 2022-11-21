@@ -21,6 +21,8 @@
 
 BOOST_AUTO_TEST_SUITE(manager_tests)
 
+using namespace system;
+
 using key0 = system::data_array<0>;
 using key1 = system::data_array<1>;
 using key2 = system::data_array<2>;

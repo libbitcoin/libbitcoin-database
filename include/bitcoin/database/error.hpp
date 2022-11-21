@@ -16,35 +16,34 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TEST_STORAGE_HPP
-#define LIBBITCOIN_DATABASE_TEST_STORAGE_HPP
+#ifndef LIBBITCOIN_DATABASE_ERROR_HPP
+#define LIBBITCOIN_DATABASE_ERROR_HPP
 
-#include "test.hpp"
+#include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
 
-namespace test {
+namespace libbitcoin {
+namespace database {
 
-// Fake a thread safe memory map implementation.
-class storage
-  : public database::storage
+/// Alias system code.
+/// std::error_code "database" category holds database::error::error_t.
+typedef std::error_code code;
+
+namespace error {
+
+enum error_t
 {
-public:
-    storage() NOEXCEPT;
-    storage(system::data_chunk& reference) NOEXCEPT;
-
-    // storage interface
-    size_t capacity() const NOEXCEPT override;
-    size_t size() const NOEXCEPT override;
-    bool resize(size_t size) NOEXCEPT override;
-    size_t allocate(size_t chunk) NOEXCEPT override;
-    memory_ptr get(size_t offset=zero) const NOEXCEPT override;
-
-private:
-    system::data_chunk local_;
-    system::data_chunk& buffer_;
-    mutable std::shared_mutex field_mutex_;
-    mutable std::shared_mutex map_mutex_;
+    success,
+    unknown
 };
 
-}
+// No current need for error_code equivalence mapping.
+DECLARE_ERROR_T_CODE_CATEGORY(error);
+
+} // namespace error
+} // namespace database
+} // namespace libbitcoin
+
+DECLARE_STD_ERROR_REGISTRATION(bc::database::error::error)
 
 #endif

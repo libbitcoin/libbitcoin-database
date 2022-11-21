@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_TABLES_ARCHIVES_PUTS_HPP
 #define LIBBITCOIN_DATABASE_TABLES_ARCHIVES_PUTS_HPP
 
+#include <algorithm>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -27,78 +28,65 @@
 
 namespace libbitcoin {
 namespace database {
-namespace puts {
+namespace table {
 
 /// Puts is an array of input or output fk records.
 /// Multiple may be allocated, put_fks.size() (from tx) determines read extent.
-
-struct record
-{
-    /// Sizes.
-    static constexpr size_t pk = schema::puts;
-    static constexpr size_t sk = zero;
-    static constexpr size_t minsize = schema::put;
-    static constexpr size_t minrow = minsize;
-    static constexpr size_t size = minsize;
-    static_assert(minsize == 5u);
-    static_assert(minrow == 5u);
-
-    linkage<pk> count() const NOEXCEPT
-    {
-        using namespace system;
-        using out = typename linkage<pk>::integer;
-        BC_ASSERT(put_fks.size() < power2<uint64_t>(to_bits(schema::put)));
-        return possible_narrow_cast<out>(put_fks.size());
-    }
-
-    /// Fields.
-    std_vector<uint64_t> put_fks{};
-
-    /// Serialializers.
-
-    inline bool from_data(reader& source) NOEXCEPT
-    {
-        // Clear the single record limit (file limit remains).
-        source.set_limit();
-
-        std::for_each(put_fks.begin(), put_fks.end(), [&](auto& fk) NOEXCEPT
-        {
-            fk = source.read_little_endian<uint64_t, schema::put>();
-        });
-
-        BC_ASSERT(source.get_position() == count() * schema::put);
-        return source;
-    }
-
-    inline bool to_data(writer& sink) const NOEXCEPT
-    {
-        // Clear the single record limit (file limit remains).
-        sink.set_limit();
-
-        std::for_each(put_fks.begin(), put_fks.end(), [&](const auto& fk) NOEXCEPT
-        {
-            sink.write_little_endian<uint64_t, schema::put>(fk);
-        });
-
-        BC_ASSERT(sink.get_position() == count() * schema::put);
-        return sink;
-    }
-
-    inline bool operator==(const record& other) const NOEXCEPT
-    {
-        return put_fks == other.put_fks;
-    }
-};
-
-/// puts::table
-class table
-  : public array_map<record>
+class puts
+  : public array_map<schema::puts>
 {
 public:
-    using array_map<record>::arraymap;
+    using array_map<schema::puts>::arraymap;
+
+    struct record
+       : public schema::puts
+    {
+        linkage<pk> count() const NOEXCEPT
+        {
+            using namespace system;
+            using out = typename linkage<pk>::integer;
+            BC_ASSERT(put_fks.size() < power2<uint64_t>(to_bits(schema::put)));
+            return possible_narrow_cast<out>(put_fks.size());
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            // Clear the single record limit (file limit remains).
+            source.set_limit();
+
+            std::for_each(put_fks.begin(), put_fks.end(), [&](auto& fk) NOEXCEPT
+            {
+                fk = source.read_little_endian<uint64_t, schema::put>();
+            });
+
+            BC_ASSERT(source.get_position() == count() * schema::put);
+            return source;
+        }
+
+        inline bool to_data(writer& sink) const NOEXCEPT
+        {
+            // Clear the single record limit (file limit remains).
+            sink.set_limit();
+
+            std::for_each(put_fks.begin(), put_fks.end(), [&](const auto& fk) NOEXCEPT
+            {
+                sink.write_little_endian<uint64_t, schema::put>(fk);
+            });
+
+            BC_ASSERT(sink.get_position() == count() * schema::put);
+            return sink;
+        }
+
+        inline bool operator==(const record& other) const NOEXCEPT
+        {
+            return put_fks == other.put_fks;
+        }
+
+        std_vector<uint64_t> put_fks{};
+    };
 };
 
-} // namespace puts
+} // namespace table
 } // namespace database
 } // namespace libbitcoin
 

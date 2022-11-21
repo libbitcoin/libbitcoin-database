@@ -21,29 +21,144 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/primitives/primitives.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 template <size_t Size>
 using search = system::data_array<Size>;
-using hash_digest = system::hash_digest;
+using hash_digest = search<system::hash_size>;
+static_assert(is_same_type<hash_digest, system::hash_digest>);
 
 namespace schema
 {
-    constexpr size_t block = 3;
-    constexpr size_t tx = 4;
-    constexpr size_t txs = 4;
-    constexpr size_t puts = 4;
-    constexpr size_t put = 5;
-    constexpr size_t bit = 1;
-    constexpr size_t code = 1;
-    constexpr size_t size = 3;
-    constexpr size_t index = 3;
-    constexpr size_t sigops = 3;
-    constexpr size_t flags = 4;
+    /// Values.
+    constexpr size_t bit = 1;       // Single bit flag.
+    constexpr size_t code = 1;      // State flag.
+    constexpr size_t size = 3;      // tx/block size/weight.
+    constexpr size_t index = 3;     // input/output index.
+    constexpr size_t sigops = 3;    // signature operation count.
+    constexpr size_t flags = 4;     // validation flags.
+
+    /// Primary keys.
+    constexpr size_t put = 5;       // ->input/output slab.
+    constexpr size_t puts_ = 4;     // ->puts record.
+    constexpr size_t txs_ = 4;      // ->txs slab.
+    constexpr size_t tx = 4;        // ->tx record.
+    constexpr size_t block = 3;     // ->header record.
+
+    /// Search keys.
     constexpr size_t tx_fp = tx + index;
     constexpr size_t hash = system::hash_size;
+
+    /// Static base record/slab for each table.
+
+    struct header
+    {
+        static constexpr size_t pk = schema::block;
+        static constexpr size_t sk = schema::hash;
+        static constexpr size_t minsize =
+            schema::block +
+            schema::flags +
+            sizeof(uint32_t) +
+            pk +
+            sizeof(uint32_t) +
+            sizeof(uint32_t) +
+            sizeof(uint32_t) +
+            sizeof(uint32_t) +
+            hash;
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 62u);
+        static_assert(minrow == 97u);
+    };
+
+    struct input
+    {
+        static constexpr size_t pk = schema::put;
+        static constexpr size_t sk = schema::tx_fp;
+        static constexpr size_t minsize =
+            schema::tx +
+            1u + // variable_size (average 1)
+            sizeof(uint32_t) +
+            1u + // variable_size (average 1)
+            1u;  // variable_size (average 1)
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = max_size_t;
+        static_assert(minsize == 11u);
+        static_assert(minrow == 23u);
+    };
+
+    struct output
+    {
+        static constexpr size_t pk = schema::put;
+        static constexpr size_t sk = zero;
+        static constexpr size_t minsize =
+            schema::tx +
+            1u + // variable_size (average 1)
+            5u + // variable_size (average 5)
+            1u;  // variable_size (average 1)
+        static constexpr size_t minrow = minsize;
+        static constexpr size_t size = max_size_t;
+        static_assert(minsize == 11u);
+        static_assert(minrow == 11u);
+    };
+
+    struct point
+    {
+        static constexpr size_t pk = schema::tx;
+        static constexpr size_t sk = schema::hash;
+        static constexpr size_t minsize = zero;
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 0u);
+        static_assert(minrow == 36u);
+    };
+
+    struct puts
+    {
+        static constexpr size_t pk = schema::puts_;
+        static constexpr size_t sk = zero;
+        static constexpr size_t minsize = schema::put;
+        static constexpr size_t minrow = minsize;
+        static constexpr size_t size = minsize;
+        static_assert(minsize == 5u);
+        static_assert(minrow == 5u);
+    };
+
+    struct transaction
+    {
+        static constexpr size_t pk = schema::tx;
+        static constexpr size_t sk = schema::hash;
+        static constexpr size_t minsize =
+            schema::bit +
+            schema::size +
+            schema::size +
+            sizeof(uint32_t) +
+            sizeof(uint32_t) +
+            schema::index +
+            schema::index +
+            schema::puts_;
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 25u);
+        static_assert(minrow == 61u);
+    };
+
+    struct txs
+    {
+        static constexpr size_t pk = schema::txs_;
+        static constexpr size_t sk = schema::block;
+        static constexpr size_t minsize = zero;
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = max_size_t;
+        static_assert(minsize == 0u);
+        static_assert(minrow == 7u);
+    };
 }
 
 } // namespace database

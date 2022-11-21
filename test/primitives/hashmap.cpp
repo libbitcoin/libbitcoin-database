@@ -21,6 +21,7 @@
 
 BOOST_AUTO_TEST_SUITE(hashmap_tests)
 
+using namespace system;
 template <typename Link, typename Key, size_t Size>
 class hashmap_
   : public hashmap<Link, Key, Size>

@@ -20,6 +20,8 @@
 
 BOOST_AUTO_TEST_SUITE(accessor_tests)
 
+using namespace system;
+
 BOOST_AUTO_TEST_CASE(accessor__construct_shared_mutex__unassigned__nulls)
 {
     std::shared_mutex mutex;

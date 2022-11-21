@@ -70,6 +70,7 @@
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\test\error.cpp" />
     <ClCompile Include="..\..\..\..\test\locks\file_lock.cpp" />
     <ClCompile Include="..\..\..\..\test\locks\flush_lock.cpp" />
     <ClCompile Include="..\..\..\..\test\locks\interprocess_lock.cpp" />
