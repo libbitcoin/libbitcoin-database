@@ -27,7 +27,23 @@ namespace error {
 DEFINE_ERROR_T_MESSAGE_MAP(error)
 {
     { success, "success" },
-    { unknown, "unknown error" }
+    { unknown, "unknown error" },
+
+    { open_open, "opening open file" },
+    { open_failure, "file failed to open" },
+
+    { close_loaded, "closing loaded file" },
+    { close_failure, "file failed to close" },
+
+    { load_locked, "loading locked file" },
+    { load_loaded, "loading loaded file" },
+    { load_failure, "file failed to load" },
+
+    { flush_unloaded, "flushing unloaded file" },
+    { flush_failure, "file failed to flush" },
+
+    { unload_locked, "unloading unloaded file" },
+    { unload_failure, "file failed to unload" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "database", "database code")

@@ -42,4 +42,103 @@ BOOST_AUTO_TEST_CASE(error_t__code__unknown__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "unknown error");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__open_open__true_exected_message)
+{
+    constexpr auto value = error::open_open;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "opening open file");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__open_failure__true_exected_message)
+{
+    constexpr auto value = error::open_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "file failed to open");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__close_loaded__true_exected_message)
+{
+    constexpr auto value = error::close_loaded;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "closing loaded file");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__close_failure__true_exected_message)
+{
+    constexpr auto value = error::close_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "file failed to close");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__load_locked__true_exected_message)
+{
+    constexpr auto value = error::load_locked;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "loading locked file");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__load_loaded__true_exected_message)
+{
+    constexpr auto value = error::load_loaded;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "loading loaded file");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__load_failure__true_exected_message)
+{
+    constexpr auto value = error::load_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "file failed to load");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__flush_unloaded__true_exected_message)
+{
+    constexpr auto value = error::flush_unloaded;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "flushing unloaded file");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__flush_failure__true_exected_message)
+{
+    constexpr auto value = error::flush_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "file failed to flush");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__unload_locked__true_exected_message)
+{
+    constexpr auto value = error::unload_locked;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "unloading unloaded file");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__unload_failure__true_exected_message)
+{
+    constexpr auto value = error::unload_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "file failed to unload");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

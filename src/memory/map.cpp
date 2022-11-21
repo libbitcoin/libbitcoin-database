@@ -31,6 +31,7 @@
 #include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/error.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/file.hpp>
 
@@ -46,7 +47,7 @@ map::map(const path& filename, size_t minimum, size_t expansion) NOEXCEPT
     minimum_(minimum),
     expansion_(expansion),
     memory_map_(nullptr),
-    mapped_(false),
+    loaded_(false),
     logical_(zero),
     capacity_(zero),
     descriptor_(file::invalid)
@@ -56,46 +57,41 @@ map::map(const path& filename, size_t minimum, size_t expansion) NOEXCEPT
 map::~map() NOEXCEPT
 {
     // LOG STOP WARNINGS (handled if unload() and close() were called).
-    BC_ASSERT_MSG(!mapped_, "file mapped at destruct");
+    BC_ASSERT_MSG(!loaded_, "file mapped at destruct");
     BC_ASSERT_MSG(is_null(memory_map_), "map defined at destruct");
     BC_ASSERT_MSG(is_zero(logical_), "logical nonzero at destruct");
     BC_ASSERT_MSG(is_zero(capacity_), "capacity nonzero at destruct");
     BC_ASSERT_MSG(descriptor_ == file::invalid, "file open at destruct");
 }
 
-bool map::open() NOEXCEPT
+code map::open() NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    // open_open
     if (descriptor_ != file::invalid)
-        return false;
+        return error::open_open;
 
     descriptor_ = file::open(filename_);
     logical_ = file::size(descriptor_);
 
-    // open_failure
-    return descriptor_ != file::invalid;
+    return descriptor_ == file::invalid ? error::open_failure : error::success;
 }
 
-bool map::close() NOEXCEPT
+code map::close() NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    // close_mapped
-    if (mapped_)
-        return false;
+    if (loaded_)
+        return error::close_loaded;
 
-    // idempotent (close-closed is ok)
     if (descriptor_ == file::invalid)
-        return true;
+        return error::success;
 
     const auto descriptor = descriptor_;
     descriptor_ = file::invalid;
     logical_ = zero;
 
-    // close_failure
-    return file::close(descriptor);
+    return file::close(descriptor) ? error::success : error::close_failure;
 }
 
 bool map::is_open() const NOEXCEPT
@@ -113,48 +109,44 @@ bool map::is_open() const NOEXCEPT
 // Fields except map_ require exclusive lock on field_mutex_ for write.
 // Fields except map_ require at least shared lock on field_mutex_ for read.
 
-bool map::load() NOEXCEPT
+code map::load() NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
     if (map_mutex_.try_lock())
     {
-        if (mapped_ || !map_())
+        if (loaded_)
         {
-            // map_mapped | map_failure
             map_mutex_.unlock();
-            return false;
+            return error::load_loaded;
         }
 
-        mapped_ = true;
+        if (!map_())
+        {
+            map_mutex_.unlock();
+            return error::load_failure;
+        }
+
+        loaded_ = true;
         map_mutex_.unlock();
-        return true;
+        return error::success;
     }
 
-    // map_locked
-    return false;
+    return error::load_locked;
 }
 
-// Suspend writes before calling.
-bool map::flush() const NOEXCEPT
+// Suspend writes before calling (unguarded here).
+code map::flush() const NOEXCEPT
 {
-    std::shared_lock field_lock(field_mutex_);
+    std::shared_lock map_lock(map_mutex_);
 
-    // flush_unmapped
-    if (!mapped_)
-        return false;
+    if (!loaded_)
+        return error::flush_unloaded;
 
-    // macos msync fails with zero logical size.
-    if (!is_zero(logical_))
-        return true;
-
-    std::unique_lock map_lock(map_mutex_);
-
-    // flush_failure
-    return flush_();
+    return flush_() ? error::success : error::flush_failure;
 }
 
-bool map::unload() NOEXCEPT
+code map::unload() NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
@@ -162,33 +154,30 @@ bool map::unload() NOEXCEPT
     {
         BC_ASSERT_MSG(logical_ <= capacity_, "logical size exceeds capacity");
 
-        // idempotent (unmap-unmapped is ok)
-        if (!mapped_)
+        if (!loaded_)
         {
             map_mutex_.unlock();
-            return true;
+            return error::success;
         }
 
         if (!unmap_())
         {
-            // unmap_failure
             map_mutex_.unlock();
-            return false;
+            return error::unload_failure;
         }
 
+        loaded_ = false;
         map_mutex_.unlock();
-        mapped_ = false;
-        return true;
+        return error::success;
     }
 
-    // unmap_locked
-    return false;
+    return error::unload_locked;
 }
 
-bool map::is_mapped() const NOEXCEPT
+bool map::is_loaded() const NOEXCEPT
 {
     std::shared_lock field_lock(field_mutex_);
-    return mapped_;
+    return loaded_;
 }
 
 // Interface.
@@ -223,14 +212,14 @@ size_t map::allocate(size_t chunk) NOEXCEPT
 {
     field_mutex_.lock_upgrade();
 
-    // allocate_unmapped
-    if (!mapped_)
+    // log: allocate_unloaded
+    if (!loaded_)
     {
         field_mutex_.unlock_upgrade();
         return storage::eof;
     }
 
-    // allocate_overflow
+    // log: allocate_overflow
     if (is_add_overflow(logical_, chunk))
     {
         field_mutex_.unlock_upgrade();
@@ -243,10 +232,10 @@ size_t map::allocate(size_t chunk) NOEXCEPT
     {
         while (!map_mutex_.try_lock_for(boost::chrono::seconds(1)))
         {
-            // TODO: log deadlock_hint
+            // log: deadlock_hint
         }
 
-        // remap_failure
+        // log: remap_failure
         if (!remap_(to_capacity(size)))
         {
             map_mutex_.unlock();
@@ -270,7 +259,7 @@ memory_ptr map::get(size_t offset) const NOEXCEPT
 {
     const auto ptr = std::make_shared<accessor<mutex>>(map_mutex_);
 
-    if (!mapped_)
+    if (!loaded_)
         return nullptr;
 
     // With offset > size the assignment is negative (stream is exhausted).
@@ -288,12 +277,25 @@ constexpr auto fail = -1;
 
 bool map::flush_() const NOEXCEPT
 {
+    // msync should not be required on modern linux, see linus et al.
+    // stackoverflow.com/questions/5902629/mmap-msync-and-linux-process-termination
 #if defined(HAVE_MSC)
-    return ::msync(memory_map_, logical_, MS_SYNC) != fail &&
-        ::fsync(descriptor_) != fail;
+    // unmap (and therefore msync) must be called before ftruncate.
+    // "To flush all the dirty pages plus the metadata for the file and ensure
+    // that they are physically written to disk..."
+    return (::msync(memory_map_, logical_, MS_SYNC) != fail) 
+        && (::fsync(descriptor_) != fail);
 #elif defined(F_FULLFSYNC)
+    // macOS msync fails with zero logical size (but we are no longer calling).
+    // non-standard macOS behavior: news.ycombinator.com/item?id=30372218
     return ::fcntl(descriptor_, F_FULLFSYNC, 0) != fail;
 #else
+    // Linux: fsync "transfers ("flushes") all modified in-core data of
+    // (i.e., modified buffer cache pages for) the file referred to by the
+    // file descriptor fd to the disk device so all changed information
+    // can be retrieved even if the system crashes or is rebooted. This
+    // includes writing through or flushing a disk cache if present. The
+    // call blocks until the device reports that transfer has completed."
     return ::fsync(descriptor_) != fail;
 #endif
 }
@@ -302,29 +304,16 @@ bool map::flush_() const NOEXCEPT
 bool map::unmap_() NOEXCEPT
 {
 #if defined(HAVE_MSC)
-    // Win32: unmap (and therefore msync) must be called before ftruncate.
-    // Win32: "To flush all the dirty pages plus the metadata for the file and
-    // ensure that they are physically written to disk..."
     const auto success =
            (::msync(memory_map_, logical_, MS_SYNC) != fail)
         && (::munmap(memory_map_, capacity_) != fail)
         && (::ftruncate(descriptor_, logical_) != fail)
         && (::fsync(descriptor_) != fail);
 #else
-    // msync should not be required on modern linux, see linus et al.
-    // stackoverflow.com/questions/5902629/mmap-msync-and-linux-process-termination
-    const auto success =
-           (::ftruncate(descriptor_, logical_) != fail)
+    const auto success = (::ftruncate(descriptor_, logical_) != fail)
     #if defined(F_FULLFSYNC)
-        // non-standard macOS behavior: news.ycombinator.com/item?id=30372218
         && (::fcntl(descriptor_, F_FULLFSYNC, 0) != fail)
     #else
-        // Linux: fsync "transfers ("flushes") all modified in-core data of
-        // (i.e., modified buffer cache pages for) the file referred to by the
-        // file descriptor fd to the disk device so all changed information
-        // can be retrieved even if the system crashes or is rebooted. This
-        // includes writing through or flushing a disk cache if present. The
-        // call blocks until the device reports that transfer has completed."
         && (::fsync(descriptor_) != fail)
     #endif
         && (::munmap(memory_map_, capacity_) != fail);

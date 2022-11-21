@@ -56,7 +56,7 @@ public:
             index     = system::narrow_cast<uint32_t>(source.read_variable());
             value     = source.read_variable();
             script    = system::chain::script(source, true);
-            BC_ASSERT(source.get_position() == count());
+            BC_ASSERT(source.get_read_position() == count());
             return source;
         }
 
@@ -66,7 +66,7 @@ public:
             sink.write_variable(index);
             sink.write_variable(value);
             script.to_data(sink, true);
-            BC_ASSERT(sink.get_position() == count());
+            BC_ASSERT(sink.get_write_position() == count());
             return sink;
         }
 

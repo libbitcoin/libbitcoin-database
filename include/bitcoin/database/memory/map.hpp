@@ -23,6 +23,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/error.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
 
@@ -43,31 +44,30 @@ public:
     ~map() NOEXCEPT;
 
     /// Open file, must be closed.
-    bool open() NOEXCEPT;
+    code open() NOEXCEPT;
 
-    /// Close file, must be unmapped, idempotent.
-    bool close() NOEXCEPT;
+    /// Close file, must be unloaded, idempotent.
+    code close() NOEXCEPT;
 
     /// True if the file is closed (or failed to open).
     bool is_open() const NOEXCEPT;
 
-    /// Map file to memory, must be unmapped.
-    bool load() NOEXCEPT;
+    /// Map file to memory, must be loaded.
+    code load() NOEXCEPT;
 
-    /// Flush logical size of memory map to disk, must be mapped.
-    /// Requires exclusive access to memory map.
-    bool flush() const NOEXCEPT;
+    /// Flush memory map to disk, suspend writes for call, must be loaded.
+    code flush() const NOEXCEPT;
 
     /// Flush, unmap and truncate to logical, restartable, idempotent.
-    bool unload() NOEXCEPT;
+    code unload() NOEXCEPT;
 
-    /// True if the file is mapped.
-    bool is_mapped() const NOEXCEPT;
+    /// True if the memory map is loaded.
+    bool is_loaded() const NOEXCEPT;
 
     /// storage interface
     /// -----------------------------------------------------------------------
 
-    /// The current capacity of the memory map (zero if unmapped).
+    /// The current capacity of the memory map (zero if unloaded).
     size_t capacity() const NOEXCEPT override;
 
     /// The current logical size of the memory map (zero if closed).
@@ -115,7 +115,7 @@ private:
     mutable mutex map_mutex_;
 
     // Protected by mutex.
-    bool mapped_;
+    bool loaded_;
     size_t logical_;
     size_t capacity_;
     int descriptor_;

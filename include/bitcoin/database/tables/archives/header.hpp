@@ -50,7 +50,7 @@ public:
             bits      = source.read_little_endian<uint32_t>();
             nonce     = source.read_little_endian<uint32_t>();
             root      = source.read_hash();
-            BC_ASSERT(source.get_position() == minrow);
+            BC_ASSERT(source.get_read_position() == minrow);
             return source;
         }
 
@@ -65,7 +65,7 @@ public:
             sink.write_little_endian<uint32_t>(bits);
             sink.write_little_endian<uint32_t>(nonce);
             sink.write_bytes(root);
-            BC_ASSERT(sink.get_position() == minrow);
+            BC_ASSERT(sink.get_write_position() == minrow);
             return sink;
         }
 

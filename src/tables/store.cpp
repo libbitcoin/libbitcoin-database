@@ -67,12 +67,12 @@ store::store(const settings& config) NOEXCEPT
 code store::create() NOEXCEPT
 {
     if (!transactor_mutex_.try_lock())
-        return system::error::unknown;
+        return error::unknown;
 
     if (!process_lock_.try_lock())
     {
         transactor_mutex_.unlock();
-        return system::error::unknown;
+        return error::unknown;
     }
 
     if (!flush_lock_.try_lock())
@@ -80,43 +80,43 @@ code store::create() NOEXCEPT
         // Suppress process unlock error in favor of flush lock error.
         /* bool */ process_lock_.try_unlock();
         transactor_mutex_.unlock();
-        return system::error::unknown;
+        return error::unknown;
     }
 
-    auto error = system::error::success;
+    auto error = error::success;
 
     // Short-circuiting (returns first code).
     if (!file::clear(configuration_.dir))
-        error = system::error::unknown;
+        error = error::unknown;
     else if (!file::create(configuration_.dir / "archive_header.idx"))
-        error = system::error::unknown;
+        error = error::unknown;
     else if (!file::create(configuration_.dir / "archive_header.dat"))
-        error = system::error::unknown;
+        error = error::unknown;
     else if (!file::create(configuration_.dir / "archive_point.idx"))
-        error = system::error::unknown;
+        error = error::unknown;
     else if (!file::create(configuration_.dir / "archive_point.dat"))
-        error = system::error::unknown;
+        error = error::unknown;
     else if (!file::create(configuration_.dir / "archive_input.idx"))
-        error = system::error::unknown;
+        error = error::unknown;
     else if (!file::create(configuration_.dir / "archive_input.dat"))
-        error = system::error::unknown;
+        error = error::unknown;
     else if (!file::create(configuration_.dir / "archive_output.dat"))
-        error = system::error::unknown;
+        error = error::unknown;
     else if (!file::create(configuration_.dir / "archive_puts.dat"))
-        error = system::error::unknown;
+        error = error::unknown;
     else if (!file::create(configuration_.dir / "archive_tx.idx"))
-        error = system::error::unknown;
+        error = error::unknown;
     else if (!file::create(configuration_.dir / "archive_tx.dat"))
-        error = system::error::unknown;
+        error = error::unknown;
     else if (!file::create(configuration_.dir / "archive_txs.idx"))
-        error = system::error::unknown;
+        error = error::unknown;
     else if (!file::create(configuration_.dir / "archive_txs.dat"))
-        error = system::error::unknown;
+        error = error::unknown;
 
     if (!flush_lock_.try_unlock())
-        error = system::error::unknown;
+        error = error::unknown;
     if (!process_lock_.try_unlock())
-        error = system::error::unknown;
+        error = error::unknown;
 
     // Suppress clear error in favor of first code.
     if (!error)
@@ -129,12 +129,12 @@ code store::create() NOEXCEPT
 code store::open() NOEXCEPT
 {
     if (!transactor_mutex_.try_lock())
-        return system::error::unknown;
+        return error::unknown;
 
     if (!process_lock_.try_lock())
     {
         transactor_mutex_.unlock();
-        return system::error::unknown;
+        return error::unknown;
     }
 
     if (!flush_lock_.try_lock())
@@ -142,71 +142,46 @@ code store::open() NOEXCEPT
         // Suppress process unlock error in favor of flush lock error.
         /* bool */ process_lock_.try_unlock();
         transactor_mutex_.unlock();
-        return system::error::unknown;
+        return error::unknown;
     }
 
-    // open and load are not idempotent (fail if open/loaded).
-    auto error = system::error::success;
-
     // Short-circuiting (returns first code).
+    code ec{ error::success };
 
-    if (!header_head_.open())
-        error = system::error::unknown;
-    else if (!header_body_.open())
-        error = system::error::unknown;
-    else if (!point_head_.open())
-        error = system::error::unknown;
-    else if (!point_body_.open())
-        error = system::error::unknown;
-    else if (!input_head_.open())
-        error = system::error::unknown;
-    else if (!input_body_.open())
-        error = system::error::unknown;
-    else if (!output_body_.open())
-        error = system::error::unknown;
-    else if (!puts_body_.open())
-        error = system::error::unknown;
-    else if (!tx_head_.open())
-        error = system::error::unknown;
-    else if (!tx_body_.open())
-        error = system::error::unknown;
-    else if (!txs_head_.open())
-        error = system::error::unknown;
-    else if (!txs_body_.open())
-        error = system::error::unknown;
+    if (!ec) ec = header_head_.open();
+    if (!ec) ec = header_body_.open();
+    if (!ec) ec = point_head_.open();
+    if (!ec) ec = point_body_.open();
+    if (!ec) ec = input_head_.open();
+    if (!ec) ec = input_body_.open();
+    if (!ec) ec = output_body_.open();
+    if (!ec) ec = puts_body_.open();
+    if (!ec) ec = tx_head_.open();
+    if (!ec) ec = tx_body_.open();
+    if (!ec) ec = txs_head_.open();
+    if (!ec) ec = txs_body_.open();
 
-    else if (!header_head_.load())
-        error = system::error::unknown;
-    else if (!header_body_.load())
-        error = system::error::unknown;
-    else if (!point_head_.load())
-        error = system::error::unknown;
-    else if (!point_body_.load())
-        error = system::error::unknown;
-    else if (!input_head_.load())
-        error = system::error::unknown;
-    else if (!input_body_.load())
-        error = system::error::unknown;
-    else if (!output_body_.load())
-        error = system::error::unknown;
-    else if (!puts_body_.load())
-        error = system::error::unknown;
-    else if (!tx_head_.load())
-        error = system::error::unknown;
-    else if (!tx_body_.load())
-        error = system::error::unknown;
-    else if (!txs_head_.load())
-        error = system::error::unknown;
-    else if (!txs_body_.load())
-        error = system::error::unknown;
+    if (!ec) ec = header_head_.load();
+    if (!ec) ec = header_body_.load();
+    if (!ec) ec = point_head_.load();
+    if (!ec) ec = point_body_.load();
+    if (!ec) ec = input_head_.load();
+    if (!ec) ec = input_body_.load();
+    if (!ec) ec = output_body_.load();
+    if (!ec) ec = puts_body_.load();
+    if (!ec) ec = tx_head_.load();
+    if (!ec) ec = tx_body_.load();
+    if (!ec) ec = txs_head_.load();
+    if (!ec) ec = txs_body_.load();
 
+    // process and flush locks remain open.
     transactor_mutex_.unlock();
 
     // Suppress close error code in favor of first open code.
-    if (!error)
+    if (!ec)
         /* code */ close();
 
-    return error;
+    return ec;
 }
 
 code store::snapshot() NOEXCEPT
@@ -216,98 +191,66 @@ code store::snapshot() NOEXCEPT
         // TODO: log deadlock_hint
     }
 
-    // Flush all bodies (headers unnecessary).
-    auto error = system::error::success;
-    if (!header_body_.flush())
-        error = system::error::unknown;
-    if (!point_body_.flush())
-        error = system::error::unknown;
-    if (!input_body_.flush())
-        error = system::error::unknown;
-    if (!output_body_.flush())
-        error = system::error::unknown;
-    if (!puts_body_.flush())
-        error = system::error::unknown;
-    if (!tx_body_.flush())
-        error = system::error::unknown;
-    if (!txs_body_.flush())
-        error = system::error::unknown;
+    code ec{ error::success };
 
-    if (!backup())
-        error = system::error::unknown;
+    // Short-circuiting, flush bodies (returns first code).
+    if (!ec) ec = header_body_.flush();
+    if (!ec) ec = point_body_.flush();
+    if (!ec) ec = input_body_.flush();
+    if (!ec) ec = output_body_.flush();
+    if (!ec) ec = puts_body_.flush();
+    if (!ec) ec = tx_body_.flush();
+    if (!ec) ec = txs_body_.flush();
+
+    // Short-circuiting, dump headers (returns first code).
+    if (!ec) ec = backup();
 
     transactor_mutex_.unlock();
-    return error;
+    return ec;
 }
 
 code store::close() NOEXCEPT
 {
-    auto error = system::error::success;
-
     // unload and close are idempotent (success if unloaded/closed).
-    if (transactor_mutex_.try_lock())
-    {
-        // Not short-circuiting (returns last code).
+    if (!transactor_mutex_.try_lock())
+        return error::unknown;
 
-        if (!header_head_.unload())
-            error = system::error::unknown;
-        if (!header_body_.unload())
-            error = system::error::unknown;
-        if (!point_head_.unload())
-            error = system::error::unknown;
-        if (!point_body_.unload())
-            error = system::error::unknown;
-        if (!input_head_.unload())
-            error = system::error::unknown;
-        if (!input_body_.unload())
-            error = system::error::unknown;
-        if (!output_body_.unload())
-            error = system::error::unknown;
-        if (!puts_body_.unload())
-            error = system::error::unknown;
-        if (!tx_head_.unload())
-            error = system::error::unknown;
-        if (!tx_body_.unload())
-            error = system::error::unknown;
-        if (!txs_head_.unload())
-            error = system::error::unknown;
-        if (!txs_body_.unload())
-            error = system::error::unknown;
+    // Short-circuiting (returns first code).
+    code ec{ error::success };
 
-        if (!header_head_.close())
-            error = system::error::unknown;
-        if (!header_body_.close())
-            error = system::error::unknown;
-        if (!point_head_.close())
-            error = system::error::unknown;
-        if (!point_body_.close())
-            error = system::error::unknown;
-        if (!input_head_.close())
-            error = system::error::unknown;
-        if (!input_body_.close())
-            error = system::error::unknown;
-        if (!output_body_.close())
-            error = system::error::unknown;
-        if (!puts_body_.close())
-            error = system::error::unknown;
-        if (!tx_head_.close())
-            error = system::error::unknown;
-        if (!tx_body_.close())
-            error = system::error::unknown;
-        if (!txs_head_.close())
-            error = system::error::unknown;
-        if (!txs_body_.close())
-            error = system::error::unknown;
+    if (!ec) ec = header_head_.unload();
+    if (!ec) ec = header_body_.unload();
+    if (!ec) ec = point_head_.unload();
+    if (!ec) ec = point_body_.unload();
+    if (!ec) ec = input_head_.unload();
+    if (!ec) ec = input_body_.unload();
+    if (!ec) ec = output_body_.unload();
+    if (!ec) ec = puts_body_.unload();
+    if (!ec) ec = tx_head_.unload();
+    if (!ec) ec = tx_body_.unload();
+    if (!ec) ec = txs_head_.unload();
+    if (!ec) ec = txs_body_.unload();
 
-        if (!process_lock_.try_unlock())
-            error = system::error::unknown;
-        if (!flush_lock_.try_unlock())
-            error = system::error::unknown;
+    if (!ec) ec = header_head_.close();
+    if (!ec) ec = header_body_.close();
+    if (!ec) ec = point_head_.close();
+    if (!ec) ec = point_body_.close();
+    if (!ec) ec = input_head_.close();
+    if (!ec) ec = input_body_.close();
+    if (!ec) ec = output_body_.close();
+    if (!ec) ec = puts_body_.close();
+    if (!ec) ec = tx_head_.close();
+    if (!ec) ec = tx_body_.close();
+    if (!ec) ec = txs_head_.close();
+    if (!ec) ec = txs_body_.close();
 
-        transactor_mutex_.unlock();
-    }
+    if (!flush_lock_.try_unlock())
+        ec = error::unknown;
+    if (!process_lock_.try_unlock())
+        ec = error::unknown;
 
-    return error;
+    transactor_mutex_.unlock();
+    return ec;
 }
 
 typename store::transactor store::get_transactor() NOEXCEPT
@@ -328,26 +271,26 @@ code store::backup() NOEXCEPT
     auto data5 = txs_head_.get();
 
     // Clear second and rename first to second (unless no first).
-    auto error = system::error::success;
+    auto error = error::success;
     if (file::exists(first))
     {
         if (!file::clear(second))
-            return system::error::unknown;
+            return error::unknown;
         if (!file::rename(first, second))
-            return system::error::unknown;
+            return error::unknown;
     }
 
     // Export current (index) to first.
-    else if (!file::dump(first / "archive_header.idx", data1->begin(), data1->size()))
-        error = system::error::unknown;
+    if (!file::dump(first / "archive_header.idx", data1->begin(), data1->size()))
+        error = error::unknown;
     else if (!file::dump(first / "archive_point.idx", data2->begin(), data2->size()))
-        error = system::error::unknown;
+        error = error::unknown;
     else if (!file::dump(first / "archive_input.idx", data3->begin(), data3->size()))
-        error = system::error::unknown;
+        error = error::unknown;
     else if (!file::dump(first / "archive_tx.idx", data4->begin(), data4->size()))
-        error = system::error::unknown;
+        error = error::unknown;
     else if (!file::dump(first / "archive_txs.idx", data5->begin(), data5->size()))
-        error = system::error::unknown;
+        error = error::unknown;
 
     // Suppress clear error code in favor of first dump code.
     if (error)
@@ -366,19 +309,23 @@ code store::restore() NOEXCEPT
     if (file::exists(first))
     {
         if (!file::clear(index))
-            return system::error::unknown;
+            return error::unknown;
         if (!file::rename(first, index))
-            return system::error::unknown;
+            return error::unknown;
     }
     else if (file::exists(second))
     {
         if (!file::clear(index))
-            return system::error::unknown;
+            return error::unknown;
         if (!file::rename(second, index))
-            return system::error::unknown;
+            return error::unknown;
+    }
+    else
+    {
+        return error::unknown;
     }
 
-    return system::error::success;
+    return error::success;
 }
 
 } // namespace database
