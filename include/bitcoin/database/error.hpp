@@ -34,7 +34,20 @@ namespace error {
 enum error_t
 {
     success,
-    unknown
+    unknown,
+
+    // memory map
+    open_open,
+    open_failure,
+    close_loaded,
+    close_failure,
+    load_locked,
+    load_loaded,
+    load_failure,
+    flush_unloaded,
+    flush_failure,
+    unload_locked,
+    unload_failure
 };
 
 // No current need for error_code equivalence mapping.
