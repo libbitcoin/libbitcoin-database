@@ -29,7 +29,7 @@ namespace database {
     
 /// This class is not thread safe, and does not throw.
 class BCD_API flush_lock final
-  : file_lock
+  : public file_lock
 {
 public:
     DELETE4(flush_lock);

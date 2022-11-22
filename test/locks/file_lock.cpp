@@ -33,9 +33,31 @@ struct file_lock_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(file_lock_tests, file_lock_setup_fixture)
 
+class access final
+  : public file_lock
+{
+public:
+    using file_lock::file_lock;
+
+    bool exists_() const NOEXCEPT
+    {
+        return file_lock::exists();
+    }
+
+    bool create_() NOEXCEPT
+    {
+        return file_lock::create();
+    }
+
+    bool destroy_() NOEXCEPT
+    {
+        return file_lock::destroy();
+    }
+};
+
 BOOST_AUTO_TEST_CASE(file_lock__construct__file__expected)
 {
-    file_lock instance(TEST_PATH);
+    access instance(TEST_PATH);
     BOOST_REQUIRE_EQUAL(instance.file(), TEST_PATH);
 }
 
@@ -43,8 +65,8 @@ BOOST_AUTO_TEST_CASE(file_lock__create__not_exists__true_created)
 {
     BOOST_REQUIRE(!test::exists(TEST_PATH));
 
-    file_lock instance(TEST_PATH);
-    BOOST_REQUIRE(instance.create());
+    access instance(TEST_PATH);
+    BOOST_REQUIRE(instance.create_());
     BOOST_REQUIRE(test::exists(TEST_PATH));
 }
 
@@ -53,24 +75,24 @@ BOOST_AUTO_TEST_CASE(file_lock__create__exists__true)
 {
     BOOST_REQUIRE(test::create(TEST_PATH));
 
-    file_lock instance(TEST_PATH);
-    BOOST_REQUIRE(instance.create());
+    access instance(TEST_PATH);
+    BOOST_REQUIRE(instance.create_());
 }
 
 BOOST_AUTO_TEST_CASE(file_lock__exists__not_exists__false)
 {
     BOOST_REQUIRE(!test::exists(TEST_PATH));
 
-    file_lock instance(TEST_PATH);
-    BOOST_REQUIRE(!instance.exists());
+    access instance(TEST_PATH);
+    BOOST_REQUIRE(!instance.exists_());
 }
 
 BOOST_AUTO_TEST_CASE(file_lock__exists__exists__true)
 {
     BOOST_REQUIRE(test::create(TEST_PATH));
 
-    file_lock instance(TEST_PATH);
-    BOOST_REQUIRE(instance.create());
+    access instance(TEST_PATH);
+    BOOST_REQUIRE(instance.create_());
     BOOST_REQUIRE(test::exists(TEST_PATH));
 }
 
@@ -79,16 +101,16 @@ BOOST_AUTO_TEST_CASE(file_lock__destroy__not_exists__true)
 {
     BOOST_REQUIRE(!test::exists(TEST_PATH));
 
-    file_lock instance(TEST_PATH);
-    BOOST_REQUIRE(instance.destroy());
+    access instance(TEST_PATH);
+    BOOST_REQUIRE(instance.destroy_());
 }
 
 BOOST_AUTO_TEST_CASE(file_lock__destroy__exists__true_deleted)
 {
     BOOST_REQUIRE(test::create(TEST_PATH));
 
-    file_lock instance(TEST_PATH);
-    BOOST_REQUIRE(instance.destroy());
+    access instance(TEST_PATH);
+    BOOST_REQUIRE(instance.destroy_());
     BOOST_REQUIRE(!test::exists(TEST_PATH));
 }
 

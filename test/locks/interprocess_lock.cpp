@@ -33,6 +33,12 @@ struct interprocess_lock_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(interprocess_lock_tests, interprocess_lock_setup_fixture)
 
+BOOST_AUTO_TEST_CASE(interprocess_lock__construct__file__expected)
+{
+    interprocess_lock instance(TEST_PATH);
+    BOOST_REQUIRE_EQUAL(instance.file(), TEST_PATH);
+}
+
 BOOST_AUTO_TEST_CASE(interprocess_lock__lock__not_exists__true_created)
 {
     BOOST_REQUIRE(!test::exists(TEST_PATH));

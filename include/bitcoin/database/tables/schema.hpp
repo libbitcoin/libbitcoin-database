@@ -61,7 +61,7 @@ namespace schema
     {
         constexpr auto index = ".idx";
         constexpr auto data = ".dat";
-        constexpr auto lock = ".lck";
+        constexpr auto lock = ".lock";
     }
 
     /// Values.

@@ -26,12 +26,17 @@
 namespace libbitcoin {
 namespace database {
     
-// locks, make_shared, .string
+// locks, make_shared
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 file_lock::file_lock(const std::filesystem::path& file) NOEXCEPT
   : file_(file)
 {
+}
+
+const std::filesystem::path& file_lock::file() const NOEXCEPT
+{
+    return file_;
 }
 
 bool file_lock::exists() const NOEXCEPT
@@ -55,11 +60,6 @@ bool file_lock::destroy() NOEXCEPT
     std::error_code ec;
     std::filesystem::remove(system::to_extended_path(file_), ec);
     return !ec;
-}
-
-std::string file_lock::file() const NOEXCEPT
-{
-    return file_.string();
 }
 
 BC_POP_WARNING()

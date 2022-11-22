@@ -67,21 +67,21 @@ public:
     /// Construct a store from settings.
     store(const settings& config) NOEXCEPT;
 
-    /// Clear store directory and create the set of empty files.
+    /// Clear store directory and the set of empty files.
     code create() NOEXCEPT;
 
-    /// Create or open the set of tables, set locks.
+    /// Open and load the set of tables, set locks.
     code open() NOEXCEPT;
 
     /// Snapshot the set of tables.
     /// Pause writes, set body sizes, flush files, copy headers, swap backups.
     code snapshot() NOEXCEPT;
 
-    /// Flush and close the set of tables, clear locks.
+    /// Unload and close the set of tables, clear locks.
     code close() NOEXCEPT;
 
     /// Get a transactor object.
-    transactor get_transactor() NOEXCEPT;
+    const transactor get_transactor() NOEXCEPT;
 
     /// Archives.
     table::header header;
@@ -114,29 +114,6 @@ protected:
     code backup() NOEXCEPT;
     code dump() NOEXCEPT;
     code restore() NOEXCEPT;
-
-private:
-    using path = std::filesystem::path;
-
-    static path index(const path& folder, const std::string& name) NOEXCEPT
-    {
-        return folder / schema::dir::indexes / (name + schema::ext::index);
-    }
-
-    static path back(const path& folder, const std::string& name) NOEXCEPT
-    {
-        return folder / schema::dir::primary / (name + schema::ext::index);
-    }
-
-    static path body(const path& folder, const std::string& name) NOEXCEPT
-    {
-        return folder / (name + schema::ext::data);
-    }
-
-    static path lock(const path& folder, const std::string& name) NOEXCEPT
-    {
-        return folder / (name + schema::ext::lock);
-    }
 
     // These are thread safe.
     const settings& configuration_;
@@ -171,6 +148,29 @@ private:
     flush_lock flush_lock_;
     interprocess_lock process_lock_;
     boost::upgrade_mutex transactor_mutex_;
+
+private:
+    using path = std::filesystem::path;
+
+    static path index(const path& folder, const std::string& name) NOEXCEPT
+    {
+        return folder / schema::dir::indexes / (name + schema::ext::index);
+    }
+
+    static path back(const path& folder, const std::string& name) NOEXCEPT
+    {
+        return folder / schema::dir::primary / (name + schema::ext::index);
+    }
+
+    static path body(const path& folder, const std::string& name) NOEXCEPT
+    {
+        return folder / (name + schema::ext::data);
+    }
+
+    static path lock(const path& folder, const std::string& name) NOEXCEPT
+    {
+        return folder / (name + schema::ext::lock);
+    }
 };
 
 } // namespace database
