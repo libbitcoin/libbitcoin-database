@@ -18,48 +18,54 @@
  */
 #include <bitcoin/database/tables/store.hpp>
 
-#include <filesystem>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/tables/schema.hpp>
+
+// TODO: evaluate performance benefits of concurrency.
 
 namespace libbitcoin {
 namespace database {
-    
-// TODO: evaluate performance benefits of concurrency.
-// TODO: error codes and config settings.
-// TODO: name, size, bucket, rate should be independently configurations.
+
 store::store(const settings& config) NOEXCEPT
   : configuration_(config),
 
-    header_head_(config.dir / "index/archive_header.idx"),
-    header_body_(config.dir / "archive_header.dat", config.size, config.rate),
-    header(header_head_, header_body_, config.buckets),
+    header_head_(index(config.dir, schema::archive::header)),
+    header_body_(body(config.dir, schema::archive::header),
+        config.header_size, config.header_rate),
+    header(header_head_, header_body_, config.header_buckets),
 
-    point_head_(config.dir / "index/archive_point.idx"),
-    point_body_(config.dir / "archive_point.dat", config.size, config.rate),
-    point(point_head_, point_body_, config.buckets),
+    point_head_(index(config.dir, schema::archive::point)),
+    point_body_(body(config.dir, schema::archive::point),
+        config.point_size, config.point_rate),
+    point(point_head_, point_body_, config.point_buckets),
 
-    input_head_(config.dir / "index/archive_input.idx"),
-    input_body_(config.dir / "archive_input.dat", config.size, config.rate),
-    input(input_head_, input_body_, config.buckets),
+    input_head_(index(config.dir, schema::archive::input)),
+    input_body_(body(config.dir, schema::archive::input),
+        config.input_size, config.input_rate),
+    input(input_head_, input_body_, config.input_buckets),
 
-    output_body_(config.dir / "archive_output.dat", config.size, config.rate),
+    output_body_(body(config.dir, schema::archive::output),
+        config.output_size, config.output_rate),
     output(output_body_),
 
-    puts_body_(config.dir / "archive_puts.dat", config.size, config.rate),
+    puts_body_(body(config.dir, schema::archive::puts),
+        config.puts_size, config.puts_rate),
     puts(puts_body_),
 
-    tx_head_(config.dir / "index/archive_tx.idx"),
-    tx_body_(config.dir / "archive_tx.dat", config.size, config.rate),
-    tx(tx_head_, tx_body_, config.buckets),
+    tx_head_(index(config.dir, schema::archive::tx)),
+    tx_body_(body(config.dir, schema::archive::tx),
+        config.tx_size, config.tx_rate),
+    tx(tx_head_, tx_body_, config.tx_buckets),
 
-    txs_head_(config.dir / "index/archive_txs.idx"),
-    txs_body_(config.dir / "archive_txs.dat", config.size, config.rate),
-    txs(txs_head_, txs_body_, config.buckets),
+    txs_head_(index(config.dir, schema::archive::txs)),
+    txs_body_(body(config.dir, schema::archive::txs),
+        config.txs_size, config.txs_rate),
+    txs(txs_head_, txs_body_, config.txs_buckets),
 
-    flush_lock_(config.dir / "flush.lck"),
-    process_lock_(config.dir / "process.lck")
+    flush_lock_(lock(config.dir, schema::lock::flush)),
+    process_lock_(lock(config.dir, schema::lock::process))
 {
 }
 
@@ -193,7 +199,7 @@ code store::snapshot() NOEXCEPT
 
     code ec{ error::success };
 
-    // Short-circuiting, flush bodies (returns first code).
+    // Short-circuiting, flush bodys (returns first code).
     if (!ec) ec = header_body_.flush();
     if (!ec) ec = point_body_.flush();
     if (!ec) ec = input_body_.flush();
@@ -260,9 +266,9 @@ typename store::transactor store::get_transactor() NOEXCEPT
 
 code store::backup() NOEXCEPT
 {
-    const auto index = configuration_.dir / "index";
-    const auto second = configuration_.dir / "second";
-    const auto first = configuration_.dir / "first";
+    static const auto indexes = configuration_.dir / schema::dir::indexes;
+    static const auto primary = configuration_.dir / schema::dir::primary;
+    static const auto secondary = configuration_.dir / schema::dir::secondary;
 
     auto data1 = header_head_.get();
     auto data2 = point_head_.get();
@@ -270,54 +276,54 @@ code store::backup() NOEXCEPT
     auto data4 = tx_head_.get();
     auto data5 = txs_head_.get();
 
-    // Clear second and rename first to second (unless no first).
+    // Clear secondary and rename primary to secondary (unless no primary).
     auto error = error::success;
-    if (file::exists(first))
+    if (file::exists(primary))
     {
-        if (!file::clear(second))
+        if (!file::clear(secondary))
             return error::unknown;
-        if (!file::rename(first, second))
+        if (!file::rename(primary, secondary))
             return error::unknown;
     }
 
-    // Export current (index) to first.
-    if (!file::dump(first / "archive_header.idx", data1->begin(), data1->size()))
+    // Export current (indexes) to primary.
+    if (!file::dump(primary / "archive_header.idx", data1->begin(), data1->size()))
         error = error::unknown;
-    else if (!file::dump(first / "archive_point.idx", data2->begin(), data2->size()))
+    else if (!file::dump(primary / "archive_point.idx", data2->begin(), data2->size()))
         error = error::unknown;
-    else if (!file::dump(first / "archive_input.idx", data3->begin(), data3->size()))
+    else if (!file::dump(primary / "archive_input.idx", data3->begin(), data3->size()))
         error = error::unknown;
-    else if (!file::dump(first / "archive_tx.idx", data4->begin(), data4->size()))
+    else if (!file::dump(primary / "archive_tx.idx", data4->begin(), data4->size()))
         error = error::unknown;
-    else if (!file::dump(first / "archive_txs.idx", data5->begin(), data5->size()))
+    else if (!file::dump(primary / "archive_txs.idx", data5->begin(), data5->size()))
         error = error::unknown;
 
-    // Suppress clear error code in favor of first dump code.
+    // Suppress clear error code in favor of primary dump code.
     if (error)
-        /* bool */ file::clear(first);
+        /* bool */ file::clear(primary);
 
     return error;
 }
 
 code store::restore() NOEXCEPT
 {
-    const auto index = configuration_.dir / "index";
-    const auto first = configuration_.dir / "first";
-    const auto second = configuration_.dir / "second";
+    static const auto indexes = configuration_.dir / schema::dir::indexes;
+    static const auto primary = configuration_.dir / schema::dir::primary;
+    static const auto secondary = configuration_.dir / schema::dir::secondary;
 
-    // Clear invalid index and recover first (or second).
-    if (file::exists(first))
+    // Clear invalid indexes and recover primary (or secondary).
+    if (file::exists(primary))
     {
-        if (!file::clear(index))
+        if (!file::clear(indexes))
             return error::unknown;
-        if (!file::rename(first, index))
+        if (!file::rename(primary, indexes))
             return error::unknown;
     }
-    else if (file::exists(second))
+    else if (file::exists(secondary))
     {
-        if (!file::clear(index))
+        if (!file::clear(indexes))
             return error::unknown;
-        if (!file::rename(second, index))
+        if (!file::rename(secondary, indexes))
             return error::unknown;
     }
     else

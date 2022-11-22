@@ -114,11 +114,27 @@ public:
 
 protected:
     /// Backup/restore the header set.
-    code backup(map& file, const std::filesystem::path& to) NOEXCEPT;
     code backup() NOEXCEPT;
     code restore() NOEXCEPT;
 
 private:
+    using path = std::filesystem::path;
+
+    static path index(const path& folder, const std::string& name) NOEXCEPT
+    {
+        return folder / schema::dir::indexes / (name + schema::ext::index);
+    }
+
+    static path body(const path& folder, const std::string& name) NOEXCEPT
+    {
+        return folder / (name + schema::ext::data);
+    }
+
+    static path lock(const path& folder, const std::string& name) NOEXCEPT
+    {
+        return folder / (name + schema::ext::lock);
+    }
+
     // These are thread safe.
     const settings& configuration_;
 

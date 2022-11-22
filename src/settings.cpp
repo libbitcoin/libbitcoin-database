@@ -27,9 +27,31 @@ using namespace bc::system;
 
 settings::settings() NOEXCEPT
   : dir{ "bitcoin" },
-    buckets{ 100 },
-    rate{ 50 },
-    size{ 1 }
+    header_buckets{ 100 },
+    header_size{ 1 },
+
+    header_rate{ 50 },
+    point_buckets{ 100 },
+    point_size{ 1 },
+    point_rate{ 50 },
+
+    input_buckets{ 100 },
+    input_size{ 1 },
+    input_rate{ 50 },
+
+    output_size{ 1 },
+    output_rate{ 50 },
+
+    puts_size{ 1 },
+    puts_rate{ 50 },
+
+    tx_buckets{ 100 },
+    tx_size{ 1 },
+    tx_rate{ 50 },
+
+    txs_buckets{ 100 },
+    txs_size{ 1 },
+    txs_rate{ 50 }
 {
 }
 

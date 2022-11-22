@@ -33,6 +33,37 @@ static_assert(is_same_type<hash_digest, system::hash_digest>);
 
 namespace schema
 {
+    namespace dir
+    {
+        constexpr auto indexes = "index";
+        constexpr auto primary = "primary";
+        constexpr auto secondary = "secondary";
+    }
+
+    namespace archive
+    {
+        constexpr auto header = "archive_header";
+        constexpr auto point = "archive_point";
+        constexpr auto input = "archive_input";
+        constexpr auto output = "archive_output";
+        constexpr auto puts = "archive_puts";
+        constexpr auto txs = "archive_txs";
+        constexpr auto tx = "archive_tx";
+    }
+
+    namespace lock
+    {
+        constexpr auto flush = "flush";
+        constexpr auto process = "process";
+    }
+
+    namespace ext
+    {
+        constexpr auto index = ".idx";
+        constexpr auto data = ".dat";
+        constexpr auto lock = ".lck";
+    }
+
     /// Values.
     constexpr size_t bit = 1;       // Single bit flag.
     constexpr size_t code = 1;      // State flag.
