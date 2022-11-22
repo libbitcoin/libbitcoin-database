@@ -298,15 +298,16 @@ code store::restore() NOEXCEPT
     static const auto primary = configuration_.dir / schema::dir::primary;
     static const auto secondary = configuration_.dir / schema::dir::secondary;
 
-    // Clear invalid /indexes and recover from /primary (or /secondary).
     if (file::exists(primary))
     {
+        // Clear invalid /indexes and recover from /primary.
         if (!file::clear(indexes)) return error::clear_directory;
         if (!file::rename(primary, indexes)) return error::rename_directory;
         return error::success;
     }
     else if (file::exists(secondary))
     {
+        // Clear invalid /indexes and recover from /secondary.
         if (!file::clear(indexes)) return error::clear_directory;
         if (!file::rename(secondary, indexes)) return error::rename_directory;
         return error::success;

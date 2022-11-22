@@ -241,6 +241,9 @@ BOOST_AUTO_TEST_CASE(store__get_transactor__always__share_locked)
 
 // protecteds
 
+// This fails tests when placed after backup/dump tests, because
+// file::exists(primary) returns true. This implies that /primary delete is not
+// complete from the preceding tests.
 BOOST_AUTO_TEST_CASE(store__restore__missing_backup__expected_error)
 {
     const settings configuration{};
