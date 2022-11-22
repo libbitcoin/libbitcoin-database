@@ -46,6 +46,7 @@ private:
     system::data_chunk& buffer_;
     mutable std::shared_mutex field_mutex_;
     mutable std::shared_mutex map_mutex_;
+    const std::filesystem::path path_{ "test" };
 };
 
 }

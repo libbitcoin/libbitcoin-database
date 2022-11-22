@@ -40,7 +40,7 @@ storage::storage(system::data_chunk& reference) NOEXCEPT
 
 const std::filesystem::path& storage::file() const NOEXCEPT
 {
-    return "test";
+    return path_;
 }
 
 size_t storage::capacity() const NOEXCEPT
