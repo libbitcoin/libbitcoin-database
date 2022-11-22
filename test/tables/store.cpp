@@ -153,7 +153,16 @@ BOOST_AUTO_TEST_CASE(store__create__default__success)
     BOOST_REQUIRE_EQUAL(instance.create(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(store__open__default__success)
+BOOST_AUTO_TEST_CASE(store__open__uncreated__open_failure)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    store instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.open(), error::open_failure);
+    instance.close();
+}
+
+BOOST_AUTO_TEST_CASE(store__open__created__success)
 {
     settings configuration{};
     configuration.dir = TEST_DIRECTORY;
@@ -163,12 +172,54 @@ BOOST_AUTO_TEST_CASE(store__open__default__success)
     instance.close();
 }
 
-BOOST_AUTO_TEST_CASE(store__snapshot__always__expected)
+BOOST_AUTO_TEST_CASE(store__snapshot__uncreated__flush_unloaded)
 {
-    BOOST_REQUIRE(true);
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    store instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.snapshot(), error::flush_unloaded);
 }
 
-BOOST_AUTO_TEST_CASE(store__close__default__success)
+BOOST_AUTO_TEST_CASE(store__snapshot__unopened__flush_unloaded)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    store instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.snapshot(), error::flush_unloaded);
+}
+
+BOOST_AUTO_TEST_CASE(store__snapshot__opened__success)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    store instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.open(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.snapshot(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+}
+
+// flush_unlock is not idempotent
+BOOST_AUTO_TEST_CASE(store__close__uncreated__flush_unlock)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    store instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.close(), error::flush_unlock);
+}
+
+// flush_unlock is not idempotent
+BOOST_AUTO_TEST_CASE(store__close__unopened__flush_unlock)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    store instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.close(), error::flush_unlock);
+}
+
+BOOST_AUTO_TEST_CASE(store__close__opened__success)
 {
     settings configuration{};
     configuration.dir = TEST_DIRECTORY;
@@ -190,25 +241,25 @@ BOOST_AUTO_TEST_CASE(store__get_transactor__always__share_locked)
 
 // protecteds
 
-BOOST_AUTO_TEST_CASE(store__backup__unloaded__expected_error)
+BOOST_AUTO_TEST_CASE(store__restore__missing_backup__expected_error)
+{
+    const settings configuration{};
+    access instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.restore_(), error::missing_backup);
+}
+
+BOOST_AUTO_TEST_CASE(store__backup__unloaded__unloaded_file)
 {
     const settings configuration{};
     access instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.backup_(), error::unloaded_file);
 }
 
-BOOST_AUTO_TEST_CASE(store__dump__unloaded__expected_error)
+BOOST_AUTO_TEST_CASE(store__dump__unloaded__unloaded_file)
 {
     const settings configuration{};
     access instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.dump_(), error::unloaded_file);
-}
-
-BOOST_AUTO_TEST_CASE(store__restore__missing_backup__expected_error)
-{
-    const settings configuration{};
-    access instance{ configuration };
-    BOOST_REQUIRE_EQUAL(instance.restore_(), error::missing_backup);
 }
 
 BOOST_AUTO_TEST_CASE(store__construct__default_configuration__referenced)

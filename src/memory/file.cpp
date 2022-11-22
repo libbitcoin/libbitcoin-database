@@ -78,7 +78,7 @@ bool exists(const path& filename) NOEXCEPT
 
 bool remove(const path& filename) NOEXCEPT
 {
-    // Deletes and returns false if file did not exist (or error).
+    // Deletes file or empty directory, returns false if not exist (or error).
     std::error_code ec;
     return std::filesystem::remove(filename, ec);
 }

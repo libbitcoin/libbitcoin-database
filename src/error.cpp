@@ -55,7 +55,9 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { flush_unlock, "flush unlock failure" },
     { process_unlock, "process unlock failure" },
 
+    { create_directory, "create directory failure" },
     { clear_directory, "clear directory failure" },
+    { remove_directory, "remove directory failure" },
     { rename_directory, "rename directory failure" },
     { missing_backup, "missing backup" },
 

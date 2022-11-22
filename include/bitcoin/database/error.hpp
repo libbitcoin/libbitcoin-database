@@ -55,7 +55,9 @@ enum error_t
     flush_lock,
     flush_unlock,
     process_unlock,
+    create_directory,
     clear_directory,
+    remove_directory,
     rename_directory,
     missing_backup,
 

@@ -235,11 +235,17 @@ code store::backup() NOEXCEPT
     static const auto primary = configuration_.dir / schema::dir::primary;
     static const auto secondary = configuration_.dir / schema::dir::secondary;
 
-    // Clear /secondary and rename /primary to /secondary (unless missing).
     if (file::exists(primary))
     {
+        // Delete /secondary, rename /primary to /secondary.
         if (!file::clear(secondary)) return error::clear_directory;
+        if (!file::remove(secondary)) return error::remove_directory;
         if (!file::rename(primary, secondary)) return error::rename_directory;
+    }
+    else
+    {
+        // Create /primary.
+        if (!file::clear(primary)) return error::create_directory;
     }
 
     const auto ec = dump();
@@ -297,13 +303,13 @@ code store::restore() NOEXCEPT
     {
         if (!file::clear(indexes)) return error::clear_directory;
         if (!file::rename(primary, indexes)) return error::rename_directory;
-        return error::close_failure;
+        return error::success;
     }
     else if (file::exists(secondary))
     {
         if (!file::clear(indexes)) return error::clear_directory;
         if (!file::rename(secondary, indexes)) return error::rename_directory;
-        return error::open_failure;
+        return error::success;
     }
 
     return error::missing_backup;
