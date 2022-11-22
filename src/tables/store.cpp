@@ -297,18 +297,16 @@ code store::restore() NOEXCEPT
     {
         if (!file::clear(indexes)) return error::clear_directory;
         if (!file::rename(primary, indexes)) return error::rename_directory;
+        return error::close_failure;
     }
     else if (file::exists(secondary))
     {
         if (!file::clear(indexes)) return error::clear_directory;
         if (!file::rename(secondary, indexes)) return error::rename_directory;
-    }
-    else
-    {
-        return error::missing_backup;
+        return error::open_failure;
     }
 
-    return error::success;
+    return error::missing_backup;
 }
 
 } // namespace database
