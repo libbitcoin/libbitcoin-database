@@ -60,7 +60,6 @@ enum error_t
     remove_directory,
     rename_directory,
     missing_backup,
-
     create_file,
     unloaded_file,
     dump_file
