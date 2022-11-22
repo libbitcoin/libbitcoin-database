@@ -26,6 +26,7 @@
 #include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/locks/locks.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/tables/schema.hpp>
 
 #include <bitcoin/database/tables/archives/header.hpp>
 #include <bitcoin/database/tables/archives/input.hpp>
@@ -59,9 +60,9 @@ namespace database {
 class BCD_API store
 {
 public:
-    DELETE5(store);
-
     using transactor = std::shared_lock<boost::upgrade_mutex>;
+
+    DELETE5(store);
 
     /// Construct a store from settings.
     store(const settings& config) NOEXCEPT;
@@ -81,10 +82,6 @@ public:
 
     /// Get a transactor object.
     transactor get_transactor() NOEXCEPT;
-
-    // TODO: change table to namespace.
-    // TODO: move table-definition types into schema namespace (pk, sk, size).
-    // TODO: define records as public subtypes of tables.
 
     /// Archives.
     table::header header;
@@ -113,8 +110,9 @@ public:
     ////table::validated_tx validated_tx;
 
 protected:
-    /// Backup/restore the header set.
+    /// Backup/restore all indexes.
     code backup() NOEXCEPT;
+    code dump() NOEXCEPT;
     code restore() NOEXCEPT;
 
 private:
@@ -123,6 +121,11 @@ private:
     static path index(const path& folder, const std::string& name) NOEXCEPT
     {
         return folder / schema::dir::indexes / (name + schema::ext::index);
+    }
+
+    static path back(const path& folder, const std::string& name) NOEXCEPT
+    {
+        return folder / schema::dir::primary / (name + schema::ext::index);
     }
 
     static path body(const path& folder, const std::string& name) NOEXCEPT

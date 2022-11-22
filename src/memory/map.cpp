@@ -64,6 +64,11 @@ map::~map() NOEXCEPT
     BC_ASSERT_MSG(descriptor_ == file::invalid, "file open at destruct");
 }
 
+const std::filesystem::path& map::file() const NOEXCEPT
+{
+    return filename_;
+}
+
 code map::open() NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);

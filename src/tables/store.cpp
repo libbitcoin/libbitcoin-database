@@ -69,7 +69,6 @@ store::store(const settings& config) NOEXCEPT
 {
 }
 
-// TODO: expose file path from maps and use here.
 code store::create() NOEXCEPT
 {
     if (!transactor_mutex_.try_lock())
@@ -83,53 +82,33 @@ code store::create() NOEXCEPT
 
     if (!flush_lock_.try_lock())
     {
-        // Suppress process unlock error in favor of flush lock error.
         /* bool */ process_lock_.try_unlock();
         transactor_mutex_.unlock();
         return error::unknown;
     }
 
-    auto error = error::success;
+    code ec{ error::success };
 
-    // Short-circuiting (returns first code).
-    if (!file::clear(configuration_.dir))
-        error = error::unknown;
-    else if (!file::create(configuration_.dir / "archive_header.idx"))
-        error = error::unknown;
-    else if (!file::create(configuration_.dir / "archive_header.dat"))
-        error = error::unknown;
-    else if (!file::create(configuration_.dir / "archive_point.idx"))
-        error = error::unknown;
-    else if (!file::create(configuration_.dir / "archive_point.dat"))
-        error = error::unknown;
-    else if (!file::create(configuration_.dir / "archive_input.idx"))
-        error = error::unknown;
-    else if (!file::create(configuration_.dir / "archive_input.dat"))
-        error = error::unknown;
-    else if (!file::create(configuration_.dir / "archive_output.dat"))
-        error = error::unknown;
-    else if (!file::create(configuration_.dir / "archive_puts.dat"))
-        error = error::unknown;
-    else if (!file::create(configuration_.dir / "archive_tx.idx"))
-        error = error::unknown;
-    else if (!file::create(configuration_.dir / "archive_tx.dat"))
-        error = error::unknown;
-    else if (!file::create(configuration_.dir / "archive_txs.idx"))
-        error = error::unknown;
-    else if (!file::create(configuration_.dir / "archive_txs.dat"))
-        error = error::unknown;
+    if (!file::clear(configuration_.dir)) ec = error::unknown;
+    else if (!file::create(header_head_.file())) ec = error::unknown;
+    else if (!file::create(header_body_.file())) ec = error::unknown;
+    else if (!file::create(point_head_.file())) ec = error::unknown;
+    else if (!file::create(point_body_.file())) ec = error::unknown;
+    else if (!file::create(input_head_.file())) ec = error::unknown;
+    else if (!file::create(input_body_.file())) ec = error::unknown;
+    else if (!file::create(output_body_.file())) ec = error::unknown;
+    else if (!file::create(puts_body_.file())) ec = error::unknown;
+    else if (!file::create(tx_head_.file())) ec = error::unknown;
+    else if (!file::create(tx_body_.file())) ec = error::unknown;
+    else if (!file::create(txs_head_.file())) ec = error::unknown;
+    else if (!file::create(txs_body_.file())) ec = error::unknown;
 
-    if (!flush_lock_.try_unlock())
-        error = error::unknown;
-    if (!process_lock_.try_unlock())
-        error = error::unknown;
+    if (!flush_lock_.try_unlock()) ec = error::unknown;
+    if (!process_lock_.try_unlock()) ec = error::unknown;
 
-    // Suppress clear error in favor of first code.
-    if (!error)
-        /* bool */ file::clear(configuration_.dir);
-
+    if (ec) /* bool */ file::clear(configuration_.dir);
     transactor_mutex_.unlock();
-    return error;
+    return ec;
 }
 
 code store::open() NOEXCEPT
@@ -145,13 +124,11 @@ code store::open() NOEXCEPT
 
     if (!flush_lock_.try_lock())
     {
-        // Suppress process unlock error in favor of flush lock error.
         /* bool */ process_lock_.try_unlock();
         transactor_mutex_.unlock();
         return error::unknown;
     }
 
-    // Short-circuiting (returns first code).
     code ec{ error::success };
 
     if (!ec) ec = header_head_.open();
@@ -180,13 +157,9 @@ code store::open() NOEXCEPT
     if (!ec) ec = txs_head_.load();
     if (!ec) ec = txs_body_.load();
 
-    // process and flush locks remain open.
+    // process and flush locks remain open until close().
     transactor_mutex_.unlock();
-
-    // Suppress close error code in favor of first open code.
-    if (!ec)
-        /* code */ close();
-
+    if (!ec) /* code */ close();
     return ec;
 }
 
@@ -199,7 +172,6 @@ code store::snapshot() NOEXCEPT
 
     code ec{ error::success };
 
-    // Short-circuiting, flush bodys (returns first code).
     if (!ec) ec = header_body_.flush();
     if (!ec) ec = point_body_.flush();
     if (!ec) ec = input_body_.flush();
@@ -208,20 +180,15 @@ code store::snapshot() NOEXCEPT
     if (!ec) ec = tx_body_.flush();
     if (!ec) ec = txs_body_.flush();
 
-    // Short-circuiting, dump headers (returns first code).
     if (!ec) ec = backup();
-
     transactor_mutex_.unlock();
     return ec;
 }
 
 code store::close() NOEXCEPT
 {
-    // unload and close are idempotent (success if unloaded/closed).
-    if (!transactor_mutex_.try_lock())
-        return error::unknown;
+    if (!transactor_mutex_.try_lock()) return error::unknown;
 
-    // Short-circuiting (returns first code).
     code ec{ error::success };
 
     if (!ec) ec = header_head_.unload();
@@ -250,10 +217,8 @@ code store::close() NOEXCEPT
     if (!ec) ec = txs_head_.close();
     if (!ec) ec = txs_body_.close();
 
-    if (!flush_lock_.try_unlock())
-        ec = error::unknown;
-    if (!process_lock_.try_unlock())
-        ec = error::unknown;
+    if (!flush_lock_.try_unlock()) ec = error::unknown;
+    if (!process_lock_.try_unlock()) ec = error::unknown;
 
     transactor_mutex_.unlock();
     return ec;
@@ -266,43 +231,51 @@ typename store::transactor store::get_transactor() NOEXCEPT
 
 code store::backup() NOEXCEPT
 {
-    static const auto indexes = configuration_.dir / schema::dir::indexes;
     static const auto primary = configuration_.dir / schema::dir::primary;
     static const auto secondary = configuration_.dir / schema::dir::secondary;
 
-    auto data1 = header_head_.get();
-    auto data2 = point_head_.get();
-    auto data3 = input_head_.get();
-    auto data4 = tx_head_.get();
-    auto data5 = txs_head_.get();
-
-    // Clear secondary and rename primary to secondary (unless no primary).
-    auto error = error::success;
+    // Clear /secondary and rename /primary to /secondary (unless missing).
     if (file::exists(primary))
     {
-        if (!file::clear(secondary))
-            return error::unknown;
-        if (!file::rename(primary, secondary))
-            return error::unknown;
+        if (!file::clear(secondary)) return error::unknown;
+        if (!file::rename(primary, secondary)) return error::unknown;
     }
 
-    // Export current (indexes) to primary.
-    if (!file::dump(primary / "archive_header.idx", data1->begin(), data1->size()))
-        error = error::unknown;
-    else if (!file::dump(primary / "archive_point.idx", data2->begin(), data2->size()))
-        error = error::unknown;
-    else if (!file::dump(primary / "archive_input.idx", data3->begin(), data3->size()))
-        error = error::unknown;
-    else if (!file::dump(primary / "archive_tx.idx", data4->begin(), data4->size()))
-        error = error::unknown;
-    else if (!file::dump(primary / "archive_txs.idx", data5->begin(), data5->size()))
-        error = error::unknown;
+    const auto ec = dump();
+    if (ec) /* bool */ file::clear(primary);
+    return ec;
+}
 
-    // Suppress clear error code in favor of primary dump code.
-    if (error)
-        /* bool */ file::clear(primary);
+// Dump memory maps of /indexes to new files in /primary.
+code store::dump() NOEXCEPT
+{
+    auto header_buffer = header_head_.get();
+    auto point_buffer = point_head_.get();
+    auto input_buffer = input_head_.get();
+    auto tx_buffer = tx_head_.get();
+    auto txs_buffer = txs_head_.get();
 
-    return error;
+    if (!file::dump(back(configuration_.dir, schema::archive::header),
+        header_buffer->begin(), header_buffer->size()))
+       return error::unknown;
+
+    if (!file::dump(back(configuration_.dir, schema::archive::point),
+        point_buffer->begin(), point_buffer->size()))
+        return error::unknown;
+
+    if (!file::dump(back(configuration_.dir, schema::archive::input),
+        input_buffer->begin(), input_buffer->size()))
+        return error::unknown;
+
+    if (!file::dump(back(configuration_.dir, schema::archive::tx),
+        tx_buffer->begin(), tx_buffer->size()))
+        return error::unknown;
+
+    if (!file::dump(back(configuration_.dir, schema::archive::txs),
+        txs_buffer->begin(), txs_buffer->size()))
+        return error::unknown;
+
+    return error::success;
 }
 
 code store::restore() NOEXCEPT
@@ -311,20 +284,16 @@ code store::restore() NOEXCEPT
     static const auto primary = configuration_.dir / schema::dir::primary;
     static const auto secondary = configuration_.dir / schema::dir::secondary;
 
-    // Clear invalid indexes and recover primary (or secondary).
+    // Clear invalid /indexes and recover from /primary (or /secondary).
     if (file::exists(primary))
     {
-        if (!file::clear(indexes))
-            return error::unknown;
-        if (!file::rename(primary, indexes))
-            return error::unknown;
+        if (!file::clear(indexes)) return error::unknown;
+        if (!file::rename(primary, indexes)) return error::unknown;
     }
     else if (file::exists(secondary))
     {
-        if (!file::clear(indexes))
-            return error::unknown;
-        if (!file::rename(secondary, indexes))
-            return error::unknown;
+        if (!file::clear(indexes)) return error::unknown;
+        if (!file::rename(secondary, indexes)) return error::unknown;
     }
     else
     {

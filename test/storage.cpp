@@ -18,6 +18,7 @@
  */
 #include "test.hpp"
 #include "storage.hpp"
+#include <filesystem>
 #include <mutex>
 #include <shared_mutex>
 
@@ -35,6 +36,11 @@ storage::storage() NOEXCEPT
 storage::storage(system::data_chunk& reference) NOEXCEPT
   : buffer_(reference)
 {
+}
+
+const std::filesystem::path& storage::file() const NOEXCEPT
+{
+    return "test";
 }
 
 size_t storage::capacity() const NOEXCEPT
