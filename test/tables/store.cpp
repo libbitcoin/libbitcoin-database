@@ -149,13 +149,18 @@ BOOST_AUTO_TEST_CASE(store__create__default__success)
 {
     settings configuration{};
     configuration.dir = TEST_DIRECTORY;
-    access instance{ configuration };
+    store instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(store__open__always__expected)
+BOOST_AUTO_TEST_CASE(store__open__default__success)
 {
-    BOOST_REQUIRE(true);
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    store instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.open(), error::success);
+    instance.close();
 }
 
 BOOST_AUTO_TEST_CASE(store__snapshot__always__expected)
@@ -163,9 +168,14 @@ BOOST_AUTO_TEST_CASE(store__snapshot__always__expected)
     BOOST_REQUIRE(true);
 }
 
-BOOST_AUTO_TEST_CASE(store__close__always__expected)
+BOOST_AUTO_TEST_CASE(store__close__default__success)
 {
-    BOOST_REQUIRE(true);
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    store instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.open(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.close(), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(store__get_transactor__always__share_locked)

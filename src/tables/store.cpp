@@ -160,7 +160,7 @@ code store::open() NOEXCEPT
 
     // process and flush locks remain open until close().
     transactor_mutex_.unlock();
-    if (!ec) /* code */ close();
+    if (ec) /* code */ close();
     return ec;
 }
 
