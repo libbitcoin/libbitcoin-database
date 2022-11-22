@@ -42,7 +42,12 @@ struct map_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(map_tests, map_setup_fixture)
 
-constexpr auto default_minimum_capacity = 1u;
+BOOST_AUTO_TEST_CASE(map__file__always__expected)
+{
+    const std::string file = TEST_PATH;
+    map instance(file);
+    BOOST_REQUIRE_EQUAL(instance.file(), file);
+}
 
 BOOST_AUTO_TEST_CASE(map__open__opened__false)
 {
@@ -124,6 +129,7 @@ BOOST_AUTO_TEST_CASE(map__properties__open_close__expected)
 
 BOOST_AUTO_TEST_CASE(map__properties__load_unload__expected)
 {
+    constexpr auto default_minimum_capacity = 1u;
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
@@ -199,6 +205,8 @@ BOOST_AUTO_TEST_CASE(map__unload__loaded__true)
 
 BOOST_AUTO_TEST_CASE(map__capacity__default__expected)
 {
+
+    constexpr auto default_minimum_capacity = 1u;
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     map instance(file);
