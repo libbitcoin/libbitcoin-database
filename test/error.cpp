@@ -262,4 +262,13 @@ BOOST_AUTO_TEST_CASE(error_t__code__dump_file__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "file failed to dump");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__create_map__true_exected_message)
+{
+    constexpr auto value = error::create_map;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "failed to create map");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

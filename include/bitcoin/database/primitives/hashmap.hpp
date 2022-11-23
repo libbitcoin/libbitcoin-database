@@ -49,7 +49,7 @@ public:
     /// False if head or body file size incorrect (not thread safe).
     bool verify() const NOEXCEPT;
 
-    /// Set body size into header (not thread safe).
+    /// Truncate body to header body size (not thread safe).
     bool snap() NOEXCEPT;
 
     /// Query interface, iterator is not thread safe.
@@ -97,7 +97,7 @@ private:
     using header = database::head<Link, Key>;
     using manager = database::manager<Link, Key, Size>;
 
-    // hash/head/push thread safe.
+    // index/top/push thread safe.
     header header_;
 
     // Thread safe.

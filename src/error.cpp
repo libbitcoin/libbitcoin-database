@@ -63,7 +63,8 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     { create_file, "file failed to create" },
     { unloaded_file, "file not loaded" },
-    { dump_file, "file failed to dump" }
+    { dump_file, "file failed to dump" },
+    { create_map, "failed to create map" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "database", "database code")

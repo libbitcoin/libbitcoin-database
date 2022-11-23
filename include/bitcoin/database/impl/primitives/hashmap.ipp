@@ -34,15 +34,19 @@ CLASS::hashmap(storage& header, storage& body, const Link& buckets) NOEXCEPT
 // not thread safe
 // ----------------------------------------------------------------------------
 
+// TODO: invoke header_.set_body_count(manager_.count()) on close.
+
 TEMPLATE
 bool CLASS::create() NOEXCEPT
 {
+    // TODO: call only on create, snap body (in case files exist).
     return header_.create() && verify();
 }
 
 TEMPLATE
 bool CLASS::verify() const NOEXCEPT
 {
+    // TODO: call only after open, retain exact match requirement.
     Link count{};
     return header_.verify() && header_.get_body_count(count) &&
         count == manager_.count();
@@ -51,7 +55,9 @@ bool CLASS::verify() const NOEXCEPT
 TEMPLATE
 bool CLASS::snap() NOEXCEPT
 {
-    return header_.set_body_count(manager_.count());
+    // TODO: call only after a restore, fails if size reduction.
+    Link count{};
+    return header_.get_body_count(count) && manager_.truncate(count);
 }
 
 // query interface

@@ -131,9 +131,11 @@ protected:
     map input_body_;
 
     // blob
+    map output_head_;
     map output_body_;
 
     // array
+    map puts_head_;
     map puts_body_;
 
     // record hashmap

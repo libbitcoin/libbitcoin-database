@@ -43,8 +43,8 @@ public:
     /// The current logical size of the memory map (zero if closed).
     virtual size_t size() const NOEXCEPT = 0;
 
-    /// Set logical size to specified (false if size exceeds capacity).
-    virtual bool resize(size_t size) NOEXCEPT = 0;
+    /// Reduce logical size to specified (false if size exceeds logical).
+    virtual bool truncate(size_t size) NOEXCEPT = 0;
 
     /// Allocate bytes and return offset to first allocated (or eof).
     virtual size_t allocate(size_t chunk) NOEXCEPT = 0;

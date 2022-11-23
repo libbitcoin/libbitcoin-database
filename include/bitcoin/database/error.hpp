@@ -62,7 +62,8 @@ enum error_t
     missing_backup,
     create_file,
     unloaded_file,
-    dump_file
+    dump_file,
+    create_map
 };
 
 // No current need for error_code equivalence mapping.

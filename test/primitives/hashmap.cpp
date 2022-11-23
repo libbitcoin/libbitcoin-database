@@ -82,7 +82,6 @@ BOOST_AUTO_TEST_CASE(hashmap__record_construct__empty_files__expected)
     BOOST_REQUIRE(!instance.verify());
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.verify());
-    BOOST_REQUIRE(instance.snap());
 
     BOOST_REQUIRE_EQUAL(head_file.size(), header_size);
     BOOST_REQUIRE(body_file.empty());

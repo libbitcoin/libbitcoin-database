@@ -145,11 +145,81 @@ public:
 
 // publics
 
+BOOST_AUTO_TEST_CASE(store__create__transactor_locked__transactor_lock)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    instance.transactor_mutex().lock();
+    BOOST_REQUIRE_EQUAL(instance.create(), error::transactor_lock);
+}
+
+BOOST_AUTO_TEST_CASE(store__create__flush_locked__flush_lock)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE(test::create(instance.flush_lock_file()));
+    BOOST_REQUIRE_EQUAL(instance.create(), error::flush_lock);
+}
+
+// process lock may be taken only once within a process.
+BOOST_AUTO_TEST_CASE(store__create__process_locked__success)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    interprocess_lock lock{ instance.process_lock_file() };
+    BOOST_REQUIRE(lock.try_lock());
+    BOOST_REQUIRE_EQUAL(instance.create(), error::process_lock);
+}
+
+BOOST_AUTO_TEST_CASE(store__create__process_lock_file__success)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE(test::create(instance.process_lock_file()));
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(store__create__default__unlocks)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+    BOOST_REQUIRE(!file::exists(instance.flush_lock_file()));
+    BOOST_REQUIRE(!file::exists(instance.process_lock_file()));
+    BOOST_REQUIRE(instance.transactor_mutex().try_lock());
+}
+
 BOOST_AUTO_TEST_CASE(store__create__default__success)
 {
     settings configuration{};
     configuration.dir = TEST_DIRECTORY;
-    store instance{ configuration };
+    access instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+}
+
+// create is index-destructive
+BOOST_AUTO_TEST_CASE(store__create__existing_index__success)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE(file::clear(configuration.dir / schema::dir::indexes));
+    BOOST_REQUIRE(file::create(instance.header_head_file()));
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+}
+
+// create is not body-destructive
+BOOST_AUTO_TEST_CASE(store__create__existing_body__success)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE(file::create(instance.header_body_file()));
     BOOST_REQUIRE_EQUAL(instance.create(), error::success);
 }
 

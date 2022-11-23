@@ -55,10 +55,10 @@ size_t storage::size() const NOEXCEPT
     return buffer_.size();
 }
 
-bool storage::resize(size_t size) NOEXCEPT
+bool storage::truncate(size_t size) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
-    if (size > buffer_.capacity())
+    if (size > buffer_.size())
         return false;
 
     buffer_.resize(size);

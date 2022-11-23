@@ -26,9 +26,42 @@ namespace libbitcoin {
 namespace database {
     
 TEMPLATE
-CLASS::arraymap(storage& body) NOEXCEPT
-  : body_(body)
+CLASS::arraymap(storage& header, storage& body) NOEXCEPT
+  : header_(header, zero), body_(body)
 {
+}
+
+// not thread safe
+// ----------------------------------------------------------------------------
+
+// TODO: add header_ (size only), create, verify, snap.
+// TODO: invoke header_.set_body_count(count) on close.
+
+TEMPLATE
+bool CLASS::create() NOEXCEPT
+{
+    // TODO: verify empty and set link size into header, snap body (in case files exist).
+    ////return header_.create() && verify();
+    return true;
+}
+
+TEMPLATE
+bool CLASS::verify() const NOEXCEPT
+{
+    // TODO: verify header is link size, require match of body size.
+    ////Link count{};
+    ////return header_.verify() && header_.get_body_count(count) &&
+    ////    count == manager_.count();
+    return true;
+}
+
+TEMPLATE
+bool CLASS::snap() NOEXCEPT
+{
+    ////// TODO: call only after a restore, fails if size reduction.
+    ////Link count{};
+    ////return header_.get_body_count(count) && manager_.truncate(count);
+    return true;
 }
 
 // query interface

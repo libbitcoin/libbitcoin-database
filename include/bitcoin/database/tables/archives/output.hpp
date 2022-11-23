@@ -38,7 +38,7 @@ public:
     using array_map<schema::output>::arraymap;
 
     struct slab
-      : public schema::input
+      : public schema::output
     {
         linkage<pk> count() const NOEXCEPT
         {

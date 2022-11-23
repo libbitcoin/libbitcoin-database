@@ -43,7 +43,7 @@ bool CLASS::truncate(const Link& count) NOEXCEPT
     if (count.is_terminal())
         return false;
 
-    return file_.resize(link_to_position(count));
+    return file_.truncate(link_to_position(count));
 }
 
 TEMPLATE

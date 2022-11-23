@@ -200,13 +200,11 @@ size_t map::size() const NOEXCEPT
     return logical_;
 }
 
-// Cannot resize beyond capactity, intended for truncation.
-bool map::resize(size_t size) NOEXCEPT
+bool map::truncate(size_t size) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    // resize_overflow
-    if (size > capacity_)
+    if (size > logical_)
         return false;
 
     logical_ = size;

@@ -76,8 +76,8 @@ public:
     /// The current logical size of the memory map (zero if closed).
     size_t size() const NOEXCEPT override;
 
-    /// Set logical size to specified (false if size exceeds capacity).
-    bool resize(size_t size) NOEXCEPT override;
+    /// Reduce logical size to specified (false if size exceeds logical).
+    bool truncate(size_t size) NOEXCEPT override;
 
     /// Allocate bytes and return offset to first allocated (or eof).
     size_t allocate(size_t chunk) NOEXCEPT override;

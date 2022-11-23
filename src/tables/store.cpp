@@ -46,13 +46,15 @@ store::store(const settings& config) NOEXCEPT
         config.input_size, config.input_rate),
     input(input_head_, input_body_, config.input_buckets),
 
+    output_head_(index(config.dir, schema::archive::output)),
     output_body_(body(config.dir, schema::archive::output),
         config.output_size, config.output_rate),
-    output(output_body_),
+    output(output_head_, output_body_),
 
+    puts_head_(index(config.dir, schema::archive::puts)),
     puts_body_(body(config.dir, schema::archive::puts),
         config.puts_size, config.puts_rate),
-    puts(puts_body_),
+    puts(puts_head_, puts_body_),
 
     tx_head_(index(config.dir, schema::archive::tx)),
     tx_body_(body(config.dir, schema::archive::tx),
@@ -90,6 +92,7 @@ code store::create() NOEXCEPT
     code ec{ error::success };
     static const auto indexes = configuration_.dir / schema::dir::indexes;
 
+    // Clear /index, create index files, ensure existence of body files.
     if (!file::clear(indexes)) ec = error::clear_directory;
     else if (!file::create(header_head_.file())) ec = error::create_file;
     else if (!file::create(header_body_.file())) ec = error::create_file;
@@ -97,12 +100,23 @@ code store::create() NOEXCEPT
     else if (!file::create(point_body_.file())) ec = error::create_file;
     else if (!file::create(input_head_.file())) ec = error::create_file;
     else if (!file::create(input_body_.file())) ec = error::create_file;
+    else if (!file::create(output_head_.file())) ec = error::create_file;
     else if (!file::create(output_body_.file())) ec = error::create_file;
+    else if (!file::create(puts_head_.file())) ec = error::create_file;
     else if (!file::create(puts_body_.file())) ec = error::create_file;
     else if (!file::create(tx_head_.file())) ec = error::create_file;
     else if (!file::create(tx_body_.file())) ec = error::create_file;
     else if (!file::create(txs_head_.file())) ec = error::create_file;
     else if (!file::create(txs_body_.file())) ec = error::create_file;
+
+    ////// Populate /index files and truncate body sizes to zero.
+    ////else if (!header.create()) ec = error::create_map;
+    ////else if (!point.create()) ec = error::create_map;
+    ////else if (!input.create()) ec = error::create_map;
+    ////else if (!output.create()) ec = error::create_map;
+    ////else if (!puts.create()) ec = error::create_map;
+    ////else if (!tx.create()) ec = error::create_map;
+    ////else if (!txs.create()) ec = error::create_map;
 
     if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
     if (!process_lock_.try_unlock()) ec = error::process_unlock;
@@ -138,7 +152,9 @@ code store::open() NOEXCEPT
     if (!ec) ec = point_body_.open();
     if (!ec) ec = input_head_.open();
     if (!ec) ec = input_body_.open();
+    if (!ec) ec = output_head_.open();
     if (!ec) ec = output_body_.open();
+    if (!ec) ec = puts_head_.open();
     if (!ec) ec = puts_body_.open();
     if (!ec) ec = tx_head_.open();
     if (!ec) ec = tx_body_.open();
@@ -151,7 +167,9 @@ code store::open() NOEXCEPT
     if (!ec) ec = point_body_.load();
     if (!ec) ec = input_head_.load();
     if (!ec) ec = input_body_.load();
+    if (!ec) ec = output_head_.load();
     if (!ec) ec = output_body_.load();
+    if (!ec) ec = puts_head_.load();
     if (!ec) ec = puts_body_.load();
     if (!ec) ec = tx_head_.load();
     if (!ec) ec = tx_body_.load();
@@ -198,7 +216,9 @@ code store::close() NOEXCEPT
     if (!ec) ec = point_body_.unload();
     if (!ec) ec = input_head_.unload();
     if (!ec) ec = input_body_.unload();
+    if (!ec) ec = output_head_.unload();
     if (!ec) ec = output_body_.unload();
+    if (!ec) ec = puts_head_.unload();
     if (!ec) ec = puts_body_.unload();
     if (!ec) ec = tx_head_.unload();
     if (!ec) ec = tx_body_.unload();
@@ -211,7 +231,9 @@ code store::close() NOEXCEPT
     if (!ec) ec = point_body_.close();
     if (!ec) ec = input_head_.close();
     if (!ec) ec = input_body_.close();
+    if (!ec) ec = output_head_.close();
     if (!ec) ec = output_body_.close();
+    if (!ec) ec = puts_head_.close();
     if (!ec) ec = puts_body_.close();
     if (!ec) ec = tx_head_.close();
     if (!ec) ec = tx_body_.close();
@@ -259,12 +281,16 @@ code store::dump() NOEXCEPT
     auto header_buffer = header_head_.get();
     auto point_buffer = point_head_.get();
     auto input_buffer = input_head_.get();
+    auto output_buffer = output_head_.get();
+    auto puts_buffer = puts_head_.get();
     auto tx_buffer = tx_head_.get();
     auto txs_buffer = txs_head_.get();
 
     if (!header_buffer ||
         !point_buffer ||
         !input_buffer ||
+        !output_buffer ||
+        !puts_buffer ||
         !tx_buffer ||
         !txs_buffer)
         return error::unloaded_file;
@@ -279,6 +305,14 @@ code store::dump() NOEXCEPT
 
     if (!file::dump(back(configuration_.dir, schema::archive::input),
         input_buffer->begin(), input_buffer->size()))
+        return error::dump_file;
+
+    if (!file::dump(back(configuration_.dir, schema::archive::output),
+        output_buffer->begin(), output_buffer->size()))
+        return error::dump_file;
+
+    if (!file::dump(back(configuration_.dir, schema::archive::puts),
+        puts_buffer->begin(), puts_buffer->size()))
         return error::dump_file;
 
     if (!file::dump(back(configuration_.dir, schema::archive::tx),

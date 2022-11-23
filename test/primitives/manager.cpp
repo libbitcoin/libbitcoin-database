@@ -66,20 +66,21 @@ BOOST_AUTO_TEST_CASE(manager__truncate__overflow_slab__false_unchanged)
     BOOST_REQUIRE_EQUAL(instance.count(), size);
 }
 
-BOOST_AUTO_TEST_CASE(manager__truncate__half_full_slab__true_changed)
-{
-    constexpr auto size = 42u;
-    constexpr auto half = to_half(size);
-    data_chunk buffer(size, 0xff);
-    test::storage file(buffer);
-    manager<linkage<4>, key1, max_size_t> instance(file);
-    BOOST_REQUIRE(instance.truncate(half));
-    BOOST_REQUIRE_EQUAL(instance.count(), half);
-
-    // Can "truncate" to capacity limit.
-    BOOST_REQUIRE(instance.truncate(size));
-    BOOST_REQUIRE_EQUAL(instance.count(), size);
-}
+// Truncate is no longer capacty based.
+////BOOST_AUTO_TEST_CASE(manager__truncate__half_full_slab__true_changed)
+////{
+////    constexpr auto size = 42u;
+////    constexpr auto half = to_half(size);
+////    data_chunk buffer(size, 0xff);
+////    test::storage file(buffer);
+////    manager<linkage<4>, key1, max_size_t> instance(file);
+////    BOOST_REQUIRE(instance.truncate(half));
+////    BOOST_REQUIRE_EQUAL(instance.count(), half);
+////
+////    // Can "truncate" to capacity limit.
+////    BOOST_REQUIRE(instance.truncate(size));
+////    BOOST_REQUIRE_EQUAL(instance.count(), size);
+////}
 
 BOOST_AUTO_TEST_CASE(manager__allocate__eof_slab__terminal_unchanged)
 {
@@ -199,19 +200,20 @@ BOOST_AUTO_TEST_CASE(manager__truncate__overflow_record__false_unchanged)
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(manager__truncate__half_full_record__true_changed)
-{
-    data_chunk buffer(14, 0xff);
-    test::storage file(buffer);
-    manager<linkage<2>, key0, 5u> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
-    BOOST_REQUIRE(instance.truncate(1));
-    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
-
-    // Can "truncate" to capacity limit.
-    BOOST_REQUIRE(instance.truncate(2));
-    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
-}
+// Truncate is no longer capacty based.
+////BOOST_AUTO_TEST_CASE(manager__truncate__half_full_record__true_changed)
+////{
+////    data_chunk buffer(14, 0xff);
+////    test::storage file(buffer);
+////    manager<linkage<2>, key0, 5u> instance(file);
+////    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+////    BOOST_REQUIRE(instance.truncate(1));
+////    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+////
+////    // Can "truncate" to capacity limit.
+////    BOOST_REQUIRE(instance.truncate(2));
+////    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+////}
 
 BOOST_AUTO_TEST_CASE(manager__allocate__terminal_empty_record__terminal_unchanged)
 {
