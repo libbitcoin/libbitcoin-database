@@ -110,9 +110,13 @@ public:
     ////table::validated_tx validated_tx;
 
 protected:
+    /// Open/close.
+    code open_load() NOEXCEPT;
+    code unload_close() NOEXCEPT;
+
     /// Backup/restore all indexes.
     code backup() NOEXCEPT;
-    code dump() NOEXCEPT;
+    code dump(const std::filesystem::path& folder) NOEXCEPT;
     code restore() NOEXCEPT;
 
     // These are thread safe.
@@ -150,29 +154,6 @@ protected:
     flush_lock flush_lock_;
     interprocess_lock process_lock_;
     boost::upgrade_mutex transactor_mutex_;
-
-private:
-    using path = std::filesystem::path;
-
-    static path index(const path& folder, const std::string& name) NOEXCEPT
-    {
-        return folder / schema::dir::indexes / (name + schema::ext::index);
-    }
-
-    static path back(const path& folder, const std::string& name) NOEXCEPT
-    {
-        return folder / schema::dir::primary / (name + schema::ext::index);
-    }
-
-    static path body(const path& folder, const std::string& name) NOEXCEPT
-    {
-        return folder / (name + schema::ext::data);
-    }
-
-    static path lock(const path& folder, const std::string& name) NOEXCEPT
-    {
-        return folder / (name + schema::ext::lock);
-    }
 };
 
 } // namespace database

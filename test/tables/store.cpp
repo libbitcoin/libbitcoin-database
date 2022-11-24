@@ -52,9 +52,9 @@ public:
         return store::backup();
     }
 
-    code dump_() NOEXCEPT
+    code dump_(const std::filesystem::path& folder) NOEXCEPT
     {
-        return store::dump();
+        return store::dump(folder);
     }
 
     code restore_() NOEXCEPT
@@ -143,7 +143,38 @@ public:
     }
 };
 
-// publics
+// construct
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(store__construct__default_configuration__referenced)
+{
+    const settings configuration{};
+    access instance{ configuration };
+    BOOST_REQUIRE_EQUAL(&instance.configuration(), &configuration);
+}
+
+BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)
+{
+    const settings configuration{};
+    access instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.header_head_file(), "bitcoin/index/archive_header.idx");
+    BOOST_REQUIRE_EQUAL(instance.header_body_file(), "bitcoin/archive_header.dat");
+    BOOST_REQUIRE_EQUAL(instance.point_head_file(), "bitcoin/index/archive_point.idx");
+    BOOST_REQUIRE_EQUAL(instance.point_body_file(), "bitcoin/archive_point.dat");
+    BOOST_REQUIRE_EQUAL(instance.input_head_file(), "bitcoin/index/archive_input.idx");
+    BOOST_REQUIRE_EQUAL(instance.input_body_file(), "bitcoin/archive_input.dat");
+    BOOST_REQUIRE_EQUAL(instance.output_body_file(), "bitcoin/archive_output.dat");
+    BOOST_REQUIRE_EQUAL(instance.puts_body_file(), "bitcoin/archive_puts.dat");
+    BOOST_REQUIRE_EQUAL(instance.tx_head_file(), "bitcoin/index/archive_tx.idx");
+    BOOST_REQUIRE_EQUAL(instance.tx_body_file(), "bitcoin/archive_tx.dat");
+    BOOST_REQUIRE_EQUAL(instance.txs_head_file(), "bitcoin/index/archive_txs.idx");
+    BOOST_REQUIRE_EQUAL(instance.txs_body_file(), "bitcoin/archive_txs.dat");
+    BOOST_REQUIRE_EQUAL(instance.flush_lock_file(), "bitcoin/flush.lock");
+    BOOST_REQUIRE_EQUAL(instance.process_lock_file(), "bitcoin/process.lock");
+}
+
+// create
+// ----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(store__create__transactor_locked__transactor_lock)
 {
@@ -204,7 +235,7 @@ BOOST_AUTO_TEST_CASE(store__create__default__success)
     BOOST_REQUIRE_EQUAL(instance.create(), error::success);
 }
 
-// create is index-destructive
+// create is index-destructive (by directory)
 BOOST_AUTO_TEST_CASE(store__create__existing_index__success)
 {
     settings configuration{};
@@ -215,7 +246,7 @@ BOOST_AUTO_TEST_CASE(store__create__existing_index__success)
     BOOST_REQUIRE_EQUAL(instance.create(), error::success);
 }
 
-// create is not body-destructive
+// create is body-destructive (by file)
 BOOST_AUTO_TEST_CASE(store__create__existing_body__success)
 {
     settings configuration{};
@@ -224,6 +255,9 @@ BOOST_AUTO_TEST_CASE(store__create__existing_body__success)
     BOOST_REQUIRE(test::create(instance.header_body_file()));
     BOOST_REQUIRE_EQUAL(instance.create(), error::success);
 }
+
+// open
+// ----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(store__open__uncreated__open_failure)
 {
@@ -243,6 +277,9 @@ BOOST_AUTO_TEST_CASE(store__open__created__success)
     BOOST_REQUIRE_EQUAL(instance.open(), error::success);
     instance.close();
 }
+
+// snapshot
+// ----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(store__snapshot__uncreated__flush_unloaded)
 {
@@ -271,6 +308,9 @@ BOOST_AUTO_TEST_CASE(store__snapshot__opened__success)
     BOOST_REQUIRE_EQUAL(instance.snapshot(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
 }
+
+// close
+// ----------------------------------------------------------------------------
 
 // flush_unlock is not idempotent
 BOOST_AUTO_TEST_CASE(store__close__uncreated__flush_unlock)
@@ -301,6 +341,9 @@ BOOST_AUTO_TEST_CASE(store__close__opened__success)
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
 }
 
+// get_transactor
+// ----------------------------------------------------------------------------
+
 BOOST_AUTO_TEST_CASE(store__get_transactor__always__share_locked)
 {
     const settings configuration{};
@@ -315,50 +358,26 @@ BOOST_AUTO_TEST_CASE(store__get_transactor__always__share_locked)
 
 BOOST_AUTO_TEST_CASE(store__backup__unloaded__backup_table)
 {
-    const settings configuration{};
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
     access instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.backup_(), error::backup_table);
 }
 
 BOOST_AUTO_TEST_CASE(store__dump__unloaded__unloaded_file)
 {
-    const settings configuration{};
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
     access instance{ configuration };
-    BOOST_REQUIRE_EQUAL(instance.dump_(), error::unloaded_file);
+    BOOST_REQUIRE_EQUAL(instance.dump_(TEST_PATH), error::unloaded_file);
 }
 
 BOOST_AUTO_TEST_CASE(store__restore__missing_backup__expected_error)
 {
-    const settings configuration{};
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
     access instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.restore_(), error::missing_backup);
-}
-
-BOOST_AUTO_TEST_CASE(store__construct__default_configuration__referenced)
-{
-    const settings configuration{};
-    access instance{ configuration };
-    BOOST_REQUIRE_EQUAL(&instance.configuration(), &configuration);
-}
-
-BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)
-{
-    const settings configuration{};
-    access instance{ configuration };
-    BOOST_REQUIRE_EQUAL(instance.header_head_file(), "bitcoin/index/archive_header.idx");
-    BOOST_REQUIRE_EQUAL(instance.header_body_file(), "bitcoin/archive_header.dat");
-    BOOST_REQUIRE_EQUAL(instance.point_head_file(), "bitcoin/index/archive_point.idx");
-    BOOST_REQUIRE_EQUAL(instance.point_body_file(), "bitcoin/archive_point.dat");
-    BOOST_REQUIRE_EQUAL(instance.input_head_file(), "bitcoin/index/archive_input.idx");
-    BOOST_REQUIRE_EQUAL(instance.input_body_file(), "bitcoin/archive_input.dat");
-    BOOST_REQUIRE_EQUAL(instance.output_body_file(), "bitcoin/archive_output.dat");
-    BOOST_REQUIRE_EQUAL(instance.puts_body_file(), "bitcoin/archive_puts.dat");
-    BOOST_REQUIRE_EQUAL(instance.tx_head_file(), "bitcoin/index/archive_tx.idx");
-    BOOST_REQUIRE_EQUAL(instance.tx_body_file(), "bitcoin/archive_tx.dat");
-    BOOST_REQUIRE_EQUAL(instance.txs_head_file(), "bitcoin/index/archive_txs.idx");
-    BOOST_REQUIRE_EQUAL(instance.txs_body_file(), "bitcoin/archive_txs.dat");
-    BOOST_REQUIRE_EQUAL(instance.flush_lock_file(), "bitcoin/flush.lock");
-    BOOST_REQUIRE_EQUAL(instance.process_lock_file(), "bitcoin/process.lock");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
