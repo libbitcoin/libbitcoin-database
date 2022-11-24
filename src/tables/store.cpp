@@ -19,6 +19,7 @@
 #include <bitcoin/database/tables/store.hpp>
 
 #include <bitcoin/system.hpp>
+#include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/tables/schema.hpp>
@@ -49,38 +50,31 @@ store::store(const settings& config) NOEXCEPT
   : configuration_(config),
 
     header_head_(index(config.dir / schema::dir::indexes, schema::archive::header)),
-    header_body_(body(config.dir, schema::archive::header),
-        config.header_size, config.header_rate),
+    header_body_(body(config.dir, schema::archive::header), config.header_size, config.header_rate),
     header(header_head_, header_body_, config.header_buckets),
 
     point_head_(index(config.dir / schema::dir::indexes, schema::archive::point)),
-    point_body_(body(config.dir, schema::archive::point),
-        config.point_size, config.point_rate),
+    point_body_(body(config.dir, schema::archive::point), config.point_size, config.point_rate),
     point(point_head_, point_body_, config.point_buckets),
 
     input_head_(index(config.dir / schema::dir::indexes, schema::archive::input)),
-    input_body_(body(config.dir, schema::archive::input),
-        config.input_size, config.input_rate),
+    input_body_(body(config.dir, schema::archive::input), config.input_size, config.input_rate),
     input(input_head_, input_body_, config.input_buckets),
 
     output_head_(index(config.dir / schema::dir::indexes, schema::archive::output)),
-    output_body_(body(config.dir, schema::archive::output),
-        config.output_size, config.output_rate),
+    output_body_(body(config.dir, schema::archive::output), config.output_size, config.output_rate),
     output(output_head_, output_body_),
 
     puts_head_(index(config.dir / schema::dir::indexes, schema::archive::puts)),
-    puts_body_(body(config.dir, schema::archive::puts),
-        config.puts_size, config.puts_rate),
+    puts_body_(body(config.dir, schema::archive::puts), config.puts_size, config.puts_rate),
     puts(puts_head_, puts_body_),
 
     tx_head_(index(config.dir / schema::dir::indexes, schema::archive::tx)),
-    tx_body_(body(config.dir, schema::archive::tx),
-        config.tx_size, config.tx_rate),
+    tx_body_(body(config.dir, schema::archive::tx), config.tx_size, config.tx_rate),
     tx(tx_head_, tx_body_, config.tx_buckets),
 
     txs_head_(index(config.dir / schema::dir::indexes, schema::archive::txs)),
-    txs_body_(body(config.dir, schema::archive::txs),
-        config.txs_size, config.txs_rate),
+    txs_body_(body(config.dir, schema::archive::txs), config.txs_size, config.txs_rate),
     txs(txs_head_, txs_body_, config.txs_buckets),
 
     flush_lock_(lock(config.dir, schema::lock::flush)),

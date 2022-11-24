@@ -30,6 +30,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <bitcoin/system.hpp>
+#include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/error.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
