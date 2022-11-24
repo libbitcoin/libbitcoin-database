@@ -30,7 +30,7 @@ class BCD_API settings
 {
 public:
     settings() NOEXCEPT;
-    settings(system::chain::selection context) NOEXCEPT;
+    ////settings(system::chain::selection context) NOEXCEPT;
 
     /// Properties.
     std::filesystem::path dir;

@@ -158,7 +158,6 @@ BOOST_AUTO_TEST_CASE(map__properties__load_unload__expected)
     BOOST_REQUIRE(test::exists(file));
 }
 
-
 BOOST_AUTO_TEST_CASE(map__load__unloaded__true)
 {
     const std::string file = TEST_PATH;
@@ -166,6 +165,21 @@ BOOST_AUTO_TEST_CASE(map__load__unloaded__true)
     map instance(file);
     BOOST_REQUIRE_EQUAL(instance.open(), error::success);
     BOOST_REQUIRE_EQUAL(instance.load(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(map__load__shared__false)
+{
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+    map instance(file);
+    BOOST_REQUIRE_EQUAL(instance.open(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.load(), error::success);
+    auto memory = instance.get(instance.allocate(1));
+    BOOST_REQUIRE(memory);
+    BOOST_REQUIRE_EQUAL(instance.load(), error::load_locked);
+    memory.reset();
     BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
 }
