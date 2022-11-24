@@ -43,7 +43,7 @@ bool CLASS::truncate(const Link& count) NOEXCEPT
     if (count.is_terminal())
         return false;
 
-    return file_.resize(link_to_position(count));
+    return file_.truncate(link_to_position(count));
 }
 
 TEMPLATE
@@ -85,17 +85,23 @@ constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
     using namespace system;
     const auto value = possible_narrow_cast<size_t>(link.value);
 
-    // Manager keys off of max Size...
     if constexpr (is_slab)
     {
+        // Slab implies link/key incorporated into size.
         return value;
     }
-    else
+    else if constexpr (!is_zero(array_count<Key>))
     {
-        // ...so must add Link + Key to Size.
+        // Record implies link/key independent of Size.
         constexpr auto element_size = Link::size + array_count<Key> + Size;
         BC_ASSERT(!is_multiply_overflow(value, element_size));
         return value * element_size;
+    }
+    else
+    {
+        // No key implies no linked list.
+        BC_ASSERT(!is_multiply_overflow(value, Size));
+        return value * Size;
     }
 }
 
@@ -105,16 +111,22 @@ constexpr Link CLASS::position_to_link(size_t position) NOEXCEPT
     using namespace system;
     using integer = typename Link::integer;
 
-    // Manager keys off of max Size...
     if constexpr (is_slab)
     {
+        // Slab implies link/key incorporated into size.
         return { possible_narrow_cast<integer>(position) };
+    }
+    else if constexpr (!is_zero(array_count<Key>))
+    {
+        // Record implies link/key independent of Size.
+        constexpr auto element_size = Link::size + array_count<Key> + Size;
+        return { possible_narrow_cast<integer>(position / element_size) };
     }
     else
     {
-        // ...so must add Link + Key to Size.
-        constexpr auto element_size = Link::size + array_count<Key> + Size;
-        return { possible_narrow_cast<integer>(position / element_size) };
+        // No key implies no linked list.
+        static_assert(!is_zero(Size));
+        return { possible_narrow_cast<integer>(position / Size) };
     }
 }
 

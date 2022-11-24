@@ -158,7 +158,6 @@ BOOST_AUTO_TEST_CASE(map__properties__load_unload__expected)
     BOOST_REQUIRE(test::exists(file));
 }
 
-
 BOOST_AUTO_TEST_CASE(map__load__unloaded__true)
 {
     const std::string file = TEST_PATH;
@@ -166,6 +165,21 @@ BOOST_AUTO_TEST_CASE(map__load__unloaded__true)
     map instance(file);
     BOOST_REQUIRE_EQUAL(instance.open(), error::success);
     BOOST_REQUIRE_EQUAL(instance.load(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(map__load__shared__false)
+{
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+    map instance(file);
+    BOOST_REQUIRE_EQUAL(instance.open(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.load(), error::success);
+    auto memory = instance.get(instance.allocate(1));
+    BOOST_REQUIRE(memory);
+    BOOST_REQUIRE_EQUAL(instance.load(), error::load_locked);
+    memory.reset();
     BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
 }
@@ -218,32 +232,33 @@ BOOST_AUTO_TEST_CASE(map__capacity__default__expected)
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(map__resize__unloaded__false)
+BOOST_AUTO_TEST_CASE(map__truncate__unloaded__false)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     map instance(file);
     BOOST_REQUIRE_EQUAL(instance.open(), error::success);
-    BOOST_REQUIRE(!instance.resize(42));
+    BOOST_REQUIRE(!instance.truncate(42));
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(map__resize__loaded__expected)
-{
-    constexpr auto size = 42u;
-    const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
-    map instance(file, 1, 50);
-    BOOST_REQUIRE_EQUAL(instance.open(), error::success);
-    BOOST_REQUIRE_EQUAL(instance.load(), error::success);
-    BOOST_REQUIRE_EQUAL(instance.allocate(size), zero);
-    constexpr auto capacity = size + to_half(size);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
-    BOOST_REQUIRE(instance.resize(to_half(size)));
-    BOOST_REQUIRE_EQUAL(instance.size(), to_half(size));
-    BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
-    BOOST_REQUIRE_EQUAL(instance.close(), error::success);
-}
+// Truncate is no longer capacty based.
+////BOOST_AUTO_TEST_CASE(map__truncate__loaded__expected)
+////{
+////    constexpr auto size = 42u;
+////    const std::string file = TEST_PATH;
+////    BOOST_REQUIRE(test::create(file));
+////    map instance(file, 1, 50);
+////    BOOST_REQUIRE_EQUAL(instance.open(), error::success);
+////    BOOST_REQUIRE_EQUAL(instance.load(), error::success);
+////    BOOST_REQUIRE_EQUAL(instance.allocate(size), zero);
+////    constexpr auto capacity = size + to_half(size);
+////    BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
+////    BOOST_REQUIRE(instance.truncate(to_half(size)));
+////    BOOST_REQUIRE_EQUAL(instance.size(), to_half(size));
+////    BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
+////    BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+////}
 
 BOOST_AUTO_TEST_CASE(map__allocate__unloaded__false)
 {

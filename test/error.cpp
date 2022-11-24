@@ -24,8 +24,6 @@ BOOST_AUTO_TEST_SUITE(error_tests)
 // error_t
 // These test std::error_code equality operator overrides.
 
-// memory map
-
 BOOST_AUTO_TEST_CASE(error_t__code__success__false_exected_message)
 {
     constexpr auto value = error::success;
@@ -143,8 +141,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__unload_failure__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "file failed to unload");
 }
 
-// store
-
 BOOST_AUTO_TEST_CASE(error_t__code__transactor_lock__true_exected_message)
 {
     constexpr auto value = error::transactor_lock;
@@ -260,6 +256,51 @@ BOOST_AUTO_TEST_CASE(error_t__code__dump_file__true_exected_message)
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "file failed to dump");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__create_table__true_exected_message)
+{
+    constexpr auto value = error::create_table;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "failed to create table");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__close_table__true_exected_message)
+{
+    constexpr auto value = error::close_table;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "failed to close table");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__backup_table__true_exected_message)
+{
+    constexpr auto value = error::backup_table;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "failed to backup table");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__restore_table__true_exected_message)
+{
+    constexpr auto value = error::restore_table;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "failed to restore table");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__verify_table__true_exected_message)
+{
+    constexpr auto value = error::verify_table;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "failed to verify table");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

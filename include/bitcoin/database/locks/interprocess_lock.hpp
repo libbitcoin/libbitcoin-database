@@ -29,6 +29,7 @@ namespace libbitcoin {
 namespace database {
 
 /// This class is not thread safe, and does not throw.
+/// The lock is process-exclusive in linux/macOS, globally in win32.
 class BCD_API interprocess_lock final
   : public file_lock
 {

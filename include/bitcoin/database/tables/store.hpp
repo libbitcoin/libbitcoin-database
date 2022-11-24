@@ -67,15 +67,17 @@ public:
     /// Construct a store from settings.
     store(const settings& config) NOEXCEPT;
 
-    /// Clear store directory and the set of empty files.
+    /// Create the set of empty files (from unloaded).
     code create() NOEXCEPT;
 
     /// Open and load the set of tables, set locks.
     code open() NOEXCEPT;
 
-    /// Snapshot the set of tables.
-    /// Pause writes, set body sizes, flush files, copy headers, swap backups.
+    /// Snapshot the set of tables (from loaded).
     code snapshot() NOEXCEPT;
+
+    /// Restore the most recent snapshot (from unloaded).
+    code restore() NOEXCEPT;
 
     /// Unload and close the set of tables, clear locks.
     code close() NOEXCEPT;
@@ -110,10 +112,10 @@ public:
     ////table::validated_tx validated_tx;
 
 protected:
-    /// Backup/restore all indexes.
+    code open_load() NOEXCEPT;
+    code unload_close() NOEXCEPT;
     code backup() NOEXCEPT;
-    code dump() NOEXCEPT;
-    code restore() NOEXCEPT;
+    code dump(const std::filesystem::path& folder) NOEXCEPT;
 
     // These are thread safe.
     const settings& configuration_;
@@ -131,9 +133,11 @@ protected:
     map input_body_;
 
     // blob
+    map output_head_;
     map output_body_;
 
     // array
+    map puts_head_;
     map puts_body_;
 
     // record hashmap
@@ -148,29 +152,6 @@ protected:
     flush_lock flush_lock_;
     interprocess_lock process_lock_;
     boost::upgrade_mutex transactor_mutex_;
-
-private:
-    using path = std::filesystem::path;
-
-    static path index(const path& folder, const std::string& name) NOEXCEPT
-    {
-        return folder / schema::dir::indexes / (name + schema::ext::index);
-    }
-
-    static path back(const path& folder, const std::string& name) NOEXCEPT
-    {
-        return folder / schema::dir::primary / (name + schema::ext::index);
-    }
-
-    static path body(const path& folder, const std::string& name) NOEXCEPT
-    {
-        return folder / (name + schema::ext::data);
-    }
-
-    static path lock(const path& folder, const std::string& name) NOEXCEPT
-    {
-        return folder / (name + schema::ext::lock);
-    }
 };
 
 } // namespace database

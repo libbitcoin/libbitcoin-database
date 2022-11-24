@@ -23,10 +23,12 @@ BOOST_AUTO_TEST_SUITE(output_tests)
 
 using namespace system;
 
-#define DECLARE(instance_, file_) \
-data_chunk file_; \
-test::storage store{ file_ }; \
-table::output instance_{ store }
+#define DECLARE(instance_, body_file_) \
+data_chunk head_file; \
+data_chunk body_file_; \
+test::storage head_store{ head_file }; \
+test::storage body_store{ body_file_ }; \
+table::output instance_{ head_store, body_store }
 
 const table::output::slab expected
 {
@@ -56,10 +58,10 @@ const data_chunk expected_file
 
 BOOST_AUTO_TEST_CASE(output__put__get__expected)
 {
-    DECLARE(instance, file);
+    DECLARE(instance, body_file);
     BOOST_REQUIRE(instance.put(table::output::slab{}));
     BOOST_REQUIRE(instance.put(expected));
-    BOOST_REQUIRE_EQUAL(file, expected_file);
+    BOOST_REQUIRE_EQUAL(body_file, expected_file);
 
     table::output::slab element{};
     BOOST_REQUIRE(instance.get<table::output::slab>(0, element));

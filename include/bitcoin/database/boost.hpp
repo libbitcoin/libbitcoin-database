@@ -23,6 +23,7 @@
     #include <windows.h>
 #endif
 #include <filesystem>
+#include <boost/chrono.hpp>
 #include <boost/interprocess/detail/os_file_functions.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>

@@ -26,9 +26,48 @@ namespace libbitcoin {
 namespace database {
     
 TEMPLATE
-CLASS::arraymap(storage& body) NOEXCEPT
-  : body_(body)
+CLASS::arraymap(storage& header, storage& body) NOEXCEPT
+  : header_(header, 0), manager_(body)
 {
+}
+
+// not thread safe
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+bool CLASS::create() NOEXCEPT
+{
+    Link count{};
+    return header_.create() &&
+        header_.get_body_count(count) && manager_.truncate(count);
+}
+
+TEMPLATE
+bool CLASS::close() NOEXCEPT
+{
+    return header_.set_body_count(manager_.count());
+}
+
+TEMPLATE
+bool CLASS::backup() NOEXCEPT
+{
+    return header_.set_body_count(manager_.count());
+}
+
+TEMPLATE
+bool CLASS::restore() NOEXCEPT
+{
+    Link count{};
+    return header_.verify() &&
+        header_.get_body_count(count) && manager_.truncate(count);
+}
+
+TEMPLATE
+bool CLASS::verify() const NOEXCEPT
+{
+    Link count{};
+    return header_.verify() &&
+        header_.get_body_count(count) && count == manager_.count();
 }
 
 // query interface
@@ -56,15 +95,13 @@ bool CLASS::put(const Element& element) NOEXCEPT
 TEMPLATE
 reader_ptr CLASS::getter(const Link& link) const NOEXCEPT
 {
-    if (link.is_terminal())
-        return {};
-
-    const auto ptr = body_.get(link_to_position(link));
+    const auto ptr = manager_.get(link);
     if (!ptr)
         return {};
 
-    // Limits to single record or eof for slab (caller can remove limit).
     const auto source = std::make_shared<reader>(ptr);
+
+    // Limits to single record or eof for slab (caller can remove limit).
     if constexpr (!is_slab) { source->set_limit(Size); }
     return source;
 }
@@ -72,34 +109,15 @@ reader_ptr CLASS::getter(const Link& link) const NOEXCEPT
 TEMPLATE
 writer_ptr CLASS::creater(const Link& size) NOEXCEPT
 {
-    const auto link = body_.allocate(link_to_position(size));
-    if (link == storage::eof)
-        return {};
-
-    const auto ptr = body_.get(link);
+    const auto ptr = manager_.get(manager_.allocate(size));
     if (!ptr)
         return {};
 
-    // Limits to created records size or slab size (caller can remove limit).
-    const auto limit = system::possible_narrow_cast<size_t>(
-        link_to_position(size.value));
-
     const auto sink = std::make_shared<writer>(ptr);
-    sink->set_limit(limit);
+
+    // Limits to single record or eof for slab (caller can remove limit).
+    if constexpr (!is_slab) { sink->set_limit(Size); }
     return sink;
-}
-
-// private
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
-{
-    const auto value = system::possible_narrow_cast<size_t>(link.value);
-    BC_ASSERT(is_slab || !system::is_multiply_overflow(value, Size));
-
-    if constexpr (is_slab) { return value; }
-    if constexpr (!is_slab) { return value * Size; }
 }
 
 } // namespace database

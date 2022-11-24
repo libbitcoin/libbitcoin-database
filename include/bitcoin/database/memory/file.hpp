@@ -30,18 +30,26 @@ namespace file {
 constexpr auto invalid = -1;
 using path = std::filesystem::path;
 
-/// Basic file system utilities, not thread safe.
+/// Directory.
 BCD_API bool clear(const path& directory) NOEXCEPT;
+BCD_API bool is_directory(const path& filename) NOEXCEPT;
+
+/// File.
 BCD_API bool create(const path& filename) NOEXCEPT;
 BCD_API bool dump(const path& to, const uint8_t* data, size_t size) NOEXCEPT;
-BCD_API bool exists(const path& filename) NOEXCEPT;
-BCD_API bool remove(const path& filename) NOEXCEPT;
+BCD_API bool is_file(const path& filename) NOEXCEPT;
+
+/// Directory or file.
+BCD_API bool remove(const path& name) NOEXCEPT;
 BCD_API bool rename(const path& from, const path& to) NOEXCEPT;
+
+/// File descriptor functions (for memory mapping).
 BCD_API int open(const path& filename) NOEXCEPT;
 BCD_API bool close(int file_descriptor) NOEXCEPT;
 BCD_API size_t size(int file_descriptor) NOEXCEPT;
-BCD_API size_t page() NOEXCEPT;
 
+/// System page size.
+BCD_API size_t page() NOEXCEPT;
 
 } // namespace file
 } // namespace database

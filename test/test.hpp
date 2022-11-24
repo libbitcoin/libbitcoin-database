@@ -93,6 +93,7 @@ namespace test {
 extern const std::string directory;
 
 bool clear(const std::filesystem::path& directory) NOEXCEPT;
+bool folder(const std::filesystem::path& directory) NOEXCEPT;
 bool create(const std::filesystem::path& file_path) NOEXCEPT;
 bool exists(const std::filesystem::path& file_path) NOEXCEPT;
 bool remove(const std::filesystem::path& file_path) NOEXCEPT;

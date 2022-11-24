@@ -26,44 +26,46 @@ namespace error {
 
 DEFINE_ERROR_T_MESSAGE_MAP(error)
 {
-    // memory map
-
+    // general
     { success, "success" },
     { unknown, "unknown error" },
 
+    // memory map
     { open_open, "opening open file" },
     { open_failure, "file failed to open" },
-
     { close_loaded, "closing loaded file" },
     { close_failure, "file failed to close" },
-
     { load_locked, "loading locked file" },
     { load_loaded, "loading loaded file" },
     { load_failure, "file failed to load" },
-
     { flush_unloaded, "flushing unloaded file" },
     { flush_failure, "file failed to flush" },
-
     { unload_locked, "unloading unloaded file" },
     { unload_failure, "file failed to unload" },
 
-    // store
-
+    // locks
     { transactor_lock, "transactor lock failure" },
     { process_lock, "process lock failure" },
     { flush_lock, "flush lock failure" },
     { flush_unlock, "flush unlock failure" },
     { process_unlock, "process unlock failure" },
 
+    // filesystem
     { create_directory, "create directory failure" },
     { clear_directory, "clear directory failure" },
     { remove_directory, "remove directory failure" },
     { rename_directory, "rename directory failure" },
     { missing_backup, "missing backup" },
-
     { create_file, "file failed to create" },
     { unloaded_file, "file not loaded" },
-    { dump_file, "file failed to dump" }
+    { dump_file, "file failed to dump" },
+
+    // tables
+    { create_table, "failed to create table" },
+    { close_table, "failed to close table" },
+    { backup_table, "failed to backup table" },
+    { restore_table, "failed to restore table" },
+    { verify_table, "failed to verify table" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "database", "database code")

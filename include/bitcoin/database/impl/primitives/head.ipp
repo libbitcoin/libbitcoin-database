@@ -30,12 +30,13 @@ TEMPLATE
 CLASS::head(storage& head, const Link& buckets) NOEXCEPT
   : file_(head), buckets_(buckets)
 {
-    BC_ASSERT_MSG(!is_zero(buckets), "no buckets");
+    ////BC_ASSERT_MSG(!is_zero(buckets), "no buckets");
 }
 
 TEMPLATE
 Link CLASS::index(const Key& key) const NOEXCEPT
 {
+    // zero buckets precludes calling index/top/push (array only).
     return system::djb2_hash(key) % buckets_;
 }
 
@@ -54,8 +55,9 @@ bool CLASS::create() NOEXCEPT
     if (!ptr)
         return false;
 
+    BC_ASSERT_MSG(verify(), "unexpected body size");
     std::fill_n(ptr->begin(), size, system::bit_all<uint8_t>);
-    return verify() && set_body_count(zero);
+    return set_body_count(zero);
 }
 
 TEMPLATE

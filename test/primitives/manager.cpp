@@ -76,9 +76,12 @@ BOOST_AUTO_TEST_CASE(manager__truncate__half_full_slab__true_changed)
     BOOST_REQUIRE(instance.truncate(half));
     BOOST_REQUIRE_EQUAL(instance.count(), half);
 
-    // Can "truncate" to capacity limit.
-    BOOST_REQUIRE(instance.truncate(size));
-    BOOST_REQUIRE_EQUAL(instance.count(), size);
+    // Can only truncate to logical limit.
+    BOOST_REQUIRE(!instance.truncate(size));
+    BOOST_REQUIRE_EQUAL(instance.count(), half);
+
+    BOOST_REQUIRE(instance.truncate(0));
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 }
 
 BOOST_AUTO_TEST_CASE(manager__allocate__eof_slab__terminal_unchanged)
@@ -124,7 +127,7 @@ BOOST_AUTO_TEST_CASE(manager__get__terminal_slab__terminal)
     constexpr auto size = 14u;
     data_chunk buffer(size, 0xff);
     test::storage file(buffer);
-    manager<linkage<2>, key1, max_size_t> instance(file);
+    const manager<linkage<2>, key1, max_size_t> instance(file);
     BOOST_REQUIRE_EQUAL(instance.count(), size);
     BOOST_REQUIRE(!instance.get(linkage<2>::terminal));
 }
@@ -139,7 +142,7 @@ BOOST_AUTO_TEST_CASE(manager__get__slab__expected)
     };
 
     test::storage file(buffer);
-    manager<linkage<2>, key1, max_size_t> instance(file);
+    const manager<linkage<2>, key1, max_size_t> instance(file);
     BOOST_REQUIRE_EQUAL(instance.count(), size);
     BOOST_REQUIRE_EQUAL(*instance.get(0)->begin(), 0x00_u8);
     BOOST_REQUIRE_EQUAL(*instance.get(1)->begin(), 0x01_u8);
@@ -208,9 +211,12 @@ BOOST_AUTO_TEST_CASE(manager__truncate__half_full_record__true_changed)
     BOOST_REQUIRE(instance.truncate(1));
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
 
-    // Can "truncate" to capacity limit.
-    BOOST_REQUIRE(instance.truncate(2));
-    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+    // Can only truncate to logical limit.
+    BOOST_REQUIRE(!instance.truncate(2));
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+
+    BOOST_REQUIRE(instance.truncate(0));
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 }
 
 BOOST_AUTO_TEST_CASE(manager__allocate__terminal_empty_record__terminal_unchanged)
@@ -259,7 +265,7 @@ BOOST_AUTO_TEST_CASE(manager__get__terminal_record__terminal)
 {
     data_chunk buffer(14, 0xff);
     test::storage file(buffer);
-    manager<linkage<2>, key0, 5u> instance(file);
+    const manager<linkage<2>, key0, 5u> instance(file);
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
     BOOST_REQUIRE(!instance.get(linkage<2>::terminal));
 }
@@ -273,10 +279,10 @@ BOOST_AUTO_TEST_CASE(manager__get__record__expected)
     };
 
     test::storage file(buffer);
-    manager<linkage<2>, key0, 6u> instance(file);
+    const manager<linkage<2>, key0, 6u> instance(file);
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
     BOOST_REQUIRE_EQUAL(*instance.get(0)->begin(), 0x00_u8);
-    BOOST_REQUIRE_EQUAL(*instance.get(1)->begin(), 0x08_u8);
+    BOOST_REQUIRE_EQUAL(*instance.get(1)->begin(), 0x06_u8);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

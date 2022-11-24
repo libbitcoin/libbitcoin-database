@@ -33,6 +33,7 @@ namespace error {
 
 enum error_t
 {
+    // general
     success,
     unknown,
 
@@ -49,12 +50,14 @@ enum error_t
     unload_locked,
     unload_failure,
 
-    // store
+    // locks
     transactor_lock,
     process_lock,
     flush_lock,
     flush_unlock,
     process_unlock,
+
+    // filesystem
     create_directory,
     clear_directory,
     remove_directory,
@@ -62,7 +65,14 @@ enum error_t
     missing_backup,
     create_file,
     unloaded_file,
-    dump_file
+    dump_file,
+
+    // tables
+    create_table,
+    close_table,
+    backup_table,
+    restore_table,
+    verify_table
 };
 
 // No current need for error_code equivalence mapping.

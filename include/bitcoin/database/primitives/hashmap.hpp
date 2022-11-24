@@ -43,14 +43,14 @@ public:
 
     hashmap(storage& header, storage& body, const Link& buckets) NOEXCEPT;
 
-    /// Create from empty body/head files (not thread safe).
+    /// Setup, not thread safe.
+    /// -----------------------------------------------------------------------
+
     bool create() NOEXCEPT;
-
-    /// False if head or body file size incorrect (not thread safe).
+    bool close() NOEXCEPT;
+    bool backup() NOEXCEPT;
+    bool restore() NOEXCEPT;
     bool verify() const NOEXCEPT;
-
-    /// Set body size into header (not thread safe).
-    bool snap() NOEXCEPT;
 
     /// Query interface, iterator is not thread safe.
     /// -----------------------------------------------------------------------
@@ -97,7 +97,8 @@ private:
     using header = database::head<Link, Key>;
     using manager = database::manager<Link, Key, Size>;
 
-    // hash/head/push thread safe.
+    // Thread safe (index/top/push).
+    // Not thread safe (create/open/close/backup/restore).
     header header_;
 
     // Thread safe.

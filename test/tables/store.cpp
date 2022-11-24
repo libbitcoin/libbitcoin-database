@@ -23,7 +23,7 @@ struct store_setup_fixture
     DELETE4(store_setup_fixture);
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-        store_setup_fixture() NOEXCEPT
+    store_setup_fixture() NOEXCEPT
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
@@ -52,9 +52,9 @@ public:
         return store::backup();
     }
 
-    code dump_() NOEXCEPT
+    code dump_(const std::filesystem::path& folder) NOEXCEPT
     {
-        return store::dump();
+        return store::dump(folder);
     }
 
     code restore_() NOEXCEPT
@@ -143,14 +143,176 @@ public:
     }
 };
 
-// publics
+// construct
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(store__construct__default_configuration__referenced)
+{
+    const settings configuration{};
+    access instance{ configuration };
+    BOOST_REQUIRE_EQUAL(&instance.configuration(), &configuration);
+}
+
+BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)
+{
+    const settings configuration{};
+    access instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.header_head_file(), "bitcoin/index/archive_header.idx");
+    BOOST_REQUIRE_EQUAL(instance.header_body_file(), "bitcoin/archive_header.dat");
+    BOOST_REQUIRE_EQUAL(instance.point_head_file(), "bitcoin/index/archive_point.idx");
+    BOOST_REQUIRE_EQUAL(instance.point_body_file(), "bitcoin/archive_point.dat");
+    BOOST_REQUIRE_EQUAL(instance.input_head_file(), "bitcoin/index/archive_input.idx");
+    BOOST_REQUIRE_EQUAL(instance.input_body_file(), "bitcoin/archive_input.dat");
+    BOOST_REQUIRE_EQUAL(instance.output_body_file(), "bitcoin/archive_output.dat");
+    BOOST_REQUIRE_EQUAL(instance.puts_body_file(), "bitcoin/archive_puts.dat");
+    BOOST_REQUIRE_EQUAL(instance.tx_head_file(), "bitcoin/index/archive_tx.idx");
+    BOOST_REQUIRE_EQUAL(instance.tx_body_file(), "bitcoin/archive_tx.dat");
+    BOOST_REQUIRE_EQUAL(instance.txs_head_file(), "bitcoin/index/archive_txs.idx");
+    BOOST_REQUIRE_EQUAL(instance.txs_body_file(), "bitcoin/archive_txs.dat");
+    BOOST_REQUIRE_EQUAL(instance.flush_lock_file(), "bitcoin/flush.lock");
+    BOOST_REQUIRE_EQUAL(instance.process_lock_file(), "bitcoin/process.lock");
+}
+
+// create
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(store__create__transactor_locked__transactor_lock)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    instance.transactor_mutex().lock();
+    BOOST_REQUIRE_EQUAL(instance.create(), error::transactor_lock);
+}
+
+// The lock is process-exclusive in linux/macOS, globally in win32.
+#if defined(HAVE_MSC)
+BOOST_AUTO_TEST_CASE(store__create__process_locked__success)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    interprocess_lock lock{ instance.process_lock_file() };
+    BOOST_REQUIRE(lock.try_lock());
+    BOOST_REQUIRE_EQUAL(instance.create(), error::process_lock);
+}
+#endif
+
+BOOST_AUTO_TEST_CASE(store__create__flush_locked__flush_lock)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE(test::create(instance.flush_lock_file()));
+    BOOST_REQUIRE_EQUAL(instance.create(), error::flush_lock);
+}
+
+BOOST_AUTO_TEST_CASE(store__create__process_lock_file__success)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE(test::create(instance.process_lock_file()));
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(store__create__default__unlocks)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+    BOOST_REQUIRE(!test::exists(instance.flush_lock_file()));
+    BOOST_REQUIRE(!test::exists(instance.process_lock_file()));
+    BOOST_REQUIRE(instance.transactor_mutex().try_lock());
+}
 
 BOOST_AUTO_TEST_CASE(store__create__default__success)
 {
     settings configuration{};
     configuration.dir = TEST_DIRECTORY;
-    store instance{ configuration };
+    access instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+}
+
+// create is index-destructive (by directory)
+BOOST_AUTO_TEST_CASE(store__create__existing_index__success)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE(test::clear(configuration.dir / schema::dir::indexes));
+    BOOST_REQUIRE(test::create(instance.header_head_file()));
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+}
+
+// create is body-destructive (by file)
+BOOST_AUTO_TEST_CASE(store__create__existing_body__success)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE(test::create(instance.header_body_file()));
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+}
+
+// open
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(store__open__transactor_locked__transactor_lock)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    instance.transactor_mutex().lock();
+    BOOST_REQUIRE_EQUAL(instance.open(), error::transactor_lock);
+}
+
+// The lock is process-exclusive in linux/macOS, globally in win32.
+#if defined(HAVE_MSC)
+BOOST_AUTO_TEST_CASE(store__copen__process_locked__success)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    interprocess_lock lock{ instance.process_lock_file() };
+    BOOST_REQUIRE(lock.try_lock());
+    BOOST_REQUIRE_EQUAL(instance.open(), error::process_lock);
+}
+#endif
+
+BOOST_AUTO_TEST_CASE(store__open__flush_locked__flush_lock)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE(test::create(instance.flush_lock_file()));
+    BOOST_REQUIRE_EQUAL(instance.open(), error::flush_lock);
+}
+
+BOOST_AUTO_TEST_CASE(store__open__process_lock_file__success)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+    BOOST_REQUIRE(test::create(instance.process_lock_file()));
+    BOOST_REQUIRE_EQUAL(instance.open(), error::success);
+    instance.close();
+}
+
+BOOST_AUTO_TEST_CASE(store__open__default__unlocks_transactor_only)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.open(), error::success);
+    BOOST_REQUIRE(test::exists(instance.flush_lock_file()));
+    BOOST_REQUIRE(test::exists(instance.process_lock_file()));
+    BOOST_REQUIRE(instance.transactor_mutex().try_lock());
+    instance.transactor_mutex().unlock();
+    instance.close();
 }
 
 BOOST_AUTO_TEST_CASE(store__open__uncreated__open_failure)
@@ -171,6 +333,9 @@ BOOST_AUTO_TEST_CASE(store__open__created__success)
     BOOST_REQUIRE_EQUAL(instance.open(), error::success);
     instance.close();
 }
+
+// snapshot
+// ----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(store__snapshot__uncreated__flush_unloaded)
 {
@@ -199,6 +364,9 @@ BOOST_AUTO_TEST_CASE(store__snapshot__opened__success)
     BOOST_REQUIRE_EQUAL(instance.snapshot(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
 }
+
+// close
+// ----------------------------------------------------------------------------
 
 // flush_unlock is not idempotent
 BOOST_AUTO_TEST_CASE(store__close__uncreated__flush_unlock)
@@ -229,6 +397,9 @@ BOOST_AUTO_TEST_CASE(store__close__opened__success)
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
 }
 
+// get_transactor
+// ----------------------------------------------------------------------------
+
 BOOST_AUTO_TEST_CASE(store__get_transactor__always__share_locked)
 {
     const settings configuration{};
@@ -239,57 +410,247 @@ BOOST_AUTO_TEST_CASE(store__get_transactor__always__share_locked)
     BOOST_REQUIRE(instance.transactor_mutex().try_lock_shared());
 }
 
-// protecteds
+// backup
+// ----------------------------------------------------------------------------
 
-// This fails tests when placed after backup/dump tests, because
-// file::exists(primary) returns true. This implies that /primary delete is not
-// complete from the preceding tests.
-BOOST_AUTO_TEST_CASE(store__restore__missing_backup__expected_error)
+BOOST_AUTO_TEST_CASE(store__backup__unloaded__backup_table)
 {
-    const settings configuration{};
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.backup_(), error::backup_table);
+}
+
+BOOST_AUTO_TEST_CASE(store__backup__loaded__success)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.open(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.backup_(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(test::folder(configuration.dir / schema::dir::primary));
+    BOOST_REQUIRE(!test::folder(configuration.dir / schema::dir::secondary));
+}
+
+BOOST_AUTO_TEST_CASE(store__backup__primary_loaded__success)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.open(), error::success);
+    BOOST_REQUIRE(test::clear(configuration.dir / schema::dir::primary));
+    BOOST_REQUIRE_EQUAL(instance.backup_(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(test::folder(configuration.dir / schema::dir::primary));
+    BOOST_REQUIRE(test::folder(configuration.dir / schema::dir::secondary));
+}
+
+BOOST_AUTO_TEST_CASE(store__backup__primary_secondary_loaded__success)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.open(), error::success);
+    BOOST_REQUIRE(test::clear(configuration.dir / schema::dir::primary));
+    BOOST_REQUIRE(test::clear(configuration.dir / schema::dir::secondary));
+    BOOST_REQUIRE_EQUAL(instance.backup_(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(test::folder(configuration.dir / schema::dir::primary));
+    BOOST_REQUIRE(test::folder(configuration.dir / schema::dir::secondary));
+}
+
+// dump
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(store__dump__unloaded__unloaded_file)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.dump_(TEST_DIRECTORY), error::unloaded_file);
+}
+
+BOOST_AUTO_TEST_CASE(store__dump__loaded__success)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.open(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.dump_(TEST_DIRECTORY), error::success);
+    BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+}
+
+// restore
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(store__restore__transactor_locked__transactor_lock)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    instance.transactor_mutex().lock();
+    BOOST_REQUIRE_EQUAL(instance.restore(), error::transactor_lock);
+}
+
+// The lock is process-exclusive in linux/macOS, globally in win32.
+#if defined(HAVE_MSC)
+BOOST_AUTO_TEST_CASE(store__restore__process_locked__success)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    interprocess_lock lock{ instance.process_lock_file() };
+    BOOST_REQUIRE(lock.try_lock());
+    BOOST_REQUIRE_EQUAL(instance.restore(), error::process_lock);
+}
+#endif
+
+BOOST_AUTO_TEST_CASE(store__restore__flush_locked__flush_lock)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE(test::create(instance.flush_lock_file()));
+    BOOST_REQUIRE_EQUAL(instance.restore(), error::flush_lock);
+}
+
+BOOST_AUTO_TEST_CASE(store__restore__process_lock_file__missing_backup)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE(test::create(instance.process_lock_file()));
+    BOOST_REQUIRE_EQUAL(instance.restore(), error::missing_backup);
+}
+
+BOOST_AUTO_TEST_CASE(store__restore__failure__unlocks)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE_NE(instance.restore(), error::success);
+    BOOST_REQUIRE(!test::exists(instance.flush_lock_file()));
+    BOOST_REQUIRE(!test::exists(instance.process_lock_file()));
+    BOOST_REQUIRE(instance.transactor_mutex().try_lock());
+}
+
+BOOST_AUTO_TEST_CASE(store__restore__no_backups__missing_backup)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
     access instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.restore_(), error::missing_backup);
 }
 
-BOOST_AUTO_TEST_CASE(store__backup__unloaded__unloaded_file)
+// The lock is process-exclusive in linux/macOS, globally in win32.
+#if defined(HAVE_MSC)
+BOOST_AUTO_TEST_CASE(store__restore__primary_open__clear_directory)
 {
-    const settings configuration{};
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
     access instance{ configuration };
-    BOOST_REQUIRE_EQUAL(instance.backup_(), error::unloaded_file);
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.open(), error::success);
+
+    // Create /primary directory, from which to restore.
+    BOOST_REQUIRE(test::clear(configuration.dir / schema::dir::primary));
+
+    // Hits the process lock from being open.
+    BOOST_REQUIRE_EQUAL(instance.restore_(), error::process_lock);
+
+    ////// Cannot delete /indexes with open files.
+    ////BOOST_REQUIRE_EQUAL(instance.restore_(), error::clear_directory);
+    instance.close();
+}
+#endif
+
+BOOST_AUTO_TEST_CASE(store__restore__primary_closed__restore_table)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+
+    // Create /index, to be purged.
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+
+    // Create /primary, from which to restore.
+    BOOST_REQUIRE(test::clear(configuration.dir / schema::dir::primary));
+
+    // There are no backup index files to open.
+    BOOST_REQUIRE_EQUAL(instance.restore_(), error::restore_table);
+
+    // Rename /primary to /indexes.
+    BOOST_REQUIRE(!test::folder(configuration.dir / schema::dir::primary));
+    BOOST_REQUIRE(test::folder(configuration.dir / schema::dir::indexes));
 }
 
-BOOST_AUTO_TEST_CASE(store__dump__unloaded__unloaded_file)
+BOOST_AUTO_TEST_CASE(store__restore__secondary_closed__restore_table)
 {
-    const settings configuration{};
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
     access instance{ configuration };
-    BOOST_REQUIRE_EQUAL(instance.dump_(), error::unloaded_file);
+
+    // Create /index, to be purged.
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+
+    // Create /secondary, from which to restore.
+    BOOST_REQUIRE(test::clear(configuration.dir / schema::dir::secondary));
+
+    // There are no backup index files to open.
+    BOOST_REQUIRE_EQUAL(instance.restore_(), error::restore_table);
+
+    // No primary, so rename /secondary to /indexes.
+    BOOST_REQUIRE(!test::folder(configuration.dir / schema::dir::secondary));
+    BOOST_REQUIRE(test::folder(configuration.dir / schema::dir::indexes));
 }
 
-BOOST_AUTO_TEST_CASE(store__construct__default_configuration__referenced)
+BOOST_AUTO_TEST_CASE(store__restore__primary_secondary_loaded__restore_table)
 {
-    const settings configuration{};
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
     access instance{ configuration };
-    BOOST_REQUIRE_EQUAL(&instance.configuration(), &configuration);
+
+    // Create /index, to be purged.
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+
+    // Create /primary from which to restore, and /secondary.
+    BOOST_REQUIRE(test::clear(configuration.dir / schema::dir::primary));
+    BOOST_REQUIRE(test::clear(configuration.dir / schema::dir::secondary));
+
+    // There are no backup index files to open.
+    BOOST_REQUIRE_EQUAL(instance.restore_(), error::restore_table);
+
+    // Rename /primary to /indexes.
+    BOOST_REQUIRE(!test::folder(configuration.dir / schema::dir::primary));
+    BOOST_REQUIRE(test::folder(configuration.dir / schema::dir::secondary));
+    BOOST_REQUIRE(test::folder(configuration.dir / schema::dir::indexes));
 }
 
-BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)
+// backup-restore
+// ----------------------------------------------------------------------------
+
+
+BOOST_AUTO_TEST_CASE(store__restore__snapshot__success_unlocks)
 {
-    const settings configuration{};
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
     access instance{ configuration };
-    BOOST_REQUIRE_EQUAL(instance.header_head_file(), "bitcoin/index/archive_header.idx");
-    BOOST_REQUIRE_EQUAL(instance.header_body_file(), "bitcoin/archive_header.dat");
-    BOOST_REQUIRE_EQUAL(instance.point_head_file(), "bitcoin/index/archive_point.idx");
-    BOOST_REQUIRE_EQUAL(instance.point_body_file(), "bitcoin/archive_point.dat");
-    BOOST_REQUIRE_EQUAL(instance.input_head_file(), "bitcoin/index/archive_input.idx");
-    BOOST_REQUIRE_EQUAL(instance.input_body_file(), "bitcoin/archive_input.dat");
-    BOOST_REQUIRE_EQUAL(instance.output_body_file(), "bitcoin/archive_output.dat");
-    BOOST_REQUIRE_EQUAL(instance.puts_body_file(), "bitcoin/archive_puts.dat");
-    BOOST_REQUIRE_EQUAL(instance.tx_head_file(), "bitcoin/index/archive_tx.idx");
-    BOOST_REQUIRE_EQUAL(instance.tx_body_file(), "bitcoin/archive_tx.dat");
-    BOOST_REQUIRE_EQUAL(instance.txs_head_file(), "bitcoin/index/archive_txs.idx");
-    BOOST_REQUIRE_EQUAL(instance.txs_body_file(), "bitcoin/archive_txs.dat");
-    BOOST_REQUIRE_EQUAL(instance.flush_lock_file(), "bitcoin/flush.lock");
-    BOOST_REQUIRE_EQUAL(instance.process_lock_file(), "bitcoin/process.lock");
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.open(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.snapshot(), error::success);
+    BOOST_REQUIRE(test::folder(configuration.dir / schema::dir::primary));
+    BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.restore(), error::success);
+    BOOST_REQUIRE(!test::folder(configuration.dir / schema::dir::primary));
+
+    BOOST_REQUIRE(!test::exists(instance.flush_lock_file()));
+    BOOST_REQUIRE(!test::exists(instance.process_lock_file()));
+    BOOST_REQUIRE(instance.transactor_mutex().try_lock());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
