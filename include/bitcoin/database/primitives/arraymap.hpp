@@ -24,6 +24,7 @@
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/head.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
+#include <bitcoin/database/primitives/manager.hpp>
 
 
 namespace libbitcoin {
@@ -37,14 +38,14 @@ class arraymap
 public:
     arraymap(storage& header, storage& body) NOEXCEPT;
 
-    /// Create from empty body/head files (not thread safe).
+    /// Setup, not thread safe.
+    /// -----------------------------------------------------------------------
+
     bool create() NOEXCEPT;
-
-    /// False if head or body file size incorrect (not thread safe).
+    bool close() NOEXCEPT;
+    bool backup() NOEXCEPT;
+    bool restore() NOEXCEPT;
     bool verify() const NOEXCEPT;
-
-    /// Truncate body to header body size (not thread safe).
-    bool snap() NOEXCEPT;
 
     /// Query interface.
     /// -----------------------------------------------------------------------
@@ -61,14 +62,15 @@ protected:
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);
-    static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
     using header = database::head<Link, system::data_array<zero>>;
+    using manager = database::manager<Link, system::data_array<zero>, Size>;
 
-    // Not thread safe (create/verify/snap).
+    // Unsafe with zero buckets (index/top/push).
+    // Not thread safe (create/open/close/backup/restore).
     header header_;
 
     // Thread safe.
-    storage& body_;
+    manager manager_;
 };
 
 template <typename Element>

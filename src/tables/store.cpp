@@ -109,14 +109,79 @@ code store::create() NOEXCEPT
     else if (!file::create(txs_head_.file())) ec = error::create_file;
     else if (!file::create(txs_body_.file())) ec = error::create_file;
 
-    ////// Populate /index files and truncate body sizes to zero.
-    ////else if (!header.create()) ec = error::create_map;
-    ////else if (!point.create()) ec = error::create_map;
-    ////else if (!input.create()) ec = error::create_map;
-    ////else if (!output.create()) ec = error::create_map;
-    ////else if (!puts.create()) ec = error::create_map;
-    ////else if (!tx.create()) ec = error::create_map;
-    ////else if (!txs.create()) ec = error::create_map;
+    if (!ec) ec = header_head_.open();
+    if (!ec) ec = header_body_.open();
+    if (!ec) ec = point_head_.open();
+    if (!ec) ec = point_body_.open();
+    if (!ec) ec = input_head_.open();
+    if (!ec) ec = input_body_.open();
+    if (!ec) ec = output_head_.open();
+    if (!ec) ec = output_body_.open();
+    if (!ec) ec = puts_head_.open();
+    if (!ec) ec = puts_body_.open();
+    if (!ec) ec = tx_head_.open();
+    if (!ec) ec = tx_body_.open();
+    if (!ec) ec = txs_head_.open();
+    if (!ec) ec = txs_body_.open();
+
+    if (!ec) ec = header_head_.load();
+    if (!ec) ec = header_body_.load();
+    if (!ec) ec = point_head_.load();
+    if (!ec) ec = point_body_.load();
+    if (!ec) ec = input_head_.load();
+    if (!ec) ec = input_body_.load();
+    if (!ec) ec = output_head_.load();
+    if (!ec) ec = output_body_.load();
+    if (!ec) ec = puts_head_.load();
+    if (!ec) ec = puts_body_.load();
+    if (!ec) ec = tx_head_.load();
+    if (!ec) ec = tx_body_.load();
+    if (!ec) ec = txs_head_.load();
+    if (!ec) ec = txs_body_.load();
+
+    if (!ec)
+    {
+        // Populate /index files and truncate body sizes to zero.
+        if (!header.create()) ec = error::create_table;
+        else if (!point.create()) ec = error::create_table;
+        else if (!input.create()) ec = error::create_table;
+        else if (!output.create()) ec = error::create_table;
+        else if (!puts.create()) ec = error::create_table;
+        else if (!tx.create()) ec = error::create_table;
+        else if (!txs.create()) ec = error::create_table;
+    }
+
+    // TODO: no shortcircuit on unload?
+    if (!ec) ec = header_head_.unload();
+    if (!ec) ec = header_body_.unload();
+    if (!ec) ec = point_head_.unload();
+    if (!ec) ec = point_body_.unload();
+    if (!ec) ec = input_head_.unload();
+    if (!ec) ec = input_body_.unload();
+    if (!ec) ec = output_head_.unload();
+    if (!ec) ec = output_body_.unload();
+    if (!ec) ec = puts_head_.unload();
+    if (!ec) ec = puts_body_.unload();
+    if (!ec) ec = tx_head_.unload();
+    if (!ec) ec = tx_body_.unload();
+    if (!ec) ec = txs_head_.unload();
+    if (!ec) ec = txs_body_.unload();
+
+    // TODO: no shortcircuit on close?
+    if (!ec) ec = header_head_.close();
+    if (!ec) ec = header_body_.close();
+    if (!ec) ec = point_head_.close();
+    if (!ec) ec = point_body_.close();
+    if (!ec) ec = input_head_.close();
+    if (!ec) ec = input_body_.close();
+    if (!ec) ec = output_head_.close();
+    if (!ec) ec = output_body_.close();
+    if (!ec) ec = puts_head_.close();
+    if (!ec) ec = puts_body_.close();
+    if (!ec) ec = tx_head_.close();
+    if (!ec) ec = tx_body_.close();
+    if (!ec) ec = txs_head_.close();
+    if (!ec) ec = txs_body_.close();
 
     if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
     if (!process_lock_.try_unlock()) ec = error::process_unlock;
@@ -176,6 +241,17 @@ code store::open() NOEXCEPT
     if (!ec) ec = txs_head_.load();
     if (!ec) ec = txs_body_.load();
 
+    if (!ec)
+    {
+        if (!header.verify()) ec = error::verify_table;
+        else if (!point.verify()) ec = error::verify_table;
+        else if (!input.verify()) ec = error::verify_table;
+        else if (!output.verify()) ec = error::verify_table;
+        else if (!puts.verify()) ec = error::verify_table;
+        else if (!tx.verify()) ec = error::verify_table;
+        else if (!txs.verify()) ec = error::verify_table;
+    }
+
     // process and flush locks remain open until close().
     transactor_mutex_.unlock();
     if (ec) /* code */ close();
@@ -191,6 +267,7 @@ code store::snapshot() NOEXCEPT
 
     code ec{ error::success };
 
+    // Assumes/requires tables open/loaded.
     if (!ec) ec = header_body_.flush();
     if (!ec) ec = point_body_.flush();
     if (!ec) ec = input_body_.flush();
@@ -210,6 +287,18 @@ code store::close() NOEXCEPT
 
     code ec{ error::success };
 
+    if (!ec)
+    {
+        if (!header.close()) ec = error::close_table;
+        else if (!point.close()) ec = error::close_table;
+        else if (!input.close()) ec = error::close_table;
+        else if (!output.close()) ec = error::close_table;
+        else if (!puts.close()) ec = error::close_table;
+        else if (!tx.close()) ec = error::close_table;
+        else if (!txs.close()) ec = error::close_table;
+    }
+
+    // TODO: no shortcircuit on unload?
     if (!ec) ec = header_head_.unload();
     if (!ec) ec = header_body_.unload();
     if (!ec) ec = point_head_.unload();
@@ -225,6 +314,7 @@ code store::close() NOEXCEPT
     if (!ec) ec = txs_head_.unload();
     if (!ec) ec = txs_body_.unload();
 
+    // TODO: no shortcircuit on close?
     if (!ec) ec = header_head_.close();
     if (!ec) ec = header_body_.close();
     if (!ec) ec = point_head_.close();
@@ -254,10 +344,18 @@ const typename store::transactor store::get_transactor() NOEXCEPT
 
 code store::backup() NOEXCEPT
 {
+    if (!header.backup()) return error::backup_table;
+    if (!point.backup()) return error::backup_table;
+    if (!input.backup()) return error::backup_table;
+    if (!output.backup()) return error::backup_table;
+    if (!puts.backup()) return error::backup_table;
+    if (!tx.backup()) return error::backup_table;
+    if (!txs.backup()) return error::backup_table;
+
     static const auto primary = configuration_.dir / schema::dir::primary;
     static const auto secondary = configuration_.dir / schema::dir::secondary;
 
-    if (file::exists(primary))
+    if (file::is_directory(primary))
     {
         // Delete /secondary, rename /primary to /secondary.
         if (!file::clear(secondary)) return error::clear_directory;
@@ -270,6 +368,7 @@ code store::backup() NOEXCEPT
         if (!file::clear(primary)) return error::create_directory;
     }
 
+    // Dump index memory maps to /primary.
     const auto ec = dump();
     if (ec) /* bool */ file::clear(primary);
     return ec;
@@ -286,14 +385,13 @@ code store::dump() NOEXCEPT
     auto tx_buffer = tx_head_.get();
     auto txs_buffer = txs_head_.get();
 
-    if (!header_buffer ||
-        !point_buffer ||
-        !input_buffer ||
-        !output_buffer ||
-        !puts_buffer ||
-        !tx_buffer ||
-        !txs_buffer)
-        return error::unloaded_file;
+    if (!header_buffer) return error::unloaded_file;
+    if (!point_buffer) return error::unloaded_file;
+    if (!input_buffer) return error::unloaded_file;
+    if (!output_buffer) return error::unloaded_file;
+    if (!puts_buffer) return error::unloaded_file;
+    if (!tx_buffer) return error::unloaded_file;
+    if (!txs_buffer) return error::unloaded_file;
 
     if (!file::dump(back(configuration_.dir, schema::archive::header),
         header_buffer->begin(), header_buffer->size()))
@@ -332,22 +430,34 @@ code store::restore() NOEXCEPT
     static const auto primary = configuration_.dir / schema::dir::primary;
     static const auto secondary = configuration_.dir / schema::dir::secondary;
 
-    if (file::exists(primary))
+    if (file::is_directory(primary))
     {
         // Clear invalid /indexes and recover from /primary.
         if (!file::clear(indexes)) return error::clear_directory;
+        if (!file::remove(indexes)) return error::remove_directory;
         if (!file::rename(primary, indexes)) return error::rename_directory;
-        return error::success;
     }
-    else if (file::exists(secondary))
+    else if (file::is_directory(secondary))
     {
         // Clear invalid /indexes and recover from /secondary.
         if (!file::clear(indexes)) return error::clear_directory;
+        if (!file::remove(indexes)) return error::remove_directory;
         if (!file::rename(secondary, indexes)) return error::rename_directory;
-        return error::success;
+    }
+    else
+    {
+        return error::missing_backup;
     }
 
-    return error::missing_backup;
+    if (!header.restore()) return error::restore_table;
+    if (!point.restore()) return error::restore_table;
+    if (!input.restore()) return error::restore_table;
+    if (!output.restore()) return error::restore_table;
+    if (!puts.restore()) return error::restore_table;
+    if (!tx.restore()) return error::restore_table;
+    if (!txs.restore()) return error::restore_table;
+
+    return error::success;
 }
 
 } // namespace database

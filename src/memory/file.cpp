@@ -48,6 +48,12 @@ bool clear(const path& directory) NOEXCEPT
     return !ec && std::filesystem::create_directories(directory, ec);
 }
 
+bool is_directory(const path& directory) NOEXCEPT
+{
+    std::error_code ec;
+    return !ec && std::filesystem::is_directory(directory, ec);
+}
+
 bool create(const path& filename) NOEXCEPT
 {
     // Creates and returns true if file already existed (and no error).
@@ -67,7 +73,7 @@ bool dump(const path& to, const uint8_t* data, size_t size) NOEXCEPT
     return file.good();
 }
 
-bool exists(const path& filename) NOEXCEPT
+bool is_file(const path& filename) NOEXCEPT
 {
     // Returns true only if file existed.
     system::ifstream file(filename);
@@ -76,13 +82,15 @@ bool exists(const path& filename) NOEXCEPT
     return good;
 }
 
-bool remove(const path& filename) NOEXCEPT
+// directory|file
+bool remove(const path& name) NOEXCEPT
 {
     // Deletes file or empty directory, returns false if not exist (or error).
     std::error_code ec;
-    return std::filesystem::remove(filename, ec);
+    return std::filesystem::remove(name, ec);
 }
 
+// directory|file
 bool rename(const path& from, const path& to) NOEXCEPT
 {
     // en.cppreference.com/w/cpp/filesystem/rename

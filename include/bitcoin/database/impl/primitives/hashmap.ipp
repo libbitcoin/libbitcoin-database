@@ -34,30 +34,40 @@ CLASS::hashmap(storage& header, storage& body, const Link& buckets) NOEXCEPT
 // not thread safe
 // ----------------------------------------------------------------------------
 
-// TODO: invoke header_.set_body_count(manager_.count()) on close.
-
 TEMPLATE
 bool CLASS::create() NOEXCEPT
 {
-    // TODO: call only on create, snap body (in case files exist).
-    return header_.create() && verify();
+    Link count{};
+    return header_.create() &&
+        header_.get_body_count(count) && manager_.truncate(count);
+}
+
+TEMPLATE
+bool CLASS::close() NOEXCEPT
+{
+    return header_.set_body_count(manager_.count());
+}
+
+TEMPLATE
+bool CLASS::backup() NOEXCEPT
+{
+    return header_.set_body_count(manager_.count());
+}
+
+TEMPLATE
+bool CLASS::restore() NOEXCEPT
+{
+    Link count{};
+    return header_.verify() &&
+        header_.get_body_count(count) && manager_.truncate(count);
 }
 
 TEMPLATE
 bool CLASS::verify() const NOEXCEPT
 {
-    // TODO: call only after open, retain exact match requirement.
     Link count{};
-    return header_.verify() && header_.get_body_count(count) &&
-        count == manager_.count();
-}
-
-TEMPLATE
-bool CLASS::snap() NOEXCEPT
-{
-    // TODO: call only after a restore, fails if size reduction.
-    Link count{};
-    return header_.get_body_count(count) && manager_.truncate(count);
+    return header_.verify() &&
+        header_.get_body_count(count) && count == manager_.count();
 }
 
 // query interface
@@ -165,12 +175,7 @@ reader_ptr CLASS::getter(const Key& key) const NOEXCEPT
 TEMPLATE
 finalizer_ptr CLASS::creater(const Key& key, const Link& size) NOEXCEPT
 {
-    return committer(key, manager_.allocate(size));
-}
-
-TEMPLATE
-finalizer_ptr CLASS::committer(const Key& key, const Link& link) NOEXCEPT
-{
+    const auto link = manager_.allocate(size);
     const auto ptr = manager_.get(link);
     if (!ptr)
         return {};

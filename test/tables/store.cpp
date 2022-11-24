@@ -189,8 +189,8 @@ BOOST_AUTO_TEST_CASE(store__create__default__unlocks)
     configuration.dir = TEST_DIRECTORY;
     access instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(), error::success);
-    BOOST_REQUIRE(!file::exists(instance.flush_lock_file()));
-    BOOST_REQUIRE(!file::exists(instance.process_lock_file()));
+    BOOST_REQUIRE(!test::exists(instance.flush_lock_file()));
+    BOOST_REQUIRE(!test::exists(instance.process_lock_file()));
     BOOST_REQUIRE(instance.transactor_mutex().try_lock());
 }
 
@@ -208,8 +208,8 @@ BOOST_AUTO_TEST_CASE(store__create__existing_index__success)
     settings configuration{};
     configuration.dir = TEST_DIRECTORY;
     access instance{ configuration };
-    BOOST_REQUIRE(file::clear(configuration.dir / schema::dir::indexes));
-    BOOST_REQUIRE(file::create(instance.header_head_file()));
+    BOOST_REQUIRE(test::clear(configuration.dir / schema::dir::indexes));
+    BOOST_REQUIRE(test::create(instance.header_head_file()));
     BOOST_REQUIRE_EQUAL(instance.create(), error::success);
 }
 
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(store__create__existing_body__success)
     settings configuration{};
     configuration.dir = TEST_DIRECTORY;
     access instance{ configuration };
-    BOOST_REQUIRE(file::create(instance.header_body_file()));
+    BOOST_REQUIRE(test::create(instance.header_body_file()));
     BOOST_REQUIRE_EQUAL(instance.create(), error::success);
 }
 
@@ -311,21 +311,11 @@ BOOST_AUTO_TEST_CASE(store__get_transactor__always__share_locked)
 
 // protecteds
 
-// This fails tests when placed after backup/dump tests, because
-// file::exists(primary) returns true. This implies that /primary delete is not
-// complete from the preceding tests.
-BOOST_AUTO_TEST_CASE(store__restore__missing_backup__expected_error)
+BOOST_AUTO_TEST_CASE(store__backup__unloaded__backup_table)
 {
     const settings configuration{};
     access instance{ configuration };
-    BOOST_REQUIRE_EQUAL(instance.restore_(), error::missing_backup);
-}
-
-BOOST_AUTO_TEST_CASE(store__backup__unloaded__unloaded_file)
-{
-    const settings configuration{};
-    access instance{ configuration };
-    BOOST_REQUIRE_EQUAL(instance.backup_(), error::unloaded_file);
+    BOOST_REQUIRE_EQUAL(instance.backup_(), error::backup_table);
 }
 
 BOOST_AUTO_TEST_CASE(store__dump__unloaded__unloaded_file)
@@ -333,6 +323,16 @@ BOOST_AUTO_TEST_CASE(store__dump__unloaded__unloaded_file)
     const settings configuration{};
     access instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.dump_(), error::unloaded_file);
+}
+
+// This fails *nix tests when placed after backup/dump tests, because
+// test::exists(primary) returns true. This implies that /primary delete is not
+// complete from the preceding tests.
+BOOST_AUTO_TEST_CASE(store__restore__missing_backup__expected_error)
+{
+    const settings configuration{};
+    access instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.restore_(), error::missing_backup);
 }
 
 BOOST_AUTO_TEST_CASE(store__construct__default_configuration__referenced)
