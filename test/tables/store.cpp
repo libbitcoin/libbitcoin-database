@@ -547,6 +547,8 @@ BOOST_AUTO_TEST_CASE(store__restore__no_backups__missing_backup)
     BOOST_REQUIRE_EQUAL(instance.restore_(), error::missing_backup);
 }
 
+// The lock is process-exclusive in linux/macOS, globally in win32.
+#if defined(HAVE_MSC)
 BOOST_AUTO_TEST_CASE(store__restore__primary_open__clear_directory)
 {
     settings configuration{};
@@ -558,15 +560,14 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_open__clear_directory)
     // Create /primary directory, from which to restore.
     BOOST_REQUIRE(test::clear(configuration.dir / schema::dir::primary));
 
-#if defined(HAVE_MSC)
     // Hits the process lock from being open.
     BOOST_REQUIRE_EQUAL(instance.restore_(), error::process_lock);
-#else
-    // Cannot delete /indexes with open files.
-    BOOST_REQUIRE_EQUAL(instance.restore_(), error::clear_directory);
-#endif
+
+    ////// Cannot delete /indexes with open files.
+    ////BOOST_REQUIRE_EQUAL(instance.restore_(), error::clear_directory);
     instance.close();
 }
+#endif
 
 BOOST_AUTO_TEST_CASE(store__restore__primary_closed__restore_table)
 {
