@@ -54,6 +54,16 @@ BOOST_AUTO_TEST_CASE(file__clear__exists__true_cleared)
     BOOST_REQUIRE(!test::exists(TEST_PATH));
 }
 
+BOOST_AUTO_TEST_CASE(file__is_directory__missing__false)
+{
+    BOOST_REQUIRE(!file::is_directory(TEST_PATH));
+}
+
+BOOST_AUTO_TEST_CASE(file__is_directory__exists__true)
+{
+    BOOST_REQUIRE(file::is_directory(TEST_DIRECTORY));
+}
+
 BOOST_AUTO_TEST_CASE(file__create__missing__true)
 {
     BOOST_REQUIRE(file::create(TEST_PATH));
