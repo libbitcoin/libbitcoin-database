@@ -134,6 +134,7 @@ code store::create() NOEXCEPT
         else if (!txs.create()) ec = error::create_table;
     }
 
+    // mmap will assert if not unloaded.
     if (!ec) ec = unload_close();
 
     if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
@@ -205,7 +206,8 @@ code store::snapshot() NOEXCEPT
 
 code store::close() NOEXCEPT
 {
-    if (!transactor_mutex_.try_lock()) return error::transactor_lock;
+    if (!transactor_mutex_.try_lock())
+        return error::transactor_lock;
 
     code ec{ error::success };
 
@@ -220,6 +222,7 @@ code store::close() NOEXCEPT
         else if (!txs.close()) ec = error::close_table;
     }
 
+    // mmap will assert if not unloaded.
     if (!ec) ec = unload_close();
 
     if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
@@ -387,6 +390,23 @@ code store::dump(const path& folder) NOEXCEPT
 
 code store::restore() NOEXCEPT
 {
+    if (!transactor_mutex_.try_lock())
+        return error::transactor_lock;
+
+    if (!process_lock_.try_lock())
+    {
+        transactor_mutex_.unlock();
+        return error::process_lock;
+    }
+
+    if (!flush_lock_.try_lock())
+    {
+        /* bool */ process_lock_.try_unlock();
+        transactor_mutex_.unlock();
+        return error::flush_lock;
+    }
+
+    code ec{ error::success };
     static const auto indexes = configuration_.dir / schema::dir::indexes;
     static const auto primary = configuration_.dir / schema::dir::primary;
     static const auto secondary = configuration_.dir / schema::dir::secondary;
@@ -394,31 +414,42 @@ code store::restore() NOEXCEPT
     if (file::is_directory(primary))
     {
         // Clear invalid /indexes and recover from /primary.
-        if (!file::clear(indexes)) return error::clear_directory;
-        if (!file::remove(indexes)) return error::remove_directory;
-        if (!file::rename(primary, indexes)) return error::rename_directory;
+        if (!file::clear(indexes)) ec = error::clear_directory;
+        else if (!file::remove(indexes)) ec = error::remove_directory;
+        else if (!file::rename(primary, indexes)) ec = error::rename_directory;
     }
     else if (file::is_directory(secondary))
     {
         // Clear invalid /indexes and recover from /secondary.
-        if (!file::clear(indexes)) return error::clear_directory;
-        if (!file::remove(indexes)) return error::remove_directory;
-        if (!file::rename(secondary, indexes)) return error::rename_directory;
+        if (!file::clear(indexes)) ec = error::clear_directory;
+        else if (!file::remove(indexes)) ec = error::remove_directory;
+        else if (!file::rename(secondary, indexes)) ec = error::rename_directory;
     }
     else
     {
-        return error::missing_backup;
+        ec = error::missing_backup;
     }
 
-    if (!header.restore()) return error::restore_table;
-    if (!point.restore()) return error::restore_table;
-    if (!input.restore()) return error::restore_table;
-    if (!output.restore()) return error::restore_table;
-    if (!puts.restore()) return error::restore_table;
-    if (!tx.restore()) return error::restore_table;
-    if (!txs.restore()) return error::restore_table;
+    if (!ec)
+    {
+        ec = open_load();
 
-    return error::success;
+        if (!header.restore()) ec = error::restore_table;
+        else if (!point.restore()) ec = error::restore_table;
+        else if (!input.restore()) ec = error::restore_table;
+        else if (!output.restore()) ec = error::restore_table;
+        else if (!puts.restore()) ec = error::restore_table;
+        else if (!tx.restore()) ec = error::restore_table;
+        else if (!txs.restore()) ec = error::restore_table;
+
+        // mmap will assert if not unloaded.
+        else if (!ec) ec = unload_close();
+    }
+
+    if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
+    if (!process_lock_.try_unlock()) ec = error::process_unlock;
+    transactor_mutex_.unlock();
+    return ec;
 }
 
 } // namespace database

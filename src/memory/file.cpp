@@ -44,14 +44,16 @@ bool clear(const path& directory) NOEXCEPT
     // create_directories returns true if path exists or created.
     // used for setup, with no expectations of file/directory existence.
     std::error_code ec;
-    std::filesystem::remove_all(directory, ec);
-    return !ec && std::filesystem::create_directories(directory, ec);
+    const auto path = system::to_extended_path(directory);
+    std::filesystem::remove_all(path, ec);
+    return !ec && std::filesystem::create_directories(path, ec);
 }
 
 bool is_directory(const path& directory) NOEXCEPT
 {
     std::error_code ec;
-    return !ec && std::filesystem::is_directory(directory, ec);
+    const auto path = system::to_extended_path(directory);
+    return !ec && std::filesystem::is_directory(path, ec);
 }
 
 bool create(const path& filename) NOEXCEPT
@@ -87,7 +89,8 @@ bool remove(const path& name) NOEXCEPT
 {
     // Deletes file or empty directory, returns false if not exist (or error).
     std::error_code ec;
-    return std::filesystem::remove(name, ec);
+    const auto path = system::to_extended_path(name);
+    return std::filesystem::remove(path, ec);
 }
 
 // directory|file
@@ -95,7 +98,9 @@ bool rename(const path& from, const path& to) NOEXCEPT
 {
     // en.cppreference.com/w/cpp/filesystem/rename
     std::error_code ec;
-    std::filesystem::rename(from, to, ec);
+    const auto from_path = system::to_extended_path(from);
+    const auto to_path = system::to_extended_path(to);
+    std::filesystem::rename(from_path, to_path, ec);
     return !ec;
 }
 
@@ -103,16 +108,18 @@ bool rename(const path& from, const path& to) NOEXCEPT
 
 int open(const path& filename) NOEXCEPT
 {
+    const auto path = system::to_extended_path(filename);
+
     // _wsopen_s and wstring do not throw (but are unannotated).
 #if defined(HAVE_MSC)
     int file_descriptor;
-    if (_wsopen_s(&file_descriptor, filename.wstring().c_str(),
-        (O_RDWR | _O_BINARY | _O_RANDOM), _SH_DENYWR,
-        (_S_IREAD | _S_IWRITE)) == -1)
+    if (_wsopen_s(&file_descriptor, path.c_str(),
+        O_RDWR | _O_BINARY | _O_RANDOM, _SH_DENYWR,
+        _S_IREAD | _S_IWRITE) == -1)
         file_descriptor = -1;
 #else
-    int file_descriptor = ::open(filename.string().c_str(),
-        (O_RDWR), (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH));
+    int file_descriptor = ::open(path.c_str(),
+        O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 #endif
     return file_descriptor;
 }

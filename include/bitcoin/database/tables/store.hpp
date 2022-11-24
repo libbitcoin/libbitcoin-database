@@ -67,15 +67,17 @@ public:
     /// Construct a store from settings.
     store(const settings& config) NOEXCEPT;
 
-    /// Clear store directory and the set of empty files.
+    /// Create the set of empty files (from unloaded).
     code create() NOEXCEPT;
 
     /// Open and load the set of tables, set locks.
     code open() NOEXCEPT;
 
-    /// Snapshot the set of tables.
-    /// Pause writes, set body sizes, flush files, copy headers, swap backups.
+    /// Snapshot the set of tables (from loaded).
     code snapshot() NOEXCEPT;
+
+    /// Restore the most recent snapshot (from unloaded).
+    code restore() NOEXCEPT;
 
     /// Unload and close the set of tables, clear locks.
     code close() NOEXCEPT;
@@ -110,14 +112,10 @@ public:
     ////table::validated_tx validated_tx;
 
 protected:
-    /// Open/close.
     code open_load() NOEXCEPT;
     code unload_close() NOEXCEPT;
-
-    /// Backup/restore all indexes.
     code backup() NOEXCEPT;
     code dump(const std::filesystem::path& folder) NOEXCEPT;
-    code restore() NOEXCEPT;
 
     // These are thread safe.
     const settings& configuration_;

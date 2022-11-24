@@ -41,16 +41,26 @@ namespace test {
 
 const std::string directory = "tests";
 
-bool clear(const std::filesystem::path& file_directory) NOEXCEPT
+bool clear(const std::filesystem::path& directory) NOEXCEPT
 {
     // remove_all returns count removed, and error code if fails.
     // create_directories returns true if path exists or created.
     // used for setup, with no expectations of file/directory existence.
-    const auto path = system::to_extended_path(file_directory);
+    const auto path = system::to_extended_path(directory);
     code ec;
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     std::filesystem::remove_all(path, ec);
     return !ec && std::filesystem::create_directories(path, ec);
+    BC_POP_WARNING()
+}
+
+
+bool folder(const std::filesystem::path& directory) NOEXCEPT
+{
+    const auto path = system::to_extended_path(directory);
+    code ec;
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    return !ec && std::filesystem::is_directory(path, ec);
     BC_POP_WARNING()
 }
 
