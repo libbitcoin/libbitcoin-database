@@ -163,7 +163,8 @@ BOOST_AUTO_TEST_CASE(store__create__flush_locked__flush_lock)
     BOOST_REQUIRE_EQUAL(instance.create(), error::flush_lock);
 }
 
-// process lock may be taken only once within a process.
+// The lock is process-exclusive in linux/macOS, globally in win32.
+#if defined(HAVE_MSC)
 BOOST_AUTO_TEST_CASE(store__create__process_locked__success)
 {
     settings configuration{};
@@ -173,6 +174,7 @@ BOOST_AUTO_TEST_CASE(store__create__process_locked__success)
     BOOST_REQUIRE(lock.try_lock());
     BOOST_REQUIRE_EQUAL(instance.create(), error::process_lock);
 }
+#endif
 
 BOOST_AUTO_TEST_CASE(store__create__process_lock_file__success)
 {
@@ -325,9 +327,6 @@ BOOST_AUTO_TEST_CASE(store__dump__unloaded__unloaded_file)
     BOOST_REQUIRE_EQUAL(instance.dump_(), error::unloaded_file);
 }
 
-// This fails *nix tests when placed after backup/dump tests, because
-// test::exists(primary) returns true. This implies that /primary delete is not
-// complete from the preceding tests.
 BOOST_AUTO_TEST_CASE(store__restore__missing_backup__expected_error)
 {
     const settings configuration{};
