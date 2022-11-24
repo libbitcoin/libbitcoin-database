@@ -47,7 +47,22 @@ enum error_t
     flush_unloaded,
     flush_failure,
     unload_locked,
-    unload_failure
+    unload_failure,
+
+    // store
+    transactor_lock,
+    process_lock,
+    flush_lock,
+    flush_unlock,
+    process_unlock,
+    create_directory,
+    clear_directory,
+    remove_directory,
+    rename_directory,
+    missing_backup,
+    create_file,
+    unloaded_file,
+    dump_file
 };
 
 // No current need for error_code equivalence mapping.

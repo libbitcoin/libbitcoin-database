@@ -34,8 +34,10 @@ public:
     /// Construction does not touch the file.
     file_lock(const std::filesystem::path& file) NOEXCEPT;
 
-    std::string file() const NOEXCEPT;
+    /// Path to lock file.
+    const std::filesystem::path& file() const NOEXCEPT;
 
+protected:
     /// True if file exists.
     bool exists() const NOEXCEPT;
 

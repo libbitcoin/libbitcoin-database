@@ -21,6 +21,8 @@
 
 #include "test.hpp"
 
+#include <filesystem>
+
 namespace test {
 
 // Fake a thread safe memory map implementation.
@@ -32,6 +34,7 @@ public:
     storage(system::data_chunk& reference) NOEXCEPT;
 
     // storage interface
+    const std::filesystem::path& file() const NOEXCEPT override;
     size_t capacity() const NOEXCEPT override;
     size_t size() const NOEXCEPT override;
     bool resize(size_t size) NOEXCEPT override;
@@ -43,6 +46,7 @@ private:
     system::data_chunk& buffer_;
     mutable std::shared_mutex field_mutex_;
     mutable std::shared_mutex map_mutex_;
+    const std::filesystem::path path_{ "test" };
 };
 
 }

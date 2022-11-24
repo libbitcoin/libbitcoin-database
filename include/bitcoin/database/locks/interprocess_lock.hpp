@@ -30,7 +30,7 @@ namespace database {
 
 /// This class is not thread safe, and does not throw.
 class BCD_API interprocess_lock final
-  : file_lock
+  : public file_lock
 {
 public:
     DELETE4(interprocess_lock);

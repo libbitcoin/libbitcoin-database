@@ -33,6 +33,12 @@ struct flush_lock_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(flush_lock_tests, flush_lock_setup_fixture)
 
+BOOST_AUTO_TEST_CASE(flush_lock__construct__file__expected)
+{
+    flush_lock instance(TEST_PATH);
+    BOOST_REQUIRE_EQUAL(instance.file(), TEST_PATH);
+}
+
 BOOST_AUTO_TEST_CASE(flush_lock__try_lock__not_exists__true_created)
 {
     BOOST_REQUIRE(!test::exists(TEST_PATH));

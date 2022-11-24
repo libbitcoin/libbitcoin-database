@@ -26,6 +26,7 @@
 #include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/locks/locks.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/tables/schema.hpp>
 
 #include <bitcoin/database/tables/archives/header.hpp>
 #include <bitcoin/database/tables/archives/input.hpp>
@@ -59,32 +60,28 @@ namespace database {
 class BCD_API store
 {
 public:
-    DELETE5(store);
-
     using transactor = std::shared_lock<boost::upgrade_mutex>;
+
+    DELETE5(store);
 
     /// Construct a store from settings.
     store(const settings& config) NOEXCEPT;
 
-    /// Clear store directory and create the set of empty files.
+    /// Clear store directory and the set of empty files.
     code create() NOEXCEPT;
 
-    /// Create or open the set of tables, set locks.
+    /// Open and load the set of tables, set locks.
     code open() NOEXCEPT;
 
     /// Snapshot the set of tables.
     /// Pause writes, set body sizes, flush files, copy headers, swap backups.
     code snapshot() NOEXCEPT;
 
-    /// Flush and close the set of tables, clear locks.
+    /// Unload and close the set of tables, clear locks.
     code close() NOEXCEPT;
 
     /// Get a transactor object.
-    transactor get_transactor() NOEXCEPT;
-
-    // TODO: change table to namespace.
-    // TODO: move table-definition types into schema namespace (pk, sk, size).
-    // TODO: define records as public subtypes of tables.
+    const transactor get_transactor() NOEXCEPT;
 
     /// Archives.
     table::header header;
@@ -113,12 +110,11 @@ public:
     ////table::validated_tx validated_tx;
 
 protected:
-    /// Backup/restore the header set.
-    code backup(map& file, const std::filesystem::path& to) NOEXCEPT;
+    /// Backup/restore all indexes.
     code backup() NOEXCEPT;
+    code dump() NOEXCEPT;
     code restore() NOEXCEPT;
 
-private:
     // These are thread safe.
     const settings& configuration_;
 
@@ -152,6 +148,29 @@ private:
     flush_lock flush_lock_;
     interprocess_lock process_lock_;
     boost::upgrade_mutex transactor_mutex_;
+
+private:
+    using path = std::filesystem::path;
+
+    static path index(const path& folder, const std::string& name) NOEXCEPT
+    {
+        return folder / schema::dir::indexes / (name + schema::ext::index);
+    }
+
+    static path back(const path& folder, const std::string& name) NOEXCEPT
+    {
+        return folder / schema::dir::primary / (name + schema::ext::index);
+    }
+
+    static path body(const path& folder, const std::string& name) NOEXCEPT
+    {
+        return folder / (name + schema::ext::data);
+    }
+
+    static path lock(const path& folder, const std::string& name) NOEXCEPT
+    {
+        return folder / (name + schema::ext::lock);
+    }
 };
 
 } // namespace database

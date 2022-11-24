@@ -67,6 +67,9 @@ public:
     /// storage interface
     /// -----------------------------------------------------------------------
 
+    /// The filesystem path of the file.
+    const std::filesystem::path& file() const NOEXCEPT override;
+
     /// The current capacity of the memory map (zero if unloaded).
     size_t capacity() const NOEXCEPT override;
 
@@ -95,8 +98,8 @@ protected:
     }
 
 private:
-    using path = std::filesystem::path;
     using mutex = boost::upgrade_mutex;
+    using path = std::filesystem::path;
 
     // Mapping utilities.
     bool flush_() const NOEXCEPT;

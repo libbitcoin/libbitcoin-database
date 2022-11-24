@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_SETTINGS_HPP
 #define LIBBITCOIN_DATABASE_SETTINGS_HPP
 
-#include <bitcoin/database/boost.hpp>
+#include <filesystem>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -34,9 +34,32 @@ public:
 
     /// Properties.
     std::filesystem::path dir;
-    uint32_t buckets;
-    uint16_t rate;
-    uint32_t size;
+
+    uint32_t header_buckets;
+    uint32_t header_size;
+    uint16_t header_rate;
+
+    uint32_t point_buckets;
+    uint32_t point_size;
+    uint16_t point_rate;
+
+    uint32_t input_buckets;
+    uint32_t input_size;
+    uint16_t input_rate;
+
+    uint32_t output_size;
+    uint16_t output_rate;
+
+    uint32_t puts_size;
+    uint16_t puts_rate;
+
+    uint32_t tx_buckets;
+    uint32_t tx_size;
+    uint16_t tx_rate;
+
+    uint32_t txs_buckets;
+    uint32_t txs_size;
+    uint16_t txs_rate;
 };
 
 } // namespace database

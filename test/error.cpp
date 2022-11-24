@@ -24,6 +24,8 @@ BOOST_AUTO_TEST_SUITE(error_tests)
 // error_t
 // These test std::error_code equality operator overrides.
 
+// memory map
+
 BOOST_AUTO_TEST_CASE(error_t__code__success__false_exected_message)
 {
     constexpr auto value = error::success;
@@ -139,6 +141,125 @@ BOOST_AUTO_TEST_CASE(error_t__code__unload_failure__true_exected_message)
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "file failed to unload");
+}
+
+// store
+
+BOOST_AUTO_TEST_CASE(error_t__code__transactor_lock__true_exected_message)
+{
+    constexpr auto value = error::transactor_lock;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "transactor lock failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__process_lock__true_exected_message)
+{
+    constexpr auto value = error::process_lock;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "process lock failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__flush_lock__true_exected_message)
+{
+    constexpr auto value = error::flush_lock;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "flush lock failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__flush_unlock__true_exected_message)
+{
+    constexpr auto value = error::flush_unlock;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "flush unlock failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__process_unlock__true_exected_message)
+{
+    constexpr auto value = error::process_unlock;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "process unlock failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__create_directory__true_exected_message)
+{
+    constexpr auto value = error::create_directory;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "create directory failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__clear_directory__true_exected_message)
+{
+    constexpr auto value = error::clear_directory;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "clear directory failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__remove_directory__true_exected_message)
+{
+    constexpr auto value = error::remove_directory;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "remove directory failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__rename_directory__true_exected_message)
+{
+    constexpr auto value = error::rename_directory;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "rename directory failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__missing_backup__true_exected_message)
+{
+    constexpr auto value = error::missing_backup;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "missing backup");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__create_file__true_exected_message)
+{
+    constexpr auto value = error::create_file;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "file failed to create");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__unloaded_file__true_exected_message)
+{
+    constexpr auto value = error::unloaded_file;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "file not loaded");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__dump_file__true_exected_message)
+{
+    constexpr auto value = error::dump_file;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "file failed to dump");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

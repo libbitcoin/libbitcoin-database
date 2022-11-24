@@ -26,6 +26,8 @@ namespace error {
 
 DEFINE_ERROR_T_MESSAGE_MAP(error)
 {
+    // memory map
+
     { success, "success" },
     { unknown, "unknown error" },
 
@@ -43,7 +45,25 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { flush_failure, "file failed to flush" },
 
     { unload_locked, "unloading unloaded file" },
-    { unload_failure, "file failed to unload" }
+    { unload_failure, "file failed to unload" },
+
+    // store
+
+    { transactor_lock, "transactor lock failure" },
+    { process_lock, "process lock failure" },
+    { flush_lock, "flush lock failure" },
+    { flush_unlock, "flush unlock failure" },
+    { process_unlock, "process unlock failure" },
+
+    { create_directory, "create directory failure" },
+    { clear_directory, "clear directory failure" },
+    { remove_directory, "remove directory failure" },
+    { rename_directory, "rename directory failure" },
+    { missing_backup, "missing backup" },
+
+    { create_file, "file failed to create" },
+    { unloaded_file, "file not loaded" },
+    { dump_file, "file failed to dump" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "database", "database code")

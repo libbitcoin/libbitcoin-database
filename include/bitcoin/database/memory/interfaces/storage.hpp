@@ -19,6 +19,8 @@
 #ifndef LIBBITCOIN_DATABASE_MEMORY_INTERFACES_STORAGE_HPP
 #define LIBBITCOIN_DATABASE_MEMORY_INTERFACES_STORAGE_HPP
 
+#include <filesystem>
+#include <bitcoin/system.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
@@ -31,6 +33,9 @@ class storage
 {
 public:
     static constexpr auto eof = system::bit_all<size_t>;
+
+    /// The filesystem path of the backing storage.
+    virtual const std::filesystem::path& file() const NOEXCEPT = 0;
 
     /// The current capacity of the memory map (zero if unmapped).
     virtual size_t capacity() const NOEXCEPT = 0;
