@@ -185,15 +185,6 @@ BOOST_AUTO_TEST_CASE(store__create__transactor_locked__transactor_lock)
     BOOST_REQUIRE_EQUAL(instance.create(), error::transactor_lock);
 }
 
-BOOST_AUTO_TEST_CASE(store__create__flush_locked__flush_lock)
-{
-    settings configuration{};
-    configuration.dir = TEST_DIRECTORY;
-    access instance{ configuration };
-    BOOST_REQUIRE(test::create(instance.flush_lock_file()));
-    BOOST_REQUIRE_EQUAL(instance.create(), error::flush_lock);
-}
-
 // The lock is process-exclusive in linux/macOS, globally in win32.
 #if defined(HAVE_MSC)
 BOOST_AUTO_TEST_CASE(store__create__process_locked__success)
@@ -206,6 +197,15 @@ BOOST_AUTO_TEST_CASE(store__create__process_locked__success)
     BOOST_REQUIRE_EQUAL(instance.create(), error::process_lock);
 }
 #endif
+
+BOOST_AUTO_TEST_CASE(store__create__flush_locked__flush_lock)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE(test::create(instance.flush_lock_file()));
+    BOOST_REQUIRE_EQUAL(instance.create(), error::flush_lock);
+}
 
 BOOST_AUTO_TEST_CASE(store__create__process_lock_file__success)
 {
@@ -258,6 +258,62 @@ BOOST_AUTO_TEST_CASE(store__create__existing_body__success)
 
 // open
 // ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(store__open__transactor_locked__transactor_lock)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    instance.transactor_mutex().lock();
+    BOOST_REQUIRE_EQUAL(instance.open(), error::transactor_lock);
+}
+
+// The lock is process-exclusive in linux/macOS, globally in win32.
+#if defined(HAVE_MSC)
+BOOST_AUTO_TEST_CASE(store__copen__process_locked__success)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    interprocess_lock lock{ instance.process_lock_file() };
+    BOOST_REQUIRE(lock.try_lock());
+    BOOST_REQUIRE_EQUAL(instance.open(), error::process_lock);
+}
+#endif
+
+BOOST_AUTO_TEST_CASE(store__open__flush_locked__flush_lock)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE(test::create(instance.flush_lock_file()));
+    BOOST_REQUIRE_EQUAL(instance.open(), error::flush_lock);
+}
+
+BOOST_AUTO_TEST_CASE(store__open__process_lock_file__success)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+    BOOST_REQUIRE(test::create(instance.process_lock_file()));
+    BOOST_REQUIRE_EQUAL(instance.open(), error::success);
+    instance.close();
+}
+
+BOOST_AUTO_TEST_CASE(store__open__default__unlocks_transactor_only)
+{
+    settings configuration{};
+    configuration.dir = TEST_DIRECTORY;
+    access instance{ configuration };
+    BOOST_REQUIRE_EQUAL(instance.create(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.open(), error::success);
+    BOOST_REQUIRE(test::exists(instance.flush_lock_file()));
+    BOOST_REQUIRE(test::exists(instance.process_lock_file()));
+    BOOST_REQUIRE(instance.transactor_mutex().try_lock());
+    instance.transactor_mutex().unlock();
+    instance.close();
+}
 
 BOOST_AUTO_TEST_CASE(store__open__uncreated__open_failure)
 {
