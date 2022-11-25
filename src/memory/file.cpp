@@ -38,34 +38,45 @@ using namespace system;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-bool clear(const path& directory) NOEXCEPT
+bool is_directory(const path& directory) NOEXCEPT
 {
-    // remove_all returns count removed, and error code if fails.
-    // create_directories returns true if path exists or created.
-    // used for setup, with no expectations of file/directory existence.
+    std::error_code ununsed;
+    const auto path = system::to_extended_path(directory);
+    return std::filesystem::is_directory(path, ununsed);
+}
+
+bool clear_directory(const path& directory) NOEXCEPT
+{
     std::error_code ec;
     const auto path = system::to_extended_path(directory);
     std::filesystem::remove_all(path, ec);
-    return !ec && std::filesystem::create_directories(path, ec);
+    return !ec && std::filesystem::create_directories(path, ec) || !ec;
 }
 
-bool is_directory(const path& directory) NOEXCEPT
+bool create_directory(const path& directory) NOEXCEPT
 {
-    std::error_code ec;
+    std::error_code unused;
     const auto path = system::to_extended_path(directory);
-    return !ec && std::filesystem::is_directory(path, ec);
+    return std::filesystem::create_directories(path, unused);
 }
 
-bool create(const path& filename) NOEXCEPT
+bool is_file(const path& filename) NOEXCEPT
 {
-    // Creates and returns true if file already existed (and no error).
+    system::ifstream file(filename);
+    const auto good = file.good();
+    file.close();
+    return good;
+}
+
+bool create_file(const path& filename) NOEXCEPT
+{
     system::ofstream file(filename);
     const auto good = file.good();
     file.close();
     return good;
 }
 
-bool dump(const path& to, const uint8_t* data, size_t size) NOEXCEPT
+bool create_file(const path& to, const uint8_t* data, size_t size) NOEXCEPT
 {
     system::ofstream file(to);
     if (!file.good()) return false;
@@ -75,22 +86,14 @@ bool dump(const path& to, const uint8_t* data, size_t size) NOEXCEPT
     return file.good();
 }
 
-bool is_file(const path& filename) NOEXCEPT
-{
-    // Returns true only if file existed.
-    system::ifstream file(filename);
-    const auto good = file.good();
-    file.close();
-    return good;
-}
-
 // directory|file
 bool remove(const path& name) NOEXCEPT
 {
-    // Deletes file or empty directory, returns false if not exist (or error).
     std::error_code ec;
     const auto path = system::to_extended_path(name);
-    return std::filesystem::remove(path, ec);
+
+    // False if did not exist, but in that case there is no error code.
+    return std::filesystem::remove(path, ec) || !ec;
 }
 
 // directory|file

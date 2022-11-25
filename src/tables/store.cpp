@@ -104,21 +104,21 @@ code store::create() NOEXCEPT
     static const auto indexes = configuration_.dir / schema::dir::indexes;
 
     // Clear /index, create index files, ensure existence of body files.
-    if (!file::clear(indexes)) ec = error::clear_directory;
-    else if (!file::create(header_head_.file())) ec = error::create_file;
-    else if (!file::create(header_body_.file())) ec = error::create_file;
-    else if (!file::create(point_head_.file())) ec = error::create_file;
-    else if (!file::create(point_body_.file())) ec = error::create_file;
-    else if (!file::create(input_head_.file())) ec = error::create_file;
-    else if (!file::create(input_body_.file())) ec = error::create_file;
-    else if (!file::create(output_head_.file())) ec = error::create_file;
-    else if (!file::create(output_body_.file())) ec = error::create_file;
-    else if (!file::create(puts_head_.file())) ec = error::create_file;
-    else if (!file::create(puts_body_.file())) ec = error::create_file;
-    else if (!file::create(tx_head_.file())) ec = error::create_file;
-    else if (!file::create(tx_body_.file())) ec = error::create_file;
-    else if (!file::create(txs_head_.file())) ec = error::create_file;
-    else if (!file::create(txs_body_.file())) ec = error::create_file;
+    if (!file::clear_directory(indexes)) ec = error::clear_directory;
+    else if (!file::create_file(header_head_.file())) ec = error::create_file;
+    else if (!file::create_file(header_body_.file())) ec = error::create_file;
+    else if (!file::create_file(point_head_.file())) ec = error::create_file;
+    else if (!file::create_file(point_body_.file())) ec = error::create_file;
+    else if (!file::create_file(input_head_.file())) ec = error::create_file;
+    else if (!file::create_file(input_body_.file())) ec = error::create_file;
+    else if (!file::create_file(output_head_.file())) ec = error::create_file;
+    else if (!file::create_file(output_body_.file())) ec = error::create_file;
+    else if (!file::create_file(puts_head_.file())) ec = error::create_file;
+    else if (!file::create_file(puts_body_.file())) ec = error::create_file;
+    else if (!file::create_file(tx_head_.file())) ec = error::create_file;
+    else if (!file::create_file(tx_body_.file())) ec = error::create_file;
+    else if (!file::create_file(txs_head_.file())) ec = error::create_file;
+    else if (!file::create_file(txs_body_.file())) ec = error::create_file;
 
     if (!ec) ec = open_load();
 
@@ -139,7 +139,7 @@ code store::create() NOEXCEPT
 
     if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
     if (!process_lock_.try_unlock()) ec = error::process_unlock;
-    if (ec) /* bool */ file::clear(configuration_.dir);
+    if (ec) /* bool */ file::clear_directory(configuration_.dir);
     transactor_mutex_.unlock();
     return ec;
 }
@@ -326,15 +326,15 @@ code store::backup() NOEXCEPT
     if (file::is_directory(primary))
     {
         // Delete /secondary, rename /primary to /secondary.
-        if (!file::clear(secondary)) return error::clear_directory;
+        if (!file::clear_directory(secondary)) return error::clear_directory;
         if (!file::remove(secondary)) return error::remove_directory;
         if (!file::rename(primary, secondary)) return error::rename_directory;
     }
 
     // Dump index memory maps to /primary.
-    if (!file::clear(primary)) return error::create_directory;
+    if (!file::clear_directory(primary)) return error::create_directory;
     const auto ec = dump(primary);
-    if (ec) /* bool */ file::clear(primary);
+    if (ec) /* bool */ file::clear_directory(primary);
     return ec;
 }
 
@@ -357,31 +357,31 @@ code store::dump(const path& folder) NOEXCEPT
     if (!tx_buffer) return error::unloaded_file;
     if (!txs_buffer) return error::unloaded_file;
 
-    if (!file::dump(index(folder, schema::archive::header),
+    if (!file::create_file(index(folder, schema::archive::header),
         header_buffer->begin(), header_buffer->size()))
        return error::dump_file;
 
-    if (!file::dump(index(folder, schema::archive::point),
+    if (!file::create_file(index(folder, schema::archive::point),
         point_buffer->begin(), point_buffer->size()))
         return error::dump_file;
 
-    if (!file::dump(index(folder, schema::archive::input),
+    if (!file::create_file(index(folder, schema::archive::input),
         input_buffer->begin(), input_buffer->size()))
         return error::dump_file;
 
-    if (!file::dump(index(folder, schema::archive::output),
+    if (!file::create_file(index(folder, schema::archive::output),
         output_buffer->begin(), output_buffer->size()))
         return error::dump_file;
 
-    if (!file::dump(index(folder, schema::archive::puts),
+    if (!file::create_file(index(folder, schema::archive::puts),
         puts_buffer->begin(), puts_buffer->size()))
         return error::dump_file;
 
-    if (!file::dump(index(folder, schema::archive::tx),
+    if (!file::create_file(index(folder, schema::archive::tx),
         tx_buffer->begin(), tx_buffer->size()))
         return error::dump_file;
 
-    if (!file::dump(index(folder, schema::archive::txs),
+    if (!file::create_file(index(folder, schema::archive::txs),
         txs_buffer->begin(), txs_buffer->size()))
         return error::dump_file;
 
@@ -414,14 +414,14 @@ code store::restore() NOEXCEPT
     if (file::is_directory(primary))
     {
         // Clear invalid /indexes and recover from /primary.
-        if (!file::clear(indexes)) ec = error::clear_directory;
+        if (!file::clear_directory(indexes)) ec = error::clear_directory;
         else if (!file::remove(indexes)) ec = error::remove_directory;
         else if (!file::rename(primary, indexes)) ec = error::rename_directory;
     }
     else if (file::is_directory(secondary))
     {
         // Clear invalid /indexes and recover from /secondary.
-        if (!file::clear(indexes)) ec = error::clear_directory;
+        if (!file::clear_directory(indexes)) ec = error::clear_directory;
         else if (!file::remove(indexes)) ec = error::remove_directory;
         else if (!file::rename(secondary, indexes)) ec = error::rename_directory;
     }
