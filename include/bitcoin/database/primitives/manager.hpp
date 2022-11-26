@@ -51,11 +51,9 @@ public:
     /// Return memory object for record at specified position (null possible).
     /// Obtaining memory object is considered const access despite fact that
     /// memory is writeable. Non-const access implies memory map modify.
-    /// MEMORY_PTR HOLDS SHARED LOCK ON STORAGE REMAP, DO NOT EXTEND LIFETIME.
     memory_ptr get(const Link& link) const NOEXCEPT;
 
     /// Return memory object for the full memory map.
-    /// MEMORY_PTR HOLDS SHARED LOCK ON STORAGE REMAP, DO NOT EXTEND LIFETIME.
     memory_ptr get() const NOEXCEPT;
 
 private:
