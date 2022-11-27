@@ -167,31 +167,31 @@ bool CLASS::set_block(const system::chain::block& block) NOEXCEPT
 TEMPLATE
 system::chain::header::cptr get_header(const hash_digest& key) NOEXCEPT
 {
-    return nullptr;
+    return {};
 }
 
 TEMPLATE
 system::chain::transaction::cptr get_tx(const hash_digest& key) NOEXCEPT
 {
-    return nullptr;
+    return {};
 }
 
 TEMPLATE
 system::chain::block::cptr get_block(const hash_digest& key) NOEXCEPT
 {
-    return nullptr;
+    return {};
 }
 
 TEMPLATE
 system::hashes get_block_locator(const hash_digest& key) NOEXCEPT
 {
-    return nullptr;
+    return {};
 }
 
 TEMPLATE
 system::hashes get_block_txs(const hash_digest& key) NOEXCEPT
 {
-    return nullptr;
+    return {};
 }
 
 } // namespace database
