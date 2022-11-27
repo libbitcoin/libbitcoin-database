@@ -21,18 +21,42 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/primitives/primitives.hpp>
 #include <bitcoin/database/tables/tables.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-template <typename Store>
+struct context
+{
+    uint32_t height{};
+    uint32_t flags{};
+    uint32_t mtp{};
+};
+
+/// Witness argument controls only canonical identifier.
+template <typename Store, bool Witness = true>
 class query
 {
 public:
-    query(store& store) NOEXCEPT;
+    using transaction = system::chain::transaction;
 
-    bool get_transaction(const hash_digest& key) NOEXCEPT;
+    query(store& value) NOEXCEPT;
+
+    /// Store system::chain object.
+    bool set_tx(const system::chain::transaction& tx) NOEXCEPT;
+    bool set_block(const system::chain::block& block) NOEXCEPT;
+    bool set_header(const system::chain::header& header,
+        const context& context) NOEXCEPT;
+
+    /// Retrieve system::chain object (may optimize with property getters).
+    system::chain::header::cptr get_header(const hash_digest& key) NOEXCEPT;
+    system::chain::transaction::cptr get_tx(const hash_digest& key) NOEXCEPT;
+    system::chain::block::cptr get_block(const hash_digest& key) NOEXCEPT;
+
+    /// Retrieve network::messages object.
+    system::hashes get_block_locator(const hash_digest& key) NOEXCEPT;
+    system::hashes get_block_txs(const hash_digest& key) NOEXCEPT;
 
 private:
     store& store_;
@@ -41,8 +65,8 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Store>
-#define CLASS query<Store>
+#define TEMPLATE template <typename Store, bool Witness>
+#define CLASS query<Store, Witness>
 
 #include <bitcoin/database/impl/store/query.ipp>
 

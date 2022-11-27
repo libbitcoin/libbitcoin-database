@@ -77,6 +77,17 @@ static_assert(linkage<6>{ 0x0000ffffffffffff }.is_terminal());
 static_assert(linkage<7>{ 0x00ffffffffffffff }.is_terminal());
 static_assert(linkage<8>{ 0xffffffffffffffff }.is_terminal());
 
+////// bool() operator.
+////static_assert(!linkage<0>{ 0x00 });
+////static_assert(!linkage<1>{ 0xff });
+////static_assert(!linkage<2>{ 0xffff });
+////static_assert(!linkage<3>{ 0x00ffffff });
+////static_assert(!linkage<4>{ 0xffffffff });
+////static_assert(!linkage<5>{ 0x000000ffffffffff });
+////static_assert(!linkage<6>{ 0x0000ffffffffffff });
+////static_assert(!linkage<7>{ 0x00ffffffffffffff });
+////static_assert(!linkage<8>{ 0xffffffffffffffff });
+
 // Default constructions (integer() cast operator for equality test).
 static_assert(linkage<0>{} == linkage<0>::terminal);
 static_assert(linkage<1>{} == linkage<1>::terminal);

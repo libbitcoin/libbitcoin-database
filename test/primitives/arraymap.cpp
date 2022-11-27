@@ -28,16 +28,18 @@ class arraymap_
   : public arraymap<Link, Size>
 {
 public:
-    using arraymap<Link, Size>::arraymap;
+    using base = arraymap<Link, Size>;
+    using base::arraymap;
 
     reader_ptr getter_(const Link& record) const NOEXCEPT
     {
-        return arraymap<Link, Size>::getter(record);
+        return base::getter(record);
     }
 
     writer_ptr creater_(const Link& size=one) NOEXCEPT
     {
-        return arraymap<Link, Size>::creater(size);
+        Link link{};
+        return base::creater(link, size);
     }
 };
 
@@ -294,7 +296,9 @@ BOOST_AUTO_TEST_CASE(arraymap__record_put__get__expected)
     test::storage body_store{ body_file };
     arraymap<link5, big_record::size> instance{ head_store, body_store };
 
-    BOOST_REQUIRE(instance.put(big_record{ 0xa1b2c3d4_u32 }));
+    link5 link{};
+    BOOST_REQUIRE(instance.put_link(link, big_record{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE_EQUAL(link, 0u);
 
     big_record record{};
     BOOST_REQUIRE(instance.get(0, record));
@@ -312,8 +316,11 @@ BOOST_AUTO_TEST_CASE(arraymap__record_put__multiple__expected)
     test::storage body_store{ body_file };
     arraymap<link5, big_record::size> instance{ head_store, body_store };
 
-    BOOST_REQUIRE(instance.put(big_record{ 0xa1b2c3d4_u32 }));
-    BOOST_REQUIRE(instance.put(little_record{ 0xa1b2c3d4_u32 }));
+    link5 link{};
+    BOOST_REQUIRE(instance.put_link(link, big_record{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE_EQUAL(link, 0u);
+    BOOST_REQUIRE(instance.put_link(link, little_record{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE_EQUAL(link, 1u);
 
     big_record record1{};
     BOOST_REQUIRE(instance.get(0, record1));
@@ -377,7 +384,9 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_put__get__expected)
     test::storage body_store{ body_file };
     arraymap<link5, big_slab::size> instance{ head_store, body_store };
 
-    BOOST_REQUIRE(instance.put(big_slab{ 0xa1b2c3d4_u32 }));
+    link5 link{};
+    BOOST_REQUIRE(instance.put_link(link, big_slab{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE_EQUAL(link, 0u);
 
     big_slab slab{};
     BOOST_REQUIRE(instance.get(zero, slab));
@@ -395,8 +404,11 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_put__multiple__expected)
     test::storage body_store{ body_file };
     arraymap<link5, big_slab::size> instance{ head_store, body_store };
 
-    BOOST_REQUIRE(instance.put(big_slab{ 0xa1b2c3d4_u32 }));
-    BOOST_REQUIRE(instance.put(little_slab{ 0xa1b2c3d4_u32 }));
+    link5 link{};
+    BOOST_REQUIRE(instance.put_link(link, big_slab{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE_EQUAL(link, 0u);
+    BOOST_REQUIRE(instance.put_link(link, little_slab{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE_EQUAL(link, big_slab::count());
 
     big_slab slab1{};
     BOOST_REQUIRE(instance.get(zero, slab1));

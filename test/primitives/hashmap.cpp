@@ -27,21 +27,23 @@ class hashmap_
   : public hashmap<Link, Key, Size>
 {
 public:
-    using hashmap<Link, Key, Size>::hashmap;
+    using base = hashmap<Link, Key, Size>;
+    using base::hashmap;
 
     reader_ptr getter_(const Key& key) const NOEXCEPT
     {
-        return hashmap<Link, Key, Size>::getter(key);
+        return getter_(base::it(key).self());
     }
 
-    reader_ptr getter_(const Link& record) const NOEXCEPT
+    reader_ptr getter_(const Link& link) const NOEXCEPT
     {
-        return hashmap<Link, Key, Size>::template streamer<database::reader>(record);
+        return base::template streamer<database::reader>(link);
     }
 
     finalizer_ptr creater_(const Key& key, const Link& size=bc::one) NOEXCEPT
     {
-        return hashmap<Link, Key, Size>::creater(key, size);
+        Link link{};
+        return base::creater(link, key, size);
     }
 };
 
@@ -501,8 +503,12 @@ BOOST_AUTO_TEST_CASE(hashmap__record_put__multiple__expected)
 
     constexpr key1 key1_big{ 0x41 };
     constexpr key1 key1_little{ 0x42 };
-    BOOST_REQUIRE(instance.put(key1_big, big_record{ 0xa1b2c3d4_u32 }));
-    BOOST_REQUIRE(instance.put(key1_little, little_record{ 0xa1b2c3d4_u32 }));
+
+    link5 link{};
+    BOOST_REQUIRE(instance.put_link(link, key1_big, big_record{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE_EQUAL(link, 0u);
+    BOOST_REQUIRE(instance.put_link(link, key1_little, little_record{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE_EQUAL(link, 1u);
 
     big_record record1{};
     BOOST_REQUIRE(instance.get(key1_big, record1));
@@ -612,8 +618,12 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_put__multiple__expected)
 
     constexpr key1 key_big{ 0x41 };
     constexpr key1 key_little{ 0x42 };
-    BOOST_REQUIRE(instance.put(key_big, big_slab{ 0xa1b2c3d4_u32 }));
-    BOOST_REQUIRE(instance.put(key_little, little_slab{ 0xa1b2c3d4_u32 }));
+
+    link5 link{};
+    BOOST_REQUIRE(instance.put_link(link, key_big, big_slab{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE_EQUAL(link, 0u);
+    BOOST_REQUIRE(instance.put_link(link, key_little, little_slab{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE_EQUAL(link, big_slab::count());
 
     big_slab slab1{};
     BOOST_REQUIRE(instance.get(zero, slab1));
@@ -1010,6 +1020,7 @@ class flex_record
 {
 public:
     static constexpr size_t size = sizeof(uint32_t);
+    static constexpr link5 count() NOEXCEPT { return 1; }
 
     template <typename Sinker>
     bool to_data(Sinker& sink) const NOEXCEPT
@@ -1025,6 +1036,10 @@ class flex_slab
 {
 public:
     static constexpr size_t size = max_size_t;
+    static constexpr link5 count() NOEXCEPT
+    {
+        return link5::size + array_count<key10> + sizeof(uint32_t);
+    }
 
     template <typename Sinker>
     bool to_data(Sinker& sink) const NOEXCEPT
@@ -1036,6 +1051,29 @@ public:
     uint32_t value{ 0 };
 };
 
+BOOST_AUTO_TEST_CASE(hashmap__set_commit__record__expected)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    hashmap<link5, key10, flex_record::size> instance{ head_store, body_store, 2 };
+    BOOST_REQUIRE(instance.create());
+
+    constexpr auto size = link5::size + array_count<key10> + flex_record::size;
+    link5 link{};
+    BOOST_REQUIRE(instance.set_link(link, flex_record{ 0x01020304_u32 }));
+    BOOST_REQUIRE_EQUAL(link, 0u);
+    BOOST_REQUIRE_EQUAL(body_file.size(), size);
+    BOOST_REQUIRE_EQUAL(head_file, base16_chunk("0000000000ffffffffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(body_file, base16_chunk("00000000000000000000000000000004030201"));
+
+    constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
+    BOOST_REQUIRE(instance.commit(link, key1));
+    BOOST_REQUIRE_EQUAL(head_file, base16_chunk("00000000000000000000ffffffffff"));
+    BOOST_REQUIRE_EQUAL(body_file, base16_chunk("ffffffffff0102030405060708090a04030201"));
+}
+
 BOOST_AUTO_TEST_CASE(hashmap__allocate_set_commit__record__expected)
 {
     data_chunk head_file;
@@ -1045,10 +1083,9 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_set_commit__record__expected)
     hashmap<link5, key10, flex_record::size> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
 
+    constexpr auto size = link5::size + array_count<key10> + flex_record::size;
     const auto link = instance.allocate(1);
     BOOST_REQUIRE_EQUAL(link, 0u);
-
-    constexpr auto size = link5::size + array_count<key10> +flex_record::size;
     BOOST_REQUIRE_EQUAL(body_file.size(), size);
 
     BOOST_REQUIRE(instance.set(link, flex_record{ 0x01020304_u32 }));
@@ -1056,7 +1093,50 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_set_commit__record__expected)
     BOOST_REQUIRE_EQUAL(body_file, base16_chunk("00000000000000000000000000000004030201"));
 
     constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
-    BOOST_REQUIRE(instance.commit(key1, link));
+    BOOST_REQUIRE(instance.commit(link, key1));
+    BOOST_REQUIRE_EQUAL(head_file, base16_chunk("00000000000000000000ffffffffff"));
+    BOOST_REQUIRE_EQUAL(body_file, base16_chunk("ffffffffff0102030405060708090a04030201"));
+}
+
+BOOST_AUTO_TEST_CASE(hashmap__allocate_put__record__expected)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    hashmap<link5, key10, flex_record::size> instance{ head_store, body_store, 2 };
+    BOOST_REQUIRE(instance.create());
+    
+    constexpr auto size = link5::size + array_count<key10> + sizeof(uint32_t);
+    const auto link = instance.allocate(1);
+    BOOST_REQUIRE_EQUAL(link, 0u);
+    BOOST_REQUIRE_EQUAL(body_file.size(), size);
+
+    constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
+    BOOST_REQUIRE(instance.put(link, key1, flex_record{ 0x01020304_u32 }));
+    BOOST_REQUIRE_EQUAL(head_file, base16_chunk("00000000000000000000ffffffffff"));
+    BOOST_REQUIRE_EQUAL(body_file, base16_chunk("ffffffffff0102030405060708090a04030201"));
+}
+
+BOOST_AUTO_TEST_CASE(hashmap__set_commit__slab__expected)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    hashmap<link5, key10, flex_slab::size> instance{ head_store, body_store, 2 };
+    BOOST_REQUIRE(instance.create());
+
+    constexpr auto size = link5::size + array_count<key10> + sizeof(uint32_t);
+    link5 link{};
+    BOOST_REQUIRE(instance.set_link(link, flex_slab{ 0x01020304_u32 }));
+    BOOST_REQUIRE_EQUAL(link, 0u);
+    BOOST_REQUIRE_EQUAL(body_file.size(), size);
+    BOOST_REQUIRE_EQUAL(head_file, base16_chunk("0000000000ffffffffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(body_file, base16_chunk("00000000000000000000000000000004030201"));
+
+    constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
+    BOOST_REQUIRE(instance.commit(link, key1));
     BOOST_REQUIRE_EQUAL(head_file, base16_chunk("00000000000000000000ffffffffff"));
     BOOST_REQUIRE_EQUAL(body_file, base16_chunk("ffffffffff0102030405060708090a04030201"));
 }
@@ -1080,7 +1160,27 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_set_commit__slab__expected)
     BOOST_REQUIRE_EQUAL(body_file, base16_chunk("00000000000000000000000000000004030201"));
 
     constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
-    BOOST_REQUIRE(instance.commit(key1, link));
+    BOOST_REQUIRE(instance.commit(link, key1));
+    BOOST_REQUIRE_EQUAL(head_file, base16_chunk("00000000000000000000ffffffffff"));
+    BOOST_REQUIRE_EQUAL(body_file, base16_chunk("ffffffffff0102030405060708090a04030201"));
+}
+
+BOOST_AUTO_TEST_CASE(hashmap__allocate_put__slab__expected)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::storage head_store{ head_file };
+    test::storage body_store{ body_file };
+    hashmap<link5, key10, flex_slab::size> instance{ head_store, body_store, 2 };
+    BOOST_REQUIRE(instance.create());
+
+    constexpr auto size = link5::size + array_count<key10> + sizeof(uint32_t);
+    const auto link = instance.allocate(size);
+    BOOST_REQUIRE_EQUAL(link, 0u);
+    BOOST_REQUIRE_EQUAL(body_file.size(), size);
+
+    constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
+    BOOST_REQUIRE(instance.put(link, key1, flex_slab{ 0x01020304_u32 }));
     BOOST_REQUIRE_EQUAL(head_file, base16_chunk("00000000000000000000ffffffffff"));
     BOOST_REQUIRE_EQUAL(body_file, base16_chunk("ffffffffff0102030405060708090a04030201"));
 }

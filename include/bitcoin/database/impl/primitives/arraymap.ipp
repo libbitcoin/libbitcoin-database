@@ -83,10 +83,18 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put_link(Link& link, const Element& element) NOEXCEPT
+{
+    auto sink = creater(link, element.count());
+    return sink && element.to_data(*sink);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::put(const Element& element) NOEXCEPT
 {
-    auto sink = creater(element.count());
-    return sink && element.to_data(*sink);
+    Link unused{};
+    return put_link(unused, element);
 }
 
 // protected
@@ -107,16 +115,17 @@ reader_ptr CLASS::getter(const Link& link) const NOEXCEPT
 }
 
 TEMPLATE
-writer_ptr CLASS::creater(const Link& size) NOEXCEPT
+writer_ptr CLASS::creater(Link& link, const Link& size) NOEXCEPT
 {
-    const auto ptr = manager_.get(manager_.allocate(size));
+    link = manager_.allocate(size);
+    const auto ptr = manager_.get(link);
     if (!ptr)
         return {};
 
     const auto sink = std::make_shared<writer>(ptr);
 
-    // Limits to single record or eof for slab (caller can remove limit).
-    if constexpr (!is_slab) { sink->set_limit(Size); }
+    // Limits to size records or eof for slab.
+    if constexpr (!is_slab) { sink->set_limit(Size * size); }
     return sink;
 }
 

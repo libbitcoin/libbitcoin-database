@@ -50,15 +50,21 @@ public:
     /// Query interface.
     /// -----------------------------------------------------------------------
 
+    /// Get element at link.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool get(const Link& link, Element& element) const NOEXCEPT;
 
+    /// Put and return link.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool put_link(Link& link, const Element& element) NOEXCEPT;
+
+    /// Put without returning link.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put(const Element& element) NOEXCEPT;
 
 protected:
     reader_ptr getter(const Link& link) const NOEXCEPT;
-    writer_ptr creater(const Link& size) NOEXCEPT;
+    writer_ptr creater(Link& link, const Link& size) NOEXCEPT;
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);

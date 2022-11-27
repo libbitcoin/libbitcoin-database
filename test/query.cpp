@@ -20,9 +20,27 @@
 
 BOOST_AUTO_TEST_SUITE(query_tests)
 
-BOOST_AUTO_TEST_CASE(query_test)
+BOOST_AUTO_TEST_CASE(query__set_header__default__expected)
 {
-    BOOST_REQUIRE(true);
+    settings settings_{};
+    settings_.dir = TEST_DIRECTORY;
+    store store_{ settings_ };
+    query<store> instance{ store_ };
+
+    context context_{};
+    system::chain::header header_{};
+    BOOST_REQUIRE(!instance.set_header(header_, context_));
+}
+
+BOOST_AUTO_TEST_CASE(query__set_tx__default__expected)
+{
+    settings settings_{};
+    settings_.dir = TEST_DIRECTORY;
+    store store_{ settings_ };
+    query<store> instance{ store_ };
+
+    system::chain::transaction transaction_{};
+    BOOST_REQUIRE(!instance.set_tx(transaction_));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -37,6 +37,19 @@ class input
 public:
     using hash_map<schema::input>::hashmap;
 
+    /// Generate composite key.
+    static const search<schema::input::sk> to_point(uint32_t fk,
+        uint32_t index) NOEXCEPT
+    {
+        // TODO: generalize/optimize.
+        search<schema::input::sk> value{};
+        system::write::bytes::copy sink(value);
+        sink.write_little_endian<uint32_t, schema::tx>(fk);
+        sink.write_little_endian<uint32_t, schema::index>(index);
+        BC_ASSERT(sink.get_write_position() == schema::input::sk);
+        return value;
+    }
+
     struct slab
       : public schema::input
     {
@@ -106,6 +119,7 @@ public:
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
+            // TODO: generalize/optimize.
             source.rewind_bytes(sk);
             point_fk = source.read_little_endian<uint32_t, schema::tx>();
             point_index = source.read_little_endian<uint32_t, schema::index>();
