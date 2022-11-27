@@ -36,6 +36,8 @@ template <typename Link, size_t Size>
 class arraymap
 {
 public:
+    using link = Link;
+
     arraymap(storage& header, storage& body) NOEXCEPT;
 
     /// Setup, not thread safe.

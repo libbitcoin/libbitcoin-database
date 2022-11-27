@@ -39,6 +39,8 @@ template <typename Link, typename Key, size_t Size>
 class hashmap
 {
 public:
+    using key = Key;
+    using link = Link;
     using iterator = database::iterator<Link, Key, Size>;
 
     hashmap(storage& header, storage& body, const Link& buckets) NOEXCEPT;
