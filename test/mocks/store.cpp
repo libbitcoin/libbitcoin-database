@@ -17,7 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
+#include "store.hpp"
 
 namespace test {
+
+store::store()
+{
+}
 
 } // namespace test

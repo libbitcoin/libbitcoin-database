@@ -23,6 +23,13 @@
 
 namespace test {
 
+// Fake a thread safe store implementation.
+class store
+{
+public:
+    store();
+};
+
 } // namespace test
 
 #endif
