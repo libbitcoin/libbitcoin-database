@@ -19,8 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_IPP
 #define LIBBITCOIN_DATABASE_QUERY_IPP
 
-#include <algorithm>
-#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -159,31 +157,31 @@ bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set_block(const system::chain::block& block) NOEXCEPT
+bool CLASS::set_block(const system::chain::block&) NOEXCEPT
 {
     return false;
 }
 
 TEMPLATE
-system::chain::header::cptr get_header(const hash_digest& key) NOEXCEPT
+system::chain::header::cptr get_header(const hash_digest&) NOEXCEPT
 {
     return {};
 }
 
 TEMPLATE
-system::chain::transaction::cptr get_tx(const hash_digest& key) NOEXCEPT
+system::chain::transaction::cptr get_tx(const hash_digest&) NOEXCEPT
 {
     return {};
 }
 
 TEMPLATE
-system::chain::block::cptr get_block(const hash_digest& key) NOEXCEPT
+system::chain::block::cptr get_block(const hash_digest&) NOEXCEPT
 {
     return {};
 }
 
 TEMPLATE
-system::hashes get_block_locator(const hash_digest& key) NOEXCEPT
+system::hashes get_block_locator(const hash_digest&) NOEXCEPT
 {
     return {};
 }
