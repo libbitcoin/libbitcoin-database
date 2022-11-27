@@ -50,7 +50,7 @@ bool clear_directory(const path& directory) NOEXCEPT
     std::error_code ec;
     const auto path = system::to_extended_path(directory);
     std::filesystem::remove_all(path, ec);
-    return !ec && std::filesystem::create_directories(path, ec) || !ec;
+    return (!ec && std::filesystem::create_directories(path, ec)) || !ec;
 }
 
 bool create_directory(const path& directory) NOEXCEPT
