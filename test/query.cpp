@@ -46,62 +46,72 @@ public:
     using path = std::filesystem::path;
     using store<test::dfile>::store;
 
-    const system::data_chunk& header_head() NOEXCEPT
+    system::data_chunk& header_head() NOEXCEPT
     {
         return header_head_.buffer();
     }
 
-    const system::data_chunk& header_body() NOEXCEPT
+    system::data_chunk& header_body() NOEXCEPT
     {
         return header_body_.buffer();
     }
 
-    const system::data_chunk& point_head() NOEXCEPT
+    system::data_chunk& point_head() NOEXCEPT
     {
         return point_head_.buffer();
     }
 
-    const system::data_chunk& point_body() NOEXCEPT
+    system::data_chunk& point_body() NOEXCEPT
     {
         return point_body_.buffer();
     }
 
-    const system::data_chunk& input_head() NOEXCEPT
+    system::data_chunk& input_head() NOEXCEPT
     {
         return input_head_.buffer();
     }
 
-    const system::data_chunk& input_body() NOEXCEPT
+    system::data_chunk& input_body() NOEXCEPT
     {
         return input_body_.buffer();
     }
 
-    const system::data_chunk& output_body() NOEXCEPT
+    system::data_chunk& output_head() NOEXCEPT
+    {
+        return output_head_.buffer();
+    }
+
+    system::data_chunk& output_body() NOEXCEPT
     {
         return output_body_.buffer();
     }
 
-    const system::data_chunk& puts_body() NOEXCEPT
+    system::data_chunk& puts_head() NOEXCEPT
+    {
+        return puts_head_.buffer();
+    }
+
+    system::data_chunk& puts_body() NOEXCEPT
     {
         return puts_body_.buffer();
     }
 
-    const system::data_chunk& tx_head() NOEXCEPT
+    system::data_chunk& tx_head() NOEXCEPT
     {
         return tx_head_.buffer();
     }
 
-    const system::data_chunk& tx_body() NOEXCEPT
+    system::data_chunk& tx_body() NOEXCEPT
     {
         return tx_body_.buffer();
     }
 
-    const system::data_chunk& txs_head() NOEXCEPT
+    system::data_chunk& txs_head() NOEXCEPT
     {
         return txs_head_.buffer();
     }
 
-    const system::data_chunk& txs_body() NOEXCEPT
+    system::data_chunk& txs_body() NOEXCEPT
     {
         return txs_body_.buffer();
     }
@@ -165,10 +175,6 @@ BOOST_AUTO_TEST_CASE(query__set_header__mock_default_header__expected)
     }
     table::header::record element1{};
     BOOST_REQUIRE(store1.header.get(block_hash, element1));
-
-    const auto pointer = query1.get_header(block_hash);
-    BOOST_REQUIRE(pointer);
-
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
     BOOST_REQUIRE_EQUAL(store1.header_head(), expected_header_head);
     BOOST_REQUIRE_EQUAL(store1.header_body(), expected_header_body);
@@ -182,7 +188,24 @@ BOOST_AUTO_TEST_CASE(query__set_header__mock_default_header__expected)
     BOOST_REQUIRE_EQUAL(element1.timestamp, header.timestamp());
     BOOST_REQUIRE_EQUAL(element1.bits, header.bits());
     BOOST_REQUIRE_EQUAL(element1.nonce, header.nonce());
+}
 
+BOOST_AUTO_TEST_CASE(query__get_header__mock_default_header__expected)
+{
+    settings settings1{};
+    settings1.header_buckets = 10;
+    settings1.dir = TEST_DIRECTORY;
+    store_accessor store1{ settings1 };
+    query<store<test::dfile>> query1{ store1 };
+    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
+    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
+
+    store1.header_head() = expected_header_head;
+    store1.header_body() = expected_header_body;
+    const auto pointer = query1.get_header(block_hash);
+    BOOST_REQUIRE(pointer);
+
+    BOOST_REQUIRE_EQUAL(store1.close(), error::success);
     BOOST_REQUIRE_EQUAL(pointer->hash(), block_hash);
     BOOST_REQUIRE_EQUAL(pointer->version(), header.version());
     BOOST_REQUIRE_EQUAL(pointer->previous_block_hash(), header.previous_block_hash());
@@ -192,7 +215,7 @@ BOOST_AUTO_TEST_CASE(query__set_header__mock_default_header__expected)
     BOOST_REQUIRE_EQUAL(pointer->nonce(), header.nonce());
 }
 
-BOOST_AUTO_TEST_CASE(query__set_header__mmap_default_header__expected)
+BOOST_AUTO_TEST_CASE(query__set_get_header__mmap_default_header__expected)
 {
     settings settings1{};
     settings1.header_buckets = 10;
@@ -232,15 +255,35 @@ BOOST_AUTO_TEST_CASE(query__set_header__mmap_default_header__expected)
     BOOST_REQUIRE_EQUAL(pointer->nonce(), header.nonce());
 }
 
-BOOST_AUTO_TEST_CASE(query__set_tx__empty_transaction__false)
+BOOST_AUTO_TEST_CASE(query__set_tx__mock_default_tx__expected)
 {
+    const auto expected_head4_array = system::base16_chunk("00000000");
+    const auto expected_head5_array = system::base16_chunk("0000000000");
+    const auto expected_head4_hash = system::base16_chunk(
+        "00000000" // record count
+        "ffffffff" // bucket[0]...
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff");
+    const auto expected_head5_hash = system::base16_chunk(
+        "0000000000" // record count
+        "ffffffffff" // bucket[0]...
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff");
     const system::chain::transaction transaction{};
 
     // data_chunk store.
     settings settings1{};
+    settings1.tx_buckets = 5;
+    settings1.point_buckets = 5;
+    settings1.input_buckets = 5;
+    settings1.txs_buckets = 5;
     settings1.dir = TEST_DIRECTORY;
-    store<map> store1{ settings1 };
-    query<store<map>> query1{ store1 };
+    store_accessor store1{ settings1 };
+    query<store<test::dfile>> query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
     {
@@ -248,6 +291,73 @@ BOOST_AUTO_TEST_CASE(query__set_tx__empty_transaction__false)
         BOOST_REQUIRE(!query1.set_tx(transaction));
     }
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
+    BOOST_REQUIRE_EQUAL(store1.tx_head(), expected_head4_hash);
+    BOOST_REQUIRE_EQUAL(store1.point_head(), expected_head4_hash);
+    BOOST_REQUIRE_EQUAL(store1.input_head(), expected_head5_hash);
+    BOOST_REQUIRE_EQUAL(store1.output_head(), expected_head5_array);
+    BOOST_REQUIRE_EQUAL(store1.puts_head(), expected_head4_array);
+    BOOST_REQUIRE_EQUAL(store1.txs_head(), expected_head4_hash);
+    BOOST_REQUIRE(store1.tx_body().empty());
+    BOOST_REQUIRE(store1.point_body().empty());
+    BOOST_REQUIRE(store1.input_body().empty());
+    BOOST_REQUIRE(store1.output_body().empty());
+    BOOST_REQUIRE(store1.puts_body().empty());
+    BOOST_REQUIRE(store1.txs_body().empty());
+}
+
+BOOST_AUTO_TEST_CASE(query__set_tx__mock_tx__expected)
+{
+    const system::chain::transaction transaction
+    {
+        // TODO: non-default.
+    };
+
+    // TODO: populate, add bodies.
+    const auto expected_head4_array = system::base16_chunk("00000000");
+    const auto expected_head5_array = system::base16_chunk("0000000000");
+    const auto expected_head4_hash = system::base16_chunk(
+        "00000000" // record count
+        "ffffffff" // bucket[0]...
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff");
+    const auto expected_head5_hash = system::base16_chunk(
+        "0000000000" // record count
+        "ffffffffff" // bucket[0]...
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff");
+
+    // data_chunk store.
+    settings settings1{};
+    settings1.tx_buckets = 5;
+    settings1.point_buckets = 5;
+    settings1.input_buckets = 5;
+    settings1.txs_buckets = 5;
+    settings1.dir = TEST_DIRECTORY;
+    store_accessor store1{ settings1 };
+    query<store<test::dfile>> query1{ store1 };
+    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
+    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
+    {
+        const auto transactor = store1.get_transactor();
+        BOOST_REQUIRE(!query1.set_tx(transaction));
+    }
+    BOOST_REQUIRE_EQUAL(store1.close(), error::success);
+    BOOST_REQUIRE_EQUAL(store1.tx_head(), expected_head4_hash);
+    BOOST_REQUIRE_EQUAL(store1.point_head(), expected_head4_hash);
+    BOOST_REQUIRE_EQUAL(store1.input_head(), expected_head5_hash);
+    BOOST_REQUIRE_EQUAL(store1.output_head(), expected_head5_array);
+    BOOST_REQUIRE_EQUAL(store1.puts_head(), expected_head4_array);
+    BOOST_REQUIRE_EQUAL(store1.txs_head(), expected_head4_hash);
+    BOOST_REQUIRE(store1.tx_body().empty());
+    BOOST_REQUIRE(store1.point_body().empty());
+    BOOST_REQUIRE(store1.input_body().empty());
+    BOOST_REQUIRE(store1.output_body().empty());
+    BOOST_REQUIRE(store1.puts_body().empty());
+    BOOST_REQUIRE(store1.txs_body().empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

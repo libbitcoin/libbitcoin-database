@@ -97,9 +97,19 @@ public:
         return input_body_.file();
     }
 
+    const path& output_head_file() const NOEXCEPT
+    {
+        return output_head_.file();
+    }
+
     const path& output_body_file() const NOEXCEPT
     {
         return output_body_.file();
+    }
+
+    const path& puts_head_file() const NOEXCEPT
+    {
+        return puts_head_.file();
     }
 
     const path& puts_body_file() const NOEXCEPT
@@ -163,7 +173,9 @@ BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)
     BOOST_REQUIRE_EQUAL(instance.point_body_file(), "bitcoin/archive_point.dat");
     BOOST_REQUIRE_EQUAL(instance.input_head_file(), "bitcoin/index/archive_input.idx");
     BOOST_REQUIRE_EQUAL(instance.input_body_file(), "bitcoin/archive_input.dat");
+    BOOST_REQUIRE_EQUAL(instance.output_head_file(), "bitcoin/index/archive_output.idx");
     BOOST_REQUIRE_EQUAL(instance.output_body_file(), "bitcoin/archive_output.dat");
+    BOOST_REQUIRE_EQUAL(instance.puts_head_file(), "bitcoin/index/archive_puts.idx");
     BOOST_REQUIRE_EQUAL(instance.puts_body_file(), "bitcoin/archive_puts.dat");
     BOOST_REQUIRE_EQUAL(instance.tx_head_file(), "bitcoin/index/archive_tx.idx");
     BOOST_REQUIRE_EQUAL(instance.tx_body_file(), "bitcoin/archive_tx.dat");
