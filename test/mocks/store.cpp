@@ -16,14 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "../../test.hpp"
-#include "../../mocks/storage.hpp"
+#include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(output_tx_tests)
+namespace test {
 
-BOOST_AUTO_TEST_CASE(tables_indexes_output_tx_test)
-{
-    BOOST_REQUIRE(true);
-}
-
-BOOST_AUTO_TEST_SUITE_END()
+} // namespace test

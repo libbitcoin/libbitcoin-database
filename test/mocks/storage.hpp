@@ -16,11 +16,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TEST_STORAGE_HPP
-#define LIBBITCOIN_DATABASE_TEST_STORAGE_HPP
+#ifndef LIBBITCOIN_DATABASE_TEST_MOCKS_STORAGE_HPP
+#define LIBBITCOIN_DATABASE_TEST_MOCKS_STORAGE_HPP
 
-#include "test.hpp"
-
+#include "../test.hpp"
 #include <filesystem>
 
 namespace test {
@@ -32,8 +31,18 @@ class storage
 public:
     storage() NOEXCEPT;
     storage(system::data_chunk& reference) NOEXCEPT;
+    storage(const std::filesystem::path& filename, size_t minimum=1,
+        size_t expansion=0) NOEXCEPT;
 
-    // storage interface
+    // test side door.
+    system::data_chunk& buffer() NOEXCEPT;
+
+    // storage interface.
+    code open() NOEXCEPT override;
+    code close() NOEXCEPT override;
+    code load() NOEXCEPT override;
+    code flush() const NOEXCEPT override;
+    code unload() NOEXCEPT override;
     const std::filesystem::path& file() const NOEXCEPT override;
     size_t capacity() const NOEXCEPT override;
     size_t size() const NOEXCEPT override;
@@ -49,6 +58,6 @@ private:
     const std::filesystem::path path_{ "test" };
 };
 
-}
+} // namespace test
 
 #endif

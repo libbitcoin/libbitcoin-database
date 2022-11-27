@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../../test.hpp"
-#include "../../storage.hpp"
+#include "../../mocks/storage.hpp"
 
 BOOST_AUTO_TEST_SUITE(validated_tx_tests)
 

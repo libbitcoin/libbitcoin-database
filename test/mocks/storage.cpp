@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "test.hpp"
-#include "storage.hpp"
+#include "../test.hpp"
+#include "../mocks/storage.hpp"
 #include <filesystem>
 #include <mutex>
 #include <shared_mutex>
@@ -29,13 +29,48 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // This is a trivial working storage interface implementation.
 storage::storage() NOEXCEPT
-  : local_{}, buffer_{ local_ }
+  : path_{}, local_{}, buffer_{ local_ }
 {
 }
 
 storage::storage(system::data_chunk& reference) NOEXCEPT
-  : buffer_(reference)
+  : path_{}, local_{}, buffer_{ reference }
 {
+}
+
+storage::storage(const std::filesystem::path& filename, size_t, size_t) NOEXCEPT
+  : path_{ filename }, local_{}, buffer_{ local_ }
+{
+}
+
+system::data_chunk& storage::buffer() NOEXCEPT
+{
+    return buffer_;
+}
+
+code storage::open() NOEXCEPT
+{
+    return error::success;
+}
+
+code storage::close() NOEXCEPT
+{
+    return error::success;
+}
+
+code storage::load() NOEXCEPT
+{
+    return error::success;
+}
+
+code storage::flush() const NOEXCEPT
+{
+    return error::success;
+}
+
+code storage::unload() NOEXCEPT
+{
+    return error::success;
 }
 
 const std::filesystem::path& storage::file() const NOEXCEPT

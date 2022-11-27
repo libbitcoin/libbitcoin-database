@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
-#include "../storage.hpp"
+#include "../mocks/storage.hpp"
 
 BOOST_AUTO_TEST_SUITE(head_tests)
 
@@ -38,6 +38,18 @@ static_assert(buckets == 20u);
 using link = linkage<link_size>;
 using key = data_array<key_size>;
 using header = head<link, key>;
+
+class nullptr_storage
+  : public test::storage
+{
+public:
+    using storage::storage;
+
+    memory_ptr get(size_t size) const NOEXCEPT override
+    {
+        if (is_zero(size)) return storage::get(size); else return {};
+    }
+};
 
 BOOST_AUTO_TEST_CASE(head__create__size__expected)
 {
@@ -119,18 +131,6 @@ BOOST_AUTO_TEST_CASE(head__top__link__terminal)
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(head.top(9).is_terminal());
 }
-
-class nullptr_storage
-  : public test::storage
-{
-public:
-    using storage::storage;
-
-    memory_ptr get(size_t size) const NOEXCEPT override
-    {
-        if (is_zero(size)) return storage::get(size); else return {};
-    }
-};
 
 BOOST_AUTO_TEST_CASE(head__top__nullptr__terminal)
 {

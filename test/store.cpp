@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "../test.hpp"
+#include "test.hpp"
 
 struct store_setup_fixture
 {
@@ -39,27 +39,27 @@ struct store_setup_fixture
 BOOST_FIXTURE_TEST_SUITE(store_tests, store_setup_fixture)
 
 class access
-  : public store
+  : public store<map>
 {
 public:
     using path = std::filesystem::path;
-    using store::store;
+    using store<map>::store;
 
     // backup internals
 
     code backup_() NOEXCEPT
     {
-        return store::backup();
+        return backup();
     }
 
     code dump_(const std::filesystem::path& folder) NOEXCEPT
     {
-        return store::dump(folder);
+        return dump(folder);
     }
 
     code restore_() NOEXCEPT
     {
-        return store::restore();
+        return restore();
     }
 
     const settings& configuration() const NOEXCEPT
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(store__open__uncreated__open_failure)
 {
     settings configuration{};
     configuration.dir = TEST_DIRECTORY;
-    store instance{ configuration };
+    store<map> instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.open(), error::open_failure);
     instance.close();
 }
@@ -328,7 +328,7 @@ BOOST_AUTO_TEST_CASE(store__open__created__success)
 {
     settings configuration{};
     configuration.dir = TEST_DIRECTORY;
-    store instance{ configuration };
+    store<map> instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(), error::success);
     BOOST_REQUIRE_EQUAL(instance.open(), error::success);
     instance.close();
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(store__snapshot__uncreated__flush_unloaded)
 {
     settings configuration{};
     configuration.dir = TEST_DIRECTORY;
-    store instance{ configuration };
+    store<map> instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.snapshot(), error::flush_unloaded);
 }
 
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(store__snapshot__unopened__flush_unloaded)
 {
     settings configuration{};
     configuration.dir = TEST_DIRECTORY;
-    store instance{ configuration };
+    store<map> instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(), error::success);
     BOOST_REQUIRE_EQUAL(instance.snapshot(), error::flush_unloaded);
 }
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(store__snapshot__opened__success)
 {
     settings configuration{};
     configuration.dir = TEST_DIRECTORY;
-    store instance{ configuration };
+    store<map> instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(), error::success);
     BOOST_REQUIRE_EQUAL(instance.open(), error::success);
     BOOST_REQUIRE_EQUAL(instance.snapshot(), error::success);
@@ -373,7 +373,7 @@ BOOST_AUTO_TEST_CASE(store__close__uncreated__flush_unlock)
 {
     settings configuration{};
     configuration.dir = TEST_DIRECTORY;
-    store instance{ configuration };
+    store<map> instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.close(), error::flush_unlock);
 }
 
@@ -382,7 +382,7 @@ BOOST_AUTO_TEST_CASE(store__close__unopened__flush_unlock)
 {
     settings configuration{};
     configuration.dir = TEST_DIRECTORY;
-    store instance{ configuration };
+    store<map> instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::flush_unlock);
 }
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(store__close__opened__success)
 {
     settings configuration{};
     configuration.dir = TEST_DIRECTORY;
-    store instance{ configuration };
+    store<map> instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(), error::success);
     BOOST_REQUIRE_EQUAL(instance.open(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
@@ -633,7 +633,6 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_secondary_loaded__restore_table)
 
 // backup-restore
 // ----------------------------------------------------------------------------
-
 
 BOOST_AUTO_TEST_CASE(store__restore__snapshot__success_unlocks)
 {

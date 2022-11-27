@@ -39,9 +39,7 @@ template <typename Store, bool Witness = true>
 class query
 {
 public:
-    using transaction = system::chain::transaction;
-
-    query(store& value) NOEXCEPT;
+    query(Store& value) NOEXCEPT;
 
     /// Store system::chain object.
     bool set_tx(const system::chain::transaction& tx) NOEXCEPT;
@@ -59,7 +57,7 @@ public:
     system::hashes get_block_txs(const hash_digest& key) NOEXCEPT;
 
 private:
-    store& store_;
+    Store& store_;
 };
 
 } // namespace database
@@ -68,7 +66,7 @@ private:
 #define TEMPLATE template <typename Store, bool Witness>
 #define CLASS query<Store, Witness>
 
-#include <bitcoin/database/impl/store/query.ipp>
+#include <bitcoin/database/impl/query.ipp>
 
 #undef CLASS
 #undef TEMPLATE

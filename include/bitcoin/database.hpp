@@ -20,6 +20,7 @@
 #include <bitcoin/database/error.hpp>
 #include <bitcoin/database/query.hpp>
 #include <bitcoin/database/settings.hpp>
+#include <bitcoin/database/store.hpp>
 #include <bitcoin/database/version.hpp>
 #include <bitcoin/database/locks/file_lock.hpp>
 #include <bitcoin/database/locks/flush_lock.hpp>
@@ -42,7 +43,6 @@
 #include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
 #include <bitcoin/database/tables/schema.hpp>
-#include <bitcoin/database/tables/store.hpp>
 #include <bitcoin/database/tables/tables.hpp>
 #include <bitcoin/database/tables/archives/header.hpp>
 #include <bitcoin/database/tables/archives/input.hpp>

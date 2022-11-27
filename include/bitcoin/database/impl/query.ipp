@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_STORE_QUERY_IPP
-#define LIBBITCOIN_DATABASE_STORE_QUERY_IPP
+#ifndef LIBBITCOIN_DATABASE_QUERY_IPP
+#define LIBBITCOIN_DATABASE_QUERY_IPP
 
 #include <algorithm>
 #include <utility>
@@ -28,7 +28,7 @@ namespace libbitcoin {
 namespace database {
     
 TEMPLATE
-CLASS::query(store& value) NOEXCEPT
+CLASS::query(Store& value) NOEXCEPT
   : store_(value)
 {
 }
@@ -37,7 +37,8 @@ TEMPLATE
 bool CLASS::set_header(const system::chain::header& header,
     const context& context) NOEXCEPT
 {
-    BC_ASSERT(header.is_valid());
+    // Iterator must be released before subsequent header put.
+    const auto parent_fk = store_.header.it(header.previous_block_hash()).self();
 
     return store_.header.put(header.hash(), table::header::record
     {
@@ -45,7 +46,7 @@ bool CLASS::set_header(const system::chain::header& header,
         context.height,
         context.flags,
         context.mtp,
-        store_.header.it(header.previous_block_hash()).self(),
+        parent_fk,
         header.version(),
         header.timestamp(),
         header.bits(),
@@ -57,8 +58,6 @@ bool CLASS::set_header(const system::chain::header& header,
 TEMPLATE
 bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
 {
-    BC_ASSERT(tx.is_valid());
-
     // Must have at least one input and output.
     if (tx.is_empty())
         return false;

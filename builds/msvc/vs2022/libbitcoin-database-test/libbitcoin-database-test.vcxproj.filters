@@ -16,20 +16,23 @@
     <Filter Include="src\memory">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\primitives">
+    <Filter Include="src\mocks">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables">
+    <Filter Include="src\primitives">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\archives">
+    <Filter Include="src\tables">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\caches">
+    <Filter Include="src\tables\archives">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000006}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\indexes">
+    <Filter Include="src\tables\caches">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000007}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\tables\indexes">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000008}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -57,6 +60,12 @@
     <ClCompile Include="..\..\..\..\test\memory\map.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\mocks\storage.cpp">
+      <Filter>src\mocks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\mocks\store.cpp">
+      <Filter>src\mocks</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\arraymap.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
@@ -79,9 +88,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\settings.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\storage.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\archives\header.cpp">
@@ -144,16 +150,19 @@
     <ClCompile Include="..\..\..\..\test\tables\indexes\spent_output.cpp">
       <Filter>src\tables\indexes</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\store.cpp">
-      <Filter>src\tables</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\store.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\test\storage.hpp">
-      <Filter>src</Filter>
+    <ClInclude Include="..\..\..\..\test\mocks\storage.hpp">
+      <Filter>src\mocks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\mocks\store.hpp">
+      <Filter>src\mocks</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\test\test.hpp">
       <Filter>src</Filter>

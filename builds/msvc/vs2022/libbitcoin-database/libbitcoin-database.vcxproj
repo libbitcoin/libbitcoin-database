@@ -81,7 +81,6 @@
     <ClCompile Include="..\..\..\..\src\memory\map.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\mman-win32\mman.c" />
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
-    <ClCompile Include="..\..\..\..\src\tables\store.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp" />
@@ -110,6 +109,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\primitives.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\query.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\store.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\header.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\input.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\output.hpp" />
@@ -131,7 +131,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\output_tx.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\spent_output.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\schema.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\store.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\tables.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp" />
     <ClInclude Include="..\..\..\..\src\memory\mman-win32\mman.h" />
@@ -144,7 +143,8 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\iterator.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\linkage.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\manager.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\store\query.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\store.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
