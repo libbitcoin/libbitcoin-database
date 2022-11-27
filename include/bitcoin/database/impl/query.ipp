@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_IPP
 #define LIBBITCOIN_DATABASE_QUERY_IPP
 
+#include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -35,8 +36,15 @@ TEMPLATE
 bool CLASS::set_header(const system::chain::header& header,
     const context& context) NOEXCEPT
 {
+    const auto& parent_sk = header.previous_block_hash();
+
     // Iterator must be released before subsequent header put.
-    const auto parent_fk = store_.header.it(header.previous_block_hash()).self();
+    const auto parent_fk = store_.header.it(parent_sk).self();
+
+    // Parent must be missing iff its hash is null.
+    if ((parent_fk == table::header::link::terminal) != 
+        (parent_sk == system::null_hash))
+        return false;
 
     return store_.header.put(header.hash(), table::header::record
     {
@@ -129,7 +137,7 @@ bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
             tx.version(),
             system::possible_narrow_cast<uint32_t>(ins.size()),
             system::possible_narrow_cast<uint32_t>(outs.size()),
-            system::possible_narrow_cast<uint32_t>(puts.put_fks.front()) // ???
+            system::possible_narrow_cast<uint32_t>(puts.put_fks.front()) //size_t?
         }))
     {
         return false;
@@ -163,31 +171,47 @@ bool CLASS::set_block(const system::chain::block&) NOEXCEPT
 }
 
 TEMPLATE
-system::chain::header::cptr get_header(const hash_digest&) NOEXCEPT
+system::chain::header::cptr CLASS::get_header(const hash_digest& key) NOEXCEPT
+{
+    table::header::record element{};
+    if (!store_.header.get(key, element))
+        return {};
+
+    // terminal parent implies genesis (default), otherwise must resolve.
+    table::header::record_sk parent{};
+    if ((element.parent_fk != table::header::link::terminal) &&
+        !store_.header.get(element.parent_fk, parent))
+            return {};
+
+    return std::make_shared<const system::chain::header>(
+        element.version,
+        std::move(parent.key),
+        std::move(element.root),
+        element.timestamp,
+        element.bits,
+        element.nonce);
+}
+
+TEMPLATE
+system::chain::transaction::cptr CLASS::get_tx(const hash_digest&) NOEXCEPT
 {
     return {};
 }
 
 TEMPLATE
-system::chain::transaction::cptr get_tx(const hash_digest&) NOEXCEPT
+system::chain::block::cptr CLASS::get_block(const hash_digest&) NOEXCEPT
 {
     return {};
 }
 
 TEMPLATE
-system::chain::block::cptr get_block(const hash_digest&) NOEXCEPT
+system::hashes CLASS::get_block_locator(const hash_digest&) NOEXCEPT
 {
     return {};
 }
 
 TEMPLATE
-system::hashes get_block_locator(const hash_digest&) NOEXCEPT
-{
-    return {};
-}
-
-TEMPLATE
-system::hashes get_block_txs(const hash_digest& key) NOEXCEPT
+system::hashes CLASS::get_block_txs(const hash_digest& key) NOEXCEPT
 {
     return {};
 }

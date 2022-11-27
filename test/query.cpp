@@ -107,9 +107,9 @@ public:
     }
 };
 
+constexpr auto parent = system::null_hash;
 constexpr auto root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
-constexpr auto parent = system::base16_array("110102030405060708090a0b0c0d0e0f220102030405060708090a0b0c0d0e0f");
-constexpr auto block_hash = system::base16_array("80a911db3f348dc686aa9711444562e0b4c10e5cccbd241be3b01412c42a3d7c");
+constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
 constexpr database::context context
 {
     0x01020304, // height
@@ -128,8 +128,8 @@ const system::chain::header header
 const auto expected_header_head = system::base16_chunk(
     "010000" // record count
     "ffffff" // bucket[0]...
-    "ffffff"
     "000000" // pk->
+    "ffffff"
     "ffffff"
     "ffffff"
     "ffffff"
@@ -139,7 +139,7 @@ const auto expected_header_head = system::base16_chunk(
     "ffffff");
 const auto expected_header_body = system::base16_chunk(
     "ffffff"   // next->
-    "80a911db3f348dc686aa9711444562e0b4c10e5cccbd241be3b01412c42a3d7c" // sk (block.hash)
+    "85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2" // sk (block.hash)
     "040302"   // height
     "14131211" // flags
     "24232221" // mtp
@@ -164,7 +164,11 @@ BOOST_AUTO_TEST_CASE(query__set_header__mock_default_header__expected)
         BOOST_REQUIRE(query1.set_header(header, context));
     }
     table::header::record element1{};
-    store1.header.get(block_hash, element1);
+    BOOST_REQUIRE(store1.header.get(block_hash, element1));
+
+    const auto pointer = query1.get_header(block_hash);
+    BOOST_REQUIRE(pointer);
+
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
     BOOST_REQUIRE_EQUAL(store1.header_head(), expected_header_head);
     BOOST_REQUIRE_EQUAL(store1.header_body(), expected_header_body);
@@ -172,12 +176,20 @@ BOOST_AUTO_TEST_CASE(query__set_header__mock_default_header__expected)
     BOOST_REQUIRE_EQUAL(element1.height, system::mask_left(context.height, byte_bits));
     BOOST_REQUIRE_EQUAL(element1.flags, context.flags);
     BOOST_REQUIRE_EQUAL(element1.mtp, context.mtp);
-    BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
     BOOST_REQUIRE_EQUAL(element1.version, header.version());
+    BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
+    BOOST_REQUIRE_EQUAL(element1.root, header.merkle_root());
     BOOST_REQUIRE_EQUAL(element1.timestamp, header.timestamp());
     BOOST_REQUIRE_EQUAL(element1.bits, header.bits());
     BOOST_REQUIRE_EQUAL(element1.nonce, header.nonce());
-    BOOST_REQUIRE_EQUAL(element1.root, header.merkle_root());
+
+    BOOST_REQUIRE_EQUAL(pointer->hash(), block_hash);
+    BOOST_REQUIRE_EQUAL(pointer->version(), header.version());
+    BOOST_REQUIRE_EQUAL(pointer->previous_block_hash(), header.previous_block_hash());
+    BOOST_REQUIRE_EQUAL(pointer->merkle_root(), header.merkle_root());
+    BOOST_REQUIRE_EQUAL(pointer->timestamp(), header.timestamp());
+    BOOST_REQUIRE_EQUAL(pointer->bits(), header.bits());
+    BOOST_REQUIRE_EQUAL(pointer->nonce(), header.nonce());
 }
 
 BOOST_AUTO_TEST_CASE(query__set_header__mmap_default_header__expected)
@@ -194,18 +206,30 @@ BOOST_AUTO_TEST_CASE(query__set_header__mmap_default_header__expected)
         BOOST_REQUIRE(query1.set_header(header, context));
     }
     table::header::record element1{};
-    store1.header.get(block_hash, element1);
+    BOOST_REQUIRE(store1.header.get(block_hash, element1));
+
+    const auto pointer = query1.get_header(block_hash);
+    BOOST_REQUIRE(pointer);
+
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
 
     BOOST_REQUIRE_EQUAL(element1.height, system::mask_left(context.height, byte_bits));
     BOOST_REQUIRE_EQUAL(element1.flags, context.flags);
     BOOST_REQUIRE_EQUAL(element1.mtp, context.mtp);
-    BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
     BOOST_REQUIRE_EQUAL(element1.version, header.version());
+    BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
+    BOOST_REQUIRE_EQUAL(element1.root, header.merkle_root());
     BOOST_REQUIRE_EQUAL(element1.timestamp, header.timestamp());
     BOOST_REQUIRE_EQUAL(element1.bits, header.bits());
     BOOST_REQUIRE_EQUAL(element1.nonce, header.nonce());
-    BOOST_REQUIRE_EQUAL(element1.root, header.merkle_root());
+
+    BOOST_REQUIRE_EQUAL(pointer->hash(), block_hash);
+    BOOST_REQUIRE_EQUAL(pointer->version(), header.version());
+    BOOST_REQUIRE_EQUAL(pointer->previous_block_hash(), header.previous_block_hash());
+    BOOST_REQUIRE_EQUAL(pointer->merkle_root(), header.merkle_root());
+    BOOST_REQUIRE_EQUAL(pointer->timestamp(), header.timestamp());
+    BOOST_REQUIRE_EQUAL(pointer->bits(), header.bits());
+    BOOST_REQUIRE_EQUAL(pointer->nonce(), header.nonce());
 }
 
 BOOST_AUTO_TEST_CASE(query__set_tx__empty_transaction__false)
