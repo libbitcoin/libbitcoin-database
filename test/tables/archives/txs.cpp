@@ -17,20 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../../test.hpp"
-#include "../../mocks/storage.hpp"
+#include "../../mocks/dfile.hpp"
 
 BOOST_AUTO_TEST_SUITE(txs_tests)
 
 using namespace system;
 constexpr search<schema::txs::sk> key = base16_array("112233");
-
-#define DECLARE(instance_, body_file_, buckets_) \
-data_chunk head_file; \
-data_chunk body_file_; \
-test::storage head_store{ head_file }; \
-test::storage body_store{ body_file_ }; \
-table::txs instance_{ head_store, body_store, buckets_ }
-
 const table::txs::slab expected0{};
 const table::txs::slab expected1
 {
@@ -120,13 +112,15 @@ const data_chunk expected_file
 
 BOOST_AUTO_TEST_CASE(txs__put__get__expected)
 {
-    DECLARE(instance, body_file, 20);
+    test::dfile head_store{};
+    test::dfile body_store{};
+    table::txs instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.put(key, expected0));
     BOOST_REQUIRE(instance.put(key, expected1));
     BOOST_REQUIRE(instance.put(key, expected2));
     BOOST_REQUIRE(instance.put(key, expected3));
-    BOOST_REQUIRE_EQUAL(body_file, expected_file);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::txs::slab slab{};
     BOOST_REQUIRE(instance.get(0, slab));

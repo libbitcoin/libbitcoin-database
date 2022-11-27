@@ -16,20 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TEST_MOCKS_STORE_HPP
-#define LIBBITCOIN_DATABASE_TEST_MOCKS_STORE_HPP
-
 #include "../test.hpp"
+#include "dbase.hpp"
 
 namespace test {
 
-// Fake a thread safe store implementation.
-class store
+dbase::dbase() NOEXCEPT
 {
-public:
-    store();
-};
+}
 
 } // namespace test
-
-#endif

@@ -46,7 +46,7 @@ public:
             mtp       = source.read_little_endian<uint32_t>();
             parent_fk = source.read_little_endian<uint32_t, schema::block>();
             version   = source.read_little_endian<uint32_t>();
-            time      = source.read_little_endian<uint32_t>();
+            timestamp = source.read_little_endian<uint32_t>();
             bits      = source.read_little_endian<uint32_t>();
             nonce     = source.read_little_endian<uint32_t>();
             root      = source.read_hash();
@@ -61,7 +61,7 @@ public:
             sink.write_little_endian<uint32_t>(mtp);
             sink.write_little_endian<uint32_t, schema::block>(parent_fk);
             sink.write_little_endian<uint32_t>(version);
-            sink.write_little_endian<uint32_t>(time);
+            sink.write_little_endian<uint32_t>(timestamp);
             sink.write_little_endian<uint32_t>(bits);
             sink.write_little_endian<uint32_t>(nonce);
             sink.write_bytes(root);
@@ -76,7 +76,7 @@ public:
                 && mtp       == other.mtp
                 && parent_fk == other.parent_fk
                 && version   == other.version
-                && time      == other.time
+                && timestamp == other.timestamp
                 && bits      == other.bits
                 && nonce     == other.nonce
                 && root      == other.root;
@@ -87,7 +87,7 @@ public:
         uint32_t mtp{};
         uint32_t parent_fk{};
         uint32_t version{};
-        uint32_t time{};
+        uint32_t timestamp{};
         uint32_t bits{};
         uint32_t nonce{};
         hash_digest root{};

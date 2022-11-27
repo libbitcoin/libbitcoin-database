@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
-#include "../mocks/storage.hpp"
+#include "../mocks/dfile.hpp"
 #include <filesystem>
 #include <mutex>
 #include <shared_mutex>
@@ -27,70 +27,70 @@ namespace test {
 // locks may throw.
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// This is a trivial working storage interface implementation.
-storage::storage() NOEXCEPT
+// This is a trivial working dfile interface implementation.
+dfile::dfile() NOEXCEPT
   : path_{}, local_{}, buffer_{ local_ }
 {
 }
 
-storage::storage(system::data_chunk& reference) NOEXCEPT
+dfile::dfile(system::data_chunk& reference) NOEXCEPT
   : path_{}, local_{}, buffer_{ reference }
 {
 }
 
-storage::storage(const std::filesystem::path& filename, size_t, size_t) NOEXCEPT
+dfile::dfile(const std::filesystem::path& filename, size_t, size_t) NOEXCEPT
   : path_{ filename }, local_{}, buffer_{ local_ }
 {
 }
 
-system::data_chunk& storage::buffer() NOEXCEPT
+system::data_chunk& dfile::buffer() NOEXCEPT
 {
     return buffer_;
 }
 
-code storage::open() NOEXCEPT
+code dfile::open() NOEXCEPT
 {
     return error::success;
 }
 
-code storage::close() NOEXCEPT
+code dfile::close() NOEXCEPT
 {
     return error::success;
 }
 
-code storage::load() NOEXCEPT
+code dfile::load() NOEXCEPT
 {
     return error::success;
 }
 
-code storage::flush() const NOEXCEPT
+code dfile::flush() const NOEXCEPT
 {
     return error::success;
 }
 
-code storage::unload() NOEXCEPT
+code dfile::unload() NOEXCEPT
 {
     return error::success;
 }
 
-const std::filesystem::path& storage::file() const NOEXCEPT
+const std::filesystem::path& dfile::file() const NOEXCEPT
 {
     return path_;
 }
 
-size_t storage::capacity() const NOEXCEPT
+size_t dfile::capacity() const NOEXCEPT
 {
     std::shared_lock field_lock(field_mutex_);
     return buffer_.capacity();
 }
 
-size_t storage::size() const NOEXCEPT
+size_t dfile::size() const NOEXCEPT
 {
     std::shared_lock field_lock(field_mutex_);
     return buffer_.size();
 }
 
-bool storage::truncate(size_t size) NOEXCEPT
+bool dfile::truncate(size_t size) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
     if (size > buffer_.size())
@@ -100,13 +100,13 @@ bool storage::truncate(size_t size) NOEXCEPT
     return true;
 }
 
-size_t storage::allocate(size_t chunk) NOEXCEPT
+size_t dfile::allocate(size_t chunk) NOEXCEPT
 {
     if (system::is_add_overflow<size_t>(buffer_.size(), chunk))
-        return storage::eof;
+        return dfile::eof;
 
     if (buffer_.size() + chunk > buffer_.max_size())
-        return storage::eof;
+        return dfile::eof;
 
     std::unique_lock field_lock(field_mutex_);
     std::unique_lock map_lock(map_mutex_);
@@ -115,7 +115,7 @@ size_t storage::allocate(size_t chunk) NOEXCEPT
     return link;
 }
 
-memory_ptr storage::get(size_t offset) const NOEXCEPT
+memory_ptr dfile::get(size_t offset) const NOEXCEPT
 {
     const auto ptr = std::make_shared<accessor<std::shared_mutex>>(map_mutex_);
 

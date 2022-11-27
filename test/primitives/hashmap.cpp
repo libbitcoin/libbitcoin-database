@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
-#include "../mocks/storage.hpp"
+#include "../mocks/dfile.hpp"
 
 BOOST_AUTO_TEST_SUITE(hashmap_tests)
 
@@ -72,8 +72,8 @@ constexpr auto element_size = link5::size + array_count<key10> + record4::size;
 
 BOOST_AUTO_TEST_CASE(hashmap__record_construct__empty__expected)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     const record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(body_store.buffer().empty());
 }
@@ -81,8 +81,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_construct__empty__expected)
 BOOST_AUTO_TEST_CASE(hashmap__record_construct__non_empty__expected)
 {
     constexpr auto body_size = 12345u;
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     body_store.buffer().resize(body_size);
     const record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE_EQUAL(body_store.buffer().size(), body_size);
@@ -90,8 +90,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_construct__non_empty__expected)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_getter__terminal__false)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(!instance.getter_(link5::terminal));
@@ -99,8 +99,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_getter__terminal__false)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_getter__empty__exhausted)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.getter_(0)->is_exhausted());
@@ -109,8 +109,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_getter__empty__exhausted)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_getter__empty__false)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(!instance.getter_(key10{ 0x00 }));
@@ -122,8 +122,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_getter__empty__false)
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_construct__empty__expected)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     const slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(body_store.buffer().empty());
 }
@@ -131,8 +131,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_construct__empty__expected)
 BOOST_AUTO_TEST_CASE(hashmap__slab_construct__non_empty__expected)
 {
     constexpr auto body_size = 12345u;
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     body_store.buffer().resize(body_size);
     const slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE_EQUAL(body_store.buffer().size(), body_size);
@@ -140,8 +140,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_construct__non_empty__expected)
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_getter__terminal__false)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(!instance.getter_(link5::terminal));
@@ -149,8 +149,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_getter__terminal__false)
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_getter__empty__exhausted)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.getter_(0)->is_exhausted());
@@ -159,8 +159,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_getter__empty__exhausted)
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_getter__empty__false)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(!instance.getter_(key10{ 0x00 }));
@@ -172,8 +172,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_getter__empty__false)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_readers__empty__expected)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
@@ -237,8 +237,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_readers__empty__expected)
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_creater_getter__empty__true)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
@@ -296,8 +296,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_creater_getter__empty__true)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_creater_duplicate_key__getter__true)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
@@ -399,8 +399,8 @@ public:
 
 BOOST_AUTO_TEST_CASE(hashmap__record_get__terminal__invalid)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     const hashmap<link5, key10, little_record::size> instance{ head_store, body_store, buckets };
 
     little_record record{};
@@ -409,8 +409,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__terminal__invalid)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_get__empty__invalid)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     const hashmap<link5, key10, little_record::size> instance{ head_store, body_store, buckets };
 
     little_record record{};
@@ -426,8 +426,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__populated__valid)
         0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba,
         0x01, 0x02, 0x03, 0x04
     };
-    test::storage head_store{ head_file };
-    test::storage body_store{ body_file };
+    test::dfile head_store{ head_file };
+    test::dfile body_store{ body_file };
     const hashmap<link5, key10, little_record::size> instance{ head_store, body_store, buckets };
 
     little_record record{};
@@ -437,8 +437,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__populated__valid)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_put__get__expected)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
@@ -464,8 +464,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_put__get__expected)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_put__multiple__expected)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
@@ -550,8 +550,8 @@ public:
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_put__get__expected)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
 
     hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
@@ -574,8 +574,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_put__get__expected)
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_put__multiple__expected)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
 
     hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
@@ -635,8 +635,8 @@ public:
 
 BOOST_AUTO_TEST_CASE(hashmap__record_get__excess__false)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
@@ -649,8 +649,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__excess__false)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_put__excess__false)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
@@ -705,8 +705,8 @@ public:
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_get__excess__true)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
@@ -721,8 +721,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_get__excess__true)
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_get__file_excess__false)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
@@ -736,8 +736,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_get__file_excess__false)
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_put__excess__false)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
@@ -747,8 +747,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_put__excess__false)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_exists__exists__true)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
@@ -760,8 +760,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_exists__exists__true)
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_exists__exists__true)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
@@ -773,8 +773,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_exists__exists__true)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_it__exists__non_terminal)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
@@ -789,8 +789,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_it__exists__non_terminal)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_it__multiple__iterated)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
@@ -912,8 +912,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_it__multiple__iterated)
 
 BOOST_AUTO_TEST_CASE(hashmap__allocate__terminal__expected)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     record_table instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.allocate(link5::terminal).is_terminal());
@@ -922,8 +922,8 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate__terminal__expected)
 
 BOOST_AUTO_TEST_CASE(hashmap__allocate__record__expected)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     record_table instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE_EQUAL(instance.allocate(1), 0u);
@@ -932,8 +932,8 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate__record__expected)
 
 BOOST_AUTO_TEST_CASE(hashmap__allocate__3_records__expected)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     record_table instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE_EQUAL(instance.allocate(3), 0u);
@@ -944,8 +944,8 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate__3_records__expected)
 
 BOOST_AUTO_TEST_CASE(hashmap__allocate__slab__allocated)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     slab_table instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE_EQUAL(instance.allocate(42), 0u);
@@ -991,8 +991,8 @@ public:
 
 BOOST_AUTO_TEST_CASE(hashmap__set_commit__record__expected)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     hashmap<link5, key10, flex_record::size> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
 
@@ -1013,8 +1013,8 @@ BOOST_AUTO_TEST_CASE(hashmap__set_commit__record__expected)
 BOOST_AUTO_TEST_CASE(hashmap__allocate_set_commit__record__expected)
 {
     data_chunk head_file;
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     hashmap<link5, key10, flex_record::size> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
 
@@ -1035,8 +1035,8 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_set_commit__record__expected)
 
 BOOST_AUTO_TEST_CASE(hashmap__allocate_put__record__expected)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     hashmap<link5, key10, flex_record::size> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
     
@@ -1053,8 +1053,8 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_put__record__expected)
 
 BOOST_AUTO_TEST_CASE(hashmap__set_commit__slab__expected)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     hashmap<link5, key10, flex_slab::size> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
 
@@ -1074,8 +1074,8 @@ BOOST_AUTO_TEST_CASE(hashmap__set_commit__slab__expected)
 
 BOOST_AUTO_TEST_CASE(hashmap__allocate_set_commit__slab__expected)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     hashmap<link5, key10, flex_slab::size> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
 
@@ -1098,8 +1098,8 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_put__slab__expected)
 {
     data_chunk head_file;
     data_chunk body_file;
-    test::storage head_store{ head_file };
-    test::storage body_store{ body_file };
+    test::dfile head_store{ head_file };
+    test::dfile body_store{ body_file };
     hashmap<link5, key10, flex_slab::size> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
 
@@ -1119,8 +1119,8 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_put__slab__expected)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_verify__empty_files__expected)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(!instance.verify());
     BOOST_REQUIRE(instance.create());
@@ -1133,8 +1133,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_create__non_empty_head_file__failure)
 {
     data_chunk head_file{ 0x42 };
     data_chunk body_file;
-    test::storage head_store{ head_file };
-    test::storage body_store{ body_file };
+    test::dfile head_store{ head_file };
+    test::dfile body_store{ body_file };
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(!instance.verify());
     BOOST_REQUIRE(!instance.create());
@@ -1146,8 +1146,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_create__non_empty_body_file__body_zeroed)
 {
     data_chunk head_file;
     data_chunk body_file{ 0x42 };
-    test::storage head_store{ head_file };
-    test::storage body_store{ body_file };
+    test::dfile head_store{ head_file };
+    test::dfile body_store{ body_file };
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(!instance.verify());
     BOOST_REQUIRE(instance.create());
@@ -1158,8 +1158,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_create__non_empty_body_file__body_zeroed)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_body_count__create__zero)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
@@ -1169,8 +1169,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_body_count__empty_close__zero)
 {
     auto head_file = base16_chunk("1234567890");
     data_chunk body_file;
-    test::storage head_store{ head_file };
-    test::storage body_store{ body_file };
+    test::dfile head_store{ head_file };
+    test::dfile body_store{ body_file };
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.close());
     BOOST_REQUIRE_EQUAL(head_file, base16_chunk("0000000000"));
@@ -1178,8 +1178,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_body_count__empty_close__zero)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_body_count__two_close__two)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     body_store.buffer() = base16_chunk("1122334455667788990011223344556677889911223344556677889900112233445566778899");
@@ -1189,8 +1189,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_body_count__two_close__two)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_body_count__two_backup__two)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     body_store.buffer() = base16_chunk("1122334455667788990011223344556677889911223344556677889900112233445566778899");
@@ -1200,8 +1200,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_body_count__two_backup__two)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_body_count__empty_restore__truncates)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     body_store.buffer() = base16_chunk("1234567812345678");
@@ -1211,8 +1211,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_body_count__empty_restore__truncates)
 
 BOOST_AUTO_TEST_CASE(hashmap__record_body_count__non_empty_restore__truncates)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     record_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     head_store.buffer() = base16_chunk("0100000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
@@ -1226,8 +1226,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_body_count__non_empty_restore__truncates)
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_verify__empty_files__expected)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(!instance.verify());
     BOOST_REQUIRE(instance.create());
@@ -1240,8 +1240,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_create__non_empty_head_file__failure)
 {
     data_chunk head_file{ 0x42 };
     data_chunk body_file;
-    test::storage head_store{ head_file };
-    test::storage body_store{ body_file };
+    test::dfile head_store{ head_file };
+    test::dfile body_store{ body_file };
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(!instance.verify());
     BOOST_REQUIRE(!instance.create());
@@ -1253,8 +1253,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_create__non_empty_body_file__body_zeroed)
 {
     data_chunk head_file;
     data_chunk body_file{ 0x42 };
-    test::storage head_store{ head_file };
-    test::storage body_store{ body_file };
+    test::dfile head_store{ head_file };
+    test::dfile body_store{ body_file };
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(!instance.verify());
     BOOST_REQUIRE(instance.create());
@@ -1265,8 +1265,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_create__non_empty_body_file__body_zeroed)
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__create__zero)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
@@ -1276,8 +1276,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__empty_close__zero)
 {
     auto head_file = base16_chunk("1234567890");
     data_chunk body_file;
-    test::storage head_store{ head_file };
-    test::storage body_store{ body_file };
+    test::dfile head_store{ head_file };
+    test::dfile body_store{ body_file };
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.close());
     BOOST_REQUIRE_EQUAL(head_file, base16_chunk("0000000000"));
@@ -1285,8 +1285,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__empty_close__zero)
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__two_close__two)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     body_store.buffer() = base16_chunk("1234");
@@ -1296,8 +1296,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__two_close__two)
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__two_backup__two)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     body_store.buffer() = base16_chunk("1234");
@@ -1307,8 +1307,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__two_backup__two)
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__empty_restore__truncates)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     body_store.buffer() = base16_chunk("1234567812345678");
@@ -1318,8 +1318,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__empty_restore__truncates)
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__non_empty_restore__truncates)
 {
-    test::storage head_store{};
-    test::storage body_store{};
+    test::dfile head_store{};
+    test::dfile body_store{};
     slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     head_store.buffer() = base16_chunk("0300000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");

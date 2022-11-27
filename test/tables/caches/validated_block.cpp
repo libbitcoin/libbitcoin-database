@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../../test.hpp"
-#include "../../mocks/storage.hpp"
+#include "../../mocks/dfile.hpp"
 
 BOOST_AUTO_TEST_SUITE(validated_block_tests)
 

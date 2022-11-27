@@ -78,10 +78,8 @@
     <ClCompile Include="..\..\..\..\test\memory\accessor.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\file.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\map.cpp" />
-    <ClCompile Include="..\..\..\..\test\mocks\storage.cpp" />
-    <ClCompile Include="..\..\..\..\test\mocks\store.cpp">
-      <ObjectFileName>$(IntDir)test_mocks_store.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\mocks\dbase.cpp" />
+    <ClCompile Include="..\..\..\..\test\mocks\dfile.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\arraymap.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hashmap.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\head.cpp" />
@@ -114,8 +112,8 @@
     <ClCompile Include="..\..\..\..\test\test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\test\mocks\storage.hpp" />
-    <ClInclude Include="..\..\..\..\test\mocks\store.hpp" />
+    <ClInclude Include="..\..\..\..\test\mocks\dbase.hpp" />
+    <ClInclude Include="..\..\..\..\test\mocks\dfile.hpp" />
     <ClInclude Include="..\..\..\..\test\test.hpp" />
   </ItemGroup>
   <ItemGroup>

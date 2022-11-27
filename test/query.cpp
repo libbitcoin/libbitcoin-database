@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "test.hpp"
-#include "mocks/storage.hpp"
+#include "mocks/dfile.hpp"
 
 struct query_setup_fixture
 {
@@ -40,11 +40,11 @@ struct query_setup_fixture
 BOOST_FIXTURE_TEST_SUITE(query_tests, query_setup_fixture)
 
 class store_accessor
-  : public store<test::storage>
+  : public store<test::dfile>
 {
 public:
     using path = std::filesystem::path;
-    using store<test::storage>::store;
+    using store<test::dfile>::store;
 
     const system::data_chunk& header_head() NOEXCEPT
     {
@@ -107,93 +107,123 @@ public:
     }
 };
 
-BOOST_AUTO_TEST_CASE(query__set_header__default_header__true)
+constexpr auto root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
+constexpr auto parent = system::base16_array("110102030405060708090a0b0c0d0e0f220102030405060708090a0b0c0d0e0f");
+constexpr auto block_hash = system::base16_array("80a911db3f348dc686aa9711444562e0b4c10e5cccbd241be3b01412c42a3d7c");
+constexpr database::context context
 {
-    settings settings_{};
-    settings_.header_buckets = 10;
-    settings_.dir = TEST_DIRECTORY;
-    store_accessor store_{ settings_ };
-    query<store<test::storage>> instance{ store_ };
-    BOOST_REQUIRE_EQUAL(store_.create(), error::success);
-    BOOST_REQUIRE_EQUAL(store_.open(), error::success);
+    0x01020304, // height
+    0x11121314, // flags
+    0x21222324  // mtp
+};
+const system::chain::header header
+{
+    0x31323334, // version
+    parent,     // previous_block_hash
+    root,       // merkle_root
+    0x41424344, // timestamp
+    0x51525354, // bits
+    0x61626364  // nonce
+};
+const auto expected_header_head = system::base16_chunk(
+    "010000" // record count
+    "ffffff" // bucket[0]...
+    "ffffff"
+    "000000" // pk->
+    "ffffff"
+    "ffffff"
+    "ffffff"
+    "ffffff"
+    "ffffff"
+    "ffffff"
+    "ffffff");
+const auto expected_header_body = system::base16_chunk(
+    "ffffff"   // next->
+    "80a911db3f348dc686aa9711444562e0b4c10e5cccbd241be3b01412c42a3d7c" // sk (block.hash)
+    "040302"   // height
+    "14131211" // flags
+    "24232221" // mtp
+    "ffffff"   // previous_block_hash (header_fk - not found)
+    "34333231" // version
+    "44434241" // timestamp
+    "54535251" // bits
+    "64636261" // nonce
+    "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); // merkle_root
 
-    constexpr context context
+BOOST_AUTO_TEST_CASE(query__set_header__mock_default_header__expected)
+{
+    settings settings1{};
+    settings1.header_buckets = 10;
+    settings1.dir = TEST_DIRECTORY;
+    store_accessor store1{ settings1 };
+    query<store<test::dfile>> query1{ store1 };
+    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
+    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
     {
-        0x01020304, // height
-        0x11121314, // flags
-        0x21222324  // mtp
-    };
-    constexpr auto block_hash = system::base16_array("80a911db3f348dc686aa9711444562e0b4c10e5cccbd241be3b01412c42a3d7c");
-    constexpr auto parent = system::base16_array("110102030405060708090a0b0c0d0e0f220102030405060708090a0b0c0d0e0f");
-    constexpr auto root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
-    const system::chain::header header
-    {
-        0x31323334, // version
-        parent,     // previous_block_hash
-        root,       // merkle_root
-        0x41424344, // timestamp
-        0x51525354, // bits
-        0x61626364  // nonce
-    };
-    BOOST_REQUIRE_EQUAL(header.hash(), block_hash);
-
-    // transactor scope.
-    {
-        const auto transactor = store_.get_transactor();
-        BOOST_REQUIRE(instance.set_header(header, context));
+        const auto transactor = store1.get_transactor();
+        BOOST_REQUIRE(query1.set_header(header, context));
     }
+    table::header::record element1{};
+    store1.header.get(block_hash, element1);
+    BOOST_REQUIRE_EQUAL(store1.close(), error::success);
+    BOOST_REQUIRE_EQUAL(store1.header_head(), expected_header_head);
+    BOOST_REQUIRE_EQUAL(store1.header_body(), expected_header_body);
 
-    BOOST_REQUIRE_EQUAL(store_.close(), error::success);
+    BOOST_REQUIRE_EQUAL(element1.height, system::mask_left(context.height, byte_bits));
+    BOOST_REQUIRE_EQUAL(element1.flags, context.flags);
+    BOOST_REQUIRE_EQUAL(element1.mtp, context.mtp);
+    BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
+    BOOST_REQUIRE_EQUAL(element1.version, header.version());
+    BOOST_REQUIRE_EQUAL(element1.timestamp, header.timestamp());
+    BOOST_REQUIRE_EQUAL(element1.bits, header.bits());
+    BOOST_REQUIRE_EQUAL(element1.nonce, header.nonce());
+    BOOST_REQUIRE_EQUAL(element1.root, header.merkle_root());
+}
 
-    ////std::cout << store_.header_head() << std::endl << std::endl;
-    const auto expected_head = system::base16_chunk(
-        "010000" // record count
-        "ffffff" // bucket[0]...
-        "ffffff"
-        "000000" // pk->
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff");
-    ////std::cout << store_.header_body() << std::endl << std::endl;
-    const auto expected_body = system::base16_chunk(
-        "ffffff"   // next->
-        "80a911db3f348dc686aa9711444562e0b4c10e5cccbd241be3b01412c42a3d7c" // sk (block.hash)
-        "040302"   // height
-        "14131211" // flags
-        "24232221" // mtp
-        "ffffff"   // previous_block_hash (header_fk - not found)
-        "34333231" // version
-        "44434241" // timestamp
-        "54535251" // bits
-        "64636261" // nonce
-        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); // merkle_root
+BOOST_AUTO_TEST_CASE(query__set_header__mmap_default_header__expected)
+{
+    settings settings1{};
+    settings1.header_buckets = 10;
+    settings1.dir = TEST_DIRECTORY;
+    store<map> store1{ settings1 };
+    query<store<map>> query1{ store1 };
+    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
+    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
+    {
+        const auto transactor = store1.get_transactor();
+        BOOST_REQUIRE(query1.set_header(header, context));
+    }
+    table::header::record element1{};
+    store1.header.get(block_hash, element1);
+    BOOST_REQUIRE_EQUAL(store1.close(), error::success);
 
-    BOOST_REQUIRE_EQUAL(store_.header_head(), expected_head);
-    BOOST_REQUIRE_EQUAL(store_.header_body(), expected_body);
+    BOOST_REQUIRE_EQUAL(element1.height, system::mask_left(context.height, byte_bits));
+    BOOST_REQUIRE_EQUAL(element1.flags, context.flags);
+    BOOST_REQUIRE_EQUAL(element1.mtp, context.mtp);
+    BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
+    BOOST_REQUIRE_EQUAL(element1.version, header.version());
+    BOOST_REQUIRE_EQUAL(element1.timestamp, header.timestamp());
+    BOOST_REQUIRE_EQUAL(element1.bits, header.bits());
+    BOOST_REQUIRE_EQUAL(element1.nonce, header.nonce());
+    BOOST_REQUIRE_EQUAL(element1.root, header.merkle_root());
 }
 
 BOOST_AUTO_TEST_CASE(query__set_tx__empty_transaction__false)
 {
-    settings settings_{};
-    settings_.dir = TEST_DIRECTORY;
-    store<map> store_{ settings_ };
-    query<store<map>> instance{ store_ };
-    BOOST_REQUIRE_EQUAL(store_.create(), error::success);
-    BOOST_REQUIRE_EQUAL(store_.open(), error::success);
-
     const system::chain::transaction transaction{};
 
-    // transactor scope.
+    // data_chunk store.
+    settings settings1{};
+    settings1.dir = TEST_DIRECTORY;
+    store<map> store1{ settings1 };
+    query<store<map>> query1{ store1 };
+    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
+    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
     {
-        const auto transactor = store_.get_transactor();
-        BOOST_REQUIRE(!instance.set_tx(transaction));
+        const auto transactor = store1.get_transactor();
+        BOOST_REQUIRE(!query1.set_tx(transaction));
     }
-
-    BOOST_REQUIRE_EQUAL(store_.close(), error::success);
+    BOOST_REQUIRE_EQUAL(store1.close(), error::success);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

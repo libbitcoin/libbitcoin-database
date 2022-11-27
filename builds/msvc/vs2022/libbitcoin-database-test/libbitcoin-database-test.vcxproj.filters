@@ -60,10 +60,10 @@
     <ClCompile Include="..\..\..\..\test\memory\map.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\mocks\storage.cpp">
+    <ClCompile Include="..\..\..\..\test\mocks\dbase.cpp">
       <Filter>src\mocks</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\mocks\store.cpp">
+    <ClCompile Include="..\..\..\..\test\mocks\dfile.cpp">
       <Filter>src\mocks</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\arraymap.cpp">
@@ -88,6 +88,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\settings.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\store.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\archives\header.cpp">
@@ -153,15 +156,12 @@
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\store.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\test\mocks\storage.hpp">
+    <ClInclude Include="..\..\..\..\test\mocks\dbase.hpp">
       <Filter>src\mocks</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\test\mocks\store.hpp">
+    <ClInclude Include="..\..\..\..\test\mocks\dfile.hpp">
       <Filter>src\mocks</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\test\test.hpp">

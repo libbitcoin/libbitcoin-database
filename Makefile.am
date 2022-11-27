@@ -59,6 +59,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/main.cpp \
     test/query.cpp \
     test/settings.cpp \
+    test/store.cpp \
     test/test.cpp \
     test/test.hpp \
     test/locks/file_lock.cpp \
@@ -67,17 +68,16 @@ test_libbitcoin_database_test_SOURCES = \
     test/memory/accessor.cpp \
     test/memory/file.cpp \
     test/memory/map.cpp \
-    test/mocks/storage.cpp \
-    test/mocks/storage.hpp \
-    test/mocks/store.cpp \
-    test/mocks/store.hpp \
+    test/mocks/dbase.cpp \
+    test/mocks/dbase.hpp \
+    test/mocks/dfile.cpp \
+    test/mocks/dfile.hpp \
     test/primitives/arraymap.cpp \
     test/primitives/hashmap.cpp \
     test/primitives/head.cpp \
     test/primitives/iterator.cpp \
     test/primitives/linkage.cpp \
     test/primitives/manager.cpp \
-    test/tables/store.cpp \
     test/tables/archives/header.cpp \
     test/tables/archives/input.cpp \
     test/tables/archives/output.cpp \
