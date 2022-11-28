@@ -196,12 +196,6 @@ BOOST_AUTO_TEST_CASE(query__get_header__mock_default_header__expected)
     constexpr auto parent = system::null_hash;
     constexpr auto root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
     constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
-    constexpr database::context context
-    {
-        0x01020304, // flags
-        0x11121314, // height
-        0x21222324  // mtp
-    };
     const system::chain::header header
     {
         0x31323334, // version
@@ -360,11 +354,11 @@ BOOST_AUTO_TEST_CASE(query__set_tx__mock_tx_null_input__expected)
         0x01020304,    // version
         inputs
         {
-            input{ {}, {}, {}, 0 }
+            input{ point{}, script{}, witness{}, 0 }
         },
         outputs
         {
-            output{ 0, {} }
+            output{ 0, script{} }
         },
         0x11121314     // locktime
     };

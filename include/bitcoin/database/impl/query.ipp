@@ -277,7 +277,7 @@ system::hashes CLASS::get_block_locator(const hash_digest&) NOEXCEPT
 }
 
 TEMPLATE
-system::hashes CLASS::get_block_txs(const hash_digest& key) NOEXCEPT
+system::hashes CLASS::get_block_txs(const hash_digest&) NOEXCEPT
 {
     return {};
 }
