@@ -129,6 +129,24 @@ public:
         uint32_t point_fk{};
         uint32_t point_index{};
     };
+
+    struct slab_with_decomposed_sk
+      : public slab
+    {
+        BC_PUSH_WARNING(NO_METHOD_HIDING)
+        inline bool from_data(reader& source) NOEXCEPT
+        BC_POP_WARNING()
+        {
+            // TODO: generalize/optimize.
+            source.rewind_bytes(sk);
+            point_fk = source.read_little_endian<uint32_t, schema::tx>();
+            point_index = source.read_little_endian<uint32_t, schema::index>();
+            return slab::from_data(source);
+        }
+
+        uint32_t point_fk{};
+        uint32_t point_index{};
+    };
 };
 
 } // namespace table

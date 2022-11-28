@@ -20,12 +20,16 @@
 #define LIBBITCOIN_DATABASE_QUERY_IPP
 
 #include <memory>
+#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
     
+BC_PUSH_WARNING(NO_NEW_OR_DELETE)
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 TEMPLATE
 CLASS::query(Store& value) NOEXCEPT
   : store_(value)
@@ -82,18 +86,18 @@ bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
 
     // Allocate and Set inputs, queue each put.
     uint32_t input_index = 0;
-    for (auto& in: ins)
+    linkage<schema::put> input_pk{};
+    for (const auto& in: ins)
     {
-        linkage<schema::put> input_pk{};
         if (store_.input.set_link(input_pk, table::input::slab
-            {
-                {},
-                tx_pk,
-                input_index++,
-                in->sequence(),
-                in->script(),
-                in->witness()
-            }))
+        {
+            {},
+            tx_pk,
+            input_index++,
+            in->sequence(),
+            in->script(),
+            in->witness()
+        }))
         {
             puts.put_fks.push_back(input_pk);
         }
@@ -101,17 +105,17 @@ bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
 
     // Commit outputs, queue each put.
     uint32_t output_index = 0;
-    for (auto& out: outs)
+    linkage<schema::put> output_pk{};
+    for (const auto& out: outs)
     {
-        linkage<schema::put> output_pk{};
         if (store_.output.put_link(output_pk, table::output::slab
-            {
-                {},
-                tx_pk,
-                output_index++,
-                out->value(),
-                out->script()
-            }))
+        {
+            {},
+            tx_pk,
+            output_index++,
+            out->value(),
+            out->script()
+        }))
         {
             puts.put_fks.push_back(output_pk);
         }
@@ -122,46 +126,49 @@ bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
         return false;
 
     // Commit puts.
-    if (!store_.puts.put(puts))
+    ////table::puts::record puts{};
+    linkage<schema::puts_> puts_pk{};
+    if (!store_.puts.put_link(puts_pk, puts))
         return false;
 
     // Set transaction.
     // TODO: instead of weight store tx.serialized_size(true)?
     if (!store_.tx.set(tx_pk, table::transaction::record
-        {
-            {},
-            tx.is_coinbase(),
-            system::possible_narrow_cast<uint32_t>(tx.serialized_size(false)),
-            system::possible_narrow_cast<uint32_t>(tx.weight()),
-            tx.locktime(),
-            tx.version(),
-            system::possible_narrow_cast<uint32_t>(ins.size()),
-            system::possible_narrow_cast<uint32_t>(outs.size()),
-            system::possible_narrow_cast<uint32_t>(puts.put_fks.front()) //size_t?
-        }))
+    {
+        {},
+        tx.is_coinbase(),
+        system::possible_narrow_cast<uint32_t>(tx.serialized_size(false)),
+        system::possible_narrow_cast<uint32_t>(tx.weight()),
+        tx.locktime(),
+        tx.version(),
+        system::possible_narrow_cast<uint32_t>(ins.size()),
+        system::possible_narrow_cast<uint32_t>(outs.size()),
+        puts_pk
+    }))
     {
         return false;
     }
 
     // Commit point and input for each input.
     auto input_fk = puts.put_fks.begin();
-    for (auto& in: ins)
+    linkage<schema::point::pk> point_pk{};
+    const table::point::record empty{};
+    for (const auto& in: ins)
     {
         const auto& prevout = in->point();
 
-        // Commit (empty to) prevout.hash if missing (multiple txs/ins may ref).
-        linkage<schema::point::pk> pk;
-        if (!store_.point.put_if(pk, prevout.hash(), table::point::record{}))
+        // Commit (empty) to prevout.hash (if missing).
+        if (!store_.point.put_if(point_pk, prevout.hash(), empty))
             return false;
 
         // Commit each input_fk to its prevout fp.
-        const auto fp = table::input::to_point(pk, prevout.index());
-        if (!store_.input.commit(*input_fk++, fp))
+        if (!store_.input.commit(*input_fk++, table::input::to_point(point_pk,
+            prevout.index())))
             return false;
     }
 
     // Commit transaction to its hash.
-    return store_.tx.commit(tx_pk, tx.hash(Witness));
+    return store_.tx.commit(tx_pk, tx.hash(false));
 }
 
 TEMPLATE
@@ -181,21 +188,80 @@ system::chain::header::cptr CLASS::get_header(const hash_digest& key) NOEXCEPT
     table::header::record_sk parent{};
     if ((element.parent_fk != table::header::link::terminal) &&
         !store_.header.get(element.parent_fk, parent))
-            return {};
+        return {};
 
-    return std::make_shared<const system::chain::header>(
+    // Use of pointer forward here avoids move construction.
+    return system::to_shared(new system::chain::header
+    {
         element.version,
         std::move(parent.key),
         std::move(element.root),
         element.timestamp,
         element.bits,
-        element.nonce);
+        element.nonce
+    });
 }
 
 TEMPLATE
-system::chain::transaction::cptr CLASS::get_tx(const hash_digest&) NOEXCEPT
+system::chain::transaction::cptr CLASS::get_tx(const hash_digest& key) NOEXCEPT
 {
-    return {};
+    using namespace system::chain;
+
+    table::transaction::record tx{};
+    if (!store_.tx.get(key, tx))
+        return {};
+
+    table::puts::record inputs{};
+    inputs.put_fks.resize(tx.ins_count);
+    if (!store_.puts.get(tx.ins_fk, inputs))
+        return {};
+
+    table::puts::record outputs{};
+    outputs.put_fks.resize(tx.outs_count);
+    if (!store_.puts.get(tx.ins_fk + tx.ins_count, outputs))
+        return {};
+
+    input_cptrs ins{};
+    ins.reserve(tx.ins_count);
+    table::point::record_sk pt{};
+    table::input::slab_with_decomposed_sk in{};
+    for (const auto& in_fk: inputs.put_fks)
+    {
+        if (!store_.input.get(in_fk, in) ||
+            !store_.point.get(in.point_fk, pt))
+            return {};
+
+        ins.emplace_back(new input
+        {
+            point{ pt.key, in.point_index },
+            std::move(in.script),
+            std::move(in.witness),
+            in.sequence
+        });
+    }
+
+    output_cptrs outs{};
+    outs.reserve(tx.outs_count);
+    table::output::slab out{};
+    for (const auto& out_fk: outputs.put_fks)
+    {
+        if (!store_.output.get(out_fk, out))
+            return {};
+
+        outs.emplace_back(new output
+        {
+            out.value,
+            std::move(out.script)
+        });
+    }
+
+    return system::to_shared(new transaction
+    {
+        tx.version,
+        system::to_shared(std::move(ins)),
+        system::to_shared(std::move(outs)),
+        tx.locktime
+    });
 }
 
 TEMPLATE
@@ -215,6 +281,9 @@ system::hashes CLASS::get_block_txs(const hash_digest& key) NOEXCEPT
 {
     return {};
 }
+
+BC_POP_WARNING()
+BC_POP_WARNING()
 
 } // namespace database
 } // namespace libbitcoin

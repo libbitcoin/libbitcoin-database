@@ -27,6 +27,7 @@
 namespace libbitcoin {
 namespace database {
 
+// TODO: rationalize with chain::context.
 struct context
 {
     uint32_t height{};
@@ -34,8 +35,7 @@ struct context
     uint32_t mtp{};
 };
 
-/// Witness argument controls only canonical identifier.
-template <typename Store, bool Witness = true>
+template <typename Store>
 class query
 {
 public:
@@ -63,8 +63,8 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Store, bool Witness>
-#define CLASS query<Store, Witness>
+#define TEMPLATE template <typename Store>
+#define CLASS query<Store>
 
 #include <bitcoin/database/impl/query.ipp>
 
