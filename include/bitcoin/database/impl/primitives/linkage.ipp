@@ -59,6 +59,12 @@ inline linkage<Size>& CLASS::operator=(const bytes& other) NOEXCEPT
     return *this;
 }
 
+////TEMPLATE
+////constexpr CLASS::operator bool() const NOEXCEPT
+////{
+////    return !is_terminal();
+////}
+
 TEMPLATE
 constexpr CLASS::operator CLASS::integer() const NOEXCEPT
 {

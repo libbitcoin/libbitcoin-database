@@ -162,8 +162,7 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/memory/file.cpp"
     "../../src/memory/map.cpp"
     "../../src/memory/mman-win32/mman.c"
-    "../../src/memory/mman-win32/mman.h"
-    "../../src/tables/store.cpp" )
+    "../../src/memory/mman-win32/mman.h" )
 
 # ${CANONICAL_LIB_NAME} project specific include directories.
 #------------------------------------------------------------------------------
@@ -198,8 +197,7 @@ if (with-tests)
         "../../test/main.cpp"
         "../../test/query.cpp"
         "../../test/settings.cpp"
-        "../../test/storage.cpp"
-        "../../test/storage.hpp"
+        "../../test/store.cpp"
         "../../test/test.cpp"
         "../../test/test.hpp"
         "../../test/locks/file_lock.cpp"
@@ -208,13 +206,16 @@ if (with-tests)
         "../../test/memory/accessor.cpp"
         "../../test/memory/file.cpp"
         "../../test/memory/map.cpp"
+        "../../test/mocks/dbase.cpp"
+        "../../test/mocks/dbase.hpp"
+        "../../test/mocks/dfile.cpp"
+        "../../test/mocks/dfile.hpp"
         "../../test/primitives/arraymap.cpp"
         "../../test/primitives/hashmap.cpp"
         "../../test/primitives/head.cpp"
         "../../test/primitives/iterator.cpp"
         "../../test/primitives/linkage.cpp"
         "../../test/primitives/manager.cpp"
-        "../../test/tables/store.cpp"
         "../../test/tables/archives/header.cpp"
         "../../test/tables/archives/input.cpp"
         "../../test/tables/archives/output.cpp"

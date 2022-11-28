@@ -78,6 +78,8 @@
     <ClCompile Include="..\..\..\..\test\memory\accessor.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\file.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\map.cpp" />
+    <ClCompile Include="..\..\..\..\test\mocks\dbase.cpp" />
+    <ClCompile Include="..\..\..\..\test\mocks\dfile.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\arraymap.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hashmap.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\head.cpp" />
@@ -86,7 +88,7 @@
     <ClCompile Include="..\..\..\..\test\primitives\manager.cpp" />
     <ClCompile Include="..\..\..\..\test\query.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
-    <ClCompile Include="..\..\..\..\test\storage.cpp" />
+    <ClCompile Include="..\..\..\..\test\store.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\header.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\input.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\output.cpp" />
@@ -107,11 +109,11 @@
     <ClCompile Include="..\..\..\..\test\tables\indexes\input_tx.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\output_tx.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\spent_output.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\store.cpp" />
     <ClCompile Include="..\..\..\..\test\test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\test\storage.hpp" />
+    <ClInclude Include="..\..\..\..\test\mocks\dbase.hpp" />
+    <ClInclude Include="..\..\..\..\test\mocks\dfile.hpp" />
     <ClInclude Include="..\..\..\..\test\test.hpp" />
   </ItemGroup>
   <ItemGroup>

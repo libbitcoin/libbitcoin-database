@@ -17,21 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../../test.hpp"
-#include "../../storage.hpp"
+#include "../../mocks/dfile.hpp"
 
 BOOST_AUTO_TEST_SUITE(header_tests)
 
 using namespace system;
 constexpr hash_digest key = base16_array("110102030405060708090a0b0c0d0e0f220102030405060708090a0b0c0d0e0f");
 constexpr hash_digest root = base16_array("330102030405060708090a0b0c0d0e0f440102030405060708090a0b0c0d0e0f");
-
-#define DECLARE(instance_, body_file_, buckets_) \
-data_chunk head_file; \
-data_chunk body_file_; \
-test::storage head_store{ head_file }; \
-test::storage body_store{ body_file_ }; \
-table::header instance_{ head_store, body_store, buckets_ }
-
 constexpr table::header::record expected
 {
     {},             // schema::header [all const static members]
@@ -40,7 +32,7 @@ constexpr table::header::record expected
     0x56341203_u32, // mtp
     0x00341204_u32, // parent_fk
     0x56341205_u32, // version
-    0x56341206_u32, // time
+    0x56341206_u32, // timestamp
     0x56341207_u32, // bits
     0x56341208_u32, // nonce
     root
@@ -91,11 +83,13 @@ const data_chunk expected_file
 
 BOOST_AUTO_TEST_CASE(header__put__get__expected)
 {
-    DECLARE(instance, body_file, 20);
+    test::dfile head_store{};
+    test::dfile body_store{};
+    table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.put({}, table::header::record{}));
     BOOST_REQUIRE(instance.put(key, expected));
-    BOOST_REQUIRE_EQUAL(body_file, expected_file);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::header::record element{};
     BOOST_REQUIRE(instance.get(0, element));
@@ -113,11 +107,13 @@ BOOST_AUTO_TEST_CASE(header__put__get__expected)
 
 BOOST_AUTO_TEST_CASE(point__put__get_sk__expected)
 {
-    DECLARE(instance, body_file, 20);
+    test::dfile head_store{};
+    test::dfile body_store{};
+    table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.put({}, table::header::record{}));
     BOOST_REQUIRE(instance.put(key, expected));
-    BOOST_REQUIRE_EQUAL(body_file, expected_file);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::header::record_sk element{};
     BOOST_REQUIRE(instance.get(1, element));
@@ -126,11 +122,13 @@ BOOST_AUTO_TEST_CASE(point__put__get_sk__expected)
 
 BOOST_AUTO_TEST_CASE(point__it__pk__expected)
 {
-    DECLARE(instance, body_file, 20);
+    test::dfile head_store{};
+    test::dfile body_store{};
+    table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.put({}, table::header::record{}));
     BOOST_REQUIRE(instance.put(key, expected));
-    BOOST_REQUIRE_EQUAL(body_file, expected_file);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     auto it = instance.it(key);
     BOOST_REQUIRE_EQUAL(it.self(), 1u);
@@ -139,11 +137,13 @@ BOOST_AUTO_TEST_CASE(point__it__pk__expected)
 
 BOOST_AUTO_TEST_CASE(header__put__get_height__expected)
 {
-    DECLARE(instance, body_file, 20);
+    test::dfile head_store{};
+    test::dfile body_store{};
+    table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.put({}, table::header::record{}));
     BOOST_REQUIRE(instance.put(key, expected));
-    BOOST_REQUIRE_EQUAL(body_file, expected_file);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::header::record_height element{};
     BOOST_REQUIRE(instance.get(1, element));
@@ -152,11 +152,13 @@ BOOST_AUTO_TEST_CASE(header__put__get_height__expected)
 
 BOOST_AUTO_TEST_CASE(header__put__get_with_sk__expected)
 {
-    DECLARE(instance, body_file, 20);
+    test::dfile head_store{};
+    test::dfile body_store{};
+    table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.put({}, table::header::record{}));
     BOOST_REQUIRE(instance.put(key, expected));
-    BOOST_REQUIRE_EQUAL(body_file, expected_file);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::header::record_with_sk element{};
     BOOST_REQUIRE(instance.get<table::header::record_with_sk>(key, element));

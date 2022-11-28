@@ -17,20 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../../test.hpp"
-#include "../../storage.hpp"
+#include "../../mocks/dfile.hpp"
 
 BOOST_AUTO_TEST_SUITE(input_tests)
 
 using namespace system;
 constexpr search<table::input::slab::sk> key = base16_array("11223344556677");
-
-#define DECLARE(instance_, body_file_, buckets_) \
-data_chunk head_file; \
-data_chunk body_file_; \
-test::storage head_store{ head_file }; \
-test::storage body_store{ body_file_ }; \
-table::input instance_{ head_store, body_store, buckets_ }
-
 const table::input::slab expected
 {
     {},             // schema::input [all const static members]
@@ -74,11 +66,13 @@ const data_chunk expected_file
 
 BOOST_AUTO_TEST_CASE(input__put__get__expected)
 {
-    DECLARE(instance, body_file, 20);
+    test::dfile head_store{};
+    test::dfile body_store{};
+    table::input instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.put({}, table::input::slab{}));
     BOOST_REQUIRE(instance.put(key, expected));
-    BOOST_REQUIRE_EQUAL(body_file, expected_file);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::input::slab element{};
     BOOST_REQUIRE(instance.get(0, element));
@@ -96,11 +90,13 @@ BOOST_AUTO_TEST_CASE(input__put__get__expected)
 
 BOOST_AUTO_TEST_CASE(input__put__get_composite_sk__expected)
 {
-    DECLARE(instance, body_file, 20);
+    test::dfile head_store{};
+    test::dfile body_store{};
+    table::input instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.put({}, table::input::slab{}));
     BOOST_REQUIRE(instance.put(key, expected));
-    BOOST_REQUIRE_EQUAL(body_file, expected_file);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::input::slab_composite_sk element{};
     BOOST_REQUIRE(instance.get(slab0_size, element));
@@ -109,11 +105,13 @@ BOOST_AUTO_TEST_CASE(input__put__get_composite_sk__expected)
 
 BOOST_AUTO_TEST_CASE(input__put__get_decomposed_sk__expected)
 {
-    DECLARE(instance, body_file, 20);
+    test::dfile head_store{};
+    test::dfile body_store{};
+    table::input instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.put({}, table::input::slab{}));
     BOOST_REQUIRE(instance.put(key, expected));
-    BOOST_REQUIRE_EQUAL(body_file, expected_file);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::input::slab_decomposed_sk element{};
     BOOST_REQUIRE(instance.get(slab0_size, element));
@@ -123,11 +121,13 @@ BOOST_AUTO_TEST_CASE(input__put__get_decomposed_sk__expected)
 
 BOOST_AUTO_TEST_CASE(input__it__pk__expected)
 {
-    DECLARE(instance, body_file, 20);
+    test::dfile head_store{};
+    test::dfile body_store{};
+    table::input instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.put({}, table::input::slab{}));
     BOOST_REQUIRE(instance.put(key, expected));
-    BOOST_REQUIRE_EQUAL(body_file, expected_file);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     auto it = instance.it(key);
     BOOST_REQUIRE_EQUAL(it.self(), slab0_size);

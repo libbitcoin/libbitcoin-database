@@ -16,32 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_STORE_QUERY_IPP
-#define LIBBITCOIN_DATABASE_STORE_QUERY_IPP
+#include "../test.hpp"
+#include "dbase.hpp"
 
-#include <bitcoin/system.hpp>
-#include <bitcoin/database/define.hpp>
+namespace test {
 
-namespace libbitcoin {
-namespace database {
-    
-TEMPLATE
-CLASS::query(store& store) NOEXCEPT
-  : store_(store)
+dbase::dbase() NOEXCEPT
 {
 }
 
-TEMPLATE
-bool CLASS::get_transaction(const hash_digest& key) NOEXCEPT
-{
-    table::transaction::record tx{};
-    if (!store_.tx.get(key, tx))
-        return false;
-
-    return true;
-}
-
-} // namespace database
-} // namespace libbitcoin
-
-#endif
+} // namespace test

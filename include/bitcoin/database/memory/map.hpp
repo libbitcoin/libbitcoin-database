@@ -43,29 +43,29 @@ public:
     /// Destruct for debug assertion only.
     ~map() NOEXCEPT;
 
-    /// Open file, must be closed.
-    code open() NOEXCEPT;
-
-    /// Close file, must be unloaded, idempotent.
-    code close() NOEXCEPT;
-
     /// True if the file is closed (or failed to open).
     bool is_open() const NOEXCEPT;
-
-    /// Map file to memory, must be loaded.
-    code load() NOEXCEPT;
-
-    /// Flush memory map to disk, suspend writes for call, must be loaded.
-    code flush() const NOEXCEPT;
-
-    /// Flush, unmap and truncate to logical, restartable, idempotent.
-    code unload() NOEXCEPT;
 
     /// True if the memory map is loaded.
     bool is_loaded() const NOEXCEPT;
 
     /// storage interface
     /// -----------------------------------------------------------------------
+
+    /// Open file, must be closed.
+    code open() NOEXCEPT override;
+
+    /// Close file, must be unloaded, idempotent.
+    code close() NOEXCEPT override;
+
+    /// Map file to memory, must be loaded.
+    code load() NOEXCEPT override;
+
+    /// Flush memory map to disk, suspend writes for call, must be loaded.
+    code flush() const NOEXCEPT override;
+
+    /// Flush, unmap and truncate to logical, restartable, idempotent.
+    code unload() NOEXCEPT override;
 
     /// The filesystem path of the file.
     const std::filesystem::path& file() const NOEXCEPT override;

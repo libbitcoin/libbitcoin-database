@@ -16,37 +16,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/tables/store.hpp>
+#ifndef LIBBITCOIN_DATABASE_STORE_IPP
+#define LIBBITCOIN_DATABASE_STORE_IPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
-#include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/tables/schema.hpp>
 
 // TODO: evaluate performance benefits of concurrency.
 
 namespace libbitcoin {
 namespace database {
 
-using path = std::filesystem::path;
-
-static path index(const path& folder, const std::string& name) NOEXCEPT
-{
-    return folder / (name + schema::ext::index);
-}
-
-static path body(const path& folder, const std::string& name) NOEXCEPT
-{
-    return folder / (name + schema::ext::data);
-}
-
-static path lock(const path& folder, const std::string& name) NOEXCEPT
-{
-    return folder / (name + schema::ext::lock);
-}
-
-store::store(const settings& config) NOEXCEPT
+TEMPLATE
+CLASS::store(const settings& config) NOEXCEPT
   : configuration_(config),
 
     header_head_(index(config.dir / schema::dir::indexes, schema::archive::header)),
@@ -82,7 +65,8 @@ store::store(const settings& config) NOEXCEPT
 {
 }
 
-code store::create() NOEXCEPT
+TEMPLATE
+code CLASS::create() NOEXCEPT
 {
     if (!transactor_mutex_.try_lock())
         return error::transactor_lock;
@@ -104,21 +88,21 @@ code store::create() NOEXCEPT
     static const auto indexes = configuration_.dir / schema::dir::indexes;
 
     // Clear /index, create index files, ensure existence of body files.
-    if (!file::clear(indexes)) ec = error::clear_directory;
-    else if (!file::create(header_head_.file())) ec = error::create_file;
-    else if (!file::create(header_body_.file())) ec = error::create_file;
-    else if (!file::create(point_head_.file())) ec = error::create_file;
-    else if (!file::create(point_body_.file())) ec = error::create_file;
-    else if (!file::create(input_head_.file())) ec = error::create_file;
-    else if (!file::create(input_body_.file())) ec = error::create_file;
-    else if (!file::create(output_head_.file())) ec = error::create_file;
-    else if (!file::create(output_body_.file())) ec = error::create_file;
-    else if (!file::create(puts_head_.file())) ec = error::create_file;
-    else if (!file::create(puts_body_.file())) ec = error::create_file;
-    else if (!file::create(tx_head_.file())) ec = error::create_file;
-    else if (!file::create(tx_body_.file())) ec = error::create_file;
-    else if (!file::create(txs_head_.file())) ec = error::create_file;
-    else if (!file::create(txs_body_.file())) ec = error::create_file;
+    if (!file::clear_directory(indexes)) ec = error::clear_directory;
+    else if (!file::create_file(header_head_.file())) ec = error::create_file;
+    else if (!file::create_file(header_body_.file())) ec = error::create_file;
+    else if (!file::create_file(point_head_.file())) ec = error::create_file;
+    else if (!file::create_file(point_body_.file())) ec = error::create_file;
+    else if (!file::create_file(input_head_.file())) ec = error::create_file;
+    else if (!file::create_file(input_body_.file())) ec = error::create_file;
+    else if (!file::create_file(output_head_.file())) ec = error::create_file;
+    else if (!file::create_file(output_body_.file())) ec = error::create_file;
+    else if (!file::create_file(puts_head_.file())) ec = error::create_file;
+    else if (!file::create_file(puts_body_.file())) ec = error::create_file;
+    else if (!file::create_file(tx_head_.file())) ec = error::create_file;
+    else if (!file::create_file(tx_body_.file())) ec = error::create_file;
+    else if (!file::create_file(txs_head_.file())) ec = error::create_file;
+    else if (!file::create_file(txs_body_.file())) ec = error::create_file;
 
     if (!ec) ec = open_load();
 
@@ -139,12 +123,13 @@ code store::create() NOEXCEPT
 
     if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
     if (!process_lock_.try_unlock()) ec = error::process_unlock;
-    if (ec) /* bool */ file::clear(configuration_.dir);
+    if (ec) /* bool */ file::clear_directory(configuration_.dir);
     transactor_mutex_.unlock();
     return ec;
 }
 
-code store::open() NOEXCEPT
+TEMPLATE
+code CLASS::open() NOEXCEPT
 {
     if (!transactor_mutex_.try_lock())
         return error::transactor_lock;
@@ -181,7 +166,8 @@ code store::open() NOEXCEPT
     return ec;
 }
 
-code store::snapshot() NOEXCEPT
+TEMPLATE
+code CLASS::snapshot() NOEXCEPT
 {
     while (!transactor_mutex_.try_lock_for(boost::chrono::seconds(1)))
     {
@@ -204,7 +190,8 @@ code store::snapshot() NOEXCEPT
     return ec;
 }
 
-code store::close() NOEXCEPT
+TEMPLATE
+code CLASS::close() NOEXCEPT
 {
     if (!transactor_mutex_.try_lock())
         return error::transactor_lock;
@@ -231,12 +218,14 @@ code store::close() NOEXCEPT
     return ec;
 }
 
-const typename store::transactor store::get_transactor() NOEXCEPT
+TEMPLATE
+const typename CLASS::transactor CLASS::get_transactor() NOEXCEPT
 {
     return transactor{ transactor_mutex_ };
 }
 
-code store::open_load() NOEXCEPT
+TEMPLATE
+code CLASS::open_load() NOEXCEPT
 {
     code ec{ error::success };
 
@@ -273,7 +262,8 @@ code store::open_load() NOEXCEPT
     return ec;
 }
 
-code store::unload_close() NOEXCEPT
+TEMPLATE
+code CLASS::unload_close() NOEXCEPT
 {
     code ec{ error::success };
 
@@ -310,7 +300,8 @@ code store::unload_close() NOEXCEPT
     return ec;
 }
 
-code store::backup() NOEXCEPT
+TEMPLATE
+code CLASS::backup() NOEXCEPT
 {
     if (!header.backup()) return error::backup_table;
     if (!point.backup()) return error::backup_table;
@@ -326,20 +317,21 @@ code store::backup() NOEXCEPT
     if (file::is_directory(primary))
     {
         // Delete /secondary, rename /primary to /secondary.
-        if (!file::clear(secondary)) return error::clear_directory;
+        if (!file::clear_directory(secondary)) return error::clear_directory;
         if (!file::remove(secondary)) return error::remove_directory;
         if (!file::rename(primary, secondary)) return error::rename_directory;
     }
 
     // Dump index memory maps to /primary.
-    if (!file::clear(primary)) return error::create_directory;
+    if (!file::clear_directory(primary)) return error::create_directory;
     const auto ec = dump(primary);
-    if (ec) /* bool */ file::clear(primary);
+    if (ec) /* bool */ file::clear_directory(primary);
     return ec;
 }
 
 // Dump memory maps of /indexes to new files in /primary.
-code store::dump(const path& folder) NOEXCEPT
+TEMPLATE
+code CLASS::dump(const path& folder) NOEXCEPT
 {
     auto header_buffer = header_head_.get();
     auto point_buffer = point_head_.get();
@@ -357,38 +349,39 @@ code store::dump(const path& folder) NOEXCEPT
     if (!tx_buffer) return error::unloaded_file;
     if (!txs_buffer) return error::unloaded_file;
 
-    if (!file::dump(index(folder, schema::archive::header),
+    if (!file::create_file(index(folder, schema::archive::header),
         header_buffer->begin(), header_buffer->size()))
        return error::dump_file;
 
-    if (!file::dump(index(folder, schema::archive::point),
+    if (!file::create_file(index(folder, schema::archive::point),
         point_buffer->begin(), point_buffer->size()))
         return error::dump_file;
 
-    if (!file::dump(index(folder, schema::archive::input),
+    if (!file::create_file(index(folder, schema::archive::input),
         input_buffer->begin(), input_buffer->size()))
         return error::dump_file;
 
-    if (!file::dump(index(folder, schema::archive::output),
+    if (!file::create_file(index(folder, schema::archive::output),
         output_buffer->begin(), output_buffer->size()))
         return error::dump_file;
 
-    if (!file::dump(index(folder, schema::archive::puts),
+    if (!file::create_file(index(folder, schema::archive::puts),
         puts_buffer->begin(), puts_buffer->size()))
         return error::dump_file;
 
-    if (!file::dump(index(folder, schema::archive::tx),
+    if (!file::create_file(index(folder, schema::archive::tx),
         tx_buffer->begin(), tx_buffer->size()))
         return error::dump_file;
 
-    if (!file::dump(index(folder, schema::archive::txs),
+    if (!file::create_file(index(folder, schema::archive::txs),
         txs_buffer->begin(), txs_buffer->size()))
         return error::dump_file;
 
     return error::success;
 }
 
-code store::restore() NOEXCEPT
+TEMPLATE
+code CLASS::restore() NOEXCEPT
 {
     if (!transactor_mutex_.try_lock())
         return error::transactor_lock;
@@ -414,14 +407,14 @@ code store::restore() NOEXCEPT
     if (file::is_directory(primary))
     {
         // Clear invalid /indexes and recover from /primary.
-        if (!file::clear(indexes)) ec = error::clear_directory;
+        if (!file::clear_directory(indexes)) ec = error::clear_directory;
         else if (!file::remove(indexes)) ec = error::remove_directory;
         else if (!file::rename(primary, indexes)) ec = error::rename_directory;
     }
     else if (file::is_directory(secondary))
     {
         // Clear invalid /indexes and recover from /secondary.
-        if (!file::clear(indexes)) ec = error::clear_directory;
+        if (!file::clear_directory(indexes)) ec = error::clear_directory;
         else if (!file::remove(indexes)) ec = error::remove_directory;
         else if (!file::rename(secondary, indexes)) ec = error::rename_directory;
     }
@@ -454,3 +447,5 @@ code store::restore() NOEXCEPT
 
 } // namespace database
 } // namespace libbitcoin
+
+#endif

@@ -92,7 +92,72 @@ Link CLASS::allocate(const Link& size) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::commit(const Key& key, const Link& link) NOEXCEPT
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
+{
+    auto source = streamer<reader>(link);
+    return source && element.from_data(*source);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::get(const Key& key, Element& element) const NOEXCEPT
+{
+    return get(it(key).self(), element);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
+{
+    auto sink = streamer<finalizer>(link);
+    return sink && element.to_data(*sink);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::set_link(Link& link, const Element& element) NOEXCEPT
+{
+    link = allocate(element.count());
+    return set(link, element);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put(const Link& link, const Key& key, const Element& element) NOEXCEPT
+{
+    auto sink = putter(link, key, element.count());
+    return sink && element.to_data(*sink) && sink->finalize();
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put_link(Link& link, const Key& key, const Element& element) NOEXCEPT
+{
+    link = allocate(element.count());
+    return put(link, key, element);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put_if(Link& link, const Key& key, const Element& element) NOEXCEPT
+{
+    // non-atomic, race may produce element duplication.
+    // it is preferred to allow duplication vs. searching under lock.
+    link = it(key).self();
+    return !link.is_terminal() || put_link(link, key, element);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put(const Key& key, const Element& element) NOEXCEPT
+{
+    Link unused{};
+    return put_link(unused, key, element);
+}
+
+TEMPLATE
+bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
 {
     const auto ptr = manager_.get(link);
     if (!ptr)
@@ -106,46 +171,6 @@ bool CLASS::commit(const Key& key, const Link& link) NOEXCEPT
     auto& next = system::unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
     return header_.push(link, next, header_.index(key));
 }
-
-TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::get(const Key& key, Element& element) const NOEXCEPT
-{
-    return get(it(key).self(), element);
-}
-
-TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
-{
-    auto source = streamer<reader>(link);
-    return source && element.from_data(*source);
-}
-
-TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
-{
-    auto sink = streamer<writer>(link);
-    return sink && element.to_data(*sink);
-}
-
-TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::put(const Key& key, const Element& element) NOEXCEPT
-{
-    auto sink = creater(key, element.count());
-    return sink && element.to_data(*sink) && sink->finalize();
-}
-
-////TEMPLATE
-////template <typename Element, if_equal<Element::size, Size>>
-////bool CLASS::put(const Key& key, const Element& element,
-////    const Link& allocation) NOEXCEPT
-////{
-////    auto sink = putter(key, element.count(), allocation);
-////    return sink && element.to_data(*sink) && sink->finalize();
-////}
 
 // protected
 // ----------------------------------------------------------------------------
@@ -167,15 +192,17 @@ typename Streamer::ptr CLASS::streamer(const Link& link) const NOEXCEPT
 }
 
 TEMPLATE
-reader_ptr CLASS::getter(const Key& key) const NOEXCEPT
+finalizer_ptr CLASS::creater(Link& link, const Key& key,
+    const Link& size) NOEXCEPT
 {
-    return streamer<reader>(it(key).self());
+    link = allocate(size);
+    return putter(link, key, size);
 }
 
 TEMPLATE
-finalizer_ptr CLASS::creater(const Key& key, const Link& size) NOEXCEPT
+finalizer_ptr CLASS::putter(const Link& link, const Key& key,
+    const Link& size) NOEXCEPT
 {
-    const auto link = manager_.allocate(size);
     const auto ptr = manager_.get(link);
     if (!ptr)
         return {};
@@ -191,8 +218,8 @@ finalizer_ptr CLASS::creater(const Key& key, const Link& size) NOEXCEPT
         return header_.push(link, next, index);
     });
 
-    // Limits to single record or eof for slab (caller can remove limit).
-    if constexpr (!is_slab) { sink->set_limit(Size); }
+    // Limits to size records or eof for slab.
+    if constexpr (!is_slab) { sink->set_limit(Size * size); }
     return sink;
 }
 

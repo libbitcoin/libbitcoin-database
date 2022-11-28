@@ -16,14 +16,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "../../test.hpp"
-#include "../../mocks/dfile.hpp"
+#ifndef LIBBITCOIN_DATABASE_TEST_MOCKS_DBASE_HPP
+#define LIBBITCOIN_DATABASE_TEST_MOCKS_DBASE_HPP
 
-BOOST_AUTO_TEST_SUITE(candidate_height_tests)
+#include "../test.hpp"
 
-BOOST_AUTO_TEST_CASE(tables_indexes_candidate_height_test)
+namespace test {
+
+// Fake a thread safe store implementation.
+class dbase
 {
-    BOOST_REQUIRE(true);
-}
+public:
+    dbase() NOEXCEPT;
+};
 
-BOOST_AUTO_TEST_SUITE_END()
+} // namespace test
+
+#endif

@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
  *
- * You should have received a dump of the GNU Affero General Public License
+ * You should have received a create_file of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
@@ -41,19 +41,6 @@ BOOST_FIXTURE_TEST_SUITE(file_tests, file_setup_fixture)
 using namespace system;
 static_assert(file::invalid == -1);
 
-BOOST_AUTO_TEST_CASE(file__clear__empty__true)
-{
-    BOOST_REQUIRE(file::clear(TEST_DIRECTORY));
-}
-
-BOOST_AUTO_TEST_CASE(file__clear__exists__true_cleared)
-{
-    BOOST_REQUIRE(test::create(TEST_PATH));
-    BOOST_REQUIRE(test::exists(TEST_PATH));
-    BOOST_REQUIRE(file::clear(TEST_DIRECTORY));
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
-}
-
 BOOST_AUTO_TEST_CASE(file__is_directory__missing__false)
 {
     BOOST_REQUIRE(!file::is_directory(TEST_PATH));
@@ -64,64 +51,39 @@ BOOST_AUTO_TEST_CASE(file__is_directory__exists__true)
     BOOST_REQUIRE(file::is_directory(TEST_DIRECTORY));
 }
 
-BOOST_AUTO_TEST_CASE(file__create__missing__true)
+BOOST_AUTO_TEST_CASE(file__clear_directory__empty__true)
 {
-    BOOST_REQUIRE(file::create(TEST_PATH));
+    BOOST_REQUIRE(file::clear_directory(TEST_DIRECTORY));
 }
 
-BOOST_AUTO_TEST_CASE(file__create__exists__true)
+BOOST_AUTO_TEST_CASE(file__clear_directory__exists__true_cleared)
 {
     BOOST_REQUIRE(test::create(TEST_PATH));
-    BOOST_REQUIRE(file::create(TEST_PATH));
+    BOOST_REQUIRE(test::exists(TEST_PATH));
+    BOOST_REQUIRE(file::clear_directory(TEST_DIRECTORY));
+    BOOST_REQUIRE(!test::exists(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file__dump__empty__created)
+BOOST_AUTO_TEST_CASE(clear_directory__missing__true)
 {
-    const data_chunk source(0);
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
-    BOOST_REQUIRE(file::dump(TEST_PATH, source.data(), source.size()));
-    BOOST_REQUIRE(test::exists(TEST_PATH));
-
-    const auto descriptor = file::open(TEST_PATH);
-    BOOST_REQUIRE_NE(descriptor, -1);
-    BOOST_REQUIRE_EQUAL(file::size(descriptor), source.size());
-    BOOST_REQUIRE(file::close(descriptor));
+    BOOST_REQUIRE(file::clear_directory(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file__dump__missing__expected_size)
+BOOST_AUTO_TEST_CASE(file__clear_directory__exists__true)
 {
-    const data_chunk source(42u);
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
-    BOOST_REQUIRE(file::dump(TEST_PATH, source.data(), source.size()));
-    BOOST_REQUIRE(test::exists(TEST_PATH));
-
-    const auto descriptor = file::open(TEST_PATH);
-    BOOST_REQUIRE_NE(descriptor, -1);
-    BOOST_REQUIRE_EQUAL(file::size(descriptor), source.size());
-    BOOST_REQUIRE(file::close(descriptor));
+    BOOST_REQUIRE(test::create(TEST_PATH));
+    BOOST_REQUIRE(file::clear_directory(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file__dump__exists__replaced)
+BOOST_AUTO_TEST_CASE(create_directory__missing__true)
 {
-    const data_chunk old(100);
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
-    BOOST_REQUIRE(file::dump(TEST_PATH, old.data(), old.size()));
-    BOOST_REQUIRE(test::exists(TEST_PATH));
+    BOOST_REQUIRE(file::create_directory(TEST_PATH));
+}
 
-    auto descriptor = file::open(TEST_PATH);
-    BOOST_REQUIRE_NE(descriptor, -1);
-    BOOST_REQUIRE_EQUAL(file::size(descriptor), old.size());
-    BOOST_REQUIRE(file::close(descriptor));
-
-    const data_chunk source(42);
-    BOOST_REQUIRE(test::exists(TEST_PATH));
-    BOOST_REQUIRE(file::dump(TEST_PATH, source.data(), source.size()));
-    BOOST_REQUIRE(test::exists(TEST_PATH));
-
-    descriptor = file::open(TEST_PATH);
-    BOOST_REQUIRE_NE(descriptor, -1);
-    BOOST_REQUIRE_EQUAL(file::size(descriptor), source.size());
-    BOOST_REQUIRE(file::close(descriptor));
+BOOST_AUTO_TEST_CASE(file__create_directory__exists__talse)
+{
+    BOOST_REQUIRE(test::create(TEST_PATH));
+    BOOST_REQUIRE(!file::create_directory(TEST_PATH));
 }
 
 BOOST_AUTO_TEST_CASE(file__is_file__missing__false)
@@ -135,9 +97,69 @@ BOOST_AUTO_TEST_CASE(file__is_file__exists__true)
     BOOST_REQUIRE(file::is_file(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file__remove__missing__false)
+BOOST_AUTO_TEST_CASE(file__create_file__missing__true)
 {
-    BOOST_REQUIRE(!file::remove(TEST_PATH));
+    BOOST_REQUIRE(file::create_file(TEST_PATH));
+}
+
+BOOST_AUTO_TEST_CASE(file__create_file__exists__true)
+{
+    BOOST_REQUIRE(test::create(TEST_PATH));
+    BOOST_REQUIRE(file::create_file(TEST_PATH));
+}
+
+BOOST_AUTO_TEST_CASE(file__create_file__empty__created)
+{
+    const data_chunk source(0);
+    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BOOST_REQUIRE(file::create_file(TEST_PATH, source.data(), source.size()));
+    BOOST_REQUIRE(test::exists(TEST_PATH));
+
+    const auto descriptor = file::open(TEST_PATH);
+    BOOST_REQUIRE_NE(descriptor, -1);
+    BOOST_REQUIRE_EQUAL(file::size(descriptor), source.size());
+    BOOST_REQUIRE(file::close(descriptor));
+}
+
+BOOST_AUTO_TEST_CASE(file__create_file__missing__expected_size)
+{
+    const data_chunk source(42u);
+    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BOOST_REQUIRE(file::create_file(TEST_PATH, source.data(), source.size()));
+    BOOST_REQUIRE(test::exists(TEST_PATH));
+
+    const auto descriptor = file::open(TEST_PATH);
+    BOOST_REQUIRE_NE(descriptor, -1);
+    BOOST_REQUIRE_EQUAL(file::size(descriptor), source.size());
+    BOOST_REQUIRE(file::close(descriptor));
+}
+
+BOOST_AUTO_TEST_CASE(file__create_file__exists__replaced)
+{
+    const data_chunk old(100);
+    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BOOST_REQUIRE(file::create_file(TEST_PATH, old.data(), old.size()));
+    BOOST_REQUIRE(test::exists(TEST_PATH));
+
+    auto descriptor = file::open(TEST_PATH);
+    BOOST_REQUIRE_NE(descriptor, -1);
+    BOOST_REQUIRE_EQUAL(file::size(descriptor), old.size());
+    BOOST_REQUIRE(file::close(descriptor));
+
+    const data_chunk source(42);
+    BOOST_REQUIRE(test::exists(TEST_PATH));
+    BOOST_REQUIRE(file::create_file(TEST_PATH, source.data(), source.size()));
+    BOOST_REQUIRE(test::exists(TEST_PATH));
+
+    descriptor = file::open(TEST_PATH);
+    BOOST_REQUIRE_NE(descriptor, -1);
+    BOOST_REQUIRE_EQUAL(file::size(descriptor), source.size());
+    BOOST_REQUIRE(file::close(descriptor));
+}
+
+BOOST_AUTO_TEST_CASE(file__remove__missing__true)
+{
+    BOOST_REQUIRE(file::remove(TEST_PATH));
 }
 
 BOOST_AUTO_TEST_CASE(file__remove__exists__true_removed)

@@ -47,6 +47,7 @@ struct linkage
     inline linkage<Size>& operator=(const bytes& other) NOEXCEPT;
 
     /// Integral and array cast operators.
+    ////constexpr operator bool() const NOEXCEPT;
     constexpr operator integer() const NOEXCEPT;
     inline operator bytes() const NOEXCEPT;
 

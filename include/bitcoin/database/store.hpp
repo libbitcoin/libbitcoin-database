@@ -57,7 +57,8 @@ namespace database {
 /// The store and query interface are the primary products of database.
 /// Store provides implmentation support for the public query interface.
 /// Query privides query interface implmentation over the store.
-class BCD_API store
+template <typename Storage, if_base_of<storage, Storage> = true>
+class store
 {
 public:
     using transactor = std::shared_lock<boost::upgrade_mutex>;
@@ -121,41 +122,67 @@ protected:
     const settings& configuration_;
 
     // record hashmap
-    map header_head_;
-    map header_body_;
+    Storage header_head_;
+    Storage header_body_;
 
     // record hashmap
-    map point_head_;
-    map point_body_;
+    Storage point_head_;
+    Storage point_body_;
 
     // slab hashmap
-    map input_head_;
-    map input_body_;
+    Storage input_head_;
+    Storage input_body_;
 
     // blob
-    map output_head_;
-    map output_body_;
+    Storage output_head_;
+    Storage output_body_;
 
     // array
-    map puts_head_;
-    map puts_body_;
+    Storage puts_head_;
+    Storage puts_body_;
 
     // record hashmap
-    map tx_head_;
-    map tx_body_;
+    Storage tx_head_;
+    Storage tx_body_;
 
     // slab hashmap
-    map txs_head_;
-    map txs_body_;
+    Storage txs_head_;
+    Storage txs_body_;
 
     // These are protected by mutex.
     flush_lock flush_lock_;
     interprocess_lock process_lock_;
     boost::upgrade_mutex transactor_mutex_;
+
+private:
+    using path = std::filesystem::path;
+
+    static inline path index(const path& folder, const std::string& name) NOEXCEPT
+    {
+        return folder / (name + schema::ext::index);
+    }
+
+    static inline path body(const path& folder, const std::string& name) NOEXCEPT
+    {
+        return folder / (name + schema::ext::data);
+    }
+
+    static inline path lock(const path& folder, const std::string& name) NOEXCEPT
+    {
+        return folder / (name + schema::ext::lock);
+    }
 };
 
 } // namespace database
 } // namespace libbitcoin
+
+#define TEMPLATE template <typename Storage, if_base_of<storage, Storage> If>
+#define CLASS store<Storage, If>
+
+#include <bitcoin/database/impl/store.ipp>
+
+#undef CLASS
+#undef TEMPLATE
 
 #endif
 

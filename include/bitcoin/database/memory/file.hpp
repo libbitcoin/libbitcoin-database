@@ -30,17 +30,29 @@ namespace file {
 constexpr auto invalid = -1;
 using path = std::filesystem::path;
 
-/// Directory.
-BCD_API bool clear(const path& directory) NOEXCEPT;
+/// True only if directory existed.
 BCD_API bool is_directory(const path& filename) NOEXCEPT;
 
-/// File.
-BCD_API bool create(const path& filename) NOEXCEPT;
-BCD_API bool dump(const path& to, const uint8_t* data, size_t size) NOEXCEPT;
+/// Clear and recreate directory, true if path existed/created.
+BCD_API bool clear_directory(const path& directory) NOEXCEPT;
+
+/// Create directory, false if existed/error.
+BCD_API bool create_directory(const path& directory) NOEXCEPT;
+
+/// True only if file existed.
 BCD_API bool is_file(const path& filename) NOEXCEPT;
 
-/// Directory or file.
+/// Create/open/close file or open/close if existed.
+BCD_API bool create_file(const path& filename) NOEXCEPT;
+
+/// Create/open file and initialize/replace with size/data.
+BCD_API bool create_file(const path& to, const uint8_t* data,
+    size_t size) NOEXCEPT;
+
+/// Delete file or empty directory, false on error only.
 BCD_API bool remove(const path& name) NOEXCEPT;
+
+/// Rename file or directory, false if did not exist/error.
 BCD_API bool rename(const path& from, const path& to) NOEXCEPT;
 
 /// File descriptor functions (for memory mapping).

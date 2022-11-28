@@ -39,6 +39,8 @@ template <typename Link, typename Key, size_t Size>
 class hashmap
 {
 public:
+    using key = Key;
+    using link = Link;
     using iterator = database::iterator<Link, Key, Size>;
 
     hashmap(storage& header, storage& body, const Link& buckets) NOEXCEPT;
@@ -61,36 +63,53 @@ public:
     /// Iterator holds shared lock on storage remap.
     iterator it(const Key& key) const NOEXCEPT;
 
-    /// Allocate space for element to returned link.
+    /// Allocate element at returned link (follow with set|put).
     Link allocate(const Link& size) NOEXCEPT;
 
-    /// Commit element set at link to header (becomes searchable).
-    bool commit(const Key& key, const Link& link) NOEXCEPT;
-
-    template <typename Element, if_equal<Element::size, Size> = true>
-    bool set(const Link& link, const Element& element) NOEXCEPT;
-
+    /// Get element at link.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool get(const Link& link, Element& element) const NOEXCEPT;
 
+    /// Get element at key.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool get(const Key& key, Element& element) const NOEXCEPT;
 
+    /// Set element into previously allocated link (follow with commit).
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool set(const Link& link, const Element& element) NOEXCEPT;
+
+    /// Allocate and set element, and return link (follow with commit).
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool set_link(Link& link, const Element& element) NOEXCEPT;
+
+    /// Set and commit previously allocated element at link to key.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool put(const Link& link, const Key& key, const Element& element) NOEXCEPT;
+
+    /// Allocate, set, commit element to key, and return link.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool put_link(Link& link, const Key& key, const Element& element) NOEXCEPT;
+
+    /// Allocate, set, commit element to key (unless found), return link.
+    /// This is non-atomic, a race may produce element duplication.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool put_if(Link& link, const Key& key, const Element& element) NOEXCEPT;
+
+    /// Allocate, set, commit element to key, without returning link.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put(const Key& key, const Element& element) NOEXCEPT;
 
-    ////// In two phase commit, element and allocation sizes not coordinated.
-    ////template <typename Element, if_equal<Element::size, Size> = true>
-    ////bool put(const Key& key, const Element& element,
-    ////    const Link& allocation) NOEXCEPT;
+    /// Commit previously set element at link to key.
+    bool commit(const Link& link, const Key& key) NOEXCEPT;
 
 protected:
     template <typename Streamer>
     typename Streamer::ptr streamer(const Link& link) const NOEXCEPT;
 
-    reader_ptr getter(const Key& key) const NOEXCEPT;
-    finalizer_ptr creater(const Key& key, const Link& size) NOEXCEPT;
-    finalizer_ptr committer(const Key& key, const Link& link) NOEXCEPT;
+    finalizer_ptr creater(Link& link, const Key& key,
+        const Link& size) NOEXCEPT;
+    finalizer_ptr putter(const Link& link, const Key& key,
+        const Link& size) NOEXCEPT;
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);

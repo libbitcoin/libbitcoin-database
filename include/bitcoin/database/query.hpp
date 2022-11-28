@@ -21,21 +21,43 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/primitives/primitives.hpp>
 #include <bitcoin/database/tables/tables.hpp>
 
 namespace libbitcoin {
 namespace database {
 
+// TODO: rationalize with chain::context.
+struct context
+{
+    uint32_t height{};
+    uint32_t flags{};
+    uint32_t mtp{};
+};
+
 template <typename Store>
 class query
 {
 public:
-    query(store& store) NOEXCEPT;
+    query(Store& value) NOEXCEPT;
 
-    bool get_transaction(const hash_digest& key) NOEXCEPT;
+    /// Store system::chain object.
+    bool set_tx(const system::chain::transaction& tx) NOEXCEPT;
+    bool set_block(const system::chain::block& block) NOEXCEPT;
+    bool set_header(const system::chain::header& header,
+        const context& context) NOEXCEPT;
+
+    /// Retrieve system::chain object (may optimize with property getters).
+    system::chain::header::cptr get_header(const hash_digest& key) NOEXCEPT;
+    system::chain::transaction::cptr get_tx(const hash_digest& key) NOEXCEPT;
+    system::chain::block::cptr get_block(const hash_digest& key) NOEXCEPT;
+
+    /// Retrieve network::messages object.
+    system::hashes get_block_locator(const hash_digest& key) NOEXCEPT;
+    system::hashes get_block_txs(const hash_digest& key) NOEXCEPT;
 
 private:
-    store& store_;
+    Store& store_;
 };
 
 } // namespace database
@@ -44,7 +66,7 @@ private:
 #define TEMPLATE template <typename Store>
 #define CLASS query<Store>
 
-#include <bitcoin/database/impl/store/query.ipp>
+#include <bitcoin/database/impl/query.ipp>
 
 #undef CLASS
 #undef TEMPLATE
