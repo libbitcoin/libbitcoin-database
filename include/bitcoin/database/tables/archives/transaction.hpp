@@ -48,8 +48,8 @@ public:
         inline bool from_data(reader& source) NOEXCEPT
         {
             coinbase   = to_bool(source.read_byte());
-            bytes      = source.read_little_endian<uint32_t, schema::size>();
-            weight     = source.read_little_endian<uint32_t, schema::size>();
+            witless    = source.read_little_endian<uint32_t, schema::size>();
+            witness    = source.read_little_endian<uint32_t, schema::size>();
             locktime   = source.read_little_endian<uint32_t>();
             version    = source.read_little_endian<uint32_t>();
             ins_count  = source.read_little_endian<uint32_t, schema::index>();
@@ -62,8 +62,8 @@ public:
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             sink.write_byte(to_int<uint8_t>(coinbase));
-            sink.write_little_endian<uint32_t, schema::size>(bytes);
-            sink.write_little_endian<uint32_t, schema::size>(weight);
+            sink.write_little_endian<uint32_t, schema::size>(witless);
+            sink.write_little_endian<uint32_t, schema::size>(witness);
             sink.write_little_endian<uint32_t>(locktime);
             sink.write_little_endian<uint32_t>(version);
             sink.write_little_endian<uint32_t, schema::index>(ins_count);
@@ -76,8 +76,8 @@ public:
         inline bool operator==(const record& other) const NOEXCEPT
         {
             return coinbase == other.coinbase
-                && bytes == other.bytes
-                && weight == other.weight
+                && witless == other.witless
+                && witness == other.witness
                 && locktime == other.locktime
                 && version == other.version
                 && ins_count == other.ins_count
@@ -86,8 +86,8 @@ public:
         }
 
         bool coinbase{};
-        uint32_t bytes{};
-        uint32_t weight{};
+        uint32_t witless{}; // tx.serialized_size(false)
+        uint32_t witness{}; // tx.serialized_size(true)
         uint32_t locktime{};
         uint32_t version{};
         uint32_t ins_count{};

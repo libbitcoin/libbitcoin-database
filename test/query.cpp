@@ -373,8 +373,8 @@ BOOST_AUTO_TEST_CASE(query__set_tx__mock_tx_null_input__expected)
         "ffffffff"     // next->
         "601f0fa54d6de8362c17dc883cc047e1f3ae0523d732598a05e3010fac591f62" // sk (tx.hash(false))
         "01"           // coinbase
-        "3c0000"       // size
-        "f00000"       // weight
+        "3c0000"       // witless
+        "3c0000"       // witness
         "14131211"     // locktime
         "04030201"     // version
         "010000"       // ins_count
@@ -496,8 +496,8 @@ BOOST_AUTO_TEST_CASE(query__set_tx__mock_tx_non_null_inputs__expected)
         "ffffffff"       // next->
         "d80f19b9c0f649081c0b279d9183b0fae35b41b72a34eb181001f82afe22043a" // sk (tx.hash(false))
         "00"             // coinbase
-        "740000"         // size
-        "dc0100"         // weight
+        "740000"         // witless
+        "800000"         // witness
         "18000000"       // locktime
         "2a000000"       // version
         "020000"         // ins_count

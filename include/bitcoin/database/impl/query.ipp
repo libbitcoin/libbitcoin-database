@@ -36,6 +36,9 @@ CLASS::query(Store& value) NOEXCEPT
 {
 }
 
+// setters
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 bool CLASS::set_header(const system::chain::header& header,
     const context& context) NOEXCEPT
@@ -86,7 +89,7 @@ bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
 
     // Allocate and Set inputs, queue each put.
     uint32_t input_index = 0;
-    linkage<schema::put> input_pk{};
+    table::input::link input_pk{};
     for (const auto& in: ins)
     {
         if (store_.input.set_link(input_pk, table::input::slab
@@ -105,7 +108,7 @@ bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
 
     // Commit outputs, queue each put.
     uint32_t output_index = 0;
-    linkage<schema::put> output_pk{};
+    table::output::link output_pk{};
     for (const auto& out: outs)
     {
         if (store_.output.put_link(output_pk, table::output::slab
@@ -125,20 +128,18 @@ bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
     if (puts.put_fks.size() != count)
         return false;
 
-    // Commit puts.
-    ////table::puts::record puts{};
-    linkage<schema::puts_> puts_pk{};
+    // Commit puts (defined above).
+    table::puts::link puts_pk{};
     if (!store_.puts.put_link(puts_pk, puts))
         return false;
 
     // Set transaction.
-    // TODO: instead of weight store tx.serialized_size(true)?
     if (!store_.tx.set(tx_pk, table::transaction::record
     {
         {},
         tx.is_coinbase(),
         system::possible_narrow_cast<uint32_t>(tx.serialized_size(false)),
-        system::possible_narrow_cast<uint32_t>(tx.weight()),
+        system::possible_narrow_cast<uint32_t>(tx.serialized_size(true)),
         tx.locktime(),
         tx.version(),
         system::possible_narrow_cast<uint32_t>(ins.size()),
@@ -151,8 +152,8 @@ bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
 
     // Commit point and input for each input.
     auto input_fk = puts.put_fks.begin();
-    linkage<schema::point::pk> point_pk{};
     const table::point::record empty{};
+    table::point::link point_pk{};
     for (const auto& in: ins)
     {
         const auto& prevout = in->point();
@@ -172,35 +173,13 @@ bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set_block(const system::chain::block&) NOEXCEPT
+bool CLASS::set_block(const system::chain::block&, const context&) NOEXCEPT
 {
     return false;
 }
 
-TEMPLATE
-system::chain::header::cptr CLASS::get_header(const hash_digest& key) NOEXCEPT
-{
-    table::header::record element{};
-    if (!store_.header.get(key, element))
-        return {};
-
-    // terminal parent implies genesis (default), otherwise must resolve.
-    table::header::record_sk parent{};
-    if ((element.parent_fk != table::header::link::terminal) &&
-        !store_.header.get(element.parent_fk, parent))
-        return {};
-
-    // Use of pointer forward here avoids move construction.
-    return system::to_shared(new system::chain::header
-    {
-        element.version,
-        std::move(parent.key),
-        std::move(element.root),
-        element.timestamp,
-        element.bits,
-        element.nonce
-    });
-}
+// getters
+// ----------------------------------------------------------------------------
 
 TEMPLATE
 system::chain::transaction::cptr CLASS::get_tx(const hash_digest& key) NOEXCEPT
@@ -265,19 +244,38 @@ system::chain::transaction::cptr CLASS::get_tx(const hash_digest& key) NOEXCEPT
 }
 
 TEMPLATE
+system::chain::header::cptr CLASS::get_header(const hash_digest& key) NOEXCEPT
+{
+    table::header::record element{};
+    if (!store_.header.get(key, element))
+        return {};
+
+    // terminal parent implies genesis (default), otherwise must resolve.
+    table::header::record_sk parent{};
+    if ((element.parent_fk != table::header::link::terminal) &&
+        !store_.header.get(element.parent_fk, parent))
+        return {};
+
+    // Use of pointer forward here avoids move construction.
+    return system::to_shared(new system::chain::header
+    {
+        element.version,
+        std::move(parent.key),
+        std::move(element.root),
+        element.timestamp,
+        element.bits,
+        element.nonce
+    });
+}
+
+TEMPLATE
 system::chain::block::cptr CLASS::get_block(const hash_digest&) NOEXCEPT
 {
     return {};
 }
 
 TEMPLATE
-system::hashes CLASS::get_block_locator(const hash_digest&) NOEXCEPT
-{
-    return {};
-}
-
-TEMPLATE
-system::hashes CLASS::get_block_txs(const hash_digest&) NOEXCEPT
+system::hashes CLASS::get_txs(const hash_digest&) NOEXCEPT
 {
     return {};
 }
