@@ -66,6 +66,9 @@ public:
     /// Allocate element at returned link (follow with set|put).
     Link allocate(const Link& size) NOEXCEPT;
 
+    // TODO: change get2/set_link/put_link/put_if to return created links.
+    // TODO: this obsoletes put2. make (bool)link work (fix cast conflict).
+
     /// Get element at link.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool get(const Link& link, Element& element) const NOEXCEPT;

@@ -41,11 +41,11 @@ class query
 public:
     query(Store& value) NOEXCEPT;
 
-    /// Store system::chain object.
+    /// Store system::chain object (idempotent).
     bool set_tx(const system::chain::transaction& tx) NOEXCEPT;
     bool set_header(const system::chain::header& header, const context& context) NOEXCEPT;
     bool set_block(const system::chain::block& block, const context& context) NOEXCEPT;
-    bool set_txs(const system::hashes& block) NOEXCEPT;
+    bool set_txs(const hash_digest& key, const system::hashes& hashes) NOEXCEPT;
 
     /// Retrieve system::chain object (may optimize with property getters).
     system::chain::transaction::cptr get_tx(const hash_digest& key) NOEXCEPT;

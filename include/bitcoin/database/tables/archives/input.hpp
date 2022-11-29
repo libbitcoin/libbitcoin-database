@@ -38,6 +38,9 @@ public:
     using hash_map<schema::input>::hashmap;
 
     /// Generate composite key.
+    /// Foreign point index is limited to 3 bytes, which cannot hold null_index.
+    /// Sentinel 0xffffffff is truncated to 0x00ffffff upon write and explicitly
+    /// restored to 0xffffffff upon read.
     static const search<schema::input::sk> to_point(uint32_t fk,
         uint32_t index) NOEXCEPT
     {
@@ -123,6 +126,11 @@ public:
             source.rewind_bytes(sk);
             point_fk = source.read_little_endian<uint32_t, schema::tx>();
             point_index = source.read_little_endian<uint32_t, schema::index>();
+
+            // Restore truncated null_index sentinel.
+            if (point_index == linkage<schema::index>::terminal)
+                point_index = system::chain::point::null_index;
+
             return source;
         }
 
@@ -141,6 +149,11 @@ public:
             source.rewind_bytes(sk);
             point_fk = source.read_little_endian<uint32_t, schema::tx>();
             point_index = source.read_little_endian<uint32_t, schema::index>();
+
+            // Restore truncated null_index sentinel.
+            if (point_index == linkage<schema::index>::terminal)
+                point_index = system::chain::point::null_index;
+
             return slab::from_data(source);
         }
 
