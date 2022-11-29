@@ -280,6 +280,7 @@ system::chain::transaction::cptr CLASS::get_tx(const hash_digest& key) NOEXCEPT
     });
 }
 
+// null: not found, unloaded.
 TEMPLATE
 system::chain::header::cptr CLASS::get_header(const hash_digest& key) NOEXCEPT
 {
@@ -304,6 +305,7 @@ system::chain::header::cptr CLASS::get_header(const hash_digest& key) NOEXCEPT
     });
 }
 
+// null: not found, unloaded.
 TEMPLATE
 system::hashes CLASS::get_txs(const hash_digest& key) NOEXCEPT
 {
@@ -326,6 +328,7 @@ system::hashes CLASS::get_txs(const hash_digest& key) NOEXCEPT
     return hashes;
 }
 
+// null: not found, unloaded.
 TEMPLATE
 system::chain::block::cptr CLASS::get_block(const hash_digest& key) NOEXCEPT
 {

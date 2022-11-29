@@ -22,18 +22,11 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/tables/context.hpp>
 #include <bitcoin/database/tables/tables.hpp>
 
 namespace libbitcoin {
 namespace database {
-
-// TODO: rationalize with chain::context.
-struct context
-{
-    uint32_t height{};
-    uint32_t flags{};
-    uint32_t mtp{};
-};
 
 template <typename Store>
 class query
@@ -47,7 +40,7 @@ public:
     bool set_block(const system::chain::block& block, const context& context) NOEXCEPT;
     bool set_txs(const hash_digest& key, const system::hashes& hashes) NOEXCEPT;
 
-    /// Retrieve system::chain object (may optimize with property getters).
+    /// Retrieve system::chain object.
     system::chain::transaction::cptr get_tx(const hash_digest& key) NOEXCEPT;
     system::chain::header::cptr get_header(const hash_digest& key) NOEXCEPT;
     system::chain::block::cptr get_block(const hash_digest& key) NOEXCEPT;

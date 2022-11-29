@@ -23,6 +23,7 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/tables/context.hpp>
 #include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
@@ -41,9 +42,7 @@ public:
     {        
         inline bool from_data(reader& source) NOEXCEPT
         {
-            height    = source.read_little_endian<uint32_t, schema::block>();
-            flags     = source.read_little_endian<uint32_t, schema::flags>();
-            mtp       = source.read_little_endian<uint32_t>();
+            context::read(source, context);
             parent_fk = source.read_little_endian<uint32_t, schema::block>();
             version   = source.read_little_endian<uint32_t>();
             timestamp = source.read_little_endian<uint32_t>();
@@ -56,9 +55,7 @@ public:
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            sink.write_little_endian<uint32_t, schema::block>(height);
-            sink.write_little_endian<uint32_t, schema::flags>(flags);
-            sink.write_little_endian<uint32_t>(mtp);
+            context::write(sink, context);
             sink.write_little_endian<uint32_t, schema::block>(parent_fk);
             sink.write_little_endian<uint32_t>(version);
             sink.write_little_endian<uint32_t>(timestamp);
@@ -71,9 +68,7 @@ public:
 
         inline bool operator==(const record& other) const NOEXCEPT
         {
-            return height    == other.height
-                && flags     == other.flags
-                && mtp       == other.mtp
+            return context   == other.context
                 && parent_fk == other.parent_fk
                 && version   == other.version
                 && timestamp == other.timestamp
@@ -82,15 +77,34 @@ public:
                 && root      == other.root;
         }
 
-        uint32_t height{};
-        uint32_t flags{};
-        uint32_t mtp{};
+        context context{};
         uint32_t parent_fk{};
         uint32_t version{};
         uint32_t timestamp{};
         uint32_t bits{};
         uint32_t nonce{};
         hash_digest root{};
+    };
+
+    struct record_ref
+      : public schema::header
+    {        
+        inline bool to_data(finalizer& sink) const NOEXCEPT
+        {
+            context::write(sink, context);
+            sink.write_little_endian<uint32_t, schema::block>(parent_fk);
+            sink.write_little_endian<uint32_t>(header.version());
+            sink.write_little_endian<uint32_t>(header.timestamp());
+            sink.write_little_endian<uint32_t>(header.bits());
+            sink.write_little_endian<uint32_t>(header.nonce());
+            sink.write_bytes(header.merkle_root());
+            BC_ASSERT(sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        context& context;
+        uint32_t parent_fk{};
+        system::chain::header& header;
     };
 
     struct record_with_sk

@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(header__put__get_height__expected)
 
     table::header::record_height element{};
     BOOST_REQUIRE(instance.get(1, element));
-    BOOST_REQUIRE_EQUAL(element.height, expected.height);
+    BOOST_REQUIRE_EQUAL(element.height, expected.context.height);
 }
 
 BOOST_AUTO_TEST_CASE(header__put__get_with_sk__expected)
