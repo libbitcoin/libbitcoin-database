@@ -233,8 +233,9 @@ system::chain::transaction::cptr CLASS::get_tx(const hash_digest& key) NOEXCEPT
     if (!store_.puts.get(tx.ins_fk + tx.ins_count, outputs))
         return {};
 
-    input_cptrs ins{};
-    ins.reserve(tx.ins_count);
+    // tx construct casts this inputs_ptr to an inputs_cptr.
+    const auto ins = system::to_shared<system::chain::input_cptrs>();
+    ins->reserve(tx.ins_count);
     table::point::record_sk pt{};
     table::input::slab_with_decomposed_sk in{};
     for (const auto& in_fk: inputs.put_fks)
@@ -243,24 +244,27 @@ system::chain::transaction::cptr CLASS::get_tx(const hash_digest& key) NOEXCEPT
             !store_.point.get(in.point_fk, pt))
             return {};
 
-        ins.emplace_back(new input
+        // TODO: construct script/witness on ptr using custom deserializer.
+        ins->emplace_back(new input
         {
-            point{ pt.key, in.point_index },
+            point{ std::move(pt.key), in.point_index },
             std::move(in.script),
             std::move(in.witness),
             in.sequence
         });
     }
 
-    output_cptrs outs{};
-    outs.reserve(tx.outs_count);
+    // tx construct casts this outputs_ptr to an outputs_cptr.
+    const auto outs = system::to_shared<system::chain::output_cptrs>();
+    outs->reserve(tx.outs_count);
     table::output::slab out{};
     for (const auto& out_fk: outputs.put_fks)
     {
+        // TODO: construct script on ptr using custom deserializer.
         if (!store_.output.get(out_fk, out))
             return {};
 
-        outs.emplace_back(new output
+        outs->emplace_back(new output
         {
             out.value,
             std::move(out.script)
@@ -270,8 +274,8 @@ system::chain::transaction::cptr CLASS::get_tx(const hash_digest& key) NOEXCEPT
     return system::to_shared(new transaction
     {
         tx.version,
-        system::to_shared(std::move(ins)),
-        system::to_shared(std::move(outs)),
+        ins,
+        outs,
         tx.locktime
     });
 }
@@ -289,7 +293,6 @@ system::chain::header::cptr CLASS::get_header(const hash_digest& key) NOEXCEPT
         !store_.header.get(header.parent_fk, parent))
         return {};
 
-    // Use of pointer forward here avoids move construction.
     return system::to_shared(new system::chain::header
     {
         header.version,
@@ -314,7 +317,7 @@ system::hashes CLASS::get_txs(const hash_digest& key) NOEXCEPT
     table::transaction::record_sk tx{};
     for (const auto& tx_fk: txs.tx_fks)
         if (store_.tx.get(tx_fk, tx))
-            hashes.push_back(tx.key);
+            hashes.push_back(std::move(tx.key));
 
     // TODO: optmize using in-loop check.
     if (hashes.size() != txs.tx_fks.size())
@@ -336,7 +339,7 @@ system::chain::block::cptr CLASS::get_block(const hash_digest& key) NOEXCEPT
         return {};
 
     // block construct casts this transactions_ptr to a transactions_cptr.
-    auto txs = system::to_shared<system::chain::transaction_ptrs>();
+    const auto txs = system::to_shared<system::chain::transaction_ptrs>();
     txs->reserve(hashes.size());
     for (const auto& hash: hashes)
         txs->push_back(get_tx(hash));
