@@ -673,7 +673,7 @@ BOOST_AUTO_TEST_CASE(query__set_block__mock_genesis_block__expected)
     const auto expected_input_body = system::base16_chunk(
         "ffffffffff"     // next->
         "00000000"       // sk (point_fk)
-        "ffffff"         // sk (point.index)
+        "ffffff"         // sk (point.index) [this tests 4 bytes null_index recovery]
         "00000000"       // parent_fk->
         "00"             // index
         "ffffffff"       // sequence
@@ -736,5 +736,7 @@ BOOST_AUTO_TEST_CASE(query__set_block__mock_genesis_block__expected)
     BOOST_REQUIRE(pointer);
     BOOST_REQUIRE(*pointer == genesis);
 }
+
+// set_txs/get_txs currently covered internal to set_block/get_block.
 
 BOOST_AUTO_TEST_SUITE_END()
