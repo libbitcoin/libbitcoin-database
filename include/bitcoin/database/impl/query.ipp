@@ -36,18 +36,23 @@ CLASS::query(Store& value) NOEXCEPT
 {
 }
 
+// setters
+// ----------------------------------------------------------------------------
+
+// false: parent link, allocation.
 TEMPLATE
 bool CLASS::set_header(const system::chain::header& header,
     const context& context) NOEXCEPT
 {
-    const auto& parent_sk = header.previous_block_hash();
-
-    // Iterator must be released before subsequent header put.
-    const auto parent_fk = store_.header.it(parent_sk).self();
+    // Bypass with success if header exists (by hash).
+    if (store_.header.exists(header.hash()))
+        return true;
 
     // Parent must be missing iff its hash is null.
-    if ((parent_fk == table::header::link::terminal) != 
-        (parent_sk == system::null_hash))
+    // Iterator must be released before subsequent header put.
+    const auto& parent_sk = header.previous_block_hash();
+    const auto parent_fk = store_.header.it(parent_sk).self();
+    if (parent_fk.is_terminal() != (parent_sk == system::null_hash))
         return false;
 
     return store_.header.put(header.hash(), table::header::record
@@ -65,12 +70,17 @@ bool CLASS::set_header(const system::chain::header& header,
     });
 }
 
+// false: tx empty, allocation.
 TEMPLATE
 bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
 {
     // Must have at least one input and output.
     if (tx.is_empty())
         return false;
+
+    // Bypass with success if tx exists (by hash).
+    if (store_.tx.exists(tx.hash(false)))
+        return true;
 
     // Allocate one transaction.
     const auto tx_pk = store_.tx.allocate(1);
@@ -86,7 +96,7 @@ bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
 
     // Allocate and Set inputs, queue each put.
     uint32_t input_index = 0;
-    linkage<schema::put> input_pk{};
+    table::input::link input_pk{};
     for (const auto& in: ins)
     {
         if (store_.input.set_link(input_pk, table::input::slab
@@ -105,7 +115,7 @@ bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
 
     // Commit outputs, queue each put.
     uint32_t output_index = 0;
-    linkage<schema::put> output_pk{};
+    table::output::link output_pk{};
     for (const auto& out: outs)
     {
         if (store_.output.put_link(output_pk, table::output::slab
@@ -125,20 +135,18 @@ bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
     if (puts.put_fks.size() != count)
         return false;
 
-    // Commit puts.
-    ////table::puts::record puts{};
-    linkage<schema::puts_> puts_pk{};
+    // Commit puts (defined above).
+    table::puts::link puts_pk{};
     if (!store_.puts.put_link(puts_pk, puts))
         return false;
 
     // Set transaction.
-    // TODO: instead of weight store tx.serialized_size(true)?
     if (!store_.tx.set(tx_pk, table::transaction::record
     {
         {},
         tx.is_coinbase(),
         system::possible_narrow_cast<uint32_t>(tx.serialized_size(false)),
-        system::possible_narrow_cast<uint32_t>(tx.weight()),
+        system::possible_narrow_cast<uint32_t>(tx.serialized_size(true)),
         tx.locktime(),
         tx.version(),
         system::possible_narrow_cast<uint32_t>(ins.size()),
@@ -151,14 +159,14 @@ bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
 
     // Commit point and input for each input.
     auto input_fk = puts.put_fks.begin();
-    linkage<schema::point::pk> point_pk{};
-    const table::point::record empty{};
+    table::point::link point_pk{};
     for (const auto& in: ins)
     {
         const auto& prevout = in->point();
 
         // Commit (empty) to prevout.hash (if missing).
-        if (!store_.point.put_if(point_pk, prevout.hash(), empty))
+        if (!store_.point.put_if(point_pk, prevout.hash(),
+            table::point::record{}))
             return false;
 
         // Commit each input_fk to its prevout fp.
@@ -171,37 +179,41 @@ bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
     return store_.tx.commit(tx_pk, tx.hash(false));
 }
 
+// false: tx link, allocation.
 TEMPLATE
-bool CLASS::set_block(const system::chain::block&) NOEXCEPT
+bool CLASS::set_txs(const hash_digest& key, const system::hashes& hashes) NOEXCEPT
 {
-    return false;
+    table::txs::slab txs{};
+    txs.tx_fks.reserve(hashes.size());
+
+    // TODO: evaluate parallelization advantage (std::for_each).
+    for (const auto& hash: hashes)
+        txs.tx_fks.push_back(store_.tx.it(hash).self());
+
+    // TODO: optmize contains using in-loop check.
+    return !system::contains(txs.tx_fks, table::txs::link::terminal) &&
+        store_.txs.put(store_.header.it(key).self(), txs);
 }
 
+// false: allocation.
 TEMPLATE
-system::chain::header::cptr CLASS::get_header(const hash_digest& key) NOEXCEPT
+bool CLASS::set_block(const system::chain::block& block,
+    const context& context) NOEXCEPT
 {
-    table::header::record element{};
-    if (!store_.header.get(key, element))
-        return {};
+    // TODO: evaluate parallelization advantage (std::for_each).
+    for (const auto& tx : *block.transactions_ptr())
+        if (!set_tx(*tx))
+            return false;
 
-    // terminal parent implies genesis (default), otherwise must resolve.
-    table::header::record_sk parent{};
-    if ((element.parent_fk != table::header::link::terminal) &&
-        !store_.header.get(element.parent_fk, parent))
-        return {};
-
-    // Use of pointer forward here avoids move construction.
-    return system::to_shared(new system::chain::header
-    {
-        element.version,
-        std::move(parent.key),
-        std::move(element.root),
-        element.timestamp,
-        element.bits,
-        element.nonce
-    });
+    // TODO: optimize by returning header_pk for use in set_txs.
+    return set_header(block.header(), context) &&
+        set_txs(block.hash(), block.transaction_hashes(false));
 }
 
+// getters
+// ----------------------------------------------------------------------------
+
+// null: not found, unloaded.
 TEMPLATE
 system::chain::transaction::cptr CLASS::get_tx(const hash_digest& key) NOEXCEPT
 {
@@ -221,8 +233,9 @@ system::chain::transaction::cptr CLASS::get_tx(const hash_digest& key) NOEXCEPT
     if (!store_.puts.get(tx.ins_fk + tx.ins_count, outputs))
         return {};
 
-    input_cptrs ins{};
-    ins.reserve(tx.ins_count);
+    // tx construct casts this inputs_ptr to an inputs_cptr.
+    const auto ins = system::to_shared<system::chain::input_cptrs>();
+    ins->reserve(tx.ins_count);
     table::point::record_sk pt{};
     table::input::slab_with_decomposed_sk in{};
     for (const auto& in_fk: inputs.put_fks)
@@ -231,24 +244,27 @@ system::chain::transaction::cptr CLASS::get_tx(const hash_digest& key) NOEXCEPT
             !store_.point.get(in.point_fk, pt))
             return {};
 
-        ins.emplace_back(new input
+        // TODO: construct script/witness on ptr using custom deserializer.
+        ins->emplace_back(new input
         {
-            point{ pt.key, in.point_index },
+            point{ std::move(pt.key), in.point_index },
             std::move(in.script),
             std::move(in.witness),
             in.sequence
         });
     }
 
-    output_cptrs outs{};
-    outs.reserve(tx.outs_count);
+    // tx construct casts this outputs_ptr to an outputs_cptr.
+    const auto outs = system::to_shared<system::chain::output_cptrs>();
+    outs->reserve(tx.outs_count);
     table::output::slab out{};
     for (const auto& out_fk: outputs.put_fks)
     {
+        // TODO: construct script on ptr using custom deserializer.
         if (!store_.output.get(out_fk, out))
             return {};
 
-        outs.emplace_back(new output
+        outs->emplace_back(new output
         {
             out.value,
             std::move(out.script)
@@ -258,28 +274,85 @@ system::chain::transaction::cptr CLASS::get_tx(const hash_digest& key) NOEXCEPT
     return system::to_shared(new transaction
     {
         tx.version,
-        system::to_shared(std::move(ins)),
-        system::to_shared(std::move(outs)),
+        ins,
+        outs,
         tx.locktime
     });
 }
 
 TEMPLATE
-system::chain::block::cptr CLASS::get_block(const hash_digest&) NOEXCEPT
+system::chain::header::cptr CLASS::get_header(const hash_digest& key) NOEXCEPT
 {
-    return {};
+    table::header::record header{};
+    if (!store_.header.get(key, header))
+        return {};
+
+    // terminal (default) parent implies genesis, otherwise it must resolve.
+    table::header::record_sk parent{};
+    if ((header.parent_fk != table::header::link::terminal) &&
+        !store_.header.get(header.parent_fk, parent))
+        return {};
+
+    return system::to_shared(new system::chain::header
+    {
+        header.version,
+        std::move(parent.key),
+        std::move(header.root),
+        header.timestamp,
+        header.bits,
+        header.nonce
+    });
 }
 
 TEMPLATE
-system::hashes CLASS::get_block_locator(const hash_digest&) NOEXCEPT
+system::hashes CLASS::get_txs(const hash_digest& key) NOEXCEPT
 {
-    return {};
+    // TODO: optmize with header_fk overload.
+    table::txs::slab txs{};
+    if (!store_.txs.get(store_.header.it(key).self(), txs))
+        return {};
+
+    system::hashes hashes{};
+    hashes.reserve(txs.tx_fks.size());
+    table::transaction::record_sk tx{};
+    for (const auto& tx_fk: txs.tx_fks)
+        if (store_.tx.get(tx_fk, tx))
+            hashes.push_back(std::move(tx.key));
+
+    // TODO: optmize using in-loop check.
+    if (hashes.size() != txs.tx_fks.size())
+        return {};
+
+    return hashes;
 }
 
 TEMPLATE
-system::hashes CLASS::get_block_txs(const hash_digest&) NOEXCEPT
+system::chain::block::cptr CLASS::get_block(const hash_digest& key) NOEXCEPT
 {
-    return {};
+    const auto header = get_header(key);
+    if (!header)
+        return {};
+
+    // TODO: optmize by querying with header_fk and getting tx fks.
+    const auto hashes = get_txs(key);
+    if (hashes.empty())
+        return {};
+
+    // block construct casts this transactions_ptr to a transactions_cptr.
+    const auto txs = system::to_shared<system::chain::transaction_ptrs>();
+    txs->reserve(hashes.size());
+    for (const auto& hash: hashes)
+        txs->push_back(get_tx(hash));
+
+    // TODO: optmize contains using in-loop check.
+    if (system::contains(*txs, nullptr))
+        return {};
+
+    return system::to_shared(new system::chain::block
+    {
+        header,
+        txs
+    });
 }
 
 BC_POP_WARNING()
