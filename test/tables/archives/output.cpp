@@ -53,8 +53,8 @@ BOOST_AUTO_TEST_CASE(output__put__get__expected)
     test::dfile head_store{};
     test::dfile body_store{};
     table::output instance{ head_store, body_store };
-    BOOST_REQUIRE(instance.put(table::output::slab{}));
-    BOOST_REQUIRE(instance.put(expected));
+    BOOST_REQUIRE(!instance.put(table::output::slab{}).is_terminal());
+    BOOST_REQUIRE(!instance.put(expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::output::slab element{};

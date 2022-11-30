@@ -93,6 +93,13 @@ Link CLASS::allocate(const Link& size) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::get(const Key& key, Element& element) const NOEXCEPT
+{
+    return get(it(key).self(), element);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
     auto source = streamer<reader>(link);
@@ -101,9 +108,10 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::get(const Key& key, Element& element) const NOEXCEPT
+Link CLASS::set(const Element& element) NOEXCEPT
 {
-    return get(it(key).self(), element);
+    const auto link = allocate(element.count());
+    return set(link, element) ? link : Link{};
 }
 
 TEMPLATE
@@ -116,44 +124,29 @@ bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::set_link(Link& link, const Element& element) NOEXCEPT
-{
-    link = allocate(element.count());
-    return set(link, element);
-}
-
-TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::put(const Link& link, const Key& key, const Element& element) NOEXCEPT
-{
-    auto sink = putter(link, key, element.count());
-    return sink && element.to_data(*sink) && sink->finalize();
-}
-
-TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::put_link(Link& link, const Key& key, const Element& element) NOEXCEPT
-{
-    link = allocate(element.count());
-    return put(link, key, element);
-}
-
-TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::put_if(Link& link, const Key& key, const Element& element) NOEXCEPT
+Link CLASS::put_if(const Key& key, const Element& element) NOEXCEPT
 {
     // non-atomic, race may produce element duplication.
     // it is preferred to allow duplication vs. searching under lock.
-    link = it(key).self();
-    return !link.is_terminal() || put_link(link, key, element);
+    auto link = it(key).self();
+    return link.is_terminal() ? put(key, element) : link;
 }
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::put(const Key& key, const Element& element) NOEXCEPT
+Link CLASS::put(const Key& key, const Element& element) NOEXCEPT
 {
-    Link unused{};
-    return put_link(unused, key, element);
+    const auto link = allocate(element.count());
+    return put(link, key, element) ? link : Link{};
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put(const Link& link, const Key& key,
+    const Element& element) NOEXCEPT
+{
+    auto sink = putter(link, key, element.count());
+    return sink && element.to_data(*sink) && sink->finalize();
 }
 
 TEMPLATE

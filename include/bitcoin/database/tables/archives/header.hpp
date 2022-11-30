@@ -88,10 +88,11 @@ public:
         uint32_t nonce{};
     };
 
+    // There is no corresponding ref getter because chain objects are const.
     struct record_get_ptr
       : public schema::header
     {
-        // header_ptr->merkle_root() ignored.
+        // header_ptr->previous_block_hash() ignored.
         inline bool from_data(reader& source) NOEXCEPT
         {
             context::read(source, context);
@@ -117,7 +118,7 @@ public:
     struct record_put_ptr
       : public schema::header
     {
-        // header_ptr->merkle_root() ignored.
+        // header_ptr->previous_block_hash() ignored.
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             BC_ASSERT(header_ptr);
@@ -135,6 +136,29 @@ public:
         const context context{};
         const uint32_t parent_fk{};
         system::chain::header::cptr header_ptr{};
+    };
+
+    // This is redundant with record_put_ptr except this does not capture.
+    struct record_put_ref
+      : public schema::header
+    {
+        // header.previous_block_hash() ignored.
+        inline bool to_data(finalizer& sink) const NOEXCEPT
+        {
+            context::write(sink, context);
+            sink.write_little_endian<uint32_t, schema::block>(parent_fk);
+            sink.write_little_endian<uint32_t>(header.version());
+            sink.write_bytes(header.merkle_root());
+            sink.write_little_endian<uint32_t>(header.timestamp());
+            sink.write_little_endian<uint32_t>(header.bits());
+            sink.write_little_endian<uint32_t>(header.nonce());
+            BC_ASSERT(sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        const context& context{};
+        const uint32_t parent_fk{};
+        const system::chain::header& header;
     };
 
     struct record_with_sk

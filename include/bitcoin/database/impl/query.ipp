@@ -55,17 +55,13 @@ bool CLASS::set_header(const system::chain::header& header,
     if (parent_fk.is_terminal() != (parent_sk == system::null_hash))
         return false;
 
-    return store_.header.put(header.hash(), table::header::record
+    return !store_.header.put(header.hash(), table::header::record_put_ref
     {
         {},
         context,
         parent_fk,
-        header.version(),
-        header.merkle_root(),
-        header.timestamp(),
-        header.bits(),
-        header.nonce()
-    });
+        header
+    }).is_terminal();
 }
 
 // false: tx empty, allocation.
@@ -94,10 +90,9 @@ bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
 
     // Allocate and Set inputs, queue each put.
     uint32_t input_index = 0;
-    table::input::link input_pk{};
     for (const auto& in: ins)
     {
-        if (store_.input.set_link(input_pk, table::input::slab
+        const auto input_pk = store_.input.set(table::input::slab
         {
             {},
             tx_pk,
@@ -105,28 +100,27 @@ bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
             in->sequence(),
             in->script(),
             in->witness()
-        }))
-        {
+        });
+
+        if (!input_pk.is_terminal())
             puts.put_fks.push_back(input_pk);
-        }
     }
 
     // Commit outputs, queue each put.
     uint32_t output_index = 0;
-    table::output::link output_pk{};
     for (const auto& out: outs)
     {
-        if (store_.output.put_link(output_pk, table::output::slab
+        const auto output_pk = store_.output.put(table::output::slab
         {
             {},
             tx_pk,
             output_index++,
             out->value(),
             out->script()
-        }))
-        {
+        });
+
+        if (!output_pk.is_terminal())
             puts.put_fks.push_back(output_pk);
-        }
     }
 
     // Halt on error.
@@ -134,8 +128,8 @@ bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
         return false;
 
     // Commit puts (defined above).
-    table::puts::link puts_pk{};
-    if (!store_.puts.put_link(puts_pk, puts))
+    const auto puts_pk = store_.puts.put(puts);
+    if (puts_pk.is_terminal())
         return false;
 
     // Set transaction.
@@ -156,15 +150,15 @@ bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
     }
 
     // Commit point and input for each input.
+    const table::point::record point{};
     auto input_fk = puts.put_fks.begin();
-    table::point::link point_pk{};
     for (const auto& in: ins)
     {
         const auto& prevout = in->point();
 
         // Commit (empty) to prevout.hash (if missing).
-        if (!store_.point.put_if(point_pk, prevout.hash(),
-            table::point::record{}))
+        const auto point_pk = store_.point.put_if(prevout.hash(), point);
+        if (point_pk.is_terminal())
             return false;
 
         // Commit each input_fk to its prevout fp.
@@ -190,7 +184,7 @@ bool CLASS::set_txs(const hash_digest& key, const system::hashes& hashes) NOEXCE
 
     // TODO: optmize contains using in-loop check.
     return !system::contains(txs.tx_fks, table::txs::link::terminal) &&
-        store_.txs.put(store_.header.it(key).self(), txs);
+        !store_.txs.put(store_.header.it(key).self(), txs).is_terminal();
 }
 
 // false: allocation.
@@ -307,9 +301,15 @@ system::chain::header::cptr CLASS::get_header(const hash_digest& key) NOEXCEPT
 TEMPLATE
 system::hashes CLASS::get_txs(const hash_digest& key) NOEXCEPT
 {
-    // TODO: optmize with header_fk overload.
+    return get_txs(store_.header.it(key).self());
+}
+
+// null: not found, unloaded.
+TEMPLATE
+system::hashes CLASS::get_txs(const table::header::link& header_fk) NOEXCEPT
+{
     table::txs::slab txs{};
-    if (!store_.txs.get(store_.header.it(key).self(), txs))
+    if (!store_.txs.get(header_fk, txs))
         return {};
 
     system::hashes hashes{};
@@ -319,7 +319,6 @@ system::hashes CLASS::get_txs(const hash_digest& key) NOEXCEPT
         if (store_.tx.get(tx_fk, tx))
             hashes.push_back(std::move(tx.key));
 
-    // TODO: optmize using in-loop check.
     if (hashes.size() != txs.tx_fks.size())
         return {};
 

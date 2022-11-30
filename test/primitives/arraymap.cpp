@@ -296,8 +296,8 @@ BOOST_AUTO_TEST_CASE(arraymap__record_put__get__expected)
     test::dfile body_store{ body_file };
     arraymap<link5, big_record::size> instance{ head_store, body_store };
 
-    link5 link{};
-    BOOST_REQUIRE(instance.put_link(link, big_record{ 0xa1b2c3d4_u32 }));
+    const auto link = instance.put(big_record{ 0xa1b2c3d4_u32 });
+    BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 0u);
 
     big_record record{};
@@ -316,10 +316,12 @@ BOOST_AUTO_TEST_CASE(arraymap__record_put__multiple__expected)
     test::dfile body_store{ body_file };
     arraymap<link5, big_record::size> instance{ head_store, body_store };
 
-    link5 link{};
-    BOOST_REQUIRE(instance.put_link(link, big_record{ 0xa1b2c3d4_u32 }));
+    auto link = instance.put(big_record{ 0xa1b2c3d4_u32 });
+    BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 0u);
-    BOOST_REQUIRE(instance.put_link(link, little_record{ 0xa1b2c3d4_u32 }));
+
+    link = instance.put(little_record{ 0xa1b2c3d4_u32 });
+    BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 1u);
 
     big_record record1{};
@@ -384,8 +386,8 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_put__get__expected)
     test::dfile body_store{ body_file };
     arraymap<link5, big_slab::size> instance{ head_store, body_store };
 
-    link5 link{};
-    BOOST_REQUIRE(instance.put_link(link, big_slab{ 0xa1b2c3d4_u32 }));
+    const auto link = instance.put(big_slab{ 0xa1b2c3d4_u32 });
+    BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 0u);
 
     big_slab slab{};
@@ -404,10 +406,12 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_put__multiple__expected)
     test::dfile body_store{ body_file };
     arraymap<link5, big_slab::size> instance{ head_store, body_store };
 
-    link5 link{};
-    BOOST_REQUIRE(instance.put_link(link, big_slab{ 0xa1b2c3d4_u32 }));
+    auto link = instance.put(big_slab{ 0xa1b2c3d4_u32 });
+    BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 0u);
-    BOOST_REQUIRE(instance.put_link(link, little_slab{ 0xa1b2c3d4_u32 }));
+
+    link = instance.put(little_slab{ 0xa1b2c3d4_u32 });
+    BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, big_slab::count());
 
     big_slab slab1{};
@@ -464,7 +468,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_put__excess__false)
     test::dfile head_store{ head_file };
     test::dfile body_store{ body_file };
     arraymap<link5, record_excess::size> instance{ head_store, body_store };
-    BOOST_REQUIRE(!instance.put(record_excess{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(instance.put(record_excess{ 0xa1b2c3d4_u32 }).is_terminal());
 }
 
 // advertises 32 but reads/writes 64
@@ -545,7 +549,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_put__excess__false)
     test::dfile head_store{ head_file };
     test::dfile body_store{ body_file };
     arraymap<link5, slab_excess::size> instance{ head_store, body_store };
-    BOOST_REQUIRE(!instance.put(slab_excess{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(instance.put(slab_excess{ 0xa1b2c3d4_u32 }).is_terminal());
 }
 
 // record create/close/backup/restore/verify

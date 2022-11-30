@@ -116,10 +116,10 @@ BOOST_AUTO_TEST_CASE(txs__put__get__expected)
     test::dfile body_store{};
     table::txs instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put(key, expected0));
-    BOOST_REQUIRE(instance.put(key, expected1));
-    BOOST_REQUIRE(instance.put(key, expected2));
-    BOOST_REQUIRE(instance.put(key, expected3));
+    BOOST_REQUIRE(!instance.put(key, expected0).is_terminal());
+    BOOST_REQUIRE(!instance.put(key, expected1).is_terminal());
+    BOOST_REQUIRE(!instance.put(key, expected2).is_terminal());
+    BOOST_REQUIRE(!instance.put(key, expected3).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::txs::slab slab{};
