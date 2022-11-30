@@ -99,8 +99,8 @@ BOOST_AUTO_TEST_CASE(header__put__get__expected)
     test::dfile body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put({}, table::header::record{}).is_terminal());
-    BOOST_REQUIRE(!instance.put(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::header::record element{};
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(header__put_ptr__get_ptr__expected)
     test::dfile body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put({}, table::header::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
 
     const table::header::record_put_ptr put_ptr
     {
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(header__put_ptr__get_ptr__expected)
         expected.parent_fk,
         system::to_shared(expected_header)
     };
-    BOOST_REQUIRE(!instance.put(key, put_ptr).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, put_ptr).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::header::record_get_ptr get_ptr{};
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(header__put_ref__get__expected)
     test::dfile body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put({}, table::header::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
 
     const table::header::record_put_ref put_ref
     {
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(header__put_ref__get__expected)
         expected.parent_fk,
         expected_header
     };
-    BOOST_REQUIRE(!instance.put(key, put_ref).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, put_ref).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::header::record element{};
@@ -178,8 +178,8 @@ BOOST_AUTO_TEST_CASE(header__put__get_with_sk__expected)
     test::dfile body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put({}, table::header::record{}).is_terminal());
-    BOOST_REQUIRE(!instance.put(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::header::record_with_sk element{};
@@ -194,8 +194,8 @@ BOOST_AUTO_TEST_CASE(point__put__get_sk__expected)
     test::dfile body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put({}, table::header::record{}).is_terminal());
-    BOOST_REQUIRE(!instance.put(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::header::record_sk element{};
@@ -209,8 +209,8 @@ BOOST_AUTO_TEST_CASE(header__put__get_height__expected)
     test::dfile body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put({}, table::header::record{}).is_terminal());
-    BOOST_REQUIRE(!instance.put(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::header::record_height element{};
@@ -224,8 +224,8 @@ BOOST_AUTO_TEST_CASE(point__it__pk__expected)
     test::dfile body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put({}, table::header::record{}).is_terminal());
-    BOOST_REQUIRE(!instance.put(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     auto it = instance.it(key);

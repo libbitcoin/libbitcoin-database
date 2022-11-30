@@ -58,7 +58,7 @@ public:
 
     /// Put element and return link.
     template <typename Element, if_equal<Element::size, Size> = true>
-    Link put(const Element& element) NOEXCEPT;
+    Link put_link(const Element& element) NOEXCEPT;
 
 protected:
     reader_ptr getter(const Link& link) const NOEXCEPT;

@@ -76,7 +76,7 @@ public:
 
     /// Allocate and set element, and return link (follow with commit).
     template <typename Element, if_equal<Element::size, Size> = true>
-    Link set(const Element& element) NOEXCEPT;
+    Link set_link(const Element& element) NOEXCEPT;
 
     /// Set element into previously allocated link (follow with commit).
     template <typename Element, if_equal<Element::size, Size> = true>
@@ -89,7 +89,7 @@ public:
 
     /// Allocate, set, commit element to key, and return link.
     template <typename Element, if_equal<Element::size, Size> = true>
-    Link put(const Key& key, const Element& element) NOEXCEPT;
+    Link put_link(const Key& key, const Element& element) NOEXCEPT;
 
     /// Set and commit previously allocated element at link to key.
     template <typename Element, if_equal<Element::size, Size> = true>

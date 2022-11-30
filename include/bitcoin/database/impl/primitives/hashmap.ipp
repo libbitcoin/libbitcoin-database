@@ -108,7 +108,7 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-Link CLASS::set(const Element& element) NOEXCEPT
+Link CLASS::set_link(const Element& element) NOEXCEPT
 {
     const auto link = allocate(element.count());
     return set(link, element) ? link : Link{};
@@ -129,12 +129,12 @@ Link CLASS::put_if(const Key& key, const Element& element) NOEXCEPT
     // non-atomic, race may produce element duplication.
     // it is preferred to allow duplication vs. searching under lock.
     auto link = it(key).self();
-    return link.is_terminal() ? put(key, element) : link;
+    return link.is_terminal() ? put_link(key, element) : link;
 }
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-Link CLASS::put(const Key& key, const Element& element) NOEXCEPT
+Link CLASS::put_link(const Key& key, const Element& element) NOEXCEPT
 {
     const auto link = allocate(element.count());
     return put(link, key, element) ? link : Link{};

@@ -83,7 +83,7 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-Link CLASS::put(const Element& element) NOEXCEPT
+Link CLASS::put_link(const Element& element) NOEXCEPT
 {
     Link link{};
     auto sink = creater(link, element.count());

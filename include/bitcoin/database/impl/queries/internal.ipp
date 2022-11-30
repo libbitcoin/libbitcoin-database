@@ -50,7 +50,7 @@ table::header::link CLASS::set_header_(const system::chain::header& header,
     if (parent_fk.is_terminal() != (parent_sk == system::null_hash))
         return {};
 
-    return store_.header.put(key, table::header::record_put_ref
+    return store_.header.put_link(key, table::header::record_put_ref
     {
         {},
         context,
@@ -89,7 +89,7 @@ table::transaction::link CLASS::set_tx_(
     uint32_t input_index = 0;
     for (const auto& in: ins)
     {
-        const auto input_pk = store_.input.set(table::input::slab
+        const auto input_pk = store_.input.set_link(table::input::slab
         {
             {},
             tx_pk,
@@ -107,7 +107,7 @@ table::transaction::link CLASS::set_tx_(
     uint32_t output_index = 0;
     for (const auto& out: outs)
     {
-        const auto output_pk = store_.output.put(table::output::slab
+        const auto output_pk = store_.output.put_link(table::output::slab
         {
             {},
             tx_pk,
@@ -125,7 +125,7 @@ table::transaction::link CLASS::set_tx_(
         return {};
 
     // Commit puts (defined above).
-    const auto puts_pk = store_.puts.put(puts);
+    const auto puts_pk = store_.puts.put_link(puts);
     if (puts_pk.is_terminal())
         return {};
 

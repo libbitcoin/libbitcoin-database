@@ -70,8 +70,8 @@ BOOST_AUTO_TEST_CASE(input__put__get__expected)
     test::dfile body_store{};
     table::input instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put({}, table::input::slab{}).is_terminal());
-    BOOST_REQUIRE(!instance.put(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link({}, table::input::slab{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::input::slab element{};
@@ -94,8 +94,8 @@ BOOST_AUTO_TEST_CASE(input__put__get_composite_sk__expected)
     test::dfile body_store{};
     table::input instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put({}, table::input::slab{}).is_terminal());
-    BOOST_REQUIRE(!instance.put(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link({}, table::input::slab{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::input::slab_composite_sk element{};
@@ -109,8 +109,8 @@ BOOST_AUTO_TEST_CASE(input__put__get_decomposed_sk__expected)
     test::dfile body_store{};
     table::input instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put({}, table::input::slab{}).is_terminal());
-    BOOST_REQUIRE(!instance.put(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link({}, table::input::slab{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::input::slab_decomposed_sk element{};
@@ -125,8 +125,8 @@ BOOST_AUTO_TEST_CASE(input__it__pk__expected)
     test::dfile body_store{};
     table::input instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put({}, table::input::slab{}).is_terminal());
-    BOOST_REQUIRE(!instance.put(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link({}, table::input::slab{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     auto it = instance.it(key);
