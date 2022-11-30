@@ -153,7 +153,7 @@ table::transaction::link CLASS::set_tx_(
     {
         const auto& prevout = in->point();
 
-        // Commit (empty) to prevout.hash (if missing).
+        // Continue with success if point exists.
         const auto point_pk = store_.point.put_if(prevout.hash(), point);
         if (point_pk.is_terminal())
             return {};
@@ -178,6 +178,10 @@ table::header::link CLASS::set_block_(const system::chain::block& block,
     if (header_fk.is_terminal())
         return {};
 
+    // Shortcircuit (redundant with set_txs_ put_if).
+    if (store_.txs.exists(header_fk))
+        return true;
+
     // Get/create foreign key for each tx (set is idempotent).
     table::txs::slab keys{};
     const auto& txs = *block.transactions_ptr();
@@ -185,7 +189,7 @@ table::header::link CLASS::set_block_(const system::chain::block& block,
     for (const auto& tx: txs)
         keys.tx_fks.push_back(set_tx_(*tx));
 
-    // Set is idempotent.
+    // Set is idempotent, requires that none are terminal.
     return set_txs_(header_fk, keys) ? header_fk : table::header::link{};
 }
 
@@ -193,6 +197,7 @@ TEMPLATE
 bool CLASS::set_txs_(const table::header::link& key,
     const table::txs::slab& txs) NOEXCEPT
 {
+    // Continue with success if txs exists for header.
     return !system::contains(txs.tx_fks, table::txs::link::terminal) &&
         !store_.txs.put_if(key, txs).is_terminal();
 }

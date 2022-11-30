@@ -57,9 +57,14 @@ TEMPLATE
 bool CLASS::set_txs(const hash_digest& key,
     const system::hashes& hashes) NOEXCEPT
 {
+    // Require header.
     const auto header_fk = store_.header.it(key).self();
     if (header_fk.is_terminal())
         return false;
+
+    // Shortcircuit (redundant with set_txs_ put_if).
+    if (store_.txs.exists(header_fk))
+        return true;
 
     // Get foreign key for each tx.
     table::txs::slab keys{};
@@ -67,6 +72,7 @@ bool CLASS::set_txs(const hash_digest& key,
     for (const auto& hash: hashes)
         keys.tx_fks.push_back(store_.tx.it(hash).self());
 
+    // Set is idempotent, requires that none are terminal.
     return set_txs_(header_fk, keys);
 }
 
