@@ -33,17 +33,17 @@ struct context
     template <typename Source>
     static inline void read(Source& source, context& context) NOEXCEPT
     {
-        context.height = source.read_little_endian<uint32_t, schema::block>();
-        context.flags  = source.read_little_endian<uint32_t, schema::flags>();
-        context.mtp    = source.read_little_endian<uint32_t>();
+        context.height = source.template read_little_endian<uint32_t, schema::block>();
+        context.flags  = source.template read_little_endian<uint32_t, schema::flags>();
+        context.mtp    = source.template read_little_endian<uint32_t>();
     };
 
     template <typename Sink>
     static inline void write(Sink& sink, const context& context) NOEXCEPT
     {
-        sink.write_little_endian<uint32_t, schema::block>(context.height);
-        sink.write_little_endian<uint32_t, schema::flags>(context.flags);
-        sink.write_little_endian<uint32_t>(context.mtp);
+        sink.template write_little_endian<uint32_t, schema::block>(context.height);
+        sink.template write_little_endian<uint32_t, schema::flags>(context.flags);
+        sink.template write_little_endian<uint32_t>(context.mtp);
     };
 
     inline bool operator==(const context& other) const NOEXCEPT
