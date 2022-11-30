@@ -173,17 +173,20 @@ TEMPLATE
 table::header::link CLASS::set_block_(const system::chain::block& block,
     const context& context) NOEXCEPT
 {
+    // Set is idempotent.
     const auto header_fk = set_header_(block.header(), context);
     if (header_fk.is_terminal())
         return {};
 
-    // Get foreign key for each tx.
-    table::txs::slab txs{};
-    txs.tx_fks.reserve((*block.transactions_ptr()).size());
-    for (const auto& tx: *block.transactions_ptr())
-        txs.tx_fks.push_back(set_tx_(*tx));
+    // Get/create foreign key for each tx (set is idempotent).
+    table::txs::slab keys{};
+    const auto& txs = *block.transactions_ptr();
+    keys.tx_fks.reserve(txs.size());
+    for (const auto& tx: txs)
+        keys.tx_fks.push_back(set_tx_(*tx));
 
-    return set_txs_(header_fk, txs) ? header_fk : table::header::link{};
+    // Set is idempotent.
+    return set_txs_(header_fk, keys) ? header_fk : table::header::link{};
 }
 
 TEMPLATE
@@ -191,7 +194,7 @@ bool CLASS::set_txs_(const table::header::link& key,
     const table::txs::slab& txs) NOEXCEPT
 {
     return !system::contains(txs.tx_fks, table::txs::link::terminal) &&
-        !store_.txs.put(key, txs).is_terminal();
+        !store_.txs.put_if(key, txs).is_terminal();
 }
 
 // chain_ptr getters(fk)
@@ -220,17 +223,17 @@ system::chain::transaction::cptr CLASS::get_tx(
     // tx construct casts this inputs_ptr to an inputs_cptr.
     const auto ins = system::to_shared<system::chain::input_cptrs>();
     ins->reserve(tx.ins_count);
-    table::point::record_sk pt{};
+    table::point::record_sk point{};
     table::input::slab_with_decomposed_sk in{};
     for (const auto& in_fk: inputs.put_fks)
     {
         if (!store_.input.get(in_fk, in) ||
-            !store_.point.get(in.point_fk, pt))
+            !store_.point.get(in.point_fk, point))
             return {};
 
         ins->emplace_back(new input
         {
-            point{ std::move(pt.key), in.point_index },
+            { std::move(point.key), in.point_index },
             std::move(in.script),
             std::move(in.witness),
             in.sequence

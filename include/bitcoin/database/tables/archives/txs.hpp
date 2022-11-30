@@ -35,7 +35,7 @@ class txs
   : public hash_map<schema::txs>
 {
 public:
-    using hashes = std_vector<uint32_t>;
+    using keys = std_vector<uint32_t>;
     using hash_map<schema::txs>::hashmap;
 
     struct slab
@@ -81,7 +81,7 @@ public:
             return tx_fks == other.tx_fks;
         }
 
-        hashes tx_fks{};
+        keys tx_fks{};
     };
 };
 

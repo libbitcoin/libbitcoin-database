@@ -62,12 +62,12 @@ bool CLASS::set_txs(const hash_digest& key,
         return false;
 
     // Get foreign key for each tx.
-    table::txs::slab txs{};
-    txs.tx_fks.reserve(hashes.size());
+    table::txs::slab keys{};
+    keys.tx_fks.reserve(hashes.size());
     for (const auto& hash: hashes)
-        txs.tx_fks.push_back(store_.tx.it(hash).self());
+        keys.tx_fks.push_back(store_.tx.it(hash).self());
 
-    return set_txs_(header_fk, txs);
+    return set_txs_(header_fk, keys);
 }
 
 // chain_ptr getters(key)
