@@ -18,6 +18,8 @@
  */
 #include "test.hpp"
 
+ // these are the slow tests (mmap)
+
 struct store_setup_fixture
 {
     DELETE4(store_setup_fixture);

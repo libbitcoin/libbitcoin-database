@@ -95,7 +95,8 @@ public:
         // header_ptr->previous_block_hash() ignored.
         inline bool from_data(reader& source) NOEXCEPT
         {
-            context::read(source, state);
+            ////context::read(source, state);
+            source.skip_bytes(context::size);
             parent_fk = source.read_little_endian<uint32_t, schema::block>();
             header_ptr = system::to_shared(new system::chain::header
             {
@@ -110,7 +111,7 @@ public:
             return source;
         }
 
-        context state{};
+        ////context state{};
         uint32_t parent_fk{};
         system::chain::header::cptr header_ptr{};
     };

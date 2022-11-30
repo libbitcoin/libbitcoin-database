@@ -32,25 +32,40 @@ template <typename Store>
 class query
 {
 public:
+    using hashes = system::hashes;
+    using block = system::chain::block;
+    using input = system::chain::input;
+    using output = system::chain::output;
+    using header = system::chain::header;
+    using transaction = system::chain::transaction;
+
     query(Store& value) NOEXCEPT;
 
-    /// Store system::chain object (idempotent).
-    bool set_tx(const system::chain::transaction& tx) NOEXCEPT;
-    bool set_header(const system::chain::header& header, const context& context) NOEXCEPT;
-    bool set_block(const system::chain::block& block, const context& context) NOEXCEPT;
-    bool set_txs(const hash_digest& key, const system::hashes& hashes) NOEXCEPT;
+    bool set_tx(const transaction& tx) NOEXCEPT;
+    bool set_header(const header& header, const context& context) NOEXCEPT;
+    bool set_block(const block& block, const context& context) NOEXCEPT;
+    bool set_txs(const hash_digest& key, const hashes& hashes) NOEXCEPT;
 
-    /// Retrieve system::chain object (by search key).
-    system::chain::transaction::cptr get_tx(const hash_digest& key) NOEXCEPT;
-    system::chain::header::cptr get_header(const hash_digest& key) NOEXCEPT;
-    system::chain::block::cptr get_block(const hash_digest& key) NOEXCEPT;
-    system::hashes get_txs(const hash_digest& key) NOEXCEPT;
+    ////input::cptr get_input(const hash_digest& prevout, uint32_t index) NOEXCEPT;
+    ////output::cptr get_output(const hash_digest& spender, uint32_t index) NOEXCEPT;
+    transaction::cptr get_tx(const hash_digest& key) NOEXCEPT;
+    header::cptr get_header(const hash_digest& key) NOEXCEPT;
+    block::cptr get_block(const hash_digest& key) NOEXCEPT;
+    hashes get_txs(const hash_digest& key) NOEXCEPT;
 
-    /// Retrieve system::chain object (by foreign key).
-    system::chain::transaction::cptr get_tx(const table::transaction::link& fk) NOEXCEPT;
-    system::chain::header::cptr get_header(const table::header::link& fk) NOEXCEPT;
-    system::chain::block::cptr get_block(const table::header::link& fk) NOEXCEPT;
-    system::hashes get_txs(const table::header::link& fk) NOEXCEPT;
+// protected:
+    table::transaction::link set_tx_(const transaction& tx) NOEXCEPT;
+    table::header::link set_header_(const header& header, const context& context) NOEXCEPT;
+    table::header::link set_block_(const block& block, const context& context) NOEXCEPT;
+    bool set_txs_(const table::header::link& key, const table::txs::slab& txs) NOEXCEPT;
+
+    ////hash_digest get_point(const table::point::link& fk) NOEXCEPT;
+    ////input::cptr get_input(const table::input::link& fk) NOEXCEPT;
+    ////output::cptr get_output(const table::output::link& fk) NOEXCEPT;
+    transaction::cptr get_tx(const table::transaction::link& fk) NOEXCEPT;
+    header::cptr get_header(const table::header::link& fk) NOEXCEPT;
+    block::cptr get_block(const table::header::link& fk) NOEXCEPT;
+    hashes get_txs(const table::header::link& fk) NOEXCEPT;
 
 private:
     Store& store_;
@@ -63,6 +78,8 @@ private:
 #define CLASS query<Store>
 
 #include <bitcoin/database/impl/query.ipp>
+#include <bitcoin/database/impl/queries/archive.ipp>
+#include <bitcoin/database/impl/queries/internal.ipp>
 
 #undef CLASS
 #undef TEMPLATE

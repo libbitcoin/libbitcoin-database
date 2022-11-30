@@ -216,6 +216,8 @@ if (with-tests)
         "../../test/primitives/iterator.cpp"
         "../../test/primitives/linkage.cpp"
         "../../test/primitives/manager.cpp"
+        "../../test/queries/archive.cpp"
+        "../../test/queries/internal.cpp"
         "../../test/tables/archives/header.cpp"
         "../../test/tables/archives/input.cpp"
         "../../test/tables/archives/output.cpp"

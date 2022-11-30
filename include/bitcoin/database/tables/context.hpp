@@ -30,6 +30,9 @@ namespace database {
 
 struct context
 {
+    static constexpr size_t size = schema::block + schema::flags +
+        sizeof(uint32_t);
+
     template <typename Source>
     static inline void read(Source& source, context& context) NOEXCEPT
     {
