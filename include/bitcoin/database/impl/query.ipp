@@ -31,4 +31,7 @@ CLASS::query(Store& value) NOEXCEPT
 } // namespace database
 } // namespace libbitcoin
 
+#include <bitcoin/database/impl/queries/archive.ipp>
+#include <bitcoin/database/impl/queries/internal.ipp>
+
 #endif

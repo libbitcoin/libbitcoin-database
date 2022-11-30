@@ -78,8 +78,6 @@ private:
 #define CLASS query<Store>
 
 #include <bitcoin/database/impl/query.ipp>
-#include <bitcoin/database/impl/queries/archive.ipp>
-#include <bitcoin/database/impl/queries/internal.ipp>
 
 #undef CLASS
 #undef TEMPLATE
