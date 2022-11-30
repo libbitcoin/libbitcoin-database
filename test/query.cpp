@@ -119,7 +119,7 @@ public:
 
 // chain::header
 
-BOOST_AUTO_TEST_CASE(query__set_header__mock_default__expected)
+BOOST_AUTO_TEST_CASE(query__set_header__default__expected)
 {
     constexpr auto parent = system::null_hash;
     constexpr auto merkle_root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(query__set_header__mock_default__expected)
     BOOST_REQUIRE_EQUAL(element1.nonce, header.nonce());
 }
 
-BOOST_AUTO_TEST_CASE(query__get_header__mock_default__expected)
+BOOST_AUTO_TEST_CASE(query__get_header__default__expected)
 {
     constexpr auto parent = system::null_hash;
     constexpr auto root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
@@ -241,13 +241,16 @@ BOOST_AUTO_TEST_CASE(query__get_header__mock_default__expected)
 
     store1.header_head() = expected_header_head;
     store1.header_body() = expected_header_body;
-    const auto pointer = query1.get_header(block_hash);
-    BOOST_REQUIRE(pointer);
-    BOOST_REQUIRE(*pointer == header);
+    const auto pointer1 = query1.get_header(block_hash);
+    BOOST_REQUIRE(pointer1);
+    BOOST_REQUIRE(*pointer1 == header);
+    const auto pointer2 = query1.get_header(0);
+    BOOST_REQUIRE(pointer2);
+    BOOST_REQUIRE(*pointer2 == header);
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(query__set_get_header__mmap_default__expected)
+BOOST_AUTO_TEST_CASE(query__set_header__mmap_get_header__expected)
 {
     constexpr auto parent = system::null_hash;
     constexpr auto merkle_root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
@@ -301,7 +304,7 @@ BOOST_AUTO_TEST_CASE(query__set_get_header__mmap_default__expected)
 
 // chain::transaction
 
-BOOST_AUTO_TEST_CASE(query__set_tx__mock_empty__expected)
+BOOST_AUTO_TEST_CASE(query__set_tx__empty__expected)
 {
     const system::chain::transaction tx{};
     const auto expected_head4_array = system::base16_chunk("00000000");
@@ -348,7 +351,7 @@ BOOST_AUTO_TEST_CASE(query__set_tx__mock_empty__expected)
     BOOST_REQUIRE(store1.puts_body().empty());
 }
 
-BOOST_AUTO_TEST_CASE(query__set_tx__mock_null_input__expected)
+BOOST_AUTO_TEST_CASE(query__set_tx__null_input__expected)
 {
     using namespace system::chain;
     const transaction tx
@@ -449,7 +452,7 @@ BOOST_AUTO_TEST_CASE(query__set_tx__mock_null_input__expected)
     BOOST_REQUIRE_EQUAL(store1.puts_body(), expected_puts_body);
 }
 
-BOOST_AUTO_TEST_CASE(query__set_get_tx__mock_non_null_inputs__expected)
+BOOST_AUTO_TEST_CASE(query__set_tx__get_tx__expected)
 {
     using namespace system::chain;
     const transaction tx
@@ -574,9 +577,12 @@ BOOST_AUTO_TEST_CASE(query__set_get_tx__mock_non_null_inputs__expected)
         BOOST_REQUIRE(query1.set_tx(tx));
     }
 
-    const auto pointer = query1.get_tx(tx_hash);
-    BOOST_REQUIRE(pointer);
-    BOOST_REQUIRE(*pointer == tx);
+    const auto pointer1 = query1.get_tx(tx_hash);
+    BOOST_REQUIRE(pointer1);
+    BOOST_REQUIRE(*pointer1 == tx);
+    const auto pointer2 = query1.get_tx(0);
+    BOOST_REQUIRE(pointer2);
+    BOOST_REQUIRE(*pointer2 == tx);
 
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
 
@@ -594,7 +600,7 @@ BOOST_AUTO_TEST_CASE(query__set_get_tx__mock_non_null_inputs__expected)
 
 // chain::block
 
-BOOST_AUTO_TEST_CASE(query__set_block__mock_genesis_block__expected)
+BOOST_AUTO_TEST_CASE(query__set_block__get_block__expected)
 {
     constexpr auto parent = system::null_hash;
     constexpr database::context context
@@ -730,9 +736,12 @@ BOOST_AUTO_TEST_CASE(query__set_block__mock_genesis_block__expected)
     BOOST_REQUIRE_EQUAL(store1.puts_body(), expected_puts_body);
     BOOST_REQUIRE_EQUAL(store1.txs_body(), expected_txs_body);
 
-    const auto pointer = query1.get_block(genesis.hash());
-    BOOST_REQUIRE(pointer);
-    BOOST_REQUIRE(*pointer == genesis);
+    const auto pointer1 = query1.get_block(genesis.hash());
+    BOOST_REQUIRE(pointer1);
+    BOOST_REQUIRE(*pointer1 == genesis);
+    const auto pointer2 = query1.get_block(0);
+    BOOST_REQUIRE(pointer2);
+    BOOST_REQUIRE(*pointer2 == genesis);
 }
 
 // set_txs/get_txs currently covered internal to set_block/get_block.

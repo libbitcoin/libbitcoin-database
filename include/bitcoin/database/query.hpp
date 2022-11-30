@@ -40,12 +40,13 @@ public:
     bool set_block(const system::chain::block& block, const context& context) NOEXCEPT;
     bool set_txs(const hash_digest& key, const system::hashes& hashes) NOEXCEPT;
 
-    /// Retrieve system::chain object.
+    /// Retrieve system::chain object (by search key).
     system::chain::transaction::cptr get_tx(const hash_digest& key) NOEXCEPT;
     system::chain::header::cptr get_header(const hash_digest& key) NOEXCEPT;
     system::chain::block::cptr get_block(const hash_digest& key) NOEXCEPT;
     system::hashes get_txs(const hash_digest& key) NOEXCEPT;
 
+    /// Retrieve system::chain object (by foreign key).
     system::chain::transaction::cptr get_tx(const table::transaction::link& fk) NOEXCEPT;
     system::chain::header::cptr get_header(const table::header::link& fk) NOEXCEPT;
     system::chain::block::cptr get_block(const table::header::link& fk) NOEXCEPT;

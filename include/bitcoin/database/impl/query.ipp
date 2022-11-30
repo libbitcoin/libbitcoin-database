@@ -36,7 +36,7 @@ CLASS::query(Store& value) NOEXCEPT
 {
 }
 
-// setters
+// setters(sk)
 // ----------------------------------------------------------------------------
 
 // false: parent link, allocation.
@@ -202,7 +202,7 @@ bool CLASS::set_block(const system::chain::block& block,
         set_txs(block.hash(), block.transaction_hashes(false));
 }
 
-// getters
+// getters(sk)
 // ----------------------------------------------------------------------------
 
 // null: not found, unloaded.
@@ -232,6 +232,9 @@ system::hashes CLASS::get_txs(const hash_digest& key) NOEXCEPT
 {
     return get_txs(store_.header.it(key).self());
 }
+
+// getters(fk)
+// ----------------------------------------------------------------------------
 
 // null: not found, unloaded.
 TEMPLATE
