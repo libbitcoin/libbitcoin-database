@@ -209,10 +209,38 @@ bool CLASS::set_block(const system::chain::block& block,
 TEMPLATE
 system::chain::transaction::cptr CLASS::get_tx(const hash_digest& key) NOEXCEPT
 {
+    return get_tx(store_.tx.it(key).self());
+}
+
+// null: not found, unloaded.
+TEMPLATE
+system::chain::header::cptr CLASS::get_header(const hash_digest& key) NOEXCEPT
+{
+    return get_header(store_.header.it(key).self());
+}
+
+// null: not found, unloaded.
+TEMPLATE
+system::chain::block::cptr CLASS::get_block(const hash_digest& key) NOEXCEPT
+{
+    return get_block(store_.header.it(key).self());
+}
+
+// null: not found, unloaded.
+TEMPLATE
+system::hashes CLASS::get_txs(const hash_digest& key) NOEXCEPT
+{
+    return get_txs(store_.header.it(key).self());
+}
+
+// null: not found, unloaded.
+TEMPLATE
+system::chain::transaction::cptr CLASS::get_tx(const table::transaction::link& fk) NOEXCEPT
+{
     using namespace system::chain;
 
     table::transaction::record tx{};
-    if (!store_.tx.get(key, tx))
+    if (!store_.tx.get(fk, tx))
         return {};
 
     table::puts::record inputs{};
@@ -274,10 +302,10 @@ system::chain::transaction::cptr CLASS::get_tx(const hash_digest& key) NOEXCEPT
 
 // null: not found, unloaded.
 TEMPLATE
-system::chain::header::cptr CLASS::get_header(const hash_digest& key) NOEXCEPT
+system::chain::header::cptr CLASS::get_header(const table::header::link& fk) NOEXCEPT
 {
     table::header::record header{};
-    if (!store_.header.get(key, header))
+    if (!store_.header.get(fk, header))
         return {};
 
     // terminal (default) parent implies genesis, otherwise it must resolve.
@@ -299,42 +327,14 @@ system::chain::header::cptr CLASS::get_header(const hash_digest& key) NOEXCEPT
 
 // null: not found, unloaded.
 TEMPLATE
-system::hashes CLASS::get_txs(const hash_digest& key) NOEXCEPT
+system::chain::block::cptr CLASS::get_block(const table::header::link& fk) NOEXCEPT
 {
-    return get_txs(store_.header.it(key).self());
-}
-
-// null: not found, unloaded.
-TEMPLATE
-system::hashes CLASS::get_txs(const table::header::link& header_fk) NOEXCEPT
-{
-    table::txs::slab txs{};
-    if (!store_.txs.get(header_fk, txs))
-        return {};
-
-    system::hashes hashes{};
-    hashes.reserve(txs.tx_fks.size());
-    table::transaction::record_sk tx{};
-    for (const auto& tx_fk: txs.tx_fks)
-        if (store_.tx.get(tx_fk, tx))
-            hashes.push_back(std::move(tx.key));
-
-    if (hashes.size() != txs.tx_fks.size())
-        return {};
-
-    return hashes;
-}
-
-// null: not found, unloaded.
-TEMPLATE
-system::chain::block::cptr CLASS::get_block(const hash_digest& key) NOEXCEPT
-{
-    const auto header = get_header(key);
+    const auto header = get_header(fk);
     if (!header)
         return {};
 
     // TODO: optmize by querying with header_fk and getting tx fks.
-    const auto hashes = get_txs(key);
+    const auto hashes = get_txs(fk);
     if (hashes.empty())
         return {};
 
@@ -353,6 +353,27 @@ system::chain::block::cptr CLASS::get_block(const hash_digest& key) NOEXCEPT
         header,
         txs
     });
+}
+
+// null: not found, unloaded.
+TEMPLATE
+system::hashes CLASS::get_txs(const table::header::link& fk) NOEXCEPT
+{
+    table::txs::slab txs{};
+    if (!store_.txs.get(fk, txs))
+        return {};
+
+    system::hashes hashes{};
+    hashes.reserve(txs.tx_fks.size());
+    table::transaction::record_sk tx{};
+    for (const auto& tx_fk : txs.tx_fks)
+        if (store_.tx.get(tx_fk, tx))
+            hashes.push_back(std::move(tx.key));
+
+    if (hashes.size() != txs.tx_fks.size())
+        return {};
+
+    return hashes;
 }
 
 BC_POP_WARNING()

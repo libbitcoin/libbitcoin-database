@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(header__put_ptr__get_ptr__expected)
     const table::header::record_put_ptr put_ptr
     {
         {},
-        expected.context,
+        expected.state,
         expected.parent_fk,
         system::to_shared(expected_header)
     };
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(header__put_ptr__get_ptr__expected)
 
     table::header::record_get_ptr get_ptr{};
     BOOST_REQUIRE(instance.get(1, get_ptr));
-    BOOST_REQUIRE(get_ptr.context == put_ptr.context);
+    BOOST_REQUIRE(get_ptr.state == put_ptr.state);
     BOOST_REQUIRE(get_ptr.header_ptr);
     BOOST_REQUIRE(*get_ptr.header_ptr == *put_ptr.header_ptr);
     BOOST_REQUIRE_EQUAL(get_ptr.parent_fk, put_ptr.parent_fk);
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(header__put_ref__get__expected)
     const table::header::record_put_ref put_ref
     {
         {},
-        expected.context,
+        expected.state,
         expected.parent_fk,
         expected_header
     };
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(header__put_ref__get__expected)
 
     table::header::record element{};
     BOOST_REQUIRE(instance.get(1, element));
-    BOOST_REQUIRE(element.context == put_ref.context);
+    BOOST_REQUIRE(element.state == put_ref.state);
     BOOST_REQUIRE(element.version == put_ref.header.version());
     BOOST_REQUIRE(element.merkle_root == put_ref.header.merkle_root());
     BOOST_REQUIRE(element.timestamp == put_ref.header.timestamp());
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(header__put__get_height__expected)
 
     table::header::record_height element{};
     BOOST_REQUIRE(instance.get(1, element));
-    BOOST_REQUIRE_EQUAL(element.height, expected.context.height);
+    BOOST_REQUIRE_EQUAL(element.height, expected.state.height);
 }
 
 BOOST_AUTO_TEST_CASE(point__it__pk__expected)

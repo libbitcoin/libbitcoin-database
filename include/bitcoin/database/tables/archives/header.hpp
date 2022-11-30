@@ -44,7 +44,7 @@ public:
     {        
         inline bool from_data(reader& source) NOEXCEPT
         {
-            database::context::read(source, context);
+            context::read(source, state);
             parent_fk   = source.read_little_endian<uint32_t, schema::block>();
             version     = source.read_little_endian<uint32_t>();
             merkle_root = source.read_hash();
@@ -57,7 +57,7 @@ public:
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            database::context::write(sink, context);
+            context::write(sink, state);
             sink.write_little_endian<uint32_t, schema::block>(parent_fk);
             sink.write_little_endian<uint32_t>(version);
             sink.write_bytes(merkle_root);
@@ -70,7 +70,7 @@ public:
 
         inline bool operator==(const record& other) const NOEXCEPT
         {
-            return context     == other.context
+            return state       == other.state
                 && parent_fk   == other.parent_fk
                 && version     == other.version
                 && merkle_root == other.merkle_root
@@ -79,7 +79,7 @@ public:
                 && nonce       == other.nonce;
         }
 
-        context context{};
+        context state{};
         uint32_t parent_fk{};
         uint32_t version{};
         hash_digest merkle_root{};
@@ -95,7 +95,7 @@ public:
         // header_ptr->previous_block_hash() ignored.
         inline bool from_data(reader& source) NOEXCEPT
         {
-            database::context::read(source, context);
+            context::read(source, state);
             parent_fk = source.read_little_endian<uint32_t, schema::block>();
             header_ptr = system::to_shared(new system::chain::header
             {
@@ -110,7 +110,7 @@ public:
             return source;
         }
 
-        context context{};
+        context state{};
         uint32_t parent_fk{};
         system::chain::header::cptr header_ptr{};
     };
@@ -122,7 +122,7 @@ public:
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             BC_ASSERT(header_ptr);
-            database::context::write(sink, context);
+            context::write(sink, state);
             sink.write_little_endian<uint32_t, schema::block>(parent_fk);
             sink.write_little_endian<uint32_t>(header_ptr->version());
             sink.write_bytes(header_ptr->merkle_root());
@@ -133,7 +133,7 @@ public:
             return sink;
         }
 
-        const context context{};
+        const context state{};
         const uint32_t parent_fk{};
         system::chain::header::cptr header_ptr{};
     };
@@ -145,7 +145,7 @@ public:
         // header.previous_block_hash() ignored.
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            database::context::write(sink, context);
+            context::write(sink, state);
             sink.write_little_endian<uint32_t, schema::block>(parent_fk);
             sink.write_little_endian<uint32_t>(header.version());
             sink.write_bytes(header.merkle_root());
@@ -156,7 +156,7 @@ public:
             return sink;
         }
 
-        const context& context{};
+        const context& state{};
         const uint32_t parent_fk{};
         const system::chain::header& header;
     };

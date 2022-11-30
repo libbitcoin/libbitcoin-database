@@ -46,7 +46,10 @@ public:
     system::chain::block::cptr get_block(const hash_digest& key) NOEXCEPT;
     system::hashes get_txs(const hash_digest& key) NOEXCEPT;
 
-    system::hashes get_txs(const table::header::link& header_fk) NOEXCEPT;
+    system::chain::transaction::cptr get_tx(const table::transaction::link& fk) NOEXCEPT;
+    system::chain::header::cptr get_header(const table::header::link& fk) NOEXCEPT;
+    system::chain::block::cptr get_block(const table::header::link& fk) NOEXCEPT;
+    system::hashes get_txs(const table::header::link& fk) NOEXCEPT;
 
 private:
     Store& store_;
