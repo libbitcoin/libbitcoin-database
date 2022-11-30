@@ -44,7 +44,7 @@ public:
     {        
         inline bool from_data(reader& source) NOEXCEPT
         {
-            context::read(source, context);
+            database::context::read(source, context);
             parent_fk   = source.read_little_endian<uint32_t, schema::block>();
             version     = source.read_little_endian<uint32_t>();
             merkle_root = source.read_hash();
@@ -57,7 +57,7 @@ public:
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            context::write(sink, context);
+            database::context::write(sink, context);
             sink.write_little_endian<uint32_t, schema::block>(parent_fk);
             sink.write_little_endian<uint32_t>(version);
             sink.write_bytes(merkle_root);
@@ -95,7 +95,7 @@ public:
         // header_ptr->previous_block_hash() ignored.
         inline bool from_data(reader& source) NOEXCEPT
         {
-            context::read(source, context);
+            database::context::read(source, context);
             parent_fk = source.read_little_endian<uint32_t, schema::block>();
             header_ptr = system::to_shared(new system::chain::header
             {
@@ -122,7 +122,7 @@ public:
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             BC_ASSERT(header_ptr);
-            context::write(sink, context);
+            database::context::write(sink, context);
             sink.write_little_endian<uint32_t, schema::block>(parent_fk);
             sink.write_little_endian<uint32_t>(header_ptr->version());
             sink.write_bytes(header_ptr->merkle_root());
@@ -145,7 +145,7 @@ public:
         // header.previous_block_hash() ignored.
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            context::write(sink, context);
+            database::context::write(sink, context);
             sink.write_little_endian<uint32_t, schema::block>(parent_fk);
             sink.write_little_endian<uint32_t>(header.version());
             sink.write_bytes(header.merkle_root());
