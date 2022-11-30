@@ -58,15 +58,13 @@ bool CLASS::set_header(const system::chain::header& header,
     return store_.header.put(header.hash(), table::header::record
     {
         {},
-        context.height,
-        context.flags,
-        context.mtp,
+        context,
         parent_fk,
         header.version(),
+        header.merkle_root(),
         header.timestamp(),
         header.bits(),
-        header.nonce(),
-        header.merkle_root()
+        header.nonce()
     });
 }
 
@@ -298,7 +296,7 @@ system::chain::header::cptr CLASS::get_header(const hash_digest& key) NOEXCEPT
     {
         header.version,
         std::move(parent.key),
-        std::move(header.root),
+        std::move(header.merkle_root),
         header.timestamp,
         header.bits,
         header.nonce

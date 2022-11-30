@@ -30,6 +30,8 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
+BC_PUSH_WARNING(NO_NEW_OR_DELETE)
+
 /// Header is a cononical record hash table.
 class header
   : public hash_map<schema::header>
@@ -43,12 +45,12 @@ public:
         inline bool from_data(reader& source) NOEXCEPT
         {
             context::read(source, context);
-            parent_fk = source.read_little_endian<uint32_t, schema::block>();
-            version   = source.read_little_endian<uint32_t>();
-            timestamp = source.read_little_endian<uint32_t>();
-            bits      = source.read_little_endian<uint32_t>();
-            nonce     = source.read_little_endian<uint32_t>();
-            root      = source.read_hash();
+            parent_fk   = source.read_little_endian<uint32_t, schema::block>();
+            version     = source.read_little_endian<uint32_t>();
+            merkle_root = source.read_hash();
+            timestamp   = source.read_little_endian<uint32_t>();
+            bits        = source.read_little_endian<uint32_t>();
+            nonce       = source.read_little_endian<uint32_t>();
             BC_ASSERT(source.get_read_position() == minrow);
             return source;
         }
@@ -58,53 +60,81 @@ public:
             context::write(sink, context);
             sink.write_little_endian<uint32_t, schema::block>(parent_fk);
             sink.write_little_endian<uint32_t>(version);
+            sink.write_bytes(merkle_root);
             sink.write_little_endian<uint32_t>(timestamp);
             sink.write_little_endian<uint32_t>(bits);
             sink.write_little_endian<uint32_t>(nonce);
-            sink.write_bytes(root);
             BC_ASSERT(sink.get_write_position() == minrow);
             return sink;
         }
 
         inline bool operator==(const record& other) const NOEXCEPT
         {
-            return context   == other.context
-                && parent_fk == other.parent_fk
-                && version   == other.version
-                && timestamp == other.timestamp
-                && bits      == other.bits
-                && nonce     == other.nonce
-                && root      == other.root;
+            return context     == other.context
+                && parent_fk   == other.parent_fk
+                && version     == other.version
+                && merkle_root == other.merkle_root
+                && timestamp   == other.timestamp
+                && bits        == other.bits
+                && nonce       == other.nonce;
         }
 
         context context{};
         uint32_t parent_fk{};
         uint32_t version{};
+        hash_digest merkle_root{};
         uint32_t timestamp{};
         uint32_t bits{};
         uint32_t nonce{};
-        hash_digest root{};
     };
 
-    struct record_ref
+    struct record_get_ptr
       : public schema::header
-    {        
+    {
+        // header_ptr->merkle_root() ignored.
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            context::read(source, context);
+            parent_fk = source.read_little_endian<uint32_t, schema::block>();
+            header_ptr = system::to_shared(new system::chain::header
+            {
+                source.read_little_endian<uint32_t>(), // version
+                hash_digest{},                         // parent (unused)
+                source.read_hash(),                    // merkle_root
+                source.read_little_endian<uint32_t>(), // timestamp
+                source.read_little_endian<uint32_t>(), // bits
+                source.read_little_endian<uint32_t>()  // nonce
+            });
+            BC_ASSERT(source.get_read_position() == minrow);
+            return source;
+        }
+
+        context context{};
+        uint32_t parent_fk{};
+        system::chain::header::cptr header_ptr{};
+    };
+
+    struct record_put_ptr
+      : public schema::header
+    {
+        // header_ptr->merkle_root() ignored.
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
+            BC_ASSERT(header_ptr);
             context::write(sink, context);
             sink.write_little_endian<uint32_t, schema::block>(parent_fk);
-            sink.write_little_endian<uint32_t>(header.version());
-            sink.write_little_endian<uint32_t>(header.timestamp());
-            sink.write_little_endian<uint32_t>(header.bits());
-            sink.write_little_endian<uint32_t>(header.nonce());
-            sink.write_bytes(header.merkle_root());
+            sink.write_little_endian<uint32_t>(header_ptr->version());
+            sink.write_bytes(header_ptr->merkle_root());
+            sink.write_little_endian<uint32_t>(header_ptr->timestamp());
+            sink.write_little_endian<uint32_t>(header_ptr->bits());
+            sink.write_little_endian<uint32_t>(header_ptr->nonce());
             BC_ASSERT(sink.get_write_position() == minrow);
             return sink;
         }
 
-        context& context;
-        uint32_t parent_fk{};
-        system::chain::header& header;
+        const context context{};
+        const uint32_t parent_fk{};
+        system::chain::header::cptr header_ptr{};
     };
 
     struct record_with_sk
@@ -147,6 +177,8 @@ public:
         uint32_t height{};
     };
 };
+
+BC_POP_WARNING()
 
 } // namespace table
 } // namespace database

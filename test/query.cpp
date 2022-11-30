@@ -122,7 +122,7 @@ public:
 BOOST_AUTO_TEST_CASE(query__set_header__mock_default__expected)
 {
     constexpr auto parent = system::null_hash;
-    constexpr auto root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
+    constexpr auto merkle_root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
     constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
     constexpr database::context context
     {
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(query__set_header__mock_default__expected)
     {
         0x31323334, // version
         parent,     // previous_block_hash
-        root,       // merkle_root
+        merkle_root,// merkle_root
         0x41424344, // timestamp
         0x51525354, // bits
         0x61626364  // nonce
@@ -159,10 +159,10 @@ BOOST_AUTO_TEST_CASE(query__set_header__mock_default__expected)
         "24232221" // mtp
         "ffffff"   // previous_block_hash (header_fk - not found)
         "34333231" // version
+        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f" //merkle_root
         "44434241" // timestamp
         "54535251" // bits
-        "64636261" // nonce
-        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); // merkle_root
+        "64636261"); // nonce
 
     settings settings1{};
     settings1.header_buckets = 10;
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(query__set_header__mock_default__expected)
     BOOST_REQUIRE_EQUAL(element1.context.mtp, context.mtp);
     BOOST_REQUIRE_EQUAL(element1.version, header.version());
     BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
-    BOOST_REQUIRE_EQUAL(element1.root, header.merkle_root());
+    BOOST_REQUIRE_EQUAL(element1.merkle_root, header.merkle_root());
     BOOST_REQUIRE_EQUAL(element1.timestamp, header.timestamp());
     BOOST_REQUIRE_EQUAL(element1.bits, header.bits());
     BOOST_REQUIRE_EQUAL(element1.nonce, header.nonce());
@@ -226,10 +226,10 @@ BOOST_AUTO_TEST_CASE(query__get_header__mock_default__expected)
         "24232221" // mtp
         "ffffff"   // previous_block_hash (header_fk - not found)
         "34333231" // version
+        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f" // merkle_root
         "44434241" // timestamp
         "54535251" // bits
-        "64636261" // nonce
-        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); // merkle_root
+        "64636261"); // nonce
 
     settings settings1{};
     settings1.header_buckets = 10;
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(query__get_header__mock_default__expected)
 BOOST_AUTO_TEST_CASE(query__set_get_header__mmap_default__expected)
 {
     constexpr auto parent = system::null_hash;
-    constexpr auto root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
+    constexpr auto merkle_root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
     constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
     constexpr database::context context
     {
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(query__set_get_header__mmap_default__expected)
     {
         0x31323334, // version
         parent,     // previous_block_hash
-        root,       // merkle_root
+        merkle_root,// merkle_root
         0x41424344, // timestamp
         0x51525354, // bits
         0x61626364  // nonce
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(query__set_get_header__mmap_default__expected)
     BOOST_REQUIRE_EQUAL(element1.context.mtp, context.mtp);
     BOOST_REQUIRE_EQUAL(element1.version, header.version());
     BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
-    BOOST_REQUIRE_EQUAL(element1.root, header.merkle_root());
+    BOOST_REQUIRE_EQUAL(element1.merkle_root, header.merkle_root());
     BOOST_REQUIRE_EQUAL(element1.timestamp, header.timestamp());
     BOOST_REQUIRE_EQUAL(element1.bits, header.bits());
     BOOST_REQUIRE_EQUAL(element1.nonce, header.nonce());
@@ -599,86 +599,86 @@ BOOST_AUTO_TEST_CASE(query__set_block__mock_genesis_block__expected)
     constexpr auto parent = system::null_hash;
     constexpr database::context context
     {
-        0x01020304, // height
-        0x11121314, // flags
-        0x21222324  // mtp
+        0x01020304,    // height
+        0x11121314,    // flags
+        0x21222324     // mtp
     };
     const auto genesis = system::settings{ system::chain::selection::mainnet }.genesis_block;
     const auto expected_header_head = system::base16_chunk(
-        "010000" // record count
-        "ffffff" // bucket[0]...
-        "000000" // pk->
+        "010000"       // record count
+        "ffffff"       // bucket[0]...
+        "000000"       // pk->
         "ffffff"
         "ffffff"
         "ffffff");
     const auto expected_header_body = system::base16_chunk(
-        "ffffff"   // next->
+        "ffffff"       // next->
         "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000" // sk (block.hash)
-        "040302"   // height
-        "14131211" // flags
-        "24232221" // mtp
-        "ffffff"   // previous_block_hash (header_fk - not found)
-        "01000000" // version
-        "29ab5f49" // timestamp
-        "ffff001d" // bits
-        "1dac2b7c" // nonce
-        "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a"); // merkle_root
+        "040302"       // height
+        "14131211"     // flags
+        "24232221"     // mtp
+        "ffffff"       // previous_block_hash (header_fk - not found)
+        "01000000"     // version
+        "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a" // merkle_root
+        "29ab5f49"     // timestamp
+        "ffff001d"     // bits
+        "1dac2b7c");   // nonce
     const auto expected_tx_head = system::base16_chunk(
-        "01000000"       // record count
-        "ffffffff"       // bucket[0]...
+        "01000000"     // record count
+        "ffffffff"     // bucket[0]...
         "ffffffff"
         "ffffffff"
-        "00000000"       // pk->
+        "00000000"     // pk->
         "ffffffff");
     const auto expected_tx_body = system::base16_chunk(
-        "ffffffff"       // next->
+        "ffffffff"     // next->
         "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a" // sk (tx.hash(false))
-        "01"             // coinbase
-        "cc0000"         // witless
-        "cc0000"         // witness
-        "00000000"       // locktime
-        "01000000"       // version
-        "010000"         // ins_count
-        "010000"         // outs_count
-        "00000000");     // puts_fk->
+        "01"           // coinbase
+        "cc0000"       // witless
+        "cc0000"       // witness
+        "00000000"     // locktime
+        "01000000"     // version
+        "010000"       // ins_count
+        "010000"       // outs_count
+        "00000000");   // puts_fk->
     const auto expected_puts_head = system::base16_chunk("02000000");
     const auto expected_puts_body = system::base16_chunk(
-        "0000000000"     // input0_fk->
-        "0000000000");   // output0_fk->
+        "0000000000"   // input0_fk->
+        "0000000000"); // output0_fk->
     const auto expected_output_head = system::base16_chunk("5200000000");
     const auto expected_output_body = system::base16_chunk(
-        "00000000"           // parent_fk->
-        "00"                 // index
+        "00000000"     // parent_fk->
+        "00"           // index
         "ff00f2052a01000000" // value
         "434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac"); // script
     const auto expected_point_head = system::base16_chunk(
-        "01000000"       // record count
-        "ffffffff"       // bucket[0]...
+        "01000000"     // record count
+        "ffffffff"     // bucket[0]...
         "ffffffff"
         "ffffffff"
         "ffffffff"
-        "00000000");     // pk->
+        "00000000");   // pk->
     const auto expected_point_body = system::base16_chunk(
-        "ffffffff"       // next->
+        "ffffffff"     // next->
         "0000000000000000000000000000000000000000000000000000000000000000"); // sk (prevout.hash)
     const auto expected_input_head = system::base16_chunk(
-        "6400000000"     // slabs size
+        "6400000000"   // slabs size
         "ffffffffff"
         "ffffffffff"
-        "0000000000"     // pk->[0]
+        "0000000000"   // pk->[0]
         "ffffffffff"
         "ffffffffff");
     const auto expected_input_body = system::base16_chunk(
-        "ffffffffff"     // next->
-        "00000000"       // sk (point_fk)
-        "ffffff"         // sk (point.index) [this tests 4 bytes null_index recovery]
-        "00000000"       // parent_fk->
-        "00"             // index
-        "ffffffff"       // sequence
+        "ffffffffff"   // next->
+        "00000000"     // sk (point_fk)
+        "ffffff"       // sk (point.index) [this tests 4 bytes null_index recovery]
+        "00000000"     // parent_fk->
+        "00"           // index
+        "ffffffff"     // sequence
         "4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73" // script
-        "00");           // witness
+        "00");         // witness
     const auto expected_txs_head = system::base16_chunk(
-        "0f000000" // slabs size
+        "0f000000"     // slabs size
         "ffffffff"
         "ffffffff"
         "ffffffff"
@@ -686,14 +686,14 @@ BOOST_AUTO_TEST_CASE(query__set_block__mock_genesis_block__expected)
         "ffffffff"
         "ffffffff"
         "ffffffff"
-        "00000000" // pk->
+        "00000000"      // pk->
         "ffffffff"
         "ffffffff");
     const auto expected_txs_body = system::base16_chunk(
-        "ffffffff"   // next->
-        "000000"     // header_fk
-        "01000000"   // txs count (1)
-        "00000000"); // transaction[0]
+        "ffffffff"      // next->
+        "000000"        // header_fk
+        "01000000"      // txs count (1)
+        "00000000");    // transaction[0]
 
     settings settings1{};
     settings1.header_buckets = 5;
