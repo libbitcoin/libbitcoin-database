@@ -35,16 +35,18 @@ class output
   : public array_map<schema::output>
 {
 public:
+    using tx = linkage<schema::tx>;
+    using ix = linkage<schema::index>;
+
     using array_map<schema::output>::arraymap;
 
     struct slab
       : public schema::output
     {
-        linkage<pk> count() const NOEXCEPT
+        link count() const NOEXCEPT
         {
-            using out = typename linkage<pk>::integer;
-            return system::possible_narrow_cast<out>(
-                schema::tx +
+            return system::possible_narrow_cast<link::integer>(
+                tx::size +
                 variable_size(index) +
                 variable_size(value) +
                 script.serialized_size(true));
@@ -52,17 +54,18 @@ public:
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            parent_fk = source.read_little_endian<uint32_t, schema::tx>();
-            index     = system::narrow_cast<uint32_t>(source.read_variable());
+            using namespace system;
+            parent_fk = source.read_little_endian<tx::integer, tx::size>();
+            index     = narrow_cast<ix::integer>(source.read_variable());
             value     = source.read_variable();
-            script    = system::chain::script(source, true);
+            script    = chain::script(source, true);
             BC_ASSERT(source.get_read_position() == count());
             return source;
         }
 
         inline bool to_data(writer& sink) const NOEXCEPT
         {
-            sink.write_little_endian<uint32_t, schema::tx>(parent_fk);
+            sink.write_little_endian<tx::integer, tx::size>(parent_fk);
             sink.write_variable(index);
             sink.write_variable(value);
             script.to_data(sink, true);
@@ -78,8 +81,8 @@ public:
                 && script == other.script;
         }
 
-        uint32_t parent_fk{}; // parent fk *not* a required query.
-        uint32_t index{};     // own (parent-relative) index not a required query.
+        tx::integer parent_fk{};
+        ix::integer index{};
         uint64_t value{};
         system::chain::script script{};
     };

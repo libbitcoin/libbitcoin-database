@@ -98,7 +98,7 @@ namespace schema
             sizeof(uint32_t) +
             sizeof(uint32_t) +
             sizeof(uint32_t) +
-            hash;
+            schema::hash;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }

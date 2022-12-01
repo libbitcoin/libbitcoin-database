@@ -34,27 +34,32 @@ class transaction
   : public hash_map<schema::transaction>
 {
 public:
+    using ix = linkage<schema::index>;
+    using put = linkage<schema::put>;
+    using puts = linkage<schema::puts_>;
+    using bytes = linkage<schema::size>;
+    using search_key = search<schema::hash>;
+
     using hash_map<schema::transaction>::hashmap;
 
     struct record
       : public schema::transaction
     {
-        /// Computed outputs start is based on presumed txs table schema.
         inline uint32_t outs_fk() const NOEXCEPT
         {
-            return ins_fk + ins_count * schema::put;
+            return ins_fk + ins_count * put::size;
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
             coinbase   = to_bool(source.read_byte());
-            witless    = source.read_little_endian<uint32_t, schema::size>();
-            witness    = source.read_little_endian<uint32_t, schema::size>();
+            witless    = source.read_little_endian<bytes::integer, bytes::size>();
+            witness    = source.read_little_endian<bytes::integer, bytes::size>();
             locktime   = source.read_little_endian<uint32_t>();
             version    = source.read_little_endian<uint32_t>();
-            ins_count  = source.read_little_endian<uint32_t, schema::index>();
-            outs_count = source.read_little_endian<uint32_t, schema::index>();
-            ins_fk     = source.read_little_endian<uint32_t, schema::puts_>();
+            ins_count  = source.read_little_endian<ix::integer, ix::size>();
+            outs_count = source.read_little_endian<ix::integer, ix::size>();
+            ins_fk     = source.read_little_endian<puts::integer, puts::size>();
             BC_ASSERT(source.get_read_position() == minrow);
             return source;
         }
@@ -62,13 +67,13 @@ public:
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             sink.write_byte(to_int<uint8_t>(coinbase));
-            sink.write_little_endian<uint32_t, schema::size>(witless);
-            sink.write_little_endian<uint32_t, schema::size>(witness);
+            sink.write_little_endian<bytes::integer, bytes::size>(witless);
+            sink.write_little_endian<bytes::integer, bytes::size>(witness);
             sink.write_little_endian<uint32_t>(locktime);
             sink.write_little_endian<uint32_t>(version);
-            sink.write_little_endian<uint32_t, schema::index>(ins_count);
-            sink.write_little_endian<uint32_t, schema::index>(outs_count);
-            sink.write_little_endian<uint32_t, schema::puts_>(ins_fk);
+            sink.write_little_endian<ix::integer, ix::size>(ins_count);
+            sink.write_little_endian<ix::integer, ix::size>(outs_count);
+            sink.write_little_endian<puts::integer, puts::size>(ins_fk);
             BC_ASSERT(sink.get_write_position() == minrow);
             return sink;
         }
@@ -86,13 +91,13 @@ public:
         }
 
         bool coinbase{};
-        uint32_t witless{}; // tx.serialized_size(false)
-        uint32_t witness{}; // tx.serialized_size(true)
+        bytes::integer witless{}; // tx.serialized_size(false)
+        bytes::integer witness{}; // tx.serialized_size(true)
         uint32_t locktime{};
         uint32_t version{};
-        uint32_t ins_count{};
-        uint32_t outs_count{};
-        uint32_t ins_fk{};
+        ix::integer ins_count{};
+        ix::integer outs_count{};
+        puts::integer ins_fk{};
     };
 
     struct record_sk
@@ -105,37 +110,36 @@ public:
             return source;
         }
 
-        hash_digest key{};
+        search_key key{};
     };
 
     struct record_puts
       : public schema::transaction
     {
-        /// Computed outputs start is based on presumed txs table schema.
         inline uint32_t outs_fk() const NOEXCEPT
         {
-            return ins_fk + ins_count * schema::put;
+            return ins_fk + ins_count * put::size;
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
             static constexpr size_t skip_size =
                 schema::bit +
-                schema::size +
-                schema::size +
+                bytes::size +
+                bytes::size +
                 sizeof(uint32_t) +
                 sizeof(uint32_t);
 
             source.skip_bytes(skip_size);
-            ins_count  = source.read_little_endian<uint32_t, schema::index>();
-            outs_count = source.read_little_endian<uint32_t, schema::index>();
-            ins_fk     = source.read_little_endian<uint32_t, schema::puts_>();
+            ins_count  = source.read_little_endian<ix::integer, ix::size>();
+            outs_count = source.read_little_endian<ix::integer, ix::size>();
+            ins_fk     = source.read_little_endian<puts::integer, puts::size>();
             return source;
         }
 
-        uint32_t ins_count{};
-        uint32_t outs_count{};
-        uint32_t ins_fk{};
+        ix::integer ins_count{};
+        ix::integer outs_count{};
+        puts::integer ins_fk{};
     };
 };
 

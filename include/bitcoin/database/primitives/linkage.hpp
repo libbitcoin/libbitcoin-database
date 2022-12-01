@@ -31,9 +31,8 @@ struct linkage
 {
     using integer = unsigned_type<Size>;
     using bytes = std_array<uint8_t, Size>;
-    static constexpr auto size = Size;
-    static constexpr auto terminal = 
-        system::unmask_right<integer>(to_bits(Size));
+    static constexpr auto size = system::possible_narrow_cast<integer>(Size);
+    static constexpr auto terminal = system::unmask_right<integer>(to_bits(Size));
 
     /// Construct a terminal link.
     constexpr linkage() NOEXCEPT;

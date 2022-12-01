@@ -35,41 +35,44 @@ class input
   : public hash_map<schema::input>
 {
 public:
+    using tx = linkage<schema::tx>;
+    using ix = linkage<schema::index>;
+    using search_key = search<schema::tx_fp>;
+
     using hash_map<schema::input>::hashmap;
 
     /// Generate composite key.
-    /// Foreign point index is limited to 3 bytes, which cannot hold null_index.
-    /// Sentinel 0xffffffff is truncated to 0x00ffffff upon write and explicitly
+    /// Foreign point index limited to 3 bytes, which cannot hold null_index.
+    /// Sentinel 0xffffffff truncated to 0x00ffffff upon write and explicitly
     /// restored to 0xffffffff upon read.
-    static const search<schema::input::sk> to_point(uint32_t fk,
-        uint32_t index) NOEXCEPT
+    static const search_key to_point(tx::integer fk, ix::integer index) NOEXCEPT
     {
         // TODO: generalize/optimize.
-        search<schema::input::sk> value{};
+        search_key value{};
         system::write::bytes::copy sink(value);
-        sink.write_little_endian<uint32_t, schema::tx>(fk);
-        sink.write_little_endian<uint32_t, schema::index>(index);
-        BC_ASSERT(sink.get_write_position() == schema::input::sk);
+        sink.write_little_endian<tx::integer, tx::size>(fk);
+        sink.write_little_endian<ix::integer, ix::size>(index);
+        BC_ASSERT(sink.get_write_position() == array_count<search_key>);
         return value;
     }
 
     struct slab
       : public schema::input
     {
-        linkage<pk> count() const NOEXCEPT
+        link count() const NOEXCEPT
         {
-            return pk + sk +
-                schema::tx +
+            return system::possible_narrow_cast<link::integer>(pk + sk +
+                tx::size +
                 variable_size(index) +
                 sizeof(uint32_t) +
                 script.serialized_size(true) +
-                witness.serialized_size(true);
+                witness.serialized_size(true));
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            parent_fk = source.read_little_endian<uint32_t, schema::tx>();
-            index     = system::narrow_cast<uint32_t>(source.read_variable());
+            parent_fk = source.read_little_endian<tx::integer, tx::size>();
+            index     = system::narrow_cast<ix::integer>(source.read_variable());
             sequence  = source.read_little_endian<uint32_t>();
             script    = system::chain::script(source, true);
             witness   = system::chain::witness(source, true);
@@ -79,7 +82,7 @@ public:
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            sink.write_little_endian<uint32_t, schema::tx>(parent_fk);
+            sink.write_little_endian<tx::integer, tx::size>(parent_fk);
             sink.write_variable(index);
             sink.write_little_endian<uint32_t>(sequence);
             script.to_data(sink, true);
@@ -97,8 +100,8 @@ public:
                 && witness == other.witness;
         }
 
-        uint32_t parent_fk{}; // parent fk *is* a required query.
-        uint32_t index{};     // own (parent-relative) index not a required query.
+        tx::integer parent_fk{};
+        ix::integer index{};
         uint32_t sequence{};
         system::chain::script script{};
         system::chain::witness witness{};
@@ -114,7 +117,7 @@ public:
             return source;
         }
 
-        search<sk> key{};
+        search_key key{};
     };
 
     struct slab_decomposed_sk
@@ -124,18 +127,18 @@ public:
         {
             // TODO: generalize/optimize.
             source.rewind_bytes(sk);
-            point_fk = source.read_little_endian<uint32_t, schema::tx>();
-            point_index = source.read_little_endian<uint32_t, schema::index>();
+            point_fk    = source.read_little_endian<tx::integer, tx::size>();
+            point_index = source.read_little_endian<ix::integer, ix::size>();
 
             // Restore truncated null_index sentinel.
-            if (point_index == linkage<schema::index>::terminal)
+            if (point_index == ix::terminal)
                 point_index = system::chain::point::null_index;
 
             return source;
         }
 
-        uint32_t point_fk{};
-        uint32_t point_index{};
+        tx::integer point_fk{};
+        ix::integer point_index{};
     };
 
     struct slab_with_decomposed_sk
@@ -147,18 +150,18 @@ public:
         {
             // TODO: generalize/optimize.
             source.rewind_bytes(sk);
-            point_fk = source.read_little_endian<uint32_t, schema::tx>();
-            point_index = source.read_little_endian<uint32_t, schema::index>();
+            point_fk = source.read_little_endian<tx::integer, tx::size>();
+            point_index = source.read_little_endian<ix::integer, ix::size>();
 
             // Restore truncated null_index sentinel.
-            if (point_index == linkage<schema::index>::terminal)
+            if (point_index == ix::terminal)
                 point_index = system::chain::point::null_index;
 
             return slab::from_data(source);
         }
 
-        uint32_t point_fk{};
-        uint32_t point_index{};
+        tx::integer point_fk{};
+        ix::integer point_index{};
     };
 };
 

@@ -36,17 +36,19 @@ class puts
   : public array_map<schema::puts>
 {
 public:
+    using put = linkage<schema::put>;
+    using keys = std_vector<put::integer>;
+
     using array_map<schema::puts>::arraymap;
 
     struct record
        : public schema::puts
     {
-        linkage<pk> count() const NOEXCEPT
+        link count() const NOEXCEPT
         {
             using namespace system;
-            using out = typename linkage<pk>::integer;
-            BC_ASSERT(put_fks.size() < power2<uint64_t>(to_bits(schema::put)));
-            return possible_narrow_cast<out>(put_fks.size());
+            BC_ASSERT(put_fks.size() < power2<uint64_t>(to_bits(put::size)));
+            return possible_narrow_cast<link::integer>(put_fks.size());
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -56,10 +58,10 @@ public:
 
             std::for_each(put_fks.begin(), put_fks.end(), [&](auto& fk) NOEXCEPT
             {
-                fk = source.read_little_endian<uint64_t, schema::put>();
+                fk = source.read_little_endian<put::integer, put::size>();
             });
 
-            BC_ASSERT(source.get_read_position() == count() * schema::put);
+            BC_ASSERT(source.get_read_position() == count() * put::size);
             return source;
         }
 
@@ -70,10 +72,10 @@ public:
 
             std::for_each(put_fks.begin(), put_fks.end(), [&](const auto& fk) NOEXCEPT
             {
-                sink.write_little_endian<uint64_t, schema::put>(fk);
+                sink.write_little_endian<put::integer, put::size>(fk);
             });
 
-            BC_ASSERT(sink.get_write_position() == count() * schema::put);
+            BC_ASSERT(sink.get_write_position() == count() * put::size);
             return sink;
         }
 
@@ -82,7 +84,7 @@ public:
             return put_fks == other.put_fks;
         }
 
-        std_vector<uint64_t> put_fks{};
+        keys put_fks{};
     };
 };
 

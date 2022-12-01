@@ -37,6 +37,9 @@ class header
   : public hash_map<schema::header>
 {
 public:
+    using block = linkage<schema::block>;
+    using search_key = search<schema::hash>;
+
     using hash_map<schema::header>::hashmap;
 
     struct record
@@ -45,7 +48,7 @@ public:
         inline bool from_data(reader& source) NOEXCEPT
         {
             context::read(source, state);
-            parent_fk   = source.read_little_endian<uint32_t, schema::block>();
+            parent_fk   = source.read_little_endian<link::integer, link::size>();
             version     = source.read_little_endian<uint32_t>();
             merkle_root = source.read_hash();
             timestamp   = source.read_little_endian<uint32_t>();
@@ -58,7 +61,7 @@ public:
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             context::write(sink, state);
-            sink.write_little_endian<uint32_t, schema::block>(parent_fk);
+            sink.write_little_endian<link::integer, link::size>(parent_fk);
             sink.write_little_endian<uint32_t>(version);
             sink.write_bytes(merkle_root);
             sink.write_little_endian<uint32_t>(timestamp);
@@ -80,7 +83,7 @@ public:
         }
 
         context state{};
-        uint32_t parent_fk{};
+        link::integer parent_fk{};
         uint32_t version{};
         hash_digest merkle_root{};
         uint32_t timestamp{};
@@ -97,7 +100,7 @@ public:
         {
             ////context::read(source, state);
             source.skip_bytes(context::size);
-            parent_fk = source.read_little_endian<uint32_t, schema::block>();
+            parent_fk = source.read_little_endian<link::integer, link::size>();
             header_ptr = system::to_shared(new system::chain::header
             {
                 source.read_little_endian<uint32_t>(), // version
@@ -112,7 +115,7 @@ public:
         }
 
         ////context state{};
-        uint32_t parent_fk{};
+        link::integer parent_fk{};
         system::chain::header::cptr header_ptr{};
     };
 
@@ -124,7 +127,7 @@ public:
         {
             BC_ASSERT(header_ptr);
             context::write(sink, state);
-            sink.write_little_endian<uint32_t, schema::block>(parent_fk);
+            sink.write_little_endian<link::integer, link::size>(parent_fk);
             sink.write_little_endian<uint32_t>(header_ptr->version());
             sink.write_bytes(header_ptr->merkle_root());
             sink.write_little_endian<uint32_t>(header_ptr->timestamp());
@@ -135,7 +138,7 @@ public:
         }
 
         const context state{};
-        const uint32_t parent_fk{};
+        const link::integer parent_fk{};
         system::chain::header::cptr header_ptr{};
     };
 
@@ -147,7 +150,7 @@ public:
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             context::write(sink, state);
-            sink.write_little_endian<uint32_t, schema::block>(parent_fk);
+            sink.write_little_endian<link::integer, link::size>(parent_fk);
             sink.write_little_endian<uint32_t>(header.version());
             sink.write_bytes(header.merkle_root());
             sink.write_little_endian<uint32_t>(header.timestamp());
@@ -158,7 +161,7 @@ public:
         }
 
         const context& state{};
-        const uint32_t parent_fk{};
+        const link::integer parent_fk{};
         const system::chain::header& header;
     };
 
@@ -174,7 +177,7 @@ public:
             return record::from_data(source);
         }
 
-        hash_digest key{};
+        search_key key{};
     };
 
     struct record_sk
@@ -187,7 +190,7 @@ public:
             return source;
         }
 
-        hash_digest key{};
+        search_key key{};
     };
 
     struct record_height
@@ -195,11 +198,11 @@ public:
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            height = source.read_little_endian<uint32_t, schema::block>();
+            height = source.read_little_endian<block::integer, block::size>();
             return source;
         }
 
-        uint32_t height{};
+        block::integer height{};
     };
 };
 

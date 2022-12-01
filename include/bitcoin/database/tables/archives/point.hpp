@@ -35,6 +35,8 @@ class point
   : public hash_map<schema::point>
 {
 public:
+    using search_key = search<schema::hash>;
+
     using hash_map<schema::point>::hashmap;
 
     struct record
@@ -70,7 +72,7 @@ public:
             return source;
         }
 
-        hash_digest key{};
+        search_key key{};
     };
 };
 

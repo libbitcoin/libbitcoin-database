@@ -35,26 +35,26 @@ class txs
   : public hash_map<schema::txs>
 {
 public:
-    using keys = std_vector<uint32_t>;
+    using tx = linkage<schema::tx>;
+    using keys = std_vector<tx::integer>;
+
     using hash_map<schema::txs>::hashmap;
 
     struct slab
       : public schema::txs
     {
-        linkage<pk> count() const NOEXCEPT
+        link count() const NOEXCEPT
         {
-            using namespace system;
-            using out = typename linkage<pk>::integer;
-            return possible_narrow_cast<out>(pk + sk +
-                schema::tx * add1(tx_fks.size()));
+            return system::possible_narrow_cast<link::integer>(pk + sk +
+                tx::size * add1(tx_fks.size()));
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            tx_fks.resize(source.read_little_endian<uint32_t, schema::tx>());
+            tx_fks.resize(source.read_little_endian<tx::integer, tx::size>());
             std::for_each(tx_fks.begin(), tx_fks.end(), [&](auto& fk) NOEXCEPT
             {
-                fk = source.read_little_endian<uint32_t, schema::tx>();
+                fk = source.read_little_endian<tx::integer, tx::size>();
             });
 
             BC_ASSERT(source.get_read_position() == count());
@@ -63,13 +63,13 @@ public:
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            BC_ASSERT(tx_fks.size() < system::power2<uint64_t>(to_bits(schema::tx)));
-            const auto fks = system::possible_narrow_cast<uint32_t>(tx_fks.size());
+            BC_ASSERT(tx_fks.size() < system::power2<uint64_t>(to_bits(tx::size)));
+            const auto fks = system::possible_narrow_cast<tx::integer>(tx_fks.size());
 
-            sink.write_little_endian<uint32_t, schema::tx>(fks);
+            sink.write_little_endian<tx::integer, tx::size>(fks);
             std::for_each(tx_fks.begin(), tx_fks.end(), [&](const auto& fk) NOEXCEPT
             {
-                sink.write_little_endian<uint32_t, schema::tx>(fk);
+                sink.write_little_endian<tx::integer, tx::size>(fk);
             });
 
             BC_ASSERT(sink.get_write_position() == count());
