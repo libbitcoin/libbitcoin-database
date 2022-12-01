@@ -134,6 +134,7 @@ table::transaction::link CLASS::set_tx_(
         return {};
 
     // Set transaction.
+    // TODO: optimize with ptr/ref writer.
     if (!store_.tx.set(tx_pk, table::transaction::record
     {
         {},
