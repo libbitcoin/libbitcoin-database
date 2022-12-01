@@ -27,8 +27,8 @@ constexpr table::transaction::record expected
 {
     {},             // schema::output [all const static members]
     true,           // coinbase
-    0x00341201_u32, // witless
-    0x00341202_u32, // witness
+    0x00341201_u32, // light
+    0x00341202_u32, // heavy
     0x56341203_u32, // locktime
     0x56341204_u32, // version
     0x00341205_u32, // ins_count

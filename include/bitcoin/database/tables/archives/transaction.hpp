@@ -53,8 +53,8 @@ public:
         inline bool from_data(reader& source) NOEXCEPT
         {
             coinbase   = to_bool(source.read_byte());
-            witless    = source.read_little_endian<bytes::integer, bytes::size>();
-            witness    = source.read_little_endian<bytes::integer, bytes::size>();
+            light      = source.read_little_endian<bytes::integer, bytes::size>();
+            heavy      = source.read_little_endian<bytes::integer, bytes::size>();
             locktime   = source.read_little_endian<uint32_t>();
             version    = source.read_little_endian<uint32_t>();
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
@@ -67,8 +67,8 @@ public:
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             sink.write_byte(to_int<uint8_t>(coinbase));
-            sink.write_little_endian<bytes::integer, bytes::size>(witless);
-            sink.write_little_endian<bytes::integer, bytes::size>(witness);
+            sink.write_little_endian<bytes::integer, bytes::size>(light);
+            sink.write_little_endian<bytes::integer, bytes::size>(heavy);
             sink.write_little_endian<uint32_t>(locktime);
             sink.write_little_endian<uint32_t>(version);
             sink.write_little_endian<ix::integer, ix::size>(ins_count);
@@ -81,8 +81,8 @@ public:
         inline bool operator==(const record& other) const NOEXCEPT
         {
             return coinbase == other.coinbase
-                && witless == other.witless
-                && witness == other.witness
+                && light == other.light
+                && heavy == other.heavy
                 && locktime == other.locktime
                 && version == other.version
                 && ins_count == other.ins_count
@@ -91,8 +91,8 @@ public:
         }
 
         bool coinbase{};
-        bytes::integer witless{}; // tx.serialized_size(false)
-        bytes::integer witness{}; // tx.serialized_size(true)
+        bytes::integer light{}; // tx.serialized_size(false)
+        bytes::integer heavy{}; // tx.serialized_size(true)
         uint32_t locktime{};
         uint32_t version{};
         ix::integer ins_count{};
