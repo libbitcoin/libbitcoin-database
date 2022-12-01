@@ -66,16 +66,13 @@ public:
     /// Allocate element at returned link (follow with set|put).
     Link allocate(const Link& size) NOEXCEPT;
 
-    // TODO: change get2/set_link/put_link/put_if to return created links.
-    // TODO: this obsoletes put2. make (bool)link work (fix cast conflict).
+    /// Get element at key.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool get(const Key& key, Element& element) const NOEXCEPT;
 
     /// Get element at link.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool get(const Link& link, Element& element) const NOEXCEPT;
-
-    /// Get element at key.
-    template <typename Element, if_equal<Element::size, Size> = true>
-    bool get(const Key& key, Element& element) const NOEXCEPT;
 
     /// Set element into previously allocated link (follow with commit).
     template <typename Element, if_equal<Element::size, Size> = true>
@@ -83,27 +80,30 @@ public:
 
     /// Allocate and set element, and return link (follow with commit).
     template <typename Element, if_equal<Element::size, Size> = true>
+    Link set_link(const Element& element) NOEXCEPT;
+    template <typename Element, if_equal<Element::size, Size> = true>
     bool set_link(Link& link, const Element& element) NOEXCEPT;
+
+    /// Allocate, set, commit element to key (unless found), return link.
+    /// This is non-atomic, a race may produce element duplication.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    Link put_if(const Key& key, const Element& element) NOEXCEPT;
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool put_if(Link& link, const Key& key, const Element& element) NOEXCEPT;
+
+    /// Allocate, set, commit element to key, and return link.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    Link put_link(const Key& key, const Element& element) NOEXCEPT;
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool put_link(Link& link, const Key& key, const Element& element) NOEXCEPT;
 
     /// Set and commit previously allocated element at link to key.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put(const Link& link, const Key& key, const Element& element) NOEXCEPT;
 
-    /// Allocate, set, commit element to key, and return link.
-    template <typename Element, if_equal<Element::size, Size> = true>
-    bool put_link(Link& link, const Key& key, const Element& element) NOEXCEPT;
-
-    /// Allocate, set, commit element to key (unless found), return link.
-    /// This is non-atomic, a race may produce element duplication.
-    template <typename Element, if_equal<Element::size, Size> = true>
-    bool put_if(Link& link, const Key& key, const Element& element) NOEXCEPT;
-
-    /// Allocate, set, commit element to key, without returning link.
-    template <typename Element, if_equal<Element::size, Size> = true>
-    bool put(const Key& key, const Element& element) NOEXCEPT;
-
     /// Commit previously set element at link to key.
     bool commit(const Link& link, const Key& key) NOEXCEPT;
+    Link commit_link(const Link& link, const Key& key) NOEXCEPT;
 
 protected:
     template <typename Streamer>

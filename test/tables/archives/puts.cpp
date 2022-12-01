@@ -78,10 +78,10 @@ BOOST_AUTO_TEST_CASE(puts__put__get__expected)
     test::dfile head_store{};
     test::dfile body_store{};
     table::puts instance{ head_store, body_store };
-    BOOST_REQUIRE(instance.put(expected0));
-    BOOST_REQUIRE(instance.put(expected1));
-    BOOST_REQUIRE(instance.put(expected2));
-    BOOST_REQUIRE(instance.put(expected3));
+    BOOST_REQUIRE(!instance.put_link(expected0).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(expected1).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(expected2).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(expected3).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::puts::record record0{};

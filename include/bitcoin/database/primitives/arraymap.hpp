@@ -56,13 +56,11 @@ public:
     template <typename Element, if_equal<Element::size, Size> = true>
     bool get(const Link& link, Element& element) const NOEXCEPT;
 
-    /// Put and return link.
+    /// Put element and return link.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put_link(Link& link, const Element& element) NOEXCEPT;
-
-    /// Put without returning link.
     template <typename Element, if_equal<Element::size, Size> = true>
-    bool put(const Element& element) NOEXCEPT;
+    Link put_link(const Element& element) NOEXCEPT;
 
 protected:
     reader_ptr getter(const Link& link) const NOEXCEPT;

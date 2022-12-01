@@ -122,6 +122,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\neutrino.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_block.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_tx.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\context.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\candidate_height.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\confirmed_block.hpp" />
@@ -143,6 +144,8 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\iterator.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\linkage.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\manager.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\queries\archive.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\queries\internal.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\store.ipp" />
     <None Include="packages.config" />

@@ -435,7 +435,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__populated__valid)
     BOOST_REQUIRE_EQUAL(record.value, 0x04030201_u32);
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_put__get__expected)
+BOOST_AUTO_TEST_CASE(hashmap__record_put_if__get__expected)
 {
     test::dfile head_store{};
     test::dfile body_store{};
@@ -443,7 +443,10 @@ BOOST_AUTO_TEST_CASE(hashmap__record_put__get__expected)
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x42 };
-    BOOST_REQUIRE(instance.put(key, big_record{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(!instance.put_if(key, big_record{ 0xa1b2c3d4_u32 }).is_terminal());
+
+    link5 link{};
+    BOOST_REQUIRE(instance.put_if(link, key, big_record{ 0xa1b2c3d4_u32 }));
 
     big_record link_record{};
     BOOST_REQUIRE(instance.get(0, link_record));
@@ -474,8 +477,11 @@ BOOST_AUTO_TEST_CASE(hashmap__record_put__multiple__expected)
 
     link5 link{};
     BOOST_REQUIRE(instance.put_link(link, key1_big, big_record{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 0u);
-    BOOST_REQUIRE(instance.put_link(link, key1_little, little_record{ 0xa1b2c3d4_u32 }));
+
+    link = instance.put_link(key1_little, little_record{ 0xa1b2c3d4_u32 });
+    BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 1u);
 
     big_record record1{};
@@ -548,7 +554,7 @@ public:
     uint32_t value{ 0 };
 };
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_put__get__expected)
+BOOST_AUTO_TEST_CASE(hashmap__slab_put_if__get__expected)
 {
     test::dfile head_store{};
     test::dfile body_store{};
@@ -557,7 +563,10 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_put__get__expected)
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x42 };
-    BOOST_REQUIRE(instance.put(key, big_slab{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(!instance.put_if(key, big_slab{ 0xa1b2c3d4_u32 }).is_terminal());
+
+    link5 link{};
+    BOOST_REQUIRE(instance.put_if(link, key, big_slab{ 0xa1b2c3d4_u32 }));
 
     big_slab slab{};
     BOOST_REQUIRE(instance.get(zero, slab));
@@ -585,8 +594,11 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_put__multiple__expected)
 
     link5 link{};
     BOOST_REQUIRE(instance.put_link(link, key_big, big_slab{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 0u);
-    BOOST_REQUIRE(instance.put_link(link, key_little, little_slab{ 0xa1b2c3d4_u32 }));
+
+    link = instance.put_link(key_little, little_slab{ 0xa1b2c3d4_u32 });
+    BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, big_slab::count());
 
     big_slab slab1{};
@@ -641,7 +653,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__excess__false)
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
-    BOOST_REQUIRE(instance.put(key, big_record{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(!instance.put_link(key, big_record{ 0xa1b2c3d4_u32 }).is_terminal());
 
     record_excess record{};
     BOOST_REQUIRE(!instance.get(zero, record));
@@ -655,7 +667,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_put__excess__false)
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
-    BOOST_REQUIRE(!instance.put(key, record_excess{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(instance.put_link(key, record_excess{ 0xa1b2c3d4_u32 }).is_terminal());
 }
 
 // advertises 32 but reads/writes 64
@@ -711,8 +723,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_get__excess__true)
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
-    BOOST_REQUIRE(instance.put(key, big_slab{ 0xa1b2c3d4_u32 }));
-    BOOST_REQUIRE(instance.put(key, big_slab{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(!instance.put_link(key, big_slab{ 0xa1b2c3d4_u32 }).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, big_slab{ 0xa1b2c3d4_u32 }).is_terminal());
 
     // Excess read allowed to eof here (reader has only knowledge of size).
     slab_excess slab{};
@@ -727,7 +739,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_get__file_excess__false)
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
-    BOOST_REQUIRE(instance.put(key, big_slab{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(!instance.put_link(key, big_slab{ 0xa1b2c3d4_u32 }).is_terminal());
 
     // Excess read disallowed to here (past eof).
     slab_excess slab{};
@@ -742,7 +754,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_put__excess__false)
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
-    BOOST_REQUIRE(!instance.put(key, slab_excess{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(instance.put_link(key, slab_excess{ 0xa1b2c3d4_u32 }).is_terminal());
 }
 
 BOOST_AUTO_TEST_CASE(hashmap__record_exists__exists__true)
@@ -754,7 +766,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_exists__exists__true)
 
     constexpr key1 key{ 0x41 };
     BOOST_REQUIRE(!instance.exists(key));
-    BOOST_REQUIRE(instance.put(key, big_record{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(!instance.put_link(key, big_record{ 0xa1b2c3d4_u32 }).is_terminal());
     BOOST_REQUIRE(instance.exists(key));
 }
 
@@ -767,7 +779,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_exists__exists__true)
 
     constexpr key1 key{ 0x41 };
     BOOST_REQUIRE(!instance.exists(key));
-    BOOST_REQUIRE(instance.put(key, big_slab{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(!instance.put_link(key, big_slab{ 0xa1b2c3d4_u32 }).is_terminal());
     BOOST_REQUIRE(instance.exists(key));
 }
 
@@ -780,7 +792,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_it__exists__non_terminal)
 
     constexpr key1 key{ 0x41 };
     BOOST_REQUIRE(instance.it(key).self().is_terminal());
-    BOOST_REQUIRE(instance.put(key, big_record{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(!instance.put_link(key, big_record{ 0xa1b2c3d4_u32 }).is_terminal());
     BOOST_REQUIRE(!instance.it(key).self().is_terminal());
 
     big_record record{};
@@ -798,15 +810,15 @@ BOOST_AUTO_TEST_CASE(hashmap__record_it__multiple__iterated)
     constexpr key1 key_b{ 0xbb };
     constexpr key1 key_c{ 0xcc };
 
-    BOOST_REQUIRE(instance.put(key_a, big_record{ 0x000000a1_u32 }));
-    BOOST_REQUIRE(instance.put(key_a, big_record{ 0x000000a2_u32 }));
-    BOOST_REQUIRE(instance.put(key_a, big_record{ 0x000000a3_u32 }));
-    BOOST_REQUIRE(instance.put(key_b, big_record{ 0x000000b1_u32 }));
-    BOOST_REQUIRE(instance.put(key_b, big_record{ 0x000000b2_u32 }));
-    BOOST_REQUIRE(instance.put(key_b, big_record{ 0x000000b3_u32 }));
-    BOOST_REQUIRE(instance.put(key_c, big_record{ 0x000000c1_u32 }));
-    BOOST_REQUIRE(instance.put(key_c, big_record{ 0x000000c2_u32 }));
-    BOOST_REQUIRE(instance.put(key_c, big_record{ 0x000000c3_u32 }));
+    BOOST_REQUIRE(!instance.put_link(key_a, big_record{ 0x000000a1_u32 }).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key_a, big_record{ 0x000000a2_u32 }).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key_a, big_record{ 0x000000a3_u32 }).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key_b, big_record{ 0x000000b1_u32 }).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key_b, big_record{ 0x000000b2_u32 }).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key_b, big_record{ 0x000000b3_u32 }).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key_c, big_record{ 0x000000c1_u32 }).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key_c, big_record{ 0x000000c2_u32 }).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key_c, big_record{ 0x000000c3_u32 }).is_terminal());
 
     auto it_a = instance.it(key_a);
 
@@ -997,8 +1009,8 @@ BOOST_AUTO_TEST_CASE(hashmap__set_commit__record__expected)
     BOOST_REQUIRE(instance.create());
 
     constexpr auto size = link5::size + array_count<key10> + flex_record::size;
-    link5 link{};
-    BOOST_REQUIRE(instance.set_link(link, flex_record{ 0x01020304_u32 }));
+    const auto link = instance.set_link(flex_record{ 0x01020304_u32 });
+    BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 0u);
     BOOST_REQUIRE_EQUAL(body_store.buffer().size(), size);
     BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffff"));
@@ -1051,7 +1063,7 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_put__record__expected)
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("ffffffffff0102030405060708090a04030201"));
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__set_commit__slab__expected)
+BOOST_AUTO_TEST_CASE(hashmap__set_commit_link__slab__expected)
 {
     test::dfile head_store{};
     test::dfile body_store{};
@@ -1061,13 +1073,14 @@ BOOST_AUTO_TEST_CASE(hashmap__set_commit__slab__expected)
     constexpr auto size = link5::size + array_count<key10> + sizeof(uint32_t);
     link5 link{};
     BOOST_REQUIRE(instance.set_link(link, flex_slab{ 0x01020304_u32 }));
+    BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 0u);
     BOOST_REQUIRE_EQUAL(body_store.buffer().size(), size);
     BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffff"));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("00000000000000000000000000000004030201"));
 
     constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
-    BOOST_REQUIRE(instance.commit(link, key1));
+    BOOST_REQUIRE(!instance.commit_link(link, key1).is_terminal());
     BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("00000000000000000000ffffffffff"));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("ffffffffff0102030405060708090a04030201"));
 }

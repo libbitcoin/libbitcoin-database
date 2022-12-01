@@ -23,19 +23,31 @@ BOOST_AUTO_TEST_SUITE(header_tests)
 
 using namespace system;
 constexpr hash_digest key = base16_array("110102030405060708090a0b0c0d0e0f220102030405060708090a0b0c0d0e0f");
-constexpr hash_digest root = base16_array("330102030405060708090a0b0c0d0e0f440102030405060708090a0b0c0d0e0f");
+constexpr hash_digest merkle_root = base16_array("330102030405060708090a0b0c0d0e0f440102030405060708090a0b0c0d0e0f");
 constexpr table::header::record expected
 {
-    {},             // schema::header [all const static members]
-    0x00341201_u32, // height
-    0x56341202_u32, // flags
-    0x56341203_u32, // mtp
+    {}, // schema::header [all const static members]
+    context
+    {
+        0x00341201_u32, // height
+        0x56341202_u32, // flags
+        0x56341203_u32  // mtp
+    },
     0x00341204_u32, // parent_fk
     0x56341205_u32, // version
+    merkle_root,
     0x56341206_u32, // timestamp
     0x56341207_u32, // bits
-    0x56341208_u32, // nonce
-    root
+    0x56341208_u32  // nonce
+};
+const system::chain::header expected_header
+{
+    expected.version,
+    hash_digest{}, // parent (unused)
+    expected.merkle_root,
+    expected.timestamp,
+    expected.bits,
+    expected.nonce
 };
 
 const data_chunk expected_file
@@ -53,11 +65,11 @@ const data_chunk expected_file
     0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
 
     // --------------------------------------------------------------------------------------------
 
@@ -74,11 +86,11 @@ const data_chunk expected_file
     0x03, 0x12, 0x34, 0x56,
     0x04, 0x12, 0x34,
     0x05, 0x12, 0x34, 0x56,
+    0x33, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+    0x44, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
     0x06, 0x12, 0x34, 0x56,
     0x07, 0x12, 0x34, 0x56,
-    0x08, 0x12, 0x34, 0x56,
-    0x33, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-    0x44, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
+    0x08, 0x12, 0x34, 0x56
 };
 
 BOOST_AUTO_TEST_CASE(header__put__get__expected)
@@ -87,8 +99,8 @@ BOOST_AUTO_TEST_CASE(header__put__get__expected)
     test::dfile body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, table::header::record{}));
-    BOOST_REQUIRE(instance.put(key, expected));
+    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::header::record element{};
@@ -105,49 +117,62 @@ BOOST_AUTO_TEST_CASE(header__put__get__expected)
     BOOST_REQUIRE(element == expected);
 }
 
-BOOST_AUTO_TEST_CASE(point__put__get_sk__expected)
+BOOST_AUTO_TEST_CASE(header__put_ptr__get__expected)
 {
     test::dfile head_store{};
     test::dfile body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, table::header::record{}));
-    BOOST_REQUIRE(instance.put(key, expected));
+    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
+
+    const table::header::record_put_ptr put_ptr
+    {
+        {},
+        expected.state,
+        expected.parent_fk,
+        system::to_shared(expected_header)
+    };
+    BOOST_REQUIRE(!instance.put_link(key, put_ptr).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
-    table::header::record_sk element{};
+    table::header::record element{};
     BOOST_REQUIRE(instance.get(1, element));
-    BOOST_REQUIRE_EQUAL(element.key, key);
+    BOOST_REQUIRE(element.state == expected.state);
+    BOOST_REQUIRE(element.version == put_ptr.header_ptr->version());
+    BOOST_REQUIRE(element.merkle_root == put_ptr.header_ptr->merkle_root());
+    BOOST_REQUIRE(element.timestamp == put_ptr.header_ptr->timestamp());
+    BOOST_REQUIRE(element.bits == put_ptr.header_ptr->bits());
+    BOOST_REQUIRE(element.nonce == put_ptr.header_ptr->nonce());
+    BOOST_REQUIRE_EQUAL(element.parent_fk, expected.parent_fk);
 }
 
-BOOST_AUTO_TEST_CASE(point__it__pk__expected)
+BOOST_AUTO_TEST_CASE(header__put_ref__get__expected)
 {
     test::dfile head_store{};
     test::dfile body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, table::header::record{}));
-    BOOST_REQUIRE(instance.put(key, expected));
+    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
+
+    const table::header::record_put_ref put_ref
+    {
+        {},
+        expected.state,
+        expected.parent_fk,
+        expected_header
+    };
+    BOOST_REQUIRE(!instance.put_link(key, put_ref).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
-    auto it = instance.it(key);
-    BOOST_REQUIRE_EQUAL(it.self(), 1u);
-    BOOST_REQUIRE(!it.advance());
-}
-
-BOOST_AUTO_TEST_CASE(header__put__get_height__expected)
-{
-    test::dfile head_store{};
-    test::dfile body_store{};
-    table::header instance{ head_store, body_store, 20 };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, table::header::record{}));
-    BOOST_REQUIRE(instance.put(key, expected));
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
-
-    table::header::record_height element{};
+    table::header::record element{};
     BOOST_REQUIRE(instance.get(1, element));
-    BOOST_REQUIRE_EQUAL(element.height, expected.height);
+    BOOST_REQUIRE(element.state == put_ref.state);
+    BOOST_REQUIRE(element.version == put_ref.header.version());
+    BOOST_REQUIRE(element.merkle_root == put_ref.header.merkle_root());
+    BOOST_REQUIRE(element.timestamp == put_ref.header.timestamp());
+    BOOST_REQUIRE(element.bits == put_ref.header.bits());
+    BOOST_REQUIRE(element.nonce == put_ref.header.nonce());
+    BOOST_REQUIRE_EQUAL(element.parent_fk, put_ref.parent_fk);
 }
 
 BOOST_AUTO_TEST_CASE(header__put__get_with_sk__expected)
@@ -156,14 +181,59 @@ BOOST_AUTO_TEST_CASE(header__put__get_with_sk__expected)
     test::dfile body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, table::header::record{}));
-    BOOST_REQUIRE(instance.put(key, expected));
+    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::header::record_with_sk element{};
     BOOST_REQUIRE(instance.get<table::header::record_with_sk>(key, element));
     BOOST_REQUIRE(static_cast<table::header::record>(element) == expected);
     BOOST_REQUIRE_EQUAL(element.key, key);
+}
+
+BOOST_AUTO_TEST_CASE(point__put__get_sk__expected)
+{
+    test::dfile head_store{};
+    test::dfile body_store{};
+    table::header instance{ head_store, body_store, 20 };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
+
+    table::header::record_sk element{};
+    BOOST_REQUIRE(instance.get(1, element));
+    BOOST_REQUIRE_EQUAL(element.key, key);
+}
+
+BOOST_AUTO_TEST_CASE(header__put__get_height__expected)
+{
+    test::dfile head_store{};
+    test::dfile body_store{};
+    table::header instance{ head_store, body_store, 20 };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
+
+    table::header::record_height element{};
+    BOOST_REQUIRE(instance.get(1, element));
+    BOOST_REQUIRE_EQUAL(element.height, expected.state.height);
+}
+
+BOOST_AUTO_TEST_CASE(point__it__pk__expected)
+{
+    test::dfile head_store{};
+    test::dfile body_store{};
+    table::header instance{ head_store, body_store, 20 };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
+
+    auto it = instance.it(key);
+    BOOST_REQUIRE_EQUAL(it.self(), 1u);
+    BOOST_REQUIRE(!it.advance());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

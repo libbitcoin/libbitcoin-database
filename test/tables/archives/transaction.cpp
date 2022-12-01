@@ -80,8 +80,8 @@ BOOST_AUTO_TEST_CASE(transaction__put__get__expected)
     test::dfile body_store{};
     table::transaction instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, table::transaction::record{}));
-    BOOST_REQUIRE(instance.put(key, expected));
+    BOOST_REQUIRE(!instance.put_link({}, table::transaction::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::transaction::record element{};
@@ -108,8 +108,8 @@ BOOST_AUTO_TEST_CASE(transaction__put__get_sk__expected)
     test::dfile body_store{};
     table::transaction instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, table::transaction::record{}));
-    BOOST_REQUIRE(instance.put(key, expected));
+    BOOST_REQUIRE(!instance.put_link({}, table::transaction::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::transaction::record_sk element{};
@@ -123,8 +123,8 @@ BOOST_AUTO_TEST_CASE(transaction__put__get_puts__expected)
     test::dfile body_store{};
     table::transaction instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, table::transaction::record{}));
-    BOOST_REQUIRE(instance.put(key, expected));
+    BOOST_REQUIRE(!instance.put_link({}, table::transaction::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::transaction::record_puts element{};
@@ -143,8 +143,8 @@ BOOST_AUTO_TEST_CASE(transaction__it__pk__expected)
     test::dfile body_store{};
     table::transaction instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put({}, table::transaction::record{}));
-    BOOST_REQUIRE(instance.put(key, expected));
+    BOOST_REQUIRE(!instance.put_link({}, table::transaction::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     auto it = instance.it(key);

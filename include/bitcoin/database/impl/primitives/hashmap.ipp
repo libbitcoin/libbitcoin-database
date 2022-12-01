@@ -93,17 +93,17 @@ Link CLASS::allocate(const Link& size) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
+bool CLASS::get(const Key& key, Element& element) const NOEXCEPT
 {
-    auto source = streamer<reader>(link);
-    return source && element.from_data(*source);
+    return get(it(key).self(), element);
 }
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::get(const Key& key, Element& element) const NOEXCEPT
+bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
-    return get(it(key).self(), element);
+    auto source = streamer<reader>(link);
+    return source && element.from_data(*source);
 }
 
 TEMPLATE
@@ -116,6 +116,14 @@ bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
+Link CLASS::set_link(const Element& element) NOEXCEPT
+{
+    Link link{};
+    return set_link(link, element) ? link : Link{};
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::set_link(Link& link, const Element& element) NOEXCEPT
 {
     link = allocate(element.count());
@@ -124,18 +132,10 @@ bool CLASS::set_link(Link& link, const Element& element) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::put(const Link& link, const Key& key, const Element& element) NOEXCEPT
+Link CLASS::put_if(const Key& key, const Element& element) NOEXCEPT
 {
-    auto sink = putter(link, key, element.count());
-    return sink && element.to_data(*sink) && sink->finalize();
-}
-
-TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::put_link(Link& link, const Key& key, const Element& element) NOEXCEPT
-{
-    link = allocate(element.count());
-    return put(link, key, element);
+    Link link{};
+    return put_if(link, key, element) ? link : Link{};
 }
 
 TEMPLATE
@@ -150,10 +150,27 @@ bool CLASS::put_if(Link& link, const Key& key, const Element& element) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::put(const Key& key, const Element& element) NOEXCEPT
+Link CLASS::put_link(const Key& key, const Element& element) NOEXCEPT
 {
-    Link unused{};
-    return put_link(unused, key, element);
+    Link link{};
+    return put_link(link, key, element) ? link : Link{};
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put_link(Link& link, const Key& key, const Element& element) NOEXCEPT
+{
+    link = allocate(element.count());
+    return put(link, key, element);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put(const Link& link, const Key& key,
+    const Element& element) NOEXCEPT
+{
+    auto sink = putter(link, key, element.count());
+    return sink && element.to_data(*sink) && sink->finalize();
 }
 
 TEMPLATE
@@ -170,6 +187,12 @@ bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
     // Commit element to search index.
     auto& next = system::unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
     return header_.push(link, next, header_.index(key));
+}
+
+TEMPLATE
+Link CLASS::commit_link(const Link& link, const Key& key) NOEXCEPT
+{
+    return commit(link, key) ? link : Link{};
 }
 
 // protected

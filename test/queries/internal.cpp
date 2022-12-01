@@ -16,22 +16,32 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_QUERY_IPP
-#define LIBBITCOIN_DATABASE_QUERY_IPP
+#include "../test.hpp"
+#include "../mocks/dfile.hpp"
 
-namespace libbitcoin {
-namespace database {
-
-TEMPLATE
-CLASS::query(Store& value) NOEXCEPT
-  : store_(value)
+struct query_internal_setup_fixture
 {
+    DELETE4(query_internal_setup_fixture);
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+        query_internal_setup_fixture() NOEXCEPT
+    {
+        BOOST_REQUIRE(test::clear(test::directory));
+    }
+
+    ~query_internal_setup_fixture() NOEXCEPT
+    {
+        BOOST_REQUIRE(test::clear(test::directory));
+    }
+
+    BC_POP_WARNING()
+};
+
+BOOST_FIXTURE_TEST_SUITE(query_tests, query_internal_setup_fixture)
+
+BOOST_AUTO_TEST_CASE(query_internal_test)
+{
+    BOOST_REQUIRE(true);
 }
 
-} // namespace database
-} // namespace libbitcoin
-
-#include <bitcoin/database/impl/queries/archive.ipp>
-#include <bitcoin/database/impl/queries/internal.ipp>
-
-#endif
+BOOST_AUTO_TEST_SUITE_END()

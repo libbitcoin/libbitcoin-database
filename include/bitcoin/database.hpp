@@ -42,6 +42,7 @@
 #include <bitcoin/database/primitives/linkage.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/tables/context.hpp>
 #include <bitcoin/database/tables/schema.hpp>
 #include <bitcoin/database/tables/tables.hpp>
 #include <bitcoin/database/tables/archives/header.hpp>
