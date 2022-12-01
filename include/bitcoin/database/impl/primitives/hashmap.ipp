@@ -108,14 +108,6 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-Link CLASS::set_link(const Element& element) NOEXCEPT
-{
-    const auto link = allocate(element.count());
-    return set(link, element) ? link : Link{};
-}
-
-TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
 {
     auto sink = streamer<finalizer>(link);
@@ -124,20 +116,52 @@ bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
+Link CLASS::set_link(const Element& element) NOEXCEPT
+{
+    Link link{};
+    return set_link(link, element) ? link : Link{};
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::set_link(Link& link, const Element& element) NOEXCEPT
+{
+    link = allocate(element.count());
+    return set(link, element);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
 Link CLASS::put_if(const Key& key, const Element& element) NOEXCEPT
+{
+    Link link{};
+    return put_if(link, key, element) ? link : Link{};
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put_if(Link& link, const Key& key, const Element& element) NOEXCEPT
 {
     // non-atomic, race may produce element duplication.
     // it is preferred to allow duplication vs. searching under lock.
-    auto link = it(key).self();
-    return link.is_terminal() ? put_link(key, element) : link;
+    link = it(key).self();
+    return !link.is_terminal() || put_link(link, key, element);
 }
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
 Link CLASS::put_link(const Key& key, const Element& element) NOEXCEPT
 {
-    const auto link = allocate(element.count());
-    return put(link, key, element) ? link : Link{};
+    Link link{};
+    return put_link(link, key, element) ? link : Link{};
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put_link(Link& link, const Key& key, const Element& element) NOEXCEPT
+{
+    link = allocate(element.count());
+    return put(link, key, element);
 }
 
 TEMPLATE
@@ -163,6 +187,12 @@ bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
     // Commit element to search index.
     auto& next = system::unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
     return header_.push(link, next, header_.index(key));
+}
+
+TEMPLATE
+Link CLASS::commit_link(const Link& link, const Key& key) NOEXCEPT
+{
+    return commit(link, key) ? link : Link{};
 }
 
 // protected

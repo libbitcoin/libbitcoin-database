@@ -100,6 +100,38 @@ public:
         puts::integer ins_fk{};
     };
 
+    struct only
+      : public schema::transaction
+    {
+        inline uint32_t outs_fk() const NOEXCEPT
+        {
+            return ins_fk + ins_count * put::size;
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            static constexpr size_t skip_size =
+                schema::bit +
+                bytes::size +
+                bytes::size;
+
+            source.skip_bytes(skip_size);
+            locktime   = source.read_little_endian<uint32_t>();
+            version    = source.read_little_endian<uint32_t>();
+            ins_count  = source.read_little_endian<ix::integer, ix::size>();
+            outs_count = source.read_little_endian<ix::integer, ix::size>();
+            ins_fk     = source.read_little_endian<puts::integer, puts::size>();
+            BC_ASSERT(source.get_read_position() == minrow);
+            return source;
+        }
+
+        uint32_t locktime{};
+        uint32_t version{};
+        ix::integer ins_count{};
+        ix::integer outs_count{};
+        puts::integer ins_fk{};
+    };
+
     struct record_sk
       : public schema::transaction
     {

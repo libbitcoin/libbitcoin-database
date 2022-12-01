@@ -86,6 +86,23 @@ public:
         uint64_t value{};
         system::chain::script script{};
     };
+
+    struct only
+      : public schema::output
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            using namespace system;
+            source.skip_bytes(tx::size);
+            source.skip_variable();
+            value = source.read_variable();
+            script = to_shared(new chain::script{ source, true });
+            return source;
+        }
+
+        uint64_t value{};
+        system::chain::script::cptr script{};
+    };
 };
 
 } // namespace table

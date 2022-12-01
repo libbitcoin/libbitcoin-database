@@ -316,7 +316,8 @@ BOOST_AUTO_TEST_CASE(arraymap__record_put__multiple__expected)
     test::dfile body_store{ body_file };
     arraymap<link5, big_record::size> instance{ head_store, body_store };
 
-    auto link = instance.put_link(big_record{ 0xa1b2c3d4_u32 });
+    link5 link{};
+    BOOST_REQUIRE(instance.put_link(link, big_record{ 0xa1b2c3d4_u32 }));
     BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 0u);
 
@@ -406,7 +407,8 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_put__multiple__expected)
     test::dfile body_store{ body_file };
     arraymap<link5, big_slab::size> instance{ head_store, body_store };
 
-    auto link = instance.put_link(big_slab{ 0xa1b2c3d4_u32 });
+    link5 link{};
+    BOOST_REQUIRE(instance.put_link(link, big_slab{ 0xa1b2c3d4_u32 }));
     BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 0u);
 

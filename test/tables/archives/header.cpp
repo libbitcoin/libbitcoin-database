@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(header__put__get__expected)
     BOOST_REQUIRE(element == expected);
 }
 
-BOOST_AUTO_TEST_CASE(header__put_ptr__get_ptr__expected)
+BOOST_AUTO_TEST_CASE(header__put_ptr__get__expected)
 {
     test::dfile head_store{};
     test::dfile body_store{};
@@ -135,12 +135,15 @@ BOOST_AUTO_TEST_CASE(header__put_ptr__get_ptr__expected)
     BOOST_REQUIRE(!instance.put_link(key, put_ptr).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
-    table::header::record_get_ptr get_ptr{};
-    BOOST_REQUIRE(instance.get(1, get_ptr));
-    ////BOOST_REQUIRE(get_ptr.state == put_ptr.state);
-    BOOST_REQUIRE(get_ptr.header_ptr);
-    BOOST_REQUIRE(*get_ptr.header_ptr == *put_ptr.header_ptr);
-    BOOST_REQUIRE_EQUAL(get_ptr.parent_fk, put_ptr.parent_fk);
+    table::header::record element{};
+    BOOST_REQUIRE(instance.get(1, element));
+    BOOST_REQUIRE(element.state == expected.state);
+    BOOST_REQUIRE(element.version == put_ptr.header_ptr->version());
+    BOOST_REQUIRE(element.merkle_root == put_ptr.header_ptr->merkle_root());
+    BOOST_REQUIRE(element.timestamp == put_ptr.header_ptr->timestamp());
+    BOOST_REQUIRE(element.bits == put_ptr.header_ptr->bits());
+    BOOST_REQUIRE(element.nonce == put_ptr.header_ptr->nonce());
+    BOOST_REQUIRE_EQUAL(element.parent_fk, expected.parent_fk);
 }
 
 BOOST_AUTO_TEST_CASE(header__put_ref__get__expected)

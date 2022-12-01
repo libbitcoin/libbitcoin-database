@@ -86,8 +86,15 @@ template <typename Element, if_equal<Element::size, Size>>
 Link CLASS::put_link(const Element& element) NOEXCEPT
 {
     Link link{};
+    return put_link(link, element) ? link : Link{};
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put_link(Link& link, const Element& element) NOEXCEPT
+{
     auto sink = creater(link, element.count());
-    return sink && element.to_data(*sink) ? link : Link{};
+    return sink && element.to_data(*sink);
 }
 
 // protected

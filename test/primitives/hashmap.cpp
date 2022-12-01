@@ -435,7 +435,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__populated__valid)
     BOOST_REQUIRE_EQUAL(record.value, 0x04030201_u32);
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_put__get__expected)
+BOOST_AUTO_TEST_CASE(hashmap__record_put_if__get__expected)
 {
     test::dfile head_store{};
     test::dfile body_store{};
@@ -443,7 +443,10 @@ BOOST_AUTO_TEST_CASE(hashmap__record_put__get__expected)
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x42 };
-    BOOST_REQUIRE(!instance.put_link(key, big_record{ 0xa1b2c3d4_u32 }).is_terminal());
+    BOOST_REQUIRE(!instance.put_if(key, big_record{ 0xa1b2c3d4_u32 }).is_terminal());
+
+    link5 link{};
+    BOOST_REQUIRE(instance.put_if(link, key, big_record{ 0xa1b2c3d4_u32 }));
 
     big_record link_record{};
     BOOST_REQUIRE(instance.get(0, link_record));
@@ -472,7 +475,8 @@ BOOST_AUTO_TEST_CASE(hashmap__record_put__multiple__expected)
     constexpr key1 key1_big{ 0x41 };
     constexpr key1 key1_little{ 0x42 };
 
-    auto link = instance.put_link(key1_big, big_record{ 0xa1b2c3d4_u32 });
+    link5 link{};
+    BOOST_REQUIRE(instance.put_link(link, key1_big, big_record{ 0xa1b2c3d4_u32 }));
     BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 0u);
 
@@ -550,7 +554,7 @@ public:
     uint32_t value{ 0 };
 };
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_put__get__expected)
+BOOST_AUTO_TEST_CASE(hashmap__slab_put_if__get__expected)
 {
     test::dfile head_store{};
     test::dfile body_store{};
@@ -559,7 +563,10 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_put__get__expected)
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x42 };
-    BOOST_REQUIRE(!instance.put_link(key, big_slab{ 0xa1b2c3d4_u32 }).is_terminal());
+    BOOST_REQUIRE(!instance.put_if(key, big_slab{ 0xa1b2c3d4_u32 }).is_terminal());
+
+    link5 link{};
+    BOOST_REQUIRE(instance.put_if(link, key, big_slab{ 0xa1b2c3d4_u32 }));
 
     big_slab slab{};
     BOOST_REQUIRE(instance.get(zero, slab));
@@ -585,7 +592,8 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_put__multiple__expected)
     constexpr key1 key_big{ 0x41 };
     constexpr key1 key_little{ 0x42 };
 
-    auto link = instance.put_link(key_big, big_slab{ 0xa1b2c3d4_u32 });
+    link5 link{};
+    BOOST_REQUIRE(instance.put_link(link, key_big, big_slab{ 0xa1b2c3d4_u32 }));
     BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 0u);
 
@@ -1055,7 +1063,7 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_put__record__expected)
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("ffffffffff0102030405060708090a04030201"));
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__set_commit__slab__expected)
+BOOST_AUTO_TEST_CASE(hashmap__set_commit_link__slab__expected)
 {
     test::dfile head_store{};
     test::dfile body_store{};
@@ -1063,7 +1071,8 @@ BOOST_AUTO_TEST_CASE(hashmap__set_commit__slab__expected)
     BOOST_REQUIRE(instance.create());
 
     constexpr auto size = link5::size + array_count<key10> + sizeof(uint32_t);
-    const auto link = instance.set_link(flex_slab{ 0x01020304_u32 });
+    link5 link{};
+    BOOST_REQUIRE(instance.set_link(link, flex_slab{ 0x01020304_u32 }));
     BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 0u);
     BOOST_REQUIRE_EQUAL(body_store.buffer().size(), size);
@@ -1071,7 +1080,7 @@ BOOST_AUTO_TEST_CASE(hashmap__set_commit__slab__expected)
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("00000000000000000000000000000004030201"));
 
     constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
-    BOOST_REQUIRE(instance.commit(link, key1));
+    BOOST_REQUIRE(!instance.commit_link(link, key1).is_terminal());
     BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("00000000000000000000ffffffffff"));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("ffffffffff0102030405060708090a04030201"));
 }

@@ -58,6 +58,8 @@ public:
 
     /// Put element and return link.
     template <typename Element, if_equal<Element::size, Size> = true>
+    bool put_link(Link& link, const Element& element) NOEXCEPT;
+    template <typename Element, if_equal<Element::size, Size> = true>
     Link put_link(const Element& element) NOEXCEPT;
 
 protected:

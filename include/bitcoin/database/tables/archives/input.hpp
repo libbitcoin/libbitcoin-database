@@ -107,6 +107,25 @@ public:
         system::chain::witness witness{};
     };
 
+    struct only
+      : public schema::input
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            using namespace system;
+            source.skip_bytes(tx::size);
+            source.skip_variable();
+            sequence = source.read_little_endian<uint32_t>();
+            script = to_shared(new chain::script{ source, true });
+            witness = to_shared(new chain::witness{ source, true });
+            return source;
+        }
+
+        uint32_t sequence{};
+        system::chain::script::cptr script{};
+        system::chain::witness::cptr witness{};
+    };
+
     struct slab_composite_sk
       : public schema::input
     {
@@ -125,7 +144,6 @@ public:
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            // TODO: generalize/optimize.
             source.rewind_bytes(sk);
             point_fk    = source.read_little_endian<tx::integer, tx::size>();
             point_index = source.read_little_endian<ix::integer, ix::size>();
@@ -141,6 +159,28 @@ public:
         ix::integer point_index{};
     };
 
+    struct only_with_decomposed_sk
+      : public only
+    {
+        BC_PUSH_WARNING(NO_METHOD_HIDING)
+        inline bool from_data(reader& source) NOEXCEPT
+        BC_POP_WARNING()
+        {
+            source.rewind_bytes(sk);
+            point_fk    = source.read_little_endian<tx::integer, tx::size>();
+            point_index = source.read_little_endian<ix::integer, ix::size>();
+
+            // Restore truncated null_index sentinel.
+            if (point_index == ix::terminal)
+                point_index = system::chain::point::null_index;
+
+            return only::from_data(source);
+        }
+
+        tx::integer point_fk{};
+        ix::integer point_index{};
+    };
+
     struct slab_with_decomposed_sk
       : public slab
     {
@@ -148,9 +188,8 @@ public:
         inline bool from_data(reader& source) NOEXCEPT
         BC_POP_WARNING()
         {
-            // TODO: generalize/optimize.
             source.rewind_bytes(sk);
-            point_fk = source.read_little_endian<tx::integer, tx::size>();
+            point_fk    = source.read_little_endian<tx::integer, tx::size>();
             point_index = source.read_little_endian<ix::integer, ix::size>();
 
             // Restore truncated null_index sentinel.

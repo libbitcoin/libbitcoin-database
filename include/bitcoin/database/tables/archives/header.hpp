@@ -91,34 +91,6 @@ public:
         uint32_t nonce{};
     };
 
-    // There is no corresponding ref getter because chain objects are const.
-    struct record_get_ptr
-      : public schema::header
-    {
-        // header_ptr->previous_block_hash() ignored.
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            ////context::read(source, state);
-            source.skip_bytes(context::size);
-            parent_fk = source.read_little_endian<link::integer, link::size>();
-            header_ptr = system::to_shared(new system::chain::header
-            {
-                source.read_little_endian<uint32_t>(), // version
-                hash_digest{},                         // parent (unused)
-                source.read_hash(),                    // merkle_root
-                source.read_little_endian<uint32_t>(), // timestamp
-                source.read_little_endian<uint32_t>(), // bits
-                source.read_little_endian<uint32_t>()  // nonce
-            });
-            BC_ASSERT(source.get_read_position() == minrow);
-            return source;
-        }
-
-        ////context state{};
-        link::integer parent_fk{};
-        system::chain::header::cptr header_ptr{};
-    };
-
     struct record_put_ptr
       : public schema::header
     {
