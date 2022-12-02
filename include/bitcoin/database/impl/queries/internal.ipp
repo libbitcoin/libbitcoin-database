@@ -35,11 +35,10 @@ BC_PUSH_WARNING(NO_USE_OF_MOVED_OBJECT)
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-table::header::link CLASS::set_header_(const system::chain::header& header,
+table::header::link CLASS::set_header_link(const system::chain::header& header,
     const context& context) NOEXCEPT
 {
     // Parent must be missing iff its hash is null.
-    // Iterator must be released before subsequent header put.
     const auto& parent_sk = header.previous_block_hash();
     const auto parent_fk = store_.header.it(parent_sk).self();
     if (parent_fk.is_terminal() != (parent_sk == system::null_hash))
@@ -67,7 +66,7 @@ table::header::link CLASS::set_header_(const system::chain::header& header,
 }
 
 TEMPLATE
-table::transaction::link CLASS::set_tx_(
+table::transaction::link CLASS::set_tx_link(
     const system::chain::transaction& tx) NOEXCEPT
 {
     // Must have at least one input and output.
@@ -76,35 +75,32 @@ table::transaction::link CLASS::set_tx_(
 
     // Return with success if tx exists.
     const auto key = tx.hash(false);
-    auto tx_pk = store_.tx.it(key).self();
-    if (!tx_pk.is_terminal())
-        return tx_pk;
+    auto tx_fk = store_.tx.it(key).self();
+    if (!tx_fk.is_terminal())
+        return tx_fk;
 
     // Declare puts record.
     const auto& ins = *tx.inputs_ptr();
     const auto& outs = *tx.outputs_ptr();
-    const auto count = outs.size() + ins.size();
     table::puts::record puts{};
-    puts.put_fks.reserve(count);
+    puts.put_fks.reserve(outs.size() + ins.size());
 
     // BEGIN TRANSACTION
     // ------------------------------------------------------------------------
     const auto lock = store_.get_transactor();
 
-    // Allocate one transaction.
-    tx_pk = store_.tx.allocate(1);
-    if (tx_pk.is_terminal())
+    tx_fk = store_.tx.allocate(1);
+    if (tx_fk.is_terminal())
         return {};
 
-    // Allocate and Set inputs, queue each put.
     uint32_t input_index = 0;
-    linkage<schema::put> put_pk{};
+    linkage<schema::put> put_fk{};
     for (const auto& in: ins)
     {
-        if (!store_.input.set_link(put_pk, table::input::slab_put_ref
+        if (!store_.input.set_link(put_fk, table::input::slab_put_ref
         {
             {},
-            tx_pk,
+            tx_fk,
             input_index++,
             *in
         }))
@@ -112,17 +108,16 @@ table::transaction::link CLASS::set_tx_(
             return {};
         }
 
-        puts.put_fks.push_back(put_pk);
+        puts.put_fks.push_back(put_fk);
     }
 
-    // Commit outputs, queue each put.
     uint32_t output_index = 0;
     for (const auto& out: outs)
     {
-        if (!store_.output.put_link(put_pk, table::output::slab_put_ref
+        if (!store_.output.put_link(put_fk, table::output::slab_put_ref
         {
             {},
-            tx_pk,
+            tx_fk,
             output_index++,
             *out
         }))
@@ -130,34 +125,28 @@ table::transaction::link CLASS::set_tx_(
             return {};
         }
 
-        puts.put_fks.push_back(put_pk);
+        puts.put_fks.push_back(put_fk);
     }
 
-    // Commit puts (defined above).
-    const auto puts_pk = store_.puts.put_link(puts);
-    if (puts_pk.is_terminal())
+    const auto puts_fk = store_.puts.put_link(puts);
+    if (puts_fk.is_terminal())
         return {};
 
-    // Set transaction.
-    // TODO: optimize with ptr/ref writer.
-    if (!store_.tx.set(tx_pk, table::transaction::record
+    using ix = table::transaction::ix::integer;
+    if (!store_.tx.set(tx_fk, table::transaction::record_put_ref
     {
         {},
-        tx.is_coinbase(),
-        system::possible_narrow_cast<uint32_t>(tx.serialized_size(false)),
-        system::possible_narrow_cast<uint32_t>(tx.serialized_size(true)),
-        tx.locktime(),
-        tx.version(),
-        system::possible_narrow_cast<uint32_t>(ins.size()),
-        system::possible_narrow_cast<uint32_t>(outs.size()),
-        puts_pk
+        tx,
+        system::possible_narrow_cast<ix>(ins.size()),
+        system::possible_narrow_cast<ix>(outs.size()),
+        puts_fk
     }))
     {
         return {};
     }
 
     // Commit point and input for each input.
-    table::point::link point_pk{};
+    table::point::link point_fk{};
     const table::point::record point{};
     auto input_fk = puts.put_fks.begin();
     for (const auto& in: ins)
@@ -165,31 +154,30 @@ table::transaction::link CLASS::set_tx_(
         const auto& prevout = in->point();
 
         // Continue with success if point exists.
-        if (!store_.point.put_if(point_pk, prevout.hash(), point))
+        if (!store_.point.put_if(point_fk, prevout.hash(), point))
             return {};
 
-        // Commit each input_fk to its prevout fp.
-        if (!store_.input.commit(*input_fk++, table::input::to_point(point_pk,
-            prevout.index())))
+        // Commit each input to its prevout fp.
+        const auto fp = table::input::to_point(point_fk, prevout.index());
+        if (!store_.input.commit(*input_fk++, fp))
             return {};
     }
 
-    // Commit transaction to its hash and return link (tx_pk or terminal).
-    return store_.tx.commit_link(tx_pk, key);
+    return store_.tx.commit_link(tx_fk, key);
     // ------------------------------------------------------------------------
     // END TRANSACTION
 }
 
 TEMPLATE
-table::header::link CLASS::set_block_(const system::chain::block& block,
+table::header::link CLASS::set_block_link(const system::chain::block& block,
     const context& context) NOEXCEPT
 {
     // Set is idempotent.
-    const auto header_fk = set_header_(block.header(), context);
+    const auto header_fk = set_header_link(block.header(), context);
     if (header_fk.is_terminal())
         return {};
 
-    // Shortcircuit (redundant with set_txs_ put_if).
+    // Shortcircuit (redundant with set_txs put_if).
     if (store_.txs.exists(header_fk))
         return true;
 
@@ -198,14 +186,14 @@ table::header::link CLASS::set_block_(const system::chain::block& block,
     const auto& txs = *block.transactions_ptr();
     keys.tx_fks.reserve(txs.size());
     for (const auto& tx: txs)
-        keys.tx_fks.push_back(set_tx_(*tx));
+        keys.tx_fks.push_back(set_tx_link(*tx));
 
     // Set is idempotent, requires that none are terminal.
-    return set_txs_(header_fk, keys) ? header_fk : table::header::link{};
+    return set_txs(header_fk, keys) ? header_fk : table::header::link{};
 }
 
 TEMPLATE
-bool CLASS::set_txs_(const table::header::link& key,
+bool CLASS::set_txs(const table::header::link& key,
     const table::txs::slab& txs) NOEXCEPT
 {
     // Continue with success if txs exists for header.
@@ -223,10 +211,54 @@ bool CLASS::set_txs_(const table::header::link& key,
 }
 
 // chain_ptr getters(fk)
-// ----------------------------------------------------------------------------
+// ============================================================================
 
 TEMPLATE
-system::chain::transaction::cptr CLASS::get_tx(
+hash_digest CLASS::get_point(const table::point::link& fk) NOEXCEPT
+{
+    table::point::record_sk hash{};
+    if (!store_.point.get(fk, hash))
+        return {};
+
+    return std::move(hash.key);
+}
+
+TEMPLATE
+CLASS::input::cptr CLASS::get_input(const table::input::link& fk) NOEXCEPT
+{;
+    table::input::only_with_decomposed_sk in{};
+    if (!store_.input.get(fk, in))
+        return {};
+
+    table::point::record_sk hash{};
+    if (!store_.point.get(in.point_fk, hash))
+        return {};
+
+    return system::to_shared(new input
+    {
+        system::to_shared(new point
+        {
+            std::move(hash.key),
+            in.point_index 
+        }),
+        in.script,
+        in.witness,
+        in.sequence
+    });
+}
+
+TEMPLATE
+CLASS::output::cptr CLASS::get_output(const table::output::link& fk) NOEXCEPT
+{
+    table::output::only out{};
+    if (!store_.output.get(fk, out))
+        return {};
+
+    return out.output;
+}
+
+TEMPLATE
+CLASS::transaction::cptr CLASS::get_tx(
     const table::transaction::link& fk) NOEXCEPT
 {
     using namespace system::chain;
@@ -239,48 +271,28 @@ system::chain::transaction::cptr CLASS::get_tx(
     if (!store_.puts.get(tx.ins_fk, puts))
         return {};
 
-    // Initialize input/output fk iterator.
     auto it = puts.put_fks.begin();
-    const auto inputs_end = std::next(it, tx.ins_count);
     const auto outputs_end = puts.put_fks.end();
+    const auto inputs_end = std::next(it, tx.ins_count);
 
-    // Get inputs.
     const auto ins = system::to_shared<input_cptrs>();
     ins->reserve(tx.ins_count);
-    table::point::record_sk hash{};
-    table::input::only_with_decomposed_sk in{};
-    for (; it != inputs_end; ++it)
+    while (it != inputs_end)
     {
-        if (!store_.input.get(*it, in) ||
-            !store_.point.get(in.point_fk, hash))
-            return {};
-
-        ins->emplace_back(new input
-        {
-            system::to_shared(new point
-            {
-                std::move(hash.key),
-                in.point_index 
-            }),
-            in.script,
-            in.witness,
-            in.sequence
-        });
+        const auto in = get_input(*it++);
+        if (!in) return {};
+        ins->push_back(in);
     }
 
-    // Get outputs.
     const auto outs = system::to_shared<output_cptrs>();
     outs->reserve(tx.outs_count);
-    table::output::only out{};
-    for (; it != outputs_end; ++it)
+    while (it != outputs_end)
     {
-        if (!store_.output.get(*it, out))
-            return {};
-
-        outs->push_back(out.output);
+        const auto out = get_output(*it++);
+        if (!out) return {};
+        outs->push_back(out);
     }
 
-    // tx ctor casts inputs_ptr/outputs_ptr to inputs_cptr/outputs_cptr.
     return system::to_shared(new transaction
     {
         tx.version,
@@ -291,21 +303,19 @@ system::chain::transaction::cptr CLASS::get_tx(
 }
 
 TEMPLATE
-system::chain::header::cptr CLASS::get_header(
-    const table::header::link& fk) NOEXCEPT
+CLASS::header::cptr CLASS::get_header(const table::header::link& fk) NOEXCEPT
 {
     using namespace system::chain;
     table::header::record head{};
     if (!store_.header.get(fk, head))
         return {};
 
-    // terminal (default) parent implies genesis, otherwise it must resolve.
+    // Terminal parent implies genesis (no parent header).
     table::header::record_sk parent{};
     if ((head.parent_fk != table::header::link::terminal) &&
         !store_.header.get(head.parent_fk, parent))
         return {};
 
-    // cannot be retrieved as an instance due to parent key.
     return system::to_shared(new header
     {
         head.version,
@@ -318,8 +328,7 @@ system::chain::header::cptr CLASS::get_header(
 }
 
 TEMPLATE
-system::chain::block::cptr CLASS::get_block(
-    const table::header::link& fk) NOEXCEPT
+CLASS::block::cptr CLASS::get_block(const table::header::link& fk) NOEXCEPT
 {
     using namespace system::chain;
     const auto head = get_header(fk);
@@ -335,13 +344,10 @@ system::chain::block::cptr CLASS::get_block(
     for (const auto& tx_fk: set.tx_fks)
     {
         const auto tx = get_tx(tx_fk);
-        if (!tx)
-            return {};
-
+        if (!tx) return {};
         txs->push_back(tx);
     }
 
-    // block ctor casts transactions_ptr to transactions_cptr.
     return system::to_shared(new block
     {
         head,
@@ -350,7 +356,7 @@ system::chain::block::cptr CLASS::get_block(
 }
 
 TEMPLATE
-system::hashes CLASS::get_txs(const table::header::link& fk) NOEXCEPT
+CLASS::hashes CLASS::get_txs(const table::header::link& fk) NOEXCEPT
 {
     table::txs::slab set{};
     if (!store_.txs.get(fk, set))
@@ -361,9 +367,7 @@ system::hashes CLASS::get_txs(const table::header::link& fk) NOEXCEPT
     table::transaction::record_sk tx{};
     for (const auto& tx_fk: set.tx_fks)
     {
-        if (!store_.tx.get(tx_fk, tx))
-            return {};
-
+        if (!store_.tx.get(tx_fk, tx)) return {};
         hashes.push_back(std::move(tx.key));            
     }
 

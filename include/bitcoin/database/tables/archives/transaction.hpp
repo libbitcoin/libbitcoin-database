@@ -130,6 +130,37 @@ struct transaction
         puts::integer ins_fk{};
     };
 
+    struct record_put_ref
+      : public schema::transaction
+    {
+        inline uint32_t outs_fk() const NOEXCEPT
+        {
+            return ins_fk + ins_count * put::size;
+        }
+
+        inline bool to_data(finalizer& sink) const NOEXCEPT
+        {
+            using namespace system;
+            sink.write_byte(to_int<uint8_t>(tx.is_coinbase()));
+            sink.write_little_endian<bytes::integer, bytes::size>(
+                possible_narrow_cast<bytes::integer>(tx.serialized_size(false)));
+            sink.write_little_endian<bytes::integer, bytes::size>(
+                possible_narrow_cast<bytes::integer>(tx.serialized_size(true)));
+            sink.write_little_endian<uint32_t>(tx.locktime());
+            sink.write_little_endian<uint32_t>(tx.version());
+            sink.write_little_endian<ix::integer, ix::size>(ins_count);
+            sink.write_little_endian<ix::integer, ix::size>(outs_count);
+            sink.write_little_endian<puts::integer, puts::size>(ins_fk);
+            BC_ASSERT(sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        const system::chain::transaction& tx{};
+        ix::integer ins_count{};
+        ix::integer outs_count{};
+        puts::integer ins_fk{};
+    };
+
     struct record_sk
       : public schema::transaction
     {

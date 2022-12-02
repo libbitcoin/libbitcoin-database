@@ -244,10 +244,6 @@ BOOST_AUTO_TEST_CASE(query__get_header__default__expected)
     const auto pointer1 = query1.get_header(block_hash);
     BOOST_REQUIRE(pointer1);
     BOOST_REQUIRE(*pointer1 == header);
-    const auto pointer2 = query1.get_header(0);
-    BOOST_REQUIRE(pointer2);
-    BOOST_REQUIRE(*pointer2 == header);
-    BOOST_REQUIRE_EQUAL(store1.close(), error::success);
 }
 
 // slow test (mmap)
@@ -581,9 +577,6 @@ BOOST_AUTO_TEST_CASE(query__set_tx__get_tx__expected)
     const auto pointer1 = query1.get_tx(tx_hash);
     BOOST_REQUIRE(pointer1);
     BOOST_REQUIRE(*pointer1 == tx);
-    const auto pointer2 = query1.get_tx(0);
-    BOOST_REQUIRE(pointer2);
-    BOOST_REQUIRE(*pointer2 == tx);
 
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
 
@@ -740,9 +733,6 @@ BOOST_AUTO_TEST_CASE(query__set_block__get_block__expected)
     const auto pointer1 = query1.get_block(genesis.hash());
     BOOST_REQUIRE(pointer1);
     BOOST_REQUIRE(*pointer1 == genesis);
-    const auto pointer2 = query1.get_block(0);
-    BOOST_REQUIRE(pointer2);
-    BOOST_REQUIRE(*pointer2 == genesis);
 
    const auto hashes = query1.get_txs(genesis.hash());
    BOOST_REQUIRE_EQUAL(hashes.size(), 1u);
@@ -758,18 +748,6 @@ BOOST_AUTO_TEST_CASE(query__get_txs__sk_not_found__empty)
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
     BOOST_REQUIRE(query1.get_txs(system::null_hash).empty());
-    BOOST_REQUIRE_EQUAL(store1.close(), error::success);
-}
-
-BOOST_AUTO_TEST_CASE(query__get_txs__fk_not_found__empty)
-{
-    settings settings1{};
-    settings1.dir = TEST_DIRECTORY;
-    store_accessor store1{ settings1 };
-    query<store<test::dfile>> query1{ store1 };
-    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
-    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-    BOOST_REQUIRE(query1.get_txs(42).empty());
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
 }
 

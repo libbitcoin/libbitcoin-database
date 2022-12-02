@@ -88,6 +88,39 @@ BOOST_AUTO_TEST_CASE(input__put__get__expected)
     BOOST_REQUIRE(element == expected);
 }
 
+BOOST_AUTO_TEST_CASE(input__get__only__expected)
+{
+    auto file = expected_file;
+    test::dfile head_store{};
+    test::dfile body_store{ file };
+    table::input instance{ head_store, body_store, 20 };
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
+
+    const auto expected_prevout = to_shared(chain::point{ one_hash, 42u });
+    table::input::only element{};
+    BOOST_REQUIRE(instance.get(slab0_size, element));
+    BOOST_REQUIRE_EQUAL(element.sequence, expected.sequence);
+    BOOST_REQUIRE(*element.script == expected.script);
+    BOOST_REQUIRE(*element.witness == expected.witness);
+}
+
+BOOST_AUTO_TEST_CASE(input__get__only_from_prevout__expected)
+{
+    auto file = expected_file;
+    test::dfile head_store{};
+    test::dfile body_store{ file };
+    table::input instance{ head_store, body_store, 20 };
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
+
+    const auto expected_prevout = to_shared(chain::point{ one_hash, 42u });
+    table::input::only_from_prevout element{ {}, expected_prevout };
+    BOOST_REQUIRE(instance.get(slab0_size, element));
+    BOOST_REQUIRE_EQUAL(element.input->sequence(), expected.sequence);
+    BOOST_REQUIRE(element.input->script() == expected.script);
+    BOOST_REQUIRE(element.input->witness() == expected.witness);
+    BOOST_REQUIRE(element.input->point_ptr() == expected_prevout);
+}
+
 BOOST_AUTO_TEST_CASE(input__put__get_composite_sk__expected)
 {
     test::dfile head_store{};

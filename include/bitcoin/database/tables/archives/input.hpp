@@ -41,19 +41,30 @@ struct input
     using search_key = search<schema::tx_fp>;
     using hash_map<schema::input>::hashmap;
 
-    /// Generate composite key.
-    /// Foreign point index limited to 3 bytes, which cannot hold null_index.
-    /// Sentinel 0xffffffff truncated to 0x00ffffff upon write and explicitly
-    /// restored to 0xffffffff upon read.
+    /// Generate composite key (foreign point).
     static const search_key to_point(tx::integer fk, ix::integer index) NOEXCEPT
     {
-        // TODO: optimize (mask each byte and or together).
-        search_key value{};
-        system::write::bytes::copy sink(value);
-        sink.write_little_endian<tx::integer, tx::size>(fk);
-        sink.write_little_endian<ix::integer, ix::size>(index);
-        BC_ASSERT(sink.get_write_position() == array_count<search_key>);
-        return value;
+        // Normal form but suboptimal.
+        ////search_key value{};
+        ////system::write::bytes::copy sink(value);
+        ////sink.write_little_endian<tx::integer, tx::size>(fk);
+        ////sink.write_little_endian<ix::integer, ix::size>(index);
+        ////BC_ASSERT(sink.get_write_position() == array_count<search_key>);
+        ////return value;
+
+        // Optimal form but will not adjust to type changes, so guard here.
+        static_assert(tx::size == 4 && ix::size == 3);
+
+        return search_key
+        {
+            system::byte<0>(fk),
+            system::byte<1>(fk),
+            system::byte<2>(fk),
+            system::byte<3>(fk),
+            system::byte<0>(index),
+            system::byte<1>(index),
+            system::byte<2>(index)
+        };
     }
 
     struct slab
@@ -125,6 +136,34 @@ struct input
         uint32_t sequence{};
         system::chain::script::cptr script{};
         system::chain::witness::cptr witness{};
+    };
+
+    // Returns complete input given input.point is provided.
+    struct only_from_prevout
+      : public schema::input
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            BC_ASSERT(prevout);
+            using namespace system;
+            source.skip_bytes(tx::size);
+            source.skip_variable();
+
+            // sequence stored out of order (prefer script/witness trailing).
+            const auto sequence = source.read_little_endian<uint32_t>();
+            input = to_shared(new chain::input
+            {
+                prevout,
+                to_shared(new chain::script{ source, true }),
+                to_shared(new chain::witness{ source, true }),
+                sequence
+            });
+
+            return source;
+        }
+
+        const system::chain::point::cptr prevout{};
+        system::chain::input::cptr input{};
     };
 
     ////struct slab_put_ptr
@@ -208,7 +247,10 @@ struct input
             point_fk    = source.read_little_endian<tx::integer, tx::size>();
             point_index = source.read_little_endian<ix::integer, ix::size>();
 
-            // Restore truncated null_index sentinel.
+            // Restore truncated null_index sentinel. Foreign point index is
+            // limited to 3 bytes, which cannot hold null_index. Sentinel 
+            // 0xffffffff truncated to 0x00ffffff upon write and explicitly
+            // restored to 0xffffffff upon read.
             if (point_index == ix::terminal)
                 point_index = system::chain::point::null_index;
 
@@ -230,7 +272,6 @@ struct input
             point_fk    = source.read_little_endian<tx::integer, tx::size>();
             point_index = source.read_little_endian<ix::integer, ix::size>();
 
-            // Restore truncated null_index sentinel.
             if (point_index == ix::terminal)
                 point_index = system::chain::point::null_index;
 
@@ -252,7 +293,6 @@ struct input
     ////        point_fk    = source.read_little_endian<tx::integer, tx::size>();
     ////        point_index = source.read_little_endian<ix::integer, ix::size>();
     ////
-    ////        // Restore truncated null_index sentinel.
     ////        if (point_index == ix::terminal)
     ////            point_index = system::chain::point::null_index;
     ////
