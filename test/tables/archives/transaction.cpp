@@ -134,7 +134,6 @@ BOOST_AUTO_TEST_CASE(transaction__put__get_puts__expected)
     BOOST_REQUIRE_EQUAL(element.ins_fk, 0x56341207_u32);
     BOOST_REQUIRE(!is_multiply_overflow<size_t>(element.ins_count, schema::put));
     BOOST_REQUIRE(!is_add_overflow<size_t>(element.ins_fk, element.ins_count * schema::put));
-    BOOST_REQUIRE_EQUAL(element.outs_fk(), element.ins_fk + element.ins_count * schema::put);
 }
 
 BOOST_AUTO_TEST_CASE(transaction__it__pk__expected)

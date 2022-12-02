@@ -40,6 +40,13 @@ struct transaction
     using search_key = search<schema::hash>;
     using hash_map<schema::transaction>::hashmap;
 
+    static constexpr size_t skip_to_puts =
+        schema::bit +
+        bytes::size +
+        bytes::size +
+        sizeof(uint32_t) +
+        sizeof(uint32_t);
+
     struct record
       : public schema::transaction
     {
@@ -101,11 +108,6 @@ struct transaction
     struct only
       : public schema::transaction
     {
-        inline uint32_t outs_fk() const NOEXCEPT
-        {
-            return ins_fk + ins_count * put::size;
-        }
-
         inline bool from_data(reader& source) NOEXCEPT
         {
             static constexpr size_t skip_size =
@@ -133,11 +135,6 @@ struct transaction
     struct record_put_ref
       : public schema::transaction
     {
-        inline uint32_t outs_fk() const NOEXCEPT
-        {
-            return ins_fk + ins_count * put::size;
-        }
-
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             using namespace system;
@@ -177,21 +174,9 @@ struct transaction
     struct record_puts
       : public schema::transaction
     {
-        inline uint32_t outs_fk() const NOEXCEPT
-        {
-            return ins_fk + ins_count * put::size;
-        }
-
         inline bool from_data(reader& source) NOEXCEPT
         {
-            static constexpr size_t skip_size =
-                schema::bit +
-                bytes::size +
-                bytes::size +
-                sizeof(uint32_t) +
-                sizeof(uint32_t);
-
-            source.skip_bytes(skip_size);
+            source.skip_bytes(skip_to_puts);
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
             outs_count = source.read_little_endian<ix::integer, ix::size>();
             ins_fk     = source.read_little_endian<puts::integer, puts::size>();
@@ -208,14 +193,7 @@ struct transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            static constexpr size_t skip_size =
-                schema::bit +
-                bytes::size +
-                bytes::size +
-                sizeof(uint32_t) +
-                sizeof(uint32_t);
-
-            source.skip_bytes(skip_size);
+            source.skip_bytes(skip_to_puts);
             const auto ins_count = source.read_little_endian<ix::integer, ix::size>();
             if (index >= ins_count) source.invalidate();
             source.skip_bytes(ix::size);
@@ -233,14 +211,7 @@ struct transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            static constexpr size_t skip_size =
-                schema::bit +
-                bytes::size +
-                bytes::size +
-                sizeof(uint32_t) +
-                sizeof(uint32_t);
-
-            source.skip_bytes(skip_size);
+            source.skip_bytes(skip_to_puts);
             const auto ins_count = source.read_little_endian<ix::integer, ix::size>();
             const auto outs_count = source.read_little_endian<ix::integer, ix::size>();
             if (index >= outs_count) source.invalidate();
