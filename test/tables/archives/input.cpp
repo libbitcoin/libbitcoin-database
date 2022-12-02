@@ -119,6 +119,42 @@ BOOST_AUTO_TEST_CASE(input__put__get_decomposed_sk__expected)
     BOOST_REQUIRE_EQUAL(element.point_index, 0x00776655_u32);
 }
 
+BOOST_AUTO_TEST_CASE(input__get_decomposed_sk__null_index__expected)
+{
+    const table::input::slab expected_null_point
+    {
+        {},             // schema::input [all const static members]
+        0xffffffff_u32, // parent_fk
+        0xffffffff_u32, // index
+        0x56341202_u32, // sequence
+        {},             // script
+        {}              // witness
+    };
+    data_chunk expected_null_point_file
+    {
+        // next
+        0xff, 0xff, 0xff, 0xff, 0xff,
+
+        // key [parent_fk, point_index (truncated)]
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+
+        // slab
+        0x00, 0x00, 0x00, 0x00,
+        0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00,
+        0x00
+    };
+
+    test::dfile head_store{};
+    test::dfile body_store{ expected_null_point_file };
+    table::input instance{ head_store, body_store, 20 };
+    table::input::slab_decomposed_sk element{};
+    BOOST_REQUIRE(instance.get(0, element));
+    BOOST_REQUIRE_EQUAL(element.point_fk, 0xffffffff_u32);
+    BOOST_REQUIRE_EQUAL(element.point_index, 0xffffffff_u32);
+}
+
 BOOST_AUTO_TEST_CASE(input__it__pk__expected)
 {
     test::dfile head_store{};
@@ -133,5 +169,8 @@ BOOST_AUTO_TEST_CASE(input__it__pk__expected)
     BOOST_REQUIRE_EQUAL(it.self(), slab0_size);
     BOOST_REQUIRE(!it.advance());
 }
+
+// only_with_decomposed_sk
+// slab_with_decomposed_sk
 
 BOOST_AUTO_TEST_SUITE_END()
