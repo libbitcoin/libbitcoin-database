@@ -77,6 +77,27 @@ bool CLASS::set_txs(const hash_digest& key,
 // chain_ptr getters(key)
 // ============================================================================
 
+
+// TODO: test.
+TEMPLATE
+CLASS::input::cptr CLASS::get_spender(const hash_digest& tx_hash,
+    uint32_t index) NOEXCEPT
+{
+    using namespace system::chain;
+
+    // Must validate hash_fk because it will be used in a search key.
+    const auto hash_fk = store_.point.it(prevout->hash()).self();
+    if (hash_fk.is_terminal())
+        return {};
+
+    table::input::only_from_prevout in{ {}, prevout };
+    const auto fp = table::input::to_point(hash_fk, prevout->index());
+    if (!store_.input.get(store_.input.it(fp).self(), in))
+        return {};
+
+    return in.input;
+}
+
 // TODO: test.
 TEMPLATE
 CLASS::input::cptr CLASS::get_input(const hash_digest& tx_hash,
@@ -111,28 +132,9 @@ CLASS::output::cptr CLASS::get_output(const hash_digest& tx_hash,
 
 // TODO: test.
 TEMPLATE
-CLASS::input::cptr CLASS::get_spender(const point::cptr& prevout) NOEXCEPT
+CLASS::output::cptr CLASS::get_output(const point& prevout) NOEXCEPT
 {
-    using namespace system::chain;
-
-    // Must validate hash_fk because it will be used in a search key.
-    const auto hash_fk = store_.point.it(prevout->hash()).self();
-    if (hash_fk.is_terminal())
-        return {};
-
-    table::input::only_from_prevout in{ {}, prevout };
-    const auto fp = table::input::to_point(hash_fk, prevout->index());
-    if (!store_.input.get(store_.input.it(fp).self(), in))
-        return {};
-
-    return in.input;
-}
-
-// TODO: test.
-TEMPLATE
-CLASS::input::cptr CLASS::get_spender(const point& prevout) NOEXCEPT
-{
-    return get_spender(system::to_shared(prevout));
+    return get_output(prevout.hash(), prevout.index());
 }
 
 TEMPLATE

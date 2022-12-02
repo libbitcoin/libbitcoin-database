@@ -47,10 +47,10 @@ public:
     bool set_txs(const hash_digest& key, const system::hashes& hashes) NOEXCEPT;
 
     // TODO: test input/output/spender getters.
+    input::cptr get_spender(const hash_digest& tx_hash, uint32_t index) NOEXCEPT;
     input::cptr get_input(const hash_digest& tx_hash, uint32_t index) NOEXCEPT;
     output::cptr get_output(const hash_digest& tx_hash, uint32_t index) NOEXCEPT;
-    input::cptr get_spender(const point::cptr& prevout) NOEXCEPT;
-    input::cptr get_spender(const point& prevout) NOEXCEPT;
+    output::cptr get_output(const point& prevout) NOEXCEPT;
     transaction::cptr get_tx(const hash_digest& key) NOEXCEPT;
     header::cptr get_header(const hash_digest& key) NOEXCEPT;
     block::cptr get_block(const hash_digest& key) NOEXCEPT;
