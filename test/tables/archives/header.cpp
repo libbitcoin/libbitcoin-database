@@ -29,16 +29,16 @@ constexpr table::header::record expected
     {}, // schema::header [all const static members]
     context
     {
-        0x00341201_u32, // height
         0x56341202_u32, // flags
+        0x00341201_u32, // height
         0x56341203_u32  // mtp
     },
     0x00341204_u32, // parent_fk
     0x56341205_u32, // version
-    merkle_root,
     0x56341206_u32, // timestamp
     0x56341207_u32, // bits
-    0x56341208_u32  // nonce
+    0x56341208_u32, // nonce
+    merkle_root
 };
 const system::chain::header expected_header
 {
@@ -60,16 +60,16 @@ const data_chunk expected_file
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 
     // record
-    0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,
 
     // --------------------------------------------------------------------------------------------
 
@@ -81,16 +81,16 @@ const data_chunk expected_file
     0x22, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
 
     // record
-    0x01, 0x12, 0x34,
     0x02, 0x12, 0x34, 0x56,
+    0x01, 0x12, 0x34,
     0x03, 0x12, 0x34, 0x56,
     0x04, 0x12, 0x34,
     0x05, 0x12, 0x34, 0x56,
-    0x33, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-    0x44, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
     0x06, 0x12, 0x34, 0x56,
     0x07, 0x12, 0x34, 0x56,
-    0x08, 0x12, 0x34, 0x56
+    0x08, 0x12, 0x34, 0x56,
+    0x33, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+    0x44, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
 };
 
 BOOST_AUTO_TEST_CASE(header__put__get__expected)
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(header__put_ptr__get__expected)
     const table::header::record_put_ptr put_ptr
     {
         {},
-        expected.state,
+        expected.ctx,
         expected.parent_fk,
         system::to_shared(expected_header)
     };
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(header__put_ptr__get__expected)
 
     table::header::record element{};
     BOOST_REQUIRE(instance.get(1, element));
-    BOOST_REQUIRE(element.state == expected.state);
+    BOOST_REQUIRE(element.ctx == expected.ctx);
     BOOST_REQUIRE(element.version == put_ptr.header_ptr->version());
     BOOST_REQUIRE(element.merkle_root == put_ptr.header_ptr->merkle_root());
     BOOST_REQUIRE(element.timestamp == put_ptr.header_ptr->timestamp());
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(header__put_ref__get__expected)
     const table::header::record_put_ref put_ref
     {
         {},
-        expected.state,
+        expected.ctx,
         expected.parent_fk,
         expected_header
     };
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(header__put_ref__get__expected)
 
     table::header::record element{};
     BOOST_REQUIRE(instance.get(1, element));
-    BOOST_REQUIRE(element.state == put_ref.state);
+    BOOST_REQUIRE(element.ctx == put_ref.ctx);
     BOOST_REQUIRE(element.version == put_ref.header.version());
     BOOST_REQUIRE(element.merkle_root == put_ref.header.merkle_root());
     BOOST_REQUIRE(element.timestamp == put_ref.header.timestamp());
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(point__put__get_sk__expected)
     BOOST_REQUIRE_EQUAL(element.key, key);
 }
 
-BOOST_AUTO_TEST_CASE(header__put__get_height__expected)
+BOOST_AUTO_TEST_CASE(header__put__get_context__expected)
 {
     test::dfile head_store{};
     test::dfile body_store{};
@@ -216,12 +216,24 @@ BOOST_AUTO_TEST_CASE(header__put__get_height__expected)
     BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
-    table::header::record_height element{};
-    BOOST_REQUIRE(instance.get(1, element));
-    BOOST_REQUIRE_EQUAL(element.height, expected.state.height);
+    table::header::record_flags flags{};
+    BOOST_REQUIRE(instance.get(1, flags));
+    BOOST_REQUIRE_EQUAL(flags.flags, expected.ctx.flags);
+
+    table::header::record_height height{};
+    BOOST_REQUIRE(instance.get(1, height));
+    BOOST_REQUIRE_EQUAL(height.height, expected.ctx.height);
+
+    table::header::record_mtp mtp{};
+    BOOST_REQUIRE(instance.get(1, mtp));
+    BOOST_REQUIRE_EQUAL(mtp.mtp, expected.ctx.mtp);
+
+    table::header::record_context context{};
+    BOOST_REQUIRE(instance.get(1, context));
+    BOOST_REQUIRE(context.ctx == expected.ctx);
 }
 
-BOOST_AUTO_TEST_CASE(point__it__pk__expected)
+BOOST_AUTO_TEST_CASE(header__it__pk__expected)
 {
     test::dfile head_store{};
     test::dfile body_store{};

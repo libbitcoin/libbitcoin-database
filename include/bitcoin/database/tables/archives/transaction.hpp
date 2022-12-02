@@ -30,16 +30,14 @@ namespace database {
 namespace table {
 
 /// Transaction is a cononical record hash table.
-class transaction
+struct transaction
   : public hash_map<schema::transaction>
 {
-public:
     using ix = linkage<schema::index>;
     using put = linkage<schema::put>;
     using puts = linkage<schema::puts_>;
     using bytes = linkage<schema::size>;
     using search_key = search<schema::hash>;
-
     using hash_map<schema::transaction>::hashmap;
 
     struct record
@@ -53,8 +51,8 @@ public:
         inline bool from_data(reader& source) NOEXCEPT
         {
             coinbase   = to_bool(source.read_byte());
-            witless    = source.read_little_endian<bytes::integer, bytes::size>();
-            witness    = source.read_little_endian<bytes::integer, bytes::size>();
+            light      = source.read_little_endian<bytes::integer, bytes::size>();
+            heavy      = source.read_little_endian<bytes::integer, bytes::size>();
             locktime   = source.read_little_endian<uint32_t>();
             version    = source.read_little_endian<uint32_t>();
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
@@ -67,8 +65,8 @@ public:
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             sink.write_byte(to_int<uint8_t>(coinbase));
-            sink.write_little_endian<bytes::integer, bytes::size>(witless);
-            sink.write_little_endian<bytes::integer, bytes::size>(witness);
+            sink.write_little_endian<bytes::integer, bytes::size>(light);
+            sink.write_little_endian<bytes::integer, bytes::size>(heavy);
             sink.write_little_endian<uint32_t>(locktime);
             sink.write_little_endian<uint32_t>(version);
             sink.write_little_endian<ix::integer, ix::size>(ins_count);
@@ -81,8 +79,8 @@ public:
         inline bool operator==(const record& other) const NOEXCEPT
         {
             return coinbase == other.coinbase
-                && witless == other.witless
-                && witness == other.witness
+                && light == other.light
+                && heavy == other.heavy
                 && locktime == other.locktime
                 && version == other.version
                 && ins_count == other.ins_count
@@ -91,8 +89,8 @@ public:
         }
 
         bool coinbase{};
-        bytes::integer witless{}; // tx.serialized_size(false)
-        bytes::integer witness{}; // tx.serialized_size(true)
+        bytes::integer light{}; // tx.serialized_size(false)
+        bytes::integer heavy{}; // tx.serialized_size(true)
         uint32_t locktime{};
         uint32_t version{};
         ix::integer ins_count{};
@@ -127,6 +125,37 @@ public:
 
         uint32_t locktime{};
         uint32_t version{};
+        ix::integer ins_count{};
+        ix::integer outs_count{};
+        puts::integer ins_fk{};
+    };
+
+    struct record_put_ref
+      : public schema::transaction
+    {
+        inline uint32_t outs_fk() const NOEXCEPT
+        {
+            return ins_fk + ins_count * put::size;
+        }
+
+        inline bool to_data(finalizer& sink) const NOEXCEPT
+        {
+            using namespace system;
+            sink.write_byte(to_int<uint8_t>(tx.is_coinbase()));
+            sink.write_little_endian<bytes::integer, bytes::size>(
+                possible_narrow_cast<bytes::integer>(tx.serialized_size(false)));
+            sink.write_little_endian<bytes::integer, bytes::size>(
+                possible_narrow_cast<bytes::integer>(tx.serialized_size(true)));
+            sink.write_little_endian<uint32_t>(tx.locktime());
+            sink.write_little_endian<uint32_t>(tx.version());
+            sink.write_little_endian<ix::integer, ix::size>(ins_count);
+            sink.write_little_endian<ix::integer, ix::size>(outs_count);
+            sink.write_little_endian<puts::integer, puts::size>(ins_fk);
+            BC_ASSERT(sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        const system::chain::transaction& tx{};
         ix::integer ins_count{};
         ix::integer outs_count{};
         puts::integer ins_fk{};
@@ -172,6 +201,56 @@ public:
         ix::integer ins_count{};
         ix::integer outs_count{};
         puts::integer ins_fk{};
+    };
+
+    struct record_input
+      : public schema::transaction
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            static constexpr size_t skip_size =
+                schema::bit +
+                bytes::size +
+                bytes::size +
+                sizeof(uint32_t) +
+                sizeof(uint32_t);
+
+            source.skip_bytes(skip_size);
+            const auto ins_count = source.read_little_endian<ix::integer, ix::size>();
+            if (index >= ins_count) source.invalidate();
+            source.skip_bytes(ix::size);
+            const auto ins_fk = source.read_little_endian<puts::integer, puts::size>();
+            input_fk = ins_fk + index * put::size;
+            return source;
+        }
+
+        const puts::integer index{};
+        put::integer input_fk{};
+    };
+
+    struct record_output
+      : public schema::transaction
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            static constexpr size_t skip_size =
+                schema::bit +
+                bytes::size +
+                bytes::size +
+                sizeof(uint32_t) +
+                sizeof(uint32_t);
+
+            source.skip_bytes(skip_size);
+            const auto ins_count = source.read_little_endian<ix::integer, ix::size>();
+            const auto outs_count = source.read_little_endian<ix::integer, ix::size>();
+            if (index >= outs_count) source.invalidate();
+            const auto ins_fk = source.read_little_endian<puts::integer, puts::size>();
+            output_fk = ins_fk + (ins_count + index) * put::size;
+            return source;
+        }
+
+        const puts::integer index{};
+        put::integer output_fk{};
     };
 };
 

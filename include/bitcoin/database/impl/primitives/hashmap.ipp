@@ -158,7 +158,8 @@ Link CLASS::put_link(const Key& key, const Element& element) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::put_link(Link& link, const Key& key, const Element& element) NOEXCEPT
+bool CLASS::put_link(Link& link, const Key& key,
+    const Element& element) NOEXCEPT
 {
     link = allocate(element.count());
     return put(link, key, element);
@@ -226,6 +227,7 @@ TEMPLATE
 finalizer_ptr CLASS::putter(const Link& link, const Key& key,
     const Link& size) NOEXCEPT
 {
+    using namespace system;
     const auto ptr = manager_.get(link);
     if (!ptr)
         return {};
@@ -237,7 +239,7 @@ finalizer_ptr CLASS::putter(const Link& link, const Key& key,
     const auto index = header_.index(key);
     sink->set_finalizer([this, link, index, ptr]() NOEXCEPT
     {
-        auto& next = system::unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
+        auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
         return header_.push(link, next, index);
     });
 

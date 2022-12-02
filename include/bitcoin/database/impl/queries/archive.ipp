@@ -34,23 +34,21 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-bool CLASS::set_header(const system::chain::header& header,
-    const context& context) NOEXCEPT
+bool CLASS::set_header(const header& header, const context& ctx) NOEXCEPT
 {
-    return !set_header_(header, context).is_terminal();
+    return !set_header_link(header, ctx).is_terminal();
 }
 
 TEMPLATE
-bool CLASS::set_tx(const system::chain::transaction& tx) NOEXCEPT
+bool CLASS::set_tx(const transaction& tx) NOEXCEPT
 {
-    return !set_tx_(tx).is_terminal();
+    return !set_tx_link(tx).is_terminal();
 }
 
 TEMPLATE
-bool CLASS::set_block(const system::chain::block& block,
-    const context& context) NOEXCEPT
+bool CLASS::set_block(const block& block, const context& ctx) NOEXCEPT
 {
-    return !set_block_(block, context).is_terminal();
+    return !set_block_link(block, ctx).is_terminal();
 }
 
 TEMPLATE
@@ -73,26 +71,73 @@ bool CLASS::set_txs(const hash_digest& key,
         keys.tx_fks.push_back(store_.tx.it(hash).self());
 
     // Set is idempotent, requires that none are terminal.
-    return set_txs_(header_fk, keys);
+    return set_txs(header_fk, keys);
 }
 
 // chain_ptr getters(key)
-// ----------------------------------------------------------------------------
+// ============================================================================
+
+// TODO: test.
+TEMPLATE
+CLASS::input::cptr CLASS::get_spender(const hash_digest& tx_hash,
+    uint32_t index) NOEXCEPT
+{
+    return get_spender(system::to_shared(new point{ tx_hash, index }));
+}
+
+// TODO: test.
+TEMPLATE
+CLASS::input::cptr CLASS::get_input(const hash_digest& tx_hash,
+    uint32_t index) NOEXCEPT
+{
+    table::transaction::record_input tx{ {}, index };
+    if (!store_.tx.get(tx_hash, tx))
+        return {};
+
+    table::puts::record_get_one input{};
+    if (!store_.puts.get(tx.input_fk, input))
+        return {};
+
+    return get_input(input.put_fk);
+}
+
+// TODO: test.
+TEMPLATE
+CLASS::output::cptr CLASS::get_output(const hash_digest& tx_hash,
+    uint32_t index) NOEXCEPT
+{
+    table::transaction::record_output tx{ {}, index };
+    if (!store_.tx.get(tx_hash, tx))
+        return {};
+
+    table::puts::record_get_one output{};
+    if (!store_.puts.get(tx.output_fk, output))
+        return {};
+
+    return get_output(output.put_fk);
+}
+
+// TODO: test.
+TEMPLATE
+CLASS::output::cptr CLASS::get_output(const point& prevout) NOEXCEPT
+{
+    return get_output(prevout.hash(), prevout.index());
+}
 
 TEMPLATE
-system::chain::transaction::cptr CLASS::get_tx(const hash_digest& key) NOEXCEPT
+CLASS::transaction::cptr CLASS::get_tx(const hash_digest& key) NOEXCEPT
 {
     return get_tx(store_.tx.it(key).self());
 }
 
 TEMPLATE
-system::chain::header::cptr CLASS::get_header(const hash_digest& key) NOEXCEPT
+CLASS::header::cptr CLASS::get_header(const hash_digest& key) NOEXCEPT
 {
     return get_header(store_.header.it(key).self());
 }
 
 TEMPLATE
-system::chain::block::cptr CLASS::get_block(const hash_digest& key) NOEXCEPT
+CLASS::block::cptr CLASS::get_block(const hash_digest& key) NOEXCEPT
 {
     return get_block(store_.header.it(key).self());
 }

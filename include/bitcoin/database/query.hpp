@@ -32,8 +32,8 @@ template <typename Store>
 class query
 {
 public:
-    using hashes = system::hashes;
     using block = system::chain::block;
+    using point = system::chain::point;
     using input = system::chain::input;
     using output = system::chain::output;
     using header = system::chain::header;
@@ -42,30 +42,33 @@ public:
     query(Store& value) NOEXCEPT;
 
     bool set_tx(const transaction& tx) NOEXCEPT;
-    bool set_header(const header& header, const context& context) NOEXCEPT;
-    bool set_block(const block& block, const context& context) NOEXCEPT;
-    bool set_txs(const hash_digest& key, const hashes& hashes) NOEXCEPT;
+    bool set_header(const header& header, const context& ctx) NOEXCEPT;
+    bool set_block(const block& block, const context& ctx) NOEXCEPT;
+    bool set_txs(const hash_digest& key, const system::hashes& hashes) NOEXCEPT;
 
-    ////input::cptr get_input(const hash_digest& prevout, uint32_t index) NOEXCEPT;
-    ////output::cptr get_output(const hash_digest& spender, uint32_t index) NOEXCEPT;
+    // TODO: test input/output/spender getters.
+    input::cptr get_spender(const hash_digest& tx_hash, uint32_t index) NOEXCEPT;
+    input::cptr get_input(const hash_digest& tx_hash, uint32_t index) NOEXCEPT;
+    output::cptr get_output(const hash_digest& tx_hash, uint32_t index) NOEXCEPT;
+    output::cptr get_output(const point& prevout) NOEXCEPT;
     transaction::cptr get_tx(const hash_digest& key) NOEXCEPT;
     header::cptr get_header(const hash_digest& key) NOEXCEPT;
     block::cptr get_block(const hash_digest& key) NOEXCEPT;
-    hashes get_txs(const hash_digest& key) NOEXCEPT;
+    system::hashes get_txs(const hash_digest& key) NOEXCEPT;
 
-// protected:
-    table::transaction::link set_tx_(const transaction& tx) NOEXCEPT;
-    table::header::link set_header_(const header& header, const context& context) NOEXCEPT;
-    table::header::link set_block_(const block& block, const context& context) NOEXCEPT;
-    bool set_txs_(const table::header::link& key, const table::txs::slab& txs) NOEXCEPT;
+protected:
+    table::transaction::link set_tx_link(const transaction& tx) NOEXCEPT;
+    table::header::link set_header_link(const header& header, const context& ctx) NOEXCEPT;
+    table::header::link set_block_link(const block& block, const context& ctx) NOEXCEPT;
+    bool set_txs(const table::header::link& fk, const table::txs::slab& set) NOEXCEPT;
 
-    ////hash_digest get_point(const table::point::link& fk) NOEXCEPT;
-    ////input::cptr get_input(const table::input::link& fk) NOEXCEPT;
-    ////output::cptr get_output(const table::output::link& fk) NOEXCEPT;
+    input::cptr get_spender(const point::cptr& point) NOEXCEPT;
+    input::cptr get_input(const table::input::link& fk) NOEXCEPT;
+    output::cptr get_output(const table::output::link& fk) NOEXCEPT;
     transaction::cptr get_tx(const table::transaction::link& fk) NOEXCEPT;
     header::cptr get_header(const table::header::link& fk) NOEXCEPT;
     block::cptr get_block(const table::header::link& fk) NOEXCEPT;
-    hashes get_txs(const table::header::link& fk) NOEXCEPT;
+    system::hashes get_txs(const table::header::link& fk) NOEXCEPT;
 
 private:
     Store& store_;

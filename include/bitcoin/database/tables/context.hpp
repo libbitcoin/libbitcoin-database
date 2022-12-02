@@ -30,36 +30,36 @@ namespace database {
 
 struct context
 {
-    using block = linkage<schema::block>;
     using state = linkage<schema::flags>;
-    static constexpr size_t size = schema::block + schema::flags +
+    using block = linkage<schema::block>;
+    static constexpr size_t size = schema::flags + schema::block +
         sizeof(uint32_t);
 
     template <typename Source>
-    static inline void read(Source& source, context& context) NOEXCEPT
+    static inline void from_data(Source& source, context& context) NOEXCEPT
     {
-        context.height = source.template read_little_endian<block::integer, block::size>();
         context.flags  = source.template read_little_endian<state::integer, state::size>();
+        context.height = source.template read_little_endian<block::integer, block::size>();
         context.mtp    = source.template read_little_endian<uint32_t>();
     };
 
     template <typename Sink>
-    static inline void write(Sink& sink, const context& context) NOEXCEPT
+    static inline void to_data(Sink& sink, const context& context) NOEXCEPT
     {
-        sink.template write_little_endian<block::integer, block::size>(context.height);
         sink.template write_little_endian<state::integer, state::size>(context.flags);
+        sink.template write_little_endian<block::integer, block::size>(context.height);
         sink.template write_little_endian<uint32_t>(context.mtp);
     };
 
     inline bool operator==(const context& other) const NOEXCEPT
     {
-        return height == other.height
-            && flags  == other.flags
+        return flags  == other.flags
+            && height == other.height
             && mtp    == other.mtp;
     }
 
-    block::integer height{};
     state::integer flags{};
+    block::integer height{};
     uint32_t mtp{};
 };
 

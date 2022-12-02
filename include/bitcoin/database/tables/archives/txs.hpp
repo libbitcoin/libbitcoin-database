@@ -31,13 +31,11 @@ namespace database {
 namespace table {
 
 /// Txs is a slab hashmap of tx fks (first is count), searchable by header.fk.
-class txs
+struct txs
   : public hash_map<schema::txs>
 {
-public:
     using tx = linkage<schema::tx>;
     using keys = std_vector<tx::integer>;
-
     using hash_map<schema::txs>::hashmap;
 
     struct slab
