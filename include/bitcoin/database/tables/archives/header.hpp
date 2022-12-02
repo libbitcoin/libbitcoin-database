@@ -48,10 +48,10 @@ struct header
             context::read(source, state);
             parent_fk   = source.read_little_endian<link::integer, link::size>();
             version     = source.read_little_endian<uint32_t>();
-            merkle_root = source.read_hash();
             timestamp   = source.read_little_endian<uint32_t>();
             bits        = source.read_little_endian<uint32_t>();
             nonce       = source.read_little_endian<uint32_t>();
+            merkle_root = source.read_hash();
             BC_ASSERT(source.get_read_position() == minrow);
             return source;
         }
@@ -61,10 +61,10 @@ struct header
             context::write(sink, state);
             sink.write_little_endian<link::integer, link::size>(parent_fk);
             sink.write_little_endian<uint32_t>(version);
-            sink.write_bytes(merkle_root);
             sink.write_little_endian<uint32_t>(timestamp);
             sink.write_little_endian<uint32_t>(bits);
             sink.write_little_endian<uint32_t>(nonce);
+            sink.write_bytes(merkle_root);
             BC_ASSERT(sink.get_write_position() == minrow);
             return sink;
         }
@@ -74,19 +74,19 @@ struct header
             return state       == other.state
                 && parent_fk   == other.parent_fk
                 && version     == other.version
-                && merkle_root == other.merkle_root
                 && timestamp   == other.timestamp
                 && bits        == other.bits
-                && nonce       == other.nonce;
+                && nonce       == other.nonce
+                && merkle_root == other.merkle_root;
         }
 
         context state{};
         link::integer parent_fk{};
         uint32_t version{};
-        hash_digest merkle_root{};
         uint32_t timestamp{};
         uint32_t bits{};
         uint32_t nonce{};
+        hash_digest merkle_root{};
     };
 
     struct record_put_ptr
@@ -99,10 +99,10 @@ struct header
             context::write(sink, state);
             sink.write_little_endian<link::integer, link::size>(parent_fk);
             sink.write_little_endian<uint32_t>(header_ptr->version());
-            sink.write_bytes(header_ptr->merkle_root());
             sink.write_little_endian<uint32_t>(header_ptr->timestamp());
             sink.write_little_endian<uint32_t>(header_ptr->bits());
             sink.write_little_endian<uint32_t>(header_ptr->nonce());
+            sink.write_bytes(header_ptr->merkle_root());
             BC_ASSERT(sink.get_write_position() == minrow);
             return sink;
         }
@@ -122,10 +122,10 @@ struct header
             context::write(sink, state);
             sink.write_little_endian<link::integer, link::size>(parent_fk);
             sink.write_little_endian<uint32_t>(header.version());
-            sink.write_bytes(header.merkle_root());
             sink.write_little_endian<uint32_t>(header.timestamp());
             sink.write_little_endian<uint32_t>(header.bits());
             sink.write_little_endian<uint32_t>(header.nonce());
+            sink.write_bytes(header.merkle_root());
             BC_ASSERT(sink.get_write_position() == minrow);
             return sink;
         }
@@ -168,6 +168,7 @@ struct header
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
+            source.skip_bytes(context::state::size);
             height = source.read_little_endian<block::integer, block::size>();
             return source;
         }

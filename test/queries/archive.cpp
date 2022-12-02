@@ -126,8 +126,8 @@ BOOST_AUTO_TEST_CASE(query__set_header__default__expected)
     constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
     constexpr database::context context
     {
-        0x01020304, // height
         0x11121314, // flags
+        0x01020304, // height
         0x21222324  // mtp
     };
     const system::chain::header header
@@ -154,15 +154,15 @@ BOOST_AUTO_TEST_CASE(query__set_header__default__expected)
     const auto expected_header_body = system::base16_chunk(
         "ffffff"   // next->
         "85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2" // sk (block.hash)
-        "040302"   // height
         "14131211" // flags
+        "040302"   // height
         "24232221" // mtp
         "ffffff"   // previous_block_hash (header_fk - not found)
         "34333231" // version
-        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f" //merkle_root
         "44434241" // timestamp
         "54535251" // bits
-        "64636261"); // nonce
+        "64636261" // nonce
+        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); //merkle_root
 
     settings settings1{};
     settings1.header_buckets = 10;
@@ -221,15 +221,15 @@ BOOST_AUTO_TEST_CASE(query__get_header__default__expected)
     const auto expected_header_body = system::base16_chunk(
         "ffffff"   // next->
         "85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2" // sk (block.hash)
-        "040302"   // height
         "14131211" // flags
+        "040302"   // height
         "24232221" // mtp
         "ffffff"   // previous_block_hash (header_fk - not found)
         "34333231" // version
-        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f" // merkle_root
         "44434241" // timestamp
         "54535251" // bits
-        "64636261"); // nonce
+        "64636261" // nonce
+        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); // merkle_root
 
     settings settings1{};
     settings1.header_buckets = 10;
@@ -606,8 +606,8 @@ BOOST_AUTO_TEST_CASE(query__set_block__get_block__expected)
     constexpr auto parent = system::null_hash;
     constexpr database::context context
     {
-        0x01020304,    // height
         0x11121314,    // flags
+        0x01020304,    // height
         0x21222324     // mtp
     };
     const auto genesis = system::settings{ system::chain::selection::mainnet }.genesis_block;
@@ -621,15 +621,15 @@ BOOST_AUTO_TEST_CASE(query__set_block__get_block__expected)
     const auto expected_header_body = system::base16_chunk(
         "ffffff"       // next->
         "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000" // sk (block.hash)
-        "040302"       // height
         "14131211"     // flags
+        "040302"       // height
         "24232221"     // mtp
         "ffffff"       // previous_block_hash (header_fk - not found)
         "01000000"     // version
-        "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a" // merkle_root
         "29ab5f49"     // timestamp
         "ffff001d"     // bits
-        "1dac2b7c");   // nonce
+        "1dac2b7c"     // nonce
+        "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a"); // merkle_root
     const auto expected_tx_head = system::base16_chunk(
         "01000000"     // record count
         "ffffffff"     // bucket[0]...
