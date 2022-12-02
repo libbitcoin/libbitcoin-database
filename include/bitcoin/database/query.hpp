@@ -62,6 +62,7 @@ protected:
     table::header::link set_block_link(const block& block, const context& ctx) NOEXCEPT;
     bool set_txs(const table::header::link& fk, const table::txs::slab& set) NOEXCEPT;
 
+    input::cptr get_spender(const point::cptr& point) NOEXCEPT;
     input::cptr get_input(const table::input::link& fk) NOEXCEPT;
     output::cptr get_output(const table::output::link& fk) NOEXCEPT;
     transaction::cptr get_tx(const table::transaction::link& fk) NOEXCEPT;

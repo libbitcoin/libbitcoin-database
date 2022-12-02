@@ -77,26 +77,12 @@ bool CLASS::set_txs(const hash_digest& key,
 // chain_ptr getters(key)
 // ============================================================================
 
-
 // TODO: test.
 TEMPLATE
 CLASS::input::cptr CLASS::get_spender(const hash_digest& tx_hash,
     uint32_t index) NOEXCEPT
 {
-    using namespace system::chain;
-
-    // Must validate hash_fk because it will be used in a search key.
-    const auto hash_fk = store_.point.it(prevout->hash()).self();
-    if (hash_fk.is_terminal())
-        return {};
-
-    // TODO: Due to conflicts this is a multimap, iterable here.
-    table::input::only_from_prevout in{ {}, prevout };
-    const auto fp = table::input::to_point(hash_fk, prevout->index());
-    if (!store_.input.get(store_.input.it(fp).self(), in))
-        return {};
-
-    return in.input;
+    return get_spender(system::to_shared(new point{ tx_hash, index }));
 }
 
 // TODO: test.
