@@ -743,9 +743,11 @@ BOOST_AUTO_TEST_CASE(query__set_block__get_block__expected)
     const auto pointer2 = query1.get_block(0);
     BOOST_REQUIRE(pointer2);
     BOOST_REQUIRE(*pointer2 == genesis);
-}
 
-// set_txs/get_txs currently covered internal to set_block/get_block.
+   const auto hashes = query1.get_txs(genesis.hash());
+   BOOST_REQUIRE_EQUAL(hashes.size(), 1u);
+   BOOST_REQUIRE_EQUAL(hashes, genesis.transaction_hashes(false));
+}
 
 BOOST_AUTO_TEST_CASE(query__get_txs__sk_not_found__empty)
 {
