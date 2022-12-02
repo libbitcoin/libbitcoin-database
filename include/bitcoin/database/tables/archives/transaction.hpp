@@ -30,16 +30,14 @@ namespace database {
 namespace table {
 
 /// Transaction is a cononical record hash table.
-class transaction
+struct transaction
   : public hash_map<schema::transaction>
 {
-public:
     using ix = linkage<schema::index>;
     using put = linkage<schema::put>;
     using puts = linkage<schema::puts_>;
     using bytes = linkage<schema::size>;
     using search_key = search<schema::hash>;
-
     using hash_map<schema::transaction>::hashmap;
 
     struct record

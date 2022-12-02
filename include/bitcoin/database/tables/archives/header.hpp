@@ -33,13 +33,11 @@ namespace table {
 BC_PUSH_WARNING(NO_NEW_OR_DELETE)
 
 /// Header is a cononical record hash table.
-class header
+struct header
   : public hash_map<schema::header>
 {
-public:
     using block = linkage<schema::block>;
     using search_key = search<schema::hash>;
-
     using hash_map<schema::header>::hashmap;
 
     struct record

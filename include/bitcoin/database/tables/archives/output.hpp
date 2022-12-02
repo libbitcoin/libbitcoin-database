@@ -31,13 +31,11 @@ namespace table {
 
 /// Output is a blob (set of non-searchable slabs).
 /// Output can be obtained by fk navigation (eg from tx/index). 
-class output
+struct output
   : public array_map<schema::output>
 {
-public:
     using tx = linkage<schema::tx>;
     using ix = linkage<schema::index>;
-
     using array_map<schema::output>::arraymap;
 
     struct slab

@@ -31,14 +31,12 @@ namespace table {
 
 /// Input is searchable by point_fk/index (fP) of the output that it spends.
 /// This makes input a multimap, as multiple inputs can spend a given output.
-class input
+struct input
   : public hash_map<schema::input>
 {
-public:
     using tx = linkage<schema::tx>;
     using ix = linkage<schema::index>;
     using search_key = search<schema::tx_fp>;
-
     using hash_map<schema::input>::hashmap;
 
     /// Generate composite key.

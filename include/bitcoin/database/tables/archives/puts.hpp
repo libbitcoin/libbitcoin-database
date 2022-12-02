@@ -32,13 +32,11 @@ namespace table {
 
 /// Puts is an array of input or output fk records.
 /// Multiple may be allocated, put_fks.size() (from tx) determines read extent.
-class puts
+struct puts
   : public array_map<schema::puts>
 {
-public:
     using put = linkage<schema::put>;
     using keys = std_vector<put::integer>;
-
     using array_map<schema::puts>::arraymap;
 
     struct record

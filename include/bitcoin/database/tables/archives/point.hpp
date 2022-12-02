@@ -31,12 +31,10 @@ namespace table {
 
 /// Point records are empty, providing only a sk<->fk compression mapping.
 /// Each record is 32+4=36 bytes, enabling 4 byte point.hash storage.
-class point
+struct point
   : public hash_map<schema::point>
 {
-public:
     using search_key = search<schema::hash>;
-
     using hash_map<schema::point>::hashmap;
 
     struct record

@@ -112,14 +112,12 @@ table::transaction::link CLASS::set_tx_(
     uint32_t output_index = 0;
     for (const auto& out: outs)
     {
-        // TODO: optimize with ptr/ref writer.
-        if (!store_.output.put_link(put_pk, table::output::slab
+        if (!store_.output.put_link(put_pk, table::output::slab_put_ref
         {
             {},
             tx_pk,
             output_index++,
-            out->value(),
-            out->script()
+            *out
         }))
         {
             return {};
