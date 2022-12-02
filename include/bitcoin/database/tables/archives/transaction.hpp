@@ -52,7 +52,7 @@ struct transaction
     {
         inline uint32_t outs_fk() const NOEXCEPT
         {
-            return ins_fk + ins_count * put::size;
+            return ins_fk + ins_count;
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -198,12 +198,12 @@ struct transaction
             if (index >= ins_count) source.invalidate();
             source.skip_bytes(ix::size);
             const auto ins_fk = source.read_little_endian<puts::integer, puts::size>();
-            input_fk = ins_fk + index * put::size;
+            input_fk = ins_fk + index;
             return source;
         }
 
         const puts::integer index{};
-        put::integer input_fk{};
+        puts::integer input_fk{};
     };
 
     struct record_output
@@ -216,12 +216,12 @@ struct transaction
             const auto outs_count = source.read_little_endian<ix::integer, ix::size>();
             if (index >= outs_count) source.invalidate();
             const auto ins_fk = source.read_little_endian<puts::integer, puts::size>();
-            output_fk = ins_fk + (ins_count + index) * put::size;
+            output_fk = ins_fk + ins_count + index;
             return source;
         }
 
         const puts::integer index{};
-        put::integer output_fk{};
+        puts::integer output_fk{};
     };
 };
 
