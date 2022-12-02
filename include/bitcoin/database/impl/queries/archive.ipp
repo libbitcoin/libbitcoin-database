@@ -90,6 +90,7 @@ CLASS::input::cptr CLASS::get_spender(const hash_digest& tx_hash,
     if (hash_fk.is_terminal())
         return {};
 
+    // TODO: Due to conflicts this is a multimap, iterable here.
     table::input::only_from_prevout in{ {}, prevout };
     const auto fp = table::input::to_point(hash_fk, prevout->index());
     if (!store_.input.get(store_.input.it(fp).self(), in))
