@@ -52,7 +52,8 @@ bool CLASS::set_block(const block& block, const context& context) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set_txs(const hash_digest& key, const hashes& hashes) NOEXCEPT
+bool CLASS::set_txs(const hash_digest& key,
+    const system::hashes& hashes) NOEXCEPT
 {
     // Require header.
     const auto header_fk = store_.header.it(key).self();
@@ -76,22 +77,39 @@ bool CLASS::set_txs(const hash_digest& key, const hashes& hashes) NOEXCEPT
 // chain_ptr getters(key)
 // ============================================================================
 
+// TODO: test.
 TEMPLATE
 CLASS::input::cptr CLASS::get_input(const hash_digest& tx_hash,
     uint32_t index) NOEXCEPT
 {
-    // Traverse parent tx/puts/input.
-    return {};
+    table::transaction::record_input tx{ {}, index };
+    if (!store_.tx.get(tx_hash, tx))
+        return {};
+
+    table::puts::record_get_one input{};
+    if (!store_.puts.get(tx.input_fk, input))
+        return {};
+
+    return get_input(input.put_fk);
 }
 
+// TODO: test.
 TEMPLATE
-CLASS::output::cptr CLASS::get_output(const hash_digest& spender,
+CLASS::output::cptr CLASS::get_output(const hash_digest& tx_hash,
     uint32_t index) NOEXCEPT
 {
-    // Traverse parent tx/puts/output.
-    return {};
+    table::transaction::record_output tx{ {}, index };
+    if (!store_.tx.get(tx_hash, tx))
+        return {};
+
+    table::puts::record_get_one output{};
+    if (!store_.puts.get(tx.output_fk, output))
+        return {};
+
+    return get_output(output.put_fk);
 }
 
+// TODO: test.
 TEMPLATE
 CLASS::input::cptr CLASS::get_spender(const point::cptr& prevout) NOEXCEPT
 {
@@ -110,6 +128,7 @@ CLASS::input::cptr CLASS::get_spender(const point::cptr& prevout) NOEXCEPT
     return in.input;
 }
 
+// TODO: test.
 TEMPLATE
 CLASS::input::cptr CLASS::get_spender(const point& prevout) NOEXCEPT
 {
@@ -135,7 +154,7 @@ CLASS::block::cptr CLASS::get_block(const hash_digest& key) NOEXCEPT
 }
 
 TEMPLATE
-CLASS::hashes CLASS::get_txs(const hash_digest& key) NOEXCEPT
+system::hashes CLASS::get_txs(const hash_digest& key) NOEXCEPT
 {
     return get_txs(store_.header.it(key).self());
 }

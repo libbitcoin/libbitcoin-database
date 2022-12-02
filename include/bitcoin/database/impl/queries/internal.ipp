@@ -213,15 +213,15 @@ bool CLASS::set_txs(const table::header::link& key,
 // chain_ptr getters(fk)
 // ============================================================================
 
-TEMPLATE
-hash_digest CLASS::get_point(const table::point::link& fk) NOEXCEPT
-{
-    table::point::record_sk hash{};
-    if (!store_.point.get(fk, hash))
-        return {};
-
-    return std::move(hash.key);
-}
+////TEMPLATE
+////hash_digest CLASS::get_point(const table::point::link& fk) NOEXCEPT
+////{
+////    table::point::record_sk hash{};
+////    if (!store_.point.get(fk, hash))
+////        return {};
+////
+////    return std::move(hash.key);
+////}
 
 TEMPLATE
 CLASS::input::cptr CLASS::get_input(const table::input::link& fk) NOEXCEPT
@@ -272,9 +272,7 @@ CLASS::transaction::cptr CLASS::get_tx(
         return {};
 
     auto it = puts.put_fks.begin();
-    const auto outputs_end = puts.put_fks.end();
     const auto inputs_end = std::next(it, tx.ins_count);
-
     const auto ins = system::to_shared<input_cptrs>();
     ins->reserve(tx.ins_count);
     while (it != inputs_end)
@@ -284,6 +282,7 @@ CLASS::transaction::cptr CLASS::get_tx(
         ins->push_back(in);
     }
 
+    const auto outputs_end = puts.put_fks.end();
     const auto outs = system::to_shared<output_cptrs>();
     outs->reserve(tx.outs_count);
     while (it != outputs_end)
@@ -356,7 +355,7 @@ CLASS::block::cptr CLASS::get_block(const table::header::link& fk) NOEXCEPT
 }
 
 TEMPLATE
-CLASS::hashes CLASS::get_txs(const table::header::link& fk) NOEXCEPT
+system::hashes CLASS::get_txs(const table::header::link& fk) NOEXCEPT
 {
     table::txs::slab set{};
     if (!store_.txs.get(fk, set))

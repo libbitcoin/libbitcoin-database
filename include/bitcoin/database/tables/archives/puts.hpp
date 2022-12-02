@@ -40,7 +40,7 @@ struct puts
     using array_map<schema::puts>::arraymap;
 
     struct record
-       : public schema::puts
+      : public schema::puts
     {
         link count() const NOEXCEPT
         {
@@ -83,6 +83,18 @@ struct puts
         }
 
         keys put_fks{};
+    };
+
+    struct record_get_one
+      : public schema::puts
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            put_fk = source.read_little_endian<put::integer, put::size>();
+            return source;
+        }
+
+        put::integer put_fk{};
     };
 };
 

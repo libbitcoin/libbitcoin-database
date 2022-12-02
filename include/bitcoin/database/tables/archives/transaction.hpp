@@ -202,6 +202,56 @@ struct transaction
         ix::integer outs_count{};
         puts::integer ins_fk{};
     };
+
+    struct record_input
+      : public schema::transaction
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            static constexpr size_t skip_size =
+                schema::bit +
+                bytes::size +
+                bytes::size +
+                sizeof(uint32_t) +
+                sizeof(uint32_t);
+
+            source.skip_bytes(skip_size);
+            const auto ins_count = source.read_little_endian<ix::integer, ix::size>();
+            if (index >= ins_count) source.invalidate();
+            source.skip_bytes(ix::size);
+            const auto ins_fk = source.read_little_endian<puts::integer, puts::size>();
+            input_fk = ins_fk + index * put::size;
+            return source;
+        }
+
+        const puts::integer index{};
+        put::integer input_fk{};
+    };
+
+    struct record_output
+      : public schema::transaction
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            static constexpr size_t skip_size =
+                schema::bit +
+                bytes::size +
+                bytes::size +
+                sizeof(uint32_t) +
+                sizeof(uint32_t);
+
+            source.skip_bytes(skip_size);
+            const auto ins_count = source.read_little_endian<ix::integer, ix::size>();
+            const auto outs_count = source.read_little_endian<ix::integer, ix::size>();
+            if (index >= outs_count) source.invalidate();
+            const auto ins_fk = source.read_little_endian<puts::integer, puts::size>();
+            output_fk = ins_fk + (ins_count + index) * put::size;
+            return source;
+        }
+
+        const puts::integer index{};
+        put::integer output_fk{};
+    };
 };
 
 } // namespace table
