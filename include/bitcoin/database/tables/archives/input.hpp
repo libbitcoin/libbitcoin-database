@@ -127,34 +127,34 @@ struct input
         system::chain::witness::cptr witness{};
     };
 
-    struct slab_put_ptr
-      : public schema::input
-    {
-        link count() const NOEXCEPT
-        {
-            return system::possible_narrow_cast<link::integer>(pk + sk +
-                tx::size +
-                variable_size(index) +
-                sizeof(uint32_t) +
-                input->script().serialized_size(true) +
-                input->witness().serialized_size(true));
-        }
-
-        inline bool to_data(finalizer& sink) const NOEXCEPT
-        {
-            sink.write_little_endian<tx::integer, tx::size>(parent_fk);
-            sink.write_variable(index);
-            sink.write_little_endian<uint32_t>(input->sequence());
-            input->script().to_data(sink, true);
-            input->witness().to_data(sink, true);
-            BC_ASSERT(sink.get_write_position() == count());
-            return sink;
-        }
-
-        tx::integer parent_fk{};
-        ix::integer index{};
-        const system::chain::input::cptr input{};
-    };
+    ////struct slab_put_ptr
+    ////  : public schema::input
+    ////{
+    ////    link count() const NOEXCEPT
+    ////    {
+    ////        return system::possible_narrow_cast<link::integer>(pk + sk +
+    ////            tx::size +
+    ////            variable_size(index) +
+    ////            sizeof(uint32_t) +
+    ////            input->script().serialized_size(true) +
+    ////            input->witness().serialized_size(true));
+    ////    }
+    ////
+    ////    inline bool to_data(finalizer& sink) const NOEXCEPT
+    ////    {
+    ////        sink.write_little_endian<tx::integer, tx::size>(parent_fk);
+    ////        sink.write_variable(index);
+    ////        sink.write_little_endian<uint32_t>(input->sequence());
+    ////        input->script().to_data(sink, true);
+    ////        input->witness().to_data(sink, true);
+    ////        BC_ASSERT(sink.get_write_position() == count());
+    ////        return sink;
+    ////    }
+    ////
+    ////    tx::integer parent_fk{};
+    ////    ix::integer index{};
+    ////    const system::chain::input::cptr input{};
+    ////};
 
     struct slab_put_ref
       : public schema::input
@@ -241,27 +241,27 @@ struct input
         ix::integer point_index{};
     };
 
-    struct slab_with_decomposed_sk
-      : public slab
-    {
-        BC_PUSH_WARNING(NO_METHOD_HIDING)
-        inline bool from_data(reader& source) NOEXCEPT
-        BC_POP_WARNING()
-        {
-            source.rewind_bytes(sk);
-            point_fk    = source.read_little_endian<tx::integer, tx::size>();
-            point_index = source.read_little_endian<ix::integer, ix::size>();
-
-            // Restore truncated null_index sentinel.
-            if (point_index == ix::terminal)
-                point_index = system::chain::point::null_index;
-
-            return slab::from_data(source);
-        }
-
-        tx::integer point_fk{};
-        ix::integer point_index{};
-    };
+    ////struct slab_with_decomposed_sk
+    ////  : public slab
+    ////{
+    ////    BC_PUSH_WARNING(NO_METHOD_HIDING)
+    ////    inline bool from_data(reader& source) NOEXCEPT
+    ////    BC_POP_WARNING()
+    ////    {
+    ////        source.rewind_bytes(sk);
+    ////        point_fk    = source.read_little_endian<tx::integer, tx::size>();
+    ////        point_index = source.read_little_endian<ix::integer, ix::size>();
+    ////
+    ////        // Restore truncated null_index sentinel.
+    ////        if (point_index == ix::terminal)
+    ////            point_index = system::chain::point::null_index;
+    ////
+    ////        return slab::from_data(source);
+    ////    }
+    ////
+    ////    tx::integer point_fk{};
+    ////    ix::integer point_index{};
+    ////};
 };
 
 BC_POP_WARNING()
