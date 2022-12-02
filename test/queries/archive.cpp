@@ -181,9 +181,9 @@ BOOST_AUTO_TEST_CASE(query__set_header__default__expected)
     BOOST_REQUIRE_EQUAL(store1.header_head(), expected_header_head);
     BOOST_REQUIRE_EQUAL(store1.header_body(), expected_header_body);
 
-    BOOST_REQUIRE_EQUAL(element1.state.height, system::mask_left(context.height, byte_bits));
-    BOOST_REQUIRE_EQUAL(element1.state.flags, context.flags);
-    BOOST_REQUIRE_EQUAL(element1.state.mtp, context.mtp);
+    BOOST_REQUIRE_EQUAL(element1.ctx.height, system::mask_left(context.height, byte_bits));
+    BOOST_REQUIRE_EQUAL(element1.ctx.flags, context.flags);
+    BOOST_REQUIRE_EQUAL(element1.ctx.mtp, context.mtp);
     BOOST_REQUIRE_EQUAL(element1.version, header.version());
     BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
     BOOST_REQUIRE_EQUAL(element1.merkle_root, header.merkle_root());
@@ -288,9 +288,9 @@ BOOST_AUTO_TEST_CASE(query__set_header__mmap_get_header__expected)
 
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
 
-    BOOST_REQUIRE_EQUAL(element1.state.height, system::mask_left(context.height, byte_bits));
-    BOOST_REQUIRE_EQUAL(element1.state.flags, context.flags);
-    BOOST_REQUIRE_EQUAL(element1.state.mtp, context.mtp);
+    BOOST_REQUIRE_EQUAL(element1.ctx.height, system::mask_left(context.height, byte_bits));
+    BOOST_REQUIRE_EQUAL(element1.ctx.flags, context.flags);
+    BOOST_REQUIRE_EQUAL(element1.ctx.mtp, context.mtp);
     BOOST_REQUIRE_EQUAL(element1.version, header.version());
     BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
     BOOST_REQUIRE_EQUAL(element1.merkle_root, header.merkle_root());

@@ -36,7 +36,7 @@ BC_PUSH_WARNING(NO_USE_OF_MOVED_OBJECT)
 
 TEMPLATE
 table::header::link CLASS::set_header_link(const system::chain::header& header,
-    const context& context) NOEXCEPT
+    const context& ctx) NOEXCEPT
 {
     // Parent must be missing iff its hash is null.
     const auto& parent_sk = header.previous_block_hash();
@@ -57,7 +57,7 @@ table::header::link CLASS::set_header_link(const system::chain::header& header,
     return store_.header.put_link(key, table::header::record_put_ref
     {
         {},
-        context,
+        ctx,
         parent_fk,
         header
     });
@@ -170,10 +170,10 @@ table::transaction::link CLASS::set_tx_link(
 
 TEMPLATE
 table::header::link CLASS::set_block_link(const system::chain::block& block,
-    const context& context) NOEXCEPT
+    const context& ctx) NOEXCEPT
 {
     // Set is idempotent.
-    const auto header_fk = set_header_link(block.header(), context);
+    const auto header_fk = set_header_link(block.header(), ctx);
     if (header_fk.is_terminal())
         return {};
 
@@ -182,22 +182,22 @@ table::header::link CLASS::set_block_link(const system::chain::block& block,
         return true;
 
     // Get/create foreign key for each tx (set is idempotent).
-    table::txs::slab keys{};
+    table::txs::slab set{};
     const auto& txs = *block.transactions_ptr();
-    keys.tx_fks.reserve(txs.size());
+    set.tx_fks.reserve(txs.size());
     for (const auto& tx: txs)
-        keys.tx_fks.push_back(set_tx_link(*tx));
+        set.tx_fks.push_back(set_tx_link(*tx));
 
     // Set is idempotent, requires that none are terminal.
-    return set_txs(header_fk, keys) ? header_fk : table::header::link{};
+    return set_txs(header_fk, set) ? header_fk : table::header::link{};
 }
 
 TEMPLATE
-bool CLASS::set_txs(const table::header::link& key,
-    const table::txs::slab& txs) NOEXCEPT
+bool CLASS::set_txs(const table::header::link& fk,
+    const table::txs::slab& set) NOEXCEPT
 {
     // Continue with success if txs exists for header.
-    if (system::contains(txs.tx_fks, table::txs::link::terminal))
+    if (system::contains(set.tx_fks, table::txs::link::terminal))
         return false;
 
 
@@ -205,7 +205,7 @@ bool CLASS::set_txs(const table::header::link& key,
     // ------------------------------------------------------------------------
     const auto lock = store_.get_transactor();
 
-    return !store_.txs.put_if(key, txs).is_terminal();
+    return !store_.txs.put_if(fk, set).is_terminal();
     // ------------------------------------------------------------------------
     // END TRANSACTION
 }

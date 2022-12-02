@@ -44,7 +44,7 @@ struct header
     {        
         inline bool from_data(reader& source) NOEXCEPT
         {
-            context::from_data(source, state);
+            context::from_data(source, ctx);
             parent_fk   = source.read_little_endian<link::integer, link::size>();
             version     = source.read_little_endian<uint32_t>();
             timestamp   = source.read_little_endian<uint32_t>();
@@ -57,7 +57,7 @@ struct header
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            context::to_data(sink, state);
+            context::to_data(sink, ctx);
             sink.write_little_endian<link::integer, link::size>(parent_fk);
             sink.write_little_endian<uint32_t>(version);
             sink.write_little_endian<uint32_t>(timestamp);
@@ -70,7 +70,7 @@ struct header
 
         inline bool operator==(const record& other) const NOEXCEPT
         {
-            return state       == other.state
+            return ctx       == other.ctx
                 && parent_fk   == other.parent_fk
                 && version     == other.version
                 && timestamp   == other.timestamp
@@ -79,7 +79,7 @@ struct header
                 && merkle_root == other.merkle_root;
         }
 
-        context state{};
+        context ctx{};
         link::integer parent_fk{};
         uint32_t version{};
         uint32_t timestamp{};
@@ -95,7 +95,7 @@ struct header
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             BC_ASSERT(header_ptr);
-            context::to_data(sink, state);
+            context::to_data(sink, ctx);
             sink.write_little_endian<link::integer, link::size>(parent_fk);
             sink.write_little_endian<uint32_t>(header_ptr->version());
             sink.write_little_endian<uint32_t>(header_ptr->timestamp());
@@ -106,7 +106,7 @@ struct header
             return sink;
         }
 
-        const context state{};
+        const context ctx{};
         const link::integer parent_fk{};
         system::chain::header::cptr header_ptr{};
     };
@@ -118,7 +118,7 @@ struct header
         // header.previous_block_hash() ignored.
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            context::to_data(sink, state);
+            context::to_data(sink, ctx);
             sink.write_little_endian<link::integer, link::size>(parent_fk);
             sink.write_little_endian<uint32_t>(header.version());
             sink.write_little_endian<uint32_t>(header.timestamp());
@@ -129,7 +129,7 @@ struct header
             return sink;
         }
 
-        const context& state{};
+        const context& ctx{};
         const link::integer parent_fk{};
         const system::chain::header& header;
     };
@@ -167,8 +167,8 @@ struct header
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            flags = source.read_little_endian<context::state::integer,
-                context::state::size>();
+            using state = context::state;
+            flags = source.read_little_endian<state::integer, state::size>();
             return source;
         }
 
@@ -180,9 +180,9 @@ struct header
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
+            using block = context::block;
             source.skip_bytes(context::state::size);
-            height = source.read_little_endian<context::block::integer,
-                context::block::size>();
+            height = source.read_little_endian<block::integer, block::size>();
             return source;
         }
 
@@ -207,11 +207,11 @@ struct header
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            context::from_data(source, state);
+            context::from_data(source, ctx);
             return source;
         }
 
-        context state{};
+        context ctx{};
     };
 };
 

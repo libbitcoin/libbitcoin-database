@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(header__put_ptr__get__expected)
     const table::header::record_put_ptr put_ptr
     {
         {},
-        expected.state,
+        expected.ctx,
         expected.parent_fk,
         system::to_shared(expected_header)
     };
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(header__put_ptr__get__expected)
 
     table::header::record element{};
     BOOST_REQUIRE(instance.get(1, element));
-    BOOST_REQUIRE(element.state == expected.state);
+    BOOST_REQUIRE(element.ctx == expected.ctx);
     BOOST_REQUIRE(element.version == put_ptr.header_ptr->version());
     BOOST_REQUIRE(element.merkle_root == put_ptr.header_ptr->merkle_root());
     BOOST_REQUIRE(element.timestamp == put_ptr.header_ptr->timestamp());
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(header__put_ref__get__expected)
     const table::header::record_put_ref put_ref
     {
         {},
-        expected.state,
+        expected.ctx,
         expected.parent_fk,
         expected_header
     };
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(header__put_ref__get__expected)
 
     table::header::record element{};
     BOOST_REQUIRE(instance.get(1, element));
-    BOOST_REQUIRE(element.state == put_ref.state);
+    BOOST_REQUIRE(element.ctx == put_ref.ctx);
     BOOST_REQUIRE(element.version == put_ref.header.version());
     BOOST_REQUIRE(element.merkle_root == put_ref.header.merkle_root());
     BOOST_REQUIRE(element.timestamp == put_ref.header.timestamp());
@@ -218,19 +218,19 @@ BOOST_AUTO_TEST_CASE(header__put__get_context__expected)
 
     table::header::record_flags flags{};
     BOOST_REQUIRE(instance.get(1, flags));
-    BOOST_REQUIRE_EQUAL(flags.flags, expected.state.flags);
+    BOOST_REQUIRE_EQUAL(flags.flags, expected.ctx.flags);
 
     table::header::record_height height{};
     BOOST_REQUIRE(instance.get(1, height));
-    BOOST_REQUIRE_EQUAL(height.height, expected.state.height);
+    BOOST_REQUIRE_EQUAL(height.height, expected.ctx.height);
 
     table::header::record_mtp mtp{};
     BOOST_REQUIRE(instance.get(1, mtp));
-    BOOST_REQUIRE_EQUAL(mtp.mtp, expected.state.mtp);
+    BOOST_REQUIRE_EQUAL(mtp.mtp, expected.ctx.mtp);
 
     table::header::record_context context{};
     BOOST_REQUIRE(instance.get(1, context));
-    BOOST_REQUIRE(context.state == expected.state);
+    BOOST_REQUIRE(context.ctx == expected.ctx);
 }
 
 BOOST_AUTO_TEST_CASE(header__it__pk__expected)

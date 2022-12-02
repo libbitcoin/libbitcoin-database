@@ -34,9 +34,9 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-bool CLASS::set_header(const header& header, const context& context) NOEXCEPT
+bool CLASS::set_header(const header& header, const context& ctx) NOEXCEPT
 {
-    return !set_header_link(header, context).is_terminal();
+    return !set_header_link(header, ctx).is_terminal();
 }
 
 TEMPLATE
@@ -46,9 +46,9 @@ bool CLASS::set_tx(const transaction& tx) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set_block(const block& block, const context& context) NOEXCEPT
+bool CLASS::set_block(const block& block, const context& ctx) NOEXCEPT
 {
-    return !set_block_link(block, context).is_terminal();
+    return !set_block_link(block, ctx).is_terminal();
 }
 
 TEMPLATE

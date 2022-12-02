@@ -42,8 +42,8 @@ public:
     query(Store& value) NOEXCEPT;
 
     bool set_tx(const transaction& tx) NOEXCEPT;
-    bool set_header(const header& header, const context& context) NOEXCEPT;
-    bool set_block(const block& block, const context& context) NOEXCEPT;
+    bool set_header(const header& header, const context& ctx) NOEXCEPT;
+    bool set_block(const block& block, const context& ctx) NOEXCEPT;
     bool set_txs(const hash_digest& key, const system::hashes& hashes) NOEXCEPT;
 
     // TODO: test input/output/spender getters.
@@ -58,9 +58,9 @@ public:
 
 protected:
     table::transaction::link set_tx_link(const transaction& tx) NOEXCEPT;
-    table::header::link set_header_link(const header& header, const context& context) NOEXCEPT;
-    table::header::link set_block_link(const block& block, const context& context) NOEXCEPT;
-    bool set_txs(const table::header::link& key, const table::txs::slab& txs) NOEXCEPT;
+    table::header::link set_header_link(const header& header, const context& ctx) NOEXCEPT;
+    table::header::link set_block_link(const block& block, const context& ctx) NOEXCEPT;
+    bool set_txs(const table::header::link& fk, const table::txs::slab& set) NOEXCEPT;
 
     input::cptr get_input(const table::input::link& fk) NOEXCEPT;
     output::cptr get_output(const table::output::link& fk) NOEXCEPT;
