@@ -91,15 +91,12 @@ table::transaction::link CLASS::set_tx_(
     linkage<schema::put> put_pk{};
     for (const auto& in: ins)
     {
-        // TODO: optimize with ptr/ref writer.
-        if (!store_.input.set_link(put_pk, table::input::slab
+        if (!store_.input.set_link(put_pk, table::input::slab_put_ref
         {
             {},
             tx_pk,
             input_index++,
-            in->sequence(),
-            in->script(),
-            in->witness()
+            *in
         }))
         {
             return {};
@@ -259,11 +256,7 @@ system::chain::transaction::cptr CLASS::get_tx(
         if (!store_.output.get(*it, out))
             return {};
 
-        outs->emplace_back(new output
-        {
-            out.value,
-            out.script
-        });
+        outs->push_back(out.output);
     }
 
     // tx ctor casts inputs_ptr/outputs_ptr to inputs_cptr/outputs_cptr.
@@ -328,7 +321,11 @@ system::chain::block::cptr CLASS::get_block(
     }
 
     // block ctor casts transactions_ptr to transactions_cptr.
-    return system::to_shared(new block{ head, txs });
+    return system::to_shared(new block
+    {
+        head,
+        txs
+    });
 }
 
 TEMPLATE
