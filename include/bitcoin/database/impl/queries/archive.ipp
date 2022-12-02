@@ -60,7 +60,7 @@ bool CLASS::set_txs(const hash_digest& key,
     if (header_fk.is_terminal())
         return false;
 
-    // Shortcircuit (redundant with set_txs_ put_if).
+    // Shortcircuit (redundant with set_txs...put_if).
     if (store_.txs.exists(header_fk))
         return true;
 
