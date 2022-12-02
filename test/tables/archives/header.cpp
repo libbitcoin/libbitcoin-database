@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(point__put__get_sk__expected)
     BOOST_REQUIRE_EQUAL(element.key, key);
 }
 
-BOOST_AUTO_TEST_CASE(header__put__get_height__expected)
+BOOST_AUTO_TEST_CASE(header__put__get_context__expected)
 {
     test::dfile head_store{};
     test::dfile body_store{};
@@ -216,12 +216,24 @@ BOOST_AUTO_TEST_CASE(header__put__get_height__expected)
     BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
-    table::header::record_height element{};
-    BOOST_REQUIRE(instance.get(1, element));
-    BOOST_REQUIRE_EQUAL(element.height, expected.state.height);
+    table::header::record_flags flags{};
+    BOOST_REQUIRE(instance.get(1, flags));
+    BOOST_REQUIRE_EQUAL(flags.flags, expected.state.flags);
+
+    table::header::record_height height{};
+    BOOST_REQUIRE(instance.get(1, height));
+    BOOST_REQUIRE_EQUAL(height.height, expected.state.height);
+
+    table::header::record_mtp mtp{};
+    BOOST_REQUIRE(instance.get(1, mtp));
+    BOOST_REQUIRE_EQUAL(mtp.mtp, expected.state.mtp);
+
+    table::header::record_context context{};
+    BOOST_REQUIRE(instance.get(1, context));
+    BOOST_REQUIRE(context.state == expected.state);
 }
 
-BOOST_AUTO_TEST_CASE(point__it__pk__expected)
+BOOST_AUTO_TEST_CASE(header__it__pk__expected)
 {
     test::dfile head_store{};
     test::dfile body_store{};

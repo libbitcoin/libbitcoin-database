@@ -36,7 +36,7 @@ struct context
         sizeof(uint32_t);
 
     template <typename Source>
-    static inline void read(Source& source, context& context) NOEXCEPT
+    static inline void from_data(Source& source, context& context) NOEXCEPT
     {
         context.flags  = source.template read_little_endian<state::integer, state::size>();
         context.height = source.template read_little_endian<block::integer, block::size>();
@@ -44,7 +44,7 @@ struct context
     };
 
     template <typename Sink>
-    static inline void write(Sink& sink, const context& context) NOEXCEPT
+    static inline void to_data(Sink& sink, const context& context) NOEXCEPT
     {
         sink.template write_little_endian<state::integer, state::size>(context.flags);
         sink.template write_little_endian<block::integer, block::size>(context.height);

@@ -36,7 +36,6 @@ BC_PUSH_WARNING(NO_NEW_OR_DELETE)
 struct header
   : public hash_map<schema::header>
 {
-    using block = linkage<schema::block>;
     using search_key = search<schema::hash>;
     using hash_map<schema::header>::hashmap;
 
@@ -45,7 +44,7 @@ struct header
     {        
         inline bool from_data(reader& source) NOEXCEPT
         {
-            context::read(source, state);
+            context::from_data(source, state);
             parent_fk   = source.read_little_endian<link::integer, link::size>();
             version     = source.read_little_endian<uint32_t>();
             timestamp   = source.read_little_endian<uint32_t>();
@@ -58,7 +57,7 @@ struct header
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            context::write(sink, state);
+            context::to_data(sink, state);
             sink.write_little_endian<link::integer, link::size>(parent_fk);
             sink.write_little_endian<uint32_t>(version);
             sink.write_little_endian<uint32_t>(timestamp);
@@ -96,7 +95,7 @@ struct header
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             BC_ASSERT(header_ptr);
-            context::write(sink, state);
+            context::to_data(sink, state);
             sink.write_little_endian<link::integer, link::size>(parent_fk);
             sink.write_little_endian<uint32_t>(header_ptr->version());
             sink.write_little_endian<uint32_t>(header_ptr->timestamp());
@@ -119,7 +118,7 @@ struct header
         // header.previous_block_hash() ignored.
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            context::write(sink, state);
+            context::to_data(sink, state);
             sink.write_little_endian<link::integer, link::size>(parent_fk);
             sink.write_little_endian<uint32_t>(header.version());
             sink.write_little_endian<uint32_t>(header.timestamp());
@@ -163,17 +162,56 @@ struct header
         search_key key{};
     };
 
+    struct record_flags
+      : public schema::header
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            flags = source.read_little_endian<context::state::integer,
+                context::state::size>();
+            return source;
+        }
+
+        context::state::integer flags{};
+    };
+
     struct record_height
       : public schema::header
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.skip_bytes(context::state::size);
-            height = source.read_little_endian<block::integer, block::size>();
+            height = source.read_little_endian<context::block::integer,
+                context::block::size>();
             return source;
         }
 
-        block::integer height{};
+        context::block::integer height{};
+    };
+
+    struct record_mtp
+      : public schema::header
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(context::state::size + context::block::size);
+            mtp = source.read_little_endian<uint32_t>();
+            return source;
+        }
+
+        uint32_t mtp{};
+    };
+
+    struct record_context
+      : public schema::header
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            context::from_data(source, state);
+            return source;
+        }
+
+        context state{};
     };
 };
 
