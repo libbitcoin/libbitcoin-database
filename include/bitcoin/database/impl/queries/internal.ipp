@@ -38,18 +38,22 @@ TEMPLATE
 table::header::link CLASS::set_header_(const system::chain::header& header,
     const context& context) NOEXCEPT
 {
-    // Return with success if header exists.
-    const auto key = header.hash();
-    auto header_fk = store_.header.it(key).self();
-    if (!header_fk.is_terminal())
-        return header_fk;
-
     // Parent must be missing iff its hash is null.
     // Iterator must be released before subsequent header put.
     const auto& parent_sk = header.previous_block_hash();
     const auto parent_fk = store_.header.it(parent_sk).self();
     if (parent_fk.is_terminal() != (parent_sk == system::null_hash))
         return {};
+
+    // Return with success if header exists.
+    const auto key = header.hash();
+    auto header_fk = store_.header.it(key).self();
+    if (!header_fk.is_terminal())
+        return header_fk;
+
+    // BEGIN TRANSACTION
+    // ------------------------------------------------------------------------
+    const auto lock = store_.get_transactor();
 
     return store_.header.put_link(key, table::header::record_put_ref
     {
@@ -58,6 +62,8 @@ table::header::link CLASS::set_header_(const system::chain::header& header,
         parent_fk,
         header
     });
+    // ------------------------------------------------------------------------
+    // END TRANSACTION
 }
 
 TEMPLATE
@@ -74,17 +80,21 @@ table::transaction::link CLASS::set_tx_(
     if (!tx_pk.is_terminal())
         return tx_pk;
 
-    // Allocate one transaction.
-    tx_pk = store_.tx.allocate(1);
-    if (tx_pk.is_terminal())
-        return {};
-
     // Declare puts record.
     const auto& ins = *tx.inputs_ptr();
     const auto& outs = *tx.outputs_ptr();
     const auto count = outs.size() + ins.size();
     table::puts::record puts{};
     puts.put_fks.reserve(count);
+
+    // BEGIN TRANSACTION
+    // ------------------------------------------------------------------------
+    const auto lock = store_.get_transactor();
+
+    // Allocate one transaction.
+    tx_pk = store_.tx.allocate(1);
+    if (tx_pk.is_terminal())
+        return {};
 
     // Allocate and Set inputs, queue each put.
     uint32_t input_index = 0;
@@ -166,6 +176,8 @@ table::transaction::link CLASS::set_tx_(
 
     // Commit transaction to its hash and return link (tx_pk or terminal).
     return store_.tx.commit_link(tx_pk, key);
+    // ------------------------------------------------------------------------
+    // END TRANSACTION
 }
 
 TEMPLATE
@@ -197,8 +209,17 @@ bool CLASS::set_txs_(const table::header::link& key,
     const table::txs::slab& txs) NOEXCEPT
 {
     // Continue with success if txs exists for header.
-    return !system::contains(txs.tx_fks, table::txs::link::terminal) &&
-        !store_.txs.put_if(key, txs).is_terminal();
+    if (system::contains(txs.tx_fks, table::txs::link::terminal))
+        return false;
+
+
+    // BEGIN TRANSACTION
+    // ------------------------------------------------------------------------
+    const auto lock = store_.get_transactor();
+
+    return !store_.txs.put_if(key, txs).is_terminal();
+    // ------------------------------------------------------------------------
+    // END TRANSACTION
 }
 
 // chain_ptr getters(fk)
