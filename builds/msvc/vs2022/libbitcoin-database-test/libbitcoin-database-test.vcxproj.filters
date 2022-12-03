@@ -132,7 +132,7 @@
     <ClCompile Include="..\..\..\..\test\tables\caches\neutrino.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\caches\validated_block.cpp">
+    <ClCompile Include="..\..\..\..\test\tables\caches\validated_bk.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_tx.cpp">
@@ -141,25 +141,13 @@
     <ClCompile Include="..\..\..\..\test\tables\indexes\address.cpp">
       <Filter>src\tables\indexes</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\indexes\candidate_height.cpp">
+    <ClCompile Include="..\..\..\..\test\tables\indexes\height.cpp">
       <Filter>src\tables\indexes</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\indexes\confirmed_block.cpp">
+    <ClCompile Include="..\..\..\..\test\tables\indexes\strong_bk.cpp">
       <Filter>src\tables\indexes</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\indexes\confirmed_height.cpp">
-      <Filter>src\tables\indexes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\indexes\confirmed_tx.cpp">
-      <Filter>src\tables\indexes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\indexes\input_tx.cpp">
-      <Filter>src\tables\indexes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\indexes\output_tx.cpp">
-      <Filter>src\tables\indexes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\indexes\spent_output.cpp">
+    <ClCompile Include="..\..\..\..\test\tables\indexes\strong_tx.cpp">
       <Filter>src\tables\indexes</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">

@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_INDEXES_ADDRESS_HPP
-#define LIBBITCOIN_DATABASE_TABLES_INDEXES_ADDRESS_HPP
+#ifndef LIBBITCOIN_DATABASE_TABLES_INDEXES_STRONG_TX_HPP
+#define LIBBITCOIN_DATABASE_TABLES_INDEXES_STRONG_TX_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -28,34 +28,38 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// address is a record hashmap of output fk records.
-struct address
-  : public hash_map<schema::height>
+/// strong_tx is a record hashmap of tx confirmation state.
+struct strong_tx
+  : public hash_map<schema::strong_tx>
 {
-    using put = linkage<schema::put>;
-    using hash_map<schema::height>::hashmap;
+    using block = linkage<schema::block>;
+    using hash_map<schema::strong_tx>::hashmap;
 
     struct record
-      : public schema::address
+      : public schema::strong_tx
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            output_fk = source.read_little_endian<put::integer, put::size>();
+            header_fk = source.read_little_endian<block::integer, block::size>();
+            height    = source.read_little_endian<block::integer, block::size>();
             return source;
         }
 
         inline bool to_data(writer& sink) const NOEXCEPT
         {
-            sink.write_little_endian<put::integer, put::size>(output_fk);
+            sink.write_little_endian<block::integer, block::size>(header_fk);
+            sink.write_little_endian<block::integer, block::size>(height);
             return sink;
         }
 
         inline bool operator==(const record& other) const NOEXCEPT
         {
-            return output_fk == other.output_fk;
+            return header_fk == other.header_fk
+                && height    == other.height;
         }
 
-        put::integer output_fk{};
+        block::integer header_fk{};
+        block::integer height{};
     };
 };
 

@@ -32,36 +32,61 @@ TEMPLATE
 CLASS::store(const settings& config) NOEXCEPT
   : configuration_(config),
 
-    header_head_(index(config.dir / schema::dir::indexes, schema::archive::header)),
+    // Archive.
+
+    header_head_(head(config.dir / schema::dir::heads, schema::archive::header)),
     header_body_(body(config.dir, schema::archive::header), config.header_size, config.header_rate),
     header(header_head_, header_body_, config.header_buckets),
 
-    point_head_(index(config.dir / schema::dir::indexes, schema::archive::point)),
+    point_head_(head(config.dir / schema::dir::heads, schema::archive::point)),
     point_body_(body(config.dir, schema::archive::point), config.point_size, config.point_rate),
     point(point_head_, point_body_, config.point_buckets),
 
-    input_head_(index(config.dir / schema::dir::indexes, schema::archive::input)),
+    input_head_(head(config.dir / schema::dir::heads, schema::archive::input)),
     input_body_(body(config.dir, schema::archive::input), config.input_size, config.input_rate),
     input(input_head_, input_body_, config.input_buckets),
 
-    output_head_(index(config.dir / schema::dir::indexes, schema::archive::output)),
+    output_head_(head(config.dir / schema::dir::heads, schema::archive::output)),
     output_body_(body(config.dir, schema::archive::output), config.output_size, config.output_rate),
     output(output_head_, output_body_),
 
-    puts_head_(index(config.dir / schema::dir::indexes, schema::archive::puts)),
+    puts_head_(head(config.dir / schema::dir::heads, schema::archive::puts)),
     puts_body_(body(config.dir, schema::archive::puts), config.puts_size, config.puts_rate),
     puts(puts_head_, puts_body_),
 
-    tx_head_(index(config.dir / schema::dir::indexes, schema::archive::tx)),
+    tx_head_(head(config.dir / schema::dir::heads, schema::archive::tx)),
     tx_body_(body(config.dir, schema::archive::tx), config.tx_size, config.tx_rate),
     tx(tx_head_, tx_body_, config.tx_buckets),
 
-    txs_head_(index(config.dir / schema::dir::indexes, schema::archive::txs)),
+    txs_head_(head(config.dir / schema::dir::heads, schema::archive::txs)),
     txs_body_(body(config.dir, schema::archive::txs), config.txs_size, config.txs_rate),
     txs(txs_head_, txs_body_, config.txs_buckets),
 
-    flush_lock_(lock(config.dir, schema::lock::flush)),
-    process_lock_(lock(config.dir, schema::lock::process))
+    // Indexes.
+
+    address_head_(head(config.dir / schema::dir::heads, schema::indexes::address)),
+    address_body_(body(config.dir, schema::indexes::address), config.address_size, config.address_rate),
+    address(address_head_, address_body_, config.address_buckets),
+
+    candidate_head_(head(config.dir / schema::dir::heads, schema::indexes::candidate)),
+    candidate_body_(body(config.dir, schema::indexes::candidate), config.candidate_size, config.candidate_rate),
+    candidate(candidate_head_, candidate_body_),
+
+    confirmed_head_(head(config.dir / schema::dir::heads, schema::indexes::confirmed)),
+    confirmed_body_(body(config.dir, schema::indexes::confirmed), config.txs_size, config.confirmed_rate),
+    confirmed(confirmed_head_, confirmed_body_),
+
+    strong_bk_head_(head(config.dir / schema::dir::heads, schema::indexes::strong_bk)),
+    strong_bk_body_(body(config.dir, schema::indexes::strong_bk), config.strong_bk_size, config.strong_bk_rate),
+    strong_bk(strong_bk_head_, strong_bk_body_, config.strong_bk_buckets),
+
+    strong_tx_head_(head(config.dir / schema::dir::heads, schema::indexes::strong_tx)),
+    strong_tx_body_(body(config.dir, schema::indexes::strong_tx), config.strong_tx_size, config.strong_tx_rate),
+    strong_tx(strong_tx_head_, strong_tx_body_, config.strong_tx_buckets),
+
+    // Locks.
+    flush_lock_(lock(config.dir, schema::locks::flush)),
+    process_lock_(lock(config.dir, schema::locks::process))
 {
 }
 
@@ -85,10 +110,10 @@ code CLASS::create() NOEXCEPT
     }
 
     code ec{ error::success };
-    static const auto indexes = configuration_.dir / schema::dir::indexes;
+    static const auto heads = configuration_.dir / schema::dir::heads;
 
-    // Clear /index, create index files, ensure existence of body files.
-    if (!file::clear_directory(indexes)) ec = error::clear_directory;
+    // Clear /heads, create head files, ensure existence of body files.
+    if (!file::clear_directory(heads)) ec = error::clear_directory;
     else if (!file::create_file(header_head_.file())) ec = error::create_file;
     else if (!file::create_file(header_body_.file())) ec = error::create_file;
     else if (!file::create_file(point_head_.file())) ec = error::create_file;
@@ -103,12 +128,22 @@ code CLASS::create() NOEXCEPT
     else if (!file::create_file(tx_body_.file())) ec = error::create_file;
     else if (!file::create_file(txs_head_.file())) ec = error::create_file;
     else if (!file::create_file(txs_body_.file())) ec = error::create_file;
+    else if (!file::create_file(address_head_.file())) ec = error::create_file;
+    else if (!file::create_file(address_body_.file())) ec = error::create_file;
+    else if (!file::create_file(candidate_head_.file())) ec = error::create_file;
+    else if (!file::create_file(candidate_body_.file())) ec = error::create_file;
+    else if (!file::create_file(confirmed_head_.file())) ec = error::create_file;
+    else if (!file::create_file(confirmed_body_.file())) ec = error::create_file;
+    else if (!file::create_file(strong_bk_head_.file())) ec = error::create_file;
+    else if (!file::create_file(strong_bk_body_.file())) ec = error::create_file;
+    else if (!file::create_file(strong_tx_head_.file())) ec = error::create_file;
+    else if (!file::create_file(strong_tx_body_.file())) ec = error::create_file;
 
     if (!ec) ec = open_load();
 
     if (!ec)
     {
-        // Populate /index files and truncate body sizes to zero.
+        // Populate /heads files and truncate body sizes to zero.
         if (!header.create()) ec = error::create_table;
         else if (!point.create()) ec = error::create_table;
         else if (!input.create()) ec = error::create_table;
@@ -116,6 +151,11 @@ code CLASS::create() NOEXCEPT
         else if (!puts.create()) ec = error::create_table;
         else if (!tx.create()) ec = error::create_table;
         else if (!txs.create()) ec = error::create_table;
+        else if (!address.create()) ec = error::create_table;
+        else if (!candidate.create()) ec = error::create_table;
+        else if (!confirmed.create()) ec = error::create_table;
+        else if (!strong_bk.create()) ec = error::create_table;
+        else if (!strong_tx.create()) ec = error::create_table;
     }
 
     // mmap will assert if not unloaded.
@@ -158,6 +198,11 @@ code CLASS::open() NOEXCEPT
         else if (!puts.verify()) ec = error::verify_table;
         else if (!tx.verify()) ec = error::verify_table;
         else if (!txs.verify()) ec = error::verify_table;
+        else if (!address.verify()) ec = error::verify_table;
+        else if (!candidate.verify()) ec = error::verify_table;
+        else if (!confirmed.verify()) ec = error::verify_table;
+        else if (!strong_bk.verify()) ec = error::verify_table;
+        else if (!strong_tx.verify()) ec = error::verify_table;
     }
 
     // process and flush locks remain open until close().
@@ -184,6 +229,11 @@ code CLASS::snapshot() NOEXCEPT
     if (!ec) ec = puts_body_.flush();
     if (!ec) ec = tx_body_.flush();
     if (!ec) ec = txs_body_.flush();
+    if (!ec) ec = address_body_.flush();
+    if (!ec) ec = candidate_body_.flush();
+    if (!ec) ec = confirmed_body_.flush();
+    if (!ec) ec = strong_bk_body_.flush();
+    if (!ec) ec = strong_tx_body_.flush();
 
     if (!ec) ec = backup();
     transactor_mutex_.unlock();
@@ -207,6 +257,11 @@ code CLASS::close() NOEXCEPT
         else if (!puts.close()) ec = error::close_table;
         else if (!tx.close()) ec = error::close_table;
         else if (!txs.close()) ec = error::close_table;
+        else if (!address.close()) ec = error::close_table;
+        else if (!candidate.close()) ec = error::close_table;
+        else if (!confirmed.close()) ec = error::close_table;
+        else if (!strong_bk.close()) ec = error::close_table;
+        else if (!strong_tx.close()) ec = error::close_table;
     }
 
     // mmap will assert if not unloaded.
@@ -243,6 +298,16 @@ code CLASS::open_load() NOEXCEPT
     if (!ec) ec = tx_body_.open();
     if (!ec) ec = txs_head_.open();
     if (!ec) ec = txs_body_.open();
+    if (!ec) ec = address_head_.open();
+    if (!ec) ec = address_body_.open();
+    if (!ec) ec = candidate_head_.open();
+    if (!ec) ec = candidate_body_.open();
+    if (!ec) ec = confirmed_head_.open();
+    if (!ec) ec = confirmed_body_.open();
+    if (!ec) ec = strong_bk_head_.open();
+    if (!ec) ec = strong_bk_body_.open();
+    if (!ec) ec = strong_tx_head_.open();
+    if (!ec) ec = strong_tx_body_.open();
 
     if (!ec) ec = header_head_.load();
     if (!ec) ec = header_body_.load();
@@ -258,6 +323,16 @@ code CLASS::open_load() NOEXCEPT
     if (!ec) ec = tx_body_.load();
     if (!ec) ec = txs_head_.load();
     if (!ec) ec = txs_body_.load();
+    if (!ec) ec = address_head_.load();
+    if (!ec) ec = address_body_.load();
+    if (!ec) ec = candidate_head_.load();
+    if (!ec) ec = candidate_body_.load();
+    if (!ec) ec = confirmed_head_.load();
+    if (!ec) ec = confirmed_body_.load();
+    if (!ec) ec = strong_bk_head_.load();
+    if (!ec) ec = strong_bk_body_.load();
+    if (!ec) ec = strong_tx_head_.load();
+    if (!ec) ec = strong_tx_body_.load();
 
     return ec;
 }
@@ -281,6 +356,16 @@ code CLASS::unload_close() NOEXCEPT
     if (!ec) ec = tx_body_.unload();
     if (!ec) ec = txs_head_.unload();
     if (!ec) ec = txs_body_.unload();
+    if (!ec) ec = address_head_.unload();
+    if (!ec) ec = address_body_.unload();
+    if (!ec) ec = candidate_head_.unload();
+    if (!ec) ec = candidate_body_.unload();
+    if (!ec) ec = confirmed_head_.unload();
+    if (!ec) ec = confirmed_body_.unload();
+    if (!ec) ec = strong_bk_head_.unload();
+    if (!ec) ec = strong_bk_body_.unload();
+    if (!ec) ec = strong_tx_head_.unload();
+    if (!ec) ec = strong_tx_body_.unload();
 
     if (!ec) ec = header_head_.close();
     if (!ec) ec = header_body_.close();
@@ -296,6 +381,16 @@ code CLASS::unload_close() NOEXCEPT
     if (!ec) ec = tx_body_.close();
     if (!ec) ec = txs_head_.close();
     if (!ec) ec = txs_body_.close();
+    if (!ec) ec = address_head_.close();
+    if (!ec) ec = address_body_.close();
+    if (!ec) ec = candidate_head_.close();
+    if (!ec) ec = candidate_body_.close();
+    if (!ec) ec = confirmed_head_.close();
+    if (!ec) ec = confirmed_body_.close();
+    if (!ec) ec = strong_bk_head_.close();
+    if (!ec) ec = strong_bk_body_.close();
+    if (!ec) ec = strong_tx_head_.close();
+    if (!ec) ec = strong_tx_body_.close();
 
     return ec;
 }
@@ -310,6 +405,11 @@ code CLASS::backup() NOEXCEPT
     if (!puts.backup()) return error::backup_table;
     if (!tx.backup()) return error::backup_table;
     if (!txs.backup()) return error::backup_table;
+    if (!address.backup()) return error::backup_table;
+    if (!candidate.backup()) return error::backup_table;
+    if (!confirmed.backup()) return error::backup_table;
+    if (!strong_bk.backup()) return error::backup_table;
+    if (!strong_tx.backup()) return error::backup_table;
 
     static const auto primary = configuration_.dir / schema::dir::primary;
     static const auto secondary = configuration_.dir / schema::dir::secondary;
@@ -322,14 +422,14 @@ code CLASS::backup() NOEXCEPT
         if (!file::rename(primary, secondary)) return error::rename_directory;
     }
 
-    // Dump index memory maps to /primary.
+    // Dump /heads memory maps to /primary.
     if (!file::clear_directory(primary)) return error::create_directory;
     const auto ec = dump(primary);
     if (ec) /* bool */ file::clear_directory(primary);
     return ec;
 }
 
-// Dump memory maps of /indexes to new files in /primary.
+// Dump memory maps of /heads to new files in /primary.
 TEMPLATE
 code CLASS::dump(const path& folder) NOEXCEPT
 {
@@ -340,6 +440,11 @@ code CLASS::dump(const path& folder) NOEXCEPT
     auto puts_buffer = puts_head_.get();
     auto tx_buffer = tx_head_.get();
     auto txs_buffer = txs_head_.get();
+    auto address_buffer = address_head_.get();
+    auto candidate_buffer = candidate_head_.get();
+    auto confirmed_buffer = confirmed_head_.get();
+    auto strong_bk_buffer = strong_bk_head_.get();
+    auto strong_tx_buffer = strong_tx_head_.get();
 
     if (!header_buffer) return error::unloaded_file;
     if (!point_buffer) return error::unloaded_file;
@@ -348,33 +453,58 @@ code CLASS::dump(const path& folder) NOEXCEPT
     if (!puts_buffer) return error::unloaded_file;
     if (!tx_buffer) return error::unloaded_file;
     if (!txs_buffer) return error::unloaded_file;
+    if (!address_buffer) return error::unloaded_file;
+    if (!candidate_buffer) return error::unloaded_file;
+    if (!confirmed_buffer) return error::unloaded_file;
+    if (!strong_bk_buffer) return error::unloaded_file;
+    if (!strong_tx_buffer) return error::unloaded_file;
 
-    if (!file::create_file(index(folder, schema::archive::header),
+    if (!file::create_file(head(folder, schema::archive::header),
         header_buffer->begin(), header_buffer->size()))
        return error::dump_file;
 
-    if (!file::create_file(index(folder, schema::archive::point),
+    if (!file::create_file(head(folder, schema::archive::point),
         point_buffer->begin(), point_buffer->size()))
         return error::dump_file;
 
-    if (!file::create_file(index(folder, schema::archive::input),
+    if (!file::create_file(head(folder, schema::archive::input),
         input_buffer->begin(), input_buffer->size()))
         return error::dump_file;
 
-    if (!file::create_file(index(folder, schema::archive::output),
+    if (!file::create_file(head(folder, schema::archive::output),
         output_buffer->begin(), output_buffer->size()))
         return error::dump_file;
 
-    if (!file::create_file(index(folder, schema::archive::puts),
+    if (!file::create_file(head(folder, schema::archive::puts),
         puts_buffer->begin(), puts_buffer->size()))
         return error::dump_file;
 
-    if (!file::create_file(index(folder, schema::archive::tx),
+    if (!file::create_file(head(folder, schema::archive::tx),
         tx_buffer->begin(), tx_buffer->size()))
         return error::dump_file;
 
-    if (!file::create_file(index(folder, schema::archive::txs),
+    if (!file::create_file(head(folder, schema::archive::txs),
         txs_buffer->begin(), txs_buffer->size()))
+        return error::dump_file;
+
+    if (!file::create_file(head(folder, schema::indexes::address),
+        address_buffer->begin(), address_buffer->size()))
+        return error::dump_file;
+
+    if (!file::create_file(head(folder, schema::indexes::candidate),
+        candidate_buffer->begin(), candidate_buffer->size()))
+        return error::dump_file;
+
+    if (!file::create_file(head(folder, schema::indexes::confirmed),
+        confirmed_buffer->begin(), confirmed_buffer->size()))
+        return error::dump_file;
+
+    if (!file::create_file(head(folder, schema::indexes::strong_bk),
+        strong_bk_buffer->begin(), strong_bk_buffer->size()))
+        return error::dump_file;
+
+    if (!file::create_file(head(folder, schema::indexes::strong_tx),
+        strong_tx_buffer->begin(), strong_tx_buffer->size()))
         return error::dump_file;
 
     return error::success;
@@ -400,23 +530,23 @@ code CLASS::restore() NOEXCEPT
     }
 
     code ec{ error::success };
-    static const auto indexes = configuration_.dir / schema::dir::indexes;
+    static const auto heads = configuration_.dir / schema::dir::heads;
     static const auto primary = configuration_.dir / schema::dir::primary;
     static const auto secondary = configuration_.dir / schema::dir::secondary;
 
     if (file::is_directory(primary))
     {
-        // Clear invalid /indexes and recover from /primary.
-        if (!file::clear_directory(indexes)) ec = error::clear_directory;
-        else if (!file::remove(indexes)) ec = error::remove_directory;
-        else if (!file::rename(primary, indexes)) ec = error::rename_directory;
+        // Clear invalid /heads and recover from /primary.
+        if (!file::clear_directory(heads)) ec = error::clear_directory;
+        else if (!file::remove(heads)) ec = error::remove_directory;
+        else if (!file::rename(primary, heads)) ec = error::rename_directory;
     }
     else if (file::is_directory(secondary))
     {
-        // Clear invalid /indexes and recover from /secondary.
-        if (!file::clear_directory(indexes)) ec = error::clear_directory;
-        else if (!file::remove(indexes)) ec = error::remove_directory;
-        else if (!file::rename(secondary, indexes)) ec = error::rename_directory;
+        // Clear invalid /heads and recover from /secondary.
+        if (!file::clear_directory(heads)) ec = error::clear_directory;
+        else if (!file::remove(heads)) ec = error::remove_directory;
+        else if (!file::rename(secondary, heads)) ec = error::rename_directory;
     }
     else
     {
@@ -434,6 +564,11 @@ code CLASS::restore() NOEXCEPT
         else if (!puts.restore()) ec = error::restore_table;
         else if (!tx.restore()) ec = error::restore_table;
         else if (!txs.restore()) ec = error::restore_table;
+        else if (!address.restore()) ec = error::restore_table;
+        else if (!candidate.restore()) ec = error::restore_table;
+        else if (!confirmed.restore()) ec = error::restore_table;
+        else if (!strong_bk.restore()) ec = error::restore_table;
+        else if (!strong_tx.restore()) ec = error::restore_table;
 
         // mmap will assert if not unloaded.
         else if (!ec) ec = unload_close();

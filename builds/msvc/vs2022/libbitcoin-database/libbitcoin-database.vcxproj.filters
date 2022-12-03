@@ -206,7 +206,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\neutrino.hpp">
       <Filter>include\bitcoin\database\tables\caches</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_block.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_bk.hpp">
       <Filter>include\bitcoin\database\tables\caches</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_tx.hpp">
@@ -218,25 +218,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\address.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\candidate_height.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\height.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\confirmed_block.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\strong_bk.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\confirmed_height.hpp">
-      <Filter>include\bitcoin\database\tables\indexes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\confirmed_tx.hpp">
-      <Filter>include\bitcoin\database\tables\indexes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\input_tx.hpp">
-      <Filter>include\bitcoin\database\tables\indexes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\output_tx.hpp">
-      <Filter>include\bitcoin\database\tables\indexes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\spent_output.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\strong_tx.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\schema.hpp">

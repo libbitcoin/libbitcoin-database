@@ -30,17 +30,13 @@
 #include <bitcoin/database/tables/caches/bootstrap.hpp>
 #include <bitcoin/database/tables/caches/buffer.hpp>
 #include <bitcoin/database/tables/caches/neutrino.hpp>
-#include <bitcoin/database/tables/caches/validated_block.hpp>
+#include <bitcoin/database/tables/caches/validated_bk.hpp>
 #include <bitcoin/database/tables/caches/validated_tx.hpp>
 
 #include <bitcoin/database/tables/indexes/address.hpp>
-#include <bitcoin/database/tables/indexes/candidate_height.hpp>
-#include <bitcoin/database/tables/indexes/confirmed_block.hpp>
-#include <bitcoin/database/tables/indexes/confirmed_height.hpp>
-#include <bitcoin/database/tables/indexes/confirmed_tx.hpp>
-#include <bitcoin/database/tables/indexes/input_tx.hpp>
-#include <bitcoin/database/tables/indexes/output_tx.hpp>
-#include <bitcoin/database/tables/indexes/spent_output.hpp>
+#include <bitcoin/database/tables/indexes/height.hpp>
+#include <bitcoin/database/tables/indexes/strong_bk.hpp>
+#include <bitcoin/database/tables/indexes/strong_tx.hpp>
 
 #include <bitcoin/database/tables/context.hpp>
 #include <bitcoin/database/tables/schema.hpp>

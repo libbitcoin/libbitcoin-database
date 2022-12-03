@@ -35,7 +35,7 @@ namespace schema
 {
     namespace dir
     {
-        constexpr auto indexes = "index";
+        constexpr auto heads = "heads";
         constexpr auto primary = "primary";
         constexpr auto secondary = "secondary";
     }
@@ -51,7 +51,25 @@ namespace schema
         constexpr auto tx = "archive_tx";
     }
 
-    namespace lock
+    namespace indexes
+    {
+        constexpr auto address = "address";
+        constexpr auto candidate = "candidate";
+        constexpr auto confirmed = "confirmed";
+        constexpr auto strong_bk = "strong_bk";
+        constexpr auto strong_tx = "strong_tx";
+    }
+
+    namespace caches
+    {
+        ////constexpr auto bootstrap = "bootstrap";
+        ////constexpr auto buffer = "buffer";
+        ////constexpr auto neutrino = "neutrino";
+        ////constexpr auto validated_bk = "validated_bk";
+        ////constexpr auto validated_tx = "validated_tx";
+    }
+
+    namespace locks
     {
         constexpr auto flush = "flush";
         constexpr auto process = "process";
@@ -59,8 +77,8 @@ namespace schema
 
     namespace ext
     {
-        constexpr auto index = ".idx";
-        constexpr auto data = ".dat";
+        constexpr auto head = ".head";
+        constexpr auto data = ".data";
         constexpr auto lock = ".lock";
     }
 
@@ -83,7 +101,8 @@ namespace schema
     constexpr size_t tx_fp = tx + index;
     constexpr size_t hash = system::hash_size;
 
-    /// Static base record/slab for each table.
+    /// Archive tables.
+    /// -----------------------------------------------------------------------
 
     struct header
     {
@@ -104,49 +123,6 @@ namespace schema
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
         static_assert(minsize == 62u);
         static_assert(minrow == 97u);
-    };
-
-    struct input
-    {
-        static constexpr size_t pk = schema::put;
-        static constexpr size_t sk = schema::tx_fp;
-        static constexpr size_t minsize =
-            schema::tx +
-            1u + // variable_size (average 1)
-            sizeof(uint32_t) +
-            1u + // variable_size (average 1)
-            1u;  // variable_size (average 1)
-        static constexpr size_t minrow = pk + sk + minsize;
-        static constexpr size_t size = max_size_t;
-        static_assert(minsize == 11u);
-        static_assert(minrow == 23u);
-    };
-
-    struct output
-    {
-        static constexpr size_t pk = schema::put;
-        static constexpr size_t sk = zero;
-        static constexpr size_t minsize =
-            schema::tx +
-            1u + // variable_size (average 1)
-            5u + // variable_size (average 5)
-            1u;  // variable_size (average 1)
-        static constexpr size_t minrow = minsize;
-        static constexpr size_t size = max_size_t;
-        static_assert(minsize == 11u);
-        static_assert(minrow == 11u);
-    };
-
-    struct point
-    {
-        static constexpr size_t pk = schema::tx;
-        static constexpr size_t sk = schema::hash;
-        static constexpr size_t minsize = zero;
-        static constexpr size_t minrow = pk + sk + minsize;
-        static constexpr size_t size = minsize;
-        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 0u);
-        static_assert(minrow == 36u);
     };
 
     struct puts
@@ -172,7 +148,7 @@ namespace schema
             sizeof(uint32_t) +
             schema::index +
             schema::index +
-            schema::puts_;
+            schema::puts::pk;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
@@ -180,16 +156,118 @@ namespace schema
         static_assert(minrow == 61u);
     };
 
+    // Moderate (sk:7) multimap, with low percentage of multiples (~1%).
+    struct input
+    {
+        static constexpr size_t pk = schema::put;
+        static constexpr size_t sk = schema::tx_fp;
+        static constexpr size_t minsize =
+            schema::transaction::pk +
+            1u + // variable_size (average 1)
+            sizeof(uint32_t) +
+            1u + // variable_size (average 1)
+            1u;  // variable_size (average 1)
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = max_size_t;
+        static_assert(minsize == 11u);
+        static_assert(minrow == 23u);
+    };
+
+    struct output
+    {
+        static constexpr size_t pk = schema::put;
+        static constexpr size_t sk = zero;
+        static constexpr size_t minsize =
+            schema::transaction::pk +
+            1u + // variable_size (average 1)
+            5u + // variable_size (average 5)
+            1u;  // variable_size (average 1)
+        static constexpr size_t minrow = minsize;
+        static constexpr size_t size = max_size_t;
+        static_assert(minsize == 11u);
+        static_assert(minrow == 11u);
+    };
+
+    struct point
+    {
+        static constexpr size_t pk = schema::tx;
+        static constexpr size_t sk = schema::hash;
+        static constexpr size_t minsize = zero;
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 0u);
+        static_assert(minrow == 36u);
+    };
+
     struct txs
     {
         static constexpr size_t pk = schema::txs_;
-        static constexpr size_t sk = schema::block;
+        static constexpr size_t sk = schema::header::pk;
         static constexpr size_t minsize = zero;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
         static_assert(minsize == 0u);
         static_assert(minrow == 7u);
     };
+
+    /// Index tables.
+    /// -----------------------------------------------------------------------
+
+    // candidate and confirmed
+    struct height
+    {
+        static constexpr size_t pk = schema::block;
+        static constexpr size_t sk = zero;
+        static constexpr size_t minsize = schema::block;
+        static constexpr size_t minrow = minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 3u);
+        static_assert(minrow == 3u);
+    };
+
+    // Modest (sk:4) multimap, with presumably moderate rate of multiples.
+    struct address
+    {
+        static constexpr size_t pk = schema::puts_;
+        static constexpr size_t sk = schema::point::pk;
+        static constexpr size_t minsize = schema::put;
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 5u);
+        static_assert(minrow == 13u);
+    };
+
+    struct strong_bk
+    {
+        static constexpr size_t pk = schema::block;
+        static constexpr size_t sk = schema::header::pk;
+        static constexpr size_t minsize = schema::code;
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 1u);
+        static_assert(minrow == 7u);
+    };
+
+    struct strong_tx
+    {
+        static constexpr size_t pk = schema::tx;
+        static constexpr size_t sk = schema::transaction::pk;
+        static constexpr size_t minsize =
+            schema::header::pk +
+            schema::block;
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 6u);
+        static_assert(minrow == 14u);
+    };
+
+    /// Cache tables.
+    /// -----------------------------------------------------------------------
 }
 
 } // namespace database

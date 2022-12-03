@@ -196,15 +196,15 @@ TEMPLATE
 bool CLASS::set_txs(const table::header::link& fk,
     const table::txs::slab& set) NOEXCEPT
 {
-    // Continue with success if txs exists for header.
+    // Fail if any tx_fk is terminal.
     if (system::contains(set.tx_fks, table::txs::link::terminal))
         return false;
-
 
     // BEGIN TRANSACTION
     // ------------------------------------------------------------------------
     const auto lock = store_.get_transactor();
 
+    // Continue with success if txs entry exists for header.
     return !store_.txs.put_if(fk, set).is_terminal();
     // ------------------------------------------------------------------------
     // END TRANSACTION

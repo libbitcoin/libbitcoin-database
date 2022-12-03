@@ -139,6 +139,26 @@ public:
         return txs_body_.file();
     }
 
+    const path& candidate_head_file() const NOEXCEPT
+    {
+        return candidate_head_.file();
+    }
+
+    const path& candidate_body_file() const NOEXCEPT
+    {
+        return candidate_body_.file();
+    }
+
+    const path& confirmed_head_file() const NOEXCEPT
+    {
+        return confirmed_head_.file();
+    }
+
+    const path& confirmed_body_file() const NOEXCEPT
+    {
+        return confirmed_body_.file();
+    }
+
     const path& flush_lock_file() const NOEXCEPT
     {
         return flush_lock_.file();
@@ -169,20 +189,30 @@ BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)
 {
     const settings configuration{};
     access instance{ configuration };
-    BOOST_REQUIRE_EQUAL(instance.header_head_file(), "bitcoin/index/archive_header.idx");
-    BOOST_REQUIRE_EQUAL(instance.header_body_file(), "bitcoin/archive_header.dat");
-    BOOST_REQUIRE_EQUAL(instance.point_head_file(), "bitcoin/index/archive_point.idx");
-    BOOST_REQUIRE_EQUAL(instance.point_body_file(), "bitcoin/archive_point.dat");
-    BOOST_REQUIRE_EQUAL(instance.input_head_file(), "bitcoin/index/archive_input.idx");
-    BOOST_REQUIRE_EQUAL(instance.input_body_file(), "bitcoin/archive_input.dat");
-    BOOST_REQUIRE_EQUAL(instance.output_head_file(), "bitcoin/index/archive_output.idx");
-    BOOST_REQUIRE_EQUAL(instance.output_body_file(), "bitcoin/archive_output.dat");
-    BOOST_REQUIRE_EQUAL(instance.puts_head_file(), "bitcoin/index/archive_puts.idx");
-    BOOST_REQUIRE_EQUAL(instance.puts_body_file(), "bitcoin/archive_puts.dat");
-    BOOST_REQUIRE_EQUAL(instance.tx_head_file(), "bitcoin/index/archive_tx.idx");
-    BOOST_REQUIRE_EQUAL(instance.tx_body_file(), "bitcoin/archive_tx.dat");
-    BOOST_REQUIRE_EQUAL(instance.txs_head_file(), "bitcoin/index/archive_txs.idx");
-    BOOST_REQUIRE_EQUAL(instance.txs_body_file(), "bitcoin/archive_txs.dat");
+
+    /// Archive.
+    BOOST_REQUIRE_EQUAL(instance.header_head_file(), "bitcoin/heads/archive_header.head");
+    BOOST_REQUIRE_EQUAL(instance.header_body_file(), "bitcoin/archive_header.data");
+    BOOST_REQUIRE_EQUAL(instance.point_head_file(), "bitcoin/heads/archive_point.head");
+    BOOST_REQUIRE_EQUAL(instance.point_body_file(), "bitcoin/archive_point.data");
+    BOOST_REQUIRE_EQUAL(instance.input_head_file(), "bitcoin/heads/archive_input.head");
+    BOOST_REQUIRE_EQUAL(instance.input_body_file(), "bitcoin/archive_input.data");
+    BOOST_REQUIRE_EQUAL(instance.output_head_file(), "bitcoin/heads/archive_output.head");
+    BOOST_REQUIRE_EQUAL(instance.output_body_file(), "bitcoin/archive_output.data");
+    BOOST_REQUIRE_EQUAL(instance.puts_head_file(), "bitcoin/heads/archive_puts.head");
+    BOOST_REQUIRE_EQUAL(instance.puts_body_file(), "bitcoin/archive_puts.data");
+    BOOST_REQUIRE_EQUAL(instance.tx_head_file(), "bitcoin/heads/archive_tx.head");
+    BOOST_REQUIRE_EQUAL(instance.tx_body_file(), "bitcoin/archive_tx.data");
+    BOOST_REQUIRE_EQUAL(instance.txs_head_file(), "bitcoin/heads/archive_txs.head");
+    BOOST_REQUIRE_EQUAL(instance.txs_body_file(), "bitcoin/archive_txs.data");
+
+    /// Index.
+    BOOST_REQUIRE_EQUAL(instance.candidate_head_file(), "bitcoin/heads/candidate.head");
+    BOOST_REQUIRE_EQUAL(instance.candidate_body_file(), "bitcoin/candidate.data");
+    BOOST_REQUIRE_EQUAL(instance.confirmed_head_file(), "bitcoin/heads/confirmed.head");
+    BOOST_REQUIRE_EQUAL(instance.confirmed_body_file(), "bitcoin/confirmed.data");
+
+    /// Locks.
     BOOST_REQUIRE_EQUAL(instance.flush_lock_file(), "bitcoin/flush.lock");
     BOOST_REQUIRE_EQUAL(instance.process_lock_file(), "bitcoin/process.lock");
 }
@@ -255,7 +285,7 @@ BOOST_AUTO_TEST_CASE(store__create__existing_index__success)
     settings configuration{};
     configuration.dir = TEST_DIRECTORY;
     access instance{ configuration };
-    BOOST_REQUIRE(test::clear(configuration.dir / schema::dir::indexes));
+    BOOST_REQUIRE(test::clear(configuration.dir / schema::dir::heads));
     BOOST_REQUIRE(test::create(instance.header_head_file()));
     BOOST_REQUIRE_EQUAL(instance.create(), error::success);
 }
@@ -600,7 +630,7 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_closed__restore_table)
 
     // Rename /primary to /indexes.
     BOOST_REQUIRE(!test::folder(configuration.dir / schema::dir::primary));
-    BOOST_REQUIRE(test::folder(configuration.dir / schema::dir::indexes));
+    BOOST_REQUIRE(test::folder(configuration.dir / schema::dir::heads));
 }
 
 BOOST_AUTO_TEST_CASE(store__restore__secondary_closed__restore_table)
@@ -620,7 +650,7 @@ BOOST_AUTO_TEST_CASE(store__restore__secondary_closed__restore_table)
 
     // No primary, so rename /secondary to /indexes.
     BOOST_REQUIRE(!test::folder(configuration.dir / schema::dir::secondary));
-    BOOST_REQUIRE(test::folder(configuration.dir / schema::dir::indexes));
+    BOOST_REQUIRE(test::folder(configuration.dir / schema::dir::heads));
 }
 
 BOOST_AUTO_TEST_CASE(store__restore__primary_secondary_loaded__restore_table)
@@ -642,7 +672,7 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_secondary_loaded__restore_table)
     // Rename /primary to /indexes.
     BOOST_REQUIRE(!test::folder(configuration.dir / schema::dir::primary));
     BOOST_REQUIRE(test::folder(configuration.dir / schema::dir::secondary));
-    BOOST_REQUIRE(test::folder(configuration.dir / schema::dir::indexes));
+    BOOST_REQUIRE(test::folder(configuration.dir / schema::dir::heads));
 }
 
 // backup-restore

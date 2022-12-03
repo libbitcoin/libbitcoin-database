@@ -16,16 +16,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_INDEXES_CANDIDATE_HEIGHT_HPP
-#define LIBBITCOIN_DATABASE_TABLES_INDEXES_CANDIDATE_HEIGHT_HPP
+#include "../../test.hpp"
+#include "../../mocks/dfile.hpp"
 
-#include <bitcoin/system.hpp>
-#include <bitcoin/database/define.hpp>
+BOOST_AUTO_TEST_SUITE(candidate_tests)
 
-namespace libbitcoin {
-namespace database {
+BOOST_AUTO_TEST_CASE(tables_indexes_candidate_test)
+{
+    BOOST_REQUIRE(true);
+}
 
-} // namespace database
-} // namespace libbitcoin
-
-#endif
+BOOST_AUTO_TEST_SUITE_END()
