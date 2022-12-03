@@ -231,10 +231,9 @@ if (with-tests)
         "../../test/tables/caches/validated_block.cpp"
         "../../test/tables/caches/validated_tx.cpp"
         "../../test/tables/indexes/address.cpp"
-        "../../test/tables/indexes/candidate_height.cpp"
         "../../test/tables/indexes/confirmed_block.cpp"
-        "../../test/tables/indexes/confirmed_height.cpp"
         "../../test/tables/indexes/confirmed_tx.cpp"
+        "../../test/tables/indexes/height.cpp"
         "../../test/tables/indexes/input_tx.cpp"
         "../../test/tables/indexes/output_tx.cpp"
         "../../test/tables/indexes/spent_output.cpp" )

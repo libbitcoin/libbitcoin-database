@@ -35,6 +35,9 @@ public:
     /// Properties.
     std::filesystem::path dir;
 
+    /// Archives.
+    /// -----------------------------------------------------------------------
+
     uint32_t header_buckets;
     uint32_t header_size;
     uint16_t header_rate;
@@ -60,6 +63,15 @@ public:
     uint32_t txs_buckets;
     uint32_t txs_size;
     uint16_t txs_rate;
+
+    /// Indexes.
+    /// -----------------------------------------------------------------------
+
+    uint32_t candidate_height_size;
+    uint16_t candidate_height_rate;
+
+    uint32_t confirmed_height_size;
+    uint16_t confirmed_height_rate;
 };
 
 } // namespace database

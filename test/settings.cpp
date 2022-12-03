@@ -23,6 +23,8 @@ BOOST_AUTO_TEST_SUITE(settings_tests)
 BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
 {
     database::settings configuration;
+
+    // Archives.
     BOOST_REQUIRE_EQUAL(configuration.dir, "bitcoin");
     BOOST_REQUIRE_EQUAL(configuration.header_buckets, 100u);
     BOOST_REQUIRE_EQUAL(configuration.header_size, 1u);
@@ -43,6 +45,12 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.txs_buckets, 100u);
     BOOST_REQUIRE_EQUAL(configuration.txs_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.txs_rate, 50u);
+
+    // Indexes.
+    BOOST_REQUIRE_EQUAL(configuration.candidate_height_size, 1u);
+    BOOST_REQUIRE_EQUAL(configuration.candidate_height_rate, 50u);
+    BOOST_REQUIRE_EQUAL(configuration.confirmed_height_size, 1u);
+    BOOST_REQUIRE_EQUAL(configuration.confirmed_height_rate, 50u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

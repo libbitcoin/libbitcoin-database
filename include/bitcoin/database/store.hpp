@@ -41,12 +41,11 @@
 ////#include <bitcoin/database/tables/caches/neutrino.hpp>
 ////#include <bitcoin/database/tables/caches/validated_block.hpp>
 ////#include <bitcoin/database/tables/caches/validated_tx.hpp>
-////
+
 ////#include <bitcoin/database/tables/indexes/address.hpp>
-////#include <bitcoin/database/tables/indexes/candidate_height.hpp>
 ////#include <bitcoin/database/tables/indexes/confirmed_block.hpp>
-////#include <bitcoin/database/tables/indexes/confirmed_height.hpp>
 ////#include <bitcoin/database/tables/indexes/confirmed_tx.hpp>
+#include <bitcoin/database/tables/indexes/height.hpp>
 ////#include <bitcoin/database/tables/indexes/input_tx.hpp>
 ////#include <bitcoin/database/tables/indexes/output_tx.hpp>
 ////#include <bitcoin/database/tables/indexes/spent_output.hpp>
@@ -97,9 +96,9 @@ public:
 
     /// Indexes.
     ////table::address address;
-    ////table::candidate_height candidate_height;
+    table::height candidate_height;
+    table::height confirmed_height;
     ////table::confirmed_block confirmed_block;
-    ////table::confirmed_height confirmed_height;
     ////table::confirmed_tx confirmed_tx;
     ////table::input_tx input_tx;
     ////table::output_tx output_tx;
@@ -120,6 +119,9 @@ protected:
 
     // These are thread safe.
     const settings& configuration_;
+
+    /// Archives.
+    /// -----------------------------------------------------------------------
 
     // record hashmap
     Storage header_head_;
@@ -149,6 +151,20 @@ protected:
     Storage txs_head_;
     Storage txs_body_;
 
+    /// Indexes.
+    /// -----------------------------------------------------------------------
+
+    // array
+    Storage candidate_height_head_;
+    Storage candidate_height_body_;
+
+    // array
+    Storage confirmed_height_head_;
+    Storage confirmed_height_body_;
+
+    /// Locks.
+    /// -----------------------------------------------------------------------
+
     // These are protected by mutex.
     flush_lock flush_lock_;
     interprocess_lock process_lock_;
@@ -157,9 +173,9 @@ protected:
 private:
     using path = std::filesystem::path;
 
-    static inline path index(const path& folder, const std::string& name) NOEXCEPT
+    static inline path head(const path& folder, const std::string& name) NOEXCEPT
     {
-        return folder / (name + schema::ext::index);
+        return folder / (name + schema::ext::head);
     }
 
     static inline path body(const path& folder, const std::string& name) NOEXCEPT

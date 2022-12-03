@@ -51,7 +51,13 @@ settings::settings() NOEXCEPT
 
     txs_buckets{ 100 },
     txs_size{ 1 },
-    txs_rate{ 50 }
+    txs_rate{ 50 },
+
+    candidate_height_size{ 1 },
+    candidate_height_rate{ 50 },
+
+    confirmed_height_size{ 1 },
+    confirmed_height_rate{ 50 }
 {
 }
 

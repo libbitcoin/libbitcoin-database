@@ -35,7 +35,7 @@ namespace schema
 {
     namespace dir
     {
-        constexpr auto indexes = "index";
+        constexpr auto heads = "heads";
         constexpr auto primary = "primary";
         constexpr auto secondary = "secondary";
     }
@@ -51,7 +51,17 @@ namespace schema
         constexpr auto tx = "archive_tx";
     }
 
-    namespace lock
+    namespace indexes
+    {
+        constexpr auto candidate_height = "candidate_height";
+        constexpr auto confirmed_height = "confirmed_height";
+    }
+
+    namespace caches
+    {
+    }
+
+    namespace locks
     {
         constexpr auto flush = "flush";
         constexpr auto process = "process";
@@ -59,8 +69,8 @@ namespace schema
 
     namespace ext
     {
-        constexpr auto index = ".idx";
-        constexpr auto data = ".dat";
+        constexpr auto head = ".head";
+        constexpr auto data = ".data";
         constexpr auto lock = ".lock";
     }
 
@@ -83,7 +93,8 @@ namespace schema
     constexpr size_t tx_fp = tx + index;
     constexpr size_t hash = system::hash_size;
 
-    /// Static base record/slab for each table.
+    /// Archive tables.
+    /// -----------------------------------------------------------------------
 
     struct header
     {
@@ -189,6 +200,22 @@ namespace schema
         static constexpr size_t size = max_size_t;
         static_assert(minsize == 0u);
         static_assert(minrow == 7u);
+    };
+
+    /// Index tables.
+    /// -----------------------------------------------------------------------
+
+    // candidate_height and confirmed_height
+    struct height
+    {
+        static constexpr size_t pk = schema::block;
+        static constexpr size_t sk = zero;
+        static constexpr size_t minsize = schema::block;
+        static constexpr size_t minrow = minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 3u);
+        static_assert(minrow == 3u);
     };
 }
 

@@ -41,6 +41,8 @@ public:
 
     query(Store& value) NOEXCEPT;
 
+    /// Archives.
+
     /// False implies error (invalid store or parameter association).
     /// Caller should assume invalid store (proper parameterization).
     bool set_tx(const transaction& tx) NOEXCEPT;
@@ -58,6 +60,8 @@ public:
     header::cptr get_header(const hash_digest& key) NOEXCEPT;
     block::cptr get_block(const hash_digest& key) NOEXCEPT;
     system::hashes get_txs(const hash_digest& key) NOEXCEPT;
+
+    /// Indexes.
 
 protected:
     /// False/terminal implies error (invalid store or parameter association).

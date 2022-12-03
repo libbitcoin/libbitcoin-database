@@ -218,16 +218,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\address.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\candidate_height.hpp">
-      <Filter>include\bitcoin\database\tables\indexes</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\confirmed_block.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\confirmed_height.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\confirmed_tx.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\confirmed_tx.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\height.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\input_tx.hpp">

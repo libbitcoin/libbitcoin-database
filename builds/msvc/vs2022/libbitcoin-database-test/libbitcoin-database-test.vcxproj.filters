@@ -141,16 +141,13 @@
     <ClCompile Include="..\..\..\..\test\tables\indexes\address.cpp">
       <Filter>src\tables\indexes</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\indexes\candidate_height.cpp">
-      <Filter>src\tables\indexes</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\indexes\confirmed_block.cpp">
       <Filter>src\tables\indexes</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\indexes\confirmed_height.cpp">
+    <ClCompile Include="..\..\..\..\test\tables\indexes\confirmed_tx.cpp">
       <Filter>src\tables\indexes</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\indexes\confirmed_tx.cpp">
+    <ClCompile Include="..\..\..\..\test\tables\indexes\height.cpp">
       <Filter>src\tables\indexes</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\indexes\input_tx.cpp">

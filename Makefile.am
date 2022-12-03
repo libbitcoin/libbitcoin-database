@@ -93,10 +93,9 @@ test_libbitcoin_database_test_SOURCES = \
     test/tables/caches/validated_block.cpp \
     test/tables/caches/validated_tx.cpp \
     test/tables/indexes/address.cpp \
-    test/tables/indexes/candidate_height.cpp \
     test/tables/indexes/confirmed_block.cpp \
-    test/tables/indexes/confirmed_height.cpp \
     test/tables/indexes/confirmed_tx.cpp \
+    test/tables/indexes/height.cpp \
     test/tables/indexes/input_tx.cpp \
     test/tables/indexes/output_tx.cpp \
     test/tables/indexes/spent_output.cpp
@@ -213,10 +212,9 @@ include_bitcoin_database_tables_caches_HEADERS = \
 include_bitcoin_database_tables_indexesdir = ${includedir}/bitcoin/database/tables/indexes
 include_bitcoin_database_tables_indexes_HEADERS = \
     include/bitcoin/database/tables/indexes/address.hpp \
-    include/bitcoin/database/tables/indexes/candidate_height.hpp \
     include/bitcoin/database/tables/indexes/confirmed_block.hpp \
-    include/bitcoin/database/tables/indexes/confirmed_height.hpp \
     include/bitcoin/database/tables/indexes/confirmed_tx.hpp \
+    include/bitcoin/database/tables/indexes/height.hpp \
     include/bitcoin/database/tables/indexes/input_tx.hpp \
     include/bitcoin/database/tables/indexes/output_tx.hpp \
     include/bitcoin/database/tables/indexes/spent_output.hpp
