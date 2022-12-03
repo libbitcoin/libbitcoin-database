@@ -95,20 +95,17 @@ public:
     table::txs txs;
 
     /// Indexes.
-    ////table::address address;
+    table::address address;
     table::height candidate;
     table::height confirmed;
-    ////table::confirmed_block confirmed_block;
-    ////table::confirmed_tx confirmed_tx;
-    ////table::input_tx input_tx;
-    ////table::output_tx output_tx;
-    ////table::spent_output spent_output;
+    table::strong_bk strong_bk;
+    table::strong_tx strong_tx;
 
     /// Caches.
     ////table::bootstrap bootstrap;
     ////table::buffer buffer;
     ////table::neutrino neutrino;
-    ////table::validated_block validated_block;
+    ////table::validated_bk validated_bk;
     ////table::validated_tx validated_tx;
 
 protected:
@@ -154,6 +151,10 @@ protected:
     /// Indexes.
     /// -----------------------------------------------------------------------
 
+    // record hashmap
+    Storage address_head_;
+    Storage address_body_;
+
     // array
     Storage candidate_head_;
     Storage candidate_body_;
@@ -161,6 +162,14 @@ protected:
     // array
     Storage confirmed_head_;
     Storage confirmed_body_;
+
+    // record hashmap
+    Storage strong_bk_head_;
+    Storage strong_bk_body_;
+
+    // record hashmap
+    Storage strong_tx_head_;
+    Storage strong_tx_body_;
 
     /// Locks.
     /// -----------------------------------------------------------------------

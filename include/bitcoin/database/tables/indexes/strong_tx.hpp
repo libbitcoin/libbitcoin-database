@@ -16,15 +16,55 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_INDEXES_CONFIRMED_TX_HPP
-#define LIBBITCOIN_DATABASE_TABLES_INDEXES_CONFIRMED_TX_HPP
+#ifndef LIBBITCOIN_DATABASE_TABLES_INDEXES_STRONG_TX_HPP
+#define LIBBITCOIN_DATABASE_TABLES_INDEXES_STRONG_TX_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
 namespace database {
+namespace table {
 
+/// strong_tx is a record hashmap of tx confirmation state.
+struct strong_tx
+  : public hash_map<schema::strong_tx>
+{
+    using block = linkage<schema::block>;
+    using search_key = search<schema::hash>;
+    using hash_map<schema::strong_tx>::hashmap;
+
+    struct record
+      : public schema::strong_tx
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            header_fk = source.read_little_endian<block::integer, block::size>();
+            height    = source.read_little_endian<block::integer, block::size>();
+            return source;
+        }
+
+        inline bool to_data(writer& sink) const NOEXCEPT
+        {
+            sink.write_little_endian<block::integer, block::size>(header_fk);
+            sink.write_little_endian<block::integer, block::size>(height);
+            return sink;
+        }
+
+        inline bool operator==(const record& other) const NOEXCEPT
+        {
+            return header_fk == other.header_fk
+                && height    == other.height;
+        }
+
+        block::integer header_fk{};
+        block::integer height{};
+    };
+};
+
+} // namespace table
 } // namespace database
 } // namespace libbitcoin
 

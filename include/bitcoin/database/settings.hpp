@@ -67,11 +67,23 @@ public:
     /// Indexes.
     /// -----------------------------------------------------------------------
 
+    uint32_t address_buckets;
+    uint32_t address_size;
+    uint16_t address_rate;
+
     uint32_t candidate_size;
     uint16_t candidate_rate;
 
     uint32_t confirmed_size;
     uint16_t confirmed_rate;
+
+    uint32_t strong_bk_buckets;
+    uint32_t strong_bk_size;
+    uint16_t strong_bk_rate;
+
+    uint32_t strong_tx_buckets;
+    uint32_t strong_tx_size;
+    uint16_t strong_tx_rate;
 };
 
 } // namespace database

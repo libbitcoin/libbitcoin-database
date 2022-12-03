@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_INDEXES_CANDIDATE_HEIGHT_HPP
-#define LIBBITCOIN_DATABASE_TABLES_INDEXES_CANDIDATE_HEIGHT_HPP
+#ifndef LIBBITCOIN_DATABASE_TABLES_INDEXES_HEIGHT_HPP
+#define LIBBITCOIN_DATABASE_TABLES_INDEXES_HEIGHT_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>

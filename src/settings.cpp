@@ -53,11 +53,23 @@ settings::settings() NOEXCEPT
     txs_size{ 1 },
     txs_rate{ 50 },
 
+    address_buckets{ 100 },
+    address_size{ 1 },
+    address_rate{ 50 },
+
     candidate_size{ 1 },
     candidate_rate{ 50 },
 
     confirmed_size{ 1 },
-    confirmed_rate{ 50 }
+    confirmed_rate{ 50 },
+
+    strong_bk_buckets{ 100 },
+    strong_bk_size{ 1 },
+    strong_bk_rate{ 50 },
+
+    strong_tx_buckets{ 100 },
+    strong_tx_size{ 1 },
+    strong_tx_rate{ 50 }
 {
 }
 

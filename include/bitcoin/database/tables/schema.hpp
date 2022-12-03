@@ -53,13 +53,11 @@ namespace schema
 
     namespace indexes
     {
-        ////constexpr auto address = "address";
+        constexpr auto address = "address";
         constexpr auto candidate = "candidate";
         constexpr auto confirmed = "confirmed";
-        ////constexpr auto input_tx = "input_tx";
-        ////constexpr auto output_tx = "output_tx";
-        ////constexpr auto strong_bk = "strong_bk";
-        ////constexpr auto strong_tx = "strong_tx";
+        constexpr auto strong_bk = "strong_bk";
+        constexpr auto strong_tx = "strong_tx";
     }
 
     namespace caches
@@ -98,6 +96,7 @@ namespace schema
     constexpr size_t txs_ = 4;      // ->txs slab.
     constexpr size_t tx = 4;        // ->tx record.
     constexpr size_t block = 3;     // ->header record.
+    constexpr size_t address_ = 4;  // ->address record.
 
     /// Search keys.
     constexpr size_t tx_fp = tx + index;
@@ -127,6 +126,7 @@ namespace schema
         static_assert(minrow == 97u);
     };
 
+    // Moderate (sk:7) multimap.
     struct input
     {
         static constexpr size_t pk = schema::put;
@@ -227,6 +227,48 @@ namespace schema
         static_assert(minsize == 3u);
         static_assert(minrow == 3u);
     };
+
+    // Expensive (sk:32) multimap.
+    struct address
+    {
+        static constexpr size_t pk = schema::address_;
+        static constexpr size_t sk = schema::hash;
+        static constexpr size_t minsize = schema::put;
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 5u);
+        static_assert(minrow == 41u);
+    };
+
+    struct strong_bk
+    {
+        static constexpr size_t pk = schema::block;
+        static constexpr size_t sk = schema::block;
+        static constexpr size_t minsize = schema::code;
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 1u);
+        static_assert(minrow == 7u);
+    };
+
+    struct strong_tx
+    {
+        static constexpr size_t pk = schema::tx;
+        static constexpr size_t sk = schema::tx;
+        static constexpr size_t minsize =
+            schema::block +
+            schema::block;
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 6u);
+        static_assert(minrow == 14u);
+    };
+
+    /// Cache tables.
+    /// -----------------------------------------------------------------------
 }
 
 } // namespace database

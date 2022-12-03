@@ -70,7 +70,7 @@ struct header
 
         inline bool operator==(const record& other) const NOEXCEPT
         {
-            return ctx       == other.ctx
+            return ctx         == other.ctx
                 && parent_fk   == other.parent_fk
                 && version     == other.version
                 && timestamp   == other.timestamp
