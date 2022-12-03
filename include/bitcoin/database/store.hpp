@@ -96,8 +96,8 @@ public:
 
     /// Indexes.
     ////table::address address;
-    table::height candidate_height;
-    table::height confirmed_height;
+    table::height candidate;
+    table::height confirmed;
     ////table::confirmed_block confirmed_block;
     ////table::confirmed_tx confirmed_tx;
     ////table::input_tx input_tx;
@@ -155,12 +155,12 @@ protected:
     /// -----------------------------------------------------------------------
 
     // array
-    Storage candidate_height_head_;
-    Storage candidate_height_body_;
+    Storage candidate_head_;
+    Storage candidate_body_;
 
     // array
-    Storage confirmed_height_head_;
-    Storage confirmed_height_body_;
+    Storage confirmed_head_;
+    Storage confirmed_body_;
 
     /// Locks.
     /// -----------------------------------------------------------------------

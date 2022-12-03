@@ -47,10 +47,10 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.txs_rate, 50u);
 
     // Indexes.
-    BOOST_REQUIRE_EQUAL(configuration.candidate_height_size, 1u);
-    BOOST_REQUIRE_EQUAL(configuration.candidate_height_rate, 50u);
-    BOOST_REQUIRE_EQUAL(configuration.confirmed_height_size, 1u);
-    BOOST_REQUIRE_EQUAL(configuration.confirmed_height_rate, 50u);
+    BOOST_REQUIRE_EQUAL(configuration.candidate_size, 1u);
+    BOOST_REQUIRE_EQUAL(configuration.candidate_rate, 50u);
+    BOOST_REQUIRE_EQUAL(configuration.confirmed_size, 1u);
+    BOOST_REQUIRE_EQUAL(configuration.confirmed_rate, 50u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

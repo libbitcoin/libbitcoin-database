@@ -64,13 +64,13 @@ CLASS::store(const settings& config) NOEXCEPT
 
     // Indexes.
 
-    candidate_height_head_(head(config.dir / schema::dir::heads, schema::indexes::candidate_height)),
-    candidate_height_body_(body(config.dir, schema::indexes::candidate_height), config.candidate_height_size, config.candidate_height_rate),
-    candidate_height(candidate_height_head_, candidate_height_body_),
+    candidate_head_(head(config.dir / schema::dir::heads, schema::indexes::candidate)),
+    candidate_body_(body(config.dir, schema::indexes::candidate), config.candidate_size, config.candidate_rate),
+    candidate(candidate_head_, candidate_body_),
 
-    confirmed_height_head_(head(config.dir / schema::dir::heads, schema::indexes::confirmed_height)),
-    confirmed_height_body_(body(config.dir, schema::indexes::confirmed_height), config.txs_size, config.confirmed_height_rate),
-    confirmed_height(confirmed_height_head_, confirmed_height_body_),
+    confirmed_head_(head(config.dir / schema::dir::heads, schema::indexes::confirmed)),
+    confirmed_body_(body(config.dir, schema::indexes::confirmed), config.txs_size, config.confirmed_rate),
+    confirmed(confirmed_head_, confirmed_body_),
 
     // Locks.
     flush_lock_(lock(config.dir, schema::locks::flush)),
@@ -116,10 +116,10 @@ code CLASS::create() NOEXCEPT
     else if (!file::create_file(tx_body_.file())) ec = error::create_file;
     else if (!file::create_file(txs_head_.file())) ec = error::create_file;
     else if (!file::create_file(txs_body_.file())) ec = error::create_file;
-    else if (!file::create_file(candidate_height_head_.file())) ec = error::create_file;
-    else if (!file::create_file(candidate_height_body_.file())) ec = error::create_file;
-    else if (!file::create_file(confirmed_height_head_.file())) ec = error::create_file;
-    else if (!file::create_file(confirmed_height_body_.file())) ec = error::create_file;
+    else if (!file::create_file(candidate_head_.file())) ec = error::create_file;
+    else if (!file::create_file(candidate_body_.file())) ec = error::create_file;
+    else if (!file::create_file(confirmed_head_.file())) ec = error::create_file;
+    else if (!file::create_file(confirmed_body_.file())) ec = error::create_file;
 
     if (!ec) ec = open_load();
 
@@ -133,8 +133,8 @@ code CLASS::create() NOEXCEPT
         else if (!puts.create()) ec = error::create_table;
         else if (!tx.create()) ec = error::create_table;
         else if (!txs.create()) ec = error::create_table;
-        else if (!candidate_height.create()) ec = error::create_table;
-        else if (!confirmed_height.create()) ec = error::create_table;
+        else if (!candidate.create()) ec = error::create_table;
+        else if (!confirmed.create()) ec = error::create_table;
     }
 
     // mmap will assert if not unloaded.
@@ -177,8 +177,8 @@ code CLASS::open() NOEXCEPT
         else if (!puts.verify()) ec = error::verify_table;
         else if (!tx.verify()) ec = error::verify_table;
         else if (!txs.verify()) ec = error::verify_table;
-        else if (!candidate_height.verify()) ec = error::verify_table;
-        else if (!confirmed_height.verify()) ec = error::verify_table;
+        else if (!candidate.verify()) ec = error::verify_table;
+        else if (!confirmed.verify()) ec = error::verify_table;
     }
 
     // process and flush locks remain open until close().
@@ -205,8 +205,8 @@ code CLASS::snapshot() NOEXCEPT
     if (!ec) ec = puts_body_.flush();
     if (!ec) ec = tx_body_.flush();
     if (!ec) ec = txs_body_.flush();
-    if (!ec) ec = candidate_height_body_.flush();
-    if (!ec) ec = confirmed_height_body_.flush();
+    if (!ec) ec = candidate_body_.flush();
+    if (!ec) ec = confirmed_body_.flush();
 
     if (!ec) ec = backup();
     transactor_mutex_.unlock();
@@ -230,8 +230,8 @@ code CLASS::close() NOEXCEPT
         else if (!puts.close()) ec = error::close_table;
         else if (!tx.close()) ec = error::close_table;
         else if (!txs.close()) ec = error::close_table;
-        else if (!candidate_height.close()) ec = error::close_table;
-        else if (!confirmed_height.close()) ec = error::close_table;
+        else if (!candidate.close()) ec = error::close_table;
+        else if (!confirmed.close()) ec = error::close_table;
     }
 
     // mmap will assert if not unloaded.
@@ -268,10 +268,10 @@ code CLASS::open_load() NOEXCEPT
     if (!ec) ec = tx_body_.open();
     if (!ec) ec = txs_head_.open();
     if (!ec) ec = txs_body_.open();
-    if (!ec) ec = candidate_height_head_.open();
-    if (!ec) ec = candidate_height_body_.open();
-    if (!ec) ec = confirmed_height_head_.open();
-    if (!ec) ec = confirmed_height_body_.open();
+    if (!ec) ec = candidate_head_.open();
+    if (!ec) ec = candidate_body_.open();
+    if (!ec) ec = confirmed_head_.open();
+    if (!ec) ec = confirmed_body_.open();
 
     if (!ec) ec = header_head_.load();
     if (!ec) ec = header_body_.load();
@@ -287,10 +287,10 @@ code CLASS::open_load() NOEXCEPT
     if (!ec) ec = tx_body_.load();
     if (!ec) ec = txs_head_.load();
     if (!ec) ec = txs_body_.load();
-    if (!ec) ec = candidate_height_head_.load();
-    if (!ec) ec = candidate_height_body_.load();
-    if (!ec) ec = confirmed_height_head_.load();
-    if (!ec) ec = confirmed_height_body_.load();
+    if (!ec) ec = candidate_head_.load();
+    if (!ec) ec = candidate_body_.load();
+    if (!ec) ec = confirmed_head_.load();
+    if (!ec) ec = confirmed_body_.load();
 
     return ec;
 }
@@ -314,10 +314,10 @@ code CLASS::unload_close() NOEXCEPT
     if (!ec) ec = tx_body_.unload();
     if (!ec) ec = txs_head_.unload();
     if (!ec) ec = txs_body_.unload();
-    if (!ec) ec = candidate_height_head_.unload();
-    if (!ec) ec = candidate_height_body_.unload();
-    if (!ec) ec = confirmed_height_head_.unload();
-    if (!ec) ec = confirmed_height_body_.unload();
+    if (!ec) ec = candidate_head_.unload();
+    if (!ec) ec = candidate_body_.unload();
+    if (!ec) ec = confirmed_head_.unload();
+    if (!ec) ec = confirmed_body_.unload();
 
     if (!ec) ec = header_head_.close();
     if (!ec) ec = header_body_.close();
@@ -333,10 +333,10 @@ code CLASS::unload_close() NOEXCEPT
     if (!ec) ec = tx_body_.close();
     if (!ec) ec = txs_head_.close();
     if (!ec) ec = txs_body_.close();
-    if (!ec) ec = candidate_height_head_.close();
-    if (!ec) ec = candidate_height_body_.close();
-    if (!ec) ec = confirmed_height_head_.close();
-    if (!ec) ec = confirmed_height_body_.close();
+    if (!ec) ec = candidate_head_.close();
+    if (!ec) ec = candidate_body_.close();
+    if (!ec) ec = confirmed_head_.close();
+    if (!ec) ec = confirmed_body_.close();
 
     return ec;
 }
@@ -351,8 +351,8 @@ code CLASS::backup() NOEXCEPT
     if (!puts.backup()) return error::backup_table;
     if (!tx.backup()) return error::backup_table;
     if (!txs.backup()) return error::backup_table;
-    if (!candidate_height.backup()) return error::backup_table;
-    if (!confirmed_height.backup()) return error::backup_table;
+    if (!candidate.backup()) return error::backup_table;
+    if (!confirmed.backup()) return error::backup_table;
 
     static const auto primary = configuration_.dir / schema::dir::primary;
     static const auto secondary = configuration_.dir / schema::dir::secondary;
@@ -383,8 +383,8 @@ code CLASS::dump(const path& folder) NOEXCEPT
     auto puts_buffer = puts_head_.get();
     auto tx_buffer = tx_head_.get();
     auto txs_buffer = txs_head_.get();
-    auto candidate_height_buffer = candidate_height_head_.get();
-    auto confirmed_height_buffer = confirmed_height_head_.get();
+    auto candidate_buffer = candidate_head_.get();
+    auto confirmed_buffer = confirmed_head_.get();
 
     if (!header_buffer) return error::unloaded_file;
     if (!point_buffer) return error::unloaded_file;
@@ -393,8 +393,8 @@ code CLASS::dump(const path& folder) NOEXCEPT
     if (!puts_buffer) return error::unloaded_file;
     if (!tx_buffer) return error::unloaded_file;
     if (!txs_buffer) return error::unloaded_file;
-    if (!candidate_height_buffer) return error::unloaded_file;
-    if (!confirmed_height_buffer) return error::unloaded_file;
+    if (!candidate_buffer) return error::unloaded_file;
+    if (!confirmed_buffer) return error::unloaded_file;
 
     if (!file::create_file(head(folder, schema::archive::header),
         header_buffer->begin(), header_buffer->size()))
@@ -424,12 +424,12 @@ code CLASS::dump(const path& folder) NOEXCEPT
         txs_buffer->begin(), txs_buffer->size()))
         return error::dump_file;
 
-    if (!file::create_file(head(folder, schema::indexes::candidate_height),
-        candidate_height_buffer->begin(), candidate_height_buffer->size()))
+    if (!file::create_file(head(folder, schema::indexes::candidate),
+        candidate_buffer->begin(), candidate_buffer->size()))
         return error::dump_file;
 
-    if (!file::create_file(head(folder, schema::indexes::confirmed_height),
-        confirmed_height_buffer->begin(), confirmed_height_buffer->size()))
+    if (!file::create_file(head(folder, schema::indexes::confirmed),
+        confirmed_buffer->begin(), confirmed_buffer->size()))
         return error::dump_file;
 
     return error::success;
@@ -489,8 +489,8 @@ code CLASS::restore() NOEXCEPT
         else if (!puts.restore()) ec = error::restore_table;
         else if (!tx.restore()) ec = error::restore_table;
         else if (!txs.restore()) ec = error::restore_table;
-        else if (!candidate_height.restore()) ec = error::restore_table;
-        else if (!confirmed_height.restore()) ec = error::restore_table;
+        else if (!candidate.restore()) ec = error::restore_table;
+        else if (!confirmed.restore()) ec = error::restore_table;
 
         // mmap will assert if not unloaded.
         else if (!ec) ec = unload_close();

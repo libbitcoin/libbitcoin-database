@@ -53,12 +53,22 @@ namespace schema
 
     namespace indexes
     {
-        constexpr auto candidate_height = "candidate_height";
-        constexpr auto confirmed_height = "confirmed_height";
+        ////constexpr auto address = "address";
+        constexpr auto candidate = "candidate";
+        constexpr auto confirmed = "confirmed";
+        ////constexpr auto input_tx = "input_tx";
+        ////constexpr auto output_tx = "output_tx";
+        ////constexpr auto strong_bk = "strong_bk";
+        ////constexpr auto strong_tx = "strong_tx";
     }
 
     namespace caches
     {
+        ////constexpr auto bootstrap = "bootstrap";
+        ////constexpr auto buffer = "buffer";
+        ////constexpr auto neutrino = "neutrino";
+        ////constexpr auto validated_bk = "validated_bk";
+        ////constexpr auto validated_tx = "validated_tx";
     }
 
     namespace locks
@@ -205,7 +215,7 @@ namespace schema
     /// Index tables.
     /// -----------------------------------------------------------------------
 
-    // candidate_height and confirmed_height
+    // candidate and confirmed
     struct height
     {
         static constexpr size_t pk = schema::block;

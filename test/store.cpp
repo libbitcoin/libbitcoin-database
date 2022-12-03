@@ -139,24 +139,24 @@ public:
         return txs_body_.file();
     }
 
-    const path& candidate_height_head_file() const NOEXCEPT
+    const path& candidate_head_file() const NOEXCEPT
     {
-        return candidate_height_head_.file();
+        return candidate_head_.file();
     }
 
-    const path& candidate_height_body_file() const NOEXCEPT
+    const path& candidate_body_file() const NOEXCEPT
     {
-        return candidate_height_body_.file();
+        return candidate_body_.file();
     }
 
-    const path& confirmed_height_head_file() const NOEXCEPT
+    const path& confirmed_head_file() const NOEXCEPT
     {
-        return confirmed_height_head_.file();
+        return confirmed_head_.file();
     }
 
-    const path& confirmed_height_body_file() const NOEXCEPT
+    const path& confirmed_body_file() const NOEXCEPT
     {
-        return confirmed_height_body_.file();
+        return confirmed_body_.file();
     }
 
     const path& flush_lock_file() const NOEXCEPT
@@ -207,10 +207,10 @@ BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)
     BOOST_REQUIRE_EQUAL(instance.txs_body_file(), "bitcoin/archive_txs.data");
 
     /// Index.
-    BOOST_REQUIRE_EQUAL(instance.candidate_height_head_file(), "bitcoin/heads/candidate_height.head");
-    BOOST_REQUIRE_EQUAL(instance.candidate_height_body_file(), "bitcoin/candidate_height.data");
-    BOOST_REQUIRE_EQUAL(instance.confirmed_height_head_file(), "bitcoin/heads/confirmed_height.head");
-    BOOST_REQUIRE_EQUAL(instance.confirmed_height_body_file(), "bitcoin/confirmed_height.data");
+    BOOST_REQUIRE_EQUAL(instance.candidate_head_file(), "bitcoin/heads/candidate.head");
+    BOOST_REQUIRE_EQUAL(instance.candidate_body_file(), "bitcoin/candidate.data");
+    BOOST_REQUIRE_EQUAL(instance.confirmed_head_file(), "bitcoin/heads/confirmed.head");
+    BOOST_REQUIRE_EQUAL(instance.confirmed_body_file(), "bitcoin/confirmed.data");
 
     /// Locks.
     BOOST_REQUIRE_EQUAL(instance.flush_lock_file(), "bitcoin/flush.lock");

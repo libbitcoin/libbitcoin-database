@@ -67,11 +67,11 @@ public:
     /// Indexes.
     /// -----------------------------------------------------------------------
 
-    uint32_t candidate_height_size;
-    uint16_t candidate_height_rate;
+    uint32_t candidate_size;
+    uint16_t candidate_rate;
 
-    uint32_t confirmed_height_size;
-    uint16_t confirmed_height_rate;
+    uint32_t confirmed_size;
+    uint16_t confirmed_rate;
 };
 
 } // namespace database
