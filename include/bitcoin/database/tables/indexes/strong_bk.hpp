@@ -33,7 +33,6 @@ struct strong_bk
   : public hash_map<schema::strong_bk>
 {
     using state = linkage<schema::code>;
-    using search_key = search<schema::hash>;
     using hash_map<schema::strong_bk>::hashmap;
 
     struct record

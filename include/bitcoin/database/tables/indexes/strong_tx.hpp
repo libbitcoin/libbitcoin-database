@@ -33,7 +33,6 @@ struct strong_tx
   : public hash_map<schema::strong_tx>
 {
     using block = linkage<schema::block>;
-    using search_key = search<schema::hash>;
     using hash_map<schema::strong_tx>::hashmap;
 
     struct record

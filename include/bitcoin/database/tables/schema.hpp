@@ -96,7 +96,6 @@ namespace schema
     constexpr size_t txs_ = 4;      // ->txs slab.
     constexpr size_t tx = 4;        // ->tx record.
     constexpr size_t block = 3;     // ->header record.
-    constexpr size_t address_ = 4;  // ->address record.
 
     /// Search keys.
     constexpr size_t tx_fp = tx + index;
@@ -126,50 +125,6 @@ namespace schema
         static_assert(minrow == 97u);
     };
 
-    // Moderate (sk:7) multimap.
-    struct input
-    {
-        static constexpr size_t pk = schema::put;
-        static constexpr size_t sk = schema::tx_fp;
-        static constexpr size_t minsize =
-            schema::tx +
-            1u + // variable_size (average 1)
-            sizeof(uint32_t) +
-            1u + // variable_size (average 1)
-            1u;  // variable_size (average 1)
-        static constexpr size_t minrow = pk + sk + minsize;
-        static constexpr size_t size = max_size_t;
-        static_assert(minsize == 11u);
-        static_assert(minrow == 23u);
-    };
-
-    struct output
-    {
-        static constexpr size_t pk = schema::put;
-        static constexpr size_t sk = zero;
-        static constexpr size_t minsize =
-            schema::tx +
-            1u + // variable_size (average 1)
-            5u + // variable_size (average 5)
-            1u;  // variable_size (average 1)
-        static constexpr size_t minrow = minsize;
-        static constexpr size_t size = max_size_t;
-        static_assert(minsize == 11u);
-        static_assert(minrow == 11u);
-    };
-
-    struct point
-    {
-        static constexpr size_t pk = schema::tx;
-        static constexpr size_t sk = schema::hash;
-        static constexpr size_t minsize = zero;
-        static constexpr size_t minrow = pk + sk + minsize;
-        static constexpr size_t size = minsize;
-        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 0u);
-        static_assert(minrow == 36u);
-    };
-
     struct puts
     {
         static constexpr size_t pk = schema::puts_;
@@ -193,7 +148,7 @@ namespace schema
             sizeof(uint32_t) +
             schema::index +
             schema::index +
-            schema::puts_;
+            schema::puts::pk;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
@@ -201,10 +156,54 @@ namespace schema
         static_assert(minrow == 61u);
     };
 
+    // Moderate (sk:7) multimap, with low percentage of multiples (~1%).
+    struct input
+    {
+        static constexpr size_t pk = schema::put;
+        static constexpr size_t sk = schema::tx_fp;
+        static constexpr size_t minsize =
+            schema::transaction::pk +
+            1u + // variable_size (average 1)
+            sizeof(uint32_t) +
+            1u + // variable_size (average 1)
+            1u;  // variable_size (average 1)
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = max_size_t;
+        static_assert(minsize == 11u);
+        static_assert(minrow == 23u);
+    };
+
+    struct output
+    {
+        static constexpr size_t pk = schema::put;
+        static constexpr size_t sk = zero;
+        static constexpr size_t minsize =
+            schema::transaction::pk +
+            1u + // variable_size (average 1)
+            5u + // variable_size (average 5)
+            1u;  // variable_size (average 1)
+        static constexpr size_t minrow = minsize;
+        static constexpr size_t size = max_size_t;
+        static_assert(minsize == 11u);
+        static_assert(minrow == 11u);
+    };
+
+    struct point
+    {
+        static constexpr size_t pk = schema::tx;
+        static constexpr size_t sk = schema::hash;
+        static constexpr size_t minsize = zero;
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 0u);
+        static_assert(minrow == 36u);
+    };
+
     struct txs
     {
         static constexpr size_t pk = schema::txs_;
-        static constexpr size_t sk = schema::block;
+        static constexpr size_t sk = schema::header::pk;
         static constexpr size_t minsize = zero;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
@@ -228,23 +227,23 @@ namespace schema
         static_assert(minrow == 3u);
     };
 
-    // Expensive (sk:32) multimap.
+    // Modest (sk:4) multimap, with presumably moderate rate of multiples.
     struct address
     {
-        static constexpr size_t pk = schema::address_;
-        static constexpr size_t sk = schema::hash;
+        static constexpr size_t pk = schema::puts_;
+        static constexpr size_t sk = schema::point::pk;
         static constexpr size_t minsize = schema::put;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
         static_assert(minsize == 5u);
-        static_assert(minrow == 41u);
+        static_assert(minrow == 13u);
     };
 
     struct strong_bk
     {
         static constexpr size_t pk = schema::block;
-        static constexpr size_t sk = schema::block;
+        static constexpr size_t sk = schema::header::pk;
         static constexpr size_t minsize = schema::code;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
@@ -256,9 +255,9 @@ namespace schema
     struct strong_tx
     {
         static constexpr size_t pk = schema::tx;
-        static constexpr size_t sk = schema::tx;
+        static constexpr size_t sk = schema::transaction::pk;
         static constexpr size_t minsize =
-            schema::block +
+            schema::header::pk +
             schema::block;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;

@@ -33,7 +33,6 @@ struct address
   : public hash_map<schema::height>
 {
     using put = linkage<schema::put>;
-    using search_key = search<schema::hash>;
     using hash_map<schema::height>::hashmap;
 
     struct record
@@ -57,34 +56,6 @@ struct address
         }
 
         put::integer output_fk{};
-    };
-
-    struct record_with_sk
-      : public record
-    {
-        BC_PUSH_WARNING(NO_METHOD_HIDING)
-        inline bool from_data(reader& source) NOEXCEPT
-        BC_POP_WARNING()
-        {
-            source.rewind_bytes(sk);
-            key = source.read_hash();
-            return record::from_data(source);
-        }
-
-        search_key key{};
-    };
-
-    struct record_sk
-      : public schema::address
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            source.rewind_bytes(sk);
-            key = source.read_hash();
-            return source;
-        }
-
-        search_key key{};
     };
 };
 
