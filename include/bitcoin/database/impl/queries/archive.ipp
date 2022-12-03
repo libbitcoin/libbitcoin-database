@@ -77,7 +77,6 @@ bool CLASS::set_txs(const hash_digest& key,
 // chain_ptr getters(key)
 // ============================================================================
 
-// TODO: test.
 TEMPLATE
 CLASS::input::cptr CLASS::get_spender(const hash_digest& tx_hash,
     uint32_t index) NOEXCEPT
@@ -85,7 +84,6 @@ CLASS::input::cptr CLASS::get_spender(const hash_digest& tx_hash,
     return get_spender(system::to_shared(new point{ tx_hash, index }));
 }
 
-// TODO: test.
 TEMPLATE
 CLASS::input::cptr CLASS::get_input(const hash_digest& tx_hash,
     uint32_t index) NOEXCEPT
@@ -101,7 +99,6 @@ CLASS::input::cptr CLASS::get_input(const hash_digest& tx_hash,
     return get_input(input.put_fk);
 }
 
-// TODO: test.
 TEMPLATE
 CLASS::output::cptr CLASS::get_output(const hash_digest& tx_hash,
     uint32_t index) NOEXCEPT
@@ -117,7 +114,6 @@ CLASS::output::cptr CLASS::get_output(const hash_digest& tx_hash,
     return get_output(output.put_fk);
 }
 
-// TODO: test.
 TEMPLATE
 CLASS::output::cptr CLASS::get_output(const point& prevout) NOEXCEPT
 {

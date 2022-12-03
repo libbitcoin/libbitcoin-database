@@ -776,6 +776,18 @@ BOOST_AUTO_TEST_CASE(query__get_txs__not_found__empty)
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
 }
 
+BOOST_AUTO_TEST_CASE(query__get_input__not_found__nullptr)
+{
+    settings settings1{};
+    settings1.dir = TEST_DIRECTORY;
+    store_accessor store1{ settings1 };
+    query_accessor query1{ store1 };
+    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
+    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
+    BOOST_REQUIRE(!query1.get_input(system::null_hash, 0u));
+    BOOST_REQUIRE_EQUAL(store1.close(), error::success);
+}
+
 BOOST_AUTO_TEST_CASE(query__get_input__genesis__expected)
 {
     settings settings1{};
@@ -799,6 +811,18 @@ BOOST_AUTO_TEST_CASE(query__get_input__genesis__expected)
     BOOST_REQUIRE(*input == *tx->inputs_ptr()->front());
 }
 
+BOOST_AUTO_TEST_CASE(query__get_output__not_found__nullptr)
+{
+    settings settings1{};
+    settings1.dir = TEST_DIRECTORY;
+    store_accessor store1{ settings1 };
+    query_accessor query1{ store1 };
+    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
+    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
+    BOOST_REQUIRE(!query1.get_output(system::null_hash, 0u));
+    BOOST_REQUIRE_EQUAL(store1.close(), error::success);
+}
+
 BOOST_AUTO_TEST_CASE(query__get_output__genesis__expected)
 {
     settings settings1{};
@@ -816,22 +840,62 @@ BOOST_AUTO_TEST_CASE(query__get_output__genesis__expected)
         const auto transactor = store1.get_transactor();
         BOOST_REQUIRE(query1.set_block(genesis, context));
     }
+
+    // get_output1
     const auto tx = genesis.transactions_ptr()->front();
-    const auto output = query1.get_output(tx->hash(false), 0u);
-    BOOST_REQUIRE(output);
-    BOOST_REQUIRE(*output == *tx->outputs_ptr()->front());
+    auto output1 = query1.get_output(tx->hash(false), 0u);
+    BOOST_REQUIRE(output1);
+    BOOST_REQUIRE(*output1 == *tx->outputs_ptr()->front());
+
+    // get_output2
+    using namespace system;
+    const chain::point point{ tx->hash(false), 0u };
+    auto output2 = query1.get_output(point);
+    BOOST_REQUIRE(output2);
+    BOOST_REQUIRE(*output2 == *tx->outputs_ptr()->front());
 }
 
-////BOOST_AUTO_TEST_CASE(query__get_output1__genesis__expected)
-////{
-////}
-////
-////BOOST_AUTO_TEST_CASE(query__get_output2__genesis__expected)
-////{
-////}
-////
-////BOOST_AUTO_TEST_CASE(query__get_spender__genesis__expected)
-////{
-////}
+BOOST_AUTO_TEST_CASE(query__get_spender__not_found__nullptr)
+{
+    settings settings1{};
+    settings1.dir = TEST_DIRECTORY;
+    store_accessor store1{ settings1 };
+    query_accessor query1{ store1 };
+    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
+    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
+    BOOST_REQUIRE(!query1.get_spender(system::null_hash, 0u));
+    BOOST_REQUIRE_EQUAL(store1.close(), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(query__get_spender__null_input__first_cb_input)
+{
+    settings settings1{};
+    settings1.header_buckets = 5;
+    settings1.tx_buckets = 5;
+    settings1.point_buckets = 5;
+    settings1.input_buckets = 5;
+    settings1.txs_buckets = 10;
+    settings1.dir = TEST_DIRECTORY;
+    store_accessor store1{ settings1 };
+    query_accessor query1{ store1 };
+    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
+    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
+    {
+        const auto transactor = store1.get_transactor();
+        BOOST_REQUIRE(query1.set_block(genesis, context));
+    }
+
+    // first tx is coinbase, cb first input has null_point (prevout).
+    // each cb input is added to the input table under the null_point fp key.
+    // this is a linked list equal to *all cb inputs*, so can be used to
+    // enumerate them. This returns only the first, as get_spender is not yet
+    // implemented as iterable over the inputs multimap.
+    const auto tx = genesis.transactions_ptr()->front();
+    const auto input = tx->inputs_ptr()->front();
+    const auto point = input->point_ptr();
+    const auto spender = query1.get_spender(point->hash(), point->index());
+    BOOST_REQUIRE(spender);
+    BOOST_REQUIRE(*spender == *input);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
