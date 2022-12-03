@@ -221,12 +221,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\height.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\input_tx.hpp">
-      <Filter>include\bitcoin\database\tables\indexes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\output_tx.hpp">
-      <Filter>include\bitcoin\database\tables\indexes</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\strong_bk.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>

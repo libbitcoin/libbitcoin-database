@@ -144,12 +144,6 @@
     <ClCompile Include="..\..\..\..\test\tables\indexes\height.cpp">
       <Filter>src\tables\indexes</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\indexes\input_tx.cpp">
-      <Filter>src\tables\indexes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\indexes\output_tx.cpp">
-      <Filter>src\tables\indexes</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\indexes\strong_bk.cpp">
       <Filter>src\tables\indexes</Filter>
     </ClCompile>

@@ -232,8 +232,6 @@ if (with-tests)
         "../../test/tables/caches/validated_tx.cpp"
         "../../test/tables/indexes/address.cpp"
         "../../test/tables/indexes/height.cpp"
-        "../../test/tables/indexes/input_tx.cpp"
-        "../../test/tables/indexes/output_tx.cpp"
         "../../test/tables/indexes/strong_bk.cpp"
         "../../test/tables/indexes/strong_tx.cpp" )
 

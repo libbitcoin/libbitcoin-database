@@ -105,8 +105,6 @@
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_tx.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\address.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\height.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\indexes\input_tx.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\indexes\output_tx.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\strong_bk.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\strong_tx.cpp" />
     <ClCompile Include="..\..\..\..\test\test.cpp" />
