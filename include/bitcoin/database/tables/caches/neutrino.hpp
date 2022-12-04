@@ -21,10 +21,51 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
 namespace database {
+namespace table {
 
+/// neutrino is a slab hashmap of sized neutrino records.
+struct neutrino
+  : public hash_map<schema::neutrino>
+{
+    using hash_map<schema::neutrino>::hashmap;
+
+    struct record
+      : public schema::neutrino
+    {
+        link count() const NOEXCEPT
+        {
+            return variable_size(filter.size()) +
+                system::possible_narrow_cast<link::integer>(filter.size());
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            filter = source.read_bytes(source.read_variable());
+            return source;
+        }
+
+        inline bool to_data(writer& sink) const NOEXCEPT
+        {
+            sink.write_variable(filter.size());
+            sink.write_bytes(filter);
+            return sink;
+        }
+
+        inline bool operator==(const record& other) const NOEXCEPT
+        {
+            return filter == other.filter;
+        }
+
+        system::data_chunk filter{};
+    };
+};
+
+} // namespace table
 } // namespace database
 } // namespace libbitcoin
 

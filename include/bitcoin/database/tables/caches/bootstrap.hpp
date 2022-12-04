@@ -21,10 +21,44 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
 namespace database {
+namespace table {
 
+/// bootstrap is an array of header hash records (initial blockchain).
+struct bootstrap
+  : public array_map<schema::bootstrap>
+{
+    using array_map<schema::bootstrap>::arraymap;
+
+    struct record
+      : public schema::bootstrap
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            block_hash = source.read_hash();
+            return source;
+        }
+
+        inline bool to_data(writer& sink) const NOEXCEPT
+        {
+            sink.write_bytes(block_hash);
+            return sink;
+        }
+
+        inline bool operator==(const record& other) const NOEXCEPT
+        {
+            return block_hash == other.block_hash;
+        }
+
+        hash_digest block_hash{};
+    };
+};
+
+} // namespace table
 } // namespace database
 } // namespace libbitcoin
 

@@ -30,7 +30,7 @@ namespace database {
 
 struct context
 {
-    using state = linkage<schema::flags>;
+    using flag = linkage<schema::flags>;
     using block = linkage<schema::block>;
     static constexpr size_t size = schema::flags + schema::block +
         sizeof(uint32_t);
@@ -38,7 +38,7 @@ struct context
     template <typename Source>
     static inline void from_data(Source& source, context& context) NOEXCEPT
     {
-        context.flags  = source.template read_little_endian<state::integer, state::size>();
+        context.flags  = source.template read_little_endian<flag::integer, flag::size>();
         context.height = source.template read_little_endian<block::integer, block::size>();
         context.mtp    = source.template read_little_endian<uint32_t>();
     };
@@ -46,7 +46,7 @@ struct context
     template <typename Sink>
     static inline void to_data(Sink& sink, const context& context) NOEXCEPT
     {
-        sink.template write_little_endian<state::integer, state::size>(context.flags);
+        sink.template write_little_endian<flag::integer, flag::size>(context.flags);
         sink.template write_little_endian<block::integer, block::size>(context.height);
         sink.template write_little_endian<uint32_t>(context.mtp);
     };
@@ -58,7 +58,7 @@ struct context
             && mtp    == other.mtp;
     }
 
-    state::integer flags{};
+    flag::integer flags{};
     block::integer height{};
     uint32_t mtp{};
 };

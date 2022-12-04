@@ -60,6 +60,22 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.strong_tx_buckets, 100u);
     BOOST_REQUIRE_EQUAL(configuration.strong_tx_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.strong_tx_rate, 50u);
+
+    // Caches.
+    BOOST_REQUIRE_EQUAL(configuration.bootstrap_size, 1u);
+    BOOST_REQUIRE_EQUAL(configuration.bootstrap_rate, 50u);
+    BOOST_REQUIRE_EQUAL(configuration.buffer_buckets, 100u);
+    BOOST_REQUIRE_EQUAL(configuration.buffer_size, 1u);
+    BOOST_REQUIRE_EQUAL(configuration.buffer_rate, 50u);
+    BOOST_REQUIRE_EQUAL(configuration.neutrino_buckets, 100u);
+    BOOST_REQUIRE_EQUAL(configuration.neutrino_size, 1u);
+    BOOST_REQUIRE_EQUAL(configuration.neutrino_rate, 50u);
+    BOOST_REQUIRE_EQUAL(configuration.validated_bk_buckets, 100u);
+    BOOST_REQUIRE_EQUAL(configuration.validated_bk_size, 1u);
+    BOOST_REQUIRE_EQUAL(configuration.validated_bk_rate, 50u);
+    BOOST_REQUIRE_EQUAL(configuration.validated_tx_buckets, 100u);
+    BOOST_REQUIRE_EQUAL(configuration.validated_tx_size, 1u);
+    BOOST_REQUIRE_EQUAL(configuration.validated_tx_rate, 50u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

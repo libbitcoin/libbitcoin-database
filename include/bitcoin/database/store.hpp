@@ -36,11 +36,11 @@
 #include <bitcoin/database/tables/archives/transaction.hpp>
 #include <bitcoin/database/tables/archives/txs.hpp>
 
-////#include <bitcoin/database/tables/caches/bootstrap.hpp>
-////#include <bitcoin/database/tables/caches/buffer.hpp>
-////#include <bitcoin/database/tables/caches/neutrino.hpp>
-////#include <bitcoin/database/tables/caches/validated_bk.hpp>
-////#include <bitcoin/database/tables/caches/validated_tx.hpp>
+#include <bitcoin/database/tables/caches/bootstrap.hpp>
+#include <bitcoin/database/tables/caches/buffer.hpp>
+#include <bitcoin/database/tables/caches/neutrino.hpp>
+#include <bitcoin/database/tables/caches/validated_bk.hpp>
+#include <bitcoin/database/tables/caches/validated_tx.hpp>
 
 #include <bitcoin/database/tables/indexes/address.hpp>
 #include <bitcoin/database/tables/indexes/height.hpp>
@@ -99,11 +99,11 @@ public:
     table::strong_tx strong_tx;
 
     /// Caches.
-    ////table::bootstrap bootstrap;
-    ////table::buffer buffer;
-    ////table::neutrino neutrino;
-    ////table::validated_bk validated_bk;
-    ////table::validated_tx validated_tx;
+    table::bootstrap bootstrap;
+    table::buffer buffer;
+    table::neutrino neutrino;
+    table::validated_bk validated_bk;
+    table::validated_tx validated_tx;
 
 protected:
     code open_load() NOEXCEPT;
@@ -167,6 +167,29 @@ protected:
     // record hashmap
     Storage strong_tx_head_;
     Storage strong_tx_body_;
+
+    /// Caches.
+    /// -----------------------------------------------------------------------
+
+    // array
+    Storage bootstrap_head_;
+    Storage bootstrap_body_;
+
+    // slab hashmap
+    Storage buffer_head_;
+    Storage buffer_body_;
+
+    // slab hashmap
+    Storage neutrino_head_;
+    Storage neutrino_body_;
+
+    // record hashmap
+    Storage validated_bk_head_;
+    Storage validated_bk_body_;
+
+    // record multimap
+    Storage validated_tx_head_;
+    Storage validated_tx_body_;
 
     /// Locks.
     /// -----------------------------------------------------------------------

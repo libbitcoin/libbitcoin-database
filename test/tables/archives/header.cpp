@@ -138,11 +138,11 @@ BOOST_AUTO_TEST_CASE(header__put_ptr__get__expected)
     table::header::record element{};
     BOOST_REQUIRE(instance.get(1, element));
     BOOST_REQUIRE(element.ctx == expected.ctx);
-    BOOST_REQUIRE(element.version == put_ptr.header_ptr->version());
-    BOOST_REQUIRE(element.merkle_root == put_ptr.header_ptr->merkle_root());
-    BOOST_REQUIRE(element.timestamp == put_ptr.header_ptr->timestamp());
-    BOOST_REQUIRE(element.bits == put_ptr.header_ptr->bits());
-    BOOST_REQUIRE(element.nonce == put_ptr.header_ptr->nonce());
+    BOOST_REQUIRE(element.version == put_ptr.header->version());
+    BOOST_REQUIRE(element.merkle_root == put_ptr.header->merkle_root());
+    BOOST_REQUIRE(element.timestamp == put_ptr.header->timestamp());
+    BOOST_REQUIRE(element.bits == put_ptr.header->bits());
+    BOOST_REQUIRE(element.nonce == put_ptr.header->nonce());
     BOOST_REQUIRE_EQUAL(element.parent_fk, expected.parent_fk);
 }
 

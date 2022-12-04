@@ -62,11 +62,11 @@ namespace schema
 
     namespace caches
     {
-        ////constexpr auto bootstrap = "bootstrap";
-        ////constexpr auto buffer = "buffer";
-        ////constexpr auto neutrino = "neutrino";
-        ////constexpr auto validated_bk = "validated_bk";
-        ////constexpr auto validated_tx = "validated_tx";
+        constexpr auto bootstrap = "bootstrap";
+        constexpr auto buffer = "buffer";
+        constexpr auto neutrino = "neutrino";
+        constexpr auto validated_bk = "validated_bk";
+        constexpr auto validated_tx = "validated_tx";
     }
 
     namespace locks
@@ -89,6 +89,7 @@ namespace schema
     constexpr size_t index = 3;     // input/output index.
     constexpr size_t sigops = 3;    // signature operation count.
     constexpr size_t flags = 4;     // validation flags.
+    constexpr size_t amount = 8;    // coin amount.
 
     /// Primary keys.
     constexpr size_t put = 5;       // ->input/output slab.
@@ -104,13 +105,14 @@ namespace schema
     /// Archive tables.
     /// -----------------------------------------------------------------------
 
+    // record hashmap
     struct header
     {
         static constexpr size_t pk = schema::block;
         static constexpr size_t sk = schema::hash;
         static constexpr size_t minsize =
-            schema::block +
             schema::flags +
+            schema::block +
             sizeof(uint32_t) +
             pk +
             sizeof(uint32_t) +
@@ -125,6 +127,7 @@ namespace schema
         static_assert(minrow == 97u);
     };
 
+    // array
     struct puts
     {
         static constexpr size_t pk = schema::puts_;
@@ -136,6 +139,7 @@ namespace schema
         static_assert(minrow == 5u);
     };
 
+    // record hashmap
     struct transaction
     {
         static constexpr size_t pk = schema::tx;
@@ -173,6 +177,7 @@ namespace schema
         static_assert(minrow == 23u);
     };
 
+    // blob
     struct output
     {
         static constexpr size_t pk = schema::put;
@@ -188,6 +193,7 @@ namespace schema
         static_assert(minrow == 11u);
     };
 
+    // record hashmap
     struct point
     {
         static constexpr size_t pk = schema::tx;
@@ -200,6 +206,7 @@ namespace schema
         static_assert(minrow == 36u);
     };
 
+    // slab hashmap
     struct txs
     {
         static constexpr size_t pk = schema::txs_;
@@ -240,6 +247,7 @@ namespace schema
         static_assert(minrow == 13u);
     };
 
+    // record hashmap
     struct strong_bk
     {
         static constexpr size_t pk = schema::block;
@@ -252,6 +260,7 @@ namespace schema
         static_assert(minrow == 7u);
     };
 
+    // record hashmap
     struct strong_tx
     {
         static constexpr size_t pk = schema::tx;
@@ -268,6 +277,79 @@ namespace schema
 
     /// Cache tables.
     /// -----------------------------------------------------------------------
+
+    // array
+    struct bootstrap
+    {
+        static constexpr size_t pk = schema::block;
+        static constexpr size_t sk = zero;
+        static constexpr size_t minsize = schema::hash;
+        static constexpr size_t minrow = minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 32u);
+        static_assert(minrow == 32u);
+    };
+
+    // slab hashmap
+    struct buffer
+    {
+        static constexpr size_t pk = schema::put;
+        static constexpr size_t sk = schema::transaction::pk;
+        static constexpr size_t minsize = zero;
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = max_size_t;
+        static_assert(minsize == 0u);
+        static_assert(minrow == 9u);
+    };
+
+    // slab hashmap
+    struct neutrino
+    {
+        static constexpr size_t pk = schema::put;
+        static constexpr size_t sk = schema::header::pk;
+        static constexpr size_t minsize = one;
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = max_size_t;
+        static_assert(minsize == 1u);
+        static_assert(minrow == 9u);
+    };
+
+    // record hashmap
+    // TODO: look at slab with varint(amount) and pk:3/4 [6-7GB].
+    struct validated_bk
+    {
+        static constexpr size_t pk = schema::block;
+        static constexpr size_t sk = schema::header::pk;
+        static constexpr size_t minsize =
+            schema::code + 
+            schema::amount;
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 9u);
+        static_assert(minrow == 15u);
+    };
+
+    // record multimap
+    // TODO: look at slab with varint(amount) and pk:4/5 [6-7GB].
+    struct validated_tx
+    {
+        static constexpr size_t pk = schema::tx;
+        static constexpr size_t sk = schema::transaction::pk;
+        static constexpr size_t minsize =
+            schema::flags +
+            schema::block +
+            sizeof(uint32_t) +
+            schema::code +
+            schema::sigops +
+            schema::amount;
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 23u);
+        static_assert(minrow == 31u);
+    };
 }
 
 } // namespace database

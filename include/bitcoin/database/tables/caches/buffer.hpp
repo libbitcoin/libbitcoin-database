@@ -21,10 +21,95 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
 namespace database {
+namespace table {
 
+/// buffer is a slab hashmap of tx records.
+struct buffer
+  : public hash_map<schema::buffer>
+{
+    using hash_map<schema::buffer>::hashmap;
+
+    struct record
+      : public schema::buffer
+    {
+        link count() const NOEXCEPT
+        {
+            using namespace system;
+            return possible_narrow_cast<link::integer>(tx.serialized_size(true));
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            tx = system::chain::transaction{ source, true };
+            return source;
+        }
+
+        inline bool to_data(writer& sink) const NOEXCEPT
+        {
+            tx.to_data(sink);
+            return sink;
+        }
+
+        inline bool operator==(const record& other) const NOEXCEPT
+        {
+            return tx == other.tx;
+        }
+
+        system::chain::transaction tx{};
+    };
+
+    struct record_ptr
+      : public schema::buffer
+    {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(tx);
+            using namespace system;
+            return possible_narrow_cast<link::integer>(tx->serialized_size(true));
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            using namespace system;
+            tx = system::to_shared(new chain::transaction{ source, true });
+            return source;
+        }
+
+        inline bool to_data(writer& sink) const NOEXCEPT
+        {
+            BC_ASSERT(tx);
+            tx->to_data(sink, true);
+            return sink;
+        }
+
+        system::chain::transaction::cptr tx{};
+    };
+
+    struct record_put_ref
+        : public schema::buffer
+    {
+        link count() const NOEXCEPT
+        {
+            using namespace system;
+            return possible_narrow_cast<link::integer>(tx.serialized_size(true));
+        }
+
+        inline bool to_data(writer& sink) const NOEXCEPT
+        {
+            tx.to_data(sink, true);
+            return sink;
+        }
+
+        const system::chain::transaction& tx{};
+    };
+};
+
+} // namespace table
 } // namespace database
 } // namespace libbitcoin
 
