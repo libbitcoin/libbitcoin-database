@@ -21,7 +21,7 @@
 
 BOOST_AUTO_TEST_SUITE(buffer_tests)
 
-BOOST_AUTO_TEST_CASE(tables_caches_buffer_test)
+BOOST_AUTO_TEST_CASE(buffer_test)
 {
     BOOST_REQUIRE(true);
 }

@@ -21,7 +21,7 @@
 
 BOOST_AUTO_TEST_SUITE(bootstrap_tests)
 
-BOOST_AUTO_TEST_CASE(tables_caches_bootstrap_test)
+BOOST_AUTO_TEST_CASE(bootstrap_test)
 {
     BOOST_REQUIRE(true);
 }

@@ -19,9 +19,9 @@
 #include "../../test.hpp"
 #include "../../mocks/dfile.hpp"
 
-BOOST_AUTO_TEST_SUITE(confirmed_tx_tests)
+BOOST_AUTO_TEST_SUITE(strong_tx_tests)
 
-BOOST_AUTO_TEST_CASE(tables_indexes_confirmed_tx_test)
+BOOST_AUTO_TEST_CASE(strong_tx_test)
 {
     BOOST_REQUIRE(true);
 }

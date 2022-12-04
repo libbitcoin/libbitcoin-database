@@ -21,7 +21,7 @@
 
 BOOST_AUTO_TEST_SUITE(validated_tx_tests)
 
-BOOST_AUTO_TEST_CASE(tables_caches_validated_tx_test)
+BOOST_AUTO_TEST_CASE(validated_tx_test)
 {
     BOOST_REQUIRE(true);
 }

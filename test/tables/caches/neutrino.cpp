@@ -21,7 +21,7 @@
 
 BOOST_AUTO_TEST_SUITE(neutrino_tests)
 
-BOOST_AUTO_TEST_CASE(tables_caches_neutrino_test)
+BOOST_AUTO_TEST_CASE(neutrino_test)
 {
     BOOST_REQUIRE(true);
 }
