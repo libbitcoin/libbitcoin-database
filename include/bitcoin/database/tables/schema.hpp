@@ -160,7 +160,7 @@ namespace schema
         static_assert(minrow == 61u);
     };
 
-    // Moderate (sk:7) multimap, with low percentage of multiples (~1%).
+    // Moderate (sk:7) slab multimap, with low percentage of multiples (~1%).
     struct input
     {
         static constexpr size_t pk = schema::put;
@@ -221,7 +221,7 @@ namespace schema
     /// Index tables.
     /// -----------------------------------------------------------------------
 
-    // candidate and confirmed
+    // candidate and confirmed arrays
     struct height
     {
         static constexpr size_t pk = schema::block;
@@ -234,7 +234,7 @@ namespace schema
         static_assert(minrow == 3u);
     };
 
-    // Modest (sk:4) multimap, with presumably moderate rate of multiples.
+    // Modest (sk:4) record multimap, with presumably moderate rate of multiples.
     struct address
     {
         static constexpr size_t pk = schema::puts_;
@@ -308,11 +308,12 @@ namespace schema
     {
         static constexpr size_t pk = schema::put;
         static constexpr size_t sk = schema::header::pk;
-        static constexpr size_t minsize = one;
+        static constexpr size_t minsize = 
+            schema::hash + one;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
-        static_assert(minsize == 1u);
-        static_assert(minrow == 9u);
+        static_assert(minsize == 33u);
+        static_assert(minrow == 41u);
     };
 
     // record hashmap
@@ -331,7 +332,7 @@ namespace schema
         static_assert(minrow == 15u);
     };
 
-    // record multimap
+    // Modest (sk:4) record multimap, with presumably moderate rate of multiples (2x).
     // TODO: look at slab with varint(amount) and pk:4/5 [6-7GB].
     struct validated_tx
     {
