@@ -32,7 +32,7 @@ namespace table {
 struct validated_bk
   : public hash_map<schema::validated_bk>
 {
-    using state = linkage<schema::code>;
+    using coding = linkage<schema::code>;
     using coin = linkage<schema::amount>;
     using hash_map<schema::validated_bk>::hashmap;
 
@@ -41,14 +41,14 @@ struct validated_bk
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            code = source.read_little_endian<state::integer, state::size>();
+            code = source.read_little_endian<coding::integer, coding::size>();
             fees = source.read_little_endian<coin::integer, coin::size>();
             return source;
         }
 
         inline bool to_data(writer& sink) const NOEXCEPT
         {
-            sink.write_little_endian<state::integer, state::size>(code);
+            sink.write_little_endian<coding::integer, coding::size>(code);
             sink.write_little_endian<coin::integer, coin::size>(fees);
             return sink;
         }
@@ -59,7 +59,7 @@ struct validated_bk
                 && fees == other.fees;
         }
 
-        state code{};
+        coding code{};
         coin fees{};
     };
 };

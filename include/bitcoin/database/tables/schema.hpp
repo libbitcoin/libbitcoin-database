@@ -82,13 +82,21 @@ namespace schema
         constexpr auto lock = ".lock";
     }
 
+    enum class state : uint8_t
+    {
+        valid = 0,         // tx valid, block connected.
+        connected = 1,     // tx scripts validated in context.
+        preconnected = 2,  // tx scripts pre-validated in context.
+        invalid = 3        // tx or block invalid (use specific code).
+    };
+
     /// Values.
-    constexpr size_t bit = 1;       // Single bit flag.
-    constexpr size_t code = 1;      // State flag.
+    constexpr size_t bit = 1;       // single bit flag.
+    constexpr size_t code = 1;      // validation state.
     constexpr size_t size = 3;      // tx/block size/weight.
     constexpr size_t index = 3;     // input/output index.
-    constexpr size_t sigops = 3;    // signature operation count.
-    constexpr size_t flags = 4;     // validation flags.
+    constexpr size_t sigops = 3;    // signature op count.
+    constexpr size_t flags = 4;     // fork flags.
     constexpr size_t amount = 8;    // coin amount.
 
     /// Primary keys.
@@ -99,7 +107,6 @@ namespace schema
     constexpr size_t block = 3;     // ->header record.
 
     /// Search keys.
-    constexpr size_t tx_fp = tx + index;
     constexpr size_t hash = system::hash_size;
 
     /// Archive tables.
@@ -164,7 +171,9 @@ namespace schema
     struct input
     {
         static constexpr size_t pk = schema::put;
-        static constexpr size_t sk = schema::tx_fp;
+        static constexpr size_t sk =
+            transaction::pk +
+            schema::index;
         static constexpr size_t minsize =
             schema::transaction::pk +
             1u + // variable_size (average 1)
@@ -337,18 +346,19 @@ namespace schema
     struct validated_tx
     {
         static constexpr size_t pk = schema::tx;
-        static constexpr size_t sk = schema::transaction::pk;
-        static constexpr size_t minsize =
+        static constexpr size_t sk =
+            schema::transaction::pk +
             schema::flags +
             schema::block +
-            sizeof(uint32_t) +
+            sizeof(uint32_t);
+        static constexpr size_t minsize =
             schema::code +
             schema::sigops +
             schema::amount;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 23u);
+        static_assert(minsize == 12u);
         static_assert(minrow == 31u);
     };
 }

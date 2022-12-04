@@ -158,7 +158,7 @@ table::transaction::link CLASS::set_tx_link(
             return {};
 
         // Commit each input to its prevout fp.
-        const auto fp = table::input::to_point(point_fk, prevout.index());
+        const auto fp = table::input::compose(point_fk, prevout.index());
         if (!store_.input.commit(*input_fk++, fp))
             return {};
     }
@@ -233,7 +233,7 @@ CLASS::input::cptr CLASS::get_spender(const point::cptr& point) NOEXCEPT
         return {};
 
     // TODO: Due to conflicts this is a multimap, iterable here.
-    const auto fp = table::input::to_point(hash_fk, point->index());
+    const auto fp = table::input::compose(hash_fk, point->index());
     const auto input_fk = store_.input.it(fp).self();
     table::input::only_from_prevout in{ {}, point };
     if (!store_.input.get(input_fk, in))

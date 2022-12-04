@@ -29,11 +29,12 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// validated_tx is a record hashmap of tx validation state.
+/// validated_tx is a record multimap of tx validation state.
+/// context is not incorporated into a composite key because of sufficiency.
 struct validated_tx
   : public hash_map<schema::validated_tx>
 {
-    using state = linkage<schema::code>;
+    using coding = linkage<schema::code>;
     using coin = linkage<schema::amount>;
     using sigop = linkage<schema::sigops>;
     using hash_map<schema::validated_tx>::hashmap;
@@ -44,8 +45,8 @@ struct validated_tx
         inline bool from_data(reader& source) NOEXCEPT
         {
             context::from_data(source, ctx);
-            code = source.read_little_endian<state::integer, state::size>();
-            fees = source.read_little_endian<coin::integer, coin::size>();
+            code = source.read_little_endian<coding::integer, coding::size>();
+            fee = source.read_little_endian<coin::integer, coin::size>();
             sigops = source.read_little_endian<sigop::integer, sigop::size>();
             return source;
         }
@@ -53,8 +54,8 @@ struct validated_tx
         inline bool to_data(writer& sink) const NOEXCEPT
         {
             context::to_data(sink, ctx);
-            sink.write_little_endian<state::integer, state::size>(code);
-            sink.write_little_endian<coin::integer, coin::size>(fees);
+            sink.write_little_endian<coding::integer, coding::size>(code);
+            sink.write_little_endian<coin::integer, coin::size>(fee);
             sink.write_little_endian<sigop::integer, sigop::size>(sigops);
             return sink;
         }
@@ -63,13 +64,13 @@ struct validated_tx
         {
             return ctx    == other.ctx
                 && code   == other.code
-                && fees   == other.fees
+                && fee    == other.fee
                 && sigops == other.sigops;
         }
 
         context ctx{};
-        state code{};
-        coin fees{};
+        coding code{};
+        coin fee{};
         sigop sigops{};
     };
 };
