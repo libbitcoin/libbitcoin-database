@@ -39,18 +39,21 @@ struct neutrino
     {
         link count() const NOEXCEPT
         {
-            return variable_size(filter.size()) +
+            return schema::hash +
+                variable_size(filter.size()) +
                 system::possible_narrow_cast<link::integer>(filter.size());
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
+            filter_head = source.read_hash();
             filter = source.read_bytes(source.read_variable());
             return source;
         }
 
         inline bool to_data(writer& sink) const NOEXCEPT
         {
+            sink.write_bytes(filter_head);
             sink.write_variable(filter.size());
             sink.write_bytes(filter);
             return sink;
@@ -58,9 +61,11 @@ struct neutrino
 
         inline bool operator==(const record& other) const NOEXCEPT
         {
-            return filter == other.filter;
+            return filter_head == other.filter_head
+                && filter      == other.filter;
         }
 
+        hash_digest filter_head{};
         system::data_chunk filter{};
     };
 };
