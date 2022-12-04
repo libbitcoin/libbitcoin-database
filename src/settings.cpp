@@ -27,10 +27,13 @@ using namespace bc::system;
 
 settings::settings() NOEXCEPT
   : dir{ "bitcoin" },
+
+    // Archives.
+
     header_buckets{ 100 },
     header_size{ 1 },
-
     header_rate{ 50 },
+
     point_buckets{ 100 },
     point_size{ 1 },
     point_rate{ 50 },
@@ -53,6 +56,8 @@ settings::settings() NOEXCEPT
     txs_size{ 1 },
     txs_rate{ 50 },
 
+    // Indexes.
+
     address_buckets{ 100 },
     address_size{ 1 },
     address_rate{ 50 },
@@ -69,7 +74,28 @@ settings::settings() NOEXCEPT
 
     strong_tx_buckets{ 100 },
     strong_tx_size{ 1 },
-    strong_tx_rate{ 50 }
+    strong_tx_rate{ 50 },
+
+    // Caches.
+
+    bootstrap_size{ 1 },
+    bootstrap_rate{ 50 },
+
+    buffer_buckets{ 100 },
+    buffer_size{ 1 },
+    buffer_rate{ 50 },
+
+    neutrino_buckets{ 100 },
+    neutrino_size{ 1 },
+    neutrino_rate{ 50 },
+
+    validated_bk_buckets{ 100 },
+    validated_bk_size{ 1 },
+    validated_bk_rate{ 50 },
+
+    validated_tx_buckets{ 100 },
+    validated_tx_size{ 1 },
+    validated_tx_rate{ 50 }
 {
 }
 

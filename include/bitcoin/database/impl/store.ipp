@@ -84,6 +84,28 @@ CLASS::store(const settings& config) NOEXCEPT
     strong_tx_body_(body(config.dir, schema::indexes::strong_tx), config.strong_tx_size, config.strong_tx_rate),
     strong_tx(strong_tx_head_, strong_tx_body_, config.strong_tx_buckets),
 
+    // Caches.
+
+    bootstrap_head_(head(config.dir / schema::dir::heads, schema::caches::bootstrap)),
+    bootstrap_body_(body(config.dir, schema::caches::bootstrap), config.bootstrap_size, config.bootstrap_rate),
+    bootstrap(bootstrap_head_, bootstrap_body_),
+
+    buffer_head_(head(config.dir / schema::dir::heads, schema::caches::buffer)),
+    buffer_body_(body(config.dir, schema::caches::buffer), config.buffer_size, config.buffer_rate),
+    buffer(buffer_head_, buffer_body_, config.buffer_buckets),
+
+    neutrino_head_(head(config.dir / schema::dir::heads, schema::caches::neutrino)),
+    neutrino_body_(body(config.dir, schema::caches::neutrino), config.neutrino_size, config.neutrino_rate),
+    neutrino(neutrino_head_, neutrino_body_, config.neutrino_buckets),
+
+    validated_bk_head_(head(config.dir / schema::dir::heads, schema::caches::validated_bk)),
+    validated_bk_body_(body(config.dir, schema::caches::validated_bk), config.validated_bk_size, config.validated_bk_rate),
+    validated_bk(validated_bk_head_, validated_bk_body_, config.validated_bk_buckets),
+
+    validated_tx_head_(head(config.dir / schema::dir::heads, schema::caches::validated_tx)),
+    validated_tx_body_(body(config.dir, schema::caches::validated_tx), config.validated_tx_size, config.validated_tx_rate),
+    validated_tx(validated_tx_head_, validated_tx_body_, config.validated_tx_buckets),
+
     // Locks.
     flush_lock_(lock(config.dir, schema::locks::flush)),
     process_lock_(lock(config.dir, schema::locks::process))
@@ -114,6 +136,7 @@ code CLASS::create() NOEXCEPT
 
     // Clear /heads, create head files, ensure existence of body files.
     if (!file::clear_directory(heads)) ec = error::clear_directory;
+
     else if (!file::create_file(header_head_.file())) ec = error::create_file;
     else if (!file::create_file(header_body_.file())) ec = error::create_file;
     else if (!file::create_file(point_head_.file())) ec = error::create_file;
@@ -128,6 +151,7 @@ code CLASS::create() NOEXCEPT
     else if (!file::create_file(tx_body_.file())) ec = error::create_file;
     else if (!file::create_file(txs_head_.file())) ec = error::create_file;
     else if (!file::create_file(txs_body_.file())) ec = error::create_file;
+
     else if (!file::create_file(address_head_.file())) ec = error::create_file;
     else if (!file::create_file(address_body_.file())) ec = error::create_file;
     else if (!file::create_file(candidate_head_.file())) ec = error::create_file;
@@ -138,6 +162,17 @@ code CLASS::create() NOEXCEPT
     else if (!file::create_file(strong_bk_body_.file())) ec = error::create_file;
     else if (!file::create_file(strong_tx_head_.file())) ec = error::create_file;
     else if (!file::create_file(strong_tx_body_.file())) ec = error::create_file;
+
+    else if (!file::create_file(bootstrap_head_.file())) ec = error::create_file;
+    else if (!file::create_file(bootstrap_body_.file())) ec = error::create_file;
+    else if (!file::create_file(buffer_head_.file())) ec = error::create_file;
+    else if (!file::create_file(buffer_body_.file())) ec = error::create_file;
+    else if (!file::create_file(neutrino_head_.file())) ec = error::create_file;
+    else if (!file::create_file(neutrino_body_.file())) ec = error::create_file;
+    else if (!file::create_file(validated_bk_head_.file())) ec = error::create_file;
+    else if (!file::create_file(validated_bk_body_.file())) ec = error::create_file;
+    else if (!file::create_file(validated_tx_head_.file())) ec = error::create_file;
+    else if (!file::create_file(validated_tx_body_.file())) ec = error::create_file;
 
     if (!ec) ec = open_load();
 
@@ -151,11 +186,18 @@ code CLASS::create() NOEXCEPT
         else if (!puts.create()) ec = error::create_table;
         else if (!tx.create()) ec = error::create_table;
         else if (!txs.create()) ec = error::create_table;
+
         else if (!address.create()) ec = error::create_table;
         else if (!candidate.create()) ec = error::create_table;
         else if (!confirmed.create()) ec = error::create_table;
         else if (!strong_bk.create()) ec = error::create_table;
         else if (!strong_tx.create()) ec = error::create_table;
+
+        else if (!bootstrap.create()) ec = error::create_table;
+        else if (!buffer.create()) ec = error::create_table;
+        else if (!neutrino.create()) ec = error::create_table;
+        else if (!validated_bk.create()) ec = error::create_table;
+        else if (!validated_tx.create()) ec = error::create_table;
     }
 
     // mmap will assert if not unloaded.
@@ -198,11 +240,18 @@ code CLASS::open() NOEXCEPT
         else if (!puts.verify()) ec = error::verify_table;
         else if (!tx.verify()) ec = error::verify_table;
         else if (!txs.verify()) ec = error::verify_table;
+
         else if (!address.verify()) ec = error::verify_table;
         else if (!candidate.verify()) ec = error::verify_table;
         else if (!confirmed.verify()) ec = error::verify_table;
         else if (!strong_bk.verify()) ec = error::verify_table;
         else if (!strong_tx.verify()) ec = error::verify_table;
+
+        else if (!bootstrap.verify()) ec = error::verify_table;
+        else if (!buffer.verify()) ec = error::verify_table;
+        else if (!neutrino.verify()) ec = error::verify_table;
+        else if (!validated_bk.verify()) ec = error::verify_table;
+        else if (!validated_tx.verify()) ec = error::verify_table;
     }
 
     // process and flush locks remain open until close().
@@ -229,11 +278,18 @@ code CLASS::snapshot() NOEXCEPT
     if (!ec) ec = puts_body_.flush();
     if (!ec) ec = tx_body_.flush();
     if (!ec) ec = txs_body_.flush();
+
     if (!ec) ec = address_body_.flush();
     if (!ec) ec = candidate_body_.flush();
     if (!ec) ec = confirmed_body_.flush();
     if (!ec) ec = strong_bk_body_.flush();
     if (!ec) ec = strong_tx_body_.flush();
+
+    if (!ec) ec = bootstrap_body_.flush();
+    if (!ec) ec = buffer_body_.flush();
+    if (!ec) ec = neutrino_body_.flush();
+    if (!ec) ec = validated_bk_body_.flush();
+    if (!ec) ec = validated_tx_body_.flush();
 
     if (!ec) ec = backup();
     transactor_mutex_.unlock();
@@ -257,11 +313,18 @@ code CLASS::close() NOEXCEPT
         else if (!puts.close()) ec = error::close_table;
         else if (!tx.close()) ec = error::close_table;
         else if (!txs.close()) ec = error::close_table;
+
         else if (!address.close()) ec = error::close_table;
         else if (!candidate.close()) ec = error::close_table;
         else if (!confirmed.close()) ec = error::close_table;
         else if (!strong_bk.close()) ec = error::close_table;
         else if (!strong_tx.close()) ec = error::close_table;
+
+        else if (!bootstrap.close()) ec = error::close_table;
+        else if (!buffer.close()) ec = error::close_table;
+        else if (!neutrino.close()) ec = error::close_table;
+        else if (!validated_bk.close()) ec = error::close_table;
+        else if (!validated_tx.close()) ec = error::close_table;
     }
 
     // mmap will assert if not unloaded.
@@ -298,6 +361,7 @@ code CLASS::open_load() NOEXCEPT
     if (!ec) ec = tx_body_.open();
     if (!ec) ec = txs_head_.open();
     if (!ec) ec = txs_body_.open();
+
     if (!ec) ec = address_head_.open();
     if (!ec) ec = address_body_.open();
     if (!ec) ec = candidate_head_.open();
@@ -308,6 +372,17 @@ code CLASS::open_load() NOEXCEPT
     if (!ec) ec = strong_bk_body_.open();
     if (!ec) ec = strong_tx_head_.open();
     if (!ec) ec = strong_tx_body_.open();
+
+    if (!ec) ec = bootstrap_head_.open();
+    if (!ec) ec = bootstrap_body_.open();
+    if (!ec) ec = buffer_head_.open();
+    if (!ec) ec = buffer_body_.open();
+    if (!ec) ec = neutrino_head_.open();
+    if (!ec) ec = neutrino_body_.open();
+    if (!ec) ec = validated_bk_head_.open();
+    if (!ec) ec = validated_bk_body_.open();
+    if (!ec) ec = validated_tx_head_.open();
+    if (!ec) ec = validated_tx_body_.open();
 
     if (!ec) ec = header_head_.load();
     if (!ec) ec = header_body_.load();
@@ -323,6 +398,7 @@ code CLASS::open_load() NOEXCEPT
     if (!ec) ec = tx_body_.load();
     if (!ec) ec = txs_head_.load();
     if (!ec) ec = txs_body_.load();
+
     if (!ec) ec = address_head_.load();
     if (!ec) ec = address_body_.load();
     if (!ec) ec = candidate_head_.load();
@@ -333,6 +409,17 @@ code CLASS::open_load() NOEXCEPT
     if (!ec) ec = strong_bk_body_.load();
     if (!ec) ec = strong_tx_head_.load();
     if (!ec) ec = strong_tx_body_.load();
+
+    if (!ec) ec = bootstrap_head_.load();
+    if (!ec) ec = bootstrap_body_.load();
+    if (!ec) ec = buffer_head_.load();
+    if (!ec) ec = buffer_body_.load();
+    if (!ec) ec = neutrino_head_.load();
+    if (!ec) ec = neutrino_body_.load();
+    if (!ec) ec = validated_bk_head_.load();
+    if (!ec) ec = validated_bk_body_.load();
+    if (!ec) ec = validated_tx_head_.load();
+    if (!ec) ec = validated_tx_body_.load();
 
     return ec;
 }
@@ -356,6 +443,7 @@ code CLASS::unload_close() NOEXCEPT
     if (!ec) ec = tx_body_.unload();
     if (!ec) ec = txs_head_.unload();
     if (!ec) ec = txs_body_.unload();
+
     if (!ec) ec = address_head_.unload();
     if (!ec) ec = address_body_.unload();
     if (!ec) ec = candidate_head_.unload();
@@ -366,6 +454,17 @@ code CLASS::unload_close() NOEXCEPT
     if (!ec) ec = strong_bk_body_.unload();
     if (!ec) ec = strong_tx_head_.unload();
     if (!ec) ec = strong_tx_body_.unload();
+
+    if (!ec) ec = bootstrap_head_.unload();
+    if (!ec) ec = bootstrap_body_.unload();
+    if (!ec) ec = buffer_head_.unload();
+    if (!ec) ec = buffer_body_.unload();
+    if (!ec) ec = neutrino_head_.unload();
+    if (!ec) ec = neutrino_body_.unload();
+    if (!ec) ec = validated_bk_head_.unload();
+    if (!ec) ec = validated_bk_body_.unload();
+    if (!ec) ec = validated_tx_head_.unload();
+    if (!ec) ec = validated_tx_body_.unload();
 
     if (!ec) ec = header_head_.close();
     if (!ec) ec = header_body_.close();
@@ -381,6 +480,7 @@ code CLASS::unload_close() NOEXCEPT
     if (!ec) ec = tx_body_.close();
     if (!ec) ec = txs_head_.close();
     if (!ec) ec = txs_body_.close();
+
     if (!ec) ec = address_head_.close();
     if (!ec) ec = address_body_.close();
     if (!ec) ec = candidate_head_.close();
@@ -391,6 +491,17 @@ code CLASS::unload_close() NOEXCEPT
     if (!ec) ec = strong_bk_body_.close();
     if (!ec) ec = strong_tx_head_.close();
     if (!ec) ec = strong_tx_body_.close();
+
+    if (!ec) ec = bootstrap_head_.close();
+    if (!ec) ec = bootstrap_body_.close();
+    if (!ec) ec = buffer_head_.close();
+    if (!ec) ec = buffer_body_.close();
+    if (!ec) ec = neutrino_head_.close();
+    if (!ec) ec = neutrino_body_.close();
+    if (!ec) ec = validated_bk_head_.close();
+    if (!ec) ec = validated_bk_body_.close();
+    if (!ec) ec = validated_tx_head_.close();
+    if (!ec) ec = validated_tx_body_.close();
 
     return ec;
 }
@@ -405,11 +516,18 @@ code CLASS::backup() NOEXCEPT
     if (!puts.backup()) return error::backup_table;
     if (!tx.backup()) return error::backup_table;
     if (!txs.backup()) return error::backup_table;
+
     if (!address.backup()) return error::backup_table;
     if (!candidate.backup()) return error::backup_table;
     if (!confirmed.backup()) return error::backup_table;
     if (!strong_bk.backup()) return error::backup_table;
     if (!strong_tx.backup()) return error::backup_table;
+
+    if (!bootstrap.backup()) return error::backup_table;
+    if (!buffer.backup()) return error::backup_table;
+    if (!neutrino.backup()) return error::backup_table;
+    if (!validated_bk.backup()) return error::backup_table;
+    if (!validated_tx.backup()) return error::backup_table;
 
     static const auto primary = configuration_.dir / schema::dir::primary;
     static const auto secondary = configuration_.dir / schema::dir::secondary;
@@ -440,11 +558,18 @@ code CLASS::dump(const path& folder) NOEXCEPT
     auto puts_buffer = puts_head_.get();
     auto tx_buffer = tx_head_.get();
     auto txs_buffer = txs_head_.get();
+
     auto address_buffer = address_head_.get();
     auto candidate_buffer = candidate_head_.get();
     auto confirmed_buffer = confirmed_head_.get();
     auto strong_bk_buffer = strong_bk_head_.get();
     auto strong_tx_buffer = strong_tx_head_.get();
+
+    auto bootstrap_buffer = bootstrap_head_.get();
+    auto buffer_buffer = buffer_head_.get();
+    auto neutrino_buffer = neutrino_head_.get();
+    auto validated_bk_buffer = validated_bk_head_.get();
+    auto validated_tx_buffer = validated_tx_head_.get();
 
     if (!header_buffer) return error::unloaded_file;
     if (!point_buffer) return error::unloaded_file;
@@ -453,11 +578,18 @@ code CLASS::dump(const path& folder) NOEXCEPT
     if (!puts_buffer) return error::unloaded_file;
     if (!tx_buffer) return error::unloaded_file;
     if (!txs_buffer) return error::unloaded_file;
+
     if (!address_buffer) return error::unloaded_file;
     if (!candidate_buffer) return error::unloaded_file;
     if (!confirmed_buffer) return error::unloaded_file;
     if (!strong_bk_buffer) return error::unloaded_file;
     if (!strong_tx_buffer) return error::unloaded_file;
+
+    if (!bootstrap_buffer) return error::unloaded_file;
+    if (!buffer_buffer) return error::unloaded_file;
+    if (!neutrino_buffer) return error::unloaded_file;
+    if (!validated_bk_buffer) return error::unloaded_file;
+    if (!validated_tx_buffer) return error::unloaded_file;
 
     if (!file::create_file(head(folder, schema::archive::header),
         header_buffer->begin(), header_buffer->size()))
@@ -487,6 +619,7 @@ code CLASS::dump(const path& folder) NOEXCEPT
         txs_buffer->begin(), txs_buffer->size()))
         return error::dump_file;
 
+
     if (!file::create_file(head(folder, schema::indexes::address),
         address_buffer->begin(), address_buffer->size()))
         return error::dump_file;
@@ -505,6 +638,27 @@ code CLASS::dump(const path& folder) NOEXCEPT
 
     if (!file::create_file(head(folder, schema::indexes::strong_tx),
         strong_tx_buffer->begin(), strong_tx_buffer->size()))
+        return error::dump_file;
+
+
+    if (!file::create_file(head(folder, schema::caches::bootstrap),
+        bootstrap_buffer->begin(), bootstrap_buffer->size()))
+        return error::dump_file;
+
+    if (!file::create_file(head(folder, schema::caches::buffer),
+        buffer_buffer->begin(), buffer_buffer->size()))
+        return error::dump_file;
+
+    if (!file::create_file(head(folder, schema::caches::neutrino),
+        neutrino_buffer->begin(), neutrino_buffer->size()))
+        return error::dump_file;
+
+    if (!file::create_file(head(folder, schema::caches::validated_bk),
+        validated_bk_buffer->begin(), validated_bk_buffer->size()))
+        return error::dump_file;
+
+    if (!file::create_file(head(folder, schema::caches::validated_tx),
+        validated_tx_buffer->begin(), validated_tx_buffer->size()))
         return error::dump_file;
 
     return error::success;
@@ -564,11 +718,18 @@ code CLASS::restore() NOEXCEPT
         else if (!puts.restore()) ec = error::restore_table;
         else if (!tx.restore()) ec = error::restore_table;
         else if (!txs.restore()) ec = error::restore_table;
+
         else if (!address.restore()) ec = error::restore_table;
         else if (!candidate.restore()) ec = error::restore_table;
         else if (!confirmed.restore()) ec = error::restore_table;
         else if (!strong_bk.restore()) ec = error::restore_table;
         else if (!strong_tx.restore()) ec = error::restore_table;
+
+        else if (!bootstrap.restore()) ec = error::restore_table;
+        else if (!buffer.restore()) ec = error::restore_table;
+        else if (!neutrino.restore()) ec = error::restore_table;
+        else if (!validated_bk.restore()) ec = error::restore_table;
+        else if (!validated_tx.restore()) ec = error::restore_table;
 
         // mmap will assert if not unloaded.
         else if (!ec) ec = unload_close();

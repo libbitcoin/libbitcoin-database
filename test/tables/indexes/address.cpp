@@ -21,7 +21,7 @@
 
 BOOST_AUTO_TEST_SUITE(address_tests)
 
-BOOST_AUTO_TEST_CASE(tables_indexes_address_test)
+BOOST_AUTO_TEST_CASE(address_test)
 {
     BOOST_REQUIRE(true);
 }

@@ -112,6 +112,7 @@ struct output
     {
         link count() const NOEXCEPT
         {
+            BC_ASSERT(output);
             return system::possible_narrow_cast<link::integer>(
                 tx::size +
                 variable_size(index) +

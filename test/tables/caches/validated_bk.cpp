@@ -19,9 +19,9 @@
 #include "../../test.hpp"
 #include "../../mocks/dfile.hpp"
 
-BOOST_AUTO_TEST_SUITE(validated_block_tests)
+BOOST_AUTO_TEST_SUITE(validated_bk_tests)
 
-BOOST_AUTO_TEST_CASE(tables_caches_validated_block_test)
+BOOST_AUTO_TEST_CASE(validated_bk_test)
 {
     BOOST_REQUIRE(true);
 }

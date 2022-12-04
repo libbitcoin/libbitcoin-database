@@ -84,6 +84,28 @@ public:
     uint32_t strong_tx_buckets;
     uint32_t strong_tx_size;
     uint16_t strong_tx_rate;
+
+    /// Caches.
+    /// -----------------------------------------------------------------------
+
+    uint32_t bootstrap_size;
+    uint16_t bootstrap_rate;
+
+    uint32_t buffer_buckets;
+    uint32_t buffer_size;
+    uint16_t buffer_rate;
+
+    uint32_t neutrino_buckets;
+    uint32_t neutrino_size;
+    uint16_t neutrino_rate;
+
+    uint32_t validated_bk_buckets;
+    uint32_t validated_bk_size;
+    uint16_t validated_bk_rate;
+
+    uint32_t validated_tx_buckets;
+    uint32_t validated_tx_size;
+    uint16_t validated_tx_rate;
 };
 
 } // namespace database

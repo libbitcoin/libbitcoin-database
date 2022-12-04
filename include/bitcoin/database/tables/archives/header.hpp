@@ -91,24 +91,24 @@ struct header
     struct record_put_ptr
       : public schema::header
     {
-        // header_ptr->previous_block_hash() ignored.
+        // header->previous_block_hash() ignored.
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            BC_ASSERT(header_ptr);
+            BC_ASSERT(header);
             context::to_data(sink, ctx);
             sink.write_little_endian<link::integer, link::size>(parent_fk);
-            sink.write_little_endian<uint32_t>(header_ptr->version());
-            sink.write_little_endian<uint32_t>(header_ptr->timestamp());
-            sink.write_little_endian<uint32_t>(header_ptr->bits());
-            sink.write_little_endian<uint32_t>(header_ptr->nonce());
-            sink.write_bytes(header_ptr->merkle_root());
+            sink.write_little_endian<uint32_t>(header->version());
+            sink.write_little_endian<uint32_t>(header->timestamp());
+            sink.write_little_endian<uint32_t>(header->bits());
+            sink.write_little_endian<uint32_t>(header->nonce());
+            sink.write_bytes(header->merkle_root());
             BC_ASSERT(sink.get_write_position() == minrow);
             return sink;
         }
 
         const context ctx{};
         const link::integer parent_fk{};
-        system::chain::header::cptr header_ptr{};
+        system::chain::header::cptr header{};
     };
 
     // This is redundant with record_put_ptr except this does not capture.
@@ -167,12 +167,12 @@ struct header
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            using state = context::state;
-            flags = source.read_little_endian<state::integer, state::size>();
+            using flag = context::flag;
+            flags = source.read_little_endian<flag::integer, flag::size>();
             return source;
         }
 
-        context::state::integer flags{};
+        context::flag::integer flags{};
     };
 
     struct record_height
@@ -181,7 +181,7 @@ struct header
         inline bool from_data(reader& source) NOEXCEPT
         {
             using block = context::block;
-            source.skip_bytes(context::state::size);
+            source.skip_bytes(context::flag::size);
             height = source.read_little_endian<block::integer, block::size>();
             return source;
         }
@@ -194,7 +194,7 @@ struct header
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(context::state::size + context::block::size);
+            source.skip_bytes(context::flag::size + context::block::size);
             mtp = source.read_little_endian<uint32_t>();
             return source;
         }

@@ -21,10 +21,60 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/tables/context.hpp>
+#include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
 namespace database {
+namespace table {
 
+/// validated_tx is a record hashmap of tx validation state.
+struct validated_tx
+  : public hash_map<schema::validated_tx>
+{
+    using state = linkage<schema::code>;
+    using coin = linkage<schema::amount>;
+    using sigop = linkage<schema::sigops>;
+    using hash_map<schema::validated_tx>::hashmap;
+
+    struct record
+      : public schema::validated_tx
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            context::from_data(source, ctx);
+            code = source.read_little_endian<state::integer, state::size>();
+            fees = source.read_little_endian<coin::integer, coin::size>();
+            sigops = source.read_little_endian<sigop::integer, sigop::size>();
+            return source;
+        }
+
+        inline bool to_data(writer& sink) const NOEXCEPT
+        {
+            context::to_data(sink, ctx);
+            sink.write_little_endian<state::integer, state::size>(code);
+            sink.write_little_endian<coin::integer, coin::size>(fees);
+            sink.write_little_endian<sigop::integer, sigop::size>(sigops);
+            return sink;
+        }
+
+        inline bool operator==(const record& other) const NOEXCEPT
+        {
+            return ctx    == other.ctx
+                && code   == other.code
+                && fees   == other.fees
+                && sigops == other.sigops;
+        }
+
+        context ctx{};
+        state code{};
+        coin fees{};
+        sigop sigops{};
+    };
+};
+
+} // namespace table
 } // namespace database
 } // namespace libbitcoin
 
