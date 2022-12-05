@@ -97,7 +97,6 @@ namespace schema
     constexpr size_t index = 3;     // input/output index.
     constexpr size_t sigops = 3;    // signature op count.
     constexpr size_t flags = 4;     // fork flags.
-    constexpr size_t amount = 8;    // coin amount.
 
     /// Primary keys.
     constexpr size_t put = 5;       // ->input/output slab.
@@ -105,6 +104,8 @@ namespace schema
     constexpr size_t txs_ = 4;      // ->txs slab.
     constexpr size_t tx = 4;        // ->tx record.
     constexpr size_t block = 3;     // ->header record.
+    constexpr size_t bk_slab = 4;   // ->validated_bk record (guestimate).
+    constexpr size_t tx_slab = 4;   // ->validated_tk record (guestimate).
 
     /// Search keys.
     constexpr size_t hash = system::hash_size;
@@ -167,7 +168,7 @@ namespace schema
         static_assert(minrow == 61u);
     };
 
-    // Moderate (sk:7) slab multimap, with low percentage of multiples (~1%).
+    // Moderate (sk:7) slab multimap, with low multiple rate.
     struct input
     {
         static constexpr size_t pk = schema::put;
@@ -243,7 +244,7 @@ namespace schema
         static_assert(minrow == 3u);
     };
 
-    // Modest (sk:4) record multimap, with presumably moderate rate of multiples.
+    // Modest (sk:4) record multimap, with high multiple rate.
     struct address
     {
         static constexpr size_t pk = schema::puts_;
@@ -318,48 +319,44 @@ namespace schema
         static constexpr size_t pk = schema::put;
         static constexpr size_t sk = schema::header::pk;
         static constexpr size_t minsize = 
-            schema::hash + one;
+            schema::hash +
+            one;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
         static_assert(minsize == 33u);
         static_assert(minrow == 41u);
     };
 
-    // record hashmap
-    // TODO: look at slab with varint(amount) and pk:3/4 [6-7GB].
+    // slab hashmap
     struct validated_bk
     {
-        static constexpr size_t pk = schema::block;
+        static constexpr size_t pk = schema::bk_slab;
         static constexpr size_t sk = schema::header::pk;
         static constexpr size_t minsize =
             schema::code + 
-            schema::amount;
+            one;
         static constexpr size_t minrow = pk + sk + minsize;
-        static constexpr size_t size = minsize;
-        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 9u);
-        static_assert(minrow == 15u);
+        static constexpr size_t size = max_size_t;
+        static_assert(minsize == 2u);
+        static_assert(minrow == 9u);
     };
 
-    // Modest (sk:4) record multimap, with presumably moderate rate of multiples (2x).
-    // TODO: look at slab with varint(amount) and pk:4/5 [6-7GB].
+    // Modest (sk:4) slab multimap, with low multiple rate.
     struct validated_tx
     {
-        static constexpr size_t pk = schema::tx;
-        static constexpr size_t sk =
-            schema::transaction::pk +
+        static constexpr size_t pk = schema::tx_slab;
+        static constexpr size_t sk = schema::transaction::pk;
+        static constexpr size_t minsize =
             schema::flags +
             schema::block +
-            sizeof(uint32_t);
-        static constexpr size_t minsize =
+            sizeof(uint32_t) +
             schema::code +
-            schema::sigops +
-            schema::amount;
+            one +
+            one;
         static constexpr size_t minrow = pk + sk + minsize;
-        static constexpr size_t size = minsize;
-        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 12u);
-        static_assert(minrow == 31u);
+        static constexpr size_t size = max_size_t;
+        static_assert(minsize == 14u);
+        static_assert(minrow == 22u);
     };
 }
 

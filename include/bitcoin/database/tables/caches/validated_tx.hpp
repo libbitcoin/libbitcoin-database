@@ -29,25 +29,35 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// validated_tx is a record multimap of tx validation state.
+/// validated_tx is a slab multimap of tx validation state.
 /// context is not incorporated into a composite key because of sufficiency.
 struct validated_tx
   : public hash_map<schema::validated_tx>
 {
     using coding = linkage<schema::code>;
-    using coin = linkage<schema::amount>;
     using sigop = linkage<schema::sigops>;
     using hash_map<schema::validated_tx>::hashmap;
 
-    struct record
+    struct slab
       : public schema::validated_tx
     {
+        link count() const NOEXCEPT
+        {
+            using namespace system;
+            return possible_narrow_cast<link::integer>(
+                context::size +
+                schema::code +
+                variable_size(fee) +
+                variable_size(sigops));
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
+            using namespace system;
             context::from_data(source, ctx);
             code = source.read_little_endian<coding::integer, coding::size>();
-            fee = source.read_little_endian<coin::integer, coin::size>();
-            sigops = source.read_little_endian<sigop::integer, sigop::size>();
+            fee = source.read_variable();
+            sigops = possible_narrow_cast<sigop::integer>(source.read_variable());
             return source;
         }
 
@@ -55,12 +65,12 @@ struct validated_tx
         {
             context::to_data(sink, ctx);
             sink.write_little_endian<coding::integer, coding::size>(code);
-            sink.write_little_endian<coin::integer, coin::size>(fee);
-            sink.write_little_endian<sigop::integer, sigop::size>(sigops);
+            sink.write_variable(fee);
+            sink.write_variable(sigops);
             return sink;
         }
 
-        inline bool operator==(const record& other) const NOEXCEPT
+        inline bool operator==(const slab& other) const NOEXCEPT
         {
             return ctx    == other.ctx
                 && code   == other.code
@@ -69,9 +79,9 @@ struct validated_tx
         }
 
         context ctx{};
-        coding code{};
-        coin fee{};
-        sigop sigops{};
+        coding::integer code{};
+        uint64_t fee{};
+        sigop::integer sigops{};
     };
 };
 

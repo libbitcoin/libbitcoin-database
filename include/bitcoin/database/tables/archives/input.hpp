@@ -42,7 +42,8 @@ struct input
     using hash_map<schema::input>::hashmap;
 
     /// Generate composite key.
-    static const search_key compose(tx::integer fk, ix::integer index) NOEXCEPT
+    static constexpr search_key compose(tx::integer fk,
+        ix::integer index) NOEXCEPT
     {
         // Will not adjust to type changes, so guard here.
         static_assert(tx::size == 4 && ix::size == 3);

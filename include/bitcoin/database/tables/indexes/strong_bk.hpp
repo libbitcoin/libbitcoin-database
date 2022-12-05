@@ -55,7 +55,7 @@ struct strong_bk
             return code == other.code;
         }
 
-        coding code{};
+        coding::integer code{};
     };
 };
 

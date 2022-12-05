@@ -28,39 +28,46 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// validated_bk is a record hashmap of block validation state.
+/// validated_bk is a slab hashmap of block validation state.
 struct validated_bk
   : public hash_map<schema::validated_bk>
 {
     using coding = linkage<schema::code>;
-    using coin = linkage<schema::amount>;
     using hash_map<schema::validated_bk>::hashmap;
 
-    struct record
+    struct slab
       : public schema::validated_bk
     {
+        link count() const NOEXCEPT
+        {
+            using namespace system;
+            return possible_narrow_cast<link::integer>(
+                schema::code + 
+                variable_size(fees));
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             code = source.read_little_endian<coding::integer, coding::size>();
-            fees = source.read_little_endian<coin::integer, coin::size>();
+            fees = source.read_variable();
             return source;
         }
 
         inline bool to_data(writer& sink) const NOEXCEPT
         {
             sink.write_little_endian<coding::integer, coding::size>(code);
-            sink.write_little_endian<coin::integer, coin::size>(fees);
+            sink.write_variable(fees);
             return sink;
         }
 
-        inline bool operator==(const record& other) const NOEXCEPT
+        inline bool operator==(const slab& other) const NOEXCEPT
         {
             return code == other.code
                 && fees == other.fees;
         }
 
-        coding code{};
-        coin fees{};
+        coding::integer code{};
+        uint64_t fees{};
     };
 };
 
