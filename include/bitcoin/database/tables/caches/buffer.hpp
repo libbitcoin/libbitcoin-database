@@ -49,7 +49,7 @@ struct buffer
             return source;
         }
 
-        inline bool to_data(writer& sink) const NOEXCEPT
+        inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             tx.to_data(sink);
             return sink;

@@ -36,8 +36,8 @@ const data_chunk closed_head = base16_chunk
 );
 const data_chunk expected_body = base16_chunk
 (
-    "785634"
-    "12efcd"
+    "785634" // header_fk1
+    "12efcd" // header_fk2
 );
 
 BOOST_AUTO_TEST_CASE(height__put__two__expected)

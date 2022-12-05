@@ -51,7 +51,7 @@ struct neutrino
             return source;
         }
 
-        inline bool to_data(writer& sink) const NOEXCEPT
+        inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             sink.write_bytes(filter_head);
             sink.write_variable(filter.size());

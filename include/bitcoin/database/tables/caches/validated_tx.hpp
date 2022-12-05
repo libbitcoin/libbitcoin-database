@@ -61,7 +61,7 @@ struct validated_tx
             return source;
         }
 
-        inline bool to_data(writer& sink) const NOEXCEPT
+        inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             context::to_data(sink, ctx);
             sink.write_little_endian<coding::integer, coding::size>(code);

@@ -44,7 +44,7 @@ struct strong_bk
             return source;
         }
 
-        inline bool to_data(writer& sink) const NOEXCEPT
+        inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             sink.write_little_endian<coding::integer, coding::size>(code);
             return sink;
