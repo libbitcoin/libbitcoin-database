@@ -21,9 +21,61 @@
 
 BOOST_AUTO_TEST_SUITE(height_tests)
 
-BOOST_AUTO_TEST_CASE(height_test)
+using namespace system;
+const table::height::record in1{ {}, 0x12345678 };
+const table::height::record in2{ {}, 0xabcdef12 };
+const table::height::record out1{ {}, 0x00345678 };
+const table::height::record out2{ {}, 0x00cdef12 };
+const data_chunk expected_head = base16_chunk
+(
+    "000000"
+);
+const data_chunk closed_head = base16_chunk
+(
+    "020000"
+);
+const data_chunk expected_body = base16_chunk
+(
+    "785634"
+    "12efcd"
+);
+
+BOOST_AUTO_TEST_CASE(height__put__two__expected)
 {
-    BOOST_REQUIRE(true);
+    test::dfile head_store{};
+    test::dfile body_store{};
+    table::height instance{ head_store, body_store };
+    BOOST_REQUIRE(instance.create());
+
+    table::height::link link1{};
+    BOOST_REQUIRE(instance.put_link(link1, in1));
+    BOOST_REQUIRE_EQUAL(link1, 0u);
+
+    table::height::link link2{};
+    BOOST_REQUIRE(instance.put_link(link2, in2));
+    BOOST_REQUIRE_EQUAL(link2, 1u);
+
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
+    BOOST_REQUIRE(instance.close());
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), closed_head);
+}
+
+BOOST_AUTO_TEST_CASE(height__get__two__expected)
+{
+    auto head = expected_head;
+    auto body = expected_body;
+    test::dfile head_store{ head };
+    test::dfile body_store{ body };
+    table::height instance{ head_store, body_store };
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
+
+    table::height::record out{};
+    BOOST_REQUIRE(instance.get(0u, out));
+    BOOST_REQUIRE(out == out1);
+    BOOST_REQUIRE(instance.get(1u, out));
+    BOOST_REQUIRE(out == out2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

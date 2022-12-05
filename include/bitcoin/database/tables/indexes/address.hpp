@@ -28,25 +28,25 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// address is a record hashmap of output fk records.
+/// address is a record multimap of output fk records.
 struct address
-  : public hash_map<schema::height>
+  : public hash_map<schema::address>
 {
-    using put = linkage<schema::put>;
-    using hash_map<schema::height>::hashmap;
+    using out = linkage<schema::put>;
+    using hash_map<schema::address>::hashmap;
 
     struct record
       : public schema::address
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            output_fk = source.read_little_endian<put::integer, put::size>();
+            output_fk = source.read_little_endian<out::integer, out::size>();
             return source;
         }
 
-        inline bool to_data(writer& sink) const NOEXCEPT
+        inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            sink.write_little_endian<put::integer, put::size>(output_fk);
+            sink.write_little_endian<out::integer, out::size>(output_fk);
             return sink;
         }
 
@@ -55,7 +55,7 @@ struct address
             return output_fk == other.output_fk;
         }
 
-        put::integer output_fk{};
+        out::integer output_fk{};
     };
 };
 
