@@ -28,7 +28,7 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// bootstrap is an array of header hash records (initial blockchain).
+/// bootstrap is an array of header hashes (initial blockchain).
 struct bootstrap
   : public array_map<schema::bootstrap>
 {

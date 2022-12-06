@@ -44,9 +44,9 @@ struct validated_tx
         link count() const NOEXCEPT
         {
             using namespace system;
-            return possible_narrow_cast<link::integer>(
+            return possible_narrow_cast<link::integer>(pk + sk +
                 context::size +
-                schema::code +
+                coding::size +
                 variable_size(fee) +
                 variable_size(sigops));
         }

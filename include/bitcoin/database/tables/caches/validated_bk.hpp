@@ -41,8 +41,8 @@ struct validated_bk
         link count() const NOEXCEPT
         {
             using namespace system;
-            return possible_narrow_cast<link::integer>(
-                schema::code + 
+            return possible_narrow_cast<link::integer>(pk + sk +
+                coding::size +
                 variable_size(fees));
         }
 

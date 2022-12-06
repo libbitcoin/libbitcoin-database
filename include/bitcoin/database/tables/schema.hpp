@@ -106,6 +106,8 @@ namespace schema
     constexpr size_t block = 3;     // ->header record.
     constexpr size_t bk_slab = 4;   // ->validated_bk record (guestimate).
     constexpr size_t tx_slab = 4;   // ->validated_tk record (guestimate).
+    constexpr size_t buffer_ = 5;   // ->buffer record (guestimate).
+    constexpr size_t neutrino_ = 5; // ->neutrino record (guestimate).
 
     /// Search keys.
     constexpr size_t hash = system::hash_size;
@@ -304,7 +306,7 @@ namespace schema
     // slab hashmap
     struct buffer
     {
-        static constexpr size_t pk = schema::put;
+        static constexpr size_t pk = schema::buffer_;
         static constexpr size_t sk = schema::transaction::pk;
         static constexpr size_t minsize = zero;
         static constexpr size_t minrow = pk + sk + minsize;
@@ -316,7 +318,7 @@ namespace schema
     // slab hashmap
     struct neutrino
     {
-        static constexpr size_t pk = schema::put;
+        static constexpr size_t pk = schema::neutrino_;
         static constexpr size_t sk = schema::header::pk;
         static constexpr size_t minsize = 
             schema::hash +

@@ -28,20 +28,21 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// neutrino is a slab hashmap of sized neutrino records.
+/// neutrino is a slab hashmap of neutrino filters.
 struct neutrino
   : public hash_map<schema::neutrino>
 {
     using hash_map<schema::neutrino>::hashmap;
 
-    struct record
+    struct slab
       : public schema::neutrino
     {
         link count() const NOEXCEPT
         {
-            return schema::hash +
+            return system::possible_narrow_cast<link::integer>(pk + sk +
+                schema::hash +
                 variable_size(filter.size()) +
-                system::possible_narrow_cast<link::integer>(filter.size());
+                filter.size());
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -59,7 +60,7 @@ struct neutrino
             return sink;
         }
 
-        inline bool operator==(const record& other) const NOEXCEPT
+        inline bool operator==(const slab& other) const NOEXCEPT
         {
             return filter_head == other.filter_head
                 && filter      == other.filter;

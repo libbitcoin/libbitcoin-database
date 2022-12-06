@@ -161,8 +161,11 @@ template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::put_link(Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
-    link = allocate(element.count());
-    return put(link, key, element);
+    // Reusing put() here would cause a second invocation of element.count().
+    const auto size = element.count();
+    link = allocate(size);
+    auto sink = putter(link, key, size);
+    return sink && element.to_data(*sink) && sink->finalize();
 }
 
 TEMPLATE
