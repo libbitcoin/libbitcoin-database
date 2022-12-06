@@ -28,19 +28,21 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// buffer is a slab hashmap of tx records.
+BC_PUSH_WARNING(NO_NEW_OR_DELETE)
+
+/// buffer is a slab hashmap of txs.
 struct buffer
   : public hash_map<schema::buffer>
 {
     using hash_map<schema::buffer>::hashmap;
 
-    struct record
+    struct slab
       : public schema::buffer
     {
         link count() const NOEXCEPT
         {
-            using namespace system;
-            return possible_narrow_cast<link::integer>(tx.serialized_size(true));
+            return system::possible_narrow_cast<link::integer>(pk + sk +
+                tx.serialized_size(true));
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -49,13 +51,13 @@ struct buffer
             return source;
         }
 
-        inline bool to_data(writer& sink) const NOEXCEPT
+        inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            tx.to_data(sink);
+            tx.to_data(sink, true);
             return sink;
         }
 
-        inline bool operator==(const record& other) const NOEXCEPT
+        inline bool operator==(const slab& other) const NOEXCEPT
         {
             return tx == other.tx;
         }
@@ -63,14 +65,13 @@ struct buffer
         system::chain::transaction tx{};
     };
 
-    struct record_ptr
+    struct slab_ptr
       : public schema::buffer
     {
         link count() const NOEXCEPT
         {
-            BC_ASSERT(tx);
-            using namespace system;
-            return possible_narrow_cast<link::integer>(tx->serialized_size(true));
+            return system::possible_narrow_cast<link::integer>(pk + sk +
+                tx->serialized_size(true));
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -80,7 +81,7 @@ struct buffer
             return source;
         }
 
-        inline bool to_data(writer& sink) const NOEXCEPT
+        inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             BC_ASSERT(tx);
             tx->to_data(sink, true);
@@ -90,16 +91,16 @@ struct buffer
         system::chain::transaction::cptr tx{};
     };
 
-    struct record_put_ref
+    struct slab_put_ref
         : public schema::buffer
     {
         link count() const NOEXCEPT
         {
-            using namespace system;
-            return possible_narrow_cast<link::integer>(tx.serialized_size(true));
+            return system::possible_narrow_cast<link::integer>(pk + sk +
+                tx.serialized_size(true));
         }
 
-        inline bool to_data(writer& sink) const NOEXCEPT
+        inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             tx.to_data(sink, true);
             return sink;
@@ -108,6 +109,8 @@ struct buffer
         const system::chain::transaction& tx{};
     };
 };
+
+BC_POP_WARNING()
 
 } // namespace table
 } // namespace database

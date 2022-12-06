@@ -45,7 +45,7 @@ struct strong_tx
             return source;
         }
 
-        inline bool to_data(writer& sink) const NOEXCEPT
+        inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             sink.write_little_endian<block::integer, block::size>(header_fk);
             sink.write_little_endian<block::integer, block::size>(height);

@@ -21,9 +21,84 @@
 
 BOOST_AUTO_TEST_SUITE(strong_tx_tests)
 
-BOOST_AUTO_TEST_CASE(strong_tx_test)
+using namespace system;
+const table::strong_tx::key key1{ 0x01, 0x02, 0x03, 0x04 };
+const table::strong_tx::key key2{ 0xa1, 0xa2, 0xa3, 0xa4 };
+const table::strong_tx::record in1{ {}, 0xaabbccdd, 0x1a2a3a4a };
+const table::strong_tx::record in2{ {}, 0x11223344, 0xa12ab1c1 };
+const table::strong_tx::record out1{ {}, 0x00bbccdd, 0x002a3a4a };
+const table::strong_tx::record out2{ {}, 0x00223344, 0x002ab1c1 };
+const data_chunk expected_head = base16_chunk
+(
+    "00000000"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
+    "01000000"
+);
+const data_chunk closed_head = base16_chunk
+(
+    "02000000"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
+    "01000000"
+);
+const data_chunk expected_body = base16_chunk
+(
+    "ffffffff" // next->end
+    "01020304" // key1
+    "ddccbb"   // header_fk1
+    "4a3a2a"   // height1
+
+    "00000000" // next->
+    "a1a2a3a4" // key2
+    "443322"   // header_fk2
+    "c1b12a"   // height2
+);
+
+BOOST_AUTO_TEST_CASE(strong_tx__put__two__expected)
 {
-    BOOST_REQUIRE(true);
+    test::dfile head_store{};
+    test::dfile body_store{};
+    table::strong_tx instance{ head_store, body_store, 5 };
+    BOOST_REQUIRE(instance.create());
+
+    table::strong_tx::link link1{};
+    BOOST_REQUIRE(instance.put_link(link1, key1, in1));
+    BOOST_REQUIRE_EQUAL(link1, 0u);
+
+    table::strong_tx::link link2{};
+    BOOST_REQUIRE(instance.put_link(link2, key2, in2));
+    BOOST_REQUIRE_EQUAL(link2, 1u);
+
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
+    BOOST_REQUIRE(instance.close());
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), closed_head);
+}
+
+BOOST_AUTO_TEST_CASE(strong_tx__get__two__expected)
+{
+    auto head = expected_head;
+    auto body = expected_body;
+    test::dfile head_store{ head };
+    test::dfile body_store{ body };
+    table::strong_tx instance{ head_store, body_store, 5 };
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
+
+    table::strong_tx::record out{};
+    BOOST_REQUIRE(instance.get(key1, out));
+    BOOST_REQUIRE(out == out1);
+    BOOST_REQUIRE(instance.get(key2, out));
+    BOOST_REQUIRE(out == out2);
+    BOOST_REQUIRE(instance.get(0u, out));
+    BOOST_REQUIRE(out == out1);
+    BOOST_REQUIRE(instance.get(1u, out));
+    BOOST_REQUIRE(out == out2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -32,7 +32,7 @@ namespace table {
 struct strong_bk
   : public hash_map<schema::strong_bk>
 {
-    using state = linkage<schema::code>;
+    using coding = linkage<schema::code>;
     using hash_map<schema::strong_bk>::hashmap;
 
     struct record
@@ -40,13 +40,13 @@ struct strong_bk
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            code = source.read_little_endian<state::integer, state::size>();
+            code = source.read_little_endian<coding::integer, coding::size>();
             return source;
         }
 
-        inline bool to_data(writer& sink) const NOEXCEPT
+        inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            sink.write_little_endian<state::integer, state::size>(code);
+            sink.write_little_endian<coding::integer, coding::size>(code);
             return sink;
         }
 
@@ -55,7 +55,7 @@ struct strong_bk
             return code == other.code;
         }
 
-        state code{};
+        coding::integer code{};
     };
 };
 

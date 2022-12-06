@@ -38,29 +38,23 @@ struct input
 {
     using tx = linkage<schema::tx>;
     using ix = linkage<schema::index>;
-    using search_key = search<schema::tx_fp>;
+    using search_key = search<schema::input::sk>;
     using hash_map<schema::input>::hashmap;
 
-    /// Generate composite key (foreign point).
-    static const search_key to_point(tx::integer fk, ix::integer index) NOEXCEPT
+    /// Generate composite key.
+    static constexpr search_key compose(tx::integer fk,
+        ix::integer index) NOEXCEPT
     {
-        // Normal form but suboptimal.
-        ////search_key value{};
-        ////system::write::bytes::copy sink(value);
-        ////sink.write_little_endian<tx::integer, tx::size>(fk);
-        ////sink.write_little_endian<ix::integer, ix::size>(index);
-        ////BC_ASSERT(sink.get_write_position() == array_count<search_key>);
-        ////return value;
-
-        // Optimal form but will not adjust to type changes, so guard here.
+        // Will not adjust to type changes, so guard here.
         static_assert(tx::size == 4 && ix::size == 3);
 
-        return search_key
+        return
         {
             system::byte<0>(fk),
             system::byte<1>(fk),
             system::byte<2>(fk),
             system::byte<3>(fk),
+
             system::byte<0>(index),
             system::byte<1>(index),
             system::byte<2>(index)
