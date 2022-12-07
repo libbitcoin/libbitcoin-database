@@ -40,15 +40,15 @@ bool CLASS::set_header(const header& header, const context& ctx) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set_tx(const transaction& tx) NOEXCEPT
-{
-    return !set_tx_link(tx).is_terminal();
-}
-
-TEMPLATE
 bool CLASS::set_block(const block& block, const context& ctx) NOEXCEPT
 {
     return !set_block_link(block, ctx).is_terminal();
+}
+
+TEMPLATE
+bool CLASS::set_tx(const transaction& tx) NOEXCEPT
+{
+    return !set_tx_link(tx).is_terminal();
 }
 
 TEMPLATE
@@ -78,41 +78,33 @@ bool CLASS::set_txs(const hash_digest& key,
 // ============================================================================
 
 TEMPLATE
-CLASS::input::cptr CLASS::get_spender(const hash_digest& tx_hash,
-    uint32_t index) NOEXCEPT
+CLASS::header::cptr CLASS::get_header(const hash_digest& key) NOEXCEPT
 {
-    // Must validate hash_fk because it will be used in a search key.
-    const auto hash_fk = store_.point.it(tx_hash).self();
-    if (hash_fk.is_terminal())
-        return {};
-
-    // Pass spent point for attachment to input (no need to read).
-    table::input::only_from_prevout in
-    {
-        {},
-        system::to_shared(point{ tx_hash, index } )
-    };
-    const auto fp = table::input::compose(hash_fk, index);
-    const auto input_fk = store_.input.it(fp).self();
-    if (!store_.input.get(input_fk, in))
-        return {};
-
-    return in.input;
+    return get_header(store_.header.it(key).self());
 }
 
 TEMPLATE
-CLASS::input::cptr CLASS::get_input(const hash_digest& tx_hash,
-    uint32_t index) NOEXCEPT
+CLASS::block::cptr CLASS::get_block(const hash_digest& key) NOEXCEPT
 {
-    table::transaction::record_input tx{ {}, index };
-    if (!store_.tx.get(tx_hash, tx))
-        return {};
+    return get_block(store_.header.it(key).self());
+}
 
-    table::puts::record_get_one input{};
-    if (!store_.puts.get(tx.input_fk, input))
-        return {};
+TEMPLATE
+system::hashes CLASS::get_txs(const hash_digest& key) NOEXCEPT
+{
+    return get_txs(store_.header.it(key).self());
+}
 
-    return get_input(input.put_fk);
+TEMPLATE
+CLASS::transaction::cptr CLASS::get_tx(const hash_digest& key) NOEXCEPT
+{
+    return get_tx(store_.tx.it(key).self());
+}
+
+TEMPLATE
+CLASS::output::cptr CLASS::get_output(const point& prevout) NOEXCEPT
+{
+    return get_output(prevout.hash(), prevout.index());
 }
 
 TEMPLATE
@@ -131,33 +123,41 @@ CLASS::output::cptr CLASS::get_output(const hash_digest& tx_hash,
 }
 
 TEMPLATE
-CLASS::output::cptr CLASS::get_output(const point& prevout) NOEXCEPT
+CLASS::input::cptr CLASS::get_input(const hash_digest& tx_hash,
+    uint32_t index) NOEXCEPT
 {
-    return get_output(prevout.hash(), prevout.index());
+    table::transaction::record_input tx{ {}, index };
+    if (!store_.tx.get(tx_hash, tx))
+        return {};
+
+    table::puts::record_get_one input{};
+    if (!store_.puts.get(tx.input_fk, input))
+        return {};
+
+    return get_input(input.put_fk);
 }
 
 TEMPLATE
-CLASS::transaction::cptr CLASS::get_tx(const hash_digest& key) NOEXCEPT
+CLASS::input::cptr CLASS::get_spender(const hash_digest& tx_hash,
+    uint32_t index) NOEXCEPT
 {
-    return get_tx(store_.tx.it(key).self());
-}
+    // Must validate hash_fk because it will be used in a search key.
+    const auto hash_fk = store_.point.it(tx_hash).self();
+    if (hash_fk.is_terminal())
+        return {};
 
-TEMPLATE
-CLASS::header::cptr CLASS::get_header(const hash_digest& key) NOEXCEPT
-{
-    return get_header(store_.header.it(key).self());
-}
+    // Pass spent point for attachment to input (no need to read).
+    table::input::only_from_prevout in
+    {
+        {},
+        system::to_shared(point{ tx_hash, index })
+    };
+    const auto fp = table::input::compose(hash_fk, index);
+    const auto input_fk = store_.input.it(fp).self();
+    if (!store_.input.get(input_fk, in))
+        return {};
 
-TEMPLATE
-CLASS::block::cptr CLASS::get_block(const hash_digest& key) NOEXCEPT
-{
-    return get_block(store_.header.it(key).self());
-}
-
-TEMPLATE
-system::hashes CLASS::get_txs(const hash_digest& key) NOEXCEPT
-{
-    return get_txs(store_.header.it(key).self());
+    return in.input;
 }
 
 BC_POP_WARNING()

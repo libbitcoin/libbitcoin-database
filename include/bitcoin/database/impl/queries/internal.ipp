@@ -35,37 +35,6 @@ BC_PUSH_WARNING(NO_USE_OF_MOVED_OBJECT)
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-table::header::link CLASS::set_header_link(const system::chain::header& header,
-    const context& ctx) NOEXCEPT
-{
-    // Parent must be missing iff its hash is null.
-    const auto& parent_sk = header.previous_block_hash();
-    const auto parent_fk = store_.header.it(parent_sk).self();
-    if (parent_fk.is_terminal() != (parent_sk == system::null_hash))
-        return {};
-
-    // Return with success if header exists.
-    const auto key = header.hash();
-    auto header_fk = store_.header.it(key).self();
-    if (!header_fk.is_terminal())
-        return header_fk;
-
-    // BEGIN TRANSACTION
-    // ------------------------------------------------------------------------
-    const auto lock = store_.get_transactor();
-
-    return store_.header.put_link(key, table::header::record_put_ref
-    {
-        {},
-        ctx,
-        parent_fk,
-        header
-    });
-    // ------------------------------------------------------------------------
-    // END TRANSACTION
-}
-
-TEMPLATE
 table::transaction::link CLASS::set_tx_link(
     const system::chain::transaction& tx) NOEXCEPT
 {
@@ -169,6 +138,37 @@ table::transaction::link CLASS::set_tx_link(
 }
 
 TEMPLATE
+table::header::link CLASS::set_header_link(const system::chain::header& header,
+    const context& ctx) NOEXCEPT
+{
+    // Parent must be missing iff its hash is null.
+    const auto& parent_sk = header.previous_block_hash();
+    const auto parent_fk = store_.header.it(parent_sk).self();
+    if (parent_fk.is_terminal() != (parent_sk == system::null_hash))
+        return {};
+
+    // Return with success if header exists.
+    const auto key = header.hash();
+    auto header_fk = store_.header.it(key).self();
+    if (!header_fk.is_terminal())
+        return header_fk;
+
+    // BEGIN TRANSACTION
+    // ------------------------------------------------------------------------
+    const auto lock = store_.get_transactor();
+
+    return store_.header.put_link(key, table::header::record_put_ref
+    {
+        {},
+        ctx,
+        parent_fk,
+        header
+    });
+    // ------------------------------------------------------------------------
+    // END TRANSACTION
+}
+
+TEMPLATE
 table::header::link CLASS::set_block_link(const system::chain::block& block,
     const context& ctx) NOEXCEPT
 {
@@ -212,84 +212,6 @@ bool CLASS::set_txs(const table::header::link& fk,
 
 // chain_ptr getters(fk)
 // ============================================================================
-
-TEMPLATE
-CLASS::input::cptr CLASS::get_input(const table::input::link& fk) NOEXCEPT
-{;
-    table::input::only_with_decomposed_sk in{};
-    if (!store_.input.get(fk, in))
-        return {};
-
-    table::point::record_sk hash{};
-    if (!store_.point.get(in.point_fk, hash))
-        return {};
-
-    return system::to_shared(new input
-    {
-        system::to_shared(new point
-        {
-            std::move(hash.key),
-            in.point_index 
-        }),
-        in.script,
-        in.witness,
-        in.sequence
-    });
-}
-
-TEMPLATE
-CLASS::output::cptr CLASS::get_output(const table::output::link& fk) NOEXCEPT
-{
-    table::output::only out{};
-    if (!store_.output.get(fk, out))
-        return {};
-
-    return out.output;
-}
-
-TEMPLATE
-CLASS::transaction::cptr CLASS::get_tx(
-    const table::transaction::link& fk) NOEXCEPT
-{
-    using namespace system::chain;
-    table::transaction::only tx{};
-    if (!store_.tx.get(fk, tx))
-        return {};
-
-    table::puts::record puts{};
-    puts.put_fks.resize(tx.ins_count + tx.outs_count);
-    if (!store_.puts.get(tx.ins_fk, puts))
-        return {};
-
-    auto it = puts.put_fks.begin();
-    const auto inputs_end = std::next(it, tx.ins_count);
-    const auto ins = system::to_shared<input_cptrs>();
-    ins->reserve(tx.ins_count);
-    while (it != inputs_end)
-    {
-        const auto in = get_input(*it++);
-        if (!in) return {};
-        ins->push_back(in);
-    }
-
-    const auto outputs_end = puts.put_fks.end();
-    const auto outs = system::to_shared<output_cptrs>();
-    outs->reserve(tx.outs_count);
-    while (it != outputs_end)
-    {
-        const auto out = get_output(*it++);
-        if (!out) return {};
-        outs->push_back(out);
-    }
-
-    return system::to_shared(new transaction
-    {
-        tx.version,
-        ins,
-        outs,
-        tx.locktime
-    });
-}
 
 TEMPLATE
 CLASS::header::cptr CLASS::get_header(const table::header::link& fk) NOEXCEPT
@@ -361,6 +283,84 @@ system::hashes CLASS::get_txs(const table::header::link& fk) NOEXCEPT
     }
 
     return hashes;
+}
+
+TEMPLATE
+CLASS::transaction::cptr CLASS::get_tx(
+    const table::transaction::link& fk) NOEXCEPT
+{
+    using namespace system::chain;
+    table::transaction::only tx{};
+    if (!store_.tx.get(fk, tx))
+        return {};
+
+    table::puts::record puts{};
+    puts.put_fks.resize(tx.ins_count + tx.outs_count);
+    if (!store_.puts.get(tx.ins_fk, puts))
+        return {};
+
+    auto it = puts.put_fks.begin();
+    const auto inputs_end = std::next(it, tx.ins_count);
+    const auto ins = system::to_shared<input_cptrs>();
+    ins->reserve(tx.ins_count);
+    while (it != inputs_end)
+    {
+        const auto in = get_input(*it++);
+        if (!in) return {};
+        ins->push_back(in);
+    }
+
+    const auto outputs_end = puts.put_fks.end();
+    const auto outs = system::to_shared<output_cptrs>();
+    outs->reserve(tx.outs_count);
+    while (it != outputs_end)
+    {
+        const auto out = get_output(*it++);
+        if (!out) return {};
+        outs->push_back(out);
+    }
+
+    return system::to_shared(new transaction
+    {
+        tx.version,
+        ins,
+        outs,
+        tx.locktime
+    });
+}
+
+TEMPLATE
+CLASS::input::cptr CLASS::get_input(const table::input::link& fk) NOEXCEPT
+{
+    table::input::only_with_decomposed_sk in{};
+    if (!store_.input.get(fk, in))
+        return {};
+
+    table::point::record_sk hash{};
+    if (!store_.point.get(in.point_fk, hash))
+        return {};
+
+    return system::to_shared(new input
+    {
+        system::to_shared(new point
+        {
+            std::move(hash.key),
+            in.point_index 
+        }),
+        in.script,
+        in.witness,
+        in.sequence
+    });
+}
+
+TEMPLATE
+CLASS::output::cptr CLASS::get_output(const table::output::link& fk) NOEXCEPT
+{
+    table::output::only out{};
+    if (!store_.output.get(fk, out))
+        return {};
+
+    return out.output;
 }
 
 BC_POP_WARNING()
