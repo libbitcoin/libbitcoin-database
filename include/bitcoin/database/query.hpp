@@ -27,7 +27,14 @@
 
 namespace libbitcoin {
 namespace database {
-
+    
+/// Setters:
+/// False implies error (invalid store or parameter association).
+/// Caller should assume invalid store (proper parameterization).
+///
+/// Getters:
+/// Null/empty implies not found or error (invalid store).
+/// Caller should assume not found, idependently monitor store state.
 template <typename Store>
 class query
 {
@@ -43,43 +50,40 @@ public:
 
     /// Archives.
 
-    /// False implies error (invalid store or parameter association).
-    /// Caller should assume invalid store (proper parameterization).
-    bool set_tx(const transaction& tx) NOEXCEPT;
     bool set_header(const header& header, const context& ctx) NOEXCEPT;
     bool set_block(const block& block, const context& ctx) NOEXCEPT;
     bool set_txs(const hash_digest& key, const system::hashes& hashes) NOEXCEPT;
+    bool set_tx(const transaction& tx) NOEXCEPT;
 
-    /// Null/empty implies not found or error (invalid store).
-    /// Caller should assume not found, idependently monitor store state.
-    input::cptr get_spender(const hash_digest& tx_hash, uint32_t index) NOEXCEPT;
-    input::cptr get_input(const hash_digest& tx_hash, uint32_t index) NOEXCEPT;
-    output::cptr get_output(const hash_digest& tx_hash, uint32_t index) NOEXCEPT;
-    output::cptr get_output(const point& prevout) NOEXCEPT;
-    transaction::cptr get_tx(const hash_digest& key) NOEXCEPT;
     header::cptr get_header(const hash_digest& key) NOEXCEPT;
     block::cptr get_block(const hash_digest& key) NOEXCEPT;
     system::hashes get_txs(const hash_digest& key) NOEXCEPT;
+    transaction::cptr get_tx(const hash_digest& key) NOEXCEPT;
+    input::cptr get_input(const hash_digest& tx_hash, uint32_t index) NOEXCEPT;
+    input::cptr get_spender(const hash_digest& tx_hash, uint32_t index) NOEXCEPT;
+    output::cptr get_output(const hash_digest& tx_hash, uint32_t index) NOEXCEPT;
+    output::cptr get_output(const point& prevout) NOEXCEPT;
 
     /// Indexes.
 
+    /// Null/empty implies not found or error (invalid store).
+    /// Caller should assume not found, idependently monitor store state.
+    block::cptr get_header(size_t height) NOEXCEPT;
+    block::cptr get_block(size_t height) NOEXCEPT;
+    block::cptr get_txs(size_t height) NOEXCEPT;
+
 protected:
-    /// False/terminal implies error (invalid store or parameter association).
-    /// Caller should assume invalid store (proper parameterization).
     table::transaction::link set_tx_link(const transaction& tx) NOEXCEPT;
     table::header::link set_header_link(const header& header, const context& ctx) NOEXCEPT;
     table::header::link set_block_link(const block& block, const context& ctx) NOEXCEPT;
     bool set_txs(const table::header::link& fk, const table::txs::slab& set) NOEXCEPT;
 
-    /// Null/empty implies not found or error (invalid store).
-    /// Caller should assume found, idependently monitor store state.
-    input::cptr get_spender(const point::cptr& point) NOEXCEPT;
-    input::cptr get_input(const table::input::link& fk) NOEXCEPT;
-    output::cptr get_output(const table::output::link& fk) NOEXCEPT;
-    transaction::cptr get_tx(const table::transaction::link& fk) NOEXCEPT;
     header::cptr get_header(const table::header::link& fk) NOEXCEPT;
     block::cptr get_block(const table::header::link& fk) NOEXCEPT;
     system::hashes get_txs(const table::header::link& fk) NOEXCEPT;
+    transaction::cptr get_tx(const table::transaction::link& fk) NOEXCEPT;
+    input::cptr get_input(const table::input::link& fk) NOEXCEPT;
+    output::cptr get_output(const table::output::link& fk) NOEXCEPT;
 
 private:
     Store& store_;

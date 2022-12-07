@@ -265,6 +265,12 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\queries\archive.ipp">
       <Filter>include\bitcoin\database\impl\queries</Filter>
     </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\queries\cache.ipp">
+      <Filter>include\bitcoin\database\impl\queries</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\queries\index.ipp">
+      <Filter>include\bitcoin\database\impl\queries</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\queries\internal.ipp">
       <Filter>include\bitcoin\database\impl\queries</Filter>
     </None>

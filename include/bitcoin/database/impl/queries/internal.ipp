@@ -213,35 +213,6 @@ bool CLASS::set_txs(const table::header::link& fk,
 // chain_ptr getters(fk)
 // ============================================================================
 
-////TEMPLATE
-////hash_digest CLASS::get_point(const table::point::link& fk) NOEXCEPT
-////{
-////    table::point::record_sk hash{};
-////    if (!store_.point.get(fk, hash))
-////        return {};
-////
-////    return std::move(hash.key);
-////}
-
-// TODO: test.
-TEMPLATE
-CLASS::input::cptr CLASS::get_spender(const point::cptr& point) NOEXCEPT
-{
-    // Must validate hash_fk because it will be used in a search key.
-    const auto hash_fk = store_.point.it(point->hash()).self();
-    if (hash_fk.is_terminal())
-        return {};
-
-    // TODO: Due to conflicts this is a multimap, iterable here.
-    const auto fp = table::input::compose(hash_fk, point->index());
-    const auto input_fk = store_.input.it(fp).self();
-    table::input::only_from_prevout in{ {}, point };
-    if (!store_.input.get(input_fk, in))
-        return {};
-
-    return in.input;
-}
-
 TEMPLATE
 CLASS::input::cptr CLASS::get_input(const table::input::link& fk) NOEXCEPT
 {;

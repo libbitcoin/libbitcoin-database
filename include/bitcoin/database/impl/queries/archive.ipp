@@ -81,7 +81,23 @@ TEMPLATE
 CLASS::input::cptr CLASS::get_spender(const hash_digest& tx_hash,
     uint32_t index) NOEXCEPT
 {
-    return get_spender(system::to_shared(new point{ tx_hash, index }));
+    // Must validate hash_fk because it will be used in a search key.
+    const auto hash_fk = store_.point.it(tx_hash).self();
+    if (hash_fk.is_terminal())
+        return {};
+
+    // Pass spent point for attachment to input (no need to read).
+    table::input::only_from_prevout in
+    {
+        {},
+        system::to_shared(point{ tx_hash, index } )
+    };
+    const auto fp = table::input::compose(hash_fk, index);
+    const auto input_fk = store_.input.it(fp).self();
+    if (!store_.input.get(input_fk, in))
+        return {};
+
+    return in.input;
 }
 
 TEMPLATE

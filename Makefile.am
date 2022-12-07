@@ -79,6 +79,8 @@ test_libbitcoin_database_test_SOURCES = \
     test/primitives/linkage.cpp \
     test/primitives/manager.cpp \
     test/queries/archive.cpp \
+    test/queries/cache.cpp \
+    test/queries/index.cpp \
     test/queries/internal.cpp \
     test/tables/archives/header.cpp \
     test/tables/archives/input.cpp \
@@ -148,6 +150,8 @@ include_bitcoin_database_impl_primitives_HEADERS = \
 include_bitcoin_database_impl_queriesdir = ${includedir}/bitcoin/database/impl/queries
 include_bitcoin_database_impl_queries_HEADERS = \
     include/bitcoin/database/impl/queries/archive.ipp \
+    include/bitcoin/database/impl/queries/cache.ipp \
+    include/bitcoin/database/impl/queries/index.ipp \
     include/bitcoin/database/impl/queries/internal.ipp
 
 include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks

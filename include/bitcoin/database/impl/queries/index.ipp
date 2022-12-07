@@ -16,24 +16,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_QUERY_IPP
-#define LIBBITCOIN_DATABASE_QUERY_IPP
+#ifndef LIBBITCOIN_DATABASE_QUERIES_INDEX_IPP
+#define LIBBITCOIN_DATABASE_QUERIES_INDEX_IPP
+
+#include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-TEMPLATE
-CLASS::query(Store& value) NOEXCEPT
-  : store_(value)
-{
-}
-
 } // namespace database
 } // namespace libbitcoin
-
-#include <bitcoin/database/impl/queries/archive.ipp>
-#include <bitcoin/database/impl/queries/cache.ipp>
-#include <bitcoin/database/impl/queries/index.ipp>
-#include <bitcoin/database/impl/queries/internal.ipp>
 
 #endif
