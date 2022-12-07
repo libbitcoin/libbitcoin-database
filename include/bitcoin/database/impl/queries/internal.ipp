@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_QUERIES_INTERNAL_IPP
 #define LIBBITCOIN_DATABASE_QUERIES_INTERNAL_IPP
 
-#include <memory>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -361,6 +360,20 @@ CLASS::output::cptr CLASS::get_output(const table::output::link& fk) NOEXCEPT
         return {};
 
     return out.output;
+}
+
+// index getters
+// ============================================================================
+
+TEMPLATE
+table::header::link CLASS::get_header_fk(size_t height) NOEXCEPT
+{
+    const auto block = system::possible_narrow_cast<
+        table::height::block::integer>(height);
+
+    table::height::record out{};
+    return store_.confirmed.get(block, out) ? out.header_fk : 
+        table::header::link{};
 }
 
 BC_POP_WARNING()

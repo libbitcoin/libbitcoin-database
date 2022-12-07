@@ -28,6 +28,7 @@ namespace database {
 
 template <size_t Size>
 using search = system::data_array<Size>;
+using hashes = system::hashes;
 using hash_digest = search<system::hash_size>;
 static_assert(is_same_type<hash_digest, system::hash_digest>);
 

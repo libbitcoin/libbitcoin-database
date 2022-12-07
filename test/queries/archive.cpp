@@ -847,12 +847,12 @@ BOOST_AUTO_TEST_CASE(query__get_output__genesis__expected)
     BOOST_REQUIRE(output1);
     BOOST_REQUIRE(*output1 == *tx->outputs_ptr()->front());
 
-    // get_output2
-    using namespace system;
-    const chain::point point{ tx->hash(false), 0u };
-    auto output2 = query1.get_output(point);
-    BOOST_REQUIRE(output2);
-    BOOST_REQUIRE(*output2 == *tx->outputs_ptr()->front());
+    ////// get_output2
+    ////using namespace system;
+    ////const chain::point point{ tx->hash(false), 0u };
+    ////auto output2 = query1.get_output(point);
+    ////BOOST_REQUIRE(output2);
+    ////BOOST_REQUIRE(*output2 == *tx->outputs_ptr()->front());
 }
 
 BOOST_AUTO_TEST_CASE(query__get_spender__not_found__nullptr)

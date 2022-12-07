@@ -25,6 +25,24 @@
 namespace libbitcoin {
 namespace database {
 
+TEMPLATE
+CLASS::block::cptr CLASS::get_header(size_t height) NOEXCEPT
+{
+    return get_header(get_header_fk(height));
+}
+
+TEMPLATE
+CLASS::block::cptr CLASS::get_block(size_t height) NOEXCEPT
+{
+    return get_block(get_header_fk(height));
+}
+
+TEMPLATE
+CLASS::block::cptr CLASS::get_txs(size_t height) NOEXCEPT
+{
+    return get_txs(get_header_fk(height));
+}
+
 } // namespace database
 } // namespace libbitcoin
 

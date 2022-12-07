@@ -19,8 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERIES_ARCHIVE_IPP
 #define LIBBITCOIN_DATABASE_QUERIES_ARCHIVE_IPP
 
-#include <memory>
-#include <utility>
+#include <algorithm>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -30,7 +29,7 @@ namespace database {
 BC_PUSH_WARNING(NO_NEW_OR_DELETE)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// bool setters(chain_ref)
+// setters
 // ----------------------------------------------------------------------------
 
 TEMPLATE
@@ -52,8 +51,7 @@ bool CLASS::set_tx(const transaction& tx) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set_txs(const hash_digest& key,
-    const system::hashes& hashes) NOEXCEPT
+bool CLASS::set_txs(const hash_digest& key, const hashes& hashes) NOEXCEPT
 {
     // Require header.
     const auto header_fk = store_.header.it(key).self();
@@ -74,8 +72,65 @@ bool CLASS::set_txs(const hash_digest& key,
     return set_txs(header_fk, keys);
 }
 
-// chain_ptr getters(key)
+// getters
 // ============================================================================
+
+TEMPLATE
+bool CLASS::header_exists(const hash_digest& key) NOEXCEPT
+{
+    return store_.header.exists(key);
+}
+
+TEMPLATE
+bool CLASS::txs_exists(const hash_digest& key) NOEXCEPT
+{
+    // Validate header_fk because it will be used as a search key.
+    const auto header_fk = store_.header.it(key).self();
+
+    // Transactions are populated if the hash table entry exists.
+    return !header_fk.is_terminal() &&
+        !store_.txs.it(header_fk).self().is_terminal();
+}
+
+TEMPLATE
+bool CLASS::tx_exists(const hash_digest& key) NOEXCEPT
+{
+    return store_.tx.exists(key);
+}
+
+TEMPLATE
+bool CLASS::populate(const block& block) NOEXCEPT
+{
+    // TODO: evaluate concurrency for larger tx counts.
+    auto result = true;
+    const auto& txs = *block.transactions_ptr();
+    std::for_each(txs.begin(), txs.end(), [&result](const auto& tx) NOEXCEPT
+    {
+        result &= populate(*tx);
+    });
+
+    return result;
+}
+
+TEMPLATE
+bool CLASS::populate(const transaction& tx) NOEXCEPT
+{
+    // TODO: evaluate concurrency for larger input counts.
+    auto result = true;
+    const auto& ins = *tx.inputs_ptr();
+    std::for_each(ins.begin(), ins.end(), [&result](const auto& in) NOEXCEPT
+    {
+        result &= populate(*in);
+    });
+
+    return result;
+}
+
+TEMPLATE
+bool CLASS::populate(const input& input) NOEXCEPT
+{
+    return ((input.prevout = get_prevout(input)));
+}
 
 TEMPLATE
 CLASS::header::cptr CLASS::get_header(const hash_digest& key) NOEXCEPT
@@ -90,7 +145,7 @@ CLASS::block::cptr CLASS::get_block(const hash_digest& key) NOEXCEPT
 }
 
 TEMPLATE
-system::hashes CLASS::get_txs(const hash_digest& key) NOEXCEPT
+hashes CLASS::get_txs(const hash_digest& key) NOEXCEPT
 {
     return get_txs(store_.header.it(key).self());
 }
@@ -102,24 +157,26 @@ CLASS::transaction::cptr CLASS::get_tx(const hash_digest& key) NOEXCEPT
 }
 
 TEMPLATE
-CLASS::output::cptr CLASS::get_output(const point& prevout) NOEXCEPT
-{
-    return get_output(prevout.hash(), prevout.index());
-}
-
-TEMPLATE
-CLASS::output::cptr CLASS::get_output(const hash_digest& tx_hash,
+CLASS::input::cptr CLASS::get_spender(const hash_digest& tx_hash,
     uint32_t index) NOEXCEPT
 {
-    table::transaction::record_output tx{ {}, index };
-    if (!store_.tx.get(tx_hash, tx))
+    // Validate hash_fk because it will be used as a search key.
+    const auto hash_fk = store_.point.it(tx_hash).self();
+    if (hash_fk.is_terminal())
         return {};
 
-    table::puts::record_get_one output{};
-    if (!store_.puts.get(tx.output_fk, output))
+    // Pass spent point for attachment to input (no need to read).
+    table::input::only_from_prevout in
+    {
+        {},
+        system::to_shared(point{ tx_hash, index })
+    };
+    const auto fp = table::input::compose(hash_fk, index);
+    const auto input_fk = store_.input.it(fp).self();
+    if (!store_.input.get(input_fk, in))
         return {};
 
-    return get_output(output.put_fk);
+    return in.input;
 }
 
 TEMPLATE
@@ -138,26 +195,25 @@ CLASS::input::cptr CLASS::get_input(const hash_digest& tx_hash,
 }
 
 TEMPLATE
-CLASS::input::cptr CLASS::get_spender(const hash_digest& tx_hash,
+CLASS::output::cptr CLASS::get_output(const hash_digest& tx_hash,
     uint32_t index) NOEXCEPT
 {
-    // Must validate hash_fk because it will be used in a search key.
-    const auto hash_fk = store_.point.it(tx_hash).self();
-    if (hash_fk.is_terminal())
+    table::transaction::record_output tx{ {}, index };
+    if (!store_.tx.get(tx_hash, tx))
         return {};
 
-    // Pass spent point for attachment to input (no need to read).
-    table::input::only_from_prevout in
-    {
-        {},
-        system::to_shared(point{ tx_hash, index })
-    };
-    const auto fp = table::input::compose(hash_fk, index);
-    const auto input_fk = store_.input.it(fp).self();
-    if (!store_.input.get(input_fk, in))
+    table::puts::record_get_one output{};
+    if (!store_.puts.get(tx.output_fk, output))
         return {};
 
-    return in.input;
+    return get_output(output.put_fk);
+}
+
+TEMPLATE
+CLASS::output::cptr CLASS::get_prevout(const input& input) NOEXCEPT
+{
+    const auto& point = input.point();
+    return get_output(point.hash(), point.index());
 }
 
 BC_POP_WARNING()
