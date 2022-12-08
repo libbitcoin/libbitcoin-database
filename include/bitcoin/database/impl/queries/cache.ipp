@@ -25,6 +25,38 @@
 namespace libbitcoin {
 namespace database {
     
+TEMPLATE
+code CLASS::header_state(const hash_digest& key) NOEXCEPT
+{
+    const auto header_fk = store_.header.it(key).self();
+    return header_fk.is_terminal() ? error::not_found : header_state(header_fk);
+}
+
+TEMPLATE
+code CLASS::block_state(const hash_digest& key) NOEXCEPT
+{
+    const auto header_fk = store_.header.it(key).self();
+    if (header_fk.is_terminal())
+        return error::not_found;
+
+    // If there is block state then txs are populated, otherwise check.
+    // A block must always be fully populated before setting valid/invalid.
+    const auto state = block_state(header_fk);
+    return (state == error::no_entry) &&
+        store_.txs.it(key).self().is_terminal() ? error::unpopulated : state;
+}
+
+TEMPLATE
+code CLASS::tx_state(const hash_digest& key, const context& context) NOEXCEPT
+{
+    const auto tx_fk = store_.tx.it(key).self();
+    if (tx_fk.is_terminal())
+        return error::not_found;
+
+    // tx validation state is contextual, while blocks carry their own context.
+    return tx_state(tx_fk, context);
+}
+
 } // namespace database
 } // namespace libbitcoin
 
