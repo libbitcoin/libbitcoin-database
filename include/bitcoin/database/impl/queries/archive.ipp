@@ -82,12 +82,12 @@ bool CLASS::header_exists(const hash_digest& key) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::txs_exists(const hash_digest& key) NOEXCEPT
+bool CLASS::block_exists(const hash_digest& key) NOEXCEPT
 {
     // Validate header_fk because it will be used as a search key.
     const auto header_fk = store_.header.it(key).self();
 
-    // Transactions are populated if the hash table entry exists.
+    // All transactions are populated if the hash table entry exists.
     return !header_fk.is_terminal() &&
         !store_.txs.it(header_fk).self().is_terminal();
 }

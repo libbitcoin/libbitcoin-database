@@ -57,11 +57,13 @@ public:
     bool set_tx(const transaction& tx) NOEXCEPT;
 
     // TODO: test.
+    /// Archive existence state only.
     bool header_exists(const hash_digest& key) NOEXCEPT;
-    bool txs_exists(const hash_digest& key) NOEXCEPT;
+    bool block_exists(const hash_digest& key) NOEXCEPT;
     bool tx_exists(const hash_digest& key) NOEXCEPT;
 
     // TODO: test.
+    /// Prevout population, false if any are missing/unpopulated.
     bool populate(const block& block) NOEXCEPT;
     bool populate(const transaction& tx) NOEXCEPT;
     bool populate(const input& input) NOEXCEPT;
@@ -83,6 +85,15 @@ public:
     block::cptr get_block(size_t height) NOEXCEPT;
     block::cptr get_txs(size_t height) NOEXCEPT;
 
+    /// Caches.
+    /// -----------------------------------------------------------------------
+
+    // TODO: test.
+    /// Validation states (block implies populated).
+    code header_state(const hash_digest& key) NOEXCEPT;
+    code block_state(const hash_digest& key) NOEXCEPT;
+    code tx_state(const hash_digest& key, const context& context) NOEXCEPT;
+
 protected:
     table::transaction::link set_tx_link(const transaction& tx) NOEXCEPT;
     table::header::link set_header_link(const header& header, const context& ctx) NOEXCEPT;
@@ -98,6 +109,10 @@ protected:
 
     table::header::link get_header_fk(size_t height) NOEXCEPT;
 
+    code header_state(const table::header::link& fk) NOEXCEPT;
+    code block_state(const table::header::link& fk) NOEXCEPT;
+    code tx_state(const table::header::link& fk, const context& context) NOEXCEPT;
+
 private:
     Store& store_;
 };
@@ -108,6 +123,9 @@ private:
 #define TEMPLATE template <typename Store>
 #define CLASS query<Store>
 
+#include <bitcoin/database/impl/queries/archive.ipp>
+#include <bitcoin/database/impl/queries/cache.ipp>
+#include <bitcoin/database/impl/queries/index.ipp>
 #include <bitcoin/database/impl/query.ipp>
 
 #undef CLASS

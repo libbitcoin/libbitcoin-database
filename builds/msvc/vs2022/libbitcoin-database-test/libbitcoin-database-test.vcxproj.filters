@@ -96,9 +96,6 @@
     <ClCompile Include="..\..\..\..\test\queries\index.cpp">
       <Filter>src\queries</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\queries\internal.cpp">
-      <Filter>src\queries</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\query.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -138,6 +135,9 @@
     <ClCompile Include="..\..\..\..\test\tables\caches\neutrino.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\caches\strong_bk.cpp">
+      <Filter>src\tables\caches</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_bk.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
@@ -148,9 +148,6 @@
       <Filter>src\tables\indexes</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\indexes\height.cpp">
-      <Filter>src\tables\indexes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\indexes\strong_bk.cpp">
       <Filter>src\tables\indexes</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\indexes\strong_tx.cpp">

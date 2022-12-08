@@ -89,7 +89,6 @@
     <ClCompile Include="..\..\..\..\test\queries\archive.cpp" />
     <ClCompile Include="..\..\..\..\test\queries\cache.cpp" />
     <ClCompile Include="..\..\..\..\test\queries\index.cpp" />
-    <ClCompile Include="..\..\..\..\test\queries\internal.cpp" />
     <ClCompile Include="..\..\..\..\test\query.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
     <ClCompile Include="..\..\..\..\test\store.cpp" />
@@ -103,11 +102,11 @@
     <ClCompile Include="..\..\..\..\test\tables\caches\bootstrap.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\buffer.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\neutrino.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\caches\strong_bk.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_bk.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_tx.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\address.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\height.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\indexes\strong_bk.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\strong_tx.cpp" />
     <ClCompile Include="..\..\..\..\test\test.cpp" />
   </ItemGroup>

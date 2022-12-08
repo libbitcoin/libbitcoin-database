@@ -206,6 +206,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\neutrino.hpp">
       <Filter>include\bitcoin\database\tables\caches</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\strong_bk.hpp">
+      <Filter>include\bitcoin\database\tables\caches</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_bk.hpp">
       <Filter>include\bitcoin\database\tables\caches</Filter>
     </ClInclude>
@@ -219,9 +222,6 @@
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\height.hpp">
-      <Filter>include\bitcoin\database\tables\indexes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\strong_bk.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\strong_tx.hpp">
@@ -269,9 +269,6 @@
       <Filter>include\bitcoin\database\impl\queries</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\queries\index.ipp">
-      <Filter>include\bitcoin\database\impl\queries</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\queries\internal.ipp">
       <Filter>include\bitcoin\database\impl\queries</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query.ipp">

@@ -219,7 +219,6 @@ if (with-tests)
         "../../test/queries/archive.cpp"
         "../../test/queries/cache.cpp"
         "../../test/queries/index.cpp"
-        "../../test/queries/internal.cpp"
         "../../test/tables/archives/header.cpp"
         "../../test/tables/archives/input.cpp"
         "../../test/tables/archives/output.cpp"
@@ -230,11 +229,11 @@ if (with-tests)
         "../../test/tables/caches/bootstrap.cpp"
         "../../test/tables/caches/buffer.cpp"
         "../../test/tables/caches/neutrino.cpp"
+        "../../test/tables/caches/strong_bk.cpp"
         "../../test/tables/caches/validated_bk.cpp"
         "../../test/tables/caches/validated_tx.cpp"
         "../../test/tables/indexes/address.cpp"
         "../../test/tables/indexes/height.cpp"
-        "../../test/tables/indexes/strong_bk.cpp"
         "../../test/tables/indexes/strong_tx.cpp" )
 
     add_test( NAME libbitcoin-database-test COMMAND libbitcoin-database-test
