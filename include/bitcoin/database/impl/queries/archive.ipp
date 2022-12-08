@@ -104,7 +104,7 @@ bool CLASS::populate(const block& block) NOEXCEPT
     // TODO: evaluate concurrency for larger tx counts.
     auto result = true;
     const auto& txs = *block.transactions_ptr();
-    std::for_each(txs.begin(), txs.end(), [&result](const auto& tx) NOEXCEPT
+    std::for_each(txs.begin(), txs.end(), [&](const auto& tx) NOEXCEPT
     {
         result &= populate(*tx);
     });
@@ -118,7 +118,7 @@ bool CLASS::populate(const transaction& tx) NOEXCEPT
     // TODO: evaluate concurrency for larger input counts.
     auto result = true;
     const auto& ins = *tx.inputs_ptr();
-    std::for_each(ins.begin(), ins.end(), [&result](const auto& in) NOEXCEPT
+    std::for_each(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
     {
         result &= populate(*in);
     });
