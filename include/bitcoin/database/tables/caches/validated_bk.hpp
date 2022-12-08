@@ -69,6 +69,18 @@ struct validated_bk
         coding::integer code{};
         uint64_t fees{};
     };
+
+    struct slab_get_code
+      : public schema::validated_bk
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            code = source.read_little_endian<coding::integer, coding::size>();
+            return source;
+        }
+
+        coding::integer code{};
+    };
 };
 
 } // namespace table
