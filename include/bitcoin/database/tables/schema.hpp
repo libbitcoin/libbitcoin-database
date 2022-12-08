@@ -57,7 +57,6 @@ namespace schema
         constexpr auto address = "address";
         constexpr auto candidate = "candidate";
         constexpr auto confirmed = "confirmed";
-        constexpr auto strong_bk = "strong_bk";
         constexpr auto strong_tx = "strong_tx";
     }
 
@@ -66,6 +65,7 @@ namespace schema
         constexpr auto bootstrap = "bootstrap";
         constexpr auto buffer = "buffer";
         constexpr auto neutrino = "neutrino";
+        constexpr auto strong_bk = "strong_bk";
         constexpr auto validated_bk = "validated_bk";
         constexpr auto validated_tx = "validated_tx";
     }
@@ -261,31 +261,20 @@ namespace schema
     };
 
     // record hashmap
-    struct strong_bk
-    {
-        static constexpr size_t pk = schema::block;
-        static constexpr size_t sk = schema::header::pk;
-        static constexpr size_t minsize = schema::code;
-        static constexpr size_t minrow = pk + sk + minsize;
-        static constexpr size_t size = minsize;
-        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 1u);
-        static_assert(minrow == 7u);
-    };
-
-    // record hashmap
     struct strong_tx
     {
         static constexpr size_t pk = schema::tx;
         static constexpr size_t sk = schema::transaction::pk;
         static constexpr size_t minsize =
-            schema::header::pk +
-            schema::block;
+            schema::header::pk;
+            ////+ schema::block;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 6u);
-        static_assert(minrow == 14u);
+        ////static_assert(minsize == 6u);
+        ////static_assert(minrow == 14u);
+        static_assert(minsize == 3u);
+        static_assert(minrow == 11u);
     };
 
     /// Cache tables.
@@ -328,6 +317,21 @@ namespace schema
         static constexpr size_t size = max_size_t;
         static_assert(minsize == 33u);
         static_assert(minrow == 41u);
+    };
+
+    // record hashmap
+    struct strong_bk
+    {
+        static constexpr size_t pk = schema::block;
+        static constexpr size_t sk = schema::header::pk;
+        static constexpr size_t minsize = zero;//// schema::code;
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        ////static_assert(minsize == 1u);
+        ////static_assert(minrow == 7u);
+        static_assert(minsize == 0u);
+        static_assert(minrow == 6u);
     };
 
     // slab hashmap

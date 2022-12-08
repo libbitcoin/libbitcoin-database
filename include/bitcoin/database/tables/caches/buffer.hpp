@@ -48,12 +48,14 @@ struct buffer
         inline bool from_data(reader& source) NOEXCEPT
         {
             tx = system::chain::transaction{ source, true };
+            BC_ASSERT(source.get_read_position() == count());
             return source;
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             tx.to_data(sink, true);
+            BC_ASSERT(sink.get_write_position() == count());
             return sink;
         }
 

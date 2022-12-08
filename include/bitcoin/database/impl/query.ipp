@@ -186,7 +186,7 @@ table::header::link CLASS::set_block_link(const system::chain::block& block,
     if (store_.txs.exists(header_fk))
         return true;
 
-    // Get/create foreign key for each tx (set is idempotent).
+    // Get/create foreign key for each tx (tx set is idempotent).
     table::txs::slab set{};
     const auto& txs = *block.transactions_ptr();
     set.tx_fks.reserve(txs.size());
@@ -426,6 +426,13 @@ code CLASS::block_state(const table::header::link& fk) NOEXCEPT
     table::validated_bk::slab_get_code out{};
     return store_.validated_bk.get(fk, out) ? to_code(out.code) :
         error::no_entry;
+}
+
+TEMPLATE
+code CLASS::block_state(table::header::link& out_fk, size_t height) NOEXCEPT
+{
+    out_fk = get_header_fk(height);
+    return out_fk.is_terminal() ? error::not_found : block_state(out_fk);
 }
 
 TEMPLATE

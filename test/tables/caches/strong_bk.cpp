@@ -24,8 +24,10 @@ BOOST_AUTO_TEST_SUITE(strong_bk_tests)
 using namespace system;
 const table::strong_bk::key key1{ 0x01, 0x02, 0x03 };
 const table::strong_bk::key key2{ 0xa1, 0xa2, 0xa3 };
-const table::strong_bk::record record1{ {}, 0x42 };
-const table::strong_bk::record record2{ {}, 0x24 };
+const table::strong_bk::record record1{};
+const table::strong_bk::record record2{};
+////const table::strong_bk::record record1{ {}, 0x42 };
+////const table::strong_bk::record record2{ {}, 0x24 };
 const data_chunk expected_head = base16_chunk
 (
     "000000"
@@ -48,11 +50,11 @@ const data_chunk expected_body = base16_chunk
 (
     "ffffff"   // next->end
     "010203"   // key1
-    "42"       // code1
+    ////"42"       // code1
 
     "000000"   // next->
     "a1a2a3"   // key2
-    "24"       // code2
+    ////"24"       // code2
 );
 
 BOOST_AUTO_TEST_CASE(strong_bk__put__two__expected)

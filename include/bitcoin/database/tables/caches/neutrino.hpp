@@ -49,6 +49,7 @@ struct neutrino
         {
             filter_head = source.read_hash();
             filter = source.read_bytes(source.read_variable());
+            BC_ASSERT(source.get_read_position() == count());
             return source;
         }
 
@@ -57,6 +58,7 @@ struct neutrino
             sink.write_bytes(filter_head);
             sink.write_variable(filter.size());
             sink.write_bytes(filter);
+            BC_ASSERT(sink.get_write_position() == count());
             return sink;
         }
 

@@ -48,6 +48,10 @@ public:
 
     query(Store& value) NOEXCEPT;
 
+
+    // TODO: need resize exposed for height indexes (and buffer/bootstrap).
+
+
     /// Archives.
     /// -----------------------------------------------------------------------
 
@@ -85,14 +89,36 @@ public:
     block::cptr get_block(size_t height) NOEXCEPT;
     block::cptr get_txs(size_t height) NOEXCEPT;
 
+    /// Scan (from 0) candidate and confirmed for last common height.
+    size_t get_fork_point() NOEXCEPT;
+
+    /// Scan from height (fork_point) for first unpopulated block.
+    size_t get_validator_start(size_t height) NOEXCEPT;
+
+    /// Scan from height (validator_start) for all unpopulated candidates.
+    hashes get_downloadable_blocks(size_t height) NOEXCEPT;
+
     /// Caches.
     /// -----------------------------------------------------------------------
 
     // TODO: test.
+    // TODO: ensure header is not a bootstrap (or checkpoint) conflict.
     /// Validation states (block implies populated).
     code header_state(const hash_digest& key) NOEXCEPT;
     code block_state(const hash_digest& key) NOEXCEPT;
     code tx_state(const hash_digest& key, const context& context) NOEXCEPT;
+
+    // TODO: test.
+    /// Confirmation states.
+    bool block_confirmed(const hash_digest& key) NOEXCEPT;
+    bool tx_confirmed(const hash_digest& key) NOEXCEPT;
+    bool output_confirmed(const hash_digest& tx_hash, uint32_t index) NOEXCEPT;
+    bool spent_confirmed(const hash_digest& tx_hash, uint32_t index) NOEXCEPT;
+
+    // TODO: test.
+    /// Bootstrap is used to kick off get_headers and reject headers.
+    bool set_bootstrap(size_t height) NOEXCEPT;
+    hashes get_bootstrap(size_t from, size_t to) NOEXCEPT;
 
 protected:
     table::transaction::link set_tx_link(const transaction& tx) NOEXCEPT;
@@ -112,6 +138,10 @@ protected:
     code header_state(const table::header::link& fk) NOEXCEPT;
     code block_state(const table::header::link& fk) NOEXCEPT;
     code tx_state(const table::header::link& fk, const context& context) NOEXCEPT;
+
+    // TODO: test.
+    /// Use for chaser iteration (will use fk to get block/txs for validation).
+    code block_state(table::header::link& out_fk, size_t height) NOEXCEPT;
 
 private:
     Store& store_;

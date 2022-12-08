@@ -43,6 +43,27 @@ CLASS::block::cptr CLASS::get_txs(size_t height) NOEXCEPT
     return get_txs(get_header_fk(height));
 }
 
+TEMPLATE
+size_t CLASS::get_fork_point() NOEXCEPT
+{
+    // TODO:
+    return {};
+}
+
+TEMPLATE
+size_t CLASS::get_validator_start(size_t height) NOEXCEPT
+{
+    // TODO:
+    return {};
+}
+
+TEMPLATE
+hashes CLASS::get_downloadable_blocks(size_t height) NOEXCEPT
+{
+    // TODO:
+    return {};
+}
+
 } // namespace database
 } // namespace libbitcoin
 

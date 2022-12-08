@@ -41,25 +41,25 @@ struct strong_tx
         inline bool from_data(reader& source) NOEXCEPT
         {
             header_fk = source.read_little_endian<block::integer, block::size>();
-            height    = source.read_little_endian<block::integer, block::size>();
+            ////height    = source.read_little_endian<block::integer, block::size>();
             return source;
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             sink.write_little_endian<block::integer, block::size>(header_fk);
-            sink.write_little_endian<block::integer, block::size>(height);
+            ////sink.write_little_endian<block::integer, block::size>(height);
             return sink;
         }
 
         inline bool operator==(const record& other) const NOEXCEPT
         {
-            return header_fk == other.header_fk
-                && height    == other.height;
+            return header_fk == other.header_fk;
+                ////&& height    == other.height;
         }
 
         block::integer header_fk{};
-        block::integer height{};
+        ////block::integer height{};
     };
 };
 

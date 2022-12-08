@@ -40,22 +40,25 @@ struct strong_bk
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            code = source.read_little_endian<coding::integer, coding::size>();
+            ////code = source.read_little_endian<coding::integer, coding::size>();
+            BC_ASSERT(source.get_read_position() == minrow);
             return source;
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            sink.write_little_endian<coding::integer, coding::size>(code);
+            ////sink.write_little_endian<coding::integer, coding::size>(code);
+            BC_ASSERT(sink.get_write_position() == minrow);
             return sink;
         }
 
-        inline bool operator==(const record& other) const NOEXCEPT
+        inline bool operator==(const record&) const NOEXCEPT
         {
-            return code == other.code;
+            return true;//// code == other.code;
         }
 
-        coding::integer code{};
+        // WHY THIS CODE?
+        ////coding::integer code{};
     };
 };
 

@@ -94,8 +94,8 @@ CLASS::store(const settings& config) NOEXCEPT
     neutrino_body_(body(config.dir, schema::caches::neutrino), config.neutrino_size, config.neutrino_rate),
     neutrino(neutrino_head_, neutrino_body_, config.neutrino_buckets),
 
-    strong_bk_head_(head(config.dir / schema::dir::heads, schema::indexes::strong_bk)),
-    strong_bk_body_(body(config.dir, schema::indexes::strong_bk), config.strong_bk_size, config.strong_bk_rate),
+    strong_bk_head_(head(config.dir / schema::dir::heads, schema::caches::strong_bk)),
+    strong_bk_body_(body(config.dir, schema::caches::strong_bk), config.strong_bk_size, config.strong_bk_rate),
     strong_bk(strong_bk_head_, strong_bk_body_, config.strong_bk_buckets),
 
     validated_bk_head_(head(config.dir / schema::dir::heads, schema::caches::validated_bk)),
@@ -649,7 +649,7 @@ code CLASS::dump(const path& folder) NOEXCEPT
         neutrino_buffer->begin(), neutrino_buffer->size()))
         return error::dump_file;
 
-    if (!file::create_file(head(folder, schema::indexes::strong_bk),
+    if (!file::create_file(head(folder, schema::caches::strong_bk),
         strong_bk_buffer->begin(), strong_bk_buffer->size()))
         return error::dump_file;
 

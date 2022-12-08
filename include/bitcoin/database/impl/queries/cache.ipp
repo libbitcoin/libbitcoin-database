@@ -25,6 +25,9 @@
 namespace libbitcoin {
 namespace database {
     
+// state
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 code CLASS::header_state(const hash_digest& key) NOEXCEPT
 {
@@ -55,6 +58,52 @@ code CLASS::tx_state(const hash_digest& key, const context& context) NOEXCEPT
 
     // tx validation state is contextual, while blocks carry their own context.
     return tx_state(tx_fk, context);
+}
+
+// confiration
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+bool CLASS::block_confirmed(const hash_digest& key) NOEXCEPT
+{
+    return store_.strong_bk.exists(key);
+}
+
+TEMPLATE
+bool CLASS::tx_confirmed(const hash_digest& key) NOEXCEPT
+{
+    return store_.strong_tx.exists(key);
+}
+
+TEMPLATE
+bool CLASS::output_confirmed(const hash_digest& tx_hash,
+    uint32_t index) NOEXCEPT
+{
+    // TODO: relate output to a strong_tx.
+}
+
+TEMPLATE
+bool CLASS::spent_confirmed(const hash_digest& tx_hash,
+    uint32_t index) NOEXCEPT
+{
+    // TODO: relate spenders of output to a strong_tx (bool).
+}
+
+// bootstrap
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+bool CLASS::set_bootstrap(size_t height) NOEXCEPT
+{
+    // TODO: copy confirmed block hashes up to height to bootstrap, or false.
+    return false;
+}
+
+TEMPLATE
+hashes CLASS::get_bootstrap(size_t from, size_t to) NOEXCEPT
+{
+    // TODO: get contiguous set of hashes for network get_headers.
+    return false;
 }
 
 } // namespace database
