@@ -76,34 +76,34 @@ bool CLASS::tx_confirmed(const hash_digest& key) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::output_confirmed(const hash_digest& tx_hash,
-    uint32_t index) NOEXCEPT
+bool CLASS::output_confirmed(const hash_digest&, uint32_t) NOEXCEPT
 {
     // TODO: relate output to a strong_tx.
+    return {};
 }
 
 TEMPLATE
-bool CLASS::spent_confirmed(const hash_digest& tx_hash,
-    uint32_t index) NOEXCEPT
+bool CLASS::spent_confirmed(const hash_digest&, uint32_t) NOEXCEPT
 {
     // TODO: relate spenders of output to a strong_tx (bool).
+    return {};
 }
 
 // bootstrap
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-bool CLASS::set_bootstrap(size_t height) NOEXCEPT
+bool CLASS::set_bootstrap(size_t) NOEXCEPT
 {
     // TODO: copy confirmed block hashes up to height to bootstrap, or false.
-    return false;
+    return {};
 }
 
 TEMPLATE
-hashes CLASS::get_bootstrap(size_t from, size_t to) NOEXCEPT
+hashes CLASS::get_bootstrap(size_t, size_t) NOEXCEPT
 {
     // TODO: get contiguous set of hashes for network get_headers.
-    return false;
+    return {};
 }
 
 } // namespace database
