@@ -72,7 +72,16 @@ enum error_t
     close_table,
     backup_table,
     restore_table,
-    verify_table
+    verify_table,
+
+    // states
+    valid,
+    invalid,
+    connected,
+    preconnected,
+    unpopulated,
+    not_found,
+    no_entry
 };
 
 // No current need for error_code equivalence mapping.
