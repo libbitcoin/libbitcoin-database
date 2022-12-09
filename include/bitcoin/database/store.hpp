@@ -39,7 +39,6 @@
 #include <bitcoin/database/tables/caches/bootstrap.hpp>
 #include <bitcoin/database/tables/caches/buffer.hpp>
 #include <bitcoin/database/tables/caches/neutrino.hpp>
-#include <bitcoin/database/tables/caches/strong_bk.hpp>
 #include <bitcoin/database/tables/caches/validated_bk.hpp>
 #include <bitcoin/database/tables/caches/validated_tx.hpp>
 
@@ -101,7 +100,6 @@ public:
     table::bootstrap bootstrap;
     table::buffer buffer;
     table::neutrino neutrino;
-    table::strong_bk strong_bk;
     table::validated_bk validated_bk;
     table::validated_tx validated_tx;
 
@@ -178,10 +176,6 @@ protected:
     // slab hashmap
     Storage neutrino_head_;
     Storage neutrino_body_;
-
-    // record hashmap
-    Storage strong_bk_head_;
-    Storage strong_bk_body_;
 
     // record hashmap
     Storage validated_bk_head_;

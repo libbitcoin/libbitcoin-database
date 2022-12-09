@@ -120,7 +120,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\bootstrap.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\buffer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\neutrino.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\strong_bk.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_bk.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_tx.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\context.hpp" />

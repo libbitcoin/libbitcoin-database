@@ -27,14 +27,14 @@
 
 namespace libbitcoin {
 namespace database {
+
+using header_link = table::header::link;
+using input_link = table::input::link;
+using output_link = table::output::link;
+using tx_link = table::transaction::link;
+using tx_links = std_vector<tx_link>;
+////using txs_link = table::txs::link;
     
-/// Setters:
-/// False implies error (invalid store or parameter association).
-/// Caller should assume invalid store (proper parameterization).
-///
-/// Getters:
-/// Null/empty/false implies not found or error (invalid store).
-/// Caller should assume not found, idependently monitor store state.
 template <typename Store>
 class query
 {
@@ -45,103 +45,109 @@ public:
     using output = system::chain::output;
     using header = system::chain::header;
     using transaction = system::chain::transaction;
+    using filter = system::data_chunk;
 
     query(Store& value) NOEXCEPT;
 
-
-    // TODO: need resize exposed for height indexes (and buffer/bootstrap).
-
-
-    /// Archives.
+    /// Initialization.
     /// -----------------------------------------------------------------------
 
-    bool set_header(const header& header, const context& ctx) NOEXCEPT;
-    bool set_block(const block& block, const context& ctx) NOEXCEPT;
-    bool set_txs(const hash_digest& key, const hashes& hashes) NOEXCEPT;
-    bool set_tx(const transaction& tx) NOEXCEPT;
+    size_t get_top() NOEXCEPT;
+    size_t get_top_candidate() NOEXCEPT;
+    size_t get_fork() NOEXCEPT;
+    size_t get_first_unpopulated_from(size_t height) NOEXCEPT;
+    hashes get_all_unpopulated_from(size_t height) NOEXCEPT;
+    hashes get_locator(size_t height) NOEXCEPT;
 
-    // TODO: test.
-    /// Archive existence state only.
-    bool header_exists(const hash_digest& key) NOEXCEPT;
-    bool block_exists(const hash_digest& key) NOEXCEPT;
-    bool tx_exists(const hash_digest& key) NOEXCEPT;
+    /// Key conversion. 
+    /// -----------------------------------------------------------------------
 
-    // TODO: test.
-    /// Prevout population, false if any are missing/unpopulated.
+    header_link to_header(size_t height) NOEXCEPT;
+    header_link to_header(const hash_digest& key) NOEXCEPT;
+    tx_links to_txs(const header_link& link) NOEXCEPT;
+    tx_link to_tx(const hash_digest& key) NOEXCEPT;
+
+    /// Archive (natural-keyed).
+    /// -----------------------------------------------------------------------
+    bool is_header(const hash_digest& key) NOEXCEPT;
+    bool is_block(const hash_digest& key) NOEXCEPT;
+    bool is_tx(const hash_digest& key) NOEXCEPT;
+
+    bool set(const header& header, const context& ctx) NOEXCEPT;
+    bool set(const block& block, const context& ctx) NOEXCEPT;
+    bool set(const transaction& tx) NOEXCEPT;
+
     bool populate(const block& block) NOEXCEPT;
     bool populate(const transaction& tx) NOEXCEPT;
     bool populate(const input& input) NOEXCEPT;
 
-    header::cptr get_header(const hash_digest& key) NOEXCEPT;
-    block::cptr get_block(const hash_digest& key) NOEXCEPT;
-    hashes get_txs(const hash_digest& key) NOEXCEPT;
-    transaction::cptr get_tx(const hash_digest& key) NOEXCEPT;
-    input::cptr get_spender(const hash_digest& tx_hash, uint32_t index) NOEXCEPT;
-    input::cptr get_input(const hash_digest& tx_hash, uint32_t index) NOEXCEPT;
-    output::cptr get_output(const hash_digest& tx_hash, uint32_t index) NOEXCEPT;
-    output::cptr get_prevout(const input& input) NOEXCEPT;
-
-    /// Indexes.
+    /// Archive (foreign-keyed).
     /// -----------------------------------------------------------------------
 
-    // TODO: test.
-    block::cptr get_header(size_t height) NOEXCEPT;
-    block::cptr get_block(size_t height) NOEXCEPT;
-    block::cptr get_txs(size_t height) NOEXCEPT;
+    header::cptr get_header(const header_link& link) NOEXCEPT;
+    block::cptr get_block(const header_link& link) NOEXCEPT;
+    hashes get_txs(const header_link& link) NOEXCEPT;
+    transaction::cptr get_tx(const tx_link& link) NOEXCEPT;
+    output::cptr get_output(const tx_link& link, uint32_t output_index) NOEXCEPT;
+    input::cptr get_input(const tx_link& link, uint32_t input_index) NOEXCEPT;
+    input::cptr get_spender(const tx_link& link, uint32_t output_index) NOEXCEPT;
 
-    /// Scan (from 0) candidate and confirmed for last common height.
-    size_t get_fork_point() NOEXCEPT;
+    header_link set_link(const header& header, const context& ctx) NOEXCEPT;
+    header_link set_link(const block& block, const context& ctx) NOEXCEPT;
+    tx_link set_link(const transaction& tx) NOEXCEPT;
+    bool set(const header_link& link, const hashes& hashes) NOEXCEPT;
+    bool set(const header_link& link, const tx_links& links) NOEXCEPT;
 
-    /// Scan from height (fork_point) for first unpopulated block.
-    size_t get_validator_start(size_t height) NOEXCEPT;
-
-    /// Scan from height (validator_start) for all unpopulated candidates.
-    hashes get_downloadable_blocks(size_t height) NOEXCEPT;
-
-    /// Caches.
+    /// Validation (foreign-keyed).
     /// -----------------------------------------------------------------------
 
-    // TODO: test.
-    // TODO: ensure header is not a bootstrap (or checkpoint) conflict.
-    /// Validation states (block implies populated).
-    code header_state(const hash_digest& key) NOEXCEPT;
-    code block_state(const hash_digest& key) NOEXCEPT;
-    code tx_state(const hash_digest& key, const context& context) NOEXCEPT;
+    code get_header_state(const header_link& link) NOEXCEPT;
+    code get_block_state(const header_link& link) NOEXCEPT;
+    code get_tx_state(const tx_link& link, const context& ctx) NOEXCEPT;
 
-    // TODO: test.
-    /// Confirmation states.
-    bool block_confirmed(const hash_digest& key) NOEXCEPT;
-    bool tx_confirmed(const hash_digest& key) NOEXCEPT;
-    bool output_confirmed(const hash_digest& tx_hash, uint32_t index) NOEXCEPT;
-    bool spent_confirmed(const hash_digest& tx_hash, uint32_t index) NOEXCEPT;
+    bool set_block_connected(const header_link& link) NOEXCEPT;
+    bool set_block_valid(const header_link& link) NOEXCEPT;
+    bool set_block_invalid(const header_link& link, const code& code) NOEXCEPT;
 
-    // TODO: test.
-    /// Bootstrap is used to kick off get_headers and reject headers.
-    bool set_bootstrap(size_t height) NOEXCEPT;
+    bool set_tx_preconnected(const tx_link& link, const context& ctx) NOEXCEPT;
+    bool set_tx_connected(const tx_link& link, const context& ctx) NOEXCEPT;
+    bool set_tx_invalid(const tx_link& link, const context& ctx,
+        const code& code) NOEXCEPT;
+
+    /// Confirmation (foreign-keyed).
+    /// -----------------------------------------------------------------------
+
+    bool is_confirmed_block(const header_link& link) NOEXCEPT;
+    bool is_candidate_block(const header_link& link) NOEXCEPT;
+    bool is_confirmed_tx(const tx_link& link) NOEXCEPT;
+    bool is_confirmed_prevout(const input_link& link) NOEXCEPT;
+    bool is_unspent_prevout(const input_link& link) NOEXCEPT;
+
+    bool push(const header_link& link) NOEXCEPT;
+    bool push_candidate(const header_link& link) NOEXCEPT;
+
+    bool pop() NOEXCEPT;
+    bool pop_candidate() NOEXCEPT;
+
+    /// Buffer (foreign-keyed).
+    /// -----------------------------------------------------------------------
+
+    transaction::cptr get_buffered_tx(const tx_link& link) NOEXCEPT;
+    bool set_buffered_tx(const transaction& tx) NOEXCEPT;
+
+    /// Neutrino (foreign-keyed).
+    /// -----------------------------------------------------------------------
+
+    filter get_filter(const header_link& link) NOEXCEPT;
+    hash_digest get_filter_head(const header_link& link) NOEXCEPT;
+    bool set_filter(const header_link& link, const hash_digest& head,
+        const filter& body) NOEXCEPT;
+
+    /// Bootstrap (array).
+    /// -----------------------------------------------------------------------
+
     hashes get_bootstrap(size_t from, size_t to) NOEXCEPT;
-
-protected:
-    table::transaction::link set_tx_link(const transaction& tx) NOEXCEPT;
-    table::header::link set_header_link(const header& header, const context& ctx) NOEXCEPT;
-    table::header::link set_block_link(const block& block, const context& ctx) NOEXCEPT;
-    bool set_txs(const table::header::link& fk, const table::txs::slab& set) NOEXCEPT;
-
-    header::cptr get_header(const table::header::link& fk) NOEXCEPT;
-    block::cptr get_block(const table::header::link& fk) NOEXCEPT;
-    hashes get_txs(const table::header::link& fk) NOEXCEPT;
-    transaction::cptr get_tx(const table::transaction::link& fk) NOEXCEPT;
-    input::cptr get_input(const table::input::link& fk) NOEXCEPT;
-    output::cptr get_output(const table::output::link& fk) NOEXCEPT;
-
-    table::header::link get_header_fk(size_t height) NOEXCEPT;
-
-    code header_state(const table::header::link& fk) NOEXCEPT;
-    code block_state(const table::header::link& fk) NOEXCEPT;
-    code tx_state(const table::header::link& fk, const context& context) NOEXCEPT;
-
-    // TODO: test.
-    /// Use for chaser iteration (will use fk to get block/txs for validation).
-    code block_state(table::header::link& out_fk, size_t height) NOEXCEPT;
+    bool set_bootstrap(size_t height) NOEXCEPT;
 
 private:
     Store& store_;
@@ -153,9 +159,9 @@ private:
 #define TEMPLATE template <typename Store>
 #define CLASS query<Store>
 
-#include <bitcoin/database/impl/queries/archive.ipp>
-#include <bitcoin/database/impl/queries/cache.ipp>
-#include <bitcoin/database/impl/queries/index.ipp>
+////#include <bitcoin/database/impl/queries/archive.ipp>
+////#include <bitcoin/database/impl/queries/cache.ipp>
+////#include <bitcoin/database/impl/queries/index.ipp>
 #include <bitcoin/database/impl/query.ipp>
 
 #undef CLASS

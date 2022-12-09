@@ -102,7 +102,6 @@
     <ClCompile Include="..\..\..\..\test\tables\caches\bootstrap.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\buffer.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\neutrino.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\caches\strong_bk.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_bk.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_tx.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\address.cpp" />

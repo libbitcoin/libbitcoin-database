@@ -94,10 +94,6 @@ CLASS::store(const settings& config) NOEXCEPT
     neutrino_body_(body(config.dir, schema::caches::neutrino), config.neutrino_size, config.neutrino_rate),
     neutrino(neutrino_head_, neutrino_body_, config.neutrino_buckets),
 
-    strong_bk_head_(head(config.dir / schema::dir::heads, schema::caches::strong_bk)),
-    strong_bk_body_(body(config.dir, schema::caches::strong_bk), config.strong_bk_size, config.strong_bk_rate),
-    strong_bk(strong_bk_head_, strong_bk_body_, config.strong_bk_buckets),
-
     validated_bk_head_(head(config.dir / schema::dir::heads, schema::caches::validated_bk)),
     validated_bk_body_(body(config.dir, schema::caches::validated_bk), config.validated_bk_size, config.validated_bk_rate),
     validated_bk(validated_bk_head_, validated_bk_body_, config.validated_bk_buckets),
@@ -167,8 +163,6 @@ code CLASS::create() NOEXCEPT
     else if (!file::create_file(buffer_body_.file())) ec = error::create_file;
     else if (!file::create_file(neutrino_head_.file())) ec = error::create_file;
     else if (!file::create_file(neutrino_body_.file())) ec = error::create_file;
-    else if (!file::create_file(strong_bk_head_.file())) ec = error::create_file;
-    else if (!file::create_file(strong_bk_body_.file())) ec = error::create_file;
     else if (!file::create_file(validated_bk_head_.file())) ec = error::create_file;
     else if (!file::create_file(validated_bk_body_.file())) ec = error::create_file;
     else if (!file::create_file(validated_tx_head_.file())) ec = error::create_file;
@@ -195,7 +189,6 @@ code CLASS::create() NOEXCEPT
         else if (!bootstrap.create()) ec = error::create_table;
         else if (!buffer.create()) ec = error::create_table;
         else if (!neutrino.create()) ec = error::create_table;
-        else if (!strong_bk.create()) ec = error::create_table;
         else if (!validated_bk.create()) ec = error::create_table;
         else if (!validated_tx.create()) ec = error::create_table;
     }
@@ -249,7 +242,6 @@ code CLASS::open() NOEXCEPT
         else if (!bootstrap.verify()) ec = error::verify_table;
         else if (!buffer.verify()) ec = error::verify_table;
         else if (!neutrino.verify()) ec = error::verify_table;
-        else if (!strong_bk.verify()) ec = error::verify_table;
         else if (!validated_bk.verify()) ec = error::verify_table;
         else if (!validated_tx.verify()) ec = error::verify_table;
     }
@@ -287,7 +279,6 @@ code CLASS::snapshot() NOEXCEPT
     if (!ec) ec = bootstrap_body_.flush();
     if (!ec) ec = buffer_body_.flush();
     if (!ec) ec = neutrino_body_.flush();
-    if (!ec) ec = strong_bk_body_.flush();
     if (!ec) ec = validated_bk_body_.flush();
     if (!ec) ec = validated_tx_body_.flush();
 
@@ -322,7 +313,6 @@ code CLASS::close() NOEXCEPT
         else if (!bootstrap.close()) ec = error::close_table;
         else if (!buffer.close()) ec = error::close_table;
         else if (!neutrino.close()) ec = error::close_table;
-        else if (!strong_bk.close()) ec = error::close_table;
         else if (!validated_bk.close()) ec = error::close_table;
         else if (!validated_tx.close()) ec = error::close_table;
     }
@@ -377,8 +367,6 @@ code CLASS::open_load() NOEXCEPT
     if (!ec) ec = buffer_body_.open();
     if (!ec) ec = neutrino_head_.open();
     if (!ec) ec = neutrino_body_.open();
-    if (!ec) ec = strong_bk_head_.open();
-    if (!ec) ec = strong_bk_body_.open();
     if (!ec) ec = validated_bk_head_.open();
     if (!ec) ec = validated_bk_body_.open();
     if (!ec) ec = validated_tx_head_.open();
@@ -414,8 +402,6 @@ code CLASS::open_load() NOEXCEPT
     if (!ec) ec = buffer_body_.load();
     if (!ec) ec = neutrino_head_.load();
     if (!ec) ec = neutrino_body_.load();
-    if (!ec) ec = strong_bk_head_.load();
-    if (!ec) ec = strong_bk_body_.load();
     if (!ec) ec = validated_bk_head_.load();
     if (!ec) ec = validated_bk_body_.load();
     if (!ec) ec = validated_tx_head_.load();
@@ -459,8 +445,6 @@ code CLASS::unload_close() NOEXCEPT
     if (!ec) ec = buffer_body_.unload();
     if (!ec) ec = neutrino_head_.unload();
     if (!ec) ec = neutrino_body_.unload();
-    if (!ec) ec = strong_bk_head_.unload();
-    if (!ec) ec = strong_bk_body_.unload();
     if (!ec) ec = validated_bk_head_.unload();
     if (!ec) ec = validated_bk_body_.unload();
     if (!ec) ec = validated_tx_head_.unload();
@@ -496,8 +480,6 @@ code CLASS::unload_close() NOEXCEPT
     if (!ec) ec = buffer_body_.close();
     if (!ec) ec = neutrino_head_.close();
     if (!ec) ec = neutrino_body_.close();
-    if (!ec) ec = strong_bk_head_.close();
-    if (!ec) ec = strong_bk_body_.close();
     if (!ec) ec = validated_bk_head_.close();
     if (!ec) ec = validated_bk_body_.close();
     if (!ec) ec = validated_tx_head_.close();
@@ -525,7 +507,6 @@ code CLASS::backup() NOEXCEPT
     if (!bootstrap.backup()) return error::backup_table;
     if (!buffer.backup()) return error::backup_table;
     if (!neutrino.backup()) return error::backup_table;
-    if (!strong_bk.backup()) return error::backup_table;
     if (!validated_bk.backup()) return error::backup_table;
     if (!validated_tx.backup()) return error::backup_table;
 
@@ -567,7 +548,6 @@ code CLASS::dump(const path& folder) NOEXCEPT
     auto bootstrap_buffer = bootstrap_head_.get();
     auto buffer_buffer = buffer_head_.get();
     auto neutrino_buffer = neutrino_head_.get();
-    auto strong_bk_buffer = strong_bk_head_.get();
     auto validated_bk_buffer = validated_bk_head_.get();
     auto validated_tx_buffer = validated_tx_head_.get();
 
@@ -587,7 +567,6 @@ code CLASS::dump(const path& folder) NOEXCEPT
     if (!bootstrap_buffer) return error::unloaded_file;
     if (!buffer_buffer) return error::unloaded_file;
     if (!neutrino_buffer) return error::unloaded_file;
-    if (!strong_bk_buffer) return error::unloaded_file;
     if (!validated_bk_buffer) return error::unloaded_file;
     if (!validated_tx_buffer) return error::unloaded_file;
 
@@ -647,10 +626,6 @@ code CLASS::dump(const path& folder) NOEXCEPT
 
     if (!file::create_file(head(folder, schema::caches::neutrino),
         neutrino_buffer->begin(), neutrino_buffer->size()))
-        return error::dump_file;
-
-    if (!file::create_file(head(folder, schema::caches::strong_bk),
-        strong_bk_buffer->begin(), strong_bk_buffer->size()))
         return error::dump_file;
 
     if (!file::create_file(head(folder, schema::caches::validated_bk),
@@ -727,7 +702,6 @@ code CLASS::restore() NOEXCEPT
         else if (!bootstrap.restore()) ec = error::restore_table;
         else if (!buffer.restore()) ec = error::restore_table;
         else if (!neutrino.restore()) ec = error::restore_table;
-        else if (!strong_bk.restore()) ec = error::restore_table;
         else if (!validated_bk.restore()) ec = error::restore_table;
         else if (!validated_tx.restore()) ec = error::restore_table;
 

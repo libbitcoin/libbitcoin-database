@@ -135,9 +135,6 @@
     <ClCompile Include="..\..\..\..\test\tables\caches\neutrino.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\caches\strong_bk.cpp">
-      <Filter>src\tables\caches</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_bk.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>

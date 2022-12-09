@@ -30,7 +30,6 @@
 #include <bitcoin/database/tables/caches/bootstrap.hpp>
 #include <bitcoin/database/tables/caches/buffer.hpp>
 #include <bitcoin/database/tables/caches/neutrino.hpp>
-#include <bitcoin/database/tables/caches/strong_bk.hpp>
 #include <bitcoin/database/tables/caches/validated_bk.hpp>
 #include <bitcoin/database/tables/caches/validated_tx.hpp>
 

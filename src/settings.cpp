@@ -68,10 +68,6 @@ settings::settings() NOEXCEPT
     confirmed_size{ 1 },
     confirmed_rate{ 50 },
 
-    strong_bk_buckets{ 100 },
-    strong_bk_size{ 1 },
-    strong_bk_rate{ 50 },
-
     strong_tx_buckets{ 100 },
     strong_tx_size{ 1 },
     strong_tx_rate{ 50 },
