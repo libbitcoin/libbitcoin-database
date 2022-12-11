@@ -45,8 +45,9 @@ struct puts
         link count() const NOEXCEPT
         {
             using namespace system;
-            BC_ASSERT(put_fks.size() < power2<uint64_t>(to_bits(put::size)));
-            return possible_narrow_cast<link::integer>(put_fks.size());
+            const auto bytes = in_fks.size() + out_fks.size();
+            BC_ASSERT(bytes < power2<uint64_t>(to_bits(put::size)));
+            return possible_narrow_cast<link::integer>(bytes);
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -54,7 +55,12 @@ struct puts
             // Clear the single record limit (file limit remains).
             source.set_limit();
 
-            std::for_each(put_fks.begin(), put_fks.end(), [&](auto& fk) NOEXCEPT
+            std::for_each(in_fks.begin(), in_fks.end(), [&](auto& fk) NOEXCEPT
+            {
+                fk = source.read_little_endian<put::integer, put::size>();
+            });
+
+            std::for_each(out_fks.begin(), out_fks.end(), [&](auto& fk) NOEXCEPT
             {
                 fk = source.read_little_endian<put::integer, put::size>();
             });
@@ -68,7 +74,12 @@ struct puts
             // Clear the single record limit (file limit remains).
             sink.set_limit();
 
-            std::for_each(put_fks.begin(), put_fks.end(), [&](const auto& fk) NOEXCEPT
+            std::for_each(in_fks.begin(), in_fks.end(), [&](const auto& fk) NOEXCEPT
+            {
+                sink.write_little_endian<put::integer, put::size>(fk);
+            });
+
+            std::for_each(out_fks.begin(), out_fks.end(), [&](const auto& fk) NOEXCEPT
             {
                 sink.write_little_endian<put::integer, put::size>(fk);
             });
@@ -79,10 +90,12 @@ struct puts
 
         inline bool operator==(const record& other) const NOEXCEPT
         {
-            return put_fks == other.put_fks;
+            return in_fks  == other.in_fks
+                && out_fks == other.out_fks;
         }
 
-        keys put_fks{};
+        keys in_fks{};
+        keys out_fks{};
     };
 
     struct record_get_one

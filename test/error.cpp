@@ -339,13 +339,13 @@ BOOST_AUTO_TEST_CASE(error_t__code__preconnected__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "preconnected");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__unpopulated__true_exected_message)
+BOOST_AUTO_TEST_CASE(error_t__code__unassociated__true_exected_message)
 {
-    constexpr auto value = error::unpopulated;
+    constexpr auto value = error::unassociated;
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "unpopulated");
+    BOOST_REQUIRE_EQUAL(ec.message(), "unassociated");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__not_found__true_exected_message)

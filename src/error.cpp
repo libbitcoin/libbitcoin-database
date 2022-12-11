@@ -72,7 +72,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { invalid, "invalid" },
     { connected, "connected" },
     { preconnected, "preconnected" },
-    { unpopulated, "unpopulated" },
+    { unassociated, "unassociated" },
     { not_found, "not_found" },
     { no_entry, "no_entry" }
 };

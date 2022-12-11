@@ -28,23 +28,32 @@
 namespace libbitcoin {
 namespace database {
 
+/// Global type aliases.
 using header_link = table::header::link;
+using point_link = table::point::link;
 using input_link = table::input::link;
 using output_link = table::output::link;
+using txs_link = table::txs::link;
 using tx_link = table::transaction::link;
-using tx_links = std_vector<tx_link>;
-////using txs_link = table::txs::link;
-    
+using tx_links = std_vector<tx_link::integer>;
+using input_links = std_vector<input_link::integer>;
+using output_links = std_vector<output_link::integer>;
+
 template <typename Store>
 class query
 {
 public:
+    /// Query type aliases.
     using block = system::chain::block;
     using point = system::chain::point;
     using input = system::chain::input;
     using output = system::chain::output;
     using header = system::chain::header;
     using transaction = system::chain::transaction;
+    using inputs_cptr = system::chain::inputs_cptr;
+    using outputs_cptr = system::chain::outputs_cptr;
+    using transactions_cptr = system::chain::transactions_cptr;
+    using heights = std_vector<size_t>;
     using filter = system::data_chunk;
 
     query(Store& value) NOEXCEPT;
@@ -52,23 +61,32 @@ public:
     /// Initialization.
     /// -----------------------------------------------------------------------
 
+    bool is_empty() NOEXCEPT;
     size_t get_top() NOEXCEPT;
     size_t get_top_candidate() NOEXCEPT;
     size_t get_fork() NOEXCEPT;
-    size_t get_first_unpopulated_from(size_t height) NOEXCEPT;
-    hashes get_all_unpopulated_from(size_t height) NOEXCEPT;
-    hashes get_locator(size_t height) NOEXCEPT;
+    size_t get_last_associated_from(size_t height) NOEXCEPT;
+    hashes get_all_unassociated_above(size_t height) NOEXCEPT;
+    hashes get_locator(const heights& heights) NOEXCEPT;
 
-    /// Key conversion. 
+    /// Key conversion.
     /// -----------------------------------------------------------------------
 
-    header_link to_header(size_t height) NOEXCEPT;
+    header_link to_candidate(size_t height) NOEXCEPT;
+    header_link to_confirmed(size_t height) NOEXCEPT;
     header_link to_header(const hash_digest& key) NOEXCEPT;
-    tx_links to_txs(const header_link& link) NOEXCEPT;
+    point_link to_point(const hash_digest& key) NOEXCEPT;
+    txs_link to_txs(const header_link& link) NOEXCEPT;
     tx_link to_tx(const hash_digest& key) NOEXCEPT;
+
+    output_links to_tx_outputs(const tx_link& link) NOEXCEPT;
+    input_links to_tx_inputs(const tx_link& link) NOEXCEPT;
+    input_links to_block_inputs(const header_link& link) NOEXCEPT;
+    tx_links to_transactions(const header_link& link) NOEXCEPT;
 
     /// Archive (natural-keyed).
     /// -----------------------------------------------------------------------
+
     bool is_header(const hash_digest& key) NOEXCEPT;
     bool is_block(const hash_digest& key) NOEXCEPT;
     bool is_tx(const hash_digest& key) NOEXCEPT;
@@ -84,13 +102,21 @@ public:
     /// Archive (foreign-keyed).
     /// -----------------------------------------------------------------------
 
+    hashes get_txs(const header_link& link) NOEXCEPT;
+    inputs_cptr get_inputs(const tx_link& link) NOEXCEPT;
+    outputs_cptr get_outputs(const tx_link& link) NOEXCEPT;
+    transactions_cptr get_transactions(const header_link& link) NOEXCEPT;
+
     header::cptr get_header(const header_link& link) NOEXCEPT;
     block::cptr get_block(const header_link& link) NOEXCEPT;
-    hashes get_txs(const header_link& link) NOEXCEPT;
     transaction::cptr get_tx(const tx_link& link) NOEXCEPT;
+    output::cptr get_output(const output_link& link) NOEXCEPT;
+    input::cptr get_input(const input_link& link) NOEXCEPT;
+
+    output::cptr get_output(const point& prevout) NOEXCEPT;
     output::cptr get_output(const tx_link& link, uint32_t output_index) NOEXCEPT;
     input::cptr get_input(const tx_link& link, uint32_t input_index) NOEXCEPT;
-    input::cptr get_spender(const tx_link& link, uint32_t output_index) NOEXCEPT;
+    inputs_cptr get_spenders(const tx_link& link, uint32_t output_index) NOEXCEPT;
 
     header_link set_link(const header& header, const context& ctx) NOEXCEPT;
     header_link set_link(const block& block, const context& ctx) NOEXCEPT;
@@ -101,7 +127,6 @@ public:
     /// Validation (foreign-keyed).
     /// -----------------------------------------------------------------------
 
-    code get_header_state(const header_link& link) NOEXCEPT;
     code get_block_state(const header_link& link) NOEXCEPT;
     code get_tx_state(const tx_link& link, const context& ctx) NOEXCEPT;
 
@@ -117,11 +142,14 @@ public:
     /// Confirmation (foreign-keyed).
     /// -----------------------------------------------------------------------
 
+    bool is_block(const header_link& link) NOEXCEPT;
     bool is_confirmed_block(const header_link& link) NOEXCEPT;
     bool is_candidate_block(const header_link& link) NOEXCEPT;
     bool is_confirmed_tx(const tx_link& link) NOEXCEPT;
     bool is_confirmed_prevout(const input_link& link) NOEXCEPT;
     bool is_unspent_prevout(const input_link& link) NOEXCEPT;
+    bool is_tx_confirmable(const tx_link& link) NOEXCEPT;
+    bool is_block_confirmable(const header_link& link) NOEXCEPT;
 
     bool push(const header_link& link) NOEXCEPT;
     bool push_candidate(const header_link& link) NOEXCEPT;
@@ -149,6 +177,11 @@ public:
     hashes get_bootstrap(size_t from, size_t to) NOEXCEPT;
     bool set_bootstrap(size_t height) NOEXCEPT;
 
+protected:
+    code to_code(linkage<schema::code>::integer value) NOEXCEPT;
+    bool is_sufficient(const context& current,
+        const context& evaluated) NOEXCEPT;
+
 private:
     Store& store_;
 };
@@ -159,9 +192,6 @@ private:
 #define TEMPLATE template <typename Store>
 #define CLASS query<Store>
 
-////#include <bitcoin/database/impl/queries/archive.ipp>
-////#include <bitcoin/database/impl/queries/cache.ipp>
-////#include <bitcoin/database/impl/queries/index.ipp>
 #include <bitcoin/database/impl/query.ipp>
 
 #undef CLASS

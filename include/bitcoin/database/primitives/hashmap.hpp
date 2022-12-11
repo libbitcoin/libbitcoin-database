@@ -66,6 +66,10 @@ public:
     /// Allocate element at returned link (follow with set|put).
     Link allocate(const Link& size) NOEXCEPT;
 
+    // TODO: test.
+    /// Return the associated search key.
+    Key get_key(const Link& size) NOEXCEPT;
+
     /// Get element at key.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool get(const Key& key, Element& element) const NOEXCEPT;

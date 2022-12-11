@@ -92,6 +92,21 @@ Link CLASS::allocate(const Link& size) NOEXCEPT
 }
 
 TEMPLATE
+Key CLASS::get_key(const Link& link) NOEXCEPT
+{
+    const auto ptr = manager_.get(link);
+    BC_ASSERT(ptr);
+
+    // As with links, search key is presumed valid (otherwise null bytes).
+    if (!ptr)
+        return {};
+
+    return system::unsafe_array_cast<uint8_t, array_count<Key>>(std::next(
+        ptr->begin(), Link::size));
+}
+
+// BUGBUG: this overload implies error suppression (not found vs. fail).
+TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::get(const Key& key, Element& element) const NOEXCEPT
 {

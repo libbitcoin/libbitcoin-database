@@ -79,7 +79,7 @@ enum error_t
     invalid,
     connected,
     preconnected,
-    unpopulated,
+    unassociated,
     not_found,
     no_entry
 };

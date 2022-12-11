@@ -78,9 +78,6 @@ test_libbitcoin_database_test_SOURCES = \
     test/primitives/iterator.cpp \
     test/primitives/linkage.cpp \
     test/primitives/manager.cpp \
-    test/queries/archive.cpp \
-    test/queries/cache.cpp \
-    test/queries/index.cpp \
     test/tables/archives/header.cpp \
     test/tables/archives/input.cpp \
     test/tables/archives/output.cpp \
@@ -91,7 +88,6 @@ test_libbitcoin_database_test_SOURCES = \
     test/tables/caches/bootstrap.cpp \
     test/tables/caches/buffer.cpp \
     test/tables/caches/neutrino.cpp \
-    test/tables/caches/strong_bk.cpp \
     test/tables/caches/validated_bk.cpp \
     test/tables/caches/validated_tx.cpp \
     test/tables/indexes/address.cpp \
@@ -146,12 +142,6 @@ include_bitcoin_database_impl_primitives_HEADERS = \
     include/bitcoin/database/impl/primitives/linkage.ipp \
     include/bitcoin/database/impl/primitives/manager.ipp
 
-include_bitcoin_database_impl_queriesdir = ${includedir}/bitcoin/database/impl/queries
-include_bitcoin_database_impl_queries_HEADERS = \
-    include/bitcoin/database/impl/queries/archive.ipp \
-    include/bitcoin/database/impl/queries/cache.ipp \
-    include/bitcoin/database/impl/queries/index.ipp
-
 include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks
 include_bitcoin_database_locks_HEADERS = \
     include/bitcoin/database/locks/file_lock.hpp \
@@ -205,7 +195,6 @@ include_bitcoin_database_tables_caches_HEADERS = \
     include/bitcoin/database/tables/caches/bootstrap.hpp \
     include/bitcoin/database/tables/caches/buffer.hpp \
     include/bitcoin/database/tables/caches/neutrino.hpp \
-    include/bitcoin/database/tables/caches/strong_bk.hpp \
     include/bitcoin/database/tables/caches/validated_bk.hpp \
     include/bitcoin/database/tables/caches/validated_tx.hpp
 

@@ -139,9 +139,6 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\iterator.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\linkage.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\manager.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\queries\archive.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\queries\cache.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\queries\index.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\store.ipp" />
     <None Include="packages.config" />
