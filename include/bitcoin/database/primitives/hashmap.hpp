@@ -70,6 +70,7 @@ public:
     /// Return the associated search key.
     Key get_key(const Link& size) NOEXCEPT;
 
+    // BUGBUG: this overload implies error suppression (not found vs. fail).
     /// Get element at key.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool get(const Key& key, Element& element) const NOEXCEPT;
