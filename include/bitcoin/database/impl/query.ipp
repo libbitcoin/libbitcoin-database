@@ -122,39 +122,39 @@ hashes CLASS::get_locator(const heights& heights) NOEXCEPT
 TEMPLATE
 header_link CLASS::to_candidate(size_t height) NOEXCEPT
 {
-    return store_.candidate.it(system::possible_narrow_cast<
-        table::height::block::integer>(height)).self();
+    return store_.candidate.first(system::possible_narrow_cast<
+        table::height::block::integer>(height));
 }
 
 TEMPLATE
 header_link CLASS::to_confirmed(size_t height) NOEXCEPT
 {
-    return store_.confirmed.it(system::possible_narrow_cast<
-        table::height::block::integer>(height)).self();
+    return store_.confirmed.first(system::possible_narrow_cast<
+        table::height::block::integer>(height));
 }
 
 TEMPLATE
 header_link CLASS::to_header(const hash_digest& key) NOEXCEPT
 {
-    return store_.header.it(key).self();
+    return store_.header.first(key);
 }
 
 TEMPLATE
 point_link CLASS::to_point(const hash_digest& key) NOEXCEPT
 {
-    return store_.point.it(key).self();
+    return store_.point.first(key);
 }
 
 TEMPLATE
 txs_link CLASS::to_txs(const header_link& link) NOEXCEPT
 {
-    return store_.txs.it(link).self();
+    return store_.txs.first(link);
 }
 
 TEMPLATE
 tx_link CLASS::to_tx(const hash_digest& key) NOEXCEPT
 {
-    return store_.tx.it(key).self();
+    return store_.tx.first(key);
 }
 
 TEMPLATE
@@ -324,7 +324,7 @@ hashes CLASS::get_txs(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-CLASS::inputs_cptr CLASS::get_inputs(const tx_link& link) NOEXCEPT
+typename CLASS::inputs_cptr CLASS::get_inputs(const tx_link& link) NOEXCEPT
 {
     const auto fks = to_tx_inputs(link);
     if (fks.empty())
@@ -341,7 +341,7 @@ CLASS::inputs_cptr CLASS::get_inputs(const tx_link& link) NOEXCEPT
 }
 
 TEMPLATE
-CLASS::outputs_cptr CLASS::get_outputs(const tx_link& link) NOEXCEPT
+typename CLASS::outputs_cptr CLASS::get_outputs(const tx_link& link) NOEXCEPT
 {
     const auto fks = to_tx_outputs(link);
     if (fks.empty())
@@ -358,7 +358,7 @@ CLASS::outputs_cptr CLASS::get_outputs(const tx_link& link) NOEXCEPT
 }
 
 TEMPLATE
-CLASS::transactions_cptr CLASS::get_transactions(
+typename CLASS::transactions_cptr CLASS::get_transactions(
     const header_link& link) NOEXCEPT
 {
     // BUGBUG: combined search/read false/error.
@@ -377,7 +377,7 @@ CLASS::transactions_cptr CLASS::get_transactions(
 }
 
 TEMPLATE
-CLASS::header::cptr CLASS::get_header(const header_link& link) NOEXCEPT
+typename CLASS::header::cptr CLASS::get_header(const header_link& link) NOEXCEPT
 {
     table::header::record head{};
     if (!store_.header.get(link, head))
@@ -401,7 +401,7 @@ CLASS::header::cptr CLASS::get_header(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-CLASS::block::cptr CLASS::get_block(const header_link& link) NOEXCEPT
+typename CLASS::block::cptr CLASS::get_block(const header_link& link) NOEXCEPT
 {
     const auto header = get_header(link);
     const auto transactions = get_transactions(link);
@@ -416,7 +416,7 @@ CLASS::block::cptr CLASS::get_block(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-CLASS::transaction::cptr CLASS::get_tx(const tx_link& link) NOEXCEPT
+typename CLASS::transaction::cptr CLASS::get_tx(const tx_link& link) NOEXCEPT
 {
     table::transaction::only tx{};
     if (!store_.tx.get(link, tx))
@@ -451,7 +451,7 @@ CLASS::transaction::cptr CLASS::get_tx(const tx_link& link) NOEXCEPT
 }
 
 TEMPLATE
-CLASS::output::cptr CLASS::get_output(const output_link& fk) NOEXCEPT
+typename CLASS::output::cptr CLASS::get_output(const output_link& fk) NOEXCEPT
 {
     table::output::only out{};
     if (!store_.output.get(fk, out))
@@ -461,7 +461,7 @@ CLASS::output::cptr CLASS::get_output(const output_link& fk) NOEXCEPT
 }
 
 TEMPLATE
-CLASS::input::cptr CLASS::get_input(const input_link& fk) NOEXCEPT
+typename CLASS::input::cptr CLASS::get_input(const input_link& fk) NOEXCEPT
 {
     table::input::only_with_decomposed_sk in{};
     if (!store_.input.get(fk, in))
@@ -485,7 +485,7 @@ CLASS::input::cptr CLASS::get_input(const input_link& fk) NOEXCEPT
 }
 
 TEMPLATE
-CLASS::output::cptr CLASS::get_output(const point& prevout) NOEXCEPT
+typename CLASS::output::cptr CLASS::get_output(const point& prevout) NOEXCEPT
 {
     if (prevout.is_null())
         return {};
@@ -494,7 +494,7 @@ CLASS::output::cptr CLASS::get_output(const point& prevout) NOEXCEPT
 }
 
 TEMPLATE
-CLASS::output::cptr CLASS::get_output(const tx_link& link,
+typename CLASS::output::cptr CLASS::get_output(const tx_link& link,
     uint32_t output_index) NOEXCEPT
 {
     table::transaction::record_output tx{ {}, output_index };
@@ -509,7 +509,7 @@ CLASS::output::cptr CLASS::get_output(const tx_link& link,
 }
 
 TEMPLATE
-CLASS::input::cptr CLASS::get_input(const tx_link& link,
+typename CLASS::input::cptr CLASS::get_input(const tx_link& link,
     uint32_t input_index) NOEXCEPT
 {
     table::transaction::record_input tx{ {}, input_index };
@@ -524,13 +524,13 @@ CLASS::input::cptr CLASS::get_input(const tx_link& link,
 }
 
 TEMPLATE
-CLASS::inputs_cptr CLASS::get_spenders(const tx_link& link,
+typename CLASS::inputs_cptr CLASS::get_spenders(const tx_link& link,
     uint32_t output_index) NOEXCEPT
 {
     const auto spenders = system::to_shared<system::chain::input_cptrs>();
 
     // Get search key of tx link (tx.hash).
-    auto tx_hash = table::transaction::get_key(link);
+    auto tx_hash = store_.tx.get_key(link);
 
     // Get point fk for tx.hash (if not found, no spenders, return empty).
     const auto hash_fk = to_point(tx_hash);
@@ -548,7 +548,7 @@ CLASS::inputs_cptr CLASS::get_spenders(const tx_link& link,
     const auto fp = table::input::compose(hash_fk, output_index);
     const auto it = store_.input.it(fp);
 
-    // It is possible for fp to not be found (due to race).
+    // It is possible for no fp to be found (due to race).
     if (it.self().is_terminal())
         return spenders;
 
@@ -604,7 +604,7 @@ header_link CLASS::set_link(const block& block, const context& ctx) NOEXCEPT
         return header_fk;
 
     tx_links links{};
-    links.reserve(block.transactions_ptr->size());
+    links.reserve(block.transactions_ptr()->size());
 
     // Get/create foreign key for each tx (terminal ok).
     for (const auto& tx: *block.transactions_ptr())
@@ -696,19 +696,20 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     }
 
     // Commit point and input for each input.
-    table::point::link point_fk{};
     const table::point::record point{};
     auto input_fk = puts.in_fks.begin();
     for (const auto& in: ins)
     {
         const auto& prevout = in->point();
+        const auto& hash = prevout.hash();
 
-        // Continue with success if point exists.
-        if (!store_.point.put_if(point_fk, prevout.hash(), point))
+        // Create point-hash if it doesn't exist and set fk.
+        auto fk = to_point(hash);
+        if (fk.is_terminal() && !store_.point.put_link(fk, hash, point))
             return {};
 
         // Commit each input to its prevout fp.
-        const auto fp = table::input::compose(point_fk, prevout.index());
+        const auto fp = table::input::compose(fk, prevout.index());
         if (!store_.input.commit(*input_fk++, fp))
             return {};
     }
@@ -737,14 +738,16 @@ bool CLASS::set(const header_link& link, const hashes& hashes) NOEXCEPT
 TEMPLATE
 bool CLASS::set(const header_link& link, const tx_links& links) NOEXCEPT
 {
+    if (store_.txs.exists(link))
+        return true;
+
     if (system::contains(links, txs_link::terminal))
         return false;
 
     // ========================================================================
     const auto lock = store_.get_transactor();
 
-    // Continue with success if txs entry exists for header.
-    return !store_.txs.put_if(link, table::txs::slab{ links }).is_terminal();
+    return !store_.txs.put(link, table::txs::slab{ {}, links });
     // ========================================================================
 }
 
@@ -766,7 +769,7 @@ TEMPLATE
 code CLASS::to_code(linkage<schema::code>::integer value) NOEXCEPT
 {
     // validated_bk/tx code to error code.
-    switch (static_cast<schema::state>(value))
+    switch (value)
     {
         case schema::state::valid:
             return error::valid;
@@ -789,13 +792,13 @@ code CLASS::get_block_state(const header_link& link) NOEXCEPT
         return error::unassociated;
 
     // A no_entry state implies associated but block not yet validated.
-    const auto entry = store_.validated_bk.it(link).self();
-    if (entry.is_terminal())
+    const auto fk = store_.validated_bk.first(link);
+    if (fk.is_terminal())
         return error::no_entry;
 
     // Handle read error independently from not found.
     table::validated_bk::slab_get_code out{};
-    if (store_.validated_bk.get(entry, out))
+    if (store_.validated_bk.get(fk, out))
         return error::unknown;
 
     return to_code(out.code);
@@ -825,40 +828,104 @@ code CLASS::get_tx_state(const tx_link& link, const context& ctx) NOEXCEPT
 TEMPLATE
 bool CLASS::set_block_connected(const header_link& link) NOEXCEPT
 {
-    return {};
+    // ========================================================================
+    const auto lock = store_.get_transactor();
+
+    return !store_.validated_bk.put(link, table::validated_bk::slab
+    {
+        {},
+        schema::state::connected,
+        0 // fees
+    });
+    // ========================================================================
 }
 
 TEMPLATE
-bool CLASS::set_block_valid(const header_link& link) NOEXCEPT
+bool CLASS::set_block_valid(const header_link& link, uint64_t fees) NOEXCEPT
 {
-    return {};
+    // ========================================================================
+    const auto lock = store_.get_transactor();
+
+    return !store_.validated_bk.put(link, table::validated_bk::slab
+    {
+        {},
+        schema::state::valid,
+        fees
+    });
+    // ========================================================================
 }
 
 TEMPLATE
 bool CLASS::set_block_invalid(const header_link& link,
-    const code& code) NOEXCEPT
+    const code& /*code */ ) NOEXCEPT
 {
-    return {};
+    // ========================================================================
+    const auto lock = store_.get_transactor();
+
+    return !store_.validated_bk.put(link, table::validated_bk::slab
+    {
+        {},
+        schema::state::invalid, //// code
+        0 // fees
+    });
+    // ========================================================================
 }
 
 TEMPLATE
 bool CLASS::set_tx_preconnected(const tx_link& link,
     const context& ctx) NOEXCEPT
 {
-    return {};
+    // ========================================================================
+    const auto lock = store_.get_transactor();
+
+    return !store_.validated_tx.put(link, table::validated_tx::slab
+    {
+        {},
+        ctx,
+        schema::state::preconnected,
+        0, // fee?
+        0  // sigops?
+    });
+    // ========================================================================
 }
 
 TEMPLATE
-bool CLASS::set_tx_connected(const tx_link& link, const context& ctx) NOEXCEPT
+bool CLASS::set_tx_connected(const tx_link& link, const context& ctx,
+    uint64_t fee, size_t sigops) NOEXCEPT
 {
-    return {};
+    using sigs = linkage<schema::sigops>;
+    BC_ASSERT(sigops < system::power2<sigs::integer>(to_bits(sigs::size)));
+
+    // ========================================================================
+    const auto lock = store_.get_transactor();
+
+    return !store_.validated_tx.put(link, table::validated_tx::slab
+    {
+        {},
+        ctx,
+        schema::state::connected,
+        fee,
+        system::possible_narrow_cast<sigs::integer>(sigops)
+    });
+    // ========================================================================
 }
 
 TEMPLATE
 bool CLASS::set_tx_invalid(const tx_link& link, const context& ctx,
     const code& code) NOEXCEPT
 {
-    return {};
+    // ========================================================================
+    const auto lock = store_.get_transactor();
+
+    return !store_.validated_tx.put(link, table::validated_tx::slab
+    {
+        {},
+        ctx,
+        schema::state::invalid, //// code
+        0, // fee
+        0  // sigops
+    });
+    // ========================================================================
 }
 
 // Confirmation (foreign-keyed).
@@ -920,7 +987,7 @@ bool CLASS::is_tx_confirmable(const tx_link& link) NOEXCEPT
         return false;
 
     // TODO: evaluate concurrency for larger input counts.
-    return std::all_of(inputs.begin(), inputs.end(), [](const auto link)
+    return std::all_of(inputs.begin(), inputs.end(), [&](const auto link)
     {
         return is_unspent_prevout(link) && is_confirmed_prevout(link);
     });
@@ -934,7 +1001,7 @@ bool CLASS::is_block_confirmable(const header_link& link) NOEXCEPT
         return false;
 
     // TODO: evaluate concurrency for larger input counts.
-    return std::all_of(inputs.begin(), inputs.end(), [](const auto link)
+    return std::all_of(inputs.begin(), inputs.end(), [&](const auto link)
     {
         return is_unspent_prevout(link) && is_confirmed_prevout(link);
     });
@@ -968,7 +1035,8 @@ bool CLASS::pop_candidate() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-CLASS::transaction::cptr CLASS::get_buffered_tx(const tx_link& link) NOEXCEPT
+typename CLASS::transaction::cptr CLASS::get_buffered_tx(
+    const tx_link& link) NOEXCEPT
 {
     return {};
 }
@@ -983,7 +1051,7 @@ bool CLASS::set_buffered_tx(const transaction& tx) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-CLASS::filter CLASS::get_filter(const header_link& link) NOEXCEPT
+typename  CLASS::filter CLASS::get_filter(const header_link& link) NOEXCEPT
 {
     return {};
 }

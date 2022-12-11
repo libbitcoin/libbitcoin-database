@@ -82,12 +82,13 @@ namespace schema
         constexpr auto lock = ".lock";
     }
 
-    enum class state : uint8_t
+    // TODO: deconflict/use specific invalid codes.
+    enum state : uint8_t
     {
         valid = 0,         // tx valid, block connected.
         connected = 1,     // tx scripts validated in context.
         preconnected = 2,  // tx scripts pre-validated in context.
-        invalid = 3        // tx or block invalid (use specific code).
+        invalid = 3        // tx or block invalid.
     };
 
     /// Values.

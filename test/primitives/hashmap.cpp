@@ -435,36 +435,6 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__populated__valid)
     BOOST_REQUIRE_EQUAL(record.value, 0x04030201_u32);
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_put_if__get__expected)
-{
-    test::dfile head_store{};
-    test::dfile body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
-    BOOST_REQUIRE(instance.create());
-
-    constexpr key1 key{ 0x42 };
-    BOOST_REQUIRE(!instance.put_if(key, big_record{ 0xa1b2c3d4_u32 }).is_terminal());
-
-    link5 link{};
-    BOOST_REQUIRE(instance.put_if(link, key, big_record{ 0xa1b2c3d4_u32 }));
-
-    big_record link_record{};
-    BOOST_REQUIRE(instance.get(0, link_record));
-    BOOST_REQUIRE_EQUAL(link_record.value, 0xa1b2c3d4_u32);
-
-    big_record key_record{};
-    BOOST_REQUIRE(instance.get(key, key_record));
-    BOOST_REQUIRE_EQUAL(key_record.value, 0xa1b2c3d4_u32);
-
-    const data_chunk expected_file
-    {
-        0xff, 0xff, 0xff, 0xff, 0xff,
-        0x42,
-        0xa1, 0xb2, 0xc3, 0xd4
-    };
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
-}
-
 BOOST_AUTO_TEST_CASE(hashmap__record_put__multiple__expected)
 {
     test::dfile head_store{};
@@ -485,11 +455,11 @@ BOOST_AUTO_TEST_CASE(hashmap__record_put__multiple__expected)
     BOOST_REQUIRE_EQUAL(link, 1u);
 
     big_record record1{};
-    BOOST_REQUIRE(instance.get(key1_big, record1));
+    BOOST_REQUIRE(instance.get(0, record1));
     BOOST_REQUIRE_EQUAL(record1.value, 0xa1b2c3d4_u32);
 
     little_record record2{};
-    BOOST_REQUIRE(instance.get(key1_little, record2));
+    BOOST_REQUIRE(instance.get(1, record2));
     BOOST_REQUIRE_EQUAL(record2.value, 0xa1b2c3d4_u32);
 
     // This expecatation relies on the fact of no hash table conflict between 0x41 and 0x42.
@@ -553,33 +523,6 @@ public:
 
     uint32_t value{ 0 };
 };
-
-BOOST_AUTO_TEST_CASE(hashmap__slab_put_if__get__expected)
-{
-    test::dfile head_store{};
-    test::dfile body_store{};
-
-    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
-    BOOST_REQUIRE(instance.create());
-
-    constexpr key1 key{ 0x42 };
-    BOOST_REQUIRE(!instance.put_if(key, big_slab{ 0xa1b2c3d4_u32 }).is_terminal());
-
-    link5 link{};
-    BOOST_REQUIRE(instance.put_if(link, key, big_slab{ 0xa1b2c3d4_u32 }));
-
-    big_slab slab{};
-    BOOST_REQUIRE(instance.get(zero, slab));
-    BOOST_REQUIRE_EQUAL(slab.value, 0xa1b2c3d4_u32);
-
-    const data_chunk expected_file
-    {
-        0xff, 0xff, 0xff, 0xff, 0xff,
-        0x42,
-        0xa1, 0xb2, 0xc3, 0xd4
-    };
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
-}
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_put__multiple__expected)
 {

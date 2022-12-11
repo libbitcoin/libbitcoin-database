@@ -76,7 +76,13 @@ bool CLASS::verify() const NOEXCEPT
 TEMPLATE
 bool CLASS::exists(const Key& key) const NOEXCEPT
 {
-    return !it(key).self().is_terminal();
+    return !first(key).is_terminal();
+}
+
+TEMPLATE
+Link CLASS::first(const Key& key) const NOEXCEPT
+{
+    return it(key).self();
 }
 
 TEMPLATE
@@ -103,13 +109,6 @@ Key CLASS::get_key(const Link& link) NOEXCEPT
 
     return system::unsafe_array_cast<uint8_t, array_count<Key>>(std::next(
         ptr->begin(), Link::size));
-}
-
-TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::get(const Key& key, Element& element) const NOEXCEPT
-{
-    return get(it(key).self(), element);
 }
 
 TEMPLATE
@@ -146,24 +145,6 @@ bool CLASS::set_link(Link& link, const Element& element) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-Link CLASS::put_if(const Key& key, const Element& element) NOEXCEPT
-{
-    Link link{};
-    return put_if(link, key, element) ? link : Link{};
-}
-
-TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::put_if(Link& link, const Key& key, const Element& element) NOEXCEPT
-{
-    // non-atomic, race may produce element duplication.
-    // it is preferred to allow duplication vs. searching under lock.
-    link = it(key).self();
-    return !link.is_terminal() || put_link(link, key, element);
-}
-
-TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
 Link CLASS::put_link(const Key& key, const Element& element) NOEXCEPT
 {
     Link link{};
@@ -180,6 +161,13 @@ bool CLASS::put_link(Link& link, const Key& key,
     link = allocate(size);
     auto sink = putter(link, key, size);
     return sink && element.to_data(*sink) && sink->finalize();
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put(const Key& key, const Element& element) NOEXCEPT
+{
+    return !put_link(key, element).is_terminal();
 }
 
 TEMPLATE

@@ -60,6 +60,10 @@ public:
     /// True if an instance of object with key exists.
     bool exists(const Key& key) const NOEXCEPT;
 
+    // TODO: test.
+    /// Return first element or terimnal.
+    Link first(const Key& key) const NOEXCEPT;
+
     /// Iterator holds shared lock on storage remap.
     iterator it(const Key& key) const NOEXCEPT;
 
@@ -69,11 +73,6 @@ public:
     // TODO: test.
     /// Return the associated search key.
     Key get_key(const Link& size) NOEXCEPT;
-
-    // BUGBUG: this overload implies error suppression (not found vs. fail).
-    /// Get element at key.
-    template <typename Element, if_equal<Element::size, Size> = true>
-    bool get(const Key& key, Element& element) const NOEXCEPT;
 
     /// Get element at link.
     template <typename Element, if_equal<Element::size, Size> = true>
@@ -89,18 +88,16 @@ public:
     template <typename Element, if_equal<Element::size, Size> = true>
     bool set_link(Link& link, const Element& element) NOEXCEPT;
 
-    /// Allocate, set, commit element to key (unless found), return link.
-    /// This is non-atomic, a race may produce element duplication.
-    template <typename Element, if_equal<Element::size, Size> = true>
-    Link put_if(const Key& key, const Element& element) NOEXCEPT;
-    template <typename Element, if_equal<Element::size, Size> = true>
-    bool put_if(Link& link, const Key& key, const Element& element) NOEXCEPT;
-
     /// Allocate, set, commit element to key, and return link.
     template <typename Element, if_equal<Element::size, Size> = true>
     Link put_link(const Key& key, const Element& element) NOEXCEPT;
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put_link(Link& link, const Key& key, const Element& element) NOEXCEPT;
+
+    // TODO: test.
+    /// Allocate, set, commit element to key.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool put(const Key& key, const Element& element) NOEXCEPT;
 
     /// Set and commit previously allocated element at link to key.
     template <typename Element, if_equal<Element::size, Size> = true>

@@ -131,11 +131,12 @@ public:
     code get_tx_state(const tx_link& link, const context& ctx) NOEXCEPT;
 
     bool set_block_connected(const header_link& link) NOEXCEPT;
-    bool set_block_valid(const header_link& link) NOEXCEPT;
+    bool set_block_valid(const header_link& link, uint64_t fees) NOEXCEPT;
     bool set_block_invalid(const header_link& link, const code& code) NOEXCEPT;
 
     bool set_tx_preconnected(const tx_link& link, const context& ctx) NOEXCEPT;
-    bool set_tx_connected(const tx_link& link, const context& ctx) NOEXCEPT;
+    bool set_tx_connected(const tx_link& link, const context& ctx,
+        uint64_t fee, size_t sigops) NOEXCEPT;
     bool set_tx_invalid(const tx_link& link, const context& ctx,
         const code& code) NOEXCEPT;
 

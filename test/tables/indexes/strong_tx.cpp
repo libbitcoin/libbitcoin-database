@@ -89,10 +89,6 @@ BOOST_AUTO_TEST_CASE(strong_tx__get__two__expected)
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
 
     table::strong_tx::record out{};
-    BOOST_REQUIRE(instance.get(key1, out));
-    BOOST_REQUIRE(out == out1);
-    BOOST_REQUIRE(instance.get(key2, out));
-    BOOST_REQUIRE(out == out2);
     BOOST_REQUIRE(instance.get(0u, out));
     BOOST_REQUIRE(out == out1);
     BOOST_REQUIRE(instance.get(1u, out));
