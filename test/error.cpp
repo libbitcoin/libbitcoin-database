@@ -303,4 +303,67 @@ BOOST_AUTO_TEST_CASE(error_t__code__verify_table__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "failed to verify table");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__valid__true_exected_message)
+{
+    constexpr auto value = error::valid;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "valid");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__invalid__true_exected_message)
+{
+    constexpr auto value = error::invalid;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "invalid");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__connected__true_exected_message)
+{
+    constexpr auto value = error::connected;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "connected");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__preconnected__true_exected_message)
+{
+    constexpr auto value = error::preconnected;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "preconnected");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__unassociated__true_exected_message)
+{
+    constexpr auto value = error::unassociated;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "unassociated");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__not_found__true_exected_message)
+{
+    constexpr auto value = error::not_found;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "not_found");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__no_entry__true_exected_message)
+{
+    constexpr auto value = error::no_entry;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "no_entry");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

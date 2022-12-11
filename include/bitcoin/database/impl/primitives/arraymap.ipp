@@ -74,6 +74,18 @@ bool CLASS::verify() const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+Link CLASS::count() const NOEXCEPT
+{
+    return manager_.count();
+}
+
+TEMPLATE
+bool CLASS::truncate(const Link& count) NOEXCEPT
+{
+    return manager_.truncate(count);
+}
+
+TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {

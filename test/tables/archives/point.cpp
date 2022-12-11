@@ -57,13 +57,7 @@ BOOST_AUTO_TEST_CASE(point__put__get__expected)
     BOOST_REQUIRE(instance.get(0, element));
     BOOST_REQUIRE(element == table::point::record{});
 
-    BOOST_REQUIRE(instance.get(null_hash, element));
-    BOOST_REQUIRE(element == table::point::record{});
-
     BOOST_REQUIRE(instance.get(1, element));
-    BOOST_REQUIRE(element == expected);
-
-    BOOST_REQUIRE(instance.get(key, element));
     BOOST_REQUIRE(element == expected);
 }
 

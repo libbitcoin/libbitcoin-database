@@ -76,10 +76,6 @@ CLASS::store(const settings& config) NOEXCEPT
     confirmed_body_(body(config.dir, schema::indexes::confirmed), config.txs_size, config.confirmed_rate),
     confirmed(confirmed_head_, confirmed_body_),
 
-    strong_bk_head_(head(config.dir / schema::dir::heads, schema::indexes::strong_bk)),
-    strong_bk_body_(body(config.dir, schema::indexes::strong_bk), config.strong_bk_size, config.strong_bk_rate),
-    strong_bk(strong_bk_head_, strong_bk_body_, config.strong_bk_buckets),
-
     strong_tx_head_(head(config.dir / schema::dir::heads, schema::indexes::strong_tx)),
     strong_tx_body_(body(config.dir, schema::indexes::strong_tx), config.strong_tx_size, config.strong_tx_rate),
     strong_tx(strong_tx_head_, strong_tx_body_, config.strong_tx_buckets),
@@ -158,8 +154,6 @@ code CLASS::create() NOEXCEPT
     else if (!file::create_file(candidate_body_.file())) ec = error::create_file;
     else if (!file::create_file(confirmed_head_.file())) ec = error::create_file;
     else if (!file::create_file(confirmed_body_.file())) ec = error::create_file;
-    else if (!file::create_file(strong_bk_head_.file())) ec = error::create_file;
-    else if (!file::create_file(strong_bk_body_.file())) ec = error::create_file;
     else if (!file::create_file(strong_tx_head_.file())) ec = error::create_file;
     else if (!file::create_file(strong_tx_body_.file())) ec = error::create_file;
 
@@ -190,7 +184,6 @@ code CLASS::create() NOEXCEPT
         else if (!address.create()) ec = error::create_table;
         else if (!candidate.create()) ec = error::create_table;
         else if (!confirmed.create()) ec = error::create_table;
-        else if (!strong_bk.create()) ec = error::create_table;
         else if (!strong_tx.create()) ec = error::create_table;
 
         else if (!bootstrap.create()) ec = error::create_table;
@@ -244,7 +237,6 @@ code CLASS::open() NOEXCEPT
         else if (!address.verify()) ec = error::verify_table;
         else if (!candidate.verify()) ec = error::verify_table;
         else if (!confirmed.verify()) ec = error::verify_table;
-        else if (!strong_bk.verify()) ec = error::verify_table;
         else if (!strong_tx.verify()) ec = error::verify_table;
 
         else if (!bootstrap.verify()) ec = error::verify_table;
@@ -282,7 +274,6 @@ code CLASS::snapshot() NOEXCEPT
     if (!ec) ec = address_body_.flush();
     if (!ec) ec = candidate_body_.flush();
     if (!ec) ec = confirmed_body_.flush();
-    if (!ec) ec = strong_bk_body_.flush();
     if (!ec) ec = strong_tx_body_.flush();
 
     if (!ec) ec = bootstrap_body_.flush();
@@ -317,7 +308,6 @@ code CLASS::close() NOEXCEPT
         else if (!address.close()) ec = error::close_table;
         else if (!candidate.close()) ec = error::close_table;
         else if (!confirmed.close()) ec = error::close_table;
-        else if (!strong_bk.close()) ec = error::close_table;
         else if (!strong_tx.close()) ec = error::close_table;
 
         else if (!bootstrap.close()) ec = error::close_table;
@@ -368,8 +358,6 @@ code CLASS::open_load() NOEXCEPT
     if (!ec) ec = candidate_body_.open();
     if (!ec) ec = confirmed_head_.open();
     if (!ec) ec = confirmed_body_.open();
-    if (!ec) ec = strong_bk_head_.open();
-    if (!ec) ec = strong_bk_body_.open();
     if (!ec) ec = strong_tx_head_.open();
     if (!ec) ec = strong_tx_body_.open();
 
@@ -405,8 +393,6 @@ code CLASS::open_load() NOEXCEPT
     if (!ec) ec = candidate_body_.load();
     if (!ec) ec = confirmed_head_.load();
     if (!ec) ec = confirmed_body_.load();
-    if (!ec) ec = strong_bk_head_.load();
-    if (!ec) ec = strong_bk_body_.load();
     if (!ec) ec = strong_tx_head_.load();
     if (!ec) ec = strong_tx_body_.load();
 
@@ -450,8 +436,6 @@ code CLASS::unload_close() NOEXCEPT
     if (!ec) ec = candidate_body_.unload();
     if (!ec) ec = confirmed_head_.unload();
     if (!ec) ec = confirmed_body_.unload();
-    if (!ec) ec = strong_bk_head_.unload();
-    if (!ec) ec = strong_bk_body_.unload();
     if (!ec) ec = strong_tx_head_.unload();
     if (!ec) ec = strong_tx_body_.unload();
 
@@ -487,8 +471,6 @@ code CLASS::unload_close() NOEXCEPT
     if (!ec) ec = candidate_body_.close();
     if (!ec) ec = confirmed_head_.close();
     if (!ec) ec = confirmed_body_.close();
-    if (!ec) ec = strong_bk_head_.close();
-    if (!ec) ec = strong_bk_body_.close();
     if (!ec) ec = strong_tx_head_.close();
     if (!ec) ec = strong_tx_body_.close();
 
@@ -520,7 +502,6 @@ code CLASS::backup() NOEXCEPT
     if (!address.backup()) return error::backup_table;
     if (!candidate.backup()) return error::backup_table;
     if (!confirmed.backup()) return error::backup_table;
-    if (!strong_bk.backup()) return error::backup_table;
     if (!strong_tx.backup()) return error::backup_table;
 
     if (!bootstrap.backup()) return error::backup_table;
@@ -562,7 +543,6 @@ code CLASS::dump(const path& folder) NOEXCEPT
     auto address_buffer = address_head_.get();
     auto candidate_buffer = candidate_head_.get();
     auto confirmed_buffer = confirmed_head_.get();
-    auto strong_bk_buffer = strong_bk_head_.get();
     auto strong_tx_buffer = strong_tx_head_.get();
 
     auto bootstrap_buffer = bootstrap_head_.get();
@@ -582,7 +562,6 @@ code CLASS::dump(const path& folder) NOEXCEPT
     if (!address_buffer) return error::unloaded_file;
     if (!candidate_buffer) return error::unloaded_file;
     if (!confirmed_buffer) return error::unloaded_file;
-    if (!strong_bk_buffer) return error::unloaded_file;
     if (!strong_tx_buffer) return error::unloaded_file;
 
     if (!bootstrap_buffer) return error::unloaded_file;
@@ -630,10 +609,6 @@ code CLASS::dump(const path& folder) NOEXCEPT
 
     if (!file::create_file(head(folder, schema::indexes::confirmed),
         confirmed_buffer->begin(), confirmed_buffer->size()))
-        return error::dump_file;
-
-    if (!file::create_file(head(folder, schema::indexes::strong_bk),
-        strong_bk_buffer->begin(), strong_bk_buffer->size()))
         return error::dump_file;
 
     if (!file::create_file(head(folder, schema::indexes::strong_tx),
@@ -722,7 +697,6 @@ code CLASS::restore() NOEXCEPT
         else if (!address.restore()) ec = error::restore_table;
         else if (!candidate.restore()) ec = error::restore_table;
         else if (!confirmed.restore()) ec = error::restore_table;
-        else if (!strong_bk.restore()) ec = error::restore_table;
         else if (!strong_tx.restore()) ec = error::restore_table;
 
         else if (!bootstrap.restore()) ec = error::restore_table;

@@ -174,6 +174,11 @@ struct transaction
     struct record_puts
       : public schema::transaction
     {
+        inline uint32_t outs_fk() const NOEXCEPT
+        {
+            return ins_fk + ins_count;
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.skip_bytes(skip_to_puts);

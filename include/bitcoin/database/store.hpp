@@ -44,7 +44,6 @@
 
 #include <bitcoin/database/tables/indexes/address.hpp>
 #include <bitcoin/database/tables/indexes/height.hpp>
-#include <bitcoin/database/tables/indexes/strong_bk.hpp>
 #include <bitcoin/database/tables/indexes/strong_tx.hpp>
 
 namespace libbitcoin {
@@ -95,7 +94,6 @@ public:
     table::address address;
     table::height candidate;
     table::height confirmed;
-    table::strong_bk strong_bk;
     table::strong_tx strong_tx;
 
     /// Caches.
@@ -159,10 +157,6 @@ protected:
     // array
     Storage confirmed_head_;
     Storage confirmed_body_;
-
-    // record hashmap
-    Storage strong_bk_head_;
-    Storage strong_bk_body_;
 
     // record hashmap
     Storage strong_tx_head_;

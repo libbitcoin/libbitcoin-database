@@ -216,8 +216,6 @@ if (with-tests)
         "../../test/primitives/iterator.cpp"
         "../../test/primitives/linkage.cpp"
         "../../test/primitives/manager.cpp"
-        "../../test/queries/archive.cpp"
-        "../../test/queries/internal.cpp"
         "../../test/tables/archives/header.cpp"
         "../../test/tables/archives/input.cpp"
         "../../test/tables/archives/output.cpp"
@@ -232,7 +230,6 @@ if (with-tests)
         "../../test/tables/caches/validated_tx.cpp"
         "../../test/tables/indexes/address.cpp"
         "../../test/tables/indexes/height.cpp"
-        "../../test/tables/indexes/strong_bk.cpp"
         "../../test/tables/indexes/strong_tx.cpp" )
 
     add_test( NAME libbitcoin-database-test COMMAND libbitcoin-database-test

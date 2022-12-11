@@ -28,6 +28,7 @@ namespace database {
 
 template <size_t Size>
 using search = system::data_array<Size>;
+using hashes = system::hashes;
 using hash_digest = search<system::hash_size>;
 static_assert(is_same_type<hash_digest, system::hash_digest>);
 
@@ -56,7 +57,6 @@ namespace schema
         constexpr auto address = "address";
         constexpr auto candidate = "candidate";
         constexpr auto confirmed = "confirmed";
-        constexpr auto strong_bk = "strong_bk";
         constexpr auto strong_tx = "strong_tx";
     }
 
@@ -82,12 +82,13 @@ namespace schema
         constexpr auto lock = ".lock";
     }
 
-    enum class state : uint8_t
+    // TODO: deconflict/use specific invalid codes.
+    enum state : uint8_t
     {
         valid = 0,         // tx valid, block connected.
         connected = 1,     // tx scripts validated in context.
         preconnected = 2,  // tx scripts pre-validated in context.
-        invalid = 3        // tx or block invalid (use specific code).
+        invalid = 3        // tx or block invalid.
     };
 
     /// Values.
@@ -260,31 +261,17 @@ namespace schema
     };
 
     // record hashmap
-    struct strong_bk
-    {
-        static constexpr size_t pk = schema::block;
-        static constexpr size_t sk = schema::header::pk;
-        static constexpr size_t minsize = schema::code;
-        static constexpr size_t minrow = pk + sk + minsize;
-        static constexpr size_t size = minsize;
-        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 1u);
-        static_assert(minrow == 7u);
-    };
-
-    // record hashmap
     struct strong_tx
     {
         static constexpr size_t pk = schema::tx;
         static constexpr size_t sk = schema::transaction::pk;
         static constexpr size_t minsize =
-            schema::header::pk +
-            schema::block;
+            schema::header::pk;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 6u);
-        static_assert(minrow == 14u);
+        static_assert(minsize == 3u);
+        static_assert(minrow == 11u);
     };
 
     /// Cache tables.

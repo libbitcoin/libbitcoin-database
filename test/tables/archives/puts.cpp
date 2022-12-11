@@ -29,6 +29,9 @@ const table::puts::record expected1
     std_vector<uint64_t>
     {
         0x0000007856341211_u64
+    },
+    std_vector<uint64_t>
+    {
     }
 };
 const table::puts::record expected2
@@ -36,7 +39,10 @@ const table::puts::record expected2
     {}, // schema::puts [all const static members]
     std_vector<uint64_t>
     {
-        0x0000007856341221_u64,
+        0x0000007856341221_u64
+    },
+    std_vector<uint64_t>
+    {
         0x0000007856341222_u64
     }
 };
@@ -45,7 +51,10 @@ const table::puts::record expected3
     {}, // schema::puts [all const static members]
     std_vector<uint64_t>
     {
-        0x0000007856341231_u64,
+        0x0000007856341231_u64
+    },
+    std_vector<uint64_t>
+    {
         0x0000007856341232_u64,
         0x0000007856341233_u64
     }
@@ -89,19 +98,24 @@ BOOST_AUTO_TEST_CASE(puts__put__get__expected)
     BOOST_REQUIRE(record0 == expected0);
 
     table::puts::record record1{};
-    record1.put_fks.resize(1);
+    record1.in_fks.resize(1);
     BOOST_REQUIRE(instance.get(0, record1));
-    BOOST_REQUIRE(record1.put_fks == expected1.put_fks);
+    BOOST_REQUIRE(record1.in_fks == expected1.in_fks);
+    BOOST_REQUIRE(record1.out_fks.empty());
 
     table::puts::record record2{};
-    record2.put_fks.resize(2);
+    record2.in_fks.resize(1);
+    record2.out_fks.resize(1);
     BOOST_REQUIRE(instance.get(1, record2));
-    BOOST_REQUIRE(record2.put_fks == expected2.put_fks);
+    BOOST_REQUIRE(record2.in_fks == expected2.in_fks);
+    BOOST_REQUIRE(record2.out_fks == expected2.out_fks);
 
     table::puts::record record3{};
-    record3.put_fks.resize(3);
+    record3.in_fks.resize(1);
+    record3.out_fks.resize(2);
     BOOST_REQUIRE(instance.get(3, record3));
-    BOOST_REQUIRE(record3.put_fks == expected3.put_fks);
+    BOOST_REQUIRE(record3.in_fks == record3.in_fks);
+    BOOST_REQUIRE(record3.out_fks == record3.out_fks);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

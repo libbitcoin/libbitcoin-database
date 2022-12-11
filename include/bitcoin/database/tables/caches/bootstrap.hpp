@@ -40,12 +40,14 @@ struct bootstrap
         inline bool from_data(reader& source) NOEXCEPT
         {
             block_hash = source.read_hash();
+            BC_ASSERT(source.get_read_position() == minrow);
             return source;
         }
 
         inline bool to_data(writer& sink) const NOEXCEPT
         {
             sink.write_bytes(block_hash);
+            BC_ASSERT(sink.get_write_position() == minrow);
             return sink;
         }
 
@@ -55,6 +57,55 @@ struct bootstrap
         }
 
         hash_digest block_hash{};
+    };
+
+    struct record_set
+      : public schema::bootstrap
+    {
+        link count() const NOEXCEPT
+        {
+            using namespace system;
+            return possible_narrow_cast<link::integer>(block_hashes.size());
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            // Clear the single record limit (file limit remains).
+            source.set_limit();
+
+            // TODO: stream-to-stream.
+            std::for_each(block_hashes.begin(), block_hashes.end(),
+                [&](auto& hash) NOEXCEPT
+                {
+                    hash = source.read_hash();
+                });
+
+            BC_ASSERT(source.get_read_position() == count() * schema::hash);
+            return source;
+        }
+
+        inline bool to_data(writer& sink) const NOEXCEPT
+        {
+            // Clear the single record limit (file limit remains).
+            sink.set_limit();
+
+            // TODO: stream-to-stream.
+            std::for_each(block_hashes.begin(), block_hashes.end(),
+                [&](const auto& hash) NOEXCEPT
+                {
+                    sink.write_bytes(hash);
+                });
+
+            BC_ASSERT(sink.get_write_position() == count() * schema::hash);
+            return sink;
+        }
+
+        inline bool operator==(const record_set& other) const NOEXCEPT
+        {
+            return block_hashes == other.block_hashes;
+        }
+
+        hashes block_hashes{};
     };
 };
 

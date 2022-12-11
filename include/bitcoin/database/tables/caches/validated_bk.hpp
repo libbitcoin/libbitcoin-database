@@ -50,6 +50,7 @@ struct validated_bk
         {
             code = source.read_little_endian<coding::integer, coding::size>();
             fees = source.read_variable();
+            BC_ASSERT(source.get_read_position() == count());
             return source;
         }
 
@@ -57,6 +58,7 @@ struct validated_bk
         {
             sink.write_little_endian<coding::integer, coding::size>(code);
             sink.write_variable(fees);
+            BC_ASSERT(sink.get_write_position() == count());
             return sink;
         }
 
@@ -68,6 +70,18 @@ struct validated_bk
 
         coding::integer code{};
         uint64_t fees{};
+    };
+
+    struct slab_get_code
+      : public schema::validated_bk
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            code = source.read_little_endian<coding::integer, coding::size>();
+            return source;
+        }
+
+        coding::integer code{};
     };
 };
 

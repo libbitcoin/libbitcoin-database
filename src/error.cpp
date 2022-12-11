@@ -65,7 +65,16 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { close_table, "failed to close table" },
     { backup_table, "failed to backup table" },
     { restore_table, "failed to restore table" },
-    { verify_table, "failed to verify table" }
+    { verify_table, "failed to verify table" },
+
+    // states
+    { valid, "valid" },
+    { invalid, "invalid" },
+    { connected, "connected" },
+    { preconnected, "preconnected" },
+    { unassociated, "unassociated" },
+    { not_found, "not_found" },
+    { no_entry, "no_entry" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "database", "database code")

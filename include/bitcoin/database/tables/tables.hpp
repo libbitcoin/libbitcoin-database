@@ -35,7 +35,6 @@
 
 #include <bitcoin/database/tables/indexes/address.hpp>
 #include <bitcoin/database/tables/indexes/height.hpp>
-#include <bitcoin/database/tables/indexes/strong_bk.hpp>
 #include <bitcoin/database/tables/indexes/strong_tx.hpp>
 
 #include <bitcoin/database/tables/context.hpp>

@@ -77,10 +77,6 @@ public:
     uint32_t confirmed_size;
     uint16_t confirmed_rate;
 
-    uint32_t strong_bk_buckets;
-    uint32_t strong_bk_size;
-    uint16_t strong_bk_rate;
-
     uint32_t strong_tx_buckets;
     uint32_t strong_tx_size;
     uint16_t strong_tx_rate;
