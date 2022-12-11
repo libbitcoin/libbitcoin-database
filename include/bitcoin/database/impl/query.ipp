@@ -938,14 +938,14 @@ bool CLASS::is_block(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_confirmed_block(const header_link& link) NOEXCEPT
+bool CLASS::is_confirmed_block(const header_link&) NOEXCEPT
 {
     // TODO: relate fk/height to index.
     return {};
 }
 
 TEMPLATE
-bool CLASS::is_candidate_block(const header_link& link) NOEXCEPT
+bool CLASS::is_candidate_block(const header_link&) NOEXCEPT
 {
     // TODO: relate fk/height to index.
     return {};
@@ -958,7 +958,7 @@ bool CLASS::is_confirmed_tx(const tx_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_confirmed_prevout(const input_link& link) NOEXCEPT
+bool CLASS::is_confirmed_prevout(const input_link&) NOEXCEPT
 {
     /// Enumerating tx.in_fks...
     /// For input to be valid, prevout must have existed (index not relevant).
@@ -970,7 +970,7 @@ bool CLASS::is_confirmed_prevout(const input_link& link) NOEXCEPT
 
 
 TEMPLATE
-bool CLASS::is_unspent_prevout(const input_link& link) NOEXCEPT
+bool CLASS::is_unspent_prevout(const input_link&) NOEXCEPT
 {
     /// Enumerating tx.in_fks...
     /// Output must not be spent by confirmed transaction (height irrelevant).
@@ -1008,13 +1008,13 @@ bool CLASS::is_block_confirmable(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::push(const header_link& link) NOEXCEPT
+bool CLASS::push(const header_link&) NOEXCEPT
 {
     return {};
 }
 
 TEMPLATE
-bool CLASS::push_candidate(const header_link& link) NOEXCEPT
+bool CLASS::push_candidate(const header_link&) NOEXCEPT
 {
     return {};
 }
@@ -1036,13 +1036,13 @@ bool CLASS::pop_candidate() NOEXCEPT
 
 TEMPLATE
 typename CLASS::transaction::cptr CLASS::get_buffered_tx(
-    const tx_link& link) NOEXCEPT
+    const tx_link&) NOEXCEPT
 {
     return {};
 }
 
 TEMPLATE
-bool CLASS::set_buffered_tx(const transaction& tx) NOEXCEPT
+bool CLASS::set_buffered_tx(const transaction&) NOEXCEPT
 {
     return {};
 }
@@ -1051,20 +1051,20 @@ bool CLASS::set_buffered_tx(const transaction& tx) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-typename  CLASS::filter CLASS::get_filter(const header_link& link) NOEXCEPT
+typename  CLASS::filter CLASS::get_filter(const header_link&) NOEXCEPT
 {
     return {};
 }
 
 TEMPLATE
-hash_digest CLASS::get_filter_head(const header_link& link) NOEXCEPT
+hash_digest CLASS::get_filter_head(const header_link&) NOEXCEPT
 {
     return {};
 }
 
 TEMPLATE
-bool CLASS::set_filter(const header_link& link, const hash_digest& head,
-    const filter& body) NOEXCEPT
+bool CLASS::set_filter(const header_link&, const hash_digest&,
+    const filter&) NOEXCEPT
 {
     return {};
 }
@@ -1073,13 +1073,13 @@ bool CLASS::set_filter(const header_link& link, const hash_digest& head,
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-hashes CLASS::get_bootstrap(size_t from, size_t to) NOEXCEPT
+hashes CLASS::get_bootstrap(size_t, size_t) NOEXCEPT
 {
     return {};
 }
 
 TEMPLATE
-bool CLASS::set_bootstrap(size_t height) NOEXCEPT
+bool CLASS::set_bootstrap(size_t) NOEXCEPT
 {
     return {};
 }

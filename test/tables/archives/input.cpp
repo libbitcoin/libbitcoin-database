@@ -78,13 +78,7 @@ BOOST_AUTO_TEST_CASE(input__put__get__expected)
     BOOST_REQUIRE(instance.get(0, element));
     BOOST_REQUIRE(element == table::input::slab{});
 
-    BOOST_REQUIRE(instance.get(search<table::input::slab::sk>{}, element));
-    BOOST_REQUIRE(element == table::input::slab{});
-
     BOOST_REQUIRE(instance.get(slab0_size, element));
-    BOOST_REQUIRE(element == expected);
-
-    BOOST_REQUIRE(instance.get(key, element));
     BOOST_REQUIRE(element == expected);
 }
 

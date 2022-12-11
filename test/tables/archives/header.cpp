@@ -107,13 +107,7 @@ BOOST_AUTO_TEST_CASE(header__put__get__expected)
     BOOST_REQUIRE(instance.get(0, element));
     BOOST_REQUIRE(element == table::header::record{});
 
-    BOOST_REQUIRE(instance.get(null_hash, element));
-    BOOST_REQUIRE(element == table::header::record{});
-
     BOOST_REQUIRE(instance.get(1, element));
-    BOOST_REQUIRE(element == expected);
-
-    BOOST_REQUIRE(instance.get(key, element));
     BOOST_REQUIRE(element == expected);
 }
 
@@ -186,7 +180,7 @@ BOOST_AUTO_TEST_CASE(header__put__get_with_sk__expected)
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::header::record_with_sk element{};
-    BOOST_REQUIRE(instance.get<table::header::record_with_sk>(key, element));
+    BOOST_REQUIRE(instance.get<table::header::record_with_sk>(1, element));
     BOOST_REQUIRE(static_cast<table::header::record>(element) == expected);
     BOOST_REQUIRE_EQUAL(element.key, key);
 }

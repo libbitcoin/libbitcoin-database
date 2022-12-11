@@ -89,11 +89,6 @@ BOOST_AUTO_TEST_CASE(validated_bk__get__two__expected)
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
 
     table::validated_bk::slab out{};
-    BOOST_REQUIRE(instance.get(key1, out));
-    BOOST_REQUIRE(out == slab1);
-    BOOST_REQUIRE(instance.get(key2, out));
-    BOOST_REQUIRE(out == slab2);
-
     BOOST_REQUIRE(instance.get(0u, out));
     BOOST_REQUIRE(out == slab1);
     BOOST_REQUIRE(instance.get(17u, out));

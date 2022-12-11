@@ -98,11 +98,6 @@ BOOST_AUTO_TEST_CASE(buffer__get__two__expected)
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
 
     table::buffer::slab out{};
-    BOOST_REQUIRE(instance.get(key1, out));
-    BOOST_REQUIRE(out == slab1);
-    BOOST_REQUIRE(instance.get(key2, out));
-    BOOST_REQUIRE(out == slab2);
-
     BOOST_REQUIRE(instance.get(0u, out));
     BOOST_REQUIRE(out == slab1);
     BOOST_REQUIRE(instance.get(0x13, out));
@@ -127,11 +122,6 @@ BOOST_AUTO_TEST_CASE(buffer__put__get__expected)
     }).is_terminal());
 
     table::buffer::slab_ptr out{};
-    BOOST_REQUIRE(instance.get(key1, out));
-    BOOST_REQUIRE(*out.tx == slab1.tx);
-    BOOST_REQUIRE(instance.get(key2, out));
-    BOOST_REQUIRE(*out.tx == slab2.tx);
-
     BOOST_REQUIRE(instance.get(0u, out));
     BOOST_REQUIRE(*out.tx == slab1.tx);
     BOOST_REQUIRE(instance.get(0x13, out));
