@@ -938,17 +938,31 @@ bool CLASS::is_block(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_confirmed_block(const header_link&) NOEXCEPT
+bool CLASS::is_confirmed_block(const header_link& link) NOEXCEPT
 {
-    // TODO: relate fk/height to index.
-    return {};
+    table::header::record_height head{};
+    if (!store_.header.get(link, head))
+        return false;
+
+    table::height::record out{};
+    if (!store_.confirmed.get(head.height, out))
+        return false;
+
+    return out.header_fk == link;
 }
 
 TEMPLATE
-bool CLASS::is_candidate_block(const header_link&) NOEXCEPT
+bool CLASS::is_candidate_block(const header_link& link) NOEXCEPT
 {
-    // TODO: relate fk/height to index.
-    return {};
+    table::header::record_height head{};
+    if (!store_.header.get(link, head))
+        return false;
+
+    table::height::record out{};
+    if (!store_.candidate.get(head.height, out))
+        return false;
+
+    return out.header_fk == link;
 }
 
 TEMPLATE
