@@ -857,7 +857,7 @@ bool CLASS::set_block_valid(const header_link& link, uint64_t fees) NOEXCEPT
 
 TEMPLATE
 bool CLASS::set_block_invalid(const header_link& link,
-    const code& /*code */ ) NOEXCEPT
+    const code& /* code */ ) NOEXCEPT
 {
     // ========================================================================
     const auto lock = store_.get_transactor();
@@ -912,7 +912,7 @@ bool CLASS::set_tx_connected(const tx_link& link, const context& ctx,
 
 TEMPLATE
 bool CLASS::set_tx_invalid(const tx_link& link, const context& ctx,
-    const code& code) NOEXCEPT
+    const code& /* code */) NOEXCEPT
 {
     // ========================================================================
     const auto lock = store_.get_transactor();
@@ -1001,9 +1001,9 @@ bool CLASS::is_tx_confirmable(const tx_link& link) NOEXCEPT
         return false;
 
     // TODO: evaluate concurrency for larger input counts.
-    return std::all_of(inputs.begin(), inputs.end(), [&](const auto link)
+    return std::all_of(inputs.begin(), inputs.end(), [&](const auto& in)
     {
-        return is_unspent_prevout(link) && is_confirmed_prevout(link);
+        return is_unspent_prevout(in) && is_confirmed_prevout(in);
     });
 }
 
@@ -1015,22 +1015,40 @@ bool CLASS::is_block_confirmable(const header_link& link) NOEXCEPT
         return false;
 
     // TODO: evaluate concurrency for larger input counts.
-    return std::all_of(inputs.begin(), inputs.end(), [&](const auto link)
+    return std::all_of(inputs.begin(), inputs.end(), [&](const auto& in)
     {
-        return is_unspent_prevout(link) && is_confirmed_prevout(link);
+        return is_unspent_prevout(in) && is_confirmed_prevout(in);
     });
 }
 
 TEMPLATE
-bool CLASS::push(const header_link&) NOEXCEPT
+bool CLASS::push(const header_link& link) NOEXCEPT
 {
-    return {};
+    const auto links = to_transactions(link);
+    if (links.empty())
+        return false;
+
+    const table::strong_tx::record in{ {}, link };
+
+    // ========================================================================
+    const auto lock = store_.get_transactor();
+
+    return store_.confirmed.put(link, table::height::record{})
+        && std::all_of(links.begin(), links.end(), [&](const auto& fk)
+        {
+            return store_.strong_tx.put(fk, in);
+        });
+    // ========================================================================
 }
 
 TEMPLATE
-bool CLASS::push_candidate(const header_link&) NOEXCEPT
+bool CLASS::push_candidate(const header_link& link) NOEXCEPT
 {
-    return {};
+    // ========================================================================
+    const auto lock = store_.get_transactor();
+
+    return store_.candidate.put(link, table::height::record{});
+    // ========================================================================
 }
 
 TEMPLATE
