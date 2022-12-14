@@ -107,6 +107,33 @@ struct output
         system::chain::output::cptr output{};
     };
 
+    struct get_parent
+      : public schema::output
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            parent_fk = source.read_little_endian<tx::integer, tx::size>();
+            return source;
+        }
+
+        tx::integer parent_fk{};
+    };
+
+    struct get_point
+      : public schema::output
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            using namespace system;
+            parent_fk = source.read_little_endian<tx::integer, tx::size>();
+            index     = narrow_cast<ix::integer>(source.read_variable());
+            return source;
+        }
+
+        tx::integer parent_fk{};
+        ix::integer index{};
+    };
+
     struct slab_ptr
       : public schema::output
     {

@@ -132,6 +132,27 @@ struct input
         system::chain::witness::cptr witness{};
     };
 
+    struct only_with_decomposed_sk
+      : public only
+    {
+        BC_PUSH_WARNING(NO_METHOD_HIDING)
+        inline bool from_data(reader& source) NOEXCEPT
+        BC_POP_WARNING()
+        {
+            source.rewind_bytes(sk);
+            point_fk    = source.read_little_endian<tx::integer, tx::size>();
+            point_index = source.read_little_endian<ix::integer, ix::size>();
+
+            if (point_index == ix::terminal)
+                point_index = system::chain::point::null_index;
+
+            return only::from_data(source);
+        }
+
+        tx::integer point_fk{};
+        ix::integer point_index{};
+    };
+
     // Returns complete input given input.point is provided.
     struct only_from_prevout
       : public schema::input
@@ -158,6 +179,18 @@ struct input
 
         const system::chain::point::cptr prevout{};
         system::chain::input::cptr input{};
+    };
+
+    struct get_parent
+      : public schema::input
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            parent_fk = source.read_little_endian<tx::integer, tx::size>();
+            return source;
+        }
+
+        tx::integer parent_fk{};
     };
 
     ////struct slab_put_ptr
@@ -232,6 +265,19 @@ struct input
         search_key key{};
     };
 
+    struct slab_decomposed_fk
+      : public schema::input
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.rewind_bytes(sk);
+            point_fk = source.read_little_endian<tx::integer, tx::size>();
+            return source;
+        }
+
+        tx::integer point_fk{};
+    };
+
     struct slab_decomposed_sk
       : public schema::input
     {
@@ -255,25 +301,20 @@ struct input
         ix::integer point_index{};
     };
 
-    struct only_with_decomposed_sk
-      : public only
+    struct slab_get_point_and_parent_fks
+      : public schema::input
     {
-        BC_PUSH_WARNING(NO_METHOD_HIDING)
         inline bool from_data(reader& source) NOEXCEPT
-        BC_POP_WARNING()
         {
             source.rewind_bytes(sk);
-            point_fk    = source.read_little_endian<tx::integer, tx::size>();
-            point_index = source.read_little_endian<ix::integer, ix::size>();
-
-            if (point_index == ix::terminal)
-                point_index = system::chain::point::null_index;
-
-            return only::from_data(source);
+            point_fk  = source.read_little_endian<tx::integer, tx::size>();
+            source.skip_bytes(ix::size);
+            parent_fk = source.read_little_endian<tx::integer, tx::size>();
+            return source;
         }
 
         tx::integer point_fk{};
-        ix::integer point_index{};
+        tx::integer parent_fk{};
     };
 
     ////struct slab_with_decomposed_sk

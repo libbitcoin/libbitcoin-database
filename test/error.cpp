@@ -303,40 +303,58 @@ BOOST_AUTO_TEST_CASE(error_t__code__verify_table__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "failed to verify table");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__valid__true_exected_message)
+BOOST_AUTO_TEST_CASE(error_t__code__tx_connected__true_exected_message)
 {
-    constexpr auto value = error::valid;
+    constexpr auto value = error::tx_connected;
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "valid");
+    BOOST_REQUIRE_EQUAL(ec.message(), "transaction connected");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__invalid__true_exected_message)
+BOOST_AUTO_TEST_CASE(error_t__code__tx_preconnected__true_exected_message)
 {
-    constexpr auto value = error::invalid;
+    constexpr auto value = error::tx_preconnected;
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "invalid");
+    BOOST_REQUIRE_EQUAL(ec.message(), "transaction preconnected");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__connected__true_exected_message)
+BOOST_AUTO_TEST_CASE(error_t__code__tx_disconnected__true_exected_message)
 {
-    constexpr auto value = error::connected;
+    constexpr auto value = error::tx_disconnected;
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "connected");
+    BOOST_REQUIRE_EQUAL(ec.message(), "transaction disconnected");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__preconnected__true_exected_message)
+BOOST_AUTO_TEST_CASE(error_t__code__block_confirmable__true_exected_message)
 {
-    constexpr auto value = error::preconnected;
+    constexpr auto value = error::block_confirmable;
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "preconnected");
+    BOOST_REQUIRE_EQUAL(ec.message(), "block confirmable");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__block_preconfirmable__true_exected_message)
+{
+    constexpr auto value = error::block_preconfirmable;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "block preconfirmable");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__block_unconfirmable__true_exected_message)
+{
+    constexpr auto value = error::block_unconfirmable;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "block unconfirmable");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__unassociated__true_exected_message)
