@@ -33,7 +33,6 @@ using header_link = table::header::link;
 using point_link = table::point::link;
 using input_link = table::input::link;
 using output_link = table::output::link;
-using strong_link = table::strong_tx::link;
 using txs_link = table::txs::link;
 using tx_link = table::transaction::link;
 using header_links = std_vector<header_link::integer>;
@@ -52,9 +51,9 @@ public:
     using output = system::chain::output;
     using header = system::chain::header;
     using transaction = system::chain::transaction;
-    using inputs_cptr = system::chain::inputs_cptr;
-    using outputs_cptr = system::chain::outputs_cptr;
-    using transactions_cptr = system::chain::transactions_cptr;
+    using inputs_ptr = system::chain::inputs_ptr;
+    using outputs_ptr = system::chain::outputs_ptr;
+    using transactions_ptr = system::chain::transactions_ptr;
     using heights = std_vector<size_t>;
     using filter = system::data_chunk;
 
@@ -80,7 +79,7 @@ public:
     header_link to_header(const hash_digest& key) NOEXCEPT;
     input_links to_spenders(const point& prevout) NOEXCEPT;
     point_link to_point(const hash_digest& key) NOEXCEPT;
-    txs_link to_txs(const header_link& link) NOEXCEPT; // link sk
+    txs_link to_txs(const header_link& link) NOEXCEPT;
     tx_link to_tx(const hash_digest& key) NOEXCEPT;
 
     /// put to tx (reverse navigation)
@@ -94,8 +93,8 @@ public:
     output_link to_prevout(const input_link& link) NOEXCEPT;
 
     /// output to spenders (reverse navigation)
-    input_links to_spenders(const output_link& link) NOEXCEPT; // fp
-    input_links to_spenders(const tx_link& link, uint32_t output_index) NOEXCEPT; // fp
+    input_links to_spenders(const output_link& link) NOEXCEPT;
+    input_links to_spenders(const tx_link& link, uint32_t output_index) NOEXCEPT;
 
     /// block/tx to puts (forward navigation)
     input_links to_tx_inputs(const tx_link& link) NOEXCEPT;
@@ -104,7 +103,7 @@ public:
     output_links to_block_outputs(const header_link& link) NOEXCEPT;
 
     /// block to txs (forward navigation)
-    tx_links to_transactions(const header_link& link) NOEXCEPT; // sk
+    tx_links to_transactions(const header_link& link) NOEXCEPT;
 
     /// tx to blocks (reverse navigation)
     /// There is no reverse index for unconfirmed tx->block.
@@ -129,9 +128,9 @@ public:
     /// -----------------------------------------------------------------------
 
     hashes get_txs(const header_link& link) NOEXCEPT;
-    inputs_cptr get_inputs(const tx_link& link) NOEXCEPT;
-    outputs_cptr get_outputs(const tx_link& link) NOEXCEPT;
-    transactions_cptr get_transactions(const header_link& link) NOEXCEPT; // sk
+    inputs_ptr get_inputs(const tx_link& link) NOEXCEPT;
+    outputs_ptr get_outputs(const tx_link& link) NOEXCEPT;
+    transactions_ptr get_transactions(const header_link& link) NOEXCEPT;
 
     header::cptr get_header(const header_link& link) NOEXCEPT;
     block::cptr get_block(const header_link& link) NOEXCEPT;
@@ -143,7 +142,7 @@ public:
     output::cptr get_output(const point& prevout) NOEXCEPT;
     output::cptr get_output(const tx_link& link, uint32_t output_index) NOEXCEPT;
     input::cptr get_input(const tx_link& link, uint32_t input_index) NOEXCEPT;
-    inputs_cptr get_spenders(const tx_link& link, uint32_t output_index) NOEXCEPT; // fp
+    inputs_ptr get_spenders(const tx_link& link, uint32_t output_index) NOEXCEPT;
 
     tx_link set_link(const transaction& tx) NOEXCEPT;
     header_link set_link(const block& block, const context& ctx) NOEXCEPT;
@@ -154,9 +153,12 @@ public:
     /// Validation (foreign-keyed).
     /// -----------------------------------------------------------------------
 
-    // TODO: get block.fees, tx.fee/sigops.
     code get_block_state(const header_link& link) NOEXCEPT;
+    code get_block_state(uint64_t& fees, const header_link& link) NOEXCEPT;
+
     code get_tx_state(const tx_link& link, const context& ctx) NOEXCEPT;
+    code get_tx_state(uint64_t& fee, size_t& sigops, const tx_link& link,
+        const context& ctx) NOEXCEPT;
 
     bool set_block_preconfirmable(const header_link& link) NOEXCEPT;
     bool set_block_unconfirmable(const header_link& link) NOEXCEPT;
@@ -199,6 +201,7 @@ public:
     /// Buffer (foreign-keyed).
     /// -----------------------------------------------------------------------
 
+    input::cptr get_buffered_output(const point& prevout) NOEXCEPT;
     transaction::cptr get_buffered_tx(const tx_link& link) NOEXCEPT;
     bool set_buffered_tx(const transaction& tx) NOEXCEPT;
 
@@ -213,10 +216,12 @@ public:
     /// Bootstrap (array).
     /// -----------------------------------------------------------------------
 
-    hashes get_bootstrap(size_t from, size_t to) NOEXCEPT;
+    hashes get_bootstrap(size_t height) NOEXCEPT;
     bool set_bootstrap(size_t height) NOEXCEPT;
 
 protected:
+    using input_key = table::input::search_key;
+    input_key make_foreign_point(const point& prevout) NOEXCEPT;
     code to_block_code(linkage<schema::code>::integer value) NOEXCEPT;
     code to_tx_code(linkage<schema::code>::integer value) NOEXCEPT;
     bool is_sufficient(const context& current,

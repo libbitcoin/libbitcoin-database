@@ -60,6 +60,11 @@ public:
     template <typename Element, if_equal<Element::size, Size> = true>
     bool get(const Link& link, Element& element) const NOEXCEPT;
 
+    // TODO: test.
+    /// Put element.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool put(const Element& element) NOEXCEPT;
+
     /// Put element and return link.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put_link(Link& link, const Element& element) NOEXCEPT;

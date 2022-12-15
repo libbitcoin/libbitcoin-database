@@ -86,19 +86,19 @@ struct validated_tx
         sigop::integer sigops{};
     };
 
-    struct slab_get_code
-      : public schema::validated_tx
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            context::from_data(source, ctx);
-            code = source.read_little_endian<coding::integer, coding::size>();
-            return source;
-        }
-
-        context ctx{};
-        coding::integer code{};
-    };
+    ////struct slab_get_code
+    ////  : public schema::validated_tx
+    ////{
+    ////    inline bool from_data(reader& source) NOEXCEPT
+    ////    {
+    ////        context::from_data(source, ctx);
+    ////        code = source.read_little_endian<coding::integer, coding::size>();
+    ////        return source;
+    ////    }
+    ////
+    ////    context ctx{};
+    ////    coding::integer code{};
+    ////};
 };
 
 } // namespace table

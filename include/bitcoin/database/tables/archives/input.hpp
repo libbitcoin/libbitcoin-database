@@ -149,6 +149,11 @@ struct input
             return only::from_data(source);
         }
 
+        inline bool is_null() const NOEXCEPT
+        {
+            return point_fk == tx::terminal;
+        }
+
         tx::integer point_fk{};
         ix::integer point_index{};
     };
@@ -275,6 +280,11 @@ struct input
             return source;
         }
 
+        inline bool is_null() const NOEXCEPT
+        {
+            return point_fk == tx::terminal;
+        }
+
         tx::integer point_fk{};
     };
 
@@ -297,6 +307,11 @@ struct input
             return source;
         }
 
+        inline bool is_null() const NOEXCEPT
+        {
+            return point_fk == tx::terminal;
+        }
+
         tx::integer point_fk{};
         ix::integer point_index{};
     };
@@ -311,6 +326,11 @@ struct input
             source.skip_bytes(ix::size);
             parent_fk = source.read_little_endian<tx::integer, tx::size>();
             return source;
+        }
+
+        inline bool is_null() const NOEXCEPT
+        {
+            return point_fk == tx::terminal;
         }
 
         tx::integer point_fk{};

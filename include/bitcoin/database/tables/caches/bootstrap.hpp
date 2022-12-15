@@ -37,31 +37,6 @@ struct bootstrap
     struct record
       : public schema::bootstrap
     {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            block_hash = source.read_hash();
-            BC_ASSERT(source.get_read_position() == minrow);
-            return source;
-        }
-
-        inline bool to_data(writer& sink) const NOEXCEPT
-        {
-            sink.write_bytes(block_hash);
-            BC_ASSERT(sink.get_write_position() == minrow);
-            return sink;
-        }
-
-        inline bool operator==(const record& other) const NOEXCEPT
-        {
-            return block_hash == other.block_hash;
-        }
-
-        hash_digest block_hash{};
-    };
-
-    struct record_set
-      : public schema::bootstrap
-    {
         link count() const NOEXCEPT
         {
             using namespace system;
@@ -100,7 +75,7 @@ struct bootstrap
             return sink;
         }
 
-        inline bool operator==(const record_set& other) const NOEXCEPT
+        inline bool operator==(const record& other) const NOEXCEPT
         {
             return block_hashes == other.block_hashes;
         }
