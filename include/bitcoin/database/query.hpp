@@ -155,7 +155,6 @@ public:
 
     code get_block_state(const header_link& link) NOEXCEPT;
     code get_block_state(uint64_t& fees, const header_link& link) NOEXCEPT;
-
     code get_tx_state(const tx_link& link, const context& ctx) NOEXCEPT;
     code get_tx_state(uint64_t& fee, size_t& sigops, const tx_link& link,
         const context& ctx) NOEXCEPT;

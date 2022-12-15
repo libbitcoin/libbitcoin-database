@@ -1077,6 +1077,7 @@ bool CLASS::is_sufficient(const context& current,
 TEMPLATE
 code CLASS::get_block_state(const header_link& link) NOEXCEPT
 {
+    // TODO: Can be optimized by not reading/passing fees.
     uint64_t fees{};
     return get_block_state(fees, link);
 }
@@ -1100,6 +1101,7 @@ code CLASS::get_block_state(uint64_t& fees, const header_link& link) NOEXCEPT
 TEMPLATE
 code CLASS::get_tx_state(const tx_link& link, const context& ctx) NOEXCEPT
 {
+    // TODO: Can be optimized by not reading/passing fee/sigops.
     uint64_t fee{};
     size_t sigops{};
     return get_tx_state(fee, sigops, link, ctx);
