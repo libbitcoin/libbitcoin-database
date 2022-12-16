@@ -79,7 +79,7 @@ CLASS::query(Store& value) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-bool CLASS::is_empty() NOEXCEPT
+inline bool CLASS::is_empty() NOEXCEPT
 {
     // True return implies genesis not indexed.
     return is_zero(store_.confirmed.count()) ||
@@ -87,14 +87,14 @@ bool CLASS::is_empty() NOEXCEPT
 }
 
 TEMPLATE
-size_t CLASS::get_top() NOEXCEPT
+inline size_t CLASS::get_top() NOEXCEPT
 {
     BC_ASSERT_MSG(!is_zero(store_.confirmed.count()), "empty");
     return sub1(store_.confirmed.count());
 }
 
 TEMPLATE
-size_t CLASS::get_top_candidate() NOEXCEPT
+inline size_t CLASS::get_top_candidate() NOEXCEPT
 {
     BC_ASSERT_MSG(!is_zero(store_.candidate.count()), "empty");
     return sub1(store_.candidate.count());
@@ -114,7 +114,7 @@ size_t CLASS::get_fork() NOEXCEPT
 TEMPLATE
 size_t CLASS::get_last_associated_from(size_t height) NOEXCEPT
 {
-    if (height == max_size_t)
+    if (height >= height_link::terminal)
         return height;
 
     // Should not be called during organization.
@@ -163,7 +163,7 @@ hashes CLASS::get_locator(const heights& heights) NOEXCEPT
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 TEMPLATE
-header_link CLASS::to_candidate(size_t height) NOEXCEPT
+inline header_link CLASS::to_candidate(size_t height) NOEXCEPT
 {
     // Terminal return implies height above top candidate.
     return store_.candidate.first(system::possible_narrow_cast<
@@ -171,7 +171,7 @@ header_link CLASS::to_candidate(size_t height) NOEXCEPT
 }
 
 TEMPLATE
-header_link CLASS::to_confirmed(size_t height) NOEXCEPT
+inline header_link CLASS::to_confirmed(size_t height) NOEXCEPT
 {
     // Terminal return implies height above top confirmed.
     return store_.confirmed.first(system::possible_narrow_cast<
@@ -179,15 +179,86 @@ header_link CLASS::to_confirmed(size_t height) NOEXCEPT
 }
 
 TEMPLATE
-header_link CLASS::to_header(const hash_digest& key) NOEXCEPT
+inline header_link CLASS::to_header(const hash_digest& key) NOEXCEPT
 {
     // Terminal return implies not archived.
     return store_.header.first(key);
 }
 
 TEMPLATE
+inline point_link CLASS::to_point(const hash_digest& key) NOEXCEPT
+{
+    // Terminal return implies not archived.
+    return store_.point.first(key);
+}
+
+TEMPLATE
+inline tx_link CLASS::to_tx(const hash_digest& key) NOEXCEPT
+{
+    // Terminal return implies not archived.
+    return store_.tx.first(key);
+}
+
+TEMPLATE
+inline typename CLASS::txs_link CLASS::to_txs(const header_link& link) NOEXCEPT
+{
+    // Terminal return implies not associated (possibly header not archived).
+    return store_.txs.first(link);
+}
+
+TEMPLATE
+inline typename CLASS::buffer_link CLASS::to_buffer(
+    const tx_link& link) NOEXCEPT
+{
+    // Terminal return implies not found.
+    return store_.buffer.first(link);
+}
+
+TEMPLATE
+inline typename CLASS::address_link CLASS::to_address(
+    const hash_digest& key) NOEXCEPT
+{
+    // Terminal return implies not found.
+    return store_.address.first(key);
+}
+
+TEMPLATE
+inline typename CLASS::neutrino_link CLASS::to_neutrino(
+    const header_link& link) NOEXCEPT
+{
+    // Terminal return implies not found.
+    return store_.neutrino.first(link);
+}
+
+TEMPLATE
+inline typename CLASS::strong_tx_link CLASS::to_strong_tx(
+    const header_link& link) NOEXCEPT
+{
+    // Terminal return implies not found.
+    return store_.strong_tx.first(link);
+}
+
+TEMPLATE
+inline typename CLASS::validated_tx_link CLASS::to_validated_tx(
+    const header_link& link) NOEXCEPT
+{
+    // Terminal return implies not found.
+    return store_.validated_tx.first(link);
+}
+
+TEMPLATE
+inline typename CLASS::validated_bk_link CLASS::to_validated_bk(
+    const header_link& link) NOEXCEPT
+{
+    // Terminal return implies not found.
+    return store_.validated_bk.first(link);
+}
+
+TEMPLATE
 input_links CLASS::to_spenders(const point& prevout) NOEXCEPT
 {
+    // This is 1 nk search, 1 fp search, with link reads and enumeration.
+
     // Empty return implies null point.
     if (prevout.is_null())
         return {};
@@ -206,27 +277,6 @@ input_links CLASS::to_spenders(const point& prevout) NOEXCEPT
     input_links spenders{};
     do { spenders.push_back(it.self()); } while (it.advance());
     return spenders;
-}
-
-TEMPLATE
-point_link CLASS::to_point(const hash_digest& key) NOEXCEPT
-{
-    // Terminal return implies not archived.
-    return store_.point.first(key);
-}
-
-TEMPLATE
-txs_link CLASS::to_txs(const header_link& link) NOEXCEPT
-{
-    // Terminal return implies not associated (possibly header not archived).
-    return store_.txs.first(link);
-}
-
-TEMPLATE
-tx_link CLASS::to_tx(const hash_digest& key) NOEXCEPT
-{
-    // Terminal return implies not archived.
-    return store_.tx.first(key);
 }
 
 // put to tx (reverse navigation)
@@ -344,6 +394,7 @@ input_links CLASS::to_tx_inputs(const tx_link& link) NOEXCEPT
     if (!store_.puts.get(tx.ins_fk, puts))
         return {};
 
+    // TODO: use pointer?
     return std::move(puts.in_fks);
 }
 
@@ -361,12 +412,15 @@ output_links CLASS::to_tx_outputs(const tx_link& link) NOEXCEPT
     if (!store_.puts.get(tx.outs_fk(), puts))
         return {};
 
+    // TODO: use pointer?
     return std::move(puts.out_fks);
 }
 
 TEMPLATE
 input_links CLASS::to_block_inputs(const header_link& link) NOEXCEPT
 {
+    // This is 1 fk search and read for block, and 2 reads for each tx.
+
     // Empty return implies invalid link or unassociated.
     const auto txs = to_transactions(link);
     if (txs.empty())
@@ -421,6 +475,7 @@ tx_links CLASS::to_transactions(const header_link& link) NOEXCEPT
     if (!store_.txs.get(to_txs(link), txs))
         return {};
 
+    // TODO: use pointer?
     return std::move(txs.tx_fks);
 }
 
@@ -432,7 +487,7 @@ header_link CLASS::strong_by(const tx_link& link) NOEXCEPT
 {
     // Terminal return implies invalid link.
     table::strong_tx::record strong{};
-    if (!store_.strong_tx.get(store_.strong_tx.first(link), strong))
+    if (!store_.strong_tx.get(to_strong_tx(link), strong))
         return {};
 
     // Terminal return implies strong block reverted.
@@ -443,49 +498,49 @@ header_link CLASS::strong_by(const tx_link& link) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-bool CLASS::is_header(const hash_digest& key) NOEXCEPT
+inline bool CLASS::is_header(const hash_digest& key) NOEXCEPT
 {
     // False return implies not archived.
     return store_.header.exists(key);
 }
 
 TEMPLATE
-bool CLASS::is_block(const hash_digest& key) NOEXCEPT
+inline bool CLASS::is_block(const hash_digest& key) NOEXCEPT
 {
     // False return implies not archived or not associated.
     return is_associated(to_header(key));
 }
 
 TEMPLATE
-bool CLASS::is_tx(const hash_digest& key) NOEXCEPT
+inline bool CLASS::is_tx(const hash_digest& key) NOEXCEPT
 {
     // False return implies not archived.
     return store_.tx.exists(key);
 }
 
 TEMPLATE
-bool CLASS::set(const header& header, const context& ctx) NOEXCEPT
+inline bool CLASS::set(const header& header, const context& ctx) NOEXCEPT
 {
     // See set_link for details.
     return !set_link(header, ctx).is_terminal();
 }
 
 TEMPLATE
-bool CLASS::set(const block& block, const context& ctx) NOEXCEPT
+inline bool CLASS::set(const block& block, const context& ctx) NOEXCEPT
 {
     // See set_link for details.
     return !set_link(block, ctx).is_terminal();
 }
 
 TEMPLATE
-bool CLASS::set(const transaction& tx) NOEXCEPT
+inline bool CLASS::set(const transaction& tx) NOEXCEPT
 {
     // See set_link for details.
     return !set_link(tx).is_terminal();
 }
 
 TEMPLATE
-bool CLASS::populate(const input& input) NOEXCEPT
+inline bool CLASS::populate(const input& input) NOEXCEPT
 {
     // False return (and nullptr assigned) implies prevout not found.
     return ((input.prevout = get_output(input.point())));
@@ -747,6 +802,18 @@ typename CLASS::point::cptr CLASS::get_point(const input_link& link) NOEXCEPT
 }
 
 TEMPLATE
+typename CLASS::inputs_ptr CLASS::get_spenders(const output_link& link) NOEXCEPT
+{
+    // nullptr return implies invalid link.
+    table::output::slab out{};
+    if (!store_.output.get(link, out))
+        return {};
+
+    // Empty return implies no spenders.
+    return get_spenders(to_tx(out.parent_fk), out.index);
+}
+
+TEMPLATE
 typename CLASS::output::cptr CLASS::get_output(const point& prevout) NOEXCEPT
 {
     // nullptr return implies null point.
@@ -813,7 +880,7 @@ typename CLASS::inputs_ptr CLASS::get_spenders(const tx_link& link,
 
 // protected
 TEMPLATE
-typename CLASS::input_key CLASS::make_foreign_point(
+inline typename CLASS::input_key CLASS::make_foreign_point(
     const point& prevout) NOEXCEPT
 {
     // Terminal foreign point return [terminal, null_index] implies null point.
@@ -1028,7 +1095,7 @@ bool CLASS::set(const header_link& link, const tx_links& links) NOEXCEPT
 
 // protected
 TEMPLATE
-code CLASS::to_block_code(linkage<schema::code>::integer value) NOEXCEPT
+inline code CLASS::to_block_code(linkage<schema::code>::integer value) NOEXCEPT
 {
     // validated_bk code to error code.
     switch (value)
@@ -1046,7 +1113,7 @@ code CLASS::to_block_code(linkage<schema::code>::integer value) NOEXCEPT
 
 // protected
 TEMPLATE
-code CLASS::to_tx_code(linkage<schema::code>::integer value) NOEXCEPT
+inline code CLASS::to_tx_code(linkage<schema::code>::integer value) NOEXCEPT
 {
     // validated_tx code to error code.
     switch (value)
@@ -1064,7 +1131,7 @@ code CLASS::to_tx_code(linkage<schema::code>::integer value) NOEXCEPT
 
 // protected
 TEMPLATE
-bool CLASS::is_sufficient(const context& current,
+inline bool CLASS::is_sufficient(const context& current,
     const context& evaluated) NOEXCEPT
 {
     // Past evaluation at a lesser height and/or mtp is sufficient.
@@ -1075,11 +1142,29 @@ bool CLASS::is_sufficient(const context& current,
 }
 
 TEMPLATE
+height_link CLASS::get_block_height(const header_link& link) NOEXCEPT
+{
+    // Terminal return implies invalid link.
+    table::header::record_height header{};
+    if (!store_.header.get(link, header))
+        return {};
+
+    return header.height;
+}
+
+TEMPLATE
 code CLASS::get_block_state(const header_link& link) NOEXCEPT
 {
-    // TODO: Can be optimized by not reading/passing fees.
-    uint64_t fees{};
-    return get_block_state(fees, link);
+    // An unassociated state implies block could not have been validated.
+    if (!is_associated(link))
+        return error::unassociated;
+
+    // Not found is presumed over invalid link (could differentiate with code).
+    table::validated_bk::slab_get_code valid{};
+    if (store_.validated_bk.get(to_validated_bk(link), valid))
+        return error::not_found;
+
+    return to_block_code(valid.code);
 }
 
 TEMPLATE
@@ -1089,9 +1174,9 @@ code CLASS::get_block_state(uint64_t& fees, const header_link& link) NOEXCEPT
     if (!is_associated(link))
         return error::unassociated;
 
-    // Not found is presumed over invalid link.
+    // Not found is presumed over invalid link (could differentiate with code).
     table::validated_bk::slab valid{};
-    if (store_.validated_bk.get(store_.validated_bk.first(link), valid))
+    if (store_.validated_bk.get(to_validated_bk(link), valid))
         return error::not_found;
 
     fees = valid.fees;
@@ -1101,10 +1186,23 @@ code CLASS::get_block_state(uint64_t& fees, const header_link& link) NOEXCEPT
 TEMPLATE
 code CLASS::get_tx_state(const tx_link& link, const context& ctx) NOEXCEPT
 {
-    // TODO: Can be optimized by not reading/passing fee/sigops.
-    uint64_t fee{};
-    size_t sigops{};
-    return get_tx_state(fee, sigops, link, ctx);
+    table::validated_tx::slab_get_code valid{};
+    auto it = store_.validated_tx.it(link);
+    if (it.self().is_terminal())
+        return error::no_entry;
+
+    // First (last pushed) with sufficient context controls state.
+    do
+    {
+        // error::unknown return implies store inconsistency (links derived).
+        if (!store_.validated_tx.get(it.self(), valid))
+            return error::unknown;
+
+        if (is_sufficient(ctx, valid.ctx))
+            return to_tx_code(valid.code);
+    }
+    while (it.advance());
+    return error::no_entry;
 }
 
 TEMPLATE
@@ -1250,7 +1348,7 @@ bool CLASS::set_tx_disconnected(const tx_link& link,
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 TEMPLATE
-bool CLASS::is_associated(const header_link& link) NOEXCEPT
+inline bool CLASS::is_associated(const header_link& link) NOEXCEPT
 {
     // Guards against unnecessary hashmap search.
     // False return implies invalid link or txs are not associated.
@@ -1258,16 +1356,11 @@ bool CLASS::is_associated(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_candidate_block(const header_link& link) NOEXCEPT
+inline bool CLASS::is_candidate_block(const header_link& link) NOEXCEPT
 {
-    // False return implies invalid link.
-    table::header::record_height header{};
-    if (!store_.header.get(link, header))
-        return false;
-
-    // False return implies no candidate at block's height.
+    // False return implies invalid link or no candidate at block's height.
     table::height::record candidate{};
-    if (!store_.candidate.get(header.height, candidate))
+    if (!store_.candidate.get(get_block_height(link), candidate))
         return false;
 
     // False return implies different candidate at block's height.
@@ -1275,16 +1368,11 @@ bool CLASS::is_candidate_block(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_confirmed_block(const header_link& link) NOEXCEPT
+inline bool CLASS::is_confirmed_block(const header_link& link) NOEXCEPT
 {
-    // False return implies invalid link.
-    table::header::record_height header{};
-    if (!store_.header.get(link, header))
-        return false;
-
-    // False return implies no confirmed at block's height.
+    // False return implies invalid link or no confirmed at block's height.
     table::height::record confirmed{};
-    if (!store_.confirmed.get(header.height, confirmed))
+    if (!store_.confirmed.get(get_block_height(link), confirmed))
         return false;
 
     // False return implies different confirmed at block's height.
@@ -1292,7 +1380,7 @@ bool CLASS::is_confirmed_block(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_confirmed_tx(const tx_link& link) NOEXCEPT
+inline bool CLASS::is_confirmed_tx(const tx_link& link) NOEXCEPT
 {
     // Not for validatation (2 additional gets).
     // False return implies invalid link or not confirmed tx.
@@ -1300,7 +1388,7 @@ bool CLASS::is_confirmed_tx(const tx_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_confirmed_input(const input_link& link) NOEXCEPT
+inline bool CLASS::is_confirmed_input(const input_link& link) NOEXCEPT
 {
     // Not for validatation (2 additional gets).
     // False return implies invalid link or not confirmed input.
@@ -1308,7 +1396,7 @@ bool CLASS::is_confirmed_input(const input_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_confirmed_output(const output_link& link) NOEXCEPT
+inline bool CLASS::is_confirmed_output(const output_link& link) NOEXCEPT
 {
     // Not for validatation (2 additional gets).
     // False return implies invalid link or not confirmed output.
@@ -1317,9 +1405,11 @@ bool CLASS::is_confirmed_output(const output_link& link) NOEXCEPT
 
 // Confirmation process.
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Strong identifies confirmed and pending confirmed txs.
+// Strong is only sufficient for confirmation during organizing.
 
 TEMPLATE
-bool CLASS::strong(const header_link& link) NOEXCEPT
+bool CLASS::make_strong(const header_link& link) NOEXCEPT
 {
     // False return implies invalid link or unassociated.
     const auto txs = to_transactions(link);
@@ -1340,7 +1430,7 @@ bool CLASS::strong(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::unstrong(const header_link& link) NOEXCEPT
+bool CLASS::make_unstrong(const header_link& link) NOEXCEPT
 {
     // False return implies invalid link or unassociated.
     const auto txs = to_transactions(link);
@@ -1361,53 +1451,67 @@ bool CLASS::unstrong(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_strong_tx(const tx_link& link) NOEXCEPT
+bool CLASS::is_spent(const input_link& link) NOEXCEPT
 {
-    // False implies invalid link or weak tx.
-    // Strong identifies confirmed and pending confirmed txs.
-    // Strong is reversed (reorg) by putting a terminal value.
-    // Strong is only sufficient for confirmation during organizing.
-    // An orgination query lock would allow this to be used vs is_confirmed_tx.
-    return !strong_by(link).is_terminal();
+    // This is 1 nk search, 1 fp search, with 2 reads, and for inputs a walk of
+    // the linked list, 1 search and 3 reads.
+
+    // False implies invalid link, null point (0), or spent only by self (1).
+    const auto ins = to_spenders(link);
+    if (ins.size() <= one)
+        return false;
+
+    // False implies prevout not strongly spent.
+    return std::all_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
+    {
+        // Use strong for performance benefit (confirmed would work).
+        return (in == link) || strong_by(to_input_tx(in)).is_terminal();
+    });
 }
 
 TEMPLATE
-bool CLASS::is_strong_prevout(const input_link& link) NOEXCEPT
+bool CLASS::is_mature(const input_link& link, size_t height) NOEXCEPT
 {
+    // This is 1 nk search, 1 fk search, and 5 reads (6 if coinbase).
+
     // False implies invalid link.
     table::input::slab_decomposed_sk in{};
     if (!store_.input.get(link, in))
         return false;
 
-    // True implies null input, considered a strong prevout.
-    // This check supersedes use of to_prevout_tx, which cannot provide
-    // differentiation between null_point and missing point in the return.
+    // True implies strong (null input).
     if (in.is_null())
         return true;
 
-    // False implies prevout tx not found or not strong.
-    // Assumes input is validated, avoids tx table query for output count.
-    return is_strong_tx(to_tx(store_.point.get_key(in.point_fk)));
-}
-
-TEMPLATE
-bool CLASS::is_strong_spent_prevout(const input_link& link) NOEXCEPT
-{
-    // False implies invalid link, null point or spent only by self (weak).
-    const auto ins = to_spenders(link);
-    if (ins.size() == one)
+    // False return implies not strong (strong no entry).
+    const auto tx_fk = to_tx(store_.point.get_key(in.point_fk));
+    const auto header_fk = strong_by(tx_fk);
+    if (header_fk == header_link::terminal)
         return false;
 
-    // False implies prevout not strongly spent.
-    return std::none_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
-    {
-        // Use strong for performance benefit (confirmed would work).
-        return (in != link) && is_strong_tx(to_input_tx(in));
-    });
+    // False return implies store integrity failure (tx missing).
+    table::transaction::record_get_coinbase transaction{};
+    if (!store_.tx.get(tx_fk, transaction))
+        return false;
+
+    // True return implies strong non-coinbase.
+    if (!transaction.coinbase)
+        return true;
+
+    // Get the height of the block containing the coinbase.
+    const auto prevout_height = get_block_height(header_fk);
+    using namespace system;
+
+    //*************************************************************************
+    // CONSENSUS: Genesis coinbase treated as forever immature (satoshi bug).
+    //*************************************************************************
+    return !is_zero(prevout_height) &&
+        (height >= ceilinged_add(prevout_height, chain::coinbase_maturity));
 }
 
 TEMPLATE
-bool CLASS::is_confirmable_block(const header_link& link) NOEXCEPT
+bool CLASS::is_confirmable_block(const header_link& link,
+    size_t height) NOEXCEPT
 {
     // False implies invalid link or store inconsistency (must be inputs).
     const auto ins = to_block_inputs(link);
@@ -1417,8 +1521,7 @@ bool CLASS::is_confirmable_block(const header_link& link) NOEXCEPT
     // False implies not confirmable block.
     return std::all_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
     {
-        // Null inputs are considered strong prevouts (and not spent).
-        return is_strong_prevout(in) && !is_strong_spent_prevout(in);
+        return is_mature(in, height) && !is_spent(in);
     });
 }
 
@@ -1432,7 +1535,8 @@ bool CLASS::push(const header_link& link) NOEXCEPT
     const auto scope = store_.get_transactor();
 
     // False return implies allocation failure.
-    return store_.confirmed.put(link, table::height::record{});
+    const table::height::record confirmed{ {}, link };
+    return store_.confirmed.put(confirmed);
     // ========================================================================
 }
 
@@ -1443,7 +1547,8 @@ bool CLASS::push_candidate(const header_link& link) NOEXCEPT
     const auto scope = store_.get_transactor();
 
     // False return implies allocation failure.
-    return store_.candidate.put(link, table::height::record{});
+    const table::height::record candidate{ {}, link };
+    return store_.candidate.put(candidate);
     // ========================================================================
 }
 
@@ -1479,54 +1584,113 @@ bool CLASS::pop_candidate() NOEXCEPT
     // ========================================================================
 }
 
-// Buffer (foreign-keyed).
+// Address (natural-keyed).
 // ----------------------------------------------------------------------------
-// Transaction buffering uses a failover cache managed by the query engine.
-// (1) in-memory bimap, (2) wire streaming to disk, (3) store archive.
-// Cache is maintained until validation (inputs and prevouts).
-// Cache size is controlled by the block download window.
-// Disk cache is created/cleared and startup/shutdown.
 
 TEMPLATE
-typename CLASS::input::cptr CLASS::get_buffered_output(
-    const point&) NOEXCEPT
+hash_digest CLASS::address_hash(const output& output) NOEXCEPT
 {
-    return {};
+    hash_digest digest{};
+    system::hash::sha256::copy sink(digest);
+    output.to_data(sink);
+    sink.flush();
+    return digest;
 }
+
+TEMPLATE
+output_link CLASS::get_address(const hash_digest& key) NOEXCEPT
+{
+    // Terminal return implies not found, or deserialize failure.
+    table::address::record address{};
+    if (!store_.address.get(to_address(key), address))
+        return {};
+
+    return address.output_fk;
+}
+
+TEMPLATE
+bool CLASS::set_address(const hash_digest& key,
+    const output_link& link) NOEXCEPT
+{
+    // False return implies serialization failure.
+    return store_.address.put(key, table::address::record
+    {
+        {},
+        link
+    });
+}
+
+TEMPLATE
+bool CLASS::set_address(const output& output) NOEXCEPT
+{
+    // False return implies serialization failure.
+    return set_address(address_hash(output), output);
+}
+
+// Buffer (foreign-keyed).
+// ----------------------------------------------------------------------------
+// TODO: implement wire prevout de/serialization.
 
 TEMPLATE
 typename CLASS::transaction::cptr CLASS::get_buffered_tx(
-    const tx_link&) NOEXCEPT
+    const tx_link& link) NOEXCEPT
 {
-    return {};
+    // nullptr return implies invalid link, not found, or deserialization fail.
+    table::buffer::slab_ptr buffer{};
+    if (!store_.buffer.get(to_buffer(link), buffer))
+        return {};
+
+    return buffer.tx;
 }
 
 TEMPLATE
-bool CLASS::set_buffered_tx(const transaction&) NOEXCEPT
+bool CLASS::set_buffered_tx(const tx_link& link,
+    const transaction& tx) NOEXCEPT
 {
-    return {};
+    // False return implies invalid link or serialization failure.
+    return store_.buffer.put(to_buffer(link), table::buffer::slab_put_ref
+    {
+        {},
+        tx
+    });
 }
 
 // Neutrino (foreign-keyed).
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-typename  CLASS::filter CLASS::get_filter(const header_link&) NOEXCEPT
+typename CLASS::filter CLASS::get_filter(const header_link& link) NOEXCEPT
 {
-    return {};
+    // nullptr return implies invalid link, not found, or deserialization fail.
+    table::neutrino::slab neutrino{};
+    if (!store_.neutrino.get(to_neutrino(link), neutrino))
+        return {};
+
+    // TODO: use pointer?
+    return std::move(neutrino.filter);
 }
 
 TEMPLATE
-hash_digest CLASS::get_filter_head(const header_link&) NOEXCEPT
+hash_digest CLASS::get_filter_head(const header_link& link) NOEXCEPT
 {
-    return {};
+    // nullptr return implies invalid link, not found, or deserialization fail.
+    table::neutrino::slab neutrino{};
+    if (!store_.neutrino.get(to_neutrino(link), neutrino))
+        return {};
+
+    return std::move(neutrino.filter_head);
 }
 
 TEMPLATE
-bool CLASS::set_filter(const header_link&, const hash_digest&,
-    const filter&) NOEXCEPT
+bool CLASS::set_filter(const header_link& link, const hash_digest& filter_head,
+    const filter& filter) NOEXCEPT
 {
-    return {};
+    return store_.neutrino.put(to_neutrino(link), table::neutrino::slab_put_ref
+    {
+        {},
+        filter_head,
+        filter
+    });
 }
 
 // Bootstrap (array).
@@ -1535,9 +1699,9 @@ bool CLASS::set_filter(const header_link&, const hash_digest&,
 TEMPLATE
 hashes CLASS::get_bootstrap(size_t height) NOEXCEPT
 {
-    // False return implies height exceeds confirmed top or is max_size_t.
-    if (height > get_top() || height == max_size_t)
-        return false;
+    // Empty return implies height exceeds confirmed top or is terminal.
+    if (height > get_top() || height >= height_link::terminal)
+        return {};
 
     table::bootstrap::record boot{};
     boot.block_hashes.resize(add1(height));
@@ -1546,14 +1710,15 @@ hashes CLASS::get_bootstrap(size_t height) NOEXCEPT
     if (!store_.bootstrap.get(0, boot))
         return {};
 
+    // TODO: use pointer?
     return std::move(boot.block_hashes);
 }
 
 TEMPLATE
 bool CLASS::set_bootstrap(size_t height) NOEXCEPT
 {
-    // False return implies height exceeds confirmed top or is max_size_t.
-    if (height > get_top() || height == max_size_t)
+    // False return implies height exceeds confirmed top or is terminal.
+    if (height > get_top() || height >= height_link::terminal)
         return false;
 
     table::bootstrap::record boot{};

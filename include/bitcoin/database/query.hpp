@@ -33,8 +33,8 @@ using header_link = table::header::link;
 using point_link = table::point::link;
 using input_link = table::input::link;
 using output_link = table::output::link;
-using txs_link = table::txs::link;
 using tx_link = table::transaction::link;
+using height_link = table::height::link;
 using header_links = std_vector<header_link::integer>;
 using tx_links = std_vector<tx_link::integer>;
 using input_links = std_vector<input_link::integer>;
@@ -62,9 +62,9 @@ public:
     /// Initialization (natural-keyed).
     /// -----------------------------------------------------------------------
 
-    bool is_empty() NOEXCEPT;
-    size_t get_top() NOEXCEPT;
-    size_t get_top_candidate() NOEXCEPT;
+    inline bool is_empty() NOEXCEPT;
+    inline size_t get_top() NOEXCEPT;
+    inline size_t get_top_candidate() NOEXCEPT;
     size_t get_fork() NOEXCEPT;
     size_t get_last_associated_from(size_t height) NOEXCEPT;
     hashes get_all_unassociated_above(size_t height) NOEXCEPT;
@@ -74,13 +74,12 @@ public:
     /// -----------------------------------------------------------------------
 
     /// search key (entry)
-    header_link to_candidate(size_t height) NOEXCEPT;
-    header_link to_confirmed(size_t height) NOEXCEPT;
-    header_link to_header(const hash_digest& key) NOEXCEPT;
+    inline header_link to_candidate(size_t height) NOEXCEPT;
+    inline header_link to_confirmed(size_t height) NOEXCEPT;
+    inline header_link to_header(const hash_digest& key) NOEXCEPT;
+    inline point_link to_point(const hash_digest& key) NOEXCEPT;
+    inline tx_link to_tx(const hash_digest& key) NOEXCEPT;
     input_links to_spenders(const point& prevout) NOEXCEPT;
-    point_link to_point(const hash_digest& key) NOEXCEPT;
-    txs_link to_txs(const header_link& link) NOEXCEPT;
-    tx_link to_tx(const hash_digest& key) NOEXCEPT;
 
     /// put to tx (reverse navigation)
     tx_link to_input_tx(const input_link& link) NOEXCEPT;
@@ -112,13 +111,13 @@ public:
     /// Archival (natural-keyed).
     /// -----------------------------------------------------------------------
 
-    bool is_header(const hash_digest& key) NOEXCEPT;
-    bool is_block(const hash_digest& key) NOEXCEPT;
-    bool is_tx(const hash_digest& key) NOEXCEPT;
+    inline bool is_header(const hash_digest& key) NOEXCEPT;
+    inline bool is_block(const hash_digest& key) NOEXCEPT;
+    inline bool is_tx(const hash_digest& key) NOEXCEPT;
 
-    bool set(const header& header, const context& ctx) NOEXCEPT;
-    bool set(const block& block, const context& ctx) NOEXCEPT;
-    bool set(const transaction& tx) NOEXCEPT;
+    inline bool set(const header& header, const context& ctx) NOEXCEPT;
+    inline bool set(const block& block, const context& ctx) NOEXCEPT;
+    inline bool set(const transaction& tx) NOEXCEPT;
 
     bool populate(const input& input) NOEXCEPT;
     bool populate(const transaction& tx) NOEXCEPT;
@@ -138,6 +137,7 @@ public:
     output::cptr get_output(const output_link& link) NOEXCEPT;
     input::cptr get_input(const input_link& link) NOEXCEPT;
     point::cptr get_point(const input_link& link) NOEXCEPT;
+    inputs_ptr get_spenders(const output_link& link) NOEXCEPT;
 
     output::cptr get_output(const point& prevout) NOEXCEPT;
     output::cptr get_output(const tx_link& link, uint32_t output_index) NOEXCEPT;
@@ -153,6 +153,7 @@ public:
     /// Validation (foreign-keyed).
     /// -----------------------------------------------------------------------
 
+    height_link get_block_height(const header_link& link) NOEXCEPT;
     code get_block_state(const header_link& link) NOEXCEPT;
     code get_block_state(uint64_t& fees, const header_link& link) NOEXCEPT;
     code get_tx_state(const tx_link& link, const context& ctx) NOEXCEPT;
@@ -171,12 +172,12 @@ public:
     /// Block state.
     /// -----------------------------------------------------------------------
 
-    bool is_associated(const header_link& link) NOEXCEPT;
-    bool is_candidate_block(const header_link& link) NOEXCEPT;
-    bool is_confirmed_block(const header_link& link) NOEXCEPT;
-    bool is_confirmed_tx(const tx_link& link) NOEXCEPT;
-    bool is_confirmed_input(const input_link& link) NOEXCEPT;
-    bool is_confirmed_output(const output_link& link) NOEXCEPT;
+    inline bool is_associated(const header_link& link) NOEXCEPT;
+    inline bool is_candidate_block(const header_link& link) NOEXCEPT;
+    inline bool is_confirmed_block(const header_link& link) NOEXCEPT;
+    inline bool is_confirmed_tx(const tx_link& link) NOEXCEPT;
+    inline bool is_confirmed_input(const input_link& link) NOEXCEPT;
+    inline bool is_confirmed_output(const output_link& link) NOEXCEPT;
 
     /// Confirmation (foreign-keyed).
     /// -----------------------------------------------------------------------
@@ -184,12 +185,11 @@ public:
     /// Strong is a confirmation optimization table.
     /// Set strong before evaluation or current block will be missed.
     /// Inputs must be validated as prevout index existence is not confirmed.
-    bool strong(const header_link& link) NOEXCEPT;
-    bool unstrong(const header_link& link) NOEXCEPT;
-    bool is_strong_tx(const tx_link& link) NOEXCEPT;
-    bool is_strong_prevout(const input_link& link) NOEXCEPT;
-    bool is_strong_spent_prevout(const input_link& link) NOEXCEPT;
-    bool is_confirmable_block(const header_link& link) NOEXCEPT;
+    bool make_strong(const header_link& link) NOEXCEPT;
+    bool make_unstrong(const header_link& link) NOEXCEPT;
+    bool is_spent(const input_link& link) NOEXCEPT;
+    bool is_mature(const input_link& link, size_t height) NOEXCEPT;
+    bool is_confirmable_block(const header_link& link, size_t height) NOEXCEPT;
 
     // Set block state.
     bool push(const header_link& link) NOEXCEPT;
@@ -197,12 +197,19 @@ public:
     bool pop() NOEXCEPT;
     bool pop_candidate() NOEXCEPT;
 
+    /// Address (natural-keyed).
+    /// -----------------------------------------------------------------------
+
+    hash_digest address_hash(const output& output) NOEXCEPT;
+    output_link get_address(const hash_digest& key) NOEXCEPT;
+    bool set_address(const hash_digest& key, const output_link& link) NOEXCEPT;
+    bool set_address(const output& output) NOEXCEPT;
+
     /// Buffer (foreign-keyed).
     /// -----------------------------------------------------------------------
 
-    input::cptr get_buffered_output(const point& prevout) NOEXCEPT;
     transaction::cptr get_buffered_tx(const tx_link& link) NOEXCEPT;
-    bool set_buffered_tx(const transaction& tx) NOEXCEPT;
+    bool set_buffered_tx(const tx_link& link, const transaction& tx) NOEXCEPT;
 
     /// Neutrino (foreign-keyed).
     /// -----------------------------------------------------------------------
@@ -219,11 +226,28 @@ public:
     bool set_bootstrap(size_t height) NOEXCEPT;
 
 protected:
+    using txs_link = table::txs::link;
+    using buffer_link = table::buffer::link;
+    using address_link = table::address::link;
+    using neutrino_link = table::neutrino::link;
+    using strong_tx_link = table::strong_tx::link;
+    using validated_tx_link = table::validated_tx::link;
+    using validated_bk_link = table::validated_bk::link;
     using input_key = table::input::search_key;
-    input_key make_foreign_point(const point& prevout) NOEXCEPT;
-    code to_block_code(linkage<schema::code>::integer value) NOEXCEPT;
-    code to_tx_code(linkage<schema::code>::integer value) NOEXCEPT;
-    bool is_sufficient(const context& current,
+
+    // TODO: restore get(key) overload, optional when don't care.
+    inline txs_link to_txs(const header_link& link) NOEXCEPT;
+    inline buffer_link to_buffer(const tx_link& link) NOEXCEPT;
+    inline address_link to_address(const hash_digest& key) NOEXCEPT;
+    inline neutrino_link to_neutrino(const header_link& link) NOEXCEPT;
+    inline strong_tx_link to_strong_tx(const header_link& link) NOEXCEPT;
+    inline validated_tx_link to_validated_tx(const header_link& link) NOEXCEPT;
+    inline validated_bk_link to_validated_bk(const header_link& link) NOEXCEPT;
+
+    inline input_key make_foreign_point(const point& prevout) NOEXCEPT;
+    inline code to_block_code(linkage<schema::code>::integer value) NOEXCEPT;
+    inline code to_tx_code(linkage<schema::code>::integer value) NOEXCEPT;
+    inline bool is_sufficient(const context& current,
         const context& evaluated) NOEXCEPT;
 
 private:
