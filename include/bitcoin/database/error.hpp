@@ -75,10 +75,12 @@ enum error_t
     verify_table,
 
     // states
-    valid,
-    invalid,
-    connected,
-    preconnected,
+    tx_connected,
+    tx_preconnected,
+    tx_disconnected,
+    block_confirmable,
+    block_preconfirmable,
+    block_unconfirmable,
     unassociated,
     not_found,
     no_entry

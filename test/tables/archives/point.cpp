@@ -61,21 +61,6 @@ BOOST_AUTO_TEST_CASE(point__put__get__expected)
     BOOST_REQUIRE(element == expected);
 }
 
-BOOST_AUTO_TEST_CASE(point__put__get_sk__expected)
-{
-    test::dfile head_store{};
-    test::dfile body_store{};
-    table::point instance{ head_store, body_store, 20 };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put_link({}, table::point::record{}).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
-
-    table::point::record_sk element{};
-    BOOST_REQUIRE(instance.get<table::point::record_sk>(1, element));
-    BOOST_REQUIRE_EQUAL(element.key, key);
-}
-
 BOOST_AUTO_TEST_CASE(point__it__pk__expected)
 {
     test::dfile head_store{};

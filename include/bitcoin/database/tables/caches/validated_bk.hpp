@@ -80,7 +80,7 @@ struct validated_bk
             code = source.read_little_endian<coding::integer, coding::size>();
             return source;
         }
-
+    
         coding::integer code{};
     };
 };

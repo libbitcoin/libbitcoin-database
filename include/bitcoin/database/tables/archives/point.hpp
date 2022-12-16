@@ -59,19 +59,6 @@ struct point
             return true;
         }
     };
-
-    struct record_sk
-      : public schema::point
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            source.rewind_bytes(sk);
-            key = source.read_hash();
-            return source;
-        }
-
-        search_key key{};
-    };
 };
 
 } // namespace table

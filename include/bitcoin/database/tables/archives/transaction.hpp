@@ -228,6 +228,18 @@ struct transaction
         const puts::integer index{};
         puts::integer output_fk{};
     };
+
+    struct record_get_coinbase
+      : public schema::transaction
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            coinbase = to_bool(source.read_byte());
+            return source;
+        }
+
+        bool coinbase{};
+    };
 };
 
 } // namespace table

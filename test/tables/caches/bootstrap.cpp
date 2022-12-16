@@ -22,8 +22,8 @@
 BOOST_AUTO_TEST_SUITE(bootstrap_tests)
 
 using namespace system;
-const table::bootstrap::record record1{ {}, { 0x42 } };
-const table::bootstrap::record record2{ {}, one_hash };
+const table::bootstrap::record record1{ {}, { { 0x42 } } };
+const table::bootstrap::record record2{ {}, { one_hash } };
 const data_chunk expected_head = base16_chunk
 (
     "000000"
@@ -70,6 +70,7 @@ BOOST_AUTO_TEST_CASE(bootstrap__get__two__expected)
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
 
     table::bootstrap::record out{};
+    out.block_hashes.resize(1);
     BOOST_REQUIRE(instance.get(0u, out));
     BOOST_REQUIRE(out == record1);
     BOOST_REQUIRE(instance.get(1u, out));

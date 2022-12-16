@@ -82,13 +82,18 @@ namespace schema
         constexpr auto lock = ".lock";
     }
 
-    // TODO: deconflict/use specific invalid codes.
-    enum state : uint8_t
+    enum block_state : uint8_t
     {
-        valid = 0,         // tx valid, block connected.
-        connected = 1,     // tx scripts validated in context.
-        preconnected = 2,  // tx scripts pre-validated in context.
-        invalid = 3        // tx or block invalid.
+        confirmable = 0,    // final
+        preconfirmable = 1, // transitional
+        unconfirmable = 2   // final
+    };
+
+    enum tx_state : uint8_t
+    {
+        connected = 0,      // final
+        preconnected = 1,   // transitional
+        disconnected = 2    // final
     };
 
     /// Values.
@@ -171,7 +176,7 @@ namespace schema
         static_assert(minrow == 61u);
     };
 
-    // Moderate (sk:7) slab multimap, with low multiple rate.
+    // moderate (sk:7) slab multimap, with low multiple rate.
     struct input
     {
         static constexpr size_t pk = schema::put;

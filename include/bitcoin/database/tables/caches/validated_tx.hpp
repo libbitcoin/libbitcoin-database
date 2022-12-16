@@ -95,7 +95,7 @@ struct validated_tx
             code = source.read_little_endian<coding::integer, coding::size>();
             return source;
         }
-
+    
         context ctx{};
         coding::integer code{};
     };

@@ -68,10 +68,12 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { verify_table, "failed to verify table" },
 
     // states
-    { valid, "valid" },
-    { invalid, "invalid" },
-    { connected, "connected" },
-    { preconnected, "preconnected" },
+    { tx_connected, "transaction connected" },
+    { tx_preconnected, "transaction preconnected" },
+    { tx_disconnected, "transaction disconnected" },
+    { block_confirmable, "block confirmable" },
+    { block_preconfirmable, "block preconfirmable" },
+    { block_unconfirmable, "block unconfirmable" },
     { unassociated, "unassociated" },
     { not_found, "not_found" },
     { no_entry, "no_entry" }
