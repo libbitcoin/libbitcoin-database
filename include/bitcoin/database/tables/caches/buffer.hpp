@@ -94,7 +94,7 @@ struct buffer
     };
 
     struct slab_put_ref
-        : public schema::buffer
+      : public schema::buffer
     {
         link count() const NOEXCEPT
         {

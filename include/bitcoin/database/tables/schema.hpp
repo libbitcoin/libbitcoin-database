@@ -176,7 +176,7 @@ namespace schema
         static_assert(minrow == 61u);
     };
 
-    // Moderate (sk:7) slab multimap, with low multiple rate.
+    // moderate (sk:7) slab multimap, with low multiple rate.
     struct input
     {
         static constexpr size_t pk = schema::put;
