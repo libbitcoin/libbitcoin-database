@@ -71,6 +71,30 @@ struct neutrino
         hash_digest filter_head{};
         system::data_chunk filter{};
     };
+
+    struct slab_put_ref
+      : public schema::neutrino
+    {
+        link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(pk + sk +
+                schema::hash +
+                variable_size(filter.size()) +
+                filter.size());
+        }
+
+        inline bool to_data(finalizer& sink) const NOEXCEPT
+        {
+            sink.write_bytes(filter_head);
+            sink.write_variable(filter.size());
+            sink.write_bytes(filter);
+            BC_ASSERT(sink.get_write_position() == count());
+            return sink;
+        }
+
+        const hash_digest& filter_head{};
+        const system::data_chunk& filter{};
+    };
 };
 
 } // namespace table
