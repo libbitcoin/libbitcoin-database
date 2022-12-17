@@ -72,6 +72,32 @@ struct neutrino
         system::data_chunk filter{};
     };
 
+    struct slab_get_filter
+      : public schema::neutrino
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(schema::hash);
+            filter = source.read_bytes(source.read_variable());
+            BC_ASSERT(source.get_read_position() == count());
+            return source;
+        }
+
+        system::data_chunk filter{};
+    };
+
+    struct slab_get_head
+        : public schema::neutrino
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            filter_head = source.read_hash();
+            return source;
+        }
+
+        hash_digest filter_head{};
+    };
+
     struct slab_put_ref
       : public schema::neutrino
     {
