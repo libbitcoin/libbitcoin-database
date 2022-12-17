@@ -226,24 +226,10 @@ public:
     bool set_bootstrap(size_t height) NOEXCEPT;
 
 protected:
-    using txs_link = table::txs::link;
-    using buffer_link = table::buffer::link;
-    using address_link = table::address::link;
-    using neutrino_link = table::neutrino::link;
-    using strong_tx_link = table::strong_tx::link;
-    using validated_tx_link = table::validated_tx::link;
-    using validated_bk_link = table::validated_bk::link;
     using input_key = table::input::search_key;
+    using txs_link = table::txs::link;
 
-    // TODO: restore get(key) overload, optional when don't care.
     inline txs_link to_txs(const header_link& link) NOEXCEPT;
-    inline buffer_link to_buffer(const tx_link& link) NOEXCEPT;
-    inline address_link to_address(const hash_digest& key) NOEXCEPT;
-    inline neutrino_link to_neutrino(const header_link& link) NOEXCEPT;
-    inline strong_tx_link to_strong_tx(const header_link& link) NOEXCEPT;
-    inline validated_tx_link to_validated_tx(const header_link& link) NOEXCEPT;
-    inline validated_bk_link to_validated_bk(const header_link& link) NOEXCEPT;
-
     inline input_key make_foreign_point(const point& prevout) NOEXCEPT;
     inline code to_block_code(linkage<schema::code>::integer value) NOEXCEPT;
     inline code to_tx_code(linkage<schema::code>::integer value) NOEXCEPT;

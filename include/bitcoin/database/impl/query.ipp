@@ -212,54 +212,6 @@ inline typename CLASS::txs_link CLASS::to_txs(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-inline typename CLASS::buffer_link CLASS::to_buffer(
-    const tx_link& link) NOEXCEPT
-{
-    // Terminal return implies not found (ok).
-    return store_.buffer.first(link);
-}
-
-TEMPLATE
-inline typename CLASS::address_link CLASS::to_address(
-    const hash_digest& key) NOEXCEPT
-{
-    // Terminal return implies not found (ok).
-    return store_.address.first(key);
-}
-
-TEMPLATE
-inline typename CLASS::neutrino_link CLASS::to_neutrino(
-    const header_link& link) NOEXCEPT
-{
-    // Terminal return implies not found (ok).
-    return store_.neutrino.first(link);
-}
-
-TEMPLATE
-inline typename CLASS::strong_tx_link CLASS::to_strong_tx(
-    const header_link& link) NOEXCEPT
-{
-    // Terminal return implies not found (ok).
-    return store_.strong_tx.first(link);
-}
-
-TEMPLATE
-inline typename CLASS::validated_tx_link CLASS::to_validated_tx(
-    const header_link& link) NOEXCEPT
-{
-    // Terminal return implies not found (ok).
-    return store_.validated_tx.first(link);
-}
-
-TEMPLATE
-inline typename CLASS::validated_bk_link CLASS::to_validated_bk(
-    const header_link& link) NOEXCEPT
-{
-    // Terminal return implies not found (ok).
-    return store_.validated_bk.first(link);
-}
-
-TEMPLATE
 input_links CLASS::to_spenders(const point& prevout) NOEXCEPT
 {
     // This is 1 nk search, 1 fp search, with link reads and enumeration.
@@ -505,7 +457,7 @@ TEMPLATE
 header_link CLASS::strong_by(const tx_link& link) NOEXCEPT
 {
     // Terminal return implies not strong (ok).
-    const auto fk = to_strong_tx(link);
+    const auto fk = store_.strong_tx.first(link);
     if (fk.is_terminal())
         return {};
 
@@ -1204,7 +1156,7 @@ code CLASS::get_block_state(const header_link& link) NOEXCEPT
         return error::unassociated;
 
     // not_found return implies no validation record (ok).
-    const auto fk = to_validated_bk(link);
+    const auto fk = store_.validated_bk.first(link);
     if (fk.is_terminal())
         return error::not_found;
 
@@ -1225,7 +1177,7 @@ code CLASS::get_block_state(uint64_t& fees, const header_link& link) NOEXCEPT
         return error::unassociated;
 
     // not_found return implies no validation record (ok).
-    const auto fk = to_validated_bk(link);
+    const auto fk = store_.validated_bk.first(link);
     if (fk.is_terminal())
         return error::not_found;
 
@@ -1693,7 +1645,7 @@ TEMPLATE
 output_link CLASS::get_address(const hash_digest& key) NOEXCEPT
 {
     // Terminal return implies address not found (ok).
-    const auto fk = to_address(key);
+    const auto fk = store_.address.first(key);
     if (fk.is_terminal())
         return {};
 
@@ -1732,7 +1684,7 @@ typename CLASS::transaction::cptr CLASS::get_buffered_tx(
     const tx_link& link) NOEXCEPT
 {
     // nullptr return implies buffered tx not found (ok).
-    const auto fk = to_buffer(link);
+    const auto fk = store_.buffer.first(link);
     if (fk.is_terminal())
         return {};
 
@@ -1763,7 +1715,7 @@ TEMPLATE
 typename CLASS::filter CLASS::get_filter(const header_link& link) NOEXCEPT
 {
     // nullptr return implies neutrino entry not found (ok).
-    const auto fk = to_neutrino(link);
+    const auto fk = store_.neutrino.first(link);
     if (fk.is_terminal())
         return {};
 
@@ -1780,7 +1732,7 @@ TEMPLATE
 hash_digest CLASS::get_filter_head(const header_link& link) NOEXCEPT
 {
     // nullptr return implies neutrino entry not found (ok).
-    const auto fk = to_neutrino(link);
+    const auto fk = store_.neutrino.first(link);
     if (fk.is_terminal())
         return {};
 
