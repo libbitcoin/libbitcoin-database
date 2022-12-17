@@ -454,7 +454,7 @@ tx_links CLASS::to_transactions(const header_link& link) NOEXCEPT
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 TEMPLATE
-header_link CLASS::strong_by(const tx_link& link) NOEXCEPT
+header_link CLASS::to_strong_by(const tx_link& link) NOEXCEPT
 {
     // Terminal return implies not strong (ok).
     const auto fk = store_.strong_tx.first(link);
@@ -1410,7 +1410,7 @@ inline bool CLASS::is_confirmed_tx(const tx_link& link) NOEXCEPT
 {
     // Not for validatation (2 additional gets).
     // Terminal return implies invalid/serial fail (fault) or not strong (ok).
-    const auto fk = strong_by(link);
+    const auto fk = to_strong_by(link);
     if (fk.is_terminal())
         return false;
 
@@ -1506,7 +1506,7 @@ bool CLASS::is_spent(const input_link& link) NOEXCEPT
     return std::all_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
     {
         // Use strong for performance benefit (confirmed would work).
-        return (in == link) || strong_by(to_input_tx(in)).is_terminal();
+        return (in == link) || to_strong_by(to_input_tx(in)).is_terminal();
     });
 }
 
@@ -1526,7 +1526,7 @@ bool CLASS::is_mature(const input_link& link, size_t height) NOEXCEPT
 
     // False return implies serial fail (fault) or not strong (ok).
     const auto tx_fk = to_tx(store_.point.get_key(in.point_fk));
-    const auto header_fk = strong_by(tx_fk);
+    const auto header_fk = to_strong_by(tx_fk);
     if (header_fk == header_link::terminal)
         return false;
 
@@ -1676,38 +1676,6 @@ bool CLASS::set_address(const output& output) NOEXCEPT
     return set_address(address_hash(output), output);
 }
 
-// Buffer (foreign-keyed).
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-typename CLASS::transaction::cptr CLASS::get_buffered_tx(
-    const tx_link& link) NOEXCEPT
-{
-    // nullptr return implies buffered tx not found (ok).
-    const auto fk = store_.buffer.first(link);
-    if (fk.is_terminal())
-        return {};
-
-    // nullptr return implies serial fail (fault).
-    table::buffer::slab_ptr buffer{};
-    if (!store_.buffer.get(fk, buffer))
-        return {};
-
-    return buffer.tx;
-}
-
-TEMPLATE
-bool CLASS::set_buffered_tx(const tx_link& link,
-    const transaction& tx) NOEXCEPT
-{
-    // False return implies allocation fail (fault).
-    return store_.buffer.put(link, table::buffer::slab_put_ref
-    {
-        {},
-        tx
-    });
-}
-
 // Neutrino (foreign-keyed).
 // ----------------------------------------------------------------------------
 
@@ -1754,6 +1722,38 @@ bool CLASS::set_filter(const header_link& link, const hash_digest& filter_head,
         {},
         filter_head,
         filter
+    });
+}
+
+// Buffer (foreign-keyed).
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+typename CLASS::transaction::cptr CLASS::get_buffered_tx(
+    const tx_link& link) NOEXCEPT
+{
+    // nullptr return implies buffered tx not found (ok).
+    const auto fk = store_.buffer.first(link);
+    if (fk.is_terminal())
+        return {};
+
+    // nullptr return implies serial fail (fault).
+    table::buffer::slab_ptr buffer{};
+    if (!store_.buffer.get(fk, buffer))
+        return {};
+
+    return buffer.tx;
+}
+
+TEMPLATE
+bool CLASS::set_buffered_tx(const tx_link& link,
+    const transaction& tx) NOEXCEPT
+{
+    // False return implies allocation fail (fault).
+    return store_.buffer.put(link, table::buffer::slab_put_ref
+    {
+        {},
+        tx
     });
 }
 
