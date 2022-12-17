@@ -375,13 +375,4 @@ BOOST_AUTO_TEST_CASE(error_t__code__not_found__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "not_found");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__no_entry__true_exected_message)
-{
-    constexpr auto value = error::no_entry;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "no_entry");
-}
-
 BOOST_AUTO_TEST_SUITE_END()
