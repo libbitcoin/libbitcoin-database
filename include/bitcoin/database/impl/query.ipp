@@ -821,7 +821,7 @@ typename CLASS::output::cptr CLASS::get_output(const tx_link& link,
         return {};
 
     // nullptr return implies output_index not found (fault if verified).
-    if (tx.output_fk == output_link::terminal)
+    if (tx.output_fk == puts_link::terminal)
         return {};
 
     // nullptr return implies store inconsistency or serial fail (fault).
@@ -843,7 +843,7 @@ typename CLASS::input::cptr CLASS::get_input(const tx_link& link,
         return {};
 
     // nullptr return implies input_index not found (fault if verified).
-    if (tx.input_fk == input_link::terminal)
+    if (tx.input_fk == puts_link::terminal)
         return {};
 
     // nullptr return implies store inconsistency or serial fail (fault).

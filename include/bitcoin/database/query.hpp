@@ -227,6 +227,7 @@ public:
 
 protected:
     using input_key = table::input::search_key;
+    using puts_link = table::puts::link;
     using txs_link = table::txs::link;
 
     inline txs_link to_txs(const header_link& link) NOEXCEPT;

@@ -75,6 +75,14 @@ struct neutrino
     struct slab_get_filter
       : public schema::neutrino
     {
+        link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(pk + sk +
+                schema::hash +
+                variable_size(filter.size()) +
+                filter.size());
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.skip_bytes(schema::hash);
