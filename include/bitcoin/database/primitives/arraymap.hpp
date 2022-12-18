@@ -52,7 +52,6 @@ public:
     /// Query interface.
     /// -----------------------------------------------------------------------
 
-    // TODO: test.
     Link count() const NOEXCEPT;
     bool truncate(const Link& count) NOEXCEPT;
 
@@ -60,7 +59,6 @@ public:
     template <typename Element, if_equal<Element::size, Size> = true>
     bool get(const Link& link, Element& element) const NOEXCEPT;
 
-    // TODO: test.
     /// Put element.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put(const Element& element) NOEXCEPT;

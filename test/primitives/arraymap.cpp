@@ -295,10 +295,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_put__get__expected)
     test::dfile head_store{ head_file };
     test::dfile body_store{ body_file };
     arraymap<link5, big_record::size> instance{ head_store, body_store };
-
-    const auto link = instance.put_link(big_record{ 0xa1b2c3d4_u32 });
-    BOOST_REQUIRE(!link.is_terminal());
-    BOOST_REQUIRE_EQUAL(link, 0u);
+    BOOST_REQUIRE(instance.put(big_record{ 0xa1b2c3d4_u32 }));
 
     big_record record{};
     BOOST_REQUIRE(instance.get(0, record));
@@ -308,7 +305,29 @@ BOOST_AUTO_TEST_CASE(arraymap__record_put__get__expected)
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_put__multiple__expected)
+BOOST_AUTO_TEST_CASE(arraymap__record_count__truncate__expected)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::dfile head_store{ head_file };
+    test::dfile body_store{ body_file };
+    arraymap<link5, big_record::size> instance{ head_store, body_store };
+    BOOST_REQUIRE(instance.put(big_record{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(instance.put(big_record{ 0xa1b2c3d4_u32 }));
+
+    const data_chunk expected_file1{ 0xa1, 0xb2, 0xc3, 0xd4, 0xa1, 0xb2, 0xc3, 0xd4 };
+    const data_chunk expected_file2{ 0xa1, 0xb2, 0xc3, 0xd4 };
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+    BOOST_REQUIRE_EQUAL(body_file, expected_file1);
+    BOOST_REQUIRE(instance.truncate(1));
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+    BOOST_REQUIRE_EQUAL(body_file, expected_file2);
+    BOOST_REQUIRE(instance.truncate(0));
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+    BOOST_REQUIRE(body_file.empty());
+}
+
+BOOST_AUTO_TEST_CASE(arraymap__record_put_link__multiple__expected)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -386,10 +405,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_put__get__expected)
     test::dfile head_store{ head_file };
     test::dfile body_store{ body_file };
     arraymap<link5, big_slab::size> instance{ head_store, body_store };
-
-    const auto link = instance.put_link(big_slab{ 0xa1b2c3d4_u32 });
-    BOOST_REQUIRE(!link.is_terminal());
-    BOOST_REQUIRE_EQUAL(link, 0u);
+    BOOST_REQUIRE(instance.put(big_slab{ 0xa1b2c3d4_u32 }));
 
     big_slab slab{};
     BOOST_REQUIRE(instance.get(zero, slab));
@@ -399,7 +415,29 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_put__get__expected)
     BOOST_REQUIRE_EQUAL(body_file, expected_file);
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_put__multiple__expected)
+BOOST_AUTO_TEST_CASE(arraymap__slab_count__truncate__expected)
+{
+    data_chunk head_file;
+    data_chunk body_file;
+    test::dfile head_store{ head_file };
+    test::dfile body_store{ body_file };
+    arraymap<link5, big_slab::size> instance{ head_store, body_store };
+    BOOST_REQUIRE(instance.put(big_slab{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(instance.put(big_slab{ 0xa1b2c3d4_u32 }));
+
+    const data_chunk expected_file1{ 0xa1, 0xb2, 0xc3, 0xd4, 0xa1, 0xb2, 0xc3, 0xd4 };
+    const data_chunk expected_file2{ 0xa1, 0xb2, 0xc3, 0xd4 };
+    BOOST_REQUIRE_EQUAL(instance.count(), 8u);
+    BOOST_REQUIRE_EQUAL(body_file, expected_file1);
+    BOOST_REQUIRE(instance.truncate(4));
+    BOOST_REQUIRE_EQUAL(instance.count(), 4u);
+    BOOST_REQUIRE_EQUAL(body_file, expected_file2);
+    BOOST_REQUIRE(instance.truncate(0));
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+    BOOST_REQUIRE(body_file.empty());
+}
+
+BOOST_AUTO_TEST_CASE(arraymap__slab_put_link__multiple__expected)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -463,7 +501,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_get__excess__false)
     BOOST_REQUIRE(!instance.get(zero, record));
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_put__excess__false)
+BOOST_AUTO_TEST_CASE(arraymap__record_put_link__excess__false)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -544,7 +582,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_get__file_excess__false)
     BOOST_REQUIRE(!instance.get<file_excess>(zero, record));
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_put__excess__false)
+BOOST_AUTO_TEST_CASE(arraymap__slab_put_link__excess__false)
 {
     data_chunk head_file;
     data_chunk body_file;
