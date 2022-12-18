@@ -28,17 +28,17 @@
 namespace libbitcoin {
 namespace database {
 
-/// Global type aliases.
-using header_link = table::header::link;
+/// Database type aliases.
 using point_link = table::point::link;
 using input_link = table::input::link;
 using output_link = table::output::link;
 using tx_link = table::transaction::link;
 using height_link = table::height::link;
-using header_links = std_vector<header_link::integer>;
+using header_link = table::header::link;
 using tx_links = std_vector<tx_link::integer>;
 using input_links = std_vector<input_link::integer>;
 using output_links = std_vector<output_link::integer>;
+using header_links = std_vector<header_link::integer>;
 
 template <typename Store>
 class query
@@ -106,7 +106,7 @@ public:
 
     /// tx to blocks (reverse navigation)
     /// There is no reverse index for unconfirmed tx->block.
-    header_link strong_by(const tx_link& link) NOEXCEPT;
+    header_link to_strong_by(const tx_link& link) NOEXCEPT;
 
     /// Archival (natural-keyed).
     /// -----------------------------------------------------------------------
@@ -166,10 +166,10 @@ public:
 
     bool set_tx_preconnected(const tx_link& link, const context& ctx) NOEXCEPT;
     bool set_tx_disconnected(const tx_link& link, const context& ctx) NOEXCEPT;
-    bool set_tx_connected(const tx_link& link, const context& ctx, uint64_t fee,
-        size_t sigops) NOEXCEPT;
+    bool set_tx_connected(const tx_link& link, const context& ctx,
+        uint64_t fee, size_t sigops) NOEXCEPT;
 
-    /// Block state.
+    /// Block status (foreign-keyed).
     /// -----------------------------------------------------------------------
 
     inline bool is_associated(const header_link& link) NOEXCEPT;
@@ -191,7 +191,7 @@ public:
     bool is_mature(const input_link& link, size_t height) NOEXCEPT;
     bool is_confirmable_block(const header_link& link, size_t height) NOEXCEPT;
 
-    // Set block state.
+    /// Set block state.
     bool push(const header_link& link) NOEXCEPT;
     bool push_candidate(const header_link& link) NOEXCEPT;
     bool pop() NOEXCEPT;
@@ -205,12 +205,6 @@ public:
     bool set_address(const hash_digest& key, const output_link& link) NOEXCEPT;
     bool set_address(const output& output) NOEXCEPT;
 
-    /// Buffer (foreign-keyed).
-    /// -----------------------------------------------------------------------
-
-    transaction::cptr get_buffered_tx(const tx_link& link) NOEXCEPT;
-    bool set_buffered_tx(const tx_link& link, const transaction& tx) NOEXCEPT;
-
     /// Neutrino (foreign-keyed).
     /// -----------------------------------------------------------------------
 
@@ -219,31 +213,24 @@ public:
     bool set_filter(const header_link& link, const hash_digest& head,
         const filter& body) NOEXCEPT;
 
-    /// Bootstrap (array).
+    /// Buffer (foreign-keyed).
+    /// -----------------------------------------------------------------------
+
+    transaction::cptr get_buffered_tx(const tx_link& link) NOEXCEPT;
+    bool set_buffered_tx(const tx_link& link, const transaction& tx) NOEXCEPT;
+
+    /// Bootstrap (natural-keyed).
     /// -----------------------------------------------------------------------
 
     hashes get_bootstrap(size_t height) NOEXCEPT;
     bool set_bootstrap(size_t height) NOEXCEPT;
 
 protected:
-    using txs_link = table::txs::link;
-    using buffer_link = table::buffer::link;
-    using address_link = table::address::link;
-    using neutrino_link = table::neutrino::link;
-    using strong_tx_link = table::strong_tx::link;
-    using validated_tx_link = table::validated_tx::link;
-    using validated_bk_link = table::validated_bk::link;
     using input_key = table::input::search_key;
+    using puts_link = table::puts::link;
+    using txs_link = table::txs::link;
 
-    // TODO: restore get(key) overload, optional when don't care.
     inline txs_link to_txs(const header_link& link) NOEXCEPT;
-    inline buffer_link to_buffer(const tx_link& link) NOEXCEPT;
-    inline address_link to_address(const hash_digest& key) NOEXCEPT;
-    inline neutrino_link to_neutrino(const header_link& link) NOEXCEPT;
-    inline strong_tx_link to_strong_tx(const header_link& link) NOEXCEPT;
-    inline validated_tx_link to_validated_tx(const header_link& link) NOEXCEPT;
-    inline validated_bk_link to_validated_bk(const header_link& link) NOEXCEPT;
-
     inline input_key make_foreign_point(const point& prevout) NOEXCEPT;
     inline code to_block_code(linkage<schema::code>::integer value) NOEXCEPT;
     inline code to_tx_code(linkage<schema::code>::integer value) NOEXCEPT;

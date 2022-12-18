@@ -75,8 +75,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { block_preconfirmable, "block preconfirmable" },
     { block_unconfirmable, "block unconfirmable" },
     { unassociated, "unassociated" },
-    { not_found, "not_found" },
-    { no_entry, "no_entry" }
+    { not_found, "not_found" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "database", "database code")
