@@ -16,108 +16,12 @@
 //// * You should have received a copy of the GNU Affero General Public License
 //// * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //// */
-////#include "../test.hpp"
-////#include "../mocks/dfile.hpp"
+////#include "test.hpp"
+////#include "mocks/chunk_store.hpp"
 ////
-////struct query_archive_setup_fixture
-////{
-////    DELETE4(query_archive_setup_fixture);
-////    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+////BOOST_AUTO_TEST_SUITE(query_tests)
 ////
-////    query_archive_setup_fixture() NOEXCEPT
-////    {
-////        BOOST_REQUIRE(test::clear(test::directory));
-////    }
-////
-////    ~query_archive_setup_fixture() NOEXCEPT
-////    {
-////        BOOST_REQUIRE(test::clear(test::directory));
-////    }
-////
-////    BC_POP_WARNING()
-////};
-////
-////BOOST_FIXTURE_TEST_SUITE(query_tests, query_archive_setup_fixture)
-////
-////class store_accessor
-////  : public store<test::dfile>
-////{
-////public:
-////    using path = std::filesystem::path;
-////    using store<test::dfile>::store;
-////
-////    system::data_chunk& header_head() NOEXCEPT
-////    {
-////        return header_head_.buffer();
-////    }
-////
-////    system::data_chunk& header_body() NOEXCEPT
-////    {
-////        return header_body_.buffer();
-////    }
-////
-////    system::data_chunk& point_head() NOEXCEPT
-////    {
-////        return point_head_.buffer();
-////    }
-////
-////    system::data_chunk& point_body() NOEXCEPT
-////    {
-////        return point_body_.buffer();
-////    }
-////
-////    system::data_chunk& input_head() NOEXCEPT
-////    {
-////        return input_head_.buffer();
-////    }
-////
-////    system::data_chunk& input_body() NOEXCEPT
-////    {
-////        return input_body_.buffer();
-////    }
-////
-////    system::data_chunk& output_head() NOEXCEPT
-////    {
-////        return output_head_.buffer();
-////    }
-////
-////    system::data_chunk& output_body() NOEXCEPT
-////    {
-////        return output_body_.buffer();
-////    }
-////
-////    system::data_chunk& puts_head() NOEXCEPT
-////    {
-////        return puts_head_.buffer();
-////    }
-////
-////    system::data_chunk& puts_body() NOEXCEPT
-////    {
-////        return puts_body_.buffer();
-////    }
-////
-////    system::data_chunk& tx_head() NOEXCEPT
-////    {
-////        return tx_head_.buffer();
-////    }
-////
-////    system::data_chunk& tx_body() NOEXCEPT
-////    {
-////        return tx_body_.buffer();
-////    }
-////
-////    system::data_chunk& txs_head() NOEXCEPT
-////    {
-////        return txs_head_.buffer();
-////    }
-////
-////    system::data_chunk& txs_body() NOEXCEPT
-////    {
-////        return txs_body_.buffer();
-////    }
-////};
-////
-////using query_accessor = query<store<test::dfile>>;
+////using query_accessor = query<store<test::chunk_storage>>;
 ////
 ////constexpr auto parent = system::null_hash;
 ////constexpr database::context context
@@ -170,13 +74,13 @@
 ////    settings settings1{};
 ////    settings1.header_buckets = 10;
 ////    settings1.dir = TEST_DIRECTORY;
-////    store_accessor store1{ settings1 };
+////    test::chunk_store store1{ settings1 };
 ////    query_accessor query1{ store1 };
 ////    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
 ////    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
 ////    {
 ////        const auto transactor = store1.get_transactor();
-////        BOOST_REQUIRE(query1.set_header(header, context));
+////        BOOST_REQUIRE(query1.set(header, context));
 ////    }
 ////    table::header::record element1{};
 ////    BOOST_REQUIRE(store1.header.get(block_hash, element1));
@@ -236,7 +140,7 @@
 ////    settings settings1{};
 ////    settings1.header_buckets = 10;
 ////    settings1.dir = TEST_DIRECTORY;
-////    store_accessor store1{ settings1 };
+////    test::chunk_store store1{ settings1 };
 ////    query_accessor query1{ store1 };
 ////    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
 ////    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
@@ -248,52 +152,52 @@
 ////    BOOST_REQUIRE(*pointer1 == header);
 ////}
 ////
-////// slow test (mmap)
-////BOOST_AUTO_TEST_CASE(query__set_header__mmap_get_header__expected)
-////{
-////    constexpr auto parent = system::null_hash;
-////    constexpr auto merkle_root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
-////    constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
-////    const system::chain::header header
-////    {
-////        0x31323334, // version
-////        parent,     // previous_block_hash
-////        merkle_root,// merkle_root
-////        0x41424344, // timestamp
-////        0x51525354, // bits
-////        0x61626364  // nonce
-////    };
-////
-////    settings settings1{};
-////    settings1.header_buckets = 10;
-////    settings1.dir = TEST_DIRECTORY;
-////    store<map> store1{ settings1 };
-////    query<store<map>> query1{ store1 };
-////    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
-////    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-////    {
-////        const auto transactor = store1.get_transactor();
-////        BOOST_REQUIRE(query1.set_header(header, context));
-////    }
-////    table::header::record element1{};
-////    BOOST_REQUIRE(store1.header.get(block_hash, element1));
-////
-////    const auto pointer = query1.get_header(block_hash);
-////    BOOST_REQUIRE(pointer);
-////    BOOST_REQUIRE(*pointer == header);
-////
-////    BOOST_REQUIRE_EQUAL(store1.close(), error::success);
-////
-////    BOOST_REQUIRE_EQUAL(element1.ctx.height, system::mask_left(context.height, byte_bits));
-////    BOOST_REQUIRE_EQUAL(element1.ctx.flags, context.flags);
-////    BOOST_REQUIRE_EQUAL(element1.ctx.mtp, context.mtp);
-////    BOOST_REQUIRE_EQUAL(element1.version, header.version());
-////    BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
-////    BOOST_REQUIRE_EQUAL(element1.merkle_root, header.merkle_root());
-////    BOOST_REQUIRE_EQUAL(element1.timestamp, header.timestamp());
-////    BOOST_REQUIRE_EQUAL(element1.bits, header.bits());
-////    BOOST_REQUIRE_EQUAL(element1.nonce, header.nonce());
-////}
+////////// slow test (mmap)
+////////BOOST_AUTO_TEST_CASE(query__set_header__mmap_get_header__expected)
+////////{
+////////    constexpr auto parent = system::null_hash;
+////////    constexpr auto merkle_root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
+////////    constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
+////////    const system::chain::header header
+////////    {
+////////        0x31323334, // version
+////////        parent,     // previous_block_hash
+////////        merkle_root,// merkle_root
+////////        0x41424344, // timestamp
+////////        0x51525354, // bits
+////////        0x61626364  // nonce
+////////    };
+////////
+////////    settings settings1{};
+////////    settings1.header_buckets = 10;
+////////    settings1.dir = TEST_DIRECTORY;
+////////    store<map> store1{ settings1 };
+////////    query<store<map>> query1{ store1 };
+////////    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
+////////    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
+////////    {
+////////        const auto transactor = store1.get_transactor();
+////////        BOOST_REQUIRE(query1.set_header(header, context));
+////////    }
+////////    table::header::record element1{};
+////////    BOOST_REQUIRE(store1.header.get(block_hash, element1));
+////////
+////////    const auto pointer = query1.get_header(block_hash);
+////////    BOOST_REQUIRE(pointer);
+////////    BOOST_REQUIRE(*pointer == header);
+////////
+////////    BOOST_REQUIRE_EQUAL(store1.close(), error::success);
+////////
+////////    BOOST_REQUIRE_EQUAL(element1.ctx.height, system::mask_left(context.height, byte_bits));
+////////    BOOST_REQUIRE_EQUAL(element1.ctx.flags, context.flags);
+////////    BOOST_REQUIRE_EQUAL(element1.ctx.mtp, context.mtp);
+////////    BOOST_REQUIRE_EQUAL(element1.version, header.version());
+////////    BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
+////////    BOOST_REQUIRE_EQUAL(element1.merkle_root, header.merkle_root());
+////////    BOOST_REQUIRE_EQUAL(element1.timestamp, header.timestamp());
+////////    BOOST_REQUIRE_EQUAL(element1.bits, header.bits());
+////////    BOOST_REQUIRE_EQUAL(element1.nonce, header.nonce());
+////////}
 ////
 ////// chain::transaction
 ////
@@ -323,13 +227,13 @@
 ////    settings1.point_buckets = 5;
 ////    settings1.input_buckets = 5;
 ////    settings1.dir = TEST_DIRECTORY;
-////    store_accessor store1{ settings1 };
+////    test::chunk_store store1{ settings1 };
 ////    query_accessor query1{ store1 };
 ////    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
 ////    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
 ////    {
 ////        const auto transactor = store1.get_transactor();
-////        BOOST_REQUIRE(!query1.set_tx(tx));
+////        BOOST_REQUIRE(!query1.set(tx));
 ////    }
 ////    BOOST_REQUIRE_EQUAL(store1.close(), error::success);
 ////    BOOST_REQUIRE_EQUAL(store1.tx_head(), expected_head4_hash);
@@ -424,13 +328,13 @@
 ////    settings1.point_buckets = 5;
 ////    settings1.input_buckets = 5;
 ////    settings1.dir = TEST_DIRECTORY;
-////    store_accessor store1{ settings1 };
+////    test::chunk_store store1{ settings1 };
 ////    query_accessor query1{ store1 };
 ////    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
 ////    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
 ////    {
 ////        const auto transactor = store1.get_transactor();
-////        BOOST_REQUIRE(query1.set_tx(tx));
+////        BOOST_REQUIRE(query1.set(tx));
 ////    }
 ////    BOOST_REQUIRE_EQUAL(store1.close(), error::success);
 ////    BOOST_REQUIRE_EQUAL(store1.tx_head(), expected_tx_head);
@@ -561,13 +465,13 @@
 ////    settings1.point_buckets = 5;
 ////    settings1.input_buckets = 5;
 ////    settings1.dir = TEST_DIRECTORY;
-////    store_accessor store1{ settings1 };
+////    test::chunk_store store1{ settings1 };
 ////    query_accessor query1{ store1 };
 ////    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
 ////    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
 ////    {
 ////        const auto transactor = store1.get_transactor();
-////        BOOST_REQUIRE(query1.set_tx(tx));
+////        BOOST_REQUIRE(query1.set(tx));
 ////    }
 ////
 ////    const auto pointer1 = query1.get_tx(tx_hash);
@@ -691,7 +595,7 @@
 ////    settings1.input_buckets = 5;
 ////    settings1.txs_buckets = 10;
 ////    settings1.dir = TEST_DIRECTORY;
-////    store_accessor store1{ settings1 };
+////    test::chunk_store store1{ settings1 };
 ////    query_accessor query1{ store1 };
 ////    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
 ////    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
@@ -699,15 +603,15 @@
 ////        const auto transactor = store1.get_transactor();
 ////
 ////        // Set header/tx/association.
-////        BOOST_REQUIRE(query1.set_block(genesis, context));
+////        BOOST_REQUIRE(query1.set(genesis, context));
 ////
 ////        // Verify idempotentcy (these do not change store state).
-////        BOOST_REQUIRE(query1.set_header(genesis.header(), context));
-////        BOOST_REQUIRE(query1.set_header(genesis.header(), context));
-////        BOOST_REQUIRE(query1.set_block(genesis, context));
-////        BOOST_REQUIRE(query1.set_block(genesis, context));
-////        BOOST_REQUIRE(query1.set_txs(genesis.hash(), genesis.transaction_hashes(false)));
-////        BOOST_REQUIRE(query1.set_txs(genesis.hash(), genesis.transaction_hashes(true)));
+////        BOOST_REQUIRE(query1.set(genesis.header(), context));
+////        BOOST_REQUIRE(query1.set(genesis.header(), context));
+////        BOOST_REQUIRE(query1.set(genesis, context));
+////        BOOST_REQUIRE(query1.set(genesis, context));
+////        BOOST_REQUIRE(query1.set(genesis.hash(), genesis.transaction_hashes(false)));
+////        BOOST_REQUIRE(query1.set(genesis.hash(), genesis.transaction_hashes(true)));
 ////    }
 ////    table::header::record element1{};
 ////    BOOST_REQUIRE(store1.header.get(genesis.hash(), element1));
@@ -747,7 +651,7 @@
 ////    settings1.input_buckets = 5;
 ////    settings1.txs_buckets = 10;
 ////    settings1.dir = TEST_DIRECTORY;
-////    store_accessor store1{ settings1 };
+////    test::chunk_store store1{ settings1 };
 ////    query_accessor query1{ store1 };
 ////    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
 ////    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
@@ -755,9 +659,9 @@
 ////        const auto transactor = store1.get_transactor();
 ////
 ////        // Assemble block.
-////        BOOST_REQUIRE(query1.set_header(genesis.header(), context));
-////        BOOST_REQUIRE(query1.set_tx(*genesis.transactions_ptr()->front()));
-////        BOOST_REQUIRE(query1.set_txs(genesis.hash(), genesis.transaction_hashes(false)));
+////        BOOST_REQUIRE(query1.set(genesis.header(), context));
+////        BOOST_REQUIRE(query1.set(*genesis.transactions_ptr()->front()));
+////        BOOST_REQUIRE(query1.set(genesis.hash(), genesis.transaction_hashes(false)));
 ////    }
 ////    const auto pointer1 = query1.get_block(genesis.hash());
 ////    BOOST_REQUIRE(pointer1);
@@ -768,7 +672,7 @@
 ////{
 ////    settings settings1{};
 ////    settings1.dir = TEST_DIRECTORY;
-////    store_accessor store1{ settings1 };
+////    test::chunk_store store1{ settings1 };
 ////    query_accessor query1{ store1 };
 ////    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
 ////    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
@@ -780,7 +684,7 @@
 ////{
 ////    settings settings1{};
 ////    settings1.dir = TEST_DIRECTORY;
-////    store_accessor store1{ settings1 };
+////    test::chunk_store store1{ settings1 };
 ////    query_accessor query1{ store1 };
 ////    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
 ////    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
@@ -797,7 +701,7 @@
 ////    settings1.input_buckets = 5;
 ////    settings1.txs_buckets = 10;
 ////    settings1.dir = TEST_DIRECTORY;
-////    store_accessor store1{ settings1 };
+////    test::chunk_store store1{ settings1 };
 ////    query_accessor query1{ store1 };
 ////    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
 ////    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
@@ -815,7 +719,7 @@
 ////{
 ////    settings settings1{};
 ////    settings1.dir = TEST_DIRECTORY;
-////    store_accessor store1{ settings1 };
+////    test::chunk_store store1{ settings1 };
 ////    query_accessor query1{ store1 };
 ////    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
 ////    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
@@ -832,7 +736,7 @@
 ////    settings1.input_buckets = 5;
 ////    settings1.txs_buckets = 10;
 ////    settings1.dir = TEST_DIRECTORY;
-////    store_accessor store1{ settings1 };
+////    test::chunk_store store1{ settings1 };
 ////    query_accessor query1{ store1 };
 ////    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
 ////    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
@@ -859,7 +763,7 @@
 ////{
 ////    settings settings1{};
 ////    settings1.dir = TEST_DIRECTORY;
-////    store_accessor store1{ settings1 };
+////    test::chunk_store store1{ settings1 };
 ////    query_accessor query1{ store1 };
 ////    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
 ////    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
@@ -876,7 +780,7 @@
 ////    settings1.input_buckets = 5;
 ////    settings1.txs_buckets = 10;
 ////    settings1.dir = TEST_DIRECTORY;
-////    store_accessor store1{ settings1 };
+////    test::chunk_store store1{ settings1 };
 ////    query_accessor query1{ store1 };
 ////    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
 ////    BOOST_REQUIRE_EQUAL(store1.open(), error::success);

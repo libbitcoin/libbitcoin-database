@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../../test.hpp"
-#include "../../mocks/dfile.hpp"
+#include "../../mocks/chunk_storage.hpp"
 
 BOOST_AUTO_TEST_SUITE(input_tests)
 
@@ -66,8 +66,8 @@ const data_chunk expected_file
 
 BOOST_AUTO_TEST_CASE(input__put__get__expected)
 {
-    test::dfile head_store{};
-    test::dfile body_store{};
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
     table::input instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(!instance.put_link({}, table::input::slab{}).is_terminal());
@@ -85,8 +85,8 @@ BOOST_AUTO_TEST_CASE(input__put__get__expected)
 BOOST_AUTO_TEST_CASE(input__get__only__expected)
 {
     auto file = expected_file;
-    test::dfile head_store{};
-    test::dfile body_store{ file };
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{ file };
     table::input instance{ head_store, body_store, 20 };
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
@@ -101,8 +101,8 @@ BOOST_AUTO_TEST_CASE(input__get__only__expected)
 BOOST_AUTO_TEST_CASE(input__get__only_from_prevout__expected)
 {
     auto file = expected_file;
-    test::dfile head_store{};
-    test::dfile body_store{ file };
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{ file };
     table::input instance{ head_store, body_store, 20 };
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
@@ -117,8 +117,8 @@ BOOST_AUTO_TEST_CASE(input__get__only_from_prevout__expected)
 
 BOOST_AUTO_TEST_CASE(input__put__get_composite_sk__expected)
 {
-    test::dfile head_store{};
-    test::dfile body_store{};
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
     table::input instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(!instance.put_link({}, table::input::slab{}).is_terminal());
@@ -132,8 +132,8 @@ BOOST_AUTO_TEST_CASE(input__put__get_composite_sk__expected)
 
 BOOST_AUTO_TEST_CASE(input__put__get_decomposed_sk__expected)
 {
-    test::dfile head_store{};
-    test::dfile body_store{};
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
     table::input instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(!instance.put_link({}, table::input::slab{}).is_terminal());
@@ -173,8 +173,8 @@ BOOST_AUTO_TEST_CASE(input__get_decomposed_sk__null_index__expected)
         0x00
     };
 
-    test::dfile head_store{};
-    test::dfile body_store{ expected_null_point_file };
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{ expected_null_point_file };
     table::input instance{ head_store, body_store, 20 };
     table::input::slab_decomposed_sk element{};
     BOOST_REQUIRE(instance.get(0, element));
@@ -184,8 +184,8 @@ BOOST_AUTO_TEST_CASE(input__get_decomposed_sk__null_index__expected)
 
 BOOST_AUTO_TEST_CASE(input__it__pk__expected)
 {
-    test::dfile head_store{};
-    test::dfile body_store{};
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
     table::input instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(!instance.put_link({}, table::input::slab{}).is_terminal());

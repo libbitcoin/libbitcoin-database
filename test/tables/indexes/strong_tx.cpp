@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../../test.hpp"
-#include "../../mocks/dfile.hpp"
+#include "../../mocks/chunk_storage.hpp"
 
 BOOST_AUTO_TEST_SUITE(strong_tx_tests)
 
@@ -59,8 +59,8 @@ const data_chunk expected_body = base16_chunk
 
 BOOST_AUTO_TEST_CASE(strong_tx__put__two__expected)
 {
-    test::dfile head_store{};
-    test::dfile body_store{};
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
     table::strong_tx instance{ head_store, body_store, 5 };
     BOOST_REQUIRE(instance.create());
 
@@ -82,8 +82,8 @@ BOOST_AUTO_TEST_CASE(strong_tx__get__two__expected)
 {
     auto head = expected_head;
     auto body = expected_body;
-    test::dfile head_store{ head };
-    test::dfile body_store{ body };
+    test::chunk_storage head_store{ head };
+    test::chunk_storage body_store{ body };
     table::strong_tx instance{ head_store, body_store, 5 };
     BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);

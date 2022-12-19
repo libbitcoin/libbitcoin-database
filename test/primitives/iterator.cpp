@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
-#include "../mocks/dfile.hpp"
+#include "../mocks/chunk_storage.hpp"
 
 BOOST_AUTO_TEST_SUITE(iterator_tests)
 
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(iterator__get_next__empty__terminal)
     using slab_iterate = iterator_<link, key, max_size_t>;
 
     constexpr key key0{};
-    test::dfile file;
+    test::chunk_storage file;
     const slab_iterate iterator{ file.get(), link::terminal, key0 };
     BOOST_REQUIRE(iterator.get_next_().is_terminal());
 }
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(iterator__get_next__overflow__terminal)
         0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00
     };
-    test::dfile file{ data };
+    test::chunk_storage file{ data };
     const slab_iterate iterator{ file.get(), start, key0 };
     BOOST_REQUIRE(iterator.get_next_().is_terminal());
 }
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(iterator__get__offset0__expected)
         0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00
     };
-    test::dfile file{ data };
+    test::chunk_storage file{ data };
     const slab_iterate iterator{ file.get(), start, key0 };
     BOOST_REQUIRE_EQUAL(iterator.get_next_(), 0x03020100_u32);
 }
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(iterator__get__offset1__expected)
         0x00, 0x00, 0x00, 0x00,
         0x00, 0x01, 0x02, 0x03
     };
-    test::dfile file{ data };
+    test::chunk_storage file{ data };
     const slab_iterate iterator{ file.get(), start, key0 };
     BOOST_REQUIRE_EQUAL(iterator.get_next_(), 0x03020100_u32);
 }
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(iterator__get__offset_to_back__expected)
     constexpr auto start = 41;
     constexpr key key0{};
     data_chunk data(42u, 0xff);
-    test::dfile file{ data };
+    test::chunk_storage file{ data };
     const slab_iterate iterator{ file.get(), start, key0 };
     BOOST_REQUIRE_EQUAL(iterator.get_next_(), 0xffu);
 }
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(iterator__next__self__expected)
         0x02, 0x1a, 0x2a, 0xee,
         0xff, 0xcc, 0xcc, 0xee
     };
-    test::dfile file{ data };
+    test::chunk_storage file{ data };
     record_iterate iterator1{ file.get(), start, key2 };
 
     // First link is zero, matched.
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(iterator__next__true__non_terminal)
         0x08, 0x1a, 0x2a, 0xee,
         0xff, 0xcc, 0xcc, 0xee
     };
-    test::dfile file{ data };
+    test::chunk_storage file{ data };
     slab_iterate iterator{ file.get(), start, key2 };
 
     BOOST_REQUIRE(!iterator.self().is_terminal());
