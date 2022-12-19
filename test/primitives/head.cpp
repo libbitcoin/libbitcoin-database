@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
-#include "../mocks/dfile.hpp"
+#include "../mocks/chunk_storage.hpp"
 
 BOOST_AUTO_TEST_SUITE(head_tests)
 
@@ -40,21 +40,21 @@ using key = data_array<key_size>;
 using header = head<link, key>;
 
 class nullptr_storage
-  : public test::dfile
+  : public test::chunk_storage
 {
 public:
-    using dfile::dfile;
+    using chunk_storage::chunk_storage;
 
     memory_ptr get(size_t size) const NOEXCEPT override
     {
-        return is_zero(size) ? dfile::get(size) : nullptr;
+        return is_zero(size) ? chunk_storage::get(size) : nullptr;
     }
 };
 
 BOOST_AUTO_TEST_CASE(head__create__size__expected)
 {
     data_chunk data;
-    test::dfile store{ data };
+    test::chunk_storage store{ data };
     header head{ store, buckets };
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE_EQUAL(data.size(), head_size);
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(head__create__size__expected)
 BOOST_AUTO_TEST_CASE(head__verify__uncreated__false)
 {
     data_chunk data;
-    test::dfile store{ data };
+    test::chunk_storage store{ data };
     header head{ store, buckets };
     ////BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(!head.verify());
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(head__verify__uncreated__false)
 BOOST_AUTO_TEST_CASE(head__verify__created__false)
 {
     data_chunk data;
-    test::dfile store{ data };
+    test::chunk_storage store{ data };
     header head{ store, buckets };
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(head.verify());
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(head__verify__created__false)
 BOOST_AUTO_TEST_CASE(head__get_body_count__created__zero)
 {
     data_chunk data;
-    test::dfile store{ data };
+    test::chunk_storage store{ data };
     header head{ store, buckets };
     BOOST_REQUIRE(head.create());
 
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(head__get_body_count__created__zero)
 BOOST_AUTO_TEST_CASE(head__set_body_count__get__expected)
 {
     data_chunk data;
-    test::dfile store{ data };
+    test::chunk_storage store{ data };
     header head{ store, buckets };
     BOOST_REQUIRE(head.create());
 
@@ -119,14 +119,14 @@ BOOST_AUTO_TEST_CASE(head__index__null_key__expected)
         BOOST_REQUIRE_EQUAL(expected, 9u);
     }
 
-    test::dfile store;
+    test::chunk_storage store;
     header head{ store, buckets };
     BOOST_REQUIRE_EQUAL(head.index(null_key), expected);
 }
 
 BOOST_AUTO_TEST_CASE(head__top__link__terminal)
 {
-    test::dfile store;
+    test::chunk_storage store;
     header head{ store, buckets };
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(head.top(9).is_terminal());
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(head__top__key__terminal)
 {
     constexpr key null_key{};
 
-    test::dfile store;
+    test::chunk_storage store;
     header head{ store, buckets };
 
     // create() allocates and fills buckets with terminal.
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(head__top__key__terminal)
 
 BOOST_AUTO_TEST_CASE(head__push__link__terminal)
 {
-    test::dfile store;
+    test::chunk_storage store;
     header head{ store, buckets };
     BOOST_REQUIRE(head.create());
 
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(head__push__link__terminal)
 
 BOOST_AUTO_TEST_CASE(head__push__key__terminal)
 {
-    test::dfile store;
+    test::chunk_storage store;
     header head{ store, buckets };
     BOOST_REQUIRE(head.create());
 

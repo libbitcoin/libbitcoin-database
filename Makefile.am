@@ -68,10 +68,10 @@ test_libbitcoin_database_test_SOURCES = \
     test/memory/accessor.cpp \
     test/memory/file.cpp \
     test/memory/map.cpp \
-    test/mocks/dbase.cpp \
-    test/mocks/dbase.hpp \
-    test/mocks/dfile.cpp \
-    test/mocks/dfile.hpp \
+    test/mocks/chunk_storage.cpp \
+    test/mocks/chunk_storage.hpp \
+    test/mocks/chunk_store.hpp \
+    test/mocks/map_store.hpp \
     test/primitives/arraymap.cpp \
     test/primitives/hashmap.cpp \
     test/primitives/head.cpp \

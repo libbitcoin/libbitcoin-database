@@ -101,7 +101,6 @@ TEMPLATE
 Key CLASS::get_key(const Link& link) NOEXCEPT
 {
     const auto ptr = manager_.get(link);
-    BC_ASSERT(ptr);
 
     // As with links, search key is presumed valid (otherwise null bytes).
     if (!ptr)

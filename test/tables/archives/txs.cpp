@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../../test.hpp"
-#include "../../mocks/dfile.hpp"
+#include "../../mocks/chunk_storage.hpp"
 
 BOOST_AUTO_TEST_SUITE(txs_tests)
 
@@ -112,8 +112,8 @@ const data_chunk expected_file
 
 BOOST_AUTO_TEST_CASE(txs__put__get__expected)
 {
-    test::dfile head_store{};
-    test::dfile body_store{};
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
     table::txs instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(!instance.put_link(key, expected0).is_terminal());

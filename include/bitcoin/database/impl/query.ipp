@@ -335,7 +335,7 @@ input_links CLASS::to_spenders(const point& prevout) NOEXCEPT
 
     // Empty return implies input not yet committed for the point (ok).
     const auto input_sk = table::input::compose(point_fk, prevout.index());
-    const auto it = store_.input.it(input_sk);
+    auto it = store_.input.it(input_sk);
     if (it.self().is_terminal())
         return {};
 
@@ -583,8 +583,8 @@ hashes CLASS::get_txs(const header_link& link) NOEXCEPT
 
     system::hashes hashes{};
     hashes.reserve(txs.tx_fks.size());
-    for (const auto& fk: txs.tx_fks)
-        hashes.push_back(store_.tx.get_key(fk));
+    for (const auto& tx_fk: txs.tx_fks)
+        hashes.push_back(store_.tx.get_key(tx_fk));
 
     // Return of any null hash (tx.get_key) implies store inconsistency (fault).
     return hashes;
@@ -634,7 +634,7 @@ typename CLASS::transactions_ptr CLASS::get_transactions(
 {
     // nullptr return implies not associated (ok).
     const auto fk = to_txs(link);
-    if (fk.empty())
+    if (fk.is_terminal())
         return {};
 
     // nullptr return implies serial fail (fault).
@@ -647,8 +647,8 @@ typename CLASS::transactions_ptr CLASS::get_transactions(
     transactions->reserve(txs.tx_fks.size());
 
     // nullptr return implies store inconsistency (fault).
-    for (const auto& fk: txs.tx_fks)
-        if (!push_bool(*transactions, get_tx(fk)))
+    for (const auto& tx_fk: txs.tx_fks)
+        if (!push_bool(*transactions, get_tx(tx_fk)))
             return {};
 
     return transactions;
@@ -881,7 +881,7 @@ inline typename CLASS::input_key CLASS::make_foreign_point(
 {
     // Terminal fp return [terminal, null_index] implies null point (ok).
     if (prevout.is_null())
-        return table::input::compose({}, prevout.index());
+        return table::input::compose(tx_link::terminal, prevout.index());
 
     // Reuse point hash fk if archived.
     auto point_fk = to_point(prevout.hash());
@@ -1084,7 +1084,7 @@ bool CLASS::set(const header_link& link, const tx_links& links) NOEXCEPT
     const auto scope = store_.get_transactor();
 
     // False return implies allocation failure (fault).
-    return !store_.txs.put(link, table::txs::slab{ {}, links });
+    return store_.txs.put(link, table::txs::slab{ {}, links });
     // ========================================================================
 }
 

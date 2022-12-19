@@ -16,28 +16,28 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TEST_MOCKS_DFILE_HPP
-#define LIBBITCOIN_DATABASE_TEST_MOCKS_DFILE_HPP
+#ifndef LIBBITCOIN_DATABASE_TEST_MOCKS_CHUNK_STORAGE_HPP
+#define LIBBITCOIN_DATABASE_TEST_MOCKS_CHUNK_STORAGE_HPP
 
 #include "../test.hpp"
 #include <filesystem>
 
 namespace test {
 
-// Fake a thread safe memory map implementation.
-class dfile
+// A thread safe storage implementation built on data_chunk.
+class chunk_storage
   : public database::storage
 {
 public:
-    dfile() NOEXCEPT;
-    dfile(system::data_chunk& reference) NOEXCEPT;
-    dfile(const std::filesystem::path& filename, size_t minimum=1,
+    chunk_storage() NOEXCEPT;
+    chunk_storage(system::data_chunk& reference) NOEXCEPT;
+    chunk_storage(const std::filesystem::path& filename, size_t minimum=1,
         size_t expansion=0) NOEXCEPT;
 
     // test side door.
     system::data_chunk& buffer() NOEXCEPT;
 
-    // dfile interface.
+    // storage interface.
     code open() NOEXCEPT override;
     code close() NOEXCEPT override;
     code load() NOEXCEPT override;
