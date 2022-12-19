@@ -19,7 +19,25 @@
 #include "test.hpp"
 #include "mocks/chunk_store.hpp"
 
-BOOST_AUTO_TEST_SUITE(query_tests)
+struct query_setup_fixture
+{
+    DELETE4(query_setup_fixture);
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+        query_setup_fixture() NOEXCEPT
+    {
+        BOOST_REQUIRE(test::clear(test::directory));
+    }
+
+    ~query_setup_fixture() NOEXCEPT
+    {
+        BOOST_REQUIRE(test::clear(test::directory));
+    }
+
+    BC_POP_WARNING()
+};
+
+BOOST_FIXTURE_TEST_SUITE(query_tests, query_setup_fixture)
 
 using query_accessor = query<store<test::chunk_storage>>;
 
