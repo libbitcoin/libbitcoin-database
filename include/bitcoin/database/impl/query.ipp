@@ -211,31 +211,6 @@ inline typename CLASS::txs_link CLASS::to_txs(const header_link& link) NOEXCEPT
     return store_.txs.first(link);
 }
 
-TEMPLATE
-input_links CLASS::to_spenders(const point& prevout) NOEXCEPT
-{
-    // This is 1 nk search, 1 fp search, with link reads and enumeration.
-
-    // Empty return implies null point (ok).
-    if (prevout.is_null())
-        return {};
-
-    // Empty return implies point/input not archived (ok).
-    const auto point_fk = to_point(prevout.hash());
-    if (point_fk.is_terminal())
-        return {};
-
-    // Empty return implies input not yet committed for the point (ok).
-    const auto input_sk = table::input::compose(point_fk, prevout.index());
-    const auto it = store_.input.it(input_sk);
-    if (it.self().is_terminal())
-        return {};
-
-    input_links spenders{};
-    do { spenders.push_back(it.self()); } while (it.advance());
-    return spenders;
-}
-
 // put to tx (reverse navigation)
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -321,8 +296,53 @@ output_link CLASS::to_prevout(const input_link& link) NOEXCEPT
     return to_output(to_tx(store_.point.get_key(in.point_fk)), in.point_index);
 }
 
+// tx to blocks (reverse navigation)
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+TEMPLATE
+header_link CLASS::to_strong_by(const tx_link& link) NOEXCEPT
+{
+    // Terminal return implies not strong (ok).
+    const auto fk = store_.strong_tx.first(link);
+    if (fk.is_terminal())
+        return {};
+
+    // Terminal return implies serial fail (fault).
+    table::strong_tx::record strong{};
+    if (!store_.strong_tx.get(fk, strong))
+        return {};
+
+    // Terminal return implies strong block reverted, not strong (ok).
+    return strong.header_fk;
+}
+
 // output to spenders (reverse navigation)
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+TEMPLATE
+input_links CLASS::to_spenders(const point& prevout) NOEXCEPT
+{
+    // This is 1 nk search, 1 fp search, with link reads and enumeration.
+
+    // Empty return implies null point (ok).
+    if (prevout.is_null())
+        return {};
+
+    // Empty return implies point/input not archived (ok).
+    const auto point_fk = to_point(prevout.hash());
+    if (point_fk.is_terminal())
+        return {};
+
+    // Empty return implies input not yet committed for the point (ok).
+    const auto input_sk = table::input::compose(point_fk, prevout.index());
+    const auto it = store_.input.it(input_sk);
+    if (it.self().is_terminal())
+        return {};
+
+    input_links spenders{};
+    do { spenders.push_back(it.self()); } while (it.advance());
+    return spenders;
+}
 
 TEMPLATE
 input_links CLASS::to_spenders(const output_link& link) NOEXCEPT
@@ -340,9 +360,11 @@ TEMPLATE
 input_links CLASS::to_spenders(const tx_link& link,
     uint32_t output_index) NOEXCEPT
 {
-    // Empty return implies invalid link or index (fault if verified), or
-    // implies no spenders (ok).
-    return to_spenders(point{ store_.tx.get_key(link), output_index });
+    // Empty return implies invalid link or index (fault if verified).
+    const auto sk = point{ store_.tx.get_key(link), output_index };
+
+    // Empty return implies no spenders (ok).
+    return to_spenders(sk);
 }
 
 // block/tx to puts (forward navigation)
@@ -448,26 +470,6 @@ tx_links CLASS::to_transactions(const header_link& link) NOEXCEPT
 
     // TODO: use pointer?
     return std::move(txs.tx_fks);
-}
-
-// tx to blocks (reverse navigation)
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-TEMPLATE
-header_link CLASS::to_strong_by(const tx_link& link) NOEXCEPT
-{
-    // Terminal return implies not strong (ok).
-    const auto fk = store_.strong_tx.first(link);
-    if (fk.is_terminal())
-        return {};
-
-    // Terminal return implies serial fail (fault).
-    table::strong_tx::record strong{};
-    if (!store_.strong_tx.get(fk, strong))
-        return {};
-
-    // Terminal return implies strong block reverted, not strong (ok).
-    return strong.header_fk;
 }
 
 // Archival (natural-keyed).
@@ -1761,14 +1763,10 @@ bool CLASS::set_buffered_tx(const tx_link& link,
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-hashes CLASS::get_bootstrap(size_t height) NOEXCEPT
+hashes CLASS::get_bootstrap() NOEXCEPT
 {
-    // Empty return implies height exceeds confirmed top or is terminal (ok).
-    if (height > get_top() || height >= height_link::terminal)
-        return {};
-
     table::bootstrap::record boot{};
-    boot.block_hashes.resize(add1(height));
+    boot.block_hashes.resize(store_.bootstrap.count());
 
     // Empty return implies empty table (ok) or store failure (fault).
     if (!store_.bootstrap.get(0, boot))
@@ -1781,8 +1779,8 @@ hashes CLASS::get_bootstrap(size_t height) NOEXCEPT
 TEMPLATE
 bool CLASS::set_bootstrap(size_t height) NOEXCEPT
 {
-    // False return implies height exceeds confirmed top or is terminal (ok).
-    if (height > get_top() || height >= height_link::terminal)
+    // False return implies height exceeds confirmed top (ok).
+    if (height > get_top())
         return false;
 
     table::bootstrap::record boot{};

@@ -60,7 +60,6 @@ public:
     /// True if an instance of object with key exists.
     bool exists(const Key& key) const NOEXCEPT;
 
-    // TODO: test.
     /// Return first element or terimnal.
     Link first(const Key& key) const NOEXCEPT;
 
@@ -70,7 +69,6 @@ public:
     /// Allocate element at returned link (follow with set|put).
     Link allocate(const Link& size) NOEXCEPT;
 
-    // TODO: test.
     /// Return the associated search key.
     Key get_key(const Link& size) NOEXCEPT;
 
@@ -94,7 +92,6 @@ public:
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put_link(Link& link, const Key& key, const Element& element) NOEXCEPT;
 
-    // TODO: test.
     /// Allocate, set, commit element to key.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put(const Key& key, const Element& element) NOEXCEPT;
