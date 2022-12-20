@@ -84,15 +84,29 @@ CLASS::query(Store& value) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-inline bool CLASS::is_empty() NOEXCEPT
+inline bool CLASS::initialize(const block& genesis) NOEXCEPT
 {
-    // True return implies genesis not indexed (ok).
-    return is_zero(store_.confirmed.count()) ||
-        is_zero(store_.candidate.count());
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    if (!set(genesis, {}))
+        return false;
+
+    const auto link = to_header(genesis.hash());
+    return push_candidate(link) && push_confirmed(link);
+    // ========================================================================
 }
 
 TEMPLATE
-inline size_t CLASS::get_top() NOEXCEPT
+inline bool CLASS::is_initialized() NOEXCEPT
+{
+    // True return implies genesis indexed (ok).
+    return !is_zero(store_.confirmed.count()) &&
+        !is_zero(store_.candidate.count());
+}
+
+TEMPLATE
+inline size_t CLASS::get_top_confirmed() NOEXCEPT
 {
     BC_ASSERT_MSG(!is_zero(store_.confirmed.count()), "empty");
     return sub1(store_.confirmed.count());
@@ -108,7 +122,7 @@ inline size_t CLASS::get_top_candidate() NOEXCEPT
 TEMPLATE
 size_t CLASS::get_fork() NOEXCEPT
 {
-    for (auto height = get_top(); !is_zero(height); --height)
+    for (auto height = get_top_confirmed(); !is_zero(height); --height)
         if (to_confirmed(height) == to_candidate(height))
             return height;
 
@@ -120,7 +134,7 @@ TEMPLATE
 size_t CLASS::get_last_associated_from(size_t height) NOEXCEPT
 {
     if (height >= height_link::terminal)
-        return height;
+        return height_link::terminal;
 
     // Should not be called during organization.
     while (is_associated(to_candidate(++height)));
@@ -171,16 +185,20 @@ TEMPLATE
 inline header_link CLASS::to_candidate(size_t height) NOEXCEPT
 {
     // Terminal return implies height above top candidate (ok).
-    return store_.candidate.first(system::possible_narrow_cast<
-        table::height::block::integer>(height));
+    if (height >= store_.candidate.count())
+        return {};
+
+    return system::possible_narrow_cast<table::height::block::integer>(height);
 }
 
 TEMPLATE
 inline header_link CLASS::to_confirmed(size_t height) NOEXCEPT
 {
     // Terminal return implies height above top confirmed (ok).
-    return store_.confirmed.first(system::possible_narrow_cast<
-        table::height::block::integer>(height));
+    if (height >= store_.confirmed.count())
+        return {};
+
+    return system::possible_narrow_cast<table::height::block::integer>(height);
 }
 
 TEMPLATE
@@ -1575,7 +1593,7 @@ bool CLASS::is_confirmable_block(const header_link& link,
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 TEMPLATE
-bool CLASS::push(const header_link& link) NOEXCEPT
+bool CLASS::push_confirmed(const header_link& link) NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
@@ -1599,10 +1617,10 @@ bool CLASS::push_candidate(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::pop() NOEXCEPT
+bool CLASS::pop_confirmed() NOEXCEPT
 {
     // False return implies index not initialized (no genesis).
-    const auto top = get_top();
+    const auto top = get_top_confirmed();
     if (is_zero(top))
         return false;
 
@@ -1780,7 +1798,7 @@ TEMPLATE
 bool CLASS::set_bootstrap(size_t height) NOEXCEPT
 {
     // False return implies height exceeds confirmed top (ok).
-    if (height > get_top())
+    if (height > get_top_confirmed())
         return false;
 
     table::bootstrap::record boot{};

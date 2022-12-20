@@ -48,8 +48,6 @@ constexpr database::context context
     0x21222324  // mtp
 };
 
-// chain::header
-
 // slow test (mmap)
 BOOST_AUTO_TEST_CASE(query__set_header__mmap_get_header__expected)
 {
@@ -73,10 +71,8 @@ BOOST_AUTO_TEST_CASE(query__set_header__mmap_get_header__expected)
     query<store<map>> query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-    {
-        const auto transactor = store1.get_transactor();
-        BOOST_REQUIRE(query1.set(header, context));
-    }
+    BOOST_REQUIRE(query1.set(header, context));
+
     table::header::record element1{};
     BOOST_REQUIRE(store1.header.get(query1.to_header(block_hash), element1));
 
@@ -142,10 +138,7 @@ BOOST_AUTO_TEST_CASE(query__set_header__default__expected)
     query_accessor query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-    {
-        const auto transactor = store1.get_transactor();
-        BOOST_REQUIRE(query1.set(header, context));
-    }
+    BOOST_REQUIRE(query1.set(header, context));
     table::header::record element1{};
     BOOST_REQUIRE(store1.header.get(query1.to_header(block_hash), element1));
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
@@ -216,8 +209,6 @@ BOOST_AUTO_TEST_CASE(query__get_header__default__expected)
     BOOST_REQUIRE(*pointer1 == header);
 }
 
-// chain::transaction
-
 BOOST_AUTO_TEST_CASE(query__set_tx__empty__expected)
 {
     const system::chain::transaction tx{};
@@ -248,10 +239,7 @@ BOOST_AUTO_TEST_CASE(query__set_tx__empty__expected)
     query_accessor query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-    {
-        const auto transactor = store1.get_transactor();
-        BOOST_REQUIRE(!query1.set(tx));
-    }
+    BOOST_REQUIRE(!query1.set(tx));
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
     BOOST_REQUIRE_EQUAL(store1.tx_head(), expected_head4_hash);
     BOOST_REQUIRE_EQUAL(store1.point_head(), expected_head4_hash);
@@ -347,10 +335,7 @@ BOOST_AUTO_TEST_CASE(query__set_tx__null_input__expected)
     query_accessor query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-    {
-        const auto transactor = store1.get_transactor();
-        BOOST_REQUIRE(query1.set(tx));
-    }
+    BOOST_REQUIRE(query1.set(tx));
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
     BOOST_REQUIRE_EQUAL(store1.tx_head(), expected_tx_head);
     BOOST_REQUIRE_EQUAL(store1.point_head(), expected_point_head);
@@ -483,11 +468,8 @@ BOOST_AUTO_TEST_CASE(query__set_tx__get_tx__expected)
     test::chunk_store store1{ settings1 };
     query_accessor query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
-    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-    {
-        const auto transactor = store1.get_transactor();
-        BOOST_REQUIRE(query1.set(tx));
-    }
+    BOOST_REQUIRE_EQUAL(store1.open(), error::success);;
+    BOOST_REQUIRE(query1.set(tx));
 
     const auto pointer1 = query1.get_tx(query1.to_tx(tx_hash));
     BOOST_REQUIRE(pointer1);
@@ -506,8 +488,6 @@ BOOST_AUTO_TEST_CASE(query__set_tx__get_tx__expected)
     BOOST_REQUIRE_EQUAL(store1.output_body(), expected_output_body);
     BOOST_REQUIRE_EQUAL(store1.puts_body(), expected_puts_body);
 }
-
-// chain::block
 
 BOOST_AUTO_TEST_CASE(query__set_block__get_block__expected)
 {
@@ -611,20 +591,18 @@ BOOST_AUTO_TEST_CASE(query__set_block__get_block__expected)
     query_accessor query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-    {
-        const auto transactor = store1.get_transactor();
 
-        // Set header/tx/association.
-        BOOST_REQUIRE(query1.set(genesis, context));
+    // Set header/tx/association.
+    BOOST_REQUIRE(query1.set(genesis, context));
 
-        // Verify idempotentcy (these do not change store state).
-        BOOST_REQUIRE(query1.set(genesis.header(), context));
-        BOOST_REQUIRE(query1.set(genesis.header(), context));
-        BOOST_REQUIRE(query1.set(genesis, context));
-        BOOST_REQUIRE(query1.set(genesis, context));
-        BOOST_REQUIRE(query1.set(query1.to_header(genesis.hash()), genesis.transaction_hashes(false)));
-        BOOST_REQUIRE(query1.set(query1.to_header(genesis.hash()), genesis.transaction_hashes(true)));
-    }
+    // Verify idempotentcy (these do not change store state).
+    BOOST_REQUIRE(query1.set(genesis.header(), context));
+    BOOST_REQUIRE(query1.set(genesis.header(), context));
+    BOOST_REQUIRE(query1.set(genesis, context));
+    BOOST_REQUIRE(query1.set(genesis, context));
+    BOOST_REQUIRE(query1.set(query1.to_header(genesis.hash()), genesis.transaction_hashes(false)));
+    BOOST_REQUIRE(query1.set(query1.to_header(genesis.hash()), genesis.transaction_hashes(true)));
+
     table::header::record element1{};
     BOOST_REQUIRE(store1.header.get(query1.to_header(genesis.hash()), element1));
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
@@ -667,14 +645,12 @@ BOOST_AUTO_TEST_CASE(query__set_txs__get_block__expected)
     query_accessor query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-    {
-        const auto transactor = store1.get_transactor();
 
-        // Assemble block.
-        BOOST_REQUIRE(query1.set(genesis.header(), context));
-        BOOST_REQUIRE(query1.set(*genesis.transactions_ptr()->front()));
-        BOOST_REQUIRE(query1.set(query1.to_header(genesis.hash()), genesis.transaction_hashes(false)));
-    }
+    // Assemble block.
+    BOOST_REQUIRE(query1.set(genesis.header(), context));
+    BOOST_REQUIRE(query1.set(*genesis.transactions_ptr()->front()));
+    BOOST_REQUIRE(query1.set(query1.to_header(genesis.hash()), genesis.transaction_hashes(false)));
+
     const auto pointer1 = query1.get_block(query1.to_header(genesis.hash()));
     BOOST_REQUIRE(pointer1);
     BOOST_REQUIRE(*pointer1 == genesis);
@@ -717,10 +693,8 @@ BOOST_AUTO_TEST_CASE(query__get_input__genesis__expected)
     query_accessor query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-    {
-        const auto transactor = store1.get_transactor();
-        BOOST_REQUIRE(query1.set(genesis, context));
-    }
+    BOOST_REQUIRE(query1.set(genesis, context));
+
     const auto tx = genesis.transactions_ptr()->front();
     const auto input = query1.get_input(query1.to_tx(tx->hash(false)), 0u);
     BOOST_REQUIRE(input);
@@ -752,10 +726,7 @@ BOOST_AUTO_TEST_CASE(query__get_output__genesis__expected)
     query_accessor query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-    {
-        const auto transactor = store1.get_transactor();
-        BOOST_REQUIRE(query1.set(genesis, context));
-    }
+    BOOST_REQUIRE(query1.set(genesis, context));
 
     // get_output1
     const auto tx = genesis.transactions_ptr()->front();

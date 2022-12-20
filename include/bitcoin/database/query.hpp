@@ -62,8 +62,9 @@ public:
     /// Initialization (natural-keyed).
     /// -----------------------------------------------------------------------
 
-    inline bool is_empty() NOEXCEPT;
-    inline size_t get_top() NOEXCEPT;
+    inline bool initialize(const block& genesis) NOEXCEPT;
+    inline bool is_initialized() NOEXCEPT;
+    inline size_t get_top_confirmed() NOEXCEPT;
     inline size_t get_top_candidate() NOEXCEPT;
     size_t get_fork() NOEXCEPT;
     size_t get_last_associated_from(size_t height) NOEXCEPT;
@@ -219,9 +220,9 @@ public:
 
     /// Set block state.
     /// False implies fault.
-    bool push(const header_link& link) NOEXCEPT;
+    bool push_confirmed(const header_link& link) NOEXCEPT;
     bool push_candidate(const header_link& link) NOEXCEPT;
-    bool pop() NOEXCEPT;
+    bool pop_confirmed() NOEXCEPT;
     bool pop_candidate() NOEXCEPT;
 
     /// Address (natural-keyed).
