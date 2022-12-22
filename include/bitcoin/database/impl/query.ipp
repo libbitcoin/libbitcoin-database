@@ -1524,7 +1524,7 @@ bool CLASS::set_strong(const header_link& link) NOEXCEPT
     const auto scope = store_.get_transactor();
 
     // False return implies allocation fail (fault).
-    return std::all_of(txs.begin(), txs.end(), [&](const auto& fk) NOEXCEPT
+    return std::all_of(txs.begin(), txs.end(), [&](const tx_link& fk) NOEXCEPT
     {
         return store_.strong_tx.put(fk, strong);
     });
@@ -1545,7 +1545,7 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
     const auto scope = store_.get_transactor();
 
     // False return implies allocation fail (fault).
-    return std::all_of(txs.begin(), txs.end(), [&](const auto& fk) NOEXCEPT
+    return std::all_of(txs.begin(), txs.end(), [&](const tx_link& fk) NOEXCEPT
     {
         return store_.strong_tx.put(fk, strong);
     });
