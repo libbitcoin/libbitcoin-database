@@ -40,8 +40,7 @@ struct query_setup_fixture
 BOOST_FIXTURE_TEST_SUITE(query_tests, query_setup_fixture)
 
 using query_accessor = query<store<test::chunk_storage>>;
-
-constexpr auto parent = system::null_hash;
+const auto genesis = system::settings{ system::chain::selection::mainnet }.genesis_block;
 constexpr database::context context
 {
     0x11121314, // flags
@@ -49,7 +48,50 @@ constexpr database::context context
     0x21222324  // mtp
 };
 
-// chain::header
+// slow test (mmap)
+BOOST_AUTO_TEST_CASE(query__set_header__mmap_get_header__expected)
+{
+    constexpr auto parent = system::null_hash;
+    constexpr auto merkle_root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
+    constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
+    const system::chain::header header
+    {
+        0x31323334, // version
+        parent,     // previous_block_hash
+        merkle_root,// merkle_root
+        0x41424344, // timestamp
+        0x51525354, // bits
+        0x61626364  // nonce
+    };
+
+    settings settings1{};
+    settings1.header_buckets = 10;
+    settings1.dir = TEST_DIRECTORY;
+    store<map> store1{ settings1 };
+    query<store<map>> query1{ store1 };
+    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
+    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
+    BOOST_REQUIRE(query1.set(header, context));
+
+    table::header::record element1{};
+    BOOST_REQUIRE(store1.header.get(query1.to_header(block_hash), element1));
+
+    const auto pointer = query1.get_header(query1.to_header(block_hash));
+    BOOST_REQUIRE(pointer);
+    BOOST_REQUIRE(*pointer == header);
+
+    BOOST_REQUIRE_EQUAL(store1.close(), error::success);
+
+    BOOST_REQUIRE_EQUAL(element1.ctx.height, system::mask_left(context.height, byte_bits));
+    BOOST_REQUIRE_EQUAL(element1.ctx.flags, context.flags);
+    BOOST_REQUIRE_EQUAL(element1.ctx.mtp, context.mtp);
+    BOOST_REQUIRE_EQUAL(element1.version, header.version());
+    BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
+    BOOST_REQUIRE_EQUAL(element1.merkle_root, header.merkle_root());
+    BOOST_REQUIRE_EQUAL(element1.timestamp, header.timestamp());
+    BOOST_REQUIRE_EQUAL(element1.bits, header.bits());
+    BOOST_REQUIRE_EQUAL(element1.nonce, header.nonce());
+}
 
 BOOST_AUTO_TEST_CASE(query__set_header__default__expected)
 {
@@ -58,7 +100,7 @@ BOOST_AUTO_TEST_CASE(query__set_header__default__expected)
     const system::chain::header header
     {
         0x31323334, // version
-        parent,     // previous_block_hash
+        system::null_hash, // previous_block_hash
         merkle_root,// merkle_root
         0x41424344, // timestamp
         0x51525354, // bits
@@ -96,10 +138,7 @@ BOOST_AUTO_TEST_CASE(query__set_header__default__expected)
     query_accessor query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-    {
-        const auto transactor = store1.get_transactor();
-        BOOST_REQUIRE(query1.set(header, context));
-    }
+    BOOST_REQUIRE(query1.set(header, context));
     table::header::record element1{};
     BOOST_REQUIRE(store1.header.get(query1.to_header(block_hash), element1));
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
@@ -124,7 +163,7 @@ BOOST_AUTO_TEST_CASE(query__get_header__default__expected)
     const system::chain::header header
     {
         0x31323334, // version
-        parent,     // previous_block_hash
+        system::null_hash, // previous_block_hash
         root,       // merkle_root
         0x41424344, // timestamp
         0x51525354, // bits
@@ -170,55 +209,6 @@ BOOST_AUTO_TEST_CASE(query__get_header__default__expected)
     BOOST_REQUIRE(*pointer1 == header);
 }
 
-////// slow test (mmap)
-////BOOST_AUTO_TEST_CASE(query__set_header__mmap_get_header__expected)
-////{
-////    constexpr auto parent = system::null_hash;
-////    constexpr auto merkle_root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
-////    constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
-////    const system::chain::header header
-////    {
-////        0x31323334, // version
-////        parent,     // previous_block_hash
-////        merkle_root,// merkle_root
-////        0x41424344, // timestamp
-////        0x51525354, // bits
-////        0x61626364  // nonce
-////    };
-////
-////    settings settings1{};
-////    settings1.header_buckets = 10;
-////    settings1.dir = TEST_DIRECTORY;
-////    store<map> store1{ settings1 };
-////    query<store<map>> query1{ store1 };
-////    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
-////    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-////    {
-////        const auto transactor = store1.get_transactor();
-////        BOOST_REQUIRE(query1.set_header(header, context));
-////    }
-////    table::header::record element1{};
-////    BOOST_REQUIRE(store1.header.get(block_hash, element1));
-////
-////    const auto pointer = query1.get_header(block_hash);
-////    BOOST_REQUIRE(pointer);
-////    BOOST_REQUIRE(*pointer == header);
-////
-////    BOOST_REQUIRE_EQUAL(store1.close(), error::success);
-////
-////    BOOST_REQUIRE_EQUAL(element1.ctx.height, system::mask_left(context.height, byte_bits));
-////    BOOST_REQUIRE_EQUAL(element1.ctx.flags, context.flags);
-////    BOOST_REQUIRE_EQUAL(element1.ctx.mtp, context.mtp);
-////    BOOST_REQUIRE_EQUAL(element1.version, header.version());
-////    BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
-////    BOOST_REQUIRE_EQUAL(element1.merkle_root, header.merkle_root());
-////    BOOST_REQUIRE_EQUAL(element1.timestamp, header.timestamp());
-////    BOOST_REQUIRE_EQUAL(element1.bits, header.bits());
-////    BOOST_REQUIRE_EQUAL(element1.nonce, header.nonce());
-////}
-
-// chain::transaction
-
 BOOST_AUTO_TEST_CASE(query__set_tx__empty__expected)
 {
     const system::chain::transaction tx{};
@@ -249,10 +239,7 @@ BOOST_AUTO_TEST_CASE(query__set_tx__empty__expected)
     query_accessor query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-    {
-        const auto transactor = store1.get_transactor();
-        BOOST_REQUIRE(!query1.set(tx));
-    }
+    BOOST_REQUIRE(!query1.set(tx));
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
     BOOST_REQUIRE_EQUAL(store1.tx_head(), expected_head4_hash);
     BOOST_REQUIRE_EQUAL(store1.point_head(), expected_head4_hash);
@@ -348,10 +335,7 @@ BOOST_AUTO_TEST_CASE(query__set_tx__null_input__expected)
     query_accessor query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-    {
-        const auto transactor = store1.get_transactor();
-        BOOST_REQUIRE(query1.set(tx));
-    }
+    BOOST_REQUIRE(query1.set(tx));
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
     BOOST_REQUIRE_EQUAL(store1.tx_head(), expected_tx_head);
     BOOST_REQUIRE_EQUAL(store1.point_head(), expected_point_head);
@@ -484,11 +468,8 @@ BOOST_AUTO_TEST_CASE(query__set_tx__get_tx__expected)
     test::chunk_store store1{ settings1 };
     query_accessor query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
-    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-    {
-        const auto transactor = store1.get_transactor();
-        BOOST_REQUIRE(query1.set(tx));
-    }
+    BOOST_REQUIRE_EQUAL(store1.open(), error::success);;
+    BOOST_REQUIRE(query1.set(tx));
 
     const auto pointer1 = query1.get_tx(query1.to_tx(tx_hash));
     BOOST_REQUIRE(pointer1);
@@ -508,100 +489,97 @@ BOOST_AUTO_TEST_CASE(query__set_tx__get_tx__expected)
     BOOST_REQUIRE_EQUAL(store1.puts_body(), expected_puts_body);
 }
 
-// chain::block
-
-const auto genesis = system::settings{ system::chain::selection::mainnet }.genesis_block;
-const auto genesis_header_head = system::base16_chunk(
-    "010000"       // record count
-    "ffffff"       // bucket[0]...
-    "000000"       // pk->
-    "ffffff"
-    "ffffff"
-    "ffffff");
-const auto genesis_header_body = system::base16_chunk(
-    "ffffff"       // next->
-    "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000" // sk (block.hash)
-    "14131211"     // flags
-    "040302"       // height
-    "24232221"     // mtp
-    "ffffff"       // previous_block_hash (header_fk - not found)
-    "01000000"     // version
-    "29ab5f49"     // timestamp
-    "ffff001d"     // bits
-    "1dac2b7c"     // nonce
-    "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a"); // merkle_root
-const auto genesis_tx_head = system::base16_chunk(
-    "01000000"     // record count
-    "ffffffff"     // bucket[0]...
-    "ffffffff"
-    "ffffffff"
-    "00000000"     // pk->
-    "ffffffff");
-const auto genesis_tx_body = system::base16_chunk(
-    "ffffffff"     // next->
-    "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a" // sk (tx.hash(false))
-    "01"           // coinbase
-    "cc0000"       // witless
-    "cc0000"       // witness
-    "00000000"     // locktime
-    "01000000"     // version
-    "010000"       // ins_count
-    "010000"       // outs_count
-    "00000000");   // puts_fk->
-const auto genesis_puts_head = system::base16_chunk("02000000");
-const auto genesis_puts_body = system::base16_chunk(
-    "0000000000"   // input0_fk->
-    "0000000000"); // output0_fk->
-const auto genesis_output_head = system::base16_chunk("5200000000");
-const auto genesis_output_body = system::base16_chunk(
-    "00000000"     // parent_fk->
-    "00"           // index
-    "ff00f2052a01000000" // value
-    "434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac"); // script
-const auto genesis_point_head = system::base16_chunk(
-    "00000000"     // record count (null point, empty)
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff");
-const auto genesis_point_body = system::base16_chunk("");
-const auto genesis_input_head = system::base16_chunk(
-    "6400000000"   // slabs size
-    "ffffffffff"
-    "ffffffffff"
-    "0000000000"   // pk->[0]
-    "ffffffffff"
-    "ffffffffff");
-const auto genesis_input_body = system::base16_chunk(
-    "ffffffffff"   // next->
-    "ffffffff"     // sk (point_fk)
-    "ffffff"       // sk (point.index) [this tests 4 bytes null_index recovery]
-    "00000000"     // parent_fk->
-    "00"           // index
-    "ffffffff"     // sequence
-    "4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73" // script
-    "00");         // witness
-const auto genesis_txs_head = system::base16_chunk(
-    "0f000000"     // slabs size
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-    "00000000"      // pk->
-    "ffffffff"
-    "ffffffff");
-const auto genesis_txs_body = system::base16_chunk(
-    "ffffffff"      // next->
-    "000000"        // header_fk
-    "01000000"      // txs count (1)
-    "00000000");    // transaction[0]
-
 BOOST_AUTO_TEST_CASE(query__set_block__get_block__expected)
 {
+    const auto genesis_header_head = system::base16_chunk(
+        "010000"       // record count
+        "ffffff"       // bucket[0]...
+        "000000"       // pk->
+        "ffffff"
+        "ffffff"
+        "ffffff");
+    const auto genesis_header_body = system::base16_chunk(
+        "ffffff"       // next->
+        "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000" // sk (block.hash)
+        "14131211"     // flags
+        "040302"       // height
+        "24232221"     // mtp
+        "ffffff"       // previous_block_hash (header_fk - not found)
+        "01000000"     // version
+        "29ab5f49"     // timestamp
+        "ffff001d"     // bits
+        "1dac2b7c"     // nonce
+        "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a"); // merkle_root
+    const auto genesis_tx_head = system::base16_chunk(
+        "01000000"     // record count
+        "ffffffff"     // bucket[0]...
+        "ffffffff"
+        "ffffffff"
+        "00000000"     // pk->
+        "ffffffff");
+    const auto genesis_tx_body = system::base16_chunk(
+        "ffffffff"     // next->
+        "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a" // sk (tx.hash(false))
+        "01"           // coinbase
+        "cc0000"       // witless
+        "cc0000"       // witness
+        "00000000"     // locktime
+        "01000000"     // version
+        "010000"       // ins_count
+        "010000"       // outs_count
+        "00000000");   // puts_fk->
+    const auto genesis_puts_head = system::base16_chunk("02000000");
+    const auto genesis_puts_body = system::base16_chunk(
+        "0000000000"   // input0_fk->
+        "0000000000"); // output0_fk->
+    const auto genesis_output_head = system::base16_chunk("5200000000");
+    const auto genesis_output_body = system::base16_chunk(
+        "00000000"     // parent_fk->
+        "00"           // index
+        "ff00f2052a01000000" // value
+        "434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac"); // script
+    const auto genesis_point_head = system::base16_chunk(
+        "00000000"     // record count (null point, empty)
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff");
+    const auto genesis_point_body = system::base16_chunk("");
+    const auto genesis_input_head = system::base16_chunk(
+        "6400000000"   // slabs size
+        "ffffffffff"
+        "ffffffffff"
+        "0000000000"   // pk->[0]
+        "ffffffffff"
+        "ffffffffff");
+    const auto genesis_input_body = system::base16_chunk(
+        "ffffffffff"   // next->
+        "ffffffff"     // sk (point_fk)
+        "ffffff"       // sk (point.index) [this tests 4 bytes null_index recovery]
+        "00000000"     // parent_fk->
+        "00"           // index
+        "ffffffff"     // sequence
+        "4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73" // script
+        "00");         // witness
+    const auto genesis_txs_head = system::base16_chunk(
+        "0f000000"     // slabs size
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "00000000"      // pk->
+        "ffffffff"
+        "ffffffff");
+    const auto genesis_txs_body = system::base16_chunk(
+        "ffffffff"      // next->
+        "000000"        // header_fk
+        "01000000"      // txs count (1)
+        "00000000");    // transaction[0]
+
     settings settings1{};
     settings1.header_buckets = 5;
     settings1.tx_buckets = 5;
@@ -613,20 +591,18 @@ BOOST_AUTO_TEST_CASE(query__set_block__get_block__expected)
     query_accessor query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-    {
-        const auto transactor = store1.get_transactor();
 
-        // Set header/tx/association.
-        BOOST_REQUIRE(query1.set(genesis, context));
+    // Set header/tx/association.
+    BOOST_REQUIRE(query1.set(genesis, context));
 
-        // Verify idempotentcy (these do not change store state).
-        BOOST_REQUIRE(query1.set(genesis.header(), context));
-        BOOST_REQUIRE(query1.set(genesis.header(), context));
-        BOOST_REQUIRE(query1.set(genesis, context));
-        BOOST_REQUIRE(query1.set(genesis, context));
-        BOOST_REQUIRE(query1.set(query1.to_header(genesis.hash()), genesis.transaction_hashes(false)));
-        BOOST_REQUIRE(query1.set(query1.to_header(genesis.hash()), genesis.transaction_hashes(true)));
-    }
+    // Verify idempotentcy (these do not change store state).
+    BOOST_REQUIRE(query1.set(genesis.header(), context));
+    BOOST_REQUIRE(query1.set(genesis.header(), context));
+    BOOST_REQUIRE(query1.set(genesis, context));
+    BOOST_REQUIRE(query1.set(genesis, context));
+    BOOST_REQUIRE(query1.set(query1.to_header(genesis.hash()), genesis.transaction_hashes(false)));
+    BOOST_REQUIRE(query1.set(query1.to_header(genesis.hash()), genesis.transaction_hashes(true)));
+
     table::header::record element1{};
     BOOST_REQUIRE(store1.header.get(query1.to_header(genesis.hash()), element1));
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
@@ -669,14 +645,12 @@ BOOST_AUTO_TEST_CASE(query__set_txs__get_block__expected)
     query_accessor query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-    {
-        const auto transactor = store1.get_transactor();
 
-        // Assemble block.
-        BOOST_REQUIRE(query1.set(genesis.header(), context));
-        BOOST_REQUIRE(query1.set(*genesis.transactions_ptr()->front()));
-        BOOST_REQUIRE(query1.set(query1.to_header(genesis.hash()), genesis.transaction_hashes(false)));
-    }
+    // Assemble block.
+    BOOST_REQUIRE(query1.set(genesis.header(), context));
+    BOOST_REQUIRE(query1.set(*genesis.transactions_ptr()->front()));
+    BOOST_REQUIRE(query1.set(query1.to_header(genesis.hash()), genesis.transaction_hashes(false)));
+
     const auto pointer1 = query1.get_block(query1.to_header(genesis.hash()));
     BOOST_REQUIRE(pointer1);
     BOOST_REQUIRE(*pointer1 == genesis);
@@ -719,10 +693,8 @@ BOOST_AUTO_TEST_CASE(query__get_input__genesis__expected)
     query_accessor query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-    {
-        const auto transactor = store1.get_transactor();
-        BOOST_REQUIRE(query1.set(genesis, context));
-    }
+    BOOST_REQUIRE(query1.set(genesis, context));
+
     const auto tx = genesis.transactions_ptr()->front();
     const auto input = query1.get_input(query1.to_tx(tx->hash(false)), 0u);
     BOOST_REQUIRE(input);
@@ -754,10 +726,7 @@ BOOST_AUTO_TEST_CASE(query__get_output__genesis__expected)
     query_accessor query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-    {
-        const auto transactor = store1.get_transactor();
-        BOOST_REQUIRE(query1.set(genesis, context));
-    }
+    BOOST_REQUIRE(query1.set(genesis, context));
 
     // get_output1
     const auto tx = genesis.transactions_ptr()->front();

@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_SETTINGS_HPP
 
 #include <filesystem>
+#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {

@@ -196,6 +196,8 @@ if (with-tests)
         "../../test/error.cpp"
         "../../test/main.cpp"
         "../../test/query.cpp"
+        "../../test/query_conversion.cpp"
+        "../../test/query_initialization.cpp"
         "../../test/settings.cpp"
         "../../test/store.cpp"
         "../../test/test.cpp"

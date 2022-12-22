@@ -203,18 +203,18 @@ struct transaction
 
             if (index >= ins_count)
             {
-                input_fk = puts::terminal;
+                puts_fk = puts::terminal;
                 return source;
             }
 
             source.skip_bytes(ix::size);
             const auto ins_fk = source.read_little_endian<puts::integer, puts::size>();
-            input_fk = ins_fk + index;
+            puts_fk = ins_fk + index;
             return source;
         }
 
         const puts::integer index{};
-        puts::integer input_fk{};
+        puts::integer puts_fk{};
     };
 
     struct record_output
@@ -228,17 +228,17 @@ struct transaction
 
             if (index >= outs_count)
             {
-                output_fk = puts::terminal;
+                puts_fk = puts::terminal;
                 return source;
             }
 
             const auto ins_fk = source.read_little_endian<puts::integer, puts::size>();
-            output_fk = ins_fk + ins_count + index;
+            puts_fk = ins_fk + ins_count + index;
             return source;
         }
 
         const puts::integer index{};
-        puts::integer output_fk{};
+        puts::integer puts_fk{};
     };
 
     struct record_get_coinbase
