@@ -84,20 +84,6 @@ CLASS::query(Store& value) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-inline bool CLASS::initialize(const block& genesis) NOEXCEPT
-{
-    // ========================================================================
-    const auto scope = store_.get_transactor();
-
-    if (!set(genesis, {}))
-        return false;
-
-    const auto link = to_header(genesis.hash());
-    return push_candidate(link) && push_confirmed(link);
-    // ========================================================================
-}
-
-TEMPLATE
 inline bool CLASS::is_initialized() NOEXCEPT
 {
     // True return implies genesis indexed (ok).
@@ -282,7 +268,11 @@ input_link CLASS::to_input(const tx_link& link, uint32_t input_index) NOEXCEPT
         return {};
 
     // Terminal return implies index does not exist (fault if verified).
-    return tx.input_fk;
+    table::puts::record_get_one put{};
+    if (!store_.puts.get(tx.puts_fk, put))
+        return {};
+
+    return put.put_fk;
 }
 
 TEMPLATE
@@ -295,7 +285,11 @@ output_link CLASS::to_output(const tx_link& link,
         return {};
 
     // Terminal return implies index does not exist (fault if verified).
-    return tx.output_fk;
+    table::puts::record_get_one put{};
+    if (!store_.puts.get(tx.puts_fk, put))
+        return {};
+
+    return put.put_fk;
 }
 
 TEMPLATE
@@ -835,22 +829,8 @@ TEMPLATE
 typename CLASS::output::cptr CLASS::get_output(const tx_link& link,
     uint32_t output_index) NOEXCEPT
 {
-    // nullptr return implies invalid link or serial fail (fault if verified).
-    table::transaction::record_output tx{ {}, output_index };
-    if (!store_.tx.get(link, tx))
-        return {};
-
-    // nullptr return implies output_index not found (fault if verified).
-    if (tx.output_fk == puts_link::terminal)
-        return {};
-
-    // nullptr return implies store inconsistency or serial fail (fault).
-    table::puts::record_get_one puts{};
-    if (!store_.puts.get(tx.output_fk, puts))
-        return {};
-
-    // nullptr return implies store inconsistency (fault).
-    return get_output(puts.put_fk);
+    // nullptr return implies invalid link or tx and/or index not found.
+    return get_output(to_output(link, output_index));
 }
 
 TEMPLATE
@@ -858,21 +838,7 @@ typename CLASS::input::cptr CLASS::get_input(const tx_link& link,
     uint32_t input_index) NOEXCEPT
 {
     // nullptr return implies invalid link or tx and/or index not found.
-    table::transaction::record_input tx{ {}, input_index };
-    if (!store_.tx.get(link, tx))
-        return {};
-
-    // nullptr return implies input_index not found (fault if verified).
-    if (tx.input_fk == puts_link::terminal)
-        return {};
-
-    // nullptr return implies store inconsistency or serial fail (fault).
-    table::puts::record_get_one puts{};
-    if (!store_.puts.get(tx.input_fk, puts))
-        return {};
-
-    // nullptr return implies store inconsistency (fault).
-    return get_input(puts.put_fk);
+    return get_input(to_input(link, input_index));
 }
 
 TEMPLATE
@@ -1378,11 +1344,8 @@ bool CLASS::set_tx_disconnected(const tx_link& link,
     // ========================================================================
 }
 
-// Confirmation (foreign-keyed).
+// Block status (foreign-keyed).
 // ----------------------------------------------------------------------------
-
-// Block state.
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 TEMPLATE
 inline bool CLASS::is_associated(const header_link& link) NOEXCEPT
@@ -1464,52 +1427,10 @@ inline bool CLASS::is_confirmed_output(const output_link& link) NOEXCEPT
     return is_confirmed_tx(fk);
 }
 
-// Confirmation process.
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Confirmation.
+// ----------------------------------------------------------------------------
 // Strong identifies confirmed and pending confirmed txs.
 // Strong is only sufficient for confirmation during organizing.
-
-TEMPLATE
-bool CLASS::make_strong(const header_link& link) NOEXCEPT
-{
-    // False return implies serial fail or unassociated (ambiguous).
-    const auto txs = to_transactions(link);
-    if (txs.empty())
-        return false;
-
-    const table::strong_tx::record strong{ {}, link };
-
-    // ========================================================================
-    const auto scope = store_.get_transactor();
-
-    // False return implies allocation fail (fault).
-    return std::all_of(txs.begin(), txs.end(), [&](const auto& fk) NOEXCEPT
-    {
-        return store_.strong_tx.put(fk, strong);
-    });
-    // ========================================================================
-}
-
-TEMPLATE
-bool CLASS::make_unstrong(const header_link& link) NOEXCEPT
-{
-    // False return implies serial fail or unassociated (ambiguous).
-    const auto txs = to_transactions(link);
-    if (txs.empty())
-        return false;
-
-    const table::strong_tx::record strong{ {}, header_link::terminal };
-
-    // ========================================================================
-    const auto scope = store_.get_transactor();
-
-    // False return implies allocation fail (fault).
-    return std::all_of(txs.begin(), txs.end(), [&](const auto& fk) NOEXCEPT
-    {
-        return store_.strong_tx.put(fk, strong);
-    });
-    // ========================================================================
-}
 
 TEMPLATE
 bool CLASS::is_spent(const input_link& link) NOEXCEPT
@@ -1589,8 +1510,63 @@ bool CLASS::is_confirmable_block(const header_link& link,
     });
 }
 
-// Set block state.
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+TEMPLATE
+bool CLASS::set_strong(const header_link& link) NOEXCEPT
+{
+    // False return implies serial fail or unassociated (ambiguous).
+    const auto txs = to_transactions(link);
+    if (txs.empty())
+        return false;
+
+    const table::strong_tx::record strong{ {}, link };
+
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    // False return implies allocation fail (fault).
+    return std::all_of(txs.begin(), txs.end(), [&](const auto& fk) NOEXCEPT
+    {
+        return store_.strong_tx.put(fk, strong);
+    });
+    // ========================================================================
+}
+
+TEMPLATE
+bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
+{
+    // False return implies serial fail or unassociated (ambiguous).
+    const auto txs = to_transactions(link);
+    if (txs.empty())
+        return false;
+
+    const table::strong_tx::record strong{ {}, header_link::terminal };
+
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    // False return implies allocation fail (fault).
+    return std::all_of(txs.begin(), txs.end(), [&](const auto& fk) NOEXCEPT
+    {
+        return store_.strong_tx.put(fk, strong);
+    });
+    // ========================================================================
+}
+
+TEMPLATE
+bool CLASS::initialize(const block& genesis) NOEXCEPT
+{
+    BC_ASSERT(!is_initialized());
+
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    if (!set(genesis, {}))
+        return false;
+
+    const auto link = to_header(genesis.hash());
+    return push_candidate(link) && push_confirmed(link);
+    // ========================================================================
+}
 
 TEMPLATE
 bool CLASS::push_confirmed(const header_link& link) NOEXCEPT

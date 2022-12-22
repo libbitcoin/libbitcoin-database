@@ -62,7 +62,6 @@ public:
     /// Initialization (natural-keyed).
     /// -----------------------------------------------------------------------
 
-    inline bool initialize(const block& genesis) NOEXCEPT;
     inline bool is_initialized() NOEXCEPT;
     inline size_t get_top_confirmed() NOEXCEPT;
     inline size_t get_top_candidate() NOEXCEPT;
@@ -206,20 +205,20 @@ public:
 
     /// Confirmation (foreign-keyed).
     /// -----------------------------------------------------------------------
-    /// Strong is a confirmation optimization table.
+    /// These rely on strong, a confirmation optimization table.
     /// Set strong before evaluation or current block will be missed.
-    /// Inputs must be validated as prevout index existence is not confirmed.
-
-    /// False implies fault if link associated.
-    bool make_strong(const header_link& link) NOEXCEPT;
-    bool make_unstrong(const header_link& link) NOEXCEPT;
+    /// Inputs must be validated, as prevout index existence is not confirmed.
 
     bool is_spent(const input_link& link) NOEXCEPT;
     bool is_mature(const input_link& link, size_t height) NOEXCEPT;
     bool is_confirmable_block(const header_link& link, size_t height) NOEXCEPT;
 
-    /// Set block state.
+    /// False implies fault if link associated.
+    bool set_strong(const header_link& link) NOEXCEPT;
+    bool set_unstrong(const header_link& link) NOEXCEPT;
+
     /// False implies fault.
+    bool initialize(const block& genesis) NOEXCEPT;
     bool push_confirmed(const header_link& link) NOEXCEPT;
     bool push_candidate(const header_link& link) NOEXCEPT;
     bool pop_confirmed() NOEXCEPT;
