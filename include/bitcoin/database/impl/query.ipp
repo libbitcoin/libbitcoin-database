@@ -161,7 +161,7 @@ hashes CLASS::get_locator(const heights& heights) NOEXCEPT
     return out;
 }
 
-// Key conversion. 
+// Key translation. 
 // ----------------------------------------------------------------------------
 
 // natural key (entry)

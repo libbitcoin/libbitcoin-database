@@ -84,10 +84,10 @@
     <ClCompile Include="..\..\..\..\test\query.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query_conversion.cpp">
+    <ClCompile Include="..\..\..\..\test\query_initialization.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query_initialization.cpp">
+    <ClCompile Include="..\..\..\..\test\query_translation.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\settings.cpp">

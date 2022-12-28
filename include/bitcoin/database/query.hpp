@@ -70,7 +70,7 @@ public:
     hashes get_all_unassociated_above(size_t height) NOEXCEPT;
     hashes get_locator(const heights& heights) NOEXCEPT;
 
-    /// Key conversion.
+    /// Translation.
     /// -----------------------------------------------------------------------
 
     /// search key (entry)
