@@ -146,6 +146,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\test\mocks\blocks.hpp">
+      <Filter>src\mocks</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\test\mocks\chunk_storage.hpp">
       <Filter>src\mocks</Filter>
     </ClInclude>

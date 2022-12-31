@@ -108,6 +108,7 @@
     <ClCompile Include="..\..\..\..\test\test.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\test\mocks\blocks.hpp" />
     <ClInclude Include="..\..\..\..\test\mocks\chunk_storage.hpp" />
     <ClInclude Include="..\..\..\..\test\mocks\chunk_store.hpp" />
     <ClInclude Include="..\..\..\..\test\mocks\map_store.hpp" />

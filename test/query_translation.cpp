@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "test.hpp"
+#include "mocks/blocks.hpp"
 #include "mocks/chunk_store.hpp"
 
 struct query_translation_setup_fixture
@@ -39,186 +40,6 @@ struct query_translation_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(query_translation_tests, query_translation_setup_fixture)
 
-using namespace system::chain;
-using query_accessor = query<store<test::chunk_storage>>;
-const auto genesis = system::settings{ system::chain::selection::mainnet }.genesis_block;
-const system::chain::block block1{ test::block1_data, true };
-const system::chain::block block2{ test::block2_data, true };
-const system::chain::block block3{ test::block3_data, true };
-constexpr hash_digest two_hash = system::from_uintx(uint256_t(two));
-const block block1a
-{
-    header
-    {
-        0x31323334,         // version
-        genesis.hash(),     // previous_block_hash
-        system::null_hash,  // merkle_root
-        0x41424344,         // timestamp
-        0x51525354,         // bits
-        0x61626364          // nonce
-    },
-    transactions
-    {
-        transaction
-        {
-            0x2a,           // version
-            inputs
-            {
-                input
-                {
-                    point{ system::one_hash, 0x18 },    // missing prevout
-                    script{ { { opcode::op_return }, { opcode::pick } } },
-                    witness{ "[242424]" },
-                    0x2a    // sequence
-                },
-                input
-                {
-                    point{ system::one_hash, 0x2a },    // missing prevout
-                    script{ { { opcode::op_return }, { opcode::roll } } },
-                    witness{ "[313131]" },
-                    0x18    // sequence
-                },
-                input
-                {
-                    point{ two_hash, 0x2b },            // missing prevout
-                    script{ { { opcode::op_return }, { opcode::roll } } },
-                    witness{ "[424242]" },
-                    0x19    // sequence
-                }
-            },
-            outputs
-            {
-                output
-                {
-                    0x18,   // value
-                    script{ { { opcode::pick } } }
-                },
-                output
-                {
-                    0x2a,   // value
-                    script{ { { opcode::roll } } }
-                }
-            },
-            0x18            // locktime
-        }
-    }
-};
-const block block2a
-{
-    header
-    {
-        0x31323334,         // version
-        block1a.hash(),     // previous_block_hash
-        system::one_hash,   // merkle_root
-        0x41424344,         // timestamp
-        0x51525354,         // bits
-        0x61626364          // nonce
-    },
-    transactions
-    {
-        transaction
-        {
-            0xa2,           // version
-            inputs
-            {
-                input
-                {
-                    // existing prevout
-                    point{ block1a.transactions_ptr()->front()->hash(false), 0x00 },
-                    script{ { { opcode::checkmultisig }, { opcode::pick } } },
-                    witness{ "[242424]" },
-                    0xa2    // sequence
-                },
-                input
-                {
-                    // existing prevout
-                    point{ block1a.transactions_ptr()->front()->hash(false), 0x01 },
-                    script{ { { opcode::checkmultisig }, { opcode::roll } } },
-                    witness{ "[313131]" },
-                    0x81    // sequence
-                }
-            },
-            outputs
-            {
-                output
-                {
-                    0x81,   // value
-                    script{ { { opcode::pick } } }
-                }
-            },
-            0x81            // locktime
-        },
-        transaction
-        {
-            0xa2,           // version
-            inputs
-            {
-                input
-                {
-                    point{ system::one_hash, 0x20 },    // missing prevout
-                    script{ { { opcode::checkmultisig }, { opcode::pick } } },
-                    witness{ "[242424]" },
-                    0xa2    // sequence
-                },
-                input
-                {
-                    point{ system::one_hash, 0x21 },    // missing prevout
-                    script{ { { opcode::checkmultisig }, { opcode::roll } } },
-                    witness{ "[313131]" },
-                    0x81    // sequence
-                }
-            },
-            outputs
-            {
-                output
-                {
-                    0x81,   // value
-                    script{ { { opcode::pick } } }
-                }
-            },
-            0x81            // locktime
-        }
-    }
-};
-const transaction tx4
-{
-    0xa5,           // version
-    inputs
-    {
-        input
-        {
-            // existing prevout (double spend with block2a:tx0:0).
-            point{ block1a.transactions_ptr()->front()->hash(false), 0x00 },
-            script{ { { opcode::checkmultisig }, { opcode::pick } } },
-            witness{ "[252525]" },
-            0xa5    // sequence
-        },
-        input
-        {
-            // existing prevout (double spend with block2a:tx0:1).
-            point{ block1a.transactions_ptr()->front()->hash(false), 0x01 },
-            script{ { { opcode::checkmultisig }, { opcode::roll } } },
-            witness{ "[353535]" },
-            0x85    // sequence
-        }
-    },
-    outputs
-    {
-        output
-        {
-            0x85,   // value
-            script{ { { opcode::pick } } }
-        }
-    },
-    0x85            // locktime
-};
-constexpr database::context context
-{
-    0x01020304, // flags
-    0x11121314, // height
-    0x21222324  // mtp
-};
-
 // to_candidate
 
 BOOST_AUTO_TEST_CASE(query_translation__to_candidate__always__expected)
@@ -226,13 +47,13 @@ BOOST_AUTO_TEST_CASE(query_translation__to_candidate__always__expected)
     settings settings{};
     settings.dir = TEST_DIRECTORY;
     test::chunk_store store{ settings };
-    query_accessor query{ store };
+    test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
 
     // initialize pushes the genesis candidate. 
-    BOOST_REQUIRE(query.initialize(genesis));
-    BOOST_REQUIRE(query.set(block1, context));
-    BOOST_REQUIRE(query.set(block2, context));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, test::context));
+    BOOST_REQUIRE(query.set(test::block2, test::context));
     BOOST_REQUIRE_EQUAL(query.to_candidate(0), 0u);
     BOOST_REQUIRE_EQUAL(query.to_candidate(1), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_candidate(2), header_link::terminal);
@@ -266,13 +87,13 @@ BOOST_AUTO_TEST_CASE(query_translation__to_confirmed__always__expected)
     settings settings{};
     settings.dir = TEST_DIRECTORY;
     test::chunk_store store{ settings };
-    query_accessor query{ store };
+    test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
 
     // initialize pushes the genesis confirmed. 
-    BOOST_REQUIRE(query.initialize(genesis));
-    BOOST_REQUIRE(query.set(block1, context));
-    BOOST_REQUIRE(query.set(block2, context));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, test::context));
+    BOOST_REQUIRE(query.set(test::block2, test::context));
     BOOST_REQUIRE_EQUAL(query.to_confirmed(0), 0u);
     BOOST_REQUIRE_EQUAL(query.to_confirmed(1), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_confirmed(2), header_link::terminal);
@@ -306,14 +127,14 @@ BOOST_AUTO_TEST_CASE(query_translation__to_header__always__expected)
     settings settings{};
     settings.dir = TEST_DIRECTORY;
     test::chunk_store store{ settings };
-    query_accessor query{ store };
+    test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
-    BOOST_REQUIRE_EQUAL(query.to_header(genesis.hash()), header_link::terminal);
-    BOOST_REQUIRE(query.initialize(genesis));
-    BOOST_REQUIRE_EQUAL(query.to_header(genesis.hash()), 0u);
-    BOOST_REQUIRE_EQUAL(query.to_header(block1.hash()), header_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.set_link(block1.header(), context), 1u);
-    BOOST_REQUIRE_EQUAL(query.to_header(block1.hash()), 1u);
+    BOOST_REQUIRE_EQUAL(query.to_header(test::genesis.hash()), header_link::terminal);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE_EQUAL(query.to_header(test::genesis.hash()), 0u);
+    BOOST_REQUIRE_EQUAL(query.to_header(test::block1.hash()), header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.set_link(test::block1.header(), test::context), 1u);
+    BOOST_REQUIRE_EQUAL(query.to_header(test::block1.hash()), 1u);
 }
 
 // to_point
@@ -323,14 +144,14 @@ BOOST_AUTO_TEST_CASE(query_translation__to_point__null_points__empty_points_tabl
     settings settings{};
     settings.dir = TEST_DIRECTORY;
     test::chunk_store store{ settings };
-    query_accessor query{ store };
+    test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
 
     // The four blocks have only null points, which are not archived.
-    BOOST_REQUIRE(query.initialize(genesis));
-    BOOST_REQUIRE(query.set(block1, context));
-    BOOST_REQUIRE(query.set(block2, context));
-    BOOST_REQUIRE(query.set(block3, context));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, test::context));
+    BOOST_REQUIRE(query.set(test::block2, test::context));
+    BOOST_REQUIRE(query.set(test::block3, test::context));
     BOOST_REQUIRE(store.point_body().empty());
 }
 
@@ -339,10 +160,10 @@ BOOST_AUTO_TEST_CASE(query_translation__to_point__points__expected)
     settings settings{};
     settings.dir = TEST_DIRECTORY;
     test::chunk_store store{ settings };
-    query_accessor query{ store };
+    test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
-    BOOST_REQUIRE(query.initialize(genesis));
-    BOOST_REQUIRE(query.set(block1a, context));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, test::context));
 
     const auto point_body = system::base16_chunk
     (
@@ -354,7 +175,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_point__points__expected)
     BOOST_REQUIRE_EQUAL(store.point_body(), point_body);
     BOOST_REQUIRE_EQUAL(query.to_point(system::null_hash), point_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_point(system::one_hash), 0u);
-    BOOST_REQUIRE_EQUAL(query.to_point(two_hash), 1u);
+    BOOST_REQUIRE_EQUAL(query.to_point(test::two_hash), 1u);
 }
 
 // to_tx
@@ -364,17 +185,17 @@ BOOST_AUTO_TEST_CASE(query_translation__to_tx__txs__expected)
     settings settings{};
     settings.dir = TEST_DIRECTORY;
     test::chunk_store store{ settings };
-    query_accessor query{ store };
+    test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
-    BOOST_REQUIRE(query.initialize(genesis));
-    BOOST_REQUIRE(query.set(block1, context));
-    BOOST_REQUIRE(query.set(block2, context));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, test::context));
+    BOOST_REQUIRE(query.set(test::block2, test::context));
 
     // All four blocks have one transaction.
-    BOOST_REQUIRE_EQUAL(query.to_tx(genesis.transactions_ptr()->front()->hash(true)), 0u);
-    BOOST_REQUIRE_EQUAL(query.to_tx(block1.transactions_ptr()->front()->hash(true)), 1u);
-    BOOST_REQUIRE_EQUAL(query.to_tx(block2.transactions_ptr()->front()->hash(true)), 2u);
-    BOOST_REQUIRE_EQUAL(query.to_tx(block3.transactions_ptr()->front()->hash(true)), tx_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_tx(test::genesis.transactions_ptr()->front()->hash(true)), 0u);
+    BOOST_REQUIRE_EQUAL(query.to_tx(test::block1.transactions_ptr()->front()->hash(true)), 1u);
+    BOOST_REQUIRE_EQUAL(query.to_tx(test::block2.transactions_ptr()->front()->hash(true)), 2u);
+    BOOST_REQUIRE_EQUAL(query.to_tx(test::block3.transactions_ptr()->front()->hash(true)), tx_link::terminal);
 }
 
 // to_input_tx/to_input/to_tx_inputs/to_block_inputs
@@ -385,13 +206,13 @@ BOOST_AUTO_TEST_CASE(query_translation__to_input_tx__to_input__expected)
     settings.input_buckets = 5;
     settings.dir = TEST_DIRECTORY;
     test::chunk_store store{ settings };
-    query_accessor query{ store };
+    test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
-    BOOST_REQUIRE(query.initialize(genesis));
-    BOOST_REQUIRE(query.set(block1, context));
-    BOOST_REQUIRE(query.set(block2, context));
-    BOOST_REQUIRE(query.set(block3, context));
-    BOOST_REQUIRE(query.set(block1a, context));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, test::context));
+    BOOST_REQUIRE(query.set(test::block2, test::context));
+    BOOST_REQUIRE(query.set(test::block3, test::context));
+    BOOST_REQUIRE(query.set(test::block1a, test::context));
 
     // First 4 blocks have one transaction with 1 input, block1a has 3.
     BOOST_REQUIRE_EQUAL(query.to_input_tx(0x00), 0u);
@@ -464,13 +285,13 @@ BOOST_AUTO_TEST_CASE(query_translation__to_output_tx__to_output__expected)
     settings.input_buckets = 5;
     settings.dir = TEST_DIRECTORY;
     test::chunk_store store{ settings };
-    query_accessor query{ store };
+    test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
-    BOOST_REQUIRE(query.initialize(genesis));
-    BOOST_REQUIRE(query.set(block1, context));
-    BOOST_REQUIRE(query.set(block2, context));
-    BOOST_REQUIRE(query.set(block3, context));
-    BOOST_REQUIRE(query.set(block1a, context));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, test::context));
+    BOOST_REQUIRE(query.set(test::block2, test::context));
+    BOOST_REQUIRE(query.set(test::block3, test::context));
+    BOOST_REQUIRE(query.set(test::block1a, test::context));
 
     // All 5 blocks have one transaction with 1 output.
     BOOST_REQUIRE_EQUAL(query.to_output_tx(0 * 0x52), 0u);
@@ -530,11 +351,11 @@ BOOST_AUTO_TEST_CASE(query_translation__to_prevout_tx__to_prevout__expected)
     settings.input_buckets = 5;
     settings.dir = TEST_DIRECTORY;
     test::chunk_store store{ settings };
-    query_accessor query{ store };
+    test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
-    BOOST_REQUIRE(query.initialize(genesis));
-    BOOST_REQUIRE(query.set(block1a, context));
-    BOOST_REQUIRE(query.set(block2a, context));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, test::context));
+    BOOST_REQUIRE(query.set(test::block2a, test::context));
 
     // inputs in link order.
     BOOST_REQUIRE_EQUAL(query.to_prevout_tx(0x00), tx_link::terminal);
@@ -631,11 +452,11 @@ BOOST_AUTO_TEST_CASE(query_translation__to_strong_by__set_strong__expected)
     settings settings{};
     settings.dir = TEST_DIRECTORY;
     test::chunk_store store{ settings };
-    query_accessor query{ store };
+    test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
-    BOOST_REQUIRE(query.initialize(genesis));
-    BOOST_REQUIRE(query.set(block1, context));
-    BOOST_REQUIRE(query.set(block2, context));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, test::context));
+    BOOST_REQUIRE(query.set(test::block2, test::context));
 
     // Either not strong or not found.
     BOOST_REQUIRE_EQUAL(query.to_strong_by(0), header_link::terminal);
@@ -644,32 +465,32 @@ BOOST_AUTO_TEST_CASE(query_translation__to_strong_by__set_strong__expected)
     BOOST_REQUIRE_EQUAL(query.to_strong_by(3), header_link::terminal);
 
     // push_candidate/push_confirmed has no effect.
-    BOOST_REQUIRE(query.push_candidate(query.to_header(genesis.hash())));
-    BOOST_REQUIRE(query.push_confirmed(query.to_header(genesis.hash())));
+    BOOST_REQUIRE(query.push_candidate(query.to_header(test::genesis.hash())));
+    BOOST_REQUIRE(query.push_confirmed(query.to_header(test::genesis.hash())));
     BOOST_REQUIRE_EQUAL(query.to_strong_by(0), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_strong_by(1), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_strong_by(2), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_strong_by(3), header_link::terminal);
 
     // set_strong sets strong_by (only), and is idempotent.
-    BOOST_REQUIRE(query.set_strong(query.to_header(genesis.hash())));
-    BOOST_REQUIRE(query.set_strong(query.to_header(genesis.hash())));
-    BOOST_REQUIRE(query.set_strong(query.to_header(block1.hash())));
+    BOOST_REQUIRE(query.set_strong(query.to_header(test::genesis.hash())));
+    BOOST_REQUIRE(query.set_strong(query.to_header(test::genesis.hash())));
+    BOOST_REQUIRE(query.set_strong(query.to_header(test::block1.hash())));
     BOOST_REQUIRE_EQUAL(query.to_strong_by(0), 0u);
     BOOST_REQUIRE_EQUAL(query.to_strong_by(1), 1u);
     BOOST_REQUIRE_EQUAL(query.to_strong_by(2), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_strong_by(3), header_link::terminal);
 
     // candidate/confirmed unaffected.
-    BOOST_REQUIRE(query.is_candidate_block(query.to_header(genesis.hash())));
-    BOOST_REQUIRE(query.is_confirmed_block(query.to_header(genesis.hash())));
-    BOOST_REQUIRE(!query.is_candidate_block(query.to_header(block1.hash())));
-    BOOST_REQUIRE(!query.is_confirmed_block(query.to_header(block1.hash())));
+    BOOST_REQUIRE(query.is_candidate_block(query.to_header(test::genesis.hash())));
+    BOOST_REQUIRE(query.is_confirmed_block(query.to_header(test::genesis.hash())));
+    BOOST_REQUIRE(!query.is_candidate_block(query.to_header(test::block1.hash())));
+    BOOST_REQUIRE(!query.is_confirmed_block(query.to_header(test::block1.hash())));
 
     // set_unstrong unsets strong_by, and is idempotent.
-    BOOST_REQUIRE(query.set_unstrong(query.to_header(genesis.hash())));
-    BOOST_REQUIRE(query.set_unstrong(query.to_header(block1.hash())));
-    BOOST_REQUIRE(query.set_unstrong(query.to_header(block2.hash())));
+    BOOST_REQUIRE(query.set_unstrong(query.to_header(test::genesis.hash())));
+    BOOST_REQUIRE(query.set_unstrong(query.to_header(test::block1.hash())));
+    BOOST_REQUIRE(query.set_unstrong(query.to_header(test::block2.hash())));
     BOOST_REQUIRE_EQUAL(query.to_strong_by(0), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_strong_by(1), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_strong_by(2), header_link::terminal);
@@ -683,11 +504,11 @@ BOOST_AUTO_TEST_CASE(query_translation__to_transactions__txs__expected)
     settings settings{};
     settings.dir = TEST_DIRECTORY;
     test::chunk_store store{ settings };
-    query_accessor query{ store };
+    test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
-    BOOST_REQUIRE(query.initialize(genesis));
-    BOOST_REQUIRE(query.set(block1a, context));
-    BOOST_REQUIRE(query.set(block2a, context));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, test::context));
+    BOOST_REQUIRE(query.set(test::block2a, test::context));
 
     const tx_links expected_links2{ 2, 3 };
     BOOST_REQUIRE_EQUAL(query.to_transactions(0), tx_links{ 0 });
@@ -705,24 +526,24 @@ BOOST_AUTO_TEST_CASE(query_translation__to_spenders__point__expected)
     settings.input_buckets = 5;
     settings.dir = TEST_DIRECTORY;
     test::chunk_store store{ settings };
-    query_accessor query{ store };
+    test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
-    BOOST_REQUIRE(query.initialize(genesis));
-    BOOST_REQUIRE(query.set(block1a, context));
-    BOOST_REQUIRE(query.set(block2a, context));
-    BOOST_REQUIRE(query.set(tx4));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, test::context));
+    BOOST_REQUIRE(query.set(test::block2a, test::context));
+    BOOST_REQUIRE(query.set(test::tx4));
 
-    BOOST_REQUIRE(query.to_spenders({ genesis.hash(), 0 }).empty());
+    BOOST_REQUIRE(query.to_spenders({ test::genesis.hash(), 0 }).empty());
     const auto expected0 = input_links{ 0x012f, 0x00bb };
     const auto expected1 = input_links{ 0x014c, 0x00d8 };
-    const auto spenders0a = query.to_spenders({ block1a.transactions_ptr()->front()->hash(false), 0 });
-    const auto spenders1a = query.to_spenders({ block1a.transactions_ptr()->front()->hash(false), 1 });
+    const auto spenders0a = query.to_spenders({ test::block1a.transactions_ptr()->front()->hash(false), 0 });
+    const auto spenders1a = query.to_spenders({ test::block1a.transactions_ptr()->front()->hash(false), 1 });
     BOOST_REQUIRE_EQUAL(spenders0a, expected0);
     BOOST_REQUIRE_EQUAL(spenders1a, expected1);
-    BOOST_REQUIRE(query.to_spenders({ block2a.transactions_ptr()->front()->hash(false), 0 }).empty());
-    BOOST_REQUIRE(query.to_spenders({ block2a.transactions_ptr()->back()->hash(false), 0 }).empty());
-    BOOST_REQUIRE(query.to_spenders({ tx4.hash(false), 0 }).empty());
-    BOOST_REQUIRE(query.to_spenders({ tx4.hash(false), 1 }).empty()); // n/a, only one output
+    BOOST_REQUIRE(query.to_spenders({ test::block2a.transactions_ptr()->front()->hash(false), 0 }).empty());
+    BOOST_REQUIRE(query.to_spenders({ test::block2a.transactions_ptr()->back()->hash(false), 0 }).empty());
+    BOOST_REQUIRE(query.to_spenders({ test::tx4.hash(false), 0 }).empty());
+    BOOST_REQUIRE(query.to_spenders({ test::tx4.hash(false), 1 }).empty()); // n/a, only one output
     BOOST_REQUIRE(query.to_spenders({ system::null_hash, 0xffffffff }).empty());
 
     BOOST_REQUIRE(query.to_spenders(0x00).empty());
