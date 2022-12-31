@@ -195,7 +195,7 @@ if (with-tests)
     add_executable( libbitcoin-database-test
         "../../test/error.cpp"
         "../../test/main.cpp"
-        "../../test/query.cpp"
+        "../../test/query_archival.cpp"
         "../../test/query_initialization.cpp"
         "../../test/query_translation.cpp"
         "../../test/settings.cpp"

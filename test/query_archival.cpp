@@ -19,17 +19,17 @@
 #include "test.hpp"
 #include "mocks/chunk_store.hpp"
 
-struct query_setup_fixture
+struct query_archival_setup_fixture
 {
-    DELETE4(query_setup_fixture);
+    DELETE4(query_archival_setup_fixture);
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-        query_setup_fixture() NOEXCEPT
+    query_archival_setup_fixture() NOEXCEPT
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
 
-    ~query_setup_fixture() NOEXCEPT
+    ~query_archival_setup_fixture() NOEXCEPT
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
@@ -37,7 +37,7 @@ struct query_setup_fixture
     BC_POP_WARNING()
 };
 
-BOOST_FIXTURE_TEST_SUITE(query_tests, query_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(query_archival_tests, query_archival_setup_fixture)
 
 using query_accessor = query<store<test::chunk_storage>>;
 const auto genesis = system::settings{ system::chain::selection::mainnet }.genesis_block;
@@ -48,8 +48,10 @@ constexpr database::context context
     0x21222324  // mtp
 };
 
+// archival (natural-keyed)
+
 // slow test (mmap)
-BOOST_AUTO_TEST_CASE(query__set_header__mmap_get_header__expected)
+BOOST_AUTO_TEST_CASE(query_archival__set_header__mmap_get_header__expected)
 {
     constexpr auto parent = system::null_hash;
     constexpr auto merkle_root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
@@ -70,6 +72,8 @@ BOOST_AUTO_TEST_CASE(query__set_header__mmap_get_header__expected)
     store<map> store1{ settings1 };
     query<store<map>> query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
+
+    // must open/close mmap
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
     BOOST_REQUIRE(query1.set(header, context));
 
@@ -80,8 +84,8 @@ BOOST_AUTO_TEST_CASE(query__set_header__mmap_get_header__expected)
     BOOST_REQUIRE(pointer);
     BOOST_REQUIRE(*pointer == header);
 
+    // must open/close mmap
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
-
     BOOST_REQUIRE_EQUAL(element1.ctx.height, system::mask_left(context.height, byte_bits));
     BOOST_REQUIRE_EQUAL(element1.ctx.flags, context.flags);
     BOOST_REQUIRE_EQUAL(element1.ctx.mtp, context.mtp);
@@ -93,7 +97,7 @@ BOOST_AUTO_TEST_CASE(query__set_header__mmap_get_header__expected)
     BOOST_REQUIRE_EQUAL(element1.nonce, header.nonce());
 }
 
-BOOST_AUTO_TEST_CASE(query__set_header__default__expected)
+BOOST_AUTO_TEST_CASE(query_archival__set_header__is_header__expected)
 {
     constexpr auto merkle_root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
     constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
@@ -137,8 +141,12 @@ BOOST_AUTO_TEST_CASE(query__set_header__default__expected)
     test::chunk_store store1{ settings1 };
     query_accessor query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
+
+    // store open/close flushes record count to head.
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
+    BOOST_REQUIRE(!query1.is_header(header.hash()));
     BOOST_REQUIRE(query1.set(header, context));
+    BOOST_REQUIRE(query1.is_header(header.hash()));
     table::header::record element1{};
     BOOST_REQUIRE(store1.header.get(query1.to_header(block_hash), element1));
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
@@ -156,60 +164,7 @@ BOOST_AUTO_TEST_CASE(query__set_header__default__expected)
     BOOST_REQUIRE_EQUAL(element1.nonce, header.nonce());
 }
 
-BOOST_AUTO_TEST_CASE(query__get_header__default__expected)
-{
-    constexpr auto root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
-    constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
-    const system::chain::header header
-    {
-        0x31323334, // version
-        system::null_hash, // previous_block_hash
-        root,       // merkle_root
-        0x41424344, // timestamp
-        0x51525354, // bits
-        0x61626364  // nonce
-    };
-    const auto expected_header_head = system::base16_chunk(
-        "010000" // record count
-        "ffffff" // bucket[0]...
-        "000000" // pk->
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff");
-    const auto expected_header_body = system::base16_chunk(
-        "ffffff"   // next->
-        "85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2" // sk (block.hash)
-        "14131211" // flags
-        "040302"   // height
-        "24232221" // mtp
-        "ffffff"   // previous_block_hash (header_fk - not found)
-        "34333231" // version
-        "44434241" // timestamp
-        "54535251" // bits
-        "64636261" // nonce
-        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); // merkle_root
-
-    settings settings1{};
-    settings1.header_buckets = 10;
-    settings1.dir = TEST_DIRECTORY;
-    test::chunk_store store1{ settings1 };
-    query_accessor query1{ store1 };
-    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
-    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
-
-    store1.header_head() = expected_header_head;
-    store1.header_body() = expected_header_body;
-    const auto pointer1 = query1.get_header(query1.to_header(block_hash));
-    BOOST_REQUIRE(pointer1);
-    BOOST_REQUIRE(*pointer1 == header);
-}
-
-BOOST_AUTO_TEST_CASE(query__set_tx__empty__expected)
+BOOST_AUTO_TEST_CASE(query_archival__set_tx__empty__expected)
 {
     const system::chain::transaction tx{};
     const auto expected_head4_array = system::base16_chunk("00000000");
@@ -238,6 +193,8 @@ BOOST_AUTO_TEST_CASE(query__set_tx__empty__expected)
     test::chunk_store store1{ settings1 };
     query_accessor query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
+
+    // store open/close flushes record count to heads.
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
     BOOST_REQUIRE(!query1.set(tx));
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
@@ -253,7 +210,7 @@ BOOST_AUTO_TEST_CASE(query__set_tx__empty__expected)
     BOOST_REQUIRE(store1.puts_body().empty());
 }
 
-BOOST_AUTO_TEST_CASE(query__set_tx__null_input__expected)
+BOOST_AUTO_TEST_CASE(query_archival__set_tx__null_input__expected)
 {
     using namespace system::chain;
     const transaction tx
@@ -349,7 +306,7 @@ BOOST_AUTO_TEST_CASE(query__set_tx__null_input__expected)
     BOOST_REQUIRE_EQUAL(store1.puts_body(), expected_puts_body);
 }
 
-BOOST_AUTO_TEST_CASE(query__set_tx__get_tx__expected)
+BOOST_AUTO_TEST_CASE(query_archival__set_tx__get_tx__expected)
 {
     using namespace system::chain;
     const transaction tx
@@ -468,8 +425,10 @@ BOOST_AUTO_TEST_CASE(query__set_tx__get_tx__expected)
     test::chunk_store store1{ settings1 };
     query_accessor query1{ store1 };
     BOOST_REQUIRE_EQUAL(store1.create(), error::success);
-    BOOST_REQUIRE_EQUAL(store1.open(), error::success);;
+    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
+    BOOST_REQUIRE(!query1.is_tx(tx.hash(false)));
     BOOST_REQUIRE(query1.set(tx));
+    BOOST_REQUIRE(query1.is_tx(tx.hash(false)));
 
     const auto pointer1 = query1.get_tx(query1.to_tx(tx_hash));
     BOOST_REQUIRE(pointer1);
@@ -489,7 +448,7 @@ BOOST_AUTO_TEST_CASE(query__set_tx__get_tx__expected)
     BOOST_REQUIRE_EQUAL(store1.puts_body(), expected_puts_body);
 }
 
-BOOST_AUTO_TEST_CASE(query__set_block__get_block__expected)
+BOOST_AUTO_TEST_CASE(query_archival__set_block__get_block__expected)
 {
     const auto genesis_header_head = system::base16_chunk(
         "010000"       // record count
@@ -593,7 +552,9 @@ BOOST_AUTO_TEST_CASE(query__set_block__get_block__expected)
     BOOST_REQUIRE_EQUAL(store1.open(), error::success);
 
     // Set header/tx/association.
+    BOOST_REQUIRE(!query1.is_block(genesis.hash()));
     BOOST_REQUIRE(query1.set(genesis, context));
+    BOOST_REQUIRE(query1.is_block(genesis.hash()));
 
     // Verify idempotentcy (these do not change store state).
     BOOST_REQUIRE(query1.set(genesis.header(), context));
@@ -632,7 +593,7 @@ BOOST_AUTO_TEST_CASE(query__set_block__get_block__expected)
     BOOST_REQUIRE_EQUAL(hashes, genesis.transaction_hashes(false));
 }
 
-BOOST_AUTO_TEST_CASE(query__set_txs__get_block__expected)
+BOOST_AUTO_TEST_CASE(query_archival__set_txs__get_block__expected)
 {
     settings settings1{};
     settings1.header_buckets = 5;
@@ -656,7 +617,73 @@ BOOST_AUTO_TEST_CASE(query__set_txs__get_block__expected)
     BOOST_REQUIRE(*pointer1 == genesis);
 }
 
-BOOST_AUTO_TEST_CASE(query__get_txs__not_found__empty)
+BOOST_AUTO_TEST_CASE(query_archival__populate__null_prevout__false)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(genesis));
+    BOOST_REQUIRE(!query.populate(*genesis.inputs_ptr()->front()));
+}
+
+// archival (foreign-keyed)
+
+BOOST_AUTO_TEST_CASE(query_archival__get_header__default__expected)
+{
+    constexpr auto root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
+    constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
+    const system::chain::header header
+    {
+        0x31323334, // version
+        system::null_hash, // previous_block_hash
+        root,       // merkle_root
+        0x41424344, // timestamp
+        0x51525354, // bits
+        0x61626364  // nonce
+    };
+    const auto expected_header_head = system::base16_chunk(
+        "010000" // record count
+        "ffffff" // bucket[0]...
+        "000000" // pk->
+        "ffffff"
+        "ffffff"
+        "ffffff"
+        "ffffff"
+        "ffffff"
+        "ffffff"
+        "ffffff"
+        "ffffff");
+    const auto expected_header_body = system::base16_chunk(
+        "ffffff"   // next->
+        "85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2" // sk (block.hash)
+        "14131211" // flags
+        "040302"   // height
+        "24232221" // mtp
+        "ffffff"   // previous_block_hash (header_fk - not found)
+        "34333231" // version
+        "44434241" // timestamp
+        "54535251" // bits
+        "64636261" // nonce
+        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); // merkle_root
+
+    settings settings1{};
+    settings1.header_buckets = 10;
+    settings1.dir = TEST_DIRECTORY;
+    test::chunk_store store1{ settings1 };
+    query_accessor query1{ store1 };
+    BOOST_REQUIRE_EQUAL(store1.create(), error::success);
+    BOOST_REQUIRE_EQUAL(store1.open(), error::success);
+
+    store1.header_head() = expected_header_head;
+    store1.header_body() = expected_header_body;
+    const auto pointer1 = query1.get_header(query1.to_header(block_hash));
+    BOOST_REQUIRE(pointer1);
+    BOOST_REQUIRE(*pointer1 == header);
+}
+
+BOOST_AUTO_TEST_CASE(query_archival__get_txs__not_found__empty)
 {
     settings settings1{};
     settings1.dir = TEST_DIRECTORY;
@@ -668,7 +695,7 @@ BOOST_AUTO_TEST_CASE(query__get_txs__not_found__empty)
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(query__get_input__not_found__nullptr)
+BOOST_AUTO_TEST_CASE(query_archival__get_input__not_found__nullptr)
 {
     settings settings1{};
     settings1.dir = TEST_DIRECTORY;
@@ -680,7 +707,7 @@ BOOST_AUTO_TEST_CASE(query__get_input__not_found__nullptr)
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(query__get_input__genesis__expected)
+BOOST_AUTO_TEST_CASE(query_archival__get_input__genesis__expected)
 {
     settings settings1{};
     settings1.header_buckets = 5;
@@ -701,7 +728,7 @@ BOOST_AUTO_TEST_CASE(query__get_input__genesis__expected)
     BOOST_REQUIRE(*input == *tx->inputs_ptr()->front());
 }
 
-BOOST_AUTO_TEST_CASE(query__get_output__not_found__nullptr)
+BOOST_AUTO_TEST_CASE(query_archival__get_output__not_found__nullptr)
 {
     settings settings1{};
     settings1.dir = TEST_DIRECTORY;
@@ -713,7 +740,7 @@ BOOST_AUTO_TEST_CASE(query__get_output__not_found__nullptr)
     BOOST_REQUIRE_EQUAL(store1.close(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(query__get_output__genesis__expected)
+BOOST_AUTO_TEST_CASE(query_archival__get_output__genesis__expected)
 {
     settings settings1{};
     settings1.header_buckets = 5;
@@ -735,7 +762,7 @@ BOOST_AUTO_TEST_CASE(query__get_output__genesis__expected)
     BOOST_REQUIRE(*output1 == *tx->outputs_ptr()->front());
 }
 
-BOOST_AUTO_TEST_CASE(query__get_spenders__not_found__empty)
+BOOST_AUTO_TEST_CASE(query_archival__get_spenders__not_found__empty)
 {
     settings settings1{};
     settings1.dir = TEST_DIRECTORY;

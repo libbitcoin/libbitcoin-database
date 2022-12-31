@@ -534,7 +534,8 @@ inline bool CLASS::populate(const input& input) NOEXCEPT
 {
     // False return could be a suppressed serial fail (fault).
     // False return (and nullptr assigned) implies prevout not found (ok).
-    return ((input.prevout = get_output(input.point())));
+    input.prevout = get_output(input.point());
+    return input.prevout != nullptr;
 }
 
 TEMPLATE

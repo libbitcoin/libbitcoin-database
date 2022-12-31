@@ -81,7 +81,7 @@
     <ClCompile Include="..\..\..\..\test\primitives\manager.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query.cpp">
+    <ClCompile Include="..\..\..\..\test\query_archival.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\query_initialization.cpp">

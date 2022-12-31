@@ -57,7 +57,7 @@ test_libbitcoin_database_test_LDADD = src/libbitcoin-database.la ${boost_unit_te
 test_libbitcoin_database_test_SOURCES = \
     test/error.cpp \
     test/main.cpp \
-    test/query.cpp \
+    test/query_archival.cpp \
     test/query_initialization.cpp \
     test/query_translation.cpp \
     test/settings.cpp \

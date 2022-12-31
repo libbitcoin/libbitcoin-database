@@ -85,7 +85,7 @@
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\manager.cpp" />
-    <ClCompile Include="..\..\..\..\test\query.cpp" />
+    <ClCompile Include="..\..\..\..\test\query_archival.cpp" />
     <ClCompile Include="..\..\..\..\test\query_initialization.cpp" />
     <ClCompile Include="..\..\..\..\test\query_translation.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
