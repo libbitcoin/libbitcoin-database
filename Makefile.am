@@ -79,7 +79,9 @@ test_libbitcoin_database_test_SOURCES = \
     test/primitives/linkage.cpp \
     test/primitives/manager.cpp \
     test/query/archival.cpp \
+    test/query/confirmation.cpp \
     test/query/initialization.cpp \
+    test/query/optional.cpp \
     test/query/translation.cpp \
     test/query/validation.cpp \
     test/tables/archives/header.cpp \

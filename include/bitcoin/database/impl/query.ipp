@@ -1488,7 +1488,7 @@ bool CLASS::is_mature(const input_link& link, size_t height) NOEXCEPT
         return false;
 
     //*************************************************************************
-    // CONSENSUS: Genesis coinbase treated as forever immature (satoshi bug).
+    // CONSENSUS: Genesis coinbase treated as forever immature.
     //*************************************************************************
     using namespace system;
     return !is_zero(prevout_height) &&
@@ -1554,22 +1554,6 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::initialize(const block& genesis) NOEXCEPT
-{
-    BC_ASSERT(!is_initialized());
-
-    // ========================================================================
-    const auto scope = store_.get_transactor();
-
-    if (!set(genesis, {}))
-        return false;
-
-    const auto link = to_header(genesis.hash());
-    return push_candidate(link) && push_confirmed(link);
-    // ========================================================================
-}
-
-TEMPLATE
 bool CLASS::push_confirmed(const header_link& link) NOEXCEPT
 {
     // ========================================================================
@@ -1622,6 +1606,22 @@ bool CLASS::pop_candidate() NOEXCEPT
 
     // False return implies allocation failure (fault).
     return store_.confirmed.truncate(sub1(top));
+    // ========================================================================
+}
+
+TEMPLATE
+bool CLASS::initialize(const block& genesis) NOEXCEPT
+{
+    BC_ASSERT(!is_initialized());
+
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    if (!set(genesis, {}))
+        return false;
+
+    const auto link = to_header(genesis.hash());
+    return push_candidate(link) && push_confirmed(link);
     // ========================================================================
 }
 

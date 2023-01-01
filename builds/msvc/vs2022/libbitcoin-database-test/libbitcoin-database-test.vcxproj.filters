@@ -87,7 +87,13 @@
     <ClCompile Include="..\..\..\..\test\query\archival.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\confirmation.cpp">
+      <Filter>src\query</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\initialization.cpp">
+      <Filter>src\query</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\optional.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\translation.cpp">

@@ -193,75 +193,56 @@ public:
     bool set_tx_connected(const tx_link& link, const context& ctx,
         uint64_t fee, size_t sigops) NOEXCEPT;
 
-    /// Block status (foreign-keyed).
-    /// -----------------------------------------------------------------------
-
-    inline bool is_associated(const header_link& link) NOEXCEPT;
-    inline bool is_candidate_block(const header_link& link) NOEXCEPT;
-    inline bool is_confirmed_block(const header_link& link) NOEXCEPT;
-    inline bool is_confirmed_tx(const tx_link& link) NOEXCEPT;
-    inline bool is_confirmed_input(const input_link& link) NOEXCEPT;
-    inline bool is_confirmed_output(const output_link& link) NOEXCEPT;
-
     /// Confirmation (foreign-keyed).
     /// -----------------------------------------------------------------------
-    /// These rely on strong, a confirmation optimization table.
     /// Set strong before evaluation or current block will be missed.
-    /// Inputs must be validated, as prevout index existence is not confirmed.
+    /// False set implies fault if link associated, push/init implies fault.
+
+    bool is_associated(const header_link& link) NOEXCEPT;
+    bool is_candidate_block(const header_link& link) NOEXCEPT;
+    bool is_confirmed_block(const header_link& link) NOEXCEPT;
+    bool is_confirmed_tx(const tx_link& link) NOEXCEPT;
+    bool is_confirmed_input(const input_link& link) NOEXCEPT;
+    bool is_confirmed_output(const output_link& link) NOEXCEPT;
 
     bool is_spent(const input_link& link) NOEXCEPT;
     bool is_mature(const input_link& link, size_t height) NOEXCEPT;
     bool is_confirmable_block(const header_link& link, size_t height) NOEXCEPT;
 
-    /// False implies fault if link associated.
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
 
-    /// False implies fault.
-    bool initialize(const block& genesis) NOEXCEPT;
     bool push_confirmed(const header_link& link) NOEXCEPT;
     bool push_candidate(const header_link& link) NOEXCEPT;
     bool pop_confirmed() NOEXCEPT;
     bool pop_candidate() NOEXCEPT;
+    bool initialize(const block& genesis) NOEXCEPT;
 
-    /// Address (natural-keyed).
+    /// Optional Tables.
     /// -----------------------------------------------------------------------
 
-    /// Terminal implies not found.
+    /// Address (natural-keyed).
+    /// Terminal implies not found, false implies fault.
     hash_digest address_hash(const output& output) NOEXCEPT;
     output_link get_address(const hash_digest& key) NOEXCEPT;
-
-    /// False implies fault.
     bool set_address(const hash_digest& key, const output_link& link) NOEXCEPT;
     bool set_address(const output& output) NOEXCEPT;
 
     /// Neutrino (foreign-keyed).
-    /// -----------------------------------------------------------------------
-
-    /// Empty/null_hash implies not found.
+    /// Empty/null_hash implies not found, false implies fault.
     filter get_filter(const header_link& link) NOEXCEPT;
     hash_digest get_filter_head(const header_link& link) NOEXCEPT;
-
-    /// False implies fault.
     bool set_filter(const header_link& link, const hash_digest& head,
         const filter& body) NOEXCEPT;
 
     /// Buffer (foreign-keyed).
-    /// -----------------------------------------------------------------------
-
-    /// Null implies not found.
+    /// Null implies not found, false implies fault.
     transaction::cptr get_buffered_tx(const tx_link& link) NOEXCEPT;
-
-    /// False implies fault.
     bool set_buffered_tx(const tx_link& link, const transaction& tx) NOEXCEPT;
 
     /// Bootstrap (natural-keyed).
-    /// -----------------------------------------------------------------------
-
-    /// Empty implies empty table.
+    /// Empty implies empty table, false implies height exceeds confirmed top.
     hashes get_bootstrap() NOEXCEPT;
-
-    /// False implies height exceeds confirmed top.
     bool set_bootstrap(size_t height) NOEXCEPT;
 
 protected:
