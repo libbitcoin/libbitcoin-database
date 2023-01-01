@@ -22,17 +22,20 @@
     <Filter Include="src\primitives">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables">
+    <Filter Include="src\query">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\archives">
+    <Filter Include="src\tables">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000006}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\caches">
+    <Filter Include="src\tables\archives">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000007}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\indexes">
+    <Filter Include="src\tables\caches">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000008}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\tables\indexes">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000009}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -81,14 +84,17 @@
     <ClCompile Include="..\..\..\..\test\primitives\manager.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query_archival.cpp">
-      <Filter>src</Filter>
+    <ClCompile Include="..\..\..\..\test\query\archival.cpp">
+      <Filter>src\query</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query_initialization.cpp">
-      <Filter>src</Filter>
+    <ClCompile Include="..\..\..\..\test\query\initialization.cpp">
+      <Filter>src\query</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query_translation.cpp">
-      <Filter>src</Filter>
+    <ClCompile Include="..\..\..\..\test\query\translation.cpp">
+      <Filter>src\query</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\validation.cpp">
+      <Filter>src\query</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\settings.cpp">
       <Filter>src</Filter>

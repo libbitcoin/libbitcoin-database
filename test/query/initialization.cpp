@@ -16,9 +16,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "test.hpp"
-#include "mocks/blocks.hpp"
-#include "mocks/chunk_store.hpp"
+#include "../test.hpp"
+#include "../mocks/blocks.hpp"
+#include "../mocks/chunk_store.hpp"
 
 struct query_initialization_setup_fixture
 {

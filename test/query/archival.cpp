@@ -16,9 +16,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "test.hpp"
-#include "mocks/blocks.hpp"
-#include "mocks/chunk_store.hpp"
+#include "../test.hpp"
+#include "../mocks/blocks.hpp"
+#include "../mocks/chunk_store.hpp"
 
 struct query_archival_setup_fixture
 {
@@ -284,7 +284,9 @@ BOOST_AUTO_TEST_CASE(query_archival__set_link_tx__null_input__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
     BOOST_REQUIRE_EQUAL(store.open(), error::success);
-    BOOST_REQUIRE(!query.set_link(tx).is_terminal());
+    const auto link = query.set_link(tx);
+    BOOST_REQUIRE(!link.is_terminal());
+    BOOST_REQUIRE_EQUAL(query.set_link(tx), link);
     BOOST_REQUIRE_EQUAL(store.close(), error::success);
     BOOST_REQUIRE_EQUAL(store.tx_head(), expected_tx_head);
     BOOST_REQUIRE_EQUAL(store.point_head(), expected_point_head);
@@ -585,7 +587,7 @@ BOOST_AUTO_TEST_CASE(query_archival__set_block__get_block__expected)
     BOOST_REQUIRE_EQUAL(hashes, test::genesis.transaction_hashes(false));
 }
 
-BOOST_AUTO_TEST_CASE(query_archival__set_txs__get_block__expected)
+BOOST_AUTO_TEST_CASE(query_archival__set_links__get_block__expected)
 {
     settings settings{};
     settings.header_buckets = 5;
@@ -603,6 +605,31 @@ BOOST_AUTO_TEST_CASE(query_archival__set_txs__get_block__expected)
     BOOST_REQUIRE(query.set(test::genesis.header(), test::context));
     BOOST_REQUIRE(query.set(*test::genesis.transactions_ptr()->front()));
     BOOST_REQUIRE(query.set(query.to_header(test::genesis.hash()), tx_links{ 0 }));
+
+    const auto pointer1 = query.get_block(query.to_header(test::genesis.hash()));
+    BOOST_REQUIRE(pointer1);
+    BOOST_REQUIRE(*pointer1 == test::genesis);
+}
+
+BOOST_AUTO_TEST_CASE(query_archival__set_hashes__get_block__expected)
+{
+    settings settings{};
+    settings.header_buckets = 5;
+    settings.tx_buckets = 5;
+    settings.point_buckets = 5;
+    settings.input_buckets = 5;
+    settings.txs_buckets = 10;
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE_EQUAL(store.open(), error::success);
+
+    // Assemble block.
+    BOOST_REQUIRE(query.set(test::genesis.header(), test::context));
+    BOOST_REQUIRE(query.set(*test::genesis.transactions_ptr()->front()));
+    const auto tx_hashes = hashes{ test::genesis.transactions_ptr()->front()->hash(false) };
+    BOOST_REQUIRE(query.set(query.to_header(test::genesis.hash()), tx_hashes));
 
     const auto pointer1 = query.get_block(query.to_header(test::genesis.hash()));
     BOOST_REQUIRE(pointer1);
@@ -674,6 +701,58 @@ BOOST_AUTO_TEST_CASE(query_archival__populate__partial_prevouts__false)
 
 // archival (foreign-keyed)
 
+BOOST_AUTO_TEST_CASE(query_archival__get_header__invalid_parent__expected)
+{
+    constexpr auto root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
+    constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
+    const system::chain::header header
+    {
+        0x31323334, // version
+        system::null_hash, // previous_block_hash
+        root,       // merkle_root
+        0x41424344, // timestamp
+        0x51525354, // bits
+        0x61626364  // nonce
+    };
+    const auto expected_header_head = system::base16_chunk(
+        "010000" // record count
+        "ffffff" // bucket[0]...
+        "000000" // pk->
+        "ffffff"
+        "ffffff"
+        "ffffff"
+        "ffffff"
+        "ffffff"
+        "ffffff"
+        "ffffff"
+        "ffffff");
+    const auto expected_header_body = system::base16_chunk(
+        "ffffff"   // next->
+        "85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2" // sk (block.hash)
+        "14131211" // flags
+        "040302"   // height
+        "24232221" // mtp
+        "424242"   // previous_block_hash (header_fk - invalid)
+        "34333231" // version
+        "44434241" // timestamp
+        "54535251" // bits
+        "64636261" // nonce
+        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); // merkle_root
+
+    settings settings{};
+    settings.header_buckets = 10;
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE_EQUAL(store.open(), error::success);
+
+    store.header_head() = expected_header_head;
+    store.header_body() = expected_header_body;
+    BOOST_REQUIRE(!query.get_header(query.to_header(block_hash)));
+    BOOST_REQUIRE(!query.get_header(header_link::terminal));
+}
+
 BOOST_AUTO_TEST_CASE(query_archival__get_header__default__expected)
 {
     constexpr auto root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
@@ -705,7 +784,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_header__default__expected)
         "14131211" // flags
         "040302"   // height
         "24232221" // mtp
-        "ffffff"   // previous_block_hash (header_fk - not found)
+        "ffffff"   // previous_block_hash (header_fk - terminal)
         "34333231" // version
         "44434241" // timestamp
         "54535251" // bits

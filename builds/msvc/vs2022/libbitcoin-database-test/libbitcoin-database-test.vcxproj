@@ -85,9 +85,10 @@
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\manager.cpp" />
-    <ClCompile Include="..\..\..\..\test\query_archival.cpp" />
-    <ClCompile Include="..\..\..\..\test\query_initialization.cpp" />
-    <ClCompile Include="..\..\..\..\test\query_translation.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\archival.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\initialization.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\translation.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\validation.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
     <ClCompile Include="..\..\..\..\test\store.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\header.cpp" />
@@ -148,6 +149,11 @@
     <Error Condition="!Exists('$(NuGetPackageRoot)secp256k1_vc143.0.1.0.20\build\native\secp256k1_vc143.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)secp256k1_vc143.0.1.0.20\build\native\secp256k1_vc143.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)boost_unit_test_framework-vc143.1.78.0\build\boost_unit_test_framework-vc143.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)boost_unit_test_framework-vc143.1.78.0\build\boost_unit_test_framework-vc143.targets'))" />
   </Target>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseSEXE|x64'">
+    <PostBuildEvent>
+      <Command>"$(TargetPath)" --run_test=query_archival_tests/query_archival__get_header__invalid_parent__expected --show_progress=no --build_info=yes</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ProjectReference Include="..\libbitcoin-database\libbitcoin-database.vcxproj">
       <Project>{62D7FBEE-4D52-424A-8938-59756E13D9F5}</Project>
