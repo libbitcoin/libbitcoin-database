@@ -161,7 +161,7 @@ hashes CLASS::get_locator(const heights& heights) NOEXCEPT
     return out;
 }
 
-// Key conversion. 
+// Key translation. 
 // ----------------------------------------------------------------------------
 
 // natural key (entry)
@@ -534,7 +534,8 @@ inline bool CLASS::populate(const input& input) NOEXCEPT
 {
     // False return could be a suppressed serial fail (fault).
     // False return (and nullptr assigned) implies prevout not found (ok).
-    return ((input.prevout = get_output(input.point())));
+    input.prevout = get_output(input.point());
+    return input.prevout != nullptr;
 }
 
 TEMPLATE
@@ -810,7 +811,7 @@ typename CLASS::inputs_ptr CLASS::get_spenders(const output_link& link) NOEXCEPT
         return {};
 
     // Empty return implies no spenders.
-    return get_spenders(to_tx(out.parent_fk), out.index);
+    return get_spenders(out.parent_fk, out.index);
 }
 
 TEMPLATE

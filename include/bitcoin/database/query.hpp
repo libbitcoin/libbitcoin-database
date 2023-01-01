@@ -70,7 +70,7 @@ public:
     hashes get_all_unassociated_above(size_t height) NOEXCEPT;
     hashes get_locator(const heights& heights) NOEXCEPT;
 
-    /// Key conversion.
+    /// Translation.
     /// -----------------------------------------------------------------------
 
     /// search key (entry)
@@ -161,9 +161,9 @@ public:
     inputs_ptr get_spenders(const tx_link& link, uint32_t output_index) NOEXCEPT;
 
     /// Terminal implies fault.
-    tx_link set_link(const transaction& tx) NOEXCEPT;
-    header_link set_link(const block& block, const context& ctx) NOEXCEPT;
     header_link set_link(const header& header, const context& ctx) NOEXCEPT;
+    header_link set_link(const block& block, const context& ctx) NOEXCEPT;
+    tx_link set_link(const transaction& tx) NOEXCEPT;
 
     /// False implies fault.
     bool set(const header_link& link, const hashes& hashes) NOEXCEPT;

@@ -85,9 +85,9 @@
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\manager.cpp" />
-    <ClCompile Include="..\..\..\..\test\query.cpp" />
-    <ClCompile Include="..\..\..\..\test\query_conversion.cpp" />
+    <ClCompile Include="..\..\..\..\test\query_archival.cpp" />
     <ClCompile Include="..\..\..\..\test\query_initialization.cpp" />
+    <ClCompile Include="..\..\..\..\test\query_translation.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
     <ClCompile Include="..\..\..\..\test\store.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\header.cpp" />
@@ -108,6 +108,7 @@
     <ClCompile Include="..\..\..\..\test\test.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\test\mocks\blocks.hpp" />
     <ClInclude Include="..\..\..\..\test\mocks\chunk_storage.hpp" />
     <ClInclude Include="..\..\..\..\test\mocks\chunk_store.hpp" />
     <ClInclude Include="..\..\..\..\test\mocks\map_store.hpp" />

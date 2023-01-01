@@ -81,13 +81,13 @@
     <ClCompile Include="..\..\..\..\test\primitives\manager.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query_conversion.cpp">
+    <ClCompile Include="..\..\..\..\test\query_archival.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\query_initialization.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query_translation.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\settings.cpp">
@@ -146,6 +146,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\test\mocks\blocks.hpp">
+      <Filter>src\mocks</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\test\mocks\chunk_storage.hpp">
       <Filter>src\mocks</Filter>
     </ClInclude>
