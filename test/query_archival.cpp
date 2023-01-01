@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(query_archival__set_header__mmap_get_header__expected)
     BOOST_REQUIRE_EQUAL(element1.nonce, header.nonce());
 }
 
-BOOST_AUTO_TEST_CASE(query_archival__set_header__is_header__expected)
+BOOST_AUTO_TEST_CASE(query_archival__set_link_header__is_header__expected)
 {
     constexpr auto merkle_root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
     constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(query_archival__set_header__is_header__expected)
     // store open/close flushes record count to head.
     BOOST_REQUIRE_EQUAL(store.open(), error::success);
     BOOST_REQUIRE(!query.is_header(header.hash()));
-    BOOST_REQUIRE(query.set(header, test::context));
+    BOOST_REQUIRE(!query.set_link(header, test::context).is_terminal());
     BOOST_REQUIRE(query.is_header(header.hash()));
     table::header::record element1{};
     BOOST_REQUIRE(store.header.get(query.to_header(block_hash), element1));
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(query_archival__set_tx__empty__expected)
     BOOST_REQUIRE(store.puts_body().empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_archival__set_tx__null_input__expected)
+BOOST_AUTO_TEST_CASE(query_archival__set_link_tx__null_input__expected)
 {
     using namespace system::chain;
     const transaction tx
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(query_archival__set_tx__null_input__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
     BOOST_REQUIRE_EQUAL(store.open(), error::success);
-    BOOST_REQUIRE(query.set(tx));
+    BOOST_REQUIRE(!query.set_link(tx).is_terminal());
     BOOST_REQUIRE_EQUAL(store.close(), error::success);
     BOOST_REQUIRE_EQUAL(store.tx_head(), expected_tx_head);
     BOOST_REQUIRE_EQUAL(store.point_head(), expected_point_head);
@@ -602,7 +602,7 @@ BOOST_AUTO_TEST_CASE(query_archival__set_txs__get_block__expected)
     // Assemble block.
     BOOST_REQUIRE(query.set(test::genesis.header(), test::context));
     BOOST_REQUIRE(query.set(*test::genesis.transactions_ptr()->front()));
-    BOOST_REQUIRE(query.set(query.to_header(test::genesis.hash()), test::genesis.transaction_hashes(false)));
+    BOOST_REQUIRE(query.set(query.to_header(test::genesis.hash()), tx_links{ 0 }));
 
     const auto pointer1 = query.get_block(query.to_header(test::genesis.hash()));
     BOOST_REQUIRE(pointer1);
@@ -650,8 +650,8 @@ BOOST_AUTO_TEST_CASE(query_archival__populate__partial_prevouts__false)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, test::context));
-    BOOST_REQUIRE(query.set(test::block2a, test::context));
+    BOOST_REQUIRE(!query.set_link(test::block1a, test::context).is_terminal());
+    BOOST_REQUIRE(!query.set_link(test::block2a, test::context).is_terminal());
     BOOST_REQUIRE(query.set(test::tx4));
 
     system::chain::block copy1{ test::block1a };
