@@ -811,7 +811,7 @@ typename CLASS::inputs_ptr CLASS::get_spenders(const output_link& link) NOEXCEPT
         return {};
 
     // Empty return implies no spenders.
-    return get_spenders(to_tx(out.parent_fk), out.index);
+    return get_spenders(out.parent_fk, out.index);
 }
 
 TEMPLATE
