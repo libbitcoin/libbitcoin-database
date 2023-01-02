@@ -174,7 +174,7 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Terminal implies fault if link verified/associated.
-    height_link get_block_height(const header_link& link) NOEXCEPT;
+    height_link get_header_height(const header_link& link) NOEXCEPT;
 
     /// error::unknown implies fault.
     code get_block_state(const header_link& link) NOEXCEPT;

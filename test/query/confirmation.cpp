@@ -40,6 +40,29 @@ struct query_confirmation_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(query_confirmation_tests, query_confirmation_setup_fixture)
 
+/////// These verify strong against confirmation height.
+////bool is_candidate_block(const header_link& link) NOEXCEPT;
+////bool is_confirmed_block(const header_link& link) NOEXCEPT;
+////bool is_confirmed_tx(const tx_link& link) NOEXCEPT;
+////bool is_confirmed_input(const input_link& link) NOEXCEPT;
+////bool is_confirmed_output(const output_link& link) NOEXCEPT;
+////
+/////// These rely on stong (use only for confirmation process).
+////bool is_spent(const input_link& link) NOEXCEPT;
+////bool is_mature(const input_link& link, size_t height) NOEXCEPT;
+////bool is_confirmable_block(const header_link& link, size_t height) NOEXCEPT;
+////
+/////// False implies fault if link associated.
+////bool set_strong(const header_link& link) NOEXCEPT;
+////bool set_unstrong(const header_link& link) NOEXCEPT;
+////
+/////// False implies fault.
+////bool initialize(const block& genesis) NOEXCEPT;
+////bool push_confirmed(const header_link& link) NOEXCEPT;
+////bool push_candidate(const header_link& link) NOEXCEPT;
+////bool pop_confirmed() NOEXCEPT;
+////bool pop_candidate() NOEXCEPT;
+
 BOOST_AUTO_TEST_CASE(query_confirmation_test)
 {
     BOOST_REQUIRE(true);

@@ -40,6 +40,30 @@ struct query_optional_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(query_optional_tests, query_optional_setup_fixture)
 
+/////// Address (natural-keyed).
+/////// Terminal implies not found, false implies fault.
+////hash_digest address_hash(const output& output) NOEXCEPT;
+////output_link get_address(const hash_digest& key) NOEXCEPT;
+////bool set_address(const hash_digest& key, const output_link& link) NOEXCEPT;
+////bool set_address(const output& output) NOEXCEPT;
+////
+/////// Neutrino (foreign-keyed).
+/////// Empty/null_hash implies not found, false implies fault.
+////filter get_filter(const header_link& link) NOEXCEPT;
+////hash_digest get_filter_head(const header_link& link) NOEXCEPT;
+////bool set_filter(const header_link& link, const hash_digest& head,
+////    const filter& body) NOEXCEPT;
+////
+/////// Buffer (foreign-keyed).
+/////// Null implies not found, false implies fault.
+////transaction::cptr get_buffered_tx(const tx_link& link) NOEXCEPT;
+////bool set_buffered_tx(const tx_link& link, const transaction& tx) NOEXCEPT;
+////
+/////// Bootstrap (natural-keyed).
+/////// Empty implies empty table, false implies height exceeds confirmed top.
+////hashes get_bootstrap() NOEXCEPT;
+////bool set_bootstrap(size_t height) NOEXCEPT;
+
 BOOST_AUTO_TEST_CASE(query_optional_test)
 {
     BOOST_REQUIRE(true);

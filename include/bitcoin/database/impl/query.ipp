@@ -1132,7 +1132,7 @@ inline bool CLASS::is_sufficient(const context& current,
 }
 
 TEMPLATE
-height_link CLASS::get_block_height(const header_link& link) NOEXCEPT
+height_link CLASS::get_header_height(const header_link& link) NOEXCEPT
 {
     // Terminal return implies invalid link or serial fail (fault if verified).
     table::header::record_height header{};
@@ -1149,14 +1149,14 @@ code CLASS::get_block_state(const header_link& link) NOEXCEPT
     if (!is_associated(link))
         return error::unassociated;
 
-    // not_found return implies no validation record (ok).
+    // unvalidated return implies no validation record (ok).
     const auto fk = store_.validated_bk.first(link);
     if (fk.is_terminal())
-        return error::not_found;
+        return error::unvalidated;
 
     // unknown return implies serial fail (fault).
     table::validated_bk::slab_get_code valid{};
-    if (store_.validated_bk.get(fk, valid))
+    if (!store_.validated_bk.get(fk, valid))
         return error::unknown;
 
     // Other code implies validation record found (ok).
@@ -1170,14 +1170,14 @@ code CLASS::get_block_state(uint64_t& fees, const header_link& link) NOEXCEPT
     if (!is_associated(link))
         return error::unassociated;
 
-    // not_found return implies no validation record (ok).
+    // unvalidated return implies no validation record (ok).
     const auto fk = store_.validated_bk.first(link);
     if (fk.is_terminal())
-        return error::not_found;
+        return error::unvalidated;
 
     // unknown return implies serial fail (fault).
     table::validated_bk::slab valid{};
-    if (store_.validated_bk.get(fk, valid))
+    if (!store_.validated_bk.get(fk, valid))
         return error::unknown;
 
     fees = valid.fees;
@@ -1189,10 +1189,10 @@ code CLASS::get_block_state(uint64_t& fees, const header_link& link) NOEXCEPT
 TEMPLATE
 code CLASS::get_tx_state(const tx_link& link, const context& ctx) NOEXCEPT
 {
-    // not_found return implies no validation records (ok).
+    // unvalidated return implies no validation records (ok).
     auto it = store_.validated_tx.it(link);
     if (it.self().is_terminal())
-        return error::not_found;
+        return error::unvalidated;
 
     // First (last pushed) with sufficient context controls state.
     table::validated_tx::slab_get_code valid{};
@@ -1208,18 +1208,18 @@ code CLASS::get_tx_state(const tx_link& link, const context& ctx) NOEXCEPT
     }
     while (it.advance());
 
-    // not_found return implies no validation record of matching context (ok).
-    return error::not_found;
+    // unvalidated return implies no validation record of matching context (ok).
+    return error::unvalidated;
 }
 
 TEMPLATE
 code CLASS::get_tx_state(uint64_t& fee, size_t& sigops, const tx_link& link,
     const context& ctx) NOEXCEPT
 {
-    // not_found return implies no validation records (ok).
+    // unvalidated return implies no validation records (ok).
     auto it = store_.validated_tx.it(link);
     if (it.self().is_terminal())
-        return error::not_found;
+        return error::unvalidated;
 
     // First (last pushed) with sufficient context controls state.
     table::validated_tx::slab valid{};
@@ -1239,8 +1239,8 @@ code CLASS::get_tx_state(uint64_t& fee, size_t& sigops, const tx_link& link,
     }
     while (it.advance());
 
-    // not_found return implies no validation record of matching context (ok).
-    return error::not_found;
+    // unvalidated return implies no validation record of matching context (ok).
+    return error::unvalidated;
 }
 
 TEMPLATE
@@ -1250,7 +1250,7 @@ bool CLASS::set_block_preconfirmable(const header_link& link) NOEXCEPT
     const auto scope = store_.get_transactor();
 
     // False return implies allocation fail (fault).
-    return !store_.validated_bk.put(link, table::validated_bk::slab
+    return store_.validated_bk.put(link, table::validated_bk::slab
     {
         {},
         schema::block_state::preconfirmable,
@@ -1267,7 +1267,7 @@ bool CLASS::set_block_confirmable(const header_link& link,
     const auto scope = store_.get_transactor();
 
     // False return implies allocation fail (fault).
-    return !store_.validated_bk.put(link, table::validated_bk::slab
+    return store_.validated_bk.put(link, table::validated_bk::slab
     {
         {},
         schema::block_state::confirmable,
@@ -1283,7 +1283,7 @@ bool CLASS::set_block_unconfirmable(const header_link& link) NOEXCEPT
     const auto scope = store_.get_transactor();
 
     // False return implies allocation fail (fault).
-    return !store_.validated_bk.put(link, table::validated_bk::slab
+    return store_.validated_bk.put(link, table::validated_bk::slab
     {
         {},
         schema::block_state::unconfirmable,
@@ -1300,7 +1300,7 @@ bool CLASS::set_tx_preconnected(const tx_link& link,
     const auto scope = store_.get_transactor();
 
     // False return implies allocation fail (fault).
-    return !store_.validated_tx.put(link, table::validated_tx::slab
+    return store_.validated_tx.put(link, table::validated_tx::slab
     {
         {},
         ctx,
@@ -1322,7 +1322,7 @@ bool CLASS::set_tx_connected(const tx_link& link, const context& ctx,
     const auto scope = store_.get_transactor();
 
     // False return implies allocation fail (fault).
-    return !store_.validated_tx.put(link, table::validated_tx::slab
+    return store_.validated_tx.put(link, table::validated_tx::slab
     {
         {},
         ctx,
@@ -1341,7 +1341,7 @@ bool CLASS::set_tx_disconnected(const tx_link& link,
     const auto scope = store_.get_transactor();
 
     // False return implies allocation fail (fault).
-    return !store_.validated_tx.put(link, table::validated_tx::slab
+    return store_.validated_tx.put(link, table::validated_tx::slab
     {
         {},
         ctx,
@@ -1359,7 +1359,7 @@ TEMPLATE
 inline bool CLASS::is_candidate_block(const header_link& link) NOEXCEPT
 {
     // False return implies invalid link or serial fail (fault if verified).
-    const auto height = get_block_height(link);
+    const auto height = get_header_height(link);
     if (height.is_terminal())
         return false;
 
@@ -1376,7 +1376,7 @@ TEMPLATE
 inline bool CLASS::is_confirmed_block(const header_link& link) NOEXCEPT
 {
     // False return implies invalid link or serial fail (fault if verified).
-    const auto height = get_block_height(link);
+    const auto height = get_header_height(link);
     if (height.is_terminal())
         return false;
 
@@ -1483,7 +1483,7 @@ bool CLASS::is_mature(const input_link& link, size_t height) NOEXCEPT
 
     // Get the height of the block containing the coinbase.
     // Terminal return implies invalid link, serial fail or race (fault).
-    const auto prevout_height = get_block_height(header_fk);
+    const auto prevout_height = get_header_height(header_fk);
     if (prevout_height.is_terminal())
         return false;
 
@@ -1557,15 +1557,25 @@ TEMPLATE
 bool CLASS::initialize(const block& genesis) NOEXCEPT
 {
     BC_ASSERT(!is_initialized());
+    BC_ASSERT(genesis.transactions_ptr()->size() == one);
 
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    if (!set(genesis, {}))
+    const context ctx{};
+    if (!set(genesis, ctx))
         return false;
 
+    // Genesis block can have only null inputs.
+    const auto fees = 0u;
+    const auto sigops = 0u;
     const auto link = to_header(genesis.hash());
-    return push_candidate(link) && push_confirmed(link);
+
+    return set_strong(header_link{ 0 })
+        && set_tx_connected(tx_link{ 0 }, ctx, fees, sigops)
+        && set_block_confirmable(link, fees)
+        && push_candidate(link)
+        && push_confirmed(link);
     // ========================================================================
 }
 

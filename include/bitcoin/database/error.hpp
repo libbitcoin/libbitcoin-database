@@ -82,7 +82,7 @@ enum error_t
     block_preconfirmable,
     block_unconfirmable,
     unassociated,
-    not_found
+    unvalidated
 };
 
 // No current need for error_code equivalence mapping.
