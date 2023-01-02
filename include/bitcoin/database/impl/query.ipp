@@ -488,6 +488,13 @@ tx_links CLASS::to_transactions(const header_link& link) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+inline bool CLASS::is_associated(const header_link& link) NOEXCEPT
+{
+    // False return implies terminal or not associated (ok).
+    return !link.is_terminal() && store_.txs.exists(link);
+}
+
+TEMPLATE
 inline bool CLASS::is_header(const hash_digest& key) NOEXCEPT
 {
     // False return implies not archived (ok).
@@ -1349,13 +1356,6 @@ bool CLASS::set_tx_disconnected(const tx_link& link,
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-inline bool CLASS::is_associated(const header_link& link) NOEXCEPT
-{
-    // False return implies terminal or unassociated (ok).
-    return !link.is_terminal() && store_.txs.exists(link);
-}
-
-TEMPLATE
 inline bool CLASS::is_candidate_block(const header_link& link) NOEXCEPT
 {
     // False return implies invalid link or serial fail (fault if verified).
@@ -1554,6 +1554,22 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::initialize(const block& genesis) NOEXCEPT
+{
+    BC_ASSERT(!is_initialized());
+
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    if (!set(genesis, {}))
+        return false;
+
+    const auto link = to_header(genesis.hash());
+    return push_candidate(link) && push_confirmed(link);
+    // ========================================================================
+}
+
+TEMPLATE
 bool CLASS::push_confirmed(const header_link& link) NOEXCEPT
 {
     // ========================================================================
@@ -1606,22 +1622,6 @@ bool CLASS::pop_candidate() NOEXCEPT
 
     // False return implies allocation failure (fault).
     return store_.confirmed.truncate(sub1(top));
-    // ========================================================================
-}
-
-TEMPLATE
-bool CLASS::initialize(const block& genesis) NOEXCEPT
-{
-    BC_ASSERT(!is_initialized());
-
-    // ========================================================================
-    const auto scope = store_.get_transactor();
-
-    if (!set(genesis, {}))
-        return false;
-
-    const auto link = to_header(genesis.hash());
-    return push_candidate(link) && push_confirmed(link);
     // ========================================================================
 }
 

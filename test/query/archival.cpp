@@ -137,8 +137,10 @@ BOOST_AUTO_TEST_CASE(query_archival__set_link_header__is_header__expected)
     // store open/close flushes record count to head.
     BOOST_REQUIRE_EQUAL(store.open(), error::success);
     BOOST_REQUIRE(!query.is_header(header.hash()));
+    BOOST_REQUIRE(!query.is_associated(0));
     BOOST_REQUIRE(!query.set_link(header, test::context).is_terminal());
     BOOST_REQUIRE(query.is_header(header.hash()));
+    BOOST_REQUIRE(!query.is_associated(0));
     table::header::record element1{};
     BOOST_REQUIRE(store.header.get(query.to_header(block_hash), element1));
     BOOST_REQUIRE_EQUAL(store.close(), error::success);

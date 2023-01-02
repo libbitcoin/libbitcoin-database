@@ -120,6 +120,7 @@ public:
     /// -----------------------------------------------------------------------
 
     /// False implies fault if associated.
+    inline bool is_associated(const header_link& link) NOEXCEPT;
     inline bool is_header(const hash_digest& key) NOEXCEPT;
     inline bool is_block(const hash_digest& key) NOEXCEPT;
     inline bool is_tx(const hash_digest& key) NOEXCEPT;
@@ -195,28 +196,32 @@ public:
 
     /// Confirmation (foreign-keyed).
     /// -----------------------------------------------------------------------
-    /// Set strong before evaluation or current block will be missed.
+    /// Tx->block association relies on strong (confirmed or pending).
+    /// Set strong during confirmation process or current block will be missed.
     /// False set implies fault if link associated, push/init implies fault.
 
-    bool is_associated(const header_link& link) NOEXCEPT;
+    /// These verify strong against confirmation height.
     bool is_candidate_block(const header_link& link) NOEXCEPT;
     bool is_confirmed_block(const header_link& link) NOEXCEPT;
     bool is_confirmed_tx(const tx_link& link) NOEXCEPT;
     bool is_confirmed_input(const input_link& link) NOEXCEPT;
     bool is_confirmed_output(const output_link& link) NOEXCEPT;
 
+    /// These rely on stong (use only for confirmation process).
     bool is_spent(const input_link& link) NOEXCEPT;
     bool is_mature(const input_link& link, size_t height) NOEXCEPT;
     bool is_confirmable_block(const header_link& link, size_t height) NOEXCEPT;
 
+    /// False implies fault if link associated.
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
 
+    /// False implies fault.
+    bool initialize(const block& genesis) NOEXCEPT;
     bool push_confirmed(const header_link& link) NOEXCEPT;
     bool push_candidate(const header_link& link) NOEXCEPT;
     bool pop_confirmed() NOEXCEPT;
     bool pop_candidate() NOEXCEPT;
-    bool initialize(const block& genesis) NOEXCEPT;
 
     /// Optional Tables.
     /// -----------------------------------------------------------------------
