@@ -100,8 +100,8 @@ public:
 
     /// output to spenders (reverse navigation)
     /// Empty implies no spenders.
-    input_links to_spenders(const point& prevout) NOEXCEPT;
     input_links to_spenders(const output_link& link) NOEXCEPT;
+    input_links to_spenders(const point& prevout) NOEXCEPT;
     input_links to_spenders(const tx_link& link,
         uint32_t output_index) NOEXCEPT;
 
@@ -257,6 +257,7 @@ protected:
 
     /// Empty implies fault if link associated.
     inline txs_link to_txs(const header_link& link) NOEXCEPT;
+    input_links to_spenders(const table::input::search_key& key) NOEXCEPT;
 
     inline input_key make_foreign_point(const point& prevout) NOEXCEPT;
     inline code to_block_code(linkage<schema::code>::integer value) NOEXCEPT;
