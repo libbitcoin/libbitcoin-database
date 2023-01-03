@@ -38,8 +38,8 @@ struct input
 {
     using tx = linkage<schema::tx>;
     using ix = linkage<schema::index>;
-    using search_key = search<schema::input::sk>;
     using hash_map<schema::input>::hashmap;
+    using search_key = search<schema::input::sk>;
 
     /// Generate composite key.
     static constexpr search_key compose(tx::integer fk,
@@ -60,6 +60,12 @@ struct input
             system::byte<2>(index)
         };
     }
+
+    /// Generate null point composite key.
+    static constexpr search_key null_point()
+    {
+        return compose(tx::terminal, ix::terminal);
+    };
 
     struct slab
       : public schema::input

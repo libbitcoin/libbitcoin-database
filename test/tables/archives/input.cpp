@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(input__get_decomposed_sk__null_index__expected)
     BOOST_REQUIRE_EQUAL(element.point_index, 0xffffffff_u32);
 }
 
-BOOST_AUTO_TEST_CASE(input__it__pk__expected)
+BOOST_AUTO_TEST_CASE(input__it__key__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -195,6 +195,12 @@ BOOST_AUTO_TEST_CASE(input__it__pk__expected)
     auto it = instance.it(key);
     BOOST_REQUIRE_EQUAL(it.self(), slab0_size);
     BOOST_REQUIRE(!it.advance());
+}
+
+BOOST_AUTO_TEST_CASE(input__null_point__compose_terminals__equal)
+{
+    using in = table::input;
+    BOOST_REQUIRE_EQUAL(in::null_point(), in::compose(in::tx::terminal, in::ix::terminal));
 }
 
 // only_with_decomposed_sk
