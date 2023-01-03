@@ -1567,8 +1567,8 @@ bool CLASS::initialize(const block& genesis) NOEXCEPT
         return false;
 
     // Genesis block can have only null inputs.
-    const auto fees = 0u;
-    const auto sigops = 0u;
+    constexpr auto fees = 0u;
+    constexpr auto sigops = 0u;
     const auto link = to_header(genesis.hash());
 
     return set_strong(header_link{ 0 })
@@ -1607,7 +1607,8 @@ TEMPLATE
 bool CLASS::pop_confirmed() NOEXCEPT
 {
     // False return implies index not initialized (no genesis).
-    const auto top = get_top_confirmed();
+    using ix = table::transaction::ix::integer;
+    const auto top = system::possible_narrow_cast<ix>(get_top_confirmed());
     if (is_zero(top))
         return false;
 
@@ -1615,7 +1616,7 @@ bool CLASS::pop_confirmed() NOEXCEPT
     const auto scope = store_.get_transactor();
 
     // False return implies allocation failure (fault).
-    return store_.confirmed.truncate(sub1(top));
+    return store_.confirmed.truncate(top);
     // ========================================================================
 }
 
@@ -1623,7 +1624,8 @@ TEMPLATE
 bool CLASS::pop_candidate() NOEXCEPT
 {
     // False return implies index not initialized (no genesis).
-    const auto top = get_top_candidate();
+    using ix = table::transaction::ix::integer;
+    const auto top = system::possible_narrow_cast<ix>(get_top_candidate());
     if (is_zero(top))
         return false;
 
@@ -1631,7 +1633,7 @@ bool CLASS::pop_candidate() NOEXCEPT
     const auto scope = store_.get_transactor();
 
     // False return implies allocation failure (fault).
-    return store_.confirmed.truncate(sub1(top));
+    return store_.candidate.truncate(top);
     // ========================================================================
 }
 
