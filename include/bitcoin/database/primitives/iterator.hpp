@@ -32,13 +32,15 @@ template <typename Link, typename Key, size_t Size = max_size_t>
 class iterator
 {
 public:
-    /// Caller must keep key value in scope.
+    /// This advances to first match (or terminal).
     iterator(const memory_ptr& data, const Link& start,
         const Key& key) NOEXCEPT;
 
     /// Advance to and return next iterator.
     bool advance() NOEXCEPT;
-    Link self() NOEXCEPT;
+
+    /// Advance to next match and return false if terminal (not found).
+    const Link& self() const NOEXCEPT;
 
 protected:
     bool is_match() const NOEXCEPT;
@@ -50,7 +52,7 @@ private:
 
     // These are thread safe.
     const memory_ptr memory_;
-    const Key& key_;
+    const Key key_;
 
     // This is not thread safe.
     Link link_;

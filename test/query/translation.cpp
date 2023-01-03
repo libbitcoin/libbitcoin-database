@@ -458,8 +458,8 @@ BOOST_AUTO_TEST_CASE(query_translation__to_strong_by__set_strong__expected)
     BOOST_REQUIRE(query.set(test::block1, test::context));
     BOOST_REQUIRE(query.set(test::block2, test::context));
 
-    // Either not strong or not found.
-    BOOST_REQUIRE_EQUAL(query.to_strong_by(0), header_link::terminal);
+    // Either not strong or not found, except genesis.
+    BOOST_REQUIRE_EQUAL(query.to_strong_by(0), 0u);
     BOOST_REQUIRE_EQUAL(query.to_strong_by(1), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_strong_by(2), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_strong_by(3), header_link::terminal);
@@ -467,13 +467,12 @@ BOOST_AUTO_TEST_CASE(query_translation__to_strong_by__set_strong__expected)
     // push_candidate/push_confirmed has no effect.
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::genesis.hash())));
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::genesis.hash())));
-    BOOST_REQUIRE_EQUAL(query.to_strong_by(0), header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_strong_by(0), 0u);
     BOOST_REQUIRE_EQUAL(query.to_strong_by(1), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_strong_by(2), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_strong_by(3), header_link::terminal);
 
     // set_strong sets strong_by (only), and is idempotent.
-    BOOST_REQUIRE(query.set_strong(query.to_header(test::genesis.hash())));
     BOOST_REQUIRE(query.set_strong(query.to_header(test::genesis.hash())));
     BOOST_REQUIRE(query.set_strong(query.to_header(test::block1.hash())));
     BOOST_REQUIRE_EQUAL(query.to_strong_by(0), 0u);

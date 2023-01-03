@@ -28,7 +28,8 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 {
     // general
     { success, "success" },
-    { unknown, "unknown error" },
+    { unknown, "unknown element" },
+    { integrity, "integrity failure" },
 
     // memory map
     { open_open, "opening open file" },
@@ -75,7 +76,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { block_preconfirmable, "block preconfirmable" },
     { block_unconfirmable, "block unconfirmable" },
     { unassociated, "unassociated" },
-    { not_found, "not_found" }
+    { unvalidated, "unvalidated" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "database", "database code")

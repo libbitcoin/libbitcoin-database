@@ -88,6 +88,7 @@ Link CLASS::first(const Key& key) const NOEXCEPT
 TEMPLATE
 typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 {
+    // TODO: due to iterator design, input_sk is copied into iterator.
     return { manager_.get(), header_.top(key), key };
 }
 

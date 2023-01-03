@@ -32,6 +32,8 @@ CLASS::iterator(const memory_ptr& data, const Link& start,
     const Key& key) NOEXCEPT
   : memory_(data), key_(key), link_(start)
 {
+    if (!is_match())
+        advance();
 }
 
 TEMPLATE
@@ -48,11 +50,8 @@ bool CLASS::advance() NOEXCEPT
 }
 
 TEMPLATE
-Link CLASS::self() NOEXCEPT
+const Link& CLASS::self() const NOEXCEPT
 {
-    if (!is_match())
-        advance();
-
     return link_;
 }
 
