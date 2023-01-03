@@ -1154,10 +1154,10 @@ code CLASS::get_block_state(const header_link& link) NOEXCEPT
     if (fk.is_terminal())
         return error::unvalidated;
 
-    // unknown return implies serial fail (fault).
+    // integrity return implies serial fail (fault).
     table::validated_bk::slab_get_code valid{};
     if (!store_.validated_bk.get(fk, valid))
-        return error::unknown;
+        return error::integrity;
 
     // Other code implies validation record found (ok).
     return to_block_code(valid.code);
@@ -1175,10 +1175,10 @@ code CLASS::get_block_state(uint64_t& fees, const header_link& link) NOEXCEPT
     if (fk.is_terminal())
         return error::unvalidated;
 
-    // unknown return implies serial fail (fault).
+    // integrity return implies serial fail (fault).
     table::validated_bk::slab valid{};
     if (!store_.validated_bk.get(fk, valid))
-        return error::unknown;
+        return error::integrity;
 
     fees = valid.fees;
 
@@ -1198,9 +1198,9 @@ code CLASS::get_tx_state(const tx_link& link, const context& ctx) NOEXCEPT
     table::validated_tx::slab_get_code valid{};
     do
     {
-        // unknown return implies serial fail (fault).
+        // integrity return implies serial fail (fault).
         if (!store_.validated_tx.get(it.self(), valid))
-            return error::unknown;
+            return error::integrity;
 
         // Other code implies validation record found (ok).
         if (is_sufficient(ctx, valid.ctx))
@@ -1225,9 +1225,9 @@ code CLASS::get_tx_state(uint64_t& fee, size_t& sigops, const tx_link& link,
     table::validated_tx::slab valid{};
     do
     {
-        // unknown return implies serial fail (fault).
+        // integrity return implies serial fail (fault).
         if (!store_.validated_tx.get(it.self(), valid))
-            return error::unknown;
+            return error::integrity;
 
         // Other code implies validation record found (ok).
         if (is_sufficient(ctx, valid.ctx))

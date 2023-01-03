@@ -36,6 +36,7 @@ enum error_t
     // general
     success,
     unknown,
+    integrity,
 
     // memory map
     open_open,

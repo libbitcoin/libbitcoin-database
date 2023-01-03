@@ -28,7 +28,8 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 {
     // general
     { success, "success" },
-    { unknown, "unknown error" },
+    { unknown, "unknown element" },
+    { integrity, "integrity failure" },
 
     // memory map
     { open_open, "opening open file" },

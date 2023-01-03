@@ -208,6 +208,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_out_of_context__u
 {
     settings settings{};
     settings.dir = TEST_DIRECTORY;
+    settings.validated_tx_buckets = 1;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -220,8 +221,11 @@ BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_out_of_context__u
     size_t sigops{};
     constexpr context ctx{ 7, 8, 9 };
 
-    // Set default context, which does not match ctx.
-    BOOST_REQUIRE(query.set_tx_connected(1, context{}, 42, 24));
+    // Set a context which does not match ctx.
+    BOOST_REQUIRE(query.set_tx_connected(0, { 1, 5, 9 }, 0, 0));
+    BOOST_REQUIRE(query.set_tx_connected(1, { 2, 6, 0 }, 0, 0));
+    BOOST_REQUIRE(query.set_tx_connected(2, { 3, 7, 1 }, 0, 0));
+    BOOST_REQUIRE(query.set_tx_connected(3, { 4, 8, 2 }, 0, 0));
     BOOST_REQUIRE_EQUAL(query.get_tx_state(1, ctx), error::unvalidated);
     BOOST_REQUIRE_EQUAL(query.get_tx_state(fee, sigops, 1, ctx), error::unvalidated);
     BOOST_REQUIRE_EQUAL(fee, 0u);
@@ -232,6 +236,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_in_context__tx_co
 {
     settings settings{};
     settings.dir = TEST_DIRECTORY;
+    settings.validated_tx_buckets = 1;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -242,12 +247,17 @@ BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_in_context__tx_co
 
     uint64_t fee{};
     size_t sigops{};
-    const context ctx{ 7, 8, 9 };
     constexpr uint64_t expected_fee = 42;
     constexpr size_t expected_sigops = 24;
-    BOOST_REQUIRE(query.set_tx_connected(1, ctx, expected_fee, expected_sigops));
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(1, ctx), error::tx_connected);
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(fee, sigops, 1, ctx), error::tx_connected);
+    constexpr context ctx{ 7, 8, 9 };
+    BOOST_REQUIRE(query.set_tx_connected(0, ctx, 11, 12));
+    BOOST_REQUIRE(query.set_tx_connected(1, ctx, 13, 14));
+    BOOST_REQUIRE(query.set_tx_connected(2, ctx, expected_fee, expected_sigops));
+    BOOST_REQUIRE(query.set_tx_connected(2, { 1, 5, 9 }, 15, 16));
+    BOOST_REQUIRE(query.set_tx_connected(2, { 2, 6, 0 }, 17, 18));
+    BOOST_REQUIRE(query.set_tx_connected(3, ctx, 19, 20));
+    BOOST_REQUIRE_EQUAL(query.get_tx_state(2, ctx), error::tx_connected);
+    BOOST_REQUIRE_EQUAL(query.get_tx_state(fee, sigops, 2, ctx), error::tx_connected);
     BOOST_REQUIRE_EQUAL(fee, expected_fee);
     BOOST_REQUIRE_EQUAL(sigops, expected_sigops);
 }
@@ -266,10 +276,10 @@ BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_in_context__tx_pr
 
     uint64_t fee{};
     size_t sigops{};
-    const context ctx{ 7, 8, 9 };
-    BOOST_REQUIRE(query.set_tx_preconnected(2, ctx));
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(2, ctx), error::tx_preconnected);
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(fee, sigops, 2, ctx), error::tx_preconnected);
+    constexpr context ctx{ 7, 8, 9 };
+    BOOST_REQUIRE(query.set_tx_preconnected(3, ctx));
+    BOOST_REQUIRE_EQUAL(query.get_tx_state(3, ctx), error::tx_preconnected);
+    BOOST_REQUIRE_EQUAL(query.get_tx_state(fee, sigops, 3, ctx), error::tx_preconnected);
     BOOST_REQUIRE_EQUAL(fee, 0u);
     BOOST_REQUIRE_EQUAL(sigops, 0u);
 }
@@ -288,10 +298,10 @@ BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_in_context__tx_di
 
     uint64_t fee{};
     size_t sigops{};
-    const context ctx{ 7, 8, 9 };
-    BOOST_REQUIRE(query.set_tx_disconnected(3, ctx));
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(3, ctx), error::tx_disconnected);
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(fee, sigops, 3, ctx), error::tx_disconnected);
+    constexpr context ctx{ 7, 8, 9 };
+    BOOST_REQUIRE(query.set_tx_disconnected(4, ctx));
+    BOOST_REQUIRE_EQUAL(query.get_tx_state(4, ctx), error::tx_disconnected);
+    BOOST_REQUIRE_EQUAL(query.get_tx_state(fee, sigops, 4, ctx), error::tx_disconnected);
     BOOST_REQUIRE_EQUAL(fee, 0u);
     BOOST_REQUIRE_EQUAL(sigops, 0u);
 }
