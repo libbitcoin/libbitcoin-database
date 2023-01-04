@@ -100,8 +100,8 @@ public:
 
     /// output to spenders (reverse navigation)
     /// Empty implies no spenders.
-    input_links to_spenders(const point& prevout) NOEXCEPT;
     input_links to_spenders(const output_link& link) NOEXCEPT;
+    input_links to_spenders(const point& prevout) NOEXCEPT;
     input_links to_spenders(const tx_link& link,
         uint32_t output_index) NOEXCEPT;
 
@@ -196,9 +196,6 @@ public:
 
     /// Confirmation (foreign-keyed).
     /// -----------------------------------------------------------------------
-    /// Tx->block association relies on strong (confirmed or pending).
-    /// Set strong during confirmation process or current block will be missed.
-    /// False set implies fault if link associated, push/init implies fault.
 
     /// These verify strong against confirmation height.
     bool is_candidate_block(const header_link& link) NOEXCEPT;
@@ -207,12 +204,16 @@ public:
     bool is_confirmed_input(const input_link& link) NOEXCEPT;
     bool is_confirmed_output(const output_link& link) NOEXCEPT;
 
-    /// These rely on stong (use only for confirmation process).
+    /// These rely on strong (use only for confirmation process).
+    /// Set strong during confirmation process or current block will be missed.
+    /// Spent implies confirmed other spenders of output that input spends.
+    /// Confirmability assumes validy (prevouts exists, scripts validated).
     bool is_spent(const input_link& link) NOEXCEPT;
     bool is_mature(const input_link& link, size_t height) NOEXCEPT;
     bool is_confirmable_block(const header_link& link, size_t height) NOEXCEPT;
 
     /// False implies fault if link associated.
+    /// Tx->block association relies on strong (confirmed or pending).
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
 
@@ -257,6 +258,10 @@ protected:
 
     /// Empty implies fault if link associated.
     inline txs_link to_txs(const header_link& link) NOEXCEPT;
+    input_links to_spenders(const table::input::search_key& key) NOEXCEPT;
+    bool is_mature_point(const point_link& link, size_t height) NOEXCEPT;
+    bool is_spent_point(const input_link& self,
+        const table::input::search_key& key) NOEXCEPT;
 
     inline input_key make_foreign_point(const point& prevout) NOEXCEPT;
     inline code to_block_code(linkage<schema::code>::integer value) NOEXCEPT;

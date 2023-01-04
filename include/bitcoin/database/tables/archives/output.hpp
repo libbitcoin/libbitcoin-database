@@ -134,48 +134,6 @@ struct output
         ix::integer index{};
     };
 
-    struct slab_ptr
-      : public schema::output
-    {
-        link count() const NOEXCEPT
-        {
-            BC_ASSERT(output);
-            return system::possible_narrow_cast<link::integer>(
-                tx::size +
-                variable_size(index) +
-                variable_size(output->value()) +
-                output->script().serialized_size(true));
-        }
-
-        inline bool to_data(writer& sink) const NOEXCEPT
-        {
-            sink.write_little_endian<tx::integer, tx::size>(parent_fk);
-            sink.write_variable(index);
-            sink.write_variable(output->value());
-            output->script().to_data(sink, true);
-            BC_ASSERT(sink.get_write_position() == count());
-            return sink;
-        }
-
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            using namespace system;
-            parent_fk = source.read_little_endian<tx::integer, tx::size>();
-            index = narrow_cast<ix::integer>(source.read_variable());
-            output = to_shared(new chain::output
-            {
-                source.read_variable(),
-                to_shared(new chain::script{ source, true })
-            });
-            BC_ASSERT(source.get_read_position() == count());
-            return source;
-        }
-
-        tx::integer parent_fk{};
-        ix::integer index{};
-        system::chain::output::cptr output{};
-    };
-
     struct slab_put_ref
       : public schema::output
     {
