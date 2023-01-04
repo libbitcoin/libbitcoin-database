@@ -208,6 +208,7 @@ public:
     bool is_confirmed_output(const output_link& link) NOEXCEPT;
 
     /// These rely on stong (use only for confirmation process).
+    /// Spent(input) is confirmed other spenders of output that input spends.
     bool is_spent(const input_link& link) NOEXCEPT;
     bool is_mature(const input_link& link, size_t height) NOEXCEPT;
     bool is_confirmable_block(const header_link& link, size_t height) NOEXCEPT;
@@ -258,8 +259,8 @@ protected:
     /// Empty implies fault if link associated.
     inline txs_link to_txs(const header_link& link) NOEXCEPT;
     input_links to_spenders(const table::input::search_key& key) NOEXCEPT;
-    bool is_mature(const point_link& link, size_t height) NOEXCEPT;
-    bool is_spent(const input_link& self,
+    bool is_mature_point(const point_link& link, size_t height) NOEXCEPT;
+    bool is_spent_point(const input_link& self,
         const table::input::search_key& key) NOEXCEPT;
 
     inline input_key make_foreign_point(const point& prevout) NOEXCEPT;

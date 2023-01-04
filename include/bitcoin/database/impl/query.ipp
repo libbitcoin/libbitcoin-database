@@ -1451,12 +1451,12 @@ bool CLASS::is_spent(const input_link& link) NOEXCEPT
 
     // False implies invalid, null point (0), self only (1) (ambiguous),
     // serial fail (fault) or prevout not strongly spent (ok).
-    return is_spent(link, input.key);
+    return is_spent_point(link, input.key);
 }
 
 // protected
 TEMPLATE
-bool CLASS::is_spent(const input_link& self,
+bool CLASS::is_spent_point(const input_link& self,
     const table::input::search_key& key) NOEXCEPT
 {
     // False implies invalid, null point (0), or self only (1) (ambiguous).
@@ -1480,17 +1480,17 @@ bool CLASS::is_mature(const input_link& link, size_t height) NOEXCEPT
     if (!store_.input.get(link, input))
         return false;
 
-    // True implies strong (null input) (ok).
+    // True implies strong (prevout of null input is always mature) (ok).
     if (input.is_null())
         return true;
 
     // False return implies serial fail (fault) or not strong (ok).
-    return is_mature(input.point_fk, height);
+    return is_mature_point(input.point_fk, height);
 }
 
 // protected
 TEMPLATE
-bool CLASS::is_mature(const point_link& link, size_t height) NOEXCEPT
+bool CLASS::is_mature_point(const point_link& link, size_t height) NOEXCEPT
 {
     // False return implies serial fail (fault) or not strong (ok).
     const auto tx_fk = to_tx(store_.point.get_key(link));
@@ -1529,8 +1529,7 @@ bool CLASS::is_confirmable_block(const header_link& link,
     {
         table::input::slab_composite_sk input{};
         return store_.input.get(in, input)
-            && is_mature(input.point_fk(), height)
-            && !is_spent(in, input.key);
+            && is_mature(input.point_fk(), height) && !is_spent(in, input.key);
     });
 }
 
