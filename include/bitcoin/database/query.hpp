@@ -196,9 +196,6 @@ public:
 
     /// Confirmation (foreign-keyed).
     /// -----------------------------------------------------------------------
-    /// Tx->block association relies on strong (confirmed or pending).
-    /// Set strong during confirmation process or current block will be missed.
-    /// False set implies fault if link associated, push/init implies fault.
 
     /// These verify strong against confirmation height.
     bool is_candidate_block(const header_link& link) NOEXCEPT;
@@ -207,13 +204,16 @@ public:
     bool is_confirmed_input(const input_link& link) NOEXCEPT;
     bool is_confirmed_output(const output_link& link) NOEXCEPT;
 
-    /// These rely on stong (use only for confirmation process).
-    /// Spent(input) is confirmed other spenders of output that input spends.
+    /// These rely on strong (use only for confirmation process).
+    /// Set strong during confirmation process or current block will be missed.
+    /// Spent implies confirmed other spenders of output that input spends.
+    /// Confirmability assumes validy (prevouts exists, scripts validated).
     bool is_spent(const input_link& link) NOEXCEPT;
     bool is_mature(const input_link& link, size_t height) NOEXCEPT;
     bool is_confirmable_block(const header_link& link, size_t height) NOEXCEPT;
 
     /// False implies fault if link associated.
+    /// Tx->block association relies on strong (confirmed or pending).
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
 

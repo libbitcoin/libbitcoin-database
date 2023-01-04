@@ -81,6 +81,7 @@ const block block1a
     },
     transactions
     {
+        // This first transaction is *not* a coinbase.
         transaction
         {
             0x2a,           // version
@@ -138,6 +139,7 @@ const block block2a
     },
     transactions
     {
+        // This first transaction is *not* a coinbase.
         transaction
         {
             0xa2,           // version
@@ -234,7 +236,7 @@ const transaction tx4
     },
     0x85            // locktime
 };
-const transaction tx5
+const transaction tx_spend_genesis
 {
     0xa6,
     inputs
@@ -271,6 +273,7 @@ const block block3a
     },
     transactions
     {
+        // This first transaction is *not* a coinbase.
         transaction
         {
             0xa3,           // version
@@ -303,6 +306,72 @@ const block block3a
             },
             0x83            // locktime
         }
+    }
+};
+const block block1b
+{
+    header
+    {
+        0x31323334,         // version
+        genesis.hash(),     // previous_block_hash
+        system::one_hash,   // merkle_root
+        0x41424344,         // timestamp
+        0x51525354,         // bits
+        0x61626364          // nonce
+    },
+    transactions
+    {
+        // This first transaction is a coinbase.
+        transaction
+        {
+            0xb1,
+            inputs
+            {
+                input
+                {
+                    point{},
+                    script{ { { opcode::checkmultisig }, { opcode::size } } },
+                    witness{},
+                    0xb1
+                }
+            },
+            outputs
+            {
+                output
+                {
+                    0xb1,
+                    script{ { { opcode::pick } } }
+                }
+            },
+            0xb1
+        }
+    }
+};
+const transaction tx2b
+{
+    transaction
+    {
+        0xb1,
+        inputs
+        {
+            input
+            {
+                // Spends block1b coinbase.
+                point{ block1b.transactions_ptr()->front()->hash(false), 0x00 },
+                script{ { { opcode::checkmultisig }, { opcode::size } } },
+                witness{},
+                0xb1
+            }
+        },
+        outputs
+        {
+            output
+            {
+                0xb1,
+                script{ { { opcode::pick } } }
+            }
+        },
+        0xb1
     }
 };
 

@@ -1439,6 +1439,8 @@ inline bool CLASS::is_confirmed_output(const output_link& link) NOEXCEPT
 // Confirmation.
 // ----------------------------------------------------------------------------
 // Strong identifies confirmed and pending confirmed txs.
+// Confirmed/candidate indexes are not used for confirmation.
+// Spent does not rely on height, maturity gets height from header.
 // Strong is only sufficient for confirmation during organizing.
 
 TEMPLATE
@@ -1512,6 +1514,7 @@ bool CLASS::is_mature_point(const point_link& link, size_t height) NOEXCEPT
     if (prevout_height.is_terminal())
         return false;
 
+    // True return implies non-genesis and at least 100 block deep prevout.
     return transaction::is_coinbase_mature(prevout_height, height);
 }
 
@@ -1528,8 +1531,11 @@ bool CLASS::is_confirmable_block(const header_link& link,
     return std::all_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
     {
         table::input::slab_composite_sk input{};
-        return store_.input.get(in, input)
-            && is_mature(input.point_fk(), height) && !is_spent(in, input.key);
+        return store_.input.get(in, input) && (input.is_null() ||
+        (
+            is_mature_point(input.point_fk(), height) &&
+            !is_spent_point(in, input.key)
+        ));
     });
 }
 

@@ -261,6 +261,11 @@ struct input
             return decompose_index(key);
         }
 
+        inline bool is_null() const NOEXCEPT
+        {
+            return key == null_point();
+        }
+
         search_key key{};
     };
 
