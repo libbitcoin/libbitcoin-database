@@ -1454,6 +1454,7 @@ bool CLASS::is_spent(const input_link& link) NOEXCEPT
     return is_spent(link, input.key);
 }
 
+// protected
 TEMPLATE
 bool CLASS::is_spent(const input_link& self,
     const table::input::search_key& key) NOEXCEPT
@@ -1487,6 +1488,7 @@ bool CLASS::is_mature(const input_link& link, size_t height) NOEXCEPT
     return is_mature(input.point_fk, height);
 }
 
+// protected
 TEMPLATE
 bool CLASS::is_mature(const point_link& link, size_t height) NOEXCEPT
 {
