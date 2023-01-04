@@ -40,32 +40,242 @@ struct query_confirmation_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(query_confirmation_tests, query_confirmation_setup_fixture)
 
-/////// These verify strong against confirmation height.
-////bool is_candidate_block(const header_link& link) NOEXCEPT;
-////bool is_confirmed_block(const header_link& link) NOEXCEPT;
-////bool is_confirmed_tx(const tx_link& link) NOEXCEPT;
-////bool is_confirmed_input(const input_link& link) NOEXCEPT;
-////bool is_confirmed_output(const output_link& link) NOEXCEPT;
-////
-/////// These rely on stong (use only for confirmation process).
+BOOST_AUTO_TEST_CASE(query_confirmation__pop__zero__false)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(!query.pop_candidate());
+    BOOST_REQUIRE(!query.pop_confirmed());
+}
+
+BOOST_AUTO_TEST_CASE(query_confirmation__is_candidate_block__push_pop_candidate__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, { 0, 1, 0 }));
+    BOOST_REQUIRE(query.set(test::block2, { 0, 2, 0 }));
+    BOOST_REQUIRE(query.is_candidate_block(0));
+    BOOST_REQUIRE(!query.is_candidate_block(1));
+    BOOST_REQUIRE(!query.is_candidate_block(2));
+
+    BOOST_REQUIRE(query.push_candidate(1));
+    BOOST_REQUIRE(query.is_candidate_block(1));
+
+    BOOST_REQUIRE(query.push_candidate(2));
+    BOOST_REQUIRE(query.is_candidate_block(2));
+
+    BOOST_REQUIRE(query.pop_candidate());
+    BOOST_REQUIRE(query.is_candidate_block(0));
+    BOOST_REQUIRE(query.is_candidate_block(1));
+    BOOST_REQUIRE(!query.is_candidate_block(2));
+
+    BOOST_REQUIRE(query.pop_candidate());
+    BOOST_REQUIRE(query.is_candidate_block(0));
+    BOOST_REQUIRE(!query.is_candidate_block(1));
+    BOOST_REQUIRE(!query.is_candidate_block(2));
+}
+
+BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmed_block__push_pop_confirmed__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, { 0, 1, 0 }));
+    BOOST_REQUIRE(query.set(test::block2, { 0, 2, 0 }));
+    BOOST_REQUIRE(query.is_confirmed_block(0));
+    BOOST_REQUIRE(!query.is_confirmed_block(1));
+    BOOST_REQUIRE(!query.is_confirmed_block(2));
+
+    BOOST_REQUIRE(query.push_confirmed(1));
+    BOOST_REQUIRE(query.is_confirmed_block(1));
+
+    BOOST_REQUIRE(query.push_confirmed(2));
+    BOOST_REQUIRE(query.is_confirmed_block(2));
+
+    BOOST_REQUIRE(query.pop_confirmed());
+    BOOST_REQUIRE(query.is_confirmed_block(0));
+    BOOST_REQUIRE(query.is_confirmed_block(1));
+    BOOST_REQUIRE(!query.is_confirmed_block(2));
+
+    BOOST_REQUIRE(query.pop_confirmed());
+    BOOST_REQUIRE(query.is_confirmed_block(0));
+    BOOST_REQUIRE(!query.is_confirmed_block(1));
+    BOOST_REQUIRE(!query.is_confirmed_block(2));
+}
+
+BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmed_tx__confirm__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, { 0, 1, 0 }));
+    BOOST_REQUIRE(query.set(test::block2, { 0, 2, 0 }));
+    BOOST_REQUIRE(query.is_confirmed_tx(0));
+    BOOST_REQUIRE(!query.is_confirmed_tx(1));
+    BOOST_REQUIRE(!query.is_confirmed_tx(2));
+
+    BOOST_REQUIRE(query.push_confirmed(1));
+    BOOST_REQUIRE(!query.is_confirmed_tx(1));
+    BOOST_REQUIRE(query.set_strong(1));
+    BOOST_REQUIRE(query.is_confirmed_tx(1));
+
+    // Ordering between strong and confirmed is unimportant.
+    BOOST_REQUIRE(query.set_strong(2));
+    BOOST_REQUIRE(!query.is_confirmed_tx(2));
+    BOOST_REQUIRE(query.push_confirmed(2));
+    BOOST_REQUIRE(query.is_confirmed_tx(2));
+}
+
+BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmed_input__confirm__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, { 0, 1, 0 }));
+    BOOST_REQUIRE(query.set(test::block2, { 0, 2, 0 }));
+
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(0, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(1, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(2, 0)));
+
+    BOOST_REQUIRE(query.push_confirmed(1));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(1, 0)));
+    BOOST_REQUIRE(query.set_strong(1));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(1, 0)));
+
+    BOOST_REQUIRE(query.set_strong(2));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(2, 0)));
+    BOOST_REQUIRE(query.push_confirmed(2));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(2, 0)));
+}
+
+BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmed_output__confirm__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, { 0, 1, 0 }));
+    BOOST_REQUIRE(query.set(test::block2, { 0, 2, 0 }));
+
+    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(0, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(1, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(2, 0)));
+
+    BOOST_REQUIRE(query.push_confirmed(1));
+    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(1, 0)));
+    BOOST_REQUIRE(query.set_strong(1));
+    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(1, 0)));
+
+    BOOST_REQUIRE(query.set_strong(2));
+    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(2, 0)));
+    BOOST_REQUIRE(query.push_confirmed(2));
+    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(2, 0)));
+}
+
+BOOST_AUTO_TEST_CASE(query_confirmation__set_strong__unassociated__false)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1.header(), {}));
+    BOOST_REQUIRE(!query.set_strong(1));
+    BOOST_REQUIRE(!query.set_unstrong(1));
+}
+
+BOOST_AUTO_TEST_CASE(query_confirmation__set_strong__set_unstrong__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, { 0, 1, 0 }));
+    BOOST_REQUIRE(query.set(test::block2, { 0, 2, 0 }));
+    BOOST_REQUIRE(query.push_confirmed(1));
+    BOOST_REQUIRE(query.push_confirmed(2));
+
+    BOOST_REQUIRE(query.is_confirmed_tx(0));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(0, 0)));
+    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(0, 0)));
+
+    BOOST_REQUIRE(!query.is_confirmed_tx(1));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(1, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(1, 0)));
+
+    BOOST_REQUIRE(!query.is_confirmed_tx(2));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(2, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(2, 0)));
+
+    BOOST_REQUIRE(query.set_strong(1));
+    BOOST_REQUIRE(query.set_strong(2));
+
+    BOOST_REQUIRE(query.is_confirmed_tx(0));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(0, 0)));
+    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(0, 0)));
+
+    BOOST_REQUIRE(query.is_confirmed_tx(1));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(1, 0)));
+    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(1, 0)));
+
+    BOOST_REQUIRE(query.is_confirmed_tx(2));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(2, 0)));
+    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(2, 0)));
+
+    BOOST_REQUIRE(query.set_unstrong(1));
+    BOOST_REQUIRE(query.set_unstrong(2));
+
+    BOOST_REQUIRE(query.is_confirmed_tx(0));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(0, 0)));
+    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(0, 0)));
+
+    BOOST_REQUIRE(!query.is_confirmed_tx(1));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(1, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(1, 0)));
+
+    BOOST_REQUIRE(!query.is_confirmed_tx(2));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(2, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(2, 0)));
+}
+
+BOOST_AUTO_TEST_CASE(query_confirmation__is_spent__unspent__false)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, {}));
+    BOOST_REQUIRE(!query.is_spent(query.to_input(0, 0))); // unspendable
+    BOOST_REQUIRE(!query.is_spent(query.to_input(1, 0))); // unspent
+    BOOST_REQUIRE(!query.is_spent(query.to_input(2, 0))); // non-existent
+}
+
 ////bool is_spent(const input_link& link) NOEXCEPT;
 ////bool is_mature(const input_link& link, size_t height) NOEXCEPT;
 ////bool is_confirmable_block(const header_link& link, size_t height) NOEXCEPT;
-////
-/////// False implies fault if link associated.
-////bool set_strong(const header_link& link) NOEXCEPT;
-////bool set_unstrong(const header_link& link) NOEXCEPT;
-////
-/////// False implies fault.
-////bool initialize(const block& genesis) NOEXCEPT;
-////bool push_confirmed(const header_link& link) NOEXCEPT;
-////bool push_candidate(const header_link& link) NOEXCEPT;
-////bool pop_confirmed() NOEXCEPT;
-////bool pop_candidate() NOEXCEPT;
-
-BOOST_AUTO_TEST_CASE(query_confirmation_test)
-{
-    BOOST_REQUIRE(true);
-}
 
 BOOST_AUTO_TEST_SUITE_END()

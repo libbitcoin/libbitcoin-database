@@ -1449,16 +1449,25 @@ bool CLASS::is_spent(const input_link& link) NOEXCEPT
     if (!store_.input.get(link, input))
         return false;
 
+    // False implies invalid, null point (0), self only (1) (ambiguous),
+    // serial fail (fault) or prevout not strongly spent (ok).
+    return is_spent(link, input.key);
+}
+
+TEMPLATE
+bool CLASS::is_spent(const input_link& self,
+    const table::input::search_key& key) NOEXCEPT
+{
     // False implies invalid, null point (0), or self only (1) (ambiguous).
-    const auto ins = to_spenders(input.key);
+    const auto ins = to_spenders(key);
     if (ins.size() <= one)
         return false;
 
     // False implies serial fail (fault) or prevout not strongly spent (ok).
-    return std::all_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
+    return std::any_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
     {
         // Use strong for performance benefit (confirmed would work).
-        return (in == link) || !to_strong_by(to_input_tx(in)).is_terminal();
+        return in != self && !to_strong_by(to_input_tx(in)).is_terminal();
     });
 }
 
@@ -1466,7 +1475,7 @@ TEMPLATE
 bool CLASS::is_mature(const input_link& link, size_t height) NOEXCEPT
 {
     // False return implies invalid link or serial fail (fault).
-    table::input::slab_decomposed_sk input{};
+    table::input::slab_decomposed_fk input{};
     if (!store_.input.get(link, input))
         return false;
 
@@ -1475,32 +1484,33 @@ bool CLASS::is_mature(const input_link& link, size_t height) NOEXCEPT
         return true;
 
     // False return implies serial fail (fault) or not strong (ok).
-    const auto prevout_tx_fk = to_tx(store_.point.get_key(input.point_fk));
-    const auto prevout_header_fk = to_strong_by(prevout_tx_fk);
-    if (prevout_header_fk == header_link::terminal)
+    return is_mature(input.point_fk, height);
+}
+
+TEMPLATE
+bool CLASS::is_mature(const point_link& link, size_t height) NOEXCEPT
+{
+    // False return implies serial fail (fault) or not strong (ok).
+    const auto tx_fk = to_tx(store_.point.get_key(link));
+    const auto header_fk = to_strong_by(tx_fk);
+    if (header_fk.is_terminal())
         return false;
 
     // False return implies store integrity failure (fault).
-    table::transaction::record_get_coinbase transaction{};
-    if (!store_.tx.get(prevout_tx_fk, transaction))
+    table::transaction::record_get_coinbase tx{};
+    if (!store_.tx.get(tx_fk, tx))
         return false;
 
     // True return implies strong non-coinbase (ok).
-    if (!transaction.coinbase)
+    if (!tx.coinbase)
         return true;
 
-    // Get the height of the block containing the coinbase.
     // Terminal return implies invalid link, serial fail or race (fault).
-    const auto prevout_tx_height = get_header_height(prevout_header_fk);
-    if (prevout_tx_height.is_terminal())
+    const auto prevout_height = get_header_height(header_fk);
+    if (prevout_height.is_terminal())
         return false;
 
-    //*************************************************************************
-    // CONSENSUS: Genesis coinbase treated as forever immature.
-    //*************************************************************************
-    using namespace system;
-    return !is_zero(prevout_tx_height) &&
-        (ceilinged_add(prevout_tx_height, chain::coinbase_maturity) <= height);
+    return transaction::is_coinbase_mature(prevout_height, height);
 }
 
 TEMPLATE
@@ -1515,8 +1525,10 @@ bool CLASS::is_confirmable_block(const header_link& link,
     // False implies not confirmable block (ok).
     return std::all_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
     {
-        // TODO: combine inputs queries.
-        return is_mature(in, height) && !is_spent(in);
+        table::input::slab_composite_sk input{};
+        return store_.input.get(in, input)
+            && is_mature(input.point_fk(), height)
+            && !is_spent(in, input.key);
     });
 }
 
