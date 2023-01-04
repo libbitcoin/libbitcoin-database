@@ -41,31 +41,38 @@ struct input
     using hash_map<schema::input>::hashmap;
     using search_key = search<schema::input::sk>;
 
-    /// Generate composite key.
+    // Composers/decomposers do not adjust to type changes.
+    static_assert(tx::size == 4 && ix::size == 3);
+
     static constexpr search_key compose(tx::integer fk,
         ix::integer index) NOEXCEPT
     {
-        // Will not adjust to type changes, so guard here.
-        static_assert(tx::size == 4 && ix::size == 3);
-
         return
         {
             system::byte<0>(fk),
             system::byte<1>(fk),
             system::byte<2>(fk),
             system::byte<3>(fk),
-
             system::byte<0>(index),
             system::byte<1>(index),
             system::byte<2>(index)
         };
     }
 
-    /// Generate null point composite key.
-    static constexpr search_key null_point()
+    static CONSTEVAL search_key null_point() NOEXCEPT
     {
         return compose(tx::terminal, ix::terminal);
     };
+
+    static inline tx decompose_fk(const search_key& key) NOEXCEPT
+    {
+        return system::array_cast<uint8_t, tx::size>(key);
+    }
+
+    static inline ix decompose_index(const search_key& key) NOEXCEPT
+    {
+        return system::array_cast<uint8_t, ix::size, tx::size>(key);
+    }
 
     struct slab
       : public schema::input
@@ -132,7 +139,7 @@ struct input
             witness = to_shared(new chain::witness{ source, true });
             return source;
         }
-
+    
         uint32_t sequence{};
         system::chain::script::cptr script{};
         system::chain::witness::cptr witness{};
@@ -148,18 +155,18 @@ struct input
             source.rewind_bytes(sk);
             point_fk    = source.read_little_endian<tx::integer, tx::size>();
             point_index = source.read_little_endian<ix::integer, ix::size>();
-
+    
             if (point_index == ix::terminal)
                 point_index = system::chain::point::null_index;
-
+    
             return only::from_data(source);
         }
-
+    
         inline bool is_null() const NOEXCEPT
         {
             return point_fk == tx::terminal;
         }
-
+    
         tx::integer point_fk{};
         ix::integer point_index{};
     };
@@ -174,7 +181,7 @@ struct input
             using namespace system;
             source.skip_bytes(tx::size);
             source.skip_variable();
-
+    
             // sequence stored out of order (prefer script/witness trailing).
             const auto sequence = source.read_little_endian<uint32_t>();
             input = to_shared(new chain::input
@@ -184,10 +191,10 @@ struct input
                 to_shared(new chain::witness{ source, true }),
                 sequence
             });
-
+    
             return source;
         }
-
+    
         const system::chain::point::cptr prevout{};
         system::chain::input::cptr input{};
     };
@@ -200,38 +207,9 @@ struct input
             parent_fk = source.read_little_endian<tx::integer, tx::size>();
             return source;
         }
-
+    
         tx::integer parent_fk{};
     };
-
-    ////struct slab_put_ptr
-    ////  : public schema::input
-    ////{
-    ////    link count() const NOEXCEPT
-    ////    {
-    ////        return system::possible_narrow_cast<link::integer>(pk + sk +
-    ////            tx::size +
-    ////            variable_size(index) +
-    ////            sizeof(uint32_t) +
-    ////            input->script().serialized_size(true) +
-    ////            input->witness().serialized_size(true));
-    ////    }
-    ////
-    ////    inline bool to_data(finalizer& sink) const NOEXCEPT
-    ////    {
-    ////        sink.write_little_endian<tx::integer, tx::size>(parent_fk);
-    ////        sink.write_variable(index);
-    ////        sink.write_little_endian<uint32_t>(input->sequence());
-    ////        input->script().to_data(sink, true);
-    ////        input->witness().to_data(sink, true);
-    ////        BC_ASSERT(sink.get_write_position() == count());
-    ////        return sink;
-    ////    }
-    ////
-    ////    tx::integer parent_fk{};
-    ////    ix::integer index{};
-    ////    const system::chain::input::cptr input{};
-    ////};
 
     struct slab_put_ref
       : public schema::input
@@ -271,6 +249,16 @@ struct input
             source.rewind_bytes(sk);
             key = source.read_forward<sk>();
             return source;
+        }
+
+        inline tx point_fk() const NOEXCEPT
+        {
+            return decompose_fk(key);
+        }
+
+        inline ix point_index() const NOEXCEPT
+        {
+            return decompose_index(key);
         }
 
         search_key key{};
@@ -321,48 +309,6 @@ struct input
         tx::integer point_fk{};
         ix::integer point_index{};
     };
-
-    struct slab_get_point_and_parent_fks
-      : public schema::input
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            source.rewind_bytes(sk);
-            point_fk  = source.read_little_endian<tx::integer, tx::size>();
-            source.skip_bytes(ix::size);
-            parent_fk = source.read_little_endian<tx::integer, tx::size>();
-            return source;
-        }
-
-        inline bool is_null() const NOEXCEPT
-        {
-            return point_fk == tx::terminal;
-        }
-
-        tx::integer point_fk{};
-        tx::integer parent_fk{};
-    };
-
-    ////struct slab_with_decomposed_sk
-    ////  : public slab
-    ////{
-    ////    BC_PUSH_WARNING(NO_METHOD_HIDING)
-    ////    inline bool from_data(reader& source) NOEXCEPT
-    ////    BC_POP_WARNING()
-    ////    {
-    ////        source.rewind_bytes(sk);
-    ////        point_fk    = source.read_little_endian<tx::integer, tx::size>();
-    ////        point_index = source.read_little_endian<ix::integer, ix::size>();
-    ////
-    ////        if (point_index == ix::terminal)
-    ////            point_index = system::chain::point::null_index;
-    ////
-    ////        return slab::from_data(source);
-    ////    }
-    ////
-    ////    tx::integer point_fk{};
-    ////    ix::integer point_index{};
-    ////};
 };
 
 BC_POP_WARNING()
