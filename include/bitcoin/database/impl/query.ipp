@@ -1453,13 +1453,13 @@ bool CLASS::is_spent(const input_link& link) NOEXCEPT
 
     // False implies invalid, null point (0), self only (1) (ambiguous),
     // serial fail (fault) or prevout not strongly spent (ok).
-    return is_spent_point(link, input.key);
+    return is_spent_point(input.key, link);
 }
 
 // protected
 TEMPLATE
-bool CLASS::is_spent_point(const input_link& self,
-    const table::input::search_key& key) NOEXCEPT
+bool CLASS::is_spent_point(const table::input::search_key& key,
+    const input_link& self) NOEXCEPT
 {
     // False implies invalid, null point (0), or self only (1) (ambiguous).
     const auto ins = to_spenders(key);
@@ -1534,7 +1534,7 @@ bool CLASS::is_confirmable_block(const header_link& link,
         return store_.input.get(in, input) && (input.is_null() ||
         (
             is_mature_point(input.point_fk(), height) &&
-            !is_spent_point(in, input.key)
+            !is_spent_point(input.key, in)
         ));
     });
 }
