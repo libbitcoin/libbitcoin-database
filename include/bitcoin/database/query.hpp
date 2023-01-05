@@ -259,8 +259,8 @@ protected:
     /// Empty implies fault if link associated.
     inline txs_link to_txs(const header_link& link) NOEXCEPT;
     input_links to_spenders(const table::input::search_key& key) NOEXCEPT;
-    bool is_mature_point(const point_link& link, size_t height) NOEXCEPT;
-    bool is_spent_point(const table::input::search_key& key,
+    bool is_mature_prevout(const point_link& link, size_t height) NOEXCEPT;
+    bool is_spent_prevout(const table::input::search_key& key,
         const input_link& self) NOEXCEPT;
 
     inline input_key make_foreign_point(const point& prevout) NOEXCEPT;
