@@ -208,6 +208,8 @@ public:
     /// Set strong during confirmation process or current block will be missed.
     /// Spent implies confirmed other spenders of output that input spends.
     /// Confirmability assumes validy (prevouts exists, scripts validated).
+    bool is_coinbase(const tx_link& link) NOEXCEPT;
+    bool is_strong(const input_link& link) NOEXCEPT;
     bool is_spent(const input_link& link) NOEXCEPT;
     bool is_mature(const input_link& link, size_t height) NOEXCEPT;
     bool is_confirmable_block(const header_link& link, size_t height) NOEXCEPT;
