@@ -703,6 +703,41 @@ BOOST_AUTO_TEST_CASE(query_archival__populate__partial_prevouts__false)
 
 // archival (foreign-keyed)
 
+BOOST_AUTO_TEST_CASE(query_archival__is_coinbase__coinbase__true)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, {}));
+    BOOST_REQUIRE(query.set(test::block2, {}));
+    BOOST_REQUIRE(query.set(test::block3, {}));
+    BOOST_REQUIRE(query.is_coinbase(0));
+    BOOST_REQUIRE(query.is_coinbase(1));
+    BOOST_REQUIRE(query.is_coinbase(2));
+    BOOST_REQUIRE(query.is_coinbase(3));
+}
+
+BOOST_AUTO_TEST_CASE(query_archival__is_coinbase__non_coinbase__true)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, {}));
+    BOOST_REQUIRE(query.set(test::block2a, {}));
+    BOOST_REQUIRE(!query.is_coinbase(1));
+    BOOST_REQUIRE(!query.is_coinbase(2));
+    BOOST_REQUIRE(!query.is_coinbase(3));
+    BOOST_REQUIRE(!query.is_coinbase(4));
+    BOOST_REQUIRE(!query.is_coinbase(5));
+    BOOST_REQUIRE(!query.is_coinbase(42));
+}
+
 BOOST_AUTO_TEST_CASE(query_archival__get_header__invalid_parent__expected)
 {
     constexpr auto root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");

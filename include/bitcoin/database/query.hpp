@@ -116,10 +116,10 @@ public:
     output_links to_block_outputs(const header_link& link) NOEXCEPT;
     tx_links to_transactions(const header_link& link) NOEXCEPT;
 
-    /// Archival (natural-keyed).
+    /// Archival (mostly natural-keyed).
     /// -----------------------------------------------------------------------
 
-    /// False implies fault if associated.
+    inline bool is_coinbase(const tx_link& link) NOEXCEPT;
     inline bool is_associated(const header_link& link) NOEXCEPT;
     inline bool is_header(const hash_digest& key) NOEXCEPT;
     inline bool is_block(const hash_digest& key) NOEXCEPT;
@@ -197,7 +197,7 @@ public:
     /// Confirmation (foreign-keyed).
     /// -----------------------------------------------------------------------
 
-    /// These verify strong against confirmation height.
+    /// These compare strong with height index (not for confirmation process).
     bool is_candidate_block(const header_link& link) NOEXCEPT;
     bool is_confirmed_block(const header_link& link) NOEXCEPT;
     bool is_confirmed_tx(const tx_link& link) NOEXCEPT;
@@ -205,10 +205,6 @@ public:
     bool is_confirmed_output(const output_link& link) NOEXCEPT;
 
     /// These rely on strong (use only for confirmation process).
-    /// Set strong during confirmation process or current block will be missed.
-    /// Spent implies confirmed other spenders of output that input spends.
-    /// Confirmability assumes validy (prevouts exists, scripts validated).
-    bool is_coinbase(const tx_link& link) NOEXCEPT;
     bool is_strong(const input_link& link) NOEXCEPT;
     bool is_spent(const input_link& link) NOEXCEPT;
     bool is_mature(const input_link& link, size_t height) NOEXCEPT;
@@ -229,12 +225,12 @@ public:
     /// Optional Tables.
     /// -----------------------------------------------------------------------
 
+    static hash_digest address_hash(const output& output) NOEXCEPT;
+
     /// Address (natural-keyed).
     /// Terminal implies not found, false implies fault.
-    hash_digest address_hash(const output& output) NOEXCEPT;
     output_link get_address(const hash_digest& key) NOEXCEPT;
     bool set_address(const hash_digest& key, const output_link& link) NOEXCEPT;
-    bool set_address(const output& output) NOEXCEPT;
 
     /// Neutrino (foreign-keyed).
     /// Empty/null_hash implies not found, false implies fault.

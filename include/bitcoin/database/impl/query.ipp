@@ -451,6 +451,13 @@ tx_links CLASS::to_transactions(const header_link& link) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+inline bool CLASS::is_coinbase(const tx_link& link) NOEXCEPT
+{
+    table::transaction::record_get_coinbase tx{};
+    return store_.tx.get(link, tx) && tx.coinbase;
+}
+
+TEMPLATE
 inline bool CLASS::is_associated(const header_link& link) NOEXCEPT
 {
     return !link.is_terminal() && store_.txs.exists(link);
@@ -1264,13 +1271,6 @@ inline bool CLASS::is_confirmed_output(const output_link& link) NOEXCEPT
 // Strong must be set at current height during organization, unset if fails.
 
 TEMPLATE
-inline bool CLASS::is_coinbase(const tx_link& link) NOEXCEPT
-{
-    table::transaction::record_get_coinbase tx{};
-    return store_.tx.get(link, tx) && tx.coinbase;
-}
-
-TEMPLATE
 inline bool CLASS::is_strong(const input_link& link) NOEXCEPT
 {
     return !to_strong_by(to_input_tx(link)).is_terminal();
@@ -1460,6 +1460,7 @@ bool CLASS::pop_candidate() NOEXCEPT
 
 // Address (natural-keyed).
 // ----------------------------------------------------------------------------
+// TODO: address search/iteration (spentness, value, order), use point keys.
 
 TEMPLATE
 hash_digest CLASS::address_hash(const output& output) NOEXCEPT
@@ -1489,17 +1490,18 @@ TEMPLATE
 bool CLASS::set_address(const hash_digest& key,
     const output_link& link) NOEXCEPT
 {
+    if (link.is_terminal())
+        return false;
+
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
     return store_.address.put(key, table::address::record
     {
         {},
         link
     });
-}
-
-TEMPLATE
-bool CLASS::set_address(const output& output) NOEXCEPT
-{
-    return set_address(address_hash(output), output);
+    // ========================================================================
 }
 
 // Neutrino (foreign-keyed).
@@ -1537,16 +1539,21 @@ TEMPLATE
 bool CLASS::set_filter(const header_link& link, const hash_digest& filter_head,
     const filter& filter) NOEXCEPT
 {
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
     return store_.neutrino.put(link, table::neutrino::slab_put_ref
     {
         {},
         filter_head,
         filter
     });
+    // ========================================================================
 }
 
 // Buffer (foreign-keyed).
 // ----------------------------------------------------------------------------
+// TODO: serialize prevouts.
 
 TEMPLATE
 typename CLASS::transaction::cptr CLASS::get_buffered_tx(
@@ -1567,11 +1574,15 @@ TEMPLATE
 bool CLASS::set_buffered_tx(const tx_link& link,
     const transaction& tx) NOEXCEPT
 {
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
     return store_.buffer.put(link, table::buffer::slab_put_ref
     {
         {},
         tx
     });
+    // ========================================================================
 }
 
 // Bootstrap (array).
@@ -1605,7 +1616,11 @@ bool CLASS::set_bootstrap(size_t height) NOEXCEPT
         boot.block_hashes.push_back(store_.header.get_key(header_fk));
     }
 
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
     return store_.bootstrap.truncate(0) && store_.bootstrap.put(boot);
+    // ========================================================================
 }
 
 BC_POP_WARNING()
