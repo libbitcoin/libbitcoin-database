@@ -192,6 +192,46 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmed_output__confirm__expected)
     BOOST_REQUIRE(query.is_confirmed_output(query.to_output(2, 0)));
 }
 
+BOOST_AUTO_TEST_CASE(query_confirmation__is_spent_output__genesis__false)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(!query.is_spent_output(query.to_output(0, 0)));
+    BOOST_REQUIRE(!query.is_spent_output(query.to_output(1, 1)));
+}
+
+BOOST_AUTO_TEST_CASE(query_confirmation__is_spent_output__strong_confirmed__true)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, { 0, 1, 0 }));
+    BOOST_REQUIRE(query.set(test::block2a, { 0, 2, 0 }));
+    BOOST_REQUIRE(query.set(test::block3a, { 0, 3, 0 }));
+    BOOST_REQUIRE(!query.is_spent_output(query.to_output(0, 0))); // genesis
+    BOOST_REQUIRE(!query.is_spent_output(query.to_output(1, 0))); // block1a
+    BOOST_REQUIRE(!query.is_spent_output(query.to_output(1, 1))); // block1a
+    BOOST_REQUIRE(query.set_strong(1));
+    BOOST_REQUIRE(query.set_strong(2));
+    BOOST_REQUIRE(query.set_strong(3));
+    BOOST_REQUIRE(!query.is_spent_output(query.to_output(0, 0))); // genesis
+    BOOST_REQUIRE(!query.is_spent_output(query.to_output(1, 0))); // block1a
+    BOOST_REQUIRE(!query.is_spent_output(query.to_output(1, 1))); // block1a
+    BOOST_REQUIRE(query.push_confirmed(1));
+    BOOST_REQUIRE(query.push_confirmed(2));
+    BOOST_REQUIRE(query.push_confirmed(3));
+    BOOST_REQUIRE(!query.is_spent_output(query.to_output(0, 0))); // genesis
+    BOOST_REQUIRE(query.is_spent_output(query.to_output(1, 0)));  // block1a
+    BOOST_REQUIRE(query.is_spent_output(query.to_output(1, 1)));  // block1a
+}
+
 BOOST_AUTO_TEST_CASE(query_confirmation__is_strong__strong__true)
 {
     settings settings{};

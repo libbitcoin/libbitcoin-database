@@ -1114,4 +1114,15 @@ BOOST_AUTO_TEST_CASE(query_archival__get_spenders__found_and_spent__expected)
     BOOST_REQUIRE(*query.get_spenders(1, 1)->back() == *block_inputs.back());
 }
 
+BOOST_AUTO_TEST_CASE(query_archival__get_value__genesis__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE_EQUAL(query.get_value(query.to_output(0, 0)), 5000000000u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

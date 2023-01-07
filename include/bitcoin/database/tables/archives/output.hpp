@@ -107,6 +107,20 @@ struct output
         system::chain::output::cptr output{};
     };
 
+    struct get_value
+      : public schema::output
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(tx::size);
+            source.skip_variable();
+            value = source.read_variable();
+            return source;
+        }
+
+        uint64_t value{};
+    };
+
     struct get_parent
       : public schema::output
     {

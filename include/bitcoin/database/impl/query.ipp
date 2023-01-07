@@ -311,6 +311,31 @@ header_link CLASS::to_strong_by(const tx_link& link) NOEXCEPT
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 TEMPLATE
+input_links CLASS::to_spenders(const output_link& link) NOEXCEPT
+{
+    table::output::get_point out{};
+    if (!store_.output.get(link, out))
+        return {};
+
+    // An output parent tx/index should never be null point.
+    return to_spenders(out.parent_fk, out.index);
+}
+
+TEMPLATE
+input_links CLASS::to_spenders(const tx_link& link,
+    uint32_t output_index) NOEXCEPT
+{
+    if (link.is_terminal())
+        return {};
+
+    const auto point_fk = to_point(store_.tx.get_key(link));
+    if (point_fk.is_terminal())
+        return {};
+
+    return to_spenders(table::input::compose(point_fk, output_index));
+}
+
+TEMPLATE
 input_links CLASS::to_spenders(const point& prevout) NOEXCEPT
 {
     if (prevout.is_null())
@@ -320,39 +345,18 @@ input_links CLASS::to_spenders(const point& prevout) NOEXCEPT
     if (point_fk.is_terminal())
         return {};
 
-    // TODO: redundant null point check.
     return to_spenders(table::input::compose(point_fk, prevout.index()));
-}
-
-TEMPLATE
-input_links CLASS::to_spenders(const output_link& link) NOEXCEPT
-{
-    table::output::get_point out{};
-    if (!store_.output.get(link, out))
-        return {};
-
-    return to_spenders(out.parent_fk, out.index);
-}
-
-TEMPLATE
-input_links CLASS::to_spenders(const tx_link& link,
-    uint32_t output_index) NOEXCEPT
-{
-    return to_spenders(point{ store_.tx.get_key(link), output_index });
 }
 
 // protected
 TEMPLATE
 input_links CLASS::to_spenders(const table::input::search_key& key) NOEXCEPT
 {
-    if (key == table::input::null_point())
-        return {};
-
     auto it = store_.input.it(key);
     if (it.self().is_terminal())
         return {};
 
-    input_links spenders{};
+    input_links spenders;
     do { spenders.push_back(it.self()); } while (it.advance());
     return spenders;
 }
@@ -451,19 +455,6 @@ tx_links CLASS::to_transactions(const header_link& link) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-inline bool CLASS::is_coinbase(const tx_link& link) NOEXCEPT
-{
-    table::transaction::record_get_coinbase tx{};
-    return store_.tx.get(link, tx) && tx.coinbase;
-}
-
-TEMPLATE
-inline bool CLASS::is_associated(const header_link& link) NOEXCEPT
-{
-    return !link.is_terminal() && store_.txs.exists(link);
-}
-
-TEMPLATE
 inline bool CLASS::is_header(const hash_digest& key) NOEXCEPT
 {
     return store_.header.exists(key);
@@ -479,6 +470,19 @@ TEMPLATE
 inline bool CLASS::is_tx(const hash_digest& key) NOEXCEPT
 {
     return store_.tx.exists(key);
+}
+
+TEMPLATE
+inline bool CLASS::is_coinbase(const tx_link& link) NOEXCEPT
+{
+    table::transaction::record_get_coinbase tx{};
+    return store_.tx.get(link, tx) && tx.coinbase;
+}
+
+TEMPLATE
+inline bool CLASS::is_associated(const header_link& link) NOEXCEPT
+{
+    return !link.is_terminal() && store_.txs.exists(link);
 }
 
 TEMPLATE
@@ -747,16 +751,6 @@ typename CLASS::point::cptr CLASS::get_point(const input_link& link) NOEXCEPT
 }
 
 TEMPLATE
-typename CLASS::inputs_ptr CLASS::get_spenders(const output_link& link) NOEXCEPT
-{
-    table::output::slab out{};
-    if (!store_.output.get(link, out))
-        return {};
-
-    return get_spenders(out.parent_fk, out.index);
-}
-
-TEMPLATE
 typename CLASS::output::cptr CLASS::get_output(const point& prevout) NOEXCEPT
 {
     // Shortcircuits get_output(to_tx(null_hash)) fault.
@@ -781,6 +775,17 @@ typename CLASS::input::cptr CLASS::get_input(const tx_link& link,
 }
 
 TEMPLATE
+typename CLASS::inputs_ptr CLASS::get_spenders(
+    const output_link& link) NOEXCEPT
+{
+    table::output::slab out{};
+    if (!store_.output.get(link, out))
+        return {};
+
+    return get_spenders(out.parent_fk, out.index);
+}
+
+TEMPLATE
 typename CLASS::inputs_ptr CLASS::get_spenders(const tx_link& link,
     uint32_t output_index) NOEXCEPT
 {
@@ -792,6 +797,13 @@ typename CLASS::inputs_ptr CLASS::get_spenders(const tx_link& link,
             return {};
 
     return spenders;
+}
+
+TEMPLATE
+uint64_t CLASS::get_value(const output_link& link) NOEXCEPT
+{
+    table::output::get_value output{};
+    return store_.output.get(link, output) ? output.value : max_uint64;
 }
 
 // protected
@@ -1222,7 +1234,7 @@ bool CLASS::set_tx_disconnected(const tx_link& link,
 // Not for use in validatation (2 additional gets).
 
 TEMPLATE
-inline bool CLASS::is_candidate_block(const header_link& link) NOEXCEPT
+bool CLASS::is_candidate_block(const header_link& link) NOEXCEPT
 {
     const auto height = get_header_height(link);
     if (height.is_terminal())
@@ -1234,7 +1246,7 @@ inline bool CLASS::is_candidate_block(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-inline bool CLASS::is_confirmed_block(const header_link& link) NOEXCEPT
+bool CLASS::is_confirmed_block(const header_link& link) NOEXCEPT
 {
     const auto height = get_header_height(link);
     if (height.is_terminal())
@@ -1246,24 +1258,34 @@ inline bool CLASS::is_confirmed_block(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-inline bool CLASS::is_confirmed_tx(const tx_link& link) NOEXCEPT
+bool CLASS::is_confirmed_tx(const tx_link& link) NOEXCEPT
 {
     const auto fk = to_strong_by(link);
     return !fk.is_terminal() && is_confirmed_block(fk);
 }
 
 TEMPLATE
-inline bool CLASS::is_confirmed_input(const input_link& link) NOEXCEPT
+bool CLASS::is_confirmed_input(const input_link& link) NOEXCEPT
 {
     const auto fk = to_input_tx(link);
     return !fk.is_terminal() && is_confirmed_tx(fk);
 }
 
 TEMPLATE
-inline bool CLASS::is_confirmed_output(const output_link& link) NOEXCEPT
+bool CLASS::is_confirmed_output(const output_link& link) NOEXCEPT
 {
     const auto fk = to_output_tx(link);
     return !fk.is_terminal() && is_confirmed_tx(fk);
+}
+
+TEMPLATE
+bool CLASS::is_spent_output(const output_link& link) NOEXCEPT
+{
+    const auto ins = to_spenders(link);
+    return std::any_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
+    {
+        return is_confirmed_input(in);
+    });
 }
 
 // Confirmation.
@@ -1271,7 +1293,7 @@ inline bool CLASS::is_confirmed_output(const output_link& link) NOEXCEPT
 // Strong must be set at current height during organization, unset if fails.
 
 TEMPLATE
-inline bool CLASS::is_strong(const input_link& link) NOEXCEPT
+bool CLASS::is_strong(const input_link& link) NOEXCEPT
 {
     return !to_strong_by(to_input_tx(link)).is_terminal();
 }
@@ -1280,7 +1302,8 @@ TEMPLATE
 bool CLASS::is_spent(const input_link& link) NOEXCEPT
 {
     table::input::slab_composite_sk input{};
-    return store_.input.get(link, input) && is_spent_prevout(input.key, link);
+    return store_.input.get(link, input) && !input.is_null() &&
+        is_spent_prevout(input.key, link);
 }
 
 // protected
@@ -1288,6 +1311,8 @@ TEMPLATE
 bool CLASS::is_spent_prevout(const table::input::search_key& key,
     const input_link& self) NOEXCEPT
 {
+    BC_ASSERT(key != table::input::null_point());
+
     const auto ins = to_spenders(key);
     return (ins.size() > one) &&
         std::any_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
@@ -1460,7 +1485,7 @@ bool CLASS::pop_candidate() NOEXCEPT
 
 // Address (natural-keyed).
 // ----------------------------------------------------------------------------
-// TODO: address search/iteration (spentness, value, order), use point keys.
+// TODO: use point keys (for multimap compression).
 
 TEMPLATE
 hash_digest CLASS::address_hash(const output& output) NOEXCEPT
@@ -1472,22 +1497,110 @@ hash_digest CLASS::address_hash(const output& output) NOEXCEPT
     return digest;
 }
 
+// protected
 TEMPLATE
-output_link CLASS::get_address(const hash_digest& key) NOEXCEPT
+bool CLASS::is_confirmed_unspent(const output_link& link) NOEXCEPT
 {
-    const auto fk = store_.address.first(key);
-    if (fk.is_terminal())
-        return {};
-
-    table::address::record address{};
-    if (!store_.address.get(fk, address))
-        return {};
-
-    return address.output_fk;
+    return is_confirmed_output(link) && !is_spent_output(link);
 }
 
 TEMPLATE
-bool CLASS::set_address(const hash_digest& key,
+uint64_t CLASS::get_confirmed_balance(const hash_digest& key) NOEXCEPT
+{
+    auto it = store_.address.it(key);
+    if (it.self().is_terminal())
+        return {};
+
+    uint64_t balance{};
+    do
+    {
+        table::address::record address{};
+        if (!store_.address.get(it.self(), address))
+            return {};
+
+        // Failure or overflow returns maximum value.
+        if (is_confirmed_unspent(address.output_fk))
+            balance = system::ceilinged_add(balance,
+                get_value(address.output_fk));
+    }
+    while (it.advance());
+    return balance;
+}
+
+TEMPLATE
+output_links CLASS::to_address_outputs(const hash_digest& key) NOEXCEPT
+{
+    auto it = store_.address.it(key);
+    if (it.self().is_terminal())
+        return {};
+
+    output_links outputs{};
+    do
+    {
+        table::address::record address{};
+        if (!store_.address.get(it.self(), address))
+            return {};
+
+        outputs.push_back(address.output_fk);
+    }
+    while (it.advance());
+    return outputs;
+}
+
+TEMPLATE
+output_links CLASS::to_unspent_outputs(const hash_digest& key) NOEXCEPT
+{
+    auto it = store_.address.it(key);
+    if (it.self().is_terminal())
+        return {};
+
+    output_links outputs{};
+    do
+    {
+        table::address::record address{};
+        if (!store_.address.get(it.self(), address))
+            return {};
+
+        if (is_confirmed_unspent(address.output_fk))
+            outputs.push_back(address.output_fk);
+    }
+    while (it.advance());
+    return outputs;
+}
+
+TEMPLATE
+output_links CLASS::to_minimum_unspent_outputs(const hash_digest& key,
+    uint64_t minimum) NOEXCEPT
+{
+    auto it = store_.address.it(key);
+    if (it.self().is_terminal())
+        return {};
+
+    output_links outputs{};
+    do
+    {
+        table::address::record address{};
+        if (!store_.address.get(it.self(), address))
+            return {};
+
+        // Confirmed and not spent, but possibly immature.
+        if (is_confirmed_output(address.output_fk) &&
+            !is_spent_output(address.output_fk))
+        {
+            const auto value = get_value(address.output_fk);
+            if (value == max_uint64)
+                return {};
+
+            if (value >= minimum)
+                outputs.push_back(address.output_fk);
+        }
+    }
+    while (it.advance());
+    return outputs;
+}
+
+TEMPLATE
+bool CLASS::set_address_output(const hash_digest& key,
     const output_link& link) NOEXCEPT
 {
     if (link.is_terminal())
@@ -1510,12 +1623,8 @@ bool CLASS::set_address(const hash_digest& key,
 TEMPLATE
 typename CLASS::filter CLASS::get_filter(const header_link& link) NOEXCEPT
 {
-    const auto fk = store_.neutrino.first(link);
-    if (fk.is_terminal())
-        return {};
-
     table::neutrino::slab_get_filter neutrino{};
-    if (!store_.neutrino.get(fk, neutrino))
+    if (!store_.neutrino.get(store_.neutrino.first(link), neutrino))
         return {};
 
     return std::move(neutrino.filter);
@@ -1524,12 +1633,8 @@ typename CLASS::filter CLASS::get_filter(const header_link& link) NOEXCEPT
 TEMPLATE
 hash_digest CLASS::get_filter_head(const header_link& link) NOEXCEPT
 {
-    const auto fk = store_.neutrino.first(link);
-    if (fk.is_terminal())
-        return {};
-
     table::neutrino::slab_get_head neutrino{};
-    if (!store_.neutrino.get(fk, neutrino))
+    if (!store_.neutrino.get(store_.neutrino.first(link), neutrino))
         return {};
 
     return std::move(neutrino.filter_head);
@@ -1553,18 +1658,14 @@ bool CLASS::set_filter(const header_link& link, const hash_digest& filter_head,
 
 // Buffer (foreign-keyed).
 // ----------------------------------------------------------------------------
-// TODO: serialize prevouts.
+// TODO: serialize prevouts, compare deserialization time to native storage.
 
 TEMPLATE
 typename CLASS::transaction::cptr CLASS::get_buffered_tx(
     const tx_link& link) NOEXCEPT
 {
-    const auto fk = store_.buffer.first(link);
-    if (fk.is_terminal())
-        return {};
-
     table::buffer::slab_ptr buffer{};
-    if (!store_.buffer.get(fk, buffer))
+    if (!store_.buffer.get(store_.buffer.first(link), buffer))
         return {};
 
     return buffer.tx;

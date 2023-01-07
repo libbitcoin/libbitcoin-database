@@ -38,7 +38,6 @@ using header_link = table::header::link;
 using tx_links = std_vector<tx_link::integer>;
 using input_links = std_vector<input_link::integer>;
 using output_links = std_vector<output_link::integer>;
-using header_links = std_vector<header_link::integer>;
 
 template <typename Store>
 class query
@@ -99,7 +98,7 @@ public:
     header_link to_strong_by(const tx_link& link) NOEXCEPT;
 
     /// output to spenders (reverse navigation)
-    /// Empty implies no spenders.
+    /// Null implies fault, empty implies no spenders.
     input_links to_spenders(const output_link& link) NOEXCEPT;
     input_links to_spenders(const point& prevout) NOEXCEPT;
     input_links to_spenders(const tx_link& link,
@@ -119,11 +118,11 @@ public:
     /// Archival (mostly natural-keyed).
     /// -----------------------------------------------------------------------
 
-    inline bool is_coinbase(const tx_link& link) NOEXCEPT;
-    inline bool is_associated(const header_link& link) NOEXCEPT;
     inline bool is_header(const hash_digest& key) NOEXCEPT;
     inline bool is_block(const hash_digest& key) NOEXCEPT;
     inline bool is_tx(const hash_digest& key) NOEXCEPT;
+    inline bool is_coinbase(const tx_link& link) NOEXCEPT;
+    inline bool is_associated(const header_link& link) NOEXCEPT;
 
     /// False implies fault.
     inline bool set(const header& header, const context& ctx) NOEXCEPT;
@@ -155,11 +154,13 @@ public:
     point::cptr get_point(const input_link& link) NOEXCEPT;
     inputs_ptr get_spenders(const output_link& link) NOEXCEPT;
 
+    /// Maximum value implies not found.
     /// Null implies fault if link verified/associated.
     output::cptr get_output(const point& prevout) NOEXCEPT;
     output::cptr get_output(const tx_link& link, uint32_t output_index) NOEXCEPT;
     input::cptr get_input(const tx_link& link, uint32_t input_index) NOEXCEPT;
     inputs_ptr get_spenders(const tx_link& link, uint32_t output_index) NOEXCEPT;
+    uint64_t get_value(const output_link& link) NOEXCEPT;
 
     /// Terminal implies fault.
     header_link set_link(const header& header, const context& ctx) NOEXCEPT;
@@ -203,6 +204,7 @@ public:
     bool is_confirmed_tx(const tx_link& link) NOEXCEPT;
     bool is_confirmed_input(const input_link& link) NOEXCEPT;
     bool is_confirmed_output(const output_link& link) NOEXCEPT;
+    bool is_spent_output(const output_link& link) NOEXCEPT;
 
     /// These rely on strong (use only for confirmation process).
     bool is_strong(const input_link& link) NOEXCEPT;
@@ -226,26 +228,31 @@ public:
     /// -----------------------------------------------------------------------
 
     static hash_digest address_hash(const output& output) NOEXCEPT;
+    uint64_t get_confirmed_balance(const hash_digest& key) NOEXCEPT;
 
     /// Address (natural-keyed).
-    /// Terminal implies not found, false implies fault.
-    output_link get_address(const hash_digest& key) NOEXCEPT;
-    bool set_address(const hash_digest& key, const output_link& link) NOEXCEPT;
+    /// Empty implies not found (no fault), false implies fault.
+    output_links to_address_outputs(const hash_digest& key) NOEXCEPT;
+    output_links to_unspent_outputs(const hash_digest& key) NOEXCEPT;
+    output_links to_minimum_unspent_outputs(const hash_digest& key,
+        uint64_t value) NOEXCEPT;
+    bool set_address_output(const hash_digest& key,
+        const output_link& link) NOEXCEPT;
 
     /// Neutrino (foreign-keyed).
-    /// Empty/null_hash implies not found, false implies fault.
+    /// Empty/null_hash implies not found (no fault), false implies fault.
     filter get_filter(const header_link& link) NOEXCEPT;
     hash_digest get_filter_head(const header_link& link) NOEXCEPT;
     bool set_filter(const header_link& link, const hash_digest& head,
         const filter& body) NOEXCEPT;
 
     /// Buffer (foreign-keyed).
-    /// Null implies not found, false implies fault.
+    /// Null implies not found (no fault), false implies fault.
     transaction::cptr get_buffered_tx(const tx_link& link) NOEXCEPT;
     bool set_buffered_tx(const tx_link& link, const transaction& tx) NOEXCEPT;
 
     /// Bootstrap (natural-keyed).
-    /// Empty implies empty table, false implies height exceeds confirmed top.
+    /// Empty implies empty table (no fault), false implies height exceeds top.
     hashes get_bootstrap() NOEXCEPT;
     bool set_bootstrap(size_t height) NOEXCEPT;
 
@@ -254,9 +261,10 @@ protected:
     using puts_link = table::puts::link;
     using txs_link = table::txs::link;
 
-    /// Empty implies fault if link associated.
+    /// Empty implies fault if header_link associated.
     inline txs_link to_txs(const header_link& link) NOEXCEPT;
     input_links to_spenders(const table::input::search_key& key) NOEXCEPT;
+    bool is_confirmed_unspent(const output_link& link) NOEXCEPT;
     bool is_mature_prevout(const point_link& link, size_t height) NOEXCEPT;
     bool is_spent_prevout(const table::input::search_key& key,
         const input_link& self) NOEXCEPT;

@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(query_optional__address_hash__genesis__expected)
     BOOST_REQUIRE_EQUAL(test::query_accessor::address_hash(output), genesis_address);
 }
 
-BOOST_AUTO_TEST_CASE(query_optional__set_address__get_address__expected)
+BOOST_AUTO_TEST_CASE(query_optional__get_confirmed_balance__genesis__expected)
 {
     settings settings{};
     settings.dir = TEST_DIRECTORY;
@@ -56,8 +56,84 @@ BOOST_AUTO_TEST_CASE(query_optional__set_address__get_address__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set_address(genesis_address, query.to_output(0, 0)));
-    BOOST_REQUIRE_EQUAL(query.get_address(genesis_address), query.to_output(0, 0));
+    BOOST_REQUIRE(query.set_address_output(genesis_address, query.to_output(0, 0)));
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_balance(genesis_address), 5000000000u);
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__to_address_outputs__genesis__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set_address_output(genesis_address, query.to_output(0, 0)));
+
+    const auto outputs = query.to_address_outputs(genesis_address);
+    BOOST_REQUIRE_EQUAL(outputs.size(), 1u);
+    BOOST_REQUIRE_EQUAL(outputs.front(), query.to_output(0, 0));
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__to_unspent_outputs__genesis__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set_address_output(genesis_address, query.to_output(0, 0)));
+
+    const auto outputs = query.to_unspent_outputs(genesis_address);
+    BOOST_REQUIRE_EQUAL(outputs.size(), 1u);
+    BOOST_REQUIRE_EQUAL(outputs.front(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__above__excluded)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set_address_output(genesis_address, 0));
+    BOOST_REQUIRE(query.to_minimum_unspent_outputs(genesis_address, 5000000001).empty());
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__at__included)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set_address_output(genesis_address, 0));
+
+    const auto outputs = query.to_minimum_unspent_outputs(genesis_address, 5000000000);
+    BOOST_REQUIRE_EQUAL(outputs.size(), 1u);
+    BOOST_REQUIRE_EQUAL(outputs.front(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__below__included)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set_address_output(genesis_address, 0));
+
+    const auto outputs0 = query.to_minimum_unspent_outputs(genesis_address, 0);
+    BOOST_REQUIRE_EQUAL(outputs0.size(), 1u);
+    BOOST_REQUIRE_EQUAL(outputs0.front(), 0);
+
+    const auto outputs1 = query.to_minimum_unspent_outputs(genesis_address, 4999999999);
+    BOOST_REQUIRE_EQUAL(outputs1.size(), 1u);
+    BOOST_REQUIRE_EQUAL(outputs1.front(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(query_optional__set_filter__get_filter_and_head__expected)
