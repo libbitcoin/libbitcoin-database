@@ -162,6 +162,19 @@ struct header
         search_key key{};
     };
 
+    struct get_parent_fk
+      : public schema::header
+    {        
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(context::size);
+            parent_fk = source.read_little_endian<link::integer, link::size>();
+            return source;
+        }
+
+        link::integer parent_fk{};
+    };
+
     struct record_flags
       : public schema::header
     {

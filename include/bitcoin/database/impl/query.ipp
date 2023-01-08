@@ -306,7 +306,7 @@ header_link CLASS::to_block(const tx_link& link) NOEXCEPT
 TEMPLATE
 header_link CLASS::to_parent(const header_link& link) NOEXCEPT
 {
-    table::header::record header{};
+    table::header::get_parent_fk header{};
     if (!store_.header.get(link, header))
         return {};
 
@@ -576,7 +576,6 @@ hashes CLASS::get_txs(const header_link& link) NOEXCEPT
     return hashes;
 }
 
-// TODO: test.
 TEMPLATE
 inline hash_digest CLASS::get_header_key(const header_link& link) NOEXCEPT
 {
