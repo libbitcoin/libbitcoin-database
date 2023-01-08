@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__get_fork__confirmed_ahead__expected)
 
 // get_last_associated_from
 
-BOOST_AUTO_TEST_CASE(query_initialization__get_last_associated_from__terminal__terminal)
+BOOST_AUTO_TEST_CASE(query_initialization__get_last_associated_from__terminal__max_size_t)
 {
     settings settings{};
     settings.dir = TEST_DIRECTORY;
@@ -251,8 +251,8 @@ BOOST_AUTO_TEST_CASE(query_initialization__get_last_associated_from__terminal__t
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE_EQUAL(query.get_last_associated_from(max_size_t), height_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.get_last_associated_from(height_link::terminal), height_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.get_last_associated_from(max_size_t), max_size_t);
+    BOOST_REQUIRE_EQUAL(query.get_last_associated_from(height_link::terminal), max_size_t);
 
     // unassociated, but correct.
     BOOST_REQUIRE_EQUAL(query.get_last_associated_from(42), 42u);

@@ -252,17 +252,20 @@ namespace schema
         static_assert(minrow == 3u);
     };
 
-    // Modest (sk:4) record multimap, with high multiple rate.
+    // TODO: modest (sk:4) record multimap, with high multiple rate.
+    // large (sk:32) record multimap, with high multiple rate.
     struct address
     {
         static constexpr size_t pk = schema::puts_;
-        static constexpr size_t sk = schema::point::pk;
+        ////static constexpr size_t sk = schema::point::pk;
+        static constexpr size_t sk = schema::hash;
         static constexpr size_t minsize = schema::put;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
         static_assert(minsize == 5u);
-        static_assert(minrow == 13u);
+        ////static_assert(minrow == 13u);
+        static_assert(minrow == 41u);
     };
 
     // record hashmap
@@ -335,7 +338,7 @@ namespace schema
         static_assert(minrow == 9u);
     };
 
-    // Modest (sk:4) slab multimap, with low multiple rate.
+    // modest (sk:4) slab multimap, with low multiple rate.
     struct validated_tx
     {
         static constexpr size_t pk = schema::tx_slab;

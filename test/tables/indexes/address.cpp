@@ -22,8 +22,8 @@
 BOOST_AUTO_TEST_SUITE(address_tests)
 
 using namespace system;
-const table::address::key key1{ 0x01, 0x02, 0x03, 0x04 };
-const table::address::key key2{ 0xa1, 0xa2, 0xa3, 0xa4 };
+const table::address::key key1 = base16_array("100000000000000000000000000000000000000000000000000000000000000a");
+const table::address::key key2 = base16_array("200000000000000000000000000000000000000000000000000000000000000b");
 const table::address::record in1{ {}, 0x1234567890abcdef };
 const table::address::record in2{ {}, 0xabcdef1234567890 };
 const table::address::record out1{ {}, 0x0000007890abcdef };
@@ -33,27 +33,27 @@ const data_chunk expected_head = base16_chunk
     "00000000"
     "ffffffff"
     "ffffffff"
-    "ffffffff"
-    "ffffffff"
     "01000000"
+    "00000000"
+    "ffffffff"
 );
 const data_chunk closed_head = base16_chunk
 (
     "02000000"
     "ffffffff"
     "ffffffff"
-    "ffffffff"
-    "ffffffff"
     "01000000"
+    "00000000"
+    "ffffffff"
 );
 const data_chunk expected_body = base16_chunk
 (
     "ffffffff"   // next->end
-    "01020304"   // key1
+    "100000000000000000000000000000000000000000000000000000000000000a" // key1
     "efcdab9078" // output1 [low 5 bytes]
 
-    "00000000"   // next->
-    "a1a2a3a4"   // key2
+    "ffffffff"   // next->end
+    "200000000000000000000000000000000000000000000000000000000000000b" // key2
     "9078563412" // output2 [low 5 bytes]
 );
 

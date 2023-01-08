@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmed_output__confirm__expected)
     BOOST_REQUIRE(query.is_confirmed_output(query.to_output(2, 0)));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__set_strong__unassociated__false)
+BOOST_AUTO_TEST_CASE(query_confirmation__is_spent_output__genesis__false)
 {
     settings settings{};
     settings.dir = TEST_DIRECTORY;
@@ -200,12 +200,11 @@ BOOST_AUTO_TEST_CASE(query_confirmation__set_strong__unassociated__false)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1.header(), {}));
-    BOOST_REQUIRE(!query.set_strong(1));
-    BOOST_REQUIRE(!query.set_unstrong(1));
+    BOOST_REQUIRE(!query.is_spent_output(query.to_output(0, 0)));
+    BOOST_REQUIRE(!query.is_spent_output(query.to_output(1, 1)));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__set_strong__set_unstrong__expected)
+BOOST_AUTO_TEST_CASE(query_confirmation__is_spent_output__strong_confirmed__true)
 {
     settings settings{};
     settings.dir = TEST_DIRECTORY;
@@ -213,52 +212,49 @@ BOOST_AUTO_TEST_CASE(query_confirmation__set_strong__set_unstrong__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, { 0, 1, 0 }));
-    BOOST_REQUIRE(query.set(test::block2, { 0, 2, 0 }));
-    BOOST_REQUIRE(query.push_confirmed(1));
-    BOOST_REQUIRE(query.push_confirmed(2));
-
-    BOOST_REQUIRE(query.is_confirmed_tx(0));
-    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(0, 0)));
-    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(0, 0)));
-
-    BOOST_REQUIRE(!query.is_confirmed_tx(1));
-    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(1, 0)));
-    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(1, 0)));
-
-    BOOST_REQUIRE(!query.is_confirmed_tx(2));
-    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(2, 0)));
-    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(2, 0)));
-
+    BOOST_REQUIRE(query.set(test::block1a, { 0, 1, 0 }));
+    BOOST_REQUIRE(query.set(test::block2a, { 0, 2, 0 }));
+    BOOST_REQUIRE(query.set(test::block3a, { 0, 3, 0 }));
+    BOOST_REQUIRE(!query.is_spent_output(query.to_output(0, 0))); // genesis
+    BOOST_REQUIRE(!query.is_spent_output(query.to_output(1, 0))); // block1a
+    BOOST_REQUIRE(!query.is_spent_output(query.to_output(1, 1))); // block1a
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.set_strong(2));
+    BOOST_REQUIRE(query.set_strong(3));
+    BOOST_REQUIRE(!query.is_spent_output(query.to_output(0, 0))); // genesis
+    BOOST_REQUIRE(!query.is_spent_output(query.to_output(1, 0))); // block1a
+    BOOST_REQUIRE(!query.is_spent_output(query.to_output(1, 1))); // block1a
+    BOOST_REQUIRE(query.push_confirmed(1));
+    BOOST_REQUIRE(query.push_confirmed(2));
+    BOOST_REQUIRE(query.push_confirmed(3));
+    BOOST_REQUIRE(!query.is_spent_output(query.to_output(0, 0))); // genesis
+    BOOST_REQUIRE(query.is_spent_output(query.to_output(1, 0)));  // block1a
+    BOOST_REQUIRE(query.is_spent_output(query.to_output(1, 1)));  // block1a
+}
 
-    BOOST_REQUIRE(query.is_confirmed_tx(0));
-    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(0, 0)));
-    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(0, 0)));
+BOOST_AUTO_TEST_CASE(query_confirmation__is_strong__strong__true)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.is_strong(query.to_input(0, 0)));
+}
 
-    BOOST_REQUIRE(query.is_confirmed_tx(1));
-    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(1, 0)));
-    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(1, 0)));
-
-    BOOST_REQUIRE(query.is_confirmed_tx(2));
-    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(2, 0)));
-    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(2, 0)));
-
-    BOOST_REQUIRE(query.set_unstrong(1));
-    BOOST_REQUIRE(query.set_unstrong(2));
-
-    BOOST_REQUIRE(query.is_confirmed_tx(0));
-    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(0, 0)));
-    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(0, 0)));
-
-    BOOST_REQUIRE(!query.is_confirmed_tx(1));
-    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(1, 0)));
-    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(1, 0)));
-
-    BOOST_REQUIRE(!query.is_confirmed_tx(2));
-    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(2, 0)));
-    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(2, 0)));
+BOOST_AUTO_TEST_CASE(query_confirmation__is_strong__weak__false)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, {}));
+    BOOST_REQUIRE(!query.is_strong(query.to_input(1, 0)));
+    BOOST_REQUIRE(query.set_strong(1));
+    BOOST_REQUIRE(query.is_strong(query.to_input(1, 0)));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirmation__is_spent__unspent__false)
@@ -381,6 +377,23 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_mature__null_input__true)
     BOOST_REQUIRE(query.is_mature(query.to_input(0, 0), 0));
 }
 
+BOOST_AUTO_TEST_CASE(query_confirmation__is_mature__non_coinbase_strong_above__true)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, { 0, 1, 0 }));
+    BOOST_REQUIRE(query.set(test::tx4));
+
+    // Is not actually mature at height zero, but strong is presumed to always
+    // be set at the current height and never above it (set above in this test).
+    BOOST_REQUIRE(query.set_strong(1));
+    BOOST_REQUIRE(query.is_mature(query.to_input(2, 0), 0));
+}
+
 BOOST_AUTO_TEST_CASE(query_confirmation__is_mature__non_coinbase__true)
 {
     settings settings{};
@@ -390,9 +403,9 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_mature__non_coinbase__true)
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1a, { 0, 1, 0 }));
-    BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.set(test::tx4));
-    BOOST_REQUIRE(query.is_mature(query.to_input(2, 0), 0));
+    BOOST_REQUIRE(query.set_strong(1));
+    BOOST_REQUIRE(query.is_mature(query.to_input(2, 0), 1));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirmation__is_mature__coinbase__expected)
@@ -593,6 +606,75 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmable_block__unconfirmed_doubl
 
     // Confirmable because of intervening tx5 is unconfirmed double spend.
     BOOST_REQUIRE(query.is_confirmable_block(2, 2));
+}
+
+BOOST_AUTO_TEST_CASE(query_confirmation__set_strong__unassociated__false)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1.header(), {}));
+    BOOST_REQUIRE(!query.set_strong(1));
+    BOOST_REQUIRE(!query.set_unstrong(1));
+}
+
+BOOST_AUTO_TEST_CASE(query_confirmation__set_strong__set_unstrong__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, { 0, 1, 0 }));
+    BOOST_REQUIRE(query.set(test::block2, { 0, 2, 0 }));
+    BOOST_REQUIRE(query.push_confirmed(1));
+    BOOST_REQUIRE(query.push_confirmed(2));
+
+    BOOST_REQUIRE(query.is_confirmed_tx(0));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(0, 0)));
+    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(0, 0)));
+
+    BOOST_REQUIRE(!query.is_confirmed_tx(1));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(1, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(1, 0)));
+
+    BOOST_REQUIRE(!query.is_confirmed_tx(2));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(2, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(2, 0)));
+
+    BOOST_REQUIRE(query.set_strong(1));
+    BOOST_REQUIRE(query.set_strong(2));
+
+    BOOST_REQUIRE(query.is_confirmed_tx(0));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(0, 0)));
+    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(0, 0)));
+
+    BOOST_REQUIRE(query.is_confirmed_tx(1));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(1, 0)));
+    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(1, 0)));
+
+    BOOST_REQUIRE(query.is_confirmed_tx(2));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(2, 0)));
+    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(2, 0)));
+
+    BOOST_REQUIRE(query.set_unstrong(1));
+    BOOST_REQUIRE(query.set_unstrong(2));
+
+    BOOST_REQUIRE(query.is_confirmed_tx(0));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(0, 0)));
+    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(0, 0)));
+
+    BOOST_REQUIRE(!query.is_confirmed_tx(1));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(1, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(1, 0)));
+
+    BOOST_REQUIRE(!query.is_confirmed_tx(2));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(2, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(2, 0)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

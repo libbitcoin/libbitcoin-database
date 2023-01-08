@@ -40,33 +40,207 @@ struct query_optional_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(query_optional_tests, query_optional_setup_fixture)
 
-/////// Address (natural-keyed).
-/////// Terminal implies not found, false implies fault.
-////hash_digest address_hash(const output& output) NOEXCEPT;
-////output_link get_address(const hash_digest& key) NOEXCEPT;
-////bool set_address(const hash_digest& key, const output_link& link) NOEXCEPT;
-////bool set_address(const output& output) NOEXCEPT;
-////
-/////// Neutrino (foreign-keyed).
-/////// Empty/null_hash implies not found, false implies fault.
-////filter get_filter(const header_link& link) NOEXCEPT;
-////hash_digest get_filter_head(const header_link& link) NOEXCEPT;
-////bool set_filter(const header_link& link, const hash_digest& head,
-////    const filter& body) NOEXCEPT;
-////
-/////// Buffer (foreign-keyed).
-/////// Null implies not found, false implies fault.
-////transaction::cptr get_buffered_tx(const tx_link& link) NOEXCEPT;
-////bool set_buffered_tx(const tx_link& link, const transaction& tx) NOEXCEPT;
-////
-/////// Bootstrap (natural-keyed).
-/////// Empty implies empty table, false implies height exceeds confirmed top.
-////hashes get_bootstrap() NOEXCEPT;
-////bool set_bootstrap(size_t height) NOEXCEPT;
+constexpr auto genesis_address = system::base16_array("023a37945feac5597732cd736c1512c5997fec3d23767741a2b79a719f5f23e5");
 
-BOOST_AUTO_TEST_CASE(query_optional_test)
+BOOST_AUTO_TEST_CASE(query_optional__address_hash__genesis__expected)
 {
-    BOOST_REQUIRE(true);
+    const auto& output = *test::genesis.transactions_ptr()->front()->outputs_ptr()->front();
+    BOOST_REQUIRE_EQUAL(test::query_accessor::address_hash(output), genesis_address);
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__get_confirmed_balance__genesis__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set_address_output(genesis_address, query.to_output(0, 0)));
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_balance(genesis_address), 5000000000u);
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__to_address_outputs__genesis__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set_address_output(genesis_address, query.to_output(0, 0)));
+
+    const auto outputs = query.to_address_outputs(genesis_address);
+    BOOST_REQUIRE_EQUAL(outputs.size(), 1u);
+    BOOST_REQUIRE_EQUAL(outputs.front(), query.to_output(0, 0));
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__to_unspent_outputs__genesis__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set_address_output(genesis_address, query.to_output(0, 0)));
+
+    const auto outputs = query.to_unspent_outputs(genesis_address);
+    BOOST_REQUIRE_EQUAL(outputs.size(), 1u);
+    BOOST_REQUIRE_EQUAL(outputs.front(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__above__excluded)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set_address_output(genesis_address, 0));
+    BOOST_REQUIRE(query.to_minimum_unspent_outputs(genesis_address, 5000000001).empty());
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__at__included)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set_address_output(genesis_address, 0));
+
+    const auto outputs = query.to_minimum_unspent_outputs(genesis_address, 5000000000);
+    BOOST_REQUIRE_EQUAL(outputs.size(), 1u);
+    BOOST_REQUIRE_EQUAL(outputs.front(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__below__included)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set_address_output(genesis_address, 0));
+
+    const auto outputs0 = query.to_minimum_unspent_outputs(genesis_address, 0);
+    BOOST_REQUIRE_EQUAL(outputs0.size(), 1u);
+    BOOST_REQUIRE_EQUAL(outputs0.front(), 0);
+
+    const auto outputs1 = query.to_minimum_unspent_outputs(genesis_address, 4999999999);
+    BOOST_REQUIRE_EQUAL(outputs1.size(), 1u);
+    BOOST_REQUIRE_EQUAL(outputs1.front(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__set_filter__get_filter_and_head__expected)
+{
+    const auto& filer_head0 = system::null_hash;
+    const auto filter0 = system::base16_chunk("0102030405060708090a0b0c0d0e0f");
+    const auto& filer_head1 = system::one_hash;
+    const auto filter1 = system::base16_chunk("102030405060708090a0b0c0d0e0f0102030405060708090a0b0c0d0e0f0");
+
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, {}));
+    BOOST_REQUIRE(query.set_filter(0, filer_head0, filter0));
+    BOOST_REQUIRE(query.set_filter(1, filer_head1, filter1));
+    BOOST_REQUIRE_EQUAL(query.get_filter_head(0), filer_head0);
+    BOOST_REQUIRE_EQUAL(query.get_filter_head(1), filer_head1);
+    BOOST_REQUIRE_EQUAL(query.get_filter(0), filter0);
+    BOOST_REQUIRE_EQUAL(query.get_filter(1), filter1);
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__set_buffered_tx__get_buffered_tx__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::tx4));
+    BOOST_REQUIRE(query.set(test::tx5));
+    BOOST_REQUIRE(query.set_buffered_tx(1, test::tx4));
+    BOOST_REQUIRE(query.set_buffered_tx(2, test::tx4));
+    BOOST_REQUIRE(*query.get_buffered_tx(1) == test::tx4);
+    BOOST_REQUIRE(*query.get_buffered_tx(2) == test::tx4);
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__set_buffered_tx__unarchived_transaction__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    // Use of the tx_link as key is conventional.
+    BOOST_REQUIRE(query.set_buffered_tx(42, {}));
+    BOOST_REQUIRE(*query.get_buffered_tx(42) == system::chain::transaction{});
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__get_buffered_tx__unset_transaction__nullptr)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(!query.get_buffered_tx(42));
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__set_bootstrap__above_confirmed__false)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, {}));
+    BOOST_REQUIRE(query.set(test::block2, {}));
+    BOOST_REQUIRE(query.set(test::block3, {}));
+    BOOST_REQUIRE(query.push_confirmed(1));
+    BOOST_REQUIRE(!query.set_bootstrap(2));
+    BOOST_REQUIRE(query.set_bootstrap(0));
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__set_bootstrap__twice__clears_previous)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, {}));
+    BOOST_REQUIRE(query.set(test::block2, {}));
+    BOOST_REQUIRE(query.set(test::block3, {}));
+    BOOST_REQUIRE(query.push_confirmed(1));
+    BOOST_REQUIRE(query.push_confirmed(2));
+    BOOST_REQUIRE(query.push_confirmed(3));
+    BOOST_REQUIRE(query.set_bootstrap(2));
+    BOOST_REQUIRE(query.set_bootstrap(3));
+
+    const hashes expected
+    {
+        test::genesis.hash(),
+        test::block1.hash(),
+        test::block2.hash(),
+        test::block3.hash()
+    };
+
+    BOOST_REQUIRE_EQUAL(query.get_bootstrap(), expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
