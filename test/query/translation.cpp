@@ -496,6 +496,28 @@ BOOST_AUTO_TEST_CASE(query_translation__to_block__set_strong__expected)
     BOOST_REQUIRE_EQUAL(query.to_block(3), header_link::terminal);
 }
 
+// _to_parent
+
+BOOST_AUTO_TEST_CASE(query_translation__to_parent__always__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, test::context));
+    BOOST_REQUIRE(query.set(test::block2, test::context));
+    BOOST_REQUIRE(query.set(test::block1a, test::context));
+    BOOST_REQUIRE(query.set(test::block2a, test::context));
+    BOOST_REQUIRE_EQUAL(query.to_parent(0), header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_parent(1), 0u);
+    BOOST_REQUIRE_EQUAL(query.to_parent(2), 1u);
+    BOOST_REQUIRE_EQUAL(query.to_parent(3), 0u);
+    BOOST_REQUIRE_EQUAL(query.to_parent(4), 3u);
+    BOOST_REQUIRE_EQUAL(query.to_parent(5), header_link::terminal);
+}
+
 // to_txs
 
 BOOST_AUTO_TEST_CASE(query_translation__to_txs__always__expected)
