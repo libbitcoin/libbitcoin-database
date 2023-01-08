@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(query_archival__set_tx__get_tx__expected)
     BOOST_REQUIRE(query.set(tx));
     BOOST_REQUIRE(query.is_tx(tx.hash(false)));
 
-    const auto pointer1 = query.get_tx(query.to_tx(tx_hash));
+    const auto pointer1 = query.get_transaction(query.to_tx(tx_hash));
     BOOST_REQUIRE(pointer1);
     BOOST_REQUIRE(*pointer1 == tx);
 

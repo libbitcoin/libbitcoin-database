@@ -158,19 +158,6 @@ struct transaction
         puts::integer ins_fk{};
     };
 
-    struct record_sk
-      : public schema::transaction
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            source.rewind_bytes(sk);
-            key = source.read_hash();
-            return source;
-        }
-
-        search_key key{};
-    };
-
     struct record_puts
       : public schema::transaction
     {

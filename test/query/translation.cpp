@@ -445,9 +445,9 @@ BOOST_AUTO_TEST_CASE(query_translation__to_prevout_tx__to_prevout__expected)
     BOOST_REQUIRE_EQUAL(store.tx_body(), tx_body);
 }
 
-// to_strong_by/set_strong/set_unstrong
+// to_block/set_strong/set_unstrong
 
-BOOST_AUTO_TEST_CASE(query_translation__to_strong_by__set_strong__expected)
+BOOST_AUTO_TEST_CASE(query_translation__to_block__set_strong__expected)
 {
     settings settings{};
     settings.dir = TEST_DIRECTORY;
@@ -459,26 +459,26 @@ BOOST_AUTO_TEST_CASE(query_translation__to_strong_by__set_strong__expected)
     BOOST_REQUIRE(query.set(test::block2, test::context));
 
     // Either not strong or not found, except genesis.
-    BOOST_REQUIRE_EQUAL(query.to_strong_by(0), 0u);
-    BOOST_REQUIRE_EQUAL(query.to_strong_by(1), header_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_strong_by(2), header_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_strong_by(3), header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_block(0), 0u);
+    BOOST_REQUIRE_EQUAL(query.to_block(1), header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_block(2), header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_block(3), header_link::terminal);
 
     // push_candidate/push_confirmed has no effect.
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::genesis.hash())));
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::genesis.hash())));
-    BOOST_REQUIRE_EQUAL(query.to_strong_by(0), 0u);
-    BOOST_REQUIRE_EQUAL(query.to_strong_by(1), header_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_strong_by(2), header_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_strong_by(3), header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_block(0), 0u);
+    BOOST_REQUIRE_EQUAL(query.to_block(1), header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_block(2), header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_block(3), header_link::terminal);
 
     // set_strong sets strong_by (only), and is idempotent.
     BOOST_REQUIRE(query.set_strong(query.to_header(test::genesis.hash())));
     BOOST_REQUIRE(query.set_strong(query.to_header(test::block1.hash())));
-    BOOST_REQUIRE_EQUAL(query.to_strong_by(0), 0u);
-    BOOST_REQUIRE_EQUAL(query.to_strong_by(1), 1u);
-    BOOST_REQUIRE_EQUAL(query.to_strong_by(2), header_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_strong_by(3), header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_block(0), 0u);
+    BOOST_REQUIRE_EQUAL(query.to_block(1), 1u);
+    BOOST_REQUIRE_EQUAL(query.to_block(2), header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_block(3), header_link::terminal);
 
     // candidate/confirmed unaffected.
     BOOST_REQUIRE(query.is_candidate_block(query.to_header(test::genesis.hash())));
@@ -490,15 +490,15 @@ BOOST_AUTO_TEST_CASE(query_translation__to_strong_by__set_strong__expected)
     BOOST_REQUIRE(query.set_unstrong(query.to_header(test::genesis.hash())));
     BOOST_REQUIRE(query.set_unstrong(query.to_header(test::block1.hash())));
     BOOST_REQUIRE(query.set_unstrong(query.to_header(test::block2.hash())));
-    BOOST_REQUIRE_EQUAL(query.to_strong_by(0), header_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_strong_by(1), header_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_strong_by(2), header_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_strong_by(3), header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_block(0), header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_block(1), header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_block(2), header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_block(3), header_link::terminal);
 }
 
-// to_transactions
+// to_txs
 
-BOOST_AUTO_TEST_CASE(query_translation__to_transactions__txs__expected)
+BOOST_AUTO_TEST_CASE(query_translation__to_txs__always__expected)
 {
     settings settings{};
     settings.dir = TEST_DIRECTORY;
@@ -510,10 +510,10 @@ BOOST_AUTO_TEST_CASE(query_translation__to_transactions__txs__expected)
     BOOST_REQUIRE(query.set(test::block2a, test::context));
 
     const tx_links expected_links2{ 2, 3 };
-    BOOST_REQUIRE_EQUAL(query.to_transactions(0), tx_links{ 0 });
-    BOOST_REQUIRE_EQUAL(query.to_transactions(1), tx_links{ 1 });
-    BOOST_REQUIRE_EQUAL(query.to_transactions(2), expected_links2);
-    BOOST_REQUIRE(query.to_transactions(3).empty());
+    BOOST_REQUIRE_EQUAL(query.to_txs(0), tx_links{ 0 });
+    BOOST_REQUIRE_EQUAL(query.to_txs(1), tx_links{ 1 });
+    BOOST_REQUIRE_EQUAL(query.to_txs(2), expected_links2);
+    BOOST_REQUIRE(query.to_txs(3).empty());
 }
 
 // to_spenders

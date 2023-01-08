@@ -51,19 +51,19 @@ BOOST_AUTO_TEST_CASE(query_validation__get_header_height__always__as_set)
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE_EQUAL(query.get_header_height(0), 0u);
 
-    BOOST_REQUIRE(query.get_header_height(1).is_terminal());
+    BOOST_REQUIRE_EQUAL(query.get_header_height(1), max_size_t);
     BOOST_REQUIRE(query.set(test::block1, { 0, 1, 0 }));
     BOOST_REQUIRE_EQUAL(query.get_header_height(1), 1u);
 
-    BOOST_REQUIRE(query.get_header_height(2).is_terminal());
+    BOOST_REQUIRE_EQUAL(query.get_header_height(2), max_size_t);
     BOOST_REQUIRE(query.set(test::block2, { 0, 2, 0 }));
     BOOST_REQUIRE_EQUAL(query.get_header_height(2), 2u);
 
-    BOOST_REQUIRE(query.get_header_height(3).is_terminal());
+    BOOST_REQUIRE_EQUAL(query.get_header_height(3), max_size_t);
     BOOST_REQUIRE(query.set(test::block1a, { 0, 1, 0 }));
     BOOST_REQUIRE_EQUAL(query.get_header_height(3), 1u);
 
-    BOOST_REQUIRE(query.get_header_height(4).is_terminal());
+    BOOST_REQUIRE_EQUAL(query.get_header_height(4), max_size_t);
     BOOST_REQUIRE(query.set(test::block2a, { 0, 2, 0 }));
     BOOST_REQUIRE_EQUAL(query.get_header_height(4), 2u);
 }

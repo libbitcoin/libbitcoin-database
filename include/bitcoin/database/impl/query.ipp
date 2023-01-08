@@ -86,7 +86,6 @@ CLASS::query(Store& value) NOEXCEPT
 TEMPLATE
 inline bool CLASS::is_initialized() NOEXCEPT
 {
-    // True return implies genesis indexed.
     return !is_zero(store_.confirmed.count()) &&
         !is_zero(store_.candidate.count());
 }
@@ -112,17 +111,16 @@ size_t CLASS::get_fork() NOEXCEPT
         if (to_confirmed(height) == to_candidate(height))
             return height;
 
-    // Should not be called during organization.
     return zero;
 }
 
+// TODO: retest.
 TEMPLATE
 size_t CLASS::get_last_associated_from(size_t height) NOEXCEPT
 {
     if (height >= height_link::terminal)
-        return height_link::terminal;
+        return max_size_t;
 
-    // Should not be called during organization.
     while (is_associated(to_candidate(++height)));
     return --height;
 }
@@ -136,10 +134,9 @@ hashes CLASS::get_all_unassociated_above(size_t height) NOEXCEPT
     {
         const auto header_fk = to_candidate(++height);
         if (!is_associated(header_fk))
-            out.push_back(store_.header.get_key(header_fk));
+            out.push_back(get_header_key(header_fk));
     }
 
-    // Should not be called during organization.
     return out;
 }
 
@@ -152,10 +149,9 @@ hashes CLASS::get_locator(const heights& heights) NOEXCEPT
     {
         const auto header_fk = to_confirmed(height);
         if (!header_fk.is_terminal())
-            out.push_back(store_.header.get_key(header_fk));
+            out.push_back(get_header_key(header_fk));
     }
 
-    // A missing hash implies one or more unindexed heights (ok).
     // Due to reorganization, top may decrease intermittently.
     out.shrink_to_fit();
     return out;
@@ -203,8 +199,9 @@ inline tx_link CLASS::to_tx(const hash_digest& key) NOEXCEPT
     return store_.tx.first(key);
 }
 
+// protected
 TEMPLATE
-inline typename CLASS::txs_link CLASS::to_txs(const header_link& link) NOEXCEPT
+inline txs_link CLASS::to_txs_link(const header_link& link) NOEXCEPT
 {
     return store_.txs.first(link);
 }
@@ -242,7 +239,7 @@ tx_link CLASS::to_prevout_tx(const input_link& link) NOEXCEPT
     if (in.is_null())
         return {};
 
-    return to_tx(store_.point.get_key(in.point_fk));
+    return to_tx(get_point_key(in.point_fk));
 }
 
 // point to put (forward navigation)
@@ -287,14 +284,14 @@ output_link CLASS::to_prevout(const input_link& link) NOEXCEPT
     if (in.is_null())
         return {};
 
-    return to_output(to_tx(store_.point.get_key(in.point_fk)), in.point_index);
+    return to_output(to_tx(get_point_key(in.point_fk)), in.point_index);
 }
 
-// tx to blocks (reverse navigation)
+// block/tx to block (reverse navigation)
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 TEMPLATE
-header_link CLASS::to_strong_by(const tx_link& link) NOEXCEPT
+header_link CLASS::to_block(const tx_link& link) NOEXCEPT
 {
     const auto fk = store_.strong_tx.first(link);
     if (fk.is_terminal())
@@ -305,6 +302,18 @@ header_link CLASS::to_strong_by(const tx_link& link) NOEXCEPT
         return {};
 
     return strong.header_fk;
+}
+
+// TODO: test.
+TEMPLATE
+header_link CLASS::to_parent(const header_link& link) NOEXCEPT
+{
+    table::header::record header{};
+    if (!store_.header.get(link, header))
+        return {};
+
+    // Terminal implies genesis (no parent).
+    return header.parent_fk;
 }
 
 // output to spenders (reverse navigation)
@@ -328,7 +337,7 @@ input_links CLASS::to_spenders(const tx_link& link,
     if (link.is_terminal())
         return {};
 
-    const auto point_fk = to_point(store_.tx.get_key(link));
+    const auto point_fk = to_point(get_tx_key(link));
     if (point_fk.is_terminal())
         return {};
 
@@ -361,7 +370,7 @@ input_links CLASS::to_spenders(const table::input::search_key& key) NOEXCEPT
     return spenders;
 }
 
-// block/tx to puts (forward navigation)
+// tx to puts (forward navigation)
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 TEMPLATE
@@ -394,10 +403,27 @@ output_links CLASS::to_tx_outputs(const tx_link& link) NOEXCEPT
     return std::move(puts.out_fks);
 }
 
+// block to txs/puts (forward navigation)
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+TEMPLATE
+tx_links CLASS::to_txs(const header_link& link) NOEXCEPT
+{
+    const auto fk = to_txs_link(link);
+    if (fk.is_terminal())
+        return {};
+
+    table::txs::slab txs{};
+    if (!store_.txs.get(fk, txs))
+        return {};
+
+    return std::move(txs.tx_fks);
+}
+
 TEMPLATE
 input_links CLASS::to_block_inputs(const header_link& link) NOEXCEPT
 {
-    const auto txs = to_transactions(link);
+    const auto txs = to_txs(link);
     if (txs.empty())
         return {};
 
@@ -417,7 +443,7 @@ input_links CLASS::to_block_inputs(const header_link& link) NOEXCEPT
 TEMPLATE
 output_links CLASS::to_block_outputs(const header_link& link) NOEXCEPT
 {
-    const auto txs = to_transactions(link);
+    const auto txs = to_txs(link);
     if (txs.empty())
         return {};
 
@@ -432,23 +458,6 @@ output_links CLASS::to_block_outputs(const header_link& link) NOEXCEPT
     }
 
     return outs;
-}
-
-// block to txs (forward navigation)
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-TEMPLATE
-tx_links CLASS::to_transactions(const header_link& link) NOEXCEPT
-{
-    const auto fk = to_txs(link);
-    if (fk.is_terminal())
-        return {};
-
-    table::txs::slab txs{};
-    if (!store_.txs.get(fk, txs))
-        return {};
-
-    return std::move(txs.tx_fks);
 }
 
 // Archival (natural-keyed).
@@ -536,7 +545,7 @@ bool CLASS::populate(const block& block) NOEXCEPT
     return result;
 }
 
-// Archival (foreign-keyed).
+// Archival (surrogate-keyed).
 // ----------------------------------------------------------------------------
 
 template <typename Element>
@@ -552,7 +561,7 @@ inline bool push_bool(std_vector<Element>& stack, const Element& element)
 TEMPLATE
 hashes CLASS::get_txs(const header_link& link) NOEXCEPT
 {
-    const auto fk = to_txs(link);
+    const auto fk = to_txs_link(link);
     if (fk.is_terminal())
         return {};
 
@@ -563,10 +572,49 @@ hashes CLASS::get_txs(const header_link& link) NOEXCEPT
     system::hashes hashes{};
     hashes.reserve(txs.tx_fks.size());
     for (const auto& tx_fk: txs.tx_fks)
-        hashes.push_back(store_.tx.get_key(tx_fk));
+        hashes.push_back(get_tx_key(tx_fk));
 
     // Return of any null_hash implies failure.
     return hashes;
+}
+
+// TODO: test.
+TEMPLATE
+inline hash_digest CLASS::get_header_key(const header_link& link) NOEXCEPT
+{
+    return store_.header.get_key(link);
+}
+
+// TODO: test.
+TEMPLATE
+inline hash_digest CLASS::get_point_key(const point_link& link) NOEXCEPT
+{
+    return store_.point.get_key(link);
+}
+
+// TODO: test.
+TEMPLATE
+inline hash_digest CLASS::get_tx_key(const tx_link& link) NOEXCEPT
+{
+    return store_.tx.get_key(link);
+}
+
+// TODO: test.
+TEMPLATE
+inline size_t CLASS::get_header_height(const header_link& link) NOEXCEPT
+{
+    const auto height = get_height(link);
+    return height >= height_link::terminal ? max_size_t :
+        system::possible_narrow_cast<size_t>(height.value);
+}
+
+// TODO: test.
+TEMPLATE
+inline size_t CLASS::get_tx_height(const tx_link& link) NOEXCEPT
+{
+    // to_block is strong but not necessarily confirmed.
+    const auto fk = to_block(link);
+    return is_confirmed_block(fk) ? get_header_height(fk) : max_size_t;
 }
 
 TEMPLATE
@@ -607,7 +655,7 @@ TEMPLATE
 typename CLASS::transactions_ptr CLASS::get_transactions(
     const header_link& link) NOEXCEPT
 {
-    const auto fk = to_txs(link);
+    const auto fk = to_txs_link(link);
     if (fk.is_terminal())
         return {};
 
@@ -620,7 +668,7 @@ typename CLASS::transactions_ptr CLASS::get_transactions(
     transactions->reserve(txs.tx_fks.size());
 
     for (const auto& tx_fk: txs.tx_fks)
-        if (!push_bool(*transactions, get_tx(tx_fk)))
+        if (!push_bool(*transactions, get_transaction(tx_fk)))
             return {};
 
     return transactions;
@@ -669,7 +717,8 @@ typename CLASS::block::cptr CLASS::get_block(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-typename CLASS::transaction::cptr CLASS::get_tx(const tx_link& link) NOEXCEPT
+typename CLASS::transaction::cptr CLASS::get_transaction(
+    const tx_link& link) NOEXCEPT
 {
     table::transaction::only tx{};
     if (!store_.tx.get(link, tx))
@@ -727,7 +776,7 @@ typename CLASS::input::cptr CLASS::get_input(const input_link& link) NOEXCEPT
     {
         in.is_null() ? null_point : system::to_shared(new point
         {
-            store_.point.get_key(in.point_fk),
+            get_point_key(in.point_fk),
             in.point_index
         }),
         in.script,
@@ -745,7 +794,7 @@ typename CLASS::point::cptr CLASS::get_point(const input_link& link) NOEXCEPT
 
     return system::to_shared(new point
     {
-        store_.point.get_key(in.point_fk),
+        get_point_key(in.point_fk),
         in.point_index
     });
 }
@@ -988,7 +1037,7 @@ bool CLASS::set(const header_link& link, const tx_links& links) NOEXCEPT
     // ========================================================================
 }
 
-// Validation (foreign-keyed).
+// Validation (surrogate-keyed).
 // ----------------------------------------------------------------------------
 
 // protected
@@ -1036,14 +1085,16 @@ inline bool CLASS::is_sufficient(const context& current,
         && evaluated.mtp <= current.mtp;
 }
 
+// TODO: test.
 TEMPLATE
-height_link CLASS::get_header_height(const header_link& link) NOEXCEPT
+context CLASS::get_context(const header_link& link) NOEXCEPT
 {
-    table::header::record_height header{};
-    if (!store_.header.get(link, header))
+    // Zero height implies error if not genesis (otherwise height/mtp).
+    table::header::record_context context{};
+    if (!store_.header.get(link, context))
         return {};
 
-    return header.height;
+    return context.ctx;
 }
 
 TEMPLATE
@@ -1229,14 +1280,25 @@ bool CLASS::set_tx_disconnected(const tx_link& link,
     // ========================================================================
 }
 
-// Block status (foreign-keyed).
+// Block status (surrogate-keyed).
 // ----------------------------------------------------------------------------
 // Not for use in validatation (2 additional gets).
+
+// protected
+TEMPLATE
+height_link CLASS::get_height(const header_link& link) NOEXCEPT
+{
+    table::header::record_height header{};
+    if (!store_.header.get(link, header))
+        return {};
+
+    return header.height;
+}
 
 TEMPLATE
 bool CLASS::is_candidate_block(const header_link& link) NOEXCEPT
 {
-    const auto height = get_header_height(link);
+    const auto height = get_height(link);
     if (height.is_terminal())
         return false;
 
@@ -1248,7 +1310,7 @@ bool CLASS::is_candidate_block(const header_link& link) NOEXCEPT
 TEMPLATE
 bool CLASS::is_confirmed_block(const header_link& link) NOEXCEPT
 {
-    const auto height = get_header_height(link);
+    const auto height = get_height(link);
     if (height.is_terminal())
         return false;
 
@@ -1260,7 +1322,7 @@ bool CLASS::is_confirmed_block(const header_link& link) NOEXCEPT
 TEMPLATE
 bool CLASS::is_confirmed_tx(const tx_link& link) NOEXCEPT
 {
-    const auto fk = to_strong_by(link);
+    const auto fk = to_block(link);
     return !fk.is_terminal() && is_confirmed_block(fk);
 }
 
@@ -1295,7 +1357,7 @@ bool CLASS::is_spent_output(const output_link& link) NOEXCEPT
 TEMPLATE
 bool CLASS::is_strong(const input_link& link) NOEXCEPT
 {
-    return !to_strong_by(to_input_tx(link)).is_terminal();
+    return !to_block(to_input_tx(link)).is_terminal();
 }
 
 TEMPLATE
@@ -1337,14 +1399,14 @@ bool CLASS::is_mature_prevout(const point_link& link, size_t height) NOEXCEPT
     if (spender_fk.is_terminal())
         return false;
 
-    const auto header_fk = to_strong_by(spender_fk);
+    const auto header_fk = to_block(spender_fk);
     if (header_fk.is_terminal())
         return false;
 
     if (!is_coinbase(spender_fk))
         return true;
 
-    const auto prevout = get_header_height(header_fk);
+    const auto prevout = get_height(header_fk);
     if (prevout.is_terminal())
         return false;
 
@@ -1371,7 +1433,7 @@ bool CLASS::is_confirmable_block(const header_link& link,
 TEMPLATE
 bool CLASS::set_strong(const header_link& link) NOEXCEPT
 {
-    const auto txs = to_transactions(link);
+    const auto txs = to_txs(link);
     if (txs.empty())
         return false;
 
@@ -1390,7 +1452,7 @@ bool CLASS::set_strong(const header_link& link) NOEXCEPT
 TEMPLATE
 bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 {
-    const auto txs = to_transactions(link);
+    const auto txs = to_txs(link);
     if (txs.empty())
         return false;
 
@@ -1504,6 +1566,7 @@ bool CLASS::is_confirmed_unspent(const output_link& link) NOEXCEPT
     return is_confirmed_output(link) && !is_spent_output(link);
 }
 
+// TODO: test more.
 TEMPLATE
 uint64_t CLASS::get_confirmed_balance(const hash_digest& key) NOEXCEPT
 {
@@ -1527,6 +1590,7 @@ uint64_t CLASS::get_confirmed_balance(const hash_digest& key) NOEXCEPT
     return balance;
 }
 
+// TODO: test more.
 TEMPLATE
 output_links CLASS::to_address_outputs(const hash_digest& key) NOEXCEPT
 {
@@ -1547,6 +1611,7 @@ output_links CLASS::to_address_outputs(const hash_digest& key) NOEXCEPT
     return outputs;
 }
 
+// TODO: test more.
 TEMPLATE
 output_links CLASS::to_unspent_outputs(const hash_digest& key) NOEXCEPT
 {
@@ -1568,6 +1633,7 @@ output_links CLASS::to_unspent_outputs(const hash_digest& key) NOEXCEPT
     return outputs;
 }
 
+// TODO: test more.
 TEMPLATE
 output_links CLASS::to_minimum_unspent_outputs(const hash_digest& key,
     uint64_t minimum) NOEXCEPT
@@ -1617,7 +1683,7 @@ bool CLASS::set_address_output(const hash_digest& key,
     // ========================================================================
 }
 
-// Neutrino (foreign-keyed).
+// Neutrino (surrogate-keyed).
 // ----------------------------------------------------------------------------
 
 TEMPLATE
@@ -1656,7 +1722,7 @@ bool CLASS::set_filter(const header_link& link, const hash_digest& filter_head,
     // ========================================================================
 }
 
-// Buffer (foreign-keyed).
+// Buffer (surrogate-keyed).
 // ----------------------------------------------------------------------------
 // TODO: serialize prevouts, compare deserialization time to native storage.
 
@@ -1714,7 +1780,7 @@ bool CLASS::set_bootstrap(size_t height) NOEXCEPT
         if (header_fk.is_terminal())
             return false;
 
-        boot.block_hashes.push_back(store_.header.get_key(header_fk));
+        boot.block_hashes.push_back(get_header_key(header_fk));
     }
 
     // ========================================================================
