@@ -69,8 +69,8 @@ public:
     /// Allocate element at returned link (follow with set|put).
     Link allocate(const Link& size) NOEXCEPT;
 
-    /// Return the associated search key.
-    Key get_key(const Link& size) NOEXCEPT;
+    /// Return the associated search key (terminal link returns default).
+    Key get_key(const Link& link) NOEXCEPT;
 
     /// Get element at link, false if deserialize error.
     template <typename Element, if_equal<Element::size, Size> = true>

@@ -101,13 +101,14 @@ Link CLASS::allocate(const Link& size) NOEXCEPT
 TEMPLATE
 Key CLASS::get_key(const Link& link) NOEXCEPT
 {
+    constexpr auto key_size = array_count<Key>;
     const auto ptr = manager_.get(link);
 
     // As with links, search key is presumed valid (otherwise null bytes).
-    if (!ptr)
+    if (!ptr || ptr->size() < (Link::size + key_size))
         return {};
 
-    return system::unsafe_array_cast<uint8_t, array_count<Key>>(std::next(
+    return system::unsafe_array_cast<uint8_t, key_size>(std::next(
         ptr->begin(), Link::size));
 }
 
