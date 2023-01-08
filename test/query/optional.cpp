@@ -57,7 +57,10 @@ BOOST_AUTO_TEST_CASE(query_optional__get_confirmed_balance__genesis__expected)
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set_address_output(genesis_address, query.to_output(0, 0)));
-    BOOST_REQUIRE_EQUAL(query.get_confirmed_balance(genesis_address), 5000000000u);
+
+    uint64_t out{};
+    BOOST_REQUIRE(query.get_confirmed_balance(out, genesis_address));
+    BOOST_REQUIRE_EQUAL(out, 5000000000u);
 }
 
 BOOST_AUTO_TEST_CASE(query_optional__to_address_outputs__genesis__expected)
@@ -70,9 +73,10 @@ BOOST_AUTO_TEST_CASE(query_optional__to_address_outputs__genesis__expected)
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set_address_output(genesis_address, query.to_output(0, 0)));
 
-    const auto outputs = query.to_address_outputs(genesis_address);
-    BOOST_REQUIRE_EQUAL(outputs.size(), 1u);
-    BOOST_REQUIRE_EQUAL(outputs.front(), query.to_output(0, 0));
+    output_links out{};
+    BOOST_REQUIRE(query.to_address_outputs(out, genesis_address));
+    BOOST_REQUIRE_EQUAL(out.size(), 1u);
+    BOOST_REQUIRE_EQUAL(out.front(), query.to_output(0, 0));
 }
 
 BOOST_AUTO_TEST_CASE(query_optional__to_unspent_outputs__genesis__expected)
@@ -85,9 +89,10 @@ BOOST_AUTO_TEST_CASE(query_optional__to_unspent_outputs__genesis__expected)
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set_address_output(genesis_address, query.to_output(0, 0)));
 
-    const auto outputs = query.to_unspent_outputs(genesis_address);
-    BOOST_REQUIRE_EQUAL(outputs.size(), 1u);
-    BOOST_REQUIRE_EQUAL(outputs.front(), 0);
+    output_links out{};
+    BOOST_REQUIRE(query.to_unspent_outputs(out, genesis_address));
+    BOOST_REQUIRE_EQUAL(out.size(), 1u);
+    BOOST_REQUIRE_EQUAL(out.front(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__above__excluded)
@@ -99,7 +104,10 @@ BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__above__excluded
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set_address_output(genesis_address, 0));
-    BOOST_REQUIRE(query.to_minimum_unspent_outputs(genesis_address, 5000000001).empty());
+
+    output_links out{};
+    BOOST_REQUIRE(query.to_minimum_unspent_outputs(out, genesis_address, 5000000001));
+    BOOST_REQUIRE(out.empty());
 }
 
 BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__at__included)
@@ -112,9 +120,10 @@ BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__at__included)
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set_address_output(genesis_address, 0));
 
-    const auto outputs = query.to_minimum_unspent_outputs(genesis_address, 5000000000);
-    BOOST_REQUIRE_EQUAL(outputs.size(), 1u);
-    BOOST_REQUIRE_EQUAL(outputs.front(), 0);
+    output_links out{};
+    BOOST_REQUIRE(query.to_minimum_unspent_outputs(out, genesis_address, 5000000000));
+    BOOST_REQUIRE_EQUAL(out.size(), 1u);
+    BOOST_REQUIRE_EQUAL(out.front(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__below__included)
@@ -127,20 +136,20 @@ BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__below__included
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set_address_output(genesis_address, 0));
 
-    const auto outputs0 = query.to_minimum_unspent_outputs(genesis_address, 0);
-    BOOST_REQUIRE_EQUAL(outputs0.size(), 1u);
-    BOOST_REQUIRE_EQUAL(outputs0.front(), 0);
-
-    const auto outputs1 = query.to_minimum_unspent_outputs(genesis_address, 4999999999);
-    BOOST_REQUIRE_EQUAL(outputs1.size(), 1u);
-    BOOST_REQUIRE_EQUAL(outputs1.front(), 0);
+    output_links out{};
+    BOOST_REQUIRE(query.to_minimum_unspent_outputs(out, genesis_address, 0));
+    BOOST_REQUIRE_EQUAL(out.size(), 1u);
+    BOOST_REQUIRE_EQUAL(out.front(), 0);
+    BOOST_REQUIRE(query.to_minimum_unspent_outputs(out, genesis_address, 4999999999));
+    BOOST_REQUIRE_EQUAL(out.size(), 1u);
+    BOOST_REQUIRE_EQUAL(out.front(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(query_optional__set_filter__get_filter_and_head__expected)
 {
-    const auto& filer_head0 = system::null_hash;
+    const auto& filter_head0 = system::null_hash;
     const auto filter0 = system::base16_chunk("0102030405060708090a0b0c0d0e0f");
-    const auto& filer_head1 = system::one_hash;
+    const auto& filter_head1 = system::one_hash;
     const auto filter1 = system::base16_chunk("102030405060708090a0b0c0d0e0f0102030405060708090a0b0c0d0e0f0");
 
     settings settings{};
@@ -150,12 +159,20 @@ BOOST_AUTO_TEST_CASE(query_optional__set_filter__get_filter_and_head__expected)
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1a, {}));
-    BOOST_REQUIRE(query.set_filter(0, filer_head0, filter0));
-    BOOST_REQUIRE(query.set_filter(1, filer_head1, filter1));
-    BOOST_REQUIRE_EQUAL(query.get_filter_head(0), filer_head0);
-    BOOST_REQUIRE_EQUAL(query.get_filter_head(1), filer_head1);
-    BOOST_REQUIRE_EQUAL(query.get_filter(0), filter0);
-    BOOST_REQUIRE_EQUAL(query.get_filter(1), filter1);
+    BOOST_REQUIRE(query.set_filter(0, filter_head0, filter0));
+    BOOST_REQUIRE(query.set_filter(1, filter_head1, filter1));
+
+    hash_digest head{};
+    BOOST_REQUIRE(query.get_filter_head(head, 0));
+    BOOST_REQUIRE_EQUAL(head, filter_head0);
+    BOOST_REQUIRE(query.get_filter_head(head, 1));
+    BOOST_REQUIRE_EQUAL(head, filter_head1);
+
+    system::data_chunk out{};
+    BOOST_REQUIRE(query.get_filter(out, 0));
+    BOOST_REQUIRE_EQUAL(out, filter0);
+    BOOST_REQUIRE(query.get_filter(out, 1));
+    BOOST_REQUIRE_EQUAL(out, filter1);
 }
 
 BOOST_AUTO_TEST_CASE(query_optional__set_buffered_tx__get_buffered_tx__expected)
@@ -240,7 +257,9 @@ BOOST_AUTO_TEST_CASE(query_optional__set_bootstrap__twice__clears_previous)
         test::block3.hash()
     };
 
-    BOOST_REQUIRE_EQUAL(query.get_bootstrap(), expected);
+    hashes out{};
+    BOOST_REQUIRE(query.get_bootstrap(out));
+    BOOST_REQUIRE_EQUAL(out, expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

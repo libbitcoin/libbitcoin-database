@@ -595,19 +595,59 @@ inline hash_digest CLASS::get_tx_key(const tx_link& link) NOEXCEPT
 }
 
 TEMPLATE
-inline size_t CLASS::get_header_height(const header_link& link) NOEXCEPT
+bool CLASS::get_height(size_t& out, const header_link& link) NOEXCEPT
 {
     const auto height = get_height(link);
-    return height >= height_link::terminal ? max_size_t :
-        system::possible_narrow_cast<size_t>(height.value);
+    if (height >= height_link::terminal)
+        return false;
+
+    out = system::possible_narrow_cast<size_t>(height.value);
+    return true;
 }
 
 TEMPLATE
-inline size_t CLASS::get_tx_height(const tx_link& link) NOEXCEPT
+bool CLASS::get_tx_height(size_t& out, const tx_link& link) NOEXCEPT
 {
     // to_block is strong but not necessarily confirmed.
     const auto fk = to_block(link);
-    return is_confirmed_block(fk) ? get_header_height(fk) : max_size_t;
+    return is_confirmed_block(fk) && get_height(out, fk);
+}
+
+TEMPLATE
+bool CLASS::get_tx_position(size_t& out, const tx_link& link) NOEXCEPT
+{
+    // to_block is strong but not necessarily confirmed.
+    const auto block_fk = to_block(link);
+    if (!is_confirmed_block(block_fk))
+        return false;
+
+    // False return below implies an integrity error (tx should be indexed).
+    auto it = store_.txs.it(block_fk);
+    if (it.self().is_terminal())
+        return false;
+
+    out = zero;
+    do
+    {
+        if (it.self() == link)
+            return true;
+
+        ++out;
+    }
+    while (it.advance());
+    out = zero;
+    return false;
+}
+
+TEMPLATE
+bool CLASS::get_value(uint64_t& out, const output_link& link) NOEXCEPT
+{
+    table::output::get_value output{};
+    if (!store_.output.get(link, output))
+        return false;
+
+    out = output.value;
+    return true;
 }
 
 TEMPLATE
@@ -839,13 +879,6 @@ typename CLASS::inputs_ptr CLASS::get_spenders(const tx_link& link,
             return {};
 
     return spenders;
-}
-
-TEMPLATE
-uint64_t CLASS::get_value(const output_link& link) NOEXCEPT
-{
-    table::output::get_value output{};
-    return store_.output.get(link, output) ? output.value : max_uint64;
 }
 
 // protected
@@ -1593,81 +1626,95 @@ bool CLASS::is_confirmed_unspent(const output_link& link) NOEXCEPT
 
 // TODO: test more.
 TEMPLATE
-uint64_t CLASS::get_confirmed_balance(const hash_digest& key) NOEXCEPT
+bool CLASS::get_confirmed_balance(uint64_t& out,
+    const hash_digest& key) NOEXCEPT
 {
     auto it = store_.address.it(key);
     if (it.self().is_terminal())
-        return {};
+        return false;
 
-    uint64_t balance{};
+    out = zero;
     do
     {
         table::address::record address{};
         if (!store_.address.get(it.self(), address))
-            return {};
+            return false;
 
         // Failure or overflow returns maximum value.
         if (is_confirmed_unspent(address.output_fk))
-            balance = system::ceilinged_add(balance,
-                get_value(address.output_fk));
+        {
+            uint64_t value{};
+            if (!get_value(value, address.output_fk))
+                return false;
+
+            out = system::ceilinged_add(value, out);
+        }
     }
     while (it.advance());
-    return balance;
+    return true;
 }
 
 // TODO: test more.
 TEMPLATE
-output_links CLASS::to_address_outputs(const hash_digest& key) NOEXCEPT
+bool CLASS::to_address_outputs(output_links& out,
+    const hash_digest& key) NOEXCEPT
+{
+    auto it = store_.address.it(key);
+    if (it.self().is_terminal())
+        return false;
+
+    out.clear();
+    do
+    {
+        table::address::record address{};
+        if (!store_.address.get(it.self(), address))
+        {
+            out.clear();
+            return false;
+        }
+
+        out.push_back(address.output_fk);
+    }
+    while (it.advance());
+    return true;
+}
+
+// TODO: test more.
+TEMPLATE
+bool CLASS::to_unspent_outputs(output_links& out,
+    const hash_digest& key) NOEXCEPT
 {
     auto it = store_.address.it(key);
     if (it.self().is_terminal())
         return {};
 
-    output_links outputs{};
+    out.clear();
     do
     {
         table::address::record address{};
         if (!store_.address.get(it.self(), address))
-            return {};
-
-        outputs.push_back(address.output_fk);
-    }
-    while (it.advance());
-    return outputs;
-}
-
-// TODO: test more.
-TEMPLATE
-output_links CLASS::to_unspent_outputs(const hash_digest& key) NOEXCEPT
-{
-    auto it = store_.address.it(key);
-    if (it.self().is_terminal())
-        return {};
-
-    output_links outputs{};
-    do
-    {
-        table::address::record address{};
-        if (!store_.address.get(it.self(), address))
-            return {};
+        {
+            out.clear();
+            return false;
+        }
 
         if (is_confirmed_unspent(address.output_fk))
-            outputs.push_back(address.output_fk);
+            out.push_back(address.output_fk);
     }
     while (it.advance());
-    return outputs;
+    return true;
 }
 
 // TODO: test more.
 TEMPLATE
-output_links CLASS::to_minimum_unspent_outputs(const hash_digest& key,
-    uint64_t minimum) NOEXCEPT
+bool CLASS::to_minimum_unspent_outputs(output_links& out,
+    const hash_digest& key, uint64_t minimum) NOEXCEPT
 {
     auto it = store_.address.it(key);
     if (it.self().is_terminal())
         return {};
 
-    output_links outputs{};
+    out.clear();
     do
     {
         table::address::record address{};
@@ -1678,16 +1725,19 @@ output_links CLASS::to_minimum_unspent_outputs(const hash_digest& key,
         if (is_confirmed_output(address.output_fk) &&
             !is_spent_output(address.output_fk))
         {
-            const auto value = get_value(address.output_fk);
-            if (value == max_uint64)
-                return {};
+            uint64_t value{};
+            if (!get_value(value, address.output_fk))
+            {
+                out.clear();
+                return false;
+            }
 
             if (value >= minimum)
-                outputs.push_back(address.output_fk);
+                out.push_back(address.output_fk);
         }
     }
     while (it.advance());
-    return outputs;
+    return true;
 }
 
 TEMPLATE
@@ -1712,23 +1762,25 @@ bool CLASS::set_address_output(const hash_digest& key,
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-typename CLASS::filter CLASS::get_filter(const header_link& link) NOEXCEPT
+bool CLASS::get_filter(filter& out, const header_link& link) NOEXCEPT
 {
     table::neutrino::slab_get_filter neutrino{};
     if (!store_.neutrino.get(store_.neutrino.first(link), neutrino))
-        return {};
+        return false;
 
-    return std::move(neutrino.filter);
+    out = std::move(neutrino.filter);
+    return true;
 }
 
 TEMPLATE
-hash_digest CLASS::get_filter_head(const header_link& link) NOEXCEPT
+bool CLASS::get_filter_head(hash_digest& out, const header_link& link) NOEXCEPT
 {
     table::neutrino::slab_get_head neutrino{};
     if (!store_.neutrino.get(store_.neutrino.first(link), neutrino))
-        return {};
+        return false;
 
-    return std::move(neutrino.filter_head);
+    out = std::move(neutrino.filter_head);
+    return true;
 }
 
 TEMPLATE
@@ -1781,14 +1833,15 @@ bool CLASS::set_buffered_tx(const tx_link& link,
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-hashes CLASS::get_bootstrap() NOEXCEPT
+bool CLASS::get_bootstrap(hashes& out) NOEXCEPT
 {
     table::bootstrap::record boot{};
     boot.block_hashes.resize(store_.bootstrap.count());
     if (!store_.bootstrap.get(0, boot))
-        return {};
+        return false;
 
-    return std::move(boot.block_hashes);
+    out = std::move(boot.block_hashes);
+    return true;
 }
 
 TEMPLATE
