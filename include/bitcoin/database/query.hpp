@@ -189,8 +189,10 @@ public:
         const context& ctx) NOEXCEPT;
 
     /// False implies fault.
-    bool get_bits(uint32_t& bits, const header_link& link) NOEXCEPT;
+    bool get_timestamp(uint32_t& timestamp, const header_link& link) NOEXCEPT;
+    bool get_version(uint32_t& version, const header_link& link) NOEXCEPT;
     bool get_context(context& ctx, const header_link& link) NOEXCEPT;
+    bool get_bits(uint32_t& bits, const header_link& link) NOEXCEPT;
 
     /// False implies fault.
     bool set_block_preconfirmable(const header_link& link) NOEXCEPT;

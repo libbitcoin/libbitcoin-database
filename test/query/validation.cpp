@@ -40,6 +40,36 @@ struct query_validation_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(query_validation_tests, query_validation_setup_fixture)
 
+BOOST_AUTO_TEST_CASE(query_validation__get_timestamp__genesis__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    uint32_t timestamp{};
+    BOOST_REQUIRE(!query.get_timestamp(timestamp, 1));
+    BOOST_REQUIRE(query.get_timestamp(timestamp, 0));
+    BOOST_REQUIRE_EQUAL(timestamp, 0x495fab29_u32);
+}
+
+BOOST_AUTO_TEST_CASE(query_validation__get_version__genesis__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    uint32_t version{};
+    BOOST_REQUIRE(!query.get_version(version, 1));
+    BOOST_REQUIRE(query.get_version(version, 0));
+    BOOST_REQUIRE_EQUAL(version, 0x00000001_u32);
+}
+
 BOOST_AUTO_TEST_CASE(query_validation__get_bits__genesis__expected)
 {
     settings settings{};

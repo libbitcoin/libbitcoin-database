@@ -1079,6 +1079,28 @@ inline bool CLASS::is_sufficient(const context& current,
 }
 
 TEMPLATE
+bool CLASS::get_timestamp(uint32_t& timestamp, const header_link& link) NOEXCEPT
+{
+    table::header::get_timestamp header{};
+    if (!store_.header.get(link, header))
+        return false;
+
+    timestamp = header.timestamp;
+    return true;
+}
+
+TEMPLATE
+bool CLASS::get_version(uint32_t& version, const header_link& link) NOEXCEPT
+{
+    table::header::get_version header{};
+    if (!store_.header.get(link, header))
+        return false;
+
+    version = header.version;
+    return true;
+}
+
+TEMPLATE
 bool CLASS::get_bits(uint32_t& bits, const header_link& link) NOEXCEPT
 {
     table::header::get_bits header{};

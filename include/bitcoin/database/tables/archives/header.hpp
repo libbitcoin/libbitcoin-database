@@ -163,6 +163,32 @@ struct header
         search_key key{};
     };
 
+    struct get_version
+      : public schema::header
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(context::size + link::size);
+            version = source.read_little_endian<uint32_t>();
+            return source;
+        }
+
+        uint32_t version{};
+    };
+
+    struct get_timestamp
+      : public schema::header
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(context::size + link::size + sizeof(uint32_t));
+            timestamp = source.read_little_endian<uint32_t>();
+            return source;
+        }
+
+        uint32_t timestamp{};
+    };
+
     struct get_bits
       : public schema::header
     {
