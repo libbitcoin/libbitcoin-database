@@ -582,21 +582,18 @@ inline hash_digest CLASS::get_header_key(const header_link& link) NOEXCEPT
     return store_.header.get_key(link);
 }
 
-// TODO: test.
 TEMPLATE
 inline hash_digest CLASS::get_point_key(const point_link& link) NOEXCEPT
 {
     return store_.point.get_key(link);
 }
 
-// TODO: test.
 TEMPLATE
 inline hash_digest CLASS::get_tx_key(const tx_link& link) NOEXCEPT
 {
     return store_.tx.get_key(link);
 }
 
-// TODO: test.
 TEMPLATE
 inline size_t CLASS::get_header_height(const header_link& link) NOEXCEPT
 {
@@ -605,7 +602,6 @@ inline size_t CLASS::get_header_height(const header_link& link) NOEXCEPT
         system::possible_narrow_cast<size_t>(height.value);
 }
 
-// TODO: test.
 TEMPLATE
 inline size_t CLASS::get_tx_height(const tx_link& link) NOEXCEPT
 {
@@ -1082,7 +1078,6 @@ inline bool CLASS::is_sufficient(const context& current,
         && evaluated.mtp <= current.mtp;
 }
 
-// TODO: test.
 TEMPLATE
 context CLASS::get_context(const header_link& link) NOEXCEPT
 {

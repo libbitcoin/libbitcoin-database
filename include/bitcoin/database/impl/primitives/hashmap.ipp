@@ -104,8 +104,8 @@ Key CLASS::get_key(const Link& link) NOEXCEPT
     constexpr auto key_size = array_count<Key>;
     const auto ptr = manager_.get(link);
 
-    // As with links, search key is presumed valid (otherwise null bytes).
-    if (!ptr || ptr->size() < (Link::size + key_size))
+    // As with link, search key is presumed valid (otherwise null array).
+    if (!ptr || system::is_lesser(ptr->size(), Link::size + key_size))
         return {};
 
     return system::unsafe_array_cast<uint8_t, key_size>(std::next(
