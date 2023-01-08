@@ -40,6 +40,21 @@ struct query_validation_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(query_validation_tests, query_validation_setup_fixture)
 
+BOOST_AUTO_TEST_CASE(query_validation__get_bits__genesis__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    uint32_t bits{};
+    BOOST_REQUIRE(!query.get_bits(bits, 1));
+    BOOST_REQUIRE(query.get_bits(bits, 0));
+    BOOST_REQUIRE_EQUAL(bits, 0x1d00ffff_u32);
+}
+
 BOOST_AUTO_TEST_CASE(query_validation__get_context__genesis__default)
 {
     settings settings{};
@@ -48,7 +63,10 @@ BOOST_AUTO_TEST_CASE(query_validation__get_context__genesis__default)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.get_context(0) == context{});
+
+    context ctx{};
+    BOOST_REQUIRE(query.get_context(ctx, 0));
+    BOOST_REQUIRE(ctx == context{});
 }
 
 BOOST_AUTO_TEST_CASE(query_validation__get_context__invalid__default)
@@ -59,8 +77,11 @@ BOOST_AUTO_TEST_CASE(query_validation__get_context__invalid__default)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.get_context(header_link::terminal) == context{});
-    BOOST_REQUIRE(query.get_context(1) == context{});
+
+    context ctx{};
+    BOOST_REQUIRE(!query.get_context(ctx, header_link::terminal));
+    BOOST_REQUIRE(!query.get_context(ctx, 1));
+    BOOST_REQUIRE(ctx == context{});
 }
 
 BOOST_AUTO_TEST_CASE(query_validation__get_context__block1__expected)
@@ -74,7 +95,10 @@ BOOST_AUTO_TEST_CASE(query_validation__get_context__block1__expected)
 
     const context expected{ 12, 34, 56 };
     BOOST_REQUIRE(query.set(test::block1, expected));
-    BOOST_REQUIRE(query.get_context(1) == expected);
+
+    context ctx{};
+    BOOST_REQUIRE(query.get_context(ctx, 1));
+    BOOST_REQUIRE(ctx == expected);
 }
 
 BOOST_AUTO_TEST_CASE(query_validation__get_block_state__invalid_link__unassociated)

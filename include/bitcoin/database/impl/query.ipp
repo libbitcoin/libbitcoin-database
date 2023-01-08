@@ -1079,14 +1079,25 @@ inline bool CLASS::is_sufficient(const context& current,
 }
 
 TEMPLATE
-context CLASS::get_context(const header_link& link) NOEXCEPT
+bool CLASS::get_bits(uint32_t& bits, const header_link& link) NOEXCEPT
 {
-    // Zero height implies error if not genesis (otherwise height/mtp).
-    table::header::record_context context{};
-    if (!store_.header.get(link, context))
-        return {};
+    table::header::get_bits header{};
+    if (!store_.header.get(link, header))
+        return false;
 
-    return context.ctx;
+    bits = std::move(header.bits);
+    return true;
+}
+
+TEMPLATE
+bool CLASS::get_context(context& ctx, const header_link& link) NOEXCEPT
+{
+    table::header::record_context header{};
+    if (!store_.header.get(link, header))
+        return false;
+
+    ctx = std::move(header.ctx);
+    return true;
 }
 
 TEMPLATE

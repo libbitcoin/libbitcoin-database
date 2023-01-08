@@ -149,6 +149,7 @@ struct header
         search_key key{};
     };
 
+    // This is an optimization which is otherwise redundant with get_key().
     struct record_sk
       : public schema::header
     {
@@ -160,6 +161,20 @@ struct header
         }
 
         search_key key{};
+    };
+
+    struct get_bits
+      : public schema::header
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(context::size + link::size + sizeof(uint32_t) +
+                sizeof(uint32_t));
+            bits = source.read_little_endian<uint32_t>();
+            return source;
+        }
+
+        uint32_t bits{};
     };
 
     struct get_parent_fk

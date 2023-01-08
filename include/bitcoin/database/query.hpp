@@ -181,13 +181,16 @@ public:
     /// Validation (surrogate-keyed).
     /// -----------------------------------------------------------------------
 
-    /// zeroes/error::unknown implies fault.
-    context get_context(const header_link& link) NOEXCEPT;
+    /// error::unknown implies fault.
     code get_block_state(const header_link& link) NOEXCEPT;
     code get_block_state(uint64_t& fees, const header_link& link) NOEXCEPT;
     code get_tx_state(const tx_link& link, const context& ctx) NOEXCEPT;
     code get_tx_state(uint64_t& fee, size_t& sigops, const tx_link& link,
         const context& ctx) NOEXCEPT;
+
+    /// False implies fault.
+    bool get_bits(uint32_t& bits, const header_link& link) NOEXCEPT;
+    bool get_context(context& ctx, const header_link& link) NOEXCEPT;
 
     /// False implies fault.
     bool set_block_preconfirmable(const header_link& link) NOEXCEPT;
