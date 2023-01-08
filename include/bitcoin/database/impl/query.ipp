@@ -114,7 +114,6 @@ size_t CLASS::get_fork() NOEXCEPT
     return zero;
 }
 
-// TODO: retest.
 TEMPLATE
 size_t CLASS::get_last_associated_from(size_t height) NOEXCEPT
 {
@@ -304,7 +303,6 @@ header_link CLASS::to_block(const tx_link& link) NOEXCEPT
     return strong.header_fk;
 }
 
-// TODO: test.
 TEMPLATE
 header_link CLASS::to_parent(const header_link& link) NOEXCEPT
 {
