@@ -937,7 +937,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_height__always__expected)
     BOOST_REQUIRE(!query.get_height(out, 6));
 }
 
-BOOST_AUTO_TEST_CASE(query_archival__get_tx_height__always__expected)
+BOOST_AUTO_TEST_CASE(query_archival__get_tx_height__not_strong__false)
 {
     settings settings{};
     settings.dir = TEST_DIRECTORY;
@@ -945,32 +945,96 @@ BOOST_AUTO_TEST_CASE(query_archival__get_tx_height__always__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, { 0, 1, 0 }));
-    BOOST_REQUIRE(query.set(test::block2, { 0, 2, 0 }));
-    BOOST_REQUIRE(query.set(test::block3, { 0, 3, 0 }));
+    BOOST_REQUIRE(query.set(test::tx4));
+
+    size_t out{};
+    BOOST_REQUIRE(!query.get_tx_height(out, 1));
+}
+
+BOOST_AUTO_TEST_CASE(query_archival__get_tx_position__confirmed__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, { 0, 1, 0 }));
+    BOOST_REQUIRE(query.set(test::block2a, { 0, 2, 0 }));
+    BOOST_REQUIRE(query.set(test::block3a, { 0, 3, 0 }));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.set_strong(2));
     BOOST_REQUIRE(query.set_strong(3));
 
     size_t out{};
-    BOOST_REQUIRE(query.get_tx_height(out, 0));
+    BOOST_REQUIRE(query.get_tx_position(out, 0));
     BOOST_REQUIRE_EQUAL(out, 0u);
-    BOOST_REQUIRE(!query.get_tx_height(out, 1));
-    BOOST_REQUIRE(!query.get_tx_height(out, 2));
-    BOOST_REQUIRE(!query.get_tx_height(out, 3));
+
+    BOOST_REQUIRE(!query.get_tx_position(out, 1));
+    BOOST_REQUIRE(!query.get_tx_position(out, 2));
+    BOOST_REQUIRE(!query.get_tx_position(out, 3));
+    BOOST_REQUIRE(!query.get_tx_position(out, 4));
     BOOST_REQUIRE(query.push_confirmed(1));
     BOOST_REQUIRE(query.push_confirmed(2));
     BOOST_REQUIRE(query.push_confirmed(3));
-    BOOST_REQUIRE(query.get_tx_height(out, 1));
+
+    BOOST_REQUIRE_EQUAL(out, 0u);
+    BOOST_REQUIRE(query.get_tx_position(out, 0));
+    BOOST_REQUIRE_EQUAL(out, 0u);
+    BOOST_REQUIRE(query.get_tx_position(out, 1));
+    BOOST_REQUIRE_EQUAL(out, 0u);
+    BOOST_REQUIRE(query.get_tx_position(out, 2));
+    BOOST_REQUIRE_EQUAL(out, 0u);
+    BOOST_REQUIRE(query.get_tx_position(out, 3));
     BOOST_REQUIRE_EQUAL(out, 1u);
-    BOOST_REQUIRE(query.get_tx_height(out, 2));
-    BOOST_REQUIRE_EQUAL(out, 2u);
-    BOOST_REQUIRE(query.get_tx_height(out, 3));
-    BOOST_REQUIRE_EQUAL(out, 3u);
-    BOOST_REQUIRE(!query.get_tx_height(out, 4));
+    BOOST_REQUIRE(query.get_tx_position(out, 4));
+    BOOST_REQUIRE_EQUAL(out, 0u);
+    BOOST_REQUIRE(!query.get_tx_position(out, 5));
 }
 
-// TODO: get_tx_position
+BOOST_AUTO_TEST_CASE(query_archival__get_tx_position__always__expected)
+{
+    settings settings{};
+    settings.dir = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, { 0, 1, 0 }));
+    BOOST_REQUIRE(query.set(test::block2a, { 0, 2, 0 }));
+    BOOST_REQUIRE(query.set(test::block3a, { 0, 3, 0 }));
+    BOOST_REQUIRE(query.set(test::tx4));
+    BOOST_REQUIRE(query.set_strong(1));
+    BOOST_REQUIRE(query.set_strong(2));
+    BOOST_REQUIRE(query.set_strong(3));
+
+    size_t out{};
+    BOOST_REQUIRE(query.get_tx_position(out, 0));
+    BOOST_REQUIRE_EQUAL(out, 0u);
+
+    BOOST_REQUIRE(!query.get_tx_position(out, 1));
+    BOOST_REQUIRE(!query.get_tx_position(out, 2));
+    BOOST_REQUIRE(!query.get_tx_position(out, 3));
+    BOOST_REQUIRE(!query.get_tx_position(out, 4));
+    BOOST_REQUIRE(query.push_confirmed(1));
+    BOOST_REQUIRE(query.push_confirmed(2));
+    BOOST_REQUIRE(query.push_confirmed(3));
+
+    BOOST_REQUIRE_EQUAL(out, 0u);
+    BOOST_REQUIRE(query.get_tx_position(out, 0));
+    BOOST_REQUIRE_EQUAL(out, 0u);
+    BOOST_REQUIRE(query.get_tx_position(out, 1));
+    BOOST_REQUIRE_EQUAL(out, 0u);
+    BOOST_REQUIRE(query.get_tx_position(out, 2));
+    BOOST_REQUIRE_EQUAL(out, 0u);
+    BOOST_REQUIRE(query.get_tx_position(out, 3));
+    BOOST_REQUIRE_EQUAL(out, 1u);
+    BOOST_REQUIRE(query.get_tx_position(out, 4));
+    BOOST_REQUIRE_EQUAL(out, 0u);
+
+    // tx4 is unconfirmed.
+    BOOST_REQUIRE(!query.get_tx_position(out, 5));
+}
 
 BOOST_AUTO_TEST_CASE(query_archival__get_input__not_found__nullptr)
 {

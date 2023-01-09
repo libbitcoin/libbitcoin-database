@@ -622,21 +622,12 @@ bool CLASS::get_tx_position(size_t& out, const tx_link& link) NOEXCEPT
         return false;
 
     // False return below implies an integrity error (tx should be indexed).
-    auto it = store_.txs.it(block_fk);
-    if (it.self().is_terminal())
+    table::txs::slab_position txs{ {}, link };
+    if (!store_.txs.get(to_txs_link(block_fk), txs))
         return false;
 
-    out = zero;
-    do
-    {
-        if (it.self() == link)
-            return true;
-
-        ++out;
-    }
-    while (it.advance());
-    out = zero;
-    return false;
+    out = txs.position;
+    return true;
 }
 
 TEMPLATE

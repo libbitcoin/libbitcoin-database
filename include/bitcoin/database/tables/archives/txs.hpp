@@ -81,6 +81,24 @@ struct txs
 
         keys tx_fks{};
     };
+
+    struct slab_position
+      : public schema::txs
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            const auto count = source.read_little_endian<tx::integer, tx::size>();
+            for (position = zero; position < count; ++position)
+                if (source.read_little_endian<tx::integer, tx::size>() == link)
+                    return source;
+
+            source.invalidate();
+            return source;
+        }
+
+        const tx::integer link{};
+        size_t position{};
+    };
 };
 
 } // namespace table
