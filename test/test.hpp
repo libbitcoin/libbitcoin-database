@@ -98,9 +98,6 @@ bool create(const std::filesystem::path& file_path) NOEXCEPT;
 bool exists(const std::filesystem::path& file_path) NOEXCEPT;
 bool remove(const std::filesystem::path& file_path) NOEXCEPT;
 
-typedef bc::system::data_array<4> tiny_hash;
-typedef bc::system::data_array<8> little_hash;
-
 } // namespace test
 
 #endif

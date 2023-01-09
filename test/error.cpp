@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "test.hpp"
-#include <bitcoin/database.hpp>
 
 BOOST_AUTO_TEST_SUITE(error_tests)
 
