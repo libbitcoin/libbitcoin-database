@@ -81,5 +81,4 @@ using code = system::code;
 } // namespace database
 } // namespace libbitcoin
 
-
 #endif
