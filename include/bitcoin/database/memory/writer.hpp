@@ -33,6 +33,8 @@ class map_sink
   : public system::device<memory>
 {
 public:
+    DEFAULT5(map_sink);
+
     typedef system::device<memory> base;
     typedef const memory_ptr& container;
     struct category
@@ -46,12 +48,6 @@ public:
         next_(data->begin())
     {
     }
-
-    map_sink(map_sink&&) = default;
-    map_sink(const map_sink&) = default;
-    map_sink& operator=(map_sink&&) = delete;
-    map_sink& operator=(const map_sink&) = delete;
-    ~map_sink() override = default;
 
 protected:
     typename base::sequence do_sequence() const NOEXCEPT override

@@ -31,7 +31,7 @@ namespace libbitcoin {
 namespace database {
 
 /// Thread safe access to a memory-mapped file.
-class BCD_API map final
+class BCD_API map
   : public storage
 {
 public:
@@ -41,7 +41,7 @@ public:
         size_t expansion=0) NOEXCEPT;
 
     /// Destruct for debug assertion only.
-    ~map() NOEXCEPT;
+    virtual ~map() NOEXCEPT;
 
     /// True if the file is closed (or failed to open).
     bool is_open() const NOEXCEPT;

@@ -30,7 +30,7 @@ namespace database {
 
 /// This class is not thread safe, and does not throw.
 /// The lock is process-exclusive in linux/macOS, globally in win32.
-class BCD_API interprocess_lock final
+class BCD_API interprocess_lock
   : public file_lock
 {
 public:
@@ -40,7 +40,7 @@ public:
     interprocess_lock(const std::filesystem::path& file) NOEXCEPT;
 
     /// Destruction calls try_unlock.
-    ~interprocess_lock() NOEXCEPT;
+    ~interprocess_lock() NOEXCEPT override;
 
     /// Creates the file and acquires exclusive access.
     /// Returns false if failed to acquire lock or lock already held.

@@ -31,6 +31,8 @@ namespace database {
 class BCD_API file_lock
 {
 public:
+    DEFAULT5(file_lock);
+
     /// Construction does not touch the file.
     file_lock(const std::filesystem::path& file) NOEXCEPT;
 

@@ -44,6 +44,8 @@ template <typename Store>
 class query
 {
 public:
+    DELETE5(query);
+
     /// Query type aliases.
     using block = system::chain::block;
     using point = system::chain::point;
