@@ -36,6 +36,8 @@ template <typename Link, size_t Size>
 class arraymap
 {
 public:
+    DEFAULT5(arraymap);
+
     using link = Link;
 
     arraymap(storage& header, storage& body) NOEXCEPT;

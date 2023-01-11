@@ -33,6 +33,8 @@ class map_source
   : public system::device<memory>
 {
 public:
+    DEFAULT5(map_source);
+
     typedef system::device<memory> base;
     typedef const memory_ptr& container;
     struct category
@@ -46,12 +48,6 @@ public:
         next_(data->begin())
     {
     }
-
-    map_source(map_source&&) = default;
-    map_source(const map_source&) = default;
-    map_source& operator=(map_source&&) = delete;
-    map_source& operator=(const map_source&) = delete;
-    ~map_source() override = default;
 
 protected:
     typename base::sequence do_sequence() const NOEXCEPT override

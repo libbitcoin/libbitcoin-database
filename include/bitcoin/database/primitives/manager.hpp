@@ -34,6 +34,8 @@ template <typename Link, typename Key, size_t Size>
 class manager
 {
 public:
+    DEFAULT5(manager);
+
     /// Manage byte storage device.
     manager(storage& file) NOEXCEPT;
 

@@ -27,9 +27,8 @@ namespace libbitcoin {
 namespace database {
 
 /// Common database configuration settings, properties not thread safe.
-class BCD_API settings
+struct BCD_API settings
 {
-public:
     settings() NOEXCEPT;
     ////settings(system::chain::selection context) NOEXCEPT;
 

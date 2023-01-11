@@ -31,6 +31,8 @@ template <typename Link, typename Key>
 class head
 {
 public:
+    DEFAULT5(head);
+
     using bytes = typename Link::bytes;
 
     head(storage& head, const Link& buckets) NOEXCEPT;

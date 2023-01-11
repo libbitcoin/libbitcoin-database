@@ -45,23 +45,6 @@ static_assert(sizeof(void*) == sizeof(uint64_t), "Not a 64 bit system!");
     #define BCD_INTERNAL BC_HELPER_DLL_LOCAL
 #endif
 
-/// Class helpers.
-/// ---------------------------------------------------------------------------
-
-/// Used when defining only the destructor.
-#define DELETE4(class_name) \
-    class_name(class_name&&) = delete; \
-    class_name(const class_name&) = delete; \
-    class_name& operator=(class_name&&) = delete; \
-    class_name& operator=(const class_name&) = delete
-
-/// Used when defining only the destructor.
-#define DEFAULT4(class_name) \
-    class_name(class_name&&) = default; \
-    class_name(const class_name&) = default; \
-    class_name& operator=(class_name&&) = default; \
-    class_name& operator=(const class_name&) = default
-
 /// Logging.
 /// ---------------------------------------------------------------------------
 #define LOG_DATABASE "database"

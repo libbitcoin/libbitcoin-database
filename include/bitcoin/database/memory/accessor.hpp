@@ -29,10 +29,12 @@ namespace database {
 
 /// Shared r/w access to a memory buffer, mutex blocks memory remap.
 template <typename Mutex>
-class accessor final
+class accessor
   : public memory
 {
 public:
+    DEFAULT5(accessor);
+
     /// Mutex guards against remap while object in scope.
     inline accessor(Mutex& mutex) NOEXCEPT;
 

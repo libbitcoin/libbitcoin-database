@@ -56,9 +56,9 @@ template <typename Storage, if_base_of<storage, Storage> = true>
 class store
 {
 public:
-    using transactor = std::shared_lock<boost::upgrade_mutex>;
-
     DELETE5(store);
+
+    using transactor = std::shared_lock<boost::upgrade_mutex>;
 
     /// Construct a store from settings.
     store(const settings& config) NOEXCEPT;
