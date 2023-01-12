@@ -96,32 +96,32 @@ settings::settings() NOEXCEPT
 {
 }
 
-////settings::settings(chain::selection context) NOEXCEPT
-////  : settings()
-////{
-////    switch (context)
-////    {
-////        case chain::selection::mainnet:
-////        {
-////            break;
-////        }
-////
-////        case chain::selection::testnet:
-////        {
-////            break;
-////        }
-////
-////        case chain::selection::regtest:
-////        {
-////            break;
-////        }
-////
-////        default:
-////        case chain::selection::none:
-////        {
-////        }
-////    }
-////}
+settings::settings(chain::selection context) NOEXCEPT
+  : settings()
+{
+    switch (context)
+    {
+        case chain::selection::mainnet:
+        {
+            break;
+        }
+
+        case chain::selection::testnet:
+        {
+            break;
+        }
+
+        case chain::selection::regtest:
+        {
+            break;
+        }
+
+        default:
+        case chain::selection::none:
+        {
+        }
+    }
+}
 
 } // namespace database
 } // namespace libbitcoin
