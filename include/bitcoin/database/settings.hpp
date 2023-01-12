@@ -30,7 +30,7 @@ namespace database {
 struct BCD_API settings
 {
     settings() NOEXCEPT;
-    ////settings(system::chain::selection context) NOEXCEPT;
+    settings(system::chain::selection context) NOEXCEPT;
 
     /// Properties.
     std::filesystem::path dir;
