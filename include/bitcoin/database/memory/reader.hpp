@@ -33,8 +33,6 @@ class map_source
   : public system::device<memory>
 {
 public:
-    DEFAULT_COPY_MOVE_DESTRUCT(map_source);
-
     typedef system::device<memory> base;
     typedef const memory_ptr& container;
     struct category

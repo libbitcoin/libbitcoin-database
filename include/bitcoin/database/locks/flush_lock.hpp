@@ -32,8 +32,6 @@ class BCD_API flush_lock
   : public file_lock
 {
 public:
-    DELETE_COPY_MOVE(flush_lock);
-
     /// Construction does not touch the file.
     flush_lock(const std::filesystem::path& file) NOEXCEPT;
 

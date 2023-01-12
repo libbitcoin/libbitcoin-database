@@ -34,8 +34,6 @@ class BCD_API interprocess_lock
   : public file_lock
 {
 public:
-    DELETE_COPY_MOVE(interprocess_lock);
-
     /// Construction does not touch the file.
     interprocess_lock(const std::filesystem::path& file) NOEXCEPT;
 
