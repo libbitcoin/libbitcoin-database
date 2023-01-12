@@ -34,7 +34,7 @@ template <typename Link, typename Key, size_t Size>
 class manager
 {
 public:
-    DEFAULT5(manager);
+    DEFAULT_COPY_MOVE_DESTRUCT(manager);
 
     /// Manage byte storage device.
     manager(storage& file) NOEXCEPT;

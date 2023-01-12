@@ -56,7 +56,7 @@ template <typename Storage, if_base_of<storage, Storage> = true>
 class store
 {
 public:
-    DELETE5(store);
+    DELETE_COPY_MOVE_DESTRUCT(store);
 
     using transactor = std::shared_lock<boost::upgrade_mutex>;
 

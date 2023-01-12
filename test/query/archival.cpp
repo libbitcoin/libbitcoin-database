@@ -22,7 +22,7 @@
 
 struct query_archival_setup_fixture
 {
-    DELETE4(query_archival_setup_fixture);
+    DELETE_COPY_MOVE(query_archival_setup_fixture);
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
     query_archival_setup_fixture() NOEXCEPT

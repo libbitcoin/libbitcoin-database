@@ -35,7 +35,7 @@ class flipper
   : public system::byte_flipper<IOStream>
 {
 public:
-    DEFAULT5(flipper);
+    DEFAULT_COPY_MOVE_DESTRUCT(flipper);
 
     using finalizer = std::function<bool()>;
 

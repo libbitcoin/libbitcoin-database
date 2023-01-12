@@ -33,8 +33,6 @@ class map_sink
   : public system::device<memory>
 {
 public:
-    DEFAULT5(map_sink);
-
     typedef system::device<memory> base;
     typedef const memory_ptr& container;
     struct category

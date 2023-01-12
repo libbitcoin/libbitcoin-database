@@ -33,7 +33,7 @@ class accessor
   : public memory
 {
 public:
-    DEFAULT5(accessor);
+    DEFAULT_COPY_MOVE_DESTRUCT(accessor);
 
     /// Mutex guards against remap while object in scope.
     inline accessor(Mutex& mutex) NOEXCEPT;

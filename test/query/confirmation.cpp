@@ -22,7 +22,7 @@
 
 struct query_confirmation_setup_fixture
 {
-    DELETE4(query_confirmation_setup_fixture);
+    DELETE_COPY_MOVE(query_confirmation_setup_fixture);
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
     query_confirmation_setup_fixture() NOEXCEPT

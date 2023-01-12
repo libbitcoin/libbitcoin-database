@@ -20,7 +20,7 @@
 
 struct file_setup_fixture
 {
-    DELETE4(file_setup_fixture);
+    DELETE_COPY_MOVE(file_setup_fixture);
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
     file_setup_fixture() NOEXCEPT
