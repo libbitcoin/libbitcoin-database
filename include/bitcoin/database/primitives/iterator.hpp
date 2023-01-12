@@ -32,7 +32,7 @@ template <typename Link, typename Key, size_t Size = max_size_t>
 class iterator
 {
 public:
-    DEFAULT5(iterator);
+    DEFAULT_COPY_MOVE_DESTRUCT(iterator);
 
     /// This advances to first match (or terminal).
     iterator(const memory_ptr& data, const Link& start,

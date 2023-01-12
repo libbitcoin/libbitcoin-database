@@ -36,7 +36,7 @@ template <typename Link, size_t Size>
 class arraymap
 {
 public:
-    DEFAULT5(arraymap);
+    DEFAULT_COPY_MOVE_DESTRUCT(arraymap);
 
     using link = Link;
 

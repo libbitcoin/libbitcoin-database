@@ -23,7 +23,7 @@
 
 struct store_setup_fixture
 {
-    DELETE4(store_setup_fixture);
+    DELETE_COPY_MOVE(store_setup_fixture);
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
     store_setup_fixture() NOEXCEPT

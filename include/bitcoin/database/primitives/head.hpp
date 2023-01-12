@@ -31,7 +31,7 @@ template <typename Link, typename Key>
 class head
 {
 public:
-    DEFAULT5(head);
+    DEFAULT_COPY_MOVE_DESTRUCT(head);
 
     using bytes = typename Link::bytes;
 

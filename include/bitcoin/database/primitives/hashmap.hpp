@@ -39,7 +39,7 @@ template <typename Link, typename Key, size_t Size>
 class hashmap
 {
 public:
-    DEFAULT5(hashmap);
+    DEFAULT_COPY_MOVE_DESTRUCT(hashmap);
 
     using key = Key;
     using link = Link;

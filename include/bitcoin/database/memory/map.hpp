@@ -35,7 +35,7 @@ class BCD_API map
   : public storage
 {
 public:
-    DELETE4(map);
+    DELETE_COPY_MOVE(map);
 
     map(const std::filesystem::path& filename, size_t minimum=1,
         size_t expansion=0) NOEXCEPT;

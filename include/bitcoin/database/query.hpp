@@ -44,7 +44,7 @@ template <typename Store>
 class query
 {
 public:
-    DELETE5(query);
+    DELETE_COPY_MOVE_DESTRUCT(query);
 
     /// Query type aliases.
     using block = system::chain::block;
