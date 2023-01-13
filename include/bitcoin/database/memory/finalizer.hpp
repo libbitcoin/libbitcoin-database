@@ -37,14 +37,14 @@ class flipper
 public:
     DEFAULT_COPY_MOVE_DESTRUCT(flipper);
 
-    using finalizer = std::function<bool()>;
+    using finalization = std::function<bool()>;
 
     flipper(IOStream& stream) NOEXCEPT
       : system::byte_flipper<IOStream>(stream)
     {
     }
 
-    void set_finalizer(finalizer&& functor) NOEXCEPT
+    void set_finalizer(finalization&& functor) NOEXCEPT
     {
         finalize_ = std::move(functor);
     }
@@ -62,7 +62,7 @@ public:
     }
 
 private:
-    finalizer finalize_;
+    finalization finalize_;
 };
 
 /// A finalizing byte reader/writer that copies data from/to a memory_ptr.
