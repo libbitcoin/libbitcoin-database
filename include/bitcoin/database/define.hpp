@@ -49,13 +49,6 @@ static_assert(sizeof(void*) == sizeof(uint64_t), "Not a 64 bit system!");
 /// ---------------------------------------------------------------------------
 #define LOG_DATABASE "database"
 
-#define LOG_INFO(name) std::cout << name << " : "
-#define LOG_DEBUG(name) std::cout << name << " : "
-#define LOG_VERBOSE(name) std::cout << name << " : "
-#define LOG_ERROR(name) std::cerr << name << " : "
-#define LOG_WARNING(name) std::cerr << name << " : "
-#define LOG_FATAL(name) std::cerr << name << " : "
-
 namespace libbitcoin {
 namespace database {
 
