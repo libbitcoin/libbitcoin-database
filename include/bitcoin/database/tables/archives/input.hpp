@@ -29,8 +29,6 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-BC_PUSH_WARNING(NO_NEW_OR_DELETE)
-
 /// Input is searchable by point_fk/index (fP) of the output that it spends.
 /// This makes input a multimap, as multiple inputs can spend a given output.
 struct input
@@ -135,8 +133,8 @@ struct input
             source.skip_bytes(tx::size);
             source.skip_variable();
             sequence = source.read_little_endian<uint32_t>();
-            script = to_shared(new chain::script{ source, true });
-            witness = to_shared(new chain::witness{ source, true });
+            script = to_shared<chain::script>(source, true);
+            witness = to_shared<chain::witness>(source, true);
             return source;
         }
     
@@ -184,13 +182,19 @@ struct input
     
             // sequence stored out of order (prefer script/witness trailing).
             const auto sequence = source.read_little_endian<uint32_t>();
+
+            // Parameter evaluation order is not assured by c++ (use new).
+            BC_PUSH_WARNING(NO_NEW_OR_DELETE)
+            BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
             input = to_shared(new chain::input
             {
                 prevout,
-                to_shared(new chain::script{ source, true }),
-                to_shared(new chain::witness{ source, true }),
+                to_shared<chain::script>(source, true),
+                to_shared<chain::witness>(source, true),
                 sequence
             });
+            BC_POP_WARNING()
+            BC_POP_WARNING()
     
             return source;
         }
@@ -315,8 +319,6 @@ struct input
         ix::integer point_index{};
     };
 };
-
-BC_POP_WARNING()
 
 } // namespace table
 } // namespace database

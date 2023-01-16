@@ -30,8 +30,6 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-BC_PUSH_WARNING(NO_NEW_OR_DELETE)
-
 /// Header is a cononical record hash table.
 struct header
   : public hash_map<schema::header>
@@ -268,8 +266,6 @@ struct header
         context ctx{};
     };
 };
-
-BC_POP_WARNING()
 
 } // namespace table
 } // namespace database

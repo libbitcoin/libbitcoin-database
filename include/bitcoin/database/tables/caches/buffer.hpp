@@ -28,8 +28,6 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-BC_PUSH_WARNING(NO_NEW_OR_DELETE)
-
 /// buffer is a slab hashmap of txs.
 struct buffer
   : public hash_map<schema::buffer>
@@ -79,7 +77,7 @@ struct buffer
         inline bool from_data(reader& source) NOEXCEPT
         {
             using namespace system;
-            tx = system::to_shared(new chain::transaction{ source, true });
+            tx = system::to_shared<chain::transaction>(source, true);
             return source;
         }
 
@@ -111,8 +109,6 @@ struct buffer
         const system::chain::transaction& tx{};
     };
 };
-
-BC_POP_WARNING()
 
 } // namespace table
 } // namespace database
