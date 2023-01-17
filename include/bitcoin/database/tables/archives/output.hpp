@@ -29,8 +29,6 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-BC_PUSH_WARNING(NO_NEW_OR_DELETE)
-
 /// Output is a blob (set of non-searchable slabs).
 /// Output can be obtained by fk navigation (eg from tx/index). 
 struct output
@@ -96,11 +94,18 @@ struct output
             using namespace system;
             source.skip_bytes(tx::size);
             source.skip_variable();
+
+            // Parameter evaluation order is not assured by c++ (use new).
+            BC_PUSH_WARNING(NO_NEW_OR_DELETE)
+            BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
             output = to_shared(new chain::output
             {
                 source.read_variable(),
-                to_shared(new chain::script{ source, true })
+                to_shared<chain::script>(source, true)
             });
+            BC_POP_WARNING()
+            BC_POP_WARNING()
+
             return source;
         }
 
@@ -175,8 +180,6 @@ struct output
         const system::chain::output& output{};
     };
 };
-
-BC_POP_WARNING()
 
 } // namespace table
 } // namespace database

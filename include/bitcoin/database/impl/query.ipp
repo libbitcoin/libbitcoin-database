@@ -69,8 +69,7 @@
 
 namespace libbitcoin {
 namespace database {
-    
-BC_PUSH_WARNING(NO_NEW_OR_DELETE)
+
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(NO_USE_OF_MOVED_OBJECT)
 
@@ -711,15 +710,15 @@ typename CLASS::header::cptr CLASS::get_header(const header_link& link) NOEXCEPT
         !store_.header.get(child.parent_fk, parent))
         return {};
 
-    return system::to_shared(new header
-    {
+    return system::to_shared<header>
+    (
         child.version,
         std::move(parent.key),
         std::move(child.merkle_root),
         child.timestamp,
         child.bits,
         child.nonce
-    });
+    );
 }
 
 TEMPLATE
@@ -733,11 +732,11 @@ typename CLASS::block::cptr CLASS::get_block(const header_link& link) NOEXCEPT
     if (!transactions)
         return {};
 
-    return system::to_shared(new block
-    {
+    return system::to_shared<block>
+    (
         header,
         transactions
-    });
+    );
 }
 
 TEMPLATE
@@ -767,13 +766,13 @@ typename CLASS::transaction::cptr CLASS::get_transaction(
         if (!push_bool(*outputs, get_output(fk)))
             return {};
 
-    return system::to_shared(new transaction
-    {
+    return system::to_shared<transaction>
+    (
         tx.version,
         inputs,
         outputs,
         tx.locktime
-    });
+    );
 }
 
 TEMPLATE
@@ -796,17 +795,17 @@ typename CLASS::input::cptr CLASS::get_input(const input_link& link) NOEXCEPT
     // Share null point instances to reduce memory consumption.
     static const auto null_point = system::to_shared<const point>();
 
-    return system::to_shared(new input
-    {
-        in.is_null() ? null_point : system::to_shared(new point
-        {
+    return system::to_shared<input>
+    (
+        in.is_null() ? null_point : system::to_shared<point>
+        (
             get_point_key(in.point_fk),
             in.point_index
-        }),
+        ),
         in.script,
         in.witness,
         in.sequence
-    });
+    );
 }
 
 TEMPLATE
@@ -816,11 +815,11 @@ typename CLASS::point::cptr CLASS::get_point(const input_link& link) NOEXCEPT
     if (!store_.input.get(link, in))
         return {};
 
-    return system::to_shared(new point
-    {
+    return system::to_shared<point>
+    (
         get_point_key(in.point_fk),
         in.point_index
-    });
+    );
 }
 
 TEMPLATE
@@ -1859,7 +1858,6 @@ bool CLASS::set_bootstrap(size_t height) NOEXCEPT
     // ========================================================================
 }
 
-BC_POP_WARNING()
 BC_POP_WARNING()
 BC_POP_WARNING()
 
