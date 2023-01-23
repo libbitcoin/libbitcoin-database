@@ -37,10 +37,10 @@ src_libbitcoin_database_la_LIBADD = ${bitcoin_system_LIBS}
 src_libbitcoin_database_la_SOURCES = \
     src/error.cpp \
     src/settings.cpp \
+    src/file/file.cpp \
     src/locks/file_lock.cpp \
     src/locks/flush_lock.cpp \
     src/locks/interprocess_lock.cpp \
-    src/memory/file.cpp \
     src/memory/map.cpp \
     src/memory/mman-win32/mman.c \
     src/memory/mman-win32/mman.h
@@ -61,11 +61,11 @@ test_libbitcoin_database_test_SOURCES = \
     test/store.cpp \
     test/test.cpp \
     test/test.hpp \
+    test/file/file.cpp \
     test/locks/file_lock.cpp \
     test/locks/flush_lock.cpp \
     test/locks/interprocess_lock.cpp \
     test/memory/accessor.cpp \
-    test/memory/file.cpp \
     test/memory/map.cpp \
     test/mocks/blocks.hpp \
     test/mocks/chunk_storage.cpp \
@@ -130,6 +130,10 @@ include_bitcoin_database_HEADERS = \
     include/bitcoin/database/store.hpp \
     include/bitcoin/database/version.hpp
 
+include_bitcoin_database_filedir = ${includedir}/bitcoin/database/file
+include_bitcoin_database_file_HEADERS = \
+    include/bitcoin/database/file/file.hpp
+
 include_bitcoin_database_impldir = ${includedir}/bitcoin/database/impl
 include_bitcoin_database_impl_HEADERS = \
     include/bitcoin/database/impl/query.ipp \
@@ -158,7 +162,6 @@ include_bitcoin_database_locks_HEADERS = \
 include_bitcoin_database_memorydir = ${includedir}/bitcoin/database/memory
 include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/accessor.hpp \
-    include/bitcoin/database/memory/file.hpp \
     include/bitcoin/database/memory/finalizer.hpp \
     include/bitcoin/database/memory/map.hpp \
     include/bitcoin/database/memory/memory.hpp \

@@ -8,66 +8,75 @@
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="include">
-      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000004}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\database">
+    <Filter Include="include\bitcoin">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000006}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\database\impl">
+    <Filter Include="include\bitcoin\database">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000007}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\database\impl\memory">
-      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000C}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\database\impl\primitives">
-      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000D}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\database\locks">
+    <Filter Include="include\bitcoin\database\file">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000008}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\database\memory">
+    <Filter Include="include\bitcoin\database\impl">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000009}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\database\memory\interfaces">
+    <Filter Include="include\bitcoin\database\impl\memory">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000E}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\database\primitives">
-      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000A}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\database\tables">
-      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000B}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\database\tables\archives">
+    <Filter Include="include\bitcoin\database\impl\primitives">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000F}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\database\tables\caches">
+    <Filter Include="include\bitcoin\database\locks">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\memory">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\memory\interfaces">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000001}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\database\tables\indexes">
+    <Filter Include="include\bitcoin\database\primitives">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\tables">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\tables\archives">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="resource">
+    <Filter Include="include\bitcoin\database\tables\caches">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\tables\indexes">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resource">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000005}</UniqueIdentifier>
     </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000000}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\locks">
+    <Filter Include="src\file">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000001}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\memory">
+    <Filter Include="src\locks">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\memory\mman-win32">
+    <Filter Include="src\memory">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\memory\mman-win32">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000004}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\src\error.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\file\file.cpp">
+      <Filter>src\file</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\locks\file_lock.cpp">
       <Filter>src\locks</Filter>
@@ -77,9 +86,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\locks\interprocess_lock.cpp">
       <Filter>src\locks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\memory\file.cpp">
-      <Filter>src\memory</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\memory\map.cpp">
       <Filter>src\memory</Filter>
@@ -104,6 +110,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\error.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\file\file.hpp">
+      <Filter>include\bitcoin\database\file</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\file_lock.hpp">
       <Filter>include\bitcoin\database\locks</Filter>
     </ClInclude>
@@ -117,9 +126,6 @@
       <Filter>include\bitcoin\database\locks</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp">
-      <Filter>include\bitcoin\database\memory</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\file.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\finalizer.hpp">

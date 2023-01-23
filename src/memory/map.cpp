@@ -33,8 +33,8 @@
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/error.hpp>
+#include <bitcoin/database/file/file.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
-#include <bitcoin/database/memory/file.hpp>
 
 namespace libbitcoin {
 namespace database {

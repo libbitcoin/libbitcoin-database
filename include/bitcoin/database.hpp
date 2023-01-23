@@ -22,12 +22,12 @@
 #include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/store.hpp>
 #include <bitcoin/database/version.hpp>
+#include <bitcoin/database/file/file.hpp>
 #include <bitcoin/database/locks/file_lock.hpp>
 #include <bitcoin/database/locks/flush_lock.hpp>
 #include <bitcoin/database/locks/interprocess_lock.hpp>
 #include <bitcoin/database/locks/locks.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
-#include <bitcoin/database/memory/file.hpp>
 #include <bitcoin/database/memory/finalizer.hpp>
 #include <bitcoin/database/memory/map.hpp>
 #include <bitcoin/database/memory/memory.hpp>

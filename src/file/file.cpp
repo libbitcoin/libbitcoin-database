@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/memory/file.hpp>
+#include <bitcoin/database/file/file.hpp>
 
 #if defined(HAVE_MSC)
     #include <io.h>

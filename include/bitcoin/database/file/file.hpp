@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MEMORY_FILE_HPP
-#define LIBBITCOIN_DATABASE_MEMORY_FILE_HPP
+#ifndef LIBBITCOIN_DATABASE_FILE_FILE_HPP
+#define LIBBITCOIN_DATABASE_FILE_FILE_HPP
 
 #include <filesystem>
 #include <bitcoin/system.hpp>
