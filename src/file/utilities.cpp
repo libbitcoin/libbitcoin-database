@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/file/file.hpp>
+#include <bitcoin/database/file/utilities.hpp>
 
 #if defined(HAVE_MSC)
     #include <io.h>
@@ -137,6 +137,7 @@ bool close(int file_descriptor) NOEXCEPT
 #endif
 }
 
+// TODO: differentiate error return from zero size.
 size_t size(int file_descriptor) NOEXCEPT
 {
     if (file_descriptor == -1)

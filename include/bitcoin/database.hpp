@@ -23,6 +23,8 @@
 #include <bitcoin/database/store.hpp>
 #include <bitcoin/database/version.hpp>
 #include <bitcoin/database/file/file.hpp>
+#include <bitcoin/database/file/rotator.hpp>
+#include <bitcoin/database/file/utilities.hpp>
 #include <bitcoin/database/locks/file_lock.hpp>
 #include <bitcoin/database/locks/flush_lock.hpp>
 #include <bitcoin/database/locks/interprocess_lock.hpp>

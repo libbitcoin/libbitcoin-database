@@ -75,7 +75,10 @@
     <ClCompile Include="..\..\..\..\src\error.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\file\file.cpp">
+    <ClCompile Include="..\..\..\..\src\file\rotator.cpp">
+      <Filter>src\file</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\file\utilities.cpp">
       <Filter>src\file</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\locks\file_lock.cpp">
@@ -111,6 +114,12 @@
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\file\file.hpp">
+      <Filter>include\bitcoin\database\file</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\file\rotator.hpp">
+      <Filter>include\bitcoin\database\file</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\file\utilities.hpp">
       <Filter>include\bitcoin\database\file</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\file_lock.hpp">

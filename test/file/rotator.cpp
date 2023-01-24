@@ -13,13 +13,34 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
+ * You should have received a create_file of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_FILE_FILE_HPP
-#define LIBBITCOIN_DATABASE_FILE_FILE_HPP
+#include "../test.hpp"
 
-#include <bitcoin/database/file/rotator.hpp>
-#include <bitcoin/database/file/utilities.hpp>
+struct rotator_setup_fixture
+{
+    DELETE_COPY_MOVE(rotator_setup_fixture);
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-#endif
+    rotator_setup_fixture() NOEXCEPT
+    {
+        BOOST_REQUIRE(test::clear(test::directory));
+    }
+
+    ~rotator_setup_fixture() NOEXCEPT
+    {
+        BOOST_REQUIRE(test::clear(test::directory));
+    }
+
+    BC_POP_WARNING()
+};
+
+BOOST_FIXTURE_TEST_SUITE(rotator_tests, rotator_setup_fixture)
+
+BOOST_AUTO_TEST_CASE(rotator_test)
+{
+    BOOST_REQUIRE(true);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

@@ -45,7 +45,10 @@
     <ClCompile Include="..\..\..\..\test\error.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\file\file.cpp">
+    <ClCompile Include="..\..\..\..\test\file\rotator.cpp">
+      <Filter>src\file</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\file\utilities.cpp">
       <Filter>src\file</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\locks\file_lock.cpp">

@@ -37,7 +37,8 @@ src_libbitcoin_database_la_LIBADD = ${bitcoin_system_LIBS}
 src_libbitcoin_database_la_SOURCES = \
     src/error.cpp \
     src/settings.cpp \
-    src/file/file.cpp \
+    src/file/rotator.cpp \
+    src/file/utilities.cpp \
     src/locks/file_lock.cpp \
     src/locks/flush_lock.cpp \
     src/locks/interprocess_lock.cpp \
@@ -61,7 +62,8 @@ test_libbitcoin_database_test_SOURCES = \
     test/store.cpp \
     test/test.cpp \
     test/test.hpp \
-    test/file/file.cpp \
+    test/file/rotator.cpp \
+    test/file/utilities.cpp \
     test/locks/file_lock.cpp \
     test/locks/flush_lock.cpp \
     test/locks/interprocess_lock.cpp \
@@ -132,7 +134,9 @@ include_bitcoin_database_HEADERS = \
 
 include_bitcoin_database_filedir = ${includedir}/bitcoin/database/file
 include_bitcoin_database_file_HEADERS = \
-    include/bitcoin/database/file/file.hpp
+    include/bitcoin/database/file/file.hpp \
+    include/bitcoin/database/file/rotator.hpp \
+    include/bitcoin/database/file/utilities.hpp
 
 include_bitcoin_database_impldir = ${includedir}/bitcoin/database/impl
 include_bitcoin_database_impl_HEADERS = \
