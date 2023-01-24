@@ -49,6 +49,9 @@ public:
 
     /// Write message to log.
     bool write(const std::string& message) NOEXCEPT;
+    
+    /// Flush the log to file.
+    bool flush() NOEXCEPT;
 
 protected:
     bool rotate() NOEXCEPT;

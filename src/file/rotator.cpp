@@ -42,10 +42,7 @@ bool rotator::stop() NOEXCEPT
     if (!stream_)
         return false;
 
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    stream_->flush();
-    BC_POP_WARNING()
-
+    flush();
     stream_.reset();
     return true;
 }
@@ -70,6 +67,17 @@ bool rotator::write(const std::string& message) NOEXCEPT
 
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     *stream_ << message;
+    BC_POP_WARNING()
+    return true;
+}
+
+bool rotator::flush() NOEXCEPT
+{
+    if (!stream_)
+        return false;
+
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    stream_->flush();
     BC_POP_WARNING()
     return true;
 }

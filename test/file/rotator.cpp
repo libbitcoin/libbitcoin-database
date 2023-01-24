@@ -227,4 +227,18 @@ BOOST_AUTO_TEST_CASE(rotator__write__existing__appends)
     BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH, 1), "abc");
 }
 
+BOOST_AUTO_TEST_CASE(rotator__flush__existing__expected)
+{
+    const std::string text = "panopticon";
+    BOOST_REQUIRE(test::create(TEST_PATH, text));
+
+    file::rotator instance(TEST_PATH, TEST_PATH + "_", 42);
+    BOOST_REQUIRE(instance.start());
+    BOOST_REQUIRE(instance.write("\n"));
+    BOOST_REQUIRE(instance.write("abc"));
+    BOOST_REQUIRE(instance.flush());
+    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH, 0), "panopticon");
+    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH, 1), "abc");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
