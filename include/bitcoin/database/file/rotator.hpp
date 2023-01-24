@@ -30,7 +30,7 @@ namespace database {
 namespace file {
 
 /// Not thread safe.
-/// Sinple two file log rotator with configurable size and file names.
+/// Simple two file log rotator with configurable size and file names.
 class BCD_API rotator
 {
 public:
@@ -38,16 +38,22 @@ public:
 
     DELETE_COPY_MOVE(rotator);
 
+    /// Construct log rotator with paths and size limit.
     rotator(const path& path1, const path& path2, size_t limit) NOEXCEPT;
 
+    /// Start rotator, should be stopped.
     bool start() NOEXCEPT;
-    void stop() NOEXCEPT;
+
+    /// Stop and flush rotator, should be started.
+    bool stop() NOEXCEPT;
+
+    /// Write message to log.
     bool write(const std::string& message) NOEXCEPT;
 
 protected:
+    bool rotate() NOEXCEPT;
     bool set_size() NOEXCEPT;
     bool set_stream() NOEXCEPT;
-    bool rotate() NOEXCEPT;
 
 private:
     // These are thread safe.

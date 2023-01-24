@@ -58,11 +58,13 @@ BCD_API bool rename(const path& from, const path& to) NOEXCEPT;
 /// File descriptor functions (for memory mapping).
 BCD_API int open(const path& filename) NOEXCEPT;
 BCD_API bool close(int file_descriptor) NOEXCEPT;
-BCD_API size_t size(int file_descriptor) NOEXCEPT;
+BCD_API bool size(size_t& out, int file_descriptor) NOEXCEPT;
+
+/// File size from name.
+BCD_API bool size(size_t& out, const path& filename) NOEXCEPT;
 
 /// System page size.
 BCD_API size_t page() NOEXCEPT;
-
 } // namespace file
 } // namespace database
 } // namespace libbitcoin

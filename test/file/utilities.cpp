@@ -23,7 +23,7 @@ struct utilities_setup_fixture
     DELETE_COPY_MOVE(utilities_setup_fixture);
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-        utilities_setup_fixture() NOEXCEPT
+    utilities_setup_fixture() NOEXCEPT
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
@@ -117,7 +117,10 @@ BOOST_AUTO_TEST_CASE(utilities__create_file__empty__created)
 
     const auto descriptor = file::open(TEST_PATH);
     BOOST_REQUIRE_NE(descriptor, -1);
-    BOOST_REQUIRE_EQUAL(file::size(descriptor), source.size());
+
+    size_t out{};
+    BOOST_REQUIRE(file::size(out, descriptor));
+    BOOST_REQUIRE_EQUAL(out, source.size());
     BOOST_REQUIRE(file::close(descriptor));
 }
 
@@ -130,7 +133,10 @@ BOOST_AUTO_TEST_CASE(utilities__create_file__missing__expected_size)
 
     const auto descriptor = file::open(TEST_PATH);
     BOOST_REQUIRE_NE(descriptor, -1);
-    BOOST_REQUIRE_EQUAL(file::size(descriptor), source.size());
+
+    size_t out{};
+    BOOST_REQUIRE(file::size(out, descriptor));
+    BOOST_REQUIRE_EQUAL(out, source.size());
     BOOST_REQUIRE(file::close(descriptor));
 }
 
@@ -143,7 +149,10 @@ BOOST_AUTO_TEST_CASE(utilities__create_file__exists__replaced)
 
     auto descriptor = file::open(TEST_PATH);
     BOOST_REQUIRE_NE(descriptor, -1);
-    BOOST_REQUIRE_EQUAL(file::size(descriptor), old.size());
+
+    size_t out{};
+    BOOST_REQUIRE(file::size(out, descriptor));
+    BOOST_REQUIRE_EQUAL(out, old.size());
     BOOST_REQUIRE(file::close(descriptor));
 
     const data_chunk source(42);
@@ -153,7 +162,9 @@ BOOST_AUTO_TEST_CASE(utilities__create_file__exists__replaced)
 
     descriptor = file::open(TEST_PATH);
     BOOST_REQUIRE_NE(descriptor, -1);
-    BOOST_REQUIRE_EQUAL(file::size(descriptor), source.size());
+
+    BOOST_REQUIRE(file::size(out, descriptor));
+    BOOST_REQUIRE_EQUAL(out, source.size());
     BOOST_REQUIRE(file::close(descriptor));
 }
 
@@ -205,26 +216,60 @@ BOOST_AUTO_TEST_CASE(utilities__close__opened__true)
     BOOST_REQUIRE(file::close(descriptor));
 }
 
-BOOST_AUTO_TEST_CASE(utilities__size__empty__zero)
+BOOST_AUTO_TEST_CASE(utilities__size1__invalid_handle__false)
+{
+    size_t out{};
+    BOOST_REQUIRE(!file::size(out, -1));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__size1__empty__true_zero)
 {
     BOOST_REQUIRE(test::create(TEST_PATH));
     const auto descriptor = file::open(TEST_PATH);
     BOOST_REQUIRE_NE(descriptor, -1);
-    BOOST_REQUIRE_EQUAL(file::size(descriptor), zero);
+
+    size_t out{ 42 };
+    BOOST_REQUIRE(file::size(out, descriptor));
+    BOOST_REQUIRE_EQUAL(out, zero);
     BOOST_REQUIRE(file::close(descriptor));
 }
 
-BOOST_AUTO_TEST_CASE(utilities__size__non_empty__expected)
+BOOST_AUTO_TEST_CASE(utilities__size1__non_empty__expected)
 {
     const std::string text = "panopticon";
-    system::ofstream file(TEST_PATH);
-    BOOST_REQUIRE(file.good());
-    file << text;
-    file.close();
+    BOOST_REQUIRE(test::create(TEST_PATH, text));
+
     const auto descriptor = file::open(TEST_PATH);
     BOOST_REQUIRE_NE(descriptor, file::invalid);
-    BOOST_REQUIRE_EQUAL(file::size(descriptor), text.length());
+
+    size_t out{};
+    BOOST_REQUIRE(file::size(out, descriptor));
+    BOOST_REQUIRE_EQUAL(out, text.length());
     BOOST_REQUIRE(file::close(descriptor));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__size2__missing__false)
+{
+    size_t out{};
+    BOOST_REQUIRE(!file::size(out, TEST_PATH));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__size2__empty__true_zero)
+{
+    size_t out{ 42 };
+    BOOST_REQUIRE(test::create(TEST_PATH));
+    BOOST_REQUIRE(file::size(out, TEST_PATH));
+    BOOST_REQUIRE_EQUAL(out, zero);
+}
+
+BOOST_AUTO_TEST_CASE(utilities__size2__non_empty__true_expected)
+{
+    const std::string text = "panopticon";
+    BOOST_REQUIRE(test::create(TEST_PATH, text));
+
+    size_t out{};
+    BOOST_REQUIRE(file::size(out, TEST_PATH));
+    BOOST_REQUIRE_EQUAL(out, text.length());
 }
 
 BOOST_AUTO_TEST_CASE(utilities__page__always__non_zero)

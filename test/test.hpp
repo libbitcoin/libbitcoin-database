@@ -92,11 +92,16 @@ namespace test {
 // Total path length cannot exceed MAX_PATH in HAVE_MSC builds.
 extern const std::string directory;
 
+size_t size(const std::filesystem::path& file_path) NOEXCEPT;
+bool exists(const std::filesystem::path& file_path) NOEXCEPT;
+bool remove(const std::filesystem::path& file_path) NOEXCEPT;
 bool clear(const std::filesystem::path& directory) NOEXCEPT;
 bool folder(const std::filesystem::path& directory) NOEXCEPT;
 bool create(const std::filesystem::path& file_path) NOEXCEPT;
-bool exists(const std::filesystem::path& file_path) NOEXCEPT;
-bool remove(const std::filesystem::path& file_path) NOEXCEPT;
+bool create(const std::filesystem::path& file_path,
+    const std::string& text) NOEXCEPT;
+std::string read_line(const std::filesystem::path& file_path,
+    size_t line = zero) NOEXCEPT;
 
 } // namespace test
 

@@ -68,6 +68,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__open_failure__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "file failed to open");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__size_failure__true_exected_message)
+{
+    constexpr auto value = error::size_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "filure obtaining file size");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__close_loaded__true_exected_message)
 {
     constexpr auto value = error::close_loaded;

@@ -33,16 +33,21 @@ rotator::rotator(const path& path1, const path& path2, size_t limit) NOEXCEPT
 
 bool rotator::start() NOEXCEPT
 {
-    return set_size() && set_stream();
+    BC_ASSERT_MSG(!stream_, "rotator not stopped");
+    return !stream_ && set_size() && set_stream();
 }
 
-void rotator::stop() NOEXCEPT
+bool rotator::stop() NOEXCEPT
 {
+    if (!stream_)
+        return false;
+
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     stream_->flush();
     BC_POP_WARNING()
 
     stream_.reset();
+    return true;
 }
 
 bool rotator::write(const std::string& message) NOEXCEPT
@@ -51,6 +56,9 @@ bool rotator::write(const std::string& message) NOEXCEPT
         return false;
 
     const auto size = message.size();
+    if (size >= limit_)
+        return false;
+
     size_ = system::ceilinged_add(size, size_);
     if (size_ >= limit_)
     {
@@ -67,31 +75,34 @@ bool rotator::write(const std::string& message) NOEXCEPT
 }
 
 // protected
+bool rotator::rotate() NOEXCEPT
+{
+    return stop()
+        && file::remove(path2_)
+        && file::rename(path1_, path2_)
+        && start();
+}
+
+// protected
 bool rotator::set_size() NOEXCEPT
 {
+    BC_ASSERT_MSG(!stream_, "rotator not stopped");
     size_ = zero;
-    const auto handle = file::open(path1_);
-    if (handle == invalid)
-        return false;
-
-    size_ = file::size(handle);
-    return file::close(handle);
+    return !file::is_file(path1_) || file::size(size_, path1_);
 }
 
 // protected
 bool rotator::set_stream() NOEXCEPT
 {
+    BC_ASSERT_MSG(!stream_, "rotator not stopped");
+
+    // Binary mode on Windows ensures that \n nor replaced with \r\n.
+    constexpr auto mode = std::ios_base::app | std::ios_base::binary;
+
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    stream_ = std::make_shared<system::ofstream>(path1_);
+    stream_ = std::make_shared<system::ofstream>(path1_, mode);
     return stream_ && stream_->good();
     BC_POP_WARNING()
-}
-
-// protected
-bool rotator::rotate() NOEXCEPT
-{
-    stop();
-    return file::remove(path2_) && file::rename(path1_, path2_) && start();
 }
 
 } // namespace file
