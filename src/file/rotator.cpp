@@ -38,7 +38,10 @@ bool rotator::start() NOEXCEPT
 
 void rotator::stop() NOEXCEPT
 {
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     stream_->flush();
+    BC_POP_WARNING()
+
     stream_.reset();
 }
 
