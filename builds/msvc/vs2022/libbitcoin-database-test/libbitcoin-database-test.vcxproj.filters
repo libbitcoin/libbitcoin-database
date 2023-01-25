@@ -10,37 +10,46 @@
     <Filter Include="src">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000000}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\locks">
+    <Filter Include="src\file">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000001}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\memory">
+    <Filter Include="src\locks">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\mocks">
+    <Filter Include="src\memory">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\primitives">
+    <Filter Include="src\mocks">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\query">
+    <Filter Include="src\primitives">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables">
+    <Filter Include="src\query">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000006}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\archives">
+    <Filter Include="src\tables">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000007}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\caches">
+    <Filter Include="src\tables\archives">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000008}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\indexes">
+    <Filter Include="src\tables\caches">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000009}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\tables\indexes">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000A}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\test\error.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\file\rotator.cpp">
+      <Filter>src\file</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\file\utilities.cpp">
+      <Filter>src\file</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\locks\file_lock.cpp">
       <Filter>src\locks</Filter>
@@ -55,9 +64,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\memory\accessor.cpp">
-      <Filter>src\memory</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\memory\file.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\memory\map.cpp">

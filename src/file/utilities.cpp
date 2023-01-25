@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/memory/file.hpp>
+#include <bitcoin/database/file/utilities.hpp>
 
 #if defined(HAVE_MSC)
     #include <io.h>
@@ -78,7 +78,8 @@ bool create_file(const path& filename) NOEXCEPT
 
 bool create_file(const path& to, const uint8_t* data, size_t size) NOEXCEPT
 {
-    system::ofstream file(to);
+    // Binary mode on Windows ensures that \n nor replaced with \r\n.
+    system::ofstream file(to, std::ios_base::binary);
     if (!file.good()) return false;
     file.write(pointer_cast<const char>(data), size);
     if (!file.good()) return false;
@@ -137,10 +138,10 @@ bool close(int file_descriptor) NOEXCEPT
 #endif
 }
 
-size_t size(int file_descriptor) NOEXCEPT
+bool size(size_t& out, int file_descriptor) NOEXCEPT
 {
     if (file_descriptor == -1)
-        return zero;
+        return false;
 
     // TODO: it may be possible to collapse this given newer WIN32 API.
     // This is required because off_t is defined as long, which is 32|64 bits
@@ -149,20 +150,23 @@ size_t size(int file_descriptor) NOEXCEPT
 #if defined(HAVE_X64)
     struct _stat64 sbuf;
     if (_fstat64(file_descriptor, &sbuf) == -1)
-        return zero;
+        return false;
 #else
     struct _stat32 sbuf;
     if (_fstat32(file_descriptor, &sbuf) == -1)
-        return zero;
+        return false;
 #endif
 #else
     // Limited to 32 bit files on 32 bit systems, see linux.die.net/man/2/open
     struct stat sbuf;
     if (fstat(file_descriptor, &sbuf) == -1)
-        return zero;
+        return false;
 #endif
+    if (is_limited<size_t>(sbuf.st_size))
+        return false;
 
-    return sign_cast<size_t>(sbuf.st_size);
+    out = sign_cast<size_t>(sbuf.st_size);
+    return true;
 }
 
 size_t page() NOEXCEPT
@@ -181,6 +185,19 @@ size_t page() NOEXCEPT
     BC_ASSERT(possible_narrow_sign_cast<uint64_t>(page_size) <= max_size_t);
     return possible_narrow_sign_cast<size_t>(page_size);
 #endif
+}
+
+bool size(size_t& out, const std::filesystem::path& file_path) NOEXCEPT
+{
+    code ec;
+    const auto size = std::filesystem::file_size(
+        to_extended_path(file_path), ec);
+
+    if (ec || is_limited<size_t>(size))
+        return false;
+
+    out = possible_narrow_and_sign_cast<size_t>(size);
+    return true;
 }
 
 BC_POP_WARNING()

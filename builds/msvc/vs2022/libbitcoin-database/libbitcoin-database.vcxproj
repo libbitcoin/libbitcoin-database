@@ -74,10 +74,11 @@
   </ImportGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\src\error.cpp" />
+    <ClCompile Include="..\..\..\..\src\file\rotator.cpp" />
+    <ClCompile Include="..\..\..\..\src\file\utilities.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\file_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\flush_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\interprocess_lock.cpp" />
-    <ClCompile Include="..\..\..\..\src\memory\file.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\map.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\mman-win32\mman.c" />
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
@@ -87,12 +88,14 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\boost.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\error.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\file\file.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\file\rotator.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\file\utilities.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\file_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\flush_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\interprocess_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\locks.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\file.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\finalizer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\storage.hpp" />

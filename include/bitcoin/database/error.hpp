@@ -41,6 +41,7 @@ enum error_t
     // memory map
     open_open,
     open_failure,
+    size_failure,
     close_loaded,
     close_failure,
     load_locked,

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MEMORY_FILE_HPP
-#define LIBBITCOIN_DATABASE_MEMORY_FILE_HPP
+#ifndef LIBBITCOIN_DATABASE_FILE_UTILITIES_HPP
+#define LIBBITCOIN_DATABASE_FILE_UTILITIES_HPP
 
 #include <filesystem>
 #include <bitcoin/system.hpp>
@@ -58,11 +58,13 @@ BCD_API bool rename(const path& from, const path& to) NOEXCEPT;
 /// File descriptor functions (for memory mapping).
 BCD_API int open(const path& filename) NOEXCEPT;
 BCD_API bool close(int file_descriptor) NOEXCEPT;
-BCD_API size_t size(int file_descriptor) NOEXCEPT;
+BCD_API bool size(size_t& out, int file_descriptor) NOEXCEPT;
+
+/// File size from name.
+BCD_API bool size(size_t& out, const path& filename) NOEXCEPT;
 
 /// System page size.
 BCD_API size_t page() NOEXCEPT;
-
 } // namespace file
 } // namespace database
 } // namespace libbitcoin

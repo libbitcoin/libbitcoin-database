@@ -37,6 +37,32 @@ namespace test {
 
 const std::string directory = "tests";
 
+size_t size(const std::filesystem::path& file_path) NOEXCEPT
+{
+    // returns max_size_t on error.
+    code ec;
+    return system::possible_narrow_and_sign_cast<size_t>(
+        std::filesystem::file_size(system::to_extended_path(file_path), ec));
+}
+
+bool exists(const std::filesystem::path& file_path) NOEXCEPT
+{
+    // Returns true only if file existed.
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    std::ifstream file(system::to_extended_path(file_path));
+    const auto good = file.good();
+    file.close();
+    BC_POP_WARNING()
+    return good;
+}
+
+bool remove(const std::filesystem::path& file_path) NOEXCEPT
+{
+    // Deletes and returns false if file did not exist (or error).
+    code ec;
+    return std::filesystem::remove(system::to_extended_path(file_path), ec);
+}
+
 bool clear(const std::filesystem::path& directory) NOEXCEPT
 {
     // remove_all returns count removed, and error code if fails.
@@ -49,7 +75,6 @@ bool clear(const std::filesystem::path& directory) NOEXCEPT
     return !ec && std::filesystem::create_directories(path, ec);
     BC_POP_WARNING()
 }
-
 
 bool folder(const std::filesystem::path& directory) NOEXCEPT
 {
@@ -71,22 +96,25 @@ bool create(const std::filesystem::path& file_path) NOEXCEPT
     return good;
 }
 
-bool exists(const std::filesystem::path& file_path) NOEXCEPT
+bool create(const std::filesystem::path& file_path,
+    const std::string& text) NOEXCEPT
 {
-    // Returns true only if file existed.
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    std::ifstream file(system::to_extended_path(file_path));
-    const auto good = file.good();
+    system::ofstream file(file_path);
+    const auto result = file.good();
+    file << text;
     file.close();
     BC_POP_WARNING()
-    return good;
+    return result;
 }
 
-bool remove(const std::filesystem::path& file_path) NOEXCEPT
+std::string read_line(const std::filesystem::path& file_path,
+    size_t line) NOEXCEPT
 {
-    // Deletes and returns false if file did not exist (or error).
-    code ec;
-    return std::filesystem::remove(system::to_extended_path(file_path), ec);
+    std::string out{};
+    std::ifstream file(system::to_extended_path(file_path));
+    do { out.clear(); std::getline(file, out); } while (!is_zero(line--));
+    return out;
 }
 
 } // namespace test

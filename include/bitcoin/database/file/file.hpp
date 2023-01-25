@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -16,15 +16,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MEMORY_MEMORY_HPP
-#define LIBBITCOIN_DATABASE_MEMORY_MEMORY_HPP
+#ifndef LIBBITCOIN_DATABASE_FILE_FILE_HPP
+#define LIBBITCOIN_DATABASE_FILE_FILE_HPP
 
-#include <bitcoin/database/memory/accessor.hpp>
-#include <bitcoin/database/memory/finalizer.hpp>
-#include <bitcoin/database/memory/interfaces/memory.hpp>
-#include <bitcoin/database/memory/interfaces/storage.hpp>
-#include <bitcoin/database/memory/map.hpp>
-#include <bitcoin/database/memory/reader.hpp>
-#include <bitcoin/database/memory/writer.hpp>
+#include <bitcoin/database/file/rotator.hpp>
+#include <bitcoin/database/file/utilities.hpp>
 
 #endif

@@ -33,8 +33,8 @@
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/error.hpp>
+#include <bitcoin/database/file/file.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
-#include <bitcoin/database/memory/file.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -78,9 +78,11 @@ code map::open() NOEXCEPT
         return error::open_open;
 
     descriptor_ = file::open(filename_);
-    logical_ = file::size(descriptor_);
+    if (descriptor_ == file::invalid)
+        return error::open_failure;
 
-    return descriptor_ == file::invalid ? error::open_failure : error::success;
+    return file::size(logical_, descriptor_) ? error::success :
+        error::size_failure;
 }
 
 code map::close() NOEXCEPT
