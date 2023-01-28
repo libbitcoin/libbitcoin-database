@@ -18,6 +18,7 @@
  */
 #include <bitcoin/database/file/rotator.hpp>
 
+#include <exception>
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -65,9 +66,15 @@ bool rotator::write(const std::string& message) NOEXCEPT
         size_ = size;
     }
 
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    *stream_ << message;
-    BC_POP_WARNING()
+    try
+    {
+        *stream_ << message;
+    }
+    catch (const std::exception&)
+    {
+        return false;
+    }
+
     return true;
 }
 
@@ -76,9 +83,15 @@ bool rotator::flush() NOEXCEPT
     if (!stream_)
         return false;
 
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    stream_->flush();
-    BC_POP_WARNING()
+    try
+    {
+        stream_->flush();
+    }
+    catch (const std::exception&)
+    {
+        return false;
+    }
+
     return true;
 }
 
@@ -94,7 +107,6 @@ bool rotator::rotate() NOEXCEPT
 // protected
 bool rotator::set_size() NOEXCEPT
 {
-    BC_ASSERT_MSG(!stream_, "rotator not stopped");
     size_ = zero;
     return !file::is_file(path1_) || file::size(size_, path1_);
 }
@@ -102,15 +114,18 @@ bool rotator::set_size() NOEXCEPT
 // protected
 bool rotator::set_stream() NOEXCEPT
 {
-    BC_ASSERT_MSG(!stream_, "rotator not stopped");
-
-    // Binary mode on Windows ensures that \n nor replaced with \r\n.
+    // Binary mode on Windows ensures that \n is not replaced with \r\n.
     constexpr auto mode = std::ios_base::app | std::ios_base::binary;
 
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    stream_ = std::make_shared<system::ofstream>(path1_, mode);
-    return stream_ && stream_->good();
-    BC_POP_WARNING()
+    try
+    {
+        stream_ = std::make_shared<system::ofstream>(path1_, mode);
+        return stream_ && stream_->good();
+    }
+    catch (const std::exception&)
+    {
+        return false;
+    }
 }
 
 } // namespace file
