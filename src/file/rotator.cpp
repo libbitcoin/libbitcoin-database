@@ -26,59 +26,79 @@
 namespace libbitcoin {
 namespace database {
 namespace file {
-
-rotator::rotator(const path& path1, const path& path2, size_t limit) NOEXCEPT
-  : path1_(path1), path2_(path2), limit_(limit)
+    
+// If start fails here, first write will fail, invalidating outer stream.
+rotator_sink::rotator_sink(const path& path1, const path& path2,
+    size_t limit) NOEXCEPT
+  : device<ofstream_wrap>({}), path1_(path1), path2_(path2), limit_(limit)
 {
+    if (system::is_limited<size_type>(limit) || !start())
+        stream_.reset();
 }
 
-bool rotator::start() NOEXCEPT
+// methods
+// ----------------------------------------------------------------------------
+// www.boost.org/doc/libs/1_79_0/libs/iostreams/doc/guide/exceptions.html
+// Must throw to invalidate the stream (system streams only indicate eof).
+
+BC_PUSH_WARNING(NO_METHOD_HIDING)
+typename rotator_sink::size_type
+rotator_sink::write(const char_type* buffer, size_type count) THROWS
+BC_POP_WARNING()
 {
-    BC_ASSERT_MSG(!stream_, "rotator not stopped");
-    return !stream_ && set_size() && set_stream();
+    if (is_null(buffer))
+    {
+        throw ostream_exception{ "buffer" };
+    }
+    else if (system::is_negative(count))
+    {
+        throw ostream_exception{ "count" };
+    }
+    else if (system::is_negative(remaining_))
+    {
+        throw ostream_exception{ "remaining" };
+    }
+    else if (!stream_)
+    {
+        throw ostream_exception{ "stream" };
+    }
+    else if (is_zero(count))
+    {
+        return count;
+    }
+    else if (is_zero(remaining_) && !rotate())
+    {
+        throw ostream_exception{ "rotate" };
+    }
+
+    // Consume full buffer up to the number of file bytes remaining.
+    const auto size = std::min(remaining_, count);
+    stream_->write(buffer, size);
+    remaining_ -= size;
+
+    // size < count indicates a partial write.
+    // next write or flush will continue where this left off.
+    return size;
 }
 
-bool rotator::stop() NOEXCEPT
+bool rotator_sink::flush() THROWS
 {
     if (!stream_)
         return false;
 
-    flush();
-    stream_.reset();
+    stream_->flush();
     return true;
 }
 
-bool rotator::write(const std::string& message) NOEXCEPT
+// protected
+// ----------------------------------------------------------------------------
+
+bool rotator_sink::start() NOEXCEPT
 {
-    if (!stream_)
-        return false;
-
-    const auto size = message.size();
-    if (size >= limit_)
-        return false;
-
-    size_ = system::ceilinged_add(size, size_);
-    if (size_ >= limit_)
-    {
-        if (!rotate())
-            return false;
-
-        size_ = size;
-    }
-
-    try
-    {
-        *stream_ << message;
-    }
-    catch (const std::exception&)
-    {
-        return false;
-    }
-
-    return true;
+    return !stream_ && set_remaining() && set_stream();
 }
 
-bool rotator::flush() NOEXCEPT
+bool rotator_sink::stop() NOEXCEPT
 {
     if (!stream_)
         return false;
@@ -86,33 +106,56 @@ bool rotator::flush() NOEXCEPT
     try
     {
         stream_->flush();
+        stream_.reset();
+        return true;
     }
     catch (const std::exception&)
     {
+        stream_.reset();
         return false;
     }
+}
 
+bool rotator_sink::rotate() NOEXCEPT
+{
+    if (stop() &&
+        file::remove(path2_) &&
+        file::rename(path1_, path2_) &&
+        start())
+    {
+        remaining_ = limit_;
+        return true;
+    }
+
+    remaining_ = {};
+    return false;
+}
+
+bool rotator_sink::set_remaining() NOEXCEPT
+{
+    if (!file::is_file(path1_))
+    {
+        remaining_ = limit_;
+        return true;
+    }
+
+    size_t out{};
+    remaining_ = {};
+    if (!file::size(out, path1_))
+        return false;
+
+    if (system::is_limited<size_type>(out))
+        return true;
+
+    const auto size = system::possible_narrow_sign_cast<size_type>(out);
+    if (size >= limit_)
+        return true;
+
+    remaining_ = limit_ - size;
     return true;
 }
 
-// protected
-bool rotator::rotate() NOEXCEPT
-{
-    return stop()
-        && file::remove(path2_)
-        && file::rename(path1_, path2_)
-        && start();
-}
-
-// protected
-bool rotator::set_size() NOEXCEPT
-{
-    size_ = zero;
-    return !file::is_file(path1_) || file::size(size_, path1_);
-}
-
-// protected
-bool rotator::set_stream() NOEXCEPT
+bool rotator_sink::set_stream() NOEXCEPT
 {
     // Binary mode on Windows ensures that \n is not replaced with \r\n.
     constexpr auto mode = std::ios_base::app | std::ios_base::binary;
@@ -126,6 +169,12 @@ bool rotator::set_stream() NOEXCEPT
     {
         return false;
     }
+}
+
+typename rotator_sink::size_type
+rotator_sink::do_optimal_buffer_size() const NOEXCEPT
+{
+    return std::min(limit_, device<ofstream_wrap>::do_optimal_buffer_size());
 }
 
 } // namespace file

@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_FILE_ROTATOR_HPP
 #define LIBBITCOIN_DATABASE_FILE_ROTATOR_HPP
 
+#include <ostream>
 #include <memory>
 #include <filesystem>
 #include <bitcoin/system.hpp>
@@ -29,45 +30,57 @@ namespace libbitcoin {
 namespace database {
 namespace file {
 
-/// Not thread safe.
-/// Simple two file log rotator with configurable size and file names.
-class BCD_API rotator
+/// Because device requires std::ofstream::value_type.
+struct ofstream_wrap
+{
+    using value_type = std::ofstream::char_type;
+    std::ofstream& stream_;
+};
+
+/// Simple two file rotating stream with configurable size and file names.
+/// Files are rotated after full and writes are contiguous across them.
+class BCD_API rotator_sink
+  : public system::device<ofstream_wrap>
 {
 public:
     using path = std::filesystem::path;
+    struct category
+      : system::ios::sink_tag,
+        system::ios::flushable_tag,
+        system::ios::optimally_buffered_tag
+    {
+    };
 
-    DELETE_COPY_MOVE(rotator);
-
-    /// Construct log rotator with paths and size limit.
-    rotator(const path& path1, const path& path2, size_t limit) NOEXCEPT;
-
-    /// Start rotator, should be stopped.
-    bool start() NOEXCEPT;
-
-    /// Stop and flush rotator, should be started.
-    bool stop() NOEXCEPT;
-
-    /// Write message to log.
-    bool write(const std::string& message) NOEXCEPT;
-    
-    /// Flush the log to file.
-    bool flush() NOEXCEPT;
+    rotator_sink(const path& path1, const path& path2, size_t limit) NOEXCEPT;
+    size_type write(const char_type* buffer, size_type count) THROWS;
+    bool flush() THROWS;
 
 protected:
+    size_type do_optimal_buffer_size() const NOEXCEPT override;
+
+    bool start() NOEXCEPT;
+    bool stop() NOEXCEPT;
     bool rotate() NOEXCEPT;
-    bool set_size() NOEXCEPT;
+    bool set_remaining() NOEXCEPT;
     bool set_stream() NOEXCEPT;
 
 private:
     // These are thread safe.
     const path path1_;
     const path path2_;
-    const size_t limit_;
+    const size_type limit_;
 
-    // These are not thread safe.
+    // This is not thread safe.
     std::shared_ptr<system::ofstream> stream_{};
-    size_t size_{};
 };
+
+namespace stream
+{
+    namespace out
+    {
+        using rotator = system::make_stream<rotator_sink>;
+    }
+}
 
 } // namespace file
 } // namespace database
