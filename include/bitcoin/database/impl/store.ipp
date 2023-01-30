@@ -29,6 +29,13 @@
 namespace libbitcoin {
 namespace database {
 
+    // Capture the result code if there is not already a code.
+// This ensures all close/unload are always executed (required cleanup).
+inline void first_code(code& ec, const code& result) NOEXCEPT
+{
+    if (!ec) ec = result;
+}
+
 TEMPLATE
 CLASS::store(const settings& config) NOEXCEPT
   : configuration_(config),
@@ -194,9 +201,9 @@ code CLASS::create() NOEXCEPT
         else if (!validated_tx.create()) ec = error::create_table;
     }
 
-    // mmap will assert if not unloaded.
     if (!ec) ec = unload_close();
 
+    // unlock errors override ec.
     if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
     if (!process_lock_.try_unlock()) ec = error::process_unlock;
     if (ec) /* bool */ file::clear_directory(configuration_.dir);
@@ -247,8 +254,18 @@ code CLASS::open() NOEXCEPT
         else if (!validated_tx.verify()) ec = error::verify_table;
     }
 
+    // This prevents close from having to follow open fail.
+    if (ec)
+    {
+        // No need to call close() as tables were just opened.
+        /* code */ unload_close();
+
+        // unlock errors override ec.
+        if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
+        if (!process_lock_.try_unlock()) ec = error::process_unlock;
+    }
+
     // process and flush locks remain open until close().
-    if (ec) /* code */ close();
     transactor_mutex_.unlock();
     return ec;
 }
@@ -318,9 +335,9 @@ code CLASS::close() NOEXCEPT
         else if (!validated_tx.close()) ec = error::close_table;
     }
 
-    // mmap will assert if not unloaded.
-    if (!ec) ec = unload_close();
+    first_code(ec, unload_close());
 
+    // unlock errors override ec.
     if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
     if (!process_lock_.try_unlock()) ec = error::process_unlock;
     transactor_mutex_.unlock();
@@ -416,75 +433,75 @@ code CLASS::unload_close() NOEXCEPT
 {
     code ec{ error::success };
 
-    if (!ec) ec = header_head_.unload();
-    if (!ec) ec = header_body_.unload();
-    if (!ec) ec = point_head_.unload();
-    if (!ec) ec = point_body_.unload();
-    if (!ec) ec = input_head_.unload();
-    if (!ec) ec = input_body_.unload();
-    if (!ec) ec = output_head_.unload();
-    if (!ec) ec = output_body_.unload();
-    if (!ec) ec = puts_head_.unload();
-    if (!ec) ec = puts_body_.unload();
-    if (!ec) ec = tx_head_.unload();
-    if (!ec) ec = tx_body_.unload();
-    if (!ec) ec = txs_head_.unload();
-    if (!ec) ec = txs_body_.unload();
+    first_code(ec, header_head_.unload());
+    first_code(ec, header_body_.unload());
+    first_code(ec, point_head_.unload());
+    first_code(ec, point_body_.unload());
+    first_code(ec, input_head_.unload());
+    first_code(ec, input_body_.unload());
+    first_code(ec, output_head_.unload());
+    first_code(ec, output_body_.unload());
+    first_code(ec, puts_head_.unload());
+    first_code(ec, puts_body_.unload());
+    first_code(ec, tx_head_.unload());
+    first_code(ec, tx_body_.unload());
+    first_code(ec, txs_head_.unload());
+    first_code(ec, txs_body_.unload());
 
-    if (!ec) ec = address_head_.unload();
-    if (!ec) ec = address_body_.unload();
-    if (!ec) ec = candidate_head_.unload();
-    if (!ec) ec = candidate_body_.unload();
-    if (!ec) ec = confirmed_head_.unload();
-    if (!ec) ec = confirmed_body_.unload();
-    if (!ec) ec = strong_tx_head_.unload();
-    if (!ec) ec = strong_tx_body_.unload();
+    first_code(ec, address_head_.unload());
+    first_code(ec, address_body_.unload());
+    first_code(ec, candidate_head_.unload());
+    first_code(ec, candidate_body_.unload());
+    first_code(ec, confirmed_head_.unload());
+    first_code(ec, confirmed_body_.unload());
+    first_code(ec, strong_tx_head_.unload());
+    first_code(ec, strong_tx_body_.unload());
 
-    if (!ec) ec = bootstrap_head_.unload();
-    if (!ec) ec = bootstrap_body_.unload();
-    if (!ec) ec = buffer_head_.unload();
-    if (!ec) ec = buffer_body_.unload();
-    if (!ec) ec = neutrino_head_.unload();
-    if (!ec) ec = neutrino_body_.unload();
-    if (!ec) ec = validated_bk_head_.unload();
-    if (!ec) ec = validated_bk_body_.unload();
-    if (!ec) ec = validated_tx_head_.unload();
-    if (!ec) ec = validated_tx_body_.unload();
+    first_code(ec, bootstrap_head_.unload());
+    first_code(ec, bootstrap_body_.unload());
+    first_code(ec, buffer_head_.unload());
+    first_code(ec, buffer_body_.unload());
+    first_code(ec, neutrino_head_.unload());
+    first_code(ec, neutrino_body_.unload());
+    first_code(ec, validated_bk_head_.unload());
+    first_code(ec, validated_bk_body_.unload());
+    first_code(ec, validated_tx_head_.unload());
+    first_code(ec, validated_tx_body_.unload());
 
-    if (!ec) ec = header_head_.close();
-    if (!ec) ec = header_body_.close();
-    if (!ec) ec = point_head_.close();
-    if (!ec) ec = point_body_.close();
-    if (!ec) ec = input_head_.close();
-    if (!ec) ec = input_body_.close();
-    if (!ec) ec = output_head_.close();
-    if (!ec) ec = output_body_.close();
-    if (!ec) ec = puts_head_.close();
-    if (!ec) ec = puts_body_.close();
-    if (!ec) ec = tx_head_.close();
-    if (!ec) ec = tx_body_.close();
-    if (!ec) ec = txs_head_.close();
-    if (!ec) ec = txs_body_.close();
+    first_code(ec, header_head_.close());
+    first_code(ec, header_body_.close());
+    first_code(ec, point_head_.close());
+    first_code(ec, point_body_.close());
+    first_code(ec, input_head_.close());
+    first_code(ec, input_body_.close());
+    first_code(ec, output_head_.close());
+    first_code(ec, output_body_.close());
+    first_code(ec, puts_head_.close());
+    first_code(ec, puts_body_.close());
+    first_code(ec, tx_head_.close());
+    first_code(ec, tx_body_.close());
+    first_code(ec, txs_head_.close());
+    first_code(ec, txs_body_.close());
 
-    if (!ec) ec = address_head_.close();
-    if (!ec) ec = address_body_.close();
-    if (!ec) ec = candidate_head_.close();
-    if (!ec) ec = candidate_body_.close();
-    if (!ec) ec = confirmed_head_.close();
-    if (!ec) ec = confirmed_body_.close();
-    if (!ec) ec = strong_tx_head_.close();
-    if (!ec) ec = strong_tx_body_.close();
+    first_code(ec, address_head_.close());
+    first_code(ec, address_body_.close());
+    first_code(ec, candidate_head_.close());
+    first_code(ec, candidate_body_.close());
+    first_code(ec, confirmed_head_.close());
+    first_code(ec, confirmed_body_.close());
+    first_code(ec, strong_tx_head_.close());
+    first_code(ec, strong_tx_body_.close());
 
-    if (!ec) ec = bootstrap_head_.close();
-    if (!ec) ec = bootstrap_body_.close();
-    if (!ec) ec = buffer_head_.close();
-    if (!ec) ec = buffer_body_.close();
-    if (!ec) ec = neutrino_head_.close();
-    if (!ec) ec = neutrino_body_.close();
-    if (!ec) ec = validated_bk_head_.close();
-    if (!ec) ec = validated_bk_body_.close();
-    if (!ec) ec = validated_tx_head_.close();
-    if (!ec) ec = validated_tx_body_.close();
+    first_code(ec, bootstrap_head_.close());
+    first_code(ec, bootstrap_body_.close());
+    first_code(ec, buffer_head_.close());
+    first_code(ec, buffer_body_.close());
+    first_code(ec, neutrino_head_.close());
+    first_code(ec, neutrino_body_.close());
+    first_code(ec, validated_bk_head_.close());
+    first_code(ec, validated_bk_body_.close());
+    first_code(ec, validated_tx_head_.close());
+    first_code(ec, validated_tx_body_.close());
 
     return ec;
 }
@@ -706,10 +723,10 @@ code CLASS::restore() NOEXCEPT
         else if (!validated_bk.restore()) ec = error::restore_table;
         else if (!validated_tx.restore()) ec = error::restore_table;
 
-        // mmap will assert if not unloaded.
         else if (!ec) ec = unload_close();
     }
 
+    // unlock errors override ec.
     if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
     if (!process_lock_.try_unlock()) ec = error::process_unlock;
     transactor_mutex_.unlock();
