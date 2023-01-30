@@ -27,13 +27,12 @@ namespace libbitcoin {
 namespace database {
 namespace file {
     
-// If start fails here, first write will fail, invalidating outer stream.
+// If start fails here, first write will throw, invalidating outer stream.
 rotator_sink::rotator_sink(const path& path1, const path& path2,
     size_t limit) NOEXCEPT
   : device<ofstream_wrap>({}), path1_(path1), path2_(path2), limit_(limit)
 {
-    if (system::is_limited<size_type>(limit) || !start())
-        stream_.reset();
+    start();
 }
 
 // methods
@@ -163,12 +162,15 @@ bool rotator_sink::set_stream() NOEXCEPT
     try
     {
         stream_ = std::make_shared<system::ofstream>(path1_, mode);
-        return stream_ && stream_->good();
+        if (stream_ && stream_->good())
+            return true;
     }
     catch (const std::exception&)
     {
-        return false;
     }
+
+    stream_.reset();
+    return false;
 }
 
 typename rotator_sink::size_type
