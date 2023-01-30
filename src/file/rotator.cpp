@@ -61,23 +61,23 @@ BC_POP_WARNING()
     {
         throw ostream_exception{ "stream" };
     }
-    else if (is_zero(count))
+
+    // Always write it all, since it's a circular buffer.
+    const auto written = count;
+
+    while (!is_zero(count))
     {
-        return count;
-    }
-    else if (is_zero(remaining_) && !rotate())
-    {
-        throw ostream_exception{ "rotate" };
+        if (is_zero(remaining_) && !rotate())
+            throw ostream_exception{ "rotate" };
+
+        const auto size = std::min(remaining_, count);
+        stream_->write(buffer, size);
+        std::advance(buffer, size);
+        remaining_ -= size;
+        count -= size;
     }
 
-    // Consume full buffer up to the number of file bytes remaining.
-    const auto size = std::min(remaining_, count);
-    stream_->write(buffer, size);
-    remaining_ -= size;
-
-    // size < count indicates a partial write.
-    // next write or flush will continue where this left off.
-    return size;
+    return written;
 }
 
 bool rotator_sink::flush() THROWS
