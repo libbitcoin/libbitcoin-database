@@ -38,205 +38,229 @@ struct rotator_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(rotator_tests, rotator_setup_fixture)
 
+// ostream instance.
+using rotate = file::stream::out::rotator;
+
+// protected method accessor.
 class accessor
-  : public file::rotator
+  : public file::rotator_sink
 {
 public:
-    using rotator::rotator;
-    bool rotate_() NOEXCEPT { return rotate();  }
-    ////bool set_size_() NOEXCEPT { return set_size(); }
-    ////bool set_stream_() NOEXCEPT { return set_stream(); }
+    using rotator_sink::rotator_sink;
+    bool start_() NOEXCEPT { return start(); }
+    bool stop_() NOEXCEPT { return stop(); }
+    bool rotate_() NOEXCEPT { return rotate(); }
 };
 
-BOOST_AUTO_TEST_CASE(rotator__start__missing__expected)
+// test data.
+const std::string text = "panopticon";
+
+BOOST_AUTO_TEST_CASE(rotator__write__at_file_limit__single)
 {
-    file::rotator instance(TEST_PATH, TEST_PATH + "_", 42);
-    BOOST_REQUIRE(instance.start());
-    BOOST_REQUIRE(test::exists(TEST_PATH));
+    const std::string expected(42, 'x');
+    rotate splitter(TEST_PATH, TEST_PATH + "_", expected.size());
+    splitter << expected;
+    BOOST_REQUIRE(splitter);
+
+    // File is initialized, but nothing is written because buffer not overflowed.
+    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), zero);
+    BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
+
+    splitter.flush();
+    BOOST_REQUIRE(splitter);
+    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), expected.size());
+    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH), expected);
+    BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
 }
 
-BOOST_AUTO_TEST_CASE(rotator__start__existing__expected)
+BOOST_AUTO_TEST_CASE(rotator__write__over_file_limit__split)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
-    file::rotator instance(TEST_PATH, TEST_PATH + "_", 42);
-    BOOST_REQUIRE(instance.start());
-    BOOST_REQUIRE(test::exists(TEST_PATH));
+    const std::string text(42, 'x');
+    rotate splitter(TEST_PATH, TEST_PATH + "_", sub1(text.size()));
+    splitter << text;
+    BOOST_REQUIRE(splitter);
+
+    // File is initialized, but nothing is written because buffer not overflowed.
+    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), zero);
+    BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
+
+    splitter.flush();
+    BOOST_REQUIRE(splitter);
+    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), one);
+    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH + "_"), 41);
+}
+
+BOOST_AUTO_TEST_CASE(rotator__construct__empty__expected)
+{
+    {
+        BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
+        BOOST_REQUIRE(!test::exists(TEST_PATH));
+        rotate splitter(TEST_PATH, TEST_PATH + "_", 42);
+        BOOST_REQUIRE(test::exists(TEST_PATH));
+        BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
+    }
+    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), zero);
+    BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
+}
+
+BOOST_AUTO_TEST_CASE(rotator__construct__existing1__expected)
+{
+    {
+        BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
+        BOOST_REQUIRE(test::create(TEST_PATH, text));
+        rotate splitter(TEST_PATH, TEST_PATH + "_", 42);
+        BOOST_REQUIRE(test::exists(TEST_PATH));
+        BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
+    }
+    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH), text);
+    BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
+}
+
+BOOST_AUTO_TEST_CASE(rotator__construct__existing2__expected)
+{
+    {
+        BOOST_REQUIRE(test::create(TEST_PATH + "_", text));
+        BOOST_REQUIRE(!test::exists(TEST_PATH));
+        rotate splitter(TEST_PATH, TEST_PATH + "_", 42);
+        BOOST_REQUIRE(test::exists(TEST_PATH));
+        BOOST_REQUIRE(test::exists(TEST_PATH + "_"));
+    }
+    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), zero);
+    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH + "_"), text);
+}
+
+BOOST_AUTO_TEST_CASE(rotator__construct__both_existing__expected)
+{
+    const std::string text1 = "panopticon1";
+    const std::string text2 = "panopticon2";
+    {
+        BOOST_REQUIRE(test::create(TEST_PATH + "_", text2));
+        BOOST_REQUIRE(test::create(TEST_PATH, text1));
+        rotate splitter(TEST_PATH, TEST_PATH + "_", 42);
+        BOOST_REQUIRE(test::exists(TEST_PATH));
+        BOOST_REQUIRE(test::exists(TEST_PATH + "_"));
+    }
+    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH), text1);
+    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH + "_"), text2);
+}
+
+BOOST_AUTO_TEST_CASE(rotator__start__started__false)
+{
+    accessor device(TEST_PATH, TEST_PATH + "_", 42);
+    BOOST_REQUIRE(!device.start_());
 }
 
 BOOST_AUTO_TEST_CASE(rotator__stop__stopped__false)
 {
-    file::rotator instance(TEST_PATH, TEST_PATH + "_", 42);
-    BOOST_REQUIRE(!instance.stop());
-    BOOST_REQUIRE(!instance.stop());
+    accessor device(TEST_PATH, TEST_PATH + "_", 42);
+    BOOST_REQUIRE(device.stop_());
+    BOOST_REQUIRE(!device.stop_());
 }
 
-BOOST_AUTO_TEST_CASE(rotator__stop__started__etrue)
+BOOST_AUTO_TEST_CASE(rotator__start_stopped__stop_started__true)
 {
-    file::rotator instance(TEST_PATH, TEST_PATH + "_", 42);
-    BOOST_REQUIRE(instance.start());
-    BOOST_REQUIRE(instance.stop());
+    accessor device(TEST_PATH, TEST_PATH + "_", 42);
+    BOOST_REQUIRE(device.stop_());
+    BOOST_REQUIRE(device.start_());
 }
 
-BOOST_AUTO_TEST_CASE(rotator__rotate__stopped__false)
+BOOST_AUTO_TEST_CASE(rotator__rotate__existing__expected)
 {
-    accessor instance(TEST_PATH, TEST_PATH + "_", 42);
-    BOOST_REQUIRE(!instance.rotate_());
-}
-
-BOOST_AUTO_TEST_CASE(rotator__rotate__started_missing__expected)
-{
-    accessor instance(TEST_PATH, TEST_PATH + "_", 42);
-    BOOST_REQUIRE(instance.start());
-    BOOST_REQUIRE(test::exists(TEST_PATH));
-    BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
-    BOOST_REQUIRE(instance.rotate_());
-    BOOST_REQUIRE(test::exists(TEST_PATH + "_"));
-    BOOST_REQUIRE(test::exists(TEST_PATH));
-    BOOST_REQUIRE(instance.stop());
-    BOOST_REQUIRE(test::exists(TEST_PATH + "_"));
-    BOOST_REQUIRE(test::exists(TEST_PATH));
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH + "_"), zero);
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), zero);
-}
-
-BOOST_AUTO_TEST_CASE(rotator__rotate__started_existing__expected)
-{
-    const std::string text = "panopticon";
     BOOST_REQUIRE(test::create(TEST_PATH, text));
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), text.size());
 
     accessor instance(TEST_PATH, TEST_PATH + "_", 42);
-    BOOST_REQUIRE(instance.start());
     BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), text.size());
     BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
-
     BOOST_REQUIRE(instance.rotate_());
     BOOST_REQUIRE_EQUAL(test::size(TEST_PATH + "_"), text.size());
     BOOST_REQUIRE(test::exists(TEST_PATH));
     BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), zero);
 }
 
-BOOST_AUTO_TEST_CASE(rotator__write__limit__false)
+BOOST_AUTO_TEST_CASE(rotator__write__below_limit__written)
 {
-    const std::string text = "panopticon";
-    file::rotator instance(TEST_PATH, TEST_PATH + "_", text.size());
-    BOOST_REQUIRE(instance.start());
-    BOOST_REQUIRE(!instance.write(text));
-    BOOST_REQUIRE(instance.stop());
-    BOOST_REQUIRE(test::exists(TEST_PATH));
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), zero);
-    BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
-}
-
-BOOST_AUTO_TEST_CASE(rotator__write__limit_add1__false)
-{
-    const std::string text = "panopticon";
-    file::rotator instance(TEST_PATH, TEST_PATH + "_", sub1(text.size()));
-    BOOST_REQUIRE(instance.start());
-    BOOST_REQUIRE(!instance.write(text));
-    BOOST_REQUIRE(instance.stop());
-    BOOST_REQUIRE(test::exists(TEST_PATH));
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), zero);
-    BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
-}
-
-BOOST_AUTO_TEST_CASE(rotator__write__limit_sub1__true_expected)
-{
-    const std::string text = "panopticon";
-    file::rotator instance(TEST_PATH, TEST_PATH + "_", add1(text.size()));
-    BOOST_REQUIRE(instance.start());
-    BOOST_REQUIRE(instance.write(text));
-    BOOST_REQUIRE(instance.stop());
+    rotate splitter(TEST_PATH, TEST_PATH + "_", add1(text.size()));
+    splitter.write(text.data(), text.size());
+    splitter.flush();
+    BOOST_REQUIRE(splitter);
     BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), text.size());
     BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
 }
 
-BOOST_AUTO_TEST_CASE(rotator__write__limit_sub1_twice__true_expected)
+BOOST_AUTO_TEST_CASE(rotator__write__at_limit__written)
 {
-    const std::string text = "panopticon";
-    file::rotator instance(TEST_PATH, TEST_PATH + "_", add1(text.size()));
-    BOOST_REQUIRE(instance.start());
-    BOOST_REQUIRE(instance.write(text));
-    BOOST_REQUIRE(instance.write(text));
-    BOOST_REQUIRE(instance.stop());
+    rotate splitter(TEST_PATH, TEST_PATH + "_", text.size());
+    splitter.write(text.data(), text.size());
+    splitter.flush();
+    BOOST_REQUIRE(splitter);
+    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), text.size());
+    BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
+}
+
+BOOST_AUTO_TEST_CASE(rotator__write__above_limit___split)
+{
+    rotate splitter(TEST_PATH, TEST_PATH + "_", sub1(text.size()));
+    BOOST_REQUIRE(splitter);
+
+    splitter.write(text.data(), text.size());
+    BOOST_REQUIRE(splitter);
+
+    splitter.flush();
+    BOOST_REQUIRE(splitter);
+    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), one);
+    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH + "_"), sub1(text.size()));
+}
+
+BOOST_AUTO_TEST_CASE(rotator__write__twice_at_limit__split)
+{
+    rotate splitter(TEST_PATH, TEST_PATH + "_", text.size());
+    splitter.write(text.data(), text.size());
+    splitter.write(text.data(), text.size());
+    splitter.flush();
+    BOOST_REQUIRE(splitter);
     BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), text.size());
     BOOST_REQUIRE_EQUAL(test::size(TEST_PATH + "_"), text.size());
 }
 
-BOOST_AUTO_TEST_CASE(rotator__write__limit_sub1_thrice__true_expected)
+BOOST_AUTO_TEST_CASE(rotator__write__thrice_at_limit__stacked)
 {
-    const std::string text = "panopticon";
-    file::rotator instance(TEST_PATH, TEST_PATH + "_", add1(text.size()));
-    BOOST_REQUIRE(instance.start());
-    BOOST_REQUIRE(instance.write(text));
-    BOOST_REQUIRE(instance.write(text));
-    BOOST_REQUIRE(instance.write(text));
-    BOOST_REQUIRE(instance.stop());
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), text.size());
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH + "_"), text.size());
-    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH), text);
-    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH + "_"), text);
+    const std::string text1 = "panopticon1";
+    const std::string text2 = "panopticon2";
+    rotate splitter(TEST_PATH, TEST_PATH + "_", text1.size());
+    splitter.write(text1.data(), text1.size());
+    splitter.write(text2.data(), text2.size());
+    splitter.write(text1.data(), text1.size());
+    splitter.flush();
+    BOOST_REQUIRE(splitter);
+    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH), text1);
+    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH + "_"), text2);
 }
 
-BOOST_AUTO_TEST_CASE(rotator__write__parts__rotated_and_queued)
+BOOST_AUTO_TEST_CASE(rotator__write__parts__accumulated_and_rotated)
 {
-    file::rotator instance(TEST_PATH, TEST_PATH + "_", 8);
-    BOOST_REQUIRE(instance.start());
-
-    // file
-    BOOST_REQUIRE(instance.write("abc"));
-    BOOST_REQUIRE(instance.write("def"));
-
-    // file
-    BOOST_REQUIRE(instance.write("ghi"));
-    BOOST_REQUIRE(instance.write("jkl"));
-
-    // file
-    BOOST_REQUIRE(instance.write("mno"));
-    BOOST_REQUIRE(instance.write("pqr"));
-
-    // Last secondary file.
-    BOOST_REQUIRE(instance.write("stu\n"));
-    BOOST_REQUIRE(instance.write("vwx"));
-
-    // Last primary file.
-    BOOST_REQUIRE(instance.write("yz\n"));
-    BOOST_REQUIRE(instance.stop());
-
     // Binary mode on Windows ensures that \n nor replaced with \r\n.
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), 3);
-    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH), "yz");
-
-    // Binary mode on Windows ensures that \n nor replaced with \r\n.
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH + "_"), 7);
-    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH + "_", 0), "stu");
-    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH + "_", 1), "vwx");
+    rotate splitter(TEST_PATH, TEST_PATH + "_", 6);
+    splitter.write("abc", 3);
+    splitter.write("def", 3);
+    splitter.write("ghi", 3);
+    splitter.write("jkl", 3);
+    splitter.write("mn\n", 3);
+    splitter.write("pqr", 3);
+    splitter.flush();
+    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), 6);
+    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH, 0), "mn");
+    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH, 1), "pqr");
+    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH + "_"), "ghijkl");
 }
 
 BOOST_AUTO_TEST_CASE(rotator__write__existing__appends)
 {
-    const std::string text = "panopticon";
     BOOST_REQUIRE(test::create(TEST_PATH, text));
 
-    file::rotator instance(TEST_PATH, TEST_PATH + "_", 42);
-    BOOST_REQUIRE(instance.start());
-    BOOST_REQUIRE(instance.write("\n"));
-    BOOST_REQUIRE(instance.write("abc"));
-    BOOST_REQUIRE(instance.stop());
-    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH, 0), "panopticon");
-    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH, 1), "abc");
-}
-
-BOOST_AUTO_TEST_CASE(rotator__flush__existing__expected)
-{
-    const std::string text = "panopticon";
-    BOOST_REQUIRE(test::create(TEST_PATH, text));
-
-    file::rotator instance(TEST_PATH, TEST_PATH + "_", 42);
-    BOOST_REQUIRE(instance.start());
-    BOOST_REQUIRE(instance.write("\n"));
-    BOOST_REQUIRE(instance.write("abc"));
-    BOOST_REQUIRE(instance.flush());
+    rotate splitter(TEST_PATH, TEST_PATH + "_", 42);
+    splitter.write("\n", 1);
+    splitter.write("abc", 3);
+    splitter.flush();
     BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH, 0), "panopticon");
     BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH, 1), "abc");
 }

@@ -33,10 +33,8 @@ class BCD_API flush_lock
 {
 public:
     /// Construction does not touch the file.
+    /// Destruction should not be used to delete the file (needs to remain).
     flush_lock(const std::filesystem::path& file) NOEXCEPT;
-
-    /// Destruction calls try_unlock.
-    ~flush_lock() NOEXCEPT override;
 
     /// False if file exists or fails to create.
     bool try_lock() NOEXCEPT;

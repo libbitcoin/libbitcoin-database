@@ -30,11 +30,6 @@ flush_lock::flush_lock(const std::filesystem::path& file) NOEXCEPT
 {
 }
 
-flush_lock::~flush_lock() NOEXCEPT
-{
-    try_unlock();
-}
-
 bool flush_lock::try_lock() NOEXCEPT
 {
     if (exists())
