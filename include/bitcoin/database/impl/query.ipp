@@ -687,7 +687,7 @@ typename CLASS::transactions_ptr CLASS::get_transactions(
         return {};
 
     using namespace system;
-    const auto transactions = to_shared<system::chain::transaction_ptrs>();
+    const auto transactions = to_shared<system::chain::transaction_cptrs>();
     transactions->reserve(txs.tx_fks.size());
 
     for (const auto& tx_fk: txs.tx_fks)
