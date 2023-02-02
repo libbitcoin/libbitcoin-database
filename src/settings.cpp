@@ -27,7 +27,7 @@ namespace database {
 using namespace bc::system;
 
 settings::settings() NOEXCEPT
-  : dir{ "bitcoin" },
+  : path{ "bitcoin" },
 
     // Archives.
 

@@ -43,7 +43,7 @@ BOOST_FIXTURE_TEST_SUITE(query_validation_tests, query_validation_setup_fixture)
 BOOST_AUTO_TEST_CASE(query_validation__get_timestamp__genesis__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_timestamp__genesis__expected)
 BOOST_AUTO_TEST_CASE(query_validation__get_version__genesis__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_version__genesis__expected)
 BOOST_AUTO_TEST_CASE(query_validation__get_bits__genesis__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_bits__genesis__expected)
 BOOST_AUTO_TEST_CASE(query_validation__get_context__genesis__default)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_context__genesis__default)
 BOOST_AUTO_TEST_CASE(query_validation__get_context__invalid__default)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_context__invalid__default)
 BOOST_AUTO_TEST_CASE(query_validation__get_context__block1__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_context__block1__expected)
 BOOST_AUTO_TEST_CASE(query_validation__get_block_state__invalid_link__unassociated)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_block_state__invalid_link__unassociat
 BOOST_AUTO_TEST_CASE(query_validation__get_block_state__unassociated_link__unassociated)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_block_state__unassociated_link__unass
 BOOST_AUTO_TEST_CASE(query_validation__get_block_state__unvalidated_link__unvalidated)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_block_state__unvalidated_link__unvali
 BOOST_AUTO_TEST_CASE(query_validation__get_block_state__confirmable__block_confirmable)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_block_state__confirmable__block_confi
 BOOST_AUTO_TEST_CASE(query_validation__get_block_state__preconfirmable__block_preconfirmable)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_block_state__preconfirmable__block_pr
 BOOST_AUTO_TEST_CASE(query_validation__get_block_state__unconfirmable__block_unconfirmable)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_block_state__unconfirmable__block_unc
 BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__invalid_link__unvalidated)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__invalid_link__unvalidated)
 BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__unvalidated__unvalidated)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__unvalidated__unvalidated)
 BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_out_of_context__unvalidated)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     settings.validated_tx_buckets = 1;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_out_of_context__u
 BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_in_context__tx_connected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     settings.validated_tx_buckets = 1;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -328,7 +328,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_in_context__tx_co
 BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_in_context__tx_preconnected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_in_context__tx_pr
 BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_in_context__tx_disconnected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);

@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(query_archival__set_header__mmap_get_header__expected)
 
     settings settings{};
     settings.header_buckets = 10;
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     store<map> store{ settings };
     query<database::store<map>> query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(query_archival__set_link_header__is_header__expected)
 
     settings settings{};
     settings.header_buckets = 10;
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(query_archival__set_tx__empty__expected)
     settings.tx_buckets = 5;
     settings.point_buckets = 5;
     settings.input_buckets = 5;
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE(query_archival__set_link_tx__null_input__expected)
     settings.tx_buckets = 5;
     settings.point_buckets = 5;
     settings.input_buckets = 5;
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(query_archival__set_tx__get_tx__expected)
     settings.tx_buckets = 5;
     settings.point_buckets = 5;
     settings.input_buckets = 5;
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -541,7 +541,7 @@ BOOST_AUTO_TEST_CASE(query_archival__set_block__get_block__expected)
     settings.point_buckets = 5;
     settings.input_buckets = 5;
     settings.txs_buckets = 10;
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -597,7 +597,7 @@ BOOST_AUTO_TEST_CASE(query_archival__set_links__get_block__expected)
     settings.point_buckets = 5;
     settings.input_buckets = 5;
     settings.txs_buckets = 10;
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -621,7 +621,7 @@ BOOST_AUTO_TEST_CASE(query_archival__set_hashes__get_block__expected)
     settings.point_buckets = 5;
     settings.input_buckets = 5;
     settings.txs_buckets = 10;
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -641,7 +641,7 @@ BOOST_AUTO_TEST_CASE(query_archival__set_hashes__get_block__expected)
 BOOST_AUTO_TEST_CASE(query_archival__populate__null_prevouts__false)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -674,7 +674,7 @@ BOOST_AUTO_TEST_CASE(query_archival__populate__null_prevouts__false)
 BOOST_AUTO_TEST_CASE(query_archival__populate__partial_prevouts__false)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -706,7 +706,7 @@ BOOST_AUTO_TEST_CASE(query_archival__populate__partial_prevouts__false)
 BOOST_AUTO_TEST_CASE(query_archival__is_coinbase__coinbase__true)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -723,7 +723,7 @@ BOOST_AUTO_TEST_CASE(query_archival__is_coinbase__coinbase__true)
 BOOST_AUTO_TEST_CASE(query_archival__is_coinbase__non_coinbase__true)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -778,7 +778,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_header__invalid_parent__expected)
 
     settings settings{};
     settings.header_buckets = 10;
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -830,7 +830,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_header__default__expected)
 
     settings settings{};
     settings.header_buckets = 10;
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -846,7 +846,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_header__default__expected)
 BOOST_AUTO_TEST_CASE(query_archival__get_txs__not_found__empty)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -858,7 +858,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_txs__not_found__empty)
 BOOST_AUTO_TEST_CASE(query_archival__get_header_key__always__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -870,7 +870,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_header_key__always__expected)
 BOOST_AUTO_TEST_CASE(query_archival__get_point_key__always__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -893,7 +893,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_point_key__always__expected)
 BOOST_AUTO_TEST_CASE(query_archival__get_tx_key__always__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -910,7 +910,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_tx_key__always__expected)
 BOOST_AUTO_TEST_CASE(query_archival__get_height__always__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -940,7 +940,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_height__always__expected)
 BOOST_AUTO_TEST_CASE(query_archival__get_tx_height__not_strong__false)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -954,7 +954,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_tx_height__not_strong__false)
 BOOST_AUTO_TEST_CASE(query_archival__get_tx_position__confirmed__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -995,7 +995,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_tx_position__confirmed__expected)
 BOOST_AUTO_TEST_CASE(query_archival__get_tx_position__always__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -1039,7 +1039,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_tx_position__always__expected)
 BOOST_AUTO_TEST_CASE(query_archival__get_input__not_found__nullptr)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -1057,7 +1057,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_input__genesis__expected)
     settings.point_buckets = 5;
     settings.input_buckets = 5;
     settings.txs_buckets = 10;
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -1073,7 +1073,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_input__genesis__expected)
 BOOST_AUTO_TEST_CASE(query_archival__get_inputs__tx_not_found__nullptr)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -1084,7 +1084,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_inputs__tx_not_found__nullptr)
 BOOST_AUTO_TEST_CASE(query_archival__get_inputs__found__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -1096,7 +1096,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_inputs__found__expected)
 BOOST_AUTO_TEST_CASE(query_archival__get_output__not_found__nullptr)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -1115,7 +1115,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_output__genesis__expected)
     settings.point_buckets = 5;
     settings.input_buckets = 5;
     settings.txs_buckets = 10;
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -1132,7 +1132,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_output__genesis__expected)
 BOOST_AUTO_TEST_CASE(query_archival__get_outputs__tx_not_found__nullptr)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -1143,7 +1143,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_outputs__tx_not_found__nullptr)
 BOOST_AUTO_TEST_CASE(query_archival__get_outputs__found__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -1155,7 +1155,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_outputs__found__expected)
 BOOST_AUTO_TEST_CASE(query_archival__get_transactions__tx_not_found__nullptr)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -1167,7 +1167,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_transactions__tx_not_found__nullptr)
 BOOST_AUTO_TEST_CASE(query_archival__get_transactions__found__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -1183,7 +1183,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_transactions__found__expected)
 BOOST_AUTO_TEST_CASE(query_archival__get_point__null_point__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -1204,7 +1204,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_point__null_point__expected)
 BOOST_AUTO_TEST_CASE(query_archival__get_spenders__unspent_or_not_found__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -1242,7 +1242,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_spenders__unspent_or_not_found__expecte
 BOOST_AUTO_TEST_CASE(query_archival__get_spenders__found_and_spent__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -1298,7 +1298,7 @@ BOOST_AUTO_TEST_CASE(query_archival__get_spenders__found_and_spent__expected)
 BOOST_AUTO_TEST_CASE(query_archival__get_value__genesis__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);

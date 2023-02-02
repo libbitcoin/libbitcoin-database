@@ -45,7 +45,7 @@ BOOST_FIXTURE_TEST_SUITE(query_translation_tests, query_translation_setup_fixtur
 BOOST_AUTO_TEST_CASE(query_translation__to_candidate__always__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_candidate__always__expected)
 BOOST_AUTO_TEST_CASE(query_translation__to_confirmed__always__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_confirmed__always__expected)
 BOOST_AUTO_TEST_CASE(query_translation__to_header__always__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_header__always__expected)
 BOOST_AUTO_TEST_CASE(query_translation__to_point__null_points__empty_points_table)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_point__null_points__empty_points_tabl
 BOOST_AUTO_TEST_CASE(query_translation__to_point__points__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_point__points__expected)
 BOOST_AUTO_TEST_CASE(query_translation__to_tx__txs__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_input_tx__to_input__expected)
 {
     settings settings{};
     settings.input_buckets = 5;
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_output_tx__to_output__expected)
 {
     settings settings{};
     settings.input_buckets = 5;
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_prevout_tx__to_prevout__expected)
     settings settings{};
     settings.tx_buckets = 5;
     settings.input_buckets = 5;
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -450,7 +450,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_prevout_tx__to_prevout__expected)
 BOOST_AUTO_TEST_CASE(query_translation__to_block__set_strong__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -501,7 +501,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_block__set_strong__expected)
 BOOST_AUTO_TEST_CASE(query_translation__to_parent__always__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -523,7 +523,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_parent__always__expected)
 BOOST_AUTO_TEST_CASE(query_translation__to_txs__always__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -545,7 +545,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_spenders__point__expected)
     settings settings{};
     settings.tx_buckets = 5;
     settings.input_buckets = 5;
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
