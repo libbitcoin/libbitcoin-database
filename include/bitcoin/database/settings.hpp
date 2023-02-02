@@ -33,7 +33,7 @@ struct BCD_API settings
     settings(system::chain::selection context) NOEXCEPT;
 
     /// Properties.
-    std::filesystem::path dir;
+    std::filesystem::path path;
 
     /// Archives.
     /// -----------------------------------------------------------------------

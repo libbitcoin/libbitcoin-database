@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(query_optional__address_hash__genesis__expected)
 BOOST_AUTO_TEST_CASE(query_optional__get_confirmed_balance__genesis__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(query_optional__get_confirmed_balance__genesis__expected)
 BOOST_AUTO_TEST_CASE(query_optional__to_address_outputs__genesis__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(query_optional__to_address_outputs__genesis__expected)
 BOOST_AUTO_TEST_CASE(query_optional__to_unspent_outputs__genesis__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(query_optional__to_unspent_outputs__genesis__expected)
 BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__above__excluded)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__above__excluded
 BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__at__included)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__at__included)
 BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__below__included)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(query_optional__set_filter__get_filter_and_head__expected)
     const auto filter1 = system::base16_chunk("102030405060708090a0b0c0d0e0f0102030405060708090a0b0c0d0e0f0");
 
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(query_optional__set_filter__get_filter_and_head__expected)
 BOOST_AUTO_TEST_CASE(query_optional__set_buffered_tx__get_buffered_tx__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(query_optional__set_buffered_tx__get_buffered_tx__expected)
 BOOST_AUTO_TEST_CASE(query_optional__set_buffered_tx__unarchived_transaction__expected)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(query_optional__set_buffered_tx__unarchived_transaction__ex
 BOOST_AUTO_TEST_CASE(query_optional__get_buffered_tx__unset_transaction__nullptr)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(query_optional__get_buffered_tx__unset_transaction__nullptr
 BOOST_AUTO_TEST_CASE(query_optional__set_bootstrap__above_confirmed__false)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(query_optional__set_bootstrap__above_confirmed__false)
 BOOST_AUTO_TEST_CASE(query_optional__set_bootstrap__twice__clears_previous)
 {
     settings settings{};
-    settings.dir = TEST_DIRECTORY;
+    settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);

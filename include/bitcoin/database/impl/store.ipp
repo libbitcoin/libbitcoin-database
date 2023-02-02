@@ -42,77 +42,77 @@ CLASS::store(const settings& config) NOEXCEPT
 
     // Archive.
 
-    header_head_(head(config.dir / schema::dir::heads, schema::archive::header)),
-    header_body_(body(config.dir, schema::archive::header), config.header_size, config.header_rate),
+    header_head_(head(config.path / schema::dir::heads, schema::archive::header)),
+    header_body_(body(config.path, schema::archive::header), config.header_size, config.header_rate),
     header(header_head_, header_body_, config.header_buckets),
 
-    point_head_(head(config.dir / schema::dir::heads, schema::archive::point)),
-    point_body_(body(config.dir, schema::archive::point), config.point_size, config.point_rate),
+    point_head_(head(config.path / schema::dir::heads, schema::archive::point)),
+    point_body_(body(config.path, schema::archive::point), config.point_size, config.point_rate),
     point(point_head_, point_body_, config.point_buckets),
 
-    input_head_(head(config.dir / schema::dir::heads, schema::archive::input)),
-    input_body_(body(config.dir, schema::archive::input), config.input_size, config.input_rate),
+    input_head_(head(config.path / schema::dir::heads, schema::archive::input)),
+    input_body_(body(config.path, schema::archive::input), config.input_size, config.input_rate),
     input(input_head_, input_body_, config.input_buckets),
 
-    output_head_(head(config.dir / schema::dir::heads, schema::archive::output)),
-    output_body_(body(config.dir, schema::archive::output), config.output_size, config.output_rate),
+    output_head_(head(config.path / schema::dir::heads, schema::archive::output)),
+    output_body_(body(config.path, schema::archive::output), config.output_size, config.output_rate),
     output(output_head_, output_body_),
 
-    puts_head_(head(config.dir / schema::dir::heads, schema::archive::puts)),
-    puts_body_(body(config.dir, schema::archive::puts), config.puts_size, config.puts_rate),
+    puts_head_(head(config.path / schema::dir::heads, schema::archive::puts)),
+    puts_body_(body(config.path, schema::archive::puts), config.puts_size, config.puts_rate),
     puts(puts_head_, puts_body_),
 
-    tx_head_(head(config.dir / schema::dir::heads, schema::archive::tx)),
-    tx_body_(body(config.dir, schema::archive::tx), config.tx_size, config.tx_rate),
+    tx_head_(head(config.path / schema::dir::heads, schema::archive::tx)),
+    tx_body_(body(config.path, schema::archive::tx), config.tx_size, config.tx_rate),
     tx(tx_head_, tx_body_, config.tx_buckets),
 
-    txs_head_(head(config.dir / schema::dir::heads, schema::archive::txs)),
-    txs_body_(body(config.dir, schema::archive::txs), config.txs_size, config.txs_rate),
+    txs_head_(head(config.path / schema::dir::heads, schema::archive::txs)),
+    txs_body_(body(config.path, schema::archive::txs), config.txs_size, config.txs_rate),
     txs(txs_head_, txs_body_, config.txs_buckets),
 
     // Indexes.
 
-    address_head_(head(config.dir / schema::dir::heads, schema::indexes::address)),
-    address_body_(body(config.dir, schema::indexes::address), config.address_size, config.address_rate),
+    address_head_(head(config.path / schema::dir::heads, schema::indexes::address)),
+    address_body_(body(config.path, schema::indexes::address), config.address_size, config.address_rate),
     address(address_head_, address_body_, config.address_buckets),
 
-    candidate_head_(head(config.dir / schema::dir::heads, schema::indexes::candidate)),
-    candidate_body_(body(config.dir, schema::indexes::candidate), config.candidate_size, config.candidate_rate),
+    candidate_head_(head(config.path / schema::dir::heads, schema::indexes::candidate)),
+    candidate_body_(body(config.path, schema::indexes::candidate), config.candidate_size, config.candidate_rate),
     candidate(candidate_head_, candidate_body_),
 
-    confirmed_head_(head(config.dir / schema::dir::heads, schema::indexes::confirmed)),
-    confirmed_body_(body(config.dir, schema::indexes::confirmed), config.txs_size, config.confirmed_rate),
+    confirmed_head_(head(config.path / schema::dir::heads, schema::indexes::confirmed)),
+    confirmed_body_(body(config.path, schema::indexes::confirmed), config.txs_size, config.confirmed_rate),
     confirmed(confirmed_head_, confirmed_body_),
 
-    strong_tx_head_(head(config.dir / schema::dir::heads, schema::indexes::strong_tx)),
-    strong_tx_body_(body(config.dir, schema::indexes::strong_tx), config.strong_tx_size, config.strong_tx_rate),
+    strong_tx_head_(head(config.path / schema::dir::heads, schema::indexes::strong_tx)),
+    strong_tx_body_(body(config.path, schema::indexes::strong_tx), config.strong_tx_size, config.strong_tx_rate),
     strong_tx(strong_tx_head_, strong_tx_body_, config.strong_tx_buckets),
 
     // Caches.
 
-    bootstrap_head_(head(config.dir / schema::dir::heads, schema::caches::bootstrap)),
-    bootstrap_body_(body(config.dir, schema::caches::bootstrap), config.bootstrap_size, config.bootstrap_rate),
+    bootstrap_head_(head(config.path / schema::dir::heads, schema::caches::bootstrap)),
+    bootstrap_body_(body(config.path, schema::caches::bootstrap), config.bootstrap_size, config.bootstrap_rate),
     bootstrap(bootstrap_head_, bootstrap_body_),
 
-    buffer_head_(head(config.dir / schema::dir::heads, schema::caches::buffer)),
-    buffer_body_(body(config.dir, schema::caches::buffer), config.buffer_size, config.buffer_rate),
+    buffer_head_(head(config.path / schema::dir::heads, schema::caches::buffer)),
+    buffer_body_(body(config.path, schema::caches::buffer), config.buffer_size, config.buffer_rate),
     buffer(buffer_head_, buffer_body_, config.buffer_buckets),
 
-    neutrino_head_(head(config.dir / schema::dir::heads, schema::caches::neutrino)),
-    neutrino_body_(body(config.dir, schema::caches::neutrino), config.neutrino_size, config.neutrino_rate),
+    neutrino_head_(head(config.path / schema::dir::heads, schema::caches::neutrino)),
+    neutrino_body_(body(config.path, schema::caches::neutrino), config.neutrino_size, config.neutrino_rate),
     neutrino(neutrino_head_, neutrino_body_, config.neutrino_buckets),
 
-    validated_bk_head_(head(config.dir / schema::dir::heads, schema::caches::validated_bk)),
-    validated_bk_body_(body(config.dir, schema::caches::validated_bk), config.validated_bk_size, config.validated_bk_rate),
+    validated_bk_head_(head(config.path / schema::dir::heads, schema::caches::validated_bk)),
+    validated_bk_body_(body(config.path, schema::caches::validated_bk), config.validated_bk_size, config.validated_bk_rate),
     validated_bk(validated_bk_head_, validated_bk_body_, config.validated_bk_buckets),
 
-    validated_tx_head_(head(config.dir / schema::dir::heads, schema::caches::validated_tx)),
-    validated_tx_body_(body(config.dir, schema::caches::validated_tx), config.validated_tx_size, config.validated_tx_rate),
+    validated_tx_head_(head(config.path / schema::dir::heads, schema::caches::validated_tx)),
+    validated_tx_body_(body(config.path, schema::caches::validated_tx), config.validated_tx_size, config.validated_tx_rate),
     validated_tx(validated_tx_head_, validated_tx_body_, config.validated_tx_buckets),
 
     // Locks.
-    flush_lock_(lock(config.dir, schema::locks::flush)),
-    process_lock_(lock(config.dir, schema::locks::process))
+    flush_lock_(lock(config.path, schema::locks::flush)),
+    process_lock_(lock(config.path, schema::locks::process))
 {
 }
 
@@ -136,7 +136,7 @@ code CLASS::create() NOEXCEPT
     }
 
     code ec{ error::success };
-    static const auto heads = configuration_.dir / schema::dir::heads;
+    static const auto heads = configuration_.path / schema::dir::heads;
 
     // Clear /heads, create head files, ensure existence of body files.
     if (!file::clear_directory(heads)) ec = error::clear_directory;
@@ -206,7 +206,7 @@ code CLASS::create() NOEXCEPT
     // unlock errors override ec.
     if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
     if (!process_lock_.try_unlock()) ec = error::process_unlock;
-    if (ec) /* bool */ file::clear_directory(configuration_.dir);
+    if (ec) /* bool */ file::clear_directory(configuration_.path);
     transactor_mutex_.unlock();
     return ec;
 }
@@ -528,8 +528,8 @@ code CLASS::backup() NOEXCEPT
     if (!validated_bk.backup()) return error::backup_table;
     if (!validated_tx.backup()) return error::backup_table;
 
-    static const auto primary = configuration_.dir / schema::dir::primary;
-    static const auto secondary = configuration_.dir / schema::dir::secondary;
+    static const auto primary = configuration_.path / schema::dir::primary;
+    static const auto secondary = configuration_.path / schema::dir::secondary;
 
     if (file::is_directory(primary))
     {
@@ -677,9 +677,9 @@ code CLASS::restore() NOEXCEPT
     }
 
     code ec{ error::success };
-    static const auto heads = configuration_.dir / schema::dir::heads;
-    static const auto primary = configuration_.dir / schema::dir::primary;
-    static const auto secondary = configuration_.dir / schema::dir::secondary;
+    static const auto heads = configuration_.path / schema::dir::heads;
+    static const auto primary = configuration_.path / schema::dir::primary;
+    static const auto secondary = configuration_.path / schema::dir::secondary;
 
     if (file::is_directory(primary))
     {
