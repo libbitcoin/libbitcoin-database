@@ -78,7 +78,7 @@ bool create_file(const path& filename) NOEXCEPT
 
 bool create_file(const path& to, const uint8_t* data, size_t size) NOEXCEPT
 {
-    // Binary mode on Windows ensures that \n nor replaced with \r\n.
+    // Binary mode on Windows ensures that \n not replaced with \r\n.
     system::ofstream file(to, std::ios_base::binary);
     if (!file.good()) return false;
     file.write(pointer_cast<const char>(data), size);
