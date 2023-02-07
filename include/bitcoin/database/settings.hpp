@@ -26,9 +26,12 @@
 namespace libbitcoin {
 namespace database {
 
+/// TODO: helper methods to embed/construct full paths (see store()).
 /// Common database configuration settings, properties not thread safe.
 struct BCD_API settings
 {
+    DEFAULT_COPY_MOVE_DESTRUCT(settings);
+
     settings() NOEXCEPT;
     settings(system::chain::selection context) NOEXCEPT;
 
