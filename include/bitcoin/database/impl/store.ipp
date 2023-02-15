@@ -29,7 +29,7 @@
 namespace libbitcoin {
 namespace database {
 
-    // Capture the result code if there is not already a code.
+// Capture the result code if there is not already a code.
 // This ensures all close/unload are always executed (required cleanup).
 inline void first_code(code& ec, const code& result) NOEXCEPT
 {

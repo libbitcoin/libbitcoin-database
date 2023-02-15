@@ -38,6 +38,12 @@ using namespace system;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
+inline path trim(const path& value) NOEXCEPT
+{
+    // Trailing slash may cause successful create_directories returning false.
+    return system::trim_right_copy(value.string(), { "/", "\\", "\x20" });
+}
+
 bool is_directory(const path& directory) NOEXCEPT
 {
     std::error_code ununsed;
@@ -56,7 +62,7 @@ bool clear_directory(const path& directory) NOEXCEPT
 bool create_directory(const path& directory) NOEXCEPT
 {
     std::error_code unused;
-    const auto path = system::to_extended_path(directory);
+    const auto path = system::to_extended_path(trim(directory));
     return std::filesystem::create_directories(path, unused);
 }
 
@@ -78,7 +84,7 @@ bool create_file(const path& filename) NOEXCEPT
 
 bool create_file(const path& to, const uint8_t* data, size_t size) NOEXCEPT
 {
-    // Binary mode on Windows ensures that \n nor replaced with \r\n.
+    // Binary mode on Windows ensures that \n not replaced with \r\n.
     system::ofstream file(to, std::ios_base::binary);
     if (!file.good()) return false;
     file.write(pointer_cast<const char>(data), size);
