@@ -38,6 +38,12 @@ using namespace system;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
+inline path trim(const path& value) NOEXCEPT
+{
+    // Trailing slash may cause successful create_directories returning false.
+    return system::trim_right_copy(value.string(), { "/", "\\", "\x20" });
+}
+
 bool is_directory(const path& directory) NOEXCEPT
 {
     std::error_code ununsed;
@@ -56,7 +62,7 @@ bool clear_directory(const path& directory) NOEXCEPT
 bool create_directory(const path& directory) NOEXCEPT
 {
     std::error_code unused;
-    const auto path = system::to_extended_path(directory);
+    const auto path = system::to_extended_path(trim(directory));
     return std::filesystem::create_directories(path, unused);
 }
 
