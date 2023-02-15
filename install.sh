@@ -776,7 +776,7 @@ build_all()
     create_from_github libbitcoin libbitcoin-system version3 "yes"
     build_from_github libbitcoin-system "$PARALLEL" false "yes" "${BITCOIN_SYSTEM_OPTIONS[@]}" "$@"
     if [[ ! ($CI == true) ]]; then
-        create_from_github libbitcoin libbitcoin-database version3
+        create_from_github libbitcoin libbitcoin-database version3 "yes"
         build_from_github libbitcoin-database "$PARALLEL" true "yes" "${BITCOIN_DATABASE_OPTIONS[@]}" "$@"
     else
         push_directory "$PRESUMED_CI_PROJECT_PATH"
