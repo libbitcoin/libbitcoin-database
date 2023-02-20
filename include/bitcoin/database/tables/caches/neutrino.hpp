@@ -48,7 +48,7 @@ struct neutrino
         inline bool from_data(reader& source) NOEXCEPT
         {
             filter_head = source.read_hash();
-            filter = source.read_bytes(source.read_variable());
+            filter = source.read_bytes(source.read_size());
             BC_ASSERT(source.get_read_position() == count());
             return source;
         }
@@ -86,7 +86,7 @@ struct neutrino
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.skip_bytes(schema::hash);
-            filter = source.read_bytes(source.read_variable());
+            filter = source.read_bytes(source.read_size());
             BC_ASSERT(source.get_read_position() == count());
             return source;
         }
