@@ -37,6 +37,7 @@ class BCD_API map
 public:
     DELETE_COPY_MOVE(map);
 
+    /// The expansion parameter is NOT IMPLEMENTED.
     map(const std::filesystem::path& filename, size_t minimum=1,
         size_t expansion=0) NOEXCEPT;
 
