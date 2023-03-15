@@ -139,7 +139,7 @@ hashes CLASS::get_all_unassociated_above(size_t height) NOEXCEPT
 }
 
 TEMPLATE
-hashes CLASS::get_locator(const heights& heights) NOEXCEPT
+hashes CLASS::get_hashes(const heights& heights) NOEXCEPT
 {
     hashes out{};
     out.reserve(heights.size());

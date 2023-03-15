@@ -43,6 +43,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 using namespace system;
 
+// The expansion parameter is NOT IMPLEMENTED.
 map::map(const path& filename, size_t minimum, size_t expansion) NOEXCEPT
   : filename_(filename),
     minimum_(minimum),
@@ -330,7 +331,7 @@ bool map::unmap_() NOEXCEPT
     return success;
 }
 
-// Mapping has no effect on logical size, always maps max(logical/min) size.
+// Mapping has no effect on logical size, always maps max(logical, min) size.
 bool map::map_() NOEXCEPT
 {
     auto size = logical_;

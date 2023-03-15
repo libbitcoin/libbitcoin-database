@@ -71,7 +71,7 @@ public:
     size_t get_fork() NOEXCEPT;
     size_t get_last_associated_from(size_t height) NOEXCEPT;
     hashes get_all_unassociated_above(size_t height) NOEXCEPT;
-    hashes get_locator(const heights& heights) NOEXCEPT;
+    hashes get_hashes(const heights& heights) NOEXCEPT;
 
     /// Translation (key/link to link/s).
     /// -----------------------------------------------------------------------

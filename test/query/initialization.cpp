@@ -360,9 +360,9 @@ BOOST_AUTO_TEST_CASE(query_initialization__get_all_unassociated_above__gapped_ca
     BOOST_REQUIRE_EQUAL(unassociated.size(), 0u);
 }
 
-// get_locator
+// get_hashes
 
-BOOST_AUTO_TEST_CASE(query_initialization__get_locator__initialized__one)
+BOOST_AUTO_TEST_CASE(query_initialization__get_hashes__initialized__one)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -370,10 +370,10 @@ BOOST_AUTO_TEST_CASE(query_initialization__get_locator__initialized__one)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE_EQUAL(query.get_locator({ 0, 1, 2, 4, 6, 8 }).size(), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_hashes({ 0, 1, 2, 4, 6, 8 }).size(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(query_initialization__get_locator__gapped__expected)
+BOOST_AUTO_TEST_CASE(query_initialization__get_hashes__gapped__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -387,7 +387,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__get_locator__gapped__expected)
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block1.hash())));
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block2.hash())));
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block3.hash())));
-    const auto locator = query.get_locator({ 0, 1, 3, 4 });
+    const auto locator = query.get_hashes({ 0, 1, 3, 4 });
     BOOST_REQUIRE_EQUAL(locator.size(), 3u);
     BOOST_REQUIRE_EQUAL(locator[0], test::genesis.hash());
     BOOST_REQUIRE_EQUAL(locator[1], test::block1.hash());
