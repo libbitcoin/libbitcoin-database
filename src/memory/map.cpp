@@ -43,7 +43,6 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 using namespace system;
 
-// The expansion parameter is NOT IMPLEMENTED.
 map::map(const path& filename, size_t minimum, size_t expansion) NOEXCEPT
   : filename_(filename),
     minimum_(minimum),
