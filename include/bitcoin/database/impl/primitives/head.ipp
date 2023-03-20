@@ -56,6 +56,9 @@ bool CLASS::create() NOEXCEPT
         return false;
 
     BC_ASSERT_MSG(verify(), "unexpected body size");
+
+    // std::memset/fill_n have identical performance (on win32).
+    ////std::memset(ptr->begin(), system::bit_all<uint8_t>, size);
     std::fill_n(ptr->begin(), size, system::bit_all<uint8_t>);
     return set_body_count(zero);
 }
