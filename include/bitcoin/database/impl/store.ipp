@@ -81,7 +81,7 @@ CLASS::store(const settings& config) NOEXCEPT
     candidate(candidate_head_, candidate_body_),
 
     confirmed_head_(head(config.path / schema::dir::heads, schema::indexes::confirmed)),
-    confirmed_body_(body(config.path, schema::indexes::confirmed), config.txs_size, config.confirmed_rate),
+    confirmed_body_(body(config.path, schema::indexes::confirmed), config.confirmed_size, config.confirmed_rate),
     confirmed(confirmed_head_, confirmed_body_),
 
     strong_tx_head_(head(config.path / schema::dir::heads, schema::indexes::strong_tx)),
