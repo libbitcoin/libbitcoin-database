@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_TABLES_STORE_HPP
 
 #include <filesystem>
+#include <functional>
 #include <shared_mutex>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
@@ -49,34 +50,103 @@
 namespace libbitcoin {
 namespace database {
 
+enum class event_t
+{
+    create_file,
+    open_file,
+    load_file,
+    unload_file,
+    close_file,
+
+    create_table,
+    verify_table,
+    close_table
+};
+
+enum class table_t
+{
+    header_table,
+    header_head,
+    header_body,
+    point_table,
+    point_head,
+    point_body,
+    input_table,
+    input_head,
+    input_body,
+    output_table,
+    output_head,
+    output_body,
+    puts_table,
+    puts_head,
+    puts_body,
+    tx_table,
+    tx_head,
+    txs_table,
+    tx_body,
+    txs_head,
+    txs_body,
+
+    address_table,
+    address_head,
+    address_body,
+    candidate_table,
+    candidate_head,
+    candidate_body,
+    confirmed_table,
+    confirmed_head,
+    confirmed_body,
+    strong_tx_table,
+    strong_tx_head,
+    strong_tx_body,
+
+    bootstrap_table,
+    bootstrap_head,
+    bootstrap_body,
+    buffer_table,
+    buffer_head,
+    buffer_body,
+    neutrino_table,
+    neutrino_head,
+    neutrino_body,
+    validated_bk_table,
+    validated_bk_head,
+    validated_bk_body,
+    validated_tx_table,
+    validated_tx_head,
+    validated_tx_body
+};
+
 /// The store and query interface are the primary products of database.
 /// Store provides implmentation support for the public query interface.
 /// Query privides query interface implmentation over the store.
+/// Event handlers are invoked synchronously, providing progress.
 template <typename Storage, if_base_of<storage, Storage> = true>
 class store
 {
 public:
     DELETE_COPY_MOVE_DESTRUCT(store);
 
-    using transactor = std::shared_lock<boost::upgrade_mutex>;
+    typedef std::shared_lock<boost::upgrade_mutex> transactor;
+    typedef std::function<void(event_t, table_t)> event_handler;
 
     /// Construct a store from settings.
     store(const settings& config) NOEXCEPT;
 
     /// Create the set of empty files (from unloaded).
-    code create() NOEXCEPT;
+    code create(const event_handler& handler) NOEXCEPT;
 
     /// Open and load the set of tables, set locks.
-    code open() NOEXCEPT;
+    code open(const event_handler& handler) NOEXCEPT;
 
     /// Snapshot the set of tables (from loaded).
-    code snapshot() NOEXCEPT;
+    code snapshot(const event_handler& handler) NOEXCEPT;
 
     /// Restore the most recent snapshot (from unloaded).
-    code restore() NOEXCEPT;
+    code restore(const event_handler& handler) NOEXCEPT;
 
     /// Unload and close the set of tables, clear locks.
-    code close() NOEXCEPT;
+    code close(const event_handler& handler) NOEXCEPT;
 
     /// Get a transactor object.
     const transactor get_transactor() NOEXCEPT;
@@ -104,10 +174,11 @@ public:
     table::validated_tx validated_tx;
 
 protected:
-    code open_load() NOEXCEPT;
-    code unload_close() NOEXCEPT;
-    code backup() NOEXCEPT;
-    code dump(const std::filesystem::path& folder) NOEXCEPT;
+    code open_load(const event_handler& handler) NOEXCEPT;
+    code unload_close(const event_handler& handler) NOEXCEPT;
+    code backup(const event_handler& handler) NOEXCEPT;
+    code dump(const std::filesystem::path& folder,
+        const event_handler& handler) NOEXCEPT;
 
     // These are thread safe.
     const settings& configuration_;
