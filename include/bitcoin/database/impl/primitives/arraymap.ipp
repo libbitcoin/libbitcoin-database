@@ -27,7 +27,7 @@ namespace database {
     
 TEMPLATE
 CLASS::arraymap(storage& header, storage& body) NOEXCEPT
-  : header_(header, 0), manager_(body)
+  : head_(header, 0), manager_(body)
 {
 }
 
@@ -38,36 +38,36 @@ TEMPLATE
 bool CLASS::create() NOEXCEPT
 {
     Link count{};
-    return header_.create() &&
-        header_.get_body_count(count) && manager_.truncate(count);
+    return head_.create() &&
+        head_.get_body_count(count) && manager_.truncate(count);
 }
 
 TEMPLATE
 bool CLASS::close() NOEXCEPT
 {
-    return header_.set_body_count(manager_.count());
+    return head_.set_body_count(manager_.count());
 }
 
 TEMPLATE
 bool CLASS::backup() NOEXCEPT
 {
-    return header_.set_body_count(manager_.count());
+    return head_.set_body_count(manager_.count());
 }
 
 TEMPLATE
 bool CLASS::restore() NOEXCEPT
 {
     Link count{};
-    return header_.verify() &&
-        header_.get_body_count(count) && manager_.truncate(count);
+    return head_.verify() &&
+        head_.get_body_count(count) && manager_.truncate(count);
 }
 
 TEMPLATE
 bool CLASS::verify() const NOEXCEPT
 {
     Link count{};
-    return header_.verify() &&
-        header_.get_body_count(count) && count == manager_.count();
+    return head_.verify() &&
+        head_.get_body_count(count) && count == manager_.count();
 }
 
 // query interface

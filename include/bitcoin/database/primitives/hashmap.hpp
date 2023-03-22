@@ -117,12 +117,12 @@ protected:
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);
-    using header = database::head<Link, Key>;
+    using head = database::head<Link, Key>;
     using manager = database::manager<Link, Key, Size>;
 
     // Thread safe (index/top/push).
     // Not thread safe (create/open/close/backup/restore).
-    header header_;
+    head head_;
 
     // Thread safe.
     manager manager_;
