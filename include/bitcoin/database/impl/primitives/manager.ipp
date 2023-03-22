@@ -52,11 +52,15 @@ Link CLASS::allocate(const Link& size) NOEXCEPT
     if (size.is_terminal())
         return size;
 
+    // File allocation is bound only by logical_ type (size_t)...
     const auto start = file_.allocate(link_to_position(size));
 
+    // ...start may therefore overflow the Link (without being eof)...
     if (start == storage::eof)
         return Link::terminal;
 
+    // ... so position_to_link returns terminal on Link overflow.
+    // Callers (arraymap and hashmap) handle terminal allocation.
     return position_to_link(start);
 }
 
@@ -106,27 +110,38 @@ constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
 }
 
 TEMPLATE
-constexpr Link CLASS::position_to_link(size_t position) NOEXCEPT
+constexpr typename Link::integer CLASS::cast_link(size_t link) NOEXCEPT
 {
     using namespace system;
     using integer = typename Link::integer;
+    constexpr auto terminal = Link::terminal;
+
+    // link limit is sub1(terminal), where terminal is 2^((8*Link::bytes)-1).
+    // It is ok for the payload to exceed link limit (link is identity only).
+    return link >= terminal ? terminal : possible_narrow_cast<integer>(link);
+}
+
+TEMPLATE
+constexpr Link CLASS::position_to_link(size_t position) NOEXCEPT
+{
+    using namespace system;
 
     if constexpr (is_slab)
     {
         // Slab implies link/key incorporated into size.
-        return { possible_narrow_cast<integer>(position) };
+        return { cast_link(position) };
     }
     else if constexpr (!is_zero(array_count<Key>))
     {
         // Record implies link/key independent of Size.
         constexpr auto element_size = Link::size + array_count<Key> + Size;
-        return { possible_narrow_cast<integer>(position / element_size) };
+        return { cast_link(position / element_size) };
     }
     else
     {
         // No key implies no linked list.
         static_assert(!is_zero(Size));
-        return { possible_narrow_cast<integer>(position / Size) };
+        return { cast_link(position / Size) };
     }
 }
 
