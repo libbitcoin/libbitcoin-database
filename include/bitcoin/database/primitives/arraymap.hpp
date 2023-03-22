@@ -77,12 +77,12 @@ protected:
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);
-    using header = database::head<Link, system::data_array<zero>>;
+    using head = database::head<Link, system::data_array<zero>>;
     using manager = database::manager<Link, system::data_array<zero>, Size>;
 
     // Unsafe with zero buckets (index/top/push).
     // Not thread safe (create/open/close/backup/restore).
-    header header_;
+    head head_;
 
     // Thread safe.
     manager manager_;

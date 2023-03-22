@@ -27,7 +27,7 @@ namespace database {
 
 TEMPLATE
 CLASS::hashmap(storage& header, storage& body, const Link& buckets) NOEXCEPT
-  : header_(header, buckets), manager_(body)
+  : head_(header, buckets), manager_(body)
 {
 }
 
@@ -38,36 +38,36 @@ TEMPLATE
 bool CLASS::create() NOEXCEPT
 {
     Link count{};
-    return header_.create() &&
-        header_.get_body_count(count) && manager_.truncate(count);
+    return head_.create() &&
+        head_.get_body_count(count) && manager_.truncate(count);
 }
 
 TEMPLATE
 bool CLASS::close() NOEXCEPT
 {
-    return header_.set_body_count(manager_.count());
+    return head_.set_body_count(manager_.count());
 }
 
 TEMPLATE
 bool CLASS::backup() NOEXCEPT
 {
-    return header_.set_body_count(manager_.count());
+    return head_.set_body_count(manager_.count());
 }
 
 TEMPLATE
 bool CLASS::restore() NOEXCEPT
 {
     Link count{};
-    return header_.verify() &&
-        header_.get_body_count(count) && manager_.truncate(count);
+    return head_.verify() &&
+        head_.get_body_count(count) && manager_.truncate(count);
 }
 
 TEMPLATE
 bool CLASS::verify() const NOEXCEPT
 {
     Link count{};
-    return header_.verify() &&
-        header_.get_body_count(count) && count == manager_.count();
+    return head_.verify() &&
+        head_.get_body_count(count) && count == manager_.count();
 }
 
 // query interface
@@ -89,7 +89,7 @@ TEMPLATE
 typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 {
     // TODO: due to iterator design, key is copied into iterator.
-    return { manager_.get(), header_.top(key), key };
+    return { manager_.get(), head_.top(key), key };
 }
 
 TEMPLATE
@@ -193,7 +193,7 @@ bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
 
     // Commit element to search index.
     auto& next = system::unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
-    return header_.push(link, next, header_.index(key));
+    return head_.push(link, next, head_.index(key));
 }
 
 TEMPLATE
@@ -242,11 +242,11 @@ finalizer_ptr CLASS::putter(const Link& link, const Key& key,
     sink->skip_bytes(Link::size);
     sink->write_bytes(key);
 
-    const auto index = header_.index(key);
+    const auto index = head_.index(key);
     sink->set_finalizer([this, link, index, ptr]() NOEXCEPT
     {
         auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
-        return header_.push(link, next, index);
+        return head_.push(link, next, index);
     });
 
     // Limits to size records or eof for slab.
