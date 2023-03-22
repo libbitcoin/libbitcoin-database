@@ -158,6 +158,21 @@ struct transaction
         puts::integer ins_fk{};
     };
 
+    struct record_puts_count
+      : public schema::transaction
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(skip_to_puts);
+            ins_count  = source.read_little_endian<ix::integer, ix::size>();
+            outs_count = source.read_little_endian<ix::integer, ix::size>();
+            return source;
+        }
+
+        ix::integer ins_count{};
+        ix::integer outs_count{};
+    };
+
     struct record_puts
       : public schema::transaction
     {
