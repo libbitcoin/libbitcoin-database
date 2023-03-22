@@ -164,7 +164,6 @@ BOOST_AUTO_TEST_CASE(query_archival__set_link_header__is_header__expected)
 BOOST_AUTO_TEST_CASE(query_archival__set_tx__empty__expected)
 {
     const system::chain::transaction tx{};
-    const auto expected_head4_array = system::base16_chunk("00000000");
     const auto expected_head5_array = system::base16_chunk("0000000000");
     const auto expected_head4_hash = system::base16_chunk(
         "00000000" // record count
@@ -199,7 +198,7 @@ BOOST_AUTO_TEST_CASE(query_archival__set_tx__empty__expected)
     BOOST_REQUIRE_EQUAL(store.point_head(), expected_head4_hash);
     BOOST_REQUIRE_EQUAL(store.input_head(), expected_head5_hash);
     BOOST_REQUIRE_EQUAL(store.output_head(), expected_head5_array);
-    BOOST_REQUIRE_EQUAL(store.puts_head(), expected_head4_array);
+    BOOST_REQUIRE_EQUAL(store.puts_head(), expected_head5_array);
     BOOST_REQUIRE(store.tx_body().empty());
     BOOST_REQUIRE(store.point_body().empty());
     BOOST_REQUIRE(store.input_body().empty());
@@ -240,8 +239,8 @@ BOOST_AUTO_TEST_CASE(query_archival__set_link_tx__null_input__expected)
         "04030201"     // version
         "010000"       // ins_count
         "010000"       // outs_count
-        "00000000");   // puts_fk->
-    const auto expected_puts_head = system::base16_chunk("02000000");
+        "0000000000");   // puts_fk->
+    const auto expected_puts_head = system::base16_chunk("0200000000");
     const auto expected_puts_body = system::base16_chunk(
         "0000000000"   // input0_fk->
         "0000000000"); // output0_fk->
@@ -360,8 +359,8 @@ BOOST_AUTO_TEST_CASE(query_archival__set_tx__get_tx__expected)
         "2a000000"       // version
         "020000"         // ins_count
         "020000"         // outs_count
-        "00000000");     // puts_fk->
-    const auto expected_puts_head = system::base16_chunk("04000000");
+        "0000000000");     // puts_fk->
+    const auto expected_puts_head = system::base16_chunk("0400000000");
     const auto expected_puts_body = system::base16_chunk(
         "0000000000"     // input0_fk->
         "1d00000000"     // input1_fk->
@@ -485,8 +484,8 @@ BOOST_AUTO_TEST_CASE(query_archival__set_block__get_block__expected)
         "01000000"     // version
         "010000"       // ins_count
         "010000"       // outs_count
-        "00000000");   // puts_fk->
-    const auto genesis_puts_head = system::base16_chunk("02000000");
+        "0000000000");   // puts_fk->
+    const auto genesis_puts_head = system::base16_chunk("0200000000");
     const auto genesis_puts_body = system::base16_chunk(
         "0000000000"   // input0_fk->
         "0000000000"); // output0_fk->
