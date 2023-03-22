@@ -56,6 +56,21 @@ public:
     bool restore() NOEXCEPT;
     bool verify() const NOEXCEPT;
 
+    /// Sizing.
+    /// -----------------------------------------------------------------------
+
+    /// Hash table bucket count.
+    size_t buckets() const NOEXCEPT;
+
+    /// Head file bytes.
+    size_t head_size() const NOEXCEPT;
+
+    /// Body file bytes.
+    size_t body_size() const NOEXCEPT;
+
+    /// Count of records (or body file bytes if slab).
+    Link count() const NOEXCEPT;
+
     /// Query interface, iterator is not thread safe.
     /// -----------------------------------------------------------------------
 

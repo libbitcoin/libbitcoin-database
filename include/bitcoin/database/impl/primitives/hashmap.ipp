@@ -70,6 +70,33 @@ bool CLASS::verify() const NOEXCEPT
         head_.get_body_count(count) && count == manager_.count();
 }
 
+// sizing
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+size_t CLASS::buckets() const NOEXCEPT
+{
+    return head_.buckets();
+}
+
+TEMPLATE
+size_t CLASS::head_size() const NOEXCEPT
+{
+    return head_.size();
+}
+
+TEMPLATE
+size_t CLASS::body_size() const NOEXCEPT
+{
+    return manager_.size();
+}
+
+TEMPLATE
+Link CLASS::count() const NOEXCEPT
+{
+    return manager_.count();
+}
+
 // query interface
 // ----------------------------------------------------------------------------
 

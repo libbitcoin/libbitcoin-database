@@ -57,6 +57,7 @@ public:
     using inputs_ptr = system::chain::inputs_ptr;
     using outputs_ptr = system::chain::outputs_ptr;
     using transactions_ptr = system::chain::transactions_ptr;
+    using sizes = std::pair<size_t, size_t>;
     using heights = std_vector<size_t>;
     using filter = system::data_chunk;
 
@@ -74,56 +75,39 @@ public:
     hashes get_all_unassociated_above(size_t height) NOEXCEPT;
     hashes get_hashes(const heights& heights) NOEXCEPT;
 
-    /// Buckets (hash tables).
+    /// Store sizing.
     /// -----------------------------------------------------------------------
-    /// Inferred from head size divided by link size, less one (body size).
 
-    ////size_t header_buckets() NOEXCEPT;
-    ////size_t point_buckets() NOEXCEPT;
-    ////size_t input_buckets() NOEXCEPT;
-    ////size_t txs_buckets() NOEXCEPT;
-    ////size_t tx_buckets() NOEXCEPT;
+    /////// Store logical byte sizes.
+    ////size_t archive_body_size() const NOEXCEPT;
 
-    /// Counts (records).
-    /// -----------------------------------------------------------------------
-    /// Inferred from body size divided by row size, retained by map.
+    /// Table logical byte sizes (archive bodies).
+    size_t header_size() const NOEXCEPT;
+    size_t output_size() const NOEXCEPT;
+    size_t input_size() const NOEXCEPT;
+    size_t point_size() const NOEXCEPT;
+    size_t puts_size() const NOEXCEPT;
+    size_t txs_size() const NOEXCEPT;
+    size_t tx_size() const NOEXCEPT;
 
-    ////size_t header_records() NOEXCEPT;
-    ////size_t point_records() NOEXCEPT;
-    ////size_t puts_records() NOEXCEPT;
-    ////size_t tx_records() NOEXCEPT;
+    /// Buckets (archive hash tables).
+    size_t header_buckets() const NOEXCEPT;
+    size_t point_buckets() const NOEXCEPT;
+    size_t input_buckets() const NOEXCEPT;
+    size_t txs_buckets() const NOEXCEPT;
+    size_t tx_buckets() const NOEXCEPT;
 
-    /// Counts (slabs).
-    /// -----------------------------------------------------------------------
-    /// Costly couting operations for input and output (txs inferred).
+    /// Counts (archive records).
+    size_t header_records() const NOEXCEPT;
+    size_t point_records() const NOEXCEPT;
+    size_t puts_records() const NOEXCEPT;
+    size_t tx_records() const NOEXCEPT;
 
-    size_t tx_inputs(const tx_link& link) NOEXCEPT;
-    size_t tx_outputs(const tx_link& link) NOEXCEPT;
-    std::pair<size_t, size_t> tx_puts(const tx_link& link) NOEXCEPT;
-
-    /// Logical byte sizes (all bodies).
-    /// -----------------------------------------------------------------------
-    /// Retained by map as size (logical).
-
-    ////size_t header_size() NOEXCEPT;
-    ////size_t output_size() NOEXCEPT;
-    ////size_t input_size() NOEXCEPT;
-    ////size_t point_size() NOEXCEPT;
-    ////size_t puts_size() NOEXCEPT;
-    ////size_t txs_size() NOEXCEPT;
-    ////size_t tx_size() NOEXCEPT;
-
-    /// Capacities (all bodies).
-    /// -----------------------------------------------------------------------
-    /// Retained by map as capacity.
-
-    ////size_t header_capacity() NOEXCEPT;
-    ////size_t output_capacity() NOEXCEPT;
-    ////size_t input_capacity() NOEXCEPT;
-    ////size_t point_capacity() NOEXCEPT;
-    ////size_t puts_capacity() NOEXCEPT;
-    ////size_t txs_capacity() NOEXCEPT;
-    ////size_t tx_capacity() NOEXCEPT;
+    /// Counters (archive slabs).
+    /// header_records is upper bound for txs_slabs (in terms of collision).
+    size_t input_slabs(const tx_link& link) const NOEXCEPT;
+    size_t output_slabs(const tx_link& link) const NOEXCEPT;
+    sizes put_slabs(const tx_link& link) const NOEXCEPT;
 
     /// Translation (key/link to link/s).
     /// -----------------------------------------------------------------------

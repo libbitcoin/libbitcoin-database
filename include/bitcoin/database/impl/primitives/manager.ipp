@@ -32,9 +32,15 @@ CLASS::manager(storage& file) NOEXCEPT
 }
 
 TEMPLATE
+size_t CLASS::size() const NOEXCEPT
+{
+    return file_.size();
+}
+
+TEMPLATE
 Link CLASS::count() const NOEXCEPT
 {
-    return position_to_link(file_.size());
+    return position_to_link(size());
 }
 
 TEMPLATE

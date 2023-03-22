@@ -37,6 +37,10 @@ public:
 
     head(storage& head, const Link& buckets) NOEXCEPT;
 
+    /// Sizing (thread safe).
+    size_t size() const NOEXCEPT;
+    size_t buckets() const NOEXCEPT;
+
     /// Create from empty head file (not thread safe).
     bool create() NOEXCEPT;
 
