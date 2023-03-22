@@ -39,6 +39,9 @@ public:
     /// Manage byte storage device.
     manager(storage& file) NOEXCEPT;
 
+    /// The file size.
+    size_t size() const NOEXCEPT;
+
     /// The logical record count or slab size.
     Link count() const NOEXCEPT;
 

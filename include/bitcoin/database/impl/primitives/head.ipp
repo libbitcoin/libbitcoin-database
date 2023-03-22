@@ -34,6 +34,18 @@ CLASS::head(storage& head, const Link& buckets) NOEXCEPT
 }
 
 TEMPLATE
+size_t CLASS::size() const NOEXCEPT
+{
+    return offset(buckets_);
+}
+
+TEMPLATE
+size_t CLASS::buckets() const NOEXCEPT
+{
+    return buckets_;
+}
+
+TEMPLATE
 Link CLASS::index(const Key& key) const NOEXCEPT
 {
     // zero buckets precludes calling index/top/push (array only).
@@ -46,8 +58,8 @@ bool CLASS::create() NOEXCEPT
     if (!is_zero(file_.size()))
         return false;
 
-    const auto size = offset(buckets_);
-    const auto start = file_.allocate(size);
+    const auto allocation = size();
+    const auto start = file_.allocate(allocation);
     if (start == storage::eof)
         return false;
 
@@ -58,15 +70,15 @@ bool CLASS::create() NOEXCEPT
     BC_ASSERT_MSG(verify(), "unexpected body size");
 
     // std::memset/fill_n have identical performance (on win32).
-    ////std::memset(ptr->begin(), system::bit_all<uint8_t>, size);
-    std::fill_n(ptr->begin(), size, system::bit_all<uint8_t>);
+    ////std::memset(ptr->begin(), system::bit_all<uint8_t>, allocation);
+    std::fill_n(ptr->begin(), allocation, system::bit_all<uint8_t>);
     return set_body_count(zero);
 }
 
 TEMPLATE
 bool CLASS::verify() const NOEXCEPT
 {
-    return offset(buckets_) == file_.size();
+    return file_.size() == size();
 }
 
 TEMPLATE

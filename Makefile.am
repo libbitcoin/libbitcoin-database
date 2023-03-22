@@ -84,6 +84,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/query/confirmation.cpp \
     test/query/initialization.cpp \
     test/query/optional.cpp \
+    test/query/sizing.cpp \
     test/query/translation.cpp \
     test/query/validation.cpp \
     test/tables/archives/header.cpp \

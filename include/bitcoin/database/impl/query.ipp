@@ -155,6 +155,163 @@ hashes CLASS::get_hashes(const heights& heights) NOEXCEPT
     return out;
 }
 
+// Store sizing.
+// ----------------------------------------------------------------------------
+
+// Store logical byte sizes.
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+////TEMPLATE
+////size_t CLASS::archive_body_size() const NOEXCEPT
+////{
+////    return
+////        header_size() +
+////        output_size() +
+////        input_size() +
+////        point_size() +
+////        puts_size() +
+////        txs_size() +
+////        tx_size();
+////}
+
+// Table logical byte sizes (archive bodies).
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+TEMPLATE
+size_t CLASS::header_size() const NOEXCEPT
+{
+    return store_.header.body_size();
+}
+
+TEMPLATE
+size_t CLASS::output_size() const NOEXCEPT
+{
+    return store_.output.body_size();
+}
+
+TEMPLATE
+size_t CLASS::input_size() const NOEXCEPT
+{
+    return store_.input.body_size();
+}
+
+TEMPLATE
+size_t CLASS::point_size() const NOEXCEPT
+{
+    return store_.point.body_size();
+}
+
+TEMPLATE
+size_t CLASS::puts_size() const NOEXCEPT
+{
+    return store_.puts.body_size();
+}
+
+TEMPLATE
+size_t CLASS::txs_size() const NOEXCEPT
+{
+    return store_.txs.body_size();
+}
+
+TEMPLATE
+size_t CLASS::tx_size() const NOEXCEPT
+{
+    return store_.tx.body_size();
+}
+
+// Buckets (archive hash tables).
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+TEMPLATE
+size_t CLASS::header_buckets() const NOEXCEPT
+{
+    return store_.header.buckets();
+}
+
+TEMPLATE
+size_t CLASS::point_buckets() const NOEXCEPT
+{
+    return store_.point.buckets();
+}
+
+TEMPLATE
+size_t CLASS::input_buckets() const NOEXCEPT
+{
+    return store_.input.buckets();
+}
+
+TEMPLATE
+size_t CLASS::txs_buckets() const NOEXCEPT
+{
+    return store_.txs.buckets();
+}
+
+TEMPLATE
+size_t CLASS::tx_buckets() const NOEXCEPT
+{
+    return store_.tx.buckets();
+}
+
+//  Counts (archive records).
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+TEMPLATE
+size_t CLASS::header_records() const NOEXCEPT
+{
+    return store_.header.count();
+}
+
+TEMPLATE
+size_t CLASS::point_records() const NOEXCEPT
+{
+    return store_.point.count();
+}
+
+TEMPLATE
+size_t CLASS::puts_records() const NOEXCEPT
+{
+    return store_.puts.count();
+}
+
+TEMPLATE
+size_t CLASS::tx_records() const NOEXCEPT
+{
+    return store_.tx.count();
+}
+
+// Counters (archive slabs).
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+TEMPLATE
+size_t CLASS::input_slabs(const tx_link& link) const NOEXCEPT
+{
+    table::transaction::record_puts_count tx{};
+    if (!store_.tx.get(link, tx))
+        return {};
+
+    return tx.ins_count;
+}
+
+TEMPLATE
+size_t CLASS::output_slabs(const tx_link& link) const NOEXCEPT
+{
+    table::transaction::record_puts_count tx{};
+    if (!store_.tx.get(link, tx))
+        return {};
+
+    return tx.outs_count;
+}
+
+TEMPLATE
+typename CLASS::sizes CLASS::put_slabs(const tx_link& link) const NOEXCEPT
+{
+    table::transaction::record_puts_count tx{};
+    if (!store_.tx.get(link, tx))
+        return {};
+
+    return { tx.ins_count, tx.outs_count };
+}
+
 // Key translation. 
 // ----------------------------------------------------------------------------
 
@@ -365,39 +522,6 @@ input_links CLASS::to_spenders(const table::input::search_key& key) NOEXCEPT
     input_links spenders;
     do { spenders.push_back(it.self()); } while (it.advance());
     return spenders;
-}
-
-// count puts (info)
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-TEMPLATE
-size_t CLASS::tx_inputs(const tx_link& link) NOEXCEPT
-{
-    table::transaction::record_puts_count tx{};
-    if (!store_.tx.get(link, tx))
-        return {};
-
-    return tx.ins_count;
-}
-
-TEMPLATE
-size_t CLASS::tx_outputs(const tx_link& link) NOEXCEPT
-{
-    table::transaction::record_puts_count tx{};
-    if (!store_.tx.get(link, tx))
-        return {};
-
-    return tx.outs_count;
-}
-
-TEMPLATE
-std::pair<size_t, size_t> CLASS::tx_puts(const tx_link& link) NOEXCEPT
-{
-    table::transaction::record_puts_count tx{};
-    if (!store_.tx.get(link, tx))
-        return {};
-
-    return { tx.ins_count, tx.outs_count };
 }
 
 // tx to puts (forward navigation)

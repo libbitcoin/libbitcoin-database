@@ -222,6 +222,7 @@ if (with-tests)
         "../../test/query/confirmation.cpp"
         "../../test/query/initialization.cpp"
         "../../test/query/optional.cpp"
+        "../../test/query/sizing.cpp"
         "../../test/query/translation.cpp"
         "../../test/query/validation.cpp"
         "../../test/tables/archives/header.cpp"

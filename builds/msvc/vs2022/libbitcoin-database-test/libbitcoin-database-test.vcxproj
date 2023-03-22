@@ -90,6 +90,7 @@
     <ClCompile Include="..\..\..\..\test\query\confirmation.cpp" />
     <ClCompile Include="..\..\..\..\test\query\initialization.cpp" />
     <ClCompile Include="..\..\..\..\test\query\optional.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\sizing.cpp" />
     <ClCompile Include="..\..\..\..\test\query\translation.cpp" />
     <ClCompile Include="..\..\..\..\test\query\validation.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
