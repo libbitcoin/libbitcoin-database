@@ -367,6 +367,39 @@ input_links CLASS::to_spenders(const table::input::search_key& key) NOEXCEPT
     return spenders;
 }
 
+// count puts (info)
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+TEMPLATE
+size_t CLASS::tx_inputs(const tx_link& link) NOEXCEPT
+{
+    table::transaction::record_puts_count tx{};
+    if (!store_.tx.get(link, tx))
+        return {};
+
+    return tx.ins_count;
+}
+
+TEMPLATE
+size_t CLASS::tx_outputs(const tx_link& link) NOEXCEPT
+{
+    table::transaction::record_puts_count tx{};
+    if (!store_.tx.get(link, tx))
+        return {};
+
+    return tx.outs_count;
+}
+
+TEMPLATE
+std::pair<size_t, size_t> CLASS::tx_puts(const tx_link& link) NOEXCEPT
+{
+    table::transaction::record_puts_count tx{};
+    if (!store_.tx.get(link, tx))
+        return {};
+
+    return { tx.ins_count, tx.outs_count };
+}
+
 // tx to puts (forward navigation)
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

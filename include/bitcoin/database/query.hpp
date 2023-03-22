@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_HPP
 #define LIBBITCOIN_DATABASE_QUERY_HPP
 
+#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
@@ -72,6 +73,57 @@ public:
     size_t get_last_associated_from(size_t height) NOEXCEPT;
     hashes get_all_unassociated_above(size_t height) NOEXCEPT;
     hashes get_hashes(const heights& heights) NOEXCEPT;
+
+    /// Buckets (hash tables).
+    /// -----------------------------------------------------------------------
+    /// Inferred from head size divided by link size, less one (body size).
+
+    ////size_t header_buckets() NOEXCEPT;
+    ////size_t point_buckets() NOEXCEPT;
+    ////size_t input_buckets() NOEXCEPT;
+    ////size_t txs_buckets() NOEXCEPT;
+    ////size_t tx_buckets() NOEXCEPT;
+
+    /// Counts (records).
+    /// -----------------------------------------------------------------------
+    /// Inferred from body size divided by row size, retained by map.
+
+    ////size_t header_records() NOEXCEPT;
+    ////size_t point_records() NOEXCEPT;
+    ////size_t puts_records() NOEXCEPT;
+    ////size_t tx_records() NOEXCEPT;
+
+    /// Counts (slabs).
+    /// -----------------------------------------------------------------------
+    /// Costly couting operations for input and output (txs inferred).
+
+    size_t tx_inputs(const tx_link& link) NOEXCEPT;
+    size_t tx_outputs(const tx_link& link) NOEXCEPT;
+    std::pair<size_t, size_t> tx_puts(const tx_link& link) NOEXCEPT;
+
+    /// Logical byte sizes (all bodies).
+    /// -----------------------------------------------------------------------
+    /// Retained by map as size (logical).
+
+    ////size_t header_size() NOEXCEPT;
+    ////size_t output_size() NOEXCEPT;
+    ////size_t input_size() NOEXCEPT;
+    ////size_t point_size() NOEXCEPT;
+    ////size_t puts_size() NOEXCEPT;
+    ////size_t txs_size() NOEXCEPT;
+    ////size_t tx_size() NOEXCEPT;
+
+    /// Capacities (all bodies).
+    /// -----------------------------------------------------------------------
+    /// Retained by map as capacity.
+
+    ////size_t header_capacity() NOEXCEPT;
+    ////size_t output_capacity() NOEXCEPT;
+    ////size_t input_capacity() NOEXCEPT;
+    ////size_t point_capacity() NOEXCEPT;
+    ////size_t puts_capacity() NOEXCEPT;
+    ////size_t txs_capacity() NOEXCEPT;
+    ////size_t tx_capacity() NOEXCEPT;
 
     /// Translation (key/link to link/s).
     /// -----------------------------------------------------------------------
