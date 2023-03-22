@@ -106,7 +106,7 @@ namespace schema
 
     /// Primary keys.
     constexpr size_t put = 5;       // ->input/output slab.
-    constexpr size_t puts_ = 4;     // ->puts record.
+    constexpr size_t puts_ = 5;     // ->puts record.
     constexpr size_t txs_ = 4;      // ->txs slab.
     constexpr size_t tx = 4;        // ->tx record.
     constexpr size_t block = 3;     // ->header record.
@@ -172,8 +172,8 @@ namespace schema
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 25u);
-        static_assert(minrow == 61u);
+        static_assert(minsize == 26u);
+        static_assert(minrow == 62u);
     };
 
     // moderate (sk:7) slab multimap, with low multiple rate.
@@ -264,8 +264,8 @@ namespace schema
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
         static_assert(minsize == 5u);
-        ////static_assert(minrow == 13u);
-        static_assert(minrow == 41u);
+        ////static_assert(minrow == 14u);
+        static_assert(minrow == 42u);
     };
 
     // record hashmap

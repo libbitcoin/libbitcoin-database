@@ -30,29 +30,29 @@ const table::address::record out1{ {}, 0x0000007890abcdef };
 const table::address::record out2{ {}, 0x0000001234567890 };
 const data_chunk expected_head = base16_chunk
 (
-    "00000000"
-    "ffffffff"
-    "ffffffff"
-    "01000000"
-    "00000000"
-    "ffffffff"
+    "0000000000"
+    "ffffffffff"
+    "ffffffffff"
+    "0100000000"
+    "0000000000"
+    "ffffffffff"
 );
 const data_chunk closed_head = base16_chunk
 (
-    "02000000"
-    "ffffffff"
-    "ffffffff"
-    "01000000"
-    "00000000"
-    "ffffffff"
+    "0200000000"
+    "ffffffffff"
+    "ffffffffff"
+    "0100000000"
+    "0000000000"
+    "ffffffffff"
 );
 const data_chunk expected_body = base16_chunk
 (
-    "ffffffff"   // next->end
+    "ffffffffff"   // next->end
     "100000000000000000000000000000000000000000000000000000000000000a" // key1
     "efcdab9078" // output1 [low 5 bytes]
 
-    "ffffffff"   // next->end
+    "ffffffffff"   // next->end
     "200000000000000000000000000000000000000000000000000000000000000b" // key2
     "9078563412" // output2 [low 5 bytes]
 );

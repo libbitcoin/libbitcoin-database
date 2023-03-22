@@ -33,7 +33,7 @@ constexpr table::transaction::record expected
     0x56341204_u32, // version
     0x00341205_u32, // ins_count
     0x00341206_u32, // outs_count
-    0x56341207_u32  // puts_fk (ins_fk)
+    0x0000007856341207_u64  // puts_fk (ins_fk)
 };
 const data_chunk expected_file
 {
@@ -52,7 +52,7 @@ const data_chunk expected_file
     0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00,
     0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
 
     // --------------------------------------------------------------------------------------------
 
@@ -71,7 +71,7 @@ const data_chunk expected_file
     0x04, 0x12, 0x34, 0x56,
     0x05, 0x12, 0x34,
     0x06, 0x12, 0x34,
-    0x07, 0x12, 0x34, 0x56
+    0x07, 0x12, 0x34, 0x56, 0x78
 };
 
 BOOST_AUTO_TEST_CASE(transaction__put__get__expected)
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(transaction__put__get_puts__expected)
     BOOST_REQUIRE(instance.get(1, element));
     BOOST_REQUIRE_EQUAL(element.ins_count, 0x00341205_u32);
     BOOST_REQUIRE_EQUAL(element.outs_count, 0x00341206_u32);
-    BOOST_REQUIRE_EQUAL(element.ins_fk, 0x56341207_u32);
+    BOOST_REQUIRE_EQUAL(element.ins_fk, 0x0000007856341207_u64);
     BOOST_REQUIRE(!is_multiply_overflow<size_t>(element.ins_count, schema::put));
     BOOST_REQUIRE(!is_add_overflow<size_t>(element.ins_fk, element.ins_count * schema::put));
 }

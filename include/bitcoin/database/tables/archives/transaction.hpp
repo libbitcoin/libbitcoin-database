@@ -50,7 +50,7 @@ struct transaction
     struct record
       : public schema::transaction
     {
-        inline uint32_t outs_fk() const NOEXCEPT
+        inline puts::integer outs_fk() const NOEXCEPT
         {
             return ins_fk + ins_count;
         }
@@ -176,7 +176,7 @@ struct transaction
     struct record_puts
       : public schema::transaction
     {
-        inline uint32_t outs_fk() const NOEXCEPT
+        inline puts::integer outs_fk() const NOEXCEPT
         {
             return ins_fk + ins_count;
         }
