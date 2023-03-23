@@ -432,6 +432,9 @@ BOOST_AUTO_TEST_CASE(query_archival__set_tx__get_tx__expected)
     BOOST_REQUIRE(pointer1);
     BOOST_REQUIRE(*pointer1 == tx);
 
+    // Verify hash caching.
+    BOOST_REQUIRE_EQUAL(pointer1->hash(false), tx_hash);
+
     BOOST_REQUIRE_EQUAL(store.close(events), error::success);
 
     BOOST_REQUIRE_EQUAL(store.tx_head(), expected_tx_head);
@@ -843,6 +846,9 @@ BOOST_AUTO_TEST_CASE(query_archival__get_header__default__expected)
     const auto pointer1 = query.get_header(query.to_header(block_hash));
     BOOST_REQUIRE(pointer1);
     BOOST_REQUIRE(*pointer1 == header);
+
+    // Verify hash caching.
+    BOOST_REQUIRE_EQUAL(pointer1->hash(), block_hash);
 }
 
 BOOST_AUTO_TEST_CASE(query_archival__get_txs__not_found__empty)
