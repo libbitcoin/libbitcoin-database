@@ -1054,6 +1054,8 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     if (tx.is_empty())
         return {};
 
+    // This hash computation should be cached by the message deserializer.
+    // Non-witness tx hash is used for identity, as it is the input reference.
     const auto key = tx.hash(false);
     auto tx_fk = to_tx(key);
     if (!tx_fk.is_terminal())
@@ -1162,6 +1164,7 @@ header_link CLASS::set_link(const header& header, const context& ctx) NOEXCEPT
     if (parent_fk.is_terminal() != (parent_sk == system::null_hash))
         return {};
 
+    // This hash computation should be cached by the message deserializer.
     const auto key = header.hash();
     auto header_fk = to_header(key);
     if (!header_fk.is_terminal())
