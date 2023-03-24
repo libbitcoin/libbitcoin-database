@@ -158,24 +158,21 @@ hashes CLASS::get_hashes(const heights& heights) NOEXCEPT
 // Store sizing.
 // ----------------------------------------------------------------------------
 
-// Store logical byte sizes.
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-////TEMPLATE
-////size_t CLASS::archive_body_size() const NOEXCEPT
-////{
-////    return
-////        header_size() +
-////        output_size() +
-////        input_size() +
-////        point_size() +
-////        puts_size() +
-////        txs_size() +
-////        tx_size();
-////}
-
 // Table logical byte sizes (archive bodies).
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+TEMPLATE
+size_t CLASS::archive_size() const NOEXCEPT
+{
+    return
+        header_size() +
+        output_size() +
+        input_size() +
+        point_size() +
+        puts_size() +
+        txs_size() +
+        tx_size();
+}
 
 TEMPLATE
 size_t CLASS::header_size() const NOEXCEPT

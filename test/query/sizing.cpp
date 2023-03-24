@@ -59,6 +59,7 @@ BOOST_AUTO_TEST_CASE(query_sizing__size__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.puts_size(), 2 * schema::put);
     BOOST_REQUIRE_EQUAL(query.txs_size(), schema::txs::minrow + 2 * schema::tx);
     BOOST_REQUIRE_EQUAL(query.tx_size(), schema::transaction::minrow);
+    BOOST_REQUIRE_EQUAL(query.archive_size(), schema::header::minrow + 82u + 100u + 0u + 2 * schema::put + schema::txs::minrow + 2 * schema::tx + schema::transaction::minrow);
 }
 
 BOOST_AUTO_TEST_CASE(query_sizing__buckets__genesis__expected)
