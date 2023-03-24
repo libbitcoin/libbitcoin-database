@@ -78,10 +78,8 @@ public:
     /// Store sizing.
     /// -----------------------------------------------------------------------
 
-    /////// Store logical byte sizes.
-    ////size_t archive_body_size() const NOEXCEPT;
-
     /// Table logical byte sizes (archive bodies).
+    size_t archive_size() const NOEXCEPT;
     size_t header_size() const NOEXCEPT;
     size_t output_size() const NOEXCEPT;
     size_t input_size() const NOEXCEPT;

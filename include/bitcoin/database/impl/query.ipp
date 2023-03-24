@@ -158,24 +158,21 @@ hashes CLASS::get_hashes(const heights& heights) NOEXCEPT
 // Store sizing.
 // ----------------------------------------------------------------------------
 
-// Store logical byte sizes.
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-////TEMPLATE
-////size_t CLASS::archive_body_size() const NOEXCEPT
-////{
-////    return
-////        header_size() +
-////        output_size() +
-////        input_size() +
-////        point_size() +
-////        puts_size() +
-////        txs_size() +
-////        tx_size();
-////}
-
 // Table logical byte sizes (archive bodies).
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+TEMPLATE
+size_t CLASS::archive_size() const NOEXCEPT
+{
+    return
+        header_size() +
+        output_size() +
+        input_size() +
+        point_size() +
+        puts_size() +
+        txs_size() +
+        tx_size();
+}
 
 TEMPLATE
 size_t CLASS::header_size() const NOEXCEPT
@@ -857,7 +854,7 @@ typename CLASS::transactions_ptr CLASS::get_transactions(
 TEMPLATE
 typename CLASS::header::cptr CLASS::get_header(const header_link& link) NOEXCEPT
 {
-    table::header::record child{};
+    table::header::record_with_sk child{};
     if (!store_.header.get(link, child))
         return {};
 
@@ -867,7 +864,8 @@ typename CLASS::header::cptr CLASS::get_header(const header_link& link) NOEXCEPT
         !store_.header.get(child.parent_fk, parent))
         return {};
 
-    return system::to_shared<header>
+    // parent.key lookup precludes header::record construction. 
+    const auto ptr = system::to_shared<header>
     (
         child.version,
         std::move(parent.key),
@@ -876,6 +874,10 @@ typename CLASS::header::cptr CLASS::get_header(const header_link& link) NOEXCEPT
         child.bits,
         child.nonce
     );
+
+    // TODO: chain::header could expose hash setter via construct.
+    ptr->set_hash(std::move(child.key));
+    return ptr;
 }
 
 TEMPLATE
@@ -900,7 +902,7 @@ TEMPLATE
 typename CLASS::transaction::cptr CLASS::get_transaction(
     const tx_link& link) NOEXCEPT
 {
-    table::transaction::only tx{};
+    table::transaction::only_with_sk tx{};
     if (!store_.tx.get(link, tx))
         return {};
 
@@ -923,13 +925,17 @@ typename CLASS::transaction::cptr CLASS::get_transaction(
         if (!push_bool(*outputs, get_output(fk)))
             return {};
 
-    return system::to_shared<transaction>
+    const auto ptr = system::to_shared<transaction>
     (
         tx.version,
         inputs,
         outputs,
         tx.locktime
     );
+
+    // TODO: chain::transaction could expose hash setter via construct.
+    ptr->set_hash(std::move(tx.key));
+    return ptr;
 }
 
 TEMPLATE
@@ -1054,6 +1060,8 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     if (tx.is_empty())
         return {};
 
+    // This hash computation should be cached by the message deserializer.
+    // Non-witness tx hash is used for identity, as it is the input reference.
     const auto key = tx.hash(false);
     auto tx_fk = to_tx(key);
     if (!tx_fk.is_terminal())
@@ -1162,6 +1170,7 @@ header_link CLASS::set_link(const header& header, const context& ctx) NOEXCEPT
     if (parent_fk.is_terminal() != (parent_sk == system::null_hash))
         return {};
 
+    // This hash computation should be cached by the message deserializer.
     const auto key = header.hash();
     auto header_fk = to_header(key);
     if (!header_fk.is_terminal())

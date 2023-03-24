@@ -158,6 +158,21 @@ struct transaction
         puts::integer ins_fk{};
     };
 
+    struct only_with_sk
+      : public only
+    {
+        BC_PUSH_WARNING(NO_METHOD_HIDING)
+        inline bool from_data(reader& source) NOEXCEPT
+        BC_POP_WARNING()
+        {
+            source.rewind_bytes(sk);
+            key = source.read_hash();
+            return only::from_data(source);
+        }
+
+        search_key key{};
+    };
+
     struct record_puts_count
       : public schema::transaction
     {
