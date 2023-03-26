@@ -1719,8 +1719,8 @@ bool CLASS::initialize(const block& genesis) NOEXCEPT
     const auto link = to_header(genesis.hash());
 
     return set_strong(header_link{ 0 })
-        && set_tx_connected(tx_link{ 0 }, ctx, fees, sigops)
-        && set_block_confirmable(link, fees)
+        && set_tx_connected(tx_link{ 0 }, ctx, fees, sigops) // tx valid.
+        && set_block_confirmable(link, fees) // rename, block valid step.
         && push_candidate(link)
         && push_confirmed(link);
     // ========================================================================
