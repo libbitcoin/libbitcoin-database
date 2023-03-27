@@ -74,25 +74,25 @@ const table::validated_tx::slab out2
 };
 const data_chunk expected_head = base16_chunk
 (
-    "00000000"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-    "22000000"
+    "0000000000"
+    "ffffffffff"
+    "ffffffffff"
+    "ffffffffff"
+    "ffffffffff"
+    "2300000000"
 );
 const data_chunk closed_head = base16_chunk
 (
-    "38000000"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-    "22000000"
+    "3a00000000"
+    "ffffffffff"
+    "ffffffffff"
+    "ffffffffff"
+    "ffffffffff"
+    "2300000000"
 );
 const data_chunk expected_body = base16_chunk
 (
-    "ffffffff"           // next->end
+    "ffffffffff"         // next->end
     "01020304"           // key1
     "44332211"           // flags1
     "887766"             // height1
@@ -101,7 +101,7 @@ const data_chunk expected_body = base16_chunk
     "ff8877665544332211" // fees1
     "fe78563412"         // sigops1
 
-    "00000000"           // next->
+    "0000000000"         // next->
     "a1a2a3a4"           // key2
     "ddccbbaa"           // flags2
     "112233"             // height2
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(validated_tx__put__two__expected)
 
     table::validated_tx::link link2{};
     BOOST_REQUIRE(instance.put_link(link2, key2, in2));
-    BOOST_REQUIRE_EQUAL(link2, 0x22u);
+    BOOST_REQUIRE_EQUAL(link2, 0x23u);
 
     BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(validated_tx__get__two__expected)
     table::validated_tx::slab out{};
     BOOST_REQUIRE(instance.get(0, out));
     BOOST_REQUIRE(out == out1);
-    BOOST_REQUIRE(instance.get(0x22, out));
+    BOOST_REQUIRE(instance.get(0x23, out));
     BOOST_REQUIRE(out == out2);
 }
 

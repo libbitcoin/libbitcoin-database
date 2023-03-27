@@ -216,6 +216,39 @@ size_t CLASS::tx_size() const NOEXCEPT
     return store_.tx.body_size();
 }
 
+// Table logical byte sizes (metadata bodies).
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+TEMPLATE
+size_t CLASS::candidate_size() const NOEXCEPT
+{
+    return store_.candidate.body_size();
+}
+
+TEMPLATE
+size_t CLASS::confirmed_size() const NOEXCEPT
+{
+    return store_.confirmed.body_size();
+}
+
+TEMPLATE
+size_t CLASS::strong_tx_size() const NOEXCEPT
+{
+    return store_.strong_tx.body_size();
+}
+
+TEMPLATE
+size_t CLASS::validated_tx_size() const NOEXCEPT
+{
+    return store_.validated_tx.body_size();
+}
+
+TEMPLATE
+size_t CLASS::validated_bk_size() const NOEXCEPT
+{
+    return store_.validated_bk.body_size();
+}
+
 // Buckets (archive hash tables).
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -249,6 +282,27 @@ size_t CLASS::tx_buckets() const NOEXCEPT
     return store_.tx.buckets();
 }
 
+// Buckets (metadata hash tables).
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+TEMPLATE
+size_t CLASS::strong_tx_buckets() const NOEXCEPT
+{
+    return store_.strong_tx.buckets();
+}
+
+TEMPLATE
+size_t CLASS::validated_tx_buckets() const NOEXCEPT
+{
+    return store_.validated_tx.buckets();
+}
+
+TEMPLATE
+size_t CLASS::validated_bk_buckets() const NOEXCEPT
+{
+    return store_.validated_bk.buckets();
+}
+
 //  Counts (archive records).
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -274,6 +328,27 @@ TEMPLATE
 size_t CLASS::tx_records() const NOEXCEPT
 {
     return store_.tx.count();
+}
+
+//  Counts (metadata records).
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+TEMPLATE
+size_t CLASS::candidate_records() const NOEXCEPT
+{
+    return store_.candidate.count();
+}
+
+TEMPLATE
+size_t CLASS::confirmed_records() const NOEXCEPT
+{
+    return store_.confirmed.count();
+}
+
+TEMPLATE
+size_t CLASS::strong_tx_records() const NOEXCEPT
+{
+    return store_.strong_tx.count();
 }
 
 // Counters (archive slabs).
@@ -1719,8 +1794,8 @@ bool CLASS::initialize(const block& genesis) NOEXCEPT
     const auto link = to_header(genesis.hash());
 
     return set_strong(header_link{ 0 })
-        && set_tx_connected(tx_link{ 0 }, ctx, fees, sigops)
-        && set_block_confirmable(link, fees)
+        && set_tx_connected(tx_link{ 0 }, ctx, fees, sigops) // tx valid.
+        && set_block_confirmable(link, fees) // rename, block valid step.
         && push_candidate(link)
         && push_confirmed(link);
     // ========================================================================

@@ -88,6 +88,13 @@ public:
     size_t txs_size() const NOEXCEPT;
     size_t tx_size() const NOEXCEPT;
 
+    /// Table logical byte sizes (metadata bodies).
+    size_t candidate_size() const NOEXCEPT;
+    size_t confirmed_size() const NOEXCEPT;
+    size_t strong_tx_size() const NOEXCEPT;
+    size_t validated_tx_size() const NOEXCEPT;
+    size_t validated_bk_size() const NOEXCEPT;
+
     /// Buckets (archive hash tables).
     size_t header_buckets() const NOEXCEPT;
     size_t point_buckets() const NOEXCEPT;
@@ -95,11 +102,21 @@ public:
     size_t txs_buckets() const NOEXCEPT;
     size_t tx_buckets() const NOEXCEPT;
 
+    /// Buckets (metadata hash tables).
+    size_t strong_tx_buckets() const NOEXCEPT;
+    size_t validated_tx_buckets() const NOEXCEPT;
+    size_t validated_bk_buckets() const NOEXCEPT;
+
     /// Counts (archive records).
     size_t header_records() const NOEXCEPT;
     size_t point_records() const NOEXCEPT;
     size_t puts_records() const NOEXCEPT;
     size_t tx_records() const NOEXCEPT;
+
+    /// Counts (metadata records).
+    size_t candidate_records() const NOEXCEPT;
+    size_t confirmed_records() const NOEXCEPT;
+    size_t strong_tx_records() const NOEXCEPT;
 
     /// Counters (archive slabs).
     /// header_records is upper bound for txs_slabs (in terms of collision).
