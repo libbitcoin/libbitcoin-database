@@ -110,8 +110,8 @@ namespace schema
     constexpr size_t txs_ = 4;      // ->txs slab.
     constexpr size_t tx = 4;        // ->tx record.
     constexpr size_t block = 3;     // ->header record.
-    constexpr size_t bk_slab = 4;   // ->validated_bk record (guestimate).
-    constexpr size_t tx_slab = 4;   // ->validated_tk record (guestimate).
+    constexpr size_t bk_slab = 3;   // ->validated_bk record.
+    constexpr size_t tx_slab = 5;   // ->validated_tk record.
     constexpr size_t buffer_ = 5;   // ->buffer record (guestimate).
     constexpr size_t neutrino_ = 5; // ->neutrino record (guestimate).
 
@@ -335,7 +335,7 @@ namespace schema
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
         static_assert(minsize == 2u);
-        static_assert(minrow == 9u);
+        static_assert(minrow == 8u);
     };
 
     // modest (sk:4) slab multimap, with low multiple rate.
@@ -353,7 +353,7 @@ namespace schema
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
         static_assert(minsize == 14u);
-        static_assert(minrow == 22u);
+        static_assert(minrow == 23u);
     };
 }
 
