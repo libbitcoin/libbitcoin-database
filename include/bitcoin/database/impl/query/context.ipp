@@ -72,19 +72,19 @@ bool CLASS::get_timestamp(uint32_t& time, size_t height,
     return get_timestamp(time, to_candidate(height));
 }
 
-TEMPLATE
-bool CLASS::get_block_hash(hash_digest& hash, size_t height,
-    const header& header, size_t header_height) const
-{
-    if (height == header_height)
-    {
-        hash = header.hash();
-        return true;
-    }
-
-    hash = get_header_key(to_candidate(height));
-    return hash != system::null_hash;
-}
+////TEMPLATE
+////bool CLASS::get_block_hash(hash_digest& hash, size_t height,
+////    const header& header, size_t header_height) const
+////{
+////    if (height == header_height)
+////    {
+////        hash = header.hash();
+////        return true;
+////    }
+////
+////    hash = get_header_key(to_candidate(height));
+////    return hash != system::null_hash;
+////}
 
 TEMPLATE
 bool CLASS::populate_bits(chain_state::data& data, const chain_state::map& map,
