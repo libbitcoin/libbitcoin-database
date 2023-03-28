@@ -57,6 +57,7 @@ public:
     using inputs_ptr = system::chain::inputs_ptr;
     using outputs_ptr = system::chain::outputs_ptr;
     using transactions_ptr = system::chain::transactions_ptr;
+    using chain_state = system::chain::chain_state;
     using chain_state_ptr = system::chain::chain_state::ptr;
     using sizes = std::pair<size_t, size_t>;
     using heights = std_vector<size_t>;
@@ -79,7 +80,38 @@ public:
     /// Chain state.
     /// -----------------------------------------------------------------------
 
-    ////chain_state_ptr get_chain_state(size_t height) const NOEXCEPT;
+    chain_state_ptr get_chain_state(size_t height) const NOEXCEPT;
+
+    // TODO: private.
+    bool get_bits(uint32_t& bits, size_t height, const header& header,
+        size_t header_height, bool candidate) const NOEXCEPT;
+    bool get_version(uint32_t& version, size_t height, const header& header,
+        size_t header_height, bool candidate) const NOEXCEPT;
+    bool get_timestamp(uint32_t& time, size_t height, const header& header,
+        size_t header_height, bool candidate) const NOEXCEPT;
+    bool get_block_hash(hash_digest& hash, size_t height, const header& header,
+        size_t header_height, bool candidate) const;
+
+    // TODO: protected.
+    bool populate_bits(chain_state::data& data, const chain_state::map& map,
+        const header& header, size_t header_height,
+        bool confirmed) const NOEXCEPT;
+    bool populate_versions(chain_state::data& data,
+        const chain_state::map& map, const header& header,
+        size_t header_height, bool candidate) const NOEXCEPT;
+    bool populate_timestamps(chain_state::data& data,
+        const chain_state::map& map, const header& header,
+        size_t header_height, bool candidate) const NOEXCEPT;
+    bool populate_all(chain_state::data& data,
+        const system::settings& settings, const header& header, size_t height,
+        bool candidate) const NOEXCEPT;
+
+    // TODO: protected.
+    chain_state_ptr populate(bool candidate) const NOEXCEPT;
+    chain_state_ptr populate(size_t header_height,
+        bool candidate) const NOEXCEPT;
+    chain_state_ptr populate(const header& header, size_t header_height,
+        bool candidate) const NOEXCEPT;
 
     /// Store sizing.
     /// -----------------------------------------------------------------------
