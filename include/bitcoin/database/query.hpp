@@ -335,8 +335,8 @@ protected:
         size_t header_height) const NOEXCEPT;
     bool get_timestamp(uint32_t& time, size_t height, const header& header,
         size_t header_height) const NOEXCEPT;
-    bool get_block_hash(hash_digest& hash, size_t height, const header& header,
-        size_t header_height) const;
+    ////bool get_block_hash(hash_digest& hash, size_t height, const header& header,
+    ////    size_t header_height) const;
 
     bool populate_bits(chain_state::data& data, const chain_state::map& map,
         const header& header, size_t header_height) const NOEXCEPT;
