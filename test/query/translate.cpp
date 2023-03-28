@@ -20,17 +20,17 @@
 #include "../mocks/blocks.hpp"
 #include "../mocks/chunk_store.hpp"
 
-struct query_translation_setup_fixture
+struct query_translate_setup_fixture
 {
-    DELETE_COPY_MOVE(query_translation_setup_fixture);
+    DELETE_COPY_MOVE(query_translate_setup_fixture);
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-    query_translation_setup_fixture() NOEXCEPT
+    query_translate_setup_fixture() NOEXCEPT
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
 
-    ~query_translation_setup_fixture() NOEXCEPT
+    ~query_translate_setup_fixture() NOEXCEPT
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
@@ -38,14 +38,14 @@ struct query_translation_setup_fixture
     BC_POP_WARNING()
 };
 
-BOOST_FIXTURE_TEST_SUITE(query_translation_tests, query_translation_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(query_translate_tests, query_translate_setup_fixture)
 
 // nop event handler.
 const auto events = [](auto, auto) {};
 
 // to_candidate
 
-BOOST_AUTO_TEST_CASE(query_translation__to_candidate__always__expected)
+BOOST_AUTO_TEST_CASE(query_translate__to_candidate__always__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_candidate__always__expected)
     BOOST_REQUIRE_EQUAL(query.to_confirmed(3), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_confirmed(4), header_link::terminal);
 
-    // key-link translation of actual candidates.
+    // key-link translate of actual candidates.
     BOOST_REQUIRE(query.push_candidate(1));
     BOOST_REQUIRE(query.push_candidate(2));
     BOOST_REQUIRE_EQUAL(query.to_candidate(0), 0u);
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_candidate__always__expected)
 
 // to_confirmed
 
-BOOST_AUTO_TEST_CASE(query_translation__to_confirmed__always__expected)
+BOOST_AUTO_TEST_CASE(query_translate__to_confirmed__always__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_confirmed__always__expected)
     BOOST_REQUIRE_EQUAL(query.to_candidate(3), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_candidate(4), header_link::terminal);
 
-    // key-link translation of actual confirmeds.
+    // key-link translate of actual confirmeds.
     BOOST_REQUIRE(query.push_confirmed(1));
     BOOST_REQUIRE(query.push_confirmed(2));
     BOOST_REQUIRE_EQUAL(query.to_confirmed(0), 0u);
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_confirmed__always__expected)
 
 // to_header
 
-BOOST_AUTO_TEST_CASE(query_translation__to_header__always__expected)
+BOOST_AUTO_TEST_CASE(query_translate__to_header__always__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_header__always__expected)
 
 // to_point
 
-BOOST_AUTO_TEST_CASE(query_translation__to_point__null_points__empty_points_table)
+BOOST_AUTO_TEST_CASE(query_translate__to_point__null_points__empty_points_table)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_point__null_points__empty_points_tabl
     BOOST_REQUIRE(store.point_body().empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_translation__to_point__points__expected)
+BOOST_AUTO_TEST_CASE(query_translate__to_point__points__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_point__points__expected)
 
 // to_tx
 
-BOOST_AUTO_TEST_CASE(query_translation__to_tx__txs__expected)
+BOOST_AUTO_TEST_CASE(query_translate__to_tx__txs__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_tx__txs__expected)
 
 // to_input_tx/to_input/to_tx_inputs/to_block_inputs
 
-BOOST_AUTO_TEST_CASE(query_translation__to_input_tx__to_input__expected)
+BOOST_AUTO_TEST_CASE(query_translate__to_input_tx__to_input__expected)
 {
     settings settings{};
     settings.input_buckets = 5;
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_input_tx__to_input__expected)
 
 // to_output_tx/to_output/to_tx_outputs/to_block_outputs
 
-BOOST_AUTO_TEST_CASE(query_translation__to_output_tx__to_output__expected)
+BOOST_AUTO_TEST_CASE(query_translate__to_output_tx__to_output__expected)
 {
     settings settings{};
     settings.input_buckets = 5;
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_output_tx__to_output__expected)
 
 // to_prevout_tx/to_prevout
 
-BOOST_AUTO_TEST_CASE(query_translation__to_prevout_tx__to_prevout__expected)
+BOOST_AUTO_TEST_CASE(query_translate__to_prevout_tx__to_prevout__expected)
 {
     settings settings{};
     settings.tx_buckets = 5;
@@ -450,7 +450,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_prevout_tx__to_prevout__expected)
 
 // to_block/set_strong/set_unstrong
 
-BOOST_AUTO_TEST_CASE(query_translation__to_block__set_strong__expected)
+BOOST_AUTO_TEST_CASE(query_translate__to_block__set_strong__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -501,7 +501,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_block__set_strong__expected)
 
 // _to_parent
 
-BOOST_AUTO_TEST_CASE(query_translation__to_parent__always__expected)
+BOOST_AUTO_TEST_CASE(query_translate__to_parent__always__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -523,7 +523,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_parent__always__expected)
 
 // to_txs
 
-BOOST_AUTO_TEST_CASE(query_translation__to_txs__always__expected)
+BOOST_AUTO_TEST_CASE(query_translate__to_txs__always__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -543,7 +543,7 @@ BOOST_AUTO_TEST_CASE(query_translation__to_txs__always__expected)
 
 // to_spenders
 
-BOOST_AUTO_TEST_CASE(query_translation__to_spenders__point__expected)
+BOOST_AUTO_TEST_CASE(query_translate__to_spenders__point__expected)
 {
     settings settings{};
     settings.tx_buckets = 5;

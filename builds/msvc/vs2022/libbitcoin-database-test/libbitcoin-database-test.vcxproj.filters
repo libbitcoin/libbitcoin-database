@@ -90,25 +90,28 @@
     <ClCompile Include="..\..\..\..\test\primitives\manager.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\archival.cpp">
+    <ClCompile Include="..\..\..\..\test\query\archive.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\confirmation.cpp">
+    <ClCompile Include="..\..\..\..\test\query\confirm.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\initialization.cpp">
+    <ClCompile Include="..\..\..\..\test\query\context.cpp">
+      <Filter>src\query</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\extent.cpp">
+      <Filter>src\query</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\initialize.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\optional.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\sizing.cpp">
+    <ClCompile Include="..\..\..\..\test\query\translate.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\translation.cpp">
-      <Filter>src\query</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\validation.cpp">
+    <ClCompile Include="..\..\..\..\test\query\validate.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\settings.cpp">
