@@ -28,6 +28,9 @@
     <Filter Include="include\bitcoin\database\impl\primitives">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\bitcoin\database\impl\query">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000001}</UniqueIdentifier>
+    </Filter>
     <Filter Include="include\bitcoin\database\locks">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000A}</UniqueIdentifier>
     </Filter>
@@ -35,7 +38,7 @@
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000B}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\database\memory\interfaces">
-      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000001}</UniqueIdentifier>
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000002}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\database\primitives">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000C}</UniqueIdentifier>
@@ -44,16 +47,16 @@
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000D}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\database\tables\archives">
-      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000002}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\database\tables\caches">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\database\tables\indexes">
+    <Filter Include="include\bitcoin\database\tables\caches">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="resource">
+    <Filter Include="include\bitcoin\database\tables\indexes">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resource">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000006}</UniqueIdentifier>
     </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000000}</UniqueIdentifier>
@@ -271,8 +274,32 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\manager.ipp">
       <Filter>include\bitcoin\database\impl\primitives</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query.ipp">
-      <Filter>include\bitcoin\database\impl</Filter>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archive.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\confirm.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\context.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\extent.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\initialize.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\optional.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\query.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\translate.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\validate.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\store.ipp">
       <Filter>include\bitcoin\database\impl</Filter>

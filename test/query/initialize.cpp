@@ -20,17 +20,17 @@
 #include "../mocks/blocks.hpp"
 #include "../mocks/chunk_store.hpp"
 
-struct query_initialization_setup_fixture
+struct query_initialize_setup_fixture
 {
-    DELETE_COPY_MOVE(query_initialization_setup_fixture);
+    DELETE_COPY_MOVE(query_initialize_setup_fixture);
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-    query_initialization_setup_fixture() NOEXCEPT
+    query_initialize_setup_fixture() NOEXCEPT
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
 
-    ~query_initialization_setup_fixture() NOEXCEPT
+    ~query_initialize_setup_fixture() NOEXCEPT
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
@@ -38,12 +38,12 @@ struct query_initialization_setup_fixture
     BC_POP_WARNING()
 };
 
-BOOST_FIXTURE_TEST_SUITE(query_initialization_tests, query_initialization_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(query_initialize_tests, query_initialize_setup_fixture)
 
 // nop event handler.
 const auto events = [](auto, auto) {};
 
-BOOST_AUTO_TEST_CASE(query_initialization__blocks__verify__expected)
+BOOST_AUTO_TEST_CASE(query_initialize__blocks__verify__expected)
 {
     BOOST_REQUIRE_EQUAL(test::block1.hash(), test::block1_hash);
     BOOST_REQUIRE_EQUAL(test::block2.hash(), test::block2_hash);
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__blocks__verify__expected)
 
 // initialize
 
-BOOST_AUTO_TEST_CASE(query_initialization__initialize__is_initialized__true)
+BOOST_AUTO_TEST_CASE(query_initialize__initialize__is_initialized__true)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__initialize__is_initialized__true)
 
 // is_initialized
 
-BOOST_AUTO_TEST_CASE(query_initialization__is_initialized__default__false)
+BOOST_AUTO_TEST_CASE(query_initialize__is_initialized__default__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -78,19 +78,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__is_initialized__default__false)
     BOOST_REQUIRE(!query.is_initialized());
 }
 
-BOOST_AUTO_TEST_CASE(query_initialization__is_initialized__unconfirmed__false)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
-    BOOST_REQUIRE(query.set(test::genesis, test::context));
-    BOOST_REQUIRE(query.push_candidate(query.to_header(test::genesis.hash())));
-    BOOST_REQUIRE(!query.is_initialized());
-}
-
-BOOST_AUTO_TEST_CASE(query_initialization__is_initialized__candidate__false)
+BOOST_AUTO_TEST_CASE(query_initialize__is_initialized__unconfirmed__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -102,7 +90,19 @@ BOOST_AUTO_TEST_CASE(query_initialization__is_initialized__candidate__false)
     BOOST_REQUIRE(!query.is_initialized());
 }
 
-BOOST_AUTO_TEST_CASE(query_initialization__is_initialized__confirmed__false)
+BOOST_AUTO_TEST_CASE(query_initialize__is_initialized__candidate__false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE(query.set(test::genesis, test::context));
+    BOOST_REQUIRE(query.push_candidate(query.to_header(test::genesis.hash())));
+    BOOST_REQUIRE(!query.is_initialized());
+}
+
+BOOST_AUTO_TEST_CASE(query_initialize__is_initialized__confirmed__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__is_initialized__confirmed__false)
     BOOST_REQUIRE(!query.is_initialized());
 }
 
-BOOST_AUTO_TEST_CASE(query_initialization__is_initialized__candidate_and_confirmed__true)
+BOOST_AUTO_TEST_CASE(query_initialize__is_initialized__candidate_and_confirmed__true)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__is_initialized__candidate_and_confirm
 
 // get_top
 
-BOOST_AUTO_TEST_CASE(query_initialization__get_top__genesis_confirmed__0)
+BOOST_AUTO_TEST_CASE(query_initialize__get_top__genesis_confirmed__0)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__get_top__genesis_confirmed__0)
     BOOST_REQUIRE_EQUAL(query.get_top_confirmed(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_initialization__get_top__three_blocks_confirmed__2)
+BOOST_AUTO_TEST_CASE(query_initialize__get_top__three_blocks_confirmed__2)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__get_top__three_blocks_confirmed__2)
 
 // get_top_candidate
 
-BOOST_AUTO_TEST_CASE(query_initialization__get_top_candidate__genesis_candidated__0)
+BOOST_AUTO_TEST_CASE(query_initialize__get_top_candidate__genesis_candidated__0)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__get_top_candidate__genesis_candidated
     BOOST_REQUIRE_EQUAL(query.get_top_candidate(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_initialization__get_top__three_blocks_candidated__2)
+BOOST_AUTO_TEST_CASE(query_initialize__get_top__three_blocks_candidated__2)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__get_top__three_blocks_candidated__2)
 
 // get_fork
 
-BOOST_AUTO_TEST_CASE(query_initialization__get_fork__initialized__0)
+BOOST_AUTO_TEST_CASE(query_initialize__get_fork__initialized__0)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__get_fork__initialized__0)
     BOOST_REQUIRE_EQUAL(query.get_fork(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_initialization__get_fork__candidate_ahead__expected)
+BOOST_AUTO_TEST_CASE(query_initialize__get_fork__candidate_ahead__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__get_fork__candidate_ahead__expected)
     BOOST_REQUIRE_EQUAL(query.get_fork(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(query_initialization__get_fork__confirmed_ahead__expected)
+BOOST_AUTO_TEST_CASE(query_initialize__get_fork__confirmed_ahead__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__get_fork__confirmed_ahead__expected)
 
 // get_last_associated_from
 
-BOOST_AUTO_TEST_CASE(query_initialization__get_last_associated_from__terminal__max_size_t)
+BOOST_AUTO_TEST_CASE(query_initialize__get_last_associated_from__terminal__max_size_t)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__get_last_associated_from__terminal__m
     BOOST_REQUIRE_EQUAL(query.get_last_associated_from(42), 42u);
 }
 
-BOOST_AUTO_TEST_CASE(query_initialization__get_last_associated_from__initialized__zero)
+BOOST_AUTO_TEST_CASE(query_initialize__get_last_associated_from__initialized__zero)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__get_last_associated_from__initialized
     BOOST_REQUIRE_EQUAL(query.get_last_associated_from(42), 42u);
 }
 
-BOOST_AUTO_TEST_CASE(query_initialization__get_last_associated_from__non_candidate__expected)
+BOOST_AUTO_TEST_CASE(query_initialize__get_last_associated_from__non_candidate__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__get_last_associated_from__non_candida
     BOOST_REQUIRE_EQUAL(query.get_last_associated_from(3), 3u);
 }
 
-BOOST_AUTO_TEST_CASE(query_initialization__get_last_associated_from__gapped_candidate__expected)
+BOOST_AUTO_TEST_CASE(query_initialize__get_last_associated_from__gapped_candidate__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -322,7 +322,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__get_last_associated_from__gapped_cand
 
 // get_all_unassociated_above
 
-BOOST_AUTO_TEST_CASE(query_initialization__get_all_unassociated_above__initialized__empty)
+BOOST_AUTO_TEST_CASE(query_initialize__get_all_unassociated_above__initialized__empty)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__get_all_unassociated_above__initializ
     BOOST_REQUIRE(query.get_all_unassociated_above(1).empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_initialization__get_all_unassociated_above__gapped_candidate__expected)
+BOOST_AUTO_TEST_CASE(query_initialize__get_all_unassociated_above__gapped_candidate__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -365,7 +365,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__get_all_unassociated_above__gapped_ca
 
 // get_hashes
 
-BOOST_AUTO_TEST_CASE(query_initialization__get_hashes__initialized__one)
+BOOST_AUTO_TEST_CASE(query_initialize__get_hashes__initialized__one)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(query_initialization__get_hashes__initialized__one)
     BOOST_REQUIRE_EQUAL(query.get_hashes({ 0, 1, 2, 4, 6, 8 }).size(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(query_initialization__get_hashes__gapped__expected)
+BOOST_AUTO_TEST_CASE(query_initialize__get_hashes__gapped__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;

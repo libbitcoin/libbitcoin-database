@@ -20,17 +20,17 @@
 #include "../mocks/blocks.hpp"
 #include "../mocks/chunk_store.hpp"
 
-struct query_confirmation_setup_fixture
+struct query_confirm_setup_fixture
 {
-    DELETE_COPY_MOVE(query_confirmation_setup_fixture);
+    DELETE_COPY_MOVE(query_confirm_setup_fixture);
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-    query_confirmation_setup_fixture() NOEXCEPT
+    query_confirm_setup_fixture() NOEXCEPT
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
 
-    ~query_confirmation_setup_fixture() NOEXCEPT
+    ~query_confirm_setup_fixture() NOEXCEPT
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
@@ -38,13 +38,13 @@ struct query_confirmation_setup_fixture
     BC_POP_WARNING()
 };
 
-BOOST_FIXTURE_TEST_SUITE(query_confirmation_tests, query_confirmation_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(query_confirm_tests, query_confirm_setup_fixture)
 
 // nop event handler.
 const auto events = [](auto, auto) {};
 
 // This asserts.
-////BOOST_AUTO_TEST_CASE(query_confirmation__pop__zero__false)
+////BOOST_AUTO_TEST_CASE(query_confirm__pop__zero__false)
 ////{
 ////    settings settings{};
 ////    settings.path = TEST_DIRECTORY;
@@ -55,7 +55,7 @@ const auto events = [](auto, auto) {};
 ////    BOOST_REQUIRE(!query.pop_confirmed());
 ////}
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_candidate_block__push_pop_candidate__expected)
+BOOST_AUTO_TEST_CASE(query_confirm__is_candidate_block__push_pop_candidate__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_candidate_block__push_pop_candidate_
     BOOST_REQUIRE(!query.is_candidate_block(2));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmed_block__push_pop_confirmed__expected)
+BOOST_AUTO_TEST_CASE(query_confirm__is_confirmed_block__push_pop_confirmed__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmed_block__push_pop_confirmed_
     BOOST_REQUIRE(!query.is_confirmed_block(2));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmed_tx__confirm__expected)
+BOOST_AUTO_TEST_CASE(query_confirm__is_confirmed_tx__confirm__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmed_tx__confirm__expected)
     BOOST_REQUIRE(query.is_confirmed_tx(2));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmed_input__confirm__expected)
+BOOST_AUTO_TEST_CASE(query_confirm__is_confirmed_input__confirm__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmed_input__confirm__expected)
     BOOST_REQUIRE(query.is_confirmed_input(query.to_input(2, 0)));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmed_output__confirm__expected)
+BOOST_AUTO_TEST_CASE(query_confirm__is_confirmed_output__confirm__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmed_output__confirm__expected)
     BOOST_REQUIRE(query.is_confirmed_output(query.to_output(2, 0)));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_spent_output__genesis__false)
+BOOST_AUTO_TEST_CASE(query_confirm__is_spent_output__genesis__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_spent_output__genesis__false)
     BOOST_REQUIRE(!query.is_spent_output(query.to_output(1, 1)));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_spent_output__strong_confirmed__true)
+BOOST_AUTO_TEST_CASE(query_confirm__is_spent_output__strong_confirmed__true)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_spent_output__strong_confirmed__true
     BOOST_REQUIRE(query.is_spent_output(query.to_output(1, 1)));  // block1a
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_strong__strong__true)
+BOOST_AUTO_TEST_CASE(query_confirm__is_strong__strong__true)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_strong__strong__true)
     BOOST_REQUIRE(query.is_strong(query.to_input(0, 0)));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_strong__weak__false)
+BOOST_AUTO_TEST_CASE(query_confirm__is_strong__weak__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_strong__weak__false)
     BOOST_REQUIRE(query.is_strong(query.to_input(1, 0)));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_spent__unspent__false)
+BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unspent__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_spent__unspent__false)
     BOOST_REQUIRE(!query.is_spent(query.to_input(2, 0))); // non-existent
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_spent__unconfirmed_double_spend__false)
+BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unconfirmed_double_spend__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_spent__unconfirmed_double_spend__fal
     BOOST_REQUIRE(!query.is_spent(query.to_input(2, 1)));  // confirmed self, unconfirmed, confirmed (unspent)
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_spent__confirmed_double_spend__true)
+BOOST_AUTO_TEST_CASE(query_confirm__is_spent__confirmed_double_spend__true)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_spent__confirmed_double_spend__true)
     BOOST_REQUIRE(query.is_spent(query.to_input(2, 1))); // confirmed self and confirmed (double spent)
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_mature__spend_genesis__false)
+BOOST_AUTO_TEST_CASE(query_confirm__is_mature__spend_genesis__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_mature__spend_genesis__false)
     BOOST_REQUIRE(!query.is_mature(query.to_input(1, 0), 100));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_mature__not_found__false)
+BOOST_AUTO_TEST_CASE(query_confirm__is_mature__not_found__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_mature__not_found__false)
     BOOST_REQUIRE(!query.is_mature(query.to_input(42, 24), 1000));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_mature__null_input__true)
+BOOST_AUTO_TEST_CASE(query_confirm__is_mature__null_input__true)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -380,7 +380,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_mature__null_input__true)
     BOOST_REQUIRE(query.is_mature(query.to_input(0, 0), 0));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_mature__non_coinbase_strong_above__true)
+BOOST_AUTO_TEST_CASE(query_confirm__is_mature__non_coinbase_strong_above__true)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_mature__non_coinbase_strong_above__t
     BOOST_REQUIRE(query.is_mature(query.to_input(2, 0), 0));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_mature__non_coinbase__true)
+BOOST_AUTO_TEST_CASE(query_confirm__is_mature__non_coinbase__true)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_mature__non_coinbase__true)
     BOOST_REQUIRE(query.is_mature(query.to_input(2, 0), 1));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_mature__coinbase__expected)
+BOOST_AUTO_TEST_CASE(query_confirm__is_mature__coinbase__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_mature__coinbase__expected)
     BOOST_REQUIRE(query.is_mature(query.to_input(2, 0), 101));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmable_block__bad_link__false)
+BOOST_AUTO_TEST_CASE(query_confirm__is_confirmable_block__bad_link__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -438,7 +438,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmable_block__bad_link__false)
     BOOST_REQUIRE(!query.is_confirmable_block(2, 1));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmable_block__null_points__true)
+BOOST_AUTO_TEST_CASE(query_confirm__is_confirmable_block__null_points__true)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -457,7 +457,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmable_block__null_points__true
     BOOST_REQUIRE(query.is_confirmable_block(3, 3));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmable_block__missing_prevouts__false)
+BOOST_AUTO_TEST_CASE(query_confirm__is_confirmable_block__missing_prevouts__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -472,7 +472,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmable_block__missing_prevouts_
     BOOST_REQUIRE(!query.is_confirmable_block(1, 1));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmable_block__spend_gensis__false)
+BOOST_AUTO_TEST_CASE(query_confirm__is_confirmable_block__spend_gensis__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -489,7 +489,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmable_block__spend_gensis__fal
     BOOST_REQUIRE(!query.is_confirmable_block(1, 101));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmable_block__mature_prevouts__true)
+BOOST_AUTO_TEST_CASE(query_confirm__is_confirmable_block__mature_prevouts__true)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -513,7 +513,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmable_block__mature_prevouts__
     BOOST_REQUIRE( query.is_confirmable_block(2, 101));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmable_block__spend_non_coinbase__true)
+BOOST_AUTO_TEST_CASE(query_confirm__is_confirmable_block__spend_non_coinbase__true)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -534,7 +534,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmable_block__spend_non_coinbas
     BOOST_REQUIRE(query.is_confirmable_block(2, 2));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmable_block__spend_coinbase_and_internal__true)
+BOOST_AUTO_TEST_CASE(query_confirm__is_confirmable_block__spend_coinbase_and_internal__true)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -562,7 +562,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmable_block__spend_coinbase_an
     BOOST_REQUIRE( query.is_confirmable_block(2, 101));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmable_block__confirmed_double_spend__false)
+BOOST_AUTO_TEST_CASE(query_confirm__is_confirmable_block__confirmed_double_spend__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -587,7 +587,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmable_block__confirmed_double_
     BOOST_REQUIRE(!query.is_confirmable_block(3, 3));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmable_block__unconfirmed_double_spend_true)
+BOOST_AUTO_TEST_CASE(query_confirm__is_confirmable_block__unconfirmed_double_spend_true)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -611,7 +611,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__is_confirmable_block__unconfirmed_doubl
     BOOST_REQUIRE(query.is_confirmable_block(2, 2));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__set_strong__unassociated__false)
+BOOST_AUTO_TEST_CASE(query_confirm__set_strong__unassociated__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -624,7 +624,7 @@ BOOST_AUTO_TEST_CASE(query_confirmation__set_strong__unassociated__false)
     BOOST_REQUIRE(!query.set_unstrong(1));
 }
 
-BOOST_AUTO_TEST_CASE(query_confirmation__set_strong__set_unstrong__expected)
+BOOST_AUTO_TEST_CASE(query_confirm__set_strong__set_unstrong__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;

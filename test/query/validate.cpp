@@ -20,17 +20,17 @@
 #include "../mocks/blocks.hpp"
 #include "../mocks/chunk_store.hpp"
 
-struct query_validation_setup_fixture
+struct query_validate_setup_fixture
 {
-    DELETE_COPY_MOVE(query_validation_setup_fixture);
+    DELETE_COPY_MOVE(query_validate_setup_fixture);
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-    query_validation_setup_fixture() NOEXCEPT
+    query_validate_setup_fixture() NOEXCEPT
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
 
-    ~query_validation_setup_fixture() NOEXCEPT
+    ~query_validate_setup_fixture() NOEXCEPT
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
@@ -38,12 +38,12 @@ struct query_validation_setup_fixture
     BC_POP_WARNING()
 };
 
-BOOST_FIXTURE_TEST_SUITE(query_validation_tests, query_validation_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(query_validate_tests, query_validate_setup_fixture)
 
 // nop event handler.
 const auto events = [](auto, auto) {};
 
-BOOST_AUTO_TEST_CASE(query_validation__get_timestamp__genesis__expected)
+BOOST_AUTO_TEST_CASE(query_validate__get_timestamp__genesis__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_timestamp__genesis__expected)
     BOOST_REQUIRE_EQUAL(timestamp, 0x495fab29_u32);
 }
 
-BOOST_AUTO_TEST_CASE(query_validation__get_version__genesis__expected)
+BOOST_AUTO_TEST_CASE(query_validate__get_version__genesis__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_version__genesis__expected)
     BOOST_REQUIRE_EQUAL(version, 0x00000001_u32);
 }
 
-BOOST_AUTO_TEST_CASE(query_validation__get_bits__genesis__expected)
+BOOST_AUTO_TEST_CASE(query_validate__get_bits__genesis__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_bits__genesis__expected)
     BOOST_REQUIRE_EQUAL(bits, 0x1d00ffff_u32);
 }
 
-BOOST_AUTO_TEST_CASE(query_validation__get_context__genesis__default)
+BOOST_AUTO_TEST_CASE(query_validate__get_context__genesis__default)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_context__genesis__default)
     BOOST_REQUIRE(ctx == context{});
 }
 
-BOOST_AUTO_TEST_CASE(query_validation__get_context__invalid__default)
+BOOST_AUTO_TEST_CASE(query_validate__get_context__invalid__default)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_context__invalid__default)
     BOOST_REQUIRE(ctx == context{});
 }
 
-BOOST_AUTO_TEST_CASE(query_validation__get_context__block1__expected)
+BOOST_AUTO_TEST_CASE(query_validate__get_context__block1__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_context__block1__expected)
     BOOST_REQUIRE(ctx == expected);
 }
 
-BOOST_AUTO_TEST_CASE(query_validation__get_block_state__invalid_link__unassociated)
+BOOST_AUTO_TEST_CASE(query_validate__get_block_state__invalid_link__unassociated)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_block_state__invalid_link__unassociat
     BOOST_REQUIRE_EQUAL(fees, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_validation__get_block_state__unassociated_link__unassociated)
+BOOST_AUTO_TEST_CASE(query_validate__get_block_state__unassociated_link__unassociated)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_block_state__unassociated_link__unass
     BOOST_REQUIRE_EQUAL(fees, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_validation__get_block_state__unvalidated_link__unvalidated)
+BOOST_AUTO_TEST_CASE(query_validate__get_block_state__unvalidated_link__unvalidated)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_block_state__unvalidated_link__unvali
     BOOST_REQUIRE_EQUAL(fees, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_validation__get_block_state__confirmable__block_confirmable)
+BOOST_AUTO_TEST_CASE(query_validate__get_block_state__confirmable__block_confirmable)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_block_state__confirmable__block_confi
     BOOST_REQUIRE_EQUAL(fees, 42u);
 }
 
-BOOST_AUTO_TEST_CASE(query_validation__get_block_state__preconfirmable__block_preconfirmable)
+BOOST_AUTO_TEST_CASE(query_validate__get_block_state__preconfirmable__block_preconfirmable)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_block_state__preconfirmable__block_pr
     BOOST_REQUIRE_EQUAL(fees, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_validation__get_block_state__unconfirmable__block_unconfirmable)
+BOOST_AUTO_TEST_CASE(query_validate__get_block_state__unconfirmable__block_unconfirmable)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_block_state__unconfirmable__block_unc
     BOOST_REQUIRE_EQUAL(fees, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__invalid_link__unvalidated)
+BOOST_AUTO_TEST_CASE(query_validate__get_tx_state__invalid_link__unvalidated)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__invalid_link__unvalidated)
     BOOST_REQUIRE_EQUAL(fee, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__unvalidated__unvalidated)
+BOOST_AUTO_TEST_CASE(query_validate__get_tx_state__unvalidated__unvalidated)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__unvalidated__unvalidated)
     BOOST_REQUIRE_EQUAL(fee, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_out_of_context__unvalidated)
+BOOST_AUTO_TEST_CASE(query_validate__get_tx_state__connected_out_of_context__unvalidated)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_out_of_context__u
     BOOST_REQUIRE_EQUAL(sigops, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_in_context__tx_connected)
+BOOST_AUTO_TEST_CASE(query_validate__get_tx_state__connected_in_context__tx_connected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -328,7 +328,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_in_context__tx_co
     BOOST_REQUIRE_EQUAL(sigops, expected_sigops);
 }
 
-BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_in_context__tx_preconnected)
+BOOST_AUTO_TEST_CASE(query_validate__get_tx_state__connected_in_context__tx_preconnected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_in_context__tx_pr
     BOOST_REQUIRE_EQUAL(sigops, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_validation__get_tx_state__connected_in_context__tx_disconnected)
+BOOST_AUTO_TEST_CASE(query_validate__get_tx_state__connected_in_context__tx_disconnected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;

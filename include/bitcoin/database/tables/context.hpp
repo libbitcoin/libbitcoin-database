@@ -23,8 +23,6 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/tables/schema.hpp>
 
-// TODO: rationalize with chain::context.
-
 namespace libbitcoin {
 namespace database {
 

@@ -20,17 +20,17 @@
 #include "../mocks/blocks.hpp"
 #include "../mocks/chunk_store.hpp"
 
-struct query_sizing_setup_fixture
+struct query_extent_setup_fixture
 {
-    DELETE_COPY_MOVE(query_sizing_setup_fixture);
+    DELETE_COPY_MOVE(query_extent_setup_fixture);
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-    query_sizing_setup_fixture() NOEXCEPT
+    query_extent_setup_fixture() NOEXCEPT
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
 
-    ~query_sizing_setup_fixture() NOEXCEPT
+    ~query_extent_setup_fixture() NOEXCEPT
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
@@ -38,12 +38,12 @@ struct query_sizing_setup_fixture
     BC_POP_WARNING()
 };
 
-BOOST_FIXTURE_TEST_SUITE(query_sizing_tests, query_sizing_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(query_extent_tests, query_extent_setup_fixture)
 
 // nop event handler.
 const auto events = [](auto, auto) {};
 
-BOOST_AUTO_TEST_CASE(query_sizing__size__genesis__expected)
+BOOST_AUTO_TEST_CASE(query_extent__sizes__genesis__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -52,6 +52,7 @@ BOOST_AUTO_TEST_CASE(query_sizing__size__genesis__expected)
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
 
+    BOOST_REQUIRE_EQUAL(query.archive_size(), schema::header::minrow + 82u + 100u + 0u + 2 * schema::put + schema::txs::minrow + 2 * schema::tx + schema::transaction::minrow);
     BOOST_REQUIRE_EQUAL(query.header_size(), schema::header::minrow);
     BOOST_REQUIRE_EQUAL(query.output_size(), 82u);
     BOOST_REQUIRE_EQUAL(query.input_size(), 100u);
@@ -59,10 +60,15 @@ BOOST_AUTO_TEST_CASE(query_sizing__size__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.puts_size(), 2 * schema::put);
     BOOST_REQUIRE_EQUAL(query.txs_size(), schema::txs::minrow + 2 * schema::tx);
     BOOST_REQUIRE_EQUAL(query.tx_size(), schema::transaction::minrow);
-    BOOST_REQUIRE_EQUAL(query.archive_size(), schema::header::minrow + 82u + 100u + 0u + 2 * schema::put + schema::txs::minrow + 2 * schema::tx + schema::transaction::minrow);
+
+    BOOST_REQUIRE_EQUAL(query.candidate_size(), schema::height::minrow);
+    BOOST_REQUIRE_EQUAL(query.confirmed_size(), schema::height::minrow);
+    BOOST_REQUIRE_EQUAL(query.strong_tx_size(), schema::strong_tx::minrow);
+    BOOST_REQUIRE_EQUAL(query.validated_tx_size(), schema::validated_tx::minrow);
+    BOOST_REQUIRE_EQUAL(query.validated_bk_size(), schema::validated_bk::minrow);
 }
 
-BOOST_AUTO_TEST_CASE(query_sizing__buckets__genesis__expected)
+BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -76,9 +82,13 @@ BOOST_AUTO_TEST_CASE(query_sizing__buckets__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.input_buckets(), 100u);
     BOOST_REQUIRE_EQUAL(query.txs_buckets(), 100u);
     BOOST_REQUIRE_EQUAL(query.tx_buckets(), 100u);
+
+    BOOST_REQUIRE_EQUAL(query.strong_tx_buckets(), 100u);
+    BOOST_REQUIRE_EQUAL(query.validated_tx_buckets(), 100u);
+    BOOST_REQUIRE_EQUAL(query.validated_bk_buckets(), 100u);
 }
 
-BOOST_AUTO_TEST_CASE(query_sizing__records__genesis__expected)
+BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -92,9 +102,13 @@ BOOST_AUTO_TEST_CASE(query_sizing__records__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.point_records(), 0u);
     BOOST_REQUIRE_EQUAL(query.puts_records(), 2u);
     BOOST_REQUIRE_EQUAL(query.tx_records(), 1u);
+
+    BOOST_REQUIRE_EQUAL(query.candidate_records(), 1u);
+    BOOST_REQUIRE_EQUAL(query.confirmed_records(), 1u);
+    BOOST_REQUIRE_EQUAL(query.strong_tx_records(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(query_sizing__slabs__genesis__expected)
+BOOST_AUTO_TEST_CASE(query_extent__slabs__genesis__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;

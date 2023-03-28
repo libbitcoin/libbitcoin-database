@@ -80,13 +80,14 @@ test_libbitcoin_database_test_SOURCES = \
     test/primitives/iterator.cpp \
     test/primitives/linkage.cpp \
     test/primitives/manager.cpp \
-    test/query/archival.cpp \
-    test/query/confirmation.cpp \
-    test/query/initialization.cpp \
+    test/query/archive.cpp \
+    test/query/confirm.cpp \
+    test/query/context.cpp \
+    test/query/extent.cpp \
+    test/query/initialize.cpp \
     test/query/optional.cpp \
-    test/query/sizing.cpp \
-    test/query/translation.cpp \
-    test/query/validation.cpp \
+    test/query/translate.cpp \
+    test/query/validate.cpp \
     test/tables/archives/header.cpp \
     test/tables/archives/input.cpp \
     test/tables/archives/output.cpp \
@@ -141,7 +142,6 @@ include_bitcoin_database_file_HEADERS = \
 
 include_bitcoin_database_impldir = ${includedir}/bitcoin/database/impl
 include_bitcoin_database_impl_HEADERS = \
-    include/bitcoin/database/impl/query.ipp \
     include/bitcoin/database/impl/store.ipp
 
 include_bitcoin_database_impl_memorydir = ${includedir}/bitcoin/database/impl/memory
@@ -156,6 +156,18 @@ include_bitcoin_database_impl_primitives_HEADERS = \
     include/bitcoin/database/impl/primitives/iterator.ipp \
     include/bitcoin/database/impl/primitives/linkage.ipp \
     include/bitcoin/database/impl/primitives/manager.ipp
+
+include_bitcoin_database_impl_querydir = ${includedir}/bitcoin/database/impl/query
+include_bitcoin_database_impl_query_HEADERS = \
+    include/bitcoin/database/impl/query/archive.ipp \
+    include/bitcoin/database/impl/query/confirm.ipp \
+    include/bitcoin/database/impl/query/context.ipp \
+    include/bitcoin/database/impl/query/extent.ipp \
+    include/bitcoin/database/impl/query/initialize.ipp \
+    include/bitcoin/database/impl/query/optional.ipp \
+    include/bitcoin/database/impl/query/query.ipp \
+    include/bitcoin/database/impl/query/translate.ipp \
+    include/bitcoin/database/impl/query/validate.ipp
 
 include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks
 include_bitcoin_database_locks_HEADERS = \
