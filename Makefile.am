@@ -141,7 +141,6 @@ include_bitcoin_database_file_HEADERS = \
 
 include_bitcoin_database_impldir = ${includedir}/bitcoin/database/impl
 include_bitcoin_database_impl_HEADERS = \
-    include/bitcoin/database/impl/query.ipp \
     include/bitcoin/database/impl/store.ipp
 
 include_bitcoin_database_impl_memorydir = ${includedir}/bitcoin/database/impl/memory
@@ -156,6 +155,18 @@ include_bitcoin_database_impl_primitives_HEADERS = \
     include/bitcoin/database/impl/primitives/iterator.ipp \
     include/bitcoin/database/impl/primitives/linkage.ipp \
     include/bitcoin/database/impl/primitives/manager.ipp
+
+include_bitcoin_database_impl_querydir = ${includedir}/bitcoin/database/impl/query
+include_bitcoin_database_impl_query_HEADERS = \
+    include/bitcoin/database/impl/query/archive.ipp \
+    include/bitcoin/database/impl/query/confirm.ipp \
+    include/bitcoin/database/impl/query/context.ipp \
+    include/bitcoin/database/impl/query/extent.ipp \
+    include/bitcoin/database/impl/query/initialize.ipp \
+    include/bitcoin/database/impl/query/optional.ipp \
+    include/bitcoin/database/impl/query/query.ipp \
+    include/bitcoin/database/impl/query/translate.ipp \
+    include/bitcoin/database/impl/query/validate.ipp
 
 include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks
 include_bitcoin_database_locks_HEADERS = \

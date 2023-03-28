@@ -142,7 +142,15 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\iterator.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\linkage.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\manager.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archive.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\confirm.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\context.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\extent.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\initialize.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\optional.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\query.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\translate.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\validate.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\store.ipp" />
     <None Include="packages.config" />
   </ItemGroup>

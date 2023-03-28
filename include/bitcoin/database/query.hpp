@@ -57,6 +57,7 @@ public:
     using inputs_ptr = system::chain::inputs_ptr;
     using outputs_ptr = system::chain::outputs_ptr;
     using transactions_ptr = system::chain::transactions_ptr;
+    using chain_state_ptr = system::chain::chain_state::ptr;
     using sizes = std::pair<size_t, size_t>;
     using heights = std_vector<size_t>;
     using filter = system::data_chunk;
@@ -74,6 +75,11 @@ public:
     size_t get_last_associated_from(size_t height) const NOEXCEPT;
     hashes get_all_unassociated_above(size_t height) const NOEXCEPT;
     hashes get_hashes(const heights& heights) const NOEXCEPT;
+
+    /// Chain state.
+    /// -----------------------------------------------------------------------
+
+    ////chain_state_ptr get_chain_state(size_t height) const NOEXCEPT;
 
     /// Store sizing.
     /// -----------------------------------------------------------------------
@@ -327,7 +333,21 @@ private:
 #define TEMPLATE template <typename Store>
 #define CLASS query<Store>
 
-#include <bitcoin/database/impl/query.ipp>
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+BC_PUSH_WARNING(NO_USE_OF_MOVED_OBJECT)
+
+#include <bitcoin/database/impl/query/query.ipp>
+#include <bitcoin/database/impl/query/archive.ipp>
+#include <bitcoin/database/impl/query/confirm.ipp>
+#include <bitcoin/database/impl/query/context.ipp>
+#include <bitcoin/database/impl/query/initialize.ipp>
+#include <bitcoin/database/impl/query/optional.ipp>
+#include <bitcoin/database/impl/query/extent.ipp>
+#include <bitcoin/database/impl/query/translate.ipp>
+#include <bitcoin/database/impl/query/validate.ipp>
+
+BC_POP_WARNING()
+BC_POP_WARNING()
 
 #undef CLASS
 #undef TEMPLATE
