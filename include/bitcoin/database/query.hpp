@@ -77,42 +77,6 @@ public:
     hashes get_all_unassociated_above(size_t height) const NOEXCEPT;
     hashes get_hashes(const heights& heights) const NOEXCEPT;
 
-    /// Chain state.
-    /// -----------------------------------------------------------------------
-
-    chain_state_ptr get_chain_state(size_t height) const NOEXCEPT;
-
-    // TODO: private.
-    bool get_bits(uint32_t& bits, size_t height, const header& header,
-        size_t header_height, bool candidate) const NOEXCEPT;
-    bool get_version(uint32_t& version, size_t height, const header& header,
-        size_t header_height, bool candidate) const NOEXCEPT;
-    bool get_timestamp(uint32_t& time, size_t height, const header& header,
-        size_t header_height, bool candidate) const NOEXCEPT;
-    bool get_block_hash(hash_digest& hash, size_t height, const header& header,
-        size_t header_height, bool candidate) const;
-
-    // TODO: protected.
-    bool populate_bits(chain_state::data& data, const chain_state::map& map,
-        const header& header, size_t header_height,
-        bool confirmed) const NOEXCEPT;
-    bool populate_versions(chain_state::data& data,
-        const chain_state::map& map, const header& header,
-        size_t header_height, bool candidate) const NOEXCEPT;
-    bool populate_timestamps(chain_state::data& data,
-        const chain_state::map& map, const header& header,
-        size_t header_height, bool candidate) const NOEXCEPT;
-    bool populate_all(chain_state::data& data,
-        const system::settings& settings, const header& header, size_t height,
-        bool candidate) const NOEXCEPT;
-
-    // TODO: protected.
-    chain_state_ptr populate(bool candidate) const NOEXCEPT;
-    chain_state_ptr populate(size_t header_height,
-        bool candidate) const NOEXCEPT;
-    chain_state_ptr populate(const header& header, size_t header_height,
-        bool candidate) const NOEXCEPT;
-
     /// Store sizing.
     /// -----------------------------------------------------------------------
 
@@ -258,6 +222,16 @@ public:
     bool set(const header_link& link, const hashes& hashes) NOEXCEPT;
     bool set(const header_link& link, const tx_links& links) NOEXCEPT;
 
+    /// Chain state.
+    /// -----------------------------------------------------------------------
+
+    chain_state_ptr get_chain_state(
+        const system::settings& settings) const NOEXCEPT;
+    chain_state_ptr get_chain_state(const system::settings& settings,
+        size_t height) const NOEXCEPT;
+    chain_state_ptr get_chain_state(const system::settings& settings,
+        const header& header, size_t height) const NOEXCEPT;
+
     /// Validation (surrogate-keyed).
     /// -----------------------------------------------------------------------
 
@@ -341,6 +315,13 @@ protected:
     using input_key = table::input::search_key;
     using puts_link = table::puts::link;
 
+    inline txs_link to_txs_link(const header_link& link) const NOEXCEPT;
+    inline input_key make_foreign_point(const point& prevout) const NOEXCEPT;
+    inline code to_block_code(linkage<schema::code>::integer value) const NOEXCEPT;
+    inline code to_tx_code(linkage<schema::code>::integer value) const NOEXCEPT;
+    inline bool is_sufficient(const context& current,
+        const context& evaluated) const NOEXCEPT;
+
     height_link get_height(const header_link& link) const NOEXCEPT;
     input_links to_spenders(const table::input::search_key& key) const NOEXCEPT;
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
@@ -348,12 +329,26 @@ protected:
     bool is_spent_prevout(const table::input::search_key& key,
         const input_link& self) const NOEXCEPT;
 
-    inline txs_link to_txs_link(const header_link& link) const NOEXCEPT;
-    inline input_key make_foreign_point(const point& prevout) const NOEXCEPT;
-    inline code to_block_code(linkage<schema::code>::integer value) const NOEXCEPT;
-    inline code to_tx_code(linkage<schema::code>::integer value) const NOEXCEPT;
-    inline bool is_sufficient(const context& current,
-        const context& evaluated) const NOEXCEPT;
+    bool get_bits(uint32_t& bits, size_t height, const header& header,
+        size_t header_height) const NOEXCEPT;
+    bool get_version(uint32_t& version, size_t height, const header& header,
+        size_t header_height) const NOEXCEPT;
+    bool get_timestamp(uint32_t& time, size_t height, const header& header,
+        size_t header_height) const NOEXCEPT;
+    bool get_block_hash(hash_digest& hash, size_t height, const header& header,
+        size_t header_height) const;
+
+    bool populate_bits(chain_state::data& data, const chain_state::map& map,
+        const header& header, size_t header_height) const NOEXCEPT;
+    bool populate_versions(chain_state::data& data,
+        const chain_state::map& map, const header& header,
+        size_t header_height) const NOEXCEPT;
+    bool populate_timestamps(chain_state::data& data,
+        const chain_state::map& map, const header& header,
+        size_t header_height) const NOEXCEPT;
+    bool populate_all(chain_state::data& data,
+        const system::settings& settings, const header& header,
+        size_t header_height) const NOEXCEPT;
 
 private:
     Store& store_;

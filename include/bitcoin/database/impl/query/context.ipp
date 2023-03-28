@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_CONTEXT_IPP
 #define LIBBITCOIN_DATABASE_QUERY_CONTEXT_IPP
 
+#include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -30,17 +31,11 @@ static constexpr uint32_t unspecified_timestamp = max_uint32;
 
 // Chain state.
 // ----------------------------------------------------------------------------
-
-TEMPLATE
-CLASS::chain_state_ptr CLASS::get_chain_state(size_t height) const NOEXCEPT
-{
-    // TODO:
-    return {};
-}
+// This is not the most efficient approach, but these are used very lightly.
 
 TEMPLATE
 bool CLASS::get_bits(uint32_t& bits, size_t height, const header& header,
-    size_t header_height, bool candidate) const NOEXCEPT
+    size_t header_height) const NOEXCEPT
 {
     if (height == header_height)
     {
@@ -48,12 +43,12 @@ bool CLASS::get_bits(uint32_t& bits, size_t height, const header& header,
         return true;
     }
 
-    return {}; ////fast_chain_.get_bits(bits, height, candidate);
+    return get_bits(bits, to_candidate(height));
 }
 
 TEMPLATE
 bool CLASS::get_version(uint32_t& version, size_t height,
-    const header& header, size_t header_height, bool candidate) const NOEXCEPT
+    const header& header, size_t header_height) const NOEXCEPT
 {
     if (height == header_height)
     {
@@ -61,12 +56,12 @@ bool CLASS::get_version(uint32_t& version, size_t height,
         return true;
     }
 
-    return {}; ////fast_chain_.get_version(version, height, candidate);
+    return get_version(version, to_candidate(height));
 }
 
 TEMPLATE
 bool CLASS::get_timestamp(uint32_t& time, size_t height,
-    const header& header, size_t header_height, bool candidate) const NOEXCEPT
+    const header& header, size_t header_height) const NOEXCEPT
 {
     if (height == header_height)
     {
@@ -74,12 +69,12 @@ bool CLASS::get_timestamp(uint32_t& time, size_t height,
         return true;
     }
 
-    return {}; ////fast_chain_.get_timestamp(time, height, candidate);
+    return get_timestamp(time, to_candidate(height));
 }
 
 TEMPLATE
 bool CLASS::get_block_hash(hash_digest& hash, size_t height,
-    const header& header, size_t header_height, bool candidate) const
+    const header& header, size_t header_height) const
 {
     if (height == header_height)
     {
@@ -87,46 +82,46 @@ bool CLASS::get_block_hash(hash_digest& hash, size_t height,
         return true;
     }
 
-    return {}; ////fast_chain_.get_block_hash(hash, height, candidate);
+    hash = get_header_key(to_candidate(height));
+    return hash != system::null_hash;
 }
 
 TEMPLATE
 bool CLASS::populate_bits(chain_state::data& data, const chain_state::map& map,
-    const header& header, size_t header_height, bool confirmed) const NOEXCEPT
+    const header& header, size_t header_height) const NOEXCEPT
 {
     auto& bits = data.bits.ordered;
     bits.resize(map.bits.count);
     auto height = map.bits.high - map.bits.count;
 
     for (auto& bit: bits)
-        if (!get_bits(bit, ++height, header, header_height, confirmed))
+        if (!get_bits(bit, ++height, header, header_height))
             return false;
 
-    return get_bits(data.bits.self, map.bits_self,
-        header, header_height, confirmed);
+    return get_bits(data.bits.self, map.bits_self, header, header_height);
 }
 
 TEMPLATE
 bool CLASS::populate_versions(chain_state::data& data,
-    const chain_state::map& map, const header& header, size_t header_height,
-    bool candidate) const NOEXCEPT
+    const chain_state::map& map, const header& header,
+    size_t header_height) const NOEXCEPT
 {
     auto& versions = data.version.ordered;
     versions.resize(map.version.count);
     auto height = map.version.high - map.version.count;
 
     for (auto& version: versions)
-        if (!get_version(version, ++height, header, header_height, candidate))
+        if (!get_version(version, ++height, header, header_height))
             return false;
 
     return get_version(data.version.self, map.version_self, header,
-        header_height, candidate);
+        header_height);
 }
 
 TEMPLATE
 bool CLASS::populate_timestamps(chain_state::data& data,
     const chain_state::map& map, const header& header,
-    size_t header_height, bool candidate) const NOEXCEPT
+    size_t header_height) const NOEXCEPT
 {
     data.timestamp.retarget = unspecified_timestamp;
     auto& timestamps = data.timestamp.ordered;
@@ -134,73 +129,60 @@ bool CLASS::populate_timestamps(chain_state::data& data,
     auto height = map.timestamp.high - map.timestamp.count;
 
     for (auto& timestamp: timestamps)
-        if (!get_timestamp(timestamp, ++height,
-            header, header_height, candidate))
+        if (!get_timestamp(timestamp, ++height, header, header_height))
             return false;
 
     // Retarget is required if timestamp_retarget is not unrequested.
     if (map.timestamp_retarget != chain_state::map::unrequested &&
         !get_timestamp(data.timestamp.retarget, map.timestamp_retarget,
-            header, header_height, candidate))
+            header, header_height))
     {
         return false;
     }
 
     return get_timestamp(data.timestamp.self, map.timestamp_self,
-        header, header_height, candidate);
+        header, header_height);
 }
 
 TEMPLATE
 bool CLASS::populate_all(chain_state::data& data,
-    const system::settings& settings, const header& header, size_t height,
-    bool candidate) const NOEXCEPT
+    const system::settings& settings, const header& header,
+    size_t height) const NOEXCEPT
 {
     // Construct the map to inform chain state data population.
     const auto map = chain_state::get_map(data.height, settings);
 
     return
-        populate_bits(data, map, header, height, candidate) &&
-        populate_versions(data, map, header, height, candidate) &&
-        populate_timestamps(data, map, header, height, candidate);
+        populate_bits(data, map, header, height) &&
+        populate_versions(data, map, header, height) &&
+        populate_timestamps(data, map, header, height);
 }
 
-// Populate chain state for the top block|header.
 TEMPLATE
-CLASS::chain_state_ptr CLASS::populate(bool candidate) const NOEXCEPT
+typename CLASS::chain_state_ptr CLASS::get_chain_state(
+    const system::settings& settings) const NOEXCEPT
 {
-    header header{};
-    size_t header_height{};
-
-    return {};
-    ////return fast_chain_.get_top(header, header_height, candidate) ?
-    ////    populate(header, header_height, candidate) : nullptr;
+    return get_chain_state(settings, get_top_candidate());
 }
 
-// Get chain state for the given block|header by height.
 TEMPLATE
-CLASS::chain_state_ptr CLASS::populate(size_t header_height,
-    bool candidate) const NOEXCEPT
+typename CLASS::chain_state_ptr CLASS::get_chain_state(
+    const system::settings& settings, size_t height) const NOEXCEPT
 {
-    header header{};
-
-    return {};
-    ////return fast_chain_.get_header(header, header_height, candidate) ?
-    ////    populate(header, header_height, candidate) : nullptr;
+    const auto header = get_header(to_candidate(height));
+    return header ? get_chain_state(settings, *header, height) : nullptr;
 }
 
-// Get chain state for the given block|header.
-// Only hash and height are queried from the current block/header.
 TEMPLATE
-CLASS::chain_state_ptr CLASS::populate(const header& header,
-    size_t header_height, bool candidate) const NOEXCEPT
+typename CLASS::chain_state_ptr CLASS::get_chain_state(
+    const system::settings& settings, const header& header,
+    size_t height) const NOEXCEPT
 {
-    chain_state::data data{};
-    data.height = header_height;
+    chain_state::data data{ height };
+    if (!populate_all(data, settings, header, height))
+        return nullptr;
 
-    return {};
-    ////return populate_all(data, header, header_height, candidate) ?
-    ////    std::make_shared<chain_state>(std::move(data), settings_) :
-    ////    nullptr;
+    return std::make_shared<chain_state>(std::move(data), settings);
 }
 
 } // namespace database
