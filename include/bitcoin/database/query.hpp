@@ -70,12 +70,13 @@ public:
     /// Not reliable during organization.
 
     inline bool is_initialized() const NOEXCEPT;
-    inline size_t get_top_confirmed() const NOEXCEPT;
     inline size_t get_top_candidate() const NOEXCEPT;
+    inline size_t get_top_confirmed() const NOEXCEPT;
     size_t get_fork() const NOEXCEPT;
     size_t get_last_associated_from(size_t height) const NOEXCEPT;
     hashes get_all_unassociated_above(size_t height) const NOEXCEPT;
-    hashes get_hashes(const heights& heights) const NOEXCEPT;
+    hashes get_candidate_hashes(const heights& heights) const NOEXCEPT;
+    hashes get_confirmed_hashes(const heights& heights) const NOEXCEPT;
 
     /// Store sizing.
     /// -----------------------------------------------------------------------
@@ -277,10 +278,10 @@ public:
     bool set_unstrong(const header_link& link) NOEXCEPT;
 
     bool initialize(const block& genesis) NOEXCEPT;
-    bool push_confirmed(const header_link& link) NOEXCEPT;
     bool push_candidate(const header_link& link) NOEXCEPT;
-    bool pop_confirmed() NOEXCEPT;
+    bool push_confirmed(const header_link& link) NOEXCEPT;
     bool pop_candidate() NOEXCEPT;
+    bool pop_confirmed() NOEXCEPT;
 
     /// Optional Tables.
     /// -----------------------------------------------------------------------

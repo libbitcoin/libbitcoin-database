@@ -32,19 +32,31 @@ namespace database {
 TEMPLATE
 inline header_link CLASS::to_candidate(size_t height) const NOEXCEPT
 {
+    using namespace system;
+    using link = table::height::block::integer;
     if (height >= store_.candidate.count())
         return {};
 
-    return system::possible_narrow_cast<table::height::block::integer>(height);
+    table::height::record index{};
+    if (!store_.candidate.get(possible_narrow_cast<link>(height), index))
+        return {};
+
+    return index.header_fk;
 }
 
 TEMPLATE
 inline header_link CLASS::to_confirmed(size_t height) const NOEXCEPT
 {
+    using namespace system;
+    using link = table::height::block::integer;
     if (height >= store_.confirmed.count())
         return {};
 
-    return system::possible_narrow_cast<table::height::block::integer>(height);
+    table::height::record index{};
+    if (!store_.confirmed.get(possible_narrow_cast<link>(height), index))
+        return {};
+
+    return index.header_fk;
 }
 
 TEMPLATE
