@@ -363,9 +363,9 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_all_unassociated_above__gapped_candid
     BOOST_REQUIRE_EQUAL(unassociated.size(), 0u);
 }
 
-// get_hashes
+// get_candidate_hashes
 
-BOOST_AUTO_TEST_CASE(query_initialize__get_hashes__initialized__one)
+BOOST_AUTO_TEST_CASE(query_initialize__get_candidate_hashes__initialized__one)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -373,10 +373,44 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_hashes__initialized__one)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE_EQUAL(query.get_hashes({ 0, 1, 2, 4, 6, 8 }).size(), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_candidate_hashes({ 0, 1, 2, 4, 6, 8 }).size(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(query_initialize__get_hashes__gapped__expected)
+BOOST_AUTO_TEST_CASE(query_initialize__get_candidate_hashes__gapped__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, test::context));
+    BOOST_REQUIRE(query.set(test::block2, test::context));
+    BOOST_REQUIRE(query.set(test::block3, test::context));
+    BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
+    BOOST_REQUIRE(query.push_candidate(query.to_header(test::block2.hash())));
+    BOOST_REQUIRE(query.push_candidate(query.to_header(test::block3.hash())));
+    const auto locator = query.get_candidate_hashes({ 0, 1, 3, 4 });
+    BOOST_REQUIRE_EQUAL(locator.size(), 3u);
+    BOOST_REQUIRE_EQUAL(locator[0], test::genesis.hash());
+    BOOST_REQUIRE_EQUAL(locator[1], test::block1.hash());
+    BOOST_REQUIRE_EQUAL(locator[2], test::block3.hash());
+}
+
+// get_confirmed_hashes
+
+BOOST_AUTO_TEST_CASE(query_initialize__get_confirmed_hashes__initialized__one)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes({ 0, 1, 2, 4, 6, 8 }).size(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(query_initialize__get_confirmed_hashes__gapped__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -390,7 +424,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_hashes__gapped__expected)
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block1.hash())));
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block2.hash())));
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block3.hash())));
-    const auto locator = query.get_hashes({ 0, 1, 3, 4 });
+    const auto locator = query.get_confirmed_hashes({ 0, 1, 3, 4 });
     BOOST_REQUIRE_EQUAL(locator.size(), 3u);
     BOOST_REQUIRE_EQUAL(locator[0], test::genesis.hash());
     BOOST_REQUIRE_EQUAL(locator[1], test::block1.hash());

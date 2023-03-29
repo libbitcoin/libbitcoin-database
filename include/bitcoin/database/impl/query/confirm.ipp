@@ -241,17 +241,6 @@ bool CLASS::initialize(const block& genesis) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::push_confirmed(const header_link& link) NOEXCEPT
-{
-    // ========================================================================
-    const auto scope = store_.get_transactor();
-
-    const table::height::record confirmed{ {}, link };
-    return store_.confirmed.put(confirmed);
-    // ========================================================================
-}
-
-TEMPLATE
 bool CLASS::push_candidate(const header_link& link) NOEXCEPT
 {
     // ========================================================================
@@ -263,17 +252,13 @@ bool CLASS::push_candidate(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::pop_confirmed() NOEXCEPT
+bool CLASS::push_confirmed(const header_link& link) NOEXCEPT
 {
-    using ix = table::transaction::ix::integer;
-    const auto top = system::possible_narrow_cast<ix>(get_top_confirmed());
-    if (is_zero(top))
-        return false;
-
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return store_.confirmed.truncate(top);
+    const table::height::record confirmed{ {}, link };
+    return store_.confirmed.put(confirmed);
     // ========================================================================
 }
 
@@ -289,6 +274,21 @@ bool CLASS::pop_candidate() NOEXCEPT
     const auto scope = store_.get_transactor();
 
     return store_.candidate.truncate(top);
+    // ========================================================================
+}
+
+TEMPLATE
+bool CLASS::pop_confirmed() NOEXCEPT
+{
+    using ix = table::transaction::ix::integer;
+    const auto top = system::possible_narrow_cast<ix>(get_top_confirmed());
+    if (is_zero(top))
+        return false;
+
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    return store_.confirmed.truncate(top);
     // ========================================================================
 }
 

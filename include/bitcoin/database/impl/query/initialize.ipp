@@ -34,6 +34,12 @@ inline bool CLASS::is_initialized() const NOEXCEPT
     return !is_zero(store_.confirmed.count()) &&
         !is_zero(store_.candidate.count());
 }
+TEMPLATE
+inline size_t CLASS::get_top_candidate() const NOEXCEPT
+{
+    BC_ASSERT_MSG(!is_zero(store_.candidate.count()), "empty");
+    return sub1(store_.candidate.count());
+}
 
 TEMPLATE
 inline size_t CLASS::get_top_confirmed() const NOEXCEPT
@@ -42,12 +48,6 @@ inline size_t CLASS::get_top_confirmed() const NOEXCEPT
     return sub1(store_.confirmed.count());
 }
 
-TEMPLATE
-inline size_t CLASS::get_top_candidate() const NOEXCEPT
-{
-    BC_ASSERT_MSG(!is_zero(store_.candidate.count()), "empty");
-    return sub1(store_.candidate.count());
-}
 
 TEMPLATE
 size_t CLASS::get_fork() const NOEXCEPT
@@ -85,7 +85,24 @@ hashes CLASS::get_all_unassociated_above(size_t height) const NOEXCEPT
 }
 
 TEMPLATE
-hashes CLASS::get_hashes(const heights& heights) const NOEXCEPT
+hashes CLASS::get_candidate_hashes(const heights& heights) const NOEXCEPT
+{
+    hashes out{};
+    out.reserve(heights.size());
+    for (const auto& height: heights)
+    {
+        const auto header_fk = to_candidate(height);
+        if (!header_fk.is_terminal())
+            out.push_back(get_header_key(header_fk));
+    }
+
+    // Due to reorganization, top may decrease intermittently.
+    out.shrink_to_fit();
+    return out;
+}
+
+TEMPLATE
+hashes CLASS::get_confirmed_hashes(const heights& heights) const NOEXCEPT
 {
     hashes out{};
     out.reserve(heights.size());
