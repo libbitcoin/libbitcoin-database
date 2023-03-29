@@ -589,17 +589,17 @@ header_link CLASS::set_link(const block& block, const context& ctx) NOEXCEPT
 TEMPLATE
 header_link CLASS::set_link(const header& header, const context& ctx) NOEXCEPT
 {
-    // Parent must be missing iff its hash is null.
-    const auto& parent_sk = header.previous_block_hash();
-    const auto parent_fk = to_header(parent_sk);
-    if (parent_fk.is_terminal() != (parent_sk == system::null_hash))
-        return {};
-
     // This hash computation should be cached by the message deserializer.
     const auto key = header.hash();
     auto header_fk = to_header(key);
     if (!header_fk.is_terminal())
         return header_fk;
+
+    // Parent must be missing iff its hash is null.
+    const auto& parent_sk = header.previous_block_hash();
+    const auto parent_fk = to_header(parent_sk);
+    if (parent_fk.is_terminal() != (parent_sk == system::null_hash))
+        return {};
 
     // ========================================================================
     const auto scope = store_.get_transactor();
