@@ -42,7 +42,7 @@ BOOST_FIXTURE_TEST_SUITE(query_context_tests, query_context_setup_fixture)
 
 const auto events = [](auto, auto) {};
 
-BOOST_AUTO_TEST_CASE(query_context__get_chain_state__genesis__expected)
+BOOST_AUTO_TEST_CASE(query_context__get_candidate_chain_state__genesis__expected)
 {
     const system::settings system_settings{ system::chain::selection::mainnet };
     const system::chain::context expected
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_chain_state__genesis__expected)
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
 
-    const auto state = query.get_chain_state(system_settings);
+    const auto state = query.get_candidate_chain_state(system_settings);
     BOOST_REQUIRE(state);
     BOOST_REQUIRE_EQUAL(state->forks(), expected.forks);
     BOOST_REQUIRE_EQUAL(state->height(), expected.height);
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_chain_state__genesis__expected)
     BOOST_REQUIRE(state->context() == expected);
 }
 
-BOOST_AUTO_TEST_CASE(query_context__get_chain_state__block1__expected)
+BOOST_AUTO_TEST_CASE(query_context__get_candidate_cchain_state__block1__expected)
 {
     const system::settings system_settings{ system::chain::selection::mainnet };
     const system::chain::context expected
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_chain_state__block1__expected)
     BOOST_REQUIRE(query.set(test::block1, context));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
 
-    const auto state = query.get_chain_state(system_settings);
+    const auto state = query.get_candidate_chain_state(system_settings);
     BOOST_REQUIRE(state);
     BOOST_REQUIRE_EQUAL(state->forks(), expected.forks);
     BOOST_REQUIRE_EQUAL(state->height(), expected.height);
