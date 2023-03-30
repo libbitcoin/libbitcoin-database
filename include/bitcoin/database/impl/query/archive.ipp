@@ -82,6 +82,13 @@ inline bool CLASS::set(const transaction& tx) NOEXCEPT
 TEMPLATE
 inline bool CLASS::populate(const input& input) const NOEXCEPT
 {
+    if (input.point().is_null())
+    {
+        input.prevout = nullptr;
+        return true;
+    }
+
+    // Null point would return nullptr and be interpreted as a failure.
     input.prevout = get_output(input.point());
     return input.prevout != nullptr;
 }
@@ -413,10 +420,10 @@ TEMPLATE
 typename CLASS::output::cptr CLASS::get_output(
     const point& prevout) const NOEXCEPT
 {
-    // Shortcircuits get_output(to_tx(null_hash)) fault.
-    if (prevout.is_null())
-        return {};
-
+    // Caller must preempt, to differentiate failure.
+    ////// Shortcircuits get_output(to_tx(null_hash)) fault.
+    ////if (prevout.is_null())
+    ////    return {};
     return get_output(to_tx(prevout.hash()), prevout.index());
 }
 

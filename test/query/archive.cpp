@@ -643,7 +643,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_hashes__get_block__expected)
     BOOST_REQUIRE(*pointer1 == test::genesis);
 }
 
-BOOST_AUTO_TEST_CASE(query_archive__populate__null_prevouts__false)
+BOOST_AUTO_TEST_CASE(query_archive__populate__null_prevouts__true)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -656,24 +656,24 @@ BOOST_AUTO_TEST_CASE(query_archive__populate__null_prevouts__false)
     BOOST_REQUIRE(query.set(test::block3, test::context));
 
     system::chain::block copy{ test::genesis };
-    BOOST_REQUIRE(!query.populate(copy));
-    BOOST_REQUIRE(!query.populate(*test::genesis.transactions_ptr()->front()));
-    BOOST_REQUIRE(!query.populate(*test::genesis.inputs_ptr()->front()));
+    BOOST_REQUIRE(query.populate(copy));
+    BOOST_REQUIRE(query.populate(*test::genesis.transactions_ptr()->front()));
+    BOOST_REQUIRE(query.populate(*test::genesis.inputs_ptr()->front()));
 
     system::chain::block copy1{ test::block1 };
-    BOOST_REQUIRE(!query.populate(copy1));
-    BOOST_REQUIRE(!query.populate(*test::block1.transactions_ptr()->front()));
-    BOOST_REQUIRE(!query.populate(*test::block1.inputs_ptr()->front()));
+    BOOST_REQUIRE(query.populate(copy1));
+    BOOST_REQUIRE(query.populate(*test::block1.transactions_ptr()->front()));
+    BOOST_REQUIRE(query.populate(*test::block1.inputs_ptr()->front()));
 
     system::chain::block copy2{ test::block2 };
-    BOOST_REQUIRE(!query.populate(copy2));
-    BOOST_REQUIRE(!query.populate(*test::block2.transactions_ptr()->front()));
-    BOOST_REQUIRE(!query.populate(*test::block2.inputs_ptr()->front()));
+    BOOST_REQUIRE(query.populate(copy2));
+    BOOST_REQUIRE(query.populate(*test::block2.transactions_ptr()->front()));
+    BOOST_REQUIRE(query.populate(*test::block2.inputs_ptr()->front()));
 
     system::chain::block copy3{ test::block3 };
-    BOOST_REQUIRE(!query.populate(copy3));
-    BOOST_REQUIRE(!query.populate(*test::block3.transactions_ptr()->front()));
-    BOOST_REQUIRE(!query.populate(*test::block3.inputs_ptr()->front()));
+    BOOST_REQUIRE(query.populate(copy3));
+    BOOST_REQUIRE(query.populate(*test::block3.transactions_ptr()->front()));
+    BOOST_REQUIRE(query.populate(*test::block3.inputs_ptr()->front()));
 }
 
 BOOST_AUTO_TEST_CASE(query_archive__populate__partial_prevouts__false)
