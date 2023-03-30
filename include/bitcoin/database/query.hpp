@@ -226,11 +226,18 @@ public:
     /// Chain state.
     /// -----------------------------------------------------------------------
 
-    chain_state_ptr get_chain_state(
+    chain_state_ptr get_candidate_chain_state(
         const system::settings& settings) const NOEXCEPT;
-    chain_state_ptr get_chain_state(const system::settings& settings,
+    chain_state_ptr get_candidate_chain_state(const system::settings& settings,
         size_t height) const NOEXCEPT;
-    chain_state_ptr get_chain_state(const system::settings& settings,
+    chain_state_ptr get_candidate_chain_state(const system::settings& settings,
+        const header& header, size_t height) const NOEXCEPT;
+
+    chain_state_ptr get_confirmed_chain_state(
+        const system::settings& settings) const NOEXCEPT;
+    chain_state_ptr get_confirmed_chain_state(const system::settings& settings,
+        size_t height) const NOEXCEPT;
+    chain_state_ptr get_confirmed_chain_state(const system::settings& settings,
         const header& header, size_t height) const NOEXCEPT;
 
     /// Validation (surrogate-keyed).
@@ -330,24 +337,43 @@ protected:
     bool is_spent_prevout(const table::input::search_key& key,
         const input_link& self) const NOEXCEPT;
 
-    bool get_bits(uint32_t& bits, size_t height, const header& header,
-        size_t header_height) const NOEXCEPT;
-    bool get_version(uint32_t& version, size_t height, const header& header,
-        size_t header_height) const NOEXCEPT;
-    bool get_timestamp(uint32_t& time, size_t height, const header& header,
-        size_t header_height) const NOEXCEPT;
-    ////bool get_block_hash(hash_digest& hash, size_t height, const header& header,
-    ////    size_t header_height) const;
-
-    bool populate_bits(chain_state::data& data, const chain_state::map& map,
+    bool get_candidate_bits(uint32_t& bits, size_t height,
         const header& header, size_t header_height) const NOEXCEPT;
-    bool populate_versions(chain_state::data& data,
+    bool get_candidate_version(uint32_t& version, size_t height,
+        const header& header, size_t header_height) const NOEXCEPT;
+    bool get_candidate_timestamp(uint32_t& time, size_t height,
+        const header& header, size_t header_height) const NOEXCEPT;
+
+    bool populate_candidate_bits(chain_state::data& data,
         const chain_state::map& map, const header& header,
         size_t header_height) const NOEXCEPT;
-    bool populate_timestamps(chain_state::data& data,
+    bool populate_candidate_versions(chain_state::data& data,
         const chain_state::map& map, const header& header,
         size_t header_height) const NOEXCEPT;
-    bool populate_all(chain_state::data& data,
+    bool populate_candidate_timestamps(chain_state::data& data,
+        const chain_state::map& map, const header& header,
+        size_t header_height) const NOEXCEPT;
+    bool populate_candidate_all(chain_state::data& data,
+        const system::settings& settings, const header& header,
+        size_t header_height) const NOEXCEPT;
+
+    bool get_confirmed_bits(uint32_t& bits, size_t height,
+        const header& header, size_t header_height) const NOEXCEPT;
+    bool get_confirmed_version(uint32_t& version, size_t height,
+        const header& header, size_t header_height) const NOEXCEPT;
+    bool get_confirmed_timestamp(uint32_t& time, size_t height,
+        const header& header, size_t header_height) const NOEXCEPT;
+
+    bool populate_confirmed_bits(chain_state::data& data,
+        const chain_state::map& map, const header& header,
+        size_t header_height) const NOEXCEPT;
+    bool populate_confirmed_versions(chain_state::data& data,
+        const chain_state::map& map, const header& header,
+        size_t header_height) const NOEXCEPT;
+    bool populate_confirmed_timestamps(chain_state::data& data,
+        const chain_state::map& map, const header& header,
+        size_t header_height) const NOEXCEPT;
+    bool populate_confirmed_all(chain_state::data& data,
         const system::settings& settings, const header& header,
         size_t header_height) const NOEXCEPT;
 
