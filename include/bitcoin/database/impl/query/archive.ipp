@@ -62,6 +62,18 @@ inline bool CLASS::is_associated(const header_link& link) const NOEXCEPT
 }
 
 TEMPLATE
+inline bool CLASS::set(const header& header, const chain_context& ctx) NOEXCEPT
+{
+    return !set_link(header, ctx).is_terminal();
+}
+
+TEMPLATE
+inline bool CLASS::set(const block& block, const chain_context& ctx) NOEXCEPT
+{
+    return !set_link(block, ctx).is_terminal();
+}
+
+TEMPLATE
 inline bool CLASS::set(const header& header, const context& ctx) NOEXCEPT
 {
     return !set_link(header, ctx).is_terminal();
@@ -573,6 +585,32 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
 
     return store_.tx.commit_link(tx_fk, key);
     // ========================================================================
+}
+
+TEMPLATE
+header_link CLASS::set_link(const block& block,
+    const chain_context& ctx) NOEXCEPT
+{
+    // Map chain context into database context.
+    return set_link(block, context
+    {
+        system::possible_narrow_cast<context::flag::integer>(ctx.forks),
+        system::possible_narrow_cast<context::block::integer>(ctx.height),
+        ctx.median_time_past
+    });
+}
+
+TEMPLATE
+header_link CLASS::set_link(const header& header,
+    const chain_context& ctx) NOEXCEPT
+{
+    // Map chain context into database context.
+    return set_link(header, context
+    {
+        system::possible_narrow_cast<context::flag::integer>(ctx.forks),
+        system::possible_narrow_cast<context::block::integer>(ctx.height),
+        ctx.median_time_past
+    });
 }
 
 TEMPLATE

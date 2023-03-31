@@ -40,6 +40,9 @@ struct query_archive_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(query_archive_tests, query_archive_setup_fixture)
 
+// ensure context::flags is same size as chain_context::forks.
+static_assert(is_same_type<database::context::flag::integer, decltype(system::chain::context{}.forks)>);
+
 // nop event handler.
 const auto events = [](auto, auto) {};
 
@@ -716,9 +719,9 @@ BOOST_AUTO_TEST_CASE(query_archive__is_coinbase__coinbase__true)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, {}));
-    BOOST_REQUIRE(query.set(test::block2, {}));
-    BOOST_REQUIRE(query.set(test::block3, {}));
+    BOOST_REQUIRE(query.set(test::block1, context{}));
+    BOOST_REQUIRE(query.set(test::block2, context{}));
+    BOOST_REQUIRE(query.set(test::block3, context{}));
     BOOST_REQUIRE(query.is_coinbase(0));
     BOOST_REQUIRE(query.is_coinbase(1));
     BOOST_REQUIRE(query.is_coinbase(2));
@@ -733,8 +736,8 @@ BOOST_AUTO_TEST_CASE(query_archive__is_coinbase__non_coinbase__true)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, {}));
-    BOOST_REQUIRE(query.set(test::block2a, {}));
+    BOOST_REQUIRE(query.set(test::block1a, context{}));
+    BOOST_REQUIRE(query.set(test::block2a, context{}));
     BOOST_REQUIRE(!query.is_coinbase(1));
     BOOST_REQUIRE(!query.is_coinbase(2));
     BOOST_REQUIRE(!query.is_coinbase(3));
@@ -892,7 +895,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_point_key__always__expected)
     BOOST_REQUIRE_EQUAL(query.get_point_key(1), system::null_hash);
 
     // block1a adds three prevouts of two txs.
-    BOOST_REQUIRE(query.set(test::block1a, {}));
+    BOOST_REQUIRE(query.set(test::block1a, context{}));
     BOOST_REQUIRE_EQUAL(query.get_point_key(1), system::one_hash);
     BOOST_REQUIRE_EQUAL(query.get_point_key(2), test::two_hash);
     BOOST_REQUIRE_EQUAL(query.get_point_key(3), system::null_hash);
@@ -923,11 +926,11 @@ BOOST_AUTO_TEST_CASE(query_archive__get_height__always__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, { 0, 1, 0 }));
-    BOOST_REQUIRE(query.set(test::block2, { 0, 2, 0 }));
-    BOOST_REQUIRE(query.set(test::block3, { 0, 3, 0 }));
-    BOOST_REQUIRE(query.set(test::block1a, { 0, 1, 0 }));
-    BOOST_REQUIRE(query.set(test::block2a, { 0, 2, 0 }));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }));
+    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }));
 
     size_t out{};
     BOOST_REQUIRE(query.get_height(out, 0));
@@ -967,9 +970,9 @@ BOOST_AUTO_TEST_CASE(query_archive__get_tx_position__confirmed__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, { 0, 1, 0 }));
-    BOOST_REQUIRE(query.set(test::block2a, { 0, 2, 0 }));
-    BOOST_REQUIRE(query.set(test::block3a, { 0, 3, 0 }));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }));
+    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }));
+    BOOST_REQUIRE(query.set(test::block3a, context{ 0, 3, 0 }));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.set_strong(2));
     BOOST_REQUIRE(query.set_strong(3));
@@ -1008,9 +1011,9 @@ BOOST_AUTO_TEST_CASE(query_archive__get_tx_position__always__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, { 0, 1, 0 }));
-    BOOST_REQUIRE(query.set(test::block2a, { 0, 2, 0 }));
-    BOOST_REQUIRE(query.set(test::block3a, { 0, 3, 0 }));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }));
+    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }));
+    BOOST_REQUIRE(query.set(test::block3a, context{ 0, 3, 0 }));
     BOOST_REQUIRE(query.set(test::tx4));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.set_strong(2));
