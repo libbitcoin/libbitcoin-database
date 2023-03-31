@@ -100,6 +100,13 @@ inline bool CLASS::populate(const input& input) const NOEXCEPT
         return true;
     }
 
+    // mtp/height used for input.is_locked (todo - ensure handled).
+    // coinbase/height/spent used for confirmability (not required).
+    ////input.metadata.height;
+    ////input.metadata.median_time_past;
+    ////input.metadata.coinbase;
+    ////input.metadata.spent;
+
     // Null point would return nullptr and be interpreted as a failure.
     input.prevout = get_output(input.point());
     return input.prevout != nullptr;
