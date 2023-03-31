@@ -59,6 +59,7 @@ public:
     using transactions_ptr = system::chain::transactions_ptr;
     using chain_state = system::chain::chain_state;
     using chain_state_ptr = system::chain::chain_state::ptr;
+    using chain_context = system::chain::context;
     using sizes = std::pair<size_t, size_t>;
     using heights = std_vector<size_t>;
     using filter = system::data_chunk;
@@ -175,7 +176,9 @@ public:
     inline bool is_coinbase(const tx_link& link) const NOEXCEPT;
     inline bool is_associated(const header_link& link) const NOEXCEPT;
 
+    inline bool set(const header& header, const chain_context& ctx) NOEXCEPT;
     inline bool set(const header& header, const context& ctx) NOEXCEPT;
+    inline bool set(const block& block, const chain_context& ctx) NOEXCEPT;
     inline bool set(const block& block, const context& ctx) NOEXCEPT;
     inline bool set(const transaction& tx) NOEXCEPT;
 
@@ -216,7 +219,9 @@ public:
     input::cptr get_input(const tx_link& link, uint32_t input_index) const NOEXCEPT;
     inputs_ptr get_spenders(const tx_link& link, uint32_t output_index) const NOEXCEPT;
 
+    header_link set_link(const header& header, const chain_context& ctx) NOEXCEPT;
     header_link set_link(const header& header, const context& ctx) NOEXCEPT;
+    header_link set_link(const block& block, const chain_context& ctx) NOEXCEPT;
     header_link set_link(const block& block, const context& ctx) NOEXCEPT;
     tx_link set_link(const transaction& tx) NOEXCEPT;
 

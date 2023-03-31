@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(query_optional__set_filter__get_filter_and_head__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, {}));
+    BOOST_REQUIRE(query.set(test::block1a, context{}));
     BOOST_REQUIRE(query.set_filter(0, filter_head0, filter0));
     BOOST_REQUIRE(query.set_filter(1, filter_head1, filter1));
 
@@ -227,9 +227,9 @@ BOOST_AUTO_TEST_CASE(query_optional__set_bootstrap__above_confirmed__false)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, {}));
-    BOOST_REQUIRE(query.set(test::block2, {}));
-    BOOST_REQUIRE(query.set(test::block3, {}));
+    BOOST_REQUIRE(query.set(test::block1, context{}));
+    BOOST_REQUIRE(query.set(test::block2, context{}));
+    BOOST_REQUIRE(query.set(test::block3, context{}));
     BOOST_REQUIRE(query.push_confirmed(1));
     BOOST_REQUIRE(!query.set_bootstrap(2));
     BOOST_REQUIRE(query.set_bootstrap(0));
@@ -243,9 +243,9 @@ BOOST_AUTO_TEST_CASE(query_optional__set_bootstrap__twice__clears_previous)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, {}));
-    BOOST_REQUIRE(query.set(test::block2, {}));
-    BOOST_REQUIRE(query.set(test::block3, {}));
+    BOOST_REQUIRE(query.set(test::block1, context{}));
+    BOOST_REQUIRE(query.set(test::block2, context{}));
+    BOOST_REQUIRE(query.set(test::block3, context{}));
     BOOST_REQUIRE(query.push_confirmed(1));
     BOOST_REQUIRE(query.push_confirmed(2));
     BOOST_REQUIRE(query.push_confirmed(3));
