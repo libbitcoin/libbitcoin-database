@@ -136,10 +136,12 @@ bool CLASS::populate_candidate_all(chain_state::data& data,
     const system::settings& settings, const header& header,
     size_t height) const NOEXCEPT
 {
-    // Construct the map to inform chain state data population.
+    // Construct the map to inform chain state data population, set hash.
     const auto map = chain_state::get_map(data.height, settings);
+    const auto link = to_candidate(data.height);
+    data.hash = get_header_key(link);
 
-    return
+    return !link.is_terminal() &&
         populate_candidate_bits(data, map, header, height) &&
         populate_candidate_versions(data, map, header, height) &&
         populate_candidate_timestamps(data, map, header, height);
@@ -281,10 +283,12 @@ bool CLASS::populate_confirmed_all(chain_state::data& data,
     const system::settings& settings, const header& header,
     size_t height) const NOEXCEPT
 {
-    // Construct the map to inform chain state data population.
+    // Construct the map to inform chain state data population, set hash.
     const auto map = chain_state::get_map(data.height, settings);
+    const auto link = to_confirmed(data.height);
+    data.hash = get_header_key(link);
 
-    return
+    return !link.is_terminal() &&
         populate_confirmed_bits(data, map, header, height) &&
         populate_confirmed_versions(data, map, header, height) &&
         populate_confirmed_timestamps(data, map, header, height);
