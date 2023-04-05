@@ -160,13 +160,13 @@ code map::unload() NOEXCEPT
 
     if (map_mutex_.try_lock())
     {
-        BC_ASSERT_MSG(logical_ <= capacity_, "logical size exceeds capacity");
-
         if (!loaded_)
         {
             map_mutex_.unlock();
             return error::success;
         }
+
+        BC_ASSERT_MSG(logical_ <= capacity_, "logical size exceeds capacity");
 
         if (!unmap_())
         {
@@ -281,6 +281,7 @@ memory_ptr map::get(size_t offset) const NOEXCEPT
 
 constexpr auto fail = -1;
 
+// Never results in unmapped.
 bool map::flush_() const NOEXCEPT
 {
     // msync should not be required on modern linux, see linus et al.
@@ -306,6 +307,7 @@ bool map::flush_() const NOEXCEPT
 #endif
 }
 
+// Always results in unmapped.
 // Trims to logical size, can be zero.
 bool map::unmap_() NOEXCEPT
 {
@@ -330,6 +332,7 @@ bool map::unmap_() NOEXCEPT
     return success;
 }
 
+// Mapping failure results in unmapped.
 // Mapping has no effect on logical size, always maps max(logical, min) size.
 bool map::map_() NOEXCEPT
 {
@@ -340,7 +343,10 @@ bool map::map_() NOEXCEPT
     {
         size = minimum_;
         if (::ftruncate(descriptor_, size) == fail)
+        {
+            unmap_();
             return false;
+        }
     }
 
     memory_map_ = pointer_cast<uint8_t>(::mmap(nullptr, size,
@@ -349,6 +355,7 @@ bool map::map_() NOEXCEPT
     return finalize_(size);
 }
 
+// Remap failure results in unmapped.
 // Remapping has no effect on logical size, sets map_/capacity_.
 bool map::remap_(size_t size) NOEXCEPT
 {
@@ -363,7 +370,10 @@ bool map::remap_(size_t size) NOEXCEPT
 #endif
 
     if (::ftruncate(descriptor_, size) == fail)
+    {
+        unmap_();
         return false;
+    }
 
 #if defined(HAVE_MSC)
     // mman-win32 mremap hack (umap/map) requires flags and file descriptor.
@@ -382,14 +392,20 @@ bool map::remap_(size_t size) NOEXCEPT
     return finalize_(size);
 }
 
+// Finalize failure results in unmapped.
 bool map::finalize_(size_t size) NOEXCEPT
 {
-    // TODO: madvise with large length value fails on linux, does 0 imply all?
-    if (memory_map_ == MAP_FAILED ||
-        ::madvise(memory_map_, 0, MADV_RANDOM) == fail)
+    if (memory_map_ == MAP_FAILED)
     {
         capacity_ = zero;
         memory_map_ = nullptr;
+        return false;
+    }
+
+    // TODO: madvise with large length value fails on linux, does 0 imply all?
+    if (::madvise(memory_map_, 0, MADV_RANDOM) == fail)
+    {
+        unmap_();
         return false;
     }
 

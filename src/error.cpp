@@ -39,7 +39,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { close_failure, "file failed to close" },
     { load_locked, "loading locked file" },
     { load_loaded, "loading loaded file" },
-    { load_failure, "file failed to load" },
+    { load_failure, "disk full" },
     { flush_unloaded, "flushing unloaded file" },
     { flush_failure, "file failed to flush" },
     { unload_locked, "unloading unloaded file" },

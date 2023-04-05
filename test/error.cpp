@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(error_t__code__load_failure__true_exected_message)
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "file failed to load");
+    BOOST_REQUIRE_EQUAL(ec.message(), "disk full");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__flush_unloaded__true_exected_message)
