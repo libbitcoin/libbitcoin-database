@@ -94,11 +94,8 @@ inline bool CLASS::set(const transaction& tx) NOEXCEPT
 TEMPLATE
 inline bool CLASS::populate(const input& input) const NOEXCEPT
 {
-    if (input.point().is_null())
-    {
-        input.prevout = nullptr;
+    if (input.prevout || input.point().is_null())
         return true;
-    }
 
     // mtp/height used for input.is_locked (todo - ensure handled).
     // coinbase/height/spent used for confirmability (not required).
