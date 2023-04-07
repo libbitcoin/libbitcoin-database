@@ -283,7 +283,8 @@ public:
     bool is_strong(const input_link& link) const NOEXCEPT;
     bool is_spent(const input_link& link) const NOEXCEPT;
     bool is_mature(const input_link& link, size_t height) const NOEXCEPT;
-    bool is_confirmable_block(const header_link& link, size_t height) const NOEXCEPT;
+    code confirmable_block(const header_link& link, size_t height,
+        uint32_t median_time_past, bool guard_duplicates=false) const NOEXCEPT;
 
     /// Block association relies on strong (confirmed or pending).
     bool set_strong(const header_link& link) NOEXCEPT;
@@ -337,8 +338,11 @@ protected:
 
     height_link get_height(const header_link& link) const NOEXCEPT;
     input_links to_spenders(const table::input::search_key& key) const NOEXCEPT;
+    code mature_prevout(const point_link& link, size_t height) const NOEXCEPT;
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
-    bool is_mature_prevout(const point_link& link, size_t height) const NOEXCEPT;
+    bool is_unspent_coinbase(const header_link& link) const NOEXCEPT;
+    bool is_locked_input(const input_link& link, size_t height,
+        uint32_t median_time_past) const NOEXCEPT;
     bool is_spent_prevout(const table::input::search_key& key,
         const input_link& self) const NOEXCEPT;
 

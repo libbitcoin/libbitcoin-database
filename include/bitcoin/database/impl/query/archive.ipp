@@ -94,20 +94,11 @@ inline bool CLASS::set(const transaction& tx) NOEXCEPT
 TEMPLATE
 inline bool CLASS::populate(const input& input) const NOEXCEPT
 {
-    if (input.point().is_null())
-    {
-        input.prevout = nullptr;
+    if (input.prevout || input.point().is_null())
         return true;
-    }
 
-    // mtp/height used for input.is_locked (todo - ensure handled).
-    // coinbase/height/spent used for confirmability (not required).
-    ////input.metadata.height;
-    ////input.metadata.median_time_past;
-    ////input.metadata.coinbase;
-    ////input.metadata.spent;
-
-    // Null point would return nullptr and be interpreted as a failure.
+    // input.metadata is not populated.
+    // Null point would return nullptr and be interpreted as missing.
     input.prevout = get_output(input.point());
     return input.prevout != nullptr;
 }

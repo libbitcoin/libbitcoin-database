@@ -134,47 +134,85 @@ bool CLASS::is_mature(const input_link& link, size_t height) const NOEXCEPT
 {
     table::input::slab_decomposed_fk input{};
     return store_.input.get(link, input) && (input.is_null() ||
-        is_mature_prevout(input.point_fk, height));
+        mature_prevout(input.point_fk, height) ==
+            system::error::transaction_success);
+}
+
+TEMPLATE
+bool CLASS::is_unspent_coinbase(const header_link&) const NOEXCEPT
+{
+    // Read header.coinbase's tx.hash.
+    // Search transaction table for tx.hash.
+    // Iterate to preceding instance(s) of tx.hash (skip self).
+    // Determine if first preceding instance exists and all outputs are spent.
+    // If so return false, otherwise true.
+    return {};
+}
+
+TEMPLATE
+bool CLASS::is_locked_input(const input_link&, size_t, uint32_t) const NOEXCEPT
+{
+    // Read input.sequence.
+
+    ////return input::is_locked(sequence, height, median_time_past,
+    ////    prevout_height, prevout_median_time_past);
+    return {};
 }
 
 // protected
 TEMPLATE
-bool CLASS::is_mature_prevout(const point_link& link,
+code CLASS::mature_prevout(const point_link& link,
     size_t height) const NOEXCEPT
 {
-    const auto spender_fk = to_tx(store_.point.get_key(link));
-    if (spender_fk.is_terminal())
-        return false;
+    const auto spent_fk = to_tx(store_.point.get_key(link));
+    if (spent_fk.is_terminal())
+        return database::error::integrity;
 
-    const auto header_fk = to_block(spender_fk);
+    // to_block traverses confirmation to find confirming header of spent tx.
+    const auto header_fk = to_block(spent_fk);
     if (header_fk.is_terminal())
-        return false;
+        return system::error::unconfirmed_spend;
+    if (!is_coinbase(spent_fk))
+        return system::error::transaction_success;
 
-    if (!is_coinbase(spender_fk))
-        return true;
+    const auto prevout_height = get_height(header_fk);
+    if (prevout_height.is_terminal())
+        return database::error::integrity;
+    if (!transaction::is_coinbase_mature(prevout_height, height))
+        return system::error::coinbase_maturity;
 
-    const auto prevout = get_height(header_fk);
-    if (prevout.is_terminal())
-        return false;
-
-    return transaction::is_coinbase_mature(prevout, height);
+    return system::error::transaction_success;
 }
 
 TEMPLATE
-bool CLASS::is_confirmable_block(const header_link& link,
-    size_t height) const NOEXCEPT
+code CLASS::confirmable_block(const header_link& link,
+    size_t height, uint32_t median_time_past,
+    bool guard_duplicates) const NOEXCEPT
 {
+    if (guard_duplicates && is_unspent_coinbase(link))
+        return system::error::unspent_coinbase_collision;
+
     const auto ins = to_block_inputs(link);
-    return !ins.empty() &&
-        std::all_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
-        {
-            table::input::slab_composite_sk input{};
-            return store_.input.get(in, input) && (input.is_null() ||
-            (
-                is_mature_prevout(input.point_fk(), height) &&
-                !is_spent_prevout(input.key, in)
-            ));
-        });
+    if (ins.empty())
+        return system::error::missing_previous_output;
+
+    code ec;
+    table::input::slab_composite_sk input{};
+    for (const auto& in: ins)
+    {
+        if (!store_.input.get(in, input))
+            return database::error::integrity;  
+        if (input.is_null())
+            return system::error::block_success;
+        if (is_spent_prevout(input.key, in))
+            return system::error::confirmed_double_spend;
+        if (is_locked_input(in, height, median_time_past))
+            return system::error::relative_time_locked;
+        if ((ec = mature_prevout(input.point_fk(), height)))
+            return ec;
+    }
+
+    return system::error::block_success;
 }
 
 TEMPLATE
