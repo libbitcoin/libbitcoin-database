@@ -215,6 +215,21 @@ struct input
         tx::integer parent_fk{};
     };
 
+    struct get_sequence
+      : public schema::input
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            using namespace system;
+            source.skip_bytes(tx::size);
+            source.skip_variable();
+            sequence = source.read_little_endian<uint32_t>();
+            return source;
+        }
+    
+        uint32_t sequence{};
+    };
+
     struct slab_put_ref
       : public schema::input
     {
