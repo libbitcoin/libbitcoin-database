@@ -121,12 +121,15 @@ bool CLASS::is_spent_prevout(const table::input::search_key& key,
 {
     BC_ASSERT(key != table::input::null_point());
 
+    // Input is one spender, must be second for output to have been spent.
     const auto ins = to_spenders(key);
-    return (ins.size() > one) &&
-        std::any_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
-        {
-            return (in != self) && is_strong(in);
-        });
+    if (ins.size() < two)
+        return false;
+
+    return std::any_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
+    {
+        return (in != self) && is_strong(in);
+    });
 }
 
 TEMPLATE
@@ -139,27 +142,33 @@ bool CLASS::is_mature(const input_link& link, size_t height) const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_unspent_coinbase(const header_link&) const NOEXCEPT
+code CLASS::unspent_coinbase(const header_link&) const NOEXCEPT
 {
+    // Duplicates allowed for two bip30 exception blocks and with bip34 active.
     // Read header.coinbase's tx.hash.
     // Search transaction table for tx.hash.
     // Iterate to preceding instance(s) of tx.hash (skip self).
     // Determine if first preceding instance exists and all outputs are spent.
     // If so return false, otherwise true.
-    return {};
+    return system::error::unspent_coinbase_collision;
 }
 
 TEMPLATE
-bool CLASS::is_locked_input(const input_link&, size_t, uint32_t) const NOEXCEPT
+code CLASS::locked_input(const input_link& link, uint32_t sequence,
+    size_t height, uint32_t mtp) const NOEXCEPT
 {
-    // Read input.sequence.
+    // to_block traverses (assures) confirmation.
 
-    ////return input::is_locked(sequence, height, median_time_past,
-    ////    prevout_height, prevout_median_time_past);
-    return {};
+    context ctx{};
+    if (!get_context(ctx, to_block(to_prevout_tx(link))))
+        return database::error::integrity;
+
+    if (input::is_locked(sequence, height, mtp, ctx.height, ctx.mtp))
+        return system::error::relative_time_locked;
+
+    return system::error::transaction_success;
 }
 
-// protected
 TEMPLATE
 code CLASS::mature_prevout(const point_link& link,
     size_t height) const NOEXCEPT
@@ -168,7 +177,7 @@ code CLASS::mature_prevout(const point_link& link,
     if (spent_fk.is_terminal())
         return database::error::integrity;
 
-    // to_block traverses confirmation to find confirming header of spent tx.
+    // to_block traverses (assures) confirmation.
     const auto header_fk = to_block(spent_fk);
     if (header_fk.is_terminal())
         return system::error::unconfirmed_spend;
@@ -186,18 +195,18 @@ code CLASS::mature_prevout(const point_link& link,
 
 TEMPLATE
 code CLASS::confirmable_block(const header_link& link,
-    size_t height, uint32_t median_time_past,
-    bool guard_duplicates) const NOEXCEPT
+    size_t height, uint32_t mtp, bool enable_locktime,
+    bool disallow_duplicates) const NOEXCEPT
 {
-    if (guard_duplicates && is_unspent_coinbase(link))
-        return system::error::unspent_coinbase_collision;
+    code ec;
+    if (disallow_duplicates && ((ec = unspent_coinbase(link))))
+        return ec;
 
     const auto ins = to_block_inputs(link);
     if (ins.empty())
         return system::error::missing_previous_output;
 
-    code ec;
-    table::input::slab_composite_sk input{};
+    table::input::slab_composite_sk_and_sequence input{};
     for (const auto& in: ins)
     {
         if (!store_.input.get(in, input))
@@ -206,8 +215,9 @@ code CLASS::confirmable_block(const header_link& link,
             return system::error::block_success;
         if (is_spent_prevout(input.key, in))
             return system::error::confirmed_double_spend;
-        if (is_locked_input(in, height, median_time_past))
-            return system::error::relative_time_locked;
+        if (enable_locktime &&
+            ((ec = locked_input(in, input.sequence, height, mtp))))
+            return ec;
         if ((ec = mature_prevout(input.point_fk(), height)))
             return ec;
     }

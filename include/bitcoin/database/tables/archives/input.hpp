@@ -220,7 +220,6 @@ struct input
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            using namespace system;
             source.skip_bytes(tx::size);
             source.skip_variable();
             sequence = source.read_little_endian<uint32_t>();
@@ -286,6 +285,21 @@ struct input
         }
 
         search_key key{};
+    };
+
+    struct slab_composite_sk_and_sequence
+      : public slab_composite_sk
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            slab_composite_sk::from_data(source);
+            source.skip_bytes(tx::size);
+            source.skip_variable();
+            sequence = source.read_little_endian<uint32_t>();
+            return source;
+        }
+
+        uint32_t sequence{};
     };
 
     struct slab_decomposed_fk
