@@ -172,12 +172,8 @@ output_link CLASS::to_prevout(const input_link& link) const NOEXCEPT
 TEMPLATE
 header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
 {
-    const auto fk = store_.strong_tx.first(link);
-    if (fk.is_terminal())
-        return {};
-
     table::strong_tx::record strong{};
-    if (!store_.strong_tx.get(fk, strong))
+    if (!store_.strong_tx.get(store_.strong_tx.first(link), strong))
         return {};
 
     return strong.header_fk;
@@ -288,15 +284,21 @@ output_links CLASS::to_tx_outputs(const tx_link& link) const NOEXCEPT
 TEMPLATE
 tx_links CLASS::to_txs(const header_link& link) const NOEXCEPT
 {
-    const auto fk = to_txs_link(link);
-    if (fk.is_terminal())
-        return {};
-
     table::txs::slab txs{};
-    if (!store_.txs.get(fk, txs))
+    if (!store_.txs.get(to_txs_link(link), txs))
         return {};
 
     return std::move(txs.tx_fks);
+}
+
+TEMPLATE
+tx_link CLASS::to_coinbase(const header_link& link) const NOEXCEPT
+{
+    table::txs::slab_coinbase txs{};
+    if (!store_.txs.get(to_txs_link(link), txs))
+        return {};
+
+    return txs.coinbase_fk;
 }
 
 TEMPLATE

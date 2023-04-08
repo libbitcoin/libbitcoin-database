@@ -164,6 +164,7 @@ public:
 
     /// block to txs/puts (forward navigation)
     tx_links to_txs(const header_link& link) const NOEXCEPT;
+    tx_link to_coinbase(const header_link& link) const NOEXCEPT;
     input_links to_block_inputs(const header_link& link) const NOEXCEPT;
     output_links to_block_outputs(const header_link& link) const NOEXCEPT;
 
@@ -283,8 +284,7 @@ public:
     bool is_strong(const input_link& link) const NOEXCEPT;
     bool is_spent(const input_link& link) const NOEXCEPT;
     bool is_mature(const input_link& link, size_t height) const NOEXCEPT;
-    code confirmable_block(const header_link& link, size_t height,
-        uint32_t mtp, bool enable_locktime,
+    code chain_confirmable(const header_link& link, bool enable_locktime,
         bool disallow_duplicates) const NOEXCEPT;
 
     /// Block association relies on strong (confirmed or pending).
@@ -340,9 +340,10 @@ protected:
     height_link get_height(const header_link& link) const NOEXCEPT;
     input_links to_spenders(const table::input::search_key& key) const NOEXCEPT;
     code mature_prevout(const point_link& link, size_t height) const NOEXCEPT;
-    code unspent_coinbase(const header_link& link) const NOEXCEPT;
     code locked_input(const input_link& link, uint32_t sequence, size_t height,
         uint32_t mtp) const NOEXCEPT;
+    ////bool is_spent_tx(const tx_link& link) const NOEXCEPT;
+    ////bool is_unspent_coinbase(const header_link& link) const NOEXCEPT;
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
     bool is_spent_prevout(const table::input::search_key& key,
         const input_link& self) const NOEXCEPT;

@@ -141,18 +141,25 @@ bool CLASS::is_mature(const input_link& link, size_t height) const NOEXCEPT
             system::error::transaction_success);
 }
 
-TEMPLATE
-code CLASS::unspent_coinbase(const header_link&) const NOEXCEPT
-{
-    // Duplicates allowed for two bip30 exception blocks and with bip34 active.
-    // Read header.coinbase's tx.hash.
-    // Search transaction table for tx.hash.
-    // Iterate to preceding instance(s) of tx.hash (skip self).
-    // Determine if first preceding instance exists and all outputs are spent.
-    // If so return false, otherwise true.
-    return system::error::unspent_coinbase_collision;
-}
+////// protected
+////TEMPLATE
+////bool CLASS::is_unspent_coinbase(const header_link& link) const NOEXCEPT
+////{
+////    return !is_spent_tx(to_coinbase(link));
+////}
+////
+////// protected
+////TEMPLATE
+////bool CLASS::is_spent_tx(const tx_link& link) const NOEXCEPT
+////{
+////    const auto outs = to_tx_outputs(link);
+////    return std::all_of(outs.begin(), outs.end(), [&](const auto& out) NOEXCEPT
+////    {
+////        return is_spent_output(out);
+////    });
+////}
 
+// protected
 TEMPLATE
 code CLASS::locked_input(const input_link& link, uint32_t sequence,
     size_t height, uint32_t mtp) const NOEXCEPT
@@ -169,6 +176,7 @@ code CLASS::locked_input(const input_link& link, uint32_t sequence,
     return system::error::transaction_success;
 }
 
+// protected
 TEMPLATE
 code CLASS::mature_prevout(const point_link& link,
     size_t height) const NOEXCEPT
@@ -194,31 +202,43 @@ code CLASS::mature_prevout(const point_link& link,
 }
 
 TEMPLATE
-code CLASS::confirmable_block(const header_link& link,
-    size_t height, uint32_t mtp, bool enable_locktime,
-    bool disallow_duplicates) const NOEXCEPT
+code CLASS::chain_confirmable(const header_link& link,
+    bool enable_locktime, bool) const NOEXCEPT
 {
-    code ec;
-    if (disallow_duplicates && ((ec = unspent_coinbase(link))))
-        return ec;
+    context ctx{};
+    if (!get_context(ctx, link))
+        return database::error::integrity;
+
+    ////// A problem here is that a tx fully spent can be reused.
+    ////// But in that case it must become unspent, since only one copy is stored.
+    ////// This presents conflict with prior instance. Pruning is also problematic.
+    ////// This code would reject an unspent duplicate, and allow spent duplicate,
+    ////// but the new tx over the spent previous tx would indicate spent. It
+    ////// Could be explicitly unspent using the strong_tx overwrite of terminal,
+    ////// but that makes both appear unspent (which is probably ok). Pruning
+    ////// would only allow prune of what appeared spent, which would be ok either
+    ////// way.
+    ////if (disallow_duplicates && is_unspent_coinbase(link))
+    ////    return system::error::unspent_coinbase_collision;
 
     const auto ins = to_block_inputs(link);
     if (ins.empty())
         return system::error::missing_previous_output;
 
+    code ec;
     table::input::slab_composite_sk_and_sequence input{};
     for (const auto& in: ins)
     {
         if (!store_.input.get(in, input))
             return database::error::integrity;  
-        if (input.is_null())
-            return system::error::block_success;
+        if (!input.is_null())
+            continue;
         if (is_spent_prevout(input.key, in))
             return system::error::confirmed_double_spend;
         if (enable_locktime &&
-            ((ec = locked_input(in, input.sequence, height, mtp))))
+            ((ec = locked_input(in, input.sequence, ctx.height, ctx.mtp))))
             return ec;
-        if ((ec = mature_prevout(input.point_fk(), height)))
+        if ((ec = mature_prevout(input.point_fk(), ctx.height)))
             return ec;
     }
 

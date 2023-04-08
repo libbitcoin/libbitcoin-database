@@ -99,6 +99,25 @@ struct txs
         const tx::integer link{};
         size_t position{};
     };
+
+    struct slab_coinbase
+      : public schema::txs
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            const auto count = source.read_little_endian<tx::integer, tx::size>();
+            if (!is_zero(count))
+            {
+                coinbase_fk = source.read_little_endian<tx::integer, tx::size>();
+                return source;
+            }
+
+            source.invalidate();
+            return source;
+        }
+
+        tx::integer coinbase_fk{};
+    };
 };
 
 } // namespace table
