@@ -101,9 +101,12 @@ bool CLASS::is_spent_output(const output_link& link) const NOEXCEPT
 // Strong must be set at current height during organization, unset if fails.
 
 TEMPLATE
-bool CLASS::is_strong(const input_link& link) const NOEXCEPT
+bool CLASS::is_mature(const input_link& link, size_t height) const NOEXCEPT
 {
-    return !to_block(to_input_tx(link)).is_terminal();
+    table::input::slab_decomposed_fk input{};
+    return store_.input.get(link, input) && (input.is_null() ||
+        mature_prevout(input.point_fk, height) ==
+        system::error::transaction_success);
 }
 
 TEMPLATE
@@ -114,13 +117,18 @@ bool CLASS::is_spent(const input_link& link) const NOEXCEPT
         is_spent_prevout(input.key, link);
 }
 
+TEMPLATE
+bool CLASS::is_strong(const input_link& link) const NOEXCEPT
+{
+    return !to_block(to_input_tx(link)).is_terminal();
+}
+
 // protected
 TEMPLATE
 bool CLASS::is_spent_prevout(const table::input::search_key& key,
     const input_link& self) const NOEXCEPT
 {
-    BC_ASSERT(key != table::input::null_point());
-
+    // For performance avoid calling with null point (always false).
     // Input is one spender, must be second for output to have been spent.
     const auto ins = to_spenders(key);
     if (ins.size() < two)
@@ -132,40 +140,12 @@ bool CLASS::is_spent_prevout(const table::input::search_key& key,
     });
 }
 
-TEMPLATE
-bool CLASS::is_mature(const input_link& link, size_t height) const NOEXCEPT
-{
-    table::input::slab_decomposed_fk input{};
-    return store_.input.get(link, input) && (input.is_null() ||
-        mature_prevout(input.point_fk, height) ==
-            system::error::transaction_success);
-}
-
-////// protected
-////TEMPLATE
-////bool CLASS::is_unspent_coinbase(const header_link& link) const NOEXCEPT
-////{
-////    return !is_spent_tx(to_coinbase(link));
-////}
-////
-////// protected
-////TEMPLATE
-////bool CLASS::is_spent_tx(const tx_link& link) const NOEXCEPT
-////{
-////    const auto outs = to_tx_outputs(link);
-////    return std::all_of(outs.begin(), outs.end(), [&](const auto& out) NOEXCEPT
-////    {
-////        return is_spent_output(out);
-////    });
-////}
-
 // protected
 TEMPLATE
 code CLASS::locked_input(const input_link& link, uint32_t sequence,
     size_t height, uint32_t mtp) const NOEXCEPT
 {
     // to_block traverses (assures) confirmation.
-
     context ctx{};
     if (!get_context(ctx, to_block(to_prevout_tx(link))))
         return database::error::integrity;
@@ -178,8 +158,7 @@ code CLASS::locked_input(const input_link& link, uint32_t sequence,
 
 // protected
 TEMPLATE
-code CLASS::mature_prevout(const point_link& link,
-    size_t height) const NOEXCEPT
+code CLASS::mature_prevout(const point_link& link, size_t height) const NOEXCEPT
 {
     const auto spent_fk = to_tx(store_.point.get_key(link));
     if (spent_fk.is_terminal())
@@ -202,24 +181,12 @@ code CLASS::mature_prevout(const point_link& link,
 }
 
 TEMPLATE
-code CLASS::chain_confirmable(const header_link& link,
-    bool enable_locktime, bool) const NOEXCEPT
+code CLASS::block_confirmable(const header_link& link,
+    bool enable_locktime) const NOEXCEPT
 {
     context ctx{};
     if (!get_context(ctx, link))
         return database::error::integrity;
-
-    ////// A problem here is that a tx fully spent can be reused.
-    ////// But in that case it must become unspent, since only one copy is stored.
-    ////// This presents conflict with prior instance. Pruning is also problematic.
-    ////// This code would reject an unspent duplicate, and allow spent duplicate,
-    ////// but the new tx over the spent previous tx would indicate spent. It
-    ////// Could be explicitly unspent using the strong_tx overwrite of terminal,
-    ////// but that makes both appear unspent (which is probably ok). Pruning
-    ////// would only allow prune of what appeared spent, which would be ok either
-    ////// way.
-    ////if (disallow_duplicates && is_unspent_coinbase(link))
-    ////    return system::error::unspent_coinbase_collision;
 
     const auto ins = to_block_inputs(link);
     if (ins.empty())
@@ -231,7 +198,7 @@ code CLASS::chain_confirmable(const header_link& link,
     {
         if (!store_.input.get(in, input))
             return database::error::integrity;  
-        if (!input.is_null())
+        if (input.is_null())
             continue;
         if (is_spent_prevout(input.key, in))
             return system::error::confirmed_double_spend;
