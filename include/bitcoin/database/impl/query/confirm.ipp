@@ -90,6 +90,8 @@ TEMPLATE
 bool CLASS::is_spent_output(const output_link& link) const NOEXCEPT
 {
     const auto ins = to_spenders(link);
+
+    // Spender count is low, so no parallel here.
     return std::any_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
     {
         return is_confirmed_input(in);
@@ -134,6 +136,7 @@ bool CLASS::is_spent_prevout(const table::input::search_key& key,
     if (ins.size() < two)
         return false;
 
+    // Spender count is low, so no parallel here.
     return std::any_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
     {
         return (in != self) && is_strong(in);
@@ -188,28 +191,47 @@ code CLASS::block_confirmable(const header_link& link,
     if (!get_context(ctx, link))
         return database::error::integrity;
 
+    // TODO: Consider parallel projections.
     const auto ins = to_block_inputs(link);
     if (ins.empty())
         return system::error::missing_previous_output;
 
-    code ec;
-    table::input::slab_composite_sk_and_sequence input{};
-    for (const auto& in: ins)
-    {
-        if (!store_.input.get(in, input))
-            return database::error::integrity;  
-        if (input.is_null())
-            continue;
-        if (is_spent_prevout(input.key, in))
-            return system::error::confirmed_double_spend;
-        if (enable_locktime &&
-            ((ec = locked_input(in, input.sequence, ctx.height, ctx.mtp))))
-            return ec;
-        if ((ec = mature_prevout(input.point_fk(), ctx.height)))
-            return ec;
-    }
+    std::atomic<code> result{};
+    return std::all_of(bc::par_unseq, ins.begin(), ins.end(),
+        [&](const auto& in) NOEXCEPT
+        {
+            table::input::slab_composite_sk_and_sequence input{};
+            if (!store_.input.get(in, input))
+            {
+                result = database::error::integrity;
+                return false;
+            }
 
-    return system::error::block_success;
+            if (input.is_null())
+                return true;
+
+            if (is_spent_prevout(input.key, in))
+            {
+                result = system::error::confirmed_double_spend;
+                return false;
+            }
+
+            code ec{};
+            if (enable_locktime &&
+                ((ec = locked_input(in, input.sequence, ctx.height, ctx.mtp))))
+            {
+                result = ec;
+                return false;
+            }
+
+            if ((ec = mature_prevout(input.point_fk(), ctx.height)))
+            {
+                result = ec;
+                return false;
+            }
+
+            return true;
+        }) ? code{ system::error::block_success } : result.load();
 }
 
 TEMPLATE
@@ -224,10 +246,11 @@ bool CLASS::set_strong(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return std::all_of(txs.begin(), txs.end(), [&](const tx_link& fk) NOEXCEPT
-    {
-        return store_.strong_tx.put(fk, strong);
-    });
+    return std::all_of(bc::par_unseq, txs.begin(), txs.end(),
+        [&](const tx_link& fk) NOEXCEPT
+        {
+            return store_.strong_tx.put(fk, strong);
+        });
     // ========================================================================
 }
 
@@ -243,10 +266,11 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return std::all_of(txs.begin(), txs.end(), [&](const tx_link& fk) NOEXCEPT
-    {
-        return store_.strong_tx.put(fk, strong);
-    });
+    return std::all_of(bc::par_unseq, txs.begin(), txs.end(),
+        [&](const tx_link& fk) NOEXCEPT
+        {
+            return store_.strong_tx.put(fk, strong);
+        });
     // ========================================================================
 }
 
