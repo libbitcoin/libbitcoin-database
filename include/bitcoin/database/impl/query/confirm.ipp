@@ -202,7 +202,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         return system::error::missing_previous_output;
 
     std::atomic<code> result{};
-    return std::all_of(bc::par_unseq, ins.begin(), ins.end(),
+    return std_all_of(bc::par_unseq, ins.begin(), ins.end(),
         [&](const auto& in) NOEXCEPT
         {
             table::input::slab_composite_sk_and_sequence input{};
@@ -250,7 +250,7 @@ bool CLASS::set_strong(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return std::all_of(bc::par_unseq, txs.begin(), txs.end(),
+    return std_all_of(bc::par_unseq, txs.begin(), txs.end(),
         [&](const tx_link& fk) NOEXCEPT
         {
             return store_.strong_tx.put(fk, strong);
@@ -270,7 +270,7 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return std::all_of(bc::par_unseq, txs.begin(), txs.end(),
+    return std_all_of(bc::par_unseq, txs.begin(), txs.end(),
         [&](const tx_link& fk) NOEXCEPT
         {
             return store_.strong_tx.put(fk, strong);
