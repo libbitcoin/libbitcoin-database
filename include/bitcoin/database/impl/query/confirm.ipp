@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/error.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -90,6 +91,8 @@ TEMPLATE
 bool CLASS::is_spent_output(const output_link& link) const NOEXCEPT
 {
     const auto ins = to_spenders(link);
+
+    // Spender count is low, so no parallel here.
     return std::any_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
     {
         return is_confirmed_input(in);
@@ -105,8 +108,7 @@ bool CLASS::is_mature(const input_link& link, size_t height) const NOEXCEPT
 {
     table::input::slab_decomposed_fk input{};
     return store_.input.get(link, input) && (input.is_null() ||
-        mature_prevout(input.point_fk, height) ==
-        system::error::transaction_success);
+        mature_prevout(input.point_fk, height) == error::success);
 }
 
 TEMPLATE
@@ -134,6 +136,7 @@ bool CLASS::is_spent_prevout(const table::input::search_key& key,
     if (ins.size() < two)
         return false;
 
+    // Spender count is low, so no parallel here.
     return std::any_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
     {
         return (in != self) && is_strong(in);
@@ -142,74 +145,100 @@ bool CLASS::is_spent_prevout(const table::input::search_key& key,
 
 // protected
 TEMPLATE
-code CLASS::locked_input(const input_link& link, uint32_t sequence,
-    size_t height, uint32_t mtp) const NOEXCEPT
+error::error_t CLASS::locked_input(const input_link& link, uint32_t sequence,
+    const database::context& put) const NOEXCEPT
 {
+    // bip68: not applicable to a coinbase tx.
     // to_block traverses (assures) confirmation.
+
+    using namespace system::chain;
+    if (!system::chain::script::is_enabled(put.flags, forks::bip68_rule))
+        return error::success;
+
     context ctx{};
     if (!get_context(ctx, to_block(to_prevout_tx(link))))
-        return database::error::integrity;
+        return error::integrity;
 
-    if (input::is_locked(sequence, height, mtp, ctx.height, ctx.mtp))
-        return system::error::relative_time_locked;
+    if (input::is_locked(sequence, put.height, put.mtp, ctx.height, ctx.mtp))
+        return error::relative_time_locked;
 
-    return system::error::transaction_success;
+    return error::success;
 }
 
 // protected
 TEMPLATE
-code CLASS::mature_prevout(const point_link& link, size_t height) const NOEXCEPT
+error::error_t CLASS::mature_prevout(const point_link& link,
+    size_t height) const NOEXCEPT
 {
     const auto spent_fk = to_tx(store_.point.get_key(link));
     if (spent_fk.is_terminal())
-        return database::error::integrity;
+        return error::integrity;
 
     // to_block traverses (assures) confirmation.
     const auto header_fk = to_block(spent_fk);
     if (header_fk.is_terminal())
-        return system::error::unconfirmed_spend;
+        return error::unconfirmed_spend;
     if (!is_coinbase(spent_fk))
-        return system::error::transaction_success;
+        return error::success;
 
     const auto prevout_height = get_height(header_fk);
     if (prevout_height.is_terminal())
-        return database::error::integrity;
+        return error::integrity;
     if (!transaction::is_coinbase_mature(prevout_height, height))
-        return system::error::coinbase_maturity;
+        return error::coinbase_maturity;
 
-    return system::error::transaction_success;
+    return error::success;
 }
 
 TEMPLATE
-code CLASS::block_confirmable(const header_link& link,
-    bool enable_locktime) const NOEXCEPT
+code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 {
     context ctx{};
     if (!get_context(ctx, link))
-        return database::error::integrity;
+        return error::integrity;
 
+    // TODO: Consider parallel projections.
     const auto ins = to_block_inputs(link);
     if (ins.empty())
-        return system::error::missing_previous_output;
+        return error::missing_previous_output;
 
-    code ec;
-    table::input::slab_composite_sk_and_sequence input{};
-    for (const auto& in: ins)
-    {
-        if (!store_.input.get(in, input))
-            return database::error::integrity;  
-        if (input.is_null())
-            continue;
-        if (is_spent_prevout(input.key, in))
-            return system::error::confirmed_double_spend;
-        if (enable_locktime &&
-            ((ec = locked_input(in, input.sequence, ctx.height, ctx.mtp))))
-            return ec;
-        if ((ec = mature_prevout(input.point_fk(), ctx.height)))
-            return ec;
-    }
+    std::atomic<error::error_t> ec{};
+    if (std::all_of(ins.begin(), ins.end(),
+        [&](const auto& in) NOEXCEPT
+        {
+            table::input::slab_composite_sk_and_sequence input{};
+            if (!store_.input.get(in, input))
+            {
+                ec = error::integrity;
+                return false;
+            }
 
-    return system::error::block_success;
+            if (input.is_null())
+                return true;
+
+            if (is_spent_prevout(input.key, in))
+            {
+                ec = error::confirmed_double_spend;
+                return false;
+            }
+
+            error::error_t code{};
+            if ((code = locked_input(in, input.sequence, ctx)))
+            {
+                ec = code;
+                return false;
+            }
+
+            if ((code = mature_prevout(input.point_fk(), ctx.height)))
+            {
+                ec = code;
+                return false;
+            }
+
+            return true;
+        })) return error::success;
+
+    return ec.load();
 }
 
 TEMPLATE
@@ -224,10 +253,11 @@ bool CLASS::set_strong(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return std::all_of(txs.begin(), txs.end(), [&](const tx_link& fk) NOEXCEPT
-    {
-        return store_.strong_tx.put(fk, strong);
-    });
+    return std_all_of(bc::par_unseq, txs.begin(), txs.end(),
+        [&](const tx_link& fk) NOEXCEPT
+        {
+            return store_.strong_tx.put(fk, strong);
+        });
     // ========================================================================
 }
 
@@ -243,10 +273,11 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return std::all_of(txs.begin(), txs.end(), [&](const tx_link& fk) NOEXCEPT
-    {
-        return store_.strong_tx.put(fk, strong);
-    });
+    return std_all_of(bc::par_unseq, txs.begin(), txs.end(),
+        [&](const tx_link& fk) NOEXCEPT
+        {
+            return store_.strong_tx.put(fk, strong);
+        });
     // ========================================================================
 }
 

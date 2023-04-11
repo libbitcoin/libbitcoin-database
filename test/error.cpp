@@ -392,4 +392,49 @@ BOOST_AUTO_TEST_CASE(error_t__code__unvalidated__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "unvalidated");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__missing_previous_output__true_exected_message)
+{
+    constexpr auto value = error::missing_previous_output;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "missing previous output");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__coinbase_maturity__true_exected_message)
+{
+    constexpr auto value = error::coinbase_maturity;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "coinbase maturity");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__relative_time_locked__true_exected_message)
+{
+    constexpr auto value = error::relative_time_locked;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "relative time locked");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__unconfirmed_spend__true_exected_message)
+{
+    constexpr auto value = error::unconfirmed_spend;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "unconfirmed spend");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__confirmed_double_spend__true_exected_message)
+{
+    constexpr auto value = error::confirmed_double_spend;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "confirmed double spend");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

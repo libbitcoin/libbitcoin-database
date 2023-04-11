@@ -77,7 +77,14 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { block_preconfirmable, "block preconfirmable" },
     { block_unconfirmable, "block unconfirmable" },
     { unassociated, "unassociated" },
-    { unvalidated, "unvalidated" }
+    { unvalidated, "unvalidated" },
+
+    // states
+    { missing_previous_output, "missing previous output" },
+    { coinbase_maturity, "coinbase maturity" },
+    { relative_time_locked, "relative time locked" },
+    { unconfirmed_spend, "unconfirmed spend" },
+    { confirmed_double_spend, "confirmed double spend" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "database", "database code")

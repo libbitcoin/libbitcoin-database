@@ -22,6 +22,7 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/error.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
 #include <bitcoin/database/tables/context.hpp>
 #include <bitcoin/database/tables/tables.hpp>
@@ -285,8 +286,7 @@ public:
     bool is_spent(const input_link& link) const NOEXCEPT;
     bool is_mature(const input_link& link, size_t height) const NOEXCEPT;
     ////bool is_exhausted(const tx_link& link) const NOEXCEPT;
-    code block_confirmable(const header_link& link,
-        bool enable_locktime) const NOEXCEPT;
+    code block_confirmable(const header_link& link) const NOEXCEPT;
 
     /// Block association relies on strong (confirmed or pending).
     bool set_strong(const header_link& link) NOEXCEPT;
@@ -340,9 +340,10 @@ protected:
 
     height_link get_height(const header_link& link) const NOEXCEPT;
     input_links to_spenders(const table::input::search_key& key) const NOEXCEPT;
-    code mature_prevout(const point_link& link, size_t height) const NOEXCEPT;
-    code locked_input(const input_link& link, uint32_t sequence, size_t height,
-        uint32_t mtp) const NOEXCEPT;
+    error::error_t mature_prevout(const point_link& link,
+        size_t height) const NOEXCEPT;
+    error::error_t locked_input(const input_link& link, uint32_t sequence,
+        const context& put) const NOEXCEPT;
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
     bool is_spent_prevout(const table::input::search_key& key,
         const input_link& self) const NOEXCEPT;

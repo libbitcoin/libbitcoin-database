@@ -240,6 +240,7 @@ input_links CLASS::to_spenders(
     if (it.self().is_terminal())
         return {};
 
+    // Spender count is low, so no parallel here.
     input_links spenders;
     do { spenders.push_back(it.self()); } while (it.advance());
     return spenders;
@@ -308,6 +309,7 @@ input_links CLASS::to_block_inputs(const header_link& link) const NOEXCEPT
     if (txs.empty())
         return {};
 
+    // TODO: Consider parallel projection.
     input_links ins{};
     for (const auto& tx: txs)
     {
@@ -328,6 +330,7 @@ output_links CLASS::to_block_outputs(const header_link& link) const NOEXCEPT
     if (txs.empty())
         return {};
 
+    // TODO: Consider parallel projection.
     output_links outs{};
     for (const auto& tx: txs)
     {

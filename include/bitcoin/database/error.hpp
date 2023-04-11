@@ -31,7 +31,7 @@ typedef std::error_code code;
 
 namespace error {
 
-enum error_t
+enum error_t : uint8_t
 {
     // general
     success,
@@ -84,7 +84,14 @@ enum error_t
     block_preconfirmable,
     block_unconfirmable,
     unassociated,
-    unvalidated
+    unvalidated,
+
+    // confirmation
+    missing_previous_output,
+    coinbase_maturity,
+    relative_time_locked,
+    unconfirmed_spend,
+    confirmed_double_spend
 };
 
 // No current need for error_code equivalence mapping.
