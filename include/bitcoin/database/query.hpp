@@ -22,6 +22,7 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/error.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
 #include <bitcoin/database/tables/context.hpp>
 #include <bitcoin/database/tables/tables.hpp>
@@ -339,8 +340,9 @@ protected:
 
     height_link get_height(const header_link& link) const NOEXCEPT;
     input_links to_spenders(const table::input::search_key& key) const NOEXCEPT;
-    code mature_prevout(const point_link& link, size_t height) const NOEXCEPT;
-    code locked_input(const input_link& link, uint32_t sequence,
+    error::error_t mature_prevout(const point_link& link,
+        size_t height) const NOEXCEPT;
+    error::error_t locked_input(const input_link& link, uint32_t sequence,
         const context& put) const NOEXCEPT;
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
     bool is_spent_prevout(const table::input::search_key& key,
