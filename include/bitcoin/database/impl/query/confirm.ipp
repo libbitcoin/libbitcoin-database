@@ -146,14 +146,20 @@ bool CLASS::is_spent_prevout(const table::input::search_key& key,
 // protected
 TEMPLATE
 code CLASS::locked_input(const input_link& link, uint32_t sequence,
-    size_t height, uint32_t mtp) const NOEXCEPT
+    const database::context& put) const NOEXCEPT
 {
+    // bip68: not applicable to a coinbase tx.
     // to_block traverses (assures) confirmation.
+
+    using namespace system::chain;
+    if (!system::chain::script::is_enabled(put.flags, forks::bip68_rule))
+        return system::error::transaction_success;
+
     context ctx{};
     if (!get_context(ctx, to_block(to_prevout_tx(link))))
         return database::error::integrity;
 
-    if (input::is_locked(sequence, height, mtp, ctx.height, ctx.mtp))
+    if (input::is_locked(sequence, put.height, put.mtp, ctx.height, ctx.mtp))
         return system::error::relative_time_locked;
 
     return system::error::transaction_success;
@@ -184,8 +190,7 @@ code CLASS::mature_prevout(const point_link& link, size_t height) const NOEXCEPT
 }
 
 TEMPLATE
-code CLASS::block_confirmable(const header_link& link,
-    bool enable_locktime) const NOEXCEPT
+code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 {
     context ctx{};
     if (!get_context(ctx, link))
@@ -217,8 +222,7 @@ code CLASS::block_confirmable(const header_link& link,
             }
 
             code ec{};
-            if (enable_locktime &&
-                ((ec = locked_input(in, input.sequence, ctx.height, ctx.mtp))))
+            if ((ec = locked_input(in, input.sequence, ctx)))
             {
                 result = ec;
                 return false;

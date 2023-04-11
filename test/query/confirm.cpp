@@ -426,6 +426,8 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_mature__coinbase__expected)
     BOOST_REQUIRE(query.is_mature(query.to_input(2, 0), 101));
 }
 
+constexpr auto bip68 = system::chain::forks::bip68_rule;
+
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__bad_link__integrity)
 {
     settings settings{};
@@ -434,8 +436,8 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__bad_link__integrity)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }));
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2, true), error::integrity);
+    BOOST_REQUIRE(query.set(test::block1, context{ bip68, 1, 0 }));
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::integrity);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__null_points__block_success)
@@ -446,15 +448,15 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__null_points__block_succes
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}));
-    BOOST_REQUIRE(query.set(test::block2, context{}));
-    BOOST_REQUIRE(query.set(test::block3, context{}));
+    BOOST_REQUIRE(query.set(test::block1, context{ bip68 }));
+    BOOST_REQUIRE(query.set(test::block2, context{ bip68 }));
+    BOOST_REQUIRE(query.set(test::block3, context{ bip68 }));
 
     // block1/2/3 at links 1/2/3 confirming at heights 1/2/3.
     // blocks have only coinbase txs, no need to be strong to be confirmable.
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(1, true), system::error::block_success);
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2, true), system::error::block_success);
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(3, true), system::error::block_success);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(1), system::error::block_success);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), system::error::block_success);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(3), system::error::block_success);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__missing_prevouts__integrity)
@@ -465,11 +467,11 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__missing_prevouts__integri
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }));
+    BOOST_REQUIRE(query.set(test::block1a, context{ bip68, 1, 0 }));
 
     // block1a is missing all three input prevouts.
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(1, true), database::error::integrity);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(1), database::error::integrity);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_gensis__coinbase_maturity)
@@ -486,8 +488,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_gensis__coinbase_ma
     BOOST_REQUIRE(query.set_strong(1));
 
     // 1 + 100 = 101 (maturity, except genesis)
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(1, false), system::error::coinbase_maturity);
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(1, true), system::error::relative_time_locked);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(1), system::error::coinbase_maturity);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__immature_prevouts__coinbase_maturity)
@@ -500,14 +501,14 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__immature_prevouts__coinba
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     // block1b has only a coinbase tx.
-    BOOST_REQUIRE(query.set(test::block1b, context{ 0, 1, 0 }));
+    BOOST_REQUIRE(query.set(test::block1b, context{ bip68, 1, 0 }));
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(1, true), system::error::block_success);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(1), system::error::block_success);
 
     // block2b prematurely spends block1b's coinbase outputs.
     BOOST_REQUIRE(query.set(test::block2b, context{ 0, 100, 0 }));
     BOOST_REQUIRE(query.set_strong(2));
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2, false), system::error::coinbase_maturity);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), system::error::coinbase_maturity);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__mature_prevouts__block_success)
@@ -520,15 +521,14 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__mature_prevouts__block_su
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     // block1b has only a coinbase tx.
-    BOOST_REQUIRE(query.set(test::block1b, context{ 0, 1, 0 }));
+    BOOST_REQUIRE(query.set(test::block1b, context{ bip68, 1, 0 }));
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(1, true), system::error::block_success);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(1), system::error::block_success);
 
     // block2b spends block1b's coinbase outputs.
     BOOST_REQUIRE(query.set(test::block2b, context{ 0, 101, 0 }));
     BOOST_REQUIRE(query.set_strong(2));
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2, false), system::error::block_success);
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2, true), system::error::relative_time_locked);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), system::error::block_success);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__block_success)
@@ -549,8 +549,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__block
     BOOST_REQUIRE(query.set_strong(2));
 
     // Maturity applies only to coinbase prevouts.
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2, false), system::error::block_success);
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2, true), system::error::relative_time_locked);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), system::error::block_success);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_coinbase_and_internal_immature__coinbase_maturity)
@@ -571,8 +570,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_coinbase_and_intern
     ////BOOST_REQUIRE(query.set_strong(2));
 
     // Not confirmable because lack of maturity.
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2, false), system::error::coinbase_maturity);
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2, true), system::error::relative_time_locked);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), system::error::coinbase_maturity);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_coinbase_and_internal_mature__block_success)
@@ -593,11 +591,11 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_coinbase_and_intern
     ////BOOST_REQUIRE(query.set_strong(2));
 
     // Not confirmable because own block prevout is not strong.
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2, false), system::error::unconfirmed_spend);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), system::error::unconfirmed_spend);
 
     // block1b coinbase prevout: 1 + 100 = 101 (maturity)
     BOOST_REQUIRE(query.set_strong(2));
-    BOOST_REQUIRE_EQUAL( query.block_confirmable(2, false), system::error::block_success);
+    BOOST_REQUIRE_EQUAL( query.block_confirmable(2), system::error::block_success);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__confirmed_double_spend__confirmed_double_spend)
@@ -618,11 +616,11 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__confirmed_double_spend__c
     BOOST_REQUIRE(query.set_strong(2));
 
     // block_spend_1a (also) spends both block1a outputs (and is otherwise confirmable).
-    BOOST_REQUIRE(query.set(test::block_spend_1a, context{ 0, 3, 0 }));
+    BOOST_REQUIRE(query.set(test::block_spend_1a, context{ bip68, 3, 0 }));
     BOOST_REQUIRE(query.set_strong(3));
 
     // Not confirmable because of intervening block2a implies double spend.
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(3, true), system::error::confirmed_double_spend);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(3), system::error::confirmed_double_spend);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__unconfirmed_double_spend__block_success)
@@ -646,8 +644,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__unconfirmed_double_spend_
     BOOST_REQUIRE(query.set_strong(2));
 
     // Confirmable because of intervening tx5 is unconfirmed double spend.
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2, false), system::error::block_success);
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2, true), system::error::relative_time_locked);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), system::error::block_success);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__set_strong__unassociated__false)
