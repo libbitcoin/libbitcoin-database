@@ -328,7 +328,7 @@ bool CLASS::set_txs_connected(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return std_all_of(bc::par_unseq, txs.begin(), txs.end(),
+    return std_all_of(bc::seq, txs.begin(), txs.end(),
         [&](const tx_link& fk) NOEXCEPT
         {
             return store_.validated_tx.put(fk, table::validated_tx::slab

@@ -324,7 +324,7 @@ input_links CLASS::to_non_coinbase_inputs(
         return {};
 
     std::vector<input_links> inputs(txs.size());
-    std_transform(bc::par_unseq, std::next(txs.begin()), txs.end(),
+    std_transform(bc::seq, std::next(txs.begin()), txs.end(),
         inputs.begin(), [&](const auto& tx) NOEXCEPT
         {
             return to_tx_inputs(tx);
