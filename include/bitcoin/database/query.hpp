@@ -166,7 +166,7 @@ public:
     /// block to txs/puts (forward navigation)
     tx_links to_txs(const header_link& link) const NOEXCEPT;
     tx_link to_coinbase(const header_link& link) const NOEXCEPT;
-    input_links to_block_inputs(const header_link& link) const NOEXCEPT;
+    input_links to_non_coinbase_inputs(const header_link& link) const NOEXCEPT;
     output_links to_block_outputs(const header_link& link) const NOEXCEPT;
 
     /// Archival (mostly natural-keyed).
@@ -265,6 +265,8 @@ public:
     bool set_block_unconfirmable(const header_link& link) NOEXCEPT;
     bool set_block_confirmable(const header_link& link, uint64_t fees) NOEXCEPT;
 
+    // set_txs_connected is FOR PERFORMANCE EVALUATION ONLY.
+    bool set_txs_connected(const header_link& link) NOEXCEPT;
     bool set_tx_preconnected(const tx_link& link, const context& ctx) NOEXCEPT;
     bool set_tx_disconnected(const tx_link& link, const context& ctx) NOEXCEPT;
     bool set_tx_connected(const tx_link& link, const context& ctx,
@@ -389,6 +391,8 @@ protected:
         size_t header_height) const NOEXCEPT;
 
 private:
+    static size_t nested_count(const auto& outer) NOEXCEPT;
+
     Store& store_;
 };
 

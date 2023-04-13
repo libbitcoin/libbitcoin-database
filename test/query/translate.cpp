@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(query_translate__to_tx__txs__expected)
     BOOST_REQUIRE_EQUAL(query.to_tx(test::block3.transactions_ptr()->front()->hash(true)), tx_link::terminal);
 }
 
-// to_input_tx/to_input/to_tx_inputs/to_block_inputs
+// to_input_tx/to_input/to_tx_inputs/to_non_coinbase_inputs
 
 BOOST_AUTO_TEST_CASE(query_translate__to_input_tx__to_input__expected)
 {
@@ -242,17 +242,17 @@ BOOST_AUTO_TEST_CASE(query_translate__to_input_tx__to_input__expected)
     BOOST_REQUIRE_EQUAL(query.to_tx_inputs(4), expected_links4);
 
     // TODO: All blocks have one transaction.
-    BOOST_REQUIRE_EQUAL(query.to_block_inputs(0), input_links{ 0x00 });
-    BOOST_REQUIRE_EQUAL(query.to_block_inputs(1), input_links{ 0x64 });
-    BOOST_REQUIRE_EQUAL(query.to_block_inputs(2), input_links{ 0x82 });
-    BOOST_REQUIRE_EQUAL(query.to_block_inputs(3), input_links{ 0xa0 });
-    BOOST_REQUIRE_EQUAL(query.to_block_inputs(4), expected_links4);
+    BOOST_REQUIRE_EQUAL(query.to_non_coinbase_inputs(0), input_links{});
+    BOOST_REQUIRE_EQUAL(query.to_non_coinbase_inputs(1), input_links{});
+    BOOST_REQUIRE_EQUAL(query.to_non_coinbase_inputs(2), input_links{});
+    BOOST_REQUIRE_EQUAL(query.to_non_coinbase_inputs(3), input_links{});
+    BOOST_REQUIRE_EQUAL(query.to_non_coinbase_inputs(4), input_links{});
 
     // Past end.
     BOOST_REQUIRE_EQUAL(query.to_input_tx(277), tx_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_input(5, 0), input_link::terminal);
     BOOST_REQUIRE(query.to_tx_inputs(5).empty());
-    BOOST_REQUIRE(query.to_block_inputs(5).empty());
+    BOOST_REQUIRE(query.to_non_coinbase_inputs(5).empty());
 
     // Verify expectations.
     const auto input_head = system::base16_chunk

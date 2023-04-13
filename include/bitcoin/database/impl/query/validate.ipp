@@ -293,7 +293,7 @@ bool CLASS::set_tx_connected(const tx_link& link, const context& ctx,
     uint64_t fee, size_t sigops) NOEXCEPT
 {
     using sigs = linkage<schema::sigops>;
-    BC_ASSERT(sigops < system::power2<sigs::integer>(to_bits(sigs::size)));
+    BC_ASSERT(sigops<system::power2<sigs::integer>(to_bits(sigs::size)));
 
     // ========================================================================
     const auto scope = store_.get_transactor();
@@ -306,6 +306,40 @@ bool CLASS::set_tx_connected(const tx_link& link, const context& ctx,
         fee,
         system::possible_narrow_cast<sigs::integer>(sigops)
     });
+    // ========================================================================
+}
+
+TEMPLATE
+bool CLASS::set_txs_connected(const header_link& link) NOEXCEPT
+{
+    context ctx{};
+    if (!get_context(ctx, link))
+        return false;
+
+    const auto txs = to_txs(link);
+    if (txs.empty())
+        return false;
+
+    // FOR PERFORMANCE EVALUATION ONLY.
+    constexpr uint64_t fee = 99;
+    constexpr size_t sigops = 42;
+    using sigs = linkage<schema::sigops>;
+
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    return std_all_of(bc::par_unseq, txs.begin(), txs.end(),
+        [&](const tx_link& fk) NOEXCEPT
+        {
+            return store_.validated_tx.put(fk, table::validated_tx::slab
+            {
+                {},
+                ctx,
+                schema::tx_state::connected,
+                fee,
+                system::possible_narrow_cast<sigs::integer>(sigops)
+            });
+        });
     // ========================================================================
 }
 

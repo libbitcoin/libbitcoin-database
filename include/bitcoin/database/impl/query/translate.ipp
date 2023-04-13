@@ -19,6 +19,8 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_TRANSLATE_IPP
 #define LIBBITCOIN_DATABASE_QUERY_TRANSLATE_IPP
 
+#include <algorithm>
+#include <iterator>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -302,23 +304,37 @@ tx_link CLASS::to_coinbase(const header_link& link) const NOEXCEPT
     return txs.coinbase_fk;
 }
 
+// static/private
 TEMPLATE
-input_links CLASS::to_block_inputs(const header_link& link) const NOEXCEPT
+size_t CLASS::nested_count(const auto& outer) NOEXCEPT
+{
+    return std::accumulate(outer.begin(), outer.end(), zero,
+        [](size_t total, const auto& inner) NOEXCEPT
+        {
+            return total + inner.size();
+        });
+};
+
+TEMPLATE
+input_links CLASS::to_non_coinbase_inputs(
+    const header_link& link) const NOEXCEPT
 {
     const auto txs = to_txs(link);
     if (txs.empty())
         return {};
 
-    // TODO: Consider parallel projection.
-    input_links ins{};
-    for (const auto& tx: txs)
-    {
-        const auto inputs = to_tx_inputs(tx);
-        if (inputs.empty())
-            return {};
+    std::vector<input_links> inputs(txs.size());
+    std_transform(bc::par_unseq, std::next(txs.begin()), txs.end(),
+        inputs.begin(), [&](const auto& tx) NOEXCEPT
+        {
+            return to_tx_inputs(tx);
+        });
 
-        ins.insert(ins.end(), inputs.begin(), inputs.end());
-    }
+    input_links ins{};
+    ins.reserve(nested_count(inputs));
+    for (const auto& set: inputs)
+        for (const auto& input: set)
+            ins.push_back(input);
 
     return ins;
 }
@@ -327,17 +343,11 @@ TEMPLATE
 output_links CLASS::to_block_outputs(const header_link& link) const NOEXCEPT
 {
     const auto txs = to_txs(link);
-    if (txs.empty())
-        return {};
-
-    // TODO: Consider parallel projection.
     output_links outs{};
+
     for (const auto& tx: txs)
     {
         const auto outputs = to_tx_outputs(tx);
-        if (outputs.empty())
-            return {};
-
         outs.insert(outs.end(), outputs.begin(), outputs.end());
     }
 
