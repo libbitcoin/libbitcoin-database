@@ -203,7 +203,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         return error::success;
 
     std::atomic<error::error_t> ec{};
-    if (std_all_of(bc::par_unseq, ins.begin(), ins.end(),
+    if (std_all_of(bc::seq, ins.begin(), ins.end(),
         [&](const auto& in) NOEXCEPT
         {
             error::error_t code{};
@@ -257,7 +257,7 @@ bool CLASS::set_strong(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return std_all_of(bc::par_unseq, txs.begin(), txs.end(),
+    return std_all_of(bc::seq, txs.begin(), txs.end(),
         [&](const tx_link& fk) NOEXCEPT
         {
             return store_.strong_tx.put(fk, strong);
@@ -277,7 +277,7 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return std_all_of(bc::par_unseq, txs.begin(), txs.end(),
+    return std_all_of(bc::seq, txs.begin(), txs.end(),
         [&](const tx_link& fk) NOEXCEPT
         {
             return store_.strong_tx.put(fk, strong);
