@@ -193,42 +193,46 @@ error::error_t CLASS::mature_prevout(const point_link& link,
 TEMPLATE
 code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 {
+    // This is free (1 sec for all blocks).
     context ctx{};
     if (!get_context(ctx, link))
         return error::integrity;
 
-    // TODO: Consider parallel projections.
-    const auto ins = to_block_inputs(link);
+    const auto ins = to_non_coinbase_inputs(link);
     if (ins.empty())
-        return error::missing_previous_output;
+        return error::success;
 
     std::atomic<error::error_t> ec{};
-    if (std::all_of(ins.begin(), ins.end(),
+    if (std_all_of(bc::par_unseq, ins.begin(), ins.end(),
         [&](const auto& in) NOEXCEPT
         {
+            error::error_t code{};
             table::input::slab_composite_sk_and_sequence input{};
-            if (!store_.input.get(in, input))
+            if (!store_.input.get(in, input) || input.is_null())
             {
                 ec = error::integrity;
                 return false;
             }
 
-            if (input.is_null())
-                return true;
-
+            // Prevout strong spenders (should be cheapest).
             if (is_spent_prevout(input.key, in))
             {
                 ec = error::confirmed_double_spend;
                 return false;
             }
 
-            error::error_t code{};
+            // Strong prevout height/mtp.
+            // Min spendable height/mtp of the prevout is not statically known.
+            // Validation height/mtp is known in validation context, but the
+            // height of the potentially-locked previous output is not known
+            // until its spender confirmation time.
             if ((code = locked_input(in, input.sequence, ctx)))
             {
                 ec = code;
                 return false;
             }
 
+            // Strong prevout, and height if coinbase.
             if ((code = mature_prevout(input.point_fk(), ctx.height)))
             {
                 ec = code;

@@ -166,7 +166,7 @@ public:
     /// block to txs/puts (forward navigation)
     tx_links to_txs(const header_link& link) const NOEXCEPT;
     tx_link to_coinbase(const header_link& link) const NOEXCEPT;
-    input_links to_block_inputs(const header_link& link) const NOEXCEPT;
+    input_links to_non_coinbase_inputs(const header_link& link) const NOEXCEPT;
     output_links to_block_outputs(const header_link& link) const NOEXCEPT;
 
     /// Archival (mostly natural-keyed).
@@ -391,6 +391,8 @@ protected:
         size_t header_height) const NOEXCEPT;
 
 private:
+    static size_t nested_count(const auto& outer) NOEXCEPT;
+
     Store& store_;
 };
 

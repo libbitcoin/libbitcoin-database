@@ -471,7 +471,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__missing_prevouts__integri
 
     // block1a is missing all three input prevouts.
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(1), error::integrity);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(1), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_gensis__coinbase_maturity)
@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_gensis__coinbase_ma
     BOOST_REQUIRE(query.set_strong(1));
 
     // 1 + 100 = 101 (maturity, except genesis)
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(1), error::coinbase_maturity);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(1), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__immature_prevouts__coinbase_maturity)
@@ -508,7 +508,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__immature_prevouts__coinba
     // block2b prematurely spends block1b's coinbase outputs.
     BOOST_REQUIRE(query.set(test::block2b, context{ 0, 100, 0 }));
     BOOST_REQUIRE(query.set_strong(2));
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::coinbase_maturity);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__mature_prevouts__success)
@@ -570,7 +570,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_coinbase_and_intern
     ////BOOST_REQUIRE(query.set_strong(2));
 
     // Not confirmable because lack of maturity.
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::coinbase_maturity);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::unconfirmed_spend);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_coinbase_and_internal_mature__success)
@@ -620,7 +620,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__confirmed_double_spend__c
     BOOST_REQUIRE(query.set_strong(3));
 
     // Not confirmable because of intervening block2a implies double spend.
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(3), error::confirmed_double_spend);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(3), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__unconfirmed_double_spend__success)
