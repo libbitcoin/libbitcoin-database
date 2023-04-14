@@ -344,7 +344,7 @@ protected:
     input_links to_spenders(const table::input::search_key& key) const NOEXCEPT;
     error::error_t mature_prevout(const point_link& link,
         size_t height) const NOEXCEPT;
-    error::error_t locked_input(const input_link& link, uint32_t sequence,
+    error::error_t locked_prevout(const point_link& link, uint32_t sequence,
         const context& put) const NOEXCEPT;
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
     bool is_spent_prevout(const table::input::search_key& key,
@@ -391,7 +391,7 @@ protected:
         size_t header_height) const NOEXCEPT;
 
 private:
-    static size_t nested_count(const auto& outer) NOEXCEPT;
+    ////static size_t nested_count(const auto& outer) NOEXCEPT;
 
     Store& store_;
 };

@@ -304,37 +304,52 @@ tx_link CLASS::to_coinbase(const header_link& link) const NOEXCEPT
     return txs.coinbase_fk;
 }
 
-// static/private
-TEMPLATE
-size_t CLASS::nested_count(const auto& outer) NOEXCEPT
-{
-    return std::accumulate(outer.begin(), outer.end(), zero,
-        [](size_t total, const auto& inner) NOEXCEPT
-        {
-            return total + inner.size();
-        });
-};
+////// static/private
+////TEMPLATE
+////size_t CLASS::nested_count(const auto& outer) NOEXCEPT
+////{
+////    return std::accumulate(outer.begin(), outer.end(), zero,
+////        [](size_t total, const auto& inner) NOEXCEPT
+////        {
+////            return total + inner.size();
+////        });
+////};
 
 TEMPLATE
 input_links CLASS::to_non_coinbase_inputs(
     const header_link& link) const NOEXCEPT
 {
+    ////const auto txs = to_txs(link);
+    ////if (txs.empty())
+    ////    return {};
+    ////
+    ////std::vector<input_links> inputs(txs.size());
+    ////std_transform(bc::seq, std::next(txs.begin()), txs.end(),
+    ////    inputs.begin(), [&](const auto& tx) NOEXCEPT
+    ////    {
+    ////        return to_tx_inputs(tx);
+    ////    });
+    ////
+    ////input_links ins{};
+    ////ins.reserve(nested_count(inputs));
+    ////for (const auto& set: inputs)
+    ////    for (const auto& input: set)
+    ////        ins.push_back(input);
+    ////
+    ////return ins;
+
     const auto txs = to_txs(link);
-    if (txs.empty())
+    if (txs.size() <= one)
         return {};
 
-    std::vector<input_links> inputs(txs.size());
-    std_transform(bc::seq, std::next(txs.begin()), txs.end(),
-        inputs.begin(), [&](const auto& tx) NOEXCEPT
-        {
-            return to_tx_inputs(tx);
-        });
-
     input_links ins{};
-    ins.reserve(nested_count(inputs));
-    for (const auto& set: inputs)
-        for (const auto& input: set)
-            ins.push_back(input);
+
+    // This is faster than an inner/outer loop as blocks become more populated.
+    for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
+    {
+        const auto inputs = to_tx_inputs(*tx);
+        ins.insert(ins.end(), inputs.begin(), inputs.end());
+    }
 
     return ins;
 }
