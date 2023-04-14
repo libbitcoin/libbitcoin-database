@@ -83,6 +83,9 @@ public:
     /// Iterator holds shared lock on storage remap.
     iterator it(const Key& key) const NOEXCEPT;
 
+    /// Return the link at the top of the conflict list (for table scanning).
+    Link top(const Link& list) const NOEXCEPT;
+
     /// Allocate element at returned link (follow with set|put).
     Link allocate(const Link& size) NOEXCEPT;
 

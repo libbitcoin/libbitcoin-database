@@ -31,13 +31,13 @@ namespace libbitcoin {
 namespace database {
 
 /// Database type aliases.
-using point_link = table::point::link;
-using input_link = table::input::link;
-using output_link = table::output::link;
-using tx_link = table::transaction::link;
 using height_link = table::height::link;
 using header_link = table::header::link;
+using output_link = table::output::link;
+using input_link = table::input::link;
+using point_link = table::point::link;
 using txs_link = table::txs::link;
+using tx_link = table::transaction::link;
 using tx_links = std_vector<tx_link::integer>;
 using input_links = std_vector<input_link::integer>;
 using output_links = std_vector<output_link::integer>;
@@ -168,6 +168,13 @@ public:
     tx_link to_coinbase(const header_link& link) const NOEXCEPT;
     input_links to_non_coinbase_inputs(const header_link& link) const NOEXCEPT;
     output_links to_block_outputs(const header_link& link) const NOEXCEPT;
+
+    /// hashmap enumeration
+    header_link top_header(size_t bucket) const NOEXCEPT;
+    input_link top_input(size_t bucket) const NOEXCEPT;
+    point_link top_point(size_t bucket) const NOEXCEPT;
+    txs_link top_txs(size_t bucket) const NOEXCEPT;
+    tx_link top_tx(size_t bucket) const NOEXCEPT;
 
     /// Archival (mostly natural-keyed).
     /// -----------------------------------------------------------------------
@@ -344,7 +351,7 @@ protected:
     input_links to_spenders(const table::input::search_key& key) const NOEXCEPT;
     error::error_t mature_prevout(const point_link& link,
         size_t height) const NOEXCEPT;
-    error::error_t locked_input(const input_link& link, uint32_t sequence,
+    error::error_t locked_prevout(const point_link& link, uint32_t sequence,
         const context& put) const NOEXCEPT;
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
     bool is_spent_prevout(const table::input::search_key& key,
@@ -391,7 +398,7 @@ protected:
         size_t header_height) const NOEXCEPT;
 
 private:
-    static size_t nested_count(const auto& outer) NOEXCEPT;
+    ////static size_t nested_count(const auto& outer) NOEXCEPT;
 
     Store& store_;
 };

@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_QUERY_CONFIRM_IPP
 
 #include <algorithm>
+#include <iterator>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/error.hpp>
@@ -145,18 +146,32 @@ bool CLASS::is_spent_prevout(const table::input::search_key& key,
 
 // protected
 TEMPLATE
-error::error_t CLASS::locked_input(const input_link& link, uint32_t sequence,
+error::error_t CLASS::locked_prevout(const point_link& link, uint32_t sequence,
     const database::context& put) const NOEXCEPT
 {
-    // bip68: not applicable to a coinbase tx.
-    // to_block traverses (assures) confirmation.
-
+    // bip68 activates at 419328 and is not applicable to coinbase.
     using namespace system::chain;
     if (!system::chain::script::is_enabled(put.flags, forks::bip68_rule))
         return error::success;
 
+    // REDUNDANT.
+    // Get hash from point, search for prevout tx and get its link.
+    const auto tx_fk = to_tx(get_point_key(link));
+    if (tx_fk.is_terminal())
+        return error::integrity;
+
+    // REDUNDANT.
+    // to_block assures confirmation by strong_tx traversal.
+    // store_.strong_tx.get(store_.strong_tx.first(tx_fk), strong);
+    const auto header_fk = to_block(tx_fk);
+    if (header_fk.is_terminal())
+        return error::unconfirmed_spend;
+
+    // REDUNDANT.
+    // TODO: fold mature_prevout::get_height with locked_prevout::get_context.
+    // store_.header.get(link, header);
     context ctx{};
-    if (!get_context(ctx, to_block(to_prevout_tx(link))))
+    if (!get_context(ctx, header_fk))
         return error::integrity;
 
     if (input::is_locked(sequence, put.height, put.mtp, ctx.height, ctx.mtp))
@@ -170,20 +185,32 @@ TEMPLATE
 error::error_t CLASS::mature_prevout(const point_link& link,
     size_t height) const NOEXCEPT
 {
-    const auto spent_fk = to_tx(store_.point.get_key(link));
-    if (spent_fk.is_terminal())
+    // REDUNDANT.
+    // Get hash from point, search for prevout tx and get its link.
+    // store_.point.get_key(link); store_.tx.first(key);
+    const auto tx_fk = to_tx(get_point_key(link));
+    if (tx_fk.is_terminal())
         return error::integrity;
 
-    // to_block traverses (assures) confirmation.
-    const auto header_fk = to_block(spent_fk);
+    // REDUNDANT.
+    // to_block assures confirmation by strong_tx traversal so this must remain
+    // prior to is_coinbase in execution order, despite the ack of dependency.
+    // store_.strong_tx.get(store_.strong_tx.first(tx_fk), strong);
+    const auto header_fk = to_block(tx_fk);
     if (header_fk.is_terminal())
         return error::unconfirmed_spend;
-    if (!is_coinbase(spent_fk))
+
+    // store_.tx.get(link, tx) && tx.coinbase;
+    if (!is_coinbase(tx_fk))
         return error::success;
 
+    // REDUNDANT.
+    // TODO: fold mature_prevout::get_height with locked_prevout::get_context.
+    // store_.header.get(link, header);
     const auto prevout_height = get_height(header_fk);
     if (prevout_height.is_terminal())
         return error::integrity;
+
     if (!transaction::is_coinbase_mature(prevout_height, height))
         return error::coinbase_maturity;
 
@@ -193,56 +220,37 @@ error::error_t CLASS::mature_prevout(const point_link& link,
 TEMPLATE
 code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 {
-    // This is free (1 sec for all blocks).
     context ctx{};
     if (!get_context(ctx, link))
         return error::integrity;
 
+    code ec{};
+    table::input::slab_composite_sk_and_sequence input{};
     const auto ins = to_non_coinbase_inputs(link);
-    if (ins.empty())
-        return error::success;
 
-    std::atomic<error::error_t> ec{};
-    if (std_all_of(bc::seq, ins.begin(), ins.end(),
-        [&](const auto& in) NOEXCEPT
-        {
-            error::error_t code{};
-            table::input::slab_composite_sk_and_sequence input{};
-            if (!store_.input.get(in, input) || input.is_null())
-            {
-                ec = error::integrity;
-                return false;
-            }
+    for (const auto& in: ins)
+    {
+        if (!store_.input.get(in, input))
+            return error::integrity;
 
-            // Prevout strong spenders (should be cheapest).
-            if (is_spent_prevout(input.key, in))
-            {
-                ec = error::confirmed_double_spend;
-                return false;
-            }
+        // Spent by more than this spender, where that input is confirmed?
+        if (is_spent_prevout(input.key, in))
+            return error::confirmed_double_spend;
 
-            // Strong prevout height/mtp.
-            // Min spendable height/mtp of the prevout is not statically known.
-            // Validation height/mtp is known in validation context, but the
-            // height of the potentially-locked previous output is not known
-            // until its spender confirmation time.
-            if ((code = locked_input(in, input.sequence, ctx)))
-            {
-                ec = code;
-                return false;
-            }
+        // TODO: combine maturity/locked into query for height|mtp|na.
+        // TODO: first walk to confirmed-ness, then if prevout cb get height.
+        // TOOD: and if bip68 get height (if not got) or mtp, call chain fns.
 
-            // Strong prevout, and height if coinbase.
-            if ((code = mature_prevout(input.point_fk(), ctx.height)))
-            {
-                ec = code;
-                return false;
-            }
+        // Strong prevout, height|mtp (based on sequence).
+        if ((ec = locked_prevout(input.point_fk(), input.sequence, ctx)))
+            return ec;
 
-            return true;
-        })) return error::success;
+        // Strong prevout, height (if coinbase).
+        if ((ec = mature_prevout(input.point_fk(), ctx.height)))
+            return ec;
+    }
 
-    return ec.load();
+    return error::success;
 }
 
 TEMPLATE
