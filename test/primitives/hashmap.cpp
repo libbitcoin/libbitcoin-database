@@ -726,6 +726,58 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_put__excess__false)
     BOOST_REQUIRE(instance.put_link(key, slab_excess{ 0xa1b2c3d4_u32 }).is_terminal());
 }
 
+BOOST_AUTO_TEST_CASE(hashmap__record_top__default__terminal)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.top(0).is_terminal());
+    BOOST_REQUIRE(instance.top(19).is_terminal());
+}
+
+BOOST_AUTO_TEST_CASE(hashmap__record_top__past_end__terminal)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.top(20).is_terminal());
+    BOOST_REQUIRE(instance.top(21).is_terminal());
+}
+
+BOOST_AUTO_TEST_CASE(hashmap__record_top__existing__expected)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+
+    BOOST_REQUIRE(!instance.put_link({ 0x41 }, big_record{ 0xa1b2c3d4_u32 }).is_terminal());
+    BOOST_REQUIRE(!instance.put_link({ 0x42 }, big_record{ 0xa2b2c3d4_u32 }).is_terminal());
+    BOOST_REQUIRE(!instance.put_link({ 0x43 }, big_record{ 0xa3b2c3d4_u32 }).is_terminal());
+    BOOST_REQUIRE(!instance.top(0).is_terminal());
+    BOOST_REQUIRE(instance.top(1).is_terminal());
+    BOOST_REQUIRE(instance.top(2).is_terminal());
+    BOOST_REQUIRE(instance.top(3).is_terminal());
+    BOOST_REQUIRE(instance.top(4).is_terminal());
+    BOOST_REQUIRE(instance.top(5).is_terminal());
+    BOOST_REQUIRE(instance.top(6).is_terminal());
+    BOOST_REQUIRE(instance.top(7).is_terminal());
+    BOOST_REQUIRE(instance.top(8).is_terminal());
+    BOOST_REQUIRE(instance.top(9).is_terminal());
+    BOOST_REQUIRE(instance.top(10).is_terminal());
+    BOOST_REQUIRE(instance.top(11).is_terminal());
+    BOOST_REQUIRE(instance.top(12).is_terminal());
+    BOOST_REQUIRE(instance.top(13).is_terminal());
+    BOOST_REQUIRE(instance.top(14).is_terminal());
+    BOOST_REQUIRE(instance.top(15).is_terminal());
+    BOOST_REQUIRE(instance.top(16).is_terminal());
+    BOOST_REQUIRE(instance.top(17).is_terminal());
+    BOOST_REQUIRE(!instance.top(18).is_terminal());
+    BOOST_REQUIRE(!instance.top(19).is_terminal());
+}
+
 BOOST_AUTO_TEST_CASE(hashmap__record_exists__exists__true)
 {
     test::chunk_storage head_store{};

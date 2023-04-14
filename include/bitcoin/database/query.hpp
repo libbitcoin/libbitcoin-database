@@ -31,13 +31,13 @@ namespace libbitcoin {
 namespace database {
 
 /// Database type aliases.
-using point_link = table::point::link;
-using input_link = table::input::link;
-using output_link = table::output::link;
-using tx_link = table::transaction::link;
 using height_link = table::height::link;
 using header_link = table::header::link;
+using output_link = table::output::link;
+using input_link = table::input::link;
+using point_link = table::point::link;
 using txs_link = table::txs::link;
+using tx_link = table::transaction::link;
 using tx_links = std_vector<tx_link::integer>;
 using input_links = std_vector<input_link::integer>;
 using output_links = std_vector<output_link::integer>;
@@ -168,6 +168,13 @@ public:
     tx_link to_coinbase(const header_link& link) const NOEXCEPT;
     input_links to_non_coinbase_inputs(const header_link& link) const NOEXCEPT;
     output_links to_block_outputs(const header_link& link) const NOEXCEPT;
+
+    /// hashmap enumeration
+    header_link top_header(size_t bucket) const NOEXCEPT;
+    input_link top_input(size_t bucket) const NOEXCEPT;
+    point_link top_point(size_t bucket) const NOEXCEPT;
+    txs_link top_txs(size_t bucket) const NOEXCEPT;
+    tx_link top_tx(size_t bucket) const NOEXCEPT;
 
     /// Archival (mostly natural-keyed).
     /// -----------------------------------------------------------------------

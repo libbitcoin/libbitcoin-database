@@ -369,6 +369,44 @@ output_links CLASS::to_block_outputs(const header_link& link) const NOEXCEPT
     return outs;
 }
 
+// hashmap enumeration
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+header_link CLASS::top_header(size_t bucket) const NOEXCEPT
+{
+    using namespace system;
+    return store_.header.top(possible_narrow_cast<header_link::integer>(bucket));
+}
+
+TEMPLATE
+input_link CLASS::top_input(size_t bucket) const NOEXCEPT
+{
+    using namespace system;
+    return store_.input.top(possible_narrow_cast<input_link::integer>(bucket));
+}
+
+TEMPLATE
+point_link CLASS::top_point(size_t bucket) const NOEXCEPT
+{
+    using namespace system;
+    return store_.point.top(possible_narrow_cast<point_link::integer>(bucket));
+}
+
+TEMPLATE
+txs_link CLASS::top_txs(size_t bucket) const NOEXCEPT
+{
+    using namespace system;
+    return store_.txs.top(possible_narrow_cast<txs_link::integer>(bucket));
+}
+
+TEMPLATE
+tx_link CLASS::top_tx(size_t bucket) const NOEXCEPT
+{
+    using namespace system;
+    return store_.tx.top(possible_narrow_cast<tx_link::integer>(bucket));
+}
+
 } // namespace database
 } // namespace libbitcoin
 

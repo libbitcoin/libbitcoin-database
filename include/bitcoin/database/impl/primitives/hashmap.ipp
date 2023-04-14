@@ -101,6 +101,12 @@ Link CLASS::count() const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+Link CLASS::top(const Link& link) const NOEXCEPT
+{
+    return link < head_.buckets() ? head_.top(link) : Link{};
+}
+
+TEMPLATE
 bool CLASS::exists(const Key& key) const NOEXCEPT
 {
     return !first(key).is_terminal();
