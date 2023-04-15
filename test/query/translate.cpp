@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(query_translate__to_tx__txs__expected)
     BOOST_REQUIRE_EQUAL(query.to_tx(test::block3.transactions_ptr()->front()->hash(true)), tx_link::terminal);
 }
 
-// to_input_tx/to_input/to_tx_inputs/to_non_coinbase_inputs
+// to_input_tx/to_input/to_tx_inputs/to_input_point/to_non_coinbase_inputs
 
 BOOST_AUTO_TEST_CASE(query_translate__to_input_tx__to_input__expected)
 {
@@ -215,6 +215,8 @@ BOOST_AUTO_TEST_CASE(query_translate__to_input_tx__to_input__expected)
     BOOST_REQUIRE(query.set(test::block1, test::context));
     BOOST_REQUIRE(query.set(test::block2, test::context));
     BOOST_REQUIRE(query.set(test::block3, test::context));
+
+    // block1a has no true coinbase.
     BOOST_REQUIRE(query.set(test::block1a, test::context));
 
     // First 4 blocks have one transaction with 1 input, block1a has 3.
@@ -234,6 +236,15 @@ BOOST_AUTO_TEST_CASE(query_translate__to_input_tx__to_input__expected)
     BOOST_REQUIRE_EQUAL(query.to_input(4, 1), 0xdbu);
     BOOST_REQUIRE_EQUAL(query.to_input(4, 2), 0xf8u);
 
+    using namespace system;
+    BOOST_REQUIRE_EQUAL(query.to_input_point(query.to_input(0, 0)), base16_array("ffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(query.to_input_point(query.to_input(1, 0)), base16_array("ffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(query.to_input_point(query.to_input(2, 0)), base16_array("ffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(query.to_input_point(query.to_input(3, 0)), base16_array("ffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(query.to_input_point(query.to_input(4, 0)), base16_array("00000000180000"));
+    BOOST_REQUIRE_EQUAL(query.to_input_point(query.to_input(4, 1)), base16_array("000000002a0000"));
+    BOOST_REQUIRE_EQUAL(query.to_input_point(query.to_input(4, 2)), base16_array("010000002b0000"));
+
     const input_links expected_links4{ 0xbe, 0xdb, 0xf8 };
     BOOST_REQUIRE_EQUAL(query.to_tx_inputs(0), input_links{ 0x00 });
     BOOST_REQUIRE_EQUAL(query.to_tx_inputs(1), input_links{ 0x64 });
@@ -251,11 +262,13 @@ BOOST_AUTO_TEST_CASE(query_translate__to_input_tx__to_input__expected)
     // Past end.
     BOOST_REQUIRE_EQUAL(query.to_input_tx(277), tx_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_input(5, 0), input_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_input_point(input_link::terminal), foreign_point{});
+    BOOST_REQUIRE_EQUAL(query.to_input_point(query.to_input(5, 0)), foreign_point{});
     BOOST_REQUIRE(query.to_tx_inputs(5).empty());
     BOOST_REQUIRE(query.to_non_coinbase_inputs(5).empty());
 
     // Verify expectations.
-    const auto input_head = system::base16_chunk
+    const auto input_head = base16_chunk
     (
         "0000000000" // size
         "db00000000"
@@ -264,7 +277,7 @@ BOOST_AUTO_TEST_CASE(query_translate__to_input_tx__to_input__expected)
         "f800000000"
         "ffffffffff"
     );
-    const auto input_body = system::base16_chunk
+    const auto input_body = base16_chunk
     (
         // 0, 1, 2, 3, 4, 4, 4
         // genesis [00]->[terminal]

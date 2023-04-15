@@ -41,6 +41,7 @@ using tx_link = table::transaction::link;
 using tx_links = std_vector<tx_link::integer>;
 using input_links = std_vector<input_link::integer>;
 using output_links = std_vector<output_link::integer>;
+using foreign_point = table::input::search_key;
 
 template <typename Store>
 class query
@@ -143,6 +144,7 @@ public:
     tx_link to_input_tx(const input_link& link) const NOEXCEPT;
     tx_link to_output_tx(const output_link& link) const NOEXCEPT;
     tx_link to_prevout_tx(const input_link& link) const NOEXCEPT;
+    foreign_point to_input_point(const input_link& link) const NOEXCEPT;
 
     /// point to put (forward navigation)
     input_link to_input(const tx_link& link, uint32_t input_index) const NOEXCEPT;

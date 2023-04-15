@@ -122,6 +122,16 @@ tx_link CLASS::to_prevout_tx(const input_link& link) const NOEXCEPT
     return to_tx(get_point_key(in.point_fk));
 }
 
+TEMPLATE
+foreign_point CLASS::to_input_point(const input_link& link) const NOEXCEPT
+{
+    table::input::slab_composite_sk in{};
+    if (!store_.input.get(link, in))
+        return {};
+
+    return in.key;
+}
+
 // point to put (forward navigation)
 // ----------------------------------------------------------------------------
 
