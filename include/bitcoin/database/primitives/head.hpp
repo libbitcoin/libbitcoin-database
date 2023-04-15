@@ -73,6 +73,7 @@ private:
         constexpr auto length = array_count<Key>;
         constexpr auto size = std::min(length, sizeof(size_t));
 
+        // This breaks data portability by endianness.
         // Assumes a high degree of uniqueness in low order 8 bytes of key.
         size_t value{};
         std::copy_n(key.begin(), size, system::byte_cast(value).begin());
