@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HEAD_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_HEAD_HPP
 
+#include <algorithm>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
@@ -65,6 +66,17 @@ private:
     static auto& array_cast(memory& buffer) NOEXCEPT
     {
         return system::unsafe_array_cast<uint8_t, Bytes>(buffer.begin());
+    }
+
+    static constexpr size_t unique_hash(const Key& key) NOEXCEPT
+    {
+        constexpr auto length = array_count<Key>;
+        constexpr auto size = std::min(length, sizeof(size_t));
+
+        // Assumes a high degree of uniqueness in low order 8 bytes of key.
+        size_t value{};
+        std::copy_n(key.begin(), size, system::byte_cast(value).begin());
+        return value;
     }
 
     static constexpr size_t offset(const Link& index) NOEXCEPT

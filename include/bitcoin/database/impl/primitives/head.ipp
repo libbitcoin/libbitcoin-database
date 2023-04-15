@@ -49,7 +49,10 @@ TEMPLATE
 Link CLASS::index(const Key& key) const NOEXCEPT
 {
     // zero buckets precludes calling index/top/push (array only).
-    return system::djb2_hash(key) % buckets_;
+    return unique_hash(key) % buckets_;
+
+    // Very poor uniqueness result for sequential keys.
+    ////return system::djb2_hash(key) % buckets_;
 }
 
 TEMPLATE
