@@ -237,6 +237,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         if (is_spent_prevout(input.key, in))
             return error::confirmed_double_spend;
 
+        // TODO: create is_spendable_prevout() to compliment is_spent_prevout().
         // TODO: combine maturity/locked into query for height|mtp|na.
         // TODO: first walk to confirmed-ness, then if prevout cb get height.
         // TOOD: and if bip68 get height (if not got) or mtp, call chain fns.
