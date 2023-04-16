@@ -123,7 +123,7 @@ tx_link CLASS::to_prevout_tx(const input_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-foreign_point CLASS::to_input_point(const input_link& link) const NOEXCEPT
+foreign_point CLASS::to_input_key(const input_link& link) const NOEXCEPT
 {
     table::input::slab_composite_sk in{};
     if (!store_.input.get(link, in))
@@ -252,7 +252,6 @@ input_links CLASS::to_spenders(
     if (it.self().is_terminal())
         return {};
 
-    // Spender count is low, so no parallel here.
     input_links spenders;
     do { spenders.push_back(it.self()); } while (it.advance());
     return spenders;

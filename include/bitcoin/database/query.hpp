@@ -144,7 +144,7 @@ public:
     tx_link to_input_tx(const input_link& link) const NOEXCEPT;
     tx_link to_output_tx(const output_link& link) const NOEXCEPT;
     tx_link to_prevout_tx(const input_link& link) const NOEXCEPT;
-    foreign_point to_input_point(const input_link& link) const NOEXCEPT;
+    foreign_point to_input_key(const input_link& link) const NOEXCEPT;
 
     /// point to put (forward navigation)
     input_link to_input(const tx_link& link, uint32_t input_index) const NOEXCEPT;
