@@ -123,7 +123,7 @@ tx_link CLASS::to_prevout_tx(const input_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-foreign_point CLASS::to_input_key(const input_link& link) const NOEXCEPT
+foreign_point CLASS::to_foreign_point(const input_link& link) const NOEXCEPT
 {
     table::input::slab_composite_sk in{};
     if (!store_.input.get(link, in))
@@ -131,6 +131,13 @@ foreign_point CLASS::to_input_key(const input_link& link) const NOEXCEPT
 
     return in.key;
 }
+
+////TEMPLATE
+////foreign_points CLASS::to_foreign_points(const header_link& link) const NOEXCEPT
+////{
+////    const auto ins = to_non_coinbase_inputs(link);
+////    ///....
+////}
 
 // point to put (forward navigation)
 // ----------------------------------------------------------------------------

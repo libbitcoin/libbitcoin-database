@@ -36,12 +36,14 @@ using header_link = table::header::link;
 using output_link = table::output::link;
 using input_link = table::input::link;
 using point_link = table::point::link;
+////using puts_link = table::puts::link;
 using txs_link = table::txs::link;
 using tx_link = table::transaction::link;
 using tx_links = std_vector<tx_link::integer>;
 using input_links = std_vector<input_link::integer>;
 using output_links = std_vector<output_link::integer>;
 using foreign_point = table::input::search_key;
+using foreign_points = std_vector<foreign_point>;
 
 template <typename Store>
 class query
@@ -144,7 +146,8 @@ public:
     tx_link to_input_tx(const input_link& link) const NOEXCEPT;
     tx_link to_output_tx(const output_link& link) const NOEXCEPT;
     tx_link to_prevout_tx(const input_link& link) const NOEXCEPT;
-    foreign_point to_input_key(const input_link& link) const NOEXCEPT;
+    foreign_point to_foreign_point(const input_link& link) const NOEXCEPT;
+    ////foreign_points to_foreign_points(const header_link& link) const NOEXCEPT;
 
     /// point to put (forward navigation)
     input_link to_input(const tx_link& link, uint32_t input_index) const NOEXCEPT;
@@ -298,6 +301,8 @@ public:
     bool is_mature(const input_link& link, size_t height) const NOEXCEPT;
     ////bool is_exhausted(const tx_link& link) const NOEXCEPT;
     code block_confirmable(const header_link& link) const NOEXCEPT;
+    code block_confirmable(const input_links& links,
+        const context& ctx) const NOEXCEPT;
 
     /// Block association relies on strong (confirmed or pending).
     bool set_strong(const header_link& link) NOEXCEPT;
@@ -339,11 +344,8 @@ public:
     bool set_bootstrap(size_t height) NOEXCEPT;
 
 protected:
-    using input_key = table::input::search_key;
-    using puts_link = table::puts::link;
-
     inline txs_link to_txs_link(const header_link& link) const NOEXCEPT;
-    inline input_key make_foreign_point(const point& prevout) const NOEXCEPT;
+    inline foreign_point make_foreign_point(const point& prevout) const NOEXCEPT;
     inline code to_block_code(linkage<schema::code>::integer value) const NOEXCEPT;
     inline code to_tx_code(linkage<schema::code>::integer value) const NOEXCEPT;
     inline bool is_sufficient(const context& current,

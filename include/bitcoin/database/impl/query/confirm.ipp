@@ -224,19 +224,52 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     if (!get_context(ctx, link))
         return error::integrity;
 
+    return block_confirmable(to_non_coinbase_inputs(link), ctx);
+}
+
+TEMPLATE
+code CLASS::block_confirmable(const input_links& links,
+    const context& ctx) const NOEXCEPT
+{
+    // TODO: find a way to test the cost of block_confirmable with cached
+    // input_fp and prevout tx_fk values (after folding locked into mature).
+    // Maybe populate cached std::vector<std::pair<input::search_key, tx_link>>
+    // and perform a warm run on it.
+
+    // This is too expensive, spans all 2.5 billion inputs.
+    // We have the necessary info when the tx comes over the wire (hash/index).
+    // It gets lost if the block tx is serialized and discarded before confirm.
+    // Same holds for prevouts (cache into a circular buffer while validating).
+    // We could cache the input foreign points for each block as it is archived.
+    // This set and context is all that is required for confirmation. A fp is 7
+    // bytes, so for a 10,000 input block, that would be 70,000 bytes and can
+    // be stored as a simple vector of arrays (contiguous). These aren't input
+    // primary keys, these are input search keys. They are used to search input
+    // for spend conflicts (is_spent_prevout).The point_fk of the fp obtains
+    // the prevout hash via direct link and can search tx for maturity. But
+    // the tx_fk from the prevout may be cached as well, allowing maturity.
+    // This requires no association with the input or output, just that the
+    // prevout tx is mature. tx_fx is 4 bytes and can be cached as well. So
+    // with all input fps and prevout tx fks the confirmation should be fast.
+    // There would be only block/tx level events and one is_spent_prevout.
+
     code ec{};
     table::input::slab_composite_sk_and_sequence input{};
-    const auto ins = to_non_coinbase_inputs(link);
 
-    for (const auto& in: ins)
+    for (const auto& in: links)
     {
+        // This is cheap.
         if (!store_.input.get(in, input))
             return error::integrity;
 
+        // This is expensive.
+        // This is an input table search and tx, has no output context.
         // Spent by more than this spender, where that input is confirmed?
         if (is_spent_prevout(input.key, in))
             return error::confirmed_double_spend;
 
+        // This is expensive.
+        // This is tx only, not output context.
         // TODO: create is_spendable_prevout() to compliment is_spent_prevout().
         // TODO: combine maturity/locked into query for height|mtp|na.
         // TODO: first walk to confirmed-ness, then if prevout cb get height.
