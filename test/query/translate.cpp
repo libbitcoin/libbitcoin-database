@@ -271,11 +271,11 @@ BOOST_AUTO_TEST_CASE(query_translate__to_input_tx__to_input__expected)
     const auto input_head = base16_chunk
     (
         "0000000000" // size
+        "a000000000"
+        "ffffffffff"
         "db00000000"
         "ffffffffff"
-        "a000000000"
         "f800000000"
-        "ffffffffff"
     );
     const auto input_body = base16_chunk
     (
@@ -400,11 +400,11 @@ BOOST_AUTO_TEST_CASE(query_translate__to_prevout_tx__to_prevout__expected)
     const auto input_head = system::base16_chunk
     (
         "0000000000" // size
-        "f500000000"
-        "ffffffffff"
         "0000000000"
-        "9e00000000"
+        "ffffffffff"
+        "f500000000"
         "1201000000"
+        "9e00000000"
     );
     const auto input_body = system::base16_chunk
     (
@@ -437,8 +437,27 @@ BOOST_AUTO_TEST_CASE(query_translate__to_prevout_tx__to_prevout__expected)
         "ffffffff"
         "ffffffff"
         "01000000"
-        "ffffffff"
+        "02000000"
     );
+
+    ////// djb2
+    ////const auto tx_body = system::base16_chunk
+    ////(
+    ////    "ffffffff" // genesis:0 [0]->terminal
+    ////    "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a"
+    ////    "01cc0000cc000000000000010000000100000100000000000000"
+    ////    "00000000" // block1a:0 [1]->[0]
+    ////    "d19c4584d53264e5d0f9d2f852578c4d4382b69abee853bfbd6bc580f84069cf"
+    ////    "009f0000b00000180000002a0000000300000200000200000000"
+    ////    "ffffffff" // block2a:0 [2]->terminal
+    ////    "c67bfbf8f354bd8f26d7a8b60c20b591dddf8760e02a1fcc3fd7af60b4253e67"
+    ////    "006a000076000081000000a20000000200000100000700000000"
+    ////    "02000000" // block2a:1 [3]->[2]
+    ////    "64a86f067651854e2242b6ac9430b6d6806ea2b24dd7edec7b61dd885cf4a40c"
+    ////    "006a000076000081000000a20000000200000100000a00000000"
+    ////);
+
+    // nosh
     const auto tx_body = system::base16_chunk
     (
         "ffffffff" // genesis:0 [0]->terminal
@@ -450,10 +469,11 @@ BOOST_AUTO_TEST_CASE(query_translate__to_prevout_tx__to_prevout__expected)
         "ffffffff" // block2a:0 [2]->terminal
         "c67bfbf8f354bd8f26d7a8b60c20b591dddf8760e02a1fcc3fd7af60b4253e67"
         "006a000076000081000000a20000000200000100000700000000"
-        "02000000" // block2a:1 [3]->[2]
+        "ffffffff" // block2a:1 [3]->terminal
         "64a86f067651854e2242b6ac9430b6d6806ea2b24dd7edec7b61dd885cf4a40c"
         "006a000076000081000000a20000000200000100000a00000000"
     );
+
     BOOST_REQUIRE_EQUAL(store.input_head(), input_head);
     BOOST_REQUIRE_EQUAL(store.input_body(), input_body);
     BOOST_REQUIRE_EQUAL(store.output_body(), output_body);
@@ -608,11 +628,11 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spenders__point__expected)
     const auto input_head = system::base16_chunk
     (
         "0000000000" // size
-        "2f01000000"
-        "ffffffffff"
         "0000000000"
-        "9e00000000"
+        "ffffffffff"
+        "2f01000000"
         "4c01000000"
+        "9e00000000"
     );
     const auto input_body = system::base16_chunk
     (
@@ -640,11 +660,33 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spenders__point__expected)
     (
         "00000000" // size
         "03000000"
+        "ffffffff"
         "04000000"
-        "ffffffff"
         "01000000"
-        "ffffffff"
+        "02000000"
     );
+
+    ////// djb2
+    ////const auto tx_body = system::base16_chunk
+    ////(
+    ////    "ffffffff" // genesis:0 [0]->terminal
+    ////    "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a"
+    ////    "01cc0000cc000000000000010000000100000100000000000000"
+    ////    "00000000" // block1a:0 [1]->[0]
+    ////    "d19c4584d53264e5d0f9d2f852578c4d4382b69abee853bfbd6bc580f84069cf"
+    ////    "009f0000b00000180000002a0000000300000200000200000000"
+    ////    "ffffffff" // block2a:0 [2]->terminal
+    ////    "c67bfbf8f354bd8f26d7a8b60c20b591dddf8760e02a1fcc3fd7af60b4253e67"
+    ////    "006a000076000081000000a20000000200000100000700000000"
+    ////    "02000000" // block2a:1 [3]->[2]
+    ////    "64a86f067651854e2242b6ac9430b6d6806ea2b24dd7edec7b61dd885cf4a40c"
+    ////    "006a000076000081000000a20000000200000100000a00000000"
+    ////    "ffffffff" // tx4 [4]->terminal
+    ////    "abee882062e8df25c967717d0f97e0133af9be84861a427dd4e3f7370549c441"
+    ////    "006a000076000085000000a50000000200000100000d00000000"
+    ////);
+
+    // nosh
     const auto tx_body = system::base16_chunk
     (
         "ffffffff" // genesis:0 [0]->terminal
@@ -656,13 +698,14 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spenders__point__expected)
         "ffffffff" // block2a:0 [2]->terminal
         "c67bfbf8f354bd8f26d7a8b60c20b591dddf8760e02a1fcc3fd7af60b4253e67"
         "006a000076000081000000a20000000200000100000700000000"
-        "02000000" // block2a:1 [3]->[2]
+        "ffffffff" // block2a:1 [3]->terminal
         "64a86f067651854e2242b6ac9430b6d6806ea2b24dd7edec7b61dd885cf4a40c"
         "006a000076000081000000a20000000200000100000a00000000"
         "ffffffff" // tx4 [4]->terminal
         "abee882062e8df25c967717d0f97e0133af9be84861a427dd4e3f7370549c441"
         "006a000076000085000000a50000000200000100000d00000000"
     );
+
     BOOST_REQUIRE_EQUAL(store.input_head(), input_head);
     BOOST_REQUIRE_EQUAL(store.input_body(), input_body);
     BOOST_REQUIRE_EQUAL(store.output_body(), output_body);

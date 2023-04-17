@@ -29,8 +29,8 @@ const table::neutrino::slab slab2{ {}, one_hash,  { 0xab, 0xcd, 0xef } };
 const data_chunk expected_head = base16_chunk
 (
     "0000000000"
-    "2a00000000"
     "ffffffffff"
+    "2a00000000"
     "ffffffffff"
     "ffffffffff"
     "ffffffffff"
@@ -38,8 +38,8 @@ const data_chunk expected_head = base16_chunk
 const data_chunk closed_head = base16_chunk
 (
     "5600000000"
-    "2a00000000"
     "ffffffffff"
+    "2a00000000"
     "ffffffffff"
     "ffffffffff"
     "ffffffffff"

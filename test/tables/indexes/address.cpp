@@ -32,29 +32,29 @@ const data_chunk expected_head = base16_chunk
 (
     "0000000000"
     "ffffffffff"
-    "ffffffffff"
-    "0100000000"
     "0000000000"
+    "0100000000"
+    "ffffffffff"
     "ffffffffff"
 );
 const data_chunk closed_head = base16_chunk
 (
     "0200000000"
     "ffffffffff"
-    "ffffffffff"
-    "0100000000"
     "0000000000"
+    "0100000000"
+    "ffffffffff"
     "ffffffffff"
 );
 const data_chunk expected_body = base16_chunk
 (
     "ffffffffff"   // next->end
     "100000000000000000000000000000000000000000000000000000000000000a" // key1
-    "efcdab9078" // output1 [low 5 bytes]
+    "efcdab9078"   // output1 [low 5 bytes]
 
     "ffffffffff"   // next->end
     "200000000000000000000000000000000000000000000000000000000000000b" // key2
-    "9078563412" // output2 [low 5 bytes]
+    "9078563412"   // output2 [low 5 bytes]
 );
 
 BOOST_AUTO_TEST_CASE(address__put__two__expected)

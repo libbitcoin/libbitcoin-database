@@ -75,20 +75,20 @@ const table::validated_tx::slab out2
 const data_chunk expected_head = base16_chunk
 (
     "0000000000"
-    "ffffffffff"
-    "ffffffffff"
-    "ffffffffff"
-    "ffffffffff"
     "2300000000"
+    "ffffffffff"
+    "ffffffffff"
+    "ffffffffff"
+    "ffffffffff"
 );
 const data_chunk closed_head = base16_chunk
 (
     "3a00000000"
-    "ffffffffff"
-    "ffffffffff"
-    "ffffffffff"
-    "ffffffffff"
     "2300000000"
+    "ffffffffff"
+    "ffffffffff"
+    "ffffffffff"
+    "ffffffffff"
 );
 const data_chunk expected_body = base16_chunk
 (
