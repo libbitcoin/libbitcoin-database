@@ -122,6 +122,23 @@ tx_link CLASS::to_prevout_tx(const input_link& link) const NOEXCEPT
     return to_tx(get_point_key(in.point_fk));
 }
 
+TEMPLATE
+foreign_point CLASS::to_foreign_point(const input_link& link) const NOEXCEPT
+{
+    table::input::slab_composite_sk in{};
+    if (!store_.input.get(link, in))
+        return {};
+
+    return in.key;
+}
+
+////TEMPLATE
+////foreign_points CLASS::to_foreign_points(const header_link& link) const NOEXCEPT
+////{
+////    const auto ins = to_non_coinbase_inputs(link);
+////    ///....
+////}
+
 // point to put (forward navigation)
 // ----------------------------------------------------------------------------
 
@@ -242,7 +259,6 @@ input_links CLASS::to_spenders(
     if (it.self().is_terminal())
         return {};
 
-    // Spender count is low, so no parallel here.
     input_links spenders;
     do { spenders.push_back(it.self()); } while (it.advance());
     return spenders;
@@ -304,47 +320,15 @@ tx_link CLASS::to_coinbase(const header_link& link) const NOEXCEPT
     return txs.coinbase_fk;
 }
 
-////// static/private
-////TEMPLATE
-////size_t CLASS::nested_count(const auto& outer) NOEXCEPT
-////{
-////    return std::accumulate(outer.begin(), outer.end(), zero,
-////        [](size_t total, const auto& inner) NOEXCEPT
-////        {
-////            return total + inner.size();
-////        });
-////};
-
 TEMPLATE
 input_links CLASS::to_non_coinbase_inputs(
     const header_link& link) const NOEXCEPT
 {
-    ////const auto txs = to_txs(link);
-    ////if (txs.empty())
-    ////    return {};
-    ////
-    ////std::vector<input_links> inputs(txs.size());
-    ////std_transform(bc::seq, std::next(txs.begin()), txs.end(),
-    ////    inputs.begin(), [&](const auto& tx) NOEXCEPT
-    ////    {
-    ////        return to_tx_inputs(tx);
-    ////    });
-    ////
-    ////input_links ins{};
-    ////ins.reserve(nested_count(inputs));
-    ////for (const auto& set: inputs)
-    ////    for (const auto& input: set)
-    ////        ins.push_back(input);
-    ////
-    ////return ins;
-
     const auto txs = to_txs(link);
     if (txs.size() <= one)
         return {};
 
     input_links ins{};
-
-    // This is faster than an inner/outer loop as blocks become more populated.
     for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
     {
         const auto inputs = to_tx_inputs(*tx);
@@ -357,8 +341,8 @@ input_links CLASS::to_non_coinbase_inputs(
 TEMPLATE
 output_links CLASS::to_block_outputs(const header_link& link) const NOEXCEPT
 {
-    const auto txs = to_txs(link);
     output_links outs{};
+    const auto txs = to_txs(link);
 
     for (const auto& tx: txs)
     {

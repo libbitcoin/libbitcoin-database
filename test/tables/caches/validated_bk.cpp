@@ -29,8 +29,8 @@ const table::validated_bk::slab slab2{ {}, 0xab, 0x0000000000000042 };
 const data_chunk expected_head = base16_chunk
 (
     "000000"
-    "100000"
     "ffffff"
+    "100000"
     "ffffff"
     "ffffff"
     "ffffff"
@@ -38,8 +38,8 @@ const data_chunk expected_head = base16_chunk
 const data_chunk closed_head = base16_chunk
 (
     "180000"
-    "100000"
     "ffffff"
+    "100000"
     "ffffff"
     "ffffff"
     "ffffff"

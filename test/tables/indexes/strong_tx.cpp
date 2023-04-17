@@ -31,20 +31,20 @@ const table::strong_tx::record out2{ {}, 0x00223344 };
 const data_chunk expected_head = base16_chunk
 (
     "00000000"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
     "01000000"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
 );
 const data_chunk closed_head = base16_chunk
 (
     "02000000"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
     "01000000"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
 );
 const data_chunk expected_body = base16_chunk
 (

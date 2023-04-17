@@ -24,6 +24,11 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
+extern std::atomic<size_t> foobar3;
+extern std::atomic<size_t> foobar4;
+extern std::atomic<size_t> foobar7;
+extern std::atomic<size_t> foobar32;
+
 namespace libbitcoin {
 namespace database {
 
@@ -39,13 +44,35 @@ CLASS::iterator(const memory_ptr& data, const Link& start,
 TEMPLATE
 bool CLASS::advance() NOEXCEPT
 {
+    size_t count{ one };
     while (!link_.is_terminal())
     {
+        ++count;
+
         link_ = get_next();
         if (is_match())
+        {
+            // Temporary hack to observe conflict lists.
+            if constexpr (array_count<Key> == 3u)
+            {
+                foobar3 = std::max(count, foobar3.load());
+            }
+            else if constexpr (array_count<Key> == 4u)
+            {
+                foobar4 = std::max(count, foobar4.load());
+            }
+            else if constexpr (array_count<Key> == 7u)
+            {
+                foobar7 = std::max(count, foobar7.load());
+            }
+            else if constexpr (array_count<Key> == 32u)
+            {
+                foobar32 = std::max(count, foobar32.load());
+            }
             return true;
+        }
     }
-    
+
     return false;
 }
 

@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HEAD_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_HEAD_HPP
 
+#include <algorithm>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
@@ -27,7 +28,7 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename Link, typename Key>
+template <typename Link, typename Key, bool Hash>
 class head
 {
 public:
@@ -35,6 +36,7 @@ public:
 
     using bytes = typename Link::bytes;
 
+    /// An array head has zero buckets (and cannot call index()).
     head(storage& head, const Link& buckets) NOEXCEPT;
 
     /// Sizing (thread safe).
@@ -59,6 +61,20 @@ public:
     Link top(const Link& index) const NOEXCEPT;
     bool push(const bytes& current, bytes& next, const Key& key) NOEXCEPT;
     bool push(const bytes& current, bytes& next, const Link& index) NOEXCEPT;
+
+protected:
+    /// Assumes a high degree of uniqueness in low order 8 bytes of key.
+    static constexpr size_t unique_hash(const Key& key) NOEXCEPT
+    {
+        constexpr auto length = array_count<Key>;
+        constexpr auto size = std::min(length, sizeof(size_t));
+
+        // This optimization breaks data portability (by endianness).
+        // Could be modified to use an endian conversion vs. simple copy.
+        size_t value{};
+        std::copy_n(key.begin(), size, system::byte_cast(value).begin());
+        return value;
+    }
 
 private:
     template <size_t Bytes>
@@ -87,8 +103,8 @@ private:
 } // namespace libbitcoin
 
 
-#define TEMPLATE template <typename Link, typename Key>
-#define CLASS head<Link, Key>
+#define TEMPLATE template <typename Link, typename Key, bool Hash>
+#define CLASS head<Link, Key, Hash>
 
 #include <bitcoin/database/impl/primitives/head.ipp>
 

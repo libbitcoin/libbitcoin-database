@@ -32,20 +32,20 @@ const table::buffer::slab slab2{ {}, genesis_tx };
 const data_chunk expected_head = base16_chunk
 (
     "0000000000"
-    "ffffffffff"
-    "ffffffffff"
-    "ffffffffff"
-    "ffffffffff"
     "1300000000"
+    "ffffffffff"
+    "ffffffffff"
+    "ffffffffff"
+    "ffffffffff"
 );
 const data_chunk closed_head = base16_chunk
 (
     "e800000000"
-    "ffffffffff"
-    "ffffffffff"
-    "ffffffffff"
-    "ffffffffff"
     "1300000000"
+    "ffffffffff"
+    "ffffffffff"
+    "ffffffffff"
+    "ffffffffff"
 );
 const data_chunk expected_body = base16_chunk
 (

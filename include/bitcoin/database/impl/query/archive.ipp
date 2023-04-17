@@ -478,7 +478,7 @@ typename CLASS::inputs_ptr CLASS::get_spenders(const tx_link& link,
 
 // protected
 TEMPLATE
-inline typename CLASS::input_key CLASS::make_foreign_point(
+inline foreign_point CLASS::make_foreign_point(
     const point& prevout) const NOEXCEPT
 {
     if (prevout.is_null())
