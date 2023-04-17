@@ -30,7 +30,6 @@ TEMPLATE
 CLASS::head(storage& head, const Link& buckets) NOEXCEPT
   : file_(head), buckets_(buckets)
 {
-    ////BC_ASSERT_MSG(!is_zero(buckets), "no buckets");
 }
 
 TEMPLATE
@@ -48,11 +47,19 @@ size_t CLASS::buckets() const NOEXCEPT
 TEMPLATE
 Link CLASS::index(const Key& key) const NOEXCEPT
 {
-    // zero buckets precludes calling index/top/push (array only).
-    return unique_hash(key) % buckets_;
+    BC_ASSERT_MSG(!is_zero(buckets_), "hash table requires buckets");
 
-    // Very poor uniqueness result for sequential keys.
-    ////return system::djb2_hash(key) % buckets_;
+    // TODO: for greater flexibility, inject hash function through template.
+    if constexpr (Hash)
+    {
+        // djb2_hash exhibits very poor uniqueness result for sequential keys.
+        return system::djb2_hash(key) % buckets_;
+    }
+    else
+    {
+        // unique_hash assumes sufficient uniqueness in low order key bytes.
+        return unique_hash(key) % buckets_;
+    }
 }
 
 TEMPLATE

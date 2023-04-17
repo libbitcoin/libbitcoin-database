@@ -24,11 +24,11 @@ BOOST_AUTO_TEST_SUITE(hashmap_tests)
 using namespace system;
 template <typename Link, typename Key, size_t Size>
 class hashmap_
-  : public hashmap<Link, Key, Size>
+  : public hashmap<Link, Key, Size, true>
 {
 public:
-    using base = hashmap<Link, Key, Size>;
-    using base::hashmap;
+    using base = hashmap<Link, Key, Size, true>;
+    using hashmap<Link, Key, Size, true>::hashmap;
 
     reader_ptr getter_(const Key& key) const NOEXCEPT
     {
@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__terminal__invalid)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    const hashmap<link5, key10, little_record::size> instance{ head_store, body_store, buckets };
+    const hashmap<link5, key10, little_record::size, true> instance{ head_store, body_store, buckets };
 
     little_record record{};
     BOOST_REQUIRE(!instance.get(link5::terminal, record));
@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__empty__invalid)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    const hashmap<link5, key10, little_record::size> instance{ head_store, body_store, buckets };
+    const hashmap<link5, key10, little_record::size, true> instance{ head_store, body_store, buckets };
 
     little_record record{};
     BOOST_REQUIRE(!instance.get(0, record));
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__populated__valid)
     };
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    const hashmap<link5, key10, little_record::size> instance{ head_store, body_store, buckets };
+    const hashmap<link5, key10, little_record::size, true> instance{ head_store, body_store, buckets };
 
     little_record record{};
     BOOST_REQUIRE(instance.get(0, record));
@@ -439,7 +439,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_put__multiple__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size, true> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key1_big{ 0x41 };
@@ -529,7 +529,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_put__multiple__expected)
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
 
-    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_slab::size, true> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key_big{ 0x41 };
@@ -592,7 +592,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__excess__false)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size, true> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -606,7 +606,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get_key__excess__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size, true> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -618,7 +618,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_put__excess__false)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size, true> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -674,7 +674,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_get__excess__true)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_slab::size, true> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -690,7 +690,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_get_key__excess__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_slab::size, true> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -704,7 +704,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_get__file_excess__false)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_slab::size, true> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -719,7 +719,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_put__excess__false)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_slab::size, true> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -730,7 +730,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_top__default__terminal)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size, true> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.top(0).is_terminal());
     BOOST_REQUIRE(instance.top(19).is_terminal());
@@ -740,7 +740,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_top__past_end__terminal)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size, true> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.top(20).is_terminal());
     BOOST_REQUIRE(instance.top(21).is_terminal());
@@ -750,7 +750,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_top__existing__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size, true> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
     BOOST_REQUIRE(!instance.put_link({ 0x41 }, big_record{ 0xa1b2c3d4_u32 }).is_terminal());
@@ -782,7 +782,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_exists__exists__true)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size, true> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -795,7 +795,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_exists__exists__true)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_slab::size, true> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -808,7 +808,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_first__exists__true)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size, true> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -822,7 +822,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_first__exists__true)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_slab::size, true> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -836,7 +836,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_it__exists__non_terminal)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size, true> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -852,7 +852,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_it__multiple__iterated)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size, true> instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key_a{ 0xaa };
@@ -1054,7 +1054,7 @@ BOOST_AUTO_TEST_CASE(hashmap__set_commit__record__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key10, flex_record::size> instance{ head_store, body_store, 2 };
+    hashmap<link5, key10, flex_record::size, true> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
 
     constexpr auto size = link5::size + array_count<key10> + flex_record::size;
@@ -1076,7 +1076,7 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_set_commit__record__expected)
     data_chunk head_file;
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key10, flex_record::size> instance{ head_store, body_store, 2 };
+    hashmap<link5, key10, flex_record::size, true> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
 
     constexpr auto size = link5::size + array_count<key10> + flex_record::size;
@@ -1098,7 +1098,7 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_put1__record__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key10, flex_record::size> instance{ head_store, body_store, 2 };
+    hashmap<link5, key10, flex_record::size, true> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
     
     constexpr auto size = link5::size + array_count<key10> + sizeof(uint32_t);
@@ -1116,7 +1116,7 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_put2__record__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key10, flex_record::size> instance{ head_store, body_store, 2 };
+    hashmap<link5, key10, flex_record::size, true> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
 
     constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
@@ -1129,7 +1129,7 @@ BOOST_AUTO_TEST_CASE(hashmap__set_commit_link__slab__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key10, flex_slab::size> instance{ head_store, body_store, 2 };
+    hashmap<link5, key10, flex_slab::size, true> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
 
     constexpr auto size = link5::size + array_count<key10> + sizeof(uint32_t);
@@ -1151,7 +1151,7 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_set_commit__slab__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key10, flex_slab::size> instance{ head_store, body_store, 2 };
+    hashmap<link5, key10, flex_slab::size, true> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
 
     constexpr auto size = link5::size + array_count<key10> + sizeof(uint32_t);
@@ -1175,7 +1175,7 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_put1__slab__expected)
     data_chunk body_file;
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    hashmap<link5, key10, flex_slab::size> instance{ head_store, body_store, 2 };
+    hashmap<link5, key10, flex_slab::size, true> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
 
     constexpr auto size = link5::size + array_count<key10> + sizeof(uint32_t);
@@ -1195,7 +1195,7 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_put2__slab__expected)
     data_chunk body_file;
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    hashmap<link5, key10, flex_slab::size> instance{ head_store, body_store, 2 };
+    hashmap<link5, key10, flex_slab::size, true> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
 
     constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };

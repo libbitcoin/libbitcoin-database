@@ -124,6 +124,7 @@ namespace schema
     // record hashmap
     struct header
     {
+        static constexpr bool hash_function = true;
         static constexpr size_t pk = schema::block;
         static constexpr size_t sk = schema::hash;
         static constexpr size_t minsize =
@@ -158,6 +159,7 @@ namespace schema
     // record hashmap
     struct transaction
     {
+        static constexpr bool hash_function = true;
         static constexpr size_t pk = schema::tx;
         static constexpr size_t sk = schema::hash;
         static constexpr size_t minsize =
@@ -179,6 +181,7 @@ namespace schema
     // moderate (sk:7) slab multimap, with low multiple rate.
     struct input
     {
+        static constexpr bool hash_function = true;
         static constexpr size_t pk = schema::put;
         static constexpr size_t sk =
             transaction::pk +
@@ -214,6 +217,7 @@ namespace schema
     // record hashmap
     struct point
     {
+        static constexpr bool hash_function = true;
         static constexpr size_t pk = schema::tx;
         static constexpr size_t sk = schema::hash;
         static constexpr size_t minsize = zero;
@@ -227,6 +231,7 @@ namespace schema
     // slab hashmap
     struct txs
     {
+        static constexpr bool hash_function = true;
         static constexpr size_t pk = schema::txs_;
         static constexpr size_t sk = schema::header::pk;
         static constexpr size_t minsize = zero;
@@ -256,6 +261,7 @@ namespace schema
     // large (sk:32) record multimap, with high multiple rate.
     struct address
     {
+        static constexpr bool hash_function = true;
         static constexpr size_t pk = schema::puts_;
         ////static constexpr size_t sk = schema::point::pk;
         static constexpr size_t sk = schema::hash;
@@ -271,6 +277,7 @@ namespace schema
     // record hashmap
     struct strong_tx
     {
+        static constexpr bool hash_function = true;
         static constexpr size_t pk = schema::tx;
         static constexpr size_t sk = schema::transaction::pk;
         static constexpr size_t minsize =
@@ -301,6 +308,7 @@ namespace schema
     // slab hashmap
     struct buffer
     {
+        static constexpr bool hash_function = true;
         static constexpr size_t pk = schema::buffer_;
         static constexpr size_t sk = schema::transaction::pk;
         static constexpr size_t minsize = zero;
@@ -313,6 +321,7 @@ namespace schema
     // slab hashmap
     struct neutrino
     {
+        static constexpr bool hash_function = true;
         static constexpr size_t pk = schema::neutrino_;
         static constexpr size_t sk = schema::header::pk;
         static constexpr size_t minsize = 
@@ -327,6 +336,7 @@ namespace schema
     // slab hashmap
     struct validated_bk
     {
+        static constexpr bool hash_function = true;
         static constexpr size_t pk = schema::bk_slab;
         static constexpr size_t sk = schema::header::pk;
         static constexpr size_t minsize =
@@ -341,6 +351,7 @@ namespace schema
     // modest (sk:4) slab multimap, with low multiple rate.
     struct validated_tx
     {
+        static constexpr bool hash_function = true;
         static constexpr size_t pk = schema::tx_slab;
         static constexpr size_t sk = schema::transaction::pk;
         static constexpr size_t minsize =

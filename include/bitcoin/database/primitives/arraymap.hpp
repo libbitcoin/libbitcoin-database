@@ -92,7 +92,7 @@ protected:
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);
-    using head = database::head<Link, system::data_array<zero>>;
+    using head = database::head<Link, system::data_array<zero>, false>;
     using manager = database::manager<Link, system::data_array<zero>, Size>;
 
     // Unsafe with zero buckets (index/top/push).

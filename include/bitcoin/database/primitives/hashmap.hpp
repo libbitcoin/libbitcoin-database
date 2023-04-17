@@ -35,7 +35,7 @@ namespace database {
 /// Readers and writers are always prepositioned at data, and are limited to
 /// the extent the record/slab size is known (limit can always be removed).
 /// Streams are always initialized from first element byte up to file limit.
-template <typename Link, typename Key, size_t Size>
+template <typename Link, typename Key, size_t Size, bool Hash>
 class hashmap
 {
 public:
@@ -135,7 +135,7 @@ protected:
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);
-    using head = database::head<Link, Key>;
+    using head = database::head<Link, Key, Hash>;
     using manager = database::manager<Link, Key, Size>;
 
     // Thread safe (index/top/push).
@@ -148,13 +148,13 @@ private:
 
 template <typename Element>
 using hash_map = hashmap<linkage<Element::pk>, system::data_array<Element::sk>,
-    Element::size>;
+    Element::size, Element::hash_function>;
 
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, typename Key, size_t Size>
-#define CLASS hashmap<Link, Key, Size>
+#define TEMPLATE template <typename Link, typename Key, size_t Size, bool Hash>
+#define CLASS hashmap<Link, Key, Size, Hash>
 
 #include <bitcoin/database/impl/primitives/hashmap.ipp>
 
