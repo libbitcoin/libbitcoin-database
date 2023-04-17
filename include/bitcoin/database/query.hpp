@@ -55,6 +55,7 @@ public:
     using block = system::chain::block;
     using point = system::chain::point;
     using input = system::chain::input;
+    using script = system::chain::script;
     using output = system::chain::output;
     using header = system::chain::header;
     using transaction = system::chain::transaction;
@@ -353,13 +354,16 @@ protected:
 
     height_link get_height(const header_link& link) const NOEXCEPT;
     input_links to_spenders(const table::input::search_key& key) const NOEXCEPT;
+
+    bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
+    inline bool is_spent_prevout(const table::input::search_key& key,
+        const input_link& self) const NOEXCEPT;
+    inline error::error_t spendable_prevout(const point_link& link,
+        uint32_t sequence, const context& ctx) const NOEXCEPT;
     error::error_t mature_prevout(const point_link& link,
         size_t height) const NOEXCEPT;
     error::error_t locked_prevout(const point_link& link, uint32_t sequence,
-        const context& put) const NOEXCEPT;
-    bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
-    bool is_spent_prevout(const table::input::search_key& key,
-        const input_link& self) const NOEXCEPT;
+        const context& ctx) const NOEXCEPT;
 
     bool get_candidate_bits(uint32_t& bits, size_t height,
         const header& header, size_t header_height) const NOEXCEPT;

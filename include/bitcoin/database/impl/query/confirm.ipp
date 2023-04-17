@@ -128,53 +128,28 @@ bool CLASS::is_strong(const input_link& link) const NOEXCEPT
 
 // protected
 TEMPLATE
-bool CLASS::is_spent_prevout(const table::input::search_key& key,
-    const input_link& self) const NOEXCEPT
-{
-    // For performance avoid calling with null point (always false).
-    // Input is one spender, must be second for output to have been spent.
-    const auto ins = to_spenders(key);
-    if (ins.size() < two)
-        return false;
-
-    // Spender count is low, so no parallel here.
-    return std::any_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
-    {
-        return (in != self) && is_strong(in);
-    });
-}
-
-// protected
-TEMPLATE
 error::error_t CLASS::locked_prevout(const point_link& link, uint32_t sequence,
-    const database::context& put) const NOEXCEPT
+    const context& ctx) const NOEXCEPT
 {
-    // bip68 activates at 419328 and is not applicable to coinbase.
-    using namespace system::chain;
-    if (!system::chain::script::is_enabled(put.flags, forks::bip68_rule))
+    if (!script::is_enabled(ctx.flags, system::chain::forks::bip68_rule))
         return error::success;
 
-    // REDUNDANT.
     // Get hash from point, search for prevout tx and get its link.
     const auto tx_fk = to_tx(get_point_key(link));
     if (tx_fk.is_terminal())
-        return error::integrity;
+        return error::missing_previous_output;
 
-    // REDUNDANT.
     // to_block assures confirmation by strong_tx traversal.
-    // store_.strong_tx.get(store_.strong_tx.first(tx_fk), strong);
     const auto header_fk = to_block(tx_fk);
     if (header_fk.is_terminal())
         return error::unconfirmed_spend;
 
-    // REDUNDANT.
-    // TODO: fold mature_prevout::get_height with locked_prevout::get_context.
-    // store_.header.get(link, header);
-    context ctx{};
-    if (!get_context(ctx, header_fk))
+    context prevout_ctx{};
+    if (!get_context(prevout_ctx, header_fk))
         return error::integrity;
 
-    if (input::is_locked(sequence, put.height, put.mtp, ctx.height, ctx.mtp))
+    if (input::is_locked(sequence, ctx.height, ctx.mtp, prevout_ctx.height,
+        prevout_ctx.mtp))
         return error::relative_time_locked;
 
     return error::success;
@@ -185,28 +160,20 @@ TEMPLATE
 error::error_t CLASS::mature_prevout(const point_link& link,
     size_t height) const NOEXCEPT
 {
-    // REDUNDANT.
     // Get hash from point, search for prevout tx and get its link.
-    // store_.point.get_key(link); store_.tx.first(key);
     const auto tx_fk = to_tx(get_point_key(link));
     if (tx_fk.is_terminal())
         return error::integrity;
 
-    // REDUNDANT.
     // to_block assures confirmation by strong_tx traversal so this must remain
     // prior to is_coinbase in execution order, despite the ack of dependency.
-    // store_.strong_tx.get(store_.strong_tx.first(tx_fk), strong);
     const auto header_fk = to_block(tx_fk);
     if (header_fk.is_terminal())
         return error::unconfirmed_spend;
 
-    // store_.tx.get(link, tx) && tx.coinbase;
     if (!is_coinbase(tx_fk))
         return error::success;
 
-    // REDUNDANT.
-    // TODO: fold mature_prevout::get_height with locked_prevout::get_context.
-    // store_.header.get(link, header);
     const auto prevout_height = get_height(header_fk);
     if (prevout_height.is_terminal())
         return error::integrity;
@@ -227,60 +194,70 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     return block_confirmable(to_non_coinbase_inputs(link), ctx);
 }
 
+// protected
+TEMPLATE
+inline bool CLASS::is_spent_prevout(const table::input::search_key& key,
+    const input_link& self) const NOEXCEPT
+{
+    const auto ins = to_spenders(key);
+    if (ins.size() < two)
+        return false;
+
+    return std::any_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
+    {
+        return (in != self) && !to_block(to_input_tx(in)).is_terminal();
+    });
+}
+
+// protected
+TEMPLATE
+inline error::error_t CLASS::spendable_prevout(const point_link& link,
+    uint32_t sequence, const context& ctx) const NOEXCEPT
+{
+    // input.point->output.hash->output.tx
+    const auto tx_fk = to_tx(get_point_key(link));
+    if (tx_fk.is_terminal())
+        return error::missing_previous_output;
+
+    // output.tx->output.block
+    const auto header_fk = to_block(tx_fk);
+    if (header_fk.is_terminal())
+        return error::unconfirmed_spend;
+
+    // output.block->prevout_ctx
+    context prevout_ctx{};
+    if (!get_context(prevout_ctx, header_fk))
+        return error::integrity;
+
+    // locked_prevout
+    if (script::is_enabled(ctx.flags, system::chain::forks::bip68_rule) &&
+        input::is_locked(sequence, ctx.height, ctx.mtp,
+            prevout_ctx.height, prevout_ctx.mtp))
+            return error::relative_time_locked;
+
+    // mature_prevout
+    if (is_coinbase(tx_fk) &&
+        !transaction::is_coinbase_mature(prevout_ctx.height, ctx.height))
+        return error::coinbase_maturity;
+
+    return error::success;
+}
+
 TEMPLATE
 code CLASS::block_confirmable(const input_links& links,
     const context& ctx) const NOEXCEPT
 {
-    // TODO: find a way to test the cost of block_confirmable with cached
-    // input_fp and prevout tx_fk values (after folding locked into mature).
-    // Maybe populate cached std::vector<std::pair<input::search_key, tx_link>>
-    // and perform a warm run on it.
-
-    // This is too expensive, spans all 2.5 billion inputs.
-    // We have the necessary info when the tx comes over the wire (hash/index).
-    // It gets lost if the block tx is serialized and discarded before confirm.
-    // Same holds for prevouts (cache into a circular buffer while validating).
-    // We could cache the input foreign points for each block as it is archived.
-    // This set and context is all that is required for confirmation. A fp is 7
-    // bytes, so for a 10,000 input block, that would be 70,000 bytes and can
-    // be stored as a simple vector of arrays (contiguous). These aren't input
-    // primary keys, these are input search keys. They are used to search input
-    // for spend conflicts (is_spent_prevout).The point_fk of the fp obtains
-    // the prevout hash via direct link and can search tx for maturity. But
-    // the tx_fk from the prevout may be cached as well, allowing maturity.
-    // This requires no association with the input or output, just that the
-    // prevout tx is mature. tx_fx is 4 bytes and can be cached as well. So
-    // with all input fps and prevout tx fks the confirmation should be fast.
-    // There would be only block/tx level events and one is_spent_prevout.
-
-    code ec{};
-    table::input::slab_composite_sk_and_sequence input{};
-
-    for (const auto& in: links)
+    for (const auto& link: links)
     {
-        // This is cheap.
-        if (!store_.input.get(in, input))
+        table::input::slab_composite_sk_and_sequence input{};
+        if (!store_.input.get(link, input))
             return error::integrity;
 
-        // This is expensive.
-        // This is an input table search and tx, has no output context.
-        // Spent by more than this spender, where that input is confirmed?
-        if (is_spent_prevout(input.key, in))
+        if (is_spent_prevout(input.key, link))
             return error::confirmed_double_spend;
 
-        // This is expensive.
-        // This is tx only, not output context.
-        // TODO: create is_spendable_prevout() to compliment is_spent_prevout().
-        // TODO: combine maturity/locked into query for height|mtp|na.
-        // TODO: first walk to confirmed-ness, then if prevout cb get height.
-        // TOOD: and if bip68 get height (if not got) or mtp, call chain fns.
-
-        // Strong prevout, height|mtp (based on sequence).
-        if ((ec = locked_prevout(input.point_fk(), input.sequence, ctx)))
-            return ec;
-
-        // Strong prevout, height (if coinbase).
-        if ((ec = mature_prevout(input.point_fk(), ctx.height)))
+        code ec{};
+        if ((ec = spendable_prevout(input.point_fk(), input.sequence, ctx)))
             return ec;
     }
 
@@ -299,11 +276,10 @@ bool CLASS::set_strong(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return std_all_of(bc::seq, txs.begin(), txs.end(),
-        [&](const tx_link& fk) NOEXCEPT
-        {
-            return store_.strong_tx.put(fk, strong);
-        });
+    return std::all_of(txs.begin(), txs.end(), [&](const tx_link& fk) NOEXCEPT
+    {
+        return store_.strong_tx.put(fk, strong);
+    });
     // ========================================================================
 }
 
@@ -319,11 +295,10 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return std_all_of(bc::seq, txs.begin(), txs.end(),
-        [&](const tx_link& fk) NOEXCEPT
-        {
-            return store_.strong_tx.put(fk, strong);
-        });
+    return std::all_of(txs.begin(), txs.end(), [&](const tx_link& fk) NOEXCEPT
+    {
+        return store_.strong_tx.put(fk, strong);
+    });
     // ========================================================================
 }
 
