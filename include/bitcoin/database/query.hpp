@@ -424,8 +424,6 @@ protected:
         size_t header_height) const NOEXCEPT;
 
 private:
-    ////static size_t nested_count(const auto& outer) NOEXCEPT;
-
     Store& store_;
 };
 
