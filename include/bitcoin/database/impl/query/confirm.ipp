@@ -93,7 +93,6 @@ bool CLASS::is_spent_output(const output_link& link) const NOEXCEPT
 {
     const auto ins = to_spenders(link);
 
-    // Spender count is low, so no parallel here.
     return std::any_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
     {
         return is_confirmed_input(in);
@@ -123,6 +122,7 @@ bool CLASS::is_spent(const input_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::is_strong(const input_link& link) const NOEXCEPT
 {
+    // to_block checks confirmedness, including de-confirmedness.
     return !to_block(to_input_tx(link)).is_terminal();
 }
 
@@ -184,6 +184,156 @@ error::error_t CLASS::mature_prevout(const point_link& link,
     return error::success;
 }
 
+// protected
+TEMPLATE
+inline error::error_t CLASS::spendable_prevout(const point_link& link,
+    uint32_t sequence, const context& ctx) const NOEXCEPT
+{
+    ////// input.point->output.hash->output.tx
+    ////const auto tx_fk = to_tx(get_point_key(link));
+    ////if (tx_fk.is_terminal())
+    ////    return error::missing_previous_output;
+    ////
+    ////// output.tx->output.block
+    ////const auto header_fk = to_block(tx_fk);
+    ////if (header_fk.is_terminal())
+    ////    return error::unconfirmed_spend;
+    ////
+    ////// output.block->prevout_ctx
+    ////context prevout_ctx{};
+    ////if (!get_context(prevout_ctx, header_fk))
+    ////    return error::integrity;
+    ////
+    ////// mature_prevout
+    ////// output.transaction->output.transaction.coinbase
+    ////if (is_coinbase(tx_fk) &&
+    ////    !transaction::is_coinbase_mature(prevout_ctx.height, ctx.height))
+    ////    return error::coinbase_maturity;
+    ////
+    ////// locked_prevout
+    ////if (script::is_enabled(ctx.flags, system::chain::forks::bip68_rule) &&
+    ////    input::is_locked(sequence, ctx.height, ctx.mtp,
+    ////        prevout_ctx.height, prevout_ctx.mtp))
+    ////        return error::relative_time_locked;
+
+    return spendable_prevout(to_tx(get_point_key(link)), is_coinbase(link),
+        sequence, ctx);
+}
+
+// protected
+TEMPLATE
+inline error::error_t CLASS::spendable_prevout(const tx_link& link,
+    bool coinbase, uint32_t sequence, const context& ctx) const NOEXCEPT
+{
+    constexpr auto bip68_rule = system::chain::forks::bip68_rule;
+
+    context out{};
+    if (!get_context(out, to_block(link)))
+        return error::unconfirmed_spend;
+
+    if (coinbase && !transaction::is_coinbase_mature(out.height, ctx.height))
+        return error::coinbase_maturity;
+
+    if (script::is_enabled(ctx.flags, bip68_rule) &&
+        input::is_locked(sequence, ctx.height, ctx.mtp, out.height, out.mtp))
+        return error::relative_time_locked;
+
+    return error::success;
+}
+
+// protected
+TEMPLATE
+inline bool CLASS::is_spent_prevout(const table::input::search_key& key,
+    const input_link& self) const NOEXCEPT
+{
+    // This is where we take the hit decoupling confirmation from validation.
+    // Must check them all, but if there is only one we can assume self.
+    // Self cannot be precluded as we are always storing before confirming.
+    // Unfortunately this ensures an input table traversal for each spend.
+    // But given that it is a hash table there are conflicts to search too.
+    const auto ins = to_spenders(key);
+    if (ins.size() < two)
+        return false;
+
+    return std::any_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
+    {
+        return (in != self) && is_strong(in);
+    });
+}
+
+TEMPLATE
+code CLASS::point_confirmable(const cached_point& point) const NOEXCEPT
+{
+    code ec{ error::success };
+
+    // height is always needed for coinbase (maturity).
+    // sequence value tells which is needed, height or mtp (bip68).
+    // but both may apply, so need to allow for two (no flags at prevout).
+    const context ctx{ 0, point.height, point.mtp };
+    if ((ec = spendable_prevout(point.tx, point.coinbase, point.sequence, ctx)))
+        return ec;
+
+    // may only be strong-spent by self (and must be but is not checked).
+    if (is_spent_prevout(point.key, point.input))
+        return error::confirmed_double_spend;
+
+    return ec;
+}
+
+TEMPLATE
+bool CLASS::create_cached_points(cached_points& out,
+    const header_link& link) const NOEXCEPT
+{
+    context ctx{};
+    if (!get_context(ctx, link))
+        return false;
+
+    table::input::slab_composite_sk_and_sequence input{};
+    for (const auto& in: to_non_coinbase_inputs(link))
+    {
+        if (!store_.input.get(in, input))
+            return false;
+    
+        const auto tx_fk = to_tx(get_point_key(input.point_fk()));
+        out.emplace_back
+        (
+            // input (under validation)
+            input.key,
+            static_cast<input_link::bytes>(input_link{ in }),
+            input.sequence,
+
+            // input->prevout
+            static_cast<tx_link::bytes>(tx_fk),
+            system::possible_narrow_cast<uint32_t>(ctx.height),
+            ctx.mtp,
+            is_coinbase(tx_fk)
+        );
+    }
+
+    return true;
+}
+
+TEMPLATE
+code CLASS::block_confirmable(const input_links& links,
+    const context& ctx) const NOEXCEPT
+{
+    code ec{};
+    table::input::slab_composite_sk_and_sequence input{};
+    for (const auto& link: links)
+    {
+        if (!store_.input.get(link, input))
+            return error::integrity;
+
+        if (is_spent_prevout(input.key, link))
+            return error::confirmed_double_spend;
+
+        if ((ec = spendable_prevout(input.point_fk(), input.sequence, ctx)))
+            return ec;
+    }
+
+    return error::success;
+}
+
 TEMPLATE
 code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 {
@@ -192,76 +342,6 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         return error::integrity;
 
     return block_confirmable(to_non_coinbase_inputs(link), ctx);
-}
-
-// protected
-TEMPLATE
-inline bool CLASS::is_spent_prevout(const table::input::search_key& key,
-    const input_link& self) const NOEXCEPT
-{
-    const auto ins = to_spenders(key);
-    if (ins.size() < two)
-        return false;
-
-    return std::any_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
-    {
-        return (in != self) && !to_block(to_input_tx(in)).is_terminal();
-    });
-}
-
-// protected
-TEMPLATE
-inline error::error_t CLASS::spendable_prevout(const point_link& link,
-    uint32_t sequence, const context& ctx) const NOEXCEPT
-{
-    // input.point->output.hash->output.tx
-    const auto tx_fk = to_tx(get_point_key(link));
-    if (tx_fk.is_terminal())
-        return error::missing_previous_output;
-
-    // output.tx->output.block
-    const auto header_fk = to_block(tx_fk);
-    if (header_fk.is_terminal())
-        return error::unconfirmed_spend;
-
-    // output.block->prevout_ctx
-    context prevout_ctx{};
-    if (!get_context(prevout_ctx, header_fk))
-        return error::integrity;
-
-    // locked_prevout
-    if (script::is_enabled(ctx.flags, system::chain::forks::bip68_rule) &&
-        input::is_locked(sequence, ctx.height, ctx.mtp,
-            prevout_ctx.height, prevout_ctx.mtp))
-            return error::relative_time_locked;
-
-    // mature_prevout
-    if (is_coinbase(tx_fk) &&
-        !transaction::is_coinbase_mature(prevout_ctx.height, ctx.height))
-        return error::coinbase_maturity;
-
-    return error::success;
-}
-
-TEMPLATE
-code CLASS::block_confirmable(const input_links& links,
-    const context& ctx) const NOEXCEPT
-{
-    for (const auto& link: links)
-    {
-        table::input::slab_composite_sk_and_sequence input{};
-        if (!store_.input.get(link, input))
-            return error::integrity;
-
-        if (is_spent_prevout(input.key, link))
-            return error::confirmed_double_spend;
-
-        code ec{};
-        if ((ec = spendable_prevout(input.point_fk(), input.sequence, ctx)))
-            return ec;
-    }
-
-    return error::success;
 }
 
 TEMPLATE
