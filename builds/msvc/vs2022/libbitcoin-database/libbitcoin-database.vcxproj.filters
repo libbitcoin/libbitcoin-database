@@ -236,6 +236,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\height.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\spend.hpp">
+      <Filter>include\bitcoin\database\tables\indexes</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\strong_tx.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>

@@ -162,6 +162,9 @@
     <ClCompile Include="..\..\..\..\test\tables\indexes\height.cpp">
       <Filter>src\tables\indexes</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\indexes\spend.cpp">
+      <Filter>src\tables\indexes</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\indexes\strong_tx.cpp">
       <Filter>src\tables\indexes</Filter>
     </ClCompile>
