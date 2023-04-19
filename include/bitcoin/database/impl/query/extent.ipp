@@ -99,6 +99,12 @@ size_t CLASS::confirmed_size() const NOEXCEPT
 }
 
 TEMPLATE
+size_t CLASS::spend_size() const NOEXCEPT
+{
+    return store_.spend.body_size();
+}
+
+TEMPLATE
 size_t CLASS::strong_tx_size() const NOEXCEPT
 {
     return store_.strong_tx.body_size();
@@ -151,6 +157,12 @@ size_t CLASS::tx_buckets() const NOEXCEPT
 
 // Buckets (metadata hash tables).
 // ----------------------------------------------------------------------------
+
+TEMPLATE
+size_t CLASS::spend_buckets() const NOEXCEPT
+{
+    return store_.spend.buckets();
+}
 
 TEMPLATE
 size_t CLASS::strong_tx_buckets() const NOEXCEPT
@@ -210,6 +222,12 @@ TEMPLATE
 size_t CLASS::confirmed_records() const NOEXCEPT
 {
     return store_.confirmed.count();
+}
+
+TEMPLATE
+size_t CLASS::spend_records() const NOEXCEPT
+{
+    return store_.spend.count();
 }
 
 TEMPLATE

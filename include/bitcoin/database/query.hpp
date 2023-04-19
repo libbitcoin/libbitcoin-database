@@ -114,6 +114,7 @@ public:
     /// Table logical byte sizes (metadata bodies).
     size_t candidate_size() const NOEXCEPT;
     size_t confirmed_size() const NOEXCEPT;
+    size_t spend_size() const NOEXCEPT;
     size_t strong_tx_size() const NOEXCEPT;
     size_t validated_tx_size() const NOEXCEPT;
     size_t validated_bk_size() const NOEXCEPT;
@@ -126,6 +127,7 @@ public:
     size_t tx_buckets() const NOEXCEPT;
 
     /// Buckets (metadata hash tables).
+    size_t spend_buckets() const NOEXCEPT;
     size_t strong_tx_buckets() const NOEXCEPT;
     size_t validated_tx_buckets() const NOEXCEPT;
     size_t validated_bk_buckets() const NOEXCEPT;
@@ -139,6 +141,7 @@ public:
     /// Counts (metadata records).
     size_t candidate_records() const NOEXCEPT;
     size_t confirmed_records() const NOEXCEPT;
+    size_t spend_records() const NOEXCEPT;
     size_t strong_tx_records() const NOEXCEPT;
 
     /// Counters (archive slabs).
