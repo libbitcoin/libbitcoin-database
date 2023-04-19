@@ -82,6 +82,8 @@ BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)
     BOOST_REQUIRE_EQUAL(instance.candidate_body_file(), "bitcoin/candidate.data");
     BOOST_REQUIRE_EQUAL(instance.confirmed_head_file(), "bitcoin/heads/confirmed.head");
     BOOST_REQUIRE_EQUAL(instance.confirmed_body_file(), "bitcoin/confirmed.data");
+    BOOST_REQUIRE_EQUAL(instance.spend_head_file(), "bitcoin/heads/spend.head");
+    BOOST_REQUIRE_EQUAL(instance.spend_body_file(), "bitcoin/spend.data");
     BOOST_REQUIRE_EQUAL(instance.strong_tx_head_file(), "bitcoin/heads/strong_tx.head");
     BOOST_REQUIRE_EQUAL(instance.strong_tx_body_file(), "bitcoin/strong_tx.data");
 

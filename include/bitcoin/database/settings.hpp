@@ -81,6 +81,10 @@ struct BCD_API settings
     uint64_t confirmed_size;
     uint16_t confirmed_rate;
 
+    uint32_t spend_buckets;
+    uint64_t spend_size;
+    uint16_t spend_rate;
+
     uint32_t strong_tx_buckets;
     uint64_t strong_tx_size;
     uint16_t strong_tx_rate;

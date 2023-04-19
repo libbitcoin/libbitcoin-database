@@ -36,14 +36,28 @@ using header_link = table::header::link;
 using output_link = table::output::link;
 using input_link = table::input::link;
 using point_link = table::point::link;
-////using puts_link = table::puts::link;
 using txs_link = table::txs::link;
 using tx_link = table::transaction::link;
 using tx_links = std_vector<tx_link::integer>;
 using input_links = std_vector<input_link::integer>;
 using output_links = std_vector<output_link::integer>;
 using foreign_point = table::input::search_key;
-using foreign_points = std_vector<foreign_point>;
+struct cached_point
+{
+    // input (under validation)
+    foreign_point key;       // double-spendness
+    input_link::bytes input; // self
+    uint32_t sequence;       // bip68
+
+    // input->prevout
+    tx_link::bytes tx;       // confirmedness
+    uint32_t height;         // bip68/maturity
+    uint32_t mtp;            // bip68
+    bool coinbase;           // maturity
+};
+// coinbase aligns at 4 bytes on msvc x64.
+////static_assert(sizeof(cached_point) == 32u);
+using cached_points = std_vector<cached_point>;
 
 template <typename Store>
 class query
@@ -100,6 +114,7 @@ public:
     /// Table logical byte sizes (metadata bodies).
     size_t candidate_size() const NOEXCEPT;
     size_t confirmed_size() const NOEXCEPT;
+    size_t spend_size() const NOEXCEPT;
     size_t strong_tx_size() const NOEXCEPT;
     size_t validated_tx_size() const NOEXCEPT;
     size_t validated_bk_size() const NOEXCEPT;
@@ -112,6 +127,7 @@ public:
     size_t tx_buckets() const NOEXCEPT;
 
     /// Buckets (metadata hash tables).
+    size_t spend_buckets() const NOEXCEPT;
     size_t strong_tx_buckets() const NOEXCEPT;
     size_t validated_tx_buckets() const NOEXCEPT;
     size_t validated_bk_buckets() const NOEXCEPT;
@@ -125,6 +141,7 @@ public:
     /// Counts (metadata records).
     size_t candidate_records() const NOEXCEPT;
     size_t confirmed_records() const NOEXCEPT;
+    size_t spend_records() const NOEXCEPT;
     size_t strong_tx_records() const NOEXCEPT;
 
     /// Counters (archive slabs).
@@ -148,7 +165,8 @@ public:
     tx_link to_output_tx(const output_link& link) const NOEXCEPT;
     tx_link to_prevout_tx(const input_link& link) const NOEXCEPT;
     foreign_point to_foreign_point(const input_link& link) const NOEXCEPT;
-    ////foreign_points to_foreign_points(const header_link& link) const NOEXCEPT;
+    bool create_cached_points(cached_points& out,
+        const header_link& link) const NOEXCEPT;
 
     /// point to put (forward navigation)
     input_link to_input(const tx_link& link, uint32_t input_index) const NOEXCEPT;
@@ -301,6 +319,7 @@ public:
     bool is_spent(const input_link& link) const NOEXCEPT;
     bool is_mature(const input_link& link, size_t height) const NOEXCEPT;
     ////bool is_exhausted(const tx_link& link) const NOEXCEPT;
+    code point_confirmable(const cached_point& point) const NOEXCEPT;
     code block_confirmable(const header_link& link) const NOEXCEPT;
     code block_confirmable(const input_links& links,
         const context& ctx) const NOEXCEPT;
@@ -353,13 +372,15 @@ protected:
         const context& evaluated) const NOEXCEPT;
 
     height_link get_height(const header_link& link) const NOEXCEPT;
-    input_links to_spenders(const table::input::search_key& key) const NOEXCEPT;
+    input_links to_spenders(const foreign_point& key) const NOEXCEPT;
 
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
-    inline bool is_spent_prevout(const table::input::search_key& key,
+    inline bool is_spent_prevout(const foreign_point& key,
         const input_link& self) const NOEXCEPT;
     inline error::error_t spendable_prevout(const point_link& link,
         uint32_t sequence, const context& ctx) const NOEXCEPT;
+    inline error::error_t spendable_prevout(const tx_link& link,
+        bool coinbase, uint32_t sequence, const context& ctx) const NOEXCEPT;
     error::error_t mature_prevout(const point_link& link,
         size_t height) const NOEXCEPT;
     error::error_t locked_prevout(const point_link& link, uint32_t sequence,
@@ -406,8 +427,6 @@ protected:
         size_t header_height) const NOEXCEPT;
 
 private:
-    ////static size_t nested_count(const auto& outer) NOEXCEPT;
-
     Store& store_;
 };
 

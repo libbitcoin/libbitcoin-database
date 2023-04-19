@@ -146,17 +146,13 @@ inline bool push_bool(std_vector<Element>& stack,
 TEMPLATE
 hashes CLASS::get_txs(const header_link& link) const NOEXCEPT
 {
-    const auto fk = to_txs_link(link);
-    if (fk.is_terminal())
-        return {};
-
-    table::txs::slab txs{};
-    if (!store_.txs.get(fk, txs))
+    const auto tx_fks = to_txs(link);
+    if (tx_fks.empty())
         return {};
 
     system::hashes hashes{};
-    hashes.reserve(txs.tx_fks.size());
-    for (const auto& tx_fk: txs.tx_fks)
+    hashes.reserve(tx_fks.size());
+    for (const auto& tx_fk: tx_fks)
         hashes.push_back(get_tx_key(tx_fk));
 
     // Return of any null_hash implies failure.
@@ -430,10 +426,6 @@ TEMPLATE
 typename CLASS::output::cptr CLASS::get_output(
     const point& prevout) const NOEXCEPT
 {
-    // Caller must preempt, to differentiate failure.
-    ////// Shortcircuits get_output(to_tx(null_hash)) fault.
-    ////if (prevout.is_null())
-    ////    return {};
     return get_output(to_tx(prevout.hash()), prevout.index());
 }
 

@@ -61,6 +61,7 @@
 #include <bitcoin/database/tables/caches/validated_tx.hpp>
 #include <bitcoin/database/tables/indexes/address.hpp>
 #include <bitcoin/database/tables/indexes/height.hpp>
+#include <bitcoin/database/tables/indexes/spend.hpp>
 #include <bitcoin/database/tables/indexes/strong_tx.hpp>
 
 #endif

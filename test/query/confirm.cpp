@@ -595,7 +595,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_coinbase_and_intern
 
     // block1b coinbase prevout: 1 + 100 = 101 (maturity)
     BOOST_REQUIRE(query.set_strong(2));
-    BOOST_REQUIRE_EQUAL( query.block_confirmable(2), error::success);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::coinbase_maturity);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__confirmed_double_spend__confirmed_double_spend)

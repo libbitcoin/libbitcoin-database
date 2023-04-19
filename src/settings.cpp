@@ -69,6 +69,10 @@ settings::settings() NOEXCEPT
     confirmed_size{ 1 },
     confirmed_rate{ 50 },
 
+    spend_buckets{ 100 },
+    spend_size{ 1 },
+    spend_rate{ 50 },
+
     strong_tx_buckets{ 100 },
     strong_tx_size{ 1 },
     strong_tx_rate{ 50 },

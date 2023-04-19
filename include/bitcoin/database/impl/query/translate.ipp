@@ -132,13 +132,6 @@ foreign_point CLASS::to_foreign_point(const input_link& link) const NOEXCEPT
     return in.key;
 }
 
-////TEMPLATE
-////foreign_points CLASS::to_foreign_points(const header_link& link) const NOEXCEPT
-////{
-////    const auto ins = to_non_coinbase_inputs(link);
-////    ///....
-////}
-
 // point to put (forward navigation)
 // ----------------------------------------------------------------------------
 
@@ -252,14 +245,13 @@ input_links CLASS::to_spenders(const point& prevout) const NOEXCEPT
 
 // protected
 TEMPLATE
-input_links CLASS::to_spenders(
-    const table::input::search_key& key) const NOEXCEPT
+input_links CLASS::to_spenders(const foreign_point& key) const NOEXCEPT
 {
     auto it = store_.input.it(key);
     if (it.self().is_terminal())
         return {};
 
-    input_links spenders;
+    input_links spenders{};
     do { spenders.push_back(it.self()); } while (it.advance());
     return spenders;
 }

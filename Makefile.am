@@ -102,6 +102,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/tables/caches/validated_tx.cpp \
     test/tables/indexes/address.cpp \
     test/tables/indexes/height.cpp \
+    test/tables/indexes/spend.cpp \
     test/tables/indexes/strong_tx.cpp
 
 endif WITH_TESTS
@@ -228,6 +229,7 @@ include_bitcoin_database_tables_indexesdir = ${includedir}/bitcoin/database/tabl
 include_bitcoin_database_tables_indexes_HEADERS = \
     include/bitcoin/database/tables/indexes/address.hpp \
     include/bitcoin/database/tables/indexes/height.hpp \
+    include/bitcoin/database/tables/indexes/spend.hpp \
     include/bitcoin/database/tables/indexes/strong_tx.hpp
 
 

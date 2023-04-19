@@ -160,6 +160,16 @@ public:
         return confirmed_body_.file();
     }
 
+    inline const path& spend_head_file() const NOEXCEPT
+    {
+        return spend_head_.file();
+    }
+
+    inline const path& spend_body_file() const NOEXCEPT
+    {
+        return spend_body_.file();
+    }
+
     inline const path& strong_tx_head_file() const NOEXCEPT
     {
         return strong_tx_head_.file();

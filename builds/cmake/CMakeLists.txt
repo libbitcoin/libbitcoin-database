@@ -240,6 +240,7 @@ if (with-tests)
         "../../test/tables/caches/validated_tx.cpp"
         "../../test/tables/indexes/address.cpp"
         "../../test/tables/indexes/height.cpp"
+        "../../test/tables/indexes/spend.cpp"
         "../../test/tables/indexes/strong_tx.cpp" )
 
     add_test( NAME libbitcoin-database-test COMMAND libbitcoin-database-test
