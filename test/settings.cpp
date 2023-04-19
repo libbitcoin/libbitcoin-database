@@ -54,6 +54,9 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.candidate_rate, 50u);
     BOOST_REQUIRE_EQUAL(configuration.confirmed_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.confirmed_rate, 50u);
+    BOOST_REQUIRE_EQUAL(configuration.spend_buckets, 100u);
+    BOOST_REQUIRE_EQUAL(configuration.spend_size, 1u);
+    BOOST_REQUIRE_EQUAL(configuration.spend_rate, 50u);
     BOOST_REQUIRE_EQUAL(configuration.strong_tx_buckets, 100u);
     BOOST_REQUIRE_EQUAL(configuration.strong_tx_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.strong_tx_rate, 50u);
