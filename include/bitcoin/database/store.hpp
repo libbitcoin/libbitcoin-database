@@ -28,24 +28,7 @@
 #include <bitcoin/database/locks/locks.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/tables/schema.hpp>
-
-#include <bitcoin/database/tables/archives/header.hpp>
-#include <bitcoin/database/tables/archives/input.hpp>
-#include <bitcoin/database/tables/archives/output.hpp>
-#include <bitcoin/database/tables/archives/point.hpp>
-#include <bitcoin/database/tables/archives/puts.hpp>
-#include <bitcoin/database/tables/archives/transaction.hpp>
-#include <bitcoin/database/tables/archives/txs.hpp>
-
-#include <bitcoin/database/tables/caches/bootstrap.hpp>
-#include <bitcoin/database/tables/caches/buffer.hpp>
-#include <bitcoin/database/tables/caches/neutrino.hpp>
-#include <bitcoin/database/tables/caches/validated_bk.hpp>
-#include <bitcoin/database/tables/caches/validated_tx.hpp>
-
-#include <bitcoin/database/tables/indexes/address.hpp>
-#include <bitcoin/database/tables/indexes/height.hpp>
-#include <bitcoin/database/tables/indexes/strong_tx.hpp>
+#include <bitcoin/database/tables/tables.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -96,6 +79,9 @@ enum class table_t
     confirmed_table,
     confirmed_head,
     confirmed_body,
+    spend_table,
+    spend_head,
+    spend_body,
     strong_tx_table,
     strong_tx_head,
     strong_tx_body,
@@ -164,6 +150,7 @@ public:
     table::address address;
     table::height candidate;
     table::height confirmed;
+    table::spend spend;
     table::strong_tx strong_tx;
 
     /// Caches.
@@ -228,6 +215,10 @@ protected:
     // array
     Storage confirmed_head_;
     Storage confirmed_body_;
+
+    // record hashmap
+    Storage spend_head_;
+    Storage spend_body_;
 
     // record hashmap
     Storage strong_tx_head_;

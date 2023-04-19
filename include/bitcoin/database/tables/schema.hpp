@@ -57,6 +57,7 @@ namespace schema
         constexpr auto address = "address";
         constexpr auto candidate = "candidate";
         constexpr auto confirmed = "confirmed";
+        constexpr auto spend = "spend";
         constexpr auto strong_tx = "strong_tx";
     }
 

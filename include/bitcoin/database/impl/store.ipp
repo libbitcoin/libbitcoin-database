@@ -77,6 +77,10 @@ CLASS::store(const settings& config) NOEXCEPT
     confirmed_body_(body(config.path, schema::indexes::confirmed), config.confirmed_size, config.confirmed_rate),
     confirmed(confirmed_head_, confirmed_body_),
 
+    spend_head_(head(config.path / schema::dir::heads, schema::indexes::spend)),
+    spend_body_(body(config.path, schema::indexes::spend), config.spend_size, config.spend_rate),
+    spend(spend_head_, spend_body_, config.spend_buckets),
+
     strong_tx_head_(head(config.path / schema::dir::heads, schema::indexes::strong_tx)),
     strong_tx_body_(body(config.path, schema::indexes::strong_tx), config.strong_tx_size, config.strong_tx_rate),
     strong_tx(strong_tx_head_, strong_tx_body_, config.strong_tx_buckets),
@@ -159,6 +163,8 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     else if (!create(candidate_body_, table_t::candidate_body)) ec = error::create_file;
     else if (!create(confirmed_head_, table_t::confirmed_head)) ec = error::create_file;
     else if (!create(confirmed_body_, table_t::confirmed_body)) ec = error::create_file;
+    else if (!create(spend_head_, table_t::spend_head)) ec = error::create_file;
+    else if (!create(spend_body_, table_t::spend_body)) ec = error::create_file;
     else if (!create(strong_tx_head_, table_t::strong_tx_head)) ec = error::create_file;
     else if (!create(strong_tx_body_, table_t::strong_tx_body)) ec = error::create_file;
 
@@ -195,6 +201,7 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
         else if (!populate(address, table_t::address_table)) ec = error::create_table;
         else if (!populate(candidate, table_t::candidate_table)) ec = error::create_table;
         else if (!populate(confirmed, table_t::confirmed_table)) ec = error::create_table;
+        else if (!populate(spend, table_t::spend_table)) ec = error::create_table;
         else if (!populate(strong_tx, table_t::strong_tx_table)) ec = error::create_table;
 
         else if (!populate(bootstrap, table_t::bootstrap_table)) ec = error::create_table;
@@ -254,6 +261,7 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
         else if (!verify(address, table_t::address_table)) ec = error::verify_table;
         else if (!verify(candidate, table_t::candidate_table)) ec = error::verify_table;
         else if (!verify(confirmed, table_t::confirmed_table)) ec = error::verify_table;
+        else if (!verify(spend, table_t::spend_table)) ec = error::verify_table;
         else if (!verify(strong_tx, table_t::strong_tx_table)) ec = error::verify_table;
 
         else if (!verify(bootstrap, table_t::bootstrap_table)) ec = error::verify_table;
@@ -301,6 +309,7 @@ code CLASS::snapshot(const event_handler& handler) NOEXCEPT
     if (!ec) ec = address_body_.flush();
     if (!ec) ec = candidate_body_.flush();
     if (!ec) ec = confirmed_body_.flush();
+    if (!ec) ec = spend_body_.flush();
     if (!ec) ec = strong_tx_body_.flush();
 
     if (!ec) ec = bootstrap_body_.flush();
@@ -341,6 +350,7 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
         else if (!close(address, table_t::address_table)) ec = error::close_table;
         else if (!close(candidate, table_t::candidate_table)) ec = error::close_table;
         else if (!close(confirmed, table_t::confirmed_table)) ec = error::close_table;
+        else if (!close(spend, table_t::spend_table)) ec = error::close_table;
         else if (!close(strong_tx, table_t::strong_tx_table)) ec = error::close_table;
 
         else if (!close(bootstrap, table_t::bootstrap_table)) ec = error::close_table;
@@ -399,6 +409,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, candidate_body_, table_t::candidate_body);
     open(ec, confirmed_head_, table_t::confirmed_head);
     open(ec, confirmed_body_, table_t::confirmed_body);
+    open(ec, spend_head_, table_t::spend_head);
+    open(ec, spend_body_, table_t::spend_body);
     open(ec, strong_tx_head_, table_t::strong_tx_head);
     open(ec, strong_tx_body_, table_t::strong_tx_body);
 
@@ -443,6 +455,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, candidate_body_, table_t::candidate_body);
     load(ec, confirmed_head_, table_t::confirmed_head);
     load(ec, confirmed_body_, table_t::confirmed_body);
+    load(ec, spend_head_, table_t::spend_head);
+    load(ec, spend_body_, table_t::spend_body);
     load(ec, strong_tx_head_, table_t::strong_tx_head);
     load(ec, strong_tx_body_, table_t::strong_tx_body);
 
@@ -495,6 +509,8 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, candidate_body_, table_t::candidate_body);
     unload(ec, confirmed_head_, table_t::confirmed_head);
     unload(ec, confirmed_body_, table_t::confirmed_body);
+    unload(ec, spend_head_, table_t::spend_head);
+    unload(ec, spend_body_, table_t::spend_body);
     unload(ec, strong_tx_head_, table_t::strong_tx_head);
     unload(ec, strong_tx_body_, table_t::strong_tx_body);
 
@@ -539,6 +555,8 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, candidate_body_, table_t::candidate_body);
     close(ec, confirmed_head_, table_t::confirmed_head);
     close(ec, confirmed_body_, table_t::confirmed_body);
+    close(ec, spend_head_, table_t::spend_head);
+    close(ec, spend_body_, table_t::spend_body);
     close(ec, strong_tx_head_, table_t::strong_tx_head);
     close(ec, strong_tx_body_, table_t::strong_tx_body);
 
@@ -570,6 +588,7 @@ code CLASS::backup(const event_handler& handler) NOEXCEPT
     if (!address.backup()) return error::backup_table;
     if (!candidate.backup()) return error::backup_table;
     if (!confirmed.backup()) return error::backup_table;
+    if (!spend.backup()) return error::backup_table;
     if (!strong_tx.backup()) return error::backup_table;
 
     if (!bootstrap.backup()) return error::backup_table;
@@ -612,6 +631,7 @@ code CLASS::dump(const path& folder,
     auto address_buffer = address_head_.get();
     auto candidate_buffer = candidate_head_.get();
     auto confirmed_buffer = confirmed_head_.get();
+    auto spend_buffer = spend_head_.get();
     auto strong_tx_buffer = strong_tx_head_.get();
 
     auto bootstrap_buffer = bootstrap_head_.get();
@@ -631,6 +651,7 @@ code CLASS::dump(const path& folder,
     if (!address_buffer) return error::unloaded_file;
     if (!candidate_buffer) return error::unloaded_file;
     if (!confirmed_buffer) return error::unloaded_file;
+    if (!spend_buffer) return error::unloaded_file;
     if (!strong_tx_buffer) return error::unloaded_file;
 
     if (!bootstrap_buffer) return error::unloaded_file;
@@ -678,6 +699,10 @@ code CLASS::dump(const path& folder,
 
     if (!file::create_file(head(folder, schema::indexes::confirmed),
         confirmed_buffer->begin(), confirmed_buffer->size()))
+        return error::dump_file;
+
+    if (!file::create_file(head(folder, schema::indexes::spend),
+        spend_buffer->begin(), spend_buffer->size()))
         return error::dump_file;
 
     if (!file::create_file(head(folder, schema::indexes::strong_tx),
@@ -766,6 +791,7 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         else if (!address.restore()) ec = error::restore_table;
         else if (!candidate.restore()) ec = error::restore_table;
         else if (!confirmed.restore()) ec = error::restore_table;
+        else if (!spend.restore()) ec = error::restore_table;
         else if (!strong_tx.restore()) ec = error::restore_table;
 
         else if (!bootstrap.restore()) ec = error::restore_table;
