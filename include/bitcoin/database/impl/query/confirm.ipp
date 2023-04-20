@@ -116,7 +116,7 @@ bool CLASS::is_spent(const input_link& link) const NOEXCEPT
 {
     table::input::slab_composite_sk input{};
     return store_.input.get(link, input) && !input.is_null() &&
-        is_spent_prevout(input.key, link);
+        is_input_spent_prevout(input.key, link);
 }
 
 TEMPLATE
@@ -243,14 +243,9 @@ inline error::error_t CLASS::spendable_prevout(const tx_link& link,
 
 // protected
 TEMPLATE
-inline bool CLASS::is_spent_prevout(const table::input::search_key& key,
+inline bool CLASS::is_input_spent_prevout(const foreign_point& key,
     const input_link& self) const NOEXCEPT
 {
-    // This is where we take the hit decoupling confirmation from validation.
-    // Must check them all, but if there is only one we can assume self.
-    // Self cannot be precluded as we are always storing before confirming.
-    // Unfortunately this ensures an input table traversal for each spend.
-    // But given that it is a hash table there are conflicts to search too.
     const auto ins = to_spenders(key);
     if (ins.size() < two)
         return false;
@@ -259,6 +254,30 @@ inline bool CLASS::is_spent_prevout(const table::input::search_key& key,
     {
         return (in != self) && is_strong(in);
     });
+}
+
+// protected
+TEMPLATE
+inline bool CLASS::is_tx_spent_prevout(const foreign_point& key,
+    const tx_link& self) const NOEXCEPT
+{
+    auto it = store_.spend.it(key);
+    if (it.self().is_terminal())
+        return false;
+
+    table::spend::record spend{};
+    do
+    {
+        // Iterated element must be found, otherwise fault.
+        if (!store_.spend.get(it.self(), spend))
+            return true;
+
+        // Skip self (which should be strong) and require strong for spent.
+        if ((spend.tx_fk != self) && !to_block(spend.tx_fk).is_terminal())
+            return true;
+    }
+    while (it.advance());
+    return false;
 }
 
 TEMPLATE
@@ -274,7 +293,7 @@ code CLASS::point_confirmable(const cached_point& point) const NOEXCEPT
         return ec;
 
     // may only be strong-spent by self (and must be but is not checked).
-    if (is_spent_prevout(point.key, point.input))
+    if (is_tx_spent_prevout(point.key, point.self))
         return error::confirmed_double_spend;
 
     return ec;
@@ -288,7 +307,7 @@ bool CLASS::create_cached_points(cached_points& out,
     if (!get_context(ctx, link))
         return false;
 
-    table::input::slab_composite_sk_and_sequence input{};
+    table::input::slab_composite_sk_and_sequence_parent input{};
     for (const auto& in: to_non_coinbase_inputs(link))
     {
         if (!store_.input.get(in, input))
@@ -299,7 +318,7 @@ bool CLASS::create_cached_points(cached_points& out,
         (
             // input (under validation)
             input.key,
-            static_cast<input_link::bytes>(input_link{ in }),
+            in.parent_fk,
             input.sequence,
 
             // input->prevout
@@ -318,13 +337,13 @@ code CLASS::block_confirmable(const input_links& links,
     const context& ctx) const NOEXCEPT
 {
     code ec{};
-    table::input::slab_composite_sk_and_sequence input{};
+    table::input::slab_composite_sk_and_sequence_parent input{};
     for (const auto& link: links)
     {
         if (!store_.input.get(link, input))
             return error::integrity;
 
-        if (is_spent_prevout(input.key, link))
+        if (is_tx_spent_prevout(input.key, input.parent_fk))
             return error::confirmed_double_spend;
 
         if ((ec = spendable_prevout(input.point_fk(), input.sequence, ctx)))

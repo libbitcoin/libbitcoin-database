@@ -287,18 +287,19 @@ struct input
         search_key key{};
     };
 
-    struct slab_composite_sk_and_sequence
+    struct slab_composite_sk_and_sequence_parent
       : public slab_composite_sk
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
             slab_composite_sk::from_data(source);
-            source.skip_bytes(tx::size);
+            parent_fk = source.read_little_endian<tx::integer, tx::size>();
             source.skip_variable();
             sequence = source.read_little_endian<uint32_t>();
             return source;
         }
 
+        tx::integer parent_fk{};
         uint32_t sequence{};
     };
 

@@ -46,7 +46,7 @@ struct cached_point
 {
     // input (under validation)
     foreign_point key;       // double-spendness
-    input_link::bytes input; // self
+    tx_link::bytes self;     // input.parent
     uint32_t sequence;       // bip68
 
     // input->prevout
@@ -261,6 +261,11 @@ public:
     bool set(const header_link& link, const hashes& hashes) NOEXCEPT;
     bool set(const header_link& link, const tx_links& links) NOEXCEPT;
 
+    // TEMP: delete/delete/protected.
+    bool set_spends(const tx_link& link) NOEXCEPT;
+    bool set_spends(const header_link& link) NOEXCEPT;
+    bool set_spend(const foreign_point& key, const tx_link& link) NOEXCEPT;
+
     /// Chain state.
     /// -----------------------------------------------------------------------
 
@@ -375,8 +380,10 @@ protected:
     input_links to_spenders(const foreign_point& key) const NOEXCEPT;
 
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
-    inline bool is_spent_prevout(const foreign_point& key,
+    inline bool is_input_spent_prevout(const foreign_point& key,
         const input_link& self) const NOEXCEPT;
+    inline bool is_tx_spent_prevout(const foreign_point& key,
+        const tx_link& self) const NOEXCEPT;
     inline error::error_t spendable_prevout(const point_link& link,
         uint32_t sequence, const context& ctx) const NOEXCEPT;
     inline error::error_t spendable_prevout(const tx_link& link,
