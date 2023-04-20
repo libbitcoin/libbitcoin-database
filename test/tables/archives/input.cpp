@@ -27,12 +27,12 @@ const table::input::slab expected
 {
     {},             // schema::input [all const static members]
     0x56341201_u32, // parent_fk
-    0x00000000_u32, // index
+    ////0x00000000_u32, // index
     0x56341202_u32, // sequence
     {},             // script
     {}              // witness
 };
-constexpr auto slab0_size = 23u;
+constexpr auto slab0_size = 22u;
 const data_chunk expected_file
 {
     // next
@@ -43,7 +43,7 @@ const data_chunk expected_file
 
     // slab
     0x00, 0x00, 0x00, 0x00,
-    0x00,
+    ////0x00,
     0x00, 0x00, 0x00, 0x00,
     0x00,
     0x00,
@@ -58,7 +58,7 @@ const data_chunk expected_file
 
     // slab
     0x01, 0x12, 0x34, 0x56,
-    0x00,
+    ////0x00,
     0x02, 0x12, 0x34, 0x56,
     0x00,
     0x00
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(input__get_decomposed_sk__null_index__expected)
     {
         {},             // schema::input [all const static members]
         0xffffffff_u32, // parent_fk
-        0xffffffff_u32, // index
+        ////0xffffffff_u32, // index
         0x56341202_u32, // sequence
         {},             // script
         {}              // witness

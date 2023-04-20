@@ -31,6 +31,8 @@ namespace table {
 
 /// Point records are empty, providing only a sk<->fk compression mapping.
 /// Each record is 32+4=36 bytes, enabling 4 byte point.hash storage.
+/// This reduces point hash storage to tx from input scale (tx/in=38%).
+/// This benefit doubles due to fp indexation by the spend table.
 struct point
   : public hash_map<schema::point>
 {
@@ -42,15 +44,11 @@ struct point
     {
         inline bool from_data(const reader& source) NOEXCEPT
         {
-            // debug warning if source non-const, but get_position is non-const.
-            ////BC_ASSERT(source.get_read_position() == minrow);
             return source;
         }
 
         inline bool to_data(const finalizer& sink) const NOEXCEPT
         {
-            // debug warning if sink non-const, but get_position is non-const.
-            ////BC_ASSERT(sink.get_write_position() == minrow);
             return sink;
         }
 
