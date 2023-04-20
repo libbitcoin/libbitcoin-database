@@ -318,11 +318,11 @@ bool CLASS::create_cached_points(cached_points& out,
         (
             // input (under validation)
             input.key,
-            in.parent_fk,
+            input.parent_fk,
             input.sequence,
 
             // input->prevout
-            static_cast<tx_link::bytes>(tx_fk),
+            tx_fk.value,
             system::possible_narrow_cast<uint32_t>(ctx.height),
             ctx.mtp,
             is_coinbase(tx_fk)

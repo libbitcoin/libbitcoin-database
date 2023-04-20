@@ -45,15 +45,15 @@ using foreign_point = table::input::search_key;
 struct cached_point
 {
     // input (under validation)
-    foreign_point key;       // double-spendness
-    tx_link::bytes self;     // input.parent
-    uint32_t sequence;       // bip68
+    foreign_point key; // double-spendness
+    uint32_t self;     // input.parent
+    uint32_t sequence; // bip68
 
     // input->prevout
-    tx_link::bytes tx;       // confirmedness
-    uint32_t height;         // bip68/maturity
-    uint32_t mtp;            // bip68
-    bool coinbase;           // maturity
+    uint32_t tx;       // confirmedness
+    uint32_t height;   // bip68/maturity
+    uint32_t mtp;      // bip68
+    bool coinbase;     // maturity
 };
 // coinbase aligns at 4 bytes on msvc x64.
 ////static_assert(sizeof(cached_point) == 32u);

@@ -79,7 +79,7 @@ struct input
         {
             return system::possible_narrow_cast<link::integer>(pk + sk +
                 tx::size +
-                variable_size(index) +
+                ////variable_size(index) +
                 sizeof(uint32_t) +
                 script.serialized_size(true) +
                 witness.serialized_size(true));
@@ -88,7 +88,7 @@ struct input
         inline bool from_data(reader& source) NOEXCEPT
         {
             parent_fk = source.read_little_endian<tx::integer, tx::size>();
-            index     = system::narrow_cast<ix::integer>(source.read_variable());
+            ////index     = system::narrow_cast<ix::integer>(source.read_variable());
             sequence  = source.read_little_endian<uint32_t>();
             script    = system::chain::script(source, true);
             witness   = system::chain::witness(source, true);
@@ -99,7 +99,7 @@ struct input
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             sink.write_little_endian<tx::integer, tx::size>(parent_fk);
-            sink.write_variable(index);
+            ////sink.write_variable(index);
             sink.write_little_endian<uint32_t>(sequence);
             script.to_data(sink, true);
             witness.to_data(sink, true);
@@ -110,14 +110,14 @@ struct input
         inline bool operator==(const slab& other) const NOEXCEPT
         {
             return parent_fk == other.parent_fk
-                && index == other.index
+                ////&& index == other.index
                 && sequence == other.sequence
                 && script == other.script
                 && witness == other.witness;
         }
 
         tx::integer parent_fk{};
-        ix::integer index{};
+        ////ix::integer index{};
         uint32_t sequence{};
         system::chain::script script{};
         system::chain::witness witness{};
@@ -131,7 +131,7 @@ struct input
         {
             using namespace system;
             source.skip_bytes(tx::size);
-            source.skip_variable();
+            ////source.skip_variable();
             sequence = source.read_little_endian<uint32_t>();
             script = to_shared<chain::script>(source, true);
             witness = to_shared<chain::witness>(source, true);
@@ -178,7 +178,7 @@ struct input
             BC_ASSERT(prevout);
             using namespace system;
             source.skip_bytes(tx::size);
-            source.skip_variable();
+            ////source.skip_variable();
     
             // sequence stored out of order (prefer script/witness trailing).
             const auto sequence = source.read_little_endian<uint32_t>();
@@ -221,7 +221,7 @@ struct input
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.skip_bytes(tx::size);
-            source.skip_variable();
+            ////source.skip_variable();
             sequence = source.read_little_endian<uint32_t>();
             return source;
         }
@@ -236,7 +236,7 @@ struct input
         {
             return system::possible_narrow_cast<link::integer>(pk + sk +
                 tx::size +
-                variable_size(index) +
+                ////variable_size(index) +
                 sizeof(uint32_t) +
                 input.script().serialized_size(true) +
                 input.witness().serialized_size(true));
@@ -246,7 +246,7 @@ struct input
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             sink.write_little_endian<tx::integer, tx::size>(parent_fk);
-            sink.write_variable(index);
+            ////sink.write_variable(index);
             sink.write_little_endian<uint32_t>(input.sequence());
             input.script().to_data(sink, true);
             input.witness().to_data(sink, true);
@@ -255,7 +255,7 @@ struct input
         }
 
         tx::integer parent_fk{};
-        ix::integer index{};
+        ////ix::integer index{};
         const system::chain::input& input{};
     };
 
@@ -294,7 +294,7 @@ struct input
         {
             slab_composite_sk::from_data(source);
             parent_fk = source.read_little_endian<tx::integer, tx::size>();
-            source.skip_variable();
+            ////source.skip_variable();
             sequence = source.read_little_endian<uint32_t>();
             return source;
         }

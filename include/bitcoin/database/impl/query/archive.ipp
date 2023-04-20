@@ -513,7 +513,7 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     if (tx_fk.is_terminal())
         return {};
 
-    uint32_t input_index = 0;
+    ////uint32_t input_index = 0;
     linkage<schema::put> put_fk{};
     for (const auto& in: ins)
     {
@@ -521,7 +521,7 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
         {
             {},
             tx_fk,
-            input_index++,
+            ////input_index++,
             *in
         }))
         {
