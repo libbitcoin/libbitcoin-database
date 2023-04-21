@@ -314,8 +314,8 @@ bool CLASS::create_cached_points(cached_points& out,
             return false;
     
         const auto tx_fk = to_tx(get_point_key(input.point_fk()));
-        out.emplace_back
-        (
+        out.push_back(
+        {
             // input (under validation)
             input.key,
             input.parent_fk,
@@ -326,7 +326,7 @@ bool CLASS::create_cached_points(cached_points& out,
             system::possible_narrow_cast<uint32_t>(ctx.height),
             ctx.mtp,
             is_coinbase(tx_fk)
-        );
+        });
     }
 
     return true;
