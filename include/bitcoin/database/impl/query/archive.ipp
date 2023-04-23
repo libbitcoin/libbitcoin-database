@@ -51,7 +51,7 @@ inline bool CLASS::is_tx(const hash_digest& key) const NOEXCEPT
 TEMPLATE
 inline bool CLASS::is_coinbase(const tx_link& link) const NOEXCEPT
 {
-    table::transaction::record_get_coinbase tx{};
+    table::transaction::get_coinbase tx{};
     return store_.tx.get(link, tx) && tx.coinbase;
 }
 
@@ -68,21 +68,27 @@ inline bool CLASS::set(const header& header, const chain_context& ctx) NOEXCEPT
 }
 
 TEMPLATE
-inline bool CLASS::set(const block& block, const chain_context& ctx) NOEXCEPT
-{
-    return !set_link(block, ctx).is_terminal();
-}
-
-TEMPLATE
 inline bool CLASS::set(const header& header, const context& ctx) NOEXCEPT
 {
     return !set_link(header, ctx).is_terminal();
 }
 
 TEMPLATE
+inline bool CLASS::set(const block& block, const chain_context& ctx) NOEXCEPT
+{
+    return !set_link(block, ctx).is_terminal();
+}
+
+TEMPLATE
 inline bool CLASS::set(const block& block, const context& ctx) NOEXCEPT
 {
     return !set_link(block, ctx).is_terminal();
+}
+
+TEMPLATE
+inline bool CLASS::set(const hash_digest& point_hash) NOEXCEPT
+{
+    return !set_link(point_hash).is_terminal();
 }
 
 TEMPLATE
@@ -205,7 +211,7 @@ bool CLASS::get_tx_position(size_t& out, const tx_link& link) const NOEXCEPT
         return false;
 
     // False return below implies an integrity error (tx should be indexed).
-    table::txs::slab_position txs{ {}, link };
+    table::txs::get_position txs{ {}, link };
     if (!store_.txs.get(to_txs_link(block_fk), txs))
         return false;
 
@@ -385,7 +391,7 @@ TEMPLATE
 typename CLASS::input::cptr CLASS::get_input(
     const input_link& link) const NOEXCEPT
 {
-    table::input::only_with_decomposed_sk in{};
+    table::input::only_with_prevout in{};
     if (!store_.input.get(link, in))
         return {};
 
@@ -409,7 +415,7 @@ TEMPLATE
 typename CLASS::point::cptr CLASS::get_point(
     const input_link& link) const NOEXCEPT
 {
-    table::input::slab_decomposed_sk in{};
+    table::input::get_prevout in{};
     if (!store_.input.get(link, in))
         return {};
 
@@ -445,45 +451,15 @@ TEMPLATE
 typename CLASS::inputs_ptr CLASS::get_spenders(
     const output_link& link) const NOEXCEPT
 {
-    table::output::slab out{};
-    if (!store_.output.get(link, out))
-        return {};
-
-    return get_spenders(out.parent_fk, out.index);
-}
-
-TEMPLATE
-typename CLASS::inputs_ptr CLASS::get_spenders(const tx_link& link,
-    uint32_t output_index) const NOEXCEPT
-{
-    const auto fks = to_spenders(link, output_index);
+    const auto input_fks = to_spenders(link);
     const auto spenders = system::to_shared<system::chain::input_cptrs>();
-    spenders->reserve(fks.size());
-    for (const auto& fk: fks)
-        if (!push_bool(*spenders, get_input(fk)))
+    spenders->reserve(input_fks.size());
+
+    for (const auto& input_fk: input_fks)
+        if (!push_bool(*spenders, get_input(input_fk)))
             return {};
 
     return spenders;
-}
-
-// protected
-TEMPLATE
-inline foreign_point CLASS::make_foreign_point(
-    const point& prevout) const NOEXCEPT
-{
-    if (prevout.is_null())
-        return table::input::null_point();
-
-    // Reuse point hash fk if archived.
-    auto point_fk = to_point(prevout.hash());
-    if (point_fk.is_terminal())
-    {
-        const table::point::record empty{};
-        if (!store_.point.put_link(point_fk, prevout.hash(), empty))
-            return {};
-    }
-
-    return table::input::compose(point_fk, prevout.index());
 }
 
 TEMPLATE
@@ -492,8 +468,7 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     if (tx.is_empty())
         return {};
 
-    // This hash computation should be cached by the message deserializer.
-    // Non-witness tx hash is used for identity, as it is the input reference.
+    // Guard against duplicates.
     const auto key = tx.hash(false);
     auto tx_fk = to_tx(key);
     if (!tx_fk.is_terminal())
@@ -506,80 +481,114 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     puts.in_fks.reserve(ins.size());
     puts.out_fks.reserve(outs.size());
 
+    // Declare points cache.
+    std_vector<foreign_point> prevouts{};
+    prevouts.reserve(ins.size());
+
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Allocate tx record.
     tx_fk = store_.tx.allocate(1);
     if (tx_fk.is_terminal())
         return {};
 
-    ////uint32_t input_index = 0;
-    linkage<schema::put> put_fk{};
+    // Commit input records.
     for (const auto& in: ins)
     {
-        if (!store_.input.set_link(put_fk, table::input::slab_put_ref
+        // Create point (hash) lookup-up table entry as required.
+        const auto& prevout = in->point();
+        const auto point_index = prevout.index();
+        const auto point_fk = set_link(prevout.hash());
+
+        // Accumulate spend records.
+        if (!point_fk.is_terminal())
+            prevouts.push_back(table::spend::compose(point_fk, point_index));
+
+        input_link input_fk{};
+        if (!store_.input.put_link(input_fk, table::input::put_ref
         {
             {},
+            point_fk,
+            point_index,
             tx_fk,
-            ////input_index++,
             *in
         }))
         {
             return {};
         }
 
-        puts.in_fks.push_back(put_fk);
+        // Acumulate inputs in order.
+        puts.in_fks.push_back(input_fk);
     }
 
-    uint32_t output_index = 0;
+    // Commit output records.
     for (const auto& out: outs)
     {
-        if (!store_.output.put_link(put_fk, table::output::slab_put_ref
+        output_link output_fk{};
+        if (!store_.output.put_link(output_fk, table::output::put_ref
         {
             {},
             tx_fk,
-            output_index++,
             *out
         }))
         {
             return {};
         }
 
-        puts.out_fks.push_back(put_fk);
+        // Acumulate outputs in order.
+        puts.out_fks.push_back(output_fk);
     }
 
+    // Commit puts records.
     const auto puts_fk = store_.puts.put_link(puts);
     if (puts_fk.is_terminal())
         return {};
 
-    using ix = table::transaction::ix::integer;
+    // Write tx record.
+    using ix = linkage<schema::index>;
     if (!store_.tx.set(tx_fk, table::transaction::record_put_ref
     {
         {},
         tx,
-        system::possible_narrow_cast<ix>(ins.size()),
-        system::possible_narrow_cast<ix>(outs.size()),
+        system::possible_narrow_cast<ix::integer>(ins.size()),
+        system::possible_narrow_cast<ix::integer>(outs.size()),
         puts_fk
     }))
     {
         return {};
     }
 
-    // Commit each input to its seach key (prevout foreign point).
-    const table::spend::record spend{ {}, tx_fk };
-    auto input_fk = puts.in_fks.begin();
-    for (const auto& in: ins)
-    {
-        const auto& point = in->point();
-        const auto fp = make_foreign_point(point);
-        if (!store_.input.commit(*input_fk++, fp))
+    // Commit prevouts (spent by the tx) to search, now that tx exists.
+    const table::spend::record spender{ {}, tx_fk };
+    for (const auto& prevout: prevouts)
+        if (!store_.spend.put(prevout, spender))
             return {};
 
-        ////if (!point.is_null() && !store_.spend.put(fp, spend))
-        ////    return {};
-    }
-
+    // Commit tx to search.
     return store_.tx.commit_link(tx_fk, key);
+    // ========================================================================
+}
+
+TEMPLATE
+inline point_link CLASS::set_link(const hash_digest& point_hash) NOEXCEPT
+{
+    if (point_hash == system::null_hash)
+        return {};
+
+    // Reuse if archived.
+    auto point_fk = to_point(point_hash);
+    if (!point_fk.is_terminal())
+        return point_fk;
+
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    const table::point::record empty{};
+    if (!store_.point.put_link(point_fk, point_hash, empty))
+        return {};
+
+    return point_fk;
     // ========================================================================
 }
 
@@ -675,6 +684,7 @@ bool CLASS::set(const header_link& link, const tx_links& links) NOEXCEPT
     if (is_associated(link))
         return true;
 
+    // This could be avoided by making this protected and guarding in callers.
     if (system::contains(links, txs_link::terminal))
         return false;
 
@@ -685,61 +695,64 @@ bool CLASS::set(const header_link& link, const tx_links& links) NOEXCEPT
     // ========================================================================
 }
 
-// TEMP: table conversion utility, by block.
-TEMPLATE
-bool CLASS::set_spends(const header_link& link) NOEXCEPT
-{
-    const auto txs = to_txs(link);
-    if (txs.empty())
-        return false;
-
-    // ========================================================================
-    const auto scope = store_.get_transactor();
-
-    return std::all_of(std::next(txs.begin()), txs.end(),
-        [&](const tx_link& tx) NOEXCEPT
-        {
-            const auto ins = to_tx_inputs(tx);
-            const table::spend::record transaction{ {}, tx };
-
-            return std::all_of(ins.begin(), ins.end(),
-                [&](const input_link& in) NOEXCEPT
-                {
-                    return store_.spend.put(to_foreign_point(in), transaction);
-                });
-        });
-    // ========================================================================
-}
-
-// TEMP: table conversion utility, by tx.
-TEMPLATE
-bool CLASS::set_spends(const tx_link& link) NOEXCEPT
-{
-    // No internal non-coinbase guard.
-    const auto ins = to_tx_inputs(link);
-    const table::spend::record transaction{ {}, link };
-
-    // ========================================================================
-    const auto scope = store_.get_transactor();
-
-    return std::all_of(ins.begin(), ins.end(), [&](const input_link& in) NOEXCEPT
-    {
-        return store_.spend.put(to_foreign_point(in), transaction);
-    });
-    // ========================================================================
-}
-
-// TEMP: table conversion utility, by tx.
-TEMPLATE
-bool CLASS::set_spend(const foreign_point& key, const tx_link& link) NOEXCEPT
-{
-    // No redundancy check, handled in set(tx), and spend is a multimap.
-    // ========================================================================
-    const auto scope = store_.get_transactor();
-
-    return store_.spend.put(key, table::spend::record{ {}, link });
-    // ========================================================================
-}
+////// TEMP: table conversion utility, by block.
+////bool set_spends(const tx_link& link) NOEXCEPT;
+////bool set_spends(const header_link& link) NOEXCEPT;
+////bool set_spend(const foreign_point& point, const tx_link& link) NOEXCEPT;
+////TEMPLATE
+////bool CLASS::set_spends(const header_link& link) NOEXCEPT
+////{
+////    const auto txs = to_txs(link);
+////    if (txs.empty())
+////        return false;
+////
+////    // ========================================================================
+////    const auto scope = store_.get_transactor();
+////
+////    return std::all_of(std::next(txs.begin()), txs.end(),
+////        [&](const tx_link& tx) NOEXCEPT
+////        {
+////            const auto ins = to_tx_inputs(tx);
+////            const table::spend::record transaction{ {}, tx };
+////
+////            return std::all_of(ins.begin(), ins.end(),
+////                [&](const input_link& in) NOEXCEPT
+////                {
+////                    return store_.spend.put(to_spend_key(in), transaction);
+////                });
+////        });
+////    // ========================================================================
+////}
+////
+////// TEMP: table conversion utility, by tx.
+////TEMPLATE
+////bool CLASS::set_spends(const tx_link& link) NOEXCEPT
+////{
+////    // No internal non-coinbase guard.
+////    const auto ins = to_tx_inputs(link);
+////    const table::spend::record transaction{ {}, link };
+////
+////    // ========================================================================
+////    const auto scope = store_.get_transactor();
+////
+////    return std::all_of(ins.begin(), ins.end(), [&](const input_link& in) NOEXCEPT
+////    {
+////        return store_.spend.put(to_spend_key(in), transaction);
+////    });
+////    // ========================================================================
+////}
+////
+////// TEMP: table conversion utility, by tx.
+////TEMPLATE
+////bool CLASS::set_spend(const foreign_point& point, const tx_link& link) NOEXCEPT
+////{
+////    // No redundancy check, handled in set(tx), and spend is a multimap.
+////    // ========================================================================
+////    const auto scope = store_.get_transactor();
+////
+////    return store_.spend.put(point, table::spend::record{ {}, link });
+////    // ========================================================================
+////}
 
 } // namespace database
 } // namespace libbitcoin

@@ -109,6 +109,7 @@ namespace schema
     constexpr size_t put = 5;       // ->input/output slab.
     constexpr size_t puts_ = 5;     // ->puts record.
     constexpr size_t spend_ = 4;    // ->spend record.
+    constexpr size_t point_ = 4;    // ->point record.
     constexpr size_t txs_ = 4;      // ->txs slab.
     constexpr size_t tx = 4;        // ->tx record.
     constexpr size_t block = 3;     // ->header record.
@@ -180,23 +181,23 @@ namespace schema
         static_assert(minrow == 62u);
     };
 
-    // TODO: change to blob (remove hashmap)
-    // moderate (sk:7) slab multimap, with low multiple rate.
+    // blob
     struct input
     {
-        static constexpr bool hash_function = false;
         static constexpr size_t pk = schema::put;
-        static constexpr size_t sk = transaction::pk + schema::index;
+        static constexpr size_t sk = zero;
         static constexpr size_t minsize =
+            schema::transaction::pk +
+            1u + // variable_size (average 1)
             schema::transaction::pk +
             ////1u + // variable_size (average 1)
             sizeof(uint32_t) +
             1u + // variable_size (average 1)
             1u;  // variable_size (average 1)
-        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t minrow = minsize;
         static constexpr size_t size = max_size_t;
-        static_assert(minsize == 10u);
-        static_assert(minrow == 22u);
+        static_assert(minsize == 15u);
+        static_assert(minrow == 15u);
     };
 
     // blob
@@ -206,13 +207,13 @@ namespace schema
         static constexpr size_t sk = zero;
         static constexpr size_t minsize =
             schema::transaction::pk +
-            1u + // variable_size (average 1)
+            ////1u + // variable_size (average 1)
             5u + // variable_size (average 5)
             1u;  // variable_size (average 1)
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = max_size_t;
-        static_assert(minsize == 11u);
-        static_assert(minrow == 11u);
+        static_assert(minsize == 10u);
+        static_assert(minrow == 10u);
     };
 
     // moderate (sk:7) record multimap, with low multiple rate.
@@ -222,7 +223,6 @@ namespace schema
         static constexpr size_t pk = schema::spend_;
         static constexpr size_t sk = transaction::pk + schema::index;
         static constexpr size_t minsize =
-            ////schema::input::pk +
             schema::transaction::pk;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
@@ -235,7 +235,7 @@ namespace schema
     struct point
     {
         static constexpr bool hash_function = false;
-        static constexpr size_t pk = schema::tx;
+        static constexpr size_t pk = schema::point_;
         static constexpr size_t sk = schema::hash;
         static constexpr size_t minsize = zero;
         static constexpr size_t minrow = pk + sk + minsize;

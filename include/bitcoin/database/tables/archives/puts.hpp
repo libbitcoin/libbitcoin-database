@@ -98,7 +98,26 @@ struct puts
         keys out_fks{};
     };
 
-    struct record_get_one
+    struct get_puts
+      : public schema::puts
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            // Clear the single record limit (file limit remains).
+            source.set_limit();
+
+            std::for_each(put_fks.begin(), put_fks.end(), [&](auto& fk) NOEXCEPT
+            {
+                fk = source.read_little_endian<put::integer, put::size>();
+            });
+
+            return source;
+        }
+
+        keys put_fks{};
+    };
+
+    struct get_at
       : public schema::puts
     {
         inline bool from_data(reader& source) NOEXCEPT

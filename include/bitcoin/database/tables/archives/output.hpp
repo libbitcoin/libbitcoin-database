@@ -28,6 +28,9 @@
 namespace libbitcoin {
 namespace database {
 namespace table {
+    
+BC_PUSH_WARNING(NO_NEW_OR_DELETE)
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 /// Output is a blob (set of non-searchable slabs).
 /// Output can be obtained by fk navigation (eg from tx/index). 
@@ -35,17 +38,15 @@ struct output
   : public array_map<schema::output>
 {
     using tx = linkage<schema::tx>;
-    using ix = linkage<schema::index>;
     using array_map<schema::output>::arraymap;
 
     struct slab
       : public schema::output
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             return system::possible_narrow_cast<link::integer>(
                 tx::size +
-                variable_size(index) +
                 variable_size(value) +
                 script.serialized_size(true));
         }
@@ -54,7 +55,6 @@ struct output
         {
             using namespace system;
             parent_fk = source.read_little_endian<tx::integer, tx::size>();
-            index     = narrow_cast<ix::integer>(source.read_variable());
             value     = source.read_variable();
             script    = chain::script(source, true);
             BC_ASSERT(source.get_read_position() == count());
@@ -64,7 +64,6 @@ struct output
         inline bool to_data(writer& sink) const NOEXCEPT
         {
             sink.write_little_endian<tx::integer, tx::size>(parent_fk);
-            sink.write_variable(index);
             sink.write_variable(value);
             script.to_data(sink, true);
             BC_ASSERT(sink.get_write_position() == count());
@@ -74,13 +73,11 @@ struct output
         inline bool operator==(const slab& other) const NOEXCEPT
         {
             return parent_fk == other.parent_fk
-                && index == other.index
                 && value == other.value
                 && script == other.script;
         }
 
         tx::integer parent_fk{};
-        ix::integer index{};
         uint64_t value{};
         system::chain::script script{};
     };
@@ -93,37 +90,16 @@ struct output
         {
             using namespace system;
             source.skip_bytes(tx::size);
-            source.skip_variable();
-
-            // Parameter evaluation order is not assured by c++ (use new).
-            BC_PUSH_WARNING(NO_NEW_OR_DELETE)
-            BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
             output = to_shared(new chain::output
             {
                 source.read_variable(),
                 to_shared<chain::script>(source, true)
             });
-            BC_POP_WARNING()
-            BC_POP_WARNING()
 
             return source;
         }
 
         system::chain::output::cptr output{};
-    };
-
-    struct get_value
-      : public schema::output
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            source.skip_bytes(tx::size);
-            source.skip_variable();
-            value = source.read_variable();
-            return source;
-        }
-
-        uint64_t value{};
     };
 
     struct get_parent
@@ -138,29 +114,26 @@ struct output
         tx::integer parent_fk{};
     };
 
-    struct get_point
+    struct get_value
       : public schema::output
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            using namespace system;
-            parent_fk = source.read_little_endian<tx::integer, tx::size>();
-            index     = narrow_cast<ix::integer>(source.read_variable());
+            source.skip_bytes(tx::size);
+            value = source.read_variable();
             return source;
         }
 
-        tx::integer parent_fk{};
-        ix::integer index{};
+        uint64_t value{};
     };
 
-    struct slab_put_ref
+    struct put_ref
       : public schema::output
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             return system::possible_narrow_cast<link::integer>(
                 tx::size +
-                variable_size(index) +
                 variable_size(output.value()) +
                 output.script().serialized_size(true));
         }
@@ -168,7 +141,6 @@ struct output
         inline bool to_data(writer& sink) const NOEXCEPT
         {
             sink.write_little_endian<tx::integer, tx::size>(parent_fk);
-            sink.write_variable(index);
             sink.write_variable(output.value());
             output.script().to_data(sink, true);
             BC_ASSERT(sink.get_write_position() == count());
@@ -176,10 +148,12 @@ struct output
         }
 
         tx::integer parent_fk{};
-        ix::integer index{};
         const system::chain::output& output{};
     };
 };
+
+BC_POP_WARNING()
+BC_POP_WARNING()
 
 } // namespace table
 } // namespace database

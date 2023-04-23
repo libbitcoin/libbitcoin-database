@@ -40,13 +40,6 @@ hash_digest CLASS::address_hash(const output& output) NOEXCEPT
     return digest;
 }
 
-// protected
-TEMPLATE
-bool CLASS::is_confirmed_unspent(const output_link& link) const NOEXCEPT
-{
-    return is_confirmed_output(link) && !is_spent_output(link);
-}
-
 // TODO: test more.
 TEMPLATE
 bool CLASS::get_confirmed_balance(uint64_t& out,
@@ -187,7 +180,7 @@ bool CLASS::set_address_output(const hash_digest& key,
 TEMPLATE
 bool CLASS::get_filter(filter& out, const header_link& link) const NOEXCEPT
 {
-    table::neutrino::slab_get_filter neutrino{};
+    table::neutrino::get_filter neutrino{};
     if (!store_.neutrino.get(store_.neutrino.first(link), neutrino))
         return false;
 
@@ -199,7 +192,7 @@ TEMPLATE
 bool CLASS::get_filter_head(hash_digest& out,
     const header_link& link) const NOEXCEPT
 {
-    table::neutrino::slab_get_head neutrino{};
+    table::neutrino::get_head neutrino{};
     if (!store_.neutrino.get(store_.neutrino.first(link), neutrino))
         return false;
 
@@ -214,7 +207,7 @@ bool CLASS::set_filter(const header_link& link, const hash_digest& filter_head,
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return store_.neutrino.put(link, table::neutrino::slab_put_ref
+    return store_.neutrino.put(link, table::neutrino::put_ref
     {
         {},
         filter_head,
@@ -245,7 +238,7 @@ bool CLASS::set_buffered_tx(const tx_link& link,
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return store_.buffer.put(link, table::buffer::slab_put_ref
+    return store_.buffer.put(link, table::buffer::put_ref
     {
         {},
         tx

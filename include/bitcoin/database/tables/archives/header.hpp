@@ -214,7 +214,7 @@ struct header
         link::integer parent_fk{};
     };
 
-    struct record_flags
+    struct get_flags
       : public schema::header
     {
         inline bool from_data(reader& source) NOEXCEPT
@@ -227,7 +227,7 @@ struct header
         context::flag::integer flags{};
     };
 
-    struct record_height
+    struct get_height
       : public schema::header
     {
         inline bool from_data(reader& source) NOEXCEPT
@@ -241,7 +241,7 @@ struct header
         context::block::integer height{};
     };
 
-    struct record_mtp
+    struct get_mtp
       : public schema::header
     {
         inline bool from_data(reader& source) NOEXCEPT

@@ -45,7 +45,7 @@ CLASS::store(const settings& config) NOEXCEPT
 
     input_head_(head(config.path / schema::dir::heads, schema::archive::input)),
     input_body_(body(config.path, schema::archive::input), config.input_size, config.input_rate),
-    input(input_head_, input_body_, config.input_buckets),
+    input(input_head_, input_body_),
 
     output_head_(head(config.path / schema::dir::heads, schema::archive::output)),
     output_body_(body(config.path, schema::archive::output), config.output_size, config.output_rate),

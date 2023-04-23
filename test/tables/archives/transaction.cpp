@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(transaction__put__get_puts__expected)
     BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
-    table::transaction::record_puts element{};
+    table::transaction::get_puts element{};
     BOOST_REQUIRE(instance.get(1, element));
     BOOST_REQUIRE_EQUAL(element.ins_count, 0x00341205_u32);
     BOOST_REQUIRE_EQUAL(element.outs_count, 0x00341206_u32);

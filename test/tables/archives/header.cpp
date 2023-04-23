@@ -210,15 +210,15 @@ BOOST_AUTO_TEST_CASE(header__put__get_context__expected)
     BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
-    table::header::record_flags flags{};
+    table::header::get_flags flags{};
     BOOST_REQUIRE(instance.get(1, flags));
     BOOST_REQUIRE_EQUAL(flags.flags, expected.ctx.flags);
 
-    table::header::record_height height{};
+    table::header::get_height height{};
     BOOST_REQUIRE(instance.get(1, height));
     BOOST_REQUIRE_EQUAL(height.height, expected.ctx.height);
 
-    table::header::record_mtp mtp{};
+    table::header::get_mtp mtp{};
     BOOST_REQUIRE(instance.get(1, mtp));
     BOOST_REQUIRE_EQUAL(mtp.mtp, expected.ctx.mtp);
 

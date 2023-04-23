@@ -39,7 +39,6 @@ settings::settings() NOEXCEPT
     point_size{ 1 },
     point_rate{ 50 },
 
-    input_buckets{ 100 },
     input_size{ 1 },
     input_rate{ 50 },
 

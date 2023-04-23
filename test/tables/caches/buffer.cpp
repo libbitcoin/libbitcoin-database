@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(buffer__put__get__expected)
         {},
         to_shared(chain::transaction{})
     }).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(key2, table::buffer::slab_put_ref
+    BOOST_REQUIRE(!instance.put_link(key2, table::buffer::put_ref
     {
         {},
         slab2.tx

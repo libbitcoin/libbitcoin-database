@@ -173,7 +173,7 @@ struct transaction
         search_key key{};
     };
 
-    struct record_puts_count
+    struct get_put_counts
       : public schema::transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
@@ -188,7 +188,7 @@ struct transaction
         ix::integer outs_count{};
     };
 
-    struct record_puts
+    struct get_puts
       : public schema::transaction
     {
         inline puts::integer outs_fk() const NOEXCEPT
@@ -210,7 +210,7 @@ struct transaction
         puts::integer ins_fk{};
     };
 
-    struct record_input
+    struct get_input
       : public schema::transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
@@ -234,7 +234,7 @@ struct transaction
         puts::integer puts_fk{};
     };
 
-    struct record_output
+    struct get_output
       : public schema::transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
@@ -258,7 +258,7 @@ struct transaction
         puts::integer puts_fk{};
     };
 
-    struct record_get_coinbase
+    struct get_coinbase
       : public schema::transaction
     {
         inline bool from_data(reader& source) NOEXCEPT

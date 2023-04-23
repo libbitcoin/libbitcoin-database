@@ -586,16 +586,18 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_coinbase_and_intern
     BOOST_REQUIRE(query.set(test::block1b, context{ 0, 1, 0 }));
     BOOST_REQUIRE(query.set_strong(1));
 
-    // block_spend_internal_2b spends first block1a output and first own output.
     BOOST_REQUIRE(query.set(test::block_spend_internal_2b, context{ 0, 101, 0 }));
     ////BOOST_REQUIRE(query.set_strong(2));
 
     // Not confirmable because own block prevout is not strong.
     BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::unconfirmed_spend);
 
-    // block1b coinbase prevout: 1 + 100 = 101 (maturity)
+    // block_spend_internal_2b spends first block1b output and first own output.
+    // But first block1b is first tx in block_spend_internal_2b so excluded as coinbase.
+    // It spends only its first own output (coinbase) and that can never be mature.
+    // But spend target is not stored as coinbase because it's not a null point.
     BOOST_REQUIRE(query.set_strong(2));
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::coinbase_maturity);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__confirmed_double_spend__confirmed_double_spend)

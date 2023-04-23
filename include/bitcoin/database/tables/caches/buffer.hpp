@@ -91,7 +91,7 @@ struct buffer
         system::chain::transaction::cptr tx{};
     };
 
-    struct slab_put_ref
+    struct put_ref
       : public schema::buffer
     {
         link count() const NOEXCEPT

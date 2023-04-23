@@ -34,40 +34,26 @@ struct spend
 {
     using tx = linkage<schema::tx>;
     using ix = linkage<schema::index>;
+    using pt = linkage<schema::point::pk>;
     using hash_map<schema::spend>::hashmap;
     using search_key = search<schema::spend::sk>;
 
     // Composers/decomposers do not adjust to type changes.
-    static_assert(tx::size == 4 && ix::size == 3);
+    static_assert(pt::size == 4 && ix::size == 3);
 
-    static constexpr search_key compose(tx::integer fk,
-        ix::integer index) NOEXCEPT
+    static constexpr search_key compose(pt::integer point_fk,
+        ix::integer point_index) NOEXCEPT
     {
         return
         {
-            system::byte<0>(fk),
-            system::byte<1>(fk),
-            system::byte<2>(fk),
-            system::byte<3>(fk),
-            system::byte<0>(index),
-            system::byte<1>(index),
-            system::byte<2>(index)
+            system::byte<0>(point_fk),
+            system::byte<1>(point_fk),
+            system::byte<2>(point_fk),
+            system::byte<3>(point_fk),
+            system::byte<0>(point_index),
+            system::byte<1>(point_index),
+            system::byte<2>(point_index)
         };
-    }
-
-    static CONSTEVAL search_key null_point() NOEXCEPT
-    {
-        return compose(tx::terminal, ix::terminal);
-    };
-
-    static inline tx decompose_fk(const search_key& key) NOEXCEPT
-    {
-        return system::array_cast<uint8_t, tx::size>(key);
-    }
-
-    static inline ix decompose_index(const search_key& key) NOEXCEPT
-    {
-        return system::array_cast<uint8_t, ix::size, tx::size>(key);
     }
 
     struct record
@@ -93,80 +79,6 @@ struct spend
         }
 
         tx::integer tx_fk{};
-    };
-
-    struct record_composite_sk
-      : public schema::spend
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            source.rewind_bytes(sk);
-            key = source.read_forward<sk>();
-            return source;
-        }
-
-        inline tx point_fk() const NOEXCEPT
-        {
-            return decompose_fk(key);
-        }
-
-        inline ix point_index() const NOEXCEPT
-        {
-            return decompose_index(key);
-        }
-
-        inline bool is_null() const NOEXCEPT
-        {
-            return key == null_point();
-        }
-
-        search_key key{};
-    };
-
-    struct record_decomposed_fk
-      : public schema::spend
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            source.rewind_bytes(sk);
-            point_fk = source.read_little_endian<tx::integer, tx::size>();
-            return source;
-        }
-
-        inline bool is_null() const NOEXCEPT
-        {
-            return point_fk == tx::terminal;
-        }
-
-        tx::integer point_fk{};
-    };
-
-    struct record_decomposed_sk
-      : public schema::spend
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            source.rewind_bytes(sk);
-            point_fk    = source.read_little_endian<tx::integer, tx::size>();
-            point_index = source.read_little_endian<ix::integer, ix::size>();
-
-            // Restore truncated null_index sentinel. Foreign point index is
-            // limited to 3 bytes, which cannot hold null_index. Sentinel 
-            // 0xffffffff truncated to 0x00ffffff upon write and explicitly
-            // restored to 0xffffffff upon read.
-            if (point_index == ix::terminal)
-                point_index = system::chain::point::null_index;
-
-            return source;
-        }
-
-        inline bool is_null() const NOEXCEPT
-        {
-            return point_fk == tx::terminal;
-        }
-
-        tx::integer point_fk{};
-        ix::integer point_index{};
     };
 };
 
