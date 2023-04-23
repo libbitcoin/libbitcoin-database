@@ -94,6 +94,16 @@ public:
         return tx_body_.buffer();
     }
 
+    system::data_chunk& spend_head() NOEXCEPT
+    {
+        return spend_head_.buffer();
+    }
+
+    system::data_chunk& spend_body() NOEXCEPT
+    {
+        return spend_body_.buffer();
+    }
+
     system::data_chunk& txs_head() NOEXCEPT
     {
         return txs_head_.buffer();

@@ -79,7 +79,6 @@ inline tx_link CLASS::to_tx(const hash_digest& key) const NOEXCEPT
     return store_.tx.first(key);
 }
 
-// protected
 TEMPLATE
 inline txs_link CLASS::to_txs_link(const header_link& link) const NOEXCEPT
 {
@@ -112,24 +111,31 @@ tx_link CLASS::to_output_tx(const output_link& link) const NOEXCEPT
 TEMPLATE
 tx_link CLASS::to_prevout_tx(const input_link& link) const NOEXCEPT
 {
-    table::input::slab_decomposed_fk in{};
-    if (!store_.input.get(link, in))
-        return {};
-
-    if (in.is_null())
+    table::input::get_prevout in{};
+    if (!store_.input.get(link, in) || in.is_null())
         return {};
 
     return to_tx(get_point_key(in.point_fk));
 }
 
 TEMPLATE
-foreign_point CLASS::to_foreign_point(const input_link& link) const NOEXCEPT
+tx_link CLASS::to_spend_tx(const spend_link& link) const NOEXCEPT
 {
-    table::input::slab_composite_sk in{};
+    table::spend::record spend{};
+    if (!store_.spend.get(link, spend))
+        return {};
+
+    return spend.tx_fk;
+}
+
+TEMPLATE
+foreign_point CLASS::to_spend_key(const input_link& link) const NOEXCEPT
+{
+    table::input::get_prevout in{};
     if (!store_.input.get(link, in))
         return {};
 
-    return in.key;
+    return in.prevout();
 }
 
 // point to put (forward navigation)
@@ -139,11 +145,11 @@ TEMPLATE
 input_link CLASS::to_input(const tx_link& link,
     uint32_t input_index) const NOEXCEPT
 {
-    table::transaction::record_input tx{ {}, input_index };
+    table::transaction::get_input tx{ {}, input_index };
     if (!store_.tx.get(link, tx))
         return {};
 
-    table::puts::record_get_one put{};
+    table::puts::get_at put{};
     if (!store_.puts.get(tx.puts_fk, put))
         return {};
 
@@ -154,11 +160,11 @@ TEMPLATE
 output_link CLASS::to_output(const tx_link& link,
     uint32_t output_index) const NOEXCEPT
 {
-    table::transaction::record_output tx{ {}, output_index };
+    table::transaction::get_output tx{ {}, output_index };
     if (!store_.tx.get(link, tx))
         return {};
 
-    table::puts::record_get_one put{};
+    table::puts::get_at put{};
     if (!store_.puts.get(tx.puts_fk, put))
         return {};
 
@@ -168,11 +174,8 @@ output_link CLASS::to_output(const tx_link& link,
 TEMPLATE
 output_link CLASS::to_prevout(const input_link& link) const NOEXCEPT
 {
-    table::input::slab_decomposed_sk in{};
-    if (!store_.input.get(link, in))
-        return {};
-
-    if (in.is_null())
+    table::input::get_prevout in{};
+    if (!store_.input.get(link, in) || in.is_null())
         return {};
 
     return to_output(to_tx(get_point_key(in.point_fk)), in.point_index);
@@ -205,54 +208,93 @@ header_link CLASS::to_parent(const header_link& link) const NOEXCEPT
 // output to spenders (reverse navigation)
 // ----------------------------------------------------------------------------
 
+// protected/unused (symmetry)
+TEMPLATE
+uint32_t CLASS::to_input_index(const tx_link& parent_fk,
+    const input_link& input_fk) const NOEXCEPT
+{
+    uint32_t index{};
+    for (const auto& in_fk: to_tx_inputs(parent_fk))
+    {
+        if (in_fk == input_fk) return index;
+        ++index;
+    }
+
+    return system::chain::point::null_index;
+}
+
+// protected/to_spenders
+TEMPLATE
+uint32_t CLASS::to_output_index(const tx_link& parent_fk,
+    const output_link& output_fk) const NOEXCEPT
+{
+    uint32_t index{};
+    for (const auto& out_fk: to_tx_outputs(parent_fk))
+    {
+        if (out_fk == output_fk) return index;
+        ++index;
+    }
+
+    return system::chain::point::null_index;
+}
+
+// protected/to_spenders
+TEMPLATE
+input_link CLASS::to_spender(const tx_link& link,
+    const foreign_point& point) const NOEXCEPT
+{
+    table::input::get_prevout input{};
+    for (const auto& in_fk: to_tx_inputs(link))
+        if (store_.input.get(in_fk, input) && (input.prevout() == point))
+            return in_fk;
+
+    return {};
+}
+
 TEMPLATE
 input_links CLASS::to_spenders(const output_link& link) const NOEXCEPT
 {
-    table::output::get_point out{};
+    table::output::get_parent out{};
     if (!store_.output.get(link, out))
         return {};
 
-    // An output parent tx/index should never be null point.
-    return to_spenders(out.parent_fk, out.index);
+    // This results in two reads to the tx table, so could be optimized.
+    return to_spenders(out.parent_fk, to_output_index(out.parent_fk, link));
 }
 
 TEMPLATE
 input_links CLASS::to_spenders(const tx_link& link,
     uint32_t output_index) const NOEXCEPT
 {
-    if (link.is_terminal())
-        return {};
-
-    const auto point_fk = to_point(get_tx_key(link));
-    if (point_fk.is_terminal())
-        return {};
-
-    return to_spenders(table::input::compose(point_fk, output_index));
+    return to_spenders(point{ get_tx_key(link), output_index });
 }
 
 TEMPLATE
 input_links CLASS::to_spenders(const point& prevout) const NOEXCEPT
 {
-    if (prevout.is_null())
-        return {};
-
     const auto point_fk = to_point(prevout.hash());
     if (point_fk.is_terminal())
         return {};
 
-    return to_spenders(table::input::compose(point_fk, prevout.index()));
+    return to_spenders(table::spend::compose(point_fk, prevout.index()));
 }
 
-// protected
 TEMPLATE
-input_links CLASS::to_spenders(const foreign_point& key) const NOEXCEPT
+input_links CLASS::to_spenders(const foreign_point& point) const NOEXCEPT
 {
-    auto it = store_.input.it(key);
+    auto it = store_.spend.it(point);
     if (it.self().is_terminal())
         return {};
 
+    // Iterate transactions that spend the point, saving each spender.
     input_links spenders{};
-    do { spenders.push_back(it.self()); } while (it.advance());
+    do
+    {
+        spenders.push_back(to_spender(to_spend_tx(it.self()), point));
+    }
+    while (it.advance());
+
+    // Any terminal link implies a store integrity failure.
     return spenders;
 }
 
@@ -262,31 +304,31 @@ input_links CLASS::to_spenders(const foreign_point& key) const NOEXCEPT
 TEMPLATE
 input_links CLASS::to_tx_inputs(const tx_link& link) const NOEXCEPT
 {
-    table::transaction::record_puts tx{};
+    table::transaction::get_puts tx{};
     if (!store_.tx.get(link, tx))
         return {};
 
-    table::puts::record puts{};
-    puts.in_fks.resize(tx.ins_count);
+    table::puts::get_puts puts{};
+    puts.put_fks.resize(tx.ins_count);
     if (!store_.puts.get(tx.ins_fk, puts))
         return {};
 
-    return std::move(puts.in_fks);
+    return std::move(puts.put_fks);
 }
 
 TEMPLATE
 output_links CLASS::to_tx_outputs(const tx_link& link) const NOEXCEPT
 {
-    table::transaction::record_puts tx{};
+    table::transaction::get_puts tx{};
     if (!store_.tx.get(link, tx))
         return {};
 
-    table::puts::record puts{};
-    puts.out_fks.resize(tx.outs_count);
+    table::puts::get_puts puts{};
+    puts.put_fks.resize(tx.outs_count);
     if (!store_.puts.get(tx.outs_fk(), puts))
         return {};
 
-    return std::move(puts.out_fks);
+    return std::move(puts.put_fks);
 }
 
 // block to txs/puts (forward navigation)
@@ -305,7 +347,7 @@ tx_links CLASS::to_txs(const header_link& link) const NOEXCEPT
 TEMPLATE
 tx_link CLASS::to_coinbase(const header_link& link) const NOEXCEPT
 {
-    table::txs::slab_coinbase txs{};
+    table::txs::get_coinbase txs{};
     if (!store_.txs.get(to_txs_link(link), txs))
         return {};
 
@@ -324,6 +366,21 @@ input_links CLASS::to_non_coinbase_inputs(
     for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
     {
         const auto inputs = to_tx_inputs(*tx);
+        ins.insert(ins.end(), inputs.begin(), inputs.end());
+    }
+
+    return ins;
+}
+
+TEMPLATE
+input_links CLASS::to_block_inputs(const header_link& link) const NOEXCEPT
+{
+    input_links ins{};
+    const auto txs = to_txs(link);
+
+    for (const auto& tx: txs)
+    {
+        const auto inputs = to_tx_inputs(tx);
         ins.insert(ins.end(), inputs.begin(), inputs.end());
     }
 
@@ -356,17 +413,17 @@ header_link CLASS::top_header(size_t bucket) const NOEXCEPT
 }
 
 TEMPLATE
-input_link CLASS::top_input(size_t bucket) const NOEXCEPT
-{
-    using namespace system;
-    return store_.input.top(possible_narrow_cast<input_link::integer>(bucket));
-}
-
-TEMPLATE
 point_link CLASS::top_point(size_t bucket) const NOEXCEPT
 {
     using namespace system;
     return store_.point.top(possible_narrow_cast<point_link::integer>(bucket));
+}
+
+TEMPLATE
+spend_link CLASS::top_spend(size_t bucket) const NOEXCEPT
+{
+    using namespace system;
+    return store_.spend.top(possible_narrow_cast<spend_link::integer>(bucket));
 }
 
 TEMPLATE

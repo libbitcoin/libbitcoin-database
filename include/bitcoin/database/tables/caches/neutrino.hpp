@@ -72,7 +72,7 @@ struct neutrino
         system::data_chunk filter{};
     };
 
-    struct slab_get_filter
+    struct get_filter
       : public schema::neutrino
     {
         link count() const NOEXCEPT
@@ -94,7 +94,7 @@ struct neutrino
         system::data_chunk filter{};
     };
 
-    struct slab_get_head
+    struct get_head
         : public schema::neutrino
     {
         inline bool from_data(reader& source) NOEXCEPT
@@ -106,7 +106,7 @@ struct neutrino
         hash_digest filter_head{};
     };
 
-    struct slab_put_ref
+    struct put_ref
       : public schema::neutrino
     {
         link count() const NOEXCEPT

@@ -138,12 +138,6 @@ size_t CLASS::point_buckets() const NOEXCEPT
 }
 
 TEMPLATE
-size_t CLASS::input_buckets() const NOEXCEPT
-{
-    return store_.input.buckets();
-}
-
-TEMPLATE
 size_t CLASS::txs_buckets() const NOEXCEPT
 {
     return store_.txs.buckets();
@@ -240,9 +234,9 @@ size_t CLASS::strong_tx_records() const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-size_t CLASS::input_slabs(const tx_link& link) const NOEXCEPT
+size_t CLASS::input_count(const tx_link& link) const NOEXCEPT
 {
-    table::transaction::record_puts_count tx{};
+    table::transaction::get_put_counts tx{};
     if (!store_.tx.get(link, tx))
         return {};
 
@@ -250,9 +244,9 @@ size_t CLASS::input_slabs(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-size_t CLASS::output_slabs(const tx_link& link) const NOEXCEPT
+size_t CLASS::output_count(const tx_link& link) const NOEXCEPT
 {
-    table::transaction::record_puts_count tx{};
+    table::transaction::get_put_counts tx{};
     if (!store_.tx.get(link, tx))
         return {};
 
@@ -260,9 +254,9 @@ size_t CLASS::output_slabs(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-typename CLASS::sizes CLASS::put_slabs(const tx_link& link) const NOEXCEPT
+two_counts CLASS::put_counts(const tx_link& link) const NOEXCEPT
 {
-    table::transaction::record_puts_count tx{};
+    table::transaction::get_put_counts tx{};
     if (!store_.tx.get(link, tx))
         return {};
 

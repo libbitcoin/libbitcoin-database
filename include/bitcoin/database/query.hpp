@@ -36,28 +36,14 @@ using header_link = table::header::link;
 using output_link = table::output::link;
 using input_link = table::input::link;
 using point_link = table::point::link;
+using spend_link = table::spend::link;
 using txs_link = table::txs::link;
 using tx_link = table::transaction::link;
 using tx_links = std_vector<tx_link::integer>;
 using input_links = std_vector<input_link::integer>;
 using output_links = std_vector<output_link::integer>;
-using foreign_point = table::input::search_key;
-struct cached_point
-{
-    // input (under validation)
-    foreign_point key; // double-spendness
-    uint32_t self;     // input.parent
-    uint32_t sequence; // bip68
-
-    // input->prevout
-    uint32_t tx;       // confirmedness
-    uint32_t height;   // bip68/maturity
-    uint32_t mtp;      // bip68
-    bool coinbase;     // maturity
-};
-// coinbase aligns at 4 bytes on msvc x64.
-////static_assert(sizeof(cached_point) == 32u);
-using cached_points = std_vector<cached_point>;
+using foreign_point = table::spend::search_key;
+using two_counts = std::pair<size_t, size_t>;
 
 template <typename Store>
 class query
@@ -98,7 +84,7 @@ public:
     hashes get_candidate_hashes(const heights& heights) const NOEXCEPT;
     hashes get_confirmed_hashes(const heights& heights) const NOEXCEPT;
 
-    /// Store sizing.
+    /// Store extent.
     /// -----------------------------------------------------------------------
 
     /// Table logical byte sizes (archive bodies).
@@ -122,7 +108,6 @@ public:
     /// Buckets (archive hash tables).
     size_t header_buckets() const NOEXCEPT;
     size_t point_buckets() const NOEXCEPT;
-    size_t input_buckets() const NOEXCEPT;
     size_t txs_buckets() const NOEXCEPT;
     size_t tx_buckets() const NOEXCEPT;
 
@@ -145,10 +130,9 @@ public:
     size_t strong_tx_records() const NOEXCEPT;
 
     /// Counters (archive slabs).
-    /// header_records is upper bound for txs_slabs (in terms of collision).
-    size_t input_slabs(const tx_link& link) const NOEXCEPT;
-    size_t output_slabs(const tx_link& link) const NOEXCEPT;
-    sizes put_slabs(const tx_link& link) const NOEXCEPT;
+    size_t input_count(const tx_link& link) const NOEXCEPT;
+    size_t output_count(const tx_link& link) const NOEXCEPT;
+    two_counts put_counts(const tx_link& link) const NOEXCEPT;
 
     /// Translation (key/link to link/s).
     /// -----------------------------------------------------------------------
@@ -159,14 +143,14 @@ public:
     inline header_link to_header(const hash_digest& key) const NOEXCEPT;
     inline point_link to_point(const hash_digest& key) const NOEXCEPT;
     inline tx_link to_tx(const hash_digest& key) const NOEXCEPT;
+    inline txs_link to_txs_link(const header_link& link) const NOEXCEPT;
 
     /// put to tx (reverse navigation)
     tx_link to_input_tx(const input_link& link) const NOEXCEPT;
     tx_link to_output_tx(const output_link& link) const NOEXCEPT;
     tx_link to_prevout_tx(const input_link& link) const NOEXCEPT;
-    foreign_point to_foreign_point(const input_link& link) const NOEXCEPT;
-    bool create_cached_points(cached_points& out,
-        const header_link& link) const NOEXCEPT;
+    tx_link to_spend_tx(const spend_link& link) const NOEXCEPT;
+    foreign_point to_spend_key(const input_link& link) const NOEXCEPT;
 
     /// point to put (forward navigation)
     input_link to_input(const tx_link& link, uint32_t input_index) const NOEXCEPT;
@@ -178,8 +162,9 @@ public:
     header_link to_parent(const header_link& link) const NOEXCEPT;
 
     /// output to spenders (reverse navigation)
-    input_links to_spenders(const output_link& link) const NOEXCEPT;
     input_links to_spenders(const point& prevout) const NOEXCEPT;
+    input_links to_spenders(const output_link& link) const NOEXCEPT;
+    input_links to_spenders(const foreign_point& point) const NOEXCEPT;
     input_links to_spenders(const tx_link& link,
         uint32_t output_index) const NOEXCEPT;
 
@@ -191,12 +176,13 @@ public:
     tx_links to_txs(const header_link& link) const NOEXCEPT;
     tx_link to_coinbase(const header_link& link) const NOEXCEPT;
     input_links to_non_coinbase_inputs(const header_link& link) const NOEXCEPT;
+    input_links to_block_inputs(const header_link& link) const NOEXCEPT;
     output_links to_block_outputs(const header_link& link) const NOEXCEPT;
 
     /// hashmap enumeration
     header_link top_header(size_t bucket) const NOEXCEPT;
-    input_link top_input(size_t bucket) const NOEXCEPT;
     point_link top_point(size_t bucket) const NOEXCEPT;
+    spend_link top_spend(size_t bucket) const NOEXCEPT;
     txs_link top_txs(size_t bucket) const NOEXCEPT;
     tx_link top_tx(size_t bucket) const NOEXCEPT;
 
@@ -213,6 +199,7 @@ public:
     inline bool set(const header& header, const context& ctx) NOEXCEPT;
     inline bool set(const block& block, const chain_context& ctx) NOEXCEPT;
     inline bool set(const block& block, const context& ctx) NOEXCEPT;
+    inline bool set(const hash_digest& point_hash) NOEXCEPT;
     inline bool set(const transaction& tx) NOEXCEPT;
 
     /// False implies not fully populated.
@@ -256,15 +243,11 @@ public:
     header_link set_link(const header& header, const context& ctx) NOEXCEPT;
     header_link set_link(const block& block, const chain_context& ctx) NOEXCEPT;
     header_link set_link(const block& block, const context& ctx) NOEXCEPT;
+    point_link set_link(const hash_digest& point_hash) NOEXCEPT;
     tx_link set_link(const transaction& tx) NOEXCEPT;
 
     bool set(const header_link& link, const hashes& hashes) NOEXCEPT;
     bool set(const header_link& link, const tx_links& links) NOEXCEPT;
-
-    // TEMP: delete/delete/protected.
-    bool set_spends(const tx_link& link) NOEXCEPT;
-    bool set_spends(const header_link& link) NOEXCEPT;
-    bool set_spend(const foreign_point& key, const tx_link& link) NOEXCEPT;
 
     /// Chain state.
     /// -----------------------------------------------------------------------
@@ -319,20 +302,21 @@ public:
     bool is_confirmed_output(const output_link& link) const NOEXCEPT;
     bool is_spent_output(const output_link& link) const NOEXCEPT;
 
+    /// These are not used in confirmation.
     /// These rely on strong (use only for confirmation process).
-    bool is_strong(const input_link& link) const NOEXCEPT;
     bool is_spent(const input_link& link) const NOEXCEPT;
+    bool is_strong(const input_link& link) const NOEXCEPT;
     bool is_mature(const input_link& link, size_t height) const NOEXCEPT;
-    ////bool is_exhausted(const tx_link& link) const NOEXCEPT;
-    code point_confirmable(const cached_point& point) const NOEXCEPT;
-    code block_confirmable(const header_link& link) const NOEXCEPT;
-    code block_confirmable(const input_links& links,
+    bool is_locked(const input_link& link, uint32_t sequence,
         const context& ctx) const NOEXCEPT;
 
+    /// These are used in confirmation.
     /// Block association relies on strong (confirmed or pending).
+    code block_confirmable(const header_link& link) const NOEXCEPT;
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
 
+    /// Height indexation.
     bool initialize(const block& genesis) NOEXCEPT;
     bool push_candidate(const header_link& link) NOEXCEPT;
     bool push_confirmed(const header_link& link) NOEXCEPT;
@@ -369,29 +353,40 @@ public:
     bool set_bootstrap(size_t height) NOEXCEPT;
 
 protected:
-    inline txs_link to_txs_link(const header_link& link) const NOEXCEPT;
-    inline foreign_point make_foreign_point(const point& prevout) const NOEXCEPT;
+    /// Translate.
+    /// -----------------------------------------------------------------------
+    uint32_t to_input_index(const tx_link& parent_fk,
+        const input_link& input_fk) const NOEXCEPT;
+    uint32_t to_output_index(const tx_link& parent_fk,
+        const output_link& output_fk) const NOEXCEPT;
+    input_link to_spender(const tx_link& link,
+        const foreign_point& point) const NOEXCEPT;
+
+    /// Validate.
+    /// -----------------------------------------------------------------------
     inline code to_block_code(linkage<schema::code>::integer value) const NOEXCEPT;
     inline code to_tx_code(linkage<schema::code>::integer value) const NOEXCEPT;
     inline bool is_sufficient(const context& current,
         const context& evaluated) const NOEXCEPT;
 
-    height_link get_height(const header_link& link) const NOEXCEPT;
-    input_links to_spenders(const foreign_point& key) const NOEXCEPT;
+    /// Confirm.
+    /// -----------------------------------------------------------------------
 
+    height_link get_height(const header_link& link) const NOEXCEPT;
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
-    inline bool is_input_spent_prevout(const foreign_point& key,
-        const input_link& self) const NOEXCEPT;
-    inline bool is_tx_spent_prevout(const foreign_point& key,
-        const tx_link& self) const NOEXCEPT;
-    inline error::error_t spendable_prevout(const point_link& link,
-        uint32_t sequence, const context& ctx) const NOEXCEPT;
-    inline error::error_t spendable_prevout(const tx_link& link,
-        bool coinbase, uint32_t sequence, const context& ctx) const NOEXCEPT;
     error::error_t mature_prevout(const point_link& link,
         size_t height) const NOEXCEPT;
     error::error_t locked_prevout(const point_link& link, uint32_t sequence,
         const context& ctx) const NOEXCEPT;
+
+    // Critical path
+    inline bool is_spent_prevout(const foreign_point& point,
+        const tx_link& self) const NOEXCEPT;
+    inline error::error_t spendable_prevout(const tx_link& link,
+        uint32_t sequence, const context& ctx) const NOEXCEPT;
+
+    /// context
+    /// -----------------------------------------------------------------------
 
     bool get_candidate_bits(uint32_t& bits, size_t height,
         const header& header, size_t header_height) const NOEXCEPT;

@@ -82,7 +82,7 @@ struct txs
         keys tx_fks{};
     };
 
-    struct slab_position
+    struct get_position
       : public schema::txs
     {
         inline bool from_data(reader& source) NOEXCEPT
@@ -100,7 +100,7 @@ struct txs
         size_t position{};
     };
 
-    struct slab_coinbase
+    struct get_coinbase
       : public schema::txs
     {
         inline bool from_data(reader& source) NOEXCEPT

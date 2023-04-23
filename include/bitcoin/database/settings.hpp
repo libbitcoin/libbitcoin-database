@@ -50,7 +50,6 @@ struct BCD_API settings
     uint64_t point_size;
     uint16_t point_rate;
 
-    uint32_t input_buckets;
     uint64_t input_size;
     uint16_t input_rate;
 

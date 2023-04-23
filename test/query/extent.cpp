@@ -52,10 +52,10 @@ BOOST_AUTO_TEST_CASE(query_extent__sizes__genesis__expected)
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
 
-    BOOST_REQUIRE_EQUAL(query.archive_size(), schema::header::minrow + 82u + 99u + 0u + 2 * schema::put + schema::txs::minrow + 2 * schema::tx + schema::transaction::minrow);
+    BOOST_REQUIRE_EQUAL(query.archive_size(), schema::header::minrow + 81u + 91u + 0u + 2 * schema::put + schema::txs::minrow + 2 * schema::tx + schema::transaction::minrow);
     BOOST_REQUIRE_EQUAL(query.header_size(), schema::header::minrow);
-    BOOST_REQUIRE_EQUAL(query.output_size(), 82u);
-    BOOST_REQUIRE_EQUAL(query.input_size(), 99u);
+    BOOST_REQUIRE_EQUAL(query.output_size(), 81u);
+    BOOST_REQUIRE_EQUAL(query.input_size(), 91u);
     BOOST_REQUIRE_EQUAL(query.point_size(), 0u); 
     BOOST_REQUIRE_EQUAL(query.puts_size(), 2 * schema::put);
     BOOST_REQUIRE_EQUAL(query.txs_size(), schema::txs::minrow + 2 * schema::tx);
@@ -80,7 +80,6 @@ BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
 
     BOOST_REQUIRE_EQUAL(query.header_buckets(), 100u);
     BOOST_REQUIRE_EQUAL(query.point_buckets(), 100u);
-    BOOST_REQUIRE_EQUAL(query.input_buckets(), 100u);
     BOOST_REQUIRE_EQUAL(query.txs_buckets(), 100u);
     BOOST_REQUIRE_EQUAL(query.tx_buckets(), 100u);
 
@@ -111,7 +110,7 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.strong_tx_records(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(query_extent__slabs__genesis__expected)
+BOOST_AUTO_TEST_CASE(query_extent__input_output_count__genesis__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -120,10 +119,8 @@ BOOST_AUTO_TEST_CASE(query_extent__slabs__genesis__expected)
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
 
-    BOOST_REQUIRE_EQUAL(query.input_slabs(1), zero);
-    BOOST_REQUIRE_EQUAL(query.output_slabs(1), zero);
-    BOOST_REQUIRE_EQUAL(query.put_slabs(1).first, zero);
-    BOOST_REQUIRE_EQUAL(query.put_slabs(1).second, zero);
+    BOOST_REQUIRE_EQUAL(query.input_count(1), zero);
+    BOOST_REQUIRE_EQUAL(query.output_count(1), zero);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

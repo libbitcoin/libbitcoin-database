@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_QUERY_CONFIRM_IPP
 
 #include <algorithm>
-#include <iterator>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/error.hpp>
@@ -30,22 +29,30 @@ namespace database {
 
 // Block status (surrogate-keyed).
 // ----------------------------------------------------------------------------
-// Not for use in validatation (2 additional gets).
+// Not for use in validatation (2 additional gets) or confirmation (height).
 
 // protected
 TEMPLATE
 height_link CLASS::get_height(const header_link& link) const NOEXCEPT
 {
-    table::header::record_height header{};
+    table::header::get_height header{};
     if (!store_.header.get(link, header))
         return {};
 
     return header.height;
 }
 
+// protected/get_confirmed_balance(address)
+TEMPLATE
+bool CLASS::is_confirmed_unspent(const output_link& link) const NOEXCEPT
+{
+    return is_confirmed_output(link) && !is_spent_output(link);
+}
+
 TEMPLATE
 bool CLASS::is_candidate_block(const header_link& link) const NOEXCEPT
 {
+    // The block is candidate (by height).
     const auto height = get_height(link);
     if (height.is_terminal())
         return false;
@@ -58,6 +65,7 @@ bool CLASS::is_candidate_block(const header_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::is_confirmed_block(const header_link& link) const NOEXCEPT
 {
+    // The block is confirmed (by height).
     const auto height = get_height(link);
     if (height.is_terminal())
         return false;
@@ -70,6 +78,7 @@ bool CLASS::is_confirmed_block(const header_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::is_confirmed_tx(const tx_link& link) const NOEXCEPT
 {
+    // The tx is strong *and* its block is confirmed (by height).
     const auto fk = to_block(link);
     return !fk.is_terminal() && is_confirmed_block(fk);
 }
@@ -77,6 +86,7 @@ bool CLASS::is_confirmed_tx(const tx_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::is_confirmed_input(const input_link& link) const NOEXCEPT
 {
+    // The input.tx is strong *and* its block is confirmed (by height).
     const auto fk = to_input_tx(link);
     return !fk.is_terminal() && is_confirmed_tx(fk);
 }
@@ -84,6 +94,7 @@ bool CLASS::is_confirmed_input(const input_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::is_confirmed_output(const output_link& link) const NOEXCEPT
 {
+    // The output.tx is strong *and* its block is confirmed (by height).
     const auto fk = to_output_tx(link);
     return !fk.is_terminal() && is_confirmed_tx(fk);
 }
@@ -91,8 +102,8 @@ bool CLASS::is_confirmed_output(const output_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::is_spent_output(const output_link& link) const NOEXCEPT
 {
+    // The spender is strong *and* its block is confirmed (by height).
     const auto ins = to_spenders(link);
-
     return std::any_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
     {
         return is_confirmed_input(in);
@@ -101,61 +112,90 @@ bool CLASS::is_spent_output(const output_link& link) const NOEXCEPT
 
 // Confirmation.
 // ----------------------------------------------------------------------------
-// Strong must be set at current height during organization, unset if fails.
+// Block confirmed by height is not considered for confirmation (just strong).
 
+// protected
 TEMPLATE
-bool CLASS::is_mature(const input_link& link, size_t height) const NOEXCEPT
+inline bool CLASS::is_spent_prevout(const foreign_point& point,
+    const tx_link& self) const NOEXCEPT
 {
-    table::input::slab_decomposed_fk input{};
-    return store_.input.get(link, input) && (input.is_null() ||
-        mature_prevout(input.point_fk, height) == error::success);
-}
+    auto it = store_.spend.it(point);
+    if (it.self().is_terminal())
+        return false;
 
-TEMPLATE
-bool CLASS::is_spent(const input_link& link) const NOEXCEPT
-{
-    table::input::slab_composite_sk input{};
-    return store_.input.get(link, input) && !input.is_null() &&
-        is_input_spent_prevout(input.key, link);
-}
+    table::spend::record spend{};
+    do
+    {
+        // Iterated element must be found, otherwise fault.
+        if (!store_.spend.get(it.self(), spend))
+            return true;
 
-TEMPLATE
-bool CLASS::is_strong(const input_link& link) const NOEXCEPT
-{
-    // to_block checks confirmedness, including de-confirmedness.
-    return !to_block(to_input_tx(link)).is_terminal();
+        // Skip self (which should be strong) and require strong for spent.
+        if ((spend.tx_fk != self) && !to_block(spend.tx_fk).is_terminal())
+            return true;
+    }
+    while (it.advance());
+    return false;
 }
 
 // protected
 TEMPLATE
-error::error_t CLASS::locked_prevout(const point_link& link, uint32_t sequence,
-    const context& ctx) const NOEXCEPT
+inline error::error_t CLASS::spendable_prevout(const tx_link& link,
+    uint32_t sequence, const context& ctx) const NOEXCEPT
 {
-    if (!script::is_enabled(ctx.flags, system::chain::forks::bip68_rule))
-        return error::success;
+    constexpr auto bip68_rule = system::chain::forks::bip68_rule;
 
-    // Get hash from point, search for prevout tx and get its link.
-    const auto tx_fk = to_tx(get_point_key(link));
-    if (tx_fk.is_terminal())
-        return error::missing_previous_output;
-
-    // to_block assures confirmation by strong_tx traversal.
-    const auto header_fk = to_block(tx_fk);
-    if (header_fk.is_terminal())
+    context out{};
+    if (!get_context(out, to_block(link)))
         return error::unconfirmed_spend;
 
-    context prevout_ctx{};
-    if (!get_context(prevout_ctx, header_fk))
-        return error::integrity;
+    if (is_coinbase(link) &&
+        !transaction::is_coinbase_mature(out.height, ctx.height))
+        return error::coinbase_maturity;
 
-    if (input::is_locked(sequence, ctx.height, ctx.mtp, prevout_ctx.height,
-        prevout_ctx.mtp))
+    if (script::is_enabled(ctx.flags, bip68_rule) &&
+        input::is_locked(sequence, ctx.height, ctx.mtp, out.height, out.mtp))
         return error::relative_time_locked;
 
     return error::success;
 }
 
-// protected
+// unused
+TEMPLATE
+bool CLASS::is_spent(const input_link& link) const NOEXCEPT
+{
+    table::input::get_prevout_parent input{};
+    if (!store_.input.get(link, input))
+        return false;
+
+    if (input.is_null())
+        return false;
+
+    return is_spent_prevout(input.prevout(), input.parent_fk);
+}
+
+// unused
+TEMPLATE
+bool CLASS::is_strong(const input_link& link) const NOEXCEPT
+{
+    return !to_block(to_input_tx(link)).is_terminal();
+}
+
+// unused
+TEMPLATE
+bool CLASS::is_mature(const input_link& link, size_t height) const NOEXCEPT
+{
+    table::input::get_prevout input{};
+    if (!store_.input.get(link, input))
+        return false;
+
+    if (input.is_null())
+        return true;
+
+    return mature_prevout(input.point_fk, height) == error::success;
+}
+
+// protected (only for is_mature/unused)
 TEMPLATE
 error::error_t CLASS::mature_prevout(const point_link& link,
     size_t height) const NOEXCEPT
@@ -184,171 +224,46 @@ error::error_t CLASS::mature_prevout(const point_link& link,
     return error::success;
 }
 
-// protected
+// unused
 TEMPLATE
-inline error::error_t CLASS::spendable_prevout(const point_link& link,
-    uint32_t sequence, const context& ctx) const NOEXCEPT
-{
-    ////// input.point->output.hash->output.tx
-    ////const auto tx_fk = to_tx(get_point_key(link));
-    ////if (tx_fk.is_terminal())
-    ////    return error::missing_previous_output;
-    ////
-    ////// output.tx->output.block
-    ////const auto header_fk = to_block(tx_fk);
-    ////if (header_fk.is_terminal())
-    ////    return error::unconfirmed_spend;
-    ////
-    ////// output.block->prevout_ctx
-    ////context prevout_ctx{};
-    ////if (!get_context(prevout_ctx, header_fk))
-    ////    return error::integrity;
-    ////
-    ////// mature_prevout
-    ////// output.transaction->output.transaction.coinbase
-    ////if (is_coinbase(tx_fk) &&
-    ////    !transaction::is_coinbase_mature(prevout_ctx.height, ctx.height))
-    ////    return error::coinbase_maturity;
-    ////
-    ////// locked_prevout
-    ////if (script::is_enabled(ctx.flags, system::chain::forks::bip68_rule) &&
-    ////    input::is_locked(sequence, ctx.height, ctx.mtp,
-    ////        prevout_ctx.height, prevout_ctx.mtp))
-    ////        return error::relative_time_locked;
-
-    return spendable_prevout(to_tx(get_point_key(link)), is_coinbase(link),
-        sequence, ctx);
-}
-
-// protected
-TEMPLATE
-inline error::error_t CLASS::spendable_prevout(const tx_link& link,
-    bool coinbase, uint32_t sequence, const context& ctx) const NOEXCEPT
-{
-    constexpr auto bip68_rule = system::chain::forks::bip68_rule;
-
-    context out{};
-    if (!get_context(out, to_block(link)))
-        return error::unconfirmed_spend;
-
-    if (coinbase && !transaction::is_coinbase_mature(out.height, ctx.height))
-        return error::coinbase_maturity;
-
-    if (script::is_enabled(ctx.flags, bip68_rule) &&
-        input::is_locked(sequence, ctx.height, ctx.mtp, out.height, out.mtp))
-        return error::relative_time_locked;
-
-    return error::success;
-}
-
-// protected
-TEMPLATE
-inline bool CLASS::is_input_spent_prevout(const foreign_point& key,
-    const input_link& self) const NOEXCEPT
-{
-    const auto ins = to_spenders(key);
-    if (ins.size() < two)
-        return false;
-
-    return std::any_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
-    {
-        return (in != self) && is_strong(in);
-    });
-}
-
-// protected
-TEMPLATE
-inline bool CLASS::is_tx_spent_prevout(const foreign_point& key,
-    const tx_link& self) const NOEXCEPT
-{
-    auto it = store_.spend.it(key);
-    if (it.self().is_terminal())
-        return false;
-
-    table::spend::record spend{};
-    do
-    {
-        // Iterated element must be found, otherwise fault.
-        if (!store_.spend.get(it.self(), spend))
-            return true;
-
-        // Skip self (which should be strong) and require strong for spent.
-        if ((spend.tx_fk != self) && !to_block(spend.tx_fk).is_terminal())
-            return true;
-    }
-    while (it.advance());
-    return false;
-}
-
-TEMPLATE
-code CLASS::point_confirmable(const cached_point& point) const NOEXCEPT
-{
-    code ec{ error::success };
-
-    // height is always needed for coinbase (maturity).
-    // sequence value tells which is needed, height or mtp (bip68).
-    // but both may apply, so need to allow for two (no flags at prevout).
-    const context ctx{ 0, point.height, point.mtp };
-    if ((ec = spendable_prevout(point.tx, point.coinbase, point.sequence, ctx)))
-        return ec;
-
-    // may only be strong-spent by self (and must be but is not checked).
-    if (is_tx_spent_prevout(point.key, point.self))
-        return error::confirmed_double_spend;
-
-    return ec;
-}
-
-TEMPLATE
-bool CLASS::create_cached_points(cached_points& out,
-    const header_link& link) const NOEXCEPT
-{
-    context ctx{};
-    if (!get_context(ctx, link))
-        return false;
-
-    table::input::slab_composite_sk_and_sequence_parent input{};
-    for (const auto& in: to_non_coinbase_inputs(link))
-    {
-        if (!store_.input.get(in, input))
-            return false;
-    
-        const auto tx_fk = to_tx(get_point_key(input.point_fk()));
-        out.push_back(
-        {
-            // input (under validation)
-            input.key,
-            input.parent_fk,
-            input.sequence,
-
-            // input->prevout
-            tx_fk.value,
-            system::possible_narrow_cast<uint32_t>(ctx.height),
-            ctx.mtp,
-            is_coinbase(tx_fk)
-        });
-    }
-
-    return true;
-}
-
-TEMPLATE
-code CLASS::block_confirmable(const input_links& links,
+bool CLASS::is_locked(const input_link& link, uint32_t sequence,
     const context& ctx) const NOEXCEPT
 {
-    code ec{};
-    table::input::slab_composite_sk_and_sequence_parent input{};
-    for (const auto& link: links)
-    {
-        if (!store_.input.get(link, input))
-            return error::integrity;
+    table::input::get_prevout input{};
+    if (!store_.input.get(link, input))
+        return false;
 
-        if (is_tx_spent_prevout(input.key, input.parent_fk))
-            return error::confirmed_double_spend;
+    if (input.is_null())
+        return true;
 
-        if ((ec = spendable_prevout(input.point_fk(), input.sequence, ctx)))
-            return ec;
-    }
+    return locked_prevout(input.point_fk, sequence, ctx) == error::success;
+}
+
+// protected (only for is_locked/unused)
+TEMPLATE
+error::error_t CLASS::locked_prevout(const point_link& link, uint32_t sequence,
+    const context& ctx) const NOEXCEPT
+{
+    if (!script::is_enabled(ctx.flags, system::chain::forks::bip68_rule))
+        return error::success;
+
+    // Get hash from point, search for prevout tx and get its link.
+    const auto tx_fk = to_tx(get_point_key(link));
+    if (tx_fk.is_terminal())
+        return error::missing_previous_output;
+
+    // to_block assures confirmation by strong_tx traversal.
+    const auto header_fk = to_block(tx_fk);
+    if (header_fk.is_terminal())
+        return error::unconfirmed_spend;
+
+    context prevout_ctx{};
+    if (!get_context(prevout_ctx, header_fk))
+        return error::integrity;
+
+    if (input::is_locked(sequence, ctx.height, ctx.mtp, prevout_ctx.height,
+        prevout_ctx.mtp))
+        return error::relative_time_locked;
 
     return error::success;
 }
@@ -360,7 +275,22 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     if (!get_context(ctx, link))
         return error::integrity;
 
-    return block_confirmable(to_non_coinbase_inputs(link), ctx);
+    code ec{};
+    table::input::get_prevout_parent_sequence input{};
+    for (const auto& in_fk: to_non_coinbase_inputs(link))
+    {
+        if (!store_.input.get(in_fk, input))
+            return error::integrity;
+
+        if ((ec = spendable_prevout(to_tx(get_point_key(input.point_fk)),
+            input.sequence, ctx)))
+            return ec;
+
+        if (is_spent_prevout(input.prevout(), input.parent_fk))
+            return error::confirmed_double_spend;
+    }
+
+    return error::success;
 }
 
 TEMPLATE
@@ -477,6 +407,76 @@ bool CLASS::pop_confirmed() NOEXCEPT
     return store_.confirmed.truncate(top);
     // ========================================================================
 }
+
+////// TEMP: testing cached values for confirmation.
+////struct cached_point
+////{
+////    // input (under validation)
+////    foreign_point key; // double-spendness
+////    uint32_t parent;   // input.parent
+////    uint32_t sequence; // bip68
+////
+////    // input->prevout
+////    uint32_t tx;       // confirmedness
+////    uint32_t height;   // bip68/maturity
+////    uint32_t mtp;      // bip68
+////    bool coinbase;     // maturity
+////};
+////// coinbase aligns at 4 bytes on msvc x64.
+////////static_assert(sizeof(cached_point) == 32u);
+////using cached_points = std_vector<cached_point>;
+////bool create_cached_points(cached_points& out,
+////    const header_link& link) const NOEXCEPT;
+////TEMPLATE
+////code CLASS::point_confirmable(const cached_point& point) const NOEXCEPT
+////{
+////    code ec{ error::success };
+////
+////    // height is always needed for coinbase (maturity).
+////    // sequence value tells which is needed, height or mtp (bip68).
+////    // but both may apply, so need to allow for two (no flags at prevout).
+////    const context ctx{ 0, point.height, point.mtp };
+////    if ((ec = spendable_prevout(point.tx, point.coinbase, point.sequence, ctx)))
+////        return ec;
+////
+////    // may only be strong-spent by self (and must be but is not checked).
+////    if (is_spent_prevout(point.key, point.parent))
+////        return error::confirmed_double_spend;
+////
+////    return ec;
+////}
+////
+////TEMPLATE
+////bool CLASS::create_cached_points(cached_points& out,
+////    const header_link& link) const NOEXCEPT
+////{
+////    context ctx{};
+////    if (!get_context(ctx, link))
+////        return false;
+////
+////    table::input::get_prevout_parent_sequence input{};
+////    for (const auto& in: to_non_coinbase_inputs(link))
+////    {
+////        if (!store_.input.get(in, input))
+////            return false;
+////    
+////        out.emplace_back
+////        (
+////            // input (under validation)
+////            input.prevout(),
+////            input.parent_fk,
+////            input.sequence,
+////
+////            // input->prevout
+////            to_tx(get_point_key(input.point_fk)),
+////            system::possible_narrow_cast<uint32_t>(ctx.height),
+////            ctx.mtp,
+////            is_coinbase(spent_fk)
+////        );
+////    }
+////
+////    return true;
+////}
 
 } // namespace database
 } // namespace libbitcoin
