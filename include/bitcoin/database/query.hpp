@@ -246,9 +246,6 @@ public:
     point_link set_link(const hash_digest& point_hash) NOEXCEPT;
     tx_link set_link(const transaction& tx) NOEXCEPT;
 
-    bool set(const header_link& link, const hashes& hashes) NOEXCEPT;
-    bool set(const header_link& link, const tx_links& links) NOEXCEPT;
-
     /// Chain state.
     /// -----------------------------------------------------------------------
 
