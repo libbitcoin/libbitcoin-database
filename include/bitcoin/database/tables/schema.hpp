@@ -188,12 +188,11 @@ namespace schema
         static constexpr size_t sk = zero;
         static constexpr size_t minsize =
             schema::transaction::pk +
-            1u + // variable_size (average 1)
+            1u + // optional variable_size (minimum 0, average 1)
             schema::transaction::pk +
-            ////1u + // variable_size (average 1)
             sizeof(uint32_t) +
-            1u + // variable_size (average 1)
-            1u;  // variable_size (average 1)
+            1u + // variable_size (minimum 1, average 1)
+            1u;  // variable_size (minimum 1, average 1)
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = max_size_t;
         static_assert(minsize == 15u);
@@ -207,9 +206,8 @@ namespace schema
         static constexpr size_t sk = zero;
         static constexpr size_t minsize =
             schema::transaction::pk +
-            ////1u + // variable_size (average 1)
-            5u + // variable_size (average 5)
-            1u;  // variable_size (average 1)
+            5u + // variable_size (minimum 1, average 5)
+            1u;  // variable_size (minimum 1, average 1)
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = max_size_t;
         static_assert(minsize == 10u);
