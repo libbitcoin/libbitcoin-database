@@ -211,7 +211,7 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Empty/null_hash implies fault.
-    hashes get_txs(const header_link& link) const NOEXCEPT;
+    hashes get_tx_keys(const header_link& link) const NOEXCEPT;
     inline hash_digest get_header_key(const header_link& link) const NOEXCEPT;
     inline hash_digest get_point_key(const point_link& link) const NOEXCEPT;
     inline hash_digest get_tx_key(const tx_link& link) const NOEXCEPT;
@@ -245,9 +245,6 @@ public:
     header_link set_link(const block& block, const context& ctx) NOEXCEPT;
     point_link set_link(const hash_digest& point_hash) NOEXCEPT;
     tx_link set_link(const transaction& tx) NOEXCEPT;
-
-    bool set(const header_link& link, const hashes& hashes) NOEXCEPT;
-    bool set(const header_link& link, const tx_links& links) NOEXCEPT;
 
     /// Chain state.
     /// -----------------------------------------------------------------------
