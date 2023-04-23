@@ -150,7 +150,7 @@ inline bool push_bool(std_vector<Element>& stack,
 }
 
 TEMPLATE
-hashes CLASS::get_txs(const header_link& link) const NOEXCEPT
+hashes CLASS::get_tx_keys(const header_link& link) const NOEXCEPT
 {
     const auto tx_fks = to_txs(link);
     if (tx_fks.empty())

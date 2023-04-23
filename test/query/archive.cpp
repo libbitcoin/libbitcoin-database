@@ -575,7 +575,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
     BOOST_REQUIRE(pointer1);
     BOOST_REQUIRE(*pointer1 == test::genesis);
 
-    const auto hashes = query.get_txs(query.to_header(test::genesis.hash()));
+    const auto hashes = query.get_tx_keys(query.to_header(test::genesis.hash()));
     BOOST_REQUIRE_EQUAL(hashes.size(), 1u);
     BOOST_REQUIRE_EQUAL(hashes, test::genesis.transaction_hashes(false));
 }
@@ -836,7 +836,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_header__default__expected)
     BOOST_REQUIRE_EQUAL(pointer1->hash(), block_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_archive__get_txs__not_found__empty)
+BOOST_AUTO_TEST_CASE(query_archive__get_tx_keys__not_found__empty)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -844,7 +844,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_txs__not_found__empty)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE_EQUAL(store.open(events), error::success);
-    BOOST_REQUIRE(query.get_txs(query.to_header(system::null_hash)).empty());
+    BOOST_REQUIRE(query.get_tx_keys(query.to_header(system::null_hash)).empty());
     BOOST_REQUIRE_EQUAL(store.close(events), error::success);
 }
 
