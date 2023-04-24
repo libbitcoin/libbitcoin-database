@@ -239,6 +239,7 @@ public:
     input::cptr get_input(const tx_link& link, uint32_t input_index) const NOEXCEPT;
     inputs_ptr get_spenders(const tx_link& link, uint32_t output_index) const NOEXCEPT;
 
+    // TODO: all except point expose idempotency guard option.
     header_link set_link(const header& header, const chain_context& ctx) NOEXCEPT;
     header_link set_link(const header& header, const context& ctx) NOEXCEPT;
     header_link set_link(const block& block, const chain_context& ctx) NOEXCEPT;
