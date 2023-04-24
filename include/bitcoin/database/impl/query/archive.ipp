@@ -285,19 +285,15 @@ TEMPLATE
 typename CLASS::transactions_ptr CLASS::get_transactions(
     const header_link& link) const NOEXCEPT
 {
-    const auto fk = to_txs_link(link);
-    if (fk.is_terminal())
-        return {};
-
-    table::txs::slab txs{};
-    if (!store_.txs.get(fk, txs))
+    const auto txs = to_txs(link);
+    if (txs.empty())
         return {};
 
     using namespace system;
     const auto transactions = to_shared<chain::transaction_cptrs>();
-    transactions->reserve(txs.tx_fks.size());
+    transactions->reserve(txs.size());
 
-    for (const auto& tx_fk: txs.tx_fks)
+    for (const auto& tx_fk: txs)
         if (!push_bool(*transactions, get_transaction(tx_fk)))
             return {};
 
@@ -318,7 +314,7 @@ typename CLASS::header::cptr CLASS::get_header(
         !store_.header.get(child.parent_fk, parent))
         return {};
 
-    // parent.key lookup precludes header::record construction. 
+    // In case of terminal parent, parent.key defaults to null_hash.
     const auto ptr = system::to_shared<header>
     (
         child.version,
