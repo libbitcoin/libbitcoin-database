@@ -247,11 +247,11 @@ TEMPLATE
 typename CLASS::inputs_ptr CLASS::get_inputs(
     const tx_link& link) const NOEXCEPT
 {
+    using namespace system;
     const auto fks = to_tx_inputs(link);
     if (fks.empty())
         return {};
 
-    using namespace system;
     const auto inputs = to_shared<chain::input_cptrs>();
     inputs->reserve(fks.size());
 
@@ -266,11 +266,11 @@ TEMPLATE
 typename CLASS::outputs_ptr CLASS::get_outputs(
     const tx_link& link) const NOEXCEPT
 {
+    using namespace system;
     const auto fks = to_tx_outputs(link);
     if (fks.empty())
         return {};
 
-    using namespace system;
     const auto outputs = to_shared<chain::output_cptrs>();
     outputs->reserve(fks.size());
 
@@ -285,11 +285,11 @@ TEMPLATE
 typename CLASS::transactions_ptr CLASS::get_transactions(
     const header_link& link) const NOEXCEPT
 {
+    using namespace system;
     const auto txs = to_txs(link);
     if (txs.empty())
         return {};
 
-    using namespace system;
     const auto transactions = to_shared<chain::transaction_cptrs>();
     transactions->reserve(txs.size());
 
@@ -310,7 +310,7 @@ typename CLASS::header::cptr CLASS::get_header(
 
     // Terminal parent implies genesis (no parent header).
     table::header::record_sk parent{};
-    if ((child.parent_fk != table::header::link::terminal) &&
+    if ((child.parent_fk != header_link::terminal) &&
         !store_.header.get(child.parent_fk, parent))
         return {};
 
@@ -352,6 +352,7 @@ TEMPLATE
 typename CLASS::transaction::cptr CLASS::get_transaction(
     const tx_link& link) const NOEXCEPT
 {
+    using namespace system;
     table::transaction::only_with_sk tx{};
     if (!store_.tx.get(link, tx))
         return {};
@@ -362,8 +363,8 @@ typename CLASS::transaction::cptr CLASS::get_transaction(
     if (!store_.puts.get(tx.ins_fk, puts))
         return {};
 
-    const auto inputs = system::to_shared<system::chain::input_cptrs>();
-    const auto outputs = system::to_shared<system::chain::output_cptrs>();
+    const auto inputs = to_shared<chain::input_cptrs>();
+    const auto outputs = to_shared<chain::output_cptrs>();
     inputs->reserve(tx.ins_count);
     outputs->reserve(tx.outs_count);
 
@@ -375,7 +376,7 @@ typename CLASS::transaction::cptr CLASS::get_transaction(
         if (!push_bool(*outputs, get_output(fk)))
             return {};
 
-    const auto ptr = system::to_shared<transaction>
+    const auto ptr = to_shared<transaction>
     (
         tx.version,
         inputs,
@@ -402,16 +403,17 @@ TEMPLATE
 typename CLASS::input::cptr CLASS::get_input(
     const input_link& link) const NOEXCEPT
 {
+    using namespace system;
     table::input::only_with_prevout in{};
     if (!store_.input.get(link, in))
         return {};
 
     // Share null point instances to reduce memory consumption.
-    static const auto null_point = system::to_shared<const point>();
+    static const auto null_point = to_shared<const point>();
 
-    return system::to_shared<input>
+    return to_shared<input>
     (
-        in.is_null() ? null_point : system::to_shared<point>
+        in.is_null() ? null_point : to_shared<point>
         (
             get_point_key(in.point_fk),
             in.point_index
