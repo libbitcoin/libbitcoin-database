@@ -144,6 +144,7 @@ struct header
             return record::from_data(source);
         }
 
+        // null_hash is the required default.
         search_key key{};
     };
 
@@ -158,6 +159,7 @@ struct header
             return source;
         }
 
+        // null_hash is the required default.
         search_key key{};
     };
 
