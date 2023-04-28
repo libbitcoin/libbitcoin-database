@@ -40,6 +40,7 @@ using spend_link = table::spend::link;
 using txs_link = table::txs::link;
 using tx_link = table::transaction::link;
 using tx_links = std_vector<tx_link::integer>;
+using spend_links = std_vector<spend_link::integer>;
 using input_links = std_vector<input_link::integer>;
 using output_links = std_vector<output_link::integer>;
 using foreign_point = table::spend::search_key;
@@ -94,13 +95,13 @@ public:
     size_t input_size() const NOEXCEPT;
     size_t point_size() const NOEXCEPT;
     size_t puts_size() const NOEXCEPT;
+    size_t spend_size() const NOEXCEPT;
     size_t txs_size() const NOEXCEPT;
     size_t tx_size() const NOEXCEPT;
 
     /// Table logical byte sizes (metadata bodies).
     size_t candidate_size() const NOEXCEPT;
     size_t confirmed_size() const NOEXCEPT;
-    size_t spend_size() const NOEXCEPT;
     size_t strong_tx_size() const NOEXCEPT;
     size_t validated_tx_size() const NOEXCEPT;
     size_t validated_bk_size() const NOEXCEPT;
@@ -108,11 +109,11 @@ public:
     /// Buckets (archive hash tables).
     size_t header_buckets() const NOEXCEPT;
     size_t point_buckets() const NOEXCEPT;
+    size_t spend_buckets() const NOEXCEPT;
     size_t txs_buckets() const NOEXCEPT;
     size_t tx_buckets() const NOEXCEPT;
 
     /// Buckets (metadata hash tables).
-    size_t spend_buckets() const NOEXCEPT;
     size_t strong_tx_buckets() const NOEXCEPT;
     size_t validated_tx_buckets() const NOEXCEPT;
     size_t validated_bk_buckets() const NOEXCEPT;
@@ -120,16 +121,15 @@ public:
     /// Counts (archive records).
     size_t header_records() const NOEXCEPT;
     size_t point_records() const NOEXCEPT;
-    size_t puts_records() const NOEXCEPT;
+    size_t spend_records() const NOEXCEPT;
     size_t tx_records() const NOEXCEPT;
 
     /// Counts (metadata records).
     size_t candidate_records() const NOEXCEPT;
     size_t confirmed_records() const NOEXCEPT;
-    size_t spend_records() const NOEXCEPT;
     size_t strong_tx_records() const NOEXCEPT;
 
-    /// Counters (archive slabs).
+    /// Counters (archive slabs - txs/puts can be derived).
     size_t input_count(const tx_link& link) const NOEXCEPT;
     size_t output_count(const tx_link& link) const NOEXCEPT;
     two_counts put_counts(const tx_link& link) const NOEXCEPT;
@@ -146,37 +146,36 @@ public:
     inline txs_link to_txs_link(const header_link& link) const NOEXCEPT;
 
     /// put to tx (reverse navigation)
-    tx_link to_input_tx(const input_link& link) const NOEXCEPT;
-    tx_link to_output_tx(const output_link& link) const NOEXCEPT;
-    tx_link to_prevout_tx(const input_link& link) const NOEXCEPT;
     tx_link to_spend_tx(const spend_link& link) const NOEXCEPT;
-    foreign_point to_spend_key(const input_link& link) const NOEXCEPT;
+    tx_link to_output_tx(const output_link& link) const NOEXCEPT;
+    tx_link to_prevout_tx(const spend_link& link) const NOEXCEPT;
+    foreign_point to_spend_key(const spend_link& link) const NOEXCEPT;
 
     /// point to put (forward navigation)
-    input_link to_input(const tx_link& link, uint32_t input_index) const NOEXCEPT;
+    spend_link to_spend(const tx_link& link, uint32_t input_index) const NOEXCEPT;
     output_link to_output(const tx_link& link, uint32_t output_index) const NOEXCEPT;
-    output_link to_prevout(const input_link& link) const NOEXCEPT;
+    output_link to_prevout(const spend_link& link) const NOEXCEPT;
 
     /// block/tx to block (reverse navigation)
     header_link to_block(const tx_link& link) const NOEXCEPT;
     header_link to_parent(const header_link& link) const NOEXCEPT;
 
     /// output to spenders (reverse navigation)
-    input_links to_spenders(const point& prevout) const NOEXCEPT;
-    input_links to_spenders(const output_link& link) const NOEXCEPT;
-    input_links to_spenders(const foreign_point& point) const NOEXCEPT;
-    input_links to_spenders(const tx_link& link,
+    spend_links to_spenders(const point& prevout) const NOEXCEPT;
+    spend_links to_spenders(const output_link& link) const NOEXCEPT;
+    spend_links to_spenders(const foreign_point& point) const NOEXCEPT;
+    spend_links to_spenders(const tx_link& link,
         uint32_t output_index) const NOEXCEPT;
 
     /// tx to puts (forward navigation)
-    input_links to_tx_inputs(const tx_link& link) const NOEXCEPT;
+    spend_links to_tx_spends(const tx_link& link) const NOEXCEPT;
     output_links to_tx_outputs(const tx_link& link) const NOEXCEPT;
 
     /// block to txs/puts (forward navigation)
     tx_links to_txs(const header_link& link) const NOEXCEPT;
     tx_link to_coinbase(const header_link& link) const NOEXCEPT;
-    input_links to_non_coinbase_inputs(const header_link& link) const NOEXCEPT;
-    input_links to_block_inputs(const header_link& link) const NOEXCEPT;
+    spend_links to_non_coinbase_spends(const header_link& link) const NOEXCEPT;
+    spend_links to_block_spends(const header_link& link) const NOEXCEPT;
     output_links to_block_outputs(const header_link& link) const NOEXCEPT;
 
     /// hashmap enumeration
@@ -230,8 +229,8 @@ public:
     block::cptr get_block(const header_link& link) const NOEXCEPT;
     transaction::cptr get_transaction(const tx_link& link) const NOEXCEPT;
     output::cptr get_output(const output_link& link) const NOEXCEPT;
-    input::cptr get_input(const input_link& link) const NOEXCEPT;
-    point::cptr get_point(const input_link& link) const NOEXCEPT;
+    input::cptr get_input(const spend_link& link) const NOEXCEPT;
+    point::cptr get_point(const spend_link& link) const NOEXCEPT;
     inputs_ptr get_spenders(const output_link& link) const NOEXCEPT;
 
     output::cptr get_output(const point& prevout) const NOEXCEPT;
@@ -296,16 +295,16 @@ public:
     bool is_candidate_block(const header_link& link) const NOEXCEPT;
     bool is_confirmed_block(const header_link& link) const NOEXCEPT;
     bool is_confirmed_tx(const tx_link& link) const NOEXCEPT;
-    bool is_confirmed_input(const input_link& link) const NOEXCEPT;
+    bool is_confirmed_input(const spend_link& link) const NOEXCEPT;
     bool is_confirmed_output(const output_link& link) const NOEXCEPT;
     bool is_spent_output(const output_link& link) const NOEXCEPT;
 
     /// These are not used in confirmation.
     /// These rely on strong (use only for confirmation process).
-    bool is_spent(const input_link& link) const NOEXCEPT;
-    bool is_strong(const input_link& link) const NOEXCEPT;
-    bool is_mature(const input_link& link, size_t height) const NOEXCEPT;
-    bool is_locked(const input_link& link, uint32_t sequence,
+    bool is_spent(const spend_link& link) const NOEXCEPT;
+    bool is_strong(const spend_link& link) const NOEXCEPT;
+    bool is_mature(const spend_link& link, size_t height) const NOEXCEPT;
+    bool is_locked(const spend_link& link, uint32_t sequence,
         const context& ctx) const NOEXCEPT;
 
     /// These are used in confirmation.
@@ -353,11 +352,11 @@ public:
 protected:
     /// Translate.
     /// -----------------------------------------------------------------------
-    uint32_t to_input_index(const tx_link& parent_fk,
-        const input_link& input_fk) const NOEXCEPT;
+    uint32_t to_spend_index(const tx_link& parent_fk,
+        const spend_link& input_fk) const NOEXCEPT;
     uint32_t to_output_index(const tx_link& parent_fk,
         const output_link& output_fk) const NOEXCEPT;
-    input_link to_spender(const tx_link& link,
+    spend_link to_spender(const tx_link& link,
         const foreign_point& point) const NOEXCEPT;
 
     /// Validate.

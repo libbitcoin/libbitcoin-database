@@ -26,10 +26,8 @@ using namespace system;
 using namespace system;
 const table::spend::key key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 };
 const table::spend::key key2{ 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7 };
-const table::spend::record in1{ {}, 0xaabbccdd };
-const table::spend::record in2{ {}, 0x11223344 };
-const table::spend::record out1{ {}, 0x00bbccdd };
-const table::spend::record out2{ {}, 0x00223344 };
+const table::spend::record in1{ {}, 0xaabbccdd, 1, 2 };
+const table::spend::record in2{ {}, 0x11223344, 3, 4 };
 const data_chunk expected_head = base16_chunk
 (
     "00000000"
@@ -52,11 +50,15 @@ const data_chunk expected_body = base16_chunk
 (
     "ffffffff"       // next->end
     "01020304050607" // key1
-    "ddccbbaa"       // header_fk1
+    "ddccbbaa"       // parent_fk1
+    "01000000"       // sequence1
+    "0200000000"     // input_fk1
 
     "00000000"       // next->
     "a1a2a3a4a5a6a7" // key2
-    "44332211"       // header_fk2
+    "44332211"       // parent_fk2
+    "03000000"       // sequence2
+    "0400000000"     // input_fk2
 );
 
 BOOST_AUTO_TEST_CASE(spend__put__two__expected)

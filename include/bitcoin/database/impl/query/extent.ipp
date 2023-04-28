@@ -37,6 +37,7 @@ size_t CLASS::archive_size() const NOEXCEPT
         input_size() +
         point_size() +
         puts_size() +
+        spend_size() +
         txs_size() +
         tx_size();
 }
@@ -72,6 +73,12 @@ size_t CLASS::puts_size() const NOEXCEPT
 }
 
 TEMPLATE
+size_t CLASS::spend_size() const NOEXCEPT
+{
+    return store_.spend.body_size();
+}
+
+TEMPLATE
 size_t CLASS::txs_size() const NOEXCEPT
 {
     return store_.txs.body_size();
@@ -96,12 +103,6 @@ TEMPLATE
 size_t CLASS::confirmed_size() const NOEXCEPT
 {
     return store_.confirmed.body_size();
-}
-
-TEMPLATE
-size_t CLASS::spend_size() const NOEXCEPT
-{
-    return store_.spend.body_size();
 }
 
 TEMPLATE
@@ -138,6 +139,12 @@ size_t CLASS::point_buckets() const NOEXCEPT
 }
 
 TEMPLATE
+size_t CLASS::spend_buckets() const NOEXCEPT
+{
+    return store_.spend.buckets();
+}
+
+TEMPLATE
 size_t CLASS::txs_buckets() const NOEXCEPT
 {
     return store_.txs.buckets();
@@ -151,12 +158,6 @@ size_t CLASS::tx_buckets() const NOEXCEPT
 
 // Buckets (metadata hash tables).
 // ----------------------------------------------------------------------------
-
-TEMPLATE
-size_t CLASS::spend_buckets() const NOEXCEPT
-{
-    return store_.spend.buckets();
-}
 
 TEMPLATE
 size_t CLASS::strong_tx_buckets() const NOEXCEPT
@@ -192,9 +193,9 @@ size_t CLASS::point_records() const NOEXCEPT
 }
 
 TEMPLATE
-size_t CLASS::puts_records() const NOEXCEPT
+size_t CLASS::spend_records() const NOEXCEPT
 {
-    return store_.puts.count();
+    return store_.spend.count();
 }
 
 TEMPLATE
@@ -219,12 +220,6 @@ size_t CLASS::confirmed_records() const NOEXCEPT
 }
 
 TEMPLATE
-size_t CLASS::spend_records() const NOEXCEPT
-{
-    return store_.spend.count();
-}
-
-TEMPLATE
 size_t CLASS::strong_tx_records() const NOEXCEPT
 {
     return store_.strong_tx.count();
@@ -232,6 +227,9 @@ size_t CLASS::strong_tx_records() const NOEXCEPT
 
 // Counters (archive slabs).
 // ----------------------------------------------------------------------------
+// Also txs and puts, but these can be derived instead of counting.
+// txs elements is equivalent to header_records and puts elements is the sum of
+// spends or inputs and outputs.
 
 TEMPLATE
 size_t CLASS::input_count(const tx_link& link) const NOEXCEPT

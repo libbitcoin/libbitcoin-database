@@ -30,103 +30,122 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// Puts is an array of input or output fk records.
-/// Multiple may be allocated, put_fks.size() (from tx) determines read extent.
+/// Puts is an blob of spend and output fk records.
 struct puts
   : public array_map<schema::puts>
 {
-    using put = linkage<schema::put>;
-    using keys = std_vector<put::integer>;
+    using spend = linkage<schema::spend_>;
+    using out = linkage<schema::put>;
+    using spend_links = std_vector<spend::integer>;
+    using output_links = std_vector<out::integer>;
     using array_map<schema::puts>::arraymap;
 
-    struct record
+    struct slab
       : public schema::puts
     {
         link count() const NOEXCEPT
         {
-            using namespace system;
-            const auto bytes = in_fks.size() + out_fks.size();
-            BC_ASSERT(bytes < power2<uint64_t>(to_bits(put::size)));
-            return possible_narrow_cast<link::integer>(bytes);
+            const auto fks = spend_fks.size() * spend::size +
+                out_fks.size() * out::size;
+            return system::possible_narrow_cast<link::integer>(fks);
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            // Clear the single record limit (file limit remains).
-            source.set_limit();
-
-            std::for_each(in_fks.begin(), in_fks.end(), [&](auto& fk) NOEXCEPT
+            std::for_each(spend_fks.begin(), spend_fks.end(), [&](auto& fk) NOEXCEPT
             {
-                fk = source.read_little_endian<put::integer, put::size>();
+                fk = source.read_little_endian<spend::integer, spend::size>();
             });
 
             std::for_each(out_fks.begin(), out_fks.end(), [&](auto& fk) NOEXCEPT
             {
-                fk = source.read_little_endian<put::integer, put::size>();
+                fk = source.read_little_endian<out::integer, out::size>();
             });
 
-            BC_ASSERT(source.get_read_position() == count() * put::size);
+            BC_ASSERT(source.get_read_position() == count());
             return source;
         }
 
         inline bool to_data(writer& sink) const NOEXCEPT
         {
-            // Clear the single record limit (file limit remains).
-            sink.set_limit();
-
-            std::for_each(in_fks.begin(), in_fks.end(), [&](const auto& fk) NOEXCEPT
+            std::for_each(spend_fks.begin(), spend_fks.end(), [&](const auto& fk) NOEXCEPT
             {
-                sink.write_little_endian<put::integer, put::size>(fk);
+                sink.write_little_endian<spend::integer, spend::size>(fk);
             });
 
             std::for_each(out_fks.begin(), out_fks.end(), [&](const auto& fk) NOEXCEPT
             {
-                sink.write_little_endian<put::integer, put::size>(fk);
+                sink.write_little_endian<out::integer, out::size>(fk);
             });
 
-            BC_ASSERT(sink.get_write_position() == count() * put::size);
+            BC_ASSERT(sink.get_write_position() == count());
             return sink;
         }
 
-        inline bool operator==(const record& other) const NOEXCEPT
+        inline bool operator==(const slab& other) const NOEXCEPT
         {
-            return in_fks  == other.in_fks
+            return spend_fks == other.spend_fks
                 && out_fks == other.out_fks;
         }
 
-        keys in_fks{};
-        keys out_fks{};
+        spend_links spend_fks{};
+        output_links out_fks{};
     };
 
-    struct get_puts
+    struct get_spends
       : public schema::puts
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            // Clear the single record limit (file limit remains).
-            source.set_limit();
-
-            std::for_each(put_fks.begin(), put_fks.end(), [&](auto& fk) NOEXCEPT
+            std::for_each(spend_fks.begin(), spend_fks.end(), [&](auto& fk) NOEXCEPT
             {
-                fk = source.read_little_endian<put::integer, put::size>();
+                fk = source.read_little_endian<spend::integer, spend::size>();
             });
 
             return source;
         }
 
-        keys put_fks{};
+        spend_links spend_fks{};
     };
 
-    struct get_at
+    struct get_outs
       : public schema::puts
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            put_fk = source.read_little_endian<put::integer, put::size>();
+            std::for_each(out_fks.begin(), out_fks.end(), [&](auto& fk) NOEXCEPT
+            {
+                fk = source.read_little_endian<out::integer, out::size>();
+            });
+
             return source;
         }
 
-        put::integer put_fk{};
+        output_links out_fks{};
+    };
+
+    struct get_spend_at
+      : public schema::puts
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            spend_fk = source.read_little_endian<spend::integer, spend::size>();
+            return source;
+        }
+
+        spend::integer spend_fk{};
+    };
+
+    struct get_output_at
+      : public schema::puts
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            out_fk = source.read_little_endian<out::integer, out::size>();
+            return source;
+        }
+
+        out::integer out_fk{};
     };
 };
 

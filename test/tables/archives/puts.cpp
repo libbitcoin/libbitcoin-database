@@ -22,36 +22,36 @@
 BOOST_AUTO_TEST_SUITE(puts_tests)
 
 using namespace system;
-const table::puts::record expected0{};
-const table::puts::record expected1
+const table::puts::slab expected0{};
+const table::puts::slab expected1
 {
     {}, // schema::puts [all const static members]
-    std_vector<uint64_t>
+    std_vector<uint32_t>
     {
-        0x0000007856341211_u64
+        0x56341211_u32
     },
     std_vector<uint64_t>
     {
     }
 };
-const table::puts::record expected2
+const table::puts::slab expected2
 {
     {}, // schema::puts [all const static members]
-    std_vector<uint64_t>
+    std_vector<uint32_t>
     {
-        0x0000007856341221_u64
+        0x56341221_u32
     },
     std_vector<uint64_t>
     {
         0x0000007856341222_u64
     }
 };
-const table::puts::record expected3
+const table::puts::slab expected3
 {
     {}, // schema::puts [all const static members]
-    std_vector<uint64_t>
+    std_vector<uint32_t>
     {
-        0x0000007856341231_u64
+        0x56341231_u32
     },
     std_vector<uint64_t>
     {
@@ -61,23 +61,15 @@ const table::puts::record expected3
 };
 const data_chunk expected_file
 {
-    // record0 (empty set)
+    // expected1 (0)
+    0x11, 0x12, 0x34, 0x56,
 
-    // --------------------------------------------------------------------------------------------
-
-    // record1
-    0x11, 0x12, 0x34, 0x56, 0x78,
-
-    // --------------------------------------------------------------------------------------------
-
-    // record2
-    0x21, 0x12, 0x34, 0x56, 0x78,
+    // expected2 (4)
+    0x21, 0x12, 0x34, 0x56,
     0x22, 0x12, 0x34, 0x56, 0x78,
 
-    // --------------------------------------------------------------------------------------------
-
-    // record3
-    0x31, 0x12, 0x34, 0x56, 0x78,
+    // expected3 (13)
+    0x31, 0x12, 0x34, 0x56,
     0x32, 0x12, 0x34, 0x56, 0x78,
     0x33, 0x12, 0x34, 0x56, 0x78
 };
@@ -93,29 +85,29 @@ BOOST_AUTO_TEST_CASE(puts__put__get__expected)
     BOOST_REQUIRE(!instance.put_link(expected3).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
-    table::puts::record record0{};
-    BOOST_REQUIRE(instance.get(0, record0));
-    BOOST_REQUIRE(record0 == expected0);
+    table::puts::slab slab0{};
+    BOOST_REQUIRE(instance.get(0, slab0));
+    BOOST_REQUIRE(slab0 == expected0);
 
-    table::puts::record record1{};
-    record1.in_fks.resize(1);
-    BOOST_REQUIRE(instance.get(0, record1));
-    BOOST_REQUIRE(record1.in_fks == expected1.in_fks);
-    BOOST_REQUIRE(record1.out_fks.empty());
+    table::puts::slab slab1{};
+    slab1.spend_fks.resize(1);
+    BOOST_REQUIRE(instance.get(0, slab1));
+    BOOST_REQUIRE(slab1.spend_fks == expected1.spend_fks);
+    BOOST_REQUIRE(slab1.out_fks.empty());
 
-    table::puts::record record2{};
-    record2.in_fks.resize(1);
-    record2.out_fks.resize(1);
-    BOOST_REQUIRE(instance.get(1, record2));
-    BOOST_REQUIRE(record2.in_fks == expected2.in_fks);
-    BOOST_REQUIRE(record2.out_fks == expected2.out_fks);
+    table::puts::slab slab2{};
+    slab2.spend_fks.resize(1);
+    slab2.out_fks.resize(1);
+    BOOST_REQUIRE(instance.get(4, slab2));
+    BOOST_REQUIRE(slab2.spend_fks == expected2.spend_fks);
+    BOOST_REQUIRE(slab2.out_fks == expected2.out_fks);
 
-    table::puts::record record3{};
-    record3.in_fks.resize(1);
-    record3.out_fks.resize(2);
-    BOOST_REQUIRE(instance.get(3, record3));
-    BOOST_REQUIRE(record3.in_fks == record3.in_fks);
-    BOOST_REQUIRE(record3.out_fks == record3.out_fks);
+    table::puts::slab slab3{};
+    slab3.spend_fks.resize(1);
+    slab3.out_fks.resize(2);
+    BOOST_REQUIRE(instance.get(13, slab3));
+    BOOST_REQUIRE(slab3.spend_fks == expected3.spend_fks);
+    BOOST_REQUIRE(slab3.out_fks == expected3.out_fks);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
