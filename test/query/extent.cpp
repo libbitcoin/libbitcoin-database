@@ -51,19 +51,24 @@ BOOST_AUTO_TEST_CASE(query_extent__sizes__genesis__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-
-    BOOST_REQUIRE_EQUAL(query.archive_size(), schema::header::minrow + 81u + 91u + 0u + 2 * schema::put + schema::txs::minrow + 2 * schema::tx + schema::transaction::minrow);
+    BOOST_REQUIRE_EQUAL(query.archive_size(),
+        schema::header::minrow +
+        81u + 79u + zero +
+        schema::spend::minrow +
+        schema::puts::minrow +
+        schema::txs::minrow +
+        schema::transaction::minrow);
     BOOST_REQUIRE_EQUAL(query.header_size(), schema::header::minrow);
     BOOST_REQUIRE_EQUAL(query.output_size(), 81u);
-    BOOST_REQUIRE_EQUAL(query.input_size(), 91u);
-    BOOST_REQUIRE_EQUAL(query.point_size(), 0u); 
-    BOOST_REQUIRE_EQUAL(query.puts_size(), 2 * schema::put);
-    BOOST_REQUIRE_EQUAL(query.txs_size(), schema::txs::minrow + 2 * schema::tx);
+    BOOST_REQUIRE_EQUAL(query.input_size(), 79u);
+    BOOST_REQUIRE_EQUAL(query.point_size(), zero);
+    BOOST_REQUIRE_EQUAL(query.spend_size(), schema::spend::minrow);
+    BOOST_REQUIRE_EQUAL(query.puts_size(), schema::puts::minrow);
+    BOOST_REQUIRE_EQUAL(query.txs_size(), schema::txs::minrow);
     BOOST_REQUIRE_EQUAL(query.tx_size(), schema::transaction::minrow);
 
     BOOST_REQUIRE_EQUAL(query.candidate_size(), schema::height::minrow);
     BOOST_REQUIRE_EQUAL(query.confirmed_size(), schema::height::minrow);
-    BOOST_REQUIRE_EQUAL(query.spend_size(), 0u);
     BOOST_REQUIRE_EQUAL(query.strong_tx_size(), schema::strong_tx::minrow);
     BOOST_REQUIRE_EQUAL(query.validated_tx_size(), schema::validated_tx::minrow);
     BOOST_REQUIRE_EQUAL(query.validated_bk_size(), schema::validated_bk::minrow);
@@ -80,10 +85,10 @@ BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
 
     BOOST_REQUIRE_EQUAL(query.header_buckets(), 100u);
     BOOST_REQUIRE_EQUAL(query.point_buckets(), 100u);
+    BOOST_REQUIRE_EQUAL(query.spend_buckets(), 100u);
     BOOST_REQUIRE_EQUAL(query.txs_buckets(), 100u);
     BOOST_REQUIRE_EQUAL(query.tx_buckets(), 100u);
 
-    BOOST_REQUIRE_EQUAL(query.spend_buckets(), 100u);
     BOOST_REQUIRE_EQUAL(query.strong_tx_buckets(), 100u);
     BOOST_REQUIRE_EQUAL(query.validated_tx_buckets(), 100u);
     BOOST_REQUIRE_EQUAL(query.validated_bk_buckets(), 100u);
@@ -98,15 +103,14 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
 
-    // point_records is zero because there are no spends in genesis.
+    // point_records is zero because there is only coinbase in genesis.
     BOOST_REQUIRE_EQUAL(query.header_records(), 1u);
     BOOST_REQUIRE_EQUAL(query.point_records(), 0u);
-    BOOST_REQUIRE_EQUAL(query.puts_records(), 2u);
+    BOOST_REQUIRE_EQUAL(query.spend_records(), 1u);
     BOOST_REQUIRE_EQUAL(query.tx_records(), 1u);
 
     BOOST_REQUIRE_EQUAL(query.candidate_records(), 1u);
     BOOST_REQUIRE_EQUAL(query.confirmed_records(), 1u);
-    BOOST_REQUIRE_EQUAL(query.spend_records(), 0u);
     BOOST_REQUIRE_EQUAL(query.strong_tx_records(), 1u);
 }
 
@@ -119,8 +123,15 @@ BOOST_AUTO_TEST_CASE(query_extent__input_output_count__genesis__expected)
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
 
-    BOOST_REQUIRE_EQUAL(query.input_count(1), zero);
-    BOOST_REQUIRE_EQUAL(query.output_count(1), zero);
+    BOOST_REQUIRE_EQUAL(query.input_count(0), 1u);
+    BOOST_REQUIRE_EQUAL(query.output_count(0), 1u);
+    BOOST_REQUIRE_EQUAL(query.put_counts(0).first, 1u);
+    BOOST_REQUIRE_EQUAL(query.put_counts(0).second, 1u);
+
+    BOOST_REQUIRE_EQUAL(query.input_count(1), 0u);
+    BOOST_REQUIRE_EQUAL(query.output_count(1), 0u);
+    BOOST_REQUIRE_EQUAL(query.put_counts(1).first, 0u);
+    BOOST_REQUIRE_EQUAL(query.put_counts(1).second, 0u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

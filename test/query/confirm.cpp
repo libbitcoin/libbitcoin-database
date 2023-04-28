@@ -154,19 +154,19 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_confirmed_input__confirm__expected)
     BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }));
     BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }));
 
-    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(0, 0)));
-    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(1, 0)));
-    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(2, 0)));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_spend(0, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_spend(1, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_spend(2, 0)));
 
     BOOST_REQUIRE(query.push_confirmed(1));
-    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(1, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_spend(1, 0)));
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(1, 0)));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_spend(1, 0)));
 
     BOOST_REQUIRE(query.set_strong(2));
-    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(2, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_spend(2, 0)));
     BOOST_REQUIRE(query.push_confirmed(2));
-    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(2, 0)));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_spend(2, 0)));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__is_confirmed_output__confirm__expected)
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_strong__strong__true)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.is_strong(query.to_input(0, 0)));
+    BOOST_REQUIRE(query.is_strong(query.to_spend(0, 0)));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__is_strong__weak__false)
@@ -255,9 +255,9 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_strong__weak__false)
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, context{}));
-    BOOST_REQUIRE(!query.is_strong(query.to_input(1, 0)));
+    BOOST_REQUIRE(!query.is_strong(query.to_spend(1, 0)));
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.is_strong(query.to_input(1, 0)));
+    BOOST_REQUIRE(query.is_strong(query.to_spend(1, 0)));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unspent__false)
@@ -269,9 +269,9 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unspent__false)
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, context{}));
-    BOOST_REQUIRE(!query.is_spent(query.to_input(0, 0))); // unspendable
-    BOOST_REQUIRE(!query.is_spent(query.to_input(1, 0))); // unspent
-    BOOST_REQUIRE(!query.is_spent(query.to_input(2, 0))); // non-existent
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(0, 0))); // unspendable
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(1, 0))); // unspent
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 0))); // non-existent
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unconfirmed_double_spend__false)
@@ -285,45 +285,45 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unconfirmed_double_spend__false)
 
     BOOST_REQUIRE(query.set(test::block1a, context{}));
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(!query.is_spent(query.to_input(0, 0))); // unspendable
-    BOOST_REQUIRE(!query.is_spent(query.to_input(1, 0))); // spent by self (and missing)
-    BOOST_REQUIRE(!query.is_spent(query.to_input(1, 1))); // spent by self (and missing)
-    BOOST_REQUIRE(!query.is_spent(query.to_input(1, 2))); // spent by self (and missing)
-    BOOST_REQUIRE(!query.is_spent(query.to_input(2, 0))); // missing tx
-    BOOST_REQUIRE(!query.is_spent(query.to_input(2, 1))); // missing tx
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(0, 0))); // unspendable
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(1, 0))); // spent by self (and missing)
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(1, 1))); // spent by self (and missing)
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(1, 2))); // spent by self (and missing)
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 0))); // missing tx
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 1))); // missing tx
 
     BOOST_REQUIRE(query.set(test::block2a, context{}));
-    BOOST_REQUIRE(!query.is_spent(query.to_input(2, 0))); // unconfirmed self
-    BOOST_REQUIRE(!query.is_spent(query.to_input(2, 1))); // unconfirmed self
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 0))); // unconfirmed self
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 1))); // unconfirmed self
 
     BOOST_REQUIRE(query.set_strong(2));
     BOOST_REQUIRE(query.push_confirmed(2));
-    BOOST_REQUIRE(!query.is_spent(query.to_input(2, 0))); // confirmed self
-    BOOST_REQUIRE(!query.is_spent(query.to_input(2, 1))); // confirmed self
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 0))); // confirmed self
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 1))); // confirmed self
 
     BOOST_REQUIRE(query.set(test::tx4));
-    BOOST_REQUIRE(!query.is_spent(query.to_input(2, 0))); // confirmed self, unconfirmed
-    BOOST_REQUIRE(!query.is_spent(query.to_input(2, 1))); // confirmed self, unconfirmed
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 0))); // confirmed self, unconfirmed
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 1))); // confirmed self, unconfirmed
 
     BOOST_REQUIRE(query.set(test::block3a, context{}));
-    BOOST_REQUIRE(!query.is_spent(query.to_input(2, 0))); // confirmed self, unconfirmed(2)
-    BOOST_REQUIRE(!query.is_spent(query.to_input(2, 1))); // confirmed self, unconfirmed(2)
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 0))); // confirmed self, unconfirmed(2)
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 1))); // confirmed self, unconfirmed(2)
 
     BOOST_REQUIRE(query.set_strong(3));
-    BOOST_REQUIRE(query.is_spent(query.to_input(2, 0)));  // confirmed self, unconfirmed, confirmed (double spent)
-    BOOST_REQUIRE(query.is_spent(query.to_input(2, 1)));  // confirmed self, unconfirmed, confirmed (double spent)
+    BOOST_REQUIRE(query.is_spent(query.to_spend(2, 0)));  // confirmed self, unconfirmed, confirmed (double spent)
+    BOOST_REQUIRE(query.is_spent(query.to_spend(2, 1)));  // confirmed self, unconfirmed, confirmed (double spent)
 
     BOOST_REQUIRE(query.set_unstrong(2));
-    BOOST_REQUIRE(query.is_spent(query.to_input(2, 0)));  // unconfirmed self, unconfirmed, confirmed (spent)
-    BOOST_REQUIRE(query.is_spent(query.to_input(2, 1)));  // unconfirmed self, unconfirmed, confirmed (spent)
+    BOOST_REQUIRE(query.is_spent(query.to_spend(2, 0)));  // unconfirmed self, unconfirmed, confirmed (spent)
+    BOOST_REQUIRE(query.is_spent(query.to_spend(2, 1)));  // unconfirmed self, unconfirmed, confirmed (spent)
 
     BOOST_REQUIRE(query.set_unstrong(3));
-    BOOST_REQUIRE(!query.is_spent(query.to_input(2, 0)));  // unconfirmed self, unconfirmed, unconfirmed (unspent)
-    BOOST_REQUIRE(!query.is_spent(query.to_input(2, 1)));  // unconfirmed self, unconfirmed, unconfirmed (unspent)
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 0)));  // unconfirmed self, unconfirmed, unconfirmed (unspent)
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 1)));  // unconfirmed self, unconfirmed, unconfirmed (unspent)
 
     BOOST_REQUIRE(query.set_strong(2));
-    BOOST_REQUIRE(!query.is_spent(query.to_input(2, 0)));  // confirmed self, unconfirmed, confirmed (unspent)
-    BOOST_REQUIRE(!query.is_spent(query.to_input(2, 1)));  // confirmed self, unconfirmed, confirmed (unspent)
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 0)));  // confirmed self, unconfirmed, confirmed (unspent)
+    BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 1)));  // confirmed self, unconfirmed, confirmed (unspent)
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__is_spent__confirmed_double_spend__true)
@@ -340,8 +340,8 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_spent__confirmed_double_spend__true)
     BOOST_REQUIRE(query.set_strong(2));
     BOOST_REQUIRE(query.set(test::block3a, context{}));
     BOOST_REQUIRE(query.set_strong(3));
-    BOOST_REQUIRE(query.is_spent(query.to_input(2, 0))); // confirmed self and confirmed (double spent)
-    BOOST_REQUIRE(query.is_spent(query.to_input(2, 1))); // confirmed self and confirmed (double spent)
+    BOOST_REQUIRE(query.is_spent(query.to_spend(2, 0))); // confirmed self and confirmed (double spent)
+    BOOST_REQUIRE(query.is_spent(query.to_spend(2, 1))); // confirmed self and confirmed (double spent)
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__is_mature__spend_genesis__false)
@@ -353,8 +353,8 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_mature__spend_genesis__false)
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::tx_spend_genesis));
-    BOOST_REQUIRE(!query.is_mature(query.to_input(1, 0), 0));
-    BOOST_REQUIRE(!query.is_mature(query.to_input(1, 0), 100));
+    BOOST_REQUIRE(!query.is_mature(query.to_spend(1, 0), 0));
+    BOOST_REQUIRE(!query.is_mature(query.to_spend(1, 0), 100));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__is_mature__not_found__false)
@@ -365,8 +365,8 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_mature__not_found__false)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(!query.is_mature(query.to_input(0, 1), 0));
-    BOOST_REQUIRE(!query.is_mature(query.to_input(42, 24), 1000));
+    BOOST_REQUIRE(!query.is_mature(query.to_spend(0, 1), 0));
+    BOOST_REQUIRE(!query.is_mature(query.to_spend(42, 24), 1000));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__is_mature__null_input__true)
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_mature__null_input__true)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.is_mature(query.to_input(0, 0), 0));
+    BOOST_REQUIRE(query.is_mature(query.to_spend(0, 0), 0));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__is_mature__non_coinbase_strong_above__true)
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_mature__non_coinbase_strong_above__true)
     // Is not actually mature at height zero, but strong is presumed to always
     // be set at the current height and never above it (set above in this test).
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.is_mature(query.to_input(2, 0), 0));
+    BOOST_REQUIRE(query.is_mature(query.to_spend(2, 0), 0));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__is_mature__non_coinbase__true)
@@ -408,7 +408,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_mature__non_coinbase__true)
     BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }));
     BOOST_REQUIRE(query.set(test::tx4));
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.is_mature(query.to_input(2, 0), 1));
+    BOOST_REQUIRE(query.is_mature(query.to_spend(2, 0), 1));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__is_mature__coinbase__expected)
@@ -422,8 +422,8 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_mature__coinbase__expected)
     BOOST_REQUIRE(query.set(test::block1b, context{ 0, 1, 0 }));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.set(test::tx2b));
-    BOOST_REQUIRE(!query.is_mature(query.to_input(2, 0), 100));
-    BOOST_REQUIRE(query.is_mature(query.to_input(2, 0), 101));
+    BOOST_REQUIRE(!query.is_mature(query.to_spend(2, 0), 100));
+    BOOST_REQUIRE(query.is_mature(query.to_spend(2, 0), 101));
 }
 
 constexpr auto bip68 = system::chain::forks::bip68_rule;
@@ -676,45 +676,45 @@ BOOST_AUTO_TEST_CASE(query_confirm__set_strong__set_unstrong__expected)
     BOOST_REQUIRE(query.push_confirmed(2));
 
     BOOST_REQUIRE(query.is_confirmed_tx(0));
-    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(0, 0)));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_spend(0, 0)));
     BOOST_REQUIRE(query.is_confirmed_output(query.to_output(0, 0)));
 
     BOOST_REQUIRE(!query.is_confirmed_tx(1));
-    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(1, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_spend(1, 0)));
     BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(1, 0)));
 
     BOOST_REQUIRE(!query.is_confirmed_tx(2));
-    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(2, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_spend(2, 0)));
     BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(2, 0)));
 
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.set_strong(2));
 
     BOOST_REQUIRE(query.is_confirmed_tx(0));
-    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(0, 0)));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_spend(0, 0)));
     BOOST_REQUIRE(query.is_confirmed_output(query.to_output(0, 0)));
 
     BOOST_REQUIRE(query.is_confirmed_tx(1));
-    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(1, 0)));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_spend(1, 0)));
     BOOST_REQUIRE(query.is_confirmed_output(query.to_output(1, 0)));
 
     BOOST_REQUIRE(query.is_confirmed_tx(2));
-    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(2, 0)));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_spend(2, 0)));
     BOOST_REQUIRE(query.is_confirmed_output(query.to_output(2, 0)));
 
     BOOST_REQUIRE(query.set_unstrong(1));
     BOOST_REQUIRE(query.set_unstrong(2));
 
     BOOST_REQUIRE(query.is_confirmed_tx(0));
-    BOOST_REQUIRE(query.is_confirmed_input(query.to_input(0, 0)));
+    BOOST_REQUIRE(query.is_confirmed_input(query.to_spend(0, 0)));
     BOOST_REQUIRE(query.is_confirmed_output(query.to_output(0, 0)));
 
     BOOST_REQUIRE(!query.is_confirmed_tx(1));
-    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(1, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_spend(1, 0)));
     BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(1, 0)));
 
     BOOST_REQUIRE(!query.is_confirmed_tx(2));
-    BOOST_REQUIRE(!query.is_confirmed_input(query.to_input(2, 0)));
+    BOOST_REQUIRE(!query.is_confirmed_input(query.to_spend(2, 0)));
     BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(2, 0)));
 }
 

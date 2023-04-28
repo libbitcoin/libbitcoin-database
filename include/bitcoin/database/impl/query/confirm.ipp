@@ -84,10 +84,10 @@ bool CLASS::is_confirmed_tx(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_confirmed_input(const input_link& link) const NOEXCEPT
+bool CLASS::is_confirmed_input(const spend_link& link) const NOEXCEPT
 {
-    // The input.tx is strong *and* its block is confirmed (by height).
-    const auto fk = to_input_tx(link);
+    // The spend.tx is strong *and* its block is confirmed (by height).
+    const auto fk = to_spend_tx(link);
     return !fk.is_terminal() && is_confirmed_tx(fk);
 }
 
@@ -123,7 +123,7 @@ inline bool CLASS::is_spent_prevout(const foreign_point& point,
     if (it.self().is_terminal())
         return false;
 
-    table::spend::record spend{};
+    table::spend::get_parent spend{};
     do
     {
         // Iterated element must be found, otherwise fault.
@@ -131,7 +131,8 @@ inline bool CLASS::is_spent_prevout(const foreign_point& point,
             return true;
 
         // Skip self (which should be strong) and require strong for spent.
-        if ((spend.tx_fk != self) && !to_block(spend.tx_fk).is_terminal())
+        if ((spend.parent_fk != self) &&
+            !to_block(spend.parent_fk).is_terminal())
             return true;
     }
     while (it.advance());
@@ -162,37 +163,37 @@ inline error::error_t CLASS::spendable_prevout(const tx_link& link,
 
 // unused
 TEMPLATE
-bool CLASS::is_spent(const input_link& link) const NOEXCEPT
+bool CLASS::is_spent(const spend_link& link) const NOEXCEPT
 {
-    table::input::get_prevout_parent input{};
-    if (!store_.input.get(link, input))
+    table::spend::get_prevout_parent spend{};
+    if (!store_.spend.get(link, spend))
         return false;
 
-    if (input.is_null())
+    if (spend.is_null())
         return false;
 
-    return is_spent_prevout(input.prevout(), input.parent_fk);
+    return is_spent_prevout(spend.prevout(), spend.parent_fk);
 }
 
 // unused
 TEMPLATE
-bool CLASS::is_strong(const input_link& link) const NOEXCEPT
+bool CLASS::is_strong(const spend_link& link) const NOEXCEPT
 {
-    return !to_block(to_input_tx(link)).is_terminal();
+    return !to_block(to_spend_tx(link)).is_terminal();
 }
 
 // unused
 TEMPLATE
-bool CLASS::is_mature(const input_link& link, size_t height) const NOEXCEPT
+bool CLASS::is_mature(const spend_link& link, size_t height) const NOEXCEPT
 {
-    table::input::get_prevout input{};
-    if (!store_.input.get(link, input))
+    table::spend::get_point spend{};
+    if (!store_.spend.get(link, spend))
         return false;
 
-    if (input.is_null())
+    if (spend.is_null())
         return true;
 
-    return mature_prevout(input.point_fk, height) == error::success;
+    return mature_prevout(spend.point_fk, height) == error::success;
 }
 
 // protected (only for is_mature/unused)
@@ -226,17 +227,17 @@ error::error_t CLASS::mature_prevout(const point_link& link,
 
 // unused
 TEMPLATE
-bool CLASS::is_locked(const input_link& link, uint32_t sequence,
+bool CLASS::is_locked(const spend_link& link, uint32_t sequence,
     const context& ctx) const NOEXCEPT
 {
-    table::input::get_prevout input{};
-    if (!store_.input.get(link, input))
+    table::spend::get_point spend{};
+    if (!store_.spend.get(link, spend))
         return false;
 
-    if (input.is_null())
+    if (spend.is_null())
         return true;
 
-    return locked_prevout(input.point_fk, sequence, ctx) == error::success;
+    return locked_prevout(spend.point_fk, sequence, ctx) == error::success;
 }
 
 // protected (only for is_locked/unused)
@@ -276,17 +277,17 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         return error::integrity;
 
     code ec{};
-    table::input::get_prevout_parent_sequence input{};
-    for (const auto& in_fk: to_non_coinbase_inputs(link))
+    table::spend::get_prevout_parent_sequence spend{};
+    for (const auto& spend_fk: to_non_coinbase_spends(link))
     {
-        if (!store_.input.get(in_fk, input))
+        if (!store_.spend.get(spend_fk, spend))
             return error::integrity;
 
-        if ((ec = spendable_prevout(to_tx(get_point_key(input.point_fk)),
-            input.sequence, ctx)))
+        if ((ec = spendable_prevout(to_tx(get_point_key(spend.point_fk)),
+            spend.sequence, ctx)))
             return ec;
 
-        if (is_spent_prevout(input.prevout(), input.parent_fk))
+        if (is_spent_prevout(spend.prevout(), spend.parent_fk))
             return error::confirmed_double_spend;
     }
 

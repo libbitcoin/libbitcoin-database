@@ -201,12 +201,13 @@ BOOST_AUTO_TEST_CASE(query_translate__to_tx__txs__expected)
     BOOST_REQUIRE_EQUAL(query.to_tx(test::block3.transactions_ptr()->front()->hash(true)), tx_link::terminal);
 }
 
-// to_input_tx/to_input/to_tx_inputs/to_spend_key/to_non_coinbase_inputs
+// to_spend_tx/to_spend/to_tx_spends/to_spend_key/to_non_coinbase_spends
 
-BOOST_AUTO_TEST_CASE(query_translate__to_input_tx__to_input__expected)
+BOOST_AUTO_TEST_CASE(query_translate__to_spend_tx__to_spend__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
+    settings.spend_buckets = 5;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
@@ -219,74 +220,135 @@ BOOST_AUTO_TEST_CASE(query_translate__to_input_tx__to_input__expected)
     BOOST_REQUIRE(query.set(test::block1a, test::context));
 
     // First 4 blocks have one transaction with 1 input, block1a has 3.
-    BOOST_REQUIRE_EQUAL(query.to_input_tx(0x00), 0u);
-    BOOST_REQUIRE_EQUAL(query.to_input_tx(0x5b + 0 * 21), 1u);
-    BOOST_REQUIRE_EQUAL(query.to_input_tx(0x5b + 1 * 21), 2u);
-    BOOST_REQUIRE_EQUAL(query.to_input_tx(0x5b + 2 * 21), 3u);
-    BOOST_REQUIRE_EQUAL(query.to_input_tx(0x5b + 3 * 21), 4u);
-    BOOST_REQUIRE_EQUAL(query.to_input_tx(0x5b + 4 * 21), 4u);
-    BOOST_REQUIRE_EQUAL(query.to_input_tx(0x5b + 5 * 21), 4u);
+    BOOST_REQUIRE_EQUAL(query.to_spend_tx(0), 0u);
+    BOOST_REQUIRE_EQUAL(query.to_spend_tx(1), 1u);
+    BOOST_REQUIRE_EQUAL(query.to_spend_tx(2), 2u);
+    BOOST_REQUIRE_EQUAL(query.to_spend_tx(3), 3u);
+    BOOST_REQUIRE_EQUAL(query.to_spend_tx(4), 4u);
+    BOOST_REQUIRE_EQUAL(query.to_spend_tx(5), 4u);
+    BOOST_REQUIRE_EQUAL(query.to_spend_tx(6), 4u);
 
-    BOOST_REQUIRE_EQUAL(query.to_input(0, 0), 0x00u);
-    BOOST_REQUIRE_EQUAL(query.to_input(1, 0), 0x5b + 0 * 21);
-    BOOST_REQUIRE_EQUAL(query.to_input(2, 0), 0x5b + 1 * 21);
-    BOOST_REQUIRE_EQUAL(query.to_input(3, 0), 0x5b + 2 * 21);
-    BOOST_REQUIRE_EQUAL(query.to_input(4, 0), 0x5b + 3 * 21);
-    BOOST_REQUIRE_EQUAL(query.to_input(4, 1), 0x5b + 4 * 21);
-    BOOST_REQUIRE_EQUAL(query.to_input(4, 2), 0x5b + 5 * 21);
+    BOOST_REQUIRE_EQUAL(query.to_spend(0, 0), 0u);
+    BOOST_REQUIRE_EQUAL(query.to_spend(1, 0), 1u);
+    BOOST_REQUIRE_EQUAL(query.to_spend(2, 0), 2u);
+    BOOST_REQUIRE_EQUAL(query.to_spend(3, 0), 3u);
+    BOOST_REQUIRE_EQUAL(query.to_spend(4, 0), 4u);
+    BOOST_REQUIRE_EQUAL(query.to_spend(4, 1), 5u);
+    BOOST_REQUIRE_EQUAL(query.to_spend(4, 2), 6u);
 
     using namespace system;
-    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_input(0, 0)), base16_array("ffffffffffffff"));
-    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_input(1, 0)), base16_array("ffffffffffffff"));
-    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_input(2, 0)), base16_array("ffffffffffffff"));
-    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_input(3, 0)), base16_array("ffffffffffffff"));
-    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_input(4, 0)), base16_array("00000000180000"));
-    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_input(4, 1)), base16_array("000000002a0000"));
-    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_input(4, 2)), base16_array("010000002b0000"));
+    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_spend(0, 0)), base16_array("ffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_spend(1, 0)), base16_array("ffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_spend(2, 0)), base16_array("ffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_spend(3, 0)), base16_array("ffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_spend(4, 0)), base16_array("00000000180000"));
+    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_spend(4, 1)), base16_array("000000002a0000"));
+    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_spend(4, 2)), base16_array("010000002b0000"));
 
-    const input_links expected_links4{ 0x5b + 3 * 21, 0x5b + 4 * 21, 0x5b + 5 * 21 };
-    BOOST_REQUIRE_EQUAL(query.to_tx_inputs(0), input_links{ 0x00 });
-    BOOST_REQUIRE_EQUAL(query.to_tx_inputs(1), input_links{ 0x5b + 0 * 21 });
-    BOOST_REQUIRE_EQUAL(query.to_tx_inputs(2), input_links{ 0x5b + 1 * 21 });
-    BOOST_REQUIRE_EQUAL(query.to_tx_inputs(3), input_links{ 0x5b + 2 * 21 });
-    BOOST_REQUIRE_EQUAL(query.to_tx_inputs(4), expected_links4);
+    const spend_links expected_links4{ 4, 5, 6 };
+    BOOST_REQUIRE_EQUAL(query.to_tx_spends(0), spend_links{ 0 });
+    BOOST_REQUIRE_EQUAL(query.to_tx_spends(1), spend_links{ 1 });
+    BOOST_REQUIRE_EQUAL(query.to_tx_spends(2), spend_links{ 2 });
+    BOOST_REQUIRE_EQUAL(query.to_tx_spends(3), spend_links{ 3 });
+    BOOST_REQUIRE_EQUAL(query.to_tx_spends(4), expected_links4);
 
     // TODO: All blocks have one transaction.
-    BOOST_REQUIRE_EQUAL(query.to_non_coinbase_inputs(0), input_links{});
-    BOOST_REQUIRE_EQUAL(query.to_non_coinbase_inputs(1), input_links{});
-    BOOST_REQUIRE_EQUAL(query.to_non_coinbase_inputs(2), input_links{});
-    BOOST_REQUIRE_EQUAL(query.to_non_coinbase_inputs(3), input_links{});
-    BOOST_REQUIRE_EQUAL(query.to_non_coinbase_inputs(4), input_links{});
+    BOOST_REQUIRE_EQUAL(query.to_non_coinbase_spends(0), spend_links{});
+    BOOST_REQUIRE_EQUAL(query.to_non_coinbase_spends(1), spend_links{});
+    BOOST_REQUIRE_EQUAL(query.to_non_coinbase_spends(2), spend_links{});
+    BOOST_REQUIRE_EQUAL(query.to_non_coinbase_spends(3), spend_links{});
+    BOOST_REQUIRE_EQUAL(query.to_non_coinbase_spends(4), spend_links{});
 
     // Past end.
-    BOOST_REQUIRE_EQUAL(query.to_input_tx(277), tx_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_input(5, 0), input_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_spend_key(input_link::terminal), foreign_point{});
-    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_input(5, 0)), foreign_point{});
-    BOOST_REQUIRE(query.to_tx_inputs(5).empty());
-    BOOST_REQUIRE(query.to_non_coinbase_inputs(5).empty());
+    BOOST_REQUIRE_EQUAL(query.to_spend_tx(7), tx_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_spend(5, 0), spend_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_spend_key(spend_link::terminal), foreign_point{});
+    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_spend(5, 0)), foreign_point{});
+    BOOST_REQUIRE(query.to_tx_spends(5).empty());
+    BOOST_REQUIRE(query.to_non_coinbase_spends(5).empty());
 
     // Verify expectations.
+    const auto spend_head = base16_chunk
+    (
+        "00000000"   // size
+        "03000000"   // pk->3
+        "ffffffff"
+        "05000000"   // pk->5
+        "ffffffff"
+        "04000000"   // pk->4
+    );
+    const auto spend_body = base16_chunk
+    (
+        "ffffffff"   // terminal->
+        "ffffffff"   // fp: point_fk->
+        "ffffff"     // fp: point_index (null)
+        "00000000"   // parent_fk->
+        "ffffffff"   // sequence
+        "0000000000" // input_fk->
+
+        "00000000"   // pk->0
+        "ffffffff"   // fp: point_fk->
+        "ffffff"     // fp: point_index (null)
+        "01000000"   // parent_fk->
+        "ffffffff"   // sequence
+        "4f00000000" // input_fk->
+
+        "01000000"   // pk->1
+        "ffffffff"   // fp: point_fk->
+        "ffffff"     // fp: point_index (null)
+        "02000000"   // parent_fk->
+        "ffffffff"   // sequence
+        "5800000000" // input_fk->
+
+        "02000000"   // pk->2
+        "ffffffff"   // fp: point_fk->
+        "ffffff"     // fp: point_index (null)
+        "03000000"   // parent_fk->
+        "ffffffff"   // sequence
+        "6100000000" // input_fk->
+
+        "06000000"   // pk->6
+        "00000000"   // fp: point_fk->
+        "180000"     // fp: point_index
+        "04000000"   // parent_fk->
+        "2a000000"   // sequence
+        "6a00000000" // input_fk->
+
+        "ffffffff"   // terminal->
+        "00000000"   // fp: point_fk->
+        "2a0000"     // fp: point_index
+        "04000000"   // parent_fk->
+        "18000000"   // sequence
+        "7200000000" // input_fk->
+
+        "ffffffff"   // terminal->
+        "01000000"   // fp: point_fk->
+        "2b0000"     // fp: point_index
+        "04000000"   // parent_fk->
+        "19000000"   // sequence
+        "7a00000000" // input_fk->
+    );
     const auto input_head = base16_chunk
     (
         "0000000000"
     );
     const auto input_body = base16_chunk
     (
-        // point/index parent    sequence  script/witness
-        "ffffffff" "" "00000000""ffffffff""4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b7300"
-        "ffffffff" "" "01000000""ffffffff""0704ffff001d010400"
-        "ffffffff" "" "02000000""ffffffff""0704ffff001d010b00"
-        "ffffffff" "" "03000000""ffffffff""0704ffff001d010e00"
-        "00000000""18""04000000""2a000000""026a790103242424"
-        "00000000""2a""04000000""18000000""026a7a0103313131"
-        "01000000""2b""04000000""19000000""026a7a0103424242"
+        "4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b7300"
+        "0704ffff001d010400"
+        "0704ffff001d010b00"
+        "0704ffff001d010e00"
+        "026a790103242424"
+        "026a7a0103313131"
+        "026a7a0103424242"
     );
+    BOOST_REQUIRE_EQUAL(store.spend_head(), spend_head);
+    BOOST_REQUIRE_EQUAL(store.spend_body(), spend_body);
     BOOST_REQUIRE_EQUAL(store.input_head(), input_head);
     BOOST_REQUIRE_EQUAL(store.input_body(), input_body);
 }
 
-BOOST_AUTO_TEST_CASE(query_translate__to_non_coinbase_inputs__populated__expected)
+BOOST_AUTO_TEST_CASE(query_translate__to_non_coinbase_spends__populated__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -296,26 +358,31 @@ BOOST_AUTO_TEST_CASE(query_translate__to_non_coinbase_inputs__populated__expecte
 
     // coinbase only (null and first).
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.to_non_coinbase_inputs(0).empty());
-    BOOST_REQUIRE(query.to_non_coinbase_inputs(1).empty());
-    BOOST_REQUIRE(query.to_non_coinbase_inputs(2).empty());
+    BOOST_REQUIRE(query.to_non_coinbase_spends(0).empty());
+    BOOST_REQUIRE(query.to_non_coinbase_spends(1).empty());
+    BOOST_REQUIRE(query.to_non_coinbase_spends(2).empty());
 
     BOOST_REQUIRE_EQUAL(store.point_body(), system::base16_chunk(""));
+    BOOST_REQUIRE_EQUAL(store.spend_body(),
+        system::base16_chunk("ffffffffffffffffffffff00000000ffffffff0000000000"));
     BOOST_REQUIRE_EQUAL(store.input_body(),
-        system::base16_chunk("ffffffff""00000000""ffffffff""4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b7300"));
+        system::base16_chunk("4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73""00"));
     BOOST_REQUIRE_EQUAL(store.output_body(),
         system::base16_chunk("00000000""ff00f2052a01000000""434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac"));
 
     // coinbase only (null and first).
     BOOST_REQUIRE(query.set(test::block1b, context{ 0, 1, 0 }));
-    BOOST_REQUIRE(query.to_non_coinbase_inputs(0).empty());
-    BOOST_REQUIRE(query.to_non_coinbase_inputs(1).empty());
-    BOOST_REQUIRE(query.to_non_coinbase_inputs(2).empty());
+    BOOST_REQUIRE(query.to_non_coinbase_spends(0).empty());
+    BOOST_REQUIRE(query.to_non_coinbase_spends(1).empty());
+    BOOST_REQUIRE(query.to_non_coinbase_spends(2).empty());
 
     BOOST_REQUIRE_EQUAL(store.point_body(), system::base16_chunk(""));
+    BOOST_REQUIRE_EQUAL(store.spend_body(),
+        system::base16_chunk("ffffffffffffffffffffff00000000ffffffff0000000000"
+                             "00000000ffffffffffffff01000000b10000004f00000000"));
     BOOST_REQUIRE_EQUAL(store.input_body(),
-        system::base16_chunk("ffffffff""00000000""ffffffff""4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b7300"
-                             "ffffffff""01000000""b1000000""02ae8200"));
+        system::base16_chunk("4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73""00"
+                             "02ae82""00"));
     BOOST_REQUIRE_EQUAL(store.output_body(),
         system::base16_chunk("00000000""ff00f2052a01000000""434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac"
                              "01000000""b1""0179"
@@ -323,8 +390,8 @@ BOOST_AUTO_TEST_CASE(query_translate__to_non_coinbase_inputs__populated__expecte
 
     // 2 inputs (block1b and tx2b).
     BOOST_REQUIRE(query.set(test::block_spend_internal_2b, context{ 0, 101, 0 }));
-    BOOST_REQUIRE(query.to_non_coinbase_inputs(0).empty());
-    BOOST_REQUIRE(query.to_non_coinbase_inputs(1).empty());
+    BOOST_REQUIRE(query.to_non_coinbase_spends(0).empty());
+    BOOST_REQUIRE(query.to_non_coinbase_spends(1).empty());
 
     // Two points because non-null, but only one is non-first (also coinbase criteria).
     // block_spend_internal_2b first tx (tx2b) is first but with non-null input.
@@ -332,11 +399,16 @@ BOOST_AUTO_TEST_CASE(query_translate__to_non_coinbase_inputs__populated__expecte
     BOOST_REQUIRE_EQUAL(store.point_body(),
         system::base16_chunk("ffffffff""730460db96b2968de1fe1fbf5cc5aa229f936943ac400ea0047899af03c89ac9"
                              "ffffffff""cad29b6decf1a6d4d47482e7f2c3b50e0a757ca618f7f9e01d4373ab3437c02d"));
+    BOOST_REQUIRE_EQUAL(store.spend_body(),
+        system::base16_chunk("ffffffff""ffffffffffffff""00000000""ffffffff""0000000000"
+                             "00000000""ffffffffffffff""01000000""b1000000""4f00000000"
+                             "ffffffff""00000000000000""02000000""b1000000""5300000000"
+                             "ffffffff""01000000000000""03000000""b2000000""5700000000"));
     BOOST_REQUIRE_EQUAL(store.input_body(),
-        system::base16_chunk("ffffffff""00000000""ffffffff""4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b7300"
-                             "ffffffff" "" "01000000""b1000000""02ae8200"    // 0x5b
-                             "00000000""00""02000000""b1000000""02ae8200"    // + 16 (b2 first tx)
-                             "01000000""00""03000000""b2000000""02ae8200")); // + 17 (b2 second tx)
+        system::base16_chunk("4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73""00"
+                             "02ae82""00"
+                             "02ae82""00"
+                             "02ae82""00"));
     BOOST_REQUIRE_EQUAL(store.output_body(),
         system::base16_chunk("00000000""ff00f2052a01000000""434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac"
                              "01000000""b1""0179"
@@ -344,8 +416,8 @@ BOOST_AUTO_TEST_CASE(query_translate__to_non_coinbase_inputs__populated__expecte
                              "02000000""b1""0179"
                              "03000000""b2""0179"));
 
-    // to_non_coinbase_inputs keys on first-tx-ness, so only one input despite two points (second point).
-    BOOST_REQUIRE_EQUAL(query.to_non_coinbase_inputs(2), input_links{ 0x5b + 16 + 17 });
+    // to_non_coinbase_spends keys on first-tx-ness, so only one input despite two points (second point).
+    BOOST_REQUIRE_EQUAL(query.to_non_coinbase_spends(2), spend_links{ 3 });
 }
 
 // to_output_tx/to_output/to_tx_outputs/to_block_outputs
@@ -378,7 +450,7 @@ BOOST_AUTO_TEST_CASE(query_translate__to_output_tx__to_output__expected)
     BOOST_REQUIRE_EQUAL(query.to_output(4, 0), 4u * 0x51u);
     BOOST_REQUIRE_EQUAL(query.to_output(4, 1), 4u * 0x51u + 7u);
 
-    const input_links expected_links4{ 4 * 0x51, 4 * 0x51 + 7 };
+    const output_links expected_links4{ 4 * 0x51, 4 * 0x51 + 7 };
     BOOST_REQUIRE_EQUAL(query.to_tx_outputs(0), output_links{ 0 * 0x51 });
     BOOST_REQUIRE_EQUAL(query.to_tx_outputs(1), output_links{ 1 * 0x51 });
     BOOST_REQUIRE_EQUAL(query.to_tx_outputs(2), output_links{ 2 * 0x51 });
@@ -427,27 +499,27 @@ BOOST_AUTO_TEST_CASE(query_translate__to_prevout_tx__to_prevout__expected)
     BOOST_REQUIRE(query.set(test::block2a, test::context));
 
     // inputs in link order.
-    BOOST_REQUIRE_EQUAL(query.to_prevout_tx(0x00), tx_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_prevout_tx(0x5b + 0 * 21), tx_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_prevout_tx(0x5b + 1 * 21), tx_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_prevout_tx(0x5b + 2 * 21), tx_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_prevout_tx(0x5b + 3 * 21), 1u); // block1a:0 (second serialized tx)
-    BOOST_REQUIRE_EQUAL(query.to_prevout_tx(0x5b + 4 * 21), 1u); // block1a:0 (second serialized tx)
-    BOOST_REQUIRE_EQUAL(query.to_prevout_tx(0x5b + 5 * 21), tx_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_prevout_tx(0x5b + 6 * 21), tx_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_prevout_tx(0), tx_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_prevout_tx(1), tx_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_prevout_tx(2), tx_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_prevout_tx(3), tx_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_prevout_tx(4), 1u); // block1a:0 (second serialized tx)
+    BOOST_REQUIRE_EQUAL(query.to_prevout_tx(5), 1u); // block1a:0 (second serialized tx)
+    BOOST_REQUIRE_EQUAL(query.to_prevout_tx(6), tx_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_prevout_tx(7), tx_link::terminal);
 
-    BOOST_REQUIRE_EQUAL(query.to_prevout(0x00), output_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_prevout(0x5b + 0 * 21), output_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_prevout(0x5b + 1 * 21), output_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_prevout(0x5b + 2 * 21), output_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_prevout(0x5b + 3 * 21), 0x51u);      // block1a:0:0 (second serialized tx:0)
-    BOOST_REQUIRE_EQUAL(query.to_prevout(0x5b + 4 * 21), 0x51u + 7u); // block1a:0:1 (second serialized tx:1)
-    BOOST_REQUIRE_EQUAL(query.to_prevout(0x5b + 5 * 21), output_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_prevout(0x5b + 6 * 21), output_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_prevout(0), output_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_prevout(1), output_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_prevout(2), output_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_prevout(3), output_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_prevout(4), 0x51u);      // block1a:0:0 (second serialized tx:0)
+    BOOST_REQUIRE_EQUAL(query.to_prevout(5), 0x51u + 7u); // block1a:0:1 (second serialized tx:1)
+    BOOST_REQUIRE_EQUAL(query.to_prevout(6), output_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_prevout(7), output_link::terminal);
 
     // Past end.
-    BOOST_REQUIRE_EQUAL(query.to_prevout_tx(0x5b + 7 * 21), tx_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_prevout(0x5b + 7 * 21), output_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_prevout_tx(8), tx_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_prevout(8), output_link::terminal);
 
     // Verify expectations.
     const auto input_head = system::base16_chunk
@@ -456,15 +528,14 @@ BOOST_AUTO_TEST_CASE(query_translate__to_prevout_tx__to_prevout__expected)
     );
     const auto input_body = system::base16_chunk
     (
-        // point/index parent    sequence  script/witness
-        "ffffffff" "" "00000000""ffffffff""4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b7300"
-        "00000000""18""01000000""2a000000""026a790103242424"
-        "00000000""2a""01000000""18000000""026a7a0103313131"
-        "01000000""2b""01000000""19000000""026a7a0103424242"
-        "02000000""00""02000000""a2000000""02ae790103242424"
-        "02000000""01""02000000""81000000""02ae7a0103313131"
-        "00000000""20""03000000""a2000000""02ae790103242424"
-        "00000000""21""03000000""81000000""02ae7a0103313131"
+        "4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73""00"
+        "026a79""0103242424"
+        "026a7a""0103313131"
+        "026a7a""0103424242"
+        "02ae79""0103242424"
+        "02ae7a""0103313131"
+        "02ae79""0103242424"
+        "02ae7a""0103313131"
     );
     const auto output_head = system::base16_chunk
     (
@@ -488,21 +559,20 @@ BOOST_AUTO_TEST_CASE(query_translate__to_prevout_tx__to_prevout__expected)
         "01000000"
         "02000000"
     );
-
     const auto tx_body = system::base16_chunk
     (
         "ffffffff" // genesis:0 [0]->terminal
         "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a"
-        "01cc0000cc000000000000010000000100000100000000000000"
+        "01cc0000cc00000000000001000000010000010000""0000000000"
         "00000000" // block1a:0 [1]->[0]
         "d19c4584d53264e5d0f9d2f852578c4d4382b69abee853bfbd6bc580f84069cf"
-        "009f0000b00000180000002a0000000300000200000200000000"
+        "009f0000b00000180000002a000000030000020000""0900000000"
         "ffffffff" // block2a:0 [2]->terminal
         "c67bfbf8f354bd8f26d7a8b60c20b591dddf8760e02a1fcc3fd7af60b4253e67"
-        "006a000076000081000000a20000000200000100000700000000"
+        "006a000076000081000000a2000000020000010000""1f00000000"
         "ffffffff" // block2a:1 [3]->terminal
         "64a86f067651854e2242b6ac9430b6d6806ea2b24dd7edec7b61dd885cf4a40c"
-        "006a000076000081000000a20000000200000100000a00000000"
+        "006a000076000081000000a2000000020000010000""2c00000000"
     );
 
     BOOST_REQUIRE_EQUAL(store.input_head(), input_head);
@@ -627,8 +697,9 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spenders__point__expected)
     const auto point2 = system::base16_array("d19c4584d53264e5d0f9d2f852578c4d4382b69abee853bfbd6bc580f84069cf");
     BOOST_REQUIRE_EQUAL(test::block1a.transactions_ptr()->front()->hash(false), point2);
 
-    const auto expected0 = input_links{ 0x5b + 7 * 21, 0x5b + 3 * 21 };
-    const auto expected1 = input_links{ 0x5b + 8 * 21, 0x5b + 4 * 21 };
+    // switch to record index
+    const auto expected0 = spend_links{ 8, 4 };
+    const auto expected1 = spend_links{ 9, 5 };
     const auto spenders0a = query.to_spenders({ point2, 0 });
     const auto spenders1a = query.to_spenders({ point2, 1 });
     BOOST_REQUIRE_EQUAL(spenders0a, expected0);
@@ -679,23 +750,24 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spenders__point__expected)
     const auto spend_head = system::base16_chunk
     (
         "00000000" // size
+        "00000000"
         "ffffffff"
-        "ffffffff"
-        "07000000"
         "08000000"
-        "02000000"
+        "09000000"
+        "01000000"
     );
     const auto spend_body = system::base16_chunk
     (
-        "ffffffff""00000000""180000""01000000" // 0
-        "ffffffff""00000000""2a0000""01000000" // 1
-        "00000000""01000000""2b0000""01000000" // 2
-        "01000000""02000000""000000""02000000" // 3
-        "ffffffff""02000000""010000""02000000" // 4
-        "03000000""00000000""200000""03000000" // 5
-        "04000000""00000000""210000""03000000" // 6
-        "05000000""02000000""000000""04000000" // 7
-        "06000000""02000000""010000""04000000" // 8
+        "ffffffff""ffffffff""ffffff""00000000""ffffffff""0000000000"
+        "03000000""00000000""180000""01000000""2a000000""4f00000000"
+        "ffffffff""00000000""2a0000""01000000""18000000""5700000000"
+        "ffffffff""01000000""2b0000""01000000""19000000""5f00000000"
+        "02000000""02000000""000000""02000000""a2000000""6700000000"
+        "ffffffff""02000000""010000""02000000""81000000""6f00000000"
+        "04000000""00000000""200000""03000000""a2000000""7700000000"
+        "05000000""00000000""210000""03000000""81000000""7f00000000"
+        "06000000""02000000""000000""04000000""a5000000""8700000000"
+        "07000000""02000000""010000""04000000""85000000""8f00000000"
     );
     const auto input_head = system::base16_chunk
     (
@@ -703,17 +775,16 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spenders__point__expected)
     );
     const auto input_body = system::base16_chunk
     (
-        // point/index parent    sequence  script/witness
-        "ffffffff" "" "00000000""ffffffff""4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b7300"
-        "00000000""18""01000000""2a000000""026a790103242424" // 1a:0:0
-        "00000000""2a""01000000""18000000""026a7a0103313131" // 1a:0:1
-        "01000000""2b""01000000""19000000""026a7a0103424242" // 1a:0:2
-        "02000000""00""02000000""a2000000""02ae790103242424" // 2a:0:0
-        "02000000""01""02000000""81000000""02ae7a0103313131" // 2a:0:1
-        "00000000""20""03000000""a2000000""02ae790103242424" // 2a:1:0
-        "00000000""21""03000000""81000000""02ae7a0103313131" // 2a:1:1
-        "02000000""00""04000000""a5000000""02ae790103252525" //  tx4:0
-        "02000000""01""04000000""85000000""02ae7a0103353535" //  tx4:1
+        "4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73""00"
+        "026a7901""03242424" // 1a:0:0
+        "026a7a01""03313131" // 1a:0:1
+        "026a7a01""03424242" // 1a:0:2
+        "02ae7901""03242424" // 2a:0:0
+        "02ae7a01""03313131" // 2a:0:1
+        "02ae7901""03242424" // 2a:1:0
+        "02ae7a01""03313131" // 2a:1:1
+        "02ae7901""03252525" //  tx4:0
+        "02ae7a01""03353535" //  tx4:1
     );
     const auto output_head = system::base16_chunk
     (
@@ -742,19 +813,19 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spenders__point__expected)
     (
         "ffffffff" // genesis:0 [0]->terminal
         "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a"
-        "01cc0000cc000000000000010000000100000100000000000000"
+        "01""cc0000""cc0000""00000000""01000000""010000""010000""0000000000"
         "00000000" // block1a:0 [1]->[0]
         "d19c4584d53264e5d0f9d2f852578c4d4382b69abee853bfbd6bc580f84069cf"
-        "009f0000b00000180000002a0000000300000200000200000000"
+        "00""9f0000""b00000""18000000""2a000000""030000""020000""0900000000"
         "ffffffff" // block2a:0 [2]->terminal
         "c67bfbf8f354bd8f26d7a8b60c20b591dddf8760e02a1fcc3fd7af60b4253e67"
-        "006a000076000081000000a20000000200000100000700000000"
+        "00""6a0000""760000""81000000""a2000000""020000""010000""1f00000000"
         "ffffffff" // block2a:1 [3]->terminal
         "64a86f067651854e2242b6ac9430b6d6806ea2b24dd7edec7b61dd885cf4a40c"
-        "006a000076000081000000a20000000200000100000a00000000"
+        "00""6a0000""760000""81000000""a2000000""020000""010000""2c00000000"
         "ffffffff" // tx4 [4]->terminal
         "abee882062e8df25c967717d0f97e0133af9be84861a427dd4e3f7370549c441"
-        "006a000076000085000000a50000000200000100000d00000000"
+        "00""6a0000""760000""85000000""a5000000""020000""010000""3900000000"
     );
 
     BOOST_REQUIRE_EQUAL(store.point_head(), point_head);

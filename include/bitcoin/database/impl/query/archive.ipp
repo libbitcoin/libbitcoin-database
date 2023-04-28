@@ -248,7 +248,7 @@ typename CLASS::inputs_ptr CLASS::get_inputs(
     const tx_link& link) const NOEXCEPT
 {
     using namespace system;
-    const auto fks = to_tx_inputs(link);
+    const auto fks = to_tx_spends(link);
     if (fks.empty())
         return {};
 
@@ -357,10 +357,10 @@ typename CLASS::transaction::cptr CLASS::get_transaction(
     if (!store_.tx.get(link, tx))
         return {};
 
-    table::puts::record puts{};
-    puts.in_fks.resize(tx.ins_count);
+    table::puts::slab puts{};
+    puts.spend_fks.resize(tx.ins_count);
     puts.out_fks.resize(tx.outs_count);
-    if (!store_.puts.get(tx.ins_fk, puts))
+    if (!store_.puts.get(tx.puts_fk, puts))
         return {};
 
     const auto inputs = to_shared<chain::input_cptrs>();
@@ -368,7 +368,7 @@ typename CLASS::transaction::cptr CLASS::get_transaction(
     inputs->reserve(tx.ins_count);
     outputs->reserve(tx.outs_count);
 
-    for (const auto& fk: puts.in_fks)
+    for (const auto& fk: puts.spend_fks)
         if (!push_bool(*inputs, get_input(fk)))
             return {};
 
@@ -401,11 +401,13 @@ typename CLASS::output::cptr CLASS::get_output(
 
 TEMPLATE
 typename CLASS::input::cptr CLASS::get_input(
-    const input_link& link) const NOEXCEPT
+    const spend_link& link) const NOEXCEPT
 {
     using namespace system;
-    table::input::only_with_prevout in{};
-    if (!store_.input.get(link, in))
+    table::input::get_ptrs in{};
+    table::spend::get_input spend{};
+    if (!store_.spend.get(link, spend) ||
+        !store_.input.get(spend.input_fk, in))
         return {};
 
     // Share null point instances to reduce memory consumption.
@@ -413,29 +415,29 @@ typename CLASS::input::cptr CLASS::get_input(
 
     return to_shared<input>
     (
-        in.is_null() ? null_point : to_shared<point>
+        spend.is_null() ? null_point : to_shared<point>
         (
-            get_point_key(in.point_fk),
-            in.point_index
+            get_point_key(spend.point_fk),
+            spend.point_index
         ),
         in.script,
         in.witness,
-        in.sequence
+        spend.sequence
     );
 }
 
 TEMPLATE
 typename CLASS::point::cptr CLASS::get_point(
-    const input_link& link) const NOEXCEPT
+    const spend_link& link) const NOEXCEPT
 {
-    table::input::get_prevout in{};
-    if (!store_.input.get(link, in))
+    table::spend::get_prevout spend{};
+    if (!store_.spend.get(link, spend))
         return {};
 
     return system::to_shared<point>
     (
-        get_point_key(in.point_fk),
-        in.point_index
+        get_point_key(spend.point_fk),
+        spend.point_index
     );
 }
 
@@ -443,12 +445,13 @@ TEMPLATE
 typename CLASS::inputs_ptr CLASS::get_spenders(
     const output_link& link) const NOEXCEPT
 {
-    const auto input_fks = to_spenders(link);
-    const auto spenders = system::to_shared<system::chain::input_cptrs>();
-    spenders->reserve(input_fks.size());
+    using namespace system;
+    const auto spend_fks = to_spenders(link);
+    const auto spenders = to_shared<chain::input_cptrs>();
+    spenders->reserve(spend_fks.size());
 
-    for (const auto& input_fk: input_fks)
-        if (!push_bool(*spenders, get_input(input_fk)))
+    for (const auto& spend_fk: spend_fks)
+        if (!push_bool(*spenders, get_input(spend_fk)))
             return {};
 
     return spenders;
@@ -472,7 +475,7 @@ TEMPLATE
 typename CLASS::input::cptr CLASS::get_input(const tx_link& link,
     uint32_t input_index) const NOEXCEPT
 {
-    return get_input(to_input(link, input_index));
+    return get_input(to_spend(link, input_index));
 }
 
 TEMPLATE
@@ -485,62 +488,71 @@ typename CLASS::inputs_ptr CLASS::get_spenders(const tx_link& link,
 TEMPLATE
 tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
 {
+    using namespace system;
     if (tx.is_empty())
         return {};
 
     const auto key = tx.hash(false);
 
     // GUARD (tx redundancy)
-    auto tx_fk = to_tx(key);
-    if (!tx_fk.is_terminal())
-        return tx_fk;
+    ////auto tx_fk = to_tx(key);
+    ////if (!tx_fk.is_terminal())
+    ////    return tx_fk;
 
     // Declare puts record.
     const auto& ins = *tx.inputs_ptr();
     const auto& outs = *tx.outputs_ptr();
-    table::puts::record puts{};
-    puts.in_fks.reserve(ins.size());
+    table::puts::slab puts{};
+    puts.spend_fks.reserve(ins.size());
     puts.out_fks.reserve(outs.size());
 
-    // Declare points cache.
-    std_vector<foreign_point> prevouts{};
-    prevouts.reserve(ins.size());
+    // Declare spends buffer.
+    std_vector<foreign_point> spends{};
+    spends.reserve(ins.size());
 
     // ========================================================================
     const auto scope = store_.get_transactor();
 
     // Allocate tx record.
-    tx_fk = store_.tx.allocate(1);
+    const auto tx_fk = store_.tx.allocate(1);
     if (tx_fk.is_terminal())
         return {};
 
-    // Commit input records.
+    // Allocate spend records.
+    const auto count = possible_narrow_cast<spend_link::integer>(ins.size());
+    auto spend_fk = store_.spend.allocate(count);
+    if (spend_fk.is_terminal())
+        return {};
+
+    // Commit input records (spend records not indexed).
     for (const auto& in: ins)
     {
-        // Create point (hash) lookup-up table entry, as required.
-        const auto& prevout = in->point();
-        const auto point_index = prevout.index();
-        const auto point_fk = set_link(prevout.hash());
-
-        // Accumulate spend records.
-        if (!point_fk.is_terminal())
-            prevouts.push_back(table::spend::compose(point_fk, point_index));
-
+        // Commit input record.
         input_link input_fk{};
-        if (!store_.input.put_link(input_fk, table::input::put_ref
+        if (!store_.input.put_link(input_fk, table::input::put_ref{ {}, *in }))
+        {
+            return {};
+        }
+
+        // Create point and accumulate spend keys.
+        const auto& prevout = in->point();
+        spends.push_back(table::spend::compose(set_link(prevout.hash()),
+            prevout.index()));
+
+        // Write spend record.
+        if (!store_.spend.set(spend_fk, table::spend::record
         {
             {},
-            point_fk,
-            point_index,
             tx_fk,
-            *in
+            in->sequence(),
+            input_fk
         }))
         {
             return {};
         }
 
-        // Acumulate inputs in order.
-        puts.in_fks.push_back(input_fk);
+        // Acumulate input (spend) in order.
+        puts.spend_fks.push_back(spend_fk.value++);
     }
 
     // Commit output records.
@@ -557,11 +569,11 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
             return {};
         }
 
-        // Acumulate outputs in order.
+        // Acumulate output in order.
         puts.out_fks.push_back(output_fk);
     }
 
-    // Commit puts records.
+    // Commit accumulated puts.
     const auto puts_fk = store_.puts.put_link(puts);
     if (puts_fk.is_terminal())
         return {};
@@ -580,11 +592,13 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
         return {};
     }
 
-    // Commit prevouts (spent by the tx) to search, now that tx exists.
-    const table::spend::record spender{ {}, tx_fk };
-    for (const auto& prevout: prevouts)
-        if (!store_.spend.put(prevout, spender))
+    // Commit spends to search.
+    for (const auto& spend: views_reverse(spends))
+    {
+        --spend_fk.value;
+        if (store_.spend.commit_link(spend_fk, spend).is_terminal())
             return {};
+    }
 
     // Commit tx to search.
     return store_.tx.commit_link(tx_fk, key);
@@ -645,15 +659,13 @@ header_link CLASS::set_link(const header& header, const context& ctx) NOEXCEPT
     const auto key = header.hash();
 
     // GUARD (header redundancy)
-    auto header_fk = to_header(key);
-    if (!header_fk.is_terminal())
-        return header_fk;
+    ////auto header_fk = to_header(key);
+    ////if (!header_fk.is_terminal())
+    ////    return header_fk;
 
+    // Parent must be missing iff its hash is null.
     const auto& parent_sk = header.previous_block_hash();
     const auto parent_fk = to_header(parent_sk);
-
-    // GUARD (header relational)
-    // Parent must be missing iff its hash is null.
     if (parent_fk.is_terminal() != (parent_sk == system::null_hash))
         return {};
 
@@ -678,8 +690,8 @@ header_link CLASS::set_link(const block& block, const context& ctx) NOEXCEPT
         return {};
 
     // GUARDED (txs redundancy)
-    if (is_associated(header_fk))
-        return header_fk;
+    ////if (is_associated(header_fk))
+    ////    return header_fk;
 
     tx_links links{};
     links.reserve(block.transactions_ptr()->size());

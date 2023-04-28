@@ -147,16 +147,18 @@ namespace schema
         static_assert(minrow == 97u);
     };
 
-    // array
+    // blob
     struct puts
     {
         static constexpr size_t pk = schema::puts_;
         static constexpr size_t sk = zero;
-        static constexpr size_t minsize = schema::put;
+        static constexpr size_t minsize =
+            schema::spend_ +
+            schema::put;
         static constexpr size_t minrow = minsize;
-        static constexpr size_t size = minsize;
-        static_assert(minsize == 5u);
-        static_assert(minrow == 5u);
+        static constexpr size_t size = max_size_t;
+        static_assert(minsize == 9u);
+        static_assert(minrow == 9u);
     };
 
     // record hashmap
@@ -187,16 +189,12 @@ namespace schema
         static constexpr size_t pk = schema::put;
         static constexpr size_t sk = zero;
         static constexpr size_t minsize =
-            schema::transaction::pk +
-            1u + // optional variable_size (minimum 0, average 1)
-            schema::transaction::pk +
-            sizeof(uint32_t) +
             1u + // variable_size (minimum 1, average 1)
             1u;  // variable_size (minimum 1, average 1)
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = max_size_t;
-        static_assert(minsize == 15u);
-        static_assert(minrow == 15u);
+        static_assert(minsize == 2u);
+        static_assert(minrow == 2u);
     };
 
     // blob
@@ -221,12 +219,14 @@ namespace schema
         static constexpr size_t pk = schema::spend_;
         static constexpr size_t sk = transaction::pk + schema::index;
         static constexpr size_t minsize =
-            schema::transaction::pk;
+            schema::transaction::pk +
+            sizeof(uint32_t) +
+            schema::input::pk;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 4u);
-        static_assert(minrow == 15u);
+        static_assert(minsize == 13u);
+        static_assert(minrow == 24u);
     };
 
     // record hashmap
@@ -249,11 +249,13 @@ namespace schema
         static constexpr bool hash_function = false;
         static constexpr size_t pk = schema::txs_;
         static constexpr size_t sk = schema::header::pk;
-        static constexpr size_t minsize = zero;
+        static constexpr size_t minsize =
+            transaction::pk + // count
+            transaction::pk;  // coinbase
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
-        static_assert(minsize == 0u);
-        static_assert(minrow == 7u);
+        static_assert(minsize == 8u);
+        static_assert(minrow == 15u);
     };
 
     /// Index tables.
