@@ -197,7 +197,7 @@ size_t map::capacity() const NOEXCEPT
     return capacity_;
 }
 
-size_t map::size() const NOEXCEPT
+INLINE size_t map::size() const NOEXCEPT
 {
     std::shared_lock field_lock(field_mutex_);
     return logical_;
@@ -261,18 +261,21 @@ size_t map::allocate(size_t chunk) NOEXCEPT
 }
 
 // Always returns a valid and bounded memory pointer.
-memory_ptr map::get(size_t offset) const NOEXCEPT
+INLINE memory_ptr map::get(size_t offset) const NOEXCEPT
 {
     const auto ptr = std::make_shared<accessor<mutex>>(map_mutex_);
 
     if (!loaded_)
         return nullptr;
 
-    // With offset > size the assignment is negative (stream is exhausted).
-    ptr->assign(
-        std::next(memory_map_, offset),
-        std::next(memory_map_, size()));
+    BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
+    ptr->assign(memory_map_ + offset, memory_map_ + size());
+    BC_POP_WARNING()
 
+    // With offset > size the assignment is negative (stream is exhausted).
+    ////ptr->assign(
+    ////    std::next(memory_map_, offset),
+    ////    std::next(memory_map_, size()));
     return ptr;
 }
 

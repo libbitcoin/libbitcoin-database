@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_IPP
 #define LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_IPP
 
-#include <iterator>
+////#include <iterator>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -50,13 +50,19 @@ inline uint8_t* CLASS::offset(size_t bytes) NOEXCEPT
     if (system::is_greater(bytes, size()))
         return nullptr;
 
-    return std::next(begin_, bytes);
+    BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
+    return begin_ + bytes;
+    BC_POP_WARNING()
+    ////return std::next(begin_, bytes);
 }
 
 TEMPLATE
 inline ptrdiff_t CLASS::size() const NOEXCEPT
 {
-    return std::distance(begin_, end_);
+    BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
+    return system::possible_narrow_and_sign_cast<ptrdiff_t>(end_ - begin_);
+    BC_POP_WARNING()
+    ////return std::distance(begin_, end_);
 }
 
 TEMPLATE
@@ -71,7 +77,7 @@ inline uint8_t* CLASS::end() NOEXCEPT
     return end_;
 }
 
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+BC_POP_WARNING()
 
 } // namespace database
 } // namespace libbitcoin

@@ -74,7 +74,7 @@ public:
     size_t capacity() const NOEXCEPT override;
 
     /// The current logical size of the memory map (zero if closed).
-    size_t size() const NOEXCEPT override;
+    INLINE size_t size() const NOEXCEPT override;
 
     /// Reduce logical size to specified (false if size exceeds logical).
     bool truncate(size_t size) NOEXCEPT override;
@@ -83,7 +83,7 @@ public:
     size_t allocate(size_t chunk) NOEXCEPT override;
 
     /// Get r/w access to start/offset of memory map (or null).
-    memory_ptr get(size_t offset=zero) const NOEXCEPT override;
+    INLINE memory_ptr get(size_t offset=zero) const NOEXCEPT override;
 
 protected:
     size_t to_capacity(size_t required) const NOEXCEPT

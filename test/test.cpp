@@ -18,12 +18,6 @@
  */
 #include "test.hpp"
 
-// temp.
-std::atomic<size_t> foobar3{ bc::one };
-std::atomic<size_t> foobar4{ bc::one };
-std::atomic<size_t> foobar7{ bc::one };
-std::atomic<size_t> foobar32{ bc::one };
-
 namespace std {
 
 std::ostream& operator<<(std::ostream& stream,

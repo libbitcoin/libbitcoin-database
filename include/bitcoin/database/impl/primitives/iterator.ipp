@@ -19,21 +19,16 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_IPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_IPP
 
-#include <algorithm>
-#include <utility>
+////#include <algorithm>
+////#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-
-extern std::atomic<size_t> foobar3;
-extern std::atomic<size_t> foobar4;
-extern std::atomic<size_t> foobar7;
-extern std::atomic<size_t> foobar32;
 
 namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-CLASS::iterator(const memory_ptr& data, const Link& start,
+INLINE CLASS::iterator(const memory_ptr& data, const Link& start,
     const Key& key) NOEXCEPT
   : memory_(data), key_(key), link_(start)
 {
@@ -42,42 +37,20 @@ CLASS::iterator(const memory_ptr& data, const Link& start,
 }
 
 TEMPLATE
-bool CLASS::advance() NOEXCEPT
+INLINE bool CLASS::advance() NOEXCEPT
 {
-    size_t count{ one };
     while (!link_.is_terminal())
     {
-        ++count;
-
         link_ = get_next();
         if (is_match())
-        {
-            // Temporary hack to observe conflict lists.
-            if constexpr (array_count<Key> == 3u)
-            {
-                foobar3 = std::max(count, foobar3.load());
-            }
-            else if constexpr (array_count<Key> == 4u)
-            {
-                foobar4 = std::max(count, foobar4.load());
-            }
-            else if constexpr (array_count<Key> == 7u)
-            {
-                foobar7 = std::max(count, foobar7.load());
-            }
-            else if constexpr (array_count<Key> == 32u)
-            {
-                foobar32 = std::max(count, foobar32.load());
-            }
             return true;
-        }
     }
 
     return false;
 }
 
 TEMPLATE
-const Link& CLASS::self() const NOEXCEPT
+INLINE const Link& CLASS::self() const NOEXCEPT
 {
     return link_;
 }
@@ -86,7 +59,7 @@ const Link& CLASS::self() const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-bool CLASS::is_match() const NOEXCEPT
+INLINE bool CLASS::is_match() const NOEXCEPT
 {
     using namespace system;
     BC_ASSERT(!is_add_overflow(link_to_position(link_), Link::size));
@@ -98,18 +71,22 @@ bool CLASS::is_match() const NOEXCEPT
     if (is_null(link))
         return false;
 
-    BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
-    return std::equal(key_.begin(), key_.end(), link);
-    BC_POP_WARNING()
+    // TODO: loop unroll.
+    for (const auto& byte: key_)
+        if (byte != *(link++))
+            return false;
+
+    return true;
+    ////return std::equal(key_.begin(), key_.end(), link);
 }
 
 TEMPLATE
-Link CLASS::get_next() const NOEXCEPT
+INLINE Link CLASS::get_next() const NOEXCEPT
 {
     if (link_.is_terminal() || !memory_)
         return Link::terminal;
 
-    auto link = memory_->offset(link_to_position(link_));
+    const auto link = memory_->offset(link_to_position(link_));
     if (is_null(link))
         return Link::terminal;
 

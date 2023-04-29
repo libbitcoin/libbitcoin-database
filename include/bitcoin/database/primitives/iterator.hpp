@@ -35,18 +35,18 @@ public:
     DEFAULT_COPY_MOVE_DESTRUCT(iterator);
 
     /// This advances to first match (or terminal).
-    iterator(const memory_ptr& data, const Link& start,
+    INLINE iterator(const memory_ptr& data, const Link& start,
         const Key& key) NOEXCEPT;
 
     /// Advance to and return next iterator.
-    bool advance() NOEXCEPT;
+    INLINE bool advance() NOEXCEPT;
 
     /// Advance to next match and return false if terminal (not found).
-    const Link& self() const NOEXCEPT;
+    INLINE const Link& self() const NOEXCEPT;
 
 protected:
-    bool is_match() const NOEXCEPT;
-    Link get_next() const NOEXCEPT;
+    INLINE bool is_match() const NOEXCEPT;
+    INLINE Link get_next() const NOEXCEPT;
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);
