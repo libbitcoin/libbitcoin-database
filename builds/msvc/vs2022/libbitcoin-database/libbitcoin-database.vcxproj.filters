@@ -158,6 +158,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\reader.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\simple_reader.hpp">
+      <Filter>include\bitcoin\database\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\simple_writer.hpp">
+      <Filter>include\bitcoin\database\memory</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\writer.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
@@ -257,6 +263,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\accessor.ipp">
+      <Filter>include\bitcoin\database\impl\memory</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\simple_reader.ipp">
+      <Filter>include\bitcoin\database\impl\memory</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\simple_writer.ipp">
       <Filter>include\bitcoin\database\impl\memory</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\arraymap.ipp">

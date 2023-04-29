@@ -147,7 +147,9 @@ include_bitcoin_database_impl_HEADERS = \
 
 include_bitcoin_database_impl_memorydir = ${includedir}/bitcoin/database/impl/memory
 include_bitcoin_database_impl_memory_HEADERS = \
-    include/bitcoin/database/impl/memory/accessor.ipp
+    include/bitcoin/database/impl/memory/accessor.ipp \
+    include/bitcoin/database/impl/memory/simple_reader.ipp \
+    include/bitcoin/database/impl/memory/simple_writer.ipp
 
 include_bitcoin_database_impl_primitivesdir = ${includedir}/bitcoin/database/impl/primitives
 include_bitcoin_database_impl_primitives_HEADERS = \
@@ -184,6 +186,8 @@ include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/map.hpp \
     include/bitcoin/database/memory/memory.hpp \
     include/bitcoin/database/memory/reader.hpp \
+    include/bitcoin/database/memory/simple_reader.hpp \
+    include/bitcoin/database/memory/simple_writer.hpp \
     include/bitcoin/database/memory/writer.hpp
 
 include_bitcoin_database_memory_interfacesdir = ${includedir}/bitcoin/database/memory/interfaces
