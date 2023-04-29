@@ -276,19 +276,26 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     if (!get_context(ctx, link))
         return error::integrity;
 
+    const auto txs = to_txs(link);
+    if (txs.size() <= one)
+        return error::success;
+
     code ec{};
     table::spend::get_prevout_parent_sequence spend{};
-    for (const auto& spend_fk: to_non_coinbase_spends(link))
+    for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
     {
-        if (!store_.spend.get(spend_fk, spend))
-            return error::integrity;
+        for (const auto& spend_fk: to_tx_spends(*tx))
+        {
+            if (!store_.spend.get(spend_fk, spend))
+                return error::integrity;
 
-        if ((ec = spendable_prevout(to_tx(get_point_key(spend.point_fk)),
-            spend.sequence, ctx)))
-            return ec;
+            if ((ec = spendable_prevout(to_tx(get_point_key(spend.point_fk)),
+                spend.sequence, ctx)))
+                return ec;
 
-        if (is_spent_prevout(spend.prevout(), spend.parent_fk))
-            return error::confirmed_double_spend;
+            if (is_spent_prevout(spend.prevout(), spend.parent_fk))
+                return error::confirmed_double_spend;
+        }
     }
 
     return error::success;

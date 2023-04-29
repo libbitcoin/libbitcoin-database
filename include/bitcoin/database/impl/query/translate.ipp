@@ -352,6 +352,7 @@ spend_links CLASS::to_non_coinbase_spends(
     if (txs.size() <= one)
         return {};
 
+    // Dynamic spends allocation is an unnecessary block_confirmable cost.
     spend_links spends{};
     for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
     {
