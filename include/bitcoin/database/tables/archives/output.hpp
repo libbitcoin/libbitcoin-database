@@ -56,7 +56,7 @@ struct output
             using namespace system;
             parent_fk = source.read_little_endian<tx::integer, tx::size>();
             value     = source.read_variable();
-            script    = chain::script(source, true);
+            script = chain::script{ source, true };
             BC_ASSERT(source.get_read_position() == count());
             return source;
         }

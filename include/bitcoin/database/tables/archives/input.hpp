@@ -52,8 +52,8 @@ struct input
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            script = system::chain::script(source, true);
-            witness = system::chain::witness(source, true);
+            script = system::chain::script{ source, true };
+            witness = system::chain::witness{ source, true };
             BC_ASSERT(source.get_read_position() == count());
             return source;
         }
