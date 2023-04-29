@@ -272,10 +272,12 @@ error::error_t CLASS::locked_prevout(const point_link& link, uint32_t sequence,
 TEMPLATE
 code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 {
+    // header(read).
     context ctx{};
     if (!get_context(ctx, link))
         return error::integrity;
 
+    // txs(search/read).
     const auto txs = to_txs(link);
     if (txs.size() <= one)
         return error::success;
@@ -284,15 +286,21 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     table::spend::get_prevout_parent_sequence spend{};
     for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
     {
+        // spender-tx(read) & puts(read).
         for (const auto& spend_fk: to_tx_spends(*tx))
         {
+            // spend(read).
             if (!store_.spend.get(spend_fk, spend))
                 return error::integrity;
 
-            if ((ec = spendable_prevout(to_tx(get_point_key(spend.point_fk)),
-                spend.sequence, ctx)))
+            // point(read) & spent-tx(search)
+            const auto spent_fk = to_tx(get_point_key(spend.point_fk));
+
+            // spent-tx(read) & strong_tx(search/read) & spent-header(read).
+            if ((ec = spendable_prevout(spent_fk, spend.sequence, ctx)))
                 return ec;
 
+            // spend(search/read) & strong_tx(search/read).
             if (is_spent_prevout(spend.prevout(), spend.parent_fk))
                 return error::confirmed_double_spend;
         }
