@@ -56,7 +56,8 @@ struct transaction
             return puts_fk + (ins_count * spend::size);
         }
 
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             coinbase   = to_bool(source.read_byte());
             light      = source.read_little_endian<bytes::integer, bytes::size>();
@@ -70,7 +71,8 @@ struct transaction
             return source;
         }
 
-        inline bool to_data(finalizer& sink) const NOEXCEPT
+        template <typename Writer>
+        inline bool to_data(Writer& sink) const NOEXCEPT
         {
             sink.write_byte(to_int<uint8_t>(coinbase));
             sink.write_little_endian<bytes::integer, bytes::size>(light);
@@ -109,7 +111,8 @@ struct transaction
     struct only
       : public schema::transaction
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             static constexpr size_t skip_size =
                 schema::bit +
@@ -136,7 +139,8 @@ struct transaction
     struct record_put_ref
       : public schema::transaction
     {
-        inline bool to_data(finalizer& sink) const NOEXCEPT
+        template <typename Writer>
+        inline bool to_data(Writer& sink) const NOEXCEPT
         {
             using namespace system;
             sink.write_byte(to_int<uint8_t>(tx.is_coinbase()));
@@ -163,7 +167,8 @@ struct transaction
       : public only
     {
         BC_PUSH_WARNING(NO_METHOD_HIDING)
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         BC_POP_WARNING()
         {
             source.rewind_bytes(sk);
@@ -177,7 +182,8 @@ struct transaction
     struct get_put_counts
       : public schema::transaction
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             source.skip_bytes(skip_to_puts);
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
@@ -197,7 +203,8 @@ struct transaction
             return puts_fk + (ins_count * spend::size);
         }
 
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             source.skip_bytes(skip_to_puts);
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
@@ -214,7 +221,8 @@ struct transaction
     struct get_spend
       : public schema::transaction
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             source.skip_bytes(skip_to_puts);
             const auto ins_count = source.read_little_endian<ix::integer, ix::size>();
@@ -238,7 +246,8 @@ struct transaction
     struct get_output
       : public schema::transaction
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             source.skip_bytes(skip_to_puts);
             const auto ins_count = source.read_little_endian<ix::integer, ix::size>();
@@ -262,7 +271,8 @@ struct transaction
     struct get_coinbase
       : public schema::transaction
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             coinbase = to_bool(source.read_byte());
             return source;

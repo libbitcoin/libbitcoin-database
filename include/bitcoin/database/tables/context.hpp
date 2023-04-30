@@ -34,14 +34,16 @@ struct context
     static constexpr size_t size = schema::flags + schema::block +
         sizeof(uint32_t);
 
-    static inline void from_data(reader& source, context& context) NOEXCEPT
+    template <typename Reader>
+    static inline void from_data(Reader& source, context& context) NOEXCEPT
     {
         context.flags  = source.template read_little_endian<flag::integer, flag::size>();
         context.height = source.template read_little_endian<block::integer, block::size>();
         context.mtp    = source.template read_little_endian<uint32_t>();
     };
 
-    static inline void to_data(finalizer& sink, const context& context) NOEXCEPT
+    template <typename Writer>
+    static inline void to_data(Writer& sink, const context& context) NOEXCEPT
     {
         sink.template write_little_endian<flag::integer, flag::size>(context.flags);
         sink.template write_little_endian<block::integer, block::size>(context.height);

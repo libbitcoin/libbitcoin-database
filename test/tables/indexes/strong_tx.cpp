@@ -65,11 +65,11 @@ BOOST_AUTO_TEST_CASE(strong_tx__put__two__expected)
     BOOST_REQUIRE(instance.create());
 
     table::strong_tx::link link1{};
-    BOOST_REQUIRE(instance.put_link(link1, key1, in1));
+    BOOST_REQUIRE(instance.put_link1(link1, key1, in1));
     BOOST_REQUIRE_EQUAL(link1, 0u);
 
     table::strong_tx::link link2{};
-    BOOST_REQUIRE(instance.put_link(link2, key2, in2));
+    BOOST_REQUIRE(instance.put_link1(link2, key2, in2));
     BOOST_REQUIRE_EQUAL(link2, 1u);
 
     BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
@@ -89,9 +89,9 @@ BOOST_AUTO_TEST_CASE(strong_tx__get__two__expected)
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
 
     table::strong_tx::record out{};
-    BOOST_REQUIRE(instance.get(0u, out));
+    BOOST_REQUIRE(instance.get1(0u, out));
     BOOST_REQUIRE(out == out1);
-    BOOST_REQUIRE(instance.get(1u, out));
+    BOOST_REQUIRE(instance.get1(1u, out));
     BOOST_REQUIRE(out == out2);
 }
 

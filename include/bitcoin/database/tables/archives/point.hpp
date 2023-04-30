@@ -42,12 +42,14 @@ struct point
     struct record
       : public schema::point
     {
-        inline bool from_data(const reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(const Reader& source) NOEXCEPT
         {
             return source;
         }
 
-        inline bool to_data(const finalizer& sink) const NOEXCEPT
+        template <typename Writer>
+        inline bool to_data(const Writer& sink) const NOEXCEPT
         {
             return sink;
         }

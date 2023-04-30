@@ -40,7 +40,7 @@ inline header_link CLASS::to_candidate(size_t height) const NOEXCEPT
         return {};
 
     table::height::record index{};
-    if (!store_.candidate.get(possible_narrow_cast<link>(height), index))
+    if (!store_.candidate.get1(possible_narrow_cast<link>(height), index))
         return {};
 
     return index.header_fk;
@@ -55,7 +55,7 @@ inline header_link CLASS::to_confirmed(size_t height) const NOEXCEPT
         return {};
 
     table::height::record index{};
-    if (!store_.confirmed.get(possible_narrow_cast<link>(height), index))
+    if (!store_.confirmed.get1(possible_narrow_cast<link>(height), index))
         return {};
 
     return index.header_fk;
@@ -140,7 +140,7 @@ spend_link CLASS::to_spend(const tx_link& link,
         return {};
 
     table::puts::get_spend_at put{};
-    if (!store_.puts.get(tx.spend_fk, put))
+    if (!store_.puts.get1(tx.spend_fk, put))
         return {};
 
     return put.spend_fk;
@@ -155,7 +155,7 @@ output_link CLASS::to_output(const tx_link& link,
         return {};
 
     table::puts::get_output_at put{};
-    if (!store_.puts.get(tx.out_fk, put))
+    if (!store_.puts.get1(tx.out_fk, put))
         return {};
 
     return put.out_fk;
@@ -300,7 +300,7 @@ spend_links CLASS::to_tx_spends(const tx_link& link) const NOEXCEPT
 
     table::puts::get_spends puts{};
     puts.spend_fks.resize(tx.ins_count);
-    if (!store_.puts.get(tx.puts_fk, puts))
+    if (!store_.puts.get1(tx.puts_fk, puts))
         return {};
 
     return std::move(puts.spend_fks);
@@ -315,7 +315,7 @@ output_links CLASS::to_tx_outputs(const tx_link& link) const NOEXCEPT
 
     table::puts::get_outs puts{};
     puts.out_fks.resize(tx.outs_count);
-    if (!store_.puts.get(tx.outs_fk(), puts))
+    if (!store_.puts.get1(tx.outs_fk(), puts))
         return {};
 
     return std::move(puts.out_fks);

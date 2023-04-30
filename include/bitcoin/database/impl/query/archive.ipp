@@ -360,7 +360,7 @@ typename CLASS::transaction::cptr CLASS::get_transaction(
     table::puts::slab puts{};
     puts.spend_fks.resize(tx.ins_count);
     puts.out_fks.resize(tx.outs_count);
-    if (!store_.puts.get(tx.puts_fk, puts))
+    if (!store_.puts.get1(tx.puts_fk, puts))
         return {};
 
     const auto inputs = to_shared<chain::input_cptrs>();
@@ -574,7 +574,7 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     }
 
     // Commit accumulated puts.
-    const auto puts_fk = store_.puts.put_link(puts);
+    const auto puts_fk = store_.puts.put_link1(puts);
     if (puts_fk.is_terminal())
         return {};
 

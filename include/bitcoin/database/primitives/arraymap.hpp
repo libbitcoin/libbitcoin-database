@@ -26,7 +26,6 @@
 #include <bitcoin/database/primitives/linkage.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 
-
 namespace libbitcoin {
 namespace database {
     
@@ -69,7 +68,7 @@ public:
     /// Reduce count as specified.
     bool truncate(const Link& count) NOEXCEPT;
 
-    /// Query interface.
+    /// Query interface (iostreams).
     /// -----------------------------------------------------------------------
 
     /// Get element at link.
@@ -85,6 +84,23 @@ public:
     bool put_link(Link& link, const Element& element) NOEXCEPT;
     template <typename Element, if_equal<Element::size, Size> = true>
     Link put_link(const Element& element) NOEXCEPT;
+
+    /// Query interface (memory).
+    /// -----------------------------------------------------------------------
+
+    /// Get element at link.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool get1(const Link& link, Element& element) const NOEXCEPT;
+
+    /// Put element.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool put1(const Element& element) NOEXCEPT;
+
+    /// Put element and return link.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool put_link1(Link& link, const Element& element) NOEXCEPT;
+    template <typename Element, if_equal<Element::size, Size> = true>
+    Link put_link1(const Element& element) NOEXCEPT;
 
 protected:
     reader_ptr getter(const Link& link) const NOEXCEPT;

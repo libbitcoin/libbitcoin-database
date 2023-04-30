@@ -65,11 +65,11 @@ BOOST_AUTO_TEST_CASE(validated_bk__put__two__expected)
     BOOST_REQUIRE(instance.create());
 
     table::validated_bk::link link1{};
-    BOOST_REQUIRE(instance.put_link(link1, key1, slab1));
+    BOOST_REQUIRE(instance.put_link1(link1, key1, slab1));
     BOOST_REQUIRE_EQUAL(link1, 0u);
 
     table::validated_bk::link link2{};
-    BOOST_REQUIRE(instance.put_link(link2, key2, slab2));
+    BOOST_REQUIRE(instance.put_link1(link2, key2, slab2));
     BOOST_REQUIRE_EQUAL(link2, 16u);
 
     BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
@@ -89,9 +89,9 @@ BOOST_AUTO_TEST_CASE(validated_bk__get__two__expected)
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
 
     table::validated_bk::slab out{};
-    BOOST_REQUIRE(instance.get(0u, out));
+    BOOST_REQUIRE(instance.get1(0u, out));
     BOOST_REQUIRE(out == slab1);
-    BOOST_REQUIRE(instance.get(16u, out));
+    BOOST_REQUIRE(instance.get1(16u, out));
     BOOST_REQUIRE(out == slab2);
 }
 

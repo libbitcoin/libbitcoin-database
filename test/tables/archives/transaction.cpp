@@ -80,15 +80,15 @@ BOOST_AUTO_TEST_CASE(transaction__put__get__expected)
     test::chunk_storage body_store{};
     table::transaction instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put_link({}, table::transaction::record{}).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1({}, table::transaction::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::transaction::record element{};
-    BOOST_REQUIRE(instance.get(0, element));
+    BOOST_REQUIRE(instance.get1(0, element));
     BOOST_REQUIRE(element == table::transaction::record{});
 
-    BOOST_REQUIRE(instance.get(1, element));
+    BOOST_REQUIRE(instance.get1(1, element));
     BOOST_REQUIRE(element == expected);
     BOOST_REQUIRE_EQUAL(element.outs_fk(), element.puts_fk + (element.ins_count * 4));
 }
@@ -99,8 +99,8 @@ BOOST_AUTO_TEST_CASE(transaction__put__get_key__expected)
     test::chunk_storage body_store{};
     table::transaction instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put_link({}, table::transaction::record{}).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1({}, table::transaction::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
     BOOST_REQUIRE_EQUAL(instance.get_key(1), key);
 }
@@ -111,12 +111,12 @@ BOOST_AUTO_TEST_CASE(transaction__put__get_puts__expected)
     test::chunk_storage body_store{};
     table::transaction instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put_link({}, table::transaction::record{}).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1({}, table::transaction::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::transaction::get_puts element{};
-    BOOST_REQUIRE(instance.get(1, element));
+    BOOST_REQUIRE(instance.get1(1, element));
     BOOST_REQUIRE_EQUAL(element.ins_count, 0x00341205_u32);
     BOOST_REQUIRE_EQUAL(element.outs_count, 0x00341206_u32);
     BOOST_REQUIRE_EQUAL(element.puts_fk, 0x0000007856341207_u64);
@@ -130,8 +130,8 @@ BOOST_AUTO_TEST_CASE(transaction__it__pk__expected)
     test::chunk_storage body_store{};
     table::transaction instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put_link({}, table::transaction::record{}).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1({}, table::transaction::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     auto it = instance.it(key);

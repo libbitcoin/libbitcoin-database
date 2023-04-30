@@ -145,6 +145,9 @@ Key CLASS::get_key(const Link& link) NOEXCEPT
         ptr->begin(), Link::size));
 }
 
+// query interface (iostreams)
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
@@ -213,12 +216,114 @@ bool CLASS::put(const Link& link, const Key& key,
     return sink && element.to_data(*sink) && sink->finalize();
 }
 
+// query interface (memory)
+// ============================================================================
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::get1(const Link& link, Element& element) const NOEXCEPT
+{
+    const auto ptr = manager_.get(link);
+    if (!ptr) return false;
+    simple_reader reader{ *ptr };
+    reader.skip_bytes(Link::size + array_count<Key>);
+    return element.from_data(reader);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::set1(const Link& link, const Element& element) NOEXCEPT
+{
+    const auto ptr = manager_.get(link);
+    if (!ptr) return false;
+    simple_finalizer writer{ *ptr };
+    writer.skip_bytes(Link::size + array_count<Key>);
+    return element.to_data(writer);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+Link CLASS::set_link1(const Element& element) NOEXCEPT
+{
+    Link link{};
+    return set_link1(link, element) ? link : Link{};
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::set_link1(Link& link, const Element& element) NOEXCEPT
+{
+    link = allocate(element.count());
+    return set1(link, element);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+Link CLASS::put_link1(const Key& key, const Element& element) NOEXCEPT
+{
+    Link link{};
+    return put_link1(link, key, element) ? link : Link{};
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put_link1(Link& link, const Key& key,
+    const Element& element) NOEXCEPT
+{
+    link = allocate(element.count());
+    const auto ptr = manager_.get(link);
+    if (!ptr) return false;
+    simple_finalizer writer{ *ptr };
+
+    // finalizing
+    using namespace system;
+    writer.skip_bytes(Link::size);
+    writer.write_bytes(key);
+    writer.set_finalizer([this, link, index = head_.index(key), ptr]() NOEXCEPT
+    {
+        auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
+        return head_.push(link, next, index);
+    });
+
+    return element.to_data(writer) && writer.finalize();
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put1(const Key& key, const Element& element) NOEXCEPT
+{
+    return !put_link1(key, element).is_terminal();
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put1(const Link& link, const Key& key,
+    const Element& element) NOEXCEPT
+{
+    const auto ptr = manager_.get(link);
+    if (!ptr) return false;
+    simple_finalizer writer{ *ptr };
+
+    // finalizing
+    using namespace system;
+    writer.skip_bytes(Link::size);
+    writer.write_bytes(key);
+    writer.set_finalizer([this, link, index = head_.index(key), ptr]() NOEXCEPT
+    {
+        auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
+        return head_.push(link, next, index);
+    });
+
+    return element.to_data(writer) && writer.finalize();
+}
+
+// ============================================================================
+
 TEMPLATE
 bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
 {
     const auto ptr = manager_.get(link);
-    if (!ptr)
-        return false;
+    if (!ptr) return false;
 
     // Set element search key.
     system::unsafe_array_cast<uint8_t, array_count<Key>>(std::next(
@@ -243,8 +348,7 @@ template <typename Streamer>
 typename Streamer::ptr CLASS::streamer(const Link& link) const NOEXCEPT
 {
     const auto ptr = manager_.get(link);
-    if (!ptr)
-        return {};
+    if (!ptr) return {};
 
     const auto stream = std::make_shared<Streamer>(ptr);
     stream->skip_bytes(Link::size + array_count<Key>);
@@ -268,15 +372,12 @@ finalizer_ptr CLASS::putter(const Link& link, const Key& key,
 {
     using namespace system;
     const auto ptr = manager_.get(link);
-    if (!ptr)
-        return {};
+    if (!ptr) return {};
 
     const auto sink = std::make_shared<finalizer>(ptr);
     sink->skip_bytes(Link::size);
     sink->write_bytes(key);
-
-    const auto index = head_.index(key);
-    sink->set_finalizer([this, link, index, ptr]() NOEXCEPT
+    sink->set_finalizer([this, link, index = head_.index(key), ptr]() NOEXCEPT
     {
         auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
         return head_.push(link, next, index);

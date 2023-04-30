@@ -92,6 +92,9 @@ public:
     /// Return the associated search key (terminal link returns default).
     Key get_key(const Link& link) NOEXCEPT;
 
+    /// Query interface (iostreams).
+    /// -----------------------------------------------------------------------
+
     /// Get element at link, false if deserialize error.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool get(const Link& link, Element& element) const NOEXCEPT;
@@ -119,6 +122,39 @@ public:
     /// Set and commit previously allocated element at link to key.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put(const Link& link, const Key& key, const Element& element) NOEXCEPT;
+
+    /// Query interface (memory).
+    /// -----------------------------------------------------------------------
+
+    /// Get element at link, false if deserialize error.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool get1(const Link& link, Element& element) const NOEXCEPT;
+
+    /// Set element into previously allocated link (follow with commit).
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool set1(const Link& link, const Element& element) NOEXCEPT;
+
+    /// Allocate and set element, and return link (follow with commit).
+    template <typename Element, if_equal<Element::size, Size> = true>
+    Link set_link1(const Element& element) NOEXCEPT;
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool set_link1(Link& link, const Element& element) NOEXCEPT;
+
+    /// Allocate, set, commit element to key, and return link.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    Link put_link1(const Key& key, const Element& element) NOEXCEPT;
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool put_link1(Link& link, const Key& key, const Element& element) NOEXCEPT;
+
+    /// Allocate, set, commit element to key.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool put1(const Key& key, const Element& element) NOEXCEPT;
+
+    /// Set and commit previously allocated element at link to key.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool put1(const Link& link, const Key& key, const Element& element) NOEXCEPT;
+
+    /// -----------------------------------------------------------------------
 
     /// Commit previously set element at link to key.
     bool commit(const Link& link, const Key& key) NOEXCEPT;

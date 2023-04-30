@@ -47,7 +47,8 @@ struct txs
                 tx::size * add1(tx_fks.size()));
         }
 
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             tx_fks.resize(source.read_little_endian<tx::integer, tx::size>());
             std::for_each(tx_fks.begin(), tx_fks.end(), [&](auto& fk) NOEXCEPT
@@ -59,7 +60,8 @@ struct txs
             return source;
         }
 
-        inline bool to_data(finalizer& sink) const NOEXCEPT
+        template <typename Writer>
+        inline bool to_data(Writer& sink) const NOEXCEPT
         {
             BC_ASSERT(tx_fks.size() < system::power2<uint64_t>(to_bits(tx::size)));
             const auto fks = system::possible_narrow_cast<tx::integer>(tx_fks.size());
@@ -85,7 +87,8 @@ struct txs
     struct get_position
       : public schema::txs
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             const auto count = source.read_little_endian<tx::integer, tx::size>();
             for (position = zero; position < count; ++position)
@@ -103,7 +106,8 @@ struct txs
     struct get_coinbase
       : public schema::txs
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             const auto count = source.read_little_endian<tx::integer, tx::size>();
             if (!is_zero(count))

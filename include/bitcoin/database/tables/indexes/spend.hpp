@@ -61,7 +61,8 @@ struct spend
     struct record
       : public schema::spend
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             parent_fk = source.read_little_endian<tx::integer, tx::size>();
             sequence = source.read_little_endian<uint32_t>();
@@ -70,7 +71,8 @@ struct spend
             return source;
         }
 
-        inline bool to_data(finalizer& sink) const NOEXCEPT
+        template <typename Writer>
+        inline bool to_data(Writer& sink) const NOEXCEPT
         {
             sink.write_little_endian<tx::integer, tx::size>(parent_fk);
             sink.write_little_endian<uint32_t>(sequence);
@@ -94,7 +96,8 @@ struct spend
     struct get_input
       : public schema::spend
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
             point_fk = source.read_little_endian<pt::integer, pt::size>();
@@ -124,7 +127,8 @@ struct spend
     struct get_parent
       : public schema::spend
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             parent_fk = source.read_little_endian<tx::integer, tx::size>();
             return source;
@@ -136,7 +140,8 @@ struct spend
     struct get_point
       : public schema::spend
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
             point_fk = source.read_little_endian<pt::integer, pt::size>();
@@ -154,7 +159,8 @@ struct spend
     struct get_key
       : public schema::spend
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
             key = source.read_forward<sk>();
@@ -167,7 +173,8 @@ struct spend
     struct get_prevout
       : public schema::spend
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
             point_fk = source.read_little_endian<pt::integer, pt::size>();
@@ -191,7 +198,8 @@ struct spend
     struct get_prevout_parent
       : public schema::spend
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
             point_fk = source.read_little_endian<pt::integer, pt::size>();
@@ -222,7 +230,8 @@ struct spend
     struct get_prevout_parent_sequence
       : public schema::spend
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
             point_fk = source.read_little_endian<pt::integer, pt::size>();

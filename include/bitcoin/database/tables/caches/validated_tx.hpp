@@ -51,7 +51,8 @@ struct validated_tx
                 variable_size(sigops));
         }
 
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             using namespace system;
             context::from_data(source, ctx);
@@ -62,7 +63,8 @@ struct validated_tx
             return source;
         }
 
-        inline bool to_data(finalizer& sink) const NOEXCEPT
+        template <typename Writer>
+        inline bool to_data(Writer& sink) const NOEXCEPT
         {
             context::to_data(sink, ctx);
             sink.write_little_endian<coding::integer, coding::size>(code);
@@ -89,7 +91,8 @@ struct validated_tx
     struct slab_get_code
       : public schema::validated_tx
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             context::from_data(source, ctx);
             code = source.read_little_endian<coding::integer, coding::size>();

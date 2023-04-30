@@ -45,7 +45,8 @@ struct neutrino
                 filter.size());
         }
 
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             filter_head = source.read_hash();
             filter = source.read_bytes(source.read_size());
@@ -53,7 +54,8 @@ struct neutrino
             return source;
         }
 
-        inline bool to_data(finalizer& sink) const NOEXCEPT
+        template <typename Writer>
+        inline bool to_data(Writer& sink) const NOEXCEPT
         {
             sink.write_bytes(filter_head);
             sink.write_variable(filter.size());
@@ -83,7 +85,8 @@ struct neutrino
                 filter.size());
         }
 
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             source.skip_bytes(schema::hash);
             filter = source.read_bytes(source.read_size());
@@ -97,7 +100,8 @@ struct neutrino
     struct get_head
         : public schema::neutrino
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             filter_head = source.read_hash();
             return source;
@@ -117,7 +121,8 @@ struct neutrino
                 filter.size());
         }
 
-        inline bool to_data(finalizer& sink) const NOEXCEPT
+        template <typename Writer>
+        inline bool to_data(Writer& sink) const NOEXCEPT
         {
             sink.write_bytes(filter_head);
             sink.write_variable(filter.size());

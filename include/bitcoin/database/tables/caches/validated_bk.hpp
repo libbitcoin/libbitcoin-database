@@ -46,7 +46,8 @@ struct validated_bk
                 variable_size(fees));
         }
 
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             code = source.read_little_endian<coding::integer, coding::size>();
             fees = source.read_variable();
@@ -54,7 +55,8 @@ struct validated_bk
             return source;
         }
 
-        inline bool to_data(finalizer& sink) const NOEXCEPT
+        template <typename Writer>
+        inline bool to_data(Writer& sink) const NOEXCEPT
         {
             sink.write_little_endian<coding::integer, coding::size>(code);
             sink.write_variable(fees);
@@ -75,7 +77,8 @@ struct validated_bk
     struct slab_get_code
       : public schema::validated_bk
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             code = source.read_little_endian<coding::integer, coding::size>();
             return source;

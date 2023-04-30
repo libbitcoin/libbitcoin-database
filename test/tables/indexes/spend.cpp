@@ -69,11 +69,11 @@ BOOST_AUTO_TEST_CASE(spend__put__two__expected)
     BOOST_REQUIRE(instance.create());
 
     table::spend::link link1{};
-    BOOST_REQUIRE(instance.put_link(link1, key1, in1));
+    BOOST_REQUIRE(instance.put_link1(link1, key1, in1));
     BOOST_REQUIRE_EQUAL(link1, 0u);
 
     table::spend::link link2{};
-    BOOST_REQUIRE(instance.put_link(link2, key2, in2));
+    BOOST_REQUIRE(instance.put_link1(link2, key2, in2));
     BOOST_REQUIRE_EQUAL(link2, 1u);
 
     BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);

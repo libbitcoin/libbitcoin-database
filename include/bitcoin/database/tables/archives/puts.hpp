@@ -50,7 +50,8 @@ struct puts
             return system::possible_narrow_cast<link::integer>(fks);
         }
 
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             std::for_each(spend_fks.begin(), spend_fks.end(), [&](auto& fk) NOEXCEPT
             {
@@ -66,7 +67,8 @@ struct puts
             return source;
         }
 
-        inline bool to_data(writer& sink) const NOEXCEPT
+        template <typename Writer>
+        inline bool to_data(Writer& sink) const NOEXCEPT
         {
             std::for_each(spend_fks.begin(), spend_fks.end(), [&](const auto& fk) NOEXCEPT
             {
@@ -95,7 +97,8 @@ struct puts
     struct get_spends
       : public schema::puts
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             std::for_each(spend_fks.begin(), spend_fks.end(), [&](auto& fk) NOEXCEPT
             {
@@ -111,7 +114,8 @@ struct puts
     struct get_outs
       : public schema::puts
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             std::for_each(out_fks.begin(), out_fks.end(), [&](auto& fk) NOEXCEPT
             {
@@ -127,7 +131,8 @@ struct puts
     struct get_spend_at
       : public schema::puts
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             spend_fk = source.read_little_endian<spend::integer, spend::size>();
             return source;
@@ -139,7 +144,8 @@ struct puts
     struct get_output_at
       : public schema::puts
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             out_fk = source.read_little_endian<out::integer, out::size>();
             return source;

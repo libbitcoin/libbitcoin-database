@@ -39,8 +39,9 @@ struct header
 
     struct record
       : public schema::header
-    {        
-        inline bool from_data(reader& source) NOEXCEPT
+    {
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             context::from_data(source, ctx);
             parent_fk   = source.read_little_endian<link::integer, link::size>();
@@ -53,7 +54,8 @@ struct header
             return source;
         }
 
-        inline bool to_data(finalizer& sink) const NOEXCEPT
+        template <typename Writer>
+        inline bool to_data(Writer& sink) const NOEXCEPT
         {
             context::to_data(sink, ctx);
             sink.write_little_endian<link::integer, link::size>(parent_fk);
@@ -90,7 +92,8 @@ struct header
       : public schema::header
     {
         // header->previous_block_hash() ignored.
-        inline bool to_data(finalizer& sink) const NOEXCEPT
+        template <typename Writer>
+        inline bool to_data(Writer& sink) const NOEXCEPT
         {
             BC_ASSERT(header);
             context::to_data(sink, ctx);
@@ -114,7 +117,8 @@ struct header
       : public schema::header
     {
         // header.previous_block_hash() ignored.
-        inline bool to_data(finalizer& sink) const NOEXCEPT
+        template <typename Writer>
+        inline bool to_data(Writer& sink) const NOEXCEPT
         {
             context::to_data(sink, ctx);
             sink.write_little_endian<link::integer, link::size>(parent_fk);
@@ -136,7 +140,8 @@ struct header
       : public record
     {
         BC_PUSH_WARNING(NO_METHOD_HIDING)
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         BC_POP_WARNING()
         {
             source.rewind_bytes(sk);
@@ -152,7 +157,8 @@ struct header
     struct record_sk
       : public schema::header
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
             key = source.read_hash();
@@ -166,7 +172,8 @@ struct header
     struct get_version
       : public schema::header
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             source.skip_bytes(context::size + link::size);
             version = source.read_little_endian<uint32_t>();
@@ -179,7 +186,8 @@ struct header
     struct get_timestamp
       : public schema::header
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             source.skip_bytes(context::size + link::size + sizeof(uint32_t));
             timestamp = source.read_little_endian<uint32_t>();
@@ -192,7 +200,8 @@ struct header
     struct get_bits
       : public schema::header
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             source.skip_bytes(context::size + link::size + sizeof(uint32_t) +
                 sizeof(uint32_t));
@@ -205,8 +214,9 @@ struct header
 
     struct get_parent_fk
       : public schema::header
-    {        
-        inline bool from_data(reader& source) NOEXCEPT
+    {
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             source.skip_bytes(context::size);
             parent_fk = source.read_little_endian<link::integer, link::size>();
@@ -219,7 +229,8 @@ struct header
     struct get_flags
       : public schema::header
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             using flag = context::flag;
             flags = source.read_little_endian<flag::integer, flag::size>();
@@ -232,7 +243,8 @@ struct header
     struct get_height
       : public schema::header
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             using block = context::block;
             source.skip_bytes(context::flag::size);
@@ -246,7 +258,8 @@ struct header
     struct get_mtp
       : public schema::header
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             source.skip_bytes(context::flag::size + context::block::size);
             mtp = source.read_little_endian<uint32_t>();
@@ -259,7 +272,8 @@ struct header
     struct record_context
       : public schema::header
     {
-        inline bool from_data(reader& source) NOEXCEPT
+        template <typename Reader>
+        inline bool from_data(Reader& source) NOEXCEPT
         {
             context::from_data(source, ctx);
             return source;

@@ -116,23 +116,23 @@ BOOST_AUTO_TEST_CASE(txs__put__get__expected)
     test::chunk_storage body_store{};
     table::txs instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put_link(key, expected0).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(key, expected1).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(key, expected2).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(key, expected3).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(key, expected0).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(key, expected1).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(key, expected2).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(key, expected3).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::txs::slab slab{};
-    BOOST_REQUIRE(instance.get(0, slab));
+    BOOST_REQUIRE(instance.get1(0, slab));
     BOOST_REQUIRE(slab == expected0);
 
-    BOOST_REQUIRE(instance.get(11, slab));
+    BOOST_REQUIRE(instance.get1(11, slab));
     BOOST_REQUIRE(slab == expected1);
 
-    BOOST_REQUIRE(instance.get(26, slab));
+    BOOST_REQUIRE(instance.get1(26, slab));
     BOOST_REQUIRE(slab == expected2);
 
-    BOOST_REQUIRE(instance.get(45, slab));
+    BOOST_REQUIRE(instance.get1(45, slab));
     BOOST_REQUIRE(slab == expected3);
 }
 

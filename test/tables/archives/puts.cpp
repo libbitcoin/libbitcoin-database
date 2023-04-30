@@ -79,33 +79,33 @@ BOOST_AUTO_TEST_CASE(puts__put__get__expected)
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
     table::puts instance{ head_store, body_store };
-    BOOST_REQUIRE(!instance.put_link(expected0).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(expected1).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(expected2).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(expected3).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(expected0).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(expected1).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(expected2).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(expected3).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::puts::slab slab0{};
-    BOOST_REQUIRE(instance.get(0, slab0));
+    BOOST_REQUIRE(instance.get1(0, slab0));
     BOOST_REQUIRE(slab0 == expected0);
 
     table::puts::slab slab1{};
     slab1.spend_fks.resize(1);
-    BOOST_REQUIRE(instance.get(0, slab1));
+    BOOST_REQUIRE(instance.get1(0, slab1));
     BOOST_REQUIRE(slab1.spend_fks == expected1.spend_fks);
     BOOST_REQUIRE(slab1.out_fks.empty());
 
     table::puts::slab slab2{};
     slab2.spend_fks.resize(1);
     slab2.out_fks.resize(1);
-    BOOST_REQUIRE(instance.get(4, slab2));
+    BOOST_REQUIRE(instance.get1(4, slab2));
     BOOST_REQUIRE(slab2.spend_fks == expected2.spend_fks);
     BOOST_REQUIRE(slab2.out_fks == expected2.out_fks);
 
     table::puts::slab slab3{};
     slab3.spend_fks.resize(1);
     slab3.out_fks.resize(2);
-    BOOST_REQUIRE(instance.get(13, slab3));
+    BOOST_REQUIRE(instance.get1(13, slab3));
     BOOST_REQUIRE(slab3.spend_fks == expected3.spend_fks);
     BOOST_REQUIRE(slab3.out_fks == expected3.out_fks);
 }

@@ -49,15 +49,15 @@ BOOST_AUTO_TEST_CASE(point__put__get__expected)
     test::chunk_storage body_store{};
     table::point instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put_link({}, table::point::record{}).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1({}, table::point::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::point::record element{};
-    BOOST_REQUIRE(instance.get(0, element));
+    BOOST_REQUIRE(instance.get1(0, element));
     BOOST_REQUIRE(element == table::point::record{});
 
-    BOOST_REQUIRE(instance.get(1, element));
+    BOOST_REQUIRE(instance.get1(1, element));
     BOOST_REQUIRE(element == expected);
 }
 
@@ -67,8 +67,8 @@ BOOST_AUTO_TEST_CASE(point__it__pk__expected)
     test::chunk_storage body_store{};
     table::point instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put_link({}, table::point::record{}).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1({}, table::point::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     auto it = instance.it(key);

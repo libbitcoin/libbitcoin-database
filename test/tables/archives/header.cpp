@@ -99,15 +99,15 @@ BOOST_AUTO_TEST_CASE(header__put__get__expected)
     test::chunk_storage body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1({}, table::header::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::header::record element{};
-    BOOST_REQUIRE(instance.get(0, element));
+    BOOST_REQUIRE(instance.get1(0, element));
     BOOST_REQUIRE(element == table::header::record{});
 
-    BOOST_REQUIRE(instance.get(1, element));
+    BOOST_REQUIRE(instance.get1(1, element));
     BOOST_REQUIRE(element == expected);
 }
 
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(header__put_ptr__get__expected)
     test::chunk_storage body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1({}, table::header::record{}).is_terminal());
 
     const table::header::record_put_ptr put_ptr
     {
@@ -126,11 +126,11 @@ BOOST_AUTO_TEST_CASE(header__put_ptr__get__expected)
         expected.parent_fk,
         system::to_shared(expected_header)
     };
-    BOOST_REQUIRE(!instance.put_link(key, put_ptr).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(key, put_ptr).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::header::record element{};
-    BOOST_REQUIRE(instance.get(1, element));
+    BOOST_REQUIRE(instance.get1(1, element));
     BOOST_REQUIRE(element.ctx == expected.ctx);
     BOOST_REQUIRE(element.version == put_ptr.header->version());
     BOOST_REQUIRE(element.merkle_root == put_ptr.header->merkle_root());
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(header__put_ref__get__expected)
     test::chunk_storage body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1({}, table::header::record{}).is_terminal());
 
     const table::header::record_put_ref put_ref
     {
@@ -155,11 +155,11 @@ BOOST_AUTO_TEST_CASE(header__put_ref__get__expected)
         expected.parent_fk,
         expected_header
     };
-    BOOST_REQUIRE(!instance.put_link(key, put_ref).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(key, put_ref).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::header::record element{};
-    BOOST_REQUIRE(instance.get(1, element));
+    BOOST_REQUIRE(instance.get1(1, element));
     BOOST_REQUIRE(element.ctx == put_ref.ctx);
     BOOST_REQUIRE(element.version == put_ref.header.version());
     BOOST_REQUIRE(element.merkle_root == put_ref.header.merkle_root());
@@ -175,12 +175,12 @@ BOOST_AUTO_TEST_CASE(header__put__get_with_sk__expected)
     test::chunk_storage body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1({}, table::header::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::header::record_with_sk element{};
-    BOOST_REQUIRE(instance.get<table::header::record_with_sk>(1, element));
+    BOOST_REQUIRE(instance.get1<table::header::record_with_sk>(1, element));
     BOOST_REQUIRE(static_cast<table::header::record>(element) == expected);
     BOOST_REQUIRE_EQUAL(element.key, key);
 }
@@ -191,12 +191,12 @@ BOOST_AUTO_TEST_CASE(point__put__get_sk__expected)
     test::chunk_storage body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1({}, table::header::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::header::record_sk element{};
-    BOOST_REQUIRE(instance.get(1, element));
+    BOOST_REQUIRE(instance.get1(1, element));
     BOOST_REQUIRE_EQUAL(element.key, key);
 }
 
@@ -206,24 +206,24 @@ BOOST_AUTO_TEST_CASE(header__put__get_context__expected)
     test::chunk_storage body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1({}, table::header::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::header::get_flags flags{};
-    BOOST_REQUIRE(instance.get(1, flags));
+    BOOST_REQUIRE(instance.get1(1, flags));
     BOOST_REQUIRE_EQUAL(flags.flags, expected.ctx.flags);
 
     table::header::get_height height{};
-    BOOST_REQUIRE(instance.get(1, height));
+    BOOST_REQUIRE(instance.get1(1, height));
     BOOST_REQUIRE_EQUAL(height.height, expected.ctx.height);
 
     table::header::get_mtp mtp{};
-    BOOST_REQUIRE(instance.get(1, mtp));
+    BOOST_REQUIRE(instance.get1(1, mtp));
     BOOST_REQUIRE_EQUAL(mtp.mtp, expected.ctx.mtp);
 
     table::header::record_context context{};
-    BOOST_REQUIRE(instance.get(1, context));
+    BOOST_REQUIRE(instance.get1(1, context));
     BOOST_REQUIRE(context.ctx == expected.ctx);
 }
 
@@ -233,8 +233,8 @@ BOOST_AUTO_TEST_CASE(header__it__pk__expected)
     test::chunk_storage body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1({}, table::header::record{}).is_terminal());
+    BOOST_REQUIRE(!instance.put_link1(key, expected).is_terminal());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     auto it = instance.it(key);

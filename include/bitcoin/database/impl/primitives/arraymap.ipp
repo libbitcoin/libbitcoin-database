@@ -103,7 +103,7 @@ bool CLASS::truncate(const Link& count) NOEXCEPT
     return manager_.truncate(count);
 }
 
-// query interface
+// query interface (iostreams)
 // ----------------------------------------------------------------------------
 
 TEMPLATE
@@ -137,6 +137,48 @@ Link CLASS::put_link(const Element& element) NOEXCEPT
     Link link{};
     return put_link(link, element) ? link : Link{};
 }
+
+// query interface (memory)
+// ============================================================================
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::get1(const Link& link, Element& element) const NOEXCEPT
+{
+    const auto ptr = manager_.get(link);
+    if (!ptr) return false;
+    simple_reader reader{ *ptr };
+    return element.from_data(reader);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put1(const Element& element) NOEXCEPT
+{
+    Link link{};
+    return put_link1(link, element);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put_link1(Link& link, const Element& element) NOEXCEPT
+{
+    link = manager_.allocate(element.count());
+    const auto ptr = manager_.get(link);
+    if (!ptr) return false;
+    simple_writer writer{ *ptr };
+    return element.to_data(writer);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+Link CLASS::put_link1(const Element& element) NOEXCEPT
+{
+    Link link{};
+    return put_link1(link, element) ? link : Link{};
+}
+
+// ============================================================================
 
 // protected
 // ----------------------------------------------------------------------------

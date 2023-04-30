@@ -58,7 +58,7 @@ bool CLASS::is_candidate_block(const header_link& link) const NOEXCEPT
         return false;
 
     table::height::record candidate{};
-    return store_.candidate.get(height, candidate) &&
+    return store_.candidate.get1(height, candidate) &&
         (candidate.header_fk == link);
 }
 
@@ -71,7 +71,7 @@ bool CLASS::is_confirmed_block(const header_link& link) const NOEXCEPT
         return false;
 
     table::height::record confirmed{};
-    return store_.confirmed.get(height, confirmed) &&
+    return store_.confirmed.get1(height, confirmed) &&
         (confirmed.header_fk == link);
 }
 
@@ -379,7 +379,7 @@ bool CLASS::push_candidate(const header_link& link) NOEXCEPT
     const auto scope = store_.get_transactor();
 
     const table::height::record candidate{ {}, link };
-    return store_.candidate.put(candidate);
+    return store_.candidate.put1(candidate);
     // ========================================================================
 }
 
@@ -390,7 +390,7 @@ bool CLASS::push_confirmed(const header_link& link) NOEXCEPT
     const auto scope = store_.get_transactor();
 
     const table::height::record confirmed{ {}, link };
-    return store_.confirmed.put(confirmed);
+    return store_.confirmed.put1(confirmed);
     // ========================================================================
 }
 
@@ -423,76 +423,6 @@ bool CLASS::pop_confirmed() NOEXCEPT
     return store_.confirmed.truncate(top);
     // ========================================================================
 }
-
-////// TEMP: testing cached values for confirmation.
-////struct cached_point
-////{
-////    // input (under validation)
-////    foreign_point key; // double-spendness
-////    uint32_t parent;   // input.parent
-////    uint32_t sequence; // bip68
-////
-////    // input->prevout
-////    uint32_t tx;       // confirmedness
-////    uint32_t height;   // bip68/maturity
-////    uint32_t mtp;      // bip68
-////    bool coinbase;     // maturity
-////};
-////// coinbase aligns at 4 bytes on msvc x64.
-////////static_assert(sizeof(cached_point) == 32u);
-////using cached_points = std_vector<cached_point>;
-////bool create_cached_points(cached_points& out,
-////    const header_link& link) const NOEXCEPT;
-////TEMPLATE
-////code CLASS::point_confirmable(const cached_point& point) const NOEXCEPT
-////{
-////    code ec{ error::success };
-////
-////    // height is always needed for coinbase (maturity).
-////    // sequence value tells which is needed, height or mtp (bip68).
-////    // but both may apply, so need to allow for two (no flags at prevout).
-////    const context ctx{ 0, point.height, point.mtp };
-////    if ((ec = spendable_prevout(point.tx, point.coinbase, point.sequence, ctx)))
-////        return ec;
-////
-////    // may only be strong-spent by self (and must be but is not checked).
-////    if (is_spent_prevout(point.key, point.parent))
-////        return error::confirmed_double_spend;
-////
-////    return ec;
-////}
-////
-////TEMPLATE
-////bool CLASS::create_cached_points(cached_points& out,
-////    const header_link& link) const NOEXCEPT
-////{
-////    context ctx{};
-////    if (!get_context(ctx, link))
-////        return false;
-////
-////    table::input::get_prevout_parent_sequence input{};
-////    for (const auto& in: to_non_coinbase_inputs(link))
-////    {
-////        if (!store_.input.get(in, input))
-////            return false;
-////    
-////        out.emplace_back
-////        (
-////            // input (under validation)
-////            input.prevout(),
-////            input.parent_fk,
-////            input.sequence,
-////
-////            // input->prevout
-////            to_tx(get_point_key(input.point_fk)),
-////            system::possible_narrow_cast<uint32_t>(ctx.height),
-////            ctx.mtp,
-////            is_coinbase(spent_fk)
-////        );
-////    }
-////
-////    return true;
-////}
 
 } // namespace database
 } // namespace libbitcoin
