@@ -41,14 +41,14 @@ struct address
         template <typename Reader>
         inline bool from_data(Reader& source) NOEXCEPT
         {
-            output_fk = source.read_little_endian<out::integer, out::size>();
+            output_fk = source.template read_little_endian<out::integer, out::size>();
             return source;
         }
 
         template <typename Writer>
         inline bool to_data(Writer& sink) const NOEXCEPT
         {
-            sink.write_little_endian<out::integer, out::size>(output_fk);
+            sink.template write_little_endian<out::integer, out::size>(output_fk);
             return sink;
         }
 

@@ -64,9 +64,9 @@ struct spend
         template <typename Reader>
         inline bool from_data(Reader& source) NOEXCEPT
         {
-            parent_fk = source.read_little_endian<tx::integer, tx::size>();
-            sequence = source.read_little_endian<uint32_t>();
-            input_fk = source.read_little_endian<in::integer, in::size>();
+            parent_fk = source.template read_little_endian<tx::integer, tx::size>();
+            sequence = source.template read_little_endian<uint32_t>();
+            input_fk = source.template read_little_endian<in::integer, in::size>();
             BC_ASSERT(source.get_read_position() == minrow);
             return source;
         }
@@ -74,9 +74,9 @@ struct spend
         template <typename Writer>
         inline bool to_data(Writer& sink) const NOEXCEPT
         {
-            sink.write_little_endian<tx::integer, tx::size>(parent_fk);
-            sink.write_little_endian<uint32_t>(sequence);
-            sink.write_little_endian<in::integer, in::size>(input_fk);
+            sink.template write_little_endian<tx::integer, tx::size>(parent_fk);
+            sink.template write_little_endian<uint32_t>(sequence);
+            sink.template write_little_endian<in::integer, in::size>(input_fk);
             BC_ASSERT(sink.get_write_position() == minrow);
             return sink;
         }
@@ -100,15 +100,15 @@ struct spend
         inline bool from_data(Reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
-            point_fk = source.read_little_endian<pt::integer, pt::size>();
-            point_index = source.read_little_endian<ix::integer, ix::size>();
+            point_fk = source.template read_little_endian<pt::integer, pt::size>();
+            point_index = source.template read_little_endian<ix::integer, ix::size>();
 
             if (null_point(point_fk))
                 point_index = system::chain::point::null_index;
 
             source.skip_bytes(tx::size);
-            sequence = source.read_little_endian<uint32_t>();
-            input_fk = source.read_little_endian<in::integer, in::size>();
+            sequence = source.template read_little_endian<uint32_t>();
+            input_fk = source.template read_little_endian<in::integer, in::size>();
             BC_ASSERT(source.get_read_position() == minrow);
             return source;
         }
@@ -130,7 +130,7 @@ struct spend
         template <typename Reader>
         inline bool from_data(Reader& source) NOEXCEPT
         {
-            parent_fk = source.read_little_endian<tx::integer, tx::size>();
+            parent_fk = source.template read_little_endian<tx::integer, tx::size>();
             return source;
         }
 
@@ -144,7 +144,7 @@ struct spend
         inline bool from_data(Reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
-            point_fk = source.read_little_endian<pt::integer, pt::size>();
+            point_fk = source.template read_little_endian<pt::integer, pt::size>();
             return source;
         }
 
@@ -163,7 +163,7 @@ struct spend
         inline bool from_data(Reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
-            key = source.read_forward<sk>();
+            key = source.template read_forward<sk>();
             return source;
         }
 
@@ -177,8 +177,8 @@ struct spend
         inline bool from_data(Reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
-            point_fk = source.read_little_endian<pt::integer, pt::size>();
-            point_index = source.read_little_endian<ix::integer, ix::size>();
+            point_fk = source.template read_little_endian<pt::integer, pt::size>();
+            point_index = source.template read_little_endian<ix::integer, ix::size>();
 
             if (null_point(point_fk))
                 point_index = system::chain::point::null_index;
@@ -202,13 +202,13 @@ struct spend
         inline bool from_data(Reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
-            point_fk = source.read_little_endian<pt::integer, pt::size>();
-            point_index = source.read_little_endian<ix::integer, ix::size>();
+            point_fk = source.template read_little_endian<pt::integer, pt::size>();
+            point_index = source.template read_little_endian<ix::integer, ix::size>();
 
             if (null_point(point_fk))
                 point_index = system::chain::point::null_index;
 
-            parent_fk = source.read_little_endian<tx::integer, tx::size>();
+            parent_fk = source.template read_little_endian<tx::integer, tx::size>();
             return source;
         }
 
@@ -234,14 +234,14 @@ struct spend
         inline bool from_data(Reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
-            point_fk = source.read_little_endian<pt::integer, pt::size>();
-            point_index = source.read_little_endian<ix::integer, ix::size>();
+            point_fk = source.template read_little_endian<pt::integer, pt::size>();
+            point_index = source.template read_little_endian<ix::integer, ix::size>();
 
             if (null_point(point_fk))
                 point_index = system::chain::point::null_index;
 
-            parent_fk = source.read_little_endian<tx::integer, tx::size>();
-            sequence = source.read_little_endian<uint32_t>();
+            parent_fk = source.template read_little_endian<tx::integer, tx::size>();
+            sequence = source.template read_little_endian<uint32_t>();
             return source;
         }
 

@@ -60,13 +60,13 @@ struct transaction
         inline bool from_data(Reader& source) NOEXCEPT
         {
             coinbase   = to_bool(source.read_byte());
-            light      = source.read_little_endian<bytes::integer, bytes::size>();
-            heavy      = source.read_little_endian<bytes::integer, bytes::size>();
-            locktime   = source.read_little_endian<uint32_t>();
-            version    = source.read_little_endian<uint32_t>();
-            ins_count  = source.read_little_endian<ix::integer, ix::size>();
-            outs_count = source.read_little_endian<ix::integer, ix::size>();
-            puts_fk    = source.read_little_endian<puts::integer, puts::size>();
+            light      = source.template read_little_endian<bytes::integer, bytes::size>();
+            heavy      = source.template read_little_endian<bytes::integer, bytes::size>();
+            locktime   = source.template read_little_endian<uint32_t>();
+            version    = source.template read_little_endian<uint32_t>();
+            ins_count  = source.template read_little_endian<ix::integer, ix::size>();
+            outs_count = source.template read_little_endian<ix::integer, ix::size>();
+            puts_fk    = source.template read_little_endian<puts::integer, puts::size>();
             BC_ASSERT(source.get_read_position() == minrow);
             return source;
         }
@@ -75,13 +75,13 @@ struct transaction
         inline bool to_data(Writer& sink) const NOEXCEPT
         {
             sink.write_byte(to_int<uint8_t>(coinbase));
-            sink.write_little_endian<bytes::integer, bytes::size>(light);
-            sink.write_little_endian<bytes::integer, bytes::size>(heavy);
-            sink.write_little_endian<uint32_t>(locktime);
-            sink.write_little_endian<uint32_t>(version);
-            sink.write_little_endian<ix::integer, ix::size>(ins_count);
-            sink.write_little_endian<ix::integer, ix::size>(outs_count);
-            sink.write_little_endian<puts::integer, puts::size>(puts_fk);
+            sink.template write_little_endian<bytes::integer, bytes::size>(light);
+            sink.template write_little_endian<bytes::integer, bytes::size>(heavy);
+            sink.template write_little_endian<uint32_t>(locktime);
+            sink.template write_little_endian<uint32_t>(version);
+            sink.template write_little_endian<ix::integer, ix::size>(ins_count);
+            sink.template write_little_endian<ix::integer, ix::size>(outs_count);
+            sink.template write_little_endian<puts::integer, puts::size>(puts_fk);
             BC_ASSERT(sink.get_write_position() == minrow);
             return sink;
         }
@@ -120,11 +120,11 @@ struct transaction
                 bytes::size;
 
             source.skip_bytes(skip_size);
-            locktime   = source.read_little_endian<uint32_t>();
-            version    = source.read_little_endian<uint32_t>();
-            ins_count  = source.read_little_endian<ix::integer, ix::size>();
-            outs_count = source.read_little_endian<ix::integer, ix::size>();
-            puts_fk    = source.read_little_endian<puts::integer, puts::size>();
+            locktime   = source.template read_little_endian<uint32_t>();
+            version    = source.template read_little_endian<uint32_t>();
+            ins_count  = source.template read_little_endian<ix::integer, ix::size>();
+            outs_count = source.template read_little_endian<ix::integer, ix::size>();
+            puts_fk    = source.template read_little_endian<puts::integer, puts::size>();
             BC_ASSERT(source.get_read_position() == minrow);
             return source;
         }
@@ -144,15 +144,15 @@ struct transaction
         {
             using namespace system;
             sink.write_byte(to_int<uint8_t>(tx.is_coinbase()));
-            sink.write_little_endian<bytes::integer, bytes::size>(
+            sink.template write_little_endian<bytes::integer, bytes::size>(
                 possible_narrow_cast<bytes::integer>(tx.serialized_size(false)));
-            sink.write_little_endian<bytes::integer, bytes::size>(
+            sink.template write_little_endian<bytes::integer, bytes::size>(
                 possible_narrow_cast<bytes::integer>(tx.serialized_size(true)));
-            sink.write_little_endian<uint32_t>(tx.locktime());
-            sink.write_little_endian<uint32_t>(tx.version());
-            sink.write_little_endian<ix::integer, ix::size>(ins_count);
-            sink.write_little_endian<ix::integer, ix::size>(outs_count);
-            sink.write_little_endian<puts::integer, puts::size>(puts_fk);
+            sink.template write_little_endian<uint32_t>(tx.locktime());
+            sink.template write_little_endian<uint32_t>(tx.version());
+            sink.template write_little_endian<ix::integer, ix::size>(ins_count);
+            sink.template write_little_endian<ix::integer, ix::size>(outs_count);
+            sink.template write_little_endian<puts::integer, puts::size>(puts_fk);
             BC_ASSERT(sink.get_write_position() == minrow);
             return sink;
         }
@@ -186,8 +186,8 @@ struct transaction
         inline bool from_data(Reader& source) NOEXCEPT
         {
             source.skip_bytes(skip_to_puts);
-            ins_count  = source.read_little_endian<ix::integer, ix::size>();
-            outs_count = source.read_little_endian<ix::integer, ix::size>();
+            ins_count  = source.template read_little_endian<ix::integer, ix::size>();
+            outs_count = source.template read_little_endian<ix::integer, ix::size>();
             return source;
         }
 
@@ -207,9 +207,9 @@ struct transaction
         inline bool from_data(Reader& source) NOEXCEPT
         {
             source.skip_bytes(skip_to_puts);
-            ins_count  = source.read_little_endian<ix::integer, ix::size>();
-            outs_count = source.read_little_endian<ix::integer, ix::size>();
-            puts_fk    = source.read_little_endian<puts::integer, puts::size>();
+            ins_count  = source.template read_little_endian<ix::integer, ix::size>();
+            outs_count = source.template read_little_endian<ix::integer, ix::size>();
+            puts_fk    = source.template read_little_endian<puts::integer, puts::size>();
             return source;
         }
 
@@ -225,7 +225,7 @@ struct transaction
         inline bool from_data(Reader& source) NOEXCEPT
         {
             source.skip_bytes(skip_to_puts);
-            const auto ins_count = source.read_little_endian<ix::integer, ix::size>();
+            const auto ins_count = source.template read_little_endian<ix::integer, ix::size>();
 
             if (index >= ins_count)
             {
@@ -234,7 +234,7 @@ struct transaction
             }
 
             source.skip_bytes(ix::size);
-            const auto puts_fk = source.read_little_endian<puts::integer, puts::size>();
+            const auto puts_fk = source.template read_little_endian<puts::integer, puts::size>();
             spend_fk = puts_fk + (index * spend::size);
             return source;
         }
@@ -250,8 +250,8 @@ struct transaction
         inline bool from_data(Reader& source) NOEXCEPT
         {
             source.skip_bytes(skip_to_puts);
-            const auto ins_count = source.read_little_endian<ix::integer, ix::size>();
-            const auto outs_count = source.read_little_endian<ix::integer, ix::size>();
+            const auto ins_count = source.template read_little_endian<ix::integer, ix::size>();
+            const auto outs_count = source.template read_little_endian<ix::integer, ix::size>();
 
             if (index >= outs_count)
             {
@@ -259,7 +259,7 @@ struct transaction
                 return source;
             }
 
-            const auto puts_fk = source.read_little_endian<puts::integer, puts::size>();
+            const auto puts_fk = source.template read_little_endian<puts::integer, puts::size>();
             out_fk = puts_fk + (ins_count * spend::size) + (index * out::size);
             return source;
         }

@@ -54,7 +54,7 @@ struct output
         inline bool from_data(reader& source) NOEXCEPT
         {
             using namespace system;
-            parent_fk = source.read_little_endian<tx::integer, tx::size>();
+            parent_fk = source.template read_little_endian<tx::integer, tx::size>();
             value     = source.read_variable();
             script = chain::script{ source, true };
             BC_ASSERT(source.get_read_position() == count());
@@ -63,7 +63,7 @@ struct output
 
         inline bool to_data(writer& sink) const NOEXCEPT
         {
-            sink.write_little_endian<tx::integer, tx::size>(parent_fk);
+            sink.template write_little_endian<tx::integer, tx::size>(parent_fk);
             sink.write_variable(value);
             script.to_data(sink, true);
             BC_ASSERT(sink.get_write_position() == count());
@@ -107,7 +107,7 @@ struct output
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            parent_fk = source.read_little_endian<tx::integer, tx::size>();
+            parent_fk = source.template read_little_endian<tx::integer, tx::size>();
             return source;
         }
 
@@ -140,7 +140,7 @@ struct output
 
         inline bool to_data(writer& sink) const NOEXCEPT
         {
-            sink.write_little_endian<tx::integer, tx::size>(parent_fk);
+            sink.template write_little_endian<tx::integer, tx::size>(parent_fk);
             sink.write_variable(output.value());
             output.script().to_data(sink, true);
             BC_ASSERT(sink.get_write_position() == count());

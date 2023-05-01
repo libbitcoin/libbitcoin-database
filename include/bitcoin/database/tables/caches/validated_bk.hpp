@@ -49,7 +49,7 @@ struct validated_bk
         template <typename Reader>
         inline bool from_data(Reader& source) NOEXCEPT
         {
-            code = source.read_little_endian<coding::integer, coding::size>();
+            code = source.template read_little_endian<coding::integer, coding::size>();
             fees = source.read_variable();
             BC_ASSERT(source.get_read_position() == count());
             return source;
@@ -58,7 +58,7 @@ struct validated_bk
         template <typename Writer>
         inline bool to_data(Writer& sink) const NOEXCEPT
         {
-            sink.write_little_endian<coding::integer, coding::size>(code);
+            sink.template write_little_endian<coding::integer, coding::size>(code);
             sink.write_variable(fees);
             BC_ASSERT(sink.get_write_position() == count());
             return sink;
@@ -80,7 +80,7 @@ struct validated_bk
         template <typename Reader>
         inline bool from_data(Reader& source) NOEXCEPT
         {
-            code = source.read_little_endian<coding::integer, coding::size>();
+            code = source.template read_little_endian<coding::integer, coding::size>();
             return source;
         }
     

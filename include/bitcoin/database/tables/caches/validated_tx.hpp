@@ -56,7 +56,7 @@ struct validated_tx
         {
             using namespace system;
             context::from_data(source, ctx);
-            code = source.read_little_endian<coding::integer, coding::size>();
+            code = source.template read_little_endian<coding::integer, coding::size>();
             fee = source.read_variable();
             sigops = possible_narrow_cast<sigop::integer>(source.read_variable());
             BC_ASSERT(source.get_read_position() == count());
@@ -67,7 +67,7 @@ struct validated_tx
         inline bool to_data(Writer& sink) const NOEXCEPT
         {
             context::to_data(sink, ctx);
-            sink.write_little_endian<coding::integer, coding::size>(code);
+            sink.template write_little_endian<coding::integer, coding::size>(code);
             sink.write_variable(fee);
             sink.write_variable(sigops);
             BC_ASSERT(sink.get_write_position() == count());
@@ -95,7 +95,7 @@ struct validated_tx
         inline bool from_data(Reader& source) NOEXCEPT
         {
             context::from_data(source, ctx);
-            code = source.read_little_endian<coding::integer, coding::size>();
+            code = source.template read_little_endian<coding::integer, coding::size>();
             return source;
         }
     

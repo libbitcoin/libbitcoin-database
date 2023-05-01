@@ -55,12 +55,12 @@ struct puts
         {
             std::for_each(spend_fks.begin(), spend_fks.end(), [&](auto& fk) NOEXCEPT
             {
-                fk = source.read_little_endian<spend::integer, spend::size>();
+                fk = source.template read_little_endian<spend::integer, spend::size>();
             });
 
             std::for_each(out_fks.begin(), out_fks.end(), [&](auto& fk) NOEXCEPT
             {
-                fk = source.read_little_endian<out::integer, out::size>();
+                fk = source.template read_little_endian<out::integer, out::size>();
             });
 
             BC_ASSERT(source.get_read_position() == count());
@@ -72,12 +72,12 @@ struct puts
         {
             std::for_each(spend_fks.begin(), spend_fks.end(), [&](const auto& fk) NOEXCEPT
             {
-                sink.write_little_endian<spend::integer, spend::size>(fk);
+                sink.template write_little_endian<spend::integer, spend::size>(fk);
             });
 
             std::for_each(out_fks.begin(), out_fks.end(), [&](const auto& fk) NOEXCEPT
             {
-                sink.write_little_endian<out::integer, out::size>(fk);
+                sink.template write_little_endian<out::integer, out::size>(fk);
             });
 
             BC_ASSERT(sink.get_write_position() == count());
@@ -102,7 +102,7 @@ struct puts
         {
             std::for_each(spend_fks.begin(), spend_fks.end(), [&](auto& fk) NOEXCEPT
             {
-                fk = source.read_little_endian<spend::integer, spend::size>();
+                fk = source.template read_little_endian<spend::integer, spend::size>();
             });
 
             return source;
@@ -119,7 +119,7 @@ struct puts
         {
             std::for_each(out_fks.begin(), out_fks.end(), [&](auto& fk) NOEXCEPT
             {
-                fk = source.read_little_endian<out::integer, out::size>();
+                fk = source.template read_little_endian<out::integer, out::size>();
             });
 
             return source;
@@ -134,7 +134,7 @@ struct puts
         template <typename Reader>
         inline bool from_data(Reader& source) NOEXCEPT
         {
-            spend_fk = source.read_little_endian<spend::integer, spend::size>();
+            spend_fk = source.template read_little_endian<spend::integer, spend::size>();
             return source;
         }
 
@@ -147,7 +147,7 @@ struct puts
         template <typename Reader>
         inline bool from_data(Reader& source) NOEXCEPT
         {
-            out_fk = source.read_little_endian<out::integer, out::size>();
+            out_fk = source.template read_little_endian<out::integer, out::size>();
             return source;
         }
 

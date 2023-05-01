@@ -50,10 +50,10 @@ struct txs
         template <typename Reader>
         inline bool from_data(Reader& source) NOEXCEPT
         {
-            tx_fks.resize(source.read_little_endian<tx::integer, tx::size>());
+            tx_fks.resize(source.template read_little_endian<tx::integer, tx::size>());
             std::for_each(tx_fks.begin(), tx_fks.end(), [&](auto& fk) NOEXCEPT
             {
-                fk = source.read_little_endian<tx::integer, tx::size>();
+                fk = source.template read_little_endian<tx::integer, tx::size>();
             });
 
             BC_ASSERT(source.get_read_position() == count());
@@ -66,10 +66,10 @@ struct txs
             BC_ASSERT(tx_fks.size() < system::power2<uint64_t>(to_bits(tx::size)));
             const auto fks = system::possible_narrow_cast<tx::integer>(tx_fks.size());
 
-            sink.write_little_endian<tx::integer, tx::size>(fks);
+            sink.template write_little_endian<tx::integer, tx::size>(fks);
             std::for_each(tx_fks.begin(), tx_fks.end(), [&](const auto& fk) NOEXCEPT
             {
-                sink.write_little_endian<tx::integer, tx::size>(fk);
+                sink.template write_little_endian<tx::integer, tx::size>(fk);
             });
 
             BC_ASSERT(sink.get_write_position() == count());
@@ -90,9 +90,9 @@ struct txs
         template <typename Reader>
         inline bool from_data(Reader& source) NOEXCEPT
         {
-            const auto count = source.read_little_endian<tx::integer, tx::size>();
+            const auto count = source.template read_little_endian<tx::integer, tx::size>();
             for (position = zero; position < count; ++position)
-                if (source.read_little_endian<tx::integer, tx::size>() == link)
+                if (source.template read_little_endian<tx::integer, tx::size>() == link)
                     return source;
 
             source.invalidate();
@@ -109,10 +109,10 @@ struct txs
         template <typename Reader>
         inline bool from_data(Reader& source) NOEXCEPT
         {
-            const auto count = source.read_little_endian<tx::integer, tx::size>();
+            const auto count = source.template read_little_endian<tx::integer, tx::size>();
             if (!is_zero(count))
             {
-                coinbase_fk = source.read_little_endian<tx::integer, tx::size>();
+                coinbase_fk = source.template read_little_endian<tx::integer, tx::size>();
                 return source;
             }
 

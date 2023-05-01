@@ -44,11 +44,11 @@ struct header
         inline bool from_data(Reader& source) NOEXCEPT
         {
             context::from_data(source, ctx);
-            parent_fk   = source.read_little_endian<link::integer, link::size>();
-            version     = source.read_little_endian<uint32_t>();
-            timestamp   = source.read_little_endian<uint32_t>();
-            bits        = source.read_little_endian<uint32_t>();
-            nonce       = source.read_little_endian<uint32_t>();
+            parent_fk   = source.template read_little_endian<link::integer, link::size>();
+            version     = source.template read_little_endian<uint32_t>();
+            timestamp   = source.template read_little_endian<uint32_t>();
+            bits        = source.template read_little_endian<uint32_t>();
+            nonce       = source.template read_little_endian<uint32_t>();
             merkle_root = source.read_hash();
             BC_ASSERT(source.get_read_position() == minrow);
             return source;
@@ -58,11 +58,11 @@ struct header
         inline bool to_data(Writer& sink) const NOEXCEPT
         {
             context::to_data(sink, ctx);
-            sink.write_little_endian<link::integer, link::size>(parent_fk);
-            sink.write_little_endian<uint32_t>(version);
-            sink.write_little_endian<uint32_t>(timestamp);
-            sink.write_little_endian<uint32_t>(bits);
-            sink.write_little_endian<uint32_t>(nonce);
+            sink.template write_little_endian<link::integer, link::size>(parent_fk);
+            sink.template write_little_endian<uint32_t>(version);
+            sink.template write_little_endian<uint32_t>(timestamp);
+            sink.template write_little_endian<uint32_t>(bits);
+            sink.template write_little_endian<uint32_t>(nonce);
             sink.write_bytes(merkle_root);
             BC_ASSERT(sink.get_write_position() == minrow);
             return sink;
@@ -97,11 +97,11 @@ struct header
         {
             BC_ASSERT(header);
             context::to_data(sink, ctx);
-            sink.write_little_endian<link::integer, link::size>(parent_fk);
-            sink.write_little_endian<uint32_t>(header->version());
-            sink.write_little_endian<uint32_t>(header->timestamp());
-            sink.write_little_endian<uint32_t>(header->bits());
-            sink.write_little_endian<uint32_t>(header->nonce());
+            sink.template write_little_endian<link::integer, link::size>(parent_fk);
+            sink.template write_little_endian<uint32_t>(header->version());
+            sink.template write_little_endian<uint32_t>(header->timestamp());
+            sink.template write_little_endian<uint32_t>(header->bits());
+            sink.template write_little_endian<uint32_t>(header->nonce());
             sink.write_bytes(header->merkle_root());
             BC_ASSERT(sink.get_write_position() == minrow);
             return sink;
@@ -121,11 +121,11 @@ struct header
         inline bool to_data(Writer& sink) const NOEXCEPT
         {
             context::to_data(sink, ctx);
-            sink.write_little_endian<link::integer, link::size>(parent_fk);
-            sink.write_little_endian<uint32_t>(header.version());
-            sink.write_little_endian<uint32_t>(header.timestamp());
-            sink.write_little_endian<uint32_t>(header.bits());
-            sink.write_little_endian<uint32_t>(header.nonce());
+            sink.template write_little_endian<link::integer, link::size>(parent_fk);
+            sink.template write_little_endian<uint32_t>(header.version());
+            sink.template write_little_endian<uint32_t>(header.timestamp());
+            sink.template write_little_endian<uint32_t>(header.bits());
+            sink.template write_little_endian<uint32_t>(header.nonce());
             sink.write_bytes(header.merkle_root());
             BC_ASSERT(sink.get_write_position() == minrow);
             return sink;
@@ -176,7 +176,7 @@ struct header
         inline bool from_data(Reader& source) NOEXCEPT
         {
             source.skip_bytes(context::size + link::size);
-            version = source.read_little_endian<uint32_t>();
+            version = source.template read_little_endian<uint32_t>();
             return source;
         }
 
@@ -190,7 +190,7 @@ struct header
         inline bool from_data(Reader& source) NOEXCEPT
         {
             source.skip_bytes(context::size + link::size + sizeof(uint32_t));
-            timestamp = source.read_little_endian<uint32_t>();
+            timestamp = source.template read_little_endian<uint32_t>();
             return source;
         }
 
@@ -205,7 +205,7 @@ struct header
         {
             source.skip_bytes(context::size + link::size + sizeof(uint32_t) +
                 sizeof(uint32_t));
-            bits = source.read_little_endian<uint32_t>();
+            bits = source.template read_little_endian<uint32_t>();
             return source;
         }
 
@@ -219,7 +219,7 @@ struct header
         inline bool from_data(Reader& source) NOEXCEPT
         {
             source.skip_bytes(context::size);
-            parent_fk = source.read_little_endian<link::integer, link::size>();
+            parent_fk = source.template read_little_endian<link::integer, link::size>();
             return source;
         }
 
@@ -233,7 +233,7 @@ struct header
         inline bool from_data(Reader& source) NOEXCEPT
         {
             using flag = context::flag;
-            flags = source.read_little_endian<flag::integer, flag::size>();
+            flags = source.template read_little_endian<flag::integer, flag::size>();
             return source;
         }
 
@@ -248,7 +248,7 @@ struct header
         {
             using block = context::block;
             source.skip_bytes(context::flag::size);
-            height = source.read_little_endian<block::integer, block::size>();
+            height = source.template read_little_endian<block::integer, block::size>();
             return source;
         }
 
@@ -262,7 +262,7 @@ struct header
         inline bool from_data(Reader& source) NOEXCEPT
         {
             source.skip_bytes(context::flag::size + context::block::size);
-            mtp = source.read_little_endian<uint32_t>();
+            mtp = source.template read_little_endian<uint32_t>();
             return source;
         }
 

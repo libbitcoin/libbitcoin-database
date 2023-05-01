@@ -363,7 +363,7 @@ public:
 
     bool from_data(database::reader& source) NOEXCEPT
     {
-        value = source.read_little_endian<uint32_t>();
+        value = source.template read_little_endian<uint32_t>();
         return source;
     }
 
@@ -487,7 +487,7 @@ public:
 
     bool from_data(database::reader& source) NOEXCEPT
     {
-        value = source.read_little_endian<uint32_t>();
+        value = source.template read_little_endian<uint32_t>();
         return source;
     }
 

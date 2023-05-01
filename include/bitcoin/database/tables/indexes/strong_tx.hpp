@@ -41,14 +41,14 @@ struct strong_tx
         template <typename Reader>
         inline bool from_data(Reader& source) NOEXCEPT
         {
-            header_fk = source.read_little_endian<block::integer, block::size>();
+            header_fk = source.template read_little_endian<block::integer, block::size>();
             return source;
         }
 
         template <typename Writer>
         inline bool to_data(Writer& sink) const NOEXCEPT
         {
-            sink.write_little_endian<block::integer, block::size>(header_fk);
+            sink.template write_little_endian<block::integer, block::size>(header_fk);
             return sink;
         }
 
