@@ -53,7 +53,7 @@ bool CLASS::get_confirmed_balance(uint64_t& out,
     do
     {
         table::address::record address{};
-        if (!store_.address.get(it.self(), address))
+        if (!store_.address.get1(it.self(), address))
             return false;
 
         // Failure or overflow returns maximum value.
@@ -83,7 +83,7 @@ bool CLASS::to_address_outputs(output_links& out,
     do
     {
         table::address::record address{};
-        if (!store_.address.get(it.self(), address))
+        if (!store_.address.get1(it.self(), address))
         {
             out.clear();
             return false;
@@ -108,7 +108,7 @@ bool CLASS::to_unspent_outputs(output_links& out,
     do
     {
         table::address::record address{};
-        if (!store_.address.get(it.self(), address))
+        if (!store_.address.get1(it.self(), address))
         {
             out.clear();
             return false;
@@ -134,7 +134,7 @@ bool CLASS::to_minimum_unspent_outputs(output_links& out,
     do
     {
         table::address::record address{};
-        if (!store_.address.get(it.self(), address))
+        if (!store_.address.get1(it.self(), address))
             return {};
 
         // Confirmed and not spent, but possibly immature.
@@ -166,7 +166,7 @@ bool CLASS::set_address_output(const hash_digest& key,
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return store_.address.put(key, table::address::record
+    return store_.address.put1(key, table::address::record
     {
         {},
         link
@@ -181,7 +181,7 @@ TEMPLATE
 bool CLASS::get_filter(filter& out, const header_link& link) const NOEXCEPT
 {
     table::neutrino::get_filter neutrino{};
-    if (!store_.neutrino.get(store_.neutrino.first(link), neutrino))
+    if (!store_.neutrino.get1(store_.neutrino.first(link), neutrino))
         return false;
 
     out = std::move(neutrino.filter);
@@ -193,7 +193,7 @@ bool CLASS::get_filter_head(hash_digest& out,
     const header_link& link) const NOEXCEPT
 {
     table::neutrino::get_head neutrino{};
-    if (!store_.neutrino.get(store_.neutrino.first(link), neutrino))
+    if (!store_.neutrino.get1(store_.neutrino.first(link), neutrino))
         return false;
 
     out = std::move(neutrino.filter_head);
@@ -207,7 +207,7 @@ bool CLASS::set_filter(const header_link& link, const hash_digest& filter_head,
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return store_.neutrino.put(link, table::neutrino::put_ref
+    return store_.neutrino.put1(link, table::neutrino::put_ref
     {
         {},
         filter_head,

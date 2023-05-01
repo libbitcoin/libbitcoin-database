@@ -81,7 +81,7 @@ bool CLASS::get_timestamp(uint32_t& timestamp,
     const header_link& link) const NOEXCEPT
 {
     table::header::get_timestamp header{};
-    if (!store_.header.get(link, header))
+    if (!store_.header.get1(link, header))
         return false;
 
     timestamp = header.timestamp;
@@ -93,7 +93,7 @@ bool CLASS::get_version(uint32_t& version,
     const header_link& link) const NOEXCEPT
 {
     table::header::get_version header{};
-    if (!store_.header.get(link, header))
+    if (!store_.header.get1(link, header))
         return false;
 
     version = header.version;
@@ -105,7 +105,7 @@ bool CLASS::get_bits(uint32_t& bits,
     const header_link& link) const NOEXCEPT
 {
     table::header::get_bits header{};
-    if (!store_.header.get(link, header))
+    if (!store_.header.get1(link, header))
         return false;
 
     bits = std::move(header.bits);
@@ -117,7 +117,7 @@ bool CLASS::get_context(context& ctx,
     const header_link& link) const NOEXCEPT
 {
     table::header::record_context header{};
-    if (!store_.header.get(link, header))
+    if (!store_.header.get1(link, header))
         return false;
 
     ctx = std::move(header.ctx);

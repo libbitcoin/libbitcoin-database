@@ -36,7 +36,7 @@ TEMPLATE
 height_link CLASS::get_height(const header_link& link) const NOEXCEPT
 {
     table::header::get_height header{};
-    if (!store_.header.get(link, header))
+    if (!store_.header.get1(link, header))
         return {};
 
     return header.height;
@@ -127,7 +127,7 @@ inline bool CLASS::is_spent_prevout(const foreign_point& point,
     do
     {
         // Iterated element must be found, otherwise fault.
-        if (!store_.spend.get(it.self(), spend))
+        if (!store_.spend.get1(it.self(), spend))
             return true;
 
         // Skip self (which should be strong) and require strong for spent.
@@ -166,7 +166,7 @@ TEMPLATE
 bool CLASS::is_spent(const spend_link& link) const NOEXCEPT
 {
     table::spend::get_prevout_parent spend{};
-    if (!store_.spend.get(link, spend))
+    if (!store_.spend.get1(link, spend))
         return false;
 
     if (spend.is_null())
@@ -187,7 +187,7 @@ TEMPLATE
 bool CLASS::is_mature(const spend_link& link, size_t height) const NOEXCEPT
 {
     table::spend::get_point spend{};
-    if (!store_.spend.get(link, spend))
+    if (!store_.spend.get1(link, spend))
         return false;
 
     if (spend.is_null())
@@ -231,7 +231,7 @@ bool CLASS::is_locked(const spend_link& link, uint32_t sequence,
     const context& ctx) const NOEXCEPT
 {
     table::spend::get_point spend{};
-    if (!store_.spend.get(link, spend))
+    if (!store_.spend.get1(link, spend))
         return false;
 
     if (spend.is_null())
@@ -290,7 +290,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         for (const auto& spend_fk: to_tx_spends(*tx))
         {
             // spend(read).
-            if (!store_.spend.get(spend_fk, spend))
+            if (!store_.spend.get1(spend_fk, spend))
                 return error::integrity;
 
             // point(read) & spent-tx(search)
@@ -323,7 +323,7 @@ bool CLASS::set_strong(const header_link& link) NOEXCEPT
 
     return std::all_of(txs.begin(), txs.end(), [&](const tx_link& fk) NOEXCEPT
     {
-        return store_.strong_tx.put(fk, strong);
+        return store_.strong_tx.put1(fk, strong);
     });
     // ========================================================================
 }
@@ -342,7 +342,7 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 
     return std::all_of(txs.begin(), txs.end(), [&](const tx_link& fk) NOEXCEPT
     {
-        return store_.strong_tx.put(fk, strong);
+        return store_.strong_tx.put1(fk, strong);
     });
     // ========================================================================
 }

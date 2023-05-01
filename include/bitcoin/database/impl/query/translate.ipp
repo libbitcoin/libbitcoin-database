@@ -102,7 +102,7 @@ TEMPLATE
 tx_link CLASS::to_prevout_tx(const spend_link& link) const NOEXCEPT
 {
     table::spend::get_point spend{};
-    if (!store_.spend.get(link, spend) || spend.is_null())
+    if (!store_.spend.get1(link, spend) || spend.is_null())
         return {};
 
     return to_tx(get_point_key(spend.point_fk));
@@ -112,7 +112,7 @@ TEMPLATE
 tx_link CLASS::to_spend_tx(const spend_link& link) const NOEXCEPT
 {
     table::spend::get_parent spend{};
-    if (!store_.spend.get(link, spend))
+    if (!store_.spend.get1(link, spend))
         return {};
 
     return spend.parent_fk;
@@ -122,7 +122,7 @@ TEMPLATE
 foreign_point CLASS::to_spend_key(const spend_link& link) const NOEXCEPT
 {
     table::spend::get_key spend{};
-    if (!store_.spend.get(link, spend))
+    if (!store_.spend.get1(link, spend))
         return {};
 
     return spend.key;
@@ -136,7 +136,7 @@ spend_link CLASS::to_spend(const tx_link& link,
     uint32_t spend_index) const NOEXCEPT
 {
     table::transaction::get_spend tx{ {}, spend_index };
-    if (!store_.tx.get(link, tx))
+    if (!store_.tx.get1(link, tx))
         return {};
 
     table::puts::get_spend_at put{};
@@ -151,7 +151,7 @@ output_link CLASS::to_output(const tx_link& link,
     uint32_t output_index) const NOEXCEPT
 {
     table::transaction::get_output tx{ {}, output_index };
-    if (!store_.tx.get(link, tx))
+    if (!store_.tx.get1(link, tx))
         return {};
 
     table::puts::get_output_at put{};
@@ -165,7 +165,7 @@ TEMPLATE
 output_link CLASS::to_prevout(const spend_link& link) const NOEXCEPT
 {
     table::spend::get_prevout spend{};
-    if (!store_.spend.get(link, spend) || spend.is_null())
+    if (!store_.spend.get1(link, spend) || spend.is_null())
         return {};
 
     return to_output(to_tx(get_point_key(spend.point_fk)), spend.point_index);
@@ -178,7 +178,7 @@ TEMPLATE
 header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
 {
     table::strong_tx::record strong{};
-    if (!store_.strong_tx.get(store_.strong_tx.first(link), strong))
+    if (!store_.strong_tx.get1(store_.strong_tx.first(link), strong))
         return {};
 
     return strong.header_fk;
@@ -188,7 +188,7 @@ TEMPLATE
 header_link CLASS::to_parent(const header_link& link) const NOEXCEPT
 {
     table::header::get_parent_fk header{};
-    if (!store_.header.get(link, header))
+    if (!store_.header.get1(link, header))
         return {};
 
     // Terminal implies genesis (no parent).
@@ -235,7 +235,7 @@ spend_link CLASS::to_spender(const tx_link& link,
 {
     table::spend::get_key spend{};
     for (const auto& spend_fk: to_tx_spends(link))
-        if (store_.spend.get(spend_fk, spend) && (spend.key == point))
+        if (store_.spend.get1(spend_fk, spend) && (spend.key == point))
             return spend_fk;
 
     return {};
@@ -295,7 +295,7 @@ TEMPLATE
 spend_links CLASS::to_tx_spends(const tx_link& link) const NOEXCEPT
 {
     table::transaction::get_puts tx{};
-    if (!store_.tx.get(link, tx))
+    if (!store_.tx.get1(link, tx))
         return {};
 
     table::puts::get_spends puts{};
@@ -310,7 +310,7 @@ TEMPLATE
 output_links CLASS::to_tx_outputs(const tx_link& link) const NOEXCEPT
 {
     table::transaction::get_puts tx{};
-    if (!store_.tx.get(link, tx))
+    if (!store_.tx.get1(link, tx))
         return {};
 
     table::puts::get_outs puts{};
@@ -328,7 +328,7 @@ TEMPLATE
 tx_links CLASS::to_txs(const header_link& link) const NOEXCEPT
 {
     table::txs::slab txs{};
-    if (!store_.txs.get(to_txs_link(link), txs))
+    if (!store_.txs.get1(to_txs_link(link), txs))
         return {};
 
     return std::move(txs.tx_fks);
@@ -338,7 +338,7 @@ TEMPLATE
 tx_link CLASS::to_coinbase(const header_link& link) const NOEXCEPT
 {
     table::txs::get_coinbase txs{};
-    if (!store_.txs.get(to_txs_link(link), txs))
+    if (!store_.txs.get1(to_txs_link(link), txs))
         return {};
 
     return txs.coinbase_fk;

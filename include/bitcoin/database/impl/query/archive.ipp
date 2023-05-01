@@ -76,7 +76,7 @@ TEMPLATE
 inline bool CLASS::is_coinbase(const tx_link& link) const NOEXCEPT
 {
     table::transaction::get_coinbase tx{};
-    return store_.tx.get(link, tx) && tx.coinbase;
+    return store_.tx.get1(link, tx) && tx.coinbase;
 }
 
 TEMPLATE
@@ -225,7 +225,7 @@ bool CLASS::get_tx_position(size_t& out, const tx_link& link) const NOEXCEPT
 
     // False return below implies an integrity error (tx should be indexed).
     table::txs::get_position txs{ {}, link };
-    if (!store_.txs.get(to_txs_link(block_fk), txs))
+    if (!store_.txs.get1(to_txs_link(block_fk), txs))
         return false;
 
     out = txs.position;
@@ -305,13 +305,13 @@ typename CLASS::header::cptr CLASS::get_header(
     const header_link& link) const NOEXCEPT
 {
     table::header::record_with_sk child{};
-    if (!store_.header.get(link, child))
+    if (!store_.header.get1(link, child))
         return {};
 
     // Terminal parent implies genesis (no parent header).
     table::header::record_sk parent{};
     if ((child.parent_fk != header_link::terminal) &&
-        !store_.header.get(child.parent_fk, parent))
+        !store_.header.get1(child.parent_fk, parent))
         return {};
 
     // In case of terminal parent, parent.key defaults to null_hash.
@@ -354,7 +354,7 @@ typename CLASS::transaction::cptr CLASS::get_transaction(
 {
     using namespace system;
     table::transaction::only_with_sk tx{};
-    if (!store_.tx.get(link, tx))
+    if (!store_.tx.get1(link, tx))
         return {};
 
     table::puts::slab puts{};
@@ -431,7 +431,7 @@ typename CLASS::point::cptr CLASS::get_point(
     const spend_link& link) const NOEXCEPT
 {
     table::spend::get_prevout spend{};
-    if (!store_.spend.get(link, spend))
+    if (!store_.spend.get1(link, spend))
         return {};
 
     return system::to_shared<point>
@@ -540,7 +540,7 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
             prevout.index()));
 
         // Write spend record.
-        if (!store_.spend.set(spend_fk, table::spend::record
+        if (!store_.spend.set1(spend_fk, table::spend::record
         {
             {},
             tx_fk,
@@ -580,7 +580,7 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
 
     // Write tx record.
     using ix = linkage<schema::index>;
-    if (!store_.tx.set(tx_fk, table::transaction::record_put_ref
+    if (!store_.tx.set1(tx_fk, table::transaction::record_put_ref
     {
         {},
         tx,
@@ -620,7 +620,7 @@ inline point_link CLASS::set_link(const hash_digest& point_hash) NOEXCEPT
     const auto scope = store_.get_transactor();
 
     const table::point::record empty{};
-    if (!store_.point.put_link(point_fk, point_hash, empty))
+    if (!store_.point.put_link1(point_fk, point_hash, empty))
         return {};
 
     return point_fk;
@@ -672,7 +672,7 @@ header_link CLASS::set_link(const header& header, const context& ctx) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return store_.header.put_link(key, table::header::record_put_ref
+    return store_.header.put_link1(key, table::header::record_put_ref
     {
         {},
         ctx,
@@ -702,7 +702,7 @@ header_link CLASS::set_link(const block& block, const context& ctx) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return store_.txs.put(header_fk, table::txs::slab{ {}, links }) ?
+    return store_.txs.put1(header_fk, table::txs::slab{ {}, links }) ?
         header_fk : table::header::link{};
     // ========================================================================
 }
