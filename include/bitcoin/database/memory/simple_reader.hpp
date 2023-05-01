@@ -30,6 +30,7 @@ BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
 BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
 
 class simple_reader
+////  : public system::reader
 {
 public:
     inline simple_reader(memory& buffer) NOEXCEPT

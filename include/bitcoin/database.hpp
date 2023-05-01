@@ -34,6 +34,7 @@
 #include <bitcoin/database/memory/map.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/reader.hpp>
+#include <bitcoin/database/memory/simple_finalizer.hpp>
 #include <bitcoin/database/memory/simple_reader.hpp>
 #include <bitcoin/database/memory/simple_writer.hpp>
 #include <bitcoin/database/memory/writer.hpp>

@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_MEMORY_SIMPLE_WRITER_HPP
 #define LIBBITCOIN_DATABASE_MEMORY_SIMPLE_WRITER_HPP
 
-#include <functional>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
@@ -31,6 +30,7 @@ BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
 BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
 
 class simple_writer
+////  : public system::writer
 {
 public:
     inline simple_writer(memory& buffer) NOEXCEPT
@@ -137,35 +137,6 @@ private:
     uint8_t* data_;
     const uint8_t* begin_;
     const uint8_t* end_;
-};
-
-class simple_finalizer
-  : public simple_writer
-{
-public:
-    using finalization = std::function<bool()>;
-
-    using simple_writer::simple_writer;
-
-    inline void set_finalizer(finalization&& functor) NOEXCEPT
-    {
-        finalize_ = std::move(functor);
-    }
-
-    // This is expected to have side effect on the stream buffer, specifically
-    // setting the "next" pointer into beginning of the address space.
-    inline bool finalize() NOEXCEPT
-    {
-        if (!*this) return false;
-
-        // std::function does not allow for noexcept.
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        return finalize_();
-        BC_POP_WARNING()
-    }
-
-private:
-    finalization finalize_;
 };
 
 BC_POP_WARNING()
