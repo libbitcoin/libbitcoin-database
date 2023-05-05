@@ -44,6 +44,9 @@ public:
     /// Get logical buffer.
     virtual uint8_t* begin() NOEXCEPT = 0;
     virtual uint8_t* end() NOEXCEPT = 0;
+
+    /// Alias begin.
+    virtual uint8_t* data() NOEXCEPT = 0;
 };
 
 typedef memory::ptr memory_ptr;

@@ -26,7 +26,6 @@
 #include <bitcoin/database/primitives/linkage.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 
-
 namespace libbitcoin {
 namespace database {
     
@@ -85,10 +84,6 @@ public:
     bool put_link(Link& link, const Element& element) NOEXCEPT;
     template <typename Element, if_equal<Element::size, Size> = true>
     Link put_link(const Element& element) NOEXCEPT;
-
-protected:
-    reader_ptr getter(const Link& link) const NOEXCEPT;
-    writer_ptr creater(Link& link, const Link& size) NOEXCEPT;
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);

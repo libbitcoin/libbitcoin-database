@@ -19,8 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_MEMORY_WRITER_HPP
 #define LIBBITCOIN_DATABASE_MEMORY_WRITER_HPP
 
-#include <memory>
-#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
@@ -28,42 +26,44 @@
 namespace libbitcoin {
 namespace database {
     
-/// Sink for ios::stream, copies bytes to/from memory_ptr.
-class map_sink
-  : public system::device<memory>
-{
-public:
-    typedef system::device<memory> base;
-    typedef const memory_ptr& container;
-    struct category
-      : system::ios::seekable, system::ios::direct_tag
-    {
-    };
+/////// Sink for ios::stream, copies bytes to/from memory_ptr.
+////class map_sink
+////  : public system::device<memory>
+////{
+////public:
+////    typedef system::device<memory> base;
+////    typedef const memory_ptr& container;
+////    struct category
+////      : system::ios::seekable, system::ios::direct_tag
+////    {
+////    };
+////
+////    map_sink(const memory_ptr& data) NOEXCEPT
+////      : base(system::limit<typename base::size_type>(data->size())),
+////        container_(data),
+////        next_(data->begin())
+////    {
+////    }
+////
+////protected:
+////    typename base::sequence do_sequence() const NOEXCEPT override
+////    {
+////        using char_type = typename base::char_type;
+////        return std::make_pair(
+////            system::pointer_cast<char_type>(container_->begin()),
+////            system::pointer_cast<char_type>(container_->end()));
+////    }
+////
+////private:
+////    const memory::ptr container_;
+////    typename memory::iterator next_;
+////};
 
-    map_sink(const memory_ptr& data) NOEXCEPT
-      : base(system::limit<typename base::size_type>(data->size())),
-        container_(data),
-        next_(data->begin())
-    {
-    }
-
-protected:
-    typename base::sequence do_sequence() const NOEXCEPT override
-    {
-        using char_type = typename base::char_type;
-        return std::make_pair(
-            system::pointer_cast<char_type>(container_->begin()),
-            system::pointer_cast<char_type>(container_->end()));
-    }
-
-private:
-    const memory::ptr container_;
-    typename memory::iterator next_;
-};
+/// A byte writer that copies data to a memory_ptr.
+using writer = system::byte_writer<system::iostream<memory>>;
 
 /// A byte reader/writer that copies data from/to a memory_ptr.
-using writer = system::make_streamer<map_sink, system::byte_flipper>;
-typedef std::shared_ptr<writer> writer_ptr;
+using flipper = system::byte_flipper<system::iostream<memory>>;
 
 } // namespace database
 } // namespace libbitcoin

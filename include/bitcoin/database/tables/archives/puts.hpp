@@ -66,7 +66,7 @@ struct puts
             return source;
         }
 
-        inline bool to_data(writer& sink) const NOEXCEPT
+        inline bool to_data(flipper& sink) const NOEXCEPT
         {
             std::for_each(spend_fks.begin(), spend_fks.end(), [&](const auto& fk) NOEXCEPT
             {

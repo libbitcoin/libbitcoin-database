@@ -110,8 +110,15 @@ TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
-    auto source = getter(link);
-    return source && element.from_data(*source);
+    using namespace system;
+    const auto ptr = manager_.get(link);
+    if (!ptr)
+        return false;
+
+    iostream<memory> stream{ ptr->data(), ptr->size() };
+    reader source{ stream };
+    if constexpr (!is_slab) { source.set_limit(Size); }
+    return element.from_data(source);
 }
 
 TEMPLATE
@@ -126,8 +133,17 @@ TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::put_link(Link& link, const Element& element) NOEXCEPT
 {
-    auto sink = creater(link, element.count());
-    return sink && element.to_data(*sink);
+    using namespace system;
+    const auto count = element.count();
+    link = manager_.allocate(count);
+    const auto ptr = manager_.get(link);
+    if (!ptr)
+        return false;
+
+    iostream<memory> stream{ ptr->data(), ptr->size() };
+    flipper sink{ stream };
+    if constexpr (!is_slab) { sink.set_limit(Size * count); }
+    return element.to_data(sink);
 }
 
 TEMPLATE
@@ -136,38 +152,6 @@ Link CLASS::put_link(const Element& element) NOEXCEPT
 {
     Link link{};
     return put_link(link, element) ? link : Link{};
-}
-
-// protected
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-reader_ptr CLASS::getter(const Link& link) const NOEXCEPT
-{
-    const auto ptr = manager_.get(link);
-    if (!ptr)
-        return {};
-
-    const auto source = std::make_shared<reader>(ptr);
-
-    // Limits to single record or eof for slab (caller can remove limit).
-    if constexpr (!is_slab) { source->set_limit(Size); }
-    return source;
-}
-
-TEMPLATE
-writer_ptr CLASS::creater(Link& link, const Link& size) NOEXCEPT
-{
-    link = manager_.allocate(size);
-    const auto ptr = manager_.get(link);
-    if (!ptr)
-        return {};
-
-    const auto sink = std::make_shared<writer>(ptr);
-
-    // Limits to size records or eof for slab.
-    if constexpr (!is_slab) { sink->set_limit(Size * size); }
-    return sink;
 }
 
 } // namespace database

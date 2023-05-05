@@ -59,7 +59,7 @@ struct bootstrap
             return source;
         }
 
-        inline bool to_data(writer& sink) const NOEXCEPT
+        inline bool to_data(flipper& sink) const NOEXCEPT
         {
             // Clear the single record limit (file limit remains).
             sink.set_limit();

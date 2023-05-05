@@ -51,6 +51,9 @@ public:
     INLINE uint8_t* begin() NOEXCEPT override;
     INLINE uint8_t* end() NOEXCEPT override;
 
+    /// Alias for begin.
+    INLINE uint8_t* data() NOEXCEPT override { return begin(); }
+
 private:
     uint8_t* begin_{};
     uint8_t* end_{};

@@ -29,17 +29,20 @@
 namespace libbitcoin {
 namespace database {
 
+// This is single inheritance.
+BC_PUSH_WARNING(DIAMOND_INHERITANCE)
+
 /// A byte flipper with finalization extentions, that accepts an iostream.
 template <typename IOStream = std::iostream>
-class flipper
+class finalizer_
   : public system::byte_flipper<IOStream>
 {
 public:
-    DEFAULT_COPY_MOVE_DESTRUCT(flipper);
+    DEFAULT_COPY_MOVE_DESTRUCT(finalizer_);
 
     using finalization = std::function<bool()>;
 
-    flipper(IOStream& stream) NOEXCEPT
+    finalizer_(IOStream& stream) NOEXCEPT
       : system::byte_flipper<IOStream>(stream)
     {
     }
@@ -66,8 +69,9 @@ private:
 };
 
 /// A finalizing byte reader/writer that copies data from/to a memory_ptr.
-using finalizer = system::make_streamer<map_sink, flipper>;
-typedef std::shared_ptr<finalizer> finalizer_ptr;
+using finalizer = finalizer_<system::iostream<memory>>;
+
+BC_POP_WARNING()
 
 } // namespace database
 } // namespace libbitcoin

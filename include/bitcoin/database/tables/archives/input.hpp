@@ -58,7 +58,7 @@ struct input
             return source;
         }
 
-        inline bool to_data(writer& sink) const NOEXCEPT
+        inline bool to_data(flipper& sink) const NOEXCEPT
         {
             script.to_data(sink, true);
             witness.to_data(sink, true);
@@ -101,7 +101,7 @@ struct input
                 input.witness().serialized_size(true));
         }
 
-        inline bool to_data(writer& sink) const NOEXCEPT
+        inline bool to_data(flipper& sink) const NOEXCEPT
         {
             input.script().to_data(sink, true);
             input.witness().to_data(sink, true);

@@ -26,6 +26,7 @@ BOOST_AUTO_TEST_CASE(accessor__construct_shared_mutex__unassigned__nulls)
 {
     std::shared_mutex mutex;
     accessor instance(mutex);
+    BOOST_REQUIRE(is_null(instance.data()));
     BOOST_REQUIRE(is_null(instance.begin()));
     BOOST_REQUIRE(is_null(instance.end()));
 }
@@ -34,6 +35,7 @@ BOOST_AUTO_TEST_CASE(accessor__construct_upgrade_mutex__unassigned__nulls)
 {
     boost::upgrade_mutex mutex;
     accessor instance(mutex);
+    BOOST_REQUIRE(is_null(instance.data()));
     BOOST_REQUIRE(is_null(instance.begin()));
     BOOST_REQUIRE(is_null(instance.end()));
 }
@@ -62,6 +64,7 @@ BOOST_AUTO_TEST_CASE(accessor__assign__forward__positive_size)
     const auto expected_begin = chunk.data();
     const auto expected_end = std::next(expected_begin, chunk.size());
     instance.assign(expected_begin, expected_end);
+    BOOST_REQUIRE_EQUAL(instance.data(), expected_begin);
     BOOST_REQUIRE_EQUAL(instance.begin(), expected_begin);
     BOOST_REQUIRE_EQUAL(instance.end(), expected_end);
     BOOST_REQUIRE_EQUAL(instance.size(), system::possible_narrow_and_sign_cast<ptrdiff_t>(1));
@@ -75,6 +78,7 @@ BOOST_AUTO_TEST_CASE(accessor__assign__reverse__negative_size)
     const auto expected_end = chunk.data();
     const auto expected_begin = std::next(expected_end, chunk.size());
     instance.assign(expected_begin, expected_end);
+    BOOST_REQUIRE_EQUAL(instance.data(), expected_begin);
     BOOST_REQUIRE_EQUAL(instance.begin(), expected_begin);
     BOOST_REQUIRE_EQUAL(instance.end(), expected_end);
     BOOST_REQUIRE_EQUAL(instance.size(), system::possible_narrow_and_sign_cast<ptrdiff_t>(-1));

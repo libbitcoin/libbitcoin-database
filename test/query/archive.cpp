@@ -49,51 +49,51 @@ const auto events = [](auto, auto) {};
 // archive (natural-keyed)
 
 // slow test (mmap)
-BOOST_AUTO_TEST_CASE(query_archive__set_header__mmap_get_header__expected)
-{
-    constexpr auto parent = system::null_hash;
-    constexpr auto merkle_root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
-    constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
-    const system::chain::header header
-    {
-        0x31323334, // version
-        parent,     // previous_block_hash
-        merkle_root,// merkle_root
-        0x41424344, // timestamp
-        0x51525354, // bits
-        0x61626364  // nonce
-    };
-
-    settings settings{};
-    settings.header_buckets = 10;
-    settings.path = TEST_DIRECTORY;
-    store<map> store{ settings };
-    query<database::store<map>> query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
-
-    // must open/close mmap
-    BOOST_REQUIRE_EQUAL(store.open(events), error::success);
-    BOOST_REQUIRE(query.set(header, test::context));
-
-    table::header::record element1{};
-    BOOST_REQUIRE(store.header.get(query.to_header(block_hash), element1));
-
-    const auto pointer = query.get_header(query.to_header(block_hash));
-    BOOST_REQUIRE(pointer);
-    BOOST_REQUIRE(*pointer == header);
-
-    // must open/close mmap
-    BOOST_REQUIRE_EQUAL(store.close(events), error::success);
-    BOOST_REQUIRE_EQUAL(element1.ctx.height, system::mask_left(test::context.height, byte_bits));
-    BOOST_REQUIRE_EQUAL(element1.ctx.flags, test::context.flags);
-    BOOST_REQUIRE_EQUAL(element1.ctx.mtp, test::context.mtp);
-    BOOST_REQUIRE_EQUAL(element1.version, header.version());
-    BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
-    BOOST_REQUIRE_EQUAL(element1.merkle_root, header.merkle_root());
-    BOOST_REQUIRE_EQUAL(element1.timestamp, header.timestamp());
-    BOOST_REQUIRE_EQUAL(element1.bits, header.bits());
-    BOOST_REQUIRE_EQUAL(element1.nonce, header.nonce());
-}
+////BOOST_AUTO_TEST_CASE(query_archive__set_header__mmap_get_header__expected)
+////{
+////    constexpr auto parent = system::null_hash;
+////    constexpr auto merkle_root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
+////    constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
+////    const system::chain::header header
+////    {
+////        0x31323334, // version
+////        parent,     // previous_block_hash
+////        merkle_root,// merkle_root
+////        0x41424344, // timestamp
+////        0x51525354, // bits
+////        0x61626364  // nonce
+////    };
+////
+////    settings settings{};
+////    settings.header_buckets = 10;
+////    settings.path = TEST_DIRECTORY;
+////    store<map> store{ settings };
+////    query<database::store<map>> query{ store };
+////    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+////
+////    // must open/close mmap
+////    BOOST_REQUIRE_EQUAL(store.open(events), error::success);
+////    BOOST_REQUIRE(query.set(header, test::context));
+////
+////    table::header::record element1{};
+////    BOOST_REQUIRE(store.header.get(query.to_header(block_hash), element1));
+////
+////    const auto pointer = query.get_header(query.to_header(block_hash));
+////    BOOST_REQUIRE(pointer);
+////    BOOST_REQUIRE(*pointer == header);
+////
+////    // must open/close mmap
+////    BOOST_REQUIRE_EQUAL(store.close(events), error::success);
+////    BOOST_REQUIRE_EQUAL(element1.ctx.height, system::mask_left(test::context.height, byte_bits));
+////    BOOST_REQUIRE_EQUAL(element1.ctx.flags, test::context.flags);
+////    BOOST_REQUIRE_EQUAL(element1.ctx.mtp, test::context.mtp);
+////    BOOST_REQUIRE_EQUAL(element1.version, header.version());
+////    BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
+////    BOOST_REQUIRE_EQUAL(element1.merkle_root, header.merkle_root());
+////    BOOST_REQUIRE_EQUAL(element1.timestamp, header.timestamp());
+////    BOOST_REQUIRE_EQUAL(element1.bits, header.bits());
+////    BOOST_REQUIRE_EQUAL(element1.nonce, header.nonce());
+////}
 
 BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
 {

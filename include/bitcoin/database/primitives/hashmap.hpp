@@ -124,15 +124,6 @@ public:
     bool commit(const Link& link, const Key& key) NOEXCEPT;
     Link commit_link(const Link& link, const Key& key) NOEXCEPT;
 
-protected:
-    template <typename Streamer>
-    typename Streamer::ptr streamer(const Link& link) const NOEXCEPT;
-
-    finalizer_ptr creater(Link& link, const Key& key,
-        const Link& size) NOEXCEPT;
-    finalizer_ptr putter(const Link& link, const Key& key,
-        const Link& size) NOEXCEPT;
-
 private:
     static constexpr auto is_slab = (Size == max_size_t);
     using head = database::head<Link, Key, Hash>;

@@ -149,16 +149,34 @@ TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
-    auto source = streamer<reader>(link);
-    return source && element.from_data(*source);
+    using namespace system;
+    const auto ptr = manager_.get(link);
+    if (!ptr)
+        return false;
+
+    iostream<memory> stream{ ptr->data(), ptr->size() };
+    reader source{ stream };
+    source.skip_bytes(Link::size + array_count<Key>);
+
+    if constexpr (!is_slab) { source.set_limit(Size); }
+    return element.from_data(source);
 }
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
 {
-    auto sink = streamer<finalizer>(link);
-    return sink && element.to_data(*sink);
+    using namespace system;
+    const auto ptr = manager_.get(link);
+    if (!ptr)
+        return false;
+
+    iostream<memory> stream{ ptr->data(), ptr->size() };
+    finalizer sink{ stream };
+    sink.skip_bytes(Link::size + array_count<Key>);
+
+    if constexpr (!is_slab) { sink.set_limit(Size); }
+    return element.to_data(sink);
 }
 
 TEMPLATE
@@ -190,11 +208,25 @@ template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::put_link(Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
-    // Reusing put() here would cause a second invocation of element.count().
-    const auto size = element.count();
-    link = allocate(size);
-    auto sink = putter(link, key, size);
-    return sink && element.to_data(*sink) && sink->finalize();
+    using namespace system;
+    const auto count = element.count();
+    link = allocate(count);
+    const auto ptr = manager_.get(link);
+    if (!ptr)
+        return false;
+
+    iostream<memory> stream{ ptr->data(), ptr->size() };
+    finalizer sink{ stream };
+    sink.skip_bytes(Link::size);
+    sink.write_bytes(key);
+    sink.set_finalizer([this, link, index = head_.index(key), ptr]() NOEXCEPT
+    {
+        auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
+        return head_.push(link, next, index);
+    });
+
+    if constexpr (!is_slab) { sink.set_limit(Size * count); }
+    return element.to_data(sink) && sink.finalize();
 }
 
 TEMPLATE
@@ -209,8 +241,25 @@ template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::put(const Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
-    auto sink = putter(link, key, element.count());
-    return sink && element.to_data(*sink) && sink->finalize();
+    using namespace system;
+    const auto count = element.count();
+    const auto ptr = manager_.get(link);
+    if (!ptr)
+        return false;
+
+    iostream<memory> stream{ ptr->data(), ptr->size() };
+    finalizer sink{ stream };
+    sink.skip_bytes(Link::size);
+    sink.write_bytes(key);
+    sink.set_finalizer([this, link, index = head_.index(key), ptr]() NOEXCEPT
+    {
+        auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
+        return head_.push(link, next, index);
+    });
+
+    if constexpr (!is_slab) { sink.set_limit(Size * count); }
+    return element.to_data(sink) && sink.finalize();
+    return false;
 }
 
 TEMPLATE
@@ -233,58 +282,6 @@ TEMPLATE
 Link CLASS::commit_link(const Link& link, const Key& key) NOEXCEPT
 {
     return commit(link, key) ? link : Link{};
-}
-
-// protected
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-template <typename Streamer>
-typename Streamer::ptr CLASS::streamer(const Link& link) const NOEXCEPT
-{
-    const auto ptr = manager_.get(link);
-    if (!ptr)
-        return {};
-
-    const auto stream = std::make_shared<Streamer>(ptr);
-    stream->skip_bytes(Link::size + array_count<Key>);
-
-    // Limits to single record or eof for slab (caller can remove limit).
-    if constexpr (!is_slab) { stream->set_limit(Size); }
-    return stream;
-}
-
-TEMPLATE
-finalizer_ptr CLASS::creater(Link& link, const Key& key,
-    const Link& size) NOEXCEPT
-{
-    link = allocate(size);
-    return putter(link, key, size);
-}
-
-TEMPLATE
-finalizer_ptr CLASS::putter(const Link& link, const Key& key,
-    const Link& size) NOEXCEPT
-{
-    using namespace system;
-    const auto ptr = manager_.get(link);
-    if (!ptr)
-        return {};
-
-    const auto sink = std::make_shared<finalizer>(ptr);
-    sink->skip_bytes(Link::size);
-    sink->write_bytes(key);
-
-    const auto index = head_.index(key);
-    sink->set_finalizer([this, link, index, ptr]() NOEXCEPT
-    {
-        auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
-        return head_.push(link, next, index);
-    });
-
-    // Limits to size records or eof for slab.
-    if constexpr (!is_slab) { sink->set_limit(Size * size); }
-    return sink;
 }
 
 } // namespace database

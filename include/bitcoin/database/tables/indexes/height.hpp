@@ -44,7 +44,7 @@ struct height
             return source;
         }
 
-        inline bool to_data(writer& sink) const NOEXCEPT
+        inline bool to_data(flipper& sink) const NOEXCEPT
         {
             sink.write_little_endian<block::integer, block::size>(header_fk);
             return sink;

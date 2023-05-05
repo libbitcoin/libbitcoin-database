@@ -21,8 +21,6 @@
 
 BOOST_AUTO_TEST_SUITE(arraymap_tests)
 
-using namespace system;
-
 template <typename Link, size_t Size>
 class arraymap_
   : public arraymap<Link, Size>
@@ -30,20 +28,39 @@ class arraymap_
 public:
     using base = arraymap<Link, Size>;
     using base::arraymap;
+    ////using reader_ptr = std::shared_ptr<database::reader>;
+    ////using writer_ptr = std::shared_ptr<database::writer>;
 
-    reader_ptr getter_(const Link& record) const NOEXCEPT
-    {
-        return base::getter(record);
-    }
+    ////reader_ptr getter_(const Link& link) const NOEXCEPT
+    ////{
+    ////    using namespace system;
+    ////    const auto ptr = manager_.get(link);
+    ////    if (!ptr)
+    ////        return {};
 
-    writer_ptr creater_(const Link& size=one) NOEXCEPT
-    {
-        Link link{};
-        return base::creater(link, size);
-    }
+    ////    istream<memory> stream{ *ptr };
+    ////    const auto source = std::make_shared<database::reader>(stream);
+    ////    if constexpr (!is_slab) { source->set_limit(Size); }
+    ////    return source;
+    ////}
+
+    ////writer_ptr creater_(const Link& size=one) NOEXCEPT
+    ////{
+    ////    using namespace system;
+    ////    const auto link = manager_.allocate(size);
+    ////    const auto ptr = manager_.get(link);
+    ////    if (!ptr)
+    ////        return {};
+
+    ////    iostream<memory> stream{ *ptr };
+    ////    const auto sink = std::make_shared<database::writer>(stream);
+    ////    if constexpr (!is_slab) { sink.set_limit(Size * size); }
+    ////    return sink;
+    ////}
 };
 
 // There is no internal linkage, but we still have primary key domain.
+using namespace system;
 using link5 = linkage<5>;
 struct slab0 { static constexpr size_t size = max_size_t; };
 struct record4 { static constexpr size_t size = 4; };
@@ -81,7 +98,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_getter__terminal__false)
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     const record_table instance{ head_store, body_store };
-    BOOST_REQUIRE(!instance.getter_(link5::terminal));
+    ////BOOST_REQUIRE(!instance.getter_(link5::terminal));
 }
 
 BOOST_AUTO_TEST_CASE(arraymap__record_getter__empty__exhausted)
@@ -91,8 +108,8 @@ BOOST_AUTO_TEST_CASE(arraymap__record_getter__empty__exhausted)
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     const record_table instance{ head_store, body_store };
-    BOOST_REQUIRE(instance.getter_(0)->is_exhausted());
-    BOOST_REQUIRE(instance.getter_(19)->is_exhausted());
+    ////BOOST_REQUIRE(instance.getter_(0)->is_exhausted());
+    ////BOOST_REQUIRE(instance.getter_(19)->is_exhausted());
 }
 
 // slab arraymap
@@ -126,7 +143,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_getter__terminal__false)
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     const slab_table instance{ head_store, body_store };
-    BOOST_REQUIRE(!instance.getter_(link5::terminal));
+    ////BOOST_REQUIRE(!instance.getter_(link5::terminal));
 }
 
 BOOST_AUTO_TEST_CASE(arraymap__slab_getter__empty__exhausted)
@@ -136,72 +153,72 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_getter__empty__exhausted)
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     const slab_table instance{ head_store, body_store };
-    BOOST_REQUIRE(instance.getter_(0)->is_exhausted());
-    BOOST_REQUIRE(instance.getter_(19)->is_exhausted());
+    ////BOOST_REQUIRE(instance.getter_(0)->is_exhausted());
+    ////BOOST_REQUIRE(instance.getter_(19)->is_exhausted());
 }
 
 // push/found/at (protected interface positive tests)
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(arraymap__record_readers__empty__expected)
-{
-    data_chunk head_file;
-    data_chunk body_file;
-    test::chunk_storage head_store{ head_file };
-    test::chunk_storage body_store{ body_file };
-    record_table instance{ head_store, body_store };
-
-    auto stream0 = instance.creater_();
-    BOOST_REQUIRE_EQUAL(body_file.size(), record4::size);
-    BOOST_REQUIRE(!stream0->is_exhausted());
-    BOOST_REQUIRE(instance.getter_(0));
-    stream0.reset();
-
-    auto stream1 = instance.creater_();
-    BOOST_REQUIRE_EQUAL(body_file.size(), 2u * record4::size);
-    BOOST_REQUIRE(!stream1->is_exhausted());
-    BOOST_REQUIRE(instance.getter_(1));
-    stream1.reset();
-
-    // Past end is valid pointer but exhausted stream.
-    BOOST_REQUIRE(instance.getter_(2));
-    BOOST_REQUIRE(instance.getter_(2)->is_exhausted());
-
-    // record (assumes zero fill)
-    // =================================
-    // 00000000 [0]
-    // 00000000 [1]
-}
-
-BOOST_AUTO_TEST_CASE(arraymap__slab_readers__empty__expected)
-{
-    data_chunk head_file;
-    data_chunk body_file;
-    test::chunk_storage head_store{ head_file };
-    test::chunk_storage body_store{ body_file };
-    slab_table instance{ head_store, body_store };
-
-    auto stream0 = instance.creater_(record4::size);
-    BOOST_REQUIRE_EQUAL(body_file.size(), record4::size);
-    BOOST_REQUIRE(!stream0->is_exhausted());
-    BOOST_REQUIRE(instance.getter_(0));
-    stream0.reset();
-
-    auto stream1 = instance.creater_(record4::size);
-    BOOST_REQUIRE_EQUAL(body_file.size(), 2u * record4::size);
-    BOOST_REQUIRE(!stream1->is_exhausted());
-    BOOST_REQUIRE(instance.getter_(record4::size));
-    stream1.reset();
-
-    // Past end is valid pointer but exhausted stream.
-    BOOST_REQUIRE(instance.getter_(2u * record4::size));
-    BOOST_REQUIRE(instance.getter_(2u * record4::size)->is_exhausted());
-
-    // record (assumes zero fill)
-    // =================================
-    // 00000000 [0]
-    // 00000000 [1]
-}
+////BOOST_AUTO_TEST_CASE(arraymap__record_readers__empty__expected)
+////{
+////    data_chunk head_file;
+////    data_chunk body_file;
+////    test::chunk_storage head_store{ head_file };
+////    test::chunk_storage body_store{ body_file };
+////    record_table instance{ head_store, body_store };
+////
+////    auto stream0 = instance.creater_();
+////    BOOST_REQUIRE_EQUAL(body_file.size(), record4::size);
+////    BOOST_REQUIRE(!stream0->is_exhausted());
+////    BOOST_REQUIRE(instance.getter_(0));
+////    stream0.reset();
+////
+////    auto stream1 = instance.creater_();
+////    BOOST_REQUIRE_EQUAL(body_file.size(), 2u * record4::size);
+////    BOOST_REQUIRE(!stream1->is_exhausted());
+////    BOOST_REQUIRE(instance.getter_(1));
+////    stream1.reset();
+////
+////    // Past end is valid pointer but exhausted stream.
+////    BOOST_REQUIRE(instance.getter_(2));
+////    BOOST_REQUIRE(instance.getter_(2)->is_exhausted());
+////
+////    // record (assumes zero fill)
+////    // =================================
+////    // 00000000 [0]
+////    // 00000000 [1]
+////}
+////
+////BOOST_AUTO_TEST_CASE(arraymap__slab_readers__empty__expected)
+////{
+////    data_chunk head_file;
+////    data_chunk body_file;
+////    test::chunk_storage head_store{ head_file };
+////    test::chunk_storage body_store{ body_file };
+////    slab_table instance{ head_store, body_store };
+////
+////    auto stream0 = instance.creater_(record4::size);
+////    BOOST_REQUIRE_EQUAL(body_file.size(), record4::size);
+////    BOOST_REQUIRE(!stream0->is_exhausted());
+////    BOOST_REQUIRE(instance.getter_(0));
+////    stream0.reset();
+////
+////    auto stream1 = instance.creater_(record4::size);
+////    BOOST_REQUIRE_EQUAL(body_file.size(), 2u * record4::size);
+////    BOOST_REQUIRE(!stream1->is_exhausted());
+////    BOOST_REQUIRE(instance.getter_(record4::size));
+////    stream1.reset();
+////
+////    // Past end is valid pointer but exhausted stream.
+////    BOOST_REQUIRE(instance.getter_(2u * record4::size));
+////    BOOST_REQUIRE(instance.getter_(2u * record4::size)->is_exhausted());
+////
+////    // record (assumes zero fill)
+////    // =================================
+////    // 00000000 [0]
+////    // 00000000 [1]
+////}
 
 // get/put
 // ----------------------------------------------------------------------------
@@ -221,7 +238,7 @@ public:
         return source;
     }
 
-    bool to_data(database::writer& sink) const NOEXCEPT
+    bool to_data(database::flipper& sink) const NOEXCEPT
     {
         sink.write_little_endian(value);
         return sink;
@@ -242,7 +259,7 @@ public:
         return source;
     }
 
-    bool to_data(database::writer& sink) const NOEXCEPT
+    bool to_data(database::flipper& sink) const NOEXCEPT
     {
         sink.write_big_endian(value);
         return sink;
@@ -368,7 +385,7 @@ public:
         return source;
     }
 
-    bool to_data(database::writer& sink) const NOEXCEPT
+    bool to_data(database::flipper& sink) const NOEXCEPT
     {
         sink.write_little_endian(value);
         return sink;
@@ -389,7 +406,7 @@ public:
         return source;
     }
 
-    bool to_data(database::writer& sink) const NOEXCEPT
+    bool to_data(database::flipper& sink) const NOEXCEPT
     {
         sink.write_big_endian(value);
         return sink;
@@ -479,7 +496,7 @@ public:
         return source;
     }
 
-    bool to_data(database::writer& sink) const NOEXCEPT
+    bool to_data(database::flipper& sink) const NOEXCEPT
     {
         sink.write_big_endian(value);
         return sink;
@@ -524,7 +541,7 @@ public:
         return source;
     }
 
-    bool to_data(database::writer& sink) const NOEXCEPT
+    bool to_data(database::flipper& sink) const NOEXCEPT
     {
         sink.write_big_endian(value);
         return sink;
@@ -547,7 +564,7 @@ public:
         return source;
     }
 
-    bool to_data(database::writer& sink) const NOEXCEPT
+    bool to_data(database::flipper& sink) const NOEXCEPT
     {
         sink.write_big_endian(value);
         return sink;
