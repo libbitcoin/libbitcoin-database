@@ -78,7 +78,10 @@ public:
     /// The current logical size of the memory map (zero if closed).
     INLINE size_t size() const NOEXCEPT override
     {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
         std::shared_lock field_lock(field_mutex_);
+        BC_POP_WARNING()
+
         return logical_;
     }
 
@@ -91,7 +94,9 @@ public:
     /// Get r/w access to start/offset of memory map (or null).
     INLINE memory_ptr get(size_t offset=zero) const NOEXCEPT override
     {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
         const auto ptr = std::make_shared<accessor<mutex>>(map_mutex_);
+        BC_POP_WARNING()
 
         if (!loaded_)
             return nullptr;
