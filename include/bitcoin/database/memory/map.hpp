@@ -20,10 +20,12 @@
 #define LIBBITCOIN_DATABASE_MEMORY_MAP_HPP
 
 #include <filesystem>
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/error.hpp>
+#include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
 
@@ -74,7 +76,14 @@ public:
     size_t capacity() const NOEXCEPT override;
 
     /// The current logical size of the memory map (zero if closed).
-    INLINE size_t size() const NOEXCEPT override;
+    INLINE size_t size() const NOEXCEPT override
+    {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        std::shared_lock field_lock(field_mutex_);
+        BC_POP_WARNING()
+
+        return logical_;
+    }
 
     /// Reduce logical size to specified (false if size exceeds logical).
     bool truncate(size_t size) NOEXCEPT override;
@@ -83,7 +92,25 @@ public:
     size_t allocate(size_t chunk) NOEXCEPT override;
 
     /// Get r/w access to start/offset of memory map (or null).
-    INLINE memory_ptr get(size_t offset=zero) const NOEXCEPT override;
+    INLINE memory_ptr get(size_t offset=zero) const NOEXCEPT override
+    {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        const auto ptr = std::make_shared<accessor<mutex>>(map_mutex_);
+        BC_POP_WARNING()
+
+        if (!loaded_)
+            return nullptr;
+
+        BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
+        ptr->assign(memory_map_ + offset, memory_map_ + size());
+        BC_POP_WARNING()
+
+        // With offset > size the assignment is negative (stream is exhausted).
+        ////ptr->assign(
+        ////    std::next(memory_map_, offset),
+        ////    std::next(memory_map_, size()));
+        return ptr;
+    }
 
 protected:
     size_t to_capacity(size_t required) const NOEXCEPT
