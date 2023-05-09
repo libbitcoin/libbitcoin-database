@@ -154,7 +154,7 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
     if (!ptr)
         return false;
 
-    iostream<memory> stream{ ptr->data(), ptr->size() };
+    iostream stream{ *ptr };
     reader source{ stream };
     source.skip_bytes(Link::size + array_count<Key>);
 
@@ -171,7 +171,7 @@ bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
     if (!ptr)
         return false;
 
-    iostream<memory> stream{ ptr->data(), ptr->size() };
+    iostream stream{ *ptr };
     finalizer sink{ stream };
     sink.skip_bytes(Link::size + array_count<Key>);
 
@@ -215,7 +215,7 @@ bool CLASS::put_link(Link& link, const Key& key,
     if (!ptr)
         return false;
 
-    iostream<memory> stream{ ptr->data(), ptr->size() };
+    iostream stream{ *ptr };
     finalizer sink{ stream };
     sink.skip_bytes(Link::size);
     sink.write_bytes(key);
@@ -247,7 +247,7 @@ bool CLASS::put(const Link& link, const Key& key,
     if (!ptr)
         return false;
 
-    iostream<memory> stream{ ptr->data(), ptr->size() };
+    iostream stream{ *ptr };
     finalizer sink{ stream };
     sink.skip_bytes(Link::size);
     sink.write_bytes(key);

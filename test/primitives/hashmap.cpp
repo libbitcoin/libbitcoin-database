@@ -42,7 +42,7 @@ public:
     ////    if (!ptr)
     ////        return {};
 
-    ////    system::istream<memory> stream{ *ptr };
+    ////    system::istream stream{ *ptr };
     ////    const auto source = std::make_shared<reader>(stream);
     ////    if constexpr (!is_slab) { source->set_limit(Size); }
     ////    return source;
@@ -56,7 +56,7 @@ public:
     ////    if (!ptr)
     ////        return {};
 
-    ////    iostream<memory> stream{ *ptr };
+    ////    iostream stream{ *ptr };
     ////    const auto sink = std::make_shared<finalizer>(stream);
     ////    sink->skip_bytes(Link::size);
     ////    sink->write_bytes(key);

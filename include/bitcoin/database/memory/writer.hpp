@@ -60,10 +60,10 @@ namespace database {
 ////};
 
 /// A byte writer that copies data to a memory_ptr.
-using writer = system::byte_writer<system::iostream<memory>>;
+using writer = system::byte_writer<system::iostream<>>;
 
 /// A byte reader/writer that copies data from/to a memory_ptr.
-using flipper = system::byte_flipper<system::iostream<memory>>;
+using flipper = system::byte_flipper<system::iostream<>>;
 
 } // namespace database
 } // namespace libbitcoin
