@@ -69,7 +69,7 @@ private:
 };
 
 /// A finalizing byte reader/writer that copies data from/to a memory_ptr.
-using finalizer = finalizer_<system::iostream<memory>>;
+using finalizer = finalizer_<system::iostream<>>;
 
 BC_POP_WARNING()
 

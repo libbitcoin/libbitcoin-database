@@ -60,7 +60,7 @@ namespace database {
 ////};
 
 /// A byte reader that copies data from a memory_ptr.
-using reader = system::byte_reader<system::iostream<memory>>;
+using reader = system::byte_reader<system::iostream<>>;
 
 } // namespace database
 } // namespace libbitcoin

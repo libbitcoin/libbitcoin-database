@@ -115,7 +115,7 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
     if (!ptr)
         return false;
 
-    iostream<memory> stream{ ptr->data(), ptr->size() };
+    iostream stream{ *ptr };
     reader source{ stream };
     if constexpr (!is_slab) { source.set_limit(Size); }
     return element.from_data(source);
@@ -140,7 +140,7 @@ bool CLASS::put_link(Link& link, const Element& element) NOEXCEPT
     if (!ptr)
         return false;
 
-    iostream<memory> stream{ ptr->data(), ptr->size() };
+    iostream stream{ *ptr };
     flipper sink{ stream };
     if constexpr (!is_slab) { sink.set_limit(Size * count); }
     return element.to_data(sink);
