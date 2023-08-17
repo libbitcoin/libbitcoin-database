@@ -25,7 +25,7 @@ Version: @PACKAGE_VERSION@
 #==============================================================================
 # Dependencies that publish package configuration.
 #------------------------------------------------------------------------------
-Requires: libbitcoin-system >= 3.7.0
+Requires: libbitcoin-system >= 3.8.0
 
 # Include directory and any other required compiler flags.
 #------------------------------------------------------------------------------

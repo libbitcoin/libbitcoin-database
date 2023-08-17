@@ -13,7 +13,7 @@
 AC_PREREQ([2.65])
 
 # Process command-line arguments and perform initialization and verification.
-AC_INIT([libbitcoin-database], [3.7.0], [eric@voskuil.org])
+AC_INIT([libbitcoin-database], [3.8.0], [eric@voskuil.org])
 
 # Do compilation tests.
 AC_LANG(C++)
@@ -258,13 +258,13 @@ AS_CASE([${with_tests}], [yes],
      AC_MSG_NOTICE([boost_unit_test_framework_LIBS : ${boost_unit_test_framework_LIBS}])],
     [AC_SUBST([boost_unit_test_framework_LIBS], [])])
 
-# Require bitcoin-system of at least version 3.7.0 and output ${bitcoin_system_CPPFLAGS/LIBS/PKG}.
+# Require bitcoin-system of at least version 3.8.0 and output ${bitcoin_system_CPPFLAGS/LIBS/PKG}.
 #------------------------------------------------------------------------------
-PKG_CHECK_MODULES([bitcoin_system], [libbitcoin-system >= 3.7.0],
-    [bitcoin_system_INCLUDEDIR="`$PKG_CONFIG --variable=includedir "libbitcoin-system >= 3.7.0" 2>/dev/null`"
-     bitcoin_system_OTHER_CFLAGS="`$PKG_CONFIG --cflags-only-other "libbitcoin-system >= 3.7.0" 2>/dev/null`"],
-    [AC_MSG_ERROR([libbitcoin-system >= 3.7.0 is required but was not found.])])
-AC_SUBST([bitcoin_system_PKG], ['libbitcoin-system >= 3.7.0'])
+PKG_CHECK_MODULES([bitcoin_system], [libbitcoin-system >= 3.8.0],
+    [bitcoin_system_INCLUDEDIR="`$PKG_CONFIG --variable=includedir "libbitcoin-system >= 3.8.0" 2>/dev/null`"
+     bitcoin_system_OTHER_CFLAGS="`$PKG_CONFIG --cflags-only-other "libbitcoin-system >= 3.8.0" 2>/dev/null`"],
+    [AC_MSG_ERROR([libbitcoin-system >= 3.8.0 is required but was not found.])])
+AC_SUBST([bitcoin_system_PKG], ['libbitcoin-system >= 3.8.0'])
 AC_SUBST([bitcoin_system_CPPFLAGS], [${bitcoin_system_CFLAGS}])
 AS_IF([test x${bitcoin_system_INCLUDEDIR} != "x"],
     [AC_SUBST([bitcoin_system_ISYS_CPPFLAGS], ["-isystem${bitcoin_system_INCLUDEDIR} ${bitcoin_system_OTHER_CFLAGS}"])],

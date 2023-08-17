@@ -12,9 +12,9 @@
  * For interpretation of the versioning scheme see: http://semver.org
  */
 
-#define LIBBITCOIN_DATABASE_VERSION "3.7.0"
+#define LIBBITCOIN_DATABASE_VERSION "3.8.0"
 #define LIBBITCOIN_DATABASE_MAJOR_VERSION 3
-#define LIBBITCOIN_DATABASE_MINOR_VERSION 7
+#define LIBBITCOIN_DATABASE_MINOR_VERSION 8
 #define LIBBITCOIN_DATABASE_PATCH_VERSION 0
 
 #endif
