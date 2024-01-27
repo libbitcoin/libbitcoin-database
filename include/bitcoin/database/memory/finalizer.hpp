@@ -24,7 +24,6 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/writer.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -33,7 +32,7 @@ namespace database {
 BC_PUSH_WARNING(DIAMOND_INHERITANCE)
 
 /// A byte flipper with finalization extentions, that accepts an iostream.
-template <typename IOStream = std::iostream>
+template <typename IOStream = system::stream::flip::fast>
 class finalizer_
   : public system::byte_flipper<IOStream>
 {
@@ -69,7 +68,7 @@ private:
 };
 
 /// A finalizing byte reader/writer that copies data from/to a memory_ptr.
-using finalizer = finalizer_<system::iostream<>>;
+using finalizer = finalizer_<>;
 
 BC_POP_WARNING()
 

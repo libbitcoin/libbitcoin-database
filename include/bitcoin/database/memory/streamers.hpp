@@ -16,14 +16,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MEMORY_MEMORY_HPP
-#define LIBBITCOIN_DATABASE_MEMORY_MEMORY_HPP
+#ifndef LIBBITCOIN_DATABASE_MEMORY_STREAMERS_HPP
+#define LIBBITCOIN_DATABASE_MEMORY_STREAMERS_HPP
 
-#include <bitcoin/database/memory/accessor.hpp>
-#include <bitcoin/database/memory/finalizer.hpp>
+#include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
-#include <bitcoin/database/memory/interfaces/storage.hpp>
-#include <bitcoin/database/memory/map.hpp>
-#include <bitcoin/database/memory/streamers.hpp>
+
+namespace libbitcoin {
+namespace database {
+
+/// These all operate over a system::iostream.
+
+using reader = system::byte_reader<system::iostream<>>;
+using writer = system::byte_writer<system::iostream<>>;
+using flipper = system::byte_flipper<system::iostream<>>;
+
+} // namespace database
+} // namespace libbitcoin
 
 #endif

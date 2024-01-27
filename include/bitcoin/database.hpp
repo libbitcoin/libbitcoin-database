@@ -36,7 +36,7 @@
 #include <bitcoin/database/memory/reader.hpp>
 #include <bitcoin/database/memory/simple_reader.hpp>
 #include <bitcoin/database/memory/simple_writer.hpp>
-#include <bitcoin/database/memory/writer.hpp>
+#include <bitcoin/database/memory/streamers.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
 #include <bitcoin/database/primitives/arraymap.hpp>
