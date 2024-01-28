@@ -495,9 +495,10 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     const auto key = tx.hash(false);
 
     // GUARD (tx redundancy)
-    ////auto tx_fk = to_tx(key);
-    ////if (!tx_fk.is_terminal())
-    ////    return tx_fk;
+    // This guard is only effective if there is a single database thread.
+    auto tx_fk = to_tx(key);
+    if (!tx_fk.is_terminal())
+        return tx_fk;
 
     // Declare puts record.
     const auto& ins = *tx.inputs_ptr();
@@ -514,7 +515,7 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     const auto scope = store_.get_transactor();
 
     // Allocate tx record.
-    const auto tx_fk = store_.tx.allocate(1);
+    tx_fk = store_.tx.allocate(1);
     if (tx_fk.is_terminal())
         return {};
 
@@ -659,9 +660,10 @@ header_link CLASS::set_link(const header& header, const context& ctx) NOEXCEPT
     const auto key = header.hash();
 
     // GUARD (header redundancy)
-    ////auto header_fk = to_header(key);
-    ////if (!header_fk.is_terminal())
-    ////    return header_fk;
+    // This guard is only effective if there is a single database thread.
+    auto header_fk = to_header(key);
+    if (!header_fk.is_terminal())
+        return header_fk;
 
     // Parent must be missing iff its hash is null.
     const auto& parent_sk = header.previous_block_hash();
@@ -689,9 +691,10 @@ header_link CLASS::set_link(const block& block, const context& ctx) NOEXCEPT
     if (header_fk.is_terminal())
         return {};
 
-    // GUARDED (txs redundancy)
-    ////if (is_associated(header_fk))
-    ////    return header_fk;
+    // GUARDED (block (txs) redundancy)
+    // This guard is only effective if there is a single database thread.
+    if (is_associated(header_fk))
+        return header_fk;
 
     tx_links links{};
     links.reserve(block.transactions_ptr()->size());
