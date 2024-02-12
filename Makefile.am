@@ -188,7 +188,7 @@ include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/reader.hpp \
     include/bitcoin/database/memory/simple_reader.hpp \
     include/bitcoin/database/memory/simple_writer.hpp \
-    include/bitcoin/database/memory/writer.hpp
+    include/bitcoin/database/memory/streamers.hpp
 
 include_bitcoin_database_memory_interfacesdir = ${includedir}/bitcoin/database/memory/interfaces
 include_bitcoin_database_memory_interfaces_HEADERS = \

@@ -164,7 +164,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\simple_writer.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\writer.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\streamers.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\arraymap.hpp">

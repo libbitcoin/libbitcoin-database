@@ -104,7 +104,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\reader.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\simple_reader.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\simple_writer.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\writer.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\streamers.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\arraymap.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hashmap.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\head.hpp" />

@@ -26,40 +26,7 @@
 namespace libbitcoin {
 namespace database {
     
-/////// Source for ios::stream, copies bytes from memory_ptr.
-////class map_source
-////  : public system::device<memory>
-////{
-////public:
-////    typedef system::device<memory> base;
-////    typedef const memory_ptr& container;
-////    struct category
-////      : system::ios::input_seekable, system::ios::direct_tag
-////    {
-////    };
-////
-////    map_source(const memory_ptr& data) NOEXCEPT
-////      : base(system::limit<typename base::size_type>(data->size())),
-////        container_(data),
-////        next_(data->begin())
-////    {
-////    }
-////
-////protected:
-////    typename base::sequence do_sequence() const NOEXCEPT override
-////    {
-////        using char_type = typename base::char_type;
-////        return std::make_pair(
-////            system::pointer_cast<char_type>(container_->begin()),
-////            system::pointer_cast<char_type>(container_->end()));
-////    }
-////
-////private:
-////    const memory::ptr container_;
-////    typename memory::const_iterator next_;
-////};
-
-/// A byte reader that copies data from a memory_ptr.
+/// A byte reader that copies data.
 using reader = system::byte_reader<system::iostream<>>;
 
 } // namespace database
