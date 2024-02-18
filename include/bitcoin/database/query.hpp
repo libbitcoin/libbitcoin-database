@@ -215,10 +215,12 @@ public:
     inline hash_digest get_point_key(const point_link& link) const NOEXCEPT;
     inline hash_digest get_tx_key(const tx_link& link) const NOEXCEPT;
 
-    /// False implies not confirmed, false get_value implies error.
-    bool get_height(size_t& out, const header_link& link) const NOEXCEPT;
+    /// False implies not confirmed.
     bool get_tx_height(size_t& out, const tx_link& link) const NOEXCEPT;
     bool get_tx_position(size_t& out, const tx_link& link) const NOEXCEPT;
+
+    /// False implies fault.
+    bool get_height(size_t& out, const header_link& link) const NOEXCEPT;
     bool get_value(uint64_t& out, const output_link& link) const NOEXCEPT;
 
     inputs_ptr get_inputs(const tx_link& link) const NOEXCEPT;
