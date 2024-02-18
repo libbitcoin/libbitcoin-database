@@ -130,7 +130,7 @@ inline bool CLASS::populate(const input& input) const NOEXCEPT
     // input.metadata is not populated.
     // Null point would return nullptr and be interpreted as missing.
     input.prevout = get_output(input.point());
-    return input.prevout != nullptr;
+    return !is_null(input.prevout);
 }
 
 TEMPLATE
