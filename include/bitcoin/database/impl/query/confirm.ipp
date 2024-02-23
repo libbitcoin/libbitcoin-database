@@ -207,7 +207,7 @@ error::error_t CLASS::mature_prevout(const point_link& link,
         return error::integrity;
 
     // to_block assures confirmation by strong_tx traversal so this must remain
-    // prior to is_coinbase in execution order, despite the ack of dependency.
+    // prior to is_coinbase in execution order, despite the lack of dependency.
     const auto header_fk = to_block(tx_fk);
     if (header_fk.is_terminal())
         return error::unconfirmed_spend;

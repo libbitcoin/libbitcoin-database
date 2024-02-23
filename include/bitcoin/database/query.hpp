@@ -201,7 +201,7 @@ public:
     inline bool set(const hash_digest& point_hash) NOEXCEPT;
     inline bool set(const transaction& tx) NOEXCEPT;
 
-    /// False implies not fully populated.
+    /// False implies not fully populated, input.metadata is not populated.
     bool populate(const input& input) const NOEXCEPT;
     bool populate(const transaction& tx) const NOEXCEPT;
     bool populate(const block& block) const NOEXCEPT;
