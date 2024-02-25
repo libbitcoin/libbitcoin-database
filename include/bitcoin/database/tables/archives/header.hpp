@@ -256,17 +256,20 @@ struct header
         uint32_t mtp{};
     };
 
-    struct get_context_and_timestamp
+    struct get_check_context
       : public schema::header
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
+            source.rewind_bytes(sk);
+            key = source.read_hash();
             context::from_data(source, ctx);
             source.skip_bytes(link::size + sizeof(uint32_t));
             timestamp = source.read_little_endian<uint32_t>();
             return source;
         }
 
+        search_key key{};
         context ctx{};
         uint32_t timestamp{};
     };

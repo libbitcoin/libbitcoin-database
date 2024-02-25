@@ -226,10 +226,11 @@ BOOST_AUTO_TEST_CASE(header__put__get_context__expected)
     BOOST_REQUIRE(instance.get(1, context));
     BOOST_REQUIRE(context.ctx == expected.ctx);
 
-    table::header::get_context_and_timestamp context_and_timestamp{};
-    BOOST_REQUIRE(instance.get(1, context_and_timestamp));
-    BOOST_REQUIRE(context_and_timestamp.ctx == expected.ctx);
-    BOOST_REQUIRE_EQUAL(context_and_timestamp.timestamp, expected.timestamp);
+    table::header::get_check_context check_context{};
+    BOOST_REQUIRE(instance.get(1, check_context));
+    BOOST_REQUIRE(check_context.ctx == expected.ctx);
+    BOOST_REQUIRE_EQUAL(check_context.timestamp, expected.timestamp);
+    BOOST_REQUIRE_EQUAL(check_context.key, key);
 }
 
 BOOST_AUTO_TEST_CASE(header__it__pk__expected)

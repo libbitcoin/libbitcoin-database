@@ -116,6 +116,12 @@ inline bool CLASS::set(const hash_digest& point_hash) NOEXCEPT
 }
 
 TEMPLATE
+inline bool CLASS::set(const block& block) NOEXCEPT
+{
+    return !set_link(block).is_terminal();
+}
+
+TEMPLATE
 inline bool CLASS::set(const transaction& tx) NOEXCEPT
 {
     return !set_link(tx).is_terminal();
@@ -688,6 +694,33 @@ TEMPLATE
 header_link CLASS::set_link(const block& block, const context& ctx) NOEXCEPT
 {
     const auto header_fk = set_link(block.header(), ctx);
+    if (header_fk.is_terminal())
+        return {};
+
+    // GUARDED (block (txs) redundancy)
+    // This guard is only effective if there is a single database thread.
+    if (is_associated(header_fk))
+        return header_fk;
+
+    tx_links links{};
+    links.reserve(block.transactions_ptr()->size());
+    for (const auto& tx: *block.transactions_ptr())
+        if (!push_link_value(links, set_link(*tx)))
+            return {};
+
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    return store_.txs.put(header_fk, table::txs::slab{ {}, links }) ?
+        header_fk : table::header::link{};
+    // ========================================================================
+}
+
+TEMPLATE
+header_link CLASS::set_link(const block& block) NOEXCEPT
+{
+    // This sets only the txs of a block with header/context already archived.
+    const auto header_fk = to_header(block.hash());
     if (header_fk.is_terminal())
         return {};
 
