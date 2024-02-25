@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_QUERY_HPP
 
 #include <utility>
+#include <unordered_map>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/error.hpp>
@@ -45,6 +46,8 @@ using input_links = std_vector<input_link::integer>;
 using output_links = std_vector<output_link::integer>;
 using foreign_point = table::spend::search_key;
 using two_counts = std::pair<size_t, size_t>;
+using context_map = std::unordered_map<system::hash_digest,
+    system::chain::context>;
 
 template <typename Store>
 class query
@@ -60,6 +63,7 @@ public:
     using output = system::chain::output;
     using header = system::chain::header;
     using transaction = system::chain::transaction;
+    using transactions = system::chain::transaction_cptrs;
     using inputs_ptr = system::chain::inputs_ptr;
     using outputs_ptr = system::chain::outputs_ptr;
     using transactions_ptr = system::chain::transactions_ptr;
@@ -81,7 +85,7 @@ public:
     inline size_t get_top_confirmed() const NOEXCEPT;
     size_t get_fork() const NOEXCEPT;
     size_t get_last_associated_from(size_t height) const NOEXCEPT;
-    hashes get_all_unassociated_above(size_t height) const NOEXCEPT;
+    context_map get_all_unassociated_above(size_t height) const NOEXCEPT;
     hashes get_candidate_hashes(const heights& heights) const NOEXCEPT;
     hashes get_confirmed_hashes(const heights& heights) const NOEXCEPT;
 
@@ -198,6 +202,7 @@ public:
     inline bool set(const header& header, const context& ctx) NOEXCEPT;
     inline bool set(const block& block, const chain_context& ctx) NOEXCEPT;
     inline bool set(const block& block, const context& ctx) NOEXCEPT;
+    inline bool set(const block& block) NOEXCEPT;
     inline bool set(const hash_digest& point_hash) NOEXCEPT;
     inline bool set(const transaction& tx) NOEXCEPT;
 
@@ -245,6 +250,7 @@ public:
     header_link set_link(const header& header, const context& ctx) NOEXCEPT;
     header_link set_link(const block& block, const chain_context& ctx) NOEXCEPT;
     header_link set_link(const block& block, const context& ctx) NOEXCEPT;
+    header_link set_link(const block& block) NOEXCEPT;
     point_link set_link(const hash_digest& point_hash) NOEXCEPT;
     tx_link set_link(const transaction& tx) NOEXCEPT;
 
@@ -278,7 +284,7 @@ public:
     bool get_version(uint32_t& version, const header_link& link) const NOEXCEPT;
     bool get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT;
     bool get_context(context& ctx, const header_link& link) const NOEXCEPT;
-    bool get_context_and_timestamp(context& ctx, uint32_t& timestamp,
+    bool get_check_context(context& ctx, hash_digest& hash, uint32_t& timestamp,
         const header_link& link) const NOEXCEPT;
 
     bool set_block_preconfirmable(const header_link& link) NOEXCEPT;
