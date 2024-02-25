@@ -276,8 +276,10 @@ public:
 
     bool get_timestamp(uint32_t& timestamp, const header_link& link) const NOEXCEPT;
     bool get_version(uint32_t& version, const header_link& link) const NOEXCEPT;
-    bool get_context(context& ctx, const header_link& link) const NOEXCEPT;
     bool get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT;
+    bool get_context(context& ctx, const header_link& link) const NOEXCEPT;
+    bool get_context_and_timestamp(context& ctx, uint32_t& timestamp,
+        const header_link& link) const NOEXCEPT;
 
     bool set_block_preconfirmable(const header_link& link) NOEXCEPT;
     bool set_block_unconfirmable(const header_link& link) NOEXCEPT;
