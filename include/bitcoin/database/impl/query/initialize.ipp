@@ -70,15 +70,33 @@ size_t CLASS::get_last_associated_from(size_t height) const NOEXCEPT
 }
 
 TEMPLATE
-hashes CLASS::get_all_unassociated_above(size_t height) const NOEXCEPT
+context_map CLASS::get_all_unassociated_above(size_t height) const NOEXCEPT
 {
-    hashes out{};
+    context_map out{};
     const auto top = get_top_candidate();
+    table::header::get_check_context context{};
     while (height < top)
     {
         const auto header_fk = to_candidate(++height);
         if (!is_associated(header_fk))
-            out.push_back(get_header_key(header_fk));
+        {
+            if (!store_.header.get(header_fk, context))
+                return {};
+
+            out.emplace(context.key, system::chain::context
+            {
+                context.ctx.flags,
+                context.timestamp,
+                context.ctx.mtp,
+                system::possible_wide_cast<size_t>(context.ctx.height),
+
+                // HACK: overloading minimum_block_version (unused).
+                // HACK: do not cast since change to fk size should break.
+                header_fk
+                ////uint32_t minimum_block_version;
+                ////uint32_t work_required;
+            });
+        }
     }
 
     return out;

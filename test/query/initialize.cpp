@@ -341,24 +341,65 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_all_unassociated_above__gapped_candid
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+
+    constexpr database::context context2
+    {
+        0x01020302, // flags
+        0x00121312, // height (3 bytes)
+        0x21222322  // mtp
+    };
+    constexpr database::context context3
+    {
+        0x01020303, // flags
+        0x00121313, // height (3 bytes)
+        0x21222323  // mtp
+    };
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, test::context));
-    BOOST_REQUIRE(query.set(test::block2.header(), test::context)); // header only
-    BOOST_REQUIRE(query.set(test::block3.header(), test::context)); // header only
+    BOOST_REQUIRE(query.set(test::block2.header(), context2)); // header only
+    BOOST_REQUIRE(query.set(test::block3.header(), context3)); // header only
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block2.hash())));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block3.hash())));
     auto unassociated = query.get_all_unassociated_above(0);
     BOOST_REQUIRE_EQUAL(unassociated.size(), 2u);
-    BOOST_REQUIRE_EQUAL(unassociated.front(), test::block2.hash());
-    BOOST_REQUIRE_EQUAL(unassociated.back(), test::block3.hash());
+
+    auto result2 = unassociated[test::block2.hash()];
+    BOOST_REQUIRE_EQUAL(result2.forks, context2.flags);
+    BOOST_REQUIRE_EQUAL(result2.timestamp, test::block2.header().timestamp());
+    BOOST_REQUIRE_EQUAL(result2.median_time_past, context2.mtp);
+    BOOST_REQUIRE_EQUAL(result2.height, context2.height);
+
+    auto result3 = unassociated[test::block3.hash()];
+    BOOST_REQUIRE_EQUAL(result3.forks, context3.flags);
+    BOOST_REQUIRE_EQUAL(result3.timestamp, test::block3.header().timestamp());
+    BOOST_REQUIRE_EQUAL(result3.median_time_past, context3.mtp);
+    BOOST_REQUIRE_EQUAL(result3.height, context3.height);
+
     unassociated = query.get_all_unassociated_above(1);
     BOOST_REQUIRE_EQUAL(unassociated.size(), 2u);
-    BOOST_REQUIRE_EQUAL(unassociated.front(), test::block2.hash());
-    BOOST_REQUIRE_EQUAL(unassociated.back(), test::block3.hash());
+
+    result2 = unassociated[test::block2.hash()];
+    BOOST_REQUIRE_EQUAL(result2.forks, context2.flags);
+    BOOST_REQUIRE_EQUAL(result2.timestamp, test::block2.header().timestamp());
+    BOOST_REQUIRE_EQUAL(result2.median_time_past, context2.mtp);
+    BOOST_REQUIRE_EQUAL(result2.height, context2.height);
+
+    result3 = unassociated[test::block3.hash()];
+    BOOST_REQUIRE_EQUAL(result3.forks, context3.flags);
+    BOOST_REQUIRE_EQUAL(result3.timestamp, test::block3.header().timestamp());
+    BOOST_REQUIRE_EQUAL(result3.median_time_past, context3.mtp);
+    BOOST_REQUIRE_EQUAL(result3.height, context3.height);
+
     unassociated = query.get_all_unassociated_above(2);
     BOOST_REQUIRE_EQUAL(unassociated.size(), 1u);
-    BOOST_REQUIRE_EQUAL(unassociated.back(), test::block3.hash());
+
+    result3 = unassociated[test::block3.hash()];
+    BOOST_REQUIRE_EQUAL(result3.forks, context3.flags);
+    BOOST_REQUIRE_EQUAL(result3.timestamp, test::block3.header().timestamp());
+    BOOST_REQUIRE_EQUAL(result3.median_time_past, context3.mtp);
+    BOOST_REQUIRE_EQUAL(result3.height, context3.height);
+
     unassociated = query.get_all_unassociated_above(3);
     BOOST_REQUIRE_EQUAL(unassociated.size(), 0u);
 }
