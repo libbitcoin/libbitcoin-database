@@ -80,22 +80,19 @@ context_map CLASS::get_all_unassociated_above(size_t height) const NOEXCEPT
         const auto header_fk = to_candidate(++height);
         if (!is_associated(header_fk))
         {
-            if (!store_.header.get(header_fk, context))
-                return {};
-
-            out.emplace(context.key, system::chain::context
+            if (store_.header.get(header_fk, context))
             {
-                context.ctx.flags,
-                context.timestamp,
-                context.ctx.mtp,
-                system::possible_wide_cast<size_t>(context.ctx.height),
+                out.emplace(context.key, system::chain::context
+                {
+                    context.ctx.flags,
+                    context.timestamp,
+                    context.ctx.mtp,
+                    system::possible_wide_cast<size_t>(context.ctx.height),
 
-                // HACK: overloading minimum_block_version (unused).
-                // HACK: do not cast since change to fk size should break.
-                header_fk
-                ////uint32_t minimum_block_version;
-                ////uint32_t work_required;
-            });
+                    ////// HACK: overloading minimum_block_version (unused).
+                    ////header_fk
+                });
+            }
         }
     }
 
