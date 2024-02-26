@@ -74,12 +74,12 @@ context_map CLASS::get_all_unassociated_above(size_t height) const NOEXCEPT
 {
     context_map out{};
     const auto top = get_top_candidate();
-    table::header::get_check_context context{};
-    while (height < top)
+    while (++height <= top)
     {
-        const auto header_fk = to_candidate(++height);
+        const auto header_fk = to_candidate(height);
         if (!is_associated(header_fk))
         {
+            table::header::get_check_context context{};
             if (store_.header.get(header_fk, context))
             {
                 out.emplace(context.key, system::chain::context
