@@ -87,7 +87,7 @@ context_map CLASS::get_all_unassociated_above(size_t height) const NOEXCEPT
                     context.ctx.flags,
                     context.timestamp,
                     context.ctx.mtp,
-                    system::possible_wide_cast<size_t>(context.ctx.height),
+                    system::possible_wide_cast<size_t>(context.ctx.height)
 
                     ////// HACK: overloading minimum_block_version (unused).
                     ////header_fk
