@@ -395,6 +395,7 @@ protected:
     /// context
     /// -----------------------------------------------------------------------
 
+    bool get_candidate_work(uint256_t& work, size_t height) const NOEXCEPT;
     bool get_candidate_bits(uint32_t& bits, size_t height,
         const header& header, size_t header_height) const NOEXCEPT;
     bool get_candidate_version(uint32_t& version, size_t height,
@@ -402,6 +403,8 @@ protected:
     bool get_candidate_timestamp(uint32_t& time, size_t height,
         const header& header, size_t header_height) const NOEXCEPT;
 
+    bool populate_candidate_work(chain_state::data& data, const header& header,
+        size_t header_height) const NOEXCEPT;
     bool populate_candidate_bits(chain_state::data& data,
         const chain_state::map& map, const header& header,
         size_t header_height) const NOEXCEPT;
@@ -415,6 +418,7 @@ protected:
         const system::settings& settings, const header& header,
         size_t header_height) const NOEXCEPT;
 
+    bool get_confirmed_work(uint256_t& work, size_t height) const NOEXCEPT;
     bool get_confirmed_bits(uint32_t& bits, size_t height,
         const header& header, size_t header_height) const NOEXCEPT;
     bool get_confirmed_version(uint32_t& version, size_t height,
@@ -422,6 +426,8 @@ protected:
     bool get_confirmed_timestamp(uint32_t& time, size_t height,
         const header& header, size_t header_height) const NOEXCEPT;
 
+    bool populate_confirmed_work(chain_state::data& data, const header& header,
+        size_t header_height) const NOEXCEPT;
     bool populate_confirmed_bits(chain_state::data& data,
         const chain_state::map& map, const header& header,
         size_t header_height) const NOEXCEPT;

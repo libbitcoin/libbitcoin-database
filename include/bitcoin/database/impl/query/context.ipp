@@ -33,6 +33,15 @@ static constexpr uint32_t unspecified_timestamp = max_uint32;
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+bool CLASS::get_candidate_work(uint256_t& work, size_t height) const NOEXCEPT
+{
+    uint32_t bits{};
+    const auto result = get_bits(bits, to_candidate(height));
+    work = header::proof(bits);
+    return result;
+}
+
+TEMPLATE
 bool CLASS::get_candidate_bits(uint32_t& bits, size_t height,
     const header& header, size_t header_height) const NOEXCEPT
 {
@@ -69,6 +78,24 @@ bool CLASS::get_candidate_timestamp(uint32_t& time, size_t height,
     }
 
     return get_timestamp(time, to_candidate(height));
+}
+
+TEMPLATE
+bool CLASS::populate_candidate_work(chain_state::data& data,
+    const header& header, size_t header_height) const NOEXCEPT
+{
+    uint256_t work{};
+    data.cumulative_work = zero;
+
+    // This may scan the entire chain.
+    for (auto height = zero; height < header_height; ++height)
+        if (get_candidate_work(work, height))
+            data.cumulative_work += work;
+        else
+            return false;
+
+    data.cumulative_work += header.proof();
+    return true;
 }
 
 TEMPLATE
@@ -142,6 +169,7 @@ bool CLASS::populate_candidate_all(chain_state::data& data,
     data.hash = get_header_key(link);
 
     return !link.is_terminal() &&
+        populate_candidate_work(data, header, height) &&
         populate_candidate_bits(data, map, header, height) &&
         populate_candidate_versions(data, map, header, height) &&
         populate_candidate_timestamps(data, map, header, height);
@@ -177,6 +205,15 @@ typename CLASS::chain_state_ptr CLASS::get_candidate_chain_state(
 
 // Chain state (confirmed).
 // ----------------------------------------------------------------------------
+
+TEMPLATE
+bool CLASS::get_confirmed_work(uint256_t& work, size_t height) const NOEXCEPT
+{
+    uint32_t bits{};
+    const auto result = get_bits(bits, to_confirmed(height));
+    work = header::proof(bits);
+    return result;
+}
 
 TEMPLATE
 bool CLASS::get_confirmed_bits(uint32_t& bits, size_t height,
@@ -215,6 +252,24 @@ bool CLASS::get_confirmed_timestamp(uint32_t& time, size_t height,
     }
 
     return get_timestamp(time, to_confirmed(height));
+}
+
+TEMPLATE
+bool CLASS::populate_confirmed_work(chain_state::data& data,
+    const header& header, size_t header_height) const NOEXCEPT
+{
+    uint256_t work{};
+    data.cumulative_work = zero;
+
+    // This may scan the entire chain.
+    for (auto height = zero; height < header_height; ++height)
+        if (get_confirmed_work(work, height))
+            data.cumulative_work += work;
+        else
+            return false;
+
+    data.cumulative_work += header.proof();
+    return true;
 }
 
 TEMPLATE
@@ -289,6 +344,7 @@ bool CLASS::populate_confirmed_all(chain_state::data& data,
     data.hash = get_header_key(link);
 
     return !link.is_terminal() &&
+        populate_confirmed_work(data, header, height) &&
         populate_confirmed_bits(data, map, header, height) &&
         populate_confirmed_versions(data, map, header, height) &&
         populate_confirmed_timestamps(data, map, header, height);
