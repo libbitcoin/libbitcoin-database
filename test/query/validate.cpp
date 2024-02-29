@@ -145,6 +145,7 @@ BOOST_AUTO_TEST_CASE(query_validate__get_block_state__invalid_link__unassociated
 
     uint64_t fees{};
     BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(1), error::unassociated);
     BOOST_REQUIRE_EQUAL(query.get_block_state(fees, 1), error::unassociated);
     BOOST_REQUIRE_EQUAL(fees, 0u);
 }
@@ -162,6 +163,7 @@ BOOST_AUTO_TEST_CASE(query_validate__get_block_state__unassociated_link__unassoc
 
     uint64_t fees{};
     BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(1), error::unassociated);
     BOOST_REQUIRE_EQUAL(query.get_block_state(fees, 1), error::unassociated);
     BOOST_REQUIRE_EQUAL(fees, 0u);
 }
@@ -178,6 +180,7 @@ BOOST_AUTO_TEST_CASE(query_validate__get_block_state__unvalidated_link__unvalida
 
     uint64_t fees{};
     BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(1), error::unvalidated);
     BOOST_REQUIRE_EQUAL(query.get_block_state(fees, 1), error::unvalidated);
     BOOST_REQUIRE_EQUAL(fees, 0u);
 }
@@ -194,11 +197,13 @@ BOOST_AUTO_TEST_CASE(query_validate__get_block_state__confirmable__block_confirm
 
     uint64_t fees{};
     BOOST_REQUIRE_EQUAL(query.get_header_state(0), error::block_confirmable);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(0), error::block_confirmable);
     BOOST_REQUIRE_EQUAL(query.get_block_state(fees, 0), error::block_confirmable);
     BOOST_REQUIRE_EQUAL(fees, 0u);
 
     BOOST_REQUIRE(query.set_block_confirmable(1, 42));
     BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::block_confirmable);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(1), error::block_confirmable);
     BOOST_REQUIRE_EQUAL(query.get_block_state(fees, 1), error::block_confirmable);
     BOOST_REQUIRE_EQUAL(fees, 42u);
 }
@@ -216,6 +221,7 @@ BOOST_AUTO_TEST_CASE(query_validate__get_block_state__preconfirmable__block_prec
     uint64_t fees{};
     BOOST_REQUIRE(query.set_block_preconfirmable(1));
     BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::block_preconfirmable);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(1), error::block_preconfirmable);
     BOOST_REQUIRE_EQUAL(query.get_block_state(fees, 1), error::block_preconfirmable);
     BOOST_REQUIRE_EQUAL(fees, 0u);
 }
@@ -233,6 +239,7 @@ BOOST_AUTO_TEST_CASE(query_validate__get_block_state__unconfirmable__block_uncon
     uint64_t fees{};
     BOOST_REQUIRE(query.set_block_unconfirmable(1));
     BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::block_unconfirmable);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(1), error::block_unconfirmable);
     BOOST_REQUIRE_EQUAL(query.get_block_state(fees, 1), error::block_unconfirmable);
     BOOST_REQUIRE_EQUAL(fees, 0u);
 }
