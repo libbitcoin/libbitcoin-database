@@ -33,12 +33,12 @@ namespace error {
 
 enum error_t : uint8_t
 {
-    // general
+    /// general
     success,
     unknown,
     integrity,
 
-    // memory map
+    /// memory map
     open_open,
     open_failure,
     size_failure,
@@ -52,14 +52,14 @@ enum error_t : uint8_t
     unload_locked,
     unload_failure,
 
-    // locks
+    /// locks
     transactor_lock,
     process_lock,
     flush_lock,
     flush_unlock,
     process_unlock,
 
-    // filesystem
+    /// filesystem
     create_directory,
     clear_directory,
     remove_directory,
@@ -76,17 +76,34 @@ enum error_t : uint8_t
     restore_table,
     verify_table,
 
-    // states
+    /// states
+
+    /// tx fully valid in the given header context.
     tx_connected,
+
+    /// tx conditionally valid in the given header context.
     tx_preconnected,
+
+    /// tx not valid in the given header context.
     tx_disconnected,
+
+    /// block is valid and confirmable.
     block_confirmable,
+
+    /// block is valid but has not been evaluated for confirmability.
     block_preconfirmable,
+
+    /// block is unconfirmable (invalid or spends not confirmable).
     block_unconfirmable,
+
+    /// header has not been invalidated and its txs are not associated.
     unassociated,
+
+    /// header|block has not been validated.
+    /// tx has not been validated in the given block context.
     unvalidated,
 
-    // confirmation
+    /// confirmation (require not just context but prevouts and/or metadata).
     missing_previous_output,
     coinbase_maturity,
     relative_time_locked,

@@ -139,11 +139,8 @@ bool CLASS::get_check_context(context& ctx, hash_digest& hash,
 }
 
 TEMPLATE
-code CLASS::get_block_state(const header_link& link) const NOEXCEPT
+code CLASS::get_header_state(const header_link& link) const NOEXCEPT
 {
-    if (!is_associated(link))
-        return error::unassociated;
-
     const auto fk = store_.validated_bk.first(link);
     if (fk.is_terminal())
         return error::unvalidated;
@@ -159,17 +156,16 @@ TEMPLATE
 code CLASS::get_block_state(uint64_t& fees,
     const header_link& link) const NOEXCEPT
 {
-    if (!is_associated(link))
-        return error::unassociated;
-
     const auto fk = store_.validated_bk.first(link);
     if (fk.is_terminal())
-        return error::unvalidated;
+        return is_associated(link) ? error::unvalidated : error::unassociated;
 
     table::validated_bk::slab valid{};
     if (!store_.validated_bk.get(fk, valid))
         return error::integrity;
 
+    // Should only be pre/confirmable if associated (not verified).
+    // Fees only valid if block_preconfirmable or block_confirmable.
     fees = valid.fees;
     return to_block_code(valid.code);
 }
