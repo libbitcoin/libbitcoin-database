@@ -127,6 +127,7 @@ include_bitcoin_HEADERS = \
 
 include_bitcoin_databasedir = ${includedir}/bitcoin/database
 include_bitcoin_database_HEADERS = \
+    include/bitcoin/database/association.hpp \
     include/bitcoin/database/boost.hpp \
     include/bitcoin/database/define.hpp \
     include/bitcoin/database/error.hpp \
