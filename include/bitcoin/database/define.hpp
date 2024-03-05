@@ -45,10 +45,6 @@ static_assert(sizeof(void*) == sizeof(uint64_t), "Not a 64 bit system!");
     #define BCD_INTERNAL BC_HELPER_DLL_LOCAL
 #endif
 
-/// Logging.
-/// ---------------------------------------------------------------------------
-#define LOG_DATABASE "database"
-
 namespace libbitcoin {
 namespace database {
 

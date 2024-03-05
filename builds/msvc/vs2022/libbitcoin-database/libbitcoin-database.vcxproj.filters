@@ -107,6 +107,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp">
       <Filter>include\bitcoin</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\association.hpp">
+      <Filter>include\bitcoin\database</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\boost.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>

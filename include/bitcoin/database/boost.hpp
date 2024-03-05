@@ -25,6 +25,11 @@
 #include <filesystem>
 #include <boost/chrono.hpp>
 #include <boost/interprocess/detail/os_file_functions.hpp>
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/key.hpp>
+#include <boost/multi_index/key_extractors.hpp>
+#include <boost/multi_index/ordered_index.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <bitcoin/system.hpp>

@@ -70,9 +70,9 @@ size_t CLASS::get_last_associated_from(size_t height) const NOEXCEPT
 }
 
 TEMPLATE
-context_map CLASS::get_all_unassociated_above(size_t height) const NOEXCEPT
+associations CLASS::get_all_unassociated_above(size_t height) const NOEXCEPT
 {
-    context_map out{};
+    associations out{};
     const auto top = get_top_candidate();
     while (++height <= top)
     {
@@ -82,16 +82,27 @@ context_map CLASS::get_all_unassociated_above(size_t height) const NOEXCEPT
             table::header::get_check_context context{};
             if (store_.header.get(header_fk, context))
             {
-                out.emplace(context.key, system::chain::context
+                // boost::multi_index_container
+                out.insert(association
                 {
-                    context.ctx.flags,
-                    context.timestamp,
-                    context.ctx.mtp,
-                    system::possible_wide_cast<size_t>(context.ctx.height)
-
-                    ////// HACK: overloading minimum_block_version (unused).
-                    ////header_fk
+                    context.key,
+                    system::chain::context
+                    {
+                        context.ctx.flags,
+                        context.timestamp,
+                        context.ctx.mtp,
+                        system::possible_wide_cast<size_t>(context.ctx.height)
+                    }
                 });
+
+                // std::unordered_map
+                ////out.emplace(context.key, system::chain::context
+                ////{
+                ////    context.ctx.flags,
+                ////    context.timestamp,
+                ////    context.ctx.mtp,
+                ////    system::possible_wide_cast<size_t>(context.ctx.height)
+                ////});
             }
         }
     }
