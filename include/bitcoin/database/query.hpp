@@ -252,6 +252,7 @@ public:
     header_link set_link(const block& block, const context& ctx) NOEXCEPT;
     header_link set_link(const block& block) NOEXCEPT;
     point_link set_link(const hash_digest& point_hash) NOEXCEPT;
+    txs_link set_link(const transactions& txs, const header_link& link) NOEXCEPT;
     tx_link set_link(const transaction& tx) NOEXCEPT;
 
     /// Chain state.
