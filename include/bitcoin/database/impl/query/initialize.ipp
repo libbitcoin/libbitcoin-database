@@ -60,6 +60,12 @@ size_t CLASS::get_fork() const NOEXCEPT
 }
 
 TEMPLATE
+size_t CLASS::get_last_associated() const NOEXCEPT
+{
+    return get_last_associated_from(get_fork());
+}
+
+TEMPLATE
 size_t CLASS::get_last_associated_from(size_t height) const NOEXCEPT
 {
     if (height >= height_link::terminal)
@@ -67,6 +73,12 @@ size_t CLASS::get_last_associated_from(size_t height) const NOEXCEPT
 
     while (is_associated(to_candidate(++height)));
     return --height;
+}
+
+TEMPLATE
+associations CLASS::get_all_unassociated() const NOEXCEPT
+{
+    return get_all_unassociated_above(get_fork());
 }
 
 TEMPLATE

@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_fork__confirmed_ahead__expected)
     BOOST_REQUIRE_EQUAL(query.get_fork(), 1u);
 }
 
-// get_last_associated_from
+// get_last_associated_from/get_last_associated
 
 BOOST_AUTO_TEST_CASE(query_initialize__get_last_associated_from__terminal__max_size_t)
 {
@@ -256,6 +256,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_last_associated_from__terminal__max_s
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE_EQUAL(query.get_last_associated_from(max_size_t), max_size_t);
     BOOST_REQUIRE_EQUAL(query.get_last_associated_from(height_link::terminal), max_size_t);
+    BOOST_REQUIRE_EQUAL(query.get_last_associated(), 0u);
 
     // unassociated, but correct.
     BOOST_REQUIRE_EQUAL(query.get_last_associated_from(42), 42u);
@@ -269,6 +270,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_last_associated_from__initialized__ze
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE_EQUAL(query.get_last_associated(), 0u);
     BOOST_REQUIRE_EQUAL(query.get_last_associated_from(0), 0u);
 
     // unassociated, but correct.
@@ -288,6 +290,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_last_associated_from__non_candidate__
     BOOST_REQUIRE(query.set(test::block3, test::context));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block2.hash())));
+    BOOST_REQUIRE_EQUAL(query.get_last_associated(), 2u);
     BOOST_REQUIRE_EQUAL(query.get_last_associated_from(0), 2u);
     BOOST_REQUIRE_EQUAL(query.get_last_associated_from(1), 2u);
     BOOST_REQUIRE_EQUAL(query.get_last_associated_from(2), 2u);
@@ -310,6 +313,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_last_associated_from__gapped_candidat
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block2.hash())));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block3.hash())));
+    BOOST_REQUIRE_EQUAL(query.get_last_associated(), 1u);
     BOOST_REQUIRE_EQUAL(query.get_last_associated_from(0), 1u);
     BOOST_REQUIRE_EQUAL(query.get_last_associated_from(1), 1u);
 
@@ -320,7 +324,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_last_associated_from__gapped_candidat
     BOOST_REQUIRE_EQUAL(query.get_last_associated_from(3), 3u);
 }
 
-// get_all_unassociated_above
+// get_all_unassociated_above/get_all_unassociated
 
 BOOST_AUTO_TEST_CASE(query_initialize__get_all_unassociated_above__initialized__empty)
 {
@@ -330,6 +334,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_all_unassociated_above__initialized__
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.get_all_unassociated().empty());
     BOOST_REQUIRE(query.get_all_unassociated_above(0).empty());
     BOOST_REQUIRE(query.get_all_unassociated_above(1).empty());
 }
@@ -361,6 +366,9 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_all_unassociated_above__gapped_candid
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block2.hash())));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block3.hash())));
+
+    // There are two unassociated blocks above genesis (fork point).
+    BOOST_REQUIRE_EQUAL(query.get_all_unassociated().size(), 2u);
 
     const auto unassociated0 = query.get_all_unassociated_above(0);
     BOOST_REQUIRE(!unassociated0.empty());
@@ -419,6 +427,21 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_all_unassociated_above__gapped_candid
 
     const auto unassociated3 = query.get_all_unassociated_above(3);
     BOOST_REQUIRE_EQUAL(unassociated3.size(), 0u);
+
+    // There are two unassociated blocks above block 1 (new fork point).
+    BOOST_REQUIRE(query.set(test::block1));
+    BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block1.hash())));
+    BOOST_REQUIRE_EQUAL(query.get_all_unassociated().size(), 2u);
+
+    // There is one unassociated block above block 2 (new fork point).
+    BOOST_REQUIRE(query.set(test::block2));
+    BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block2.hash())));
+    BOOST_REQUIRE_EQUAL(query.get_all_unassociated().size(), 1u);
+
+    // There are no unassociated blocks above block 3 (new fork point).
+    BOOST_REQUIRE(query.set(test::block3));
+    BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block3.hash())));
+    BOOST_REQUIRE_EQUAL(query.get_all_unassociated().size(), 0u);
 }
 
 // get_candidate_hashes
