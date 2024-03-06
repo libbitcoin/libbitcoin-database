@@ -22,6 +22,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/tables/tables.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -29,6 +30,7 @@ namespace database {
 /// Association between block hash and context.
 struct association
 {
+    table::height::link link;
     system::hash_digest hash;
     system::chain::context context;
 
