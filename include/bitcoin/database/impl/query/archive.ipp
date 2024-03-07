@@ -694,26 +694,12 @@ TEMPLATE
 header_link CLASS::set_link(const block& block, const context& ctx) NOEXCEPT
 {
     const auto header_fk = set_link(block.header(), ctx);
-    if (header_fk.is_terminal())
+
+    // Returns txs::link so translate to header::link.
+    if (set_link(*block.transactions_ptr(), header_fk).is_terminal())
         return {};
 
-    // GUARDED (block (txs) redundancy)
-    // This guard is only effective if there is a single database thread.
-    if (is_associated(header_fk))
-        return header_fk;
-
-    tx_links links{};
-    links.reserve(block.transactions_ptr()->size());
-    for (const auto& tx: *block.transactions_ptr())
-        if (!push_link_value(links, set_link(*tx)))
-            return {};
-
-    // ========================================================================
-    const auto scope = store_.get_transactor();
-
-    return store_.txs.put(header_fk, table::txs::slab{ {}, links }) ?
-        header_fk : table::header::link{};
-    // ========================================================================
+    return header_fk;
 }
 
 TEMPLATE
@@ -724,22 +710,36 @@ header_link CLASS::set_link(const block& block) NOEXCEPT
     if (header_fk.is_terminal())
         return {};
 
+    // Returns txs::link so translate to header::link.
+    if (set_link(*block.transactions_ptr(), header_fk).is_terminal())
+        return {};
+
+    return header_fk;
+}
+
+TEMPLATE
+txs_link CLASS::set_link(const transactions& txs,
+    const header_link& link) NOEXCEPT
+{
+    if (link.is_terminal())
+        return{};
+
     // GUARDED (block (txs) redundancy)
     // This guard is only effective if there is a single database thread.
-    if (is_associated(header_fk))
-        return header_fk;
+    const auto txs_link = to_txs_link(link);
+    if (!txs_link.is_terminal())
+        return txs_link;
 
     tx_links links{};
-    links.reserve(block.transactions_ptr()->size());
-    for (const auto& tx: *block.transactions_ptr())
+    links.reserve(txs.size());
+    for (const auto& tx: txs)
         if (!push_link_value(links, set_link(*tx)))
             return {};
 
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return store_.txs.put(header_fk, table::txs::slab{ {}, links }) ?
-        header_fk : table::header::link{};
+    return store_.txs.put_link(link, table::txs::slab{ {}, links });
     // ========================================================================
 }
 

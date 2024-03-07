@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_all_unassociated_above__gapped_candid
 
     const auto it2 = unassociated0.find(test::block2.hash());
     BOOST_REQUIRE(it2 != unassociated0.end());
-    BOOST_REQUIRE(it2 != unassociated0.end());
+    BOOST_REQUIRE_EQUAL(it2->link, 2u);
     BOOST_REQUIRE_EQUAL(it2->context.forks, context2.flags);
     BOOST_REQUIRE_EQUAL(it2->context.timestamp, test::block2.header().timestamp());
     BOOST_REQUIRE_EQUAL(it2->context.median_time_past, context2.mtp);
@@ -392,7 +392,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_all_unassociated_above__gapped_candid
 
     const auto it3 = unassociated0.find(test::block3.hash());
     BOOST_REQUIRE(it3 != unassociated0.end());
-    BOOST_REQUIRE(it3 != unassociated0.end());
+    BOOST_REQUIRE_EQUAL(it3->link, 3u);
     BOOST_REQUIRE_EQUAL(it3->context.forks, context3.flags);
     BOOST_REQUIRE_EQUAL(it3->context.timestamp, test::block3.header().timestamp());
     BOOST_REQUIRE_EQUAL(it3->context.median_time_past, context3.mtp);

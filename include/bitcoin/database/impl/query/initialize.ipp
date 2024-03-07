@@ -94,9 +94,9 @@ associations CLASS::get_all_unassociated_above(size_t height) const NOEXCEPT
             table::header::get_check_context context{};
             if (store_.header.get(header_fk, context))
             {
-                // boost::multi_index_container
                 out.insert(association
                 {
+                    header_fk,
                     context.key,
                     system::chain::context
                     {
@@ -106,15 +106,6 @@ associations CLASS::get_all_unassociated_above(size_t height) const NOEXCEPT
                         system::possible_wide_cast<size_t>(context.ctx.height)
                     }
                 });
-
-                // std::unordered_map
-                ////out.emplace(context.key, system::chain::context
-                ////{
-                ////    context.ctx.flags,
-                ////    context.timestamp,
-                ////    context.ctx.mtp,
-                ////    system::possible_wide_cast<size_t>(context.ctx.height)
-                ////});
             }
         }
     }
