@@ -78,15 +78,16 @@ size_t CLASS::get_last_associated_from(size_t height) const NOEXCEPT
 TEMPLATE
 associations CLASS::get_all_unassociated() const NOEXCEPT
 {
-    return get_all_unassociated_above(get_fork());
+    return get_unassociated_above(get_fork(), max_size_t);
 }
 
 TEMPLATE
-associations CLASS::get_all_unassociated_above(size_t height) const NOEXCEPT
+associations CLASS::get_unassociated_above(size_t height,
+    size_t count) const NOEXCEPT
 {
     associations out{};
     const auto top = get_top_candidate();
-    while (++height <= top)
+    while (++height <= top && !is_zero(count))
     {
         const auto header_fk = to_candidate(height);
         if (!is_associated(header_fk))
@@ -94,6 +95,7 @@ associations CLASS::get_all_unassociated_above(size_t height) const NOEXCEPT
             table::header::get_check_context context{};
             if (store_.header.get(header_fk, context))
             {
+                --count;
                 out.insert(association
                 {
                     header_fk,
