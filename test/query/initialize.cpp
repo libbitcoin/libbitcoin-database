@@ -416,6 +416,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_above__gapped_candidate_
     BOOST_REQUIRE_EQUAL(it3s->context.timestamp, test::block3.header().timestamp());
     BOOST_REQUIRE_EQUAL(it3s->context.median_time_past, context3.mtp);
     BOOST_REQUIRE_EQUAL(it3s->context.height, context3.height);
+    BOOST_REQUIRE_EQUAL(unassociated1.top().height, context3.height);
 
     const auto unassociated2 = query.get_unassociated_above(2);
     BOOST_REQUIRE_EQUAL(unassociated2.size(), 1u);
@@ -426,6 +427,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_above__gapped_candidate_
     BOOST_REQUIRE_EQUAL(it3a->context.timestamp, test::block3.header().timestamp());
     BOOST_REQUIRE_EQUAL(it3a->context.median_time_past, context3.mtp);
     BOOST_REQUIRE_EQUAL(it3a->context.height, context3.height);
+    BOOST_REQUIRE_EQUAL(unassociated2.top().height, context3.height);
 
     const auto unassociated3 = query.get_unassociated_above(3);
     BOOST_REQUIRE_EQUAL(unassociated3.size(), 0u);
