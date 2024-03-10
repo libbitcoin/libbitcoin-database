@@ -123,6 +123,13 @@ public:
     {
         return find(height) != pos_end();
     }
+
+    /// The context of the maximum ordered_unique index (must not be empty).
+    inline const system::chain::context& top() const NOEXCEPT
+    {
+        BC_ASSERT(!empty());
+        return get<association::pos>().rbegin()->context;
+    }
 };
 
 } // namespace database

@@ -85,7 +85,8 @@ public:
     size_t get_last_associated() const NOEXCEPT;
     size_t get_last_associated_from(size_t height) const NOEXCEPT;
     associations get_all_unassociated() const NOEXCEPT;
-    associations get_all_unassociated_above(size_t height) const NOEXCEPT;
+    associations get_unassociated_above(size_t height,
+        size_t count=max_size_t) const NOEXCEPT;
     hashes get_candidate_hashes(const heights& heights) const NOEXCEPT;
     hashes get_confirmed_hashes(const heights& heights) const NOEXCEPT;
 

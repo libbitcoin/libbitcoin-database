@@ -324,9 +324,9 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_last_associated_from__gapped_candidat
     BOOST_REQUIRE_EQUAL(query.get_last_associated_from(3), 3u);
 }
 
-// get_all_unassociated_above/get_all_unassociated
+// get_unassociated_above/get_all_unassociated
 
-BOOST_AUTO_TEST_CASE(query_initialize__get_all_unassociated_above__initialized__empty)
+BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_above__initialized__empty)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -335,11 +335,11 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_all_unassociated_above__initialized__
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.get_all_unassociated().empty());
-    BOOST_REQUIRE(query.get_all_unassociated_above(0).empty());
-    BOOST_REQUIRE(query.get_all_unassociated_above(1).empty());
+    BOOST_REQUIRE(query.get_unassociated_above(0).empty());
+    BOOST_REQUIRE(query.get_unassociated_above(1).empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_initialize__get_all_unassociated_above__gapped_candidate__expected)
+BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_above__gapped_candidate__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -370,7 +370,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_all_unassociated_above__gapped_candid
     // There are two unassociated blocks above genesis (fork point).
     BOOST_REQUIRE_EQUAL(query.get_all_unassociated().size(), 2u);
 
-    const auto unassociated0 = query.get_all_unassociated_above(0);
+    const auto unassociated0 = query.get_unassociated_above(0);
     BOOST_REQUIRE(!unassociated0.empty());
     BOOST_REQUIRE_EQUAL(unassociated0.size(), 2u);
 
@@ -398,8 +398,10 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_all_unassociated_above__gapped_candid
     BOOST_REQUIRE_EQUAL(it3->context.median_time_past, context3.mtp);
     BOOST_REQUIRE_EQUAL(it3->context.height, context3.height);
 
-    const auto unassociated1 = query.get_all_unassociated_above(1);
+    const auto unassociated1 = query.get_unassociated_above(1);
     BOOST_REQUIRE_EQUAL(unassociated1.size(), 2u);
+    BOOST_REQUIRE(query.get_unassociated_above(1, 0).empty());
+    BOOST_REQUIRE_EQUAL(query.get_unassociated_above(1, 1).size(), 1u);
 
     const auto it2s = unassociated1.find(context2.height);
     BOOST_REQUIRE(it2s != unassociated1.pos_end());
@@ -414,8 +416,9 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_all_unassociated_above__gapped_candid
     BOOST_REQUIRE_EQUAL(it3s->context.timestamp, test::block3.header().timestamp());
     BOOST_REQUIRE_EQUAL(it3s->context.median_time_past, context3.mtp);
     BOOST_REQUIRE_EQUAL(it3s->context.height, context3.height);
+    BOOST_REQUIRE_EQUAL(unassociated1.top().height, context3.height);
 
-    const auto unassociated2 = query.get_all_unassociated_above(2);
+    const auto unassociated2 = query.get_unassociated_above(2);
     BOOST_REQUIRE_EQUAL(unassociated2.size(), 1u);
 
     const auto it3a = unassociated2.find(test::block3.hash());
@@ -424,8 +427,9 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_all_unassociated_above__gapped_candid
     BOOST_REQUIRE_EQUAL(it3a->context.timestamp, test::block3.header().timestamp());
     BOOST_REQUIRE_EQUAL(it3a->context.median_time_past, context3.mtp);
     BOOST_REQUIRE_EQUAL(it3a->context.height, context3.height);
+    BOOST_REQUIRE_EQUAL(unassociated2.top().height, context3.height);
 
-    const auto unassociated3 = query.get_all_unassociated_above(3);
+    const auto unassociated3 = query.get_unassociated_above(3);
     BOOST_REQUIRE_EQUAL(unassociated3.size(), 0u);
 
     // There are two unassociated blocks above block 1 (new fork point).
