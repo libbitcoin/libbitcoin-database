@@ -116,6 +116,24 @@ associations CLASS::get_unassociated_above(size_t height,
 }
 
 TEMPLATE
+size_t CLASS::get_unassociated_count() const NOEXCEPT
+{
+    return get_unassociated_count_above(get_fork());
+}
+
+TEMPLATE
+size_t CLASS::get_unassociated_count_above(size_t height) const NOEXCEPT
+{
+    size_t count{};
+    const auto top = get_top_candidate();
+    while (++height <= top)
+        if (!is_associated(to_candidate(height)))
+            ++count;
+
+    return count;
+}
+
+TEMPLATE
 hashes CLASS::get_candidate_hashes(const heights& heights) const NOEXCEPT
 {
     hashes out{};
