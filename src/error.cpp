@@ -28,7 +28,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 {
     // general
     { success, "success" },
-    { unknown, "unknown element" },
+    { unknown_state, "unknown state" },
     { integrity, "integrity failure" },
 
     // memory map

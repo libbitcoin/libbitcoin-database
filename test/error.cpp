@@ -32,13 +32,13 @@ BOOST_AUTO_TEST_CASE(error_t__code__success__false_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "success");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__unknown__true_exected_message)
+BOOST_AUTO_TEST_CASE(error_t__code__unknown_state__true_exected_message)
 {
-    constexpr auto value = error::unknown;
+    constexpr auto value = error::unknown_state;
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "unknown element");
+    BOOST_REQUIRE_EQUAL(ec.message(), "unknown state");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__integrity__true_exected_message)

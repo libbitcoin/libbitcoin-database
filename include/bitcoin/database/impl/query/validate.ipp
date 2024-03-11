@@ -43,7 +43,7 @@ inline code CLASS::to_block_code(
         case schema::block_state::unconfirmable:
             return error::block_unconfirmable;
         default:
-            return error::unknown;
+            return error::unknown_state;
     }
 }
 
@@ -61,7 +61,7 @@ inline code CLASS::to_tx_code(
         case schema::tx_state::disconnected:
             return error::tx_disconnected;
         default:
-            return error::unknown;
+            return error::unknown_state;
     }
 }
 
