@@ -35,7 +35,7 @@ enum error_t : uint8_t
 {
     /// general
     success,
-    unknown,
+    unknown_state,
     integrity,
 
     /// memory map
