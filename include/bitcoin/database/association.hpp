@@ -128,7 +128,10 @@ public:
     inline const system::chain::context& top() const NOEXCEPT
     {
         BC_ASSERT(!empty());
+
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
         return get<association::pos>().rbegin()->context;
+        BC_POP_WARNING()
     }
 };
 
