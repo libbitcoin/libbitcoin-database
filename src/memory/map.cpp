@@ -25,12 +25,13 @@
     #include <sys/stat.h>
     #include <sys/types.h>
 #endif
+#include <algorithm>
+#include <chrono>
 #include <fcntl.h>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
 #include <bitcoin/system.hpp>
-#include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/error.hpp>
 #include <bitcoin/database/file/file.hpp>
@@ -47,21 +48,20 @@ map::map(const path& filename, size_t minimum, size_t expansion) NOEXCEPT
     minimum_(minimum),
     expansion_(expansion),
     memory_map_(nullptr),
+    opened_(file::invalid),
     loaded_(false),
-    logical_(zero),
     capacity_(zero),
-    descriptor_(file::invalid)
+    logical_(zero)
 {
 }
 
 map::~map() NOEXCEPT
 {
-    // LOG STOP WARNINGS (handled if unload() and close() were called).
     BC_ASSERT_MSG(!loaded_, "file mapped at destruct");
     BC_ASSERT_MSG(is_null(memory_map_), "map defined at destruct");
     BC_ASSERT_MSG(is_zero(logical_), "logical nonzero at destruct");
     BC_ASSERT_MSG(is_zero(capacity_), "capacity nonzero at destruct");
-    BC_ASSERT_MSG(descriptor_ == file::invalid, "file open at destruct");
+    BC_ASSERT_MSG(opened_ == file::invalid, "file open at destruct");
 }
 
 const std::filesystem::path& map::file() const NOEXCEPT
@@ -73,14 +73,14 @@ code map::open() NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    if (descriptor_ != file::invalid)
+    if (opened_ != file::invalid)
         return error::open_open;
 
-    descriptor_ = file::open(filename_);
-    if (descriptor_ == file::invalid)
+    opened_ = file::open(filename_);
+    if (opened_ == file::invalid)
         return error::open_failure;
 
-    return file::size(logical_, descriptor_) ? error::success :
+    return file::size(logical_, opened_) ? error::success :
         error::size_failure;
 }
 
@@ -91,11 +91,11 @@ code map::close() NOEXCEPT
     if (loaded_)
         return error::close_loaded;
 
-    if (descriptor_ == file::invalid)
+    if (opened_ == file::invalid)
         return error::success;
 
-    const auto descriptor = descriptor_;
-    descriptor_ = file::invalid;
+    const auto descriptor = opened_;
+    opened_ = file::invalid;
     logical_ = zero;
 
     return file::close(descriptor) ? error::success : error::close_failure;
@@ -104,52 +104,53 @@ code map::close() NOEXCEPT
 bool map::is_open() const NOEXCEPT
 {
     std::shared_lock field_lock(field_mutex_);
-    return descriptor_ != file::invalid;
+    return opened_ != file::invalid;
 }
 
-// Map, flush, unmap.
+// map, flush, unmap.
 // ----------------------------------------------------------------------------
-
-// Each accessor holds a shared lock on map_mutex_ (read/write access to map).
-// Exclusive lock on map_mutex_ ensures there are no open accessor objects.
-// map_ field requires exclusive lock on map_mutex_ for read(flush)/write.
-// Fields except map_ require exclusive lock on field_mutex_ for write.
-// Fields except map_ require at least shared lock on field_mutex_ for read.
+// Each accessor holds a shared lock on remap_mutex_ (read/write access to map).
+// Exclusive lock on remap_mutex_ ensures there are open accessor objects,
+// which allows for safely remapping the memory map.
 
 code map::load() NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    if (map_mutex_.try_lock())
+    if (remap_mutex_.try_lock())
     {
         if (loaded_)
         {
-            map_mutex_.unlock();
+            remap_mutex_.unlock();
             return error::load_loaded;
         }
 
+        // Updates fields.
         if (!map_())
         {
-            map_mutex_.unlock();
+            remap_mutex_.unlock();
             return error::load_failure;
         }
 
         loaded_ = true;
-        map_mutex_.unlock();
+        remap_mutex_.unlock();
         return error::success;
     }
 
     return error::load_locked;
 }
 
-// Suspend writes before calling (unguarded here).
+// Suspend writes before calling.
 code map::flush() const NOEXCEPT
 {
-    std::shared_lock map_lock(map_mutex_);
+    // Prevent unload, resize, remap.
+    std::shared_lock map_lock(remap_mutex_);
+    std::shared_lock field_lock(field_mutex_);
 
     if (!loaded_)
         return error::flush_unloaded;
 
+    // Reads fields and the memory map.
     return flush_() ? error::success : error::flush_failure;
 }
 
@@ -157,24 +158,25 @@ code map::unload() NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    if (map_mutex_.try_lock())
+    if (remap_mutex_.try_lock())
     {
         if (!loaded_)
         {
-            map_mutex_.unlock();
+            remap_mutex_.unlock();
             return error::success;
         }
 
         BC_ASSERT_MSG(logical_ <= capacity_, "logical size exceeds capacity");
 
+        // Updates fields.
         if (!unmap_())
         {
-            map_mutex_.unlock();
+            remap_mutex_.unlock();
             return error::unload_failure;
         }
 
         loaded_ = false;
-        map_mutex_.unlock();
+        remap_mutex_.unlock();
         return error::success;
     }
 
@@ -189,6 +191,12 @@ bool map::is_loaded() const NOEXCEPT
 
 // Interface.
 // ----------------------------------------------------------------------------
+
+size_t map::size() const NOEXCEPT
+{
+    std::shared_lock field_lock(field_mutex_);
+    return logical_;
+}
 
 size_t map::capacity() const NOEXCEPT
 {
@@ -207,50 +215,54 @@ bool map::truncate(size_t size) NOEXCEPT
     return true;
 }
 
+// Waits until all access pointers are destructed. Will deadlock if any access
+// pointer is waiting on allocation. Lock safety requires that access pointers
+// are short-lived and do not block on allocation.
+// TODO: Could loop over a try lock here and log deadlock warning.
 size_t map::allocate(size_t chunk) NOEXCEPT
 {
-    field_mutex_.lock_upgrade();
+    std::unique_lock field_lock(field_mutex_);
 
-    // log: allocate_unloaded
-    if (!loaded_)
-    {
-        field_mutex_.unlock_upgrade();
+    if (!loaded_ || is_add_overflow(logical_, chunk))
         return storage::eof;
-    }
 
-    // log: allocate_overflow
-    if (is_add_overflow(logical_, chunk))
+    auto end = logical_ + chunk;
+    if (end > capacity_)
     {
-        field_mutex_.unlock_upgrade();
-        return storage::eof;
-    }
+        const auto size = to_capacity(end);
 
-    const auto size = logical_ + chunk;
+        std::unique_lock remap_lock(remap_mutex_);
 
-    if (size > capacity_)
-    {
-        while (!map_mutex_.try_lock_for(boost::chrono::seconds(1)))
-        {
-            // log: deadlock_hint
-        }
-
-        // log: remap_failure
-        if (!remap_(to_capacity(size)))
-        {
-            map_mutex_.unlock();
-            field_mutex_.unlock_upgrade();
+        if (!remap_(size))
             return storage::eof;
-        }
-
-        map_mutex_.unlock();
     }
 
-    const auto position = logical_;
-    field_mutex_.unlock_upgrade_and_lock();
-    logical_ = size;
-    field_mutex_.unlock();
+    std::swap(logical_, end);
+    return end;
+}
 
-    return position;
+memory_ptr map::get(size_t offset) const NOEXCEPT
+{
+    // Obtaining logical before access prevents mutual mutex wait (deadlock).
+    // The store could remap between here and next line, but logical size
+    // only increases. Close zeroizes logical but must be unloaded to do so.
+    // Truncate can reduce logical, but capacity is not affected. It is always
+    // the case that ptr may write past current logical, so long as it never
+    // writes past current capacity. Truncation is managed by callers.
+    const auto logical = size();
+
+    // Takes a shared lock on remap_mutex_ until destruct, blocking remap.
+    const auto ptr = std::make_shared<access>(remap_mutex_);
+
+    // loaded_ update is precluded by remap_mutex_, making this read atomic.
+    if (!loaded_ || is_null(ptr))
+        return nullptr;
+
+    // With offset > size the assignment is negative (stream is exhausted).
+    BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
+    ptr->assign(memory_map_ + offset, memory_map_ + logical);
+    BC_POP_WARNING()
+    return ptr;
 }
 
 // private, mman wrappers, not thread safe
@@ -268,11 +280,11 @@ bool map::flush_() const NOEXCEPT
     // "To flush all the dirty pages plus the metadata for the file and ensure
     // that they are physically written to disk..."
     return (::msync(memory_map_, logical_, MS_SYNC) != fail) 
-        && (::fsync(descriptor_) != fail);
+        && (::fsync(opened_) != fail);
 #elif defined(F_FULLFSYNC)
     // macOS msync fails with zero logical size (but we are no longer calling).
     // non-standard macOS behavior: news.ycombinator.com/item?id=30372218
-    return ::fcntl(descriptor_, F_FULLFSYNC, 0) != fail;
+    return ::fcntl(opened_, F_FULLFSYNC, 0) != fail;
 #else
     // Linux: fsync "transfers ("flushes") all modified in-core data of
     // (i.e., modified buffer cache pages for) the file referred to by the
@@ -280,7 +292,7 @@ bool map::flush_() const NOEXCEPT
     // can be retrieved even if the system crashes or is rebooted. This
     // includes writing through or flushing a disk cache if present. The
     // call blocks until the device reports that transfer has completed."
-    return ::fsync(descriptor_) != fail;
+    return ::fsync(opened_) != fail;
 #endif
 }
 
@@ -292,14 +304,14 @@ bool map::unmap_() NOEXCEPT
     const auto success =
            (::msync(memory_map_, logical_, MS_SYNC) != fail)
         && (::munmap(memory_map_, capacity_) != fail)
-        && (::ftruncate(descriptor_, logical_) != fail)
-        && (::fsync(descriptor_) != fail);
+        && (::ftruncate(opened_, logical_) != fail)
+        && (::fsync(opened_) != fail);
 #else
-    const auto success = (::ftruncate(descriptor_, logical_) != fail)
+    const auto success = (::ftruncate(opened_, logical_) != fail)
     #if defined(F_FULLFSYNC)
-        && (::fcntl(descriptor_, F_FULLFSYNC, 0) != fail)
+        && (::fcntl(opened_, F_FULLFSYNC, 0) != fail)
     #else
-        && (::fsync(descriptor_) != fail)
+        && (::fsync(opened_) != fail)
     #endif
         && (::munmap(memory_map_, capacity_) != fail);
 #endif
@@ -319,7 +331,7 @@ bool map::map_() NOEXCEPT
     if (size < minimum_)
     {
         size = minimum_;
-        if (::ftruncate(descriptor_, size) == fail)
+        if (::ftruncate(opened_, size) == fail)
         {
             unmap_();
             return false;
@@ -327,7 +339,7 @@ bool map::map_() NOEXCEPT
     }
 
     memory_map_ = pointer_cast<uint8_t>(::mmap(nullptr, size,
-        PROT_READ | PROT_WRITE, MAP_SHARED, descriptor_, 0));
+        PROT_READ | PROT_WRITE, MAP_SHARED, opened_, 0));
 
     return finalize_(size);
 }
@@ -346,7 +358,7 @@ bool map::remap_(size_t size) NOEXCEPT
         return false;
 #endif
 
-    if (::ftruncate(descriptor_, size) == fail)
+    if (::ftruncate(opened_, size) == fail)
     {
         unmap_();
         return false;
@@ -355,7 +367,7 @@ bool map::remap_(size_t size) NOEXCEPT
 #if defined(HAVE_MSC)
     // mman-win32 mremap hack (umap/map) requires flags and file descriptor.
     memory_map_ = pointer_cast<uint8_t>(::mremap_(memory_map_, capacity_, size,
-        PROT_READ | PROT_WRITE, MAP_SHARED, descriptor_));
+        PROT_READ | PROT_WRITE, MAP_SHARED, opened_));
 #elif defined(MREMAP_MAYMOVE)
     memory_map_ = pointer_cast<uint8_t>(::mremap(memory_map_, capacity_, size,
         MREMAP_MAYMOVE));
@@ -363,7 +375,7 @@ bool map::remap_(size_t size) NOEXCEPT
     // macOS: does not define mremap or MREMAP_MAYMOVE.
     // TODO: see "MREMAP_MAYMOVE" in sqlite for map extension technique.
     memory_map_ = pointer_cast<uint8_t>(::mmap(nullptr, size,
-        PROT_READ | PROT_WRITE, MAP_SHARED, descriptor_, 0));
+        PROT_READ | PROT_WRITE, MAP_SHARED, opened_, 0));
 #endif
 
     return finalize_(size);
