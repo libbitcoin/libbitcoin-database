@@ -38,7 +38,10 @@ public:
     /// Mutex guards against remap while object in scope.
     INLINE accessor(Mutex& mutex) NOEXCEPT;
 
-    /// Set the buffer.
+    /// Set the buffer, where end is within allocated space.
+    /// End should be initialized to logical space though that may contract or
+    /// expand during accessor lifetime. The only guarantee offered by end is
+    /// that it remains within allocated space and is initially logical space.
     INLINE void assign(uint8_t* begin, uint8_t* end) NOEXCEPT;
 
     /// Return an offset from begin, nullptr if end or past end.
