@@ -52,11 +52,11 @@ public:
     /// The filesystem path of the backing storage.
     virtual const std::filesystem::path& file() const NOEXCEPT = 0;
 
-    /// The current capacity of the memory map (zero if unmapped).
-    virtual size_t capacity() const NOEXCEPT = 0;
-
     /// The current logical size of the memory map (zero if closed).
     virtual size_t size() const NOEXCEPT = 0;
+
+    /// The current capacity of the memory map (zero if unmapped).
+    virtual size_t capacity() const NOEXCEPT = 0;
 
     /// Reduce logical size to specified (false if size exceeds logical).
     virtual bool truncate(size_t size) NOEXCEPT = 0;
