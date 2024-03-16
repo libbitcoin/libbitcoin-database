@@ -303,7 +303,7 @@ code CLASS::snapshot(const event_handler& handler) NOEXCEPT
     {
         if (!ec)
         {
-            handler(event_t::flush_table, table);
+            handler(event_t::flush_body, table);
             ec = storage.flush();
         }
     };
@@ -619,6 +619,8 @@ code CLASS::backup(const event_handler& handler) NOEXCEPT
     static const auto primary = configuration_.path / schema::dir::primary;
     static const auto secondary = configuration_.path / schema::dir::secondary;
 
+    handler(event_t::archive_snapshot, table_t::store);
+
     if (file::is_directory(primary))
     {
         // Delete /secondary, rename /primary to /secondary.
@@ -635,6 +637,7 @@ code CLASS::backup(const event_handler& handler) NOEXCEPT
 }
 
 // Dump memory maps of /heads to new files in /primary.
+// Heads are copied from RAM, not flushed to disk and copied as files.
 TEMPLATE
 code CLASS::dump(const path& folder,
     const event_handler& handler) NOEXCEPT
@@ -682,7 +685,7 @@ code CLASS::dump(const path& folder,
     const auto dump = [&handler, &folder](const auto& storage, const auto& name,
         table_t table) NOEXCEPT
     {
-        handler(event_t::dump_table, table);
+        handler(event_t::copy_header, table);
         return file::create_file(head(folder, name), storage->begin(),
             storage->size());
     };
@@ -750,6 +753,8 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
     static const auto heads = configuration_.path / schema::dir::heads;
     static const auto primary = configuration_.path / schema::dir::primary;
     static const auto secondary = configuration_.path / schema::dir::secondary;
+
+    handler(event_t::recover_snapshot, table_t::store);
 
     if (file::is_directory(primary))
     {
