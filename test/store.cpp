@@ -515,8 +515,9 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_closed__restore_table)
     // There are no backup index files to open.
     BOOST_REQUIRE_EQUAL(instance.restore_(), error::restore_table);
 
-    // Rename /primary to /indexes.
-    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::primary));
+    // Rename /primary to /indexes and copy to /primary.
+    ////BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::primary));
+    BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::heads));
 }
 
@@ -556,8 +557,9 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_secondary_loaded__restore_table)
     // There are no backup index files to open.
     BOOST_REQUIRE_EQUAL(instance.restore_(), error::restore_table);
 
-    // Rename /primary to /indexes.
-    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::primary));
+    // Rename /primary to /indexes and copy to /primary.
+    ////BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::primary));
+    BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::secondary));
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::heads));
 }
@@ -576,7 +578,8 @@ BOOST_AUTO_TEST_CASE(store__restore__snapshot__success_unlocks)
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
     BOOST_REQUIRE_EQUAL(instance.close(events), error::success);
     BOOST_REQUIRE_EQUAL(instance.restore(events), error::success);
-    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::primary));
+    BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
+    ////BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::primary));
 
     BOOST_REQUIRE(!test::exists(instance.flush_lock_file()));
     BOOST_REQUIRE(!test::exists(instance.process_lock_file()));
