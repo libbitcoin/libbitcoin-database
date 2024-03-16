@@ -46,10 +46,13 @@ enum class event_t
     close_table,
 
     wait_lock,
-    flush_table,
+    flush_body,
     backup_table,
-    dump_table,
-    restore_table
+    copy_header,
+    archive_index,
+
+    restore_table,
+    recover_index
 };
 
 enum class table_t
