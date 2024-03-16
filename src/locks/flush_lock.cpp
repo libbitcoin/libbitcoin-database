@@ -46,5 +46,10 @@ bool flush_lock::try_unlock() NOEXCEPT
     return destroy();
 }
 
+bool flush_lock::is_locked() const NOEXCEPT
+{
+    return exists();
+}
+
 } // namespace database
 } // namespace libbitcoin
