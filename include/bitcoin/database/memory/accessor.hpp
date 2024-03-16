@@ -36,26 +36,26 @@ public:
     DELETE_COPY_MOVE_DESTRUCT(accessor);
 
     /// Mutex guards against remap while object in scope.
-    INLINE accessor(Mutex& mutex) NOEXCEPT;
+    inline accessor(Mutex& mutex) NOEXCEPT;
 
     /// Set the buffer, where end is within allocated space.
     /// End should be initialized to logical space though that may contract or
     /// expand during accessor lifetime. The only guarantee offered by end is
     /// that it remains within allocated space and is initially logical space.
-    INLINE void assign(uint8_t* begin, uint8_t* end) NOEXCEPT;
+    inline void assign(uint8_t* begin, uint8_t* end) NOEXCEPT;
 
     /// Return an offset from begin, nullptr if end or past end.
-    INLINE uint8_t* offset(size_t bytes) NOEXCEPT override;
+    inline uint8_t* offset(size_t bytes) NOEXCEPT override;
 
     /// The logical buffer size (from begin to end).
-    INLINE ptrdiff_t size() const NOEXCEPT override;
+    inline ptrdiff_t size() const NOEXCEPT override;
 
     /// Get logical buffer (guarded against remap only).
-    INLINE uint8_t* begin() NOEXCEPT override;
-    INLINE uint8_t* end() NOEXCEPT override;
+    inline uint8_t* begin() NOEXCEPT override;
+    inline uint8_t* end() NOEXCEPT override;
 
     /// Alias for begin.
-    INLINE uint8_t* data() NOEXCEPT override { return begin(); }
+    inline uint8_t* data() NOEXCEPT override { return begin(); }
 
 private:
     uint8_t* begin_{};
