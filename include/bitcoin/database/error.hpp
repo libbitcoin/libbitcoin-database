@@ -64,7 +64,7 @@ enum error_t : uint8_t
     clear_directory,
     remove_directory,
     rename_directory,
-    missing_backup,
+    missing_snapshot,
     create_file,
     unloaded_file,
     dump_file,
