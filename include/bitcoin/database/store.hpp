@@ -113,8 +113,8 @@ class store
 public:
     DELETE_COPY_MOVE_DESTRUCT(store);
 
-    typedef std::shared_lock<boost::upgrade_mutex> transactor;
     typedef std::function<void(event_t, table_t)> event_handler;
+    typedef std::shared_lock<std::shared_timed_mutex> transactor;
 
     /// Construct a store from settings.
     store(const settings& config) NOEXCEPT;
@@ -253,7 +253,7 @@ protected:
     // These are protected by mutex.
     flush_lock flush_lock_;
     interprocess_lock process_lock_;
-    boost::upgrade_mutex transactor_mutex_;
+    std::shared_timed_mutex transactor_mutex_;
 
 private:
     using path = std::filesystem::path;

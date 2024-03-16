@@ -244,7 +244,7 @@ public:
         return process_lock_.file();
     }
 
-    inline boost::upgrade_mutex& transactor_mutex() NOEXCEPT
+    inline std::shared_timed_mutex& transactor_mutex() NOEXCEPT
     {
         return transactor_mutex_;
     }

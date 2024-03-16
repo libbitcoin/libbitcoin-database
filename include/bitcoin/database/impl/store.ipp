@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_STORE_IPP
 #define LIBBITCOIN_DATABASE_STORE_IPP
 
+#include <chrono>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
@@ -290,9 +291,10 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
 TEMPLATE
 code CLASS::snapshot(const event_handler& handler) NOEXCEPT
 {
-    while (!transactor_mutex_.try_lock_for(boost::chrono::seconds(1)))
+    while (!transactor_mutex_.try_lock_for(std::chrono::seconds(1)))
     {
-        // TODO: log deadlock_hint
+        // TODO: progress updates via handler.
+        handler({}, {});
     }
 
     code ec{ error::success };
