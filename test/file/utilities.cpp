@@ -203,6 +203,36 @@ BOOST_AUTO_TEST_CASE(utilities__rename__exists__true)
     BOOST_REQUIRE(test::exists(TEST_PATH));
 }
 
+BOOST_AUTO_TEST_CASE(utilities__copy__missing__false)
+{
+    BOOST_REQUIRE(!file::copy(TEST_PATH, TEST_PATH));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__copy__exists_to_self__false)
+{
+    BOOST_REQUIRE(test::create(TEST_PATH));
+    BOOST_REQUIRE(!file::copy(TEST_PATH, TEST_PATH));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__copy__target_missing__true_both_exist)
+{
+    const std::string target = TEST_PATH + "_";
+    BOOST_REQUIRE(test::create(TEST_PATH));
+    BOOST_REQUIRE(file::copy(TEST_PATH, target));
+    BOOST_REQUIRE(test::exists(target));
+    BOOST_REQUIRE(test::exists(TEST_PATH));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__copy__target_exists__false_both_exist)
+{
+    const std::string target = TEST_PATH + "_";
+    BOOST_REQUIRE(test::create(TEST_PATH));
+    BOOST_REQUIRE(test::create(target));
+    BOOST_REQUIRE(!file::copy(target, TEST_PATH));
+    BOOST_REQUIRE(test::exists(target));
+    BOOST_REQUIRE(test::exists(TEST_PATH));
+}
+
 BOOST_AUTO_TEST_CASE(utilities__open__missing__failure)
 {
     BOOST_REQUIRE_EQUAL(file::open(TEST_PATH), -1);

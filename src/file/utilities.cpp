@@ -114,6 +114,17 @@ bool rename(const path& from, const path& to) NOEXCEPT
     return !ec;
 }
 
+// file
+bool copy(const path& from, const path& to) NOEXCEPT
+{
+    // en.cppreference.com/w/cpp/filesystem/rename
+    std::error_code ec;
+    const auto from_path = system::to_extended_path(from);
+    const auto to_path = system::to_extended_path(to);
+    std::filesystem::copy_file(from_path, to_path, ec);
+    return !ec;
+}
+
 // File descriptor functions required for memory mapping.
 
 int open(const path& filename) NOEXCEPT
