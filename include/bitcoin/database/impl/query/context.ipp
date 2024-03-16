@@ -81,6 +81,32 @@ bool CLASS::get_candidate_timestamp(uint32_t& time, size_t height,
 }
 
 TEMPLATE
+bool CLASS::populate_candidate_bip9(chain_state::data& data,
+    const chain_state::map& map, const header& header,
+    size_t header_height) const NOEXCEPT
+{
+    if (map.bip9_bit0_height != chain_state::map::unrequested)
+    {
+        if (header_height == map.bip9_bit0_height)
+            data.bip9_bit0_hash = header.hash();
+        else
+            data.bip9_bit0_hash = get_header_key(
+                to_candidate(map.bip9_bit0_height));
+    }
+
+    if (map.bip9_bit1_height != chain_state::map::unrequested)
+    {
+        if (header_height == map.bip9_bit1_height)
+            data.bip9_bit1_hash = header.hash();
+        else
+            data.bip9_bit1_hash = get_header_key(
+                to_candidate(map.bip9_bit1_height));
+    }
+
+    return true;
+}
+
+TEMPLATE
 bool CLASS::populate_candidate_work(chain_state::data& data,
     const header& header, size_t header_height) const NOEXCEPT
 {
@@ -170,6 +196,7 @@ bool CLASS::populate_candidate_all(chain_state::data& data,
 
     return !link.is_terminal() &&
         populate_candidate_work(data, header, height) &&
+        populate_candidate_bip9(data, map, header, height) &&
         populate_candidate_bits(data, map, header, height) &&
         populate_candidate_versions(data, map, header, height) &&
         populate_candidate_timestamps(data, map, header, height);
@@ -252,6 +279,32 @@ bool CLASS::get_confirmed_timestamp(uint32_t& time, size_t height,
     }
 
     return get_timestamp(time, to_confirmed(height));
+}
+
+TEMPLATE
+bool CLASS::populate_confirmed_bip9(chain_state::data& data,
+    const chain_state::map& map, const header& header,
+    size_t header_height) const NOEXCEPT
+{
+    if (map.bip9_bit0_height != chain_state::map::unrequested)
+    {
+        if (header_height == map.bip9_bit0_height)
+            data.bip9_bit0_hash = header.hash();
+        else
+            data.bip9_bit0_hash = get_header_key(
+                to_confirmed(map.bip9_bit0_height));
+    }
+
+    if (map.bip9_bit1_height != chain_state::map::unrequested)
+    {
+        if (header_height == map.bip9_bit1_height)
+            data.bip9_bit1_hash = header.hash();
+        else
+            data.bip9_bit1_hash = get_header_key(
+                to_confirmed(map.bip9_bit1_height));
+    }
+
+    return true;
 }
 
 TEMPLATE
@@ -345,6 +398,7 @@ bool CLASS::populate_confirmed_all(chain_state::data& data,
 
     return !link.is_terminal() &&
         populate_confirmed_work(data, header, height) &&
+        populate_confirmed_bip9(data, map, header, height) &&
         populate_confirmed_bits(data, map, header, height) &&
         populate_confirmed_versions(data, map, header, height) &&
         populate_confirmed_timestamps(data, map, header, height);
