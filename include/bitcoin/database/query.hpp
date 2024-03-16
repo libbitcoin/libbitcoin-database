@@ -411,6 +411,11 @@ protected:
     bool get_candidate_timestamp(uint32_t& time, size_t height,
         const header& header, size_t header_height) const NOEXCEPT;
 
+    // This is currently based on archived activation only.
+    bool populate_candidate_bip9(chain_state::data& data,
+        const chain_state::map& map, const header& header,
+        size_t header_height) const NOEXCEPT;
+
     bool populate_candidate_work(chain_state::data& data, const header& header,
         size_t header_height) const NOEXCEPT;
     bool populate_candidate_bits(chain_state::data& data,
@@ -433,6 +438,11 @@ protected:
         const header& header, size_t header_height) const NOEXCEPT;
     bool get_confirmed_timestamp(uint32_t& time, size_t height,
         const header& header, size_t header_height) const NOEXCEPT;
+
+    // This is currently based on archived activation only.
+    bool populate_confirmed_bip9(chain_state::data& data,
+        const chain_state::map& map, const header& header,
+        size_t header_height) const NOEXCEPT;
 
     bool populate_confirmed_work(chain_state::data& data, const header& header,
         size_t header_height) const NOEXCEPT;
