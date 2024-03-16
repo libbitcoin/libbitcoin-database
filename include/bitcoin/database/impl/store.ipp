@@ -772,7 +772,7 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
     }
     else
     {
-        ec = error::missing_backup;
+        ec = error::missing_snapshot;
     }
 
     const auto restore = [&handler](auto& storage, table_t table) NOEXCEPT

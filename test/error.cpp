@@ -239,13 +239,13 @@ BOOST_AUTO_TEST_CASE(error_t__code__rename_directory__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "rename directory failure");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__missing_backup__true_exected_message)
+BOOST_AUTO_TEST_CASE(error_t__code__missing_snapshot__true_exected_message)
 {
-    constexpr auto value = error::missing_backup;
+    constexpr auto value = error::missing_snapshot;
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "missing backup");
+    BOOST_REQUIRE_EQUAL(ec.message(), "missing snapshot");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__create_file__true_exected_message)

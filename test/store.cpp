@@ -450,13 +450,13 @@ BOOST_AUTO_TEST_CASE(store__restore__flush_locked__flush_lock)
     BOOST_REQUIRE_EQUAL(instance.restore(events), error::flush_lock);
 }
 
-BOOST_AUTO_TEST_CASE(store__restore__process_lock_file__missing_backup)
+BOOST_AUTO_TEST_CASE(store__restore__process_lock_file__missing_snapshot)
 {
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(test::create(instance.process_lock_file()));
-    BOOST_REQUIRE_EQUAL(instance.restore(events), error::missing_backup);
+    BOOST_REQUIRE_EQUAL(instance.restore(events), error::missing_snapshot);
 }
 
 BOOST_AUTO_TEST_CASE(store__restore__failure__unlocks)
@@ -470,12 +470,12 @@ BOOST_AUTO_TEST_CASE(store__restore__failure__unlocks)
     BOOST_REQUIRE(instance.transactor_mutex().try_lock());
 }
 
-BOOST_AUTO_TEST_CASE(store__restore__no_backups__missing_backup)
+BOOST_AUTO_TEST_CASE(store__restore__no_backups__missing_snapshot)
 {
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE_EQUAL(instance.restore_(), error::missing_backup);
+    BOOST_REQUIRE_EQUAL(instance.restore_(), error::missing_snapshot);
 }
 
 // The lock is process-exclusive in linux/macOS, globally in win32.
