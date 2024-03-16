@@ -43,11 +43,19 @@ enum class event_t
 
     create_table,
     verify_table,
-    close_table
+    close_table,
+
+    wait_lock,
+    flush_table,
+    backup_table,
+    dump_table,
+    restore_table
 };
 
 enum class table_t
 {
+    store,
+
     header_table,
     header_head,
     header_body,

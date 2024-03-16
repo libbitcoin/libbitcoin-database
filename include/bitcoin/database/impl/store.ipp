@@ -30,6 +30,8 @@
 namespace libbitcoin {
 namespace database {
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 TEMPLATE
 CLASS::store(const settings& config) NOEXCEPT
   : configuration_(config),
@@ -135,7 +137,8 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
 
     code ec{ error::success };
     static const auto heads = configuration_.path / schema::dir::heads;
-    const auto create = [&](const auto& storage, table_t table) NOEXCEPT
+
+    const auto create = [&handler](const auto& storage, table_t table) NOEXCEPT
     {
         handler(event_t::create_file, table);
         return file::create_file(storage.file());
@@ -184,7 +187,7 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
 
     if (!ec)
     {
-        const auto populate = [&](auto& storage, table_t table) NOEXCEPT
+        const auto populate = [&handler](auto& storage, table_t table) NOEXCEPT
         {
             handler(event_t::create_table, table);
             return storage.create();
@@ -245,7 +248,7 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
 
     if (!ec)
     {
-        const auto verify = [&](auto& storage, table_t table) NOEXCEPT
+        const auto verify = [&handler](auto& storage, table_t table) NOEXCEPT
         {
             handler(event_t::verify_table, table);
             return storage.verify();
@@ -293,32 +296,40 @@ code CLASS::snapshot(const event_handler& handler) NOEXCEPT
 {
     while (!transactor_mutex_.try_lock_for(std::chrono::seconds(1)))
     {
-        // TODO: progress updates via handler.
-        handler({}, {});
+        handler(event_t::wait_lock, table_t::store);
     }
+
+    const auto flush = [&handler](auto& ec, auto& storage, table_t table) NOEXCEPT
+    {
+        if (!ec)
+        {
+            handler(event_t::flush_table, table);
+            ec = storage.flush();
+        }
+    };
 
     code ec{ error::success };
 
     // Assumes/requires tables open/loaded.
-    if (!ec) ec = header_body_.flush();
-    if (!ec) ec = point_body_.flush();
-    if (!ec) ec = input_body_.flush();
-    if (!ec) ec = output_body_.flush();
-    if (!ec) ec = puts_body_.flush();
-    if (!ec) ec = tx_body_.flush();
-    if (!ec) ec = txs_body_.flush();
+    flush(ec, header_body_, table_t::header_body);
+    flush(ec, point_body_, table_t::point_body);
+    flush(ec, input_body_, table_t::input_body);
+    flush(ec, output_body_, table_t::output_body);
+    flush(ec, puts_body_, table_t::puts_body);
+    flush(ec, tx_body_, table_t::tx_body);
+    flush(ec, txs_body_, table_t::txs_body);
 
-    if (!ec) ec = address_body_.flush();
-    if (!ec) ec = candidate_body_.flush();
-    if (!ec) ec = confirmed_body_.flush();
-    if (!ec) ec = spend_body_.flush();
-    if (!ec) ec = strong_tx_body_.flush();
+    flush(ec, address_body_, table_t::address_body);
+    flush(ec, candidate_body_, table_t::candidate_body);
+    flush(ec, confirmed_body_, table_t::confirmed_body);
+    flush(ec, spend_body_, table_t::spend_body);
+    flush(ec, strong_tx_body_, table_t::strong_tx_body);
 
-    if (!ec) ec = bootstrap_body_.flush();
-    if (!ec) ec = buffer_body_.flush();
-    if (!ec) ec = neutrino_body_.flush();
-    if (!ec) ec = validated_bk_body_.flush();
-    if (!ec) ec = validated_tx_body_.flush();
+    flush(ec, bootstrap_body_, table_t::bootstrap_body);
+    flush(ec, buffer_body_, table_t::buffer_body);
+    flush(ec, neutrino_body_, table_t::neutrino_body);
+    flush(ec, validated_bk_body_, table_t::validated_bk_body);
+    flush(ec, validated_tx_body_, table_t::validated_tx_body);
 
     if (!ec) ec = backup(handler);
     transactor_mutex_.unlock();
@@ -335,7 +346,7 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
 
     if (!ec)
     {
-        const auto close = [&](auto& storage, table_t table) NOEXCEPT
+        const auto close = [&handler](auto& storage, table_t table) NOEXCEPT
         {
             handler(event_t::close_table, table);
             return storage.close();
@@ -579,25 +590,31 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
 TEMPLATE
 code CLASS::backup(const event_handler& handler) NOEXCEPT
 {
-    if (!header.backup()) return error::backup_table;
-    if (!point.backup()) return error::backup_table;
-    if (!input.backup()) return error::backup_table;
-    if (!output.backup()) return error::backup_table;
-    if (!puts.backup()) return error::backup_table;
-    if (!tx.backup()) return error::backup_table;
-    if (!txs.backup()) return error::backup_table;
+    const auto backup = [&handler](auto& storage, table_t table) NOEXCEPT
+    {
+        handler(event_t::backup_table, table);
+        return storage.backup();
+    };
 
-    if (!address.backup()) return error::backup_table;
-    if (!candidate.backup()) return error::backup_table;
-    if (!confirmed.backup()) return error::backup_table;
-    if (!spend.backup()) return error::backup_table;
-    if (!strong_tx.backup()) return error::backup_table;
+    if (!backup(header, table_t::header_table)) return error::backup_table;
+    if (!backup(point, table_t::point_table)) return error::backup_table;
+    if (!backup(input, table_t::input_table)) return error::backup_table;
+    if (!backup(output, table_t::output_table)) return error::backup_table;
+    if (!backup(puts, table_t::puts_table)) return error::backup_table;
+    if (!backup(tx, table_t::tx_table)) return error::backup_table;
+    if (!backup(txs, table_t::txs_table)) return error::backup_table;
 
-    if (!bootstrap.backup()) return error::backup_table;
-    if (!buffer.backup()) return error::backup_table;
-    if (!neutrino.backup()) return error::backup_table;
-    if (!validated_bk.backup()) return error::backup_table;
-    if (!validated_tx.backup()) return error::backup_table;
+    if (!backup(address, table_t::address_table)) return error::backup_table;
+    if (!backup(candidate, table_t::candidate_table)) return error::backup_table;
+    if (!backup(confirmed, table_t::confirmed_table)) return error::backup_table;
+    if (!backup(spend, table_t::spend_table)) return error::backup_table;
+    if (!backup(strong_tx, table_t::strong_tx_table)) return error::backup_table;
+
+    if (!backup(bootstrap, table_t::bootstrap_table)) return error::backup_table;
+    if (!backup(buffer, table_t::buffer_table)) return error::backup_table;
+    if (!backup(neutrino, table_t::neutrino_table)) return error::backup_table;
+    if (!backup(validated_bk, table_t::validated_bk_table)) return error::backup_table;
+    if (!backup(validated_tx, table_t::validated_tx_table)) return error::backup_table;
 
     static const auto primary = configuration_.path / schema::dir::primary;
     static const auto secondary = configuration_.path / schema::dir::secondary;
@@ -620,7 +637,7 @@ code CLASS::backup(const event_handler& handler) NOEXCEPT
 // Dump memory maps of /heads to new files in /primary.
 TEMPLATE
 code CLASS::dump(const path& folder,
-    const event_handler&) NOEXCEPT
+    const event_handler& handler) NOEXCEPT
 {
     auto header_buffer = header_head_.get();
     auto point_buffer = point_head_.get();
@@ -662,74 +679,49 @@ code CLASS::dump(const path& folder,
     if (!validated_bk_buffer) return error::unloaded_file;
     if (!validated_tx_buffer) return error::unloaded_file;
 
-    if (!file::create_file(head(folder, schema::archive::header),
-        header_buffer->begin(), header_buffer->size()))
-       return error::dump_file;
+    const auto dump = [&handler, &folder](const auto& storage, const auto& name,
+        table_t table) NOEXCEPT
+    {
+        handler(event_t::dump_table, table);
+        return file::create_file(head(folder, name), storage->begin(),
+            storage->size());
+    };
 
-    if (!file::create_file(head(folder, schema::archive::point),
-        point_buffer->begin(), point_buffer->size()))
+    if (!dump(header_buffer, schema::archive::header, table_t::header_head))
+        return error::dump_file;
+    if (!dump(point_buffer, schema::archive::point, table_t::point_head))
+        return error::dump_file;
+    if (!dump(input_buffer, schema::archive::input, table_t::input_head))
+        return error::dump_file;
+    if (!dump(output_buffer, schema::archive::output, table_t::output_head))
+        return error::dump_file;
+    if (!dump(puts_buffer, schema::archive::puts, table_t::puts_head))
+        return error::dump_file;
+    if (!dump(tx_buffer, schema::archive::tx, table_t::tx_head))
+        return error::dump_file;
+    if (!dump(txs_buffer, schema::archive::txs, table_t::txs_head))
         return error::dump_file;
 
-    if (!file::create_file(head(folder, schema::archive::input),
-        input_buffer->begin(), input_buffer->size()))
+    if (!dump(address_buffer, schema::indexes::address, table_t::address_head))
+        return error::dump_file;
+    if (!dump(candidate_buffer, schema::indexes::candidate, table_t::candidate_head))
+        return error::dump_file;
+    if (!dump(confirmed_buffer, schema::indexes::confirmed, table_t::confirmed_head))
+        return error::dump_file;
+    if (!dump(spend_buffer, schema::indexes::spend, table_t::spend_head))
+        return error::dump_file;
+    if (!dump(strong_tx_buffer, schema::indexes::strong_tx, table_t::strong_tx_head))
         return error::dump_file;
 
-    if (!file::create_file(head(folder, schema::archive::output),
-        output_buffer->begin(), output_buffer->size()))
+    if (!dump(bootstrap_buffer, schema::caches::bootstrap, table_t::bootstrap_head))
         return error::dump_file;
-
-    if (!file::create_file(head(folder, schema::archive::puts),
-        puts_buffer->begin(), puts_buffer->size()))
+    if (!dump(buffer_buffer, schema::caches::buffer, table_t::buffer_head))
         return error::dump_file;
-
-    if (!file::create_file(head(folder, schema::archive::tx),
-        tx_buffer->begin(), tx_buffer->size()))
+    if (!dump(neutrino_buffer, schema::caches::neutrino, table_t::neutrino_head))
         return error::dump_file;
-
-    if (!file::create_file(head(folder, schema::archive::txs),
-        txs_buffer->begin(), txs_buffer->size()))
+    if (!dump(validated_bk_buffer, schema::caches::validated_bk, table_t::validated_bk_head))
         return error::dump_file;
-
-
-    if (!file::create_file(head(folder, schema::indexes::address),
-        address_buffer->begin(), address_buffer->size()))
-        return error::dump_file;
-
-    if (!file::create_file(head(folder, schema::indexes::candidate),
-        candidate_buffer->begin(), candidate_buffer->size()))
-        return error::dump_file;
-
-    if (!file::create_file(head(folder, schema::indexes::confirmed),
-        confirmed_buffer->begin(), confirmed_buffer->size()))
-        return error::dump_file;
-
-    if (!file::create_file(head(folder, schema::indexes::spend),
-        spend_buffer->begin(), spend_buffer->size()))
-        return error::dump_file;
-
-    if (!file::create_file(head(folder, schema::indexes::strong_tx),
-        strong_tx_buffer->begin(), strong_tx_buffer->size()))
-        return error::dump_file;
-
-
-    if (!file::create_file(head(folder, schema::caches::bootstrap),
-        bootstrap_buffer->begin(), bootstrap_buffer->size()))
-        return error::dump_file;
-
-    if (!file::create_file(head(folder, schema::caches::buffer),
-        buffer_buffer->begin(), buffer_buffer->size()))
-        return error::dump_file;
-
-    if (!file::create_file(head(folder, schema::caches::neutrino),
-        neutrino_buffer->begin(), neutrino_buffer->size()))
-        return error::dump_file;
-
-    if (!file::create_file(head(folder, schema::caches::validated_bk),
-        validated_bk_buffer->begin(), validated_bk_buffer->size()))
-        return error::dump_file;
-
-    if (!file::create_file(head(folder, schema::caches::validated_tx),
-        validated_tx_buffer->begin(), validated_tx_buffer->size()))
+    if (!dump(validated_tx_buffer, schema::caches::validated_tx, table_t::validated_tx_head))
         return error::dump_file;
 
     return error::success;
@@ -778,31 +770,37 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         ec = error::missing_backup;
     }
 
+    const auto restore = [&handler](auto& storage, table_t table) NOEXCEPT
+    {
+        handler(event_t::restore_table, table);
+        return storage.restore();
+    };
+
     if (!ec)
     {
         ec = open_load(handler);
 
-        if (!header.restore()) ec = error::restore_table;
-        else if (!point.restore()) ec = error::restore_table;
-        else if (!input.restore()) ec = error::restore_table;
-        else if (!output.restore()) ec = error::restore_table;
-        else if (!puts.restore()) ec = error::restore_table;
-        else if (!tx.restore()) ec = error::restore_table;
-        else if (!txs.restore()) ec = error::restore_table;
+        if (!restore(header, table_t::header_table)) ec = error::restore_table;
+        if (!restore(point, table_t::point_table)) ec = error::restore_table;
+        if (!restore(input, table_t::input_table)) ec = error::restore_table;
+        if (!restore(output, table_t::output_table)) ec = error::restore_table;
+        if (!restore(puts, table_t::puts_table)) ec = error::restore_table;
+        if (!restore(tx, table_t::tx_table)) ec = error::restore_table;
+        if (!restore(txs, table_t::txs_table)) ec = error::restore_table;
 
-        else if (!address.restore()) ec = error::restore_table;
-        else if (!candidate.restore()) ec = error::restore_table;
-        else if (!confirmed.restore()) ec = error::restore_table;
-        else if (!spend.restore()) ec = error::restore_table;
-        else if (!strong_tx.restore()) ec = error::restore_table;
+        if (!restore(address, table_t::address_table)) ec = error::restore_table;
+        if (!restore(candidate, table_t::candidate_table)) ec = error::restore_table;
+        if (!restore(confirmed, table_t::confirmed_table)) ec = error::restore_table;
+        if (!restore(spend, table_t::spend_table)) ec = error::restore_table;
+        if (!restore(strong_tx, table_t::strong_tx_table)) ec = error::restore_table;
 
-        else if (!bootstrap.restore()) ec = error::restore_table;
-        else if (!buffer.restore()) ec = error::restore_table;
-        else if (!neutrino.restore()) ec = error::restore_table;
-        else if (!validated_bk.restore()) ec = error::restore_table;
-        else if (!validated_tx.restore()) ec = error::restore_table;
+        if (!restore(bootstrap, table_t::bootstrap_table)) ec = error::restore_table;
+        if (!restore(buffer, table_t::buffer_table)) ec = error::restore_table;
+        if (!restore(neutrino, table_t::neutrino_table)) ec = error::restore_table;
+        if (!restore(validated_bk, table_t::validated_bk_table)) ec = error::restore_table;
+        if (!restore(validated_tx, table_t::validated_tx_table)) ec = error::restore_table;
 
-        else if (!ec) ec = unload_close(handler);
+        if (!ec) ec = unload_close(handler);
     }
 
     // unlock errors override ec.
@@ -811,6 +809,8 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
     transactor_mutex_.unlock();
     return ec;
 }
+
+BC_POP_WARNING()
 
 } // namespace database
 } // namespace libbitcoin
