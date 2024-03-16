@@ -41,6 +41,9 @@ public:
 
     /// False if file does not exist or fails to delete.
     bool try_unlock() NOEXCEPT;
+
+    /// True if file exists.
+    bool is_locked() const NOEXCEPT;
 };
 
 } // namespace database

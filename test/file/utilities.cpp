@@ -203,6 +203,78 @@ BOOST_AUTO_TEST_CASE(utilities__rename__exists__true)
     BOOST_REQUIRE(test::exists(TEST_PATH));
 }
 
+BOOST_AUTO_TEST_CASE(utilities__copy__missing__false)
+{
+    BOOST_REQUIRE(!file::copy(TEST_PATH, TEST_PATH));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__copy__exists_to_self__false)
+{
+    BOOST_REQUIRE(test::create(TEST_PATH));
+    BOOST_REQUIRE(!file::copy(TEST_PATH, TEST_PATH));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__copy__target_missing__true_both_exist)
+{
+    const std::string target = TEST_PATH + "_";
+    BOOST_REQUIRE(test::create(TEST_PATH));
+    BOOST_REQUIRE(file::copy(TEST_PATH, target));
+    BOOST_REQUIRE(test::exists(target));
+    BOOST_REQUIRE(test::exists(TEST_PATH));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__copy__target_exists__false_both_exist)
+{
+    const std::string target = TEST_PATH + "_";
+    BOOST_REQUIRE(test::create(TEST_PATH));
+    BOOST_REQUIRE(test::create(target));
+    BOOST_REQUIRE(!file::copy(target, TEST_PATH));
+    BOOST_REQUIRE(test::exists(target));
+    BOOST_REQUIRE(test::exists(TEST_PATH));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__copy_directory__missing__false)
+{
+    BOOST_REQUIRE(!file::copy_directory(TEST_PATH, TEST_PATH));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__copy_directory__exists_to_self__false)
+{
+    BOOST_REQUIRE(file::create_directory(TEST_PATH));
+    BOOST_REQUIRE(!file::copy_directory(TEST_PATH, TEST_PATH));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__copy_directory__target_exists__false)
+{
+    const std::string from_dir = TEST_PATH + "_from";
+    const std::string to_dir = TEST_PATH + "_to";
+    BOOST_REQUIRE(file::create_directory(from_dir));
+    BOOST_REQUIRE(file::create_directory(to_dir));
+    BOOST_REQUIRE(!file::copy_directory(from_dir, to_dir));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__copy_directory__target_missing__true_copied)
+{
+    const std::string from_dir = TEST_PATH + "_from";
+    const std::string to_dir = TEST_PATH + "_to";
+    BOOST_REQUIRE(file::create_directory(from_dir));
+    BOOST_REQUIRE(file::copy_directory(from_dir, to_dir));
+    BOOST_REQUIRE(file::is_directory(to_dir));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__copy_directory__target_missing__true_files_copied)
+{
+    const std::string from_dir = TEST_PATH + "_from";
+    const std::string to_dir = TEST_PATH + "_to";
+    const std::string from_file = from_dir + "/file";
+    const std::string to_file = to_dir + "/file";
+    BOOST_REQUIRE(file::create_directory(from_dir));
+    BOOST_REQUIRE(file::create_file(from_file));
+    BOOST_REQUIRE(file::copy_directory(from_dir, to_dir));
+    BOOST_REQUIRE(file::is_directory(to_dir));
+    BOOST_REQUIRE(file::is_file(to_file));
+}
+
 BOOST_AUTO_TEST_CASE(utilities__open__missing__failure)
 {
     BOOST_REQUIRE_EQUAL(file::open(TEST_PATH), -1);

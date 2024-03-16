@@ -742,9 +742,9 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         return error::process_lock;
     }
 
-    if (!flush_lock_.try_lock())
+    // Requires that the store is already flush locked (corrupted).
+    if (!flush_lock_.is_locked())
     {
-        /* bool */ process_lock_.try_unlock();
         transactor_mutex_.unlock();
         return error::flush_lock;
     }
@@ -758,17 +758,27 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
 
     if (file::is_directory(primary))
     {
-        // Clear invalid /heads and recover from /primary.
-        if (!file::clear_directory(heads)) ec = error::clear_directory;
+        // Clear invalid /heads, recover from /primary, clone to /primary.
+        if      (!file::clear_directory(heads)) ec = error::clear_directory;
         else if (!file::remove(heads)) ec = error::remove_directory;
         else if (!file::rename(primary, heads)) ec = error::rename_directory;
+        else if (!file::copy_directory(heads, primary))
+        {
+            ec = error::copy_directory;
+            /* bool */ file::remove(primary);
+        }
     }
     else if (file::is_directory(secondary))
     {
-        // Clear invalid /heads and recover from /secondary.
-        if (!file::clear_directory(heads)) ec = error::clear_directory;
+        // Clear invalid /heads, recover from /secondary, clone to /primary.
+        if      (!file::clear_directory(heads)) ec = error::clear_directory;
         else if (!file::remove(heads)) ec = error::remove_directory;
         else if (!file::rename(secondary, heads)) ec = error::rename_directory;
+        else if (!file::copy_directory(heads, primary))
+        {
+            ec = error::copy_directory;
+            /* bool */ file::remove(primary);
+        }
     }
     else
     {

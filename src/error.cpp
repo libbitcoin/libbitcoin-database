@@ -57,6 +57,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { clear_directory, "clear directory failure" },
     { remove_directory, "remove directory failure" },
     { rename_directory, "rename directory failure" },
+    { copy_directory, "copy directory failure" },
     { missing_snapshot, "missing snapshot" },
     { create_file, "file failed to create" },
     { unloaded_file, "file not loaded" },

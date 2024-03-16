@@ -73,5 +73,21 @@ BOOST_AUTO_TEST_CASE(flush_lock__try_unlock__exists__true_deleted)
     BOOST_REQUIRE(!test::exists(TEST_PATH));
 }
 
+BOOST_AUTO_TEST_CASE(flush_lock__is_locked__not_exists__false)
+{
+    BOOST_REQUIRE(!test::exists(TEST_PATH));
+
+    flush_lock instance(TEST_PATH);
+    BOOST_REQUIRE(!instance.is_locked());
+}
+
+BOOST_AUTO_TEST_CASE(flush_lock__is_locked__exists__true)
+{
+    BOOST_REQUIRE(test::create(TEST_PATH));
+
+    flush_lock instance(TEST_PATH);
+    BOOST_REQUIRE(instance.is_locked());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 

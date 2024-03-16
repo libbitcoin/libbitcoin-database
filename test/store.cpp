@@ -44,6 +44,14 @@ BOOST_FIXTURE_TEST_SUITE(store_tests, store_setup_fixture)
 // nop event handler.
 const auto events = [](auto, auto){};
 
+// flush lock file path from directory.
+std::filesystem::path flush_lock_file(std::filesystem::path path)
+{
+    path /= schema::locks::flush;
+    path += schema::ext::lock;
+    return path;
+}
+
 // construct
 // ----------------------------------------------------------------------------
 
@@ -441,12 +449,11 @@ BOOST_AUTO_TEST_CASE(store__restore__process_locked__success)
 }
 #endif
 
-BOOST_AUTO_TEST_CASE(store__restore__flush_locked__flush_lock)
+BOOST_AUTO_TEST_CASE(store__restore__no_flush_locked__flush_lock)
 {
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(test::create(instance.flush_lock_file()));
     BOOST_REQUIRE_EQUAL(instance.restore(events), error::flush_lock);
 }
 
@@ -456,6 +463,7 @@ BOOST_AUTO_TEST_CASE(store__restore__process_lock_file__missing_snapshot)
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(test::create(instance.process_lock_file()));
+    BOOST_REQUIRE(test::create(flush_lock_file(configuration.path)));
     BOOST_REQUIRE_EQUAL(instance.restore(events), error::missing_snapshot);
 }
 
@@ -464,6 +472,7 @@ BOOST_AUTO_TEST_CASE(store__restore__failure__unlocks)
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
+    BOOST_REQUIRE(test::create(flush_lock_file(configuration.path)));
     BOOST_REQUIRE_NE(instance.restore(events), error::success);
     BOOST_REQUIRE(!test::exists(instance.flush_lock_file()));
     BOOST_REQUIRE(!test::exists(instance.process_lock_file()));
@@ -475,6 +484,7 @@ BOOST_AUTO_TEST_CASE(store__restore__no_backups__missing_snapshot)
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
+    BOOST_REQUIRE(test::create(flush_lock_file(configuration.path)));
     BOOST_REQUIRE_EQUAL(instance.restore_(), error::missing_snapshot);
 }
 
@@ -513,10 +523,12 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_closed__restore_table)
     BOOST_REQUIRE(test::clear(configuration.path / schema::dir::primary));
 
     // There are no backup index files to open.
+    BOOST_REQUIRE(test::create(flush_lock_file(configuration.path)));
     BOOST_REQUIRE_EQUAL(instance.restore_(), error::restore_table);
 
-    // Rename /primary to /indexes.
-    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::primary));
+    // Rename /primary to /indexes and copy to /primary.
+    ////BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::primary));
+    BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::heads));
 }
 
@@ -533,6 +545,7 @@ BOOST_AUTO_TEST_CASE(store__restore__secondary_closed__restore_table)
     BOOST_REQUIRE(test::clear(configuration.path / schema::dir::secondary));
 
     // There are no backup index files to open.
+    BOOST_REQUIRE(test::create(flush_lock_file(configuration.path)));
     BOOST_REQUIRE_EQUAL(instance.restore_(), error::restore_table);
 
     // No primary, so rename /secondary to /indexes.
@@ -554,10 +567,12 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_secondary_loaded__restore_table)
     BOOST_REQUIRE(test::clear(configuration.path / schema::dir::secondary));
 
     // There are no backup index files to open.
+    BOOST_REQUIRE(test::create(flush_lock_file(configuration.path)));
     BOOST_REQUIRE_EQUAL(instance.restore_(), error::restore_table);
 
-    // Rename /primary to /indexes.
-    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::primary));
+    // Rename /primary to /indexes and copy to /primary.
+    ////BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::primary));
+    BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::secondary));
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::heads));
 }
@@ -569,14 +584,17 @@ BOOST_AUTO_TEST_CASE(store__restore__snapshot__success_unlocks)
 {
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
+
     test::map_store instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
     BOOST_REQUIRE_EQUAL(instance.open(events), error::success);
     BOOST_REQUIRE_EQUAL(instance.snapshot(events), error::success);
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
     BOOST_REQUIRE_EQUAL(instance.close(events), error::success);
+    BOOST_REQUIRE(test::create(flush_lock_file(configuration.path)));
     BOOST_REQUIRE_EQUAL(instance.restore(events), error::success);
-    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::primary));
+    BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
+    ////BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::primary));
 
     BOOST_REQUIRE(!test::exists(instance.flush_lock_file()));
     BOOST_REQUIRE(!test::exists(instance.process_lock_file()));
