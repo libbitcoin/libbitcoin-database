@@ -55,8 +55,12 @@ BCD_API bool remove(const path& name) NOEXCEPT;
 /// Rename file or directory, false if did not exist/error.
 BCD_API bool rename(const path& from, const path& to) NOEXCEPT;
 
-/// Copy file, false if did not exist/error.
+/// Copy file, false if did not exist/error or target existed.
 BCD_API bool copy(const path& from, const path& to) NOEXCEPT;
+
+/// Copy directory with contents non-recursively.
+/// False if did not exist/error or target existed.
+BCD_API bool copy_directory(const path& from, const path& to) NOEXCEPT;
 
 /// File descriptor functions (for memory mapping).
 BCD_API int open(const path& filename) NOEXCEPT;

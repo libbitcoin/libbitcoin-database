@@ -117,11 +117,25 @@ bool rename(const path& from, const path& to) NOEXCEPT
 // file
 bool copy(const path& from, const path& to) NOEXCEPT
 {
-    // en.cppreference.com/w/cpp/filesystem/rename
+    // en.cppreference.com/w/cpp/filesystem/copy_file
     std::error_code ec;
     const auto from_path = system::to_extended_path(from);
     const auto to_path = system::to_extended_path(to);
     std::filesystem::copy_file(from_path, to_path, ec);
+    return !ec;
+}
+
+// directory
+bool copy_directory(const path& from, const path& to) NOEXCEPT
+{
+    if (file::is_directory(to) || !file::is_directory(from))
+        return false;
+
+    // en.cppreference.com/w/cpp/filesystem/copy
+    std::error_code ec;
+    const auto from_path = system::to_extended_path(from);
+    const auto to_path = system::to_extended_path(to);
+    std::filesystem::copy(from_path, to_path, ec);
     return !ec;
 }
 
