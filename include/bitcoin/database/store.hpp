@@ -43,11 +43,19 @@ enum class event_t
 
     create_table,
     verify_table,
-    close_table
+    close_table,
+
+    wait_lock,
+    flush_table,
+    backup_table,
+    dump_table,
+    restore_table
 };
 
 enum class table_t
 {
+    store,
+
     header_table,
     header_head,
     header_body,
@@ -113,8 +121,8 @@ class store
 public:
     DELETE_COPY_MOVE_DESTRUCT(store);
 
-    typedef std::shared_lock<boost::upgrade_mutex> transactor;
     typedef std::function<void(event_t, table_t)> event_handler;
+    typedef std::shared_lock<std::shared_timed_mutex> transactor;
 
     /// Construct a store from settings.
     store(const settings& config) NOEXCEPT;
@@ -253,7 +261,7 @@ protected:
     // These are protected by mutex.
     flush_lock flush_lock_;
     interprocess_lock process_lock_;
-    boost::upgrade_mutex transactor_mutex_;
+    std::shared_timed_mutex transactor_mutex_;
 
 private:
     using path = std::filesystem::path;

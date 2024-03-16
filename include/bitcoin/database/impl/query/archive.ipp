@@ -492,6 +492,28 @@ typename CLASS::inputs_ptr CLASS::get_spenders(const tx_link& link,
 }
 
 TEMPLATE
+inline point_link CLASS::set_link_(const hash_digest& point_hash) NOEXCEPT
+{
+    if (point_hash == system::null_hash)
+        return {};
+
+    // Reuse if archived (always - this is a compression, not a guard).
+    auto point_fk = to_point(point_hash);
+    if (!point_fk.is_terminal())
+        return point_fk;
+
+    // This write is NOT transacted as it is only called from set_link(tx)
+    // ========================================================================
+
+    const table::point::record empty{};
+    if (!store_.point.put_link(point_fk, point_hash, empty))
+        return {};
+
+    return point_fk;
+    // ========================================================================
+}
+
+TEMPLATE
 tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
 {
     using namespace system;
@@ -543,7 +565,7 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
 
         // Create point and accumulate spend keys.
         const auto& prevout = in->point();
-        spends.push_back(table::spend::compose(set_link(prevout.hash()),
+        spends.push_back(table::spend::compose(set_link_(prevout.hash()),
             prevout.index()));
 
         // Write spend record.
@@ -609,28 +631,6 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
 
     // Commit tx to search.
     return store_.tx.commit_link(tx_fk, key);
-    // ========================================================================
-}
-
-TEMPLATE
-inline point_link CLASS::set_link(const hash_digest& point_hash) NOEXCEPT
-{
-    if (point_hash == system::null_hash)
-        return {};
-
-    // Reuse if archived (always - this is a compression, not a guard).
-    auto point_fk = to_point(point_hash);
-    if (!point_fk.is_terminal())
-        return point_fk;
-
-    // ========================================================================
-    const auto scope = store_.get_transactor();
-
-    const table::point::record empty{};
-    if (!store_.point.put_link(point_fk, point_hash, empty))
-        return {};
-
-    return point_fk;
     // ========================================================================
 }
 
