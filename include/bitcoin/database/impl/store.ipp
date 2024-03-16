@@ -619,7 +619,7 @@ code CLASS::backup(const event_handler& handler) NOEXCEPT
     static const auto primary = configuration_.path / schema::dir::primary;
     static const auto secondary = configuration_.path / schema::dir::secondary;
 
-    handler(event_t::archive_index, table_t::store);
+    handler(event_t::archive_snapshot, table_t::store);
 
     if (file::is_directory(primary))
     {
@@ -754,7 +754,7 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
     static const auto primary = configuration_.path / schema::dir::primary;
     static const auto secondary = configuration_.path / schema::dir::secondary;
 
-    handler(event_t::recover_index, table_t::store);
+    handler(event_t::recover_snapshot, table_t::store);
 
     if (file::is_directory(primary))
     {

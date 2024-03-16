@@ -49,10 +49,10 @@ enum class event_t
     flush_body,
     backup_table,
     copy_header,
-    archive_index,
+    archive_snapshot,
 
     restore_table,
-    recover_index
+    recover_snapshot
 };
 
 enum class table_t
