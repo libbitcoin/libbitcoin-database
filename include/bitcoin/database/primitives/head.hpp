@@ -20,8 +20,8 @@
 #define LIBBITCOIN_DATABASE_PRIMITIVES_HEAD_HPP
 
 #include <algorithm>
+#include <shared_mutex>
 #include <bitcoin/system.hpp>
-#include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
@@ -96,7 +96,7 @@ private:
 
     storage& file_;
     const Link buckets_;
-    mutable boost::upgrade_mutex mutex_;
+    mutable std::shared_mutex mutex_;
 };
 
 } // namespace database
