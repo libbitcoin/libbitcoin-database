@@ -31,19 +31,10 @@ BOOST_AUTO_TEST_CASE(accessor__construct_shared_mutex__unassigned__nulls)
     BOOST_REQUIRE(is_null(instance.end()));
 }
 
-BOOST_AUTO_TEST_CASE(accessor__construct_upgrade_mutex__unassigned__nulls)
-{
-    boost::upgrade_mutex mutex;
-    accessor instance(mutex);
-    BOOST_REQUIRE(is_null(instance.data()));
-    BOOST_REQUIRE(is_null(instance.begin()));
-    BOOST_REQUIRE(is_null(instance.end()));
-}
-
 BOOST_AUTO_TEST_CASE(accessor__destruct__shared_lock__released)
 {
-    boost::upgrade_mutex mutex;
-    auto access = std::make_shared<accessor<boost::upgrade_mutex>>(mutex);
+    std::shared_mutex mutex;
+    auto access = std::make_shared<accessor<std::shared_mutex>>(mutex);
     BOOST_REQUIRE(!mutex.try_lock());
     access.reset();
     BOOST_REQUIRE(mutex.try_lock());
