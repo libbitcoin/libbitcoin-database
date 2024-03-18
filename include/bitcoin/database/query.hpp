@@ -82,8 +82,10 @@ public:
     inline size_t get_top_candidate() const NOEXCEPT;
     inline size_t get_top_confirmed() const NOEXCEPT;
     size_t get_fork() const NOEXCEPT;
-    size_t get_last_associated() const NOEXCEPT;
-    size_t get_last_associated_from(size_t height) const NOEXCEPT;
+    size_t get_top_associated() const NOEXCEPT;
+    size_t get_top_associated_from(size_t height) const NOEXCEPT;
+    size_t get_top_confirmable() const NOEXCEPT;
+    size_t get_top_confirmable_from(size_t height) const NOEXCEPT;
     associations get_all_unassociated() const NOEXCEPT;
     associations get_unassociated_above(size_t height,
         size_t count=max_size_t) const NOEXCEPT;

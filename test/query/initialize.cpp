@@ -244,9 +244,9 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_fork__confirmed_ahead__expected)
     BOOST_REQUIRE_EQUAL(query.get_fork(), 1u);
 }
 
-// get_last_associated_from/get_last_associated
+// get_top_associated_from/get_top_associated
 
-BOOST_AUTO_TEST_CASE(query_initialize__get_last_associated_from__terminal__max_size_t)
+BOOST_AUTO_TEST_CASE(query_initialize__get_top_associated_from__terminal__max_size_t)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -254,15 +254,15 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_last_associated_from__terminal__max_s
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE_EQUAL(query.get_last_associated_from(max_size_t), max_size_t);
-    BOOST_REQUIRE_EQUAL(query.get_last_associated_from(height_link::terminal), max_size_t);
-    BOOST_REQUIRE_EQUAL(query.get_last_associated(), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_top_associated_from(max_size_t), max_size_t);
+    BOOST_REQUIRE_EQUAL(query.get_top_associated_from(height_link::terminal), max_size_t);
+    BOOST_REQUIRE_EQUAL(query.get_top_associated(), 0u);
 
     // unassociated, but correct.
-    BOOST_REQUIRE_EQUAL(query.get_last_associated_from(42), 42u);
+    BOOST_REQUIRE_EQUAL(query.get_top_associated_from(42), 42u);
 }
 
-BOOST_AUTO_TEST_CASE(query_initialize__get_last_associated_from__initialized__zero)
+BOOST_AUTO_TEST_CASE(query_initialize__get_top_associated_from__initialized__zero)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -270,14 +270,14 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_last_associated_from__initialized__ze
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE_EQUAL(query.get_last_associated(), 0u);
-    BOOST_REQUIRE_EQUAL(query.get_last_associated_from(0), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_top_associated(), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_top_associated_from(0), 0u);
 
     // unassociated, but correct.
-    BOOST_REQUIRE_EQUAL(query.get_last_associated_from(42), 42u);
+    BOOST_REQUIRE_EQUAL(query.get_top_associated_from(42), 42u);
 }
 
-BOOST_AUTO_TEST_CASE(query_initialize__get_last_associated_from__non_candidate__expected)
+BOOST_AUTO_TEST_CASE(query_initialize__get_top_associated_from__non_candidate__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -290,16 +290,16 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_last_associated_from__non_candidate__
     BOOST_REQUIRE(query.set(test::block3, test::context));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block2.hash())));
-    BOOST_REQUIRE_EQUAL(query.get_last_associated(), 2u);
-    BOOST_REQUIRE_EQUAL(query.get_last_associated_from(0), 2u);
-    BOOST_REQUIRE_EQUAL(query.get_last_associated_from(1), 2u);
-    BOOST_REQUIRE_EQUAL(query.get_last_associated_from(2), 2u);
+    BOOST_REQUIRE_EQUAL(query.get_top_associated(), 2u);
+    BOOST_REQUIRE_EQUAL(query.get_top_associated_from(0), 2u);
+    BOOST_REQUIRE_EQUAL(query.get_top_associated_from(1), 2u);
+    BOOST_REQUIRE_EQUAL(query.get_top_associated_from(2), 2u);
 
     // unassociated, but correct.
-    BOOST_REQUIRE_EQUAL(query.get_last_associated_from(3), 3u);
+    BOOST_REQUIRE_EQUAL(query.get_top_associated_from(3), 3u);
 }
 
-BOOST_AUTO_TEST_CASE(query_initialize__get_last_associated_from__gapped_candidate__expected)
+BOOST_AUTO_TEST_CASE(query_initialize__get_top_associated_from__gapped_candidate__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -313,15 +313,15 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_last_associated_from__gapped_candidat
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block2.hash())));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block3.hash())));
-    BOOST_REQUIRE_EQUAL(query.get_last_associated(), 1u);
-    BOOST_REQUIRE_EQUAL(query.get_last_associated_from(0), 1u);
-    BOOST_REQUIRE_EQUAL(query.get_last_associated_from(1), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_top_associated(), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_top_associated_from(0), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_top_associated_from(1), 1u);
 
     // gapped, but correct.
-    BOOST_REQUIRE_EQUAL(query.get_last_associated_from(2), 3u);
+    BOOST_REQUIRE_EQUAL(query.get_top_associated_from(2), 3u);
 
     // unassociated, but correct.
-    BOOST_REQUIRE_EQUAL(query.get_last_associated_from(3), 3u);
+    BOOST_REQUIRE_EQUAL(query.get_top_associated_from(3), 3u);
 }
 
 // get_unassociated_above/get_all_unassociated
