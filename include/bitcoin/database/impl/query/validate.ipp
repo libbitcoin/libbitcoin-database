@@ -124,19 +124,19 @@ bool CLASS::get_context(context& ctx,
     return true;
 }
 
-TEMPLATE
-bool CLASS::get_check_context(context& ctx, hash_digest& hash,
-    uint32_t& timestamp, const header_link& link) const NOEXCEPT
-{
-    table::header::get_check_context header{};
-    if (!store_.header.get(link, header))
-        return false;
-
-    hash = std::move(header.key);
-    ctx = std::move(header.ctx);
-    timestamp = header.timestamp;
-    return true;
-}
+////TEMPLATE
+////bool CLASS::get_check_context(context& ctx, hash_digest& hash,
+////    uint32_t& timestamp, const header_link& link) const NOEXCEPT
+////{
+////    table::header::get_check_context header{};
+////    if (!store_.header.get(link, header))
+////        return false;
+////
+////    hash = std::move(header.key);
+////    ctx = std::move(header.ctx);
+////    timestamp = header.timestamp;
+////    return true;
+////}
 
 TEMPLATE
 code CLASS::get_header_state(const header_link& link) const NOEXCEPT
@@ -163,8 +163,7 @@ code CLASS::get_block_state(const header_link& link) const NOEXCEPT
     if (!store_.validated_bk.get(fk, valid))
         return error::integrity;
 
-    // Should only be pre/confirmable if associated (not verified).
-    // Fees only valid if block_preconfirmable or block_confirmable.
+    // Fees only valid if block_confirmable.
     return to_block_code(valid.code);
 }
 
@@ -180,8 +179,7 @@ code CLASS::get_block_state(uint64_t& fees,
     if (!store_.validated_bk.get(fk, valid))
         return error::integrity;
 
-    // Should only be pre/confirmable if associated (not verified).
-    // Fees only valid if block_preconfirmable or block_confirmable.
+    // Fees only valid if block_confirmable.
     fees = valid.fees;
     return to_block_code(valid.code);
 }

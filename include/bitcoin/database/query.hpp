@@ -82,8 +82,10 @@ public:
     inline size_t get_top_candidate() const NOEXCEPT;
     inline size_t get_top_confirmed() const NOEXCEPT;
     size_t get_fork() const NOEXCEPT;
-    size_t get_last_associated() const NOEXCEPT;
-    size_t get_last_associated_from(size_t height) const NOEXCEPT;
+    size_t get_top_associated() const NOEXCEPT;
+    size_t get_top_associated_from(size_t height) const NOEXCEPT;
+    size_t get_top_preconfirmable() const NOEXCEPT;
+    size_t get_top_preconfirmable_from(size_t height) const NOEXCEPT;
     associations get_all_unassociated() const NOEXCEPT;
     associations get_unassociated_above(size_t height,
         size_t count=max_size_t) const NOEXCEPT;
@@ -288,8 +290,6 @@ public:
     bool get_version(uint32_t& version, const header_link& link) const NOEXCEPT;
     bool get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT;
     bool get_context(context& ctx, const header_link& link) const NOEXCEPT;
-    bool get_check_context(context& ctx, hash_digest& hash, uint32_t& timestamp,
-        const header_link& link) const NOEXCEPT;
 
     bool set_block_preconfirmable(const header_link& link) NOEXCEPT;
     bool set_block_unconfirmable(const header_link& link) NOEXCEPT;
