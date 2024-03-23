@@ -124,19 +124,19 @@ bool CLASS::get_context(context& ctx,
     return true;
 }
 
-TEMPLATE
-bool CLASS::get_check_context(context& ctx, hash_digest& hash,
-    uint32_t& timestamp, const header_link& link) const NOEXCEPT
-{
-    table::header::get_check_context header{};
-    if (!store_.header.get(link, header))
-        return false;
-
-    hash = std::move(header.key);
-    ctx = std::move(header.ctx);
-    timestamp = header.timestamp;
-    return true;
-}
+////TEMPLATE
+////bool CLASS::get_check_context(context& ctx, hash_digest& hash,
+////    uint32_t& timestamp, const header_link& link) const NOEXCEPT
+////{
+////    table::header::get_check_context header{};
+////    if (!store_.header.get(link, header))
+////        return false;
+////
+////    hash = std::move(header.key);
+////    ctx = std::move(header.ctx);
+////    timestamp = header.timestamp;
+////    return true;
+////}
 
 TEMPLATE
 code CLASS::get_header_state(const header_link& link) const NOEXCEPT
