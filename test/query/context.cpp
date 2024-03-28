@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_candidate_chain_state__genesis__expected
 
     const auto state = query.get_candidate_chain_state(system_settings);
     BOOST_REQUIRE(state);
-    BOOST_REQUIRE_EQUAL(state->forks(), expected.forks);
+    BOOST_REQUIRE_EQUAL(state->flags(), expected.flags);
     BOOST_REQUIRE_EQUAL(state->height(), expected.height);
     BOOST_REQUIRE_EQUAL(state->timestamp(), expected.timestamp);
     BOOST_REQUIRE_EQUAL(state->work_required(), expected.work_required);
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_candidate_chain_state__block1__expected)
     const system::settings system_settings{ system::chain::selection::mainnet };
     const system::chain::context expected
     {
-        131211u,                            // forks
+        131211u,                            // flags
         test::block1.header().timestamp(),  // timestamp
         test::genesis.header().timestamp(), // mtp
         1u,                                 // height
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_candidate_chain_state__block1__expected)
     // Not actually contributory.
     const database::context context
     {
-        expected.forks,
+        expected.flags,
         system::possible_narrow_cast<uint32_t>(expected.height),
         expected.median_time_past
     };
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_candidate_chain_state__block1__expected)
 
     const auto state = query.get_candidate_chain_state(system_settings);
     BOOST_REQUIRE(state);
-    BOOST_REQUIRE_EQUAL(state->forks(), expected.forks);
+    BOOST_REQUIRE_EQUAL(state->flags(), expected.flags);
     BOOST_REQUIRE_EQUAL(state->height(), expected.height);
     BOOST_REQUIRE_EQUAL(state->timestamp(), expected.timestamp);
     BOOST_REQUIRE_EQUAL(state->work_required(), expected.work_required);
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_confirmed_chain_state__testnet_genesis__
     const uint256_t expected_cumulative_work{};
     const system::chain::context expected
     {
-        131211u,
+        131210u,
         genesis.header().timestamp(),
         0u,
         0u,
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_confirmed_chain_state__testnet_genesis__
 
     const auto state = query.get_confirmed_chain_state(system_settings);
     BOOST_REQUIRE(state);
-    BOOST_REQUIRE_EQUAL(state->forks(), expected.forks);
+    BOOST_REQUIRE_EQUAL(state->flags(), expected.flags);
     BOOST_REQUIRE_EQUAL(state->height(), expected.height);
     BOOST_REQUIRE_EQUAL(state->timestamp(), expected.timestamp);
     BOOST_REQUIRE_EQUAL(state->work_required(), expected.work_required);
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_confirmed_chain_state__block1__expected)
     const system::settings system_settings{ system::chain::selection::mainnet };
     const system::chain::context expected
     {
-        131211u,                            // forks
+        131211u,                            // flags
         test::block1.header().timestamp(),  // timestamp
         test::genesis.header().timestamp(), // mtp
         1u,                                 // height
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_confirmed_chain_state__block1__expected)
     // Not actually contributory.
     const database::context context
     {
-        expected.forks,
+        expected.flags,
         system::possible_narrow_cast<uint32_t>(expected.height),
         expected.median_time_past
     };
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_confirmed_chain_state__block1__expected)
 
     const auto state = query.get_confirmed_chain_state(system_settings);
     BOOST_REQUIRE(state);
-    BOOST_REQUIRE_EQUAL(state->forks(), expected.forks);
+    BOOST_REQUIRE_EQUAL(state->flags(), expected.flags);
     BOOST_REQUIRE_EQUAL(state->height(), expected.height);
     BOOST_REQUIRE_EQUAL(state->timestamp(), expected.timestamp);
     BOOST_REQUIRE_EQUAL(state->work_required(), expected.work_required);
