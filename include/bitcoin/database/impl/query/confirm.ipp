@@ -144,7 +144,7 @@ TEMPLATE
 inline error::error_t CLASS::spendable_prevout(const tx_link& link,
     uint32_t sequence, const context& ctx) const NOEXCEPT
 {
-    constexpr auto bip68_rule = system::chain::forks::bip68_rule;
+    constexpr auto bip68_rule = system::chain::flags::bip68_rule;
 
     context out{};
     if (!get_context(out, to_block(link)))
@@ -245,7 +245,7 @@ TEMPLATE
 error::error_t CLASS::locked_prevout(const point_link& link, uint32_t sequence,
     const context& ctx) const NOEXCEPT
 {
-    if (!script::is_enabled(ctx.flags, system::chain::forks::bip68_rule))
+    if (!script::is_enabled(ctx.flags, system::chain::flags::bip68_rule))
         return error::success;
 
     // Get hash from point, search for prevout tx and get its link.

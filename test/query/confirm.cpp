@@ -429,7 +429,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_mature__coinbase__expected)
     BOOST_REQUIRE(query.is_mature(query.to_spend(2, 0), 101));
 }
 
-constexpr auto bip68 = system::chain::forks::bip68_rule;
+constexpr auto bip68 = system::chain::flags::bip68_rule;
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__bad_link__integrity)
 {
