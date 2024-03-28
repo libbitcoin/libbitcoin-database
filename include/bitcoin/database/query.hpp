@@ -412,7 +412,7 @@ protected:
         const header& header, size_t header_height) const NOEXCEPT;
 
     // This is currently based on archived activation only.
-    bool populate_candidate_bip9(chain_state::data& data,
+    bool populate_candidate_hash(chain_state::data& data,
         const chain_state::map& map, const header& header,
         size_t header_height) const NOEXCEPT;
 
@@ -440,7 +440,7 @@ protected:
         const header& header, size_t header_height) const NOEXCEPT;
 
     // This is currently based on archived activation only.
-    bool populate_confirmed_bip9(chain_state::data& data,
+    bool populate_confirmed_hash(chain_state::data& data,
         const chain_state::map& map, const header& header,
         size_t header_height) const NOEXCEPT;
 
