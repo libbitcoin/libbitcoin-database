@@ -641,7 +641,7 @@ header_link CLASS::set_link(const block& block,
     // Map chain context into database context.
     return set_link(block, context
     {
-        system::possible_narrow_cast<context::flag::integer>(ctx.forks),
+        system::possible_narrow_cast<context::flag::integer>(ctx.flags),
         system::possible_narrow_cast<context::block::integer>(ctx.height),
         ctx.median_time_past
     });
@@ -654,7 +654,7 @@ header_link CLASS::set_link(const header& header,
     // Map chain context into database context.
     return set_link(header, context
     {
-        system::possible_narrow_cast<context::flag::integer>(ctx.forks),
+        system::possible_narrow_cast<context::flag::integer>(ctx.flags),
         system::possible_narrow_cast<context::block::integer>(ctx.height),
         ctx.median_time_past
     });

@@ -40,8 +40,8 @@ struct query_archive_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(query_archive_tests, query_archive_setup_fixture)
 
-// ensure context::flags is same size as chain_context::forks.
-static_assert(is_same_type<database::context::flag::integer, decltype(system::chain::context{}.forks)>);
+// ensure context::flags is same size as chain_context::flags.
+static_assert(is_same_type<database::context::flag::integer, decltype(system::chain::context{}.flags)>);
 
 // nop event handler.
 const auto events = [](auto, auto) {};
