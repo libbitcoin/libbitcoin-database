@@ -60,33 +60,6 @@ size_t CLASS::get_fork() const NOEXCEPT
 }
 
 TEMPLATE
-size_t CLASS::get_top_preconfirmable() const NOEXCEPT
-{
-    return get_top_preconfirmable_from(get_fork());
-}
-
-TEMPLATE
-size_t CLASS::get_top_preconfirmable_from(size_t height) const NOEXCEPT
-{
-    if (height >= height_link::terminal)
-        return max_size_t;
-
-    while (!is_zero(++height))
-    {
-        switch (get_block_state(to_candidate(height)).value())
-        {
-            case error::block_confirmable:
-            case error::block_preconfirmable:
-                continue;
-            default:
-                break;
-        }
-    }
-
-    return --height;
-}
-
-TEMPLATE
 size_t CLASS::get_top_associated() const NOEXCEPT
 {
     return get_top_associated_from(get_fork());
