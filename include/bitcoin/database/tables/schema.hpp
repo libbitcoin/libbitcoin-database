@@ -87,7 +87,8 @@ namespace schema
     {
         confirmable = 0,    // final
         preconfirmable = 1, // transitional
-        unconfirmable = 2   // final
+        malleable = 2,      // transitional
+        unconfirmable = 3   // final
     };
 
     enum tx_state : uint8_t
