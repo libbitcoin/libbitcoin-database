@@ -84,8 +84,6 @@ public:
     size_t get_fork() const NOEXCEPT;
     size_t get_top_associated() const NOEXCEPT;
     size_t get_top_associated_from(size_t height) const NOEXCEPT;
-    size_t get_top_preconfirmable() const NOEXCEPT;
-    size_t get_top_preconfirmable_from(size_t height) const NOEXCEPT;
     associations get_all_unassociated() const NOEXCEPT;
     associations get_unassociated_above(size_t height,
         size_t count=max_size_t) const NOEXCEPT;
@@ -291,9 +289,10 @@ public:
     bool get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT;
     bool get_context(context& ctx, const header_link& link) const NOEXCEPT;
 
-    bool set_block_preconfirmable(const header_link& link) NOEXCEPT;
-    bool set_block_unconfirmable(const header_link& link) NOEXCEPT;
     bool set_block_confirmable(const header_link& link, uint64_t fees) NOEXCEPT;
+    bool set_block_preconfirmable(const header_link& link) NOEXCEPT;
+    bool set_block_malleable(const header_link& link) NOEXCEPT;
+    bool set_block_unconfirmable(const header_link& link) NOEXCEPT;
 
     // set_txs_connected is FOR PERFORMANCE EVALUATION ONLY.
     bool set_txs_connected(const header_link& link) NOEXCEPT;
