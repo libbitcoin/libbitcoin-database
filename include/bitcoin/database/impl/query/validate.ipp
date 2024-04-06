@@ -42,9 +42,9 @@ inline code CLASS::to_block_code(
         // Block satisfies validation rules (prevouts unverified).
         case schema::block_state::preconfirmable:
             return error::block_preconfirmable;
-        // Block satisfies validation rules but is malleable.
-        case schema::block_state::malleable:
-            return error::block_malleable;
+        ////// Block satisfies validation rules but is malleable.
+        ////case schema::block_state::malleable:
+        ////    return error::block_malleable;
         // Final: Block does not satsify validation/confirmation rules.
         case schema::block_state::unconfirmable:
             return error::block_unconfirmable;
@@ -259,20 +259,20 @@ bool CLASS::set_block_preconfirmable(const header_link& link) NOEXCEPT
     // ========================================================================
 }
 
-TEMPLATE
-bool CLASS::set_block_malleable(const header_link& link) NOEXCEPT
-{
-    // ========================================================================
-    const auto scope = store_.get_transactor();
-
-    return store_.validated_bk.put(link, table::validated_bk::slab
-        {
-            {},
-            schema::block_state::malleable,
-            0 // fees
-        });
-    // ========================================================================
-}
+////TEMPLATE
+////bool CLASS::set_block_malleable(const header_link& link) NOEXCEPT
+////{
+////    // ========================================================================
+////    const auto scope = store_.get_transactor();
+////
+////    return store_.validated_bk.put(link, table::validated_bk::slab
+////        {
+////            {},
+////            schema::block_state::malleable,
+////            0 // fees
+////        });
+////    // ========================================================================
+////}
 
 TEMPLATE
 bool CLASS::set_block_confirmable(const header_link& link,

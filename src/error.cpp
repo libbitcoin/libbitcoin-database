@@ -76,7 +76,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { tx_disconnected, "transaction disconnected" },
     { block_confirmable, "block confirmable" },
     { block_preconfirmable, "block preconfirmable" },
-    { block_malleable, "block malleable" },
+    ////{ block_malleable, "block malleable" },
     { block_unconfirmable, "block unconfirmable" },
     { unassociated, "unassociated" },
     { unvalidated, "unvalidated" },

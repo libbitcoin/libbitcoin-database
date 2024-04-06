@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_INITIALIZE_IPP
 #define LIBBITCOIN_DATABASE_QUERY_INITIALIZE_IPP
 
+#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -85,30 +86,15 @@ TEMPLATE
 associations CLASS::get_unassociated_above(size_t height,
     size_t count) const NOEXCEPT
 {
+    association item{};
     associations out{};
     const auto top = get_top_candidate();
     while (++height <= top && !is_zero(count))
     {
-        const auto header_fk = to_candidate(height);
-        if (!is_associated(header_fk))
+        if (get_unassociated(item, to_candidate(height)))
         {
-            table::header::get_check_context context{};
-            if (store_.header.get(header_fk, context))
-            {
-                --count;
-                out.insert(association
-                {
-                    header_fk,
-                    context.key,
-                    system::chain::context
-                    {
-                        context.ctx.flags,
-                        context.timestamp,
-                        context.ctx.mtp,
-                        system::possible_wide_cast<size_t>(context.ctx.height)
-                    }
-                });
-            }
+            out.insert(std::move(item));
+            --count;
         }
     }
 

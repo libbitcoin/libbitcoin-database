@@ -94,9 +94,9 @@ enum error_t : uint8_t
     /// block is valid but has not been evaluated for confirmability.
     block_preconfirmable,
 
-    /// block is valid but has not been evaluated for confirmability.
-    /// block has a malleable identifier, so invalidity cannot be stored.
-    block_malleable,
+    /////// block is valid but has not been evaluated for confirmability.
+    /////// block has a malleable identifier, so invalidity cannot be stored.
+    ////block_malleable,
 
     /// block is unconfirmable (invalid or spends not confirmable).
     block_unconfirmable,
