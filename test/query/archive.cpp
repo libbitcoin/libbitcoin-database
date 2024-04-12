@@ -910,6 +910,29 @@ BOOST_AUTO_TEST_CASE(query_archive__is_coinbase__non_coinbase__false)
     BOOST_REQUIRE(!query.is_coinbase(42));
 }
 
+BOOST_AUTO_TEST_CASE(query_archive__is_malleable__non_malleable__false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, context{}));
+    BOOST_REQUIRE(query.set(test::block2a, context{}));
+
+    BOOST_REQUIRE(!query.is_malleable(1));
+    BOOST_REQUIRE(!query.is_malleable(2));
+    BOOST_REQUIRE(!query.is_malleable(3));
+    BOOST_REQUIRE(!query.is_malleable(4));
+    BOOST_REQUIRE(!query.is_malleable(5));
+    BOOST_REQUIRE(!query.is_malleable(42));
+
+    BOOST_REQUIRE(!query.is_malleated(test::genesis));
+    BOOST_REQUIRE(!query.is_malleated(test::block1a));
+    BOOST_REQUIRE(!query.is_malleated(test::block2a));
+}
+
 BOOST_AUTO_TEST_CASE(query_archive__is_malleable__malleable__true)
 {
     using namespace system::chain;
@@ -930,32 +953,70 @@ BOOST_AUTO_TEST_CASE(query_archive__is_malleable__malleable__true)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+
+    // Store 4 blocks.
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE_EQUAL(query.set_link(block1, database::context{}), 1u);
     BOOST_REQUIRE_EQUAL(query.set_link(block2, database::context{}), 2u);
     BOOST_REQUIRE_EQUAL(query.set_link(block3, database::context{}), 3u);
+
+    // All are associated.
+    BOOST_REQUIRE(query.is_associated(0));
+    BOOST_REQUIRE(query.is_associated(1));
+    BOOST_REQUIRE(query.is_associated(2));
+    BOOST_REQUIRE(query.is_associated(3));
+
+    // Only genesis is non-malleable.
     BOOST_REQUIRE(!query.is_malleable(0));
     BOOST_REQUIRE(query.is_malleable(1));
     BOOST_REQUIRE(query.is_malleable(2));
     BOOST_REQUIRE(query.is_malleable(3));
-}
 
-BOOST_AUTO_TEST_CASE(query_archive__is_malleable__non_malleable__false)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{}));
-    BOOST_REQUIRE(query.set(test::block2a, context{}));
-    BOOST_REQUIRE(!query.is_malleable(1));
-    BOOST_REQUIRE(!query.is_malleable(2));
-    BOOST_REQUIRE(!query.is_malleable(3));
-    BOOST_REQUIRE(!query.is_malleable(4));
-    BOOST_REQUIRE(!query.is_malleable(5));
-    BOOST_REQUIRE(!query.is_malleable(42));
+    // Only genesis is non-malleated when compared against itself, since not malleable.
+    BOOST_REQUIRE(!query.is_malleated(test::genesis));
+    BOOST_REQUIRE(query.is_malleated(block1));
+    BOOST_REQUIRE(query.is_malleated(block2));
+    BOOST_REQUIRE(query.is_malleated(block3));
+
+    // Disassociate 3 blocks.
+    BOOST_REQUIRE(query.dissasociate(query.to_header(block1.hash())));
+    BOOST_REQUIRE(query.dissasociate(query.to_header(block2.hash())));
+    BOOST_REQUIRE(query.dissasociate(query.to_header(block3.hash())));
+
+    // Verify all 3 not associated.
+    BOOST_REQUIRE(!query.is_associated(1));
+    BOOST_REQUIRE(!query.is_associated(2));
+    BOOST_REQUIRE(!query.is_associated(3));
+
+    // Verify all 3 remain malleable.
+    BOOST_REQUIRE(query.is_malleable(1));
+    BOOST_REQUIRE(query.is_malleable(2));
+    BOOST_REQUIRE(query.is_malleable(3));
+
+    // Verify all 3 remain malleated by first association (against themselves).
+    BOOST_REQUIRE(query.is_malleated(block1));
+    BOOST_REQUIRE(query.is_malleated(block2));
+    BOOST_REQUIRE(query.is_malleated(block3));
+
+    // Reassociate the same transaction sets (first(n), disassociated (0), second(n))
+    BOOST_REQUIRE(!query.set_link(*block1.transactions_ptr(), 1).is_terminal());
+    BOOST_REQUIRE(!query.set_link(*block2.transactions_ptr(), 2).is_terminal());
+    BOOST_REQUIRE(!query.set_link(*block3.transactions_ptr(), 3).is_terminal());
+
+    // Verify all 3 are reassociated.
+    BOOST_REQUIRE(query.is_associated(1));
+    BOOST_REQUIRE(query.is_associated(2));
+    BOOST_REQUIRE(query.is_associated(3));
+
+    // Verify all 3 are associated as malleable.
+    BOOST_REQUIRE(query.is_malleable(1));
+    BOOST_REQUIRE(query.is_malleable(2));
+    BOOST_REQUIRE(query.is_malleable(3));
+
+    // Verify all 3 remain malleated by second association (against themselves).
+    BOOST_REQUIRE(query.is_malleated(block1));
+    BOOST_REQUIRE(query.is_malleated(block2));
+    BOOST_REQUIRE(query.is_malleated(block3));
 }
 
 BOOST_AUTO_TEST_CASE(query_archive__get_header__invalid_parent__expected)

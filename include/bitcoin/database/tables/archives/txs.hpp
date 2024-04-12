@@ -50,7 +50,7 @@ struct txs
         inline bool from_data(reader& source) NOEXCEPT
         {
             tx_fks.resize(source.read_little_endian<tx::integer, schema::count_>());
-            mutable_ = to_bool(source.read_byte());
+            malleable = to_bool(source.read_byte());
             std::for_each(tx_fks.begin(), tx_fks.end(), [&](auto& fk) NOEXCEPT
             {
                 fk = source.read_little_endian<tx::integer, tx::size>();
@@ -66,7 +66,7 @@ struct txs
             const auto fks = system::possible_narrow_cast<tx::integer>(tx_fks.size());
 
             sink.write_little_endian<tx::integer, schema::count_>(fks);
-            sink.write_byte(to_int<uint8_t>(mutable_));
+            sink.write_byte(to_int<uint8_t>(malleable));
             std::for_each(tx_fks.begin(), tx_fks.end(), [&](const auto& fk) NOEXCEPT
             {
                 sink.write_little_endian<tx::integer, tx::size>(fk);
@@ -81,7 +81,7 @@ struct txs
             return tx_fks == other.tx_fks;
         }
 
-        bool mutable_{ false };
+        bool malleable{ false };
         keys tx_fks{};
     };
 

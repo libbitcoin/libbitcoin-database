@@ -82,18 +82,34 @@ inline bool CLASS::is_coinbase(const tx_link& link) const NOEXCEPT
 TEMPLATE
 inline bool CLASS::is_malleated(const block& block) const NOEXCEPT
 {
-    // is_malleable_duplicate is always invalid, so never stored.
-    if (!block.is_malleable())
-        return false;
+    auto it = store_.txs.it(to_header(block.hash()));
+    const auto transactions = *block.transactions_ptr();
+    do
+    {
+        // Non-malleable is final so don't continue with that type association.
+        table::txs::slab txs{};
+        if (!store_.txs.get(it.self(), txs) || !txs.malleable)
+            return false;
 
-    // This is invoked for all new blocks, most of which will not exist (cheap).
-    // TODO: determine if block is a bitwise match for a stored instance, where
-    // TODO: the stored and unassociated instances share the same block hash.
-    // TODO: if there is an associated instance this check need not be called.
-    // TODO: if the associated instance is matched then the assumption is that
-    // TODO: that instance is not malleated, but that may be later determined.
-    // TODO: so only disassociated instances are compared and otherwise false.
-    return true;
+        if (txs.tx_fks.size() != transactions.size())
+            continue;
+
+        bool match{ true };
+        auto tx = transactions.begin();
+        for (const auto& link: txs.tx_fks)
+        {
+            if (store_.tx.get_key(link) != (*tx++)->hash(false))
+            {
+                match = false;
+                break;
+            }
+        }
+
+        if (match)
+            return true;
+    }
+    while (it.advance());
+    return false;
 }
 
 TEMPLATE
@@ -775,11 +791,14 @@ txs_link CLASS::set_link(const transactions& txs,
     if (link.is_terminal())
         return{};
 
-    // GUARDED (block (txs) redundancy)
-    // This guard is only effective if there is a single database thread.
-    const auto txs_link = to_txs_link(link);
-    if (!txs_link.is_terminal())
-        return txs_link;
+    // txs cannot be guarded because of disassociation and reassociation, which
+    // are required because malleable64 blocks may be found to be invalid but
+    // cannot be marked as invalid (so they are disassociated).
+    //// GUARDED (block (txs) redundancy)
+    //// This guard is only effective if there is a single database thread.
+    ////const auto txs_link = to_txs_link(link);
+    ////if (!txs_link.is_terminal())
+    ////    return txs_link;
 
     tx_links links{};
     links.reserve(txs.size());
