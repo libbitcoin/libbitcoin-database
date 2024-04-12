@@ -27,7 +27,7 @@ const table::txs::slab expected0{};
 const table::txs::slab expected1
 {
     {}, // schema::txs [all const static members]
-    false,
+    true,
     std_vector<uint32_t>
     {
         0x56341211_u32
@@ -46,7 +46,7 @@ const table::txs::slab expected2
 const table::txs::slab expected3
 {
     {}, // schema::txs [all const static members]
-    false,
+    true,
     std_vector<uint32_t>
     {
         0x56341231_u32,
@@ -63,7 +63,10 @@ const data_chunk expected_file
     0x11, 0x22, 0x33,
 
     // slab0 (count) [0]
-    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00,
+
+    // slab0 (malleable) [false]
+    0x00,
 
     // slab0 (txs)
 
@@ -76,7 +79,10 @@ const data_chunk expected_file
     0x11, 0x22, 0x33,
 
     // slab1 (count) [1]
-    0x01, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00,
+
+    // slab0 (malleable) [true]
+    0x01,
 
     // slab1 (txs)
     0x11, 0x12, 0x34, 0x56,
@@ -90,7 +96,10 @@ const data_chunk expected_file
     0x11, 0x22, 0x33,
 
     // slab2 (count) [2]
-    0x02, 0x00, 0x00, 0x00,
+    0x02, 0x00, 0x00,
+
+    // slab0 (malleable) [false]
+    0x00,
 
     // slab2
     0x21, 0x12, 0x34, 0x56,
@@ -105,7 +114,10 @@ const data_chunk expected_file
     0x11, 0x22, 0x33,
 
     // slab3 (count) [3]
-    0x03, 0x00, 0x00, 0x00,
+    0x03, 0x00, 0x00,
+    
+    // slab0 (malleable) [true]
+    0x01,
 
     // slab3
     0x31, 0x12, 0x34, 0x56,
