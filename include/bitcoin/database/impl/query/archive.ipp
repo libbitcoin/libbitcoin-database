@@ -80,9 +80,34 @@ inline bool CLASS::is_coinbase(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
+inline bool CLASS::is_malleated(const block& block) const NOEXCEPT
+{
+    // is_malleable_duplicate is always invalid, so never stored.
+    if (!block.is_malleable())
+        return false;
+
+    // This is invoked for all new blocks, most of which will not exist (cheap).
+    // TODO: determine if block is a bitwise match for a stored instance, where
+    // TODO: the stored and unassociated instances share the same block hash.
+    // TODO: if there is an associated instance this check need not be called.
+    // TODO: if the associated instance is matched then the assumption is that
+    // TODO: that instance is not malleated, but that may be later determined.
+    // TODO: so only disassociated instances are compared and otherwise false.
+    return true;
+}
+
+TEMPLATE
+inline bool CLASS::is_malleable(const header_link& link) const NOEXCEPT
+{
+    table::txs::get_malleable txs{};
+    return store_.txs.get(to_txs_link(link), txs) && txs.malleable;
+}
+
+TEMPLATE
 inline bool CLASS::is_associated(const header_link& link) const NOEXCEPT
 {
-    return !link.is_terminal() && store_.txs.exists(link);
+    table::txs::get_associated txs{};
+    return store_.txs.get(to_txs_link(link), txs) && txs.associated;
 }
 
 TEMPLATE
@@ -762,13 +787,12 @@ txs_link CLASS::set_link(const transactions& txs,
         if (!push_link_value(links, set_link(*tx)))
             return {};
 
-    // Malleable if all txs serialize to 64 bytes without witness.
-    const auto mutable_ = block::is_malleable64(txs);
+    const auto malleable = block::is_malleable64(txs);
 
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return store_.txs.put_link(link, table::txs::slab{ {}, mutable_, links });
+    return store_.txs.put_link(link, table::txs::slab{ {}, malleable, links });
     // ========================================================================
 }
 
@@ -778,45 +802,13 @@ bool CLASS::dissasociate(const header_link& link) NOEXCEPT
     if (link.is_terminal())
         return false;
 
-    // TODO: disassociate the header from its transactions.
+    const auto malleable = is_malleable(link);
 
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return true;
+    return store_.txs.put_link(link, table::txs::slab{ {}, malleable, {} });
     // ========================================================================
-}
-
-TEMPLATE
-inline bool CLASS::is_malleated(const block& block) const NOEXCEPT
-{
-    // is_malleable_duplicate is always invalid, so never stored.
-    if (!block.is_malleable())
-        return false;
-
-    // This is invoked for all new blocks, most of which will not exist (cheap).
-    // TODO: determine if block is a bitwise match for a stored instance, where
-    // TODO: the stored and unassociated instances share the same block hash.
-    // TODO: if there is an associated instance this check need not be called.
-    // TODO: if the associated instance is matched then the assumption is that
-    // TODO: that instance is not malleated, but that may be later determined.
-    // TODO: so only disassociated instances are compared and otherwise false.
-    return true;
-}
-
-TEMPLATE
-inline bool CLASS::is_malleable(const header_link& link) const NOEXCEPT
-{
-    // Unknown treated as false, should not have been called unless associated.
-    if (!is_associated(link))
-        return false;
-
-    // Invoked after confirm failure (free).
-    // Invoked to not bypass checkpoints in validate/confirm (expensive).
-    // TODO: implement block.is_malleable() from the store.
-    // TODO: find any tx without a 64 byte non-witness size (false).
-    // TODO: or archive malleable bit with txs record.
-    return true;
 }
 
 } // namespace database

@@ -123,6 +123,31 @@ struct txs
 
         tx::integer coinbase_fk{};
     };
+
+    struct get_malleable
+      : public schema::txs
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(schema::count_);
+            malleable = to_bool(source.read_byte());
+            return source;
+        }
+
+        bool malleable{};
+    };
+
+    struct get_associated
+      : public schema::txs
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            associated = to_bool(source.read_little_endian<tx::integer, schema::count_>());
+            return source;
+        }
+
+        bool associated{};
+    };
 };
 
 } // namespace table

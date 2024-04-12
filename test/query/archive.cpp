@@ -716,8 +716,10 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
     // Set header and then txs.
     BOOST_REQUIRE(!query.is_block(test::genesis.hash()));
     BOOST_REQUIRE(query.set(test::genesis.header(), test::context));
+    BOOST_REQUIRE(!query.is_associated(0));
     BOOST_REQUIRE(query.set(test::genesis));
     BOOST_REQUIRE(query.is_block(test::genesis.hash()));
+    BOOST_REQUIRE(query.is_associated(0));
 
     // Verify idempotentcy (these do not change store state).
     ////BOOST_REQUIRE(query.set(test::genesis.header(), test::context));
@@ -753,6 +755,11 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
     const auto hashes = query.get_tx_keys(query.to_header(test::genesis.hash()));
     BOOST_REQUIRE_EQUAL(hashes.size(), 1u);
     BOOST_REQUIRE_EQUAL(hashes, test::genesis.transaction_hashes(false));
+
+    BOOST_REQUIRE(!query.is_malleable(0));
+    BOOST_REQUIRE(query.dissasociate(0));
+    BOOST_REQUIRE(!query.is_associated(0));
+    BOOST_REQUIRE(!query.is_malleable(0));
 }
 
 // Moved to protected, set_link(block) covers.
@@ -885,7 +892,7 @@ BOOST_AUTO_TEST_CASE(query_archive__is_coinbase__coinbase__true)
     BOOST_REQUIRE(query.is_coinbase(3));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive__is_coinbase__non_coinbase__true)
+BOOST_AUTO_TEST_CASE(query_archive__is_coinbase__non_coinbase__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -901,6 +908,54 @@ BOOST_AUTO_TEST_CASE(query_archive__is_coinbase__non_coinbase__true)
     BOOST_REQUIRE(!query.is_coinbase(4));
     BOOST_REQUIRE(!query.is_coinbase(5));
     BOOST_REQUIRE(!query.is_coinbase(42));
+}
+
+BOOST_AUTO_TEST_CASE(query_archive__is_malleable__malleable__true)
+{
+    using namespace system::chain;
+    transaction tx64
+    {
+        42,
+        inputs{ { point{}, script{ { opcode::dup, opcode::dup } }, 42 } },
+        outputs{ { 42, script{ { opcode::dup, opcode::dup } } } },
+        42
+    };
+
+    const block block1{ header{ 42, {}, {}, {}, {}, {} }, { tx64 } };
+    const block block2{ header{ 43, {}, {}, {}, {}, {} }, { tx64, tx64 } };
+    const block block3{ header{ 44, {}, {}, {}, {}, {} }, { tx64, tx64, tx64 } };
+
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE_EQUAL(query.set_link(block1, database::context{}), 1u);
+    BOOST_REQUIRE_EQUAL(query.set_link(block2, database::context{}), 2u);
+    BOOST_REQUIRE_EQUAL(query.set_link(block3, database::context{}), 3u);
+    BOOST_REQUIRE(!query.is_malleable(0));
+    BOOST_REQUIRE(query.is_malleable(1));
+    BOOST_REQUIRE(query.is_malleable(2));
+    BOOST_REQUIRE(query.is_malleable(3));
+}
+
+BOOST_AUTO_TEST_CASE(query_archive__is_malleable__non_malleable__false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, context{}));
+    BOOST_REQUIRE(query.set(test::block2a, context{}));
+    BOOST_REQUIRE(!query.is_malleable(1));
+    BOOST_REQUIRE(!query.is_malleable(2));
+    BOOST_REQUIRE(!query.is_malleable(3));
+    BOOST_REQUIRE(!query.is_malleable(4));
+    BOOST_REQUIRE(!query.is_malleable(5));
+    BOOST_REQUIRE(!query.is_malleable(42));
 }
 
 BOOST_AUTO_TEST_CASE(query_archive__get_header__invalid_parent__expected)
