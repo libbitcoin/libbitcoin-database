@@ -762,10 +762,13 @@ txs_link CLASS::set_link(const transactions& txs,
         if (!push_link_value(links, set_link(*tx)))
             return {};
 
+    // Malleable if all txs serialize to 64 bytes without witness.
+    const auto mutable_ = block::is_malleable64(txs);
+
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return store_.txs.put_link(link, table::txs::slab{ {}, links });
+    return store_.txs.put_link(link, table::txs::slab{ {}, mutable_, links });
     // ========================================================================
 }
 
@@ -812,6 +815,7 @@ inline bool CLASS::is_malleable(const header_link& link) const NOEXCEPT
     // Invoked to not bypass checkpoints in validate/confirm (expensive).
     // TODO: implement block.is_malleable() from the store.
     // TODO: find any tx without a 64 byte non-witness size (false).
+    // TODO: or archive malleable bit with txs record.
     return true;
 }
 
