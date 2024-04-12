@@ -716,8 +716,10 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
     // Set header and then txs.
     BOOST_REQUIRE(!query.is_block(test::genesis.hash()));
     BOOST_REQUIRE(query.set(test::genesis.header(), test::context));
+    BOOST_REQUIRE(!query.is_associated(0));
     BOOST_REQUIRE(query.set(test::genesis));
     BOOST_REQUIRE(query.is_block(test::genesis.hash()));
+    BOOST_REQUIRE(query.is_associated(0));
 
     // Verify idempotentcy (these do not change store state).
     ////BOOST_REQUIRE(query.set(test::genesis.header(), test::context));
@@ -753,6 +755,9 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
     const auto hashes = query.get_tx_keys(query.to_header(test::genesis.hash()));
     BOOST_REQUIRE_EQUAL(hashes.size(), 1u);
     BOOST_REQUIRE_EQUAL(hashes, test::genesis.transaction_hashes(false));
+
+    BOOST_REQUIRE(query.dissasociate(0));
+    BOOST_REQUIRE(!query.is_associated(0));
 }
 
 // Moved to protected, set_link(block) covers.
