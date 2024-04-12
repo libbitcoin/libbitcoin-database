@@ -374,15 +374,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__block_preconfirmable__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "block preconfirmable");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__block_malleable__true_exected_message)
-{
-    constexpr auto value = error::block_malleable;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "block malleable");
-}
-
 BOOST_AUTO_TEST_CASE(error_t__code__block_unconfirmable__true_exected_message)
 {
     constexpr auto value = error::block_unconfirmable;

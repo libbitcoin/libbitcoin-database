@@ -44,12 +44,13 @@ struct txs
         link count() const NOEXCEPT
         {
             return system::possible_narrow_cast<link::integer>(pk + sk +
-                tx::size * add1(tx_fks.size()));
+                schema::bit + schema::count_ + tx::size * tx_fks.size());
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            tx_fks.resize(source.read_little_endian<tx::integer, tx::size>());
+            tx_fks.resize(source.read_little_endian<tx::integer, schema::count_>());
+            mutable_ = to_bool(source.read_byte());
             std::for_each(tx_fks.begin(), tx_fks.end(), [&](auto& fk) NOEXCEPT
             {
                 fk = source.read_little_endian<tx::integer, tx::size>();
@@ -61,10 +62,11 @@ struct txs
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            BC_ASSERT(tx_fks.size() < system::power2<uint64_t>(to_bits(tx::size)));
+            BC_ASSERT(tx_fks.size() < system::power2<uint64_t>(to_bits(schema::count_)));
             const auto fks = system::possible_narrow_cast<tx::integer>(tx_fks.size());
 
-            sink.write_little_endian<tx::integer, tx::size>(fks);
+            sink.write_little_endian<tx::integer, schema::count_>(fks);
+            sink.write_byte(to_int<uint8_t>(mutable_));
             std::for_each(tx_fks.begin(), tx_fks.end(), [&](const auto& fk) NOEXCEPT
             {
                 sink.write_little_endian<tx::integer, tx::size>(fk);
@@ -79,6 +81,7 @@ struct txs
             return tx_fks == other.tx_fks;
         }
 
+        bool mutable_{ false };
         keys tx_fks{};
     };
 
@@ -87,7 +90,8 @@ struct txs
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            const auto count = source.read_little_endian<tx::integer, tx::size>();
+            const auto count = source.read_little_endian<tx::integer, schema::count_>();
+            source.skip_byte();
             for (position = zero; position < count; ++position)
                 if (source.read_little_endian<tx::integer, tx::size>() == link)
                     return source;
@@ -105,7 +109,8 @@ struct txs
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            const auto count = source.read_little_endian<tx::integer, tx::size>();
+            const auto count = source.read_little_endian<tx::integer, schema::count_>();
+            source.skip_byte();
             if (!is_zero(count))
             {
                 coinbase_fk = source.read_little_endian<tx::integer, tx::size>();

@@ -86,49 +86,49 @@ inline bool CLASS::is_associated(const header_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-inline bool CLASS::set(const header& header, const chain_context& ctx) NOEXCEPT
+bool CLASS::set(const header& header, const chain_context& ctx) NOEXCEPT
 {
     return !set_link(header, ctx).is_terminal();
 }
 
 TEMPLATE
-inline bool CLASS::set(const header& header, const context& ctx) NOEXCEPT
+bool CLASS::set(const header& header, const context& ctx) NOEXCEPT
 {
     return !set_link(header, ctx).is_terminal();
 }
 
 TEMPLATE
-inline bool CLASS::set(const block& block, const chain_context& ctx) NOEXCEPT
+bool CLASS::set(const block& block, const chain_context& ctx) NOEXCEPT
 {
     return !set_link(block, ctx).is_terminal();
 }
 
 TEMPLATE
-inline bool CLASS::set(const block& block, const context& ctx) NOEXCEPT
+bool CLASS::set(const block& block, const context& ctx) NOEXCEPT
 {
     return !set_link(block, ctx).is_terminal();
 }
 
 TEMPLATE
-inline bool CLASS::set(const hash_digest& point_hash) NOEXCEPT
+bool CLASS::set(const hash_digest& point_hash) NOEXCEPT
 {
     return !set_link(point_hash).is_terminal();
 }
 
 TEMPLATE
-inline bool CLASS::set(const block& block) NOEXCEPT
+bool CLASS::set(const block& block) NOEXCEPT
 {
     return !set_link(block).is_terminal();
 }
 
 TEMPLATE
-inline bool CLASS::set(const transaction& tx) NOEXCEPT
+bool CLASS::set(const transaction& tx) NOEXCEPT
 {
     return !set_link(tx).is_terminal();
 }
 
 TEMPLATE
-inline bool CLASS::populate(const input& input) const NOEXCEPT
+bool CLASS::populate(const input& input) const NOEXCEPT
 {
     if (input.prevout || input.point().is_null())
         return true;
@@ -246,6 +246,32 @@ bool CLASS::get_value(uint64_t& out, const output_link& link) const NOEXCEPT
         return false;
 
     out = output.value;
+    return true;
+}
+
+TEMPLATE
+bool CLASS::get_unassociated(association& out, header_link link) const NOEXCEPT
+{
+    if (is_associated(link))
+        return false;
+
+    table::header::get_check_context context{};
+    if (!store_.header.get(link, context))
+        return false;
+
+    out =
+    {
+        link,
+        context.key,
+        system::chain::context
+        {
+            context.ctx.flags,
+            context.timestamp,
+            context.ctx.mtp,
+            system::possible_wide_cast<size_t>(context.ctx.height)
+        }
+    };
+
     return true;
 }
 
@@ -736,11 +762,61 @@ txs_link CLASS::set_link(const transactions& txs,
         if (!push_link_value(links, set_link(*tx)))
             return {};
 
+    // Malleable if all txs serialize to 64 bytes without witness.
+    const auto mutable_ = block::is_malleable64(txs);
+
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return store_.txs.put_link(link, table::txs::slab{ {}, links });
+    return store_.txs.put_link(link, table::txs::slab{ {}, mutable_, links });
     // ========================================================================
+}
+
+TEMPLATE
+bool CLASS::dissasociate(const header_link& link) NOEXCEPT
+{
+    if (link.is_terminal())
+        return false;
+
+    // TODO: disassociate the header from its transactions.
+
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    return true;
+    // ========================================================================
+}
+
+TEMPLATE
+inline bool CLASS::is_malleated(const block& block) const NOEXCEPT
+{
+    // is_malleable_duplicate is always invalid, so never stored.
+    if (!block.is_malleable())
+        return false;
+
+    // This is invoked for all new blocks, most of which will not exist (cheap).
+    // TODO: determine if block is a bitwise match for a stored instance, where
+    // TODO: the stored and unassociated instances share the same block hash.
+    // TODO: if there is an associated instance this check need not be called.
+    // TODO: if the associated instance is matched then the assumption is that
+    // TODO: that instance is not malleated, but that may be later determined.
+    // TODO: so only disassociated instances are compared and otherwise false.
+    return true;
+}
+
+TEMPLATE
+inline bool CLASS::is_malleable(const header_link& link) const NOEXCEPT
+{
+    // Unknown treated as false, should not have been called unless associated.
+    if (!is_associated(link))
+        return false;
+
+    // Invoked after confirm failure (free).
+    // Invoked to not bypass checkpoints in validate/confirm (expensive).
+    // TODO: implement block.is_malleable() from the store.
+    // TODO: find any tx without a 64 byte non-witness size (false).
+    // TODO: or archive malleable bit with txs record.
+    return true;
 }
 
 } // namespace database

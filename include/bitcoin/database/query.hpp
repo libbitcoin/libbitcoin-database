@@ -199,15 +199,17 @@ public:
     inline bool is_block(const hash_digest& key) const NOEXCEPT;
     inline bool is_tx(const hash_digest& key) const NOEXCEPT;
     inline bool is_coinbase(const tx_link& link) const NOEXCEPT;
+    inline bool is_malleated(const block& block) const NOEXCEPT;
+    inline bool is_malleable(const header_link& link) const NOEXCEPT;
     inline bool is_associated(const header_link& link) const NOEXCEPT;
 
-    inline bool set(const header& header, const chain_context& ctx) NOEXCEPT;
-    inline bool set(const header& header, const context& ctx) NOEXCEPT;
-    inline bool set(const block& block, const chain_context& ctx) NOEXCEPT;
-    inline bool set(const block& block, const context& ctx) NOEXCEPT;
-    inline bool set(const block& block) NOEXCEPT;
-    inline bool set(const hash_digest& point_hash) NOEXCEPT;
-    inline bool set(const transaction& tx) NOEXCEPT;
+    bool set(const header& header, const chain_context& ctx) NOEXCEPT;
+    bool set(const header& header, const context& ctx) NOEXCEPT;
+    bool set(const block& block, const chain_context& ctx) NOEXCEPT;
+    bool set(const block& block, const context& ctx) NOEXCEPT;
+    bool set(const block& block) NOEXCEPT;
+    bool set(const hash_digest& point_hash) NOEXCEPT;
+    bool set(const transaction& tx) NOEXCEPT;
 
     /// False implies not fully populated, input.metadata is not populated.
     bool populate(const input& input) const NOEXCEPT;
@@ -230,6 +232,7 @@ public:
     /// False implies fault.
     bool get_height(size_t& out, const header_link& link) const NOEXCEPT;
     bool get_value(uint64_t& out, const output_link& link) const NOEXCEPT;
+    bool get_unassociated(association& out, header_link link) const NOEXCEPT;
 
     inputs_ptr get_inputs(const tx_link& link) const NOEXCEPT;
     outputs_ptr get_outputs(const tx_link& link) const NOEXCEPT;
@@ -256,6 +259,7 @@ public:
     header_link set_link(const block& block) NOEXCEPT;
     txs_link set_link(const transactions& txs, const header_link& link) NOEXCEPT;
     tx_link set_link(const transaction& tx) NOEXCEPT;
+    bool dissasociate(const header_link& link) NOEXCEPT;
 
     /// Chain state.
     /// -----------------------------------------------------------------------
@@ -291,7 +295,6 @@ public:
 
     bool set_block_confirmable(const header_link& link, uint64_t fees) NOEXCEPT;
     bool set_block_preconfirmable(const header_link& link) NOEXCEPT;
-    bool set_block_malleable(const header_link& link) NOEXCEPT;
     bool set_block_unconfirmable(const header_link& link) NOEXCEPT;
 
     // set_txs_connected is FOR PERFORMANCE EVALUATION ONLY.

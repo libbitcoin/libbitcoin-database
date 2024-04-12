@@ -87,8 +87,7 @@ namespace schema
     {
         confirmable = 0,    // final
         preconfirmable = 1, // transitional
-        malleable = 2,      // transitional
-        unconfirmable = 3   // final
+        unconfirmable = 2   // final
     };
 
     enum tx_state : uint8_t
@@ -102,6 +101,7 @@ namespace schema
     constexpr size_t bit = 1;       // single bit flag.
     constexpr size_t code = 1;      // validation state.
     constexpr size_t size = 3;      // tx/block size/weight.
+    constexpr size_t count_ = 3;    // txs count.
     constexpr size_t index = 3;     // input/output index.
     constexpr size_t sigops = 3;    // signature op count.
     constexpr size_t flags = 4;     // fork flags.
@@ -251,8 +251,9 @@ namespace schema
         static constexpr size_t pk = schema::txs_;
         static constexpr size_t sk = schema::header::pk;
         static constexpr size_t minsize =
-            transaction::pk + // count
-            transaction::pk;  // coinbase
+            count_ +         // txs
+            bit +            // mutable
+            transaction::pk; // coinbase
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
         static_assert(minsize == 8u);

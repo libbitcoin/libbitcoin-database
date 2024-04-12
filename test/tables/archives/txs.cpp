@@ -27,6 +27,7 @@ const table::txs::slab expected0{};
 const table::txs::slab expected1
 {
     {}, // schema::txs [all const static members]
+    false,
     std_vector<uint32_t>
     {
         0x56341211_u32
@@ -35,6 +36,7 @@ const table::txs::slab expected1
 const table::txs::slab expected2
 {
     {}, // schema::txs [all const static members]
+    false,
     std_vector<uint32_t>
     {
         0x56341221_u32,
@@ -44,6 +46,7 @@ const table::txs::slab expected2
 const table::txs::slab expected3
 {
     {}, // schema::txs [all const static members]
+    false,
     std_vector<uint32_t>
     {
         0x56341231_u32,
