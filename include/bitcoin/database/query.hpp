@@ -264,19 +264,17 @@ public:
     /// Chain state.
     /// -----------------------------------------------------------------------
 
+    chain_state_ptr get_chain_state(const system::settings& settings,
+        const hash_digest& hash) const NOEXCEPT;
     chain_state_ptr get_candidate_chain_state(
         const system::settings& settings) const NOEXCEPT;
     chain_state_ptr get_candidate_chain_state(const system::settings& settings,
         size_t height) const NOEXCEPT;
     chain_state_ptr get_candidate_chain_state(const system::settings& settings,
-        const header& header, size_t height) const NOEXCEPT;
-
-    chain_state_ptr get_confirmed_chain_state(
-        const system::settings& settings) const NOEXCEPT;
-    chain_state_ptr get_confirmed_chain_state(const system::settings& settings,
+        const header_link& link, size_t height) const NOEXCEPT;
+    chain_state_ptr get_candidate_chain_state(const system::settings& settings,
+        const header& header, const header_link& link,
         size_t height) const NOEXCEPT;
-    chain_state_ptr get_confirmed_chain_state(const system::settings& settings,
-        const header& header, size_t height) const NOEXCEPT;
 
     /// Validation (surrogate-keyed).
     /// -----------------------------------------------------------------------
@@ -291,6 +289,7 @@ public:
     bool get_timestamp(uint32_t& timestamp, const header_link& link) const NOEXCEPT;
     bool get_version(uint32_t& version, const header_link& link) const NOEXCEPT;
     bool get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT;
+    bool get_work(uint256_t& work, const header_link& link) const NOEXCEPT;
     bool get_context(context& ctx, const header_link& link) const NOEXCEPT;
 
     bool set_block_confirmable(const header_link& link, uint64_t fees) NOEXCEPT;
@@ -405,61 +404,37 @@ protected:
     /// context
     /// -----------------------------------------------------------------------
 
-    bool get_candidate_work(uint256_t& work, size_t height) const NOEXCEPT;
-    bool get_candidate_bits(uint32_t& bits, size_t height,
-        const header& header, size_t header_height) const NOEXCEPT;
-    bool get_candidate_version(uint32_t& version, size_t height,
-        const header& header, size_t header_height) const NOEXCEPT;
-    bool get_candidate_timestamp(uint32_t& time, size_t height,
-        const header& header, size_t header_height) const NOEXCEPT;
+    /// any blocks
 
-    // This is currently based on archived activation only.
-    bool populate_candidate_hash(chain_state::data& data,
-        const chain_state::map& map, const header& header,
-        size_t header_height) const NOEXCEPT;
+    bool populate_bits(chain_state::data& data,
+        const chain_state::map& map, header_link link) const NOEXCEPT;
+    bool populate_versions(chain_state::data& data,
+        const chain_state::map& map, header_link link) const NOEXCEPT;
+    bool populate_timestamps(chain_state::data& data,
+        const chain_state::map& map, header_link link) const NOEXCEPT;
+    bool populate_retarget(chain_state::data& data, const chain_state::map& map,
+        header_link link) const NOEXCEPT;
+    bool populate_hashes(chain_state::data& data,
+        const chain_state::map& map) const NOEXCEPT;
+    bool populate_work(chain_state::data& data, header_link link) const NOEXCEPT;
+    bool populate_all(chain_state::data& data, const system::settings& settings,
+        const header_link& link, size_t height) const NOEXCEPT;
 
-    bool populate_candidate_work(chain_state::data& data, const header& header,
-        size_t header_height) const NOEXCEPT;
+    /// candidate blocks
+
     bool populate_candidate_bits(chain_state::data& data,
-        const chain_state::map& map, const header& header,
-        size_t header_height) const NOEXCEPT;
+        const chain_state::map& map, const header& header) const NOEXCEPT;
     bool populate_candidate_versions(chain_state::data& data,
-        const chain_state::map& map, const header& header,
-        size_t header_height) const NOEXCEPT;
+        const chain_state::map& map, const header& header) const NOEXCEPT;
     bool populate_candidate_timestamps(chain_state::data& data,
-        const chain_state::map& map, const header& header,
-        size_t header_height) const NOEXCEPT;
+        const chain_state::map& map, const header& header) const NOEXCEPT;
+    bool populate_candidate_retarget(chain_state::data& data,
+        const chain_state::map& map, const header& header) const NOEXCEPT;
+    bool populate_candidate_work(chain_state::data& data,
+        const header& header) const NOEXCEPT;
     bool populate_candidate_all(chain_state::data& data,
         const system::settings& settings, const header& header,
-        size_t header_height) const NOEXCEPT;
-
-    bool get_confirmed_work(uint256_t& work, size_t height) const NOEXCEPT;
-    bool get_confirmed_bits(uint32_t& bits, size_t height,
-        const header& header, size_t header_height) const NOEXCEPT;
-    bool get_confirmed_version(uint32_t& version, size_t height,
-        const header& header, size_t header_height) const NOEXCEPT;
-    bool get_confirmed_timestamp(uint32_t& time, size_t height,
-        const header& header, size_t header_height) const NOEXCEPT;
-
-    // This is currently based on archived activation only.
-    bool populate_confirmed_hash(chain_state::data& data,
-        const chain_state::map& map, const header& header,
-        size_t header_height) const NOEXCEPT;
-
-    bool populate_confirmed_work(chain_state::data& data, const header& header,
-        size_t header_height) const NOEXCEPT;
-    bool populate_confirmed_bits(chain_state::data& data,
-        const chain_state::map& map, const header& header,
-        size_t header_height) const NOEXCEPT;
-    bool populate_confirmed_versions(chain_state::data& data,
-        const chain_state::map& map, const header& header,
-        size_t header_height) const NOEXCEPT;
-    bool populate_confirmed_timestamps(chain_state::data& data,
-        const chain_state::map& map, const header& header,
-        size_t header_height) const NOEXCEPT;
-    bool populate_confirmed_all(chain_state::data& data,
-        const system::settings& settings, const header& header,
-        size_t header_height) const NOEXCEPT;
+        const header_link& link, size_t height) const NOEXCEPT;
 
 private:
     Store& store_;

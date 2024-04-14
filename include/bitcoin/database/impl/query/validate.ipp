@@ -135,6 +135,15 @@ bool CLASS::get_context(context& ctx,
     return true;
 }
 
+TEMPLATE
+bool CLASS::get_work(uint256_t& work, const header_link& link) const NOEXCEPT
+{
+    uint32_t bits{};
+    const auto result = get_bits(bits, link);
+    work = header::proof(bits);
+    return result;
+}
+
 ////TEMPLATE
 ////bool CLASS::get_check_context(context& ctx, hash_digest& hash,
 ////    uint32_t& timestamp, const header_link& link) const NOEXCEPT
