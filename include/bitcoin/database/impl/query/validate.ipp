@@ -119,7 +119,7 @@ bool CLASS::get_bits(uint32_t& bits,
     if (!store_.header.get(link, header))
         return false;
 
-    bits = std::move(header.bits);
+    bits = header.bits;
     return true;
 }
 
@@ -133,6 +133,15 @@ bool CLASS::get_context(context& ctx,
 
     ctx = std::move(header.ctx);
     return true;
+}
+
+TEMPLATE
+bool CLASS::get_work(uint256_t& work, const header_link& link) const NOEXCEPT
+{
+    uint32_t bits{};
+    const auto result = get_bits(bits, link);
+    work = header::proof(bits);
+    return result;
 }
 
 ////TEMPLATE
