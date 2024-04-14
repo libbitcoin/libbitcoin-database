@@ -119,7 +119,7 @@ bool CLASS::get_bits(uint32_t& bits,
     if (!store_.header.get(link, header))
         return false;
 
-    bits = std::move(header.bits);
+    bits = header.bits;
     return true;
 }
 
