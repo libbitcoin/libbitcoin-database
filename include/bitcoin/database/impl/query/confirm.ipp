@@ -150,6 +150,7 @@ inline error::error_t CLASS::spendable_prevout(const tx_link& link,
     if (!get_context(out, to_block(link)))
         return error::unconfirmed_spend;
 
+    // spend of a coinbase
     if (is_coinbase(link) &&
         !transaction::is_coinbase_mature(out.height, ctx.height))
         return error::coinbase_maturity;
@@ -281,6 +282,10 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     const auto txs = to_txs(link);
     if (txs.size() <= one)
         return error::success;
+
+    // TODO: incorporate bip30 checks.
+    ////constexpr auto bip30_rule = system::chain::flags::bip30_rule;
+    ////const auto bip30 = script::is_enabled(ctx.flags, bip30_rule);
 
     code ec{};
     table::spend::get_prevout_parent_sequence spend{};
