@@ -590,7 +590,7 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     const auto key = tx.hash(false);
 
     // GUARD (tx redundancy)
-    // This guard is only effective if there is a single database thread.
+    // This is only fully effective if there is a single database thread.
     auto tx_fk = to_tx(key);
     if (!tx_fk.is_terminal())
         return tx_fk;
@@ -733,7 +733,7 @@ header_link CLASS::set_link(const header& header, const context& ctx) NOEXCEPT
     const auto key = header.hash();
 
     // GUARD (header redundancy)
-    // This guard is only effective if there is a single database thread.
+    // This is only fully effective if there is a single database thread.
     auto header_fk = to_header(key);
     if (!header_fk.is_terminal())
         return header_fk;
@@ -791,14 +791,13 @@ txs_link CLASS::set_link(const transactions& txs,
     if (link.is_terminal())
         return{};
 
-    // txs cannot be guarded because of disassociation and reassociation, which
-    // are required because malleable64 blocks may be found to be invalid but
-    // cannot be marked as invalid (so they are disassociated).
-    //// GUARDED (block (txs) redundancy)
-    //// This guard is only effective if there is a single database thread.
-    ////const auto txs_link = to_txs_link(link);
-    ////if (!txs_link.is_terminal())
-    ////    return txs_link;
+    // GUARD (block (txs) redundancy)
+    // This is only fully effective if there is a single database thread.
+    // Guard must be lifted for an existing top malleable association so
+    // that a non-malleable association may be accomplished.
+    const auto txs_link = to_txs_link(link);
+    if (!txs_link.is_terminal() && !is_malleable(link))
+        return txs_link;
 
     tx_links links{};
     links.reserve(txs.size());
