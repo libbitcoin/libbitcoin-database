@@ -48,6 +48,11 @@ struct context
         sink.template write_little_endian<uint32_t>(context.mtp);
     };
 
+    constexpr bool is_enabled(system::chain::flags rule) const NOEXCEPT
+    {
+        return system::chain::script::is_enabled(flags, rule);
+    }
+
     inline bool operator==(const context& other) const NOEXCEPT
     {
         return flags  == other.flags

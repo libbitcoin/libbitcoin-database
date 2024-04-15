@@ -144,8 +144,6 @@ TEMPLATE
 inline error::error_t CLASS::spendable_prevout(const tx_link& link,
     uint32_t sequence, const context& ctx) const NOEXCEPT
 {
-    constexpr auto bip68_rule = system::chain::flags::bip68_rule;
-
     context out{};
     if (!get_context(out, to_block(link)))
         return error::unconfirmed_spend;
@@ -155,7 +153,7 @@ inline error::error_t CLASS::spendable_prevout(const tx_link& link,
         !transaction::is_coinbase_mature(out.height, ctx.height))
         return error::coinbase_maturity;
 
-    if (script::is_enabled(ctx.flags, bip68_rule) &&
+    if (ctx.is_enabled(system::chain::flags::bip68_rule) &&
         input::is_locked(sequence, ctx.height, ctx.mtp, out.height, out.mtp))
         return error::relative_time_locked;
 
@@ -246,7 +244,7 @@ TEMPLATE
 error::error_t CLASS::locked_prevout(const point_link& link, uint32_t sequence,
     const context& ctx) const NOEXCEPT
 {
-    if (!script::is_enabled(ctx.flags, system::chain::flags::bip68_rule))
+    if (!ctx.is_enabled(system::chain::flags::bip68_rule))
         return error::success;
 
     // Get hash from point, search for prevout tx and get its link.
@@ -284,8 +282,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         return error::success;
 
     // TODO: incorporate bip30 checks.
-    ////constexpr auto bip30_rule = system::chain::flags::bip30_rule;
-    ////const auto bip30 = script::is_enabled(ctx.flags, bip30_rule);
+    ////const auto bip30 = ctx.is_enabled(system::chain::flags::bip30_rule);
 
     code ec{};
     table::spend::get_prevout_parent_sequence spend{};
