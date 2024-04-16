@@ -206,6 +206,64 @@ bool CLASS::populate(const block& block) const NOEXCEPT
     return result;
 }
 
+TEMPLATE
+bool CLASS::populate_with_metadata(const input& input) const NOEXCEPT
+{
+    if (input.prevout || input.point().is_null())
+        return true;
+
+    // Null point would return nullptr and be interpreted as missing.
+    input.prevout = get_output(input.point());
+    if (is_null(input.prevout))
+        return false;
+
+    const auto tx = to_tx(input.point().hash());
+    if (tx.is_terminal())
+        return false;
+
+    const auto block = to_block(tx);
+    if (block.is_terminal())
+        return false;
+
+    context ctx{};
+    if (!get_context(ctx, block))
+        return false;
+
+    // Assumes previous coinbase is spent and prevouts of others are not.
+    input.metadata.coinbase = is_coinbase(tx);
+    input.metadata.spent = input.metadata.coinbase;
+    input.metadata.median_time_past = ctx.mtp;
+    input.metadata.height = ctx.height;
+    return true;
+}
+
+
+TEMPLATE
+bool CLASS::populate_with_metadata(const transaction& tx) const NOEXCEPT
+{
+    auto result = true;
+    const auto& ins = *tx.inputs_ptr();
+    std::for_each(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
+    {
+        result &= populate_with_metadata(*in);
+    });
+
+    return result;
+}
+
+TEMPLATE
+bool CLASS::populate_with_metadata(const block& block) const NOEXCEPT
+{
+    auto result = true;
+    const auto ins = block.inputs_ptr();
+    std::for_each(ins->begin(), ins->end(), [&](const auto& in) NOEXCEPT
+    {
+        result &= populate_with_metadata(*in);
+    });
+
+    return result;
+}
+
 // Archival (surrogate-keyed).
 // ----------------------------------------------------------------------------
 

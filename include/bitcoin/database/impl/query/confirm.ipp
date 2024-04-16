@@ -113,6 +113,7 @@ bool CLASS::is_spent_output(const output_link& link) const NOEXCEPT
 // Confirmation.
 // ----------------------------------------------------------------------------
 // Block confirmed by height is not considered for confirmation (just strong).
+// Transactions must be set strong before executing confirmation queries.
 
 // protected
 TEMPLATE
@@ -142,7 +143,7 @@ inline bool CLASS::is_spent_prevout(const foreign_point& point,
 // protected
 TEMPLATE
 inline error::error_t CLASS::spendable_prevout(const tx_link& link,
-    uint32_t sequence, const context& ctx) const NOEXCEPT
+    uint32_t sequence, uint32_t version, const context& ctx) const NOEXCEPT
 {
     context out{};
     if (!get_context(out, to_block(link)))
@@ -154,6 +155,7 @@ inline error::error_t CLASS::spendable_prevout(const tx_link& link,
         return error::coinbase_maturity;
 
     if (ctx.is_enabled(system::chain::flags::bip68_rule) &&
+        (version >= system::chain::relative_locktime_min_version) &&
         input::is_locked(sequence, ctx.height, ctx.mtp, out.height, out.mtp))
         return error::relative_time_locked;
 
@@ -281,15 +283,23 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     if (txs.size() <= one)
         return error::success;
 
-    // TODO: incorporate bip30 checks.
-    ////const auto bip30 = ctx.is_enabled(system::chain::flags::bip30_rule);
+    // TODO: incorporate bip30 check.
+    // TODO: this is complicated by possibility of redundant writes.
+    // TODO: so must associate all instances of the tx to (confirmed) blocks,
+    // TODO: and if not this block (!= link) must be spent by confirmed block.
+    // TODO: maturity ensures it's not spent in this block (or <= 100 blocks).
+    ////if (ctx.is_enabled(system::chain::flags::bip30_rule))
+    ////{
+    ////    const auto cb = txs.front();
+    ////}
 
     code ec{};
+    uint32_t version{};
     table::spend::get_prevout_parent_sequence spend{};
     for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
     {
         // spender-tx(read) & puts(read).
-        for (const auto& spend_fk: to_tx_spends(*tx))
+        for (const auto& spend_fk: to_tx_spends(version, *tx))
         {
             // spend(read).
             if (!store_.spend.get(spend_fk, spend))
@@ -299,7 +309,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
             const auto spent_fk = to_tx(get_point_key(spend.point_fk));
 
             // spent-tx(read) & strong_tx(search/read) & spent-header(read).
-            if ((ec = spendable_prevout(spent_fk, spend.sequence, ctx)))
+            if ((ec = spendable_prevout(spent_fk, spend.sequence, version, ctx)))
                 return ec;
 
             // spend(search/read) & strong_tx(search/read).
