@@ -117,27 +117,30 @@ bool CLASS::is_spent_output(const output_link& link) const NOEXCEPT
 
 // protected
 TEMPLATE
-inline bool CLASS::is_spent_prevout(const foreign_point& point,
+inline error::error_t CLASS::spent_prevout(const foreign_point& point,
     const tx_link& self) const NOEXCEPT
 {
     auto it = store_.spend.it(point);
     if (it.self().is_terminal())
-        return false;
+        return error::success;
 
     table::spend::get_parent spend{};
     do
     {
         // Iterated element must be found, otherwise fault.
         if (!store_.spend.get(it.self(), spend))
-            return true;
+            return error::integrity;
 
-        // Skip self (which should be strong) and require strong for spent.
-        if ((spend.parent_fk != self) &&
-            !to_block(spend.parent_fk).is_terminal())
-            return true;
+        // Skip the tx spend, which is the only one if not double spent.
+        if (spend.parent_fk == self)
+            continue;
+
+        // If strong spender exists then prevout is confirmed double spent.
+        if (!to_block(spend.parent_fk).is_terminal())
+            return error::confirmed_double_spend;
     }
     while (it.advance());
-    return false;
+    return error::success;
 }
 
 // protected
@@ -173,7 +176,7 @@ bool CLASS::is_spent(const spend_link& link) const NOEXCEPT
     if (spend.is_null())
         return false;
 
-    return is_spent_prevout(spend.prevout(), spend.parent_fk);
+    return spent_prevout(spend.prevout(), spend.parent_fk);
 }
 
 // unused
@@ -280,7 +283,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 
     // txs(search/read).
     const auto txs = to_txs(link);
-    if (txs.size() <= one)
+    if (txs.empty())
         return error::success;
 
     // TODO: incorporate bip30 check.
@@ -313,8 +316,8 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
                 return ec;
 
             // spend(search/read) & strong_tx(search/read).
-            if (is_spent_prevout(spend.prevout(), spend.parent_fk))
-                return error::confirmed_double_spend;
+            if ((ec = spent_prevout(spend.prevout(), spend.parent_fk)))
+                return ec;
         }
     }
 
@@ -468,7 +471,7 @@ bool CLASS::pop_confirmed() NOEXCEPT
 ////        return ec;
 ////
 ////    // may only be strong-spent by self (and must be but is not checked).
-////    if (is_spent_prevout(point.key, point.parent))
+////    if (spent_prevout(point.key, point.parent))
 ////        return error::confirmed_double_spend;
 ////
 ////    return ec;

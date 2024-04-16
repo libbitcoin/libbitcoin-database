@@ -403,7 +403,7 @@ protected:
         const context& ctx) const NOEXCEPT;
 
     // Critical path
-    inline bool is_spent_prevout(const foreign_point& point,
+    inline error::error_t spent_prevout(const foreign_point& point,
         const tx_link& self) const NOEXCEPT;
     inline error::error_t spendable_prevout(const tx_link& link,
         uint32_t sequence, uint32_t version, const context& ctx) const NOEXCEPT;
