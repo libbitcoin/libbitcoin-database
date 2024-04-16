@@ -252,6 +252,18 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spend_tx__to_spend__expected)
     BOOST_REQUIRE_EQUAL(query.to_tx_spends(3), spend_links{ 3 });
     BOOST_REQUIRE_EQUAL(query.to_tx_spends(4), expected_links4);
 
+    uint32_t version{};
+    BOOST_REQUIRE_EQUAL(query.to_tx_spends(version, 0), spend_links{ 0 });
+    BOOST_REQUIRE_EQUAL(version, test::genesis.transactions_ptr()->front()->version());
+    BOOST_REQUIRE_EQUAL(query.to_tx_spends(version, 1), spend_links{ 1 });
+    BOOST_REQUIRE_EQUAL(version, test::block1.transactions_ptr()->front()->version());
+    BOOST_REQUIRE_EQUAL(query.to_tx_spends(version, 2), spend_links{ 2 });
+    BOOST_REQUIRE_EQUAL(version, test::block2.transactions_ptr()->front()->version());
+    BOOST_REQUIRE_EQUAL(query.to_tx_spends(version, 3), spend_links{ 3 });
+    BOOST_REQUIRE_EQUAL(version, test::block3.transactions_ptr()->front()->version());
+    BOOST_REQUIRE_EQUAL(query.to_tx_spends(version, 4), expected_links4);
+    BOOST_REQUIRE_EQUAL(version, test::block1a.transactions_ptr()->front()->version());
+
     // TODO: All blocks have one transaction.
     BOOST_REQUIRE_EQUAL(query.to_non_coinbase_spends(0), spend_links{});
     BOOST_REQUIRE_EQUAL(query.to_non_coinbase_spends(1), spend_links{});

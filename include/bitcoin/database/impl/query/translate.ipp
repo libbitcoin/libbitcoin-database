@@ -292,6 +292,21 @@ spend_links CLASS::to_spenders(const foreign_point& point) const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+output_links CLASS::to_tx_outputs(const tx_link& link) const NOEXCEPT
+{
+    table::transaction::get_puts tx{};
+    if (!store_.tx.get(link, tx))
+        return {};
+
+    table::puts::get_outs puts{};
+    puts.out_fks.resize(tx.outs_count);
+    if (!store_.puts.get(tx.outs_fk(), puts))
+        return {};
+
+    return std::move(puts.out_fks);
+}
+
+TEMPLATE
 spend_links CLASS::to_tx_spends(const tx_link& link) const NOEXCEPT
 {
     table::transaction::get_puts tx{};
@@ -306,19 +321,22 @@ spend_links CLASS::to_tx_spends(const tx_link& link) const NOEXCEPT
     return std::move(puts.spend_fks);
 }
 
+// used in optimized block_confirmable
 TEMPLATE
-output_links CLASS::to_tx_outputs(const tx_link& link) const NOEXCEPT
+spend_links CLASS::to_tx_spends(uint32_t& version,
+    const tx_link& link) const NOEXCEPT
 {
-    table::transaction::get_puts tx{};
+    table::transaction::get_version_puts tx{};
     if (!store_.tx.get(link, tx))
         return {};
 
-    table::puts::get_outs puts{};
-    puts.out_fks.resize(tx.outs_count);
-    if (!store_.puts.get(tx.outs_fk(), puts))
+    version = tx.version;
+    table::puts::get_spends puts{};
+    puts.spend_fks.resize(tx.ins_count);
+    if (!store_.puts.get(tx.puts_fk, puts))
         return {};
 
-    return std::move(puts.out_fks);
+    return std::move(puts.spend_fks);
 }
 
 // block to txs/puts (forward navigation)

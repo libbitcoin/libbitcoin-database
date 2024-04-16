@@ -175,8 +175,10 @@ public:
         uint32_t output_index) const NOEXCEPT;
 
     /// tx to puts (forward navigation)
-    spend_links to_tx_spends(const tx_link& link) const NOEXCEPT;
     output_links to_tx_outputs(const tx_link& link) const NOEXCEPT;
+    spend_links to_tx_spends(const tx_link& link) const NOEXCEPT;
+    spend_links to_tx_spends(uint32_t& version,
+        const tx_link& link) const NOEXCEPT;
 
     /// block to txs/puts (forward navigation)
     tx_links to_txs(const header_link& link) const NOEXCEPT;
@@ -215,6 +217,11 @@ public:
     bool populate(const input& input) const NOEXCEPT;
     bool populate(const transaction& tx) const NOEXCEPT;
     bool populate(const block& block) const NOEXCEPT;
+
+    /// False implies not fully populated, input.metadata is populated.
+    bool populate_with_metadata(const input& input) const NOEXCEPT;
+    bool populate_with_metadata(const transaction& tx) const NOEXCEPT;
+    bool populate_with_metadata(const block& block) const NOEXCEPT;
 
     /// Archival (surrogate-keyed).
     /// -----------------------------------------------------------------------
@@ -399,7 +406,7 @@ protected:
     inline bool is_spent_prevout(const foreign_point& point,
         const tx_link& self) const NOEXCEPT;
     inline error::error_t spendable_prevout(const tx_link& link,
-        uint32_t sequence, const context& ctx) const NOEXCEPT;
+        uint32_t sequence, uint32_t version, const context& ctx) const NOEXCEPT;
 
     /// context
     /// -----------------------------------------------------------------------

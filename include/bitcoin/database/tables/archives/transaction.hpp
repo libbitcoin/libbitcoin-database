@@ -41,11 +41,14 @@ struct transaction
     using search_key = search<schema::hash>;
     using hash_map<schema::transaction>::hashmap;
 
-    static constexpr size_t skip_to_puts =
+    static constexpr size_t skip_to_version =
         schema::bit +
         bytes::size +
         bytes::size +
-        sizeof(uint32_t) +
+        sizeof(uint32_t);
+
+    static constexpr size_t skip_to_puts =
+        skip_to_version +
         sizeof(uint32_t);
 
     struct record
@@ -206,6 +209,30 @@ struct transaction
             return source;
         }
 
+        ix::integer ins_count{};
+        ix::integer outs_count{};
+        puts::integer puts_fk{};
+    };
+
+    struct get_version_puts
+      : public schema::transaction
+    {
+        inline puts::integer outs_fk() const NOEXCEPT
+        {
+            return puts_fk + (ins_count * spend::size);
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(skip_to_version);
+            version = source.read_little_endian<uint32_t>();
+            ins_count  = source.read_little_endian<ix::integer, ix::size>();
+            outs_count = source.read_little_endian<ix::integer, ix::size>();
+            puts_fk    = source.read_little_endian<puts::integer, puts::size>();
+            return source;
+        }
+
+        uint32_t version{};
         ix::integer ins_count{};
         ix::integer outs_count{};
         puts::integer puts_fk{};
