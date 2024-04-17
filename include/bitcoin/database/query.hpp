@@ -403,9 +403,12 @@ protected:
         const context& ctx) const NOEXCEPT;
 
     // Critical path
+
+    inline error::error_t unspent_coinbase(const tx_link& link,
+        const context& ctx) const NOEXCEPT;
     inline error::error_t spent_prevout(const foreign_point& point,
         const tx_link& self) const NOEXCEPT;
-    inline error::error_t spendable_prevout(const tx_link& link,
+    inline error::error_t spendable_prevout(const point_link& link,
         uint32_t sequence, uint32_t version, const context& ctx) const NOEXCEPT;
 
     /// context
