@@ -419,6 +419,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__coinbase_maturity__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "coinbase maturity");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__unspent_coinbase_collision__true_exected_message)
+{
+    constexpr auto value = error::unspent_coinbase_collision;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "unspent coinbase collision");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__relative_time_locked__true_exected_message)
 {
     constexpr auto value = error::relative_time_locked;
