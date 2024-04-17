@@ -294,7 +294,7 @@ inline error::error_t CLASS::spendable_prevout(const point_link& link,
 }
 
 TEMPLATE
-inline error::error_t CLASS::unspent_coinbase(const tx_link& link,
+inline error::error_t CLASS::unspent_coinbase(const tx_link&,
     const context& ctx) const NOEXCEPT
 {
     if (!ctx.is_enabled(system::chain::flags::bip30_rule))
