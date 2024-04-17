@@ -242,6 +242,8 @@ inline error::error_t CLASS::spent_prevout(const foreign_point& point,
             continue;
 
         // If strong spender exists then prevout is confirmed double spent.
+        // Since all spends are traversed, this is safe for duplicate txs.
+        // For each parent_fk (tx) a unique set of ordered strong_txs exist.
         if (!to_block(spend.parent_fk).is_terminal())
             return error::confirmed_double_spend;
     }
@@ -254,19 +256,32 @@ TEMPLATE
 inline error::error_t CLASS::spendable_prevout(const point_link& link,
     uint32_t sequence, uint32_t version, const context& ctx) const NOEXCEPT
 {
-    const auto spent_fk = to_tx(get_point_key(link));
-    if (spent_fk.is_terminal())
+    auto it = store_.tx.it(get_point_key(link));
+    if (it.self().is_terminal())
         return error::missing_previous_output;
+
+    // Due to the natural key coupling between tx-spend and spent-tx, it is
+    // possible to associate a not strong tx when a strong tx exists. So must
+    // iterate over the tx set associated by the point hash. set/unset strong
+    // are always applied via the block-txs-tx links, so are consistent for any
+    // confirmed/unconfirmed block. to_block(tx) returns most recent archived.
+    // There is no material cost to this unless there are duplicates.
+    header_link block{};
+    do { block = to_block(it.self()); }
+        while (block.is_terminal() && it.advance());
 
     // Because of this check (only) all txs in the block under evaluation (and
     // all prior) must be set to strong. Otherwise txs in the same block will
     // result in spend of an unconfirmed prevout, and short of scanning the
     // current block txs there is no other way to know link's block context.
-    context out{};
-    if (!get_context(out, to_block(spent_fk)))
+    if (block.is_terminal())
         return error::unconfirmed_spend;
 
-    if (is_coinbase(spent_fk) &&
+    context out{};
+    if (!get_context(out, block))
+        return error::integrity;
+
+    if (is_coinbase(it.self()) &&
         !transaction::is_coinbase_mature(out.height, ctx.height))
         return error::coinbase_maturity;
 
@@ -285,56 +300,11 @@ inline error::error_t CLASS::unspent_coinbase(const tx_link& link,
     if (!ctx.is_enabled(system::chain::flags::bip30_rule))
         return error::success;
 
-    auto cb = store_.tx.it(get_tx_key(link));
-    if (cb.self().is_terminal())
-        return error::integrity;
-
-    // Multiple may or may not share the same tx record (race condition),
-    // so must test each instance for confirmation and confirmed spend.
-    do
-    {
-        // is coinbase confirmed?
-        auto st = store_.strong_tx.it(cb.self());
-        if (st.self().is_terminal())
-            continue;
-
-        do
-        {
-            table::strong_tx::record strong{};
-            if (!store_.strong_tx.get(st.self(), strong))
-                return error::integrity;
-
-            // TODO: foreign_point will always be ambiguous. However spenders
-            // TODO: cannot be duplicates - only coinbases can be duplicated.
-            // TODO: So distinct spend records must have a unique parent_fk. So
-            // TODO: while the number of coinbases is arbitrary, the number of
-            // TODO: spenders of them with unique parent_fk alway reflects
-            // TODO: actual spends. So we can know how many unique spends of
-            // TODO: the duplicates exist - even if unique spending txs are
-            // TODO: duplicated (due to race), by collapsing on parent_fk. And
-            // TODO: since each block association includes a header_fk, we
-            // TODO: we can know how many unique confirmed coinbases exist by
-            // TODO: collapsing on strong header_fk. We don't care about
-            // TODO: unconfirmed coinbases or unconfirmed spenders. So, if
-            // TODO: there are as many unique confirmed spends of a cb as there
-            // TODO: are unique confirmed cb's, then they are all spent. If
-            // TODO: there are fewer there is an unspent duplicate, and if
-            // TODO: there are more it implies an integrity fault.
-            // TODO: So create methods to get unique confirmed spenders of
-            // TODO: tx_link and unique instances of block associations from
-            // TODO: tx_link. Then simply compare the counts.
-
-            // is non-self confirmed coinbase confirmed spent?
-            const auto ec = spent_prevout(foreign_point{}, link);
-            if (ec == error::confirmed_double_spend)
-                continue;
-
-            // success means confirmed coinbase is not confirmed spent.
-            return !ec ? error::unspent_coinbase_collision : ec;
-        }
-        while (st.advance());
-    }
-    while (cb.advance());
+    // TODO: iterate over all distinct-block associated instances by tx.hash.
+    // TODO: sum net of confirmed and unconfirmed associations by block.
+    // TODO: this results in a per-block state for the transaction, independent
+    // TODO: of whether the tx instance is repeated or unique for any block.
+    // TODO: note that normally the top association *by tx.hash* is taken.
     return error::success;
 }
 
@@ -352,8 +322,8 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         return error::success;
 
     code ec{};
-    ////if ((ec = unspent_coinbase(txs.front(), ctx)))
-    ////    return ec;
+    if ((ec = unspent_coinbase(txs.front(), ctx)))
+        return ec;
 
     uint32_t version{};
     table::spend::get_prevout_parent_sequence spend{};
@@ -364,11 +334,14 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
             if (!store_.spend.get(spend_fk, spend))
                 return error::integrity;
 
+            // TODO: don't read spend.parent_fk.
+            BC_ASSERT(spend.parent_fk == *tx);
+
             if ((ec = spendable_prevout(spend.point_fk, spend.sequence,
                 version, ctx)))
                 return ec;
 
-            if ((ec = spent_prevout(spend.prevout(), spend.parent_fk)))
+            if ((ec = spent_prevout(spend.prevout(), *tx)))
                 return ec;
         }
     }
