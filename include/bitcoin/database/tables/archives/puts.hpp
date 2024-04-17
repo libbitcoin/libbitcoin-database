@@ -40,6 +40,11 @@ struct puts
     using output_links = std_vector<out::integer>;
     using array_map<schema::puts>::arraymap;
 
+    // TODO: There is a potential optimization available given that the inputs
+    // (spend puts) for a given transaction are sequential. This means that an
+    // offset with count are sufficient to store and number of spends. This is
+    // more efficient if store averages more than two spends per tx (maybe).
+
     struct slab
       : public schema::puts
     {
