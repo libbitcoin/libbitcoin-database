@@ -83,6 +83,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     // states
     { missing_previous_output, "missing previous output" },
     { coinbase_maturity, "coinbase maturity" },
+    { unspent_coinbase_collision, "unspent coinbase collision" },
     { relative_time_locked, "relative time locked" },
     { unconfirmed_spend, "unconfirmed spend" },
     { confirmed_double_spend, "confirmed double spend" }

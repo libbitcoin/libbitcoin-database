@@ -107,6 +107,7 @@ enum error_t : uint8_t
     /// confirmation (require not just context but prevouts and/or metadata).
     missing_previous_output,
     coinbase_maturity,
+    unspent_coinbase_collision,
     relative_time_locked,
     unconfirmed_spend,
     confirmed_double_spend
