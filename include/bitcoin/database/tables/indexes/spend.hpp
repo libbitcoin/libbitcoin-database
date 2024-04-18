@@ -219,7 +219,7 @@ struct spend
         tx::integer parent_fk{};
     };
 
-    struct get_prevout_parent_sequence
+    struct get_prevout_sequence
       : public schema::spend
     {
         inline bool from_data(reader& source) NOEXCEPT
@@ -231,7 +231,7 @@ struct spend
             if (null_point(point_fk))
                 point_index = system::chain::point::null_index;
 
-            parent_fk = source.read_little_endian<tx::integer, tx::size>();
+            source.skip_bytes(tx::size);
             sequence = source.read_little_endian<uint32_t>();
             return source;
         }
@@ -248,7 +248,6 @@ struct spend
 
         pt::integer point_fk{};
         ix::integer point_index{};
-        tx::integer parent_fk{};
         uint32_t sequence{};
     };
 

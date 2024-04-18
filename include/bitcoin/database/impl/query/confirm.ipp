@@ -326,16 +326,13 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         return ec;
 
     uint32_t version{};
-    table::spend::get_prevout_parent_sequence spend{};
+    table::spend::get_prevout_sequence spend{};
     for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
     {
         for (const auto& spend_fk: to_tx_spends(version, *tx))
         {
             if (!store_.spend.get(spend_fk, spend))
                 return error::integrity;
-
-            // TODO: don't read spend.parent_fk.
-            BC_ASSERT(spend.parent_fk == *tx);
 
             if ((ec = spendable_prevout(spend.point_fk, spend.sequence,
                 version, ctx)))
@@ -510,7 +507,7 @@ bool CLASS::pop_confirmed() NOEXCEPT
 ////    if (!get_context(ctx, link))
 ////        return false;
 ////
-////    table::input::get_prevout_parent_sequence input{};
+////    table::input::get_prevout_sequence input{};
 ////    for (const auto& in: to_non_coinbase_inputs(link))
 ////    {
 ////        if (!store_.input.get(in, input))
