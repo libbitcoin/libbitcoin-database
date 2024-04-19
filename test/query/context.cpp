@@ -45,7 +45,6 @@ const auto events = [](auto, auto) {};
 BOOST_AUTO_TEST_CASE(query_context__get_candidate_chain_state__genesis__expected)
 {
     const system::settings system_settings{ system::chain::selection::mainnet };
-    const uint256_t expected_cumulative_work{};
     const system::chain::context expected
     {
         131211u,
