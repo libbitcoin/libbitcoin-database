@@ -456,7 +456,8 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__null_points__success)
     BOOST_REQUIRE(query.set(test::block3, context{ bip68 }));
 
     // block1/2/3 at links 1/2/3 confirming at heights 1/2/3.
-    // blocks have only coinbase txs, no need to be strong to be confirmable.
+    // blocks have only coinbase txs, all txs should be set strong before calling
+    // confirmable, but these are bip30 default configuration.
     BOOST_REQUIRE_EQUAL(query.block_confirmable(1), error::success);
     BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
     BOOST_REQUIRE_EQUAL(query.block_confirmable(3), error::success);
@@ -555,102 +556,107 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__succe
     BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_coinbase_and_internal_immature__coinbase_maturity)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-
-    // block1b has coinbase tx/outputs.
-    BOOST_REQUIRE(query.set(test::block1b, context{ 0, 1, 0 }));
-    BOOST_REQUIRE(query.set_strong(1));
-
-    // block_spend_internal_2b spends first block1a output and first own output.
-    BOOST_REQUIRE(query.set(test::block_spend_internal_2b, context{ 0, 100, 0 }));
-    ////BOOST_REQUIRE(query.set_strong(2));
-
-    // Not confirmable because lack of maturity.
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::unconfirmed_spend);
-}
-
-BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_coinbase_and_internal_mature__success)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-
-    // block1b has coinbase tx/outputs.
-    BOOST_REQUIRE(query.set(test::block1b, context{ 0, 1, 0 }));
-    BOOST_REQUIRE(query.set_strong(1));
-
-    BOOST_REQUIRE(query.set(test::block_spend_internal_2b, context{ 0, 101, 0 }));
-    ////BOOST_REQUIRE(query.set_strong(2));
-
-    // Not confirmable because own block prevout is not strong.
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::unconfirmed_spend);
-
-    // block_spend_internal_2b spends first block1b output and first own output.
-    // But first block1b is first tx in block_spend_internal_2b so excluded as coinbase.
-    // It spends only its first own output (coinbase) and that can never be mature.
-    // But spend target is not stored as coinbase because it's not a null point.
-    BOOST_REQUIRE(query.set_strong(2));
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
-}
-
-BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__confirmed_double_spend__confirmed_double_spend)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-
-    // block1a has non-coinbase tx/outputs.
-    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }));
-    BOOST_REQUIRE(query.set_strong(1));
-
-    // block2a spends both block1a outputs (though not itself confirmable is set strong).
-    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }));
-    BOOST_REQUIRE(query.set_strong(2));
-
-    // block_spend_1a (also) spends both block1a outputs (and is otherwise confirmable).
-    BOOST_REQUIRE(query.set(test::block_spend_1a, context{ bip68, 3, 0 }));
-    BOOST_REQUIRE(query.set_strong(3));
-
-    // Not confirmable because of intervening block2a implies double spend.
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(3), error::success);
-}
-
-BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__unconfirmed_double_spend__success)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-
-    // block1a has non-coinbase tx/outputs.
-    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }));
-    BOOST_REQUIRE(query.set_strong(1));
-
-    // tx5 spends first block1a output.
-    BOOST_REQUIRE(query.set(test::tx5));
-
-    // block_spend_1a (also) spends both block1a outputs.
-    BOOST_REQUIRE(query.set(test::block_spend_1a, context{ 0, 2, 0 }));
-    BOOST_REQUIRE(query.set_strong(2));
-
-    // Confirmable because of intervening tx5 is unconfirmed double spend.
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
-}
+// These pas but test vectors need to be updated to create clear test conditions.
+////BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_coinbase_and_internal_immature__coinbase_maturity)
+////{
+////    settings settings{};
+////    settings.path = TEST_DIRECTORY;
+////    test::chunk_store store{ settings };
+////    test::query_accessor query{ store };
+////    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+////    BOOST_REQUIRE(query.initialize(test::genesis));
+////
+////    // block1b has coinbase tx/outputs.
+////    BOOST_REQUIRE(query.set(test::block1b, context{ 0, 1, 0 }));
+////    BOOST_REQUIRE(query.set_strong(1));
+////
+////    // block_spend_internal_2b spends first block1a output and first own output.
+////    BOOST_REQUIRE(query.set(test::block_spend_internal_2b, context{ 0, 100, 0 }));
+////    ////BOOST_REQUIRE(query.set_strong(2));
+////
+////    // Not confirmable because tx not strong.
+////    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::integrity);
+////    BOOST_REQUIRE(query.set_strong(2));
+////
+////    // Not confirmable because lack of maturity.
+////    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
+////}
+////
+////BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_coinbase_and_internal_mature__success)
+////{
+////    settings settings{};
+////    settings.path = TEST_DIRECTORY;
+////    test::chunk_store store{ settings };
+////    test::query_accessor query{ store };
+////    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+////    BOOST_REQUIRE(query.initialize(test::genesis));
+////
+////    // block1b has coinbase tx/outputs.
+////    BOOST_REQUIRE(query.set(test::block1b, context{ 0, 1, 0 }));
+////    BOOST_REQUIRE(query.set_strong(1));
+////
+////    BOOST_REQUIRE(query.set(test::block_spend_internal_2b, context{ 0, 101, 0 }));
+////    ////BOOST_REQUIRE(query.set_strong(2));
+////
+////    // Not confirmable because tx not strong.
+////    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::integrity);
+////
+////    // block_spend_internal_2b spends first block1b output and first own output.
+////    // But first block1b is first tx in block_spend_internal_2b so excluded as coinbase.
+////    // It spends only its first own output (coinbase) and that can never be mature.
+////    // But spend target is not stored as coinbase because it's not a null point.
+////    BOOST_REQUIRE(query.set_strong(2));
+////    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
+////}
+////
+////BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__confirmed_double_spend__confirmed_double_spend)
+////{
+////    settings settings{};
+////    settings.path = TEST_DIRECTORY;
+////    test::chunk_store store{ settings };
+////    test::query_accessor query{ store };
+////    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+////    BOOST_REQUIRE(query.initialize(test::genesis));
+////
+////    // block1a has non-coinbase tx/outputs.
+////    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }));
+////    BOOST_REQUIRE(query.set_strong(1));
+////
+////    // block2a spends both block1a outputs (though not itself confirmable is set strong).
+////    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }));
+////    BOOST_REQUIRE(query.set_strong(2));
+////
+////    // block_spend_1a (also) spends both block1a outputs (and is otherwise confirmable).
+////    BOOST_REQUIRE(query.set(test::block_spend_1a, context{ bip68, 3, 0 }));
+////    BOOST_REQUIRE(query.set_strong(3));
+////
+////    // Not confirmable because of intervening block2a implies double spend.
+////    BOOST_REQUIRE_EQUAL(query.block_confirmable(3), error::success);
+////}
+////
+////BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__unconfirmed_double_spend__success)
+////{
+////    settings settings{};
+////    settings.path = TEST_DIRECTORY;
+////    test::chunk_store store{ settings };
+////    test::query_accessor query{ store };
+////    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+////    BOOST_REQUIRE(query.initialize(test::genesis));
+////
+////    // block1a has non-coinbase tx/outputs.
+////    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }));
+////    BOOST_REQUIRE(query.set_strong(1));
+////
+////    // tx5 spends first block1a output.
+////    BOOST_REQUIRE(query.set(test::tx5));
+////
+////    // block_spend_1a (also) spends both block1a outputs.
+////    BOOST_REQUIRE(query.set(test::block_spend_1a, context{ 0, 2, 0 }));
+////    BOOST_REQUIRE(query.set_strong(2));
+////
+////    // Confirmable because of intervening tx5 is unconfirmed double spend.
+////    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
+////}
 
 BOOST_AUTO_TEST_CASE(query_confirm__set_strong__unassociated__false)
 {

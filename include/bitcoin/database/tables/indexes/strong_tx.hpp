@@ -41,12 +41,14 @@ struct strong_tx
         inline bool from_data(reader& source) NOEXCEPT
         {
             header_fk = source.read_little_endian<block::integer, block::size>();
+            positive = to_bool(source.read_byte());
             return source;
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             sink.write_little_endian<block::integer, block::size>(header_fk);
+            sink.write_byte(to_int<uint8_t>(positive));
             return sink;
         }
 
@@ -56,6 +58,7 @@ struct strong_tx
         }
 
         block::integer header_fk{};
+        bool positive{};
     };
 };
 
