@@ -40,12 +40,17 @@ using point_link = table::point::link;
 using spend_link = table::spend::link;
 using txs_link = table::txs::link;
 using tx_link = table::transaction::link;
+
+using header_links = std_vector<header_link::integer>;
 using tx_links = std_vector<tx_link::integer>;
 using spend_links = std_vector<spend_link::integer>;
 using input_links = std_vector<input_link::integer>;
 using output_links = std_vector<output_link::integer>;
+
 using foreign_point = table::spend::search_key;
 using two_counts = std::pair<size_t, size_t>;
+struct strong_pair { header_link block; tx_link tx; };
+using strong_pairs = std_vector<strong_pair>;
 
 template <typename Store>
 class query
@@ -163,9 +168,9 @@ public:
     output_link to_output(const tx_link& link, uint32_t output_index) const NOEXCEPT;
     output_link to_prevout(const spend_link& link) const NOEXCEPT;
 
-    /// block/tx to block (reverse navigation)
-    header_link to_block(const tx_link& link) const NOEXCEPT;
+    /// block/tx to block/s (reverse navigation)
     header_link to_parent(const header_link& link) const NOEXCEPT;
+    header_link to_block(const tx_link& link) const NOEXCEPT;
 
     /// output to spenders (reverse navigation)
     spend_links to_spenders(const point& prevout) const NOEXCEPT;
@@ -177,8 +182,6 @@ public:
     /// tx to puts (forward navigation)
     output_links to_tx_outputs(const tx_link& link) const NOEXCEPT;
     spend_links to_tx_spends(const tx_link& link) const NOEXCEPT;
-    spend_links to_tx_spends(uint32_t& version,
-        const tx_link& link) const NOEXCEPT;
 
     /// block to txs/puts (forward navigation)
     tx_links to_txs(const header_link& link) const NOEXCEPT;
@@ -374,12 +377,17 @@ public:
 protected:
     /// Translate.
     /// -----------------------------------------------------------------------
+    inline header_links to_blocks(const tx_link& link) const NOEXCEPT;
+    inline strong_pair to_strong(const hash_digest& tx_hash) const NOEXCEPT;
+    inline strong_pairs to_strongs(const hash_digest& tx_hash) const NOEXCEPT;
     uint32_t to_spend_index(const tx_link& parent_fk,
         const spend_link& input_fk) const NOEXCEPT;
     uint32_t to_output_index(const tx_link& parent_fk,
         const output_link& output_fk) const NOEXCEPT;
     spend_link to_spender(const tx_link& link,
         const foreign_point& point) const NOEXCEPT;
+    spend_links to_tx_spends(uint32_t& version,
+        const tx_link& link) const NOEXCEPT;
 
     /// Archival
     /// -----------------------------------------------------------------------
@@ -403,13 +411,12 @@ protected:
         const context& ctx) const NOEXCEPT;
 
     // Critical path
-
-    inline error::error_t unspent_coinbase(const tx_link& link,
-        const context& ctx) const NOEXCEPT;
     inline error::error_t spent_prevout(const foreign_point& point,
         const tx_link& self) const NOEXCEPT;
-    inline error::error_t spendable_prevout(const point_link& link,
+    inline error::error_t unspendable_prevout(const point_link& link,
         uint32_t sequence, uint32_t version, const context& ctx) const NOEXCEPT;
+    inline error::error_t unspent_duplicates(const tx_link& link,
+        const context& ctx) const NOEXCEPT;
 
     /// context
     /// -----------------------------------------------------------------------

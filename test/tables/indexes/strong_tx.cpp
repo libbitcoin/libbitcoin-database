@@ -24,10 +24,10 @@ BOOST_AUTO_TEST_SUITE(strong_tx_tests)
 using namespace system;
 const table::strong_tx::key key1{ 0x01, 0x02, 0x03, 0x04 };
 const table::strong_tx::key key2{ 0xa1, 0xa2, 0xa3, 0xa4 };
-const table::strong_tx::record in1{ {}, 0xaabbccdd };
-const table::strong_tx::record in2{ {}, 0x11223344 };
-const table::strong_tx::record out1{ {}, 0x00bbccdd };
-const table::strong_tx::record out2{ {}, 0x00223344 };
+const table::strong_tx::record in1{ {}, 0xaabbccdd, true };
+const table::strong_tx::record in2{ {}, 0x11223344, true };
+const table::strong_tx::record out1{ {}, 0x00bbccdd, true };
+const table::strong_tx::record out2{ {}, 0x00223344, true };
 const data_chunk expected_head = base16_chunk
 (
     "00000000"
@@ -51,10 +51,12 @@ const data_chunk expected_body = base16_chunk
     "ffffffff" // next->end
     "01020304" // key1
     "ddccbb"   // header_fk1
+    "01"       // positive
 
     "00000000" // next->
     "a1a2a3a4" // key2
     "443322"   // header_fk2
+    "01"       // positive
 );
 
 BOOST_AUTO_TEST_CASE(strong_tx__put__two__expected)

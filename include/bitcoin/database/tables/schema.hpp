@@ -300,12 +300,12 @@ namespace schema
         static constexpr size_t pk = schema::tx;
         static constexpr size_t sk = schema::transaction::pk;
         static constexpr size_t minsize =
-            schema::header::pk;
+            schema::header::pk + bit;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 3u);
-        static_assert(minrow == 11u);
+        static_assert(minsize == 4u);
+        static_assert(minrow == 12u);
     };
 
     /// Cache tables.
