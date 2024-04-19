@@ -231,8 +231,9 @@ inline strong_pairs CLASS::to_strongs(const hash_digest& tx_hash) const NOEXCEPT
     strong_pairs strongs{};
     do
     {
+        // clang emplace_back bug (no matching constructor), using push_back.
         for (const auto& link: to_blocks(it.self()))
-            strongs.emplace_back(link, it.self());
+            strongs.push_back({ link, it.self() });
     }
     while (it.advance());
     return strongs;
