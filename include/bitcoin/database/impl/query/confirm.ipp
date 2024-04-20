@@ -224,6 +224,15 @@ error::error_t CLASS::locked_prevout(const point_link& link, uint32_t sequence,
 
 // protected
 TEMPLATE
+inline error::error_t CLASS::spent_prevout(tx_link link,
+    index index) const NOEXCEPT
+{
+    return spent_prevout(table::spend::compose(link, index),
+        tx_link::terminal);
+}
+
+// protected
+TEMPLATE
 inline error::error_t CLASS::spent_prevout(const foreign_point& point,
     const tx_link& self) const NOEXCEPT
 {
@@ -279,7 +288,6 @@ TEMPLATE
 inline error::error_t CLASS::unspent_duplicates(const tx_link& link,
     const context& ctx) const NOEXCEPT
 {
-    using namespace table;
     if (!ctx.is_enabled(system::chain::flags::bip30_rule))
         return error::success;
 
@@ -294,7 +302,7 @@ inline error::error_t CLASS::unspent_duplicates(const tx_link& link,
     size_t unspent{};
     for (const auto& cb: coinbases)
         for (index out{}; out < output_count(cb.tx); ++out)
-            if (!spent_prevout(spend::compose(cb.tx, out)) && is_one(unspent++))
+            if (!spent_prevout(cb.tx, out) && is_one(unspent++))
                 return error::unspent_coinbase_collision;
 
     return is_zero(unspent) ? error::integrity : error::success;
