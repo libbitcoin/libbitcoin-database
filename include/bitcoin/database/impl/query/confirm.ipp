@@ -279,28 +279,24 @@ TEMPLATE
 inline error::error_t CLASS::unspent_duplicates(const tx_link& link,
     const context& ctx) const NOEXCEPT
 {
-    using namespace table;
     if (!ctx.is_enabled(system::chain::flags::bip30_rule))
         return error::success;
 
-    // Self should be strong but was not identified.
     const auto coinbases = to_strongs(get_tx_key(link));
     if (coinbases.empty())
         return error::integrity;
 
-    // Only self was found (optimization).
     if (is_one(coinbases.size()))
         return error::success;
 
-    // All but one (self) must be confirmed spent or coinbase is unspent.
+    // All but one coinbase tx (self) must be confirmed spent or cb is unspent.
     size_t strong_unspent{};
-    for (const auto& coinbase: coinbases)
-        for (spend::pt::integer out{}; out < output_count(coinbase.tx); ++out)
-            if (!spent_prevout(spend::compose(coinbase.tx, out)) &&
+    for (const auto& cb: coinbases)
+        for (table::spend::pt::integer out{}; out < output_count(cb.tx); ++out)
+            if (!spent_prevout(table::spend::compose(cb.tx, out)) &&
                 is_one(strong_unspent++))
                 return error::unspent_coinbase_collision;
 
-    // Only self should/must be unspent.
     return is_zero(strong_unspent) ? error::integrity : error::success;
 }
 
