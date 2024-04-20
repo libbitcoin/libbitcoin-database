@@ -254,10 +254,8 @@ inline header_links CLASS::to_blocks(const tx_link& link) const NOEXCEPT
     block_txs strongs{};
     do
     {
-        if (!store_.strong_tx.get(it.self(), strong))
-            return {};
- 
-        if (!contains(strongs, strong))
+        if (store_.strong_tx.get(it.self(), strong) &&
+            !contains(strongs, strong))
             strongs.push_back(strong);
     }
     while(it.advance());
