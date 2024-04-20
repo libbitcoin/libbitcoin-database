@@ -174,6 +174,7 @@ output_link CLASS::to_prevout(const spend_link& link) const NOEXCEPT
 
 // block/tx to block (reverse navigation)
 // ----------------------------------------------------------------------------
+// Required for confirmation processing.
 
 TEMPLATE
 header_link CLASS::to_parent(const header_link& link) const NOEXCEPT
@@ -186,7 +187,6 @@ header_link CLASS::to_parent(const header_link& link) const NOEXCEPT
     return header.parent_fk;
 }
 
-// The block of a strong block-tx association.
 TEMPLATE
 header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
 {
@@ -194,14 +194,14 @@ header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
     if (!store_.strong_tx.get(store_.strong_tx.first(link), strong))
         return {};
 
-    // Terminal implies not strong.
+    // Terminal implies not strong (false).
     return strong.positive ? strong.header_fk : header_link::terminal;
 }
 
 // protected
-// The first block-tx tuple where the tx is strong by the block.
 // If there are no associations the link of the first tx by hash is returned,
 // which is an optimization to prevent requery to determine tx existence.
+// Return the first block-tx tuple where the tx is strong by the block.
 TEMPLATE
 inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
 {
@@ -218,15 +218,15 @@ inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
 }
 
 // protected
-// This is required for bip30 processing.
-// The distinct set of block-tx tuples where the tx is strong by the block.
+// Required for bip30 processing.
+// Each it.self() is a unique link to a tx instance with tx_hash.
+// Duplicate tx instances with the same hash result from a write race.
+// It is possible that one tx instance is strong by distinct blocks, but it
+// is not possible that two tx instances are both strong by the same block.
+// Return the distinct set of block-tx tuples where tx is strong by block.
 TEMPLATE
 inline strong_pairs CLASS::to_strongs(const hash_digest& tx_hash) const NOEXCEPT
 {
-    // Each it.self() is a unique link to a tx instance with tx_hash.
-    // Duplicate tx instances with the same hash result from a write race.
-    // It is possible that one tx instance is strong by distinct blocks, but it
-    // is not possible that two tx instances are both strong by the same block.
     auto it = store_.tx.it(tx_hash);
     strong_pairs strongs{};
     do
@@ -240,42 +240,46 @@ inline strong_pairs CLASS::to_strongs(const hash_digest& tx_hash) const NOEXCEPT
 }
 
 // protected
-// This is required for bip30 processing.
+// Required for bip30 processing.
 // A single tx.link may be associated to multiple blocks (see bip30). But the
 // top of the strong_tx table will reflect the current state of only one block
 // association. This scans the multimap for the first instance of each block
 // that is associated by the tx.link and returns that set of block links.
+// Return the distinct set of block/header links where tx is strong by block.
 TEMPLATE
 inline header_links CLASS::to_blocks(const tx_link& link) const NOEXCEPT
 {
-    using record = table::strong_tx::record;
-    using records = std::vector<record>;
-    const auto contains = [](const records& items, const record& item) NOEXCEPT
-    {
-        return std::any_of(items.begin(), items.end(), [&](const record& it)
-        {
-            return it.header_fk == item.header_fk;
-        });
-    };
-
     auto it = store_.strong_tx.it(link);
-    if (it.self().is_terminal())
-        return {};
-
-    records strongs{};
+    block_tx strong{};
+    block_txs strongs{};
     do
     {
-        record strong{};
         if (!store_.strong_tx.get(it.self(), strong))
             return {};
  
-        // Retain only the first record for each block, strong or weak.
         if (!contains(strongs, strong))
             strongs.push_back(strong);
     }
     while(it.advance());
+    return strong_only(strongs);
+}
 
-    // Return just the block links of the strong associations.
+// private/static
+TEMPLATE
+inline bool CLASS::contains(const block_txs& blocks,
+    const block_tx& block) NOEXCEPT
+{
+    return std::any_of(blocks.begin(), blocks.end(),
+        [&block](const auto& it) NOEXCEPT
+        {
+            return it.header_fk == block.header_fk;
+        });
+}
+
+// private/static
+TEMPLATE
+inline header_links CLASS::strong_only(const block_txs& strongs) NOEXCEPT
+{
     header_links blocks{};
     for (const auto& strong: strongs)
         if (strong.positive)

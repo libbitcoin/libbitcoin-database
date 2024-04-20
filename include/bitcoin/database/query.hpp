@@ -377,9 +377,6 @@ public:
 protected:
     /// Translate.
     /// -----------------------------------------------------------------------
-    inline header_links to_blocks(const tx_link& link) const NOEXCEPT;
-    inline strong_pair to_strong(const hash_digest& tx_hash) const NOEXCEPT;
-    inline strong_pairs to_strongs(const hash_digest& tx_hash) const NOEXCEPT;
     uint32_t to_spend_index(const tx_link& parent_fk,
         const spend_link& input_fk) const NOEXCEPT;
     uint32_t to_output_index(const tx_link& parent_fk,
@@ -388,6 +385,11 @@ protected:
         const foreign_point& point) const NOEXCEPT;
     spend_links to_tx_spends(uint32_t& version,
         const tx_link& link) const NOEXCEPT;
+
+    // Critical path
+    inline header_links to_blocks(const tx_link& link) const NOEXCEPT;
+    inline strong_pair to_strong(const hash_digest& tx_hash) const NOEXCEPT;
+    inline strong_pairs to_strongs(const hash_digest& tx_hash) const NOEXCEPT;
 
     /// Archival
     /// -----------------------------------------------------------------------
@@ -412,7 +414,7 @@ protected:
 
     // Critical path
     inline error::error_t spent_prevout(const foreign_point& point,
-        const tx_link& self) const NOEXCEPT;
+        const tx_link& self = tx_link::terminal) const NOEXCEPT;
     inline error::error_t unspendable_prevout(const point_link& link,
         uint32_t sequence, uint32_t version, const context& ctx) const NOEXCEPT;
     inline error::error_t unspent_duplicates(const tx_link& link,
@@ -454,6 +456,13 @@ protected:
         const header_link& link, size_t height) const NOEXCEPT;
 
 private:
+    // for to_blocks
+    using block_tx = table::strong_tx::record;
+    using block_txs = std::vector<block_tx>;
+    static inline header_links strong_only(const block_txs& strongs) NOEXCEPT;
+    static inline bool contains(const block_txs& blocks,
+        const block_tx& block) NOEXCEPT;
+
     Store& store_;
 };
 
