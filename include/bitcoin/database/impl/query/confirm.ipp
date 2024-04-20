@@ -289,7 +289,7 @@ inline error::error_t CLASS::unspent_duplicates(const tx_link& link,
     if (is_one(coinbases.size()))
         return error::success;
 
-    // All but one coinbase tx (self) must be confirmed spent or cb is unspent.
+    // bip30: all (but self) must be confirmed spent or dup invalid (cb only).
     size_t strong_unspent{};
     for (const auto& cb: coinbases)
         for (table::spend::pt::integer out{}; out < output_count(cb.tx); ++out)
