@@ -242,8 +242,6 @@ inline error::error_t CLASS::spent_prevout(const foreign_point& point,
             continue;
 
         // If strong spender exists then prevout is confirmed double spent.
-        // Since all spends are traversed, and strength is distinct by tx-block
-        // link association, this is safe for duplicate txs.
         if (!to_block(spend.parent_fk).is_terminal())
             return error::confirmed_double_spend;
     }
