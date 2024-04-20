@@ -279,6 +279,7 @@ TEMPLATE
 inline error::error_t CLASS::unspent_duplicates(const tx_link& link,
     const context& ctx) const NOEXCEPT
 {
+    using namespace table;
     if (!ctx.is_enabled(system::chain::flags::bip30_rule))
         return error::success;
 
@@ -290,14 +291,13 @@ inline error::error_t CLASS::unspent_duplicates(const tx_link& link,
         return error::success;
 
     // bip30: all (but self) must be confirmed spent or dup invalid (cb only).
-    size_t strong_unspent{};
+    size_t unspent{};
     for (const auto& cb: coinbases)
-        for (table::spend::pt::integer out{}; out < output_count(cb.tx); ++out)
-            if (!spent_prevout(table::spend::compose(cb.tx, out)) &&
-                is_one(strong_unspent++))
+        for (index out{}; out < output_count(cb.tx); ++out)
+            if (!spent_prevout(spend::compose(cb.tx, out)) && is_one(unspent++))
                 return error::unspent_coinbase_collision;
 
-    return is_zero(strong_unspent) ? error::integrity : error::success;
+    return is_zero(unspent) ? error::integrity : error::success;
 }
 
 TEMPLATE

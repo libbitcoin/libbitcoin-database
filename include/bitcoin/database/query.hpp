@@ -73,6 +73,7 @@ public:
     using chain_state = system::chain::chain_state;
     using chain_state_ptr = system::chain::chain_state::ptr;
     using chain_context = system::chain::context;
+    using index = table::transaction::ix::integer;
     using sizes = std::pair<size_t, size_t>;
     using heights = std_vector<size_t>;
     using filter = system::data_chunk;
