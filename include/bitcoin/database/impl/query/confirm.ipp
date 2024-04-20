@@ -256,14 +256,6 @@ TEMPLATE
 inline error::error_t CLASS::unspendable_prevout(const point_link& link,
     uint32_t sequence, uint32_t version, const context& ctx) const NOEXCEPT
 {
-    // Due to the natural key coupling between tx-spend and spent-tx, it is
-    // possible to associate a not strong tx when a strong tx exists. So must
-    // iterate over the tx set associated by the transaction hash (vs. link).
-    // A strong/not-strong association only affects the associated instances
-    // and is there definitive for a given tx-block tuple. Therefore if one
-    // instance is negative and another is positive, it implies a reorganized
-    // block (negative) and a strong block (positive). There may be multiple
-    // positive and/or negative, but one positive is sufficient here.
     const auto strong = to_strong(get_point_key(link));
     if (strong.block.is_terminal())
         return strong.tx.is_terminal() ? error::missing_previous_output :
@@ -293,45 +285,25 @@ inline error::error_t CLASS::unspent_duplicates(const tx_link& link,
     if (!ctx.is_enabled(system::chain::flags::bip30_rule))
         return error::success;
 
-    // Self is not a spender in this case.
-    constexpr auto self = tx_link::terminal;
+    // Self should be strong but was not identified.
     const auto coinbases = to_strongs(get_tx_key(link));
-
-    // self should be strong but was not found (fault).
     if (coinbases.empty())
         return error::integrity;
 
-    // assuming it is strong only self was found (optimization).
+    // Only self was found (optimization).
     if (is_one(coinbases.size()))
         return error::success;
 
-    // All that are found must be confirmed spent except self.
-    size_t strong_unspent_coinbase_count{};
+    // All but one (self) must be confirmed spent or coinbase is unspent.
+    size_t strong_unspent{};
     for (const auto& coinbase: coinbases)
-    {
-        // All outputs must be spent or the coinbase is unspent.
         for (spend::pt::integer out{}; out < output_count(coinbase.tx); ++out)
-        {
-            // Could stop at two but very rare so condition is more costly.
-            if (!spent_prevout(spend::compose(coinbase.tx, out), self))
-            {
-                ++strong_unspent_coinbase_count;
-                continue;
-            }
-        }
-    }
+            if (!spent_prevout(spend::compose(coinbase.tx, out)) &&
+                is_one(strong_unspent++))
+                return error::unspent_coinbase_collision;
 
-    switch (strong_unspent_coinbase_count)
-    {
-        // self should be unspent (fault).
-        case zero: return error::integrity;
-
-        // only self is unspent.
-        case one: return error::success;
-
-        // at least one instance other than self is unspent.
-        default: return error::unspent_coinbase_collision;
-    }
+    // Only self should/must be unspent.
+    return is_zero(strong_unspent) ? error::integrity : error::success;
 }
 
 TEMPLATE
