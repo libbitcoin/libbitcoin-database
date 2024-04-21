@@ -300,9 +300,9 @@ inline error::error_t CLASS::unspent_duplicates(const tx_link& link,
 
     // bip30: all (but self) must be confirmed spent or dup invalid (cb only).
     size_t unspent{};
-    for (const auto& cb: coinbases)
-        for (index out{}; out < output_count(cb.tx); ++out)
-            if (!spent_prevout(cb.tx, out) && is_one(unspent++))
+    for (const auto& coinbase: coinbases)
+        for (index out{}; out < output_count(coinbase.tx); ++out)
+            if (!spent_prevout(coinbase.tx, out) && is_one(unspent++))
                 return error::unspent_coinbase_collision;
 
     return is_zero(unspent) ? error::integrity : error::success;
