@@ -42,7 +42,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { load_failure, "disk full" },
     { flush_unloaded, "flushing unloaded file" },
     { flush_failure, "file failed to flush" },
-    { unload_locked, "unloading unloaded file" },
+    { unload_locked, "unloading locked file" },
     { unload_failure, "file failed to unload" },
 
     // locks
