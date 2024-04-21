@@ -54,7 +54,8 @@ struct strong_tx
 
         inline bool operator==(const record& other) const NOEXCEPT
         {
-            return header_fk == other.header_fk;
+            return header_fk == other.header_fk
+                && positive == other.positive;
         }
 
         block::integer header_fk{};
