@@ -86,6 +86,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\association.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\associations.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\boost.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\error.hpp" />
