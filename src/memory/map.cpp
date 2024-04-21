@@ -86,6 +86,7 @@ code map::open() NOEXCEPT
 
 code map::close() NOEXCEPT
 {
+    std::unique_lock map_lock(remap_mutex_);
     std::unique_lock field_lock(field_mutex_);
 
     if (loaded_)
