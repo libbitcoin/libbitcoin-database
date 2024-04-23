@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_INITIALIZE_IPP
 #define LIBBITCOIN_DATABASE_QUERY_INITIALIZE_IPP
 
+#include <algorithm>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -79,16 +80,30 @@ size_t CLASS::get_top_associated_from(size_t height) const NOEXCEPT
 TEMPLATE
 associations CLASS::get_all_unassociated() const NOEXCEPT
 {
-    return get_unassociated_above(get_fork(), max_size_t);
+    return get_unassociated_above(get_fork());
+}
+
+TEMPLATE
+associations CLASS::get_unassociated_above(size_t height) const NOEXCEPT
+{
+    return get_unassociated_above(height, max_size_t);
 }
 
 TEMPLATE
 associations CLASS::get_unassociated_above(size_t height,
     size_t count) const NOEXCEPT
 {
+    return get_unassociated_above(height, count, max_size_t);
+}
+
+TEMPLATE
+associations CLASS::get_unassociated_above(size_t height,
+    size_t count, size_t last) const NOEXCEPT
+{
     association item{};
     associations out{};
-    const auto top = get_top_candidate();
+    const auto top = std::min(get_top_candidate(), last);
+
     while (++height <= top && !is_zero(count))
     {
         if (get_unassociated(item, to_candidate(height)))
