@@ -142,7 +142,7 @@ struct txs
         bool malleable{};
     };
 
-    struct get_wire_size
+    struct get_block_size
       : public schema::txs
     {
         inline bool from_data(reader& source) NOEXCEPT

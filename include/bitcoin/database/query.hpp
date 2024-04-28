@@ -262,7 +262,11 @@ public:
     outputs_ptr get_outputs(const tx_link& link) const NOEXCEPT;
     transactions_ptr get_transactions(const header_link& link) const NOEXCEPT;
 
-    size_t get_size(const header_link& link) const NOEXCEPT;
+    size_t get_candidate_size() const NOEXCEPT;
+    size_t get_candidate_size(size_t top) const NOEXCEPT;
+    size_t get_confirmed_size() const NOEXCEPT;
+    size_t get_confirmed_size(size_t top) const NOEXCEPT;
+    size_t get_block_size(const header_link& link) const NOEXCEPT;
     header::cptr get_header(const header_link& link) const NOEXCEPT;
     block::cptr get_block(const header_link& link) const NOEXCEPT;
     transaction::cptr get_transaction(const tx_link& link) const NOEXCEPT;

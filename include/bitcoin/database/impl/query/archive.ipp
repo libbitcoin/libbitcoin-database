@@ -432,9 +432,41 @@ typename CLASS::transactions_ptr CLASS::get_transactions(
 }
 
 TEMPLATE
-size_t CLASS::get_size(const header_link& link) const NOEXCEPT
+size_t CLASS::get_candidate_size() const NOEXCEPT
 {
-    table::txs::get_wire_size txs{};
+    return get_candidate_size(get_top_candidate());
+}
+
+TEMPLATE
+size_t CLASS::get_candidate_size(size_t top) const NOEXCEPT
+{
+    size_t wire{};
+    for (auto height = zero; height <= top; ++height)
+        wire += get_block_size(to_candidate(height));
+
+    return wire;
+}
+
+TEMPLATE
+size_t CLASS::get_confirmed_size() const NOEXCEPT
+{
+    return get_confirmed_size(get_top_confirmed());
+}
+
+TEMPLATE
+size_t CLASS::get_confirmed_size(size_t top) const NOEXCEPT
+{
+    size_t wire{};
+    for (auto height = zero; height <= top; ++height)
+        wire += get_block_size(to_confirmed(height));
+
+    return wire;
+}
+
+TEMPLATE
+size_t CLASS::get_block_size(const header_link& link) const NOEXCEPT
+{
+    table::txs::get_block_size txs{};
     return store_.txs.get(to_txs_link(link), txs) ? txs.wire : zero;
 }
 

@@ -1022,11 +1022,28 @@ BOOST_AUTO_TEST_CASE(query_archive__is_malleable__malleable__true)
     BOOST_REQUIRE(query.is_malleated(block2));
     BOOST_REQUIRE(query.is_malleated(block3));
 
-    // Verify stored sizes.
-    BOOST_REQUIRE_EQUAL(query.get_size(0), test::genesis.serialized_size(true));
-    BOOST_REQUIRE_EQUAL(query.get_size(1), block1.serialized_size(true));
-    BOOST_REQUIRE_EQUAL(query.get_size(2), block2.serialized_size(false));
-    BOOST_REQUIRE_EQUAL(query.get_size(3), block3.serialized_size(true));
+    // Verify stored block sizes.
+    BOOST_REQUIRE_EQUAL(query.get_block_size(0), test::genesis.serialized_size(true));
+    BOOST_REQUIRE_EQUAL(query.get_block_size(1), block1.serialized_size(true));
+    BOOST_REQUIRE_EQUAL(query.get_block_size(2), block2.serialized_size(false));
+    BOOST_REQUIRE_EQUAL(query.get_block_size(3), block3.serialized_size(true));
+
+    // Verify confirmed wire size.
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_size(), test::genesis.serialized_size(true));
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_size(0), test::genesis.serialized_size(true));
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_size(1), test::genesis.serialized_size(true));
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_size(42), test::genesis.serialized_size(true));
+
+    const auto candidate_size = test::genesis.serialized_size(true) + block1.serialized_size(true) + block2.serialized_size(false) + block3.serialized_size(true);
+
+    // Verify candidate wire size.
+    BOOST_REQUIRE(query.push_candidate(query.to_header(block1.hash())));
+    BOOST_REQUIRE(query.push_candidate(query.to_header(block2.hash())));
+    BOOST_REQUIRE(query.push_candidate(query.to_header(block3.hash())));
+    BOOST_REQUIRE_EQUAL(query.get_candidate_size(), candidate_size);
+    BOOST_REQUIRE_EQUAL(query.get_candidate_size(0), test::genesis.serialized_size(true));
+    BOOST_REQUIRE_EQUAL(query.get_candidate_size(1), test::genesis.serialized_size(true) + block1.serialized_size(true));
+    BOOST_REQUIRE_EQUAL(query.get_candidate_size(42), candidate_size);
 }
 
 BOOST_AUTO_TEST_CASE(query_archive__get_header__invalid_parent__expected)
