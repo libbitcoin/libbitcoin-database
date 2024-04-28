@@ -157,6 +157,13 @@ bool CLASS::to_minimum_unspent_outputs(output_links& out,
 }
 
 TEMPLATE
+bool CLASS::set_address_output(const output& output,
+    const output_link& link) NOEXCEPT
+{
+    return set_address_output(address_hash(output), link);
+}
+
+TEMPLATE
 bool CLASS::set_address_output(const hash_digest& key,
     const output_link& link) NOEXCEPT
 {

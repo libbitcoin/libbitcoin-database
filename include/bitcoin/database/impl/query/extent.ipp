@@ -123,6 +123,15 @@ size_t CLASS::validated_bk_size() const NOEXCEPT
     return store_.validated_bk.body_size();
 }
 
+// Table logical byte sizes (optional bodies).
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+size_t CLASS::address_size() const NOEXCEPT
+{
+    return store_.address.body_size();
+}
+
 // Buckets (archive hash tables).
 // ----------------------------------------------------------------------------
 
@@ -177,6 +186,15 @@ size_t CLASS::validated_bk_buckets() const NOEXCEPT
     return store_.validated_bk.buckets();
 }
 
+// Buckets (optional hash tables).
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+size_t CLASS::address_buckets() const NOEXCEPT
+{
+    return store_.address.buckets();
+}
+
 //  Counts (archive records).
 // ----------------------------------------------------------------------------
 
@@ -223,6 +241,15 @@ TEMPLATE
 size_t CLASS::strong_tx_records() const NOEXCEPT
 {
     return store_.strong_tx.count();
+}
+
+//  Counts (optional records).
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+size_t CLASS::address_records() const NOEXCEPT
+{
+    return store_.address.count();
 }
 
 // Counters (archive slabs).

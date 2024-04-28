@@ -123,6 +123,9 @@ public:
     size_t validated_tx_size() const NOEXCEPT;
     size_t validated_bk_size() const NOEXCEPT;
 
+    /// Table logical byte sizes (optional bodies).
+    size_t address_size() const NOEXCEPT;
+
     /// Buckets (archive hash tables).
     size_t header_buckets() const NOEXCEPT;
     size_t point_buckets() const NOEXCEPT;
@@ -135,6 +138,9 @@ public:
     size_t validated_tx_buckets() const NOEXCEPT;
     size_t validated_bk_buckets() const NOEXCEPT;
 
+    /// Buckets (optional hash tables).
+    size_t address_buckets() const NOEXCEPT;
+
     /// Counts (archive records).
     size_t header_records() const NOEXCEPT;
     size_t point_records() const NOEXCEPT;
@@ -145,6 +151,9 @@ public:
     size_t candidate_records() const NOEXCEPT;
     size_t confirmed_records() const NOEXCEPT;
     size_t strong_tx_records() const NOEXCEPT;
+
+    /// Counts (optional records).
+    size_t address_records() const NOEXCEPT;
 
     /// Counters (archive slabs - txs/puts can be derived).
     size_t input_count(const tx_link& link) const NOEXCEPT;
@@ -362,6 +371,8 @@ public:
     bool to_unspent_outputs(output_links& out, const hash_digest& key) const NOEXCEPT;
     bool to_minimum_unspent_outputs(output_links& out, const hash_digest& key,
         uint64_t value) const NOEXCEPT;
+    bool set_address_output(const output& output,
+        const output_link& link) NOEXCEPT;
     bool set_address_output(const hash_digest& key,
         const output_link& link) NOEXCEPT;
 
