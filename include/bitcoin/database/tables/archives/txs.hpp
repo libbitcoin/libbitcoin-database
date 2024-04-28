@@ -36,6 +36,7 @@ struct txs
 {
     using tx = linkage<schema::tx>;
     using keys = std_vector<tx::integer>;
+    using bytes = linkage<schema::size>;
     using hash_map<schema::txs>::hashmap;
 
     struct slab
@@ -44,13 +45,14 @@ struct txs
         link count() const NOEXCEPT
         {
             return system::possible_narrow_cast<link::integer>(pk + sk +
-                schema::bit + schema::count_ + tx::size * tx_fks.size());
+                schema::count_ + schema::bit + bytes::size +tx::size * tx_fks.size());
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
             tx_fks.resize(source.read_little_endian<tx::integer, schema::count_>());
             malleable = to_bool(source.read_byte());
+            wire = source.read_little_endian<bytes::integer, bytes::size>();
             std::for_each(tx_fks.begin(), tx_fks.end(), [&](auto& fk) NOEXCEPT
             {
                 fk = source.read_little_endian<tx::integer, tx::size>();
@@ -67,6 +69,7 @@ struct txs
 
             sink.write_little_endian<tx::integer, schema::count_>(fks);
             sink.write_byte(to_int<uint8_t>(malleable));
+            sink.write_little_endian<bytes::integer, bytes::size>(wire);
             std::for_each(tx_fks.begin(), tx_fks.end(), [&](const auto& fk) NOEXCEPT
             {
                 sink.write_little_endian<tx::integer, tx::size>(fk);
@@ -82,6 +85,7 @@ struct txs
         }
 
         bool malleable{ false };
+        bytes::integer wire{}; // block.serialized_size(true)
         keys tx_fks{};
     };
 
@@ -91,7 +95,7 @@ struct txs
         inline bool from_data(reader& source) NOEXCEPT
         {
             const auto count = source.read_little_endian<tx::integer, schema::count_>();
-            source.skip_byte();
+            source.skip_bytes(schema::bit + bytes::size);
             for (position = zero; position < count; ++position)
                 if (source.read_little_endian<tx::integer, tx::size>() == link)
                     return source;
@@ -110,7 +114,7 @@ struct txs
         inline bool from_data(reader& source) NOEXCEPT
         {
             const auto count = source.read_little_endian<tx::integer, schema::count_>();
-            source.skip_byte();
+            source.skip_bytes(schema::bit + bytes::size);
             if (!is_zero(count))
             {
                 coinbase_fk = source.read_little_endian<tx::integer, tx::size>();
@@ -131,10 +135,24 @@ struct txs
         {
             source.skip_bytes(schema::count_);
             malleable = to_bool(source.read_byte());
+            source.skip_bytes(bytes::size);
             return source;
         }
 
         bool malleable{};
+    };
+
+    struct get_wire_size
+      : public schema::txs
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(schema::count_ + schema::bit);
+            wire = source.read_little_endian<bytes::integer, bytes::size>();
+            return source;
+        }
+
+        bytes::integer wire{};
     };
 
     struct get_associated

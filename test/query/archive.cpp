@@ -536,22 +536,24 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
         "4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73" // script
         "00");         // witness
     const auto genesis_txs_head = system::base16_chunk(
-        "0f000000"     // slabs size
-        "00000000"     // pk->
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff");
+        "1300000000"   // slabs size
+        "0000000000"   // pk->
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff");
     const auto genesis_txs_body = system::base16_chunk(
-        "ffffffff"      // next->
-        "000000"        // header_fk
-        "01000000"      // txs count (1)
-        "00000000");    // transaction[0]
+        "ffffffffff"   // next->
+        "000000"       // header_fk
+        "010000"       // txs count (1)
+        "00"           // txs malleable (false)
+        "1d0100"       // txs wire (285)
+        "00000000");   // transaction[0]
 
     settings settings{};
     settings.header_buckets = 5;
@@ -644,7 +646,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
         "01000000"     // version
         "010000"       // ins_count
         "010000"       // outs_count
-        "0000000000");   // puts_fk->
+        "0000000000");  // puts_fk->
     const auto genesis_puts_head = system::base16_chunk("0900000000");
     const auto genesis_puts_body = system::base16_chunk(
         "00000000"     // spend0_fk->
@@ -684,22 +686,24 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
         "4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73" // script
         "00");         // witness
     const auto genesis_txs_head = system::base16_chunk(
-        "0f000000"     // slabs size
-        "00000000"     // pk->
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff");
+        "1300000000"   // slabs size
+        "0000000000"   // pk->
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff");
     const auto genesis_txs_body = system::base16_chunk(
-        "ffffffff"      // next->
-        "000000"        // header_fk
-        "01000000"      // txs count (1)
-        "00000000");    // transaction[0]
+        "ffffffffff"   // next->
+        "000000"       // header_fk
+        "010000"       // txs count (1)
+        "00"           // txs malleable (false)
+        "1d0100"       // txs wire (285)
+        "00000000");   // transaction[0]
 
     settings settings{};
     settings.header_buckets = 5;
@@ -999,9 +1003,9 @@ BOOST_AUTO_TEST_CASE(query_archive__is_malleable__malleable__true)
     BOOST_REQUIRE(query.is_malleated(block3));
 
     // Reassociate the same transaction sets (first(n), disassociated (0), second(n))
-    BOOST_REQUIRE(!query.set_link(*block1.transactions_ptr(), 1).is_terminal());
-    BOOST_REQUIRE(!query.set_link(*block2.transactions_ptr(), 2).is_terminal());
-    BOOST_REQUIRE(!query.set_link(*block3.transactions_ptr(), 3).is_terminal());
+    BOOST_REQUIRE(!query.set_link(*block1.transactions_ptr(), 1, block1.serialized_size(true)).is_terminal());
+    BOOST_REQUIRE(!query.set_link(*block2.transactions_ptr(), 2, block2.serialized_size(false)).is_terminal());
+    BOOST_REQUIRE(!query.set_link(*block3.transactions_ptr(), 3, block3.serialized_size(true)).is_terminal());
 
     // Verify all 3 are reassociated.
     BOOST_REQUIRE(query.is_associated(1));
@@ -1017,6 +1021,12 @@ BOOST_AUTO_TEST_CASE(query_archive__is_malleable__malleable__true)
     BOOST_REQUIRE(query.is_malleated(block1));
     BOOST_REQUIRE(query.is_malleated(block2));
     BOOST_REQUIRE(query.is_malleated(block3));
+
+    // Verify stored sizes.
+    BOOST_REQUIRE_EQUAL(query.get_size(0), test::genesis.serialized_size(true));
+    BOOST_REQUIRE_EQUAL(query.get_size(1), block1.serialized_size(true));
+    BOOST_REQUIRE_EQUAL(query.get_size(2), block2.serialized_size(false));
+    BOOST_REQUIRE_EQUAL(query.get_size(3), block3.serialized_size(true));
 }
 
 BOOST_AUTO_TEST_CASE(query_archive__get_header__invalid_parent__expected)

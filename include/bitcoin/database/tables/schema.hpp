@@ -111,7 +111,7 @@ namespace schema
     constexpr size_t puts_ = 5;     // ->puts record.
     constexpr size_t spend_ = 4;    // ->spend record.
     constexpr size_t point_ = 4;    // ->point record.
-    constexpr size_t txs_ = 4;      // ->txs slab.
+    constexpr size_t txs_ = 5;      // ->txs slab.
     constexpr size_t tx = 4;        // ->tx record.
     constexpr size_t block = 3;     // ->header record.
     constexpr size_t bk_slab = 3;   // ->validated_bk record.
@@ -252,12 +252,13 @@ namespace schema
         static constexpr size_t sk = schema::header::pk;
         static constexpr size_t minsize =
             count_ +         // txs
-            bit +            // mutable
+            bit +            // malleable (could compress with size)
+            schema::size +   // block.serialized_size(true) (could be variable)
             transaction::pk; // coinbase
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
-        static_assert(minsize == 8u);
-        static_assert(minrow == 15u);
+        static_assert(minsize == 11u);
+        static_assert(minrow == 19u);
     };
 
     /// Index tables.
