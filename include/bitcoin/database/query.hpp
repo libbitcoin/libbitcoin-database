@@ -262,6 +262,11 @@ public:
     outputs_ptr get_outputs(const tx_link& link) const NOEXCEPT;
     transactions_ptr get_transactions(const header_link& link) const NOEXCEPT;
 
+    size_t get_candidate_size() const NOEXCEPT;
+    size_t get_candidate_size(size_t top) const NOEXCEPT;
+    size_t get_confirmed_size() const NOEXCEPT;
+    size_t get_confirmed_size(size_t top) const NOEXCEPT;
+    size_t get_block_size(const header_link& link) const NOEXCEPT;
     header::cptr get_header(const header_link& link) const NOEXCEPT;
     block::cptr get_block(const header_link& link) const NOEXCEPT;
     transaction::cptr get_transaction(const tx_link& link) const NOEXCEPT;
@@ -281,7 +286,8 @@ public:
     header_link set_link(const block& block, const chain_context& ctx) NOEXCEPT;
     header_link set_link(const block& block, const context& ctx) NOEXCEPT;
     header_link set_link(const block& block) NOEXCEPT;
-    txs_link set_link(const transactions& txs, const header_link& link) NOEXCEPT;
+    txs_link set_link(const transactions& txs, const header_link& link,
+        size_t size) NOEXCEPT;
     tx_link set_link(const transaction& tx) NOEXCEPT;
     bool dissasociate(const header_link& link) NOEXCEPT;
 
@@ -474,7 +480,6 @@ protected:
         const header_link& link, size_t height) const NOEXCEPT;
 
 private:
-    // for to_blocks
     using block_tx = table::strong_tx::record;
     using block_txs = std::vector<block_tx>;
     static inline header_links strong_only(const block_txs& strongs) NOEXCEPT;

@@ -28,6 +28,7 @@ const table::txs::slab expected1
 {
     {}, // schema::txs [all const static members]
     true,
+    0x0000ab,
     std_vector<uint32_t>
     {
         0x56341211_u32
@@ -37,6 +38,7 @@ const table::txs::slab expected2
 {
     {}, // schema::txs [all const static members]
     false,
+    0x00a00b,
     std_vector<uint32_t>
     {
         0x56341221_u32,
@@ -47,6 +49,7 @@ const table::txs::slab expected3
 {
     {}, // schema::txs [all const static members]
     true,
+    0xa0000b,
     std_vector<uint32_t>
     {
         0x56341231_u32,
@@ -57,7 +60,7 @@ const table::txs::slab expected3
 const data_chunk expected_file
 {
     // 00->terminal
-    0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff,
 
     // key
     0x11, 0x22, 0x33,
@@ -68,12 +71,15 @@ const data_chunk expected_file
     // slab0 (malleable) [false]
     0x00,
 
+    // slab0 (wire) [0x00]
+    0x00, 0x00, 0x00,
+
     // slab0 (txs)
 
     // --------------------------------------------------------------------------------------------
 
     // 11->00
-    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
 
     // key
     0x11, 0x22, 0x33,
@@ -81,8 +87,11 @@ const data_chunk expected_file
     // slab1 (count) [1]
     0x01, 0x00, 0x00,
 
-    // slab0 (malleable) [true]
+    // slab1 (malleable) [true]
     0x01,
+
+    // slab1 (wire) [0x0000ab]
+    0xab, 0x00, 0x00,
 
     // slab1 (txs)
     0x11, 0x12, 0x34, 0x56,
@@ -90,7 +99,7 @@ const data_chunk expected_file
     // --------------------------------------------------------------------------------------------
 
     // 26->11
-    0x0b, 0x00, 0x00, 0x00,
+    0x0f, 0x00, 0x00, 0x00, 0x00,
 
     // key
     0x11, 0x22, 0x33,
@@ -98,8 +107,11 @@ const data_chunk expected_file
     // slab2 (count) [2]
     0x02, 0x00, 0x00,
 
-    // slab0 (malleable) [false]
+    // slab2 (malleable) [false]
     0x00,
+
+    // slab2 (wire) [0x00a00b]
+    0x0b, 0xa0, 0x00,
 
     // slab2
     0x21, 0x12, 0x34, 0x56,
@@ -108,7 +120,7 @@ const data_chunk expected_file
     // --------------------------------------------------------------------------------------------
 
     // 45->26
-    0x1a, 0x00, 0x00, 0x00,
+    0x22, 0x00, 0x00, 0x00, 0x00,
 
     // key
     0x11, 0x22, 0x33,
@@ -116,8 +128,11 @@ const data_chunk expected_file
     // slab3 (count) [3]
     0x03, 0x00, 0x00,
     
-    // slab0 (malleable) [true]
+    // slab3 (malleable) [true]
     0x01,
+
+    // slab3 (wire) [0xa0000b]
+    0x0b, 0x00, 0xa0,
 
     // slab3
     0x31, 0x12, 0x34, 0x56,
@@ -141,13 +156,13 @@ BOOST_AUTO_TEST_CASE(txs__put__get__expected)
     BOOST_REQUIRE(instance.get(0, slab));
     BOOST_REQUIRE(slab == expected0);
 
-    BOOST_REQUIRE(instance.get(11, slab));
+    BOOST_REQUIRE(instance.get(15, slab));
     BOOST_REQUIRE(slab == expected1);
 
-    BOOST_REQUIRE(instance.get(26, slab));
+    BOOST_REQUIRE(instance.get(34, slab));
     BOOST_REQUIRE(slab == expected2);
 
-    BOOST_REQUIRE(instance.get(45, slab));
+    BOOST_REQUIRE(instance.get(57, slab));
     BOOST_REQUIRE(slab == expected3);
 }
 

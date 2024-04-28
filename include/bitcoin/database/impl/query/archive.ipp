@@ -432,6 +432,45 @@ typename CLASS::transactions_ptr CLASS::get_transactions(
 }
 
 TEMPLATE
+size_t CLASS::get_candidate_size() const NOEXCEPT
+{
+    return get_candidate_size(get_top_candidate());
+}
+
+TEMPLATE
+size_t CLASS::get_candidate_size(size_t top) const NOEXCEPT
+{
+    size_t wire{};
+    for (auto height = zero; height <= top; ++height)
+        wire += get_block_size(to_candidate(height));
+
+    return wire;
+}
+
+TEMPLATE
+size_t CLASS::get_confirmed_size() const NOEXCEPT
+{
+    return get_confirmed_size(get_top_confirmed());
+}
+
+TEMPLATE
+size_t CLASS::get_confirmed_size(size_t top) const NOEXCEPT
+{
+    size_t wire{};
+    for (auto height = zero; height <= top; ++height)
+        wire += get_block_size(to_confirmed(height));
+
+    return wire;
+}
+
+TEMPLATE
+size_t CLASS::get_block_size(const header_link& link) const NOEXCEPT
+{
+    table::txs::get_block_size txs{};
+    return store_.txs.get(to_txs_link(link), txs) ? txs.wire : zero;
+}
+
+TEMPLATE
 typename CLASS::header::cptr CLASS::get_header(
     const header_link& link) const NOEXCEPT
 {
@@ -754,6 +793,20 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
             return {};
     }
 
+    ////// Commit addresses to search.
+    ////auto out_fk = puts.out_fks.begin();
+    ////for (const auto& out: outs)
+    ////{
+    ////    if (!store_.address.put(address_hash(*out), table::address::record
+    ////    {
+    ////        {},
+    ////        *out_fk++
+    ////    }))
+    ////    {
+    ////        return {};
+    ////    }
+    ////}
+
     // Commit tx to search.
     return store_.tx.commit_link(tx_fk, key);
     // ========================================================================
@@ -821,7 +874,8 @@ header_link CLASS::set_link(const block& block, const context& ctx) NOEXCEPT
     const auto header_fk = set_link(block.header(), ctx);
 
     // Returns txs::link so translate to header::link.
-    if (set_link(*block.transactions_ptr(), header_fk).is_terminal())
+    if (set_link(*block.transactions_ptr(), header_fk,
+        block.serialized_size(true)).is_terminal())
         return {};
 
     return header_fk;
@@ -836,7 +890,8 @@ header_link CLASS::set_link(const block& block) NOEXCEPT
         return {};
 
     // Returns txs::link so translate to header::link.
-    if (set_link(*block.transactions_ptr(), header_fk).is_terminal())
+    if (set_link(*block.transactions_ptr(), header_fk,
+        block.serialized_size(true)).is_terminal())
         return {};
 
     return header_fk;
@@ -844,7 +899,7 @@ header_link CLASS::set_link(const block& block) NOEXCEPT
 
 TEMPLATE
 txs_link CLASS::set_link(const transactions& txs,
-    const header_link& link) NOEXCEPT
+    const header_link& link, size_t size) NOEXCEPT
 {
     if (link.is_terminal())
         return{};
@@ -863,12 +918,14 @@ txs_link CLASS::set_link(const transactions& txs,
         if (!push_link_value(links, set_link(*tx)))
             return {};
 
+    using bytes = linkage<schema::size>::integer;
+    const auto wire = system::possible_narrow_cast<bytes>(size);
     const auto malleable = block::is_malleable64(txs);
 
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return store_.txs.put_link(link, table::txs::slab{ {}, malleable, links });
+    return store_.txs.put_link(link, table::txs::slab{ {}, malleable, wire, links });
     // ========================================================================
 }
 
@@ -883,7 +940,7 @@ bool CLASS::dissasociate(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    return store_.txs.put_link(link, table::txs::slab{ {}, malleable, {} });
+    return store_.txs.put_link(link, table::txs::slab{ {}, malleable, {}, {} });
     // ========================================================================
 }
 
