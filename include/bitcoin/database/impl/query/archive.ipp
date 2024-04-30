@@ -793,19 +793,22 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
             return {};
     }
 
-    ////// Commit addresses to search.
-    ////auto out_fk = puts.out_fks.begin();
-    ////for (const auto& out: outs)
-    ////{
-    ////    if (!store_.address.put(address_hash(*out), table::address::record
-    ////    {
-    ////        {},
-    ////        *out_fk++
-    ////    }))
-    ////    {
-    ////        return {};
-    ////    }
-    ////}
+    // Commit addresses to search if address index is enabled.
+    if (store_.address.enabled())
+    {
+        auto out_fk = puts.out_fks.begin();
+        for (const auto& out: outs)
+        {
+            if (!store_.address.put(address_hash(*out), table::address::record
+            {
+                {},
+                *out_fk++
+            }))
+            {
+                return {};
+            }
+        }
+    }
 
     // Commit tx to search.
     return store_.tx.commit_link(tx_fk, key);
