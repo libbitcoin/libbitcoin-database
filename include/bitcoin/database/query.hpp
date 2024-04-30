@@ -160,6 +160,10 @@ public:
     size_t output_count(const tx_link& link) const NOEXCEPT;
     two_counts put_counts(const tx_link& link) const NOEXCEPT;
 
+    /// Optional table state.
+    bool address_enabled() const NOEXCEPT;
+    bool neutrino_enabled() const NOEXCEPT;
+
     /// Translation (key/link to link/s).
     /// -----------------------------------------------------------------------
 

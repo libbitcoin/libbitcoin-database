@@ -134,4 +134,42 @@ BOOST_AUTO_TEST_CASE(query_extent__input_output_count__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.put_counts(1).second, 0u);
 }
 
+BOOST_AUTO_TEST_CASE(query_extent__optionals_enabled__default__true)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.address_enabled());
+    BOOST_REQUIRE(query.neutrino_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(query_extent__address_enabled__disabled__false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    settings.address_buckets = 0;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(!query.address_enabled());
+    BOOST_REQUIRE(query.neutrino_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(query_extent__neutrino_enabled__disabled__false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    settings.neutrino_buckets = 0;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.address_enabled());
+    BOOST_REQUIRE(!query.neutrino_enabled());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

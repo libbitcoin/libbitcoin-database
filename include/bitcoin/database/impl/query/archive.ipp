@@ -794,7 +794,7 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     }
 
     // Commit addresses to search if address index is enabled.
-    if (store_.address.enabled())
+    if (address_enabled())
     {
         auto out_fk = puts.out_fks.begin();
         for (const auto& out: outs)

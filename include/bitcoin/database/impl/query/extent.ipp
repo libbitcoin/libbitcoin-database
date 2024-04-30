@@ -288,6 +288,18 @@ two_counts CLASS::put_counts(const tx_link& link) const NOEXCEPT
     return { tx.ins_count, tx.outs_count };
 }
 
+TEMPLATE
+bool CLASS::address_enabled() const NOEXCEPT
+{
+    return store_.address.enabled();
+}
+
+TEMPLATE
+bool CLASS::neutrino_enabled() const NOEXCEPT
+{
+    return store_.neutrino.enabled();
+}
+
 } // namespace database
 } // namespace libbitcoin
 
