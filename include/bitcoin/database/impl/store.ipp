@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_STORE_IPP
 #define LIBBITCOIN_DATABASE_STORE_IPP
 
+#include <algorithm>
 #include <chrono>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
@@ -32,6 +33,10 @@ namespace database {
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
+// head doesn't guard (performance) and parameter is cast to Link object,
+// so establish 1 as the minimum value (which also implies disabled).
+constexpr auto nonzero = 1_u32;
+
 TEMPLATE
 CLASS::store(const settings& config) NOEXCEPT
   : configuration_(config),
@@ -40,11 +45,11 @@ CLASS::store(const settings& config) NOEXCEPT
 
     header_head_(head(config.path / schema::dir::heads, schema::archive::header)),
     header_body_(body(config.path, schema::archive::header), config.header_size, config.header_rate),
-    header(header_head_, header_body_, config.header_buckets),
+    header(header_head_, header_body_, std::max(config.header_buckets, nonzero)),
 
     point_head_(head(config.path / schema::dir::heads, schema::archive::point)),
     point_body_(body(config.path, schema::archive::point), config.point_size, config.point_rate),
-    point(point_head_, point_body_, config.point_buckets),
+    point(point_head_, point_body_, std::max(config.point_buckets, nonzero)),
 
     input_head_(head(config.path / schema::dir::heads, schema::archive::input)),
     input_body_(body(config.path, schema::archive::input), config.input_size, config.input_rate),
@@ -60,17 +65,17 @@ CLASS::store(const settings& config) NOEXCEPT
 
     tx_head_(head(config.path / schema::dir::heads, schema::archive::tx)),
     tx_body_(body(config.path, schema::archive::tx), config.tx_size, config.tx_rate),
-    tx(tx_head_, tx_body_, config.tx_buckets),
+    tx(tx_head_, tx_body_, std::max(config.tx_buckets, nonzero)),
 
     txs_head_(head(config.path / schema::dir::heads, schema::archive::txs)),
     txs_body_(body(config.path, schema::archive::txs), config.txs_size, config.txs_rate),
-    txs(txs_head_, txs_body_, config.txs_buckets),
+    txs(txs_head_, txs_body_, std::max(config.txs_buckets, nonzero)),
 
     // Indexes.
 
     address_head_(head(config.path / schema::dir::heads, schema::indexes::address)),
     address_body_(body(config.path, schema::indexes::address), config.address_size, config.address_rate),
-    address(address_head_, address_body_, config.address_buckets),
+    address(address_head_, address_body_, std::max(config.address_buckets, nonzero)),
 
     candidate_head_(head(config.path / schema::dir::heads, schema::indexes::candidate)),
     candidate_body_(body(config.path, schema::indexes::candidate), config.candidate_size, config.candidate_rate),
@@ -82,11 +87,11 @@ CLASS::store(const settings& config) NOEXCEPT
 
     spend_head_(head(config.path / schema::dir::heads, schema::indexes::spend)),
     spend_body_(body(config.path, schema::indexes::spend), config.spend_size, config.spend_rate),
-    spend(spend_head_, spend_body_, config.spend_buckets),
+    spend(spend_head_, spend_body_, std::max(config.spend_buckets, nonzero)),
 
     strong_tx_head_(head(config.path / schema::dir::heads, schema::indexes::strong_tx)),
     strong_tx_body_(body(config.path, schema::indexes::strong_tx), config.strong_tx_size, config.strong_tx_rate),
-    strong_tx(strong_tx_head_, strong_tx_body_, config.strong_tx_buckets),
+    strong_tx(strong_tx_head_, strong_tx_body_, std::max(config.strong_tx_buckets, nonzero)),
 
     // Caches.
 
@@ -96,19 +101,19 @@ CLASS::store(const settings& config) NOEXCEPT
 
     buffer_head_(head(config.path / schema::dir::heads, schema::caches::buffer)),
     buffer_body_(body(config.path, schema::caches::buffer), config.buffer_size, config.buffer_rate),
-    buffer(buffer_head_, buffer_body_, config.buffer_buckets),
+    buffer(buffer_head_, buffer_body_, std::max(config.buffer_buckets, nonzero)),
 
     neutrino_head_(head(config.path / schema::dir::heads, schema::caches::neutrino)),
     neutrino_body_(body(config.path, schema::caches::neutrino), config.neutrino_size, config.neutrino_rate),
-    neutrino(neutrino_head_, neutrino_body_, config.neutrino_buckets),
+    neutrino(neutrino_head_, neutrino_body_, std::max(config.neutrino_buckets, nonzero)),
 
     validated_bk_head_(head(config.path / schema::dir::heads, schema::caches::validated_bk)),
     validated_bk_body_(body(config.path, schema::caches::validated_bk), config.validated_bk_size, config.validated_bk_rate),
-    validated_bk(validated_bk_head_, validated_bk_body_, config.validated_bk_buckets),
+    validated_bk(validated_bk_head_, validated_bk_body_, std::max(config.validated_bk_buckets, nonzero)),
 
     validated_tx_head_(head(config.path / schema::dir::heads, schema::caches::validated_tx)),
     validated_tx_body_(body(config.path, schema::caches::validated_tx), config.validated_tx_size, config.validated_tx_rate),
-    validated_tx(validated_tx_head_, validated_tx_body_, config.validated_tx_buckets),
+    validated_tx(validated_tx_head_, validated_tx_body_, std::max(config.validated_tx_buckets, nonzero)),
 
     // Locks.
     flush_lock_(lock(config.path, schema::locks::flush)),

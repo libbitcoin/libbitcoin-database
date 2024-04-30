@@ -799,7 +799,7 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
         auto out_fk = puts.out_fks.begin();
         for (const auto& out: outs)
         {
-            if (!store_.address.put(address_hash(*out), table::address::record
+            if (!store_.address.put(out->script().hash(), table::address::record
             {
                 {},
                 *out_fk++
