@@ -30,16 +30,6 @@ namespace database {
 // ----------------------------------------------------------------------------
 // TODO: use point keys (for multimap compression).
 
-TEMPLATE
-hash_digest CLASS::address_hash(const output& output) NOEXCEPT
-{
-    hash_digest digest{};
-    system::hash::sha256::copy sink(digest);
-    output.to_data(sink);
-    sink.flush();
-    return digest;
-}
-
 // TODO: test more.
 TEMPLATE
 bool CLASS::get_confirmed_balance(uint64_t& out,
@@ -160,7 +150,7 @@ TEMPLATE
 bool CLASS::set_address_output(const output& output,
     const output_link& link) NOEXCEPT
 {
-    return set_address_output(address_hash(output), link);
+    return set_address_output(output.script().hash(), link);
 }
 
 TEMPLATE

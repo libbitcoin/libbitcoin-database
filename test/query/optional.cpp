@@ -43,13 +43,7 @@ BOOST_FIXTURE_TEST_SUITE(query_optional_tests, query_optional_setup_fixture)
 // nop event handler.
 const auto events = [](auto, auto) {};
 
-constexpr auto genesis_address = system::base16_array("023a37945feac5597732cd736c1512c5997fec3d23767741a2b79a719f5f23e5");
-
-BOOST_AUTO_TEST_CASE(query_optional__address_hash__genesis__expected)
-{
-    const auto& output = *test::genesis.transactions_ptr()->front()->outputs_ptr()->front();
-    BOOST_REQUIRE_EQUAL(test::query_accessor::address_hash(output), genesis_address);
-}
+const auto genesis_address = test::genesis.transactions_ptr()->front()->outputs_ptr()->front()->script().hash();
 
 BOOST_AUTO_TEST_CASE(query_optional__get_confirmed_balance__genesis__expected)
 {

@@ -368,9 +368,6 @@ public:
     /// Optional Tables.
     /// -----------------------------------------------------------------------
 
-    /// Address hash function.
-    static hash_digest address_hash(const output& output) NOEXCEPT;
-
     /// Address (natural-keyed).
     bool get_confirmed_balance(uint64_t& out, const hash_digest& key) const NOEXCEPT;
     bool to_address_outputs(output_links& out, const hash_digest& key) const NOEXCEPT;
