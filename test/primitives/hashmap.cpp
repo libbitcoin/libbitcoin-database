@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_construct__empty__expected)
     BOOST_REQUIRE(body_store.buffer().empty());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_construct__non_empty__expected)
+BOOST_AUTO_TEST_CASE(hashmap__slab_construct__non_empty__expected_enabled)
 {
     constexpr auto body_size = 12345u;
     test::chunk_storage head_store{};
@@ -161,6 +161,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_construct__non_empty__expected)
     body_store.buffer().resize(body_size);
     const slab_table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE_EQUAL(body_store.buffer().size(), body_size);
+    BOOST_REQUIRE(instance.enabled());
 }
 
 BOOST_AUTO_TEST_CASE(hashmap__slab_getter__terminal__false)
@@ -190,6 +191,32 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_getter__empty__false)
     BOOST_REQUIRE(instance.create());
     ////BOOST_REQUIRE(!instance.getter_(key10{ 0x00 }));
     ////BOOST_REQUIRE(!instance.getter_(key10{ 0x42 }));
+}
+
+BOOST_AUTO_TEST_CASE(hashmap__enabled__non_empty_slab_zero_buckets__false)
+{
+    constexpr auto body_size = 12345u;
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    body_store.buffer().resize(body_size);
+    const slab_table instance{ head_store, body_store, 0 };
+    BOOST_REQUIRE(!instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(hashmap__enabled__empty_slab_one_bucket__false)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    slab_table instance{ head_store, body_store, 1 };
+    BOOST_REQUIRE(!instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(hashmap__enabled__empty_slab_nonzero_buckets__true)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    slab_table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.enabled());
 }
 
 // push/found/at (protected interface positive tests)

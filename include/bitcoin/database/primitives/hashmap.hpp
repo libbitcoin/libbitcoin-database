@@ -59,6 +59,9 @@ public:
     /// Sizing.
     /// -----------------------------------------------------------------------
 
+    /// The instance is enabled (more than 1 bucket).
+    bool enabled() const NOEXCEPT;
+
     /// Hash table bucket count.
     size_t buckets() const NOEXCEPT;
 
