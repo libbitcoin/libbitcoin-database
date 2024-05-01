@@ -72,6 +72,9 @@ BOOST_AUTO_TEST_CASE(query_extent__sizes__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.strong_tx_size(), schema::strong_tx::minrow);
     BOOST_REQUIRE_EQUAL(query.validated_tx_size(), schema::validated_tx::minrow);
     BOOST_REQUIRE_EQUAL(query.validated_bk_size(), schema::validated_bk::minrow);
+
+    BOOST_REQUIRE_EQUAL(query.address_size(), schema::address::minrow);
+    BOOST_REQUIRE_EQUAL(query.neutrino_size(), 0u);
 }
 
 BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
@@ -92,6 +95,9 @@ BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.strong_tx_buckets(), 100u);
     BOOST_REQUIRE_EQUAL(query.validated_tx_buckets(), 100u);
     BOOST_REQUIRE_EQUAL(query.validated_bk_buckets(), 100u);
+
+    BOOST_REQUIRE_EQUAL(query.address_buckets(), 100u);
+    BOOST_REQUIRE_EQUAL(query.neutrino_buckets(), 100u);
 }
 
 BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
@@ -112,6 +118,8 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.candidate_records(), 1u);
     BOOST_REQUIRE_EQUAL(query.confirmed_records(), 1u);
     BOOST_REQUIRE_EQUAL(query.strong_tx_records(), 1u);
+
+    BOOST_REQUIRE_EQUAL(query.address_records(), 1u);
 }
 
 BOOST_AUTO_TEST_CASE(query_extent__input_output_count__genesis__expected)

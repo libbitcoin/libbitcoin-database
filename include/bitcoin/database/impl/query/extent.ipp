@@ -132,6 +132,12 @@ size_t CLASS::address_size() const NOEXCEPT
     return store_.address.body_size();
 }
 
+TEMPLATE
+size_t CLASS::neutrino_size() const NOEXCEPT
+{
+    return store_.neutrino.body_size();
+}
+
 // Buckets (archive hash tables).
 // ----------------------------------------------------------------------------
 
@@ -193,6 +199,12 @@ TEMPLATE
 size_t CLASS::address_buckets() const NOEXCEPT
 {
     return store_.address.buckets();
+}
+
+TEMPLATE
+size_t CLASS::neutrino_buckets() const NOEXCEPT
+{
+    return store_.neutrino.buckets();
 }
 
 //  Counts (archive records).
