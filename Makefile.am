@@ -210,7 +210,9 @@ include_bitcoin_database_primitives_HEADERS = \
 include_bitcoin_database_tablesdir = ${includedir}/bitcoin/database/tables
 include_bitcoin_database_tables_HEADERS = \
     include/bitcoin/database/tables/context.hpp \
+    include/bitcoin/database/tables/event.hpp \
     include/bitcoin/database/tables/schema.hpp \
+    include/bitcoin/database/tables/table.hpp \
     include/bitcoin/database/tables/tables.hpp
 
 include_bitcoin_database_tables_archivesdir = ${includedir}/bitcoin/database/tables/archives

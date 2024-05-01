@@ -130,11 +130,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_bk.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_tx.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\context.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\event.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\height.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\spend.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\strong_tx.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\schema.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\tables.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp" />
     <ClInclude Include="..\..\..\..\src\memory\mman-win32\mman.h" />
