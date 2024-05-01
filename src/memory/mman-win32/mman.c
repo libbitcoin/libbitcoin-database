@@ -114,6 +114,11 @@ void* mmap(void* addr, size_t len, int prot, int flags, int fd, oft__ off)
 
     const LPVOID map = MapViewOfFile(mapping, access, file_hi, file_lo, len);
 
+    /* "to fully close a file mapping object, an application must unmap all
+    mapped views of the file mapping object by calling UnmapViewOfFile and
+    close the file mapping object handle by calling CloseHandle. These
+    functions can be called in any order." - so we close the handle here and
+    retain only the map.*/
     if (map == NULL || CloseHandle(mapping) == FALSE)
     {
         errno = last_error(EPERM);
@@ -249,14 +254,26 @@ int ftruncate(int fd, oft__ size)
         return -1;
     }
 
+    // Possible equivalent, sets errno.
+    ////if (_chsize_s(_get_osfhandle(fd), (LONGLONG)size) != FALSE)
+    ////{
+    ////    errno = 0;
+    ////    return 0;
+    ////}
+    ////
+    ////return -1;
+
     /* unsigned to signed, splits to high and low */
     big.QuadPart = (LONGLONG)size;
 
     const HANDLE handle = (HANDLE)_get_osfhandle(fd);
     const BOOL position = SetFilePointerEx(handle, big, NULL, FILE_BEGIN);
 
-    /* UnmapViewOfFile must be called first to unmap all views and call
-    CloseHandle to close file mapping object before can call SetEndOfFile. */
+    /* "UnmapViewOfFile must be called first to unmap all views and call
+    CloseHandle to close file mapping object before can call SetEndOfFile." -
+    we have earlier called CloseHandle to close file mapping object (in mmap)
+    but have not called UnmapViewOfFile before calling this from remap_() and
+    it is apparently working.*/
     if (position == INVALID_SET_FILE_POINTER || SetEndOfFile(handle) == FALSE)
     {
         errno = last_error(EIO);
