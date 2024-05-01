@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_STORE_HPP
-#define LIBBITCOIN_DATABASE_TABLES_STORE_HPP
+#ifndef LIBBITCOIN_DATABASE_STORE_HPP
+#define LIBBITCOIN_DATABASE_STORE_HPP
 
 #include <filesystem>
 #include <functional>
@@ -27,92 +27,10 @@
 #include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/locks/locks.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/tables/schema.hpp>
 #include <bitcoin/database/tables/tables.hpp>
 
 namespace libbitcoin {
 namespace database {
-
-enum class event_t
-{
-    create_file,
-    open_file,
-    load_file,
-    unload_file,
-    close_file,
-
-    create_table,
-    verify_table,
-    close_table,
-
-    wait_lock,
-    flush_body,
-    backup_table,
-    copy_header,
-    archive_snapshot,
-
-    restore_table,
-    recover_snapshot
-};
-
-enum class table_t
-{
-    store,
-
-    header_table,
-    header_head,
-    header_body,
-    point_table,
-    point_head,
-    point_body,
-    input_table,
-    input_head,
-    input_body,
-    output_table,
-    output_head,
-    output_body,
-    puts_table,
-    puts_head,
-    puts_body,
-    tx_table,
-    tx_head,
-    txs_table,
-    tx_body,
-    txs_head,
-    txs_body,
-
-    address_table,
-    address_head,
-    address_body,
-    candidate_table,
-    candidate_head,
-    candidate_body,
-    confirmed_table,
-    confirmed_head,
-    confirmed_body,
-    spend_table,
-    spend_head,
-    spend_body,
-    strong_tx_table,
-    strong_tx_head,
-    strong_tx_body,
-
-    bootstrap_table,
-    bootstrap_head,
-    bootstrap_body,
-    buffer_table,
-    buffer_head,
-    buffer_body,
-    neutrino_table,
-    neutrino_head,
-    neutrino_body,
-    validated_bk_table,
-    validated_bk_head,
-    validated_bk_body,
-    validated_tx_table,
-    validated_tx_head,
-    validated_tx_body
-};
 
 /// The store and query interface are the primary products of database.
 /// Store provides implmentation support for the public query interface.
@@ -297,4 +215,3 @@ private:
 #undef TEMPLATE
 
 #endif
-

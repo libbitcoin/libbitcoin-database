@@ -39,6 +39,8 @@
 #include <bitcoin/database/tables/indexes/strong_tx.hpp>
 
 #include <bitcoin/database/tables/context.hpp>
+#include <bitcoin/database/tables/event.hpp>
 #include <bitcoin/database/tables/schema.hpp>
+#include <bitcoin/database/tables/table.hpp>
 
 #endif

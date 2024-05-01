@@ -242,6 +242,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\context.hpp">
       <Filter>include\bitcoin\database\tables</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\event.hpp">
+      <Filter>include\bitcoin\database\tables</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\address.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>
@@ -255,6 +258,9 @@
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\schema.hpp">
+      <Filter>include\bitcoin\database\tables</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\table.hpp">
       <Filter>include\bitcoin\database\tables</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\tables.hpp">
