@@ -344,8 +344,11 @@ code CLASS::snapshot(const event_handler& handler) NOEXCEPT
 TEMPLATE
 code CLASS::close(const event_handler& handler) NOEXCEPT
 {
-    if (!transactor_mutex_.try_lock())
-        return error::transactor_lock;
+    // Transactor may be held outside of the node, such as for backup. 
+    while (!transactor_mutex_.try_lock_for(std::chrono::seconds(1)))
+    {
+        handler(event_t::wait_lock, table_t::store);
+    }
 
     code ec{ error::success };
 
