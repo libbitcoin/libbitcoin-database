@@ -229,6 +229,7 @@ bool CLASS::populate_with_metadata(const input& input) const NOEXCEPT
     if (!get_context(ctx, block))
         return false;
 
+    // For testing only.
     // Assumes previous coinbase is spent and prevouts of others are not.
     input.metadata.coinbase = is_coinbase(tx);
     input.metadata.spent = input.metadata.coinbase;

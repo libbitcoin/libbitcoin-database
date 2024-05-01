@@ -125,6 +125,7 @@ public:
 
     /// Table logical byte sizes (optional bodies).
     size_t address_size() const NOEXCEPT;
+    size_t neutrino_size() const NOEXCEPT;
 
     /// Buckets (archive hash tables).
     size_t header_buckets() const NOEXCEPT;
@@ -140,6 +141,7 @@ public:
 
     /// Buckets (optional hash tables).
     size_t address_buckets() const NOEXCEPT;
+    size_t neutrino_buckets() const NOEXCEPT;
 
     /// Counts (archive records).
     size_t header_records() const NOEXCEPT;
@@ -155,7 +157,7 @@ public:
     /// Counts (optional records).
     size_t address_records() const NOEXCEPT;
 
-    /// Counters (archive slabs - txs/puts can be derived).
+    /// Counters (archive slabs - txs/puts/neutrino can be derived).
     size_t input_count(const tx_link& link) const NOEXCEPT;
     size_t output_count(const tx_link& link) const NOEXCEPT;
     two_counts put_counts(const tx_link& link) const NOEXCEPT;
@@ -239,6 +241,7 @@ public:
     bool populate(const transaction& tx) const NOEXCEPT;
     bool populate(const block& block) const NOEXCEPT;
 
+    /// For testing only.
     /// False implies not fully populated, input.metadata is populated.
     bool populate_with_metadata(const input& input) const NOEXCEPT;
     bool populate_with_metadata(const transaction& tx) const NOEXCEPT;
