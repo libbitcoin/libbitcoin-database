@@ -158,36 +158,6 @@ public:
 
     // Caches.
 
-    system::data_chunk& bootstrap_head() NOEXCEPT
-    {
-        return bootstrap_head_.buffer();
-    }
-
-    system::data_chunk& bootstrap_body() NOEXCEPT
-    {
-        return bootstrap_body_.buffer();
-    }
-
-    system::data_chunk& buffer_head() NOEXCEPT
-    {
-        return buffer_head_.buffer();
-    }
-
-    system::data_chunk& buffer_body() NOEXCEPT
-    {
-        return buffer_body_.buffer();
-    }
-
-    system::data_chunk& neutrino_head() NOEXCEPT
-    {
-        return neutrino_head_.buffer();
-    }
-
-    system::data_chunk& neutrino_body() NOEXCEPT
-    {
-        return neutrino_body_.buffer();
-    }
-
     system::data_chunk& validated_bk_head() NOEXCEPT
     {
         return validated_bk_head_.buffer();
@@ -207,6 +177,36 @@ public:
     {
         return validated_tx_body_.buffer();
     }
+
+    system::data_chunk& neutrino_head() NOEXCEPT
+    {
+        return neutrino_head_.buffer();
+    }
+
+    system::data_chunk& neutrino_body() NOEXCEPT
+    {
+        return neutrino_body_.buffer();
+    }
+
+    ////system::data_chunk& bootstrap_head() NOEXCEPT
+    ////{
+    ////    return bootstrap_head_.buffer();
+    ////}
+
+    ////system::data_chunk& bootstrap_body() NOEXCEPT
+    ////{
+    ////    return bootstrap_body_.buffer();
+    ////}
+
+    ////system::data_chunk& buffer_head() NOEXCEPT
+    ////{
+    ////    return buffer_head_.buffer();
+    ////}
+
+    ////system::data_chunk& buffer_body() NOEXCEPT
+    ////{
+    ////    return buffer_body_.buffer();
+    ////}
 };
 
 using query_accessor = query<store<chunk_storage>>;

@@ -96,16 +96,16 @@ BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)
     BOOST_REQUIRE_EQUAL(instance.strong_tx_body_file(), "bitcoin/strong_tx.data");
 
     /// Caches.
-    BOOST_REQUIRE_EQUAL(instance.bootstrap_head_file(), "bitcoin/heads/bootstrap.head");
-    BOOST_REQUIRE_EQUAL(instance.bootstrap_body_file(), "bitcoin/bootstrap.data");
-    BOOST_REQUIRE_EQUAL(instance.buffer_head_file(), "bitcoin/heads/buffer.head");
-    BOOST_REQUIRE_EQUAL(instance.buffer_body_file(), "bitcoin/buffer.data");
-    BOOST_REQUIRE_EQUAL(instance.neutrino_head_file(), "bitcoin/heads/neutrino.head");
-    BOOST_REQUIRE_EQUAL(instance.neutrino_body_file(), "bitcoin/neutrino.data");
     BOOST_REQUIRE_EQUAL(instance.validated_bk_head_file(), "bitcoin/heads/validated_bk.head");
     BOOST_REQUIRE_EQUAL(instance.validated_bk_body_file(), "bitcoin/validated_bk.data");
     BOOST_REQUIRE_EQUAL(instance.validated_tx_head_file(), "bitcoin/heads/validated_tx.head");
     BOOST_REQUIRE_EQUAL(instance.validated_tx_body_file(), "bitcoin/validated_tx.data");
+    BOOST_REQUIRE_EQUAL(instance.neutrino_head_file(), "bitcoin/heads/neutrino.head");
+    BOOST_REQUIRE_EQUAL(instance.neutrino_body_file(), "bitcoin/neutrino.data");
+    ////BOOST_REQUIRE_EQUAL(instance.bootstrap_head_file(), "bitcoin/heads/bootstrap.head");
+    ////BOOST_REQUIRE_EQUAL(instance.bootstrap_body_file(), "bitcoin/bootstrap.data");
+    ////BOOST_REQUIRE_EQUAL(instance.buffer_head_file(), "bitcoin/heads/buffer.head");
+    ////BOOST_REQUIRE_EQUAL(instance.buffer_body_file(), "bitcoin/buffer.data");
 
     /// Locks.
     BOOST_REQUIRE_EQUAL(instance.flush_lock_file(), "bitcoin/flush.lock");

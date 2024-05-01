@@ -219,7 +219,6 @@ bool map::truncate(size_t size) NOEXCEPT
 // Waits until all access pointers are destructed. Will deadlock if any access
 // pointer is waiting on allocation. Lock safety requires that access pointers
 // are short-lived and do not block on allocation.
-// TODO: Could loop over a try lock here and log deadlock warning.
 size_t map::allocate(size_t chunk) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
@@ -232,6 +231,7 @@ size_t map::allocate(size_t chunk) NOEXCEPT
     {
         const auto size = to_capacity(end);
 
+        // TODO: Could loop over a try lock here and log deadlock warning.
         std::unique_lock remap_lock(remap_mutex_);
 
         if (!remap_(size))

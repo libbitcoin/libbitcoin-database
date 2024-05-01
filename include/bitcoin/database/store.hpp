@@ -83,11 +83,11 @@ public:
     table::strong_tx strong_tx;
 
     /// Caches.
-    table::bootstrap bootstrap;
-    table::buffer buffer;
-    table::neutrino neutrino;
     table::validated_bk validated_bk;
     table::validated_tx validated_tx;
+    table::neutrino neutrino;
+    ////table::bootstrap bootstrap;
+    ////table::buffer buffer;
 
 protected:
     code open_load(const event_handler& handler) NOEXCEPT;
@@ -156,18 +156,6 @@ protected:
     /// Caches.
     /// -----------------------------------------------------------------------
 
-    // array
-    Storage bootstrap_head_;
-    Storage bootstrap_body_;
-
-    // slab hashmap
-    Storage buffer_head_;
-    Storage buffer_body_;
-
-    // slab hashmap
-    Storage neutrino_head_;
-    Storage neutrino_body_;
-
     // record hashmap
     Storage validated_bk_head_;
     Storage validated_bk_body_;
@@ -175,6 +163,18 @@ protected:
     // record multimap
     Storage validated_tx_head_;
     Storage validated_tx_body_;
+
+    // slab hashmap
+    Storage neutrino_head_;
+    Storage neutrino_body_;
+
+    ////// array
+    ////Storage bootstrap_head_;
+    ////Storage bootstrap_body_;
+
+    ////// slab hashmap
+    ////Storage buffer_head_;
+    ////Storage buffer_body_;
 
     /// Locks.
     /// -----------------------------------------------------------------------
