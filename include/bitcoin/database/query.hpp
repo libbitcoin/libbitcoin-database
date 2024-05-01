@@ -392,13 +392,13 @@ public:
     bool set_filter(const header_link& link, const hash_digest& head,
         const filter& body) NOEXCEPT;
 
-    /// Buffer (surrogate-keyed).
-    transaction::cptr get_buffered_tx(const tx_link& link) const NOEXCEPT;
-    bool set_buffered_tx(const tx_link& link, const transaction& tx) NOEXCEPT;
+    /////// Buffer (surrogate-keyed).
+    ////transaction::cptr get_buffered_tx(const tx_link& link) const NOEXCEPT;
+    ////bool set_buffered_tx(const tx_link& link, const transaction& tx) NOEXCEPT;
 
-    /// Bootstrap (natural-keyed).
-    bool get_bootstrap(hashes& out) const NOEXCEPT;
-    bool set_bootstrap(size_t height) NOEXCEPT;
+    /////// Bootstrap (natural-keyed).
+    ////bool get_bootstrap(hashes& out) const NOEXCEPT;
+    ////bool set_bootstrap(size_t height) NOEXCEPT;
 
 protected:
     /// Translate.

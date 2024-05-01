@@ -182,36 +182,6 @@ public:
 
     // Caches.
 
-    inline const path& bootstrap_head_file() const NOEXCEPT
-    {
-        return bootstrap_head_.file();
-    }
-
-    inline const path& bootstrap_body_file() const NOEXCEPT
-    {
-        return bootstrap_body_.file();
-    }
-
-    inline const path& buffer_head_file() const NOEXCEPT
-    {
-        return buffer_head_.file();
-    }
-
-    inline const path& buffer_body_file() const NOEXCEPT
-    {
-        return buffer_body_.file();
-    }
-
-    inline const path& neutrino_head_file() const NOEXCEPT
-    {
-        return neutrino_head_.file();
-    }
-
-    inline const path& neutrino_body_file() const NOEXCEPT
-    {
-        return neutrino_body_.file();
-    }
-
     inline const path& validated_bk_head_file() const NOEXCEPT
     {
         return validated_bk_head_.file();
@@ -231,6 +201,36 @@ public:
     {
         return validated_tx_body_.file();
     }
+
+    inline const path& neutrino_head_file() const NOEXCEPT
+    {
+        return neutrino_head_.file();
+    }
+
+    inline const path& neutrino_body_file() const NOEXCEPT
+    {
+        return neutrino_body_.file();
+    }
+
+    ////inline const path& bootstrap_head_file() const NOEXCEPT
+    ////{
+    ////    return bootstrap_head_.file();
+    ////}
+
+    ////inline const path& bootstrap_body_file() const NOEXCEPT
+    ////{
+    ////    return bootstrap_body_.file();
+    ////}
+
+    ////inline const path& buffer_head_file() const NOEXCEPT
+    ////{
+    ////    return buffer_head_.file();
+    ////}
+
+    ////inline const path& buffer_body_file() const NOEXCEPT
+    ////{
+    ////    return buffer_body_.file();
+    ////}
 
     // Locks.
 

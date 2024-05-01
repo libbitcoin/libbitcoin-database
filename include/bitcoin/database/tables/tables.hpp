@@ -27,8 +27,8 @@
 #include <bitcoin/database/tables/archives/transaction.hpp>
 #include <bitcoin/database/tables/archives/txs.hpp>
 
-#include <bitcoin/database/tables/caches/bootstrap.hpp>
-#include <bitcoin/database/tables/caches/buffer.hpp>
+////#include <bitcoin/database/tables/caches/bootstrap.hpp>
+////#include <bitcoin/database/tables/caches/buffer.hpp>
 #include <bitcoin/database/tables/caches/neutrino.hpp>
 #include <bitcoin/database/tables/caches/validated_bk.hpp>
 #include <bitcoin/database/tables/caches/validated_tx.hpp>

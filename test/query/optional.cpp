@@ -172,91 +172,91 @@ BOOST_AUTO_TEST_CASE(query_optional__set_filter__get_filter_and_head__expected)
     BOOST_REQUIRE_EQUAL(out, filter1);
 }
 
-BOOST_AUTO_TEST_CASE(query_optional__set_buffered_tx__get_buffered_tx__expected)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::tx4));
-    BOOST_REQUIRE(query.set(test::tx5));
-    BOOST_REQUIRE(query.set_buffered_tx(1, test::tx4));
-    BOOST_REQUIRE(query.set_buffered_tx(2, test::tx4));
-    BOOST_REQUIRE(*query.get_buffered_tx(1) == test::tx4);
-    BOOST_REQUIRE(*query.get_buffered_tx(2) == test::tx4);
-}
-
-BOOST_AUTO_TEST_CASE(query_optional__set_buffered_tx__unarchived_transaction__expected)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-
-    // Use of the tx_link as key is conventional.
-    BOOST_REQUIRE(query.set_buffered_tx(42, {}));
-    BOOST_REQUIRE(*query.get_buffered_tx(42) == system::chain::transaction{});
-}
-
-BOOST_AUTO_TEST_CASE(query_optional__get_buffered_tx__unset_transaction__nullptr)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(!query.get_buffered_tx(42));
-}
-
-BOOST_AUTO_TEST_CASE(query_optional__set_bootstrap__above_confirmed__false)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}));
-    BOOST_REQUIRE(query.set(test::block2, context{}));
-    BOOST_REQUIRE(query.set(test::block3, context{}));
-    BOOST_REQUIRE(query.push_confirmed(1));
-    BOOST_REQUIRE(!query.set_bootstrap(2));
-    BOOST_REQUIRE(query.set_bootstrap(0));
-}
-
-BOOST_AUTO_TEST_CASE(query_optional__set_bootstrap__twice__clears_previous)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}));
-    BOOST_REQUIRE(query.set(test::block2, context{}));
-    BOOST_REQUIRE(query.set(test::block3, context{}));
-    BOOST_REQUIRE(query.push_confirmed(1));
-    BOOST_REQUIRE(query.push_confirmed(2));
-    BOOST_REQUIRE(query.push_confirmed(3));
-    BOOST_REQUIRE(query.set_bootstrap(2));
-    BOOST_REQUIRE(query.set_bootstrap(3));
-
-    const hashes expected
-    {
-        test::genesis.hash(),
-        test::block1.hash(),
-        test::block2.hash(),
-        test::block3.hash()
-    };
-
-    hashes out{};
-    BOOST_REQUIRE(query.get_bootstrap(out));
-    BOOST_REQUIRE_EQUAL(out, expected);
-}
+////BOOST_AUTO_TEST_CASE(query_optional__set_buffered_tx__get_buffered_tx__expected)
+////{
+////    settings settings{};
+////    settings.path = TEST_DIRECTORY;
+////    test::chunk_store store{ settings };
+////    test::query_accessor query{ store };
+////    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+////    BOOST_REQUIRE(query.initialize(test::genesis));
+////    BOOST_REQUIRE(query.set(test::tx4));
+////    BOOST_REQUIRE(query.set(test::tx5));
+////    BOOST_REQUIRE(query.set_buffered_tx(1, test::tx4));
+////    BOOST_REQUIRE(query.set_buffered_tx(2, test::tx4));
+////    BOOST_REQUIRE(*query.get_buffered_tx(1) == test::tx4);
+////    BOOST_REQUIRE(*query.get_buffered_tx(2) == test::tx4);
+////}
+////
+////BOOST_AUTO_TEST_CASE(query_optional__set_buffered_tx__unarchived_transaction__expected)
+////{
+////    settings settings{};
+////    settings.path = TEST_DIRECTORY;
+////    test::chunk_store store{ settings };
+////    test::query_accessor query{ store };
+////    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+////    BOOST_REQUIRE(query.initialize(test::genesis));
+////
+////    // Use of the tx_link as key is conventional.
+////    BOOST_REQUIRE(query.set_buffered_tx(42, {}));
+////    BOOST_REQUIRE(*query.get_buffered_tx(42) == system::chain::transaction{});
+////}
+////
+////BOOST_AUTO_TEST_CASE(query_optional__get_buffered_tx__unset_transaction__nullptr)
+////{
+////    settings settings{};
+////    settings.path = TEST_DIRECTORY;
+////    test::chunk_store store{ settings };
+////    test::query_accessor query{ store };
+////    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+////    BOOST_REQUIRE(query.initialize(test::genesis));
+////    BOOST_REQUIRE(!query.get_buffered_tx(42));
+////}
+////
+////BOOST_AUTO_TEST_CASE(query_optional__set_bootstrap__above_confirmed__false)
+////{
+////    settings settings{};
+////    settings.path = TEST_DIRECTORY;
+////    test::chunk_store store{ settings };
+////    test::query_accessor query{ store };
+////    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+////    BOOST_REQUIRE(query.initialize(test::genesis));
+////    BOOST_REQUIRE(query.set(test::block1, context{}));
+////    BOOST_REQUIRE(query.set(test::block2, context{}));
+////    BOOST_REQUIRE(query.set(test::block3, context{}));
+////    BOOST_REQUIRE(query.push_confirmed(1));
+////    BOOST_REQUIRE(!query.set_bootstrap(2));
+////    BOOST_REQUIRE(query.set_bootstrap(0));
+////}
+////
+////BOOST_AUTO_TEST_CASE(query_optional__set_bootstrap__twice__clears_previous)
+////{
+////    settings settings{};
+////    settings.path = TEST_DIRECTORY;
+////    test::chunk_store store{ settings };
+////    test::query_accessor query{ store };
+////    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+////    BOOST_REQUIRE(query.initialize(test::genesis));
+////    BOOST_REQUIRE(query.set(test::block1, context{}));
+////    BOOST_REQUIRE(query.set(test::block2, context{}));
+////    BOOST_REQUIRE(query.set(test::block3, context{}));
+////    BOOST_REQUIRE(query.push_confirmed(1));
+////    BOOST_REQUIRE(query.push_confirmed(2));
+////    BOOST_REQUIRE(query.push_confirmed(3));
+////    BOOST_REQUIRE(query.set_bootstrap(2));
+////    BOOST_REQUIRE(query.set_bootstrap(3));
+////
+////    const hashes expected
+////    {
+////        test::genesis.hash(),
+////        test::block1.hash(),
+////        test::block2.hash(),
+////        test::block3.hash()
+////    };
+////
+////    hashes out{};
+////    BOOST_REQUIRE(query.get_bootstrap(out));
+////    BOOST_REQUIRE_EQUAL(out, expected);
+////}
 
 BOOST_AUTO_TEST_SUITE_END()

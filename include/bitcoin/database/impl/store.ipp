@@ -95,18 +95,6 @@ CLASS::store(const settings& config) NOEXCEPT
 
     // Caches.
 
-    bootstrap_head_(head(config.path / schema::dir::heads, schema::caches::bootstrap)),
-    bootstrap_body_(body(config.path, schema::caches::bootstrap), config.bootstrap_size, config.bootstrap_rate),
-    bootstrap(bootstrap_head_, bootstrap_body_),
-
-    buffer_head_(head(config.path / schema::dir::heads, schema::caches::buffer)),
-    buffer_body_(body(config.path, schema::caches::buffer), config.buffer_size, config.buffer_rate),
-    buffer(buffer_head_, buffer_body_, std::max(config.buffer_buckets, nonzero)),
-
-    neutrino_head_(head(config.path / schema::dir::heads, schema::caches::neutrino)),
-    neutrino_body_(body(config.path, schema::caches::neutrino), config.neutrino_size, config.neutrino_rate),
-    neutrino(neutrino_head_, neutrino_body_, std::max(config.neutrino_buckets, nonzero)),
-
     validated_bk_head_(head(config.path / schema::dir::heads, schema::caches::validated_bk)),
     validated_bk_body_(body(config.path, schema::caches::validated_bk), config.validated_bk_size, config.validated_bk_rate),
     validated_bk(validated_bk_head_, validated_bk_body_, std::max(config.validated_bk_buckets, nonzero)),
@@ -114,6 +102,18 @@ CLASS::store(const settings& config) NOEXCEPT
     validated_tx_head_(head(config.path / schema::dir::heads, schema::caches::validated_tx)),
     validated_tx_body_(body(config.path, schema::caches::validated_tx), config.validated_tx_size, config.validated_tx_rate),
     validated_tx(validated_tx_head_, validated_tx_body_, std::max(config.validated_tx_buckets, nonzero)),
+
+    neutrino_head_(head(config.path / schema::dir::heads, schema::caches::neutrino)),
+    neutrino_body_(body(config.path, schema::caches::neutrino), config.neutrino_size, config.neutrino_rate),
+    neutrino(neutrino_head_, neutrino_body_, std::max(config.neutrino_buckets, nonzero)),
+
+    ////bootstrap_head_(head(config.path / schema::dir::heads, schema::caches::bootstrap)),
+    ////bootstrap_body_(body(config.path, schema::caches::bootstrap), config.bootstrap_size, config.bootstrap_rate),
+    ////bootstrap(bootstrap_head_, bootstrap_body_),
+
+    ////buffer_head_(head(config.path / schema::dir::heads, schema::caches::buffer)),
+    ////buffer_body_(body(config.path, schema::caches::buffer), config.buffer_size, config.buffer_rate),
+    ////buffer(buffer_head_, buffer_body_, std::max(config.buffer_buckets, nonzero)),
 
     // Locks.
     flush_lock_(lock(config.path, schema::locks::flush)),
@@ -177,16 +177,16 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     else if (!create(strong_tx_head_, table_t::strong_tx_head)) ec = error::create_file;
     else if (!create(strong_tx_body_, table_t::strong_tx_body)) ec = error::create_file;
 
-    else if (!create(bootstrap_head_, table_t::bootstrap_head)) ec = error::create_file;
-    else if (!create(bootstrap_body_, table_t::bootstrap_body)) ec = error::create_file;
-    else if (!create(buffer_head_, table_t::buffer_head)) ec = error::create_file;
-    else if (!create(buffer_body_, table_t::buffer_body)) ec = error::create_file;
-    else if (!create(neutrino_head_, table_t::neutrino_head)) ec = error::create_file;
-    else if (!create(neutrino_body_, table_t::neutrino_body)) ec = error::create_file;
     else if (!create(validated_bk_head_, table_t::validated_bk_head)) ec = error::create_file;
     else if (!create(validated_bk_body_, table_t::validated_bk_body)) ec = error::create_file;
     else if (!create(validated_tx_head_, table_t::validated_tx_head)) ec = error::create_file;
     else if (!create(validated_tx_body_, table_t::validated_tx_body)) ec = error::create_file;
+    else if (!create(neutrino_head_, table_t::neutrino_head)) ec = error::create_file;
+    else if (!create(neutrino_body_, table_t::neutrino_body)) ec = error::create_file;
+    ////else if (!create(bootstrap_head_, table_t::bootstrap_head)) ec = error::create_file;
+    ////else if (!create(bootstrap_body_, table_t::bootstrap_body)) ec = error::create_file;
+    ////else if (!create(buffer_head_, table_t::buffer_head)) ec = error::create_file;
+    ////else if (!create(buffer_body_, table_t::buffer_body)) ec = error::create_file;
 
     if (!ec) ec = open_load(handler);
 
@@ -213,11 +213,11 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
         else if (!populate(spend, table_t::spend_table)) ec = error::create_table;
         else if (!populate(strong_tx, table_t::strong_tx_table)) ec = error::create_table;
 
-        else if (!populate(bootstrap, table_t::bootstrap_table)) ec = error::create_table;
-        else if (!populate(buffer, table_t::buffer_table)) ec = error::create_table;
-        else if (!populate(neutrino, table_t::neutrino_table)) ec = error::create_table;
         else if (!populate(validated_bk, table_t::validated_bk_table)) ec = error::create_table;
         else if (!populate(validated_tx, table_t::validated_tx_table)) ec = error::create_table;
+        else if (!populate(neutrino, table_t::neutrino_table)) ec = error::create_table;
+        ////else if (!populate(bootstrap, table_t::bootstrap_table)) ec = error::create_table;
+        ////else if (!populate(buffer, table_t::buffer_table)) ec = error::create_table;
     }
 
     if (!ec) ec = unload_close(handler);
@@ -273,11 +273,11 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
         else if (!verify(spend, table_t::spend_table)) ec = error::verify_table;
         else if (!verify(strong_tx, table_t::strong_tx_table)) ec = error::verify_table;
 
-        else if (!verify(bootstrap, table_t::bootstrap_table)) ec = error::verify_table;
-        else if (!verify(buffer, table_t::buffer_table)) ec = error::verify_table;
-        else if (!verify(neutrino, table_t::neutrino_table)) ec = error::verify_table;
         else if (!verify(validated_bk, table_t::validated_bk_table)) ec = error::verify_table;
         else if (!verify(validated_tx, table_t::validated_tx_table)) ec = error::verify_table;
+        else if (!verify(neutrino, table_t::neutrino_table)) ec = error::verify_table;
+        ////else if (!verify(bootstrap, table_t::bootstrap_table)) ec = error::verify_table;
+        ////else if (!verify(buffer, table_t::buffer_table)) ec = error::verify_table;
     }
 
     // This prevents close from having to follow open fail.
@@ -330,11 +330,11 @@ code CLASS::snapshot(const event_handler& handler) NOEXCEPT
     flush(ec, spend_body_, table_t::spend_body);
     flush(ec, strong_tx_body_, table_t::strong_tx_body);
 
-    flush(ec, bootstrap_body_, table_t::bootstrap_body);
-    flush(ec, buffer_body_, table_t::buffer_body);
-    flush(ec, neutrino_body_, table_t::neutrino_body);
     flush(ec, validated_bk_body_, table_t::validated_bk_body);
     flush(ec, validated_tx_body_, table_t::validated_tx_body);
+    flush(ec, neutrino_body_, table_t::neutrino_body);
+    ////flush(ec, bootstrap_body_, table_t::bootstrap_body);
+    ////flush(ec, buffer_body_, table_t::buffer_body);
 
     if (!ec) ec = backup(handler);
     transactor_mutex_.unlock();
@@ -371,11 +371,11 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
         else if (!close(spend, table_t::spend_table)) ec = error::close_table;
         else if (!close(strong_tx, table_t::strong_tx_table)) ec = error::close_table;
 
-        else if (!close(bootstrap, table_t::bootstrap_table)) ec = error::close_table;
-        else if (!close(buffer, table_t::buffer_table)) ec = error::close_table;
-        else if (!close(neutrino, table_t::neutrino_table)) ec = error::close_table;
         else if (!close(validated_bk, table_t::validated_bk_table)) ec = error::close_table;
         else if (!close(validated_tx, table_t::validated_tx_table)) ec = error::close_table;
+        else if (!close(neutrino, table_t::neutrino_table)) ec = error::close_table;
+        ////else if (!close(bootstrap, table_t::bootstrap_table)) ec = error::close_table;
+        ////else if (!close(buffer, table_t::buffer_table)) ec = error::close_table;
     }
 
     if (!ec) ec = unload_close(handler);
@@ -432,16 +432,16 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, strong_tx_head_, table_t::strong_tx_head);
     open(ec, strong_tx_body_, table_t::strong_tx_body);
 
-    open(ec, bootstrap_head_, table_t::bootstrap_head);
-    open(ec, bootstrap_body_, table_t::bootstrap_body);
-    open(ec, buffer_head_, table_t::buffer_head);
-    open(ec, buffer_body_, table_t::buffer_body);
-    open(ec, neutrino_head_, table_t::neutrino_head);
-    open(ec, neutrino_body_, table_t::neutrino_body);
     open(ec, validated_bk_head_, table_t::validated_bk_head);
     open(ec, validated_bk_body_, table_t::validated_bk_body);
     open(ec, validated_tx_head_, table_t::validated_tx_head);
     open(ec, validated_tx_body_, table_t::validated_tx_body);
+    open(ec, neutrino_head_, table_t::neutrino_head);
+    open(ec, neutrino_body_, table_t::neutrino_body);
+    ////open(ec, bootstrap_head_, table_t::bootstrap_head);
+    ////open(ec, bootstrap_body_, table_t::bootstrap_body);
+    ////open(ec, buffer_head_, table_t::buffer_head);
+    ////open(ec, buffer_body_, table_t::buffer_body);
 
     const auto load = [&handler](auto& ec, auto& storage, table_t table) NOEXCEPT
     {
@@ -478,16 +478,16 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, strong_tx_head_, table_t::strong_tx_head);
     load(ec, strong_tx_body_, table_t::strong_tx_body);
 
-    load(ec, bootstrap_head_, table_t::bootstrap_head);
-    load(ec, bootstrap_body_, table_t::bootstrap_body);
-    load(ec, buffer_head_, table_t::buffer_head);
-    load(ec, buffer_body_, table_t::buffer_body);
-    load(ec, neutrino_head_, table_t::neutrino_head);
-    load(ec, neutrino_body_, table_t::neutrino_body);
     load(ec, validated_bk_head_, table_t::validated_bk_head);
     load(ec, validated_bk_body_, table_t::validated_bk_body);
     load(ec, validated_tx_head_, table_t::validated_tx_head);
     load(ec, validated_tx_body_, table_t::validated_tx_body);
+    load(ec, neutrino_head_, table_t::neutrino_head);
+    load(ec, neutrino_body_, table_t::neutrino_body);
+    ////load(ec, bootstrap_head_, table_t::bootstrap_head);
+    ////load(ec, bootstrap_body_, table_t::bootstrap_body);
+    ////load(ec, buffer_head_, table_t::buffer_head);
+    ////load(ec, buffer_body_, table_t::buffer_body);
 
     return ec;
 }
@@ -532,16 +532,16 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, strong_tx_head_, table_t::strong_tx_head);
     unload(ec, strong_tx_body_, table_t::strong_tx_body);
 
-    unload(ec, bootstrap_head_, table_t::bootstrap_head);
-    unload(ec, bootstrap_body_, table_t::bootstrap_body);
-    unload(ec, buffer_head_, table_t::buffer_head);
-    unload(ec, buffer_body_, table_t::buffer_body);
-    unload(ec, neutrino_head_, table_t::neutrino_head);
-    unload(ec, neutrino_body_, table_t::neutrino_body);
     unload(ec, validated_bk_head_, table_t::validated_bk_head);
     unload(ec, validated_bk_body_, table_t::validated_bk_body);
     unload(ec, validated_tx_head_, table_t::validated_tx_head);
     unload(ec, validated_tx_body_, table_t::validated_tx_body);
+    unload(ec, neutrino_head_, table_t::neutrino_head);
+    unload(ec, neutrino_body_, table_t::neutrino_body);
+    ////unload(ec, bootstrap_head_, table_t::bootstrap_head);
+    ////unload(ec, bootstrap_body_, table_t::bootstrap_body);
+    ////unload(ec, buffer_head_, table_t::buffer_head);
+    ////unload(ec, buffer_body_, table_t::buffer_body);
 
     const auto close = [&handler](auto& ec, auto& storage, table_t table) NOEXCEPT
     {
@@ -578,16 +578,16 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, strong_tx_head_, table_t::strong_tx_head);
     close(ec, strong_tx_body_, table_t::strong_tx_body);
 
-    close(ec, bootstrap_head_, table_t::bootstrap_head);
-    close(ec, bootstrap_body_, table_t::bootstrap_body);
-    close(ec, buffer_head_, table_t::buffer_head);
-    close(ec, buffer_body_, table_t::buffer_body);
-    close(ec, neutrino_head_, table_t::neutrino_head);
-    close(ec, neutrino_body_, table_t::neutrino_body);
     close(ec, validated_bk_head_, table_t::validated_bk_head);
     close(ec, validated_bk_body_, table_t::validated_bk_body);
     close(ec, validated_tx_head_, table_t::validated_tx_head);
     close(ec, validated_tx_body_, table_t::validated_tx_body);
+    close(ec, neutrino_head_, table_t::neutrino_head);
+    close(ec, neutrino_body_, table_t::neutrino_body);
+    ////close(ec, bootstrap_head_, table_t::bootstrap_head);
+    ////close(ec, bootstrap_body_, table_t::bootstrap_body);
+    ////close(ec, buffer_head_, table_t::buffer_head);
+    ////close(ec, buffer_body_, table_t::buffer_body);
 
     return ec;
 }
@@ -615,11 +615,11 @@ code CLASS::backup(const event_handler& handler) NOEXCEPT
     if (!backup(spend, table_t::spend_table)) return error::backup_table;
     if (!backup(strong_tx, table_t::strong_tx_table)) return error::backup_table;
 
-    if (!backup(bootstrap, table_t::bootstrap_table)) return error::backup_table;
-    if (!backup(buffer, table_t::buffer_table)) return error::backup_table;
-    if (!backup(neutrino, table_t::neutrino_table)) return error::backup_table;
     if (!backup(validated_bk, table_t::validated_bk_table)) return error::backup_table;
     if (!backup(validated_tx, table_t::validated_tx_table)) return error::backup_table;
+    if (!backup(neutrino, table_t::neutrino_table)) return error::backup_table;
+    ////if (!backup(bootstrap, table_t::bootstrap_table)) return error::backup_table;
+    ////if (!backup(buffer, table_t::buffer_table)) return error::backup_table;
 
     static const auto primary = configuration_.path / schema::dir::primary;
     static const auto secondary = configuration_.path / schema::dir::secondary;
@@ -661,11 +661,11 @@ code CLASS::dump(const path& folder,
     auto spend_buffer = spend_head_.get();
     auto strong_tx_buffer = strong_tx_head_.get();
 
-    auto bootstrap_buffer = bootstrap_head_.get();
-    auto buffer_buffer = buffer_head_.get();
-    auto neutrino_buffer = neutrino_head_.get();
     auto validated_bk_buffer = validated_bk_head_.get();
     auto validated_tx_buffer = validated_tx_head_.get();
+    auto neutrino_buffer = neutrino_head_.get();
+    ////auto bootstrap_buffer = bootstrap_head_.get();
+    ////auto buffer_buffer = buffer_head_.get();
 
     if (!header_buffer) return error::unloaded_file;
     if (!point_buffer) return error::unloaded_file;
@@ -681,11 +681,11 @@ code CLASS::dump(const path& folder,
     if (!spend_buffer) return error::unloaded_file;
     if (!strong_tx_buffer) return error::unloaded_file;
 
-    if (!bootstrap_buffer) return error::unloaded_file;
-    if (!buffer_buffer) return error::unloaded_file;
-    if (!neutrino_buffer) return error::unloaded_file;
     if (!validated_bk_buffer) return error::unloaded_file;
     if (!validated_tx_buffer) return error::unloaded_file;
+    if (!neutrino_buffer) return error::unloaded_file;
+    ////if (!bootstrap_buffer) return error::unloaded_file;
+    ////if (!buffer_buffer) return error::unloaded_file;
 
     const auto dump = [&handler, &folder](const auto& storage, const auto& name,
         table_t table) NOEXCEPT
@@ -721,16 +721,16 @@ code CLASS::dump(const path& folder,
     if (!dump(strong_tx_buffer, schema::indexes::strong_tx, table_t::strong_tx_head))
         return error::dump_file;
 
-    if (!dump(bootstrap_buffer, schema::caches::bootstrap, table_t::bootstrap_head))
-        return error::dump_file;
-    if (!dump(buffer_buffer, schema::caches::buffer, table_t::buffer_head))
-        return error::dump_file;
-    if (!dump(neutrino_buffer, schema::caches::neutrino, table_t::neutrino_head))
-        return error::dump_file;
     if (!dump(validated_bk_buffer, schema::caches::validated_bk, table_t::validated_bk_head))
         return error::dump_file;
     if (!dump(validated_tx_buffer, schema::caches::validated_tx, table_t::validated_tx_head))
         return error::dump_file;
+    if (!dump(neutrino_buffer, schema::caches::neutrino, table_t::neutrino_head))
+        return error::dump_file;
+    ////if (!dump(bootstrap_buffer, schema::caches::bootstrap, table_t::bootstrap_head))
+    ////    return error::dump_file;
+    ////if (!dump(buffer_buffer, schema::caches::buffer, table_t::buffer_head))
+    ////    return error::dump_file;
 
     return error::success;
 }
@@ -814,11 +814,11 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         if (!restore(spend, table_t::spend_table)) ec = error::restore_table;
         if (!restore(strong_tx, table_t::strong_tx_table)) ec = error::restore_table;
 
-        if (!restore(bootstrap, table_t::bootstrap_table)) ec = error::restore_table;
-        if (!restore(buffer, table_t::buffer_table)) ec = error::restore_table;
-        if (!restore(neutrino, table_t::neutrino_table)) ec = error::restore_table;
         if (!restore(validated_bk, table_t::validated_bk_table)) ec = error::restore_table;
         if (!restore(validated_tx, table_t::validated_tx_table)) ec = error::restore_table;
+        if (!restore(neutrino, table_t::neutrino_table)) ec = error::restore_table;
+        ////if (!restore(bootstrap, table_t::bootstrap_table)) ec = error::restore_table;
+        ////if (!restore(buffer, table_t::buffer_table)) ec = error::restore_table;
 
         if (!ec) ec = unload_close(handler);
     }
