@@ -158,6 +158,69 @@ BOOST_AUTO_TEST_CASE(error_t__code__unload_failure__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "file failed to unload");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__disk_full__true_exected_message)
+{
+    constexpr auto value = error::disk_full;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "disk full");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__mmap_failure__true_exected_message)
+{
+    constexpr auto value = error::mmap_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "mmap failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__mremap_failure__true_exected_message)
+{
+    constexpr auto value = error::mremap_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "mremap failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__munmap_failure__true_exected_message)
+{
+    constexpr auto value = error::munmap_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "munmap failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__madvise_failure__true_exected_message)
+{
+    constexpr auto value = error::madvise_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "madvise failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__ftruncate_failure__true_exected_message)
+{
+    constexpr auto value = error::ftruncate_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "ftruncate failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__fsync_failure__true_exected_message)
+{
+    constexpr auto value = error::fsync_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "fsync failure");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__transactor_lock__true_exected_message)
 {
     constexpr auto value = error::transactor_lock;
