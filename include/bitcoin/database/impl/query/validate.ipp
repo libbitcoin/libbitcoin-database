@@ -256,6 +256,7 @@ bool CLASS::set_block_preconfirmable(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Clean single allocation failure (e.g. disk full).
     return store_.validated_bk.put(link, table::validated_bk::slab
     {
         {},
@@ -272,6 +273,7 @@ bool CLASS::set_block_confirmable(const header_link& link,
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Clean single allocation failure (e.g. disk full).
     return store_.validated_bk.put(link, table::validated_bk::slab
     {
         {},
@@ -287,6 +289,7 @@ bool CLASS::set_block_unconfirmable(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Clean single allocation failure (e.g. disk full).
     return store_.validated_bk.put(link, table::validated_bk::slab
     {
         {},
@@ -303,6 +306,7 @@ bool CLASS::set_tx_preconnected(const tx_link& link,
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Clean single allocation failure (e.g. disk full).
     return store_.validated_tx.put(link, table::validated_tx::slab
     {
         {},
@@ -321,6 +325,7 @@ bool CLASS::set_tx_disconnected(const tx_link& link,
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Clean single allocation failure (e.g. disk full).
     return store_.validated_tx.put(link, table::validated_tx::slab
     {
         {},
@@ -342,6 +347,7 @@ bool CLASS::set_tx_connected(const tx_link& link, const context& ctx,
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Clean single allocation failure (e.g. disk full).
     return store_.validated_tx.put(link, table::validated_tx::slab
     {
         {},
@@ -372,6 +378,7 @@ bool CLASS::set_txs_connected(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Clean single allocation failure (e.g. disk full).
     return std_all_of(bc::seq, txs.begin(), txs.end(),
         [&](const tx_link& fk) NOEXCEPT
         {
