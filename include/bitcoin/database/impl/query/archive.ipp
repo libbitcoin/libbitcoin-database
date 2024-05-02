@@ -951,7 +951,7 @@ txs_link CLASS::set_link(const transactions& txs,
 }
 
 TEMPLATE
-bool CLASS::dissasociate(const header_link& link) NOEXCEPT
+bool CLASS::set_dissasociated(const header_link& link) NOEXCEPT
 {
     if (link.is_terminal())
         return false;

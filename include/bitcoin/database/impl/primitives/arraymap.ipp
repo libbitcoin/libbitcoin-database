@@ -103,7 +103,7 @@ bool CLASS::truncate(const Link& count) NOEXCEPT
     return manager_.truncate(count);
 }
 
-// query interface
+// error condition
 // ----------------------------------------------------------------------------
 
 TEMPLATE

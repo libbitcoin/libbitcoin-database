@@ -74,6 +74,12 @@ CLASS::query(Store& value) NOEXCEPT
 {
 }
 
+TEMPLATE
+bool CLASS::is_full() const NOEXCEPT
+{
+    return store_.get_error(error::disk_full);
+}
+
 } // namespace database
 } // namespace libbitcoin
 

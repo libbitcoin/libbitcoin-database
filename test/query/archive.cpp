@@ -761,7 +761,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
     BOOST_REQUIRE_EQUAL(hashes, test::genesis.transaction_hashes(false));
 
     BOOST_REQUIRE(!query.is_malleable(0));
-    BOOST_REQUIRE(query.dissasociate(0));
+    BOOST_REQUIRE(query.set_dissasociated(0));
     BOOST_REQUIRE(!query.is_associated(0));
     BOOST_REQUIRE(!query.is_malleable(0));
 }
@@ -983,9 +983,9 @@ BOOST_AUTO_TEST_CASE(query_archive__is_malleable__malleable__true)
     BOOST_REQUIRE(query.is_malleated(block3));
 
     // Disassociate 3 blocks.
-    BOOST_REQUIRE(query.dissasociate(query.to_header(block1.hash())));
-    BOOST_REQUIRE(query.dissasociate(query.to_header(block2.hash())));
-    BOOST_REQUIRE(query.dissasociate(query.to_header(block3.hash())));
+    BOOST_REQUIRE(query.set_dissasociated(query.to_header(block1.hash())));
+    BOOST_REQUIRE(query.set_dissasociated(query.to_header(block2.hash())));
+    BOOST_REQUIRE(query.set_dissasociated(query.to_header(block3.hash())));
 
     // Verify all 3 not associated.
     BOOST_REQUIRE(!query.is_associated(1));
