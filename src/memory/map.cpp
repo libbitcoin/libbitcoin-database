@@ -44,14 +44,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 using namespace system;
 
 map::map(const path& filename, size_t minimum, size_t expansion) NOEXCEPT
-  : filename_(filename),
-    minimum_(minimum),
-    expansion_(expansion),
-    memory_map_(nullptr),
-    opened_(file::invalid),
-    loaded_(false),
-    capacity_(zero),
-    logical_(zero)
+  : filename_(filename), minimum_(minimum), expansion_(expansion)
 {
 }
 
@@ -142,7 +135,7 @@ code map::load() NOEXCEPT
 }
 
 // Suspend writes before calling.
-code map::flush() const NOEXCEPT
+code map::flush() NOEXCEPT
 {
     // Prevent unload, resize, remap.
     std::shared_lock map_lock(remap_mutex_);
@@ -234,6 +227,7 @@ size_t map::allocate(size_t chunk) NOEXCEPT
         // TODO: Could loop over a try lock here and log deadlock warning.
         std::unique_lock remap_lock(remap_mutex_);
 
+        // If disk_full set, suspend writes, create space, clear, and restart.
         if (!remap_(size))
             return storage::eof;
     }
@@ -266,13 +260,30 @@ memory_ptr map::get(size_t offset) const NOEXCEPT
     return ptr;
 }
 
+code map::get_error() const NOEXCEPT
+{
+    return error_.load();
+}
+
+void map::clear_error() NOEXCEPT
+{
+    error_ = error::success;
+}
+
+// Read-write protected by atomic, write-write protected by remap_mutex.
+void map::set_first_code(const error::error_t& value) NOEXCEPT
+{
+    if (!error_)
+        error_.store(value);
+}
+
 // private, mman wrappers, not thread safe
 // ----------------------------------------------------------------------------
 
 constexpr auto fail = -1;
 
 // Never results in unmapped.
-bool map::flush_() const NOEXCEPT
+bool map::flush_() NOEXCEPT
 {
     // msync should not be required on modern linux, see linus et al.
     // stackoverflow.com/questions/5902629/mmap-msync-and-linux-process-termination
@@ -280,12 +291,12 @@ bool map::flush_() const NOEXCEPT
     // unmap (and therefore msync) must be called before ftruncate.
     // "To flush all the dirty pages plus the metadata for the file and ensure
     // that they are physically written to disk..."
-    return (::msync(memory_map_, logical_, MS_SYNC) != fail) 
+    const auto success = (::msync(memory_map_, logical_, MS_SYNC) != fail) 
         && (::fsync(opened_) != fail);
 #elif defined(F_FULLFSYNC)
     // macOS msync fails with zero logical size (but we are no longer calling).
     // non-standard macOS behavior: news.ycombinator.com/item?id=30372218
-    return ::fcntl(opened_, F_FULLFSYNC, 0) != fail;
+    const auto success = ::fcntl(opened_, F_FULLFSYNC, 0) != fail;
 #else
     // Linux: fsync "transfers ("flushes") all modified in-core data of
     // (i.e., modified buffer cache pages for) the file referred to by the
@@ -293,8 +304,13 @@ bool map::flush_() const NOEXCEPT
     // can be retrieved even if the system crashes or is rebooted. This
     // includes writing through or flushing a disk cache if present. The
     // call blocks until the device reports that transfer has completed."
-    return ::fsync(opened_) != fail;
+    const auto success = ::fsync(opened_) != fail;
 #endif
+
+    if (!success)
+        set_first_code(error::fsync_failure);
+
+    return success;
 }
 
 // Always results in unmapped.
@@ -316,6 +332,8 @@ bool map::unmap_() NOEXCEPT
     #endif
         && (::munmap(memory_map_, capacity_) != fail);
 #endif
+    if (!success)
+        set_first_code(error::munmap_failure);
 
     capacity_ = zero;
     memory_map_ = nullptr;
@@ -334,6 +352,7 @@ bool map::map_() NOEXCEPT
         size = minimum_;
         if (::ftruncate(opened_, size) == fail)
         {
+            set_first_code(error::ftruncate_failure);
             unmap_();
             return false;
         }
@@ -356,11 +375,22 @@ bool map::remap_(size_t size) NOEXCEPT
 #if !defined(HAVE_MSC) && !defined(MREMAP_MAYMOVE)
     // macOS: unmap before ftruncate sets new size.
     if (!unmap_())
+    {
+        set_first_code(error::mremap_failure);
         return false;
+    }
 #endif
 
     if (::ftruncate(opened_, size) == fail)
     {
+        // Disk full is the only restartable store failure (no unmap).
+        if (errno == ENOSPC)
+        {
+            set_first_code(error::disk_full);
+            return false;
+        }
+
+        set_first_code(error::ftruncate_failure);
         unmap_();
         return false;
     }
@@ -389,12 +419,14 @@ bool map::finalize_(size_t size) NOEXCEPT
     {
         capacity_ = zero;
         memory_map_ = nullptr;
+        set_first_code(error::mmap_failure);
         return false;
     }
 
     // TODO: madvise with large length value fails on linux, does 0 imply all?
     if (::madvise(memory_map_, 0, MADV_RANDOM) == fail)
     {
+        set_first_code(error::madvise_failure);
         unmap_();
         return false;
     }

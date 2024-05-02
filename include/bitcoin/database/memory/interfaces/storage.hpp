@@ -44,7 +44,7 @@ public:
     virtual code load() NOEXCEPT = 0;
 
     /// Flush memory map to disk, suspend writes for call, must be loaded.
-    virtual code flush() const NOEXCEPT = 0;
+    virtual code flush() NOEXCEPT = 0;
 
     /// Flush, unmap and truncate to logical, restartable, idempotent.
     virtual code unload() NOEXCEPT = 0;
@@ -66,6 +66,12 @@ public:
 
     /// Get r/w access to start/offset of memory map (or null).
     virtual memory_ptr get(size_t offset=zero) const NOEXCEPT = 0;
+
+    /// Get the current error condition.
+    virtual code get_error() const NOEXCEPT = 0;
+
+    /// Clear the error condition.
+    virtual void clear_error() NOEXCEPT = 0;
 };
 
 } // namespace database

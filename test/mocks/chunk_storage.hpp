@@ -41,7 +41,7 @@ public:
     code open() NOEXCEPT override;
     code close() NOEXCEPT override;
     code load() NOEXCEPT override;
-    code flush() const NOEXCEPT override;
+    code flush() NOEXCEPT override;
     code unload() NOEXCEPT override;
     const std::filesystem::path& file() const NOEXCEPT override;
     size_t capacity() const NOEXCEPT override;
@@ -49,6 +49,8 @@ public:
     bool truncate(size_t size) NOEXCEPT override;
     size_t allocate(size_t chunk) NOEXCEPT override;
     memory_ptr get(size_t offset=zero) const NOEXCEPT override;
+    code get_error() const NOEXCEPT override;
+    void clear_error() NOEXCEPT override;
 
 private:
     system::data_chunk local_;
