@@ -74,6 +74,15 @@ public:
     /// Count of records (or body file bytes if slab).
     Link count() const NOEXCEPT;
 
+    /// Errors.
+    /// -----------------------------------------------------------------------
+
+    /// Get the current error condition.
+    code get_error() const NOEXCEPT;
+
+    /// Clear the error condition.
+    void clear_error() NOEXCEPT;
+
     /// Query interface, iterator is not thread safe.
     /// -----------------------------------------------------------------------
 

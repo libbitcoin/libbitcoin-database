@@ -107,6 +107,21 @@ bool CLASS::truncate(const Link& count) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+code CLASS::get_error() const NOEXCEPT
+{
+    return manager_.get_error();
+}
+
+TEMPLATE
+void CLASS::clear_error() NOEXCEPT
+{
+    manager_.clear_error();
+}
+
+// query interface
+// ----------------------------------------------------------------------------
+
+TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {

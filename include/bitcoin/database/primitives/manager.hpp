@@ -61,6 +61,12 @@ public:
     /// Return memory object for the full memory map.
     memory_ptr get() const NOEXCEPT;
 
+    /// Get the current error condition.
+    code get_error() const NOEXCEPT;
+
+    /// Clear the error condition.
+    void clear_error() NOEXCEPT;
+
 private:
     static constexpr auto is_slab = (Size == max_size_t);
     static constexpr size_t link_to_position(const Link& link) NOEXCEPT;

@@ -107,6 +107,21 @@ Link CLASS::count() const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+code CLASS::get_error() const NOEXCEPT
+{
+    return manager_.get_error();
+}
+
+TEMPLATE
+void CLASS::clear_error() NOEXCEPT
+{
+    manager_.clear_error();
+}
+
+// query interface
+// ----------------------------------------------------------------------------
+
+TEMPLATE
 Link CLASS::top(const Link& link) const NOEXCEPT
 {
     return link < head_.buckets() ? head_.top(link) : Link{};
