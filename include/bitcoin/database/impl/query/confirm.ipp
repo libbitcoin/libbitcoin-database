@@ -356,6 +356,7 @@ bool CLASS::set_strong(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Clean allocation failure (e.g. disk full), block not confirmed.
     return std::all_of(txs.begin(), txs.end(), [&](const tx_link& fk) NOEXCEPT
     {
         return store_.strong_tx.put(fk, strong);
@@ -375,6 +376,7 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Clean allocation failure (e.g. disk full), block not unconfirmed.
     return std::all_of(txs.begin(), txs.end(), [&](const tx_link& fk) NOEXCEPT
     {
         return store_.strong_tx.put(fk, strong);
@@ -399,6 +401,7 @@ bool CLASS::initialize(const block& genesis) NOEXCEPT
     constexpr auto sigops = 0u;
     const auto link = to_header(genesis.hash());
 
+    // Unsafe for allocation failure, but only used in store creation.
     return set_strong(header_link{ 0 })
         && set_tx_connected(tx_link{ 0 }, ctx, fees, sigops) // tx valid.
         && set_block_confirmable(link, fees) // rename, block valid step.
@@ -413,6 +416,7 @@ bool CLASS::push_candidate(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Clean single allocation failure (e.g. disk full).
     const table::height::record candidate{ {}, link };
     return store_.candidate.put(candidate);
     // ========================================================================
@@ -424,6 +428,7 @@ bool CLASS::push_confirmed(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Clean single allocation failure (e.g. disk full).
     const table::height::record confirmed{ {}, link };
     return store_.confirmed.put(confirmed);
     // ========================================================================
@@ -440,6 +445,7 @@ bool CLASS::pop_candidate() NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Clean single allocation failure (e.g. disk full).
     return store_.candidate.truncate(top);
     // ========================================================================
 }
@@ -455,6 +461,7 @@ bool CLASS::pop_confirmed() NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Clean single allocation failure (e.g. disk full).
     return store_.confirmed.truncate(top);
     // ========================================================================
 }

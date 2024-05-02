@@ -146,30 +146,31 @@ bool CLASS::to_minimum_unspent_outputs(output_links& out,
     return true;
 }
 
-TEMPLATE
-bool CLASS::set_address_output(const output& output,
-    const output_link& link) NOEXCEPT
-{
-    return set_address_output(output.script().hash(), link);
-}
-
-TEMPLATE
-bool CLASS::set_address_output(const hash_digest& key,
-    const output_link& link) NOEXCEPT
-{
-    if (link.is_terminal())
-        return false;
-
-    // ========================================================================
-    const auto scope = store_.get_transactor();
-
-    return store_.address.put(key, table::address::record
-    {
-        {},
-        link
-    });
-    // ========================================================================
-}
+////TEMPLATE
+////bool CLASS::set_address_output(const output& output,
+////    const output_link& link) NOEXCEPT
+////{
+////    return set_address_output(output.script().hash(), link);
+////}
+////
+////TEMPLATE
+////bool CLASS::set_address_output(const hash_digest& key,
+////    const output_link& link) NOEXCEPT
+////{
+////    if (link.is_terminal())
+////        return false;
+////
+////    // ========================================================================
+////    const auto scope = store_.get_transactor();
+////
+////    // Clean single allocation failure (e.g. disk full).
+////    return store_.address.put(key, table::address::record
+////    {
+////        {},
+////        link
+////    });
+////    // ========================================================================
+////}
 
 // Neutrino (surrogate-keyed).
 // ----------------------------------------------------------------------------
@@ -204,6 +205,7 @@ bool CLASS::set_filter(const header_link& link, const hash_digest& filter_head,
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Clean single allocation failure (e.g. disk full).
     return store_.neutrino.put(link, table::neutrino::put_ref
     {
         {},
@@ -213,10 +215,10 @@ bool CLASS::set_filter(const header_link& link, const hash_digest& filter_head,
     // ========================================================================
 }
 
-// Buffer (surrogate-keyed).
-// ----------------------------------------------------------------------------
-// TODO: serialize prevouts, compare deserialization time to native storage.
-
+////// Buffer (surrogate-keyed).
+////// ----------------------------------------------------------------------------
+////// TODO: serialize prevouts, compare deserialization time to native storage.
+////
 ////TEMPLATE
 ////typename CLASS::transaction::cptr CLASS::get_buffered_tx(
 ////    const tx_link& link) const NOEXCEPT
@@ -242,10 +244,10 @@ bool CLASS::set_filter(const header_link& link, const hash_digest& filter_head,
 ////    });
 ////    // ========================================================================
 ////}
-
-// Bootstrap (array).
-// ----------------------------------------------------------------------------
-
+////
+////// Bootstrap (array).
+////// ----------------------------------------------------------------------------
+////
 ////TEMPLATE
 ////bool CLASS::get_bootstrap(hashes& out) const NOEXCEPT
 ////{

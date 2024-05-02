@@ -94,6 +94,7 @@ void* mmap(void* addr, size_t len, int prot, int flags, int fd, oft__ off)
         return MAP_FAILED;
     }
 
+    /* Never call CloseHandle on the return value of this function. */
     const HANDLE handle = ((flags & MAP_ANONYMOUS) == 0) ? 
         (HANDLE)_get_osfhandle(fd) : INVALID_HANDLE_VALUE;
 
@@ -142,14 +143,14 @@ void* mremap_(void* addr, size_t old_size, size_t new_size, int prot,
 
 int munmap(void* addr, size_t len)
 {
-    if (UnmapViewOfFile(addr) != FALSE)
+    if (UnmapViewOfFile(addr) == FALSE)
     {
-        errno = 0;
-        return 0;
+        errno = last_error(EPERM);
+        return -1;
     }
 
-    errno = last_error(EPERM);
-    return -1;
+    errno = 0;
+    return 0;
 }
 
 int madvise(void* addr, size_t len, int advice)
@@ -165,14 +166,14 @@ int mprotect(void* addr, size_t len, int prot)
     DWORD old_protect = 0;
     const DWORD new_protect = protect_page(prot);
 
-    if (VirtualProtect(addr, len, new_protect, &old_protect) != FALSE)
+    if (VirtualProtect(addr, len, new_protect, &old_protect) == FALSE)
     {
-        errno = 0;
-        return 0;
+        errno = last_error(EPERM);
+        return -1;
     }
 
-    errno = last_error(EPERM);
-    return -1;
+    errno = 0;
+    return 0;
 }
 
 /* The FlushViewOfFile function does not flush the file metadata, and it does
@@ -182,14 +183,14 @@ the metadata for the file and ensure that they are physically written to disk,
 call FlushViewOfFile and then call the FlushFileBuffers function [fsync]. */
 int msync(void* addr, size_t len, int flags)
 {
-    if (len == 0 || FlushViewOfFile(addr, len) != FALSE)
+    if ((len != 0) && FlushViewOfFile(addr, len) == FALSE)
     {
-        errno = 0;
-        return 0;
+        errno = last_error(EPERM);
+        return -1;
     }
 
-    errno = last_error(EPERM);
-    return -1;
+    errno = 0;
+    return 0;
 }
 
 /* unreferenced formal parameter */
@@ -200,41 +201,41 @@ int msync(void* addr, size_t len, int flags)
 /* unused */
 int mlock(const void* addr, size_t len)
 {
-    if (VirtualLock((LPVOID)addr, len) != FALSE)
+    if (VirtualLock((LPVOID)addr, len) == FALSE)
     {
-        errno = 0;
-        return 0;
+        errno = last_error(EPERM);
+        return -1;
     }
 
-    errno = last_error(EPERM);
-    return -1;
+    errno = 0;
+    return 0;
 }
 
 /* unused */
 int munlock(const void* addr, size_t len)
 {
-    if (VirtualUnlock((LPVOID)addr, len) != FALSE)
+    if (VirtualUnlock((LPVOID)addr, len) == FALSE)
     {
-        errno = 0;
-        return 0;
+        errno = last_error(EPERM);
+        return -1;
     }
 
-    errno = last_error(EPERM);
-    return -1;
+    errno = 0;
+    return 0;
 }
 
 int fsync(int fd)
 {
+    /* Never call CloseHandle on the return value of this function. */
     const HANDLE handle = (HANDLE)(_get_osfhandle(fd));
-
-    if (FlushFileBuffers(handle) != FALSE)
+    if (FlushFileBuffers(handle) == FALSE)
     {
-        errno = 0;
-        return 0;
+        errno = last_error(EPERM);
+        return -1;
     }
 
-    errno = last_error(EPERM);
-    return -1;
+    errno = 0;
+    return 0;
 }
 
 int ftruncate(int fd, oft__ size)
@@ -254,27 +255,27 @@ int ftruncate(int fd, oft__ size)
         return -1;
     }
 
-    // Possible equivalent, sets errno.
-    ////if (_chsize_s(_get_osfhandle(fd), (LONGLONG)size) != FALSE)
-    ////{
-    ////    errno = 0;
-    ////    return 0;
-    ////}
-    ////
-    ////return -1;
-
-    /* unsigned to signed, splits to high and low */
-    big.QuadPart = (LONGLONG)size;
-
+    /* Never call CloseHandle on the return value of this function. */
     const HANDLE handle = (HANDLE)_get_osfhandle(fd);
-    const BOOL position = SetFilePointerEx(handle, big, NULL, FILE_BEGIN);
+    if (handle == INVALID_HANDLE_VALUE)
+    {
+        /* sets errno */
+        return -1;
+    }
 
+    big.QuadPart = (LONGLONG)size;
+    if (SetFilePointerEx(handle, big, NULL, FILE_BEGIN) == FALSE)
+    {
+        /* sets errno */
+        return -1;
+    }
+    
     /* "UnmapViewOfFile must be called first to unmap all views and call
     CloseHandle to close file mapping object before can call SetEndOfFile." -
     we have earlier called CloseHandle to close file mapping object (in mmap)
     but have not called UnmapViewOfFile before calling this from remap_() and
     it is apparently working.*/
-    if (position == INVALID_SET_FILE_POINTER || SetEndOfFile(handle) == FALSE)
+    if (SetEndOfFile(handle) == FALSE)
     {
         errno = last_error(EIO);
         return -1;

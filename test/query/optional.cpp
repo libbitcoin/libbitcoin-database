@@ -92,20 +92,20 @@ BOOST_AUTO_TEST_CASE(query_optional__to_unspent_outputs__genesis__expected)
     BOOST_REQUIRE_EQUAL(out.front(), 0);
 }
 
-BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__above__excluded)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set_address_output(genesis_address, 0));
-
-    output_links out{};
-    BOOST_REQUIRE(query.to_minimum_unspent_outputs(out, genesis_address, 5000000001));
-    BOOST_REQUIRE(out.empty());
-}
+////BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__above__excluded)
+////{
+////    settings settings{};
+////    settings.path = TEST_DIRECTORY;
+////    test::chunk_store store{ settings };
+////    test::query_accessor query{ store };
+////    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+////    BOOST_REQUIRE(query.initialize(test::genesis));
+////    BOOST_REQUIRE(query.set_address_output(genesis_address, 0));
+////
+////    output_links out{};
+////    BOOST_REQUIRE(query.to_minimum_unspent_outputs(out, genesis_address, 5000000001));
+////    BOOST_REQUIRE(out.empty());
+////}
 
 BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__at__included)
 {

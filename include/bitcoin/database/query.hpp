@@ -375,22 +375,24 @@ public:
     /// Optional Tables.
     /// -----------------------------------------------------------------------
 
-    /// Address (natural-keyed).
+    /// Address, set internal to tx (natural-keyed).
     bool get_confirmed_balance(uint64_t& out, const hash_digest& key) const NOEXCEPT;
     bool to_address_outputs(output_links& out, const hash_digest& key) const NOEXCEPT;
     bool to_unspent_outputs(output_links& out, const hash_digest& key) const NOEXCEPT;
     bool to_minimum_unspent_outputs(output_links& out, const hash_digest& key,
         uint64_t value) const NOEXCEPT;
-    bool set_address_output(const output& output,
-        const output_link& link) NOEXCEPT;
-    bool set_address_output(const hash_digest& key,
-        const output_link& link) NOEXCEPT;
 
-    /// Neutrino (surrogate-keyed).
+    /// Neutrino, set during validation with prevouts (surrogate-keyed).
     bool get_filter(filter& out, const header_link& link) const NOEXCEPT;
     bool get_filter_head(hash_digest& out, const header_link& link) const NOEXCEPT;
     bool set_filter(const header_link& link, const hash_digest& head,
         const filter& body) NOEXCEPT;
+
+    ////// This is set within tx.
+    ////bool set_address_output(const output& output,
+    ////    const output_link& link) NOEXCEPT;
+    ////bool set_address_output(const hash_digest& key,
+    ////    const output_link& link) NOEXCEPT;
 
     /////// Buffer (surrogate-keyed).
     ////transaction::cptr get_buffered_tx(const tx_link& link) const NOEXCEPT;

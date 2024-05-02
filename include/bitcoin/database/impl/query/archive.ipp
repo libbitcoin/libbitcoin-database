@@ -668,16 +668,15 @@ inline point_link CLASS::set_link_(const hash_digest& point_hash) NOEXCEPT
         return point_fk;
 
     // This write is NOT transacted as it is only called from set_link(tx)
-    // ========================================================================
-
     const table::point::record empty{};
     if (!store_.point.put_link(point_fk, point_hash, empty))
         return {};
 
     return point_fk;
-    // ========================================================================
 }
 
+// TODO: rename/change spend to archive table.
+// The only multitable write, all archive except header, also address.
 TEMPLATE
 tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
 {
@@ -708,11 +707,13 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     const auto scope = store_.get_transactor();
 
     // Allocate tx record.
+    // Clean single allocation failure (e.g. disk full).
     tx_fk = store_.tx.allocate(1);
     if (tx_fk.is_terminal())
         return {};
 
     // Allocate spend records.
+    // Clean single allocation failure (e.g. disk full).
     const auto count = possible_narrow_cast<spend_link::integer>(ins.size());
     auto spend_fk = store_.spend.allocate(count);
     if (spend_fk.is_terminal())
@@ -722,18 +723,19 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     for (const auto& in: ins)
     {
         // Commit input record.
+        // Safe allocation failure, blob linked by unindexed spend.
         input_link input_fk{};
         if (!store_.input.put_link(input_fk, table::input::put_ref{ {}, *in }))
-        {
             return {};
-        }
 
         // Create point and accumulate spend keys.
+        // Safe allocation failure, duplicates are guarded and expected.
         const auto& prevout = in->point();
         spends.push_back(table::spend::compose(set_link_(prevout.hash()),
             prevout.index()));
 
         // Write spend record.
+        // Safe allocation failure, index is deferred because invalid tx_fk.
         if (!store_.spend.set(spend_fk, table::spend::record
         {
             {},
@@ -752,6 +754,7 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     // Commit output records.
     for (const auto& out: outs)
     {
+        // Safe allocation failure, blob unlinked.
         output_link output_fk{};
         if (!store_.output.put_link(output_fk, table::output::put_ref
         {
@@ -768,11 +771,13 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     }
 
     // Commit accumulated puts.
+    // Safe allocation failure, unlinked blob links spend/output blobs.
     const auto puts_fk = store_.puts.put_link(puts);
     if (puts_fk.is_terminal())
         return {};
 
     // Write tx record.
+    // Safe allocation failure, index is deferred for spend index consistency.
     using ix = linkage<schema::index>;
     if (!store_.tx.set(tx_fk, table::transaction::record_put_ref
     {
@@ -787,6 +792,10 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     }
 
     // Commit spends to search.
+    // Safe allocation failure, unindexed txs linked by spend, others
+    // unlinked. A replay of committed spends without indexed tx will appear as
+    // double spends, but the spend cannot be confirmed without the indexed tx.
+    // Spends without indexed txs should be suppressed by c/s interface query.
     for (const auto& spend: views_reverse(spends))
     {
         --spend_fk.value;
@@ -800,6 +809,11 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
         auto out_fk = puts.out_fks.begin();
         for (const auto& out: outs)
         {
+            // Safe allocation failure, unindexed tx outputs linked by address,
+            // others unlinked. A replay of committed addresses without indexed
+            // tx will appear as double spends, but the spend cannot be
+            // confirmed without the indexed tx. Addresses without indexed txs
+            // should be suppressed by c/s interface query.
             if (!store_.address.put(out->script().hash(), table::address::record
             {
                 {},
@@ -812,6 +826,7 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     }
 
     // Commit tx to search.
+    // Clean single allocation failure, see also above. (e.g. disk full).
     return store_.tx.commit_link(tx_fk, key);
     // ========================================================================
 }
@@ -862,6 +877,7 @@ header_link CLASS::set_link(const header& header, const context& ctx) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Clean single allocation failure (e.g. disk full).
     return store_.header.put_link(key, table::header::record_put_ref
     {
         {},
@@ -929,6 +945,7 @@ txs_link CLASS::set_link(const transactions& txs,
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Clean single allocation failure (e.g. disk full).
     return store_.txs.put_link(link, table::txs::slab{ {}, malleable, wire, links });
     // ========================================================================
 }
@@ -944,6 +961,7 @@ bool CLASS::dissasociate(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Clean single allocation failure (e.g. disk full).
     return store_.txs.put_link(link, table::txs::slab{ {}, malleable, {}, {} });
     // ========================================================================
 }
