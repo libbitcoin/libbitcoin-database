@@ -656,25 +656,6 @@ typename CLASS::inputs_ptr CLASS::get_spenders(const tx_link& link,
     return get_spenders(to_output(link, output_index));
 }
 
-TEMPLATE
-inline point_link CLASS::set_link_(const hash_digest& point_hash) NOEXCEPT
-{
-    if (point_hash == system::null_hash)
-        return {};
-
-    // Reuse if archived (always - this is a compression, not a guard).
-    auto point_fk = to_point(point_hash);
-    if (!point_fk.is_terminal())
-        return point_fk;
-
-    // This write is NOT transacted as it is only called from set_link(tx)
-    const table::point::record empty{};
-    if (!store_.point.put_link(point_fk, point_hash, empty))
-        return {};
-
-    return point_fk;
-}
-
 // TODO: rename/change spend to archive table.
 // The only multitable write, all archive except header, also address.
 TEMPLATE
@@ -725,14 +706,38 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
         // Commit input record.
         // Safe allocation failure, blob linked by unindexed spend.
         input_link input_fk{};
-        if (!store_.input.put_link(input_fk, table::input::put_ref{ {}, *in }))
+        if (!store_.input.put_link(input_fk, table::input::put_ref
+        {
+            {},
+            *in
+        }))
+        {
             return {};
+        }
 
-        // Create point and accumulate spend keys.
-        // Safe allocation failure, duplicates are guarded and expected.
+        // Input point aliases.
         const auto& prevout = in->point();
-        spends.push_back(table::spend::compose(set_link_(prevout.hash()),
-            prevout.index()));
+        const auto& hash = prevout.hash();
+
+        // Get or create prevout hash in point table (reduces duplicates).
+        point_link hash_fk{};
+        if (hash != null_hash)
+        {
+            hash_fk = to_point(hash);
+            if (hash_fk.is_terminal())
+            {
+                // Safe allocation failure, duplicates limited but expected.
+                if (!store_.point.put_link(hash_fk, hash, table::point::record
+                {
+                }))
+                {
+                    return {};
+                }
+            }
+        }
+
+        // Accumulate spend keys in order (terminal for any null point).
+        spends.push_back(table::spend::compose(hash_fk, prevout.index()));
 
         // Write spend record.
         // Safe allocation failure, index is deferred because invalid tx_fk.
@@ -747,7 +752,7 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
             return {};
         }
 
-        // Acumulate input (spend) in order.
+        // Acumulate spends (input references) in order.
         puts.spend_fks.push_back(spend_fk.value++);
     }
 
@@ -766,7 +771,7 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
             return {};
         }
 
-        // Acumulate output in order.
+        // Acumulate outputs in order.
         puts.out_fks.push_back(output_fk);
     }
 
@@ -792,10 +797,10 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     }
 
     // Commit spends to search.
-    // Safe allocation failure, unindexed txs linked by spend, others
-    // unlinked. A replay of committed spends without indexed tx will appear as
-    // double spends, but the spend cannot be confirmed without the indexed tx.
-    // Spends without indexed txs should be suppressed by c/s interface query.
+    // Safe allocation failure, unindexed txs linked by spend, others unlinked.
+    // A replay of committed spends without indexed tx will appear as double
+    // spends, but the spend cannot be confirmed without the indexed tx. Spends
+    // without indexed txs should be suppressed by c/s interface query.
     for (const auto& spend: views_reverse(spends))
     {
         --spend_fk.value;
@@ -826,7 +831,7 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     }
 
     // Commit tx to search.
-    // Clean single allocation failure, see also above. (e.g. disk full).
+    // Clean single allocation failure (e.g. disk full).
     return store_.tx.commit_link(tx_fk, key);
     // ========================================================================
 }
@@ -945,8 +950,15 @@ txs_link CLASS::set_link(const transactions& txs,
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Header link is the key for the txs table.
     // Clean single allocation failure (e.g. disk full).
-    return store_.txs.put_link(link, table::txs::slab{ {}, malleable, wire, links });
+    return store_.txs.put_link(link, table::txs::slab
+    {
+        {},
+        malleable,
+        wire,
+        links
+    });
     // ========================================================================
 }
 
@@ -961,8 +973,15 @@ bool CLASS::set_dissasociated(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Header link is the key for the txs table.
     // Clean single allocation failure (e.g. disk full).
-    return store_.txs.put_link(link, table::txs::slab{ {}, malleable, {}, {} });
+    return store_.txs.put(link, table::txs::slab
+    {
+        {},
+        malleable,
+        {},
+        {}
+    });
     // ========================================================================
 }
 

@@ -423,10 +423,6 @@ protected:
     inline strong_pair to_strong(const hash_digest& tx_hash) const NOEXCEPT;
     inline strong_pairs to_strongs(const hash_digest& tx_hash) const NOEXCEPT;
 
-    /// Archival
-    /// -----------------------------------------------------------------------
-    point_link set_link_(const hash_digest& point_hash) NOEXCEPT;
-
     /// Validate.
     /// -----------------------------------------------------------------------
     inline code to_block_code(linkage<schema::code>::integer value) const NOEXCEPT;
