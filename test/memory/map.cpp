@@ -47,6 +47,7 @@ BOOST_AUTO_TEST_CASE(map__file__always__expected)
     const std::string file = TEST_PATH;
     map instance(file);
     BOOST_REQUIRE_EQUAL(instance.file(), file);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__open__opened__false)
@@ -59,6 +60,7 @@ BOOST_AUTO_TEST_CASE(map__open__opened__false)
     BOOST_REQUIRE_EQUAL(instance.open(), error::success);
     BOOST_REQUIRE_EQUAL(instance.open(), error::open_open);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__open__no_file__false)
@@ -68,6 +70,7 @@ BOOST_AUTO_TEST_CASE(map__open__no_file__false)
     BOOST_REQUIRE(!test::exists(file));
     BOOST_REQUIRE_EQUAL(instance.open(), error::open_failure);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__close__open__true)
@@ -78,6 +81,7 @@ BOOST_AUTO_TEST_CASE(map__close__open__true)
     BOOST_REQUIRE_EQUAL(instance.open(), error::success);
     BOOST_REQUIRE(instance.is_open());
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__close__closed__true)
@@ -99,6 +103,7 @@ BOOST_AUTO_TEST_CASE(map__close__loaded__false)
     BOOST_REQUIRE_EQUAL(instance.close(), error::close_loaded);
     BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__properties__open_close__expected)
@@ -123,6 +128,7 @@ BOOST_AUTO_TEST_CASE(map__properties__open_close__expected)
     BOOST_REQUIRE(!instance.is_loaded());
     BOOST_REQUIRE_EQUAL(instance.size(), 0u);
     BOOST_REQUIRE_EQUAL(instance.capacity(), 0u);
+    BOOST_REQUIRE(!instance.get_error());
 
     BOOST_REQUIRE(test::exists(file));
 }
@@ -154,6 +160,7 @@ BOOST_AUTO_TEST_CASE(map__properties__load_unload__expected)
     BOOST_REQUIRE(!instance.is_loaded());
     BOOST_REQUIRE_EQUAL(instance.size(), 0u);
     BOOST_REQUIRE_EQUAL(instance.capacity(), 0u);
+    BOOST_REQUIRE(!instance.get_error());
 
     BOOST_REQUIRE(test::exists(file));
 }
@@ -167,6 +174,7 @@ BOOST_AUTO_TEST_CASE(map__load__unloaded__true)
     BOOST_REQUIRE_EQUAL(instance.load(), error::success);
     BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__load__shared__false)
@@ -182,6 +190,7 @@ BOOST_AUTO_TEST_CASE(map__load__shared__false)
     memory.reset();
     BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__load__loaded__false)
@@ -194,6 +203,7 @@ BOOST_AUTO_TEST_CASE(map__load__loaded__false)
     BOOST_REQUIRE_EQUAL(instance.load(), error::load_loaded);
     BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__unload__unloaded__true)
@@ -204,6 +214,7 @@ BOOST_AUTO_TEST_CASE(map__unload__unloaded__true)
     BOOST_REQUIRE_EQUAL(instance.open(), error::success);
     BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__unload__loaded__true)
@@ -215,6 +226,7 @@ BOOST_AUTO_TEST_CASE(map__unload__loaded__true)
     BOOST_REQUIRE_EQUAL(instance.load(), error::success);
     BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__capacity__default__expected)
@@ -230,6 +242,7 @@ BOOST_AUTO_TEST_CASE(map__capacity__default__expected)
     BOOST_REQUIRE_EQUAL(instance.capacity(), default_minimum_capacity);
     BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__truncate__unloaded__false)
@@ -240,6 +253,7 @@ BOOST_AUTO_TEST_CASE(map__truncate__unloaded__false)
     BOOST_REQUIRE_EQUAL(instance.open(), error::success);
     BOOST_REQUIRE(!instance.truncate(42));
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 // Truncate is no longer capacty based.
@@ -258,6 +272,7 @@ BOOST_AUTO_TEST_CASE(map__truncate__unloaded__false)
 ////    BOOST_REQUIRE_EQUAL(instance.size(), to_half(size));
 ////    BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
 ////    BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+////    BOOST_REQUIRE(!instance.get_error());
 ////}
 
 BOOST_AUTO_TEST_CASE(map__allocate__unloaded__false)
@@ -268,6 +283,7 @@ BOOST_AUTO_TEST_CASE(map__allocate__unloaded__false)
     BOOST_REQUIRE_EQUAL(instance.open(), error::success);
     BOOST_REQUIRE_EQUAL(instance.allocate(42), map::eof);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__allocate__loaded__expected_capacity)
@@ -283,6 +299,7 @@ BOOST_AUTO_TEST_CASE(map__allocate__loaded__expected_capacity)
     BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
     BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__allocate__add_overflow__eof)
@@ -296,6 +313,7 @@ BOOST_AUTO_TEST_CASE(map__allocate__add_overflow__eof)
     BOOST_REQUIRE_EQUAL(instance.allocate(max_size_t), storage::eof);
     BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__allocate__minimum_no_expansion__expected_capacity)
@@ -312,6 +330,7 @@ BOOST_AUTO_TEST_CASE(map__allocate__minimum_no_expansion__expected_capacity)
     BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
     BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__allocate__no_minimum_expansion__expected_capacity)
@@ -334,6 +353,7 @@ BOOST_AUTO_TEST_CASE(map__allocate__no_minimum_expansion__expected_capacity)
     BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
     BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__get__unloaded__false)
@@ -344,6 +364,7 @@ BOOST_AUTO_TEST_CASE(map__get__unloaded__false)
     BOOST_REQUIRE_EQUAL(instance.open(), error::success);
     BOOST_REQUIRE(!instance.get());
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__get__loaded__success)
@@ -356,6 +377,7 @@ BOOST_AUTO_TEST_CASE(map__get__loaded__success)
     BOOST_REQUIRE(instance.get(instance.allocate(1)));
     BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__flush__unloaded__false)
@@ -366,6 +388,7 @@ BOOST_AUTO_TEST_CASE(map__flush__unloaded__false)
     BOOST_REQUIRE_EQUAL(instance.open(), error::success);
     BOOST_REQUIRE_EQUAL(instance.flush(), error::flush_unloaded);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__flush__loaded__true)
@@ -378,6 +401,7 @@ BOOST_AUTO_TEST_CASE(map__flush__loaded__true)
     BOOST_REQUIRE_EQUAL(instance.flush(), error::success);
     BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__write__read__expected)
@@ -399,6 +423,7 @@ BOOST_AUTO_TEST_CASE(map__write__read__expected)
     memory.reset();
     BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(map__unload__shared__false)
@@ -414,6 +439,7 @@ BOOST_AUTO_TEST_CASE(map__unload__shared__false)
     memory.reset();
     BOOST_REQUIRE_EQUAL(instance.unload(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(), error::success);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

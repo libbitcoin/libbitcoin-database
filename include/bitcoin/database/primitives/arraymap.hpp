@@ -68,6 +68,15 @@ public:
     /// Reduce count as specified.
     bool truncate(const Link& count) NOEXCEPT;
 
+    /// Errors.
+    /// -----------------------------------------------------------------------
+
+    /// Get the current error condition.
+    code get_error() const NOEXCEPT;
+
+    /// Clear the error condition.
+    void clear_error() NOEXCEPT;
+
     /// Query interface.
     /// -----------------------------------------------------------------------
 

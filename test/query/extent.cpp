@@ -43,6 +43,14 @@ BOOST_FIXTURE_TEST_SUITE(query_extent_tests, query_extent_setup_fixture)
 // nop event handler.
 const auto events = [](auto, auto) {};
 
+BOOST_AUTO_TEST_CASE(query__is_full__chunk_store__false)
+{
+    const settings configuration{};
+    test::chunk_store store{ configuration };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!query.is_full());
+}
+
 BOOST_AUTO_TEST_CASE(query_extent__sizes__genesis__expected)
 {
     settings settings{};

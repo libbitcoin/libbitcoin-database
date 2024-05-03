@@ -52,6 +52,15 @@ enum error_t : uint8_t
     unload_locked,
     unload_failure,
 
+    // mmap
+    disk_full,
+    mmap_failure,
+    mremap_failure,
+    munmap_failure,
+    madvise_failure,
+    ftruncate_failure,
+    fsync_failure,
+
     /// locks
     transactor_lock,
     process_lock,

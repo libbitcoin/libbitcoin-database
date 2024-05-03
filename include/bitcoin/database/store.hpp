@@ -66,6 +66,12 @@ public:
     /// Get a transactor object.
     const transactor get_transactor() NOEXCEPT;
 
+    /// Detect the specified exclusive error condition.
+    bool get_error(const code& ec) const NOEXCEPT;
+
+    /// Clear all error conditions.
+    void clear_error() NOEXCEPT;
+
     /// Archives.
     table::header header;
     table::point point;

@@ -34,6 +34,7 @@ BOOST_AUTO_TEST_CASE(manager__count__empty_slab__zero)
     test::chunk_storage file;
     const manager<linkage<4>, key1, max_size_t> instance(file);
     BOOST_REQUIRE(is_zero(instance.count()));
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__count__non_empty_slab__expected)
@@ -45,6 +46,7 @@ BOOST_AUTO_TEST_CASE(manager__count__non_empty_slab__expected)
     // Slab sizing is byte-based (arbitrary, links are file offsets).
     const manager<linkage<4>, key1, max_size_t> instance(file);
     BOOST_REQUIRE_EQUAL(instance.count(), expected);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__truncate__terminal_slab__false_unchanged)
@@ -54,6 +56,7 @@ BOOST_AUTO_TEST_CASE(manager__truncate__terminal_slab__false_unchanged)
     manager<linkage<4>, key1, max_size_t> instance(file);
     BOOST_REQUIRE(!instance.truncate(linkage<4>::terminal));
     BOOST_REQUIRE_EQUAL(instance.count(), zero);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__truncate__overflow_slab__false_unchanged)
@@ -64,6 +67,7 @@ BOOST_AUTO_TEST_CASE(manager__truncate__overflow_slab__false_unchanged)
     manager<linkage<4>, key1, max_size_t> instance(file);
     BOOST_REQUIRE(!instance.truncate(add1(size)));
     BOOST_REQUIRE_EQUAL(instance.count(), size);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__truncate__half_full_slab__true_changed)
@@ -82,6 +86,7 @@ BOOST_AUTO_TEST_CASE(manager__truncate__half_full_slab__true_changed)
 
     BOOST_REQUIRE(instance.truncate(0));
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__allocate__eof_slab__terminal_unchanged)
@@ -91,6 +96,7 @@ BOOST_AUTO_TEST_CASE(manager__allocate__eof_slab__terminal_unchanged)
     manager<linkage<7>, key1, max_size_t> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(storage::eof), linkage<7>::terminal);
     BOOST_REQUIRE_EQUAL(instance.count(), zero);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__allocate__terminal_slab__terminal_unchanged)
@@ -100,6 +106,7 @@ BOOST_AUTO_TEST_CASE(manager__allocate__terminal_slab__terminal_unchanged)
     manager<linkage<4>, key1, max_size_t> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(linkage<4>::terminal), linkage<4>::terminal);
     BOOST_REQUIRE_EQUAL(instance.count(), zero);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__allocate__empty_slab__expected)
@@ -110,6 +117,7 @@ BOOST_AUTO_TEST_CASE(manager__allocate__empty_slab__expected)
     manager<linkage<4>, key1, max_size_t> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(expected), zero);
     BOOST_REQUIRE_EQUAL(instance.count(), expected);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__allocate__non_empty_slab__expected)
@@ -120,6 +128,7 @@ BOOST_AUTO_TEST_CASE(manager__allocate__non_empty_slab__expected)
     manager<linkage<4>, key1, max_size_t> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(to_half(expected)), to_half(expected));
     BOOST_REQUIRE_EQUAL(instance.count(), expected);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__get__terminal_slab__terminal)
@@ -130,6 +139,7 @@ BOOST_AUTO_TEST_CASE(manager__get__terminal_slab__terminal)
     const manager<linkage<2>, key1, max_size_t> instance(file);
     BOOST_REQUIRE_EQUAL(instance.count(), size);
     BOOST_REQUIRE(!instance.get(linkage<2>::terminal));
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__get__slab__expected)
@@ -148,6 +158,7 @@ BOOST_AUTO_TEST_CASE(manager__get__slab__expected)
     BOOST_REQUIRE_EQUAL(*instance.get(1)->begin(), 0x01_u8);
     BOOST_REQUIRE_EQUAL(*instance.get(2)->begin(), 0x02_u8);
     BOOST_REQUIRE_EQUAL(*instance.get(9)->begin(), 0x09_u8);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 // records
@@ -157,6 +168,7 @@ BOOST_AUTO_TEST_CASE(manager__count__empty_record__zero)
     test::chunk_storage file;
     const manager<linkage<4>, key1, 42> instance(file);
     BOOST_REQUIRE(is_zero(instance.count()));
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__count__1_record__expected)
@@ -170,6 +182,7 @@ BOOST_AUTO_TEST_CASE(manager__count__1_record__expected)
     // Record sizing is record count-based (links are record counters).
     const manager<linkage<4>, key1, bytes> instance(file);
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__count__33_record__expected)
@@ -181,6 +194,7 @@ BOOST_AUTO_TEST_CASE(manager__count__33_record__expected)
     test::chunk_storage file(buffer);
     const manager<linkage<4>, key2, bytes> instance(file);
     BOOST_REQUIRE_EQUAL(instance.count(), 33u);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__truncate__terminal_record__false_unchanged)
@@ -190,6 +204,7 @@ BOOST_AUTO_TEST_CASE(manager__truncate__terminal_record__false_unchanged)
     manager<linkage<2>, key0, 5u> instance(file);
     BOOST_REQUIRE(!instance.truncate(linkage<2>::terminal));
     BOOST_REQUIRE_EQUAL(instance.count(), zero);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__truncate__overflow_record__false_unchanged)
@@ -200,6 +215,7 @@ BOOST_AUTO_TEST_CASE(manager__truncate__overflow_record__false_unchanged)
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
     BOOST_REQUIRE(!instance.truncate(2));
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__truncate__half_full_record__true_changed)
@@ -217,6 +233,7 @@ BOOST_AUTO_TEST_CASE(manager__truncate__half_full_record__true_changed)
 
     BOOST_REQUIRE(instance.truncate(0));
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__allocate__terminal_empty_record__terminal_unchanged)
@@ -226,6 +243,7 @@ BOOST_AUTO_TEST_CASE(manager__allocate__terminal_empty_record__terminal_unchange
     manager<linkage<2>, key0, 5u> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(linkage<2>::terminal), linkage<2>::terminal);
     BOOST_REQUIRE_EQUAL(instance.count(), zero);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__allocate__terminal_non_empty_record__expected)
@@ -237,6 +255,7 @@ BOOST_AUTO_TEST_CASE(manager__allocate__terminal_non_empty_record__expected)
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
     BOOST_REQUIRE_EQUAL(instance.allocate(linkage<2>::terminal), linkage<2>::terminal);
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__allocate__empty_record__expected)
@@ -248,6 +267,7 @@ BOOST_AUTO_TEST_CASE(manager__allocate__empty_record__expected)
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
     BOOST_REQUIRE_EQUAL(instance.allocate(2), 1u);
     BOOST_REQUIRE_EQUAL(instance.count(), 3u);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__allocate__non_empty_record__expected)
@@ -259,6 +279,7 @@ BOOST_AUTO_TEST_CASE(manager__allocate__non_empty_record__expected)
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
     BOOST_REQUIRE_EQUAL(instance.allocate(2), 2u);
     BOOST_REQUIRE_EQUAL(instance.count(), 4u);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__get__terminal_record__terminal)
@@ -268,6 +289,7 @@ BOOST_AUTO_TEST_CASE(manager__get__terminal_record__terminal)
     const manager<linkage<2>, key0, 5u> instance(file);
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
     BOOST_REQUIRE(!instance.get(linkage<2>::terminal));
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_CASE(manager__get__record__expected)
@@ -283,6 +305,7 @@ BOOST_AUTO_TEST_CASE(manager__get__record__expected)
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
     BOOST_REQUIRE_EQUAL(*instance.get(0)->begin(), 0x00_u8);
     BOOST_REQUIRE_EQUAL(*instance.get(1)->begin(), 0x06_u8);
+    BOOST_REQUIRE(!instance.get_error());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

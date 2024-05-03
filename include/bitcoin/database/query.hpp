@@ -53,6 +53,7 @@ using two_counts = std::pair<size_t, size_t>;
 struct strong_pair { header_link block; tx_link tx; };
 using strong_pairs = std_vector<strong_pair>;
 
+// Writers (non-const) are only: push_, pop_, set_ and initialize.
 template <typename Store>
 class query
 {
@@ -80,6 +81,9 @@ public:
     using filter = system::data_chunk;
 
     query(Store& value) NOEXCEPT;
+
+    /// True if disk is full and no other store error condition.
+    bool is_full() const NOEXCEPT;
 
     /// Initialization (natural-keyed).
     /// -----------------------------------------------------------------------
@@ -296,7 +300,7 @@ public:
     txs_link set_link(const transactions& txs, const header_link& link,
         size_t size) NOEXCEPT;
     tx_link set_link(const transaction& tx) NOEXCEPT;
-    bool dissasociate(const header_link& link) NOEXCEPT;
+    bool set_dissasociated(const header_link& link) NOEXCEPT;
 
     /// Chain state.
     /// -----------------------------------------------------------------------
@@ -418,10 +422,6 @@ protected:
     inline header_links to_blocks(const tx_link& link) const NOEXCEPT;
     inline strong_pair to_strong(const hash_digest& tx_hash) const NOEXCEPT;
     inline strong_pairs to_strongs(const hash_digest& tx_hash) const NOEXCEPT;
-
-    /// Archival
-    /// -----------------------------------------------------------------------
-    point_link set_link_(const hash_digest& point_hash) NOEXCEPT;
 
     /// Validate.
     /// -----------------------------------------------------------------------

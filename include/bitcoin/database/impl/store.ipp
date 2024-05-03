@@ -37,6 +37,9 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // so establish 1 as the minimum value (which also implies disabled).
 constexpr auto nonzero = 1_u32;
 
+// public
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 CLASS::store(const settings& config) NOEXCEPT
   : configuration_(config),
@@ -395,6 +398,65 @@ const typename CLASS::transactor CLASS::get_transactor() NOEXCEPT
 {
     return transactor{ transactor_mutex_ };
 }
+
+TEMPLATE
+bool CLASS::get_error(const code& ec) const NOEXCEPT
+{
+    // A disk full error will not leave a flush lock, but others will.
+    // There may be other error codes as well so check all.
+
+    bool found{};
+    const auto match = [&ec, &found](const auto& storage) NOEXCEPT
+    {
+        const auto error = storage.get_error();
+        if (error == ec) found = true;
+        return !error || found;
+    };
+
+    return match(header_body_)
+        && match(point_body_)
+        && match(input_body_)
+        && match(output_body_)
+        && match(puts_body_)
+        && match(tx_body_)
+        && match(txs_body_)
+        && match(address_body_)
+        && match(candidate_body_)
+        && match(confirmed_body_)
+        && match(spend_body_)
+        && match(strong_tx_body_)
+        && match(validated_bk_body_)
+        && match(validated_tx_body_)
+        && match(neutrino_body_)
+        ////&& match(bootstrap_body_)
+        ////&& match(buffer_body_)
+        && found;
+}
+
+TEMPLATE
+void CLASS::clear_error() NOEXCEPT
+{
+    header_body_.clear_error();
+    point_body_.clear_error();
+    input_body_.clear_error();
+    output_body_.clear_error();
+    puts_body_.clear_error();
+    tx_body_.clear_error();
+    txs_body_.clear_error();
+    address_body_.clear_error();
+    candidate_body_.clear_error();
+    confirmed_body_.clear_error();
+    spend_body_.clear_error();
+    strong_tx_body_.clear_error();
+    validated_bk_body_.clear_error();
+    validated_tx_body_.clear_error();
+    neutrino_body_.clear_error();
+    ////bootstrap_body_.clear_error();
+    ////buffer_body_.clear_error();
+}
+
+// protected
+// ----------------------------------------------------------------------------
 
 TEMPLATE
 code CLASS::open_load(const event_handler& handler) NOEXCEPT

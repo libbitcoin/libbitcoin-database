@@ -64,7 +64,7 @@ code chunk_storage::load() NOEXCEPT
     return error::success;
 }
 
-code chunk_storage::flush() const NOEXCEPT
+code chunk_storage::flush() NOEXCEPT
 {
     return error::success;
 }
@@ -126,6 +126,15 @@ memory_ptr chunk_storage::get(size_t offset) const NOEXCEPT
         std::next(buffer_.data(), size()));
 
     return ptr;
+}
+
+code chunk_storage::get_error() const NOEXCEPT
+{
+    return {};
+}
+
+void chunk_storage::clear_error() NOEXCEPT
+{
 }
 
 BC_POP_WARNING()

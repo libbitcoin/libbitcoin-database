@@ -45,6 +45,15 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { unload_locked, "unloading locked file" },
     { unload_failure, "file failed to unload" },
 
+    // mmap
+    { disk_full, "disk full" },
+    { mmap_failure, "mmap failure" },
+    { mremap_failure, "mremap failure" },
+    { munmap_failure, "munmap failure" },
+    { madvise_failure, "madvise failure" },
+    { ftruncate_failure, "ftruncate failure" },
+    { fsync_failure, "fsync failure" },
+
     // locks
     { transactor_lock, "transactor lock failure" },
     { process_lock, "process lock failure" },

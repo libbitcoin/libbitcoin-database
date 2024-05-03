@@ -20,12 +20,14 @@
 #define LIBBITCOIN_DATABASE_MEMORY_MAP_HPP
 
 #include <algorithm>
+#include <atomic>
 #include <filesystem>
 #include <mutex>
 #include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/error.hpp>
+#include <bitcoin/database/file/file.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
@@ -65,7 +67,7 @@ public:
     code load() NOEXCEPT override;
 
     /// Flush memory map to disk, suspend writes for call, must be loaded.
-    code flush() const NOEXCEPT override;
+    code flush() NOEXCEPT override;
 
     /// Flush, unmap and truncate to logical, restartable, idempotent.
     code unload() NOEXCEPT override;
@@ -88,7 +90,14 @@ public:
     /// Get r/w access to start/offset of memory map (or null).
     memory_ptr get(size_t offset=zero) const NOEXCEPT override;
 
+    /// Get the current error condition.
+    code get_error() const NOEXCEPT override;
+
+    /// Clear the error condition.
+    void clear_error() NOEXCEPT override;
+
 protected:
+    void set_first_code(const error::error_t& value) NOEXCEPT;
     size_t to_capacity(size_t required) const NOEXCEPT
     {
         BC_PUSH_WARNING(NO_STATIC_CAST)
@@ -105,7 +114,7 @@ private:
     using access = accessor<std::shared_mutex>;
 
     // Mapping utilities.
-    bool flush_() const NOEXCEPT;
+    bool flush_() NOEXCEPT;
     bool unmap_() NOEXCEPT;
     bool map_() NOEXCEPT;
     bool remap_(size_t size) NOEXCEPT;
@@ -119,17 +128,20 @@ private:
     // Protected by remap_mutex.
     // requires remap_mutex_ exclusive lock for write.
     // requires remap_mutex_ minimum shared lock for flush/read.
-    uint8_t* memory_map_;
+    uint8_t* memory_map_{};
     mutable std::shared_mutex remap_mutex_{};
 
     // Protected by field_mutex.
     // fields require field_mutex_ exclusive lock for write.
     // fields require minimum field_mutex_ shared lock for flush/read.
-    int opened_;
-    bool loaded_;
-    size_t capacity_;
-    size_t logical_;
+    int opened_{ file::invalid };
+    bool loaded_{};
+    size_t capacity_{};
+    size_t logical_{};
     mutable std::shared_mutex field_mutex_{};
+
+    // This is thread safe;
+    std::atomic<error::error_t> error_{ error::success };
 };
 
 } // namespace database

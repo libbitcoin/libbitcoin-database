@@ -86,6 +86,21 @@ memory_ptr CLASS::get(const Link& value) const NOEXCEPT
     return file_.get(link_to_position(value));
 }
 
+// Errors.
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+code CLASS::get_error() const NOEXCEPT
+{
+    return file_.get_error();
+}
+
+TEMPLATE
+void CLASS::clear_error() NOEXCEPT
+{
+    file_.clear_error();
+}
+
 // private
 // ----------------------------------------------------------------------------
 
