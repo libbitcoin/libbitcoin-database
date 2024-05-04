@@ -44,18 +44,17 @@ namespace schema
     namespace archive
     {
         constexpr auto header = "archive_header";
-        constexpr auto point = "archive_point";
         constexpr auto input = "archive_input";
         constexpr auto output = "archive_output";
-        constexpr auto spend = "archive_spend";
+        constexpr auto point = "archive_point";
         constexpr auto puts = "archive_puts";
-        constexpr auto txs = "archive_txs";
+        constexpr auto spend = "archive_spend";
         constexpr auto tx = "archive_tx";
+        constexpr auto txs = "archive_txs";
     }
 
     namespace indexes
     {
-        constexpr auto address = "address";
         constexpr auto candidate = "candidate";
         constexpr auto confirmed = "confirmed";
         constexpr auto strong_tx = "strong_tx";
@@ -63,11 +62,16 @@ namespace schema
 
     namespace caches
     {
-        constexpr auto bootstrap = "bootstrap";
-        constexpr auto buffer = "buffer";
-        constexpr auto neutrino = "neutrino";
         constexpr auto validated_bk = "validated_bk";
         constexpr auto validated_tx = "validated_tx";
+    }
+
+    namespace optionals
+    {
+        constexpr auto address = "address";
+        constexpr auto neutrino = "neutrino";
+        ////constexpr auto bootstrap = "bootstrap";
+        ////constexpr auto buffer = "buffer";
     }
 
     namespace locks
@@ -116,8 +120,8 @@ namespace schema
     constexpr size_t block = 3;     // ->header record.
     constexpr size_t bk_slab = 3;   // ->validated_bk record.
     constexpr size_t tx_slab = 5;   // ->validated_tk record.
-    constexpr size_t buffer_ = 5;   // ->buffer record (guestimate).
-    constexpr size_t neutrino_ = 5; // ->neutrino record (guestimate).
+    constexpr size_t neutrino_ = 5; // ->neutrino record.
+    ////constexpr size_t buffer_ = 5;   // ->buffer record (guestimate).
 
     /// Search keys.
     constexpr size_t hash = system::hash_size;

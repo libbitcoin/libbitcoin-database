@@ -74,23 +74,25 @@ public:
 
     /// Archives.
     table::header header;
-    table::point point;
     table::input input;
     table::output output;
+    table::point point;
     table::puts puts;
+    table::spend spend;
     table::transaction tx;
     table::txs txs;
 
     /// Indexes.
-    table::address address;
     table::height candidate;
     table::height confirmed;
-    table::spend spend;
     table::strong_tx strong_tx;
 
     /// Caches.
     table::validated_bk validated_bk;
     table::validated_tx validated_tx;
+
+    /// Optionals.
+    table::address address;
     table::neutrino neutrino;
     ////table::bootstrap bootstrap;
     ////table::buffer buffer;
@@ -112,10 +114,6 @@ protected:
     Storage header_head_;
     Storage header_body_;
 
-    // record hashmap
-    Storage point_head_;
-    Storage point_body_;
-
     // slab hashmap
     Storage input_head_;
     Storage input_body_;
@@ -124,9 +122,17 @@ protected:
     Storage output_head_;
     Storage output_body_;
 
+    // record hashmap
+    Storage point_head_;
+    Storage point_body_;
+
     // array
     Storage puts_head_;
     Storage puts_body_;
+
+    // record hashmap
+    Storage spend_head_;
+    Storage spend_body_;
 
     // record hashmap
     Storage tx_head_;
@@ -139,10 +145,6 @@ protected:
     /// Indexes.
     /// -----------------------------------------------------------------------
 
-    // record hashmap
-    Storage address_head_;
-    Storage address_body_;
-
     // array
     Storage candidate_head_;
     Storage candidate_body_;
@@ -150,10 +152,6 @@ protected:
     // array
     Storage confirmed_head_;
     Storage confirmed_body_;
-
-    // record hashmap
-    Storage spend_head_;
-    Storage spend_body_;
 
     // record hashmap
     Storage strong_tx_head_;
@@ -169,6 +167,13 @@ protected:
     // record multimap
     Storage validated_tx_head_;
     Storage validated_tx_body_;
+
+    /// Optionals.
+    /// -----------------------------------------------------------------------
+
+    // record hashmap
+    Storage address_head_;
+    Storage address_body_;
 
     // slab hashmap
     Storage neutrino_head_;
