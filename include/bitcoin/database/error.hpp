@@ -86,8 +86,6 @@ enum error_t : uint8_t
     restore_table,
     verify_table,
 
-    /// states
-
     /// tx fully valid in the given header context.
     tx_connected,
 
