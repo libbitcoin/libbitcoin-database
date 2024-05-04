@@ -47,6 +47,7 @@ namespace schema
         constexpr auto point = "archive_point";
         constexpr auto input = "archive_input";
         constexpr auto output = "archive_output";
+        constexpr auto spend = "archive_spend";
         constexpr auto puts = "archive_puts";
         constexpr auto txs = "archive_txs";
         constexpr auto tx = "archive_tx";
@@ -57,7 +58,6 @@ namespace schema
         constexpr auto address = "address";
         constexpr auto candidate = "candidate";
         constexpr auto confirmed = "confirmed";
-        constexpr auto spend = "spend";
         constexpr auto strong_tx = "strong_tx";
     }
 

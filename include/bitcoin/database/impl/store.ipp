@@ -88,8 +88,8 @@ CLASS::store(const settings& config) NOEXCEPT
     confirmed_body_(body(config.path, schema::indexes::confirmed), config.confirmed_size, config.confirmed_rate),
     confirmed(confirmed_head_, confirmed_body_),
 
-    spend_head_(head(config.path / schema::dir::heads, schema::indexes::spend)),
-    spend_body_(body(config.path, schema::indexes::spend), config.spend_size, config.spend_rate),
+    spend_head_(head(config.path / schema::dir::heads, schema::archive::spend)),
+    spend_body_(body(config.path, schema::archive::spend), config.spend_size, config.spend_rate),
     spend(spend_head_, spend_body_, std::max(config.spend_buckets, nonzero)),
 
     strong_tx_head_(head(config.path / schema::dir::heads, schema::indexes::strong_tx)),
@@ -781,7 +781,7 @@ code CLASS::dump(const path& folder,
         return error::dump_file;
     if (!dump(confirmed_buffer, schema::indexes::confirmed, table_t::confirmed_head))
         return error::dump_file;
-    if (!dump(spend_buffer, schema::indexes::spend, table_t::spend_head))
+    if (!dump(spend_buffer, schema::archive::spend, table_t::spend_head))
         return error::dump_file;
     if (!dump(strong_tx_buffer, schema::indexes::strong_tx, table_t::strong_tx_head))
         return error::dump_file;
