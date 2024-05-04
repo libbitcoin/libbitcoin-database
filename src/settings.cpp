@@ -78,24 +78,24 @@ settings::settings() NOEXCEPT
 
     // Caches.
 
-    bootstrap_size{ 1 },
-    bootstrap_rate{ 50 },
-
-    buffer_buckets{ 100 },
-    buffer_size{ 1 },
-    buffer_rate{ 50 },
-
-    neutrino_buckets{ 100 },
-    neutrino_size{ 1 },
-    neutrino_rate{ 50 },
-
     validated_bk_buckets{ 100 },
     validated_bk_size{ 1 },
     validated_bk_rate{ 50 },
 
     validated_tx_buckets{ 100 },
     validated_tx_size{ 1 },
-    validated_tx_rate{ 50 }
+    validated_tx_rate{ 50 },
+
+    neutrino_buckets{ 100 },
+    neutrino_size{ 1 },
+    neutrino_rate{ 50 }
+
+    ////bootstrap_size{ 1 },
+    ////bootstrap_rate{ 50 },
+
+    ////buffer_buckets{ 100 },
+    ////buffer_size{ 1 },
+    ////buffer_rate{ 50 }
 {
 }
 
