@@ -55,8 +55,11 @@
     <Filter Include="include\bitcoin\database\tables\indexes">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="resource">
+    <Filter Include="include\bitcoin\database\tables\optionals">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000006}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resource">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000007}</UniqueIdentifier>
     </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000000}</UniqueIdentifier>
@@ -218,20 +221,14 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\puts.hpp">
       <Filter>include\bitcoin\database\tables\archives</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\spend.hpp">
+      <Filter>include\bitcoin\database\tables\archives</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\transaction.hpp">
       <Filter>include\bitcoin\database\tables\archives</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\txs.hpp">
       <Filter>include\bitcoin\database\tables\archives</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\bootstrap.hpp">
-      <Filter>include\bitcoin\database\tables\caches</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\buffer.hpp">
-      <Filter>include\bitcoin\database\tables\caches</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\neutrino.hpp">
-      <Filter>include\bitcoin\database\tables\caches</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_bk.hpp">
       <Filter>include\bitcoin\database\tables\caches</Filter>
@@ -245,17 +242,23 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\event.hpp">
       <Filter>include\bitcoin\database\tables</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\address.hpp">
-      <Filter>include\bitcoin\database\tables\indexes</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\height.hpp">
-      <Filter>include\bitcoin\database\tables\indexes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\spend.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\strong_tx.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\optionals\address.hpp">
+      <Filter>include\bitcoin\database\tables\optionals</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\optionals\bootstrap.hpp">
+      <Filter>include\bitcoin\database\tables\optionals</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\optionals\buffer.hpp">
+      <Filter>include\bitcoin\database\tables\optionals</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\optionals\neutrino.hpp">
+      <Filter>include\bitcoin\database\tables\optionals</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\schema.hpp">
       <Filter>include\bitcoin\database\tables</Filter>

@@ -46,18 +46,22 @@ struct BCD_API settings
     uint64_t header_size;
     uint16_t header_rate;
 
-    uint32_t point_buckets;
-    uint64_t point_size;
-    uint16_t point_rate;
-
     uint64_t input_size;
     uint16_t input_rate;
 
     uint64_t output_size;
     uint16_t output_rate;
 
+    uint32_t point_buckets;
+    uint64_t point_size;
+    uint16_t point_rate;
+
     uint64_t puts_size;
     uint16_t puts_rate;
+
+    uint32_t spend_buckets;
+    uint64_t spend_size;
+    uint16_t spend_rate;
 
     uint32_t tx_buckets;
     uint64_t tx_size;
@@ -70,19 +74,11 @@ struct BCD_API settings
     /// Indexes.
     /// -----------------------------------------------------------------------
 
-    uint32_t address_buckets;
-    uint64_t address_size;
-    uint16_t address_rate;
-
     uint64_t candidate_size;
     uint16_t candidate_rate;
 
     uint64_t confirmed_size;
     uint16_t confirmed_rate;
-
-    uint32_t spend_buckets;
-    uint64_t spend_size;
-    uint16_t spend_rate;
 
     uint32_t strong_tx_buckets;
     uint64_t strong_tx_size;
@@ -91,17 +87,6 @@ struct BCD_API settings
     /// Caches.
     /// -----------------------------------------------------------------------
 
-    uint32_t bootstrap_size;
-    uint16_t bootstrap_rate;
-
-    uint32_t buffer_buckets;
-    uint64_t buffer_size;
-    uint16_t buffer_rate;
-
-    uint32_t neutrino_buckets;
-    uint64_t neutrino_size;
-    uint16_t neutrino_rate;
-
     uint32_t validated_bk_buckets;
     uint64_t validated_bk_size;
     uint16_t validated_bk_rate;
@@ -109,6 +94,24 @@ struct BCD_API settings
     uint32_t validated_tx_buckets;
     uint64_t validated_tx_size;
     uint16_t validated_tx_rate;
+
+    /// Optionals.
+    /// -----------------------------------------------------------------------
+
+    uint32_t address_buckets;
+    uint64_t address_size;
+    uint16_t address_rate;
+
+    uint32_t neutrino_buckets;
+    uint64_t neutrino_size;
+    uint16_t neutrino_rate;
+
+    ////uint32_t bootstrap_size;
+    ////uint16_t bootstrap_rate;
+
+    ////uint32_t buffer_buckets;
+    ////uint64_t buffer_size;
+    ////uint16_t buffer_rate;
 };
 
 } // namespace database

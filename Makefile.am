@@ -222,23 +222,26 @@ include_bitcoin_database_tables_archives_HEADERS = \
     include/bitcoin/database/tables/archives/output.hpp \
     include/bitcoin/database/tables/archives/point.hpp \
     include/bitcoin/database/tables/archives/puts.hpp \
+    include/bitcoin/database/tables/archives/spend.hpp \
     include/bitcoin/database/tables/archives/transaction.hpp \
     include/bitcoin/database/tables/archives/txs.hpp
 
 include_bitcoin_database_tables_cachesdir = ${includedir}/bitcoin/database/tables/caches
 include_bitcoin_database_tables_caches_HEADERS = \
-    include/bitcoin/database/tables/caches/bootstrap.hpp \
-    include/bitcoin/database/tables/caches/buffer.hpp \
-    include/bitcoin/database/tables/caches/neutrino.hpp \
     include/bitcoin/database/tables/caches/validated_bk.hpp \
     include/bitcoin/database/tables/caches/validated_tx.hpp
 
 include_bitcoin_database_tables_indexesdir = ${includedir}/bitcoin/database/tables/indexes
 include_bitcoin_database_tables_indexes_HEADERS = \
-    include/bitcoin/database/tables/indexes/address.hpp \
     include/bitcoin/database/tables/indexes/height.hpp \
-    include/bitcoin/database/tables/indexes/spend.hpp \
     include/bitcoin/database/tables/indexes/strong_tx.hpp
+
+include_bitcoin_database_tables_optionalsdir = ${includedir}/bitcoin/database/tables/optionals
+include_bitcoin_database_tables_optionals_HEADERS = \
+    include/bitcoin/database/tables/optionals/address.hpp \
+    include/bitcoin/database/tables/optionals/bootstrap.hpp \
+    include/bitcoin/database/tables/optionals/buffer.hpp \
+    include/bitcoin/database/tables/optionals/neutrino.hpp
 
 
 # Custom make targets.

@@ -35,18 +35,22 @@ settings::settings() NOEXCEPT
     header_size{ 1 },
     header_rate{ 50 },
 
-    point_buckets{ 100 },
-    point_size{ 1 },
-    point_rate{ 50 },
-
     input_size{ 1 },
     input_rate{ 50 },
 
     output_size{ 1 },
     output_rate{ 50 },
 
+    point_buckets{ 100 },
+    point_size{ 1 },
+    point_rate{ 50 },
+
     puts_size{ 1 },
     puts_rate{ 50 },
+
+    spend_buckets{ 100 },
+    spend_size{ 1 },
+    spend_rate{ 50 },
 
     tx_buckets{ 100 },
     tx_size{ 1 },
@@ -58,19 +62,11 @@ settings::settings() NOEXCEPT
 
     // Indexes.
 
-    address_buckets{ 100 },
-    address_size{ 1 },
-    address_rate{ 50 },
-
     candidate_size{ 1 },
     candidate_rate{ 50 },
 
     confirmed_size{ 1 },
     confirmed_rate{ 50 },
-
-    spend_buckets{ 100 },
-    spend_size{ 1 },
-    spend_rate{ 50 },
 
     strong_tx_buckets{ 100 },
     strong_tx_size{ 1 },
@@ -78,24 +74,32 @@ settings::settings() NOEXCEPT
 
     // Caches.
 
-    bootstrap_size{ 1 },
-    bootstrap_rate{ 50 },
-
-    buffer_buckets{ 100 },
-    buffer_size{ 1 },
-    buffer_rate{ 50 },
-
-    neutrino_buckets{ 100 },
-    neutrino_size{ 1 },
-    neutrino_rate{ 50 },
-
     validated_bk_buckets{ 100 },
     validated_bk_size{ 1 },
     validated_bk_rate{ 50 },
 
     validated_tx_buckets{ 100 },
     validated_tx_size{ 1 },
-    validated_tx_rate{ 50 }
+    validated_tx_rate{ 50 },
+
+    // Optionals.
+
+    address_buckets{ 100 },
+    address_size{ 1 },
+    address_rate{ 50 },
+
+    neutrino_buckets{ 100 },
+    neutrino_size{ 1 },
+    neutrino_rate{ 50 }
+
+    // Caches.
+
+    ////bootstrap_size{ 1 },
+    ////bootstrap_rate{ 50 },
+
+    ////buffer_buckets{ 100 },
+    ////buffer_size{ 1 },
+    ////buffer_rate{ 50 }
 {
 }
 
