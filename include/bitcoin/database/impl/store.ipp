@@ -407,6 +407,30 @@ const typename CLASS::transactor CLASS::get_transactor() NOEXCEPT
 }
 
 TEMPLATE
+code CLASS::get_first_error() const NOEXCEPT
+{
+    code ec{};
+    if ((ec = header_body_.get_error())) return ec;
+    if ((ec = input_body_.get_error())) return ec;
+    if ((ec = output_body_.get_error())) return ec;
+    if ((ec = point_body_.get_error())) return ec;
+    if ((ec = puts_body_.get_error())) return ec;
+    if ((ec = spend_body_.get_error())) return ec;
+    if ((ec = tx_body_.get_error())) return ec;
+    if ((ec = txs_body_.get_error())) return ec;
+    if ((ec = candidate_body_.get_error())) return ec;
+    if ((ec = confirmed_body_.get_error())) return ec;
+    if ((ec = strong_tx_body_.get_error())) return ec;
+    if ((ec = validated_bk_body_.get_error())) return ec;
+    if ((ec = validated_tx_body_.get_error())) return ec;
+    if ((ec = address_body_.get_error())) return ec;
+    if ((ec = neutrino_body_.get_error())) return ec;
+    ////if ((ec = bootstrap_body_.get_error())) return ec;
+    ////if ((ec = buffer_body_.get_error())) return ec;
+    return ec;
+}
+
+TEMPLATE
 bool CLASS::get_error(const code& ec) const NOEXCEPT
 {
     // A disk full error will not leave a flush lock, but others will.

@@ -68,6 +68,9 @@ public:
     /// Get a transactor object.
     const transactor get_transactor() NOEXCEPT;
 
+    /// Detect the first error condition.
+    code get_first_error() const NOEXCEPT;
+
     /// Detect the specified error condition (exclusive).
     bool get_error(const code& ec) const NOEXCEPT;
 
