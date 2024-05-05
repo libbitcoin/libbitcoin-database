@@ -462,6 +462,33 @@ void CLASS::clear_error() NOEXCEPT
     ////buffer_body_.clear_error();
 }
 
+TEMPLATE
+void CLASS::report_errors(const error_handler& handler) NOEXCEPT
+{
+    const auto report = [&handler](const auto& storage, table_t table) NOEXCEPT
+    {
+        handler(storage.get_error(), table);
+    };
+
+    report(header_body_, table_t::header_body);
+    report(input_body_, table_t::input_body);
+    report(output_body_, table_t::output_body);
+    report(point_body_, table_t::point_body);
+    report(puts_body_, table_t::puts_body);
+    report(spend_body_, table_t::spend_body);
+    report(tx_body_, table_t::tx_body);
+    report(txs_body_, table_t::txs_body);
+    report(candidate_body_, table_t::candidate_body);
+    report(confirmed_body_, table_t::confirmed_body);
+    report(strong_tx_body_, table_t::strong_tx_body);
+    report(validated_bk_body_, table_t::validated_bk_body);
+    report(validated_tx_body_, table_t::validated_tx_body);
+    report(address_body_, table_t::address_body);
+    report(neutrino_body_, table_t::neutrino_body);
+    ////report(bootstrap_body_, table_t::bootstrap_body);
+    ////report(buffer_body_, table_t::buffer_body);
+}
+
 // protected
 // ----------------------------------------------------------------------------
 
