@@ -765,7 +765,11 @@ code CLASS::backup(const event_handler& handler) NOEXCEPT
     // Dump /heads memory maps to /primary.
     if (!file::clear_directory(primary)) return error::create_directory;
     const auto ec = dump(primary, handler);
-    if (ec) /* bool */ file::clear_directory(primary);
+
+    // If failed clear primary and rename secondary to primary.
+    if (ec && file::clear_directory(primary) && file::remove(primary))
+        /* bool */ file::rename(secondary, primary);
+
     return ec;
 }
 
