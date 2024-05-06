@@ -24,6 +24,7 @@
 #include <shared_mutex>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/error.hpp>
 #include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/locks/locks.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -43,6 +44,7 @@ public:
     DELETE_COPY_MOVE_DESTRUCT(store);
 
     typedef std::function<void(event_t, table_t)> event_handler;
+    typedef std::function<void(const code&, table_t)> error_handler;
     typedef std::shared_lock<std::shared_timed_mutex> transactor;
 
     /// Construct a store from settings.
@@ -66,11 +68,17 @@ public:
     /// Get a transactor object.
     const transactor get_transactor() NOEXCEPT;
 
-    /// Detect the specified exclusive error condition.
+    /// Detect the first error condition.
+    code get_first_error() const NOEXCEPT;
+
+    /// Detect the specified error condition (exclusive).
     bool get_error(const code& ec) const NOEXCEPT;
 
     /// Clear all error conditions.
     void clear_error() NOEXCEPT;
+
+    /// Dump all error conditions to error handler.
+    void report_errors(const error_handler& handler) NOEXCEPT;
 
     /// Archives.
     table::header header;
