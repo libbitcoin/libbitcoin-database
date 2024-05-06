@@ -85,7 +85,7 @@ public:
     /// True if disk is full and no other store error condition.
     bool is_full() const NOEXCEPT;
 
-    /// True if there is any store error condition.
+    /// True if there is any store error condition (excludes error::disk_full).
     bool is_fault() const NOEXCEPT;
 
     /// Initialization (natural-keyed).
