@@ -29,7 +29,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     // general
     { success, "success" },
     { unknown_state, "unknown state" },
-    { integrity, "integrity failure" },
+    { integrity, "store corrupted" },
 
     // memory map
     { open_open, "opening open file" },

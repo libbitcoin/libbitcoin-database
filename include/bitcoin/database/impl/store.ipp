@@ -393,9 +393,11 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
 
     if (!ec) ec = unload_close(handler);
 
-    // unlock errors override ec.
-    if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
+    // unlock errors override ec, fault overrides unlock errors.
+    const auto fault = get_first_error() && !get_error(error::disk_full);
+    if (!fault && !flush_lock_.try_unlock()) ec = error::flush_unlock;
     if (!process_lock_.try_unlock()) ec = error::process_unlock;
+    if (fault) ec = error::integrity;
     transactor_mutex_.unlock();
     return ec;
 }
