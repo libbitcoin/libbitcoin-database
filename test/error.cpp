@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(error_t__code__integrity__true_exected_message)
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "integrity failure");
+    BOOST_REQUIRE_EQUAL(ec.message(), "store corrupted");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__open_open__true_exected_message)
