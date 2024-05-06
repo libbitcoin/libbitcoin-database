@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(store__get_error__disk_full__false)
 {
     const settings configuration{};
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(!instance.get_error(error::disk_full));
+    BOOST_REQUIRE(!instance.is_error(error::disk_full));
 }
 
 // create

@@ -393,126 +393,18 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
 
     if (!ec) ec = unload_close(handler);
 
-    // unlock errors override ec, fault overrides unlock errors.
-    const auto fault = get_first_error() && !get_error(error::disk_full);
-    if (!fault && !flush_lock_.try_unlock()) ec = error::flush_unlock;
-    if (!process_lock_.try_unlock()) ec = error::process_unlock;
-    if (fault) ec = error::integrity;
+    // unlock errors override ec.
+    if (!process_lock_.try_unlock())
+        ec = error::process_unlock;
+
+    // fault overrides unlock errors and leaves behind flush_lock.
+    if (get_fault())
+        ec = error::integrity;
+    else if (!flush_lock_.try_unlock())
+        ec = error::flush_unlock;
+
     transactor_mutex_.unlock();
     return ec;
-}
-
-TEMPLATE
-const typename CLASS::transactor CLASS::get_transactor() NOEXCEPT
-{
-    return transactor{ transactor_mutex_ };
-}
-
-TEMPLATE
-code CLASS::get_first_error() const NOEXCEPT
-{
-    code ec{};
-    if ((ec = header_body_.get_error())) return ec;
-    if ((ec = input_body_.get_error())) return ec;
-    if ((ec = output_body_.get_error())) return ec;
-    if ((ec = point_body_.get_error())) return ec;
-    if ((ec = puts_body_.get_error())) return ec;
-    if ((ec = spend_body_.get_error())) return ec;
-    if ((ec = tx_body_.get_error())) return ec;
-    if ((ec = txs_body_.get_error())) return ec;
-    if ((ec = candidate_body_.get_error())) return ec;
-    if ((ec = confirmed_body_.get_error())) return ec;
-    if ((ec = strong_tx_body_.get_error())) return ec;
-    if ((ec = validated_bk_body_.get_error())) return ec;
-    if ((ec = validated_tx_body_.get_error())) return ec;
-    if ((ec = address_body_.get_error())) return ec;
-    if ((ec = neutrino_body_.get_error())) return ec;
-    ////if ((ec = bootstrap_body_.get_error())) return ec;
-    ////if ((ec = buffer_body_.get_error())) return ec;
-    return ec;
-}
-
-TEMPLATE
-bool CLASS::get_error(const code& ec) const NOEXCEPT
-{
-    // A disk full error will not leave a flush lock, but others will.
-    // There may be other error codes as well so check all.
-
-    bool found{};
-    const auto match = [&ec, &found](const auto& storage) NOEXCEPT
-    {
-        const auto error = storage.get_error();
-        if (error == ec) found = true;
-        return !error || found;
-    };
-
-    return match(header_body_)
-        && match(input_body_)
-        && match(output_body_)
-        && match(point_body_)
-        && match(puts_body_)
-        && match(spend_body_)
-        && match(tx_body_)
-        && match(txs_body_)
-        && match(candidate_body_)
-        && match(confirmed_body_)
-        && match(strong_tx_body_)
-        && match(validated_bk_body_)
-        && match(validated_tx_body_)
-        && match(address_body_)
-        && match(neutrino_body_)
-        ////&& match(bootstrap_body_)
-        ////&& match(buffer_body_)
-        && found;
-}
-
-TEMPLATE
-void CLASS::clear_error() NOEXCEPT
-{
-    header_body_.clear_error();
-    input_body_.clear_error();
-    output_body_.clear_error();
-    point_body_.clear_error();
-    puts_body_.clear_error();
-    spend_body_.clear_error();
-    tx_body_.clear_error();
-    txs_body_.clear_error();
-    candidate_body_.clear_error();
-    confirmed_body_.clear_error();
-    strong_tx_body_.clear_error();
-    validated_bk_body_.clear_error();
-    validated_tx_body_.clear_error();
-    address_body_.clear_error();
-    neutrino_body_.clear_error();
-    ////bootstrap_body_.clear_error();
-    ////buffer_body_.clear_error();
-}
-
-TEMPLATE
-void CLASS::report_errors(const error_handler& handler) NOEXCEPT
-{
-    const auto report = [&handler](const auto& storage, table_t table) NOEXCEPT
-    {
-        handler(storage.get_error(), table);
-    };
-
-    report(header_body_, table_t::header_body);
-    report(input_body_, table_t::input_body);
-    report(output_body_, table_t::output_body);
-    report(point_body_, table_t::point_body);
-    report(puts_body_, table_t::puts_body);
-    report(spend_body_, table_t::spend_body);
-    report(tx_body_, table_t::tx_body);
-    report(txs_body_, table_t::txs_body);
-    report(candidate_body_, table_t::candidate_body);
-    report(confirmed_body_, table_t::confirmed_body);
-    report(strong_tx_body_, table_t::strong_tx_body);
-    report(validated_bk_body_, table_t::validated_bk_body);
-    report(validated_tx_body_, table_t::validated_tx_body);
-    report(address_body_, table_t::address_body);
-    report(neutrino_body_, table_t::neutrino_body);
-    ////report(bootstrap_body_, table_t::bootstrap_body);
-    ////report(buffer_body_, table_t::buffer_body);
 }
 
 // protected
@@ -966,6 +858,128 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
     if (!process_lock_.try_unlock()) ec = error::process_unlock;
     transactor_mutex_.unlock();
     return ec;
+}
+
+// context
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+const typename CLASS::transactor CLASS::get_transactor() NOEXCEPT
+{
+    return transactor{ transactor_mutex_ };
+}
+
+TEMPLATE
+code CLASS::get_fault() const NOEXCEPT
+{
+    const auto fault = [](const auto& storage) NOEXCEPT
+    {
+        const auto ec = storage.get_error();
+        return ec == error::disk_full ? error::success : ec;
+    };
+
+    code ec{};
+    if ((ec = fault(header_body_))) return ec;
+    if ((ec = fault(input_body_))) return ec;
+    if ((ec = fault(output_body_))) return ec;
+    if ((ec = fault(point_body_))) return ec;
+    if ((ec = fault(puts_body_))) return ec;
+    if ((ec = fault(spend_body_))) return ec;
+    if ((ec = fault(tx_body_))) return ec;
+    if ((ec = fault(txs_body_))) return ec;
+    if ((ec = fault(candidate_body_))) return ec;
+    if ((ec = fault(confirmed_body_))) return ec;
+    if ((ec = fault(strong_tx_body_))) return ec;
+    if ((ec = fault(validated_bk_body_))) return ec;
+    if ((ec = fault(validated_tx_body_))) return ec;
+    if ((ec = fault(address_body_))) return ec;
+    if ((ec = fault(neutrino_body_))) return ec;
+    ////if ((ec = fault(bootstrap_body_))) return ec;
+    ////if ((ec = fault(buffer_body_))) return ec;
+    return ec;
+}
+
+TEMPLATE
+bool CLASS::is_error(const code& ec) const NOEXCEPT
+{
+    // A disk full error will not leave a flush lock, but others will.
+    // There may be other error codes as well so check all.
+
+    bool found{};
+    const auto match = [&ec, &found](const auto& storage) NOEXCEPT
+    {
+        const auto error = storage.get_error();
+        if (error == ec) found = true;
+        return !error || found;
+    };
+
+    return match(header_body_)
+        && match(input_body_)
+        && match(output_body_)
+        && match(point_body_)
+        && match(puts_body_)
+        && match(spend_body_)
+        && match(tx_body_)
+        && match(txs_body_)
+        && match(candidate_body_)
+        && match(confirmed_body_)
+        && match(strong_tx_body_)
+        && match(validated_bk_body_)
+        && match(validated_tx_body_)
+        && match(address_body_)
+        && match(neutrino_body_)
+        ////&& match(bootstrap_body_)
+        ////&& match(buffer_body_)
+        && found;
+}
+
+TEMPLATE
+void CLASS::clear_errors() NOEXCEPT
+{
+    header_body_.clear_error();
+    input_body_.clear_error();
+    output_body_.clear_error();
+    point_body_.clear_error();
+    puts_body_.clear_error();
+    spend_body_.clear_error();
+    tx_body_.clear_error();
+    txs_body_.clear_error();
+    candidate_body_.clear_error();
+    confirmed_body_.clear_error();
+    strong_tx_body_.clear_error();
+    validated_bk_body_.clear_error();
+    validated_tx_body_.clear_error();
+    address_body_.clear_error();
+    neutrino_body_.clear_error();
+    ////bootstrap_body_.clear_error();
+    ////buffer_body_.clear_error();
+}
+
+TEMPLATE
+void CLASS::report_errors(const error_handler& handler) NOEXCEPT
+{
+    const auto report = [&handler](const auto& storage, table_t table) NOEXCEPT
+    {
+        handler(storage.get_error(), table);
+    };
+
+    report(header_body_, table_t::header_body);
+    report(input_body_, table_t::input_body);
+    report(output_body_, table_t::output_body);
+    report(point_body_, table_t::point_body);
+    report(puts_body_, table_t::puts_body);
+    report(spend_body_, table_t::spend_body);
+    report(tx_body_, table_t::tx_body);
+    report(txs_body_, table_t::txs_body);
+    report(candidate_body_, table_t::candidate_body);
+    report(confirmed_body_, table_t::confirmed_body);
+    report(strong_tx_body_, table_t::strong_tx_body);
+    report(validated_bk_body_, table_t::validated_bk_body);
+    report(validated_tx_body_, table_t::validated_tx_body);
+    report(address_body_, table_t::address_body);
+    report(neutrino_body_, table_t::neutrino_body);
+    ////report(bootstrap_body_, table_t::bootstrap_body);
+    ////report(buffer_body_, table_t::buffer_body);
 }
 
 BC_POP_WARNING()

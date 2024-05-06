@@ -50,6 +50,9 @@ public:
     /// Construct a store from settings.
     store(const settings& config) NOEXCEPT;
 
+    /// Methods.
+    /// -----------------------------------------------------------------------
+
     /// Create the set of empty files (from unloaded).
     code create(const event_handler& handler) NOEXCEPT;
 
@@ -65,20 +68,26 @@ public:
     /// Unload and close the set of tables, clear locks.
     code close(const event_handler& handler) NOEXCEPT;
 
+    /// Context.
+    /// -----------------------------------------------------------------------
+
     /// Get a transactor object.
     const transactor get_transactor() NOEXCEPT;
 
-    /// Detect the first error condition.
-    code get_first_error() const NOEXCEPT;
+    /// Detect the first error condition (excludes error::disk_full).
+    code get_fault() const NOEXCEPT;
 
-    /// Detect the specified error condition (exclusive).
-    bool get_error(const code& ec) const NOEXCEPT;
+    /// Detect the exclusive existence of the specified error condition.
+    bool is_error(const code& ec) const NOEXCEPT;
 
     /// Clear all error conditions.
-    void clear_error() NOEXCEPT;
+    void clear_errors() NOEXCEPT;
 
     /// Dump all error conditions to error handler.
     void report_errors(const error_handler& handler) NOEXCEPT;
+
+    /// Tables.
+    /// -----------------------------------------------------------------------
 
     /// Archives.
     table::header header;
