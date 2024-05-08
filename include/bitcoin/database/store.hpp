@@ -84,7 +84,7 @@ public:
     void clear_errors() NOEXCEPT;
 
     /// Dump all error conditions to error handler.
-    void report_errors(const error_handler& handler) NOEXCEPT;
+    void report_errors(const error_handler& handler) const NOEXCEPT;
 
     /// Tables.
     /// -----------------------------------------------------------------------
