@@ -956,7 +956,7 @@ void CLASS::clear_errors() NOEXCEPT
 }
 
 TEMPLATE
-void CLASS::report_errors(const error_handler& handler) NOEXCEPT
+void CLASS::report_errors(const error_handler& handler) const NOEXCEPT
 {
     const auto report = [&handler](const auto& storage, table_t table) NOEXCEPT
     {
