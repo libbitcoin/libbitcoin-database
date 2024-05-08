@@ -435,6 +435,7 @@ typename CLASS::transactions_ptr CLASS::get_transactions(
 TEMPLATE
 size_t CLASS::get_candidate_size() const NOEXCEPT
 {
+    // If the store is not opened this will be a max_size loop.
     return get_candidate_size(get_top_candidate());
 }
 
@@ -451,6 +452,7 @@ size_t CLASS::get_candidate_size(size_t top) const NOEXCEPT
 TEMPLATE
 size_t CLASS::get_confirmed_size() const NOEXCEPT
 {
+    // If the store is not opened this will be a max_size loop.
     return get_confirmed_size(get_top_confirmed());
 }
 
