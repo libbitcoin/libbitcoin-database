@@ -59,10 +59,10 @@ public:
     /// Open and load the set of tables, set locks.
     code open(const event_handler& handler) NOEXCEPT;
 
-    /// Snapshot the set of tables (from loaded).
+    /// Snapshot the set of tables (from loaded, leaves loaded).
     code snapshot(const event_handler& handler) NOEXCEPT;
 
-    /// Restore the most recent snapshot (from unloaded).
+    /// Restore the most recent snapshot (from unloaded, leave loaded).
     code restore(const event_handler& handler) NOEXCEPT;
 
     /// Unload and close the set of tables, clear locks.

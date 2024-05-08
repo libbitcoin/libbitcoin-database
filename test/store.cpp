@@ -606,9 +606,13 @@ BOOST_AUTO_TEST_CASE(store__restore__snapshot__success_unlocks)
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
     ////BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::primary));
 
+    // leaves loaded and unlocked
+    BOOST_REQUIRE(test::exists(instance.flush_lock_file()));
+    BOOST_REQUIRE(test::exists(instance.process_lock_file()));
+
+    BOOST_REQUIRE_EQUAL(instance.close(events), error::success);
     BOOST_REQUIRE(!test::exists(instance.flush_lock_file()));
     BOOST_REQUIRE(!test::exists(instance.process_lock_file()));
-    BOOST_REQUIRE(instance.transactor_mutex().try_lock());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

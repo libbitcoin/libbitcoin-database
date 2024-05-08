@@ -849,13 +849,20 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         if (!restore(neutrino, table_t::neutrino_table)) ec = error::restore_table;
         ////if (!restore(bootstrap, table_t::bootstrap_table)) ec = error::restore_table;
         ////if (!restore(buffer, table_t::buffer_table)) ec = error::restore_table;
-
-        if (!ec) ec = unload_close(handler);
     }
 
-    // unlock errors override ec.
-    if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
-    if (!process_lock_.try_unlock()) ec = error::process_unlock;
+    // This prevents close from having to follow open fail.
+    if (ec)
+    {
+        // No need to call close() as tables were just opened.
+        /* code */ unload_close(handler);
+
+        // unlock errors override ec.
+        if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
+        if (!process_lock_.try_unlock()) ec = error::process_unlock;
+    }
+
+    // process and flush locks remain open until close().
     transactor_mutex_.unlock();
     return ec;
 }
