@@ -779,6 +779,7 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
     // Requires that the store is already flush locked (corrupted).
     if (!flush_lock_.is_locked())
     {
+        /* bool */ process_lock_.try_unlock();
         transactor_mutex_.unlock();
         return error::flush_lock;
     }
@@ -819,43 +820,56 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         ec = error::missing_snapshot;
     }
 
-    const auto restore = [&handler](auto& storage, table_t table) NOEXCEPT
+    const auto restore = [&handler](auto& ec, auto& storage, table_t table) NOEXCEPT
     {
-        handler(event_t::restore_table, table);
-        return storage.restore();
+        if (!ec)
+        {
+            handler(event_t::restore_table, table);
+            if (!storage.restore())
+                ec = error::restore_table;
+        }
     };
 
     if (!ec)
-    {
         ec = open_load(handler);
 
-        if (!restore(header, table_t::header_table)) ec = error::restore_table;
-        if (!restore(input, table_t::input_table)) ec = error::restore_table;
-        if (!restore(output, table_t::output_table)) ec = error::restore_table;
-        if (!restore(point, table_t::point_table)) ec = error::restore_table;
-        if (!restore(puts, table_t::puts_table)) ec = error::restore_table;
-        if (!restore(spend, table_t::spend_table)) ec = error::restore_table;
-        if (!restore(tx, table_t::tx_table)) ec = error::restore_table;
-        if (!restore(txs, table_t::txs_table)) ec = error::restore_table;
+    if (!ec)
+    {
+        restore(ec, header, table_t::header_table);
+        restore(ec, input, table_t::input_table);
+        restore(ec, output, table_t::output_table);
+        restore(ec, point, table_t::point_table);
+        restore(ec, puts, table_t::puts_table);
+        restore(ec, spend, table_t::spend_table);
+        restore(ec, tx, table_t::tx_table);
+        restore(ec, txs, table_t::txs_table);
 
-        if (!restore(candidate, table_t::candidate_table)) ec = error::restore_table;
-        if (!restore(confirmed, table_t::confirmed_table)) ec = error::restore_table;
-        if (!restore(strong_tx, table_t::strong_tx_table)) ec = error::restore_table;
+        restore(ec, candidate, table_t::candidate_table);
+        restore(ec, confirmed, table_t::confirmed_table);
+        restore(ec, strong_tx, table_t::strong_tx_table);
 
-        if (!restore(validated_bk, table_t::validated_bk_table)) ec = error::restore_table;
-        if (!restore(validated_tx, table_t::validated_tx_table)) ec = error::restore_table;
+        restore(ec, validated_bk, table_t::validated_bk_table);
+        restore(ec, validated_tx, table_t::validated_tx_table);
 
-        if (!restore(address, table_t::address_table)) ec = error::restore_table;
-        if (!restore(neutrino, table_t::neutrino_table)) ec = error::restore_table;
-        ////if (!restore(bootstrap, table_t::bootstrap_table)) ec = error::restore_table;
-        ////if (!restore(buffer, table_t::buffer_table)) ec = error::restore_table;
+        restore(ec, address, table_t::address_table);
+        restore(ec, neutrino, table_t::neutrino_table);
+        ////restore(ec, bootstrap, table_t::bootstrap_table);
+        ////restore(ec, buffer, table_t::buffer_table);
 
-        if (!ec) ec = unload_close(handler);
+        if (ec)
+            /* code */ unload_close(handler);
     }
 
-    // unlock errors override ec.
-    if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
-    if (!process_lock_.try_unlock()) ec = error::process_unlock;
+    if (ec)
+    {
+        // unlock errors override ec.
+        // on failure flush_lock is left in place (store corrupt).
+        // on success process and flush locks are held until close().
+        ////if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
+        if (!process_lock_.try_unlock()) ec = error::process_unlock;
+    }
+
+    // store is open after successful restore but not otherwise.
     transactor_mutex_.unlock();
     return ec;
 }
