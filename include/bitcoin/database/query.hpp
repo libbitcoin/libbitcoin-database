@@ -88,6 +88,9 @@ public:
     /// True if there is any store error condition (excludes error::disk_full).
     bool is_fault() const NOEXCEPT;
 
+    /// Get priority condition, error::disk_full if is_full, else first code.
+    code get_code() const NOEXCEPT;
+
     /// Initialization (natural-keyed).
     /// -----------------------------------------------------------------------
     /// Not reliable during organization.
