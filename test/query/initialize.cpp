@@ -485,6 +485,20 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_count_above__gapped_cand
     BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(2), 1u);
     BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(3), 0u);
 
+    BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(0, 0), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(0, 1), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(0, 2), 2u);
+    BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(0, 3), 2u);
+    BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(1, 0), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(1, 1), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(1, 2), 2u);
+    BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(1, 3), 2u);
+    BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(2, 0), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(2, 1), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(2, 2), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(3, 0), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(3, 1), 0u);
+
     // There is one unassociated block at block 2.
     BOOST_REQUIRE(query.set(test::block3));                    // associated
     BOOST_REQUIRE_EQUAL(query.get_unassociated_count(), 1u);

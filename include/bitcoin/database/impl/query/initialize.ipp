@@ -125,9 +125,16 @@ size_t CLASS::get_unassociated_count() const NOEXCEPT
 TEMPLATE
 size_t CLASS::get_unassociated_count_above(size_t height) const NOEXCEPT
 {
+    return get_unassociated_count_above(height, max_size_t);
+}
+
+TEMPLATE
+size_t CLASS::get_unassociated_count_above(size_t height,
+    size_t maximum) const NOEXCEPT
+{
     size_t count{};
     const auto top = get_top_candidate();
-    while (++height <= top)
+    while (++height <= top && count < maximum)
         if (!is_associated(to_candidate(height)))
             ++count;
 
