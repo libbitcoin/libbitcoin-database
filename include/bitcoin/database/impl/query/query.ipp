@@ -86,6 +86,12 @@ bool CLASS::is_fault() const NOEXCEPT
     return !!store_.get_fault();
 }
 
+TEMPLATE
+code CLASS::get_code() const NOEXCEPT
+{
+    return is_full() ? error::disk_full : store_.get_fault();
+}
+
 } // namespace database
 } // namespace libbitcoin
 
