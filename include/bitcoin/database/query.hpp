@@ -109,6 +109,8 @@ public:
         size_t count, size_t last) const NOEXCEPT;
     size_t get_unassociated_count() const NOEXCEPT;
     size_t get_unassociated_count_above(size_t height) const NOEXCEPT;
+    size_t get_unassociated_count_above(size_t height,
+        size_t last) const NOEXCEPT;
     hashes get_candidate_hashes(const heights& heights) const NOEXCEPT;
     hashes get_confirmed_hashes(const heights& heights) const NOEXCEPT;
 
