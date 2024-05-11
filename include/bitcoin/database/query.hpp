@@ -82,6 +82,9 @@ public:
 
     query(Store& value) NOEXCEPT;
 
+    /// Store management from query-holder (not store owner) context.
+    /// -----------------------------------------------------------------------
+
     /// True if disk is full and no other store error condition.
     bool is_full() const NOEXCEPT;
 
@@ -90,6 +93,9 @@ public:
 
     /// Get priority condition, error::disk_full if is_full, else first code.
     code get_code() const NOEXCEPT;
+
+    /// Snapshot the store while running.
+    code snapshot(const typename Store::event_handler& handler) const NOEXCEPT;
 
     /// Initialization (natural-keyed).
     /// -----------------------------------------------------------------------

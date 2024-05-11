@@ -92,6 +92,13 @@ code CLASS::get_code() const NOEXCEPT
     return is_full() ? error::disk_full : store_.get_fault();
 }
 
+TEMPLATE
+code CLASS::snapshot(
+    const typename Store::event_handler& handler) const NOEXCEPT
+{
+    return store_.snapshot(handler);
+}
+
 } // namespace database
 } // namespace libbitcoin
 
