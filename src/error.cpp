@@ -62,6 +62,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { process_unlock, "process unlock failure" },
 
     // filesystem
+    { missing_directory, "missing directory failure" },
     { create_directory, "create directory failure" },
     { clear_directory, "clear directory failure" },
     { remove_directory, "remove directory failure" },

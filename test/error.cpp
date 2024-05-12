@@ -266,6 +266,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__process_unlock__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "process unlock failure");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__missing_directory__true_exected_message)
+{
+    constexpr auto value = error::missing_directory;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "missing directory failure");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__create_directory__true_exected_message)
 {
     constexpr auto value = error::create_directory;
