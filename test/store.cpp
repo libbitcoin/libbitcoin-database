@@ -163,17 +163,20 @@ BOOST_AUTO_TEST_CASE(store__create__process_lock_file__success)
     test::map_store instance{ configuration };
     BOOST_REQUIRE(test::create(instance.process_lock_file()));
     BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(instance.close(events), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(store__create__default__unlocks)
+BOOST_AUTO_TEST_CASE(store__create__default__locks)
 {
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
-    BOOST_REQUIRE(!test::exists(instance.flush_lock_file()));
-    BOOST_REQUIRE(!test::exists(instance.process_lock_file()));
+    BOOST_REQUIRE(test::exists(instance.flush_lock_file()));
+    BOOST_REQUIRE(test::exists(instance.process_lock_file()));
     BOOST_REQUIRE(instance.transactor_mutex().try_lock());
+    instance.transactor_mutex().unlock();
+    BOOST_REQUIRE_EQUAL(instance.close(events), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(store__create__default__success)
@@ -182,6 +185,7 @@ BOOST_AUTO_TEST_CASE(store__create__default__success)
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(instance.close(events), error::success);
 }
 
 // create is index-destructive (by directory)
@@ -193,6 +197,7 @@ BOOST_AUTO_TEST_CASE(store__create__existing_index__success)
     BOOST_REQUIRE(test::clear(configuration.path / schema::dir::heads));
     BOOST_REQUIRE(test::create(instance.header_head_file()));
     BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(instance.close(events), error::success);
 }
 
 // create is body-destructive (by file)
@@ -203,6 +208,7 @@ BOOST_AUTO_TEST_CASE(store__create__existing_body__success)
     test::map_store instance{ configuration };
     BOOST_REQUIRE(test::create(instance.header_body_file()));
     BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(instance.close(events), error::success);
 }
 
 // open
@@ -244,10 +250,9 @@ BOOST_AUTO_TEST_CASE(store__open__process_lock_file__success)
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
     BOOST_REQUIRE(test::create(instance.process_lock_file()));
-    BOOST_REQUIRE_EQUAL(instance.open(events), error::success);
-    instance.close(events);
+    BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(instance.close(events), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(store__open__default__unlocks_transactor_only)
@@ -256,7 +261,6 @@ BOOST_AUTO_TEST_CASE(store__open__default__unlocks_transactor_only)
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
-    BOOST_REQUIRE_EQUAL(instance.open(events), error::success);
     BOOST_REQUIRE(test::exists(instance.flush_lock_file()));
     BOOST_REQUIRE(test::exists(instance.process_lock_file()));
     BOOST_REQUIRE(instance.transactor_mutex().try_lock());
@@ -270,7 +274,6 @@ BOOST_AUTO_TEST_CASE(store__open__uncreated__open_failure)
     configuration.path = TEST_DIRECTORY;
     store<map> instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.open(events), error::open_failure);
-    instance.close(events);
 }
 
 BOOST_AUTO_TEST_CASE(store__open__created__success)
@@ -279,8 +282,7 @@ BOOST_AUTO_TEST_CASE(store__open__created__success)
     configuration.path = TEST_DIRECTORY;
     store<map> instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
-    BOOST_REQUIRE_EQUAL(instance.open(events), error::success);
-    instance.close(events);
+    BOOST_REQUIRE_EQUAL(instance.close(events), error::success);
 }
 
 // snapshot
@@ -294,22 +296,12 @@ BOOST_AUTO_TEST_CASE(store__snapshot__uncreated__flush_unloaded)
     BOOST_REQUIRE_EQUAL(instance.snapshot(events), error::flush_unloaded);
 }
 
-BOOST_AUTO_TEST_CASE(store__snapshot__unopened__flush_unloaded)
-{
-    settings configuration{};
-    configuration.path = TEST_DIRECTORY;
-    store<map> instance{ configuration };
-    BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
-    BOOST_REQUIRE_EQUAL(instance.snapshot(events), error::flush_unloaded);
-}
-
 BOOST_AUTO_TEST_CASE(store__snapshot__opened__success)
 {
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
     store<map> instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
-    BOOST_REQUIRE_EQUAL(instance.open(events), error::success);
     BOOST_REQUIRE_EQUAL(instance.snapshot(events), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(events), error::success);
 }
@@ -326,23 +318,12 @@ BOOST_AUTO_TEST_CASE(store__close__uncreated__flush_unlock)
     BOOST_REQUIRE_EQUAL(instance.close(events), error::flush_unlock);
 }
 
-// flush_unlock is not idempotent
-BOOST_AUTO_TEST_CASE(store__close__unopened__flush_unlock)
-{
-    settings configuration{};
-    configuration.path = TEST_DIRECTORY;
-    store<map> instance{ configuration };
-    BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
-    BOOST_REQUIRE_EQUAL(instance.close(events), error::flush_unlock);
-}
-
 BOOST_AUTO_TEST_CASE(store__close__opened__success)
 {
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
     store<map> instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
-    BOOST_REQUIRE_EQUAL(instance.open(events), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(events), error::success);
 }
 
@@ -376,7 +357,6 @@ BOOST_AUTO_TEST_CASE(store__backup__loaded__success)
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
-    BOOST_REQUIRE_EQUAL(instance.open(events), error::success);
     BOOST_REQUIRE_EQUAL(instance.backup_(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(events), error::success);
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
@@ -389,7 +369,6 @@ BOOST_AUTO_TEST_CASE(store__backup__primary_loaded__success)
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
-    BOOST_REQUIRE_EQUAL(instance.open(events), error::success);
     BOOST_REQUIRE(test::clear(configuration.path / schema::dir::primary));
     BOOST_REQUIRE_EQUAL(instance.backup_(), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(events), error::success);
@@ -403,7 +382,6 @@ BOOST_AUTO_TEST_CASE(store__backup__primary_secondary_loaded__success)
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
-    BOOST_REQUIRE_EQUAL(instance.open(events), error::success);
     BOOST_REQUIRE(test::clear(configuration.path / schema::dir::primary));
     BOOST_REQUIRE(test::clear(configuration.path / schema::dir::secondary));
     BOOST_REQUIRE_EQUAL(instance.backup_(), error::success);
@@ -429,7 +407,6 @@ BOOST_AUTO_TEST_CASE(store__dump__loaded__success)
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
-    BOOST_REQUIRE_EQUAL(instance.open(events), error::success);
     BOOST_REQUIRE_EQUAL(instance.dump_(TEST_DIRECTORY), error::success);
     BOOST_REQUIRE_EQUAL(instance.close(events), error::success);
 }
@@ -511,7 +488,6 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_open__clear_directory)
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
-    BOOST_REQUIRE_EQUAL(instance.open(events), error::success);
 
     // Create /primary directory, from which to restore.
     BOOST_REQUIRE(test::clear(configuration.path / schema::dir::primary));
@@ -521,7 +497,8 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_open__clear_directory)
 
     ////// Cannot delete /indexes with open files.
     ////BOOST_REQUIRE_EQUAL(instance.restore_(), error::clear_directory);
-    instance.close(events);
+    BOOST_REQUIRE_EQUAL(instance.close(events), error::success);
+
 }
 #endif
 
@@ -533,6 +510,9 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_closed__open_failure)
 
     // Create /index, to be purged.
     BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
+
+    // Must be closed for restore.
+    BOOST_REQUIRE_EQUAL(instance.close(events), error::success);
 
     // Create /primary, from which to restore.
     BOOST_REQUIRE(test::clear(configuration.path / schema::dir::primary));
@@ -556,6 +536,9 @@ BOOST_AUTO_TEST_CASE(store__restore__secondary_closed__open_failure)
     // Create /index, to be purged.
     BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
 
+    // Must be closed for restore.
+    BOOST_REQUIRE_EQUAL(instance.close(events), error::success);
+
     // Create /secondary, from which to restore.
     BOOST_REQUIRE(test::clear(configuration.path / schema::dir::secondary));
 
@@ -576,6 +559,9 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_secondary_loaded__open_failure)
 
     // Create /index, to be purged.
     BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
+
+    // Must be closed for restore.
+    BOOST_REQUIRE_EQUAL(instance.close(events), error::success);
 
     // Create /primary from which to restore, and /secondary.
     BOOST_REQUIRE(test::clear(configuration.path / schema::dir::primary));
@@ -602,7 +588,6 @@ BOOST_AUTO_TEST_CASE(store__restore__snapshot__success_unlocks)
 
     test::map_store instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.create(events), error::success);
-    BOOST_REQUIRE_EQUAL(instance.open(events), error::success);
     BOOST_REQUIRE_EQUAL(instance.snapshot(events), error::success);
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
     BOOST_REQUIRE_EQUAL(instance.close(events), error::success);

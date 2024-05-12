@@ -52,7 +52,7 @@ enum error_t : uint8_t
     unload_locked,
     unload_failure,
 
-    // mmap
+    /// mmap
     disk_full,
     mmap_failure,
     mremap_failure,
@@ -69,6 +69,7 @@ enum error_t : uint8_t
     process_unlock,
 
     /// filesystem
+    missing_directory,
     create_directory,
     clear_directory,
     remove_directory,
@@ -79,7 +80,7 @@ enum error_t : uint8_t
     unloaded_file,
     dump_file,
 
-    // tables
+    /// tables
     create_table,
     close_table,
     backup_table,

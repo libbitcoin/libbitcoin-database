@@ -227,12 +227,18 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
         ////else if (!populate(buffer, table_t::buffer_table)) ec = error::create_table;
     }
 
-    if (!ec) ec = unload_close(handler);
+    if (ec)
+    {
+        /* code */ unload_close(handler);
 
-    // unlock errors override ec.
-    if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
-    if (!process_lock_.try_unlock()) ec = error::process_unlock;
-    if (ec) /* bool */ file::clear_directory(configuration_.path);
+        // unlock errors override ec.
+        if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
+        if (!process_lock_.try_unlock()) ec = error::process_unlock;
+        /* bool */ file::clear_directory(configuration_.path);
+        /* bool */ file::remove(configuration_.path);
+    }
+
+    // process and flush locks remain open until close().
     transactor_mutex_.unlock();
     return ec;
 }
@@ -240,6 +246,9 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
 TEMPLATE
 code CLASS::open(const event_handler& handler) NOEXCEPT
 {
+    if (!file::is_directory(configuration_.path))
+        return error::missing_directory;
+
     if (!transactor_mutex_.try_lock())
         return error::transactor_lock;
 
@@ -288,10 +297,8 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
         ////else if (!verify(buffer, table_t::buffer_table)) ec = error::verify_table;
     }
 
-    // This prevents close from having to follow open fail.
     if (ec)
     {
-        // No need to call close() as tables were just opened.
         /* code */ unload_close(handler);
 
         // unlock errors override ec.
