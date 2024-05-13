@@ -123,7 +123,8 @@ public:
     /// Store extent.
     /// -----------------------------------------------------------------------
 
-    /// Table logical byte sizes (archive bodies).
+    /// Body + head logical byte sizes.
+    size_t store_size() const NOEXCEPT;
     size_t archive_size() const NOEXCEPT;
     size_t header_size() const NOEXCEPT;
     size_t output_size() const NOEXCEPT;
@@ -133,46 +134,72 @@ public:
     size_t spend_size() const NOEXCEPT;
     size_t txs_size() const NOEXCEPT;
     size_t tx_size() const NOEXCEPT;
-
-    /// Table logical byte sizes (metadata bodies).
     size_t candidate_size() const NOEXCEPT;
     size_t confirmed_size() const NOEXCEPT;
     size_t strong_tx_size() const NOEXCEPT;
     size_t validated_tx_size() const NOEXCEPT;
     size_t validated_bk_size() const NOEXCEPT;
-
-    /// Table logical byte sizes (optional bodies).
     size_t address_size() const NOEXCEPT;
     size_t neutrino_size() const NOEXCEPT;
 
-    /// Buckets (archive hash tables).
+    /// Body logical byte sizes.
+    size_t store_body_size() const NOEXCEPT;
+    size_t archive_body_size() const NOEXCEPT;
+    size_t header_body_size() const NOEXCEPT;
+    size_t output_body_size() const NOEXCEPT;
+    size_t input_body_size() const NOEXCEPT;
+    size_t point_body_size() const NOEXCEPT;
+    size_t puts_body_size() const NOEXCEPT;
+    size_t spend_body_size() const NOEXCEPT;
+    size_t txs_body_size() const NOEXCEPT;
+    size_t tx_body_size() const NOEXCEPT;
+    size_t candidate_body_size() const NOEXCEPT;
+    size_t confirmed_body_size() const NOEXCEPT;
+    size_t strong_tx_body_size() const NOEXCEPT;
+    size_t validated_tx_body_size() const NOEXCEPT;
+    size_t validated_bk_body_size() const NOEXCEPT;
+    size_t address_body_size() const NOEXCEPT;
+    size_t neutrino_body_size() const NOEXCEPT;
+
+    /// Head logical byte sizes.
+    size_t store_head_size() const NOEXCEPT;
+    size_t archive_head_size() const NOEXCEPT;
+    size_t header_head_size() const NOEXCEPT;
+    size_t output_head_size() const NOEXCEPT;
+    size_t input_head_size() const NOEXCEPT;
+    size_t point_head_size() const NOEXCEPT;
+    size_t puts_head_size() const NOEXCEPT;
+    size_t spend_head_size() const NOEXCEPT;
+    size_t txs_head_size() const NOEXCEPT;
+    size_t tx_head_size() const NOEXCEPT;
+    size_t candidate_head_size() const NOEXCEPT;
+    size_t confirmed_head_size() const NOEXCEPT;
+    size_t strong_tx_head_size() const NOEXCEPT;
+    size_t validated_tx_head_size() const NOEXCEPT;
+    size_t validated_bk_head_size() const NOEXCEPT;
+    size_t address_head_size() const NOEXCEPT;
+    size_t neutrino_head_size() const NOEXCEPT;
+
+    /// Buckets.
     size_t header_buckets() const NOEXCEPT;
     size_t point_buckets() const NOEXCEPT;
     size_t spend_buckets() const NOEXCEPT;
     size_t txs_buckets() const NOEXCEPT;
     size_t tx_buckets() const NOEXCEPT;
-
-    /// Buckets (metadata hash tables).
     size_t strong_tx_buckets() const NOEXCEPT;
     size_t validated_tx_buckets() const NOEXCEPT;
     size_t validated_bk_buckets() const NOEXCEPT;
-
-    /// Buckets (optional hash tables).
     size_t address_buckets() const NOEXCEPT;
     size_t neutrino_buckets() const NOEXCEPT;
 
-    /// Counts (archive records).
+    /// Records.
     size_t header_records() const NOEXCEPT;
     size_t point_records() const NOEXCEPT;
     size_t spend_records() const NOEXCEPT;
     size_t tx_records() const NOEXCEPT;
-
-    /// Counts (metadata records).
     size_t candidate_records() const NOEXCEPT;
     size_t confirmed_records() const NOEXCEPT;
     size_t strong_tx_records() const NOEXCEPT;
-
-    /// Counts (optional records).
     size_t address_records() const NOEXCEPT;
 
     /// Counters (archive slabs - txs/puts/neutrino can be derived).
