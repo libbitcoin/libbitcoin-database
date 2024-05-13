@@ -41,6 +41,88 @@ constexpr auto nonzero = 1_u32;
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+const std::unordered_map<event_t, std::string> CLASS::events
+{
+    { event_t::create_file, "create_file" },
+    { event_t::open_file,   "open_file" },
+    { event_t::load_file, "load_file" },
+    { event_t::unload_file, "unload_file" },
+    { event_t::close_file, "close_file" },
+    { event_t::create_table, "create_table" },
+    { event_t::verify_table, "verify_table" },
+    { event_t::close_table, "close_table" },
+
+    { event_t::wait_lock, "wait_lock" },
+    { event_t::flush_body, "flush_body" },
+    { event_t::backup_table, "backup_table" },
+    { event_t::copy_header, "copy_header" },
+    { event_t::archive_snapshot, "archive_snapshot" },
+
+    { event_t::restore_table, "restore_table" },
+    { event_t::recover_snapshot, "recover_snapshot" }
+};
+
+TEMPLATE
+const std::unordered_map<table_t, std::string> CLASS::tables
+{
+    { table_t::store, "store" },
+
+    { table_t::header_table, "header_table" },
+    { table_t::header_head, "header_head" },
+    { table_t::header_body, "header_body" },
+    { table_t::point_table, "point_table" },
+    { table_t::point_head, "point_head" },
+    { table_t::point_body, "point_body" },
+    { table_t::input_table, "input_table" },
+    { table_t::input_head, "input_head" },
+    { table_t::input_body, "input_body" },
+    { table_t::output_table, "output_table" },
+    { table_t::output_head, "output_head" },
+    { table_t::output_body, "output_body" },
+    { table_t::puts_table, "puts_table" },
+    { table_t::puts_head, "puts_head" },
+    { table_t::puts_body, "puts_body" },
+    { table_t::tx_table, "tx_table" },
+    { table_t::tx_head, "tx_head" },
+    { table_t::txs_table, "txs_table" },
+    { table_t::tx_body, "tx_body" },
+    { table_t::txs_head, "txs_head" },
+    { table_t::txs_body, "txs_body" },
+
+    { table_t::address_table, "address_table" },
+    { table_t::address_head, "address_head" },
+    { table_t::address_body, "address_body" },
+    { table_t::candidate_table, "candidate_table" },
+    { table_t::candidate_head, "candidate_head" },
+    { table_t::candidate_body, "candidate_body" },
+    { table_t::confirmed_table, "confirmed_table" },
+    { table_t::confirmed_head, "confirmed_head" },
+    { table_t::confirmed_body, "confirmed_body" },
+    { table_t::spend_table, "spend_table" },
+    { table_t::spend_head, "spend_head" },
+    { table_t::spend_body, "spend_body" },
+    { table_t::strong_tx_table, "strong_tx_table" },
+    { table_t::strong_tx_head, "strong_tx_head" },
+    { table_t::strong_tx_body, "strong_tx_body" },
+
+    { table_t::validated_bk_table, "validated_bk_table" },
+    { table_t::validated_bk_head, "validated_bk_head" },
+    { table_t::validated_bk_body, "validated_bk_body" },
+    { table_t::validated_tx_table, "validated_tx_table" },
+    { table_t::validated_tx_head, "validated_tx_head" },
+    { table_t::validated_tx_body, "validated_tx_body" },
+    { table_t::neutrino_table, "neutrino_table" },
+    { table_t::neutrino_head, "neutrino_head" },
+    { table_t::neutrino_body, "neutrino_body" }
+    ////{ table_t::bootstrap_table, "bootstrap_table" },
+    ////{ table_t::bootstrap_head, "bootstrap_head" },
+    ////{ table_t::bootstrap_body, "bootstrap_body" },
+    ////{ table_t::buffer_table, "buffer_table" },
+    ////{ table_t::buffer_head, "buffer_head" },
+    ////{ table_t::buffer_body, "buffer_body" }
+};
+
+TEMPLATE
 CLASS::store(const settings& config) NOEXCEPT
   : configuration_(config),
 
