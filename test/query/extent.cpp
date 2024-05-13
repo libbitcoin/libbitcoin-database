@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(query__is_full__chunk_store__false)
     BOOST_REQUIRE(!query.is_full());
 }
 
-BOOST_AUTO_TEST_CASE(query_extent__sizes__genesis__expected)
+BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -59,30 +59,30 @@ BOOST_AUTO_TEST_CASE(query_extent__sizes__genesis__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE_EQUAL(query.archive_size(),
+    BOOST_REQUIRE_EQUAL(query.archive_body_size(),
         schema::header::minrow +
         81u + 79u + zero +
         schema::spend::minrow +
         schema::puts::minrow +
         schema::txs::minrow +
         schema::transaction::minrow);
-    BOOST_REQUIRE_EQUAL(query.header_size(), schema::header::minrow);
-    BOOST_REQUIRE_EQUAL(query.output_size(), 81u);
-    BOOST_REQUIRE_EQUAL(query.input_size(), 79u);
-    BOOST_REQUIRE_EQUAL(query.point_size(), zero);
-    BOOST_REQUIRE_EQUAL(query.spend_size(), schema::spend::minrow);
-    BOOST_REQUIRE_EQUAL(query.puts_size(), schema::puts::minrow);
-    BOOST_REQUIRE_EQUAL(query.txs_size(), schema::txs::minrow);
-    BOOST_REQUIRE_EQUAL(query.tx_size(), schema::transaction::minrow);
+    BOOST_REQUIRE_EQUAL(query.header_body_size(), schema::header::minrow);
+    BOOST_REQUIRE_EQUAL(query.output_body_size(), 81u);
+    BOOST_REQUIRE_EQUAL(query.input_body_size(), 79u);
+    BOOST_REQUIRE_EQUAL(query.point_body_size(), zero);
+    BOOST_REQUIRE_EQUAL(query.spend_body_size(), schema::spend::minrow);
+    BOOST_REQUIRE_EQUAL(query.puts_body_size(), schema::puts::minrow);
+    BOOST_REQUIRE_EQUAL(query.txs_body_size(), schema::txs::minrow);
+    BOOST_REQUIRE_EQUAL(query.tx_body_size(), schema::transaction::minrow);
 
-    BOOST_REQUIRE_EQUAL(query.candidate_size(), schema::height::minrow);
-    BOOST_REQUIRE_EQUAL(query.confirmed_size(), schema::height::minrow);
-    BOOST_REQUIRE_EQUAL(query.strong_tx_size(), schema::strong_tx::minrow);
-    BOOST_REQUIRE_EQUAL(query.validated_tx_size(), schema::validated_tx::minrow);
-    BOOST_REQUIRE_EQUAL(query.validated_bk_size(), schema::validated_bk::minrow);
+    BOOST_REQUIRE_EQUAL(query.candidate_body_size(), schema::height::minrow);
+    BOOST_REQUIRE_EQUAL(query.confirmed_body_size(), schema::height::minrow);
+    BOOST_REQUIRE_EQUAL(query.strong_tx_body_size(), schema::strong_tx::minrow);
+    BOOST_REQUIRE_EQUAL(query.validated_tx_body_size(), schema::validated_tx::minrow);
+    BOOST_REQUIRE_EQUAL(query.validated_bk_body_size(), schema::validated_bk::minrow);
 
-    BOOST_REQUIRE_EQUAL(query.address_size(), schema::address::minrow);
-    BOOST_REQUIRE_EQUAL(query.neutrino_size(), 0u);
+    BOOST_REQUIRE_EQUAL(query.address_body_size(), schema::address::minrow);
+    BOOST_REQUIRE_EQUAL(query.neutrino_body_size(), 0u);
 }
 
 BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)

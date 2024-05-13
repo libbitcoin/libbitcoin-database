@@ -22,247 +22,154 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
+#define DEFINE_SIZES(name) \
+TEMPLATE \
+size_t CLASS::name##_size() const NOEXCEPT \
+{ \
+return name##_head_size() + name##_body_size(); \
+} \
+TEMPLATE \
+size_t CLASS::name##_head_size() const NOEXCEPT \
+{ \
+return store_.name.head_size(); \
+} \
+TEMPLATE \
+size_t CLASS::name##_body_size() const NOEXCEPT \
+{ \
+    return store_.name.body_size(); \
+}
+
+#define DEFINE_BUCKETS(name) \
+TEMPLATE \
+size_t CLASS::name##_buckets() const NOEXCEPT \
+{ \
+    return store_.name.buckets(); \
+}
+
+#define DEFINE_RECORDS(name) \
+TEMPLATE \
+size_t CLASS::name##_records() const NOEXCEPT \
+{ \
+    return store_.name.count(); \
+}
+
 namespace libbitcoin {
 namespace database {
 
-// Table logical byte sizes (archive bodies).
+// Store extent.
 // ----------------------------------------------------------------------------
+
+TEMPLATE
+size_t CLASS::store_size() const NOEXCEPT
+{
+    return store_body_size() + store_head_size();
+}
 
 TEMPLATE
 size_t CLASS::archive_size() const NOEXCEPT
 {
-    return
-        header_size() +
-        output_size() +
-        input_size() +
-        point_size() +
-        puts_size() +
-        spend_size() +
-        txs_size() +
-        tx_size();
+    return archive_body_size() + archive_head_size();
 }
 
 TEMPLATE
-size_t CLASS::header_size() const NOEXCEPT
+size_t CLASS::store_body_size() const NOEXCEPT
 {
-    return store_.header.body_size();
+    return archive_body_size()
+        + candidate_body_size()
+        + confirmed_body_size()
+        + strong_tx_body_size()
+        + validated_tx_body_size()
+        + validated_bk_body_size()
+        + address_body_size()
+        + neutrino_body_size();
 }
 
 TEMPLATE
-size_t CLASS::output_size() const NOEXCEPT
+size_t CLASS::archive_body_size() const NOEXCEPT
 {
-    return store_.output.body_size();
+    return header_body_size()
+        + output_body_size()
+        + input_body_size()
+        + point_body_size()
+        + puts_body_size()
+        + spend_body_size()
+        + txs_body_size()
+        + tx_body_size();
 }
 
 TEMPLATE
-size_t CLASS::input_size() const NOEXCEPT
+size_t CLASS::store_head_size() const NOEXCEPT
 {
-    return store_.input.body_size();
+    return archive_head_size()
+        + candidate_head_size()
+        + confirmed_head_size()
+        + strong_tx_head_size()
+        + validated_tx_head_size()
+        + validated_bk_head_size()
+        + address_head_size()
+        + neutrino_head_size();
 }
 
 TEMPLATE
-size_t CLASS::point_size() const NOEXCEPT
+size_t CLASS::archive_head_size() const NOEXCEPT
 {
-    return store_.point.body_size();
+    return header_head_size()
+        + output_head_size()
+        + input_head_size()
+        + point_head_size()
+        + puts_head_size()
+        + spend_head_size()
+        + txs_head_size()
+        + tx_head_size();
 }
 
-TEMPLATE
-size_t CLASS::puts_size() const NOEXCEPT
-{
-    return store_.puts.body_size();
-}
-
-TEMPLATE
-size_t CLASS::spend_size() const NOEXCEPT
-{
-    return store_.spend.body_size();
-}
-
-TEMPLATE
-size_t CLASS::txs_size() const NOEXCEPT
-{
-    return store_.txs.body_size();
-}
-
-TEMPLATE
-size_t CLASS::tx_size() const NOEXCEPT
-{
-    return store_.tx.body_size();
-}
-
-// Table logical byte sizes (metadata bodies).
+// Sizes.
 // ----------------------------------------------------------------------------
 
-TEMPLATE
-size_t CLASS::candidate_size() const NOEXCEPT
-{
-    return store_.candidate.body_size();
-}
+DEFINE_SIZES(header)
+DEFINE_SIZES(output)
+DEFINE_SIZES(input)
+DEFINE_SIZES(point)
+DEFINE_SIZES(puts)
+DEFINE_SIZES(spend)
+DEFINE_SIZES(txs)
+DEFINE_SIZES(tx)
 
-TEMPLATE
-size_t CLASS::confirmed_size() const NOEXCEPT
-{
-    return store_.confirmed.body_size();
-}
+DEFINE_SIZES(candidate)
+DEFINE_SIZES(confirmed)
+DEFINE_SIZES(strong_tx)
+DEFINE_SIZES(validated_tx)
+DEFINE_SIZES(validated_bk)
+DEFINE_SIZES(address)
+DEFINE_SIZES(neutrino)
 
-TEMPLATE
-size_t CLASS::strong_tx_size() const NOEXCEPT
-{
-    return store_.strong_tx.body_size();
-}
-
-TEMPLATE
-size_t CLASS::validated_tx_size() const NOEXCEPT
-{
-    return store_.validated_tx.body_size();
-}
-
-TEMPLATE
-size_t CLASS::validated_bk_size() const NOEXCEPT
-{
-    return store_.validated_bk.body_size();
-}
-
-// Table logical byte sizes (optional bodies).
+// Buckets.
 // ----------------------------------------------------------------------------
 
-TEMPLATE
-size_t CLASS::address_size() const NOEXCEPT
-{
-    return store_.address.body_size();
-}
+DEFINE_BUCKETS(header)
+DEFINE_BUCKETS(point)
+DEFINE_BUCKETS(spend)
+DEFINE_BUCKETS(txs)
+DEFINE_BUCKETS(tx)
 
-TEMPLATE
-size_t CLASS::neutrino_size() const NOEXCEPT
-{
-    return store_.neutrino.body_size();
-}
+DEFINE_BUCKETS(strong_tx)
+DEFINE_BUCKETS(validated_tx)
+DEFINE_BUCKETS(validated_bk)
+DEFINE_BUCKETS(address)
+DEFINE_BUCKETS(neutrino)
 
-// Buckets (archive hash tables).
+// Records.
 // ----------------------------------------------------------------------------
 
-TEMPLATE
-size_t CLASS::header_buckets() const NOEXCEPT
-{
-    return store_.header.buckets();
-}
+DEFINE_RECORDS(header)
+DEFINE_RECORDS(point)
+DEFINE_RECORDS(spend)
+DEFINE_RECORDS(tx)
 
-TEMPLATE
-size_t CLASS::point_buckets() const NOEXCEPT
-{
-    return store_.point.buckets();
-}
-
-TEMPLATE
-size_t CLASS::spend_buckets() const NOEXCEPT
-{
-    return store_.spend.buckets();
-}
-
-TEMPLATE
-size_t CLASS::txs_buckets() const NOEXCEPT
-{
-    return store_.txs.buckets();
-}
-
-TEMPLATE
-size_t CLASS::tx_buckets() const NOEXCEPT
-{
-    return store_.tx.buckets();
-}
-
-// Buckets (metadata hash tables).
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-size_t CLASS::strong_tx_buckets() const NOEXCEPT
-{
-    return store_.strong_tx.buckets();
-}
-
-TEMPLATE
-size_t CLASS::validated_tx_buckets() const NOEXCEPT
-{
-    return store_.validated_tx.buckets();
-}
-
-TEMPLATE
-size_t CLASS::validated_bk_buckets() const NOEXCEPT
-{
-    return store_.validated_bk.buckets();
-}
-
-// Buckets (optional hash tables).
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-size_t CLASS::address_buckets() const NOEXCEPT
-{
-    return store_.address.buckets();
-}
-
-TEMPLATE
-size_t CLASS::neutrino_buckets() const NOEXCEPT
-{
-    return store_.neutrino.buckets();
-}
-
-//  Counts (archive records).
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-size_t CLASS::header_records() const NOEXCEPT
-{
-    return store_.header.count();
-}
-
-TEMPLATE
-size_t CLASS::point_records() const NOEXCEPT
-{
-    return store_.point.count();
-}
-
-TEMPLATE
-size_t CLASS::spend_records() const NOEXCEPT
-{
-    return store_.spend.count();
-}
-
-TEMPLATE
-size_t CLASS::tx_records() const NOEXCEPT
-{
-    return store_.tx.count();
-}
-
-//  Counts (metadata records).
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-size_t CLASS::candidate_records() const NOEXCEPT
-{
-    return store_.candidate.count();
-}
-
-TEMPLATE
-size_t CLASS::confirmed_records() const NOEXCEPT
-{
-    return store_.confirmed.count();
-}
-
-TEMPLATE
-size_t CLASS::strong_tx_records() const NOEXCEPT
-{
-    return store_.strong_tx.count();
-}
-
-//  Counts (optional records).
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-size_t CLASS::address_records() const NOEXCEPT
-{
-    return store_.address.count();
-}
+DEFINE_RECORDS(candidate)
+DEFINE_RECORDS(confirmed)
+DEFINE_RECORDS(strong_tx)
+DEFINE_RECORDS(address)
 
 // Counters (archive slabs).
 // ----------------------------------------------------------------------------
@@ -314,5 +221,9 @@ bool CLASS::neutrino_enabled() const NOEXCEPT
 
 } // namespace database
 } // namespace libbitcoin
+
+#undef DEFINE_SIZES
+#undef DEFINE_BUCKETS
+#undef DEFINE_RECORDS
 
 #endif
