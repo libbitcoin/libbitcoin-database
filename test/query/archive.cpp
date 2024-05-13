@@ -44,7 +44,7 @@ BOOST_FIXTURE_TEST_SUITE(query_archive_tests, query_archive_setup_fixture)
 static_assert(is_same_type<database::context::flag::integer, decltype(system::chain::context{}.flags)>);
 
 // nop event handler.
-const auto events = [](auto, auto) {};
+const auto events_handler = [](auto, auto) {};
 
 // archive (natural-keyed)
 
@@ -69,7 +69,7 @@ const auto events = [](auto, auto) {};
 ////    settings.path = TEST_DIRECTORY;
 ////    store<map> store{ settings };
 ////    query<database::store<map>> query{ store };
-////    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+////    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
 ////
 ////    BOOST_REQUIRE(query.set(header, test::context));
 ////
@@ -81,7 +81,7 @@ const auto events = [](auto, auto) {};
 ////    BOOST_REQUIRE(*pointer == header);
 ////
 ////    // must open/close mmap
-////    BOOST_REQUIRE_EQUAL(store.close(events), error::success);
+////    BOOST_REQUIRE_EQUAL(store.close(events_handler), error::success);
 ////    BOOST_REQUIRE_EQUAL(element1.ctx.height, system::mask_left(test::context.height, byte_bits));
 ////    BOOST_REQUIRE_EQUAL(element1.ctx.flags, test::context.flags);
 ////    BOOST_REQUIRE_EQUAL(element1.ctx.mtp, test::context.mtp);
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
 
     // store open/close flushes record count to head.
     BOOST_REQUIRE(!query.is_header(header.hash()));
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
     BOOST_REQUIRE(!query.is_associated(0));
     table::header::record element1{};
     BOOST_REQUIRE(store.header.get(query.to_header(block_hash), element1));
-    BOOST_REQUIRE_EQUAL(store.close(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.close(events_handler), error::success);
     BOOST_REQUIRE_EQUAL(store.header_head(), expected_header_head);
     BOOST_REQUIRE_EQUAL(store.header_body(), expected_header_body);
 
@@ -190,11 +190,11 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__empty__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
 
     // store open/close flushes record count to heads.
     BOOST_REQUIRE(!query.set(tx));
-    BOOST_REQUIRE_EQUAL(store.close(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.close(events_handler), error::success);
     BOOST_REQUIRE_EQUAL(store.tx_head(), expected_head4_hash);
     BOOST_REQUIRE_EQUAL(store.point_head(), expected_head4_hash);
     BOOST_REQUIRE_EQUAL(store.input_head(), expected_head5_array);
@@ -287,11 +287,11 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_tx__null_input__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     const auto link = query.set_link(tx);
     BOOST_REQUIRE(!link.is_terminal());
     ////BOOST_REQUIRE_EQUAL(query.set_link(tx), link);
-    BOOST_REQUIRE_EQUAL(store.close(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.close(events_handler), error::success);
 
     BOOST_REQUIRE_EQUAL(store.tx_head(), expected_tx_head);
     BOOST_REQUIRE_EQUAL(store.point_head(), expected_point_head);
@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__get_tx__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(!query.is_tx(tx.hash(false)));
     BOOST_REQUIRE(query.set(tx));
     BOOST_REQUIRE(query.is_tx(tx.hash(false)));
@@ -435,7 +435,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__get_tx__expected)
     BOOST_REQUIRE(pointer1);
     BOOST_REQUIRE(*pointer1 == tx);
     BOOST_REQUIRE_EQUAL(pointer1->hash(false), tx_hash);
-    BOOST_REQUIRE_EQUAL(store.close(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.close(events_handler), error::success);
 
     BOOST_REQUIRE_EQUAL(store.tx_head(), expected_tx_head);
     BOOST_REQUIRE_EQUAL(store.point_head(), expected_point_head);
@@ -558,7 +558,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
 
     // Set block (header/txs).
     BOOST_REQUIRE(!query.is_block(test::genesis.hash()));
@@ -573,7 +573,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
 
     table::header::record element1{};
     BOOST_REQUIRE(store.header.get(query.to_header(test::genesis.hash()), element1));
-    BOOST_REQUIRE_EQUAL(store.close(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.close(events_handler), error::success);
 
     BOOST_REQUIRE_EQUAL(store.header_head(), genesis_header_head);
     BOOST_REQUIRE_EQUAL(store.tx_head(), genesis_tx_head);
@@ -707,7 +707,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
 
     // Set header and then txs.
     BOOST_REQUIRE(!query.is_block(test::genesis.hash()));
@@ -725,7 +725,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
 
     table::header::record element1{};
     BOOST_REQUIRE(store.header.get(query.to_header(test::genesis.hash()), element1));
-    BOOST_REQUIRE_EQUAL(store.close(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.close(events_handler), error::success);
 
     BOOST_REQUIRE_EQUAL(store.header_head(), genesis_header_head);
     BOOST_REQUIRE_EQUAL(store.tx_head(), genesis_tx_head);
@@ -769,7 +769,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
 ////    settings.path = TEST_DIRECTORY;
 ////    test::chunk_store store{ settings };
 ////    test::query_accessor query{ store };
-////    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+////    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
 ////
 ////    // Assemble block.
 ////    BOOST_REQUIRE(query.set(test::genesis.header(), test::context));
@@ -791,7 +791,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
 ////    settings.path = TEST_DIRECTORY;
 ////    test::chunk_store store{ settings };
 ////    test::query_accessor query{ store };
-////    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+////    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
 ////
 ////    // Assemble block.
 ////    BOOST_REQUIRE(query.set(test::genesis.header(), test::context));
@@ -810,7 +810,7 @@ BOOST_AUTO_TEST_CASE(query_archive__populate__null_prevouts__true)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, test::context));
     BOOST_REQUIRE(query.set(test::block2, test::context));
@@ -843,7 +843,7 @@ BOOST_AUTO_TEST_CASE(query_archive__populate__partial_prevouts__false)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(!query.set_link(test::block1a, test::context).is_terminal());
     BOOST_REQUIRE(!query.set_link(test::block2a, test::context).is_terminal());
@@ -875,7 +875,7 @@ BOOST_AUTO_TEST_CASE(query_archive__is_coinbase__coinbase__true)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, context{}));
     BOOST_REQUIRE(query.set(test::block2, context{}));
@@ -892,7 +892,7 @@ BOOST_AUTO_TEST_CASE(query_archive__is_coinbase__non_coinbase__false)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1a, context{}));
     BOOST_REQUIRE(query.set(test::block2a, context{}));
@@ -910,7 +910,7 @@ BOOST_AUTO_TEST_CASE(query_archive__is_malleable__non_malleable__false)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1a, context{}));
     BOOST_REQUIRE(query.set(test::block2a, context{}));
@@ -946,7 +946,7 @@ BOOST_AUTO_TEST_CASE(query_archive__is_malleable__malleable__true)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
 
     // Store 4 blocks.
     BOOST_REQUIRE(query.initialize(test::genesis));
@@ -1079,7 +1079,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_header__invalid_parent__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
 
     store.header_head() = expected_header_head;
     store.header_body() = expected_header_body;
@@ -1131,7 +1131,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_header__default__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
 
     store.header_head() = expected_header_head;
     store.header_body() = expected_header_body;
@@ -1149,9 +1149,9 @@ BOOST_AUTO_TEST_CASE(query_archive__get_tx_keys__not_found__empty)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.get_tx_keys(query.to_header(system::null_hash)).empty());
-    BOOST_REQUIRE_EQUAL(store.close(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.close(events_handler), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(query_archive__get_header_key__always__expected)
@@ -1160,7 +1160,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_header_key__always__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE_EQUAL(query.get_header_key(0), test::genesis.hash());
     BOOST_REQUIRE_EQUAL(query.get_header_key(1), system::null_hash);
@@ -1172,7 +1172,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_point_key__always__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE_EQUAL(query.get_point_key(0), system::null_hash);
 
@@ -1195,7 +1195,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_tx_key__always__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE_EQUAL(query.get_tx_key(0), test::genesis.transactions_ptr()->front()->hash(false));
     BOOST_REQUIRE_EQUAL(query.get_tx_key(1), system::null_hash);
@@ -1212,7 +1212,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_height__always__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }));
     BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }));
@@ -1242,7 +1242,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_tx_height__not_strong__false)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::tx4));
 
@@ -1256,7 +1256,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_tx_position__confirmed__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }));
     BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }));
@@ -1297,7 +1297,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_tx_position__always__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }));
     BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }));
@@ -1341,9 +1341,9 @@ BOOST_AUTO_TEST_CASE(query_archive__get_input__not_found__nullptr)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(!query.get_input(query.to_tx(system::null_hash), 0u));
-    BOOST_REQUIRE_EQUAL(store.close(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.close(events_handler), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(query_archive__get_input__genesis__expected)
@@ -1356,7 +1356,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_input__genesis__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.set(test::genesis, test::context));
 
     const auto tx = test::genesis.transactions_ptr()->front();
@@ -1371,7 +1371,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_inputs__tx_not_found__nullptr)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(!query.get_inputs(1));
 }
@@ -1382,7 +1382,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_inputs__found__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::tx4));
     BOOST_REQUIRE_EQUAL(query.get_inputs(1)->size(), 2u);
@@ -1394,11 +1394,11 @@ BOOST_AUTO_TEST_CASE(query_archive__get_output__not_found__nullptr)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(!query.get_output(query.to_tx(system::null_hash), 0u));
     BOOST_REQUIRE(!query.get_output({ system::null_hash, 0u }));
     BOOST_REQUIRE(!query.get_output(0));
-    BOOST_REQUIRE_EQUAL(store.close(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.close(events_handler), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(query_archive__get_output__genesis__expected)
@@ -1411,7 +1411,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_output__genesis__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.set(test::genesis, test::context));
 
     const auto tx = test::genesis.transactions_ptr()->front();
@@ -1427,7 +1427,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_outputs__tx_not_found__nullptr)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(!query.get_outputs(1));
 }
@@ -1438,7 +1438,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_outputs__found__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::tx4));
     BOOST_REQUIRE_EQUAL(query.get_outputs(1)->size(), 1u);
@@ -1450,7 +1450,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_transactions__tx_not_found__nullptr)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::tx4));
     BOOST_REQUIRE(!query.get_transactions(3));
@@ -1462,7 +1462,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_transactions__found__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1a, test::context));
     BOOST_REQUIRE(query.set(test::block2a, test::context));
@@ -1478,7 +1478,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_point__null_point__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1a, test::context));
     BOOST_REQUIRE(query.set(test::block2a, test::context));
@@ -1499,7 +1499,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_spenders__unspent_or_not_found__expected
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, test::context));
     BOOST_REQUIRE(query.set(test::block2, test::context));
@@ -1537,7 +1537,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_spenders__unspent_or_not_found__expected
 ////    settings.path = TEST_DIRECTORY;
 ////    test::chunk_store store{ settings };
 ////    test::query_accessor query{ store };
-////    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+////    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
 ////    BOOST_REQUIRE(query.initialize(test::genesis));
 ////
 ////    // Neither of the two block1a outputs spent yet.
@@ -1593,7 +1593,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_value__genesis__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     uint64_t value{};
