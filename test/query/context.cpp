@@ -40,7 +40,7 @@ struct query_context_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(query_context_tests, query_context_setup_fixture)
 
-const auto events = [](auto, auto) {};
+const auto events_handler = [](auto, auto) {};
 
 BOOST_AUTO_TEST_CASE(query_context__get_candidate_chain_state__genesis__expected)
 {
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_candidate_chain_state__genesis__expected
     database_settings.path = TEST_DIRECTORY;
     test::chunk_store store{ database_settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     const auto state = query.get_candidate_chain_state(system_settings);
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_candidate_chain_state__block1__expected)
     database_settings.path = TEST_DIRECTORY;
     test::chunk_store store{ database_settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, context));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));

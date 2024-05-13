@@ -22,6 +22,7 @@
 #include <filesystem>
 #include <functional>
 #include <shared_mutex>
+#include <unordered_map>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/error.hpp>
@@ -46,6 +47,10 @@ public:
     typedef std::function<void(event_t, table_t)> event_handler;
     typedef std::function<void(const code&, table_t)> error_handler;
     typedef std::shared_lock<std::shared_timed_mutex> transactor;
+
+    // event and table names, useful for internal logging.
+    static const std::unordered_map<event_t, std::string> events;
+    static const std::unordered_map<table_t, std::string> tables;
 
     /// Construct a store from settings.
     store(const settings& config) NOEXCEPT;
