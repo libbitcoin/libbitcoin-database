@@ -200,6 +200,32 @@ bool size(size_t& out, int file_descriptor) NOEXCEPT
     return true;
 }
 
+bool size(size_t& out, const std::filesystem::path& filename) NOEXCEPT
+{
+    code ec;
+    const auto size = std::filesystem::file_size(
+        to_extended_path(filename), ec);
+
+    if (ec || is_limited<size_t>(size))
+        return false;
+
+    out = possible_narrow_cast<size_t>(size);
+    return true;
+}
+
+bool space(size_t& out, const path& filename) NOEXCEPT
+{
+    code ec;
+    const auto space = std::filesystem::space(
+        to_extended_path(filename), ec);
+
+    if (ec || is_limited<size_t>(space.available))
+        return false;
+
+    out = possible_narrow_cast<size_t>(space.available);
+    return true;
+}
+
 size_t page() NOEXCEPT
 {
 #if defined(HAVE_MSC)
@@ -216,19 +242,6 @@ size_t page() NOEXCEPT
     BC_ASSERT(possible_narrow_sign_cast<uint64_t>(page_size) <= max_size_t);
     return possible_narrow_sign_cast<size_t>(page_size);
 #endif
-}
-
-bool size(size_t& out, const std::filesystem::path& file_path) NOEXCEPT
-{
-    code ec;
-    const auto size = std::filesystem::file_size(
-        to_extended_path(file_path), ec);
-
-    if (ec || is_limited<size_t>(size))
-        return false;
-
-    out = possible_narrow_and_sign_cast<size_t>(size);
-    return true;
 }
 
 BC_POP_WARNING()

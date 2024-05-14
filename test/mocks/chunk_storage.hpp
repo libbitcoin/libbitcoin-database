@@ -49,8 +49,9 @@ public:
     bool truncate(size_t size) NOEXCEPT override;
     size_t allocate(size_t chunk) NOEXCEPT override;
     memory_ptr get(size_t offset=zero) const NOEXCEPT override;
-    code get_error() const NOEXCEPT override;
-    void clear_error() NOEXCEPT override;
+    code get_fault() const NOEXCEPT override;
+    bool is_full() const NOEXCEPT override;
+    void reset_full() NOEXCEPT override;
 
 private:
     system::data_chunk local_;

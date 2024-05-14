@@ -79,17 +79,17 @@ public:
     /// Get a transactor object.
     const transactor get_transactor() NOEXCEPT;
 
-    /// Detect the first error condition (excludes error::disk_full).
+    /// Get first fault code or error::success.
     code get_fault() const NOEXCEPT;
 
-    /// Detect the exclusive existence of the specified error condition.
-    bool is_error(const code& ec) const NOEXCEPT;
+    /// True if there is a disk full condition.
+    bool is_full() const NOEXCEPT;
 
-    /// Clear all error conditions.
-    void clear_errors() NOEXCEPT;
+    /// Clear a disk full condition.
+    void reset_full() NOEXCEPT;
 
-    /// Dump all error conditions to error handler.
-    void report_errors(const error_handler& handler) const NOEXCEPT;
+    /// Dump all error/full conditions to handler.
+    void report_condition(const error_handler& handler) const NOEXCEPT;
 
     /// Tables.
     /// -----------------------------------------------------------------------

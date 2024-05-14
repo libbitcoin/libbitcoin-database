@@ -975,95 +975,79 @@ const typename CLASS::transactor CLASS::get_transactor() NOEXCEPT
 TEMPLATE
 code CLASS::get_fault() const NOEXCEPT
 {
-    const auto fault = [](const auto& storage) NOEXCEPT
-    {
-        const auto ec = storage.get_error();
-        return ec == error::disk_full ? error::success : ec;
-    };
-
     code ec{};
-    if ((ec = fault(header_body_))) return ec;
-    if ((ec = fault(input_body_))) return ec;
-    if ((ec = fault(output_body_))) return ec;
-    if ((ec = fault(point_body_))) return ec;
-    if ((ec = fault(puts_body_))) return ec;
-    if ((ec = fault(spend_body_))) return ec;
-    if ((ec = fault(tx_body_))) return ec;
-    if ((ec = fault(txs_body_))) return ec;
-    if ((ec = fault(candidate_body_))) return ec;
-    if ((ec = fault(confirmed_body_))) return ec;
-    if ((ec = fault(strong_tx_body_))) return ec;
-    if ((ec = fault(validated_bk_body_))) return ec;
-    if ((ec = fault(validated_tx_body_))) return ec;
-    if ((ec = fault(address_body_))) return ec;
-    if ((ec = fault(neutrino_body_))) return ec;
-    ////if ((ec = fault(bootstrap_body_))) return ec;
-    ////if ((ec = fault(buffer_body_))) return ec;
+    if ((ec = header_body_.get_fault())) return ec;
+    if ((ec = input_body_.get_fault())) return ec;
+    if ((ec = output_body_.get_fault())) return ec;
+    if ((ec = point_body_.get_fault())) return ec;
+    if ((ec = puts_body_.get_fault())) return ec;
+    if ((ec = spend_body_.get_fault())) return ec;
+    if ((ec = tx_body_.get_fault())) return ec;
+    if ((ec = txs_body_.get_fault())) return ec;
+    if ((ec = candidate_body_.get_fault())) return ec;
+    if ((ec = confirmed_body_.get_fault())) return ec;
+    if ((ec = strong_tx_body_.get_fault())) return ec;
+    if ((ec = validated_bk_body_.get_fault())) return ec;
+    if ((ec = validated_tx_body_.get_fault())) return ec;
+    if ((ec = address_body_.get_fault())) return ec;
+    if ((ec = neutrino_body_.get_fault())) return ec;
+    ////if ((ec = bootstrap_body_.get_fault())) return ec;
+    ////if ((ec = buffer_body_.get_fault())) return ec;
     return ec;
 }
 
 TEMPLATE
-bool CLASS::is_error(const code& ec) const NOEXCEPT
+bool CLASS::is_full() const NOEXCEPT
 {
-    // A disk full error will not leave a flush lock, but others will.
-    // There may be other error codes as well so check all.
-
-    bool found{};
-    const auto match = [&ec, &found](const auto& storage) NOEXCEPT
-    {
-        const auto error = storage.get_error();
-        if (error == ec) found = true;
-        return !error || found;
-    };
-
-    return match(header_body_)
-        && match(input_body_)
-        && match(output_body_)
-        && match(point_body_)
-        && match(puts_body_)
-        && match(spend_body_)
-        && match(tx_body_)
-        && match(txs_body_)
-        && match(candidate_body_)
-        && match(confirmed_body_)
-        && match(strong_tx_body_)
-        && match(validated_bk_body_)
-        && match(validated_tx_body_)
-        && match(address_body_)
-        && match(neutrino_body_)
-        ////&& match(bootstrap_body_)
-        ////&& match(buffer_body_)
-        && found;
+    return header_body_.is_full()
+        || input_body_.is_full()
+        || output_body_.is_full()
+        || point_body_.is_full()
+        || puts_body_.is_full()
+        || spend_body_.is_full()
+        || tx_body_.is_full()
+        || txs_body_.is_full()
+        || candidate_body_.is_full()
+        || confirmed_body_.is_full()
+        || strong_tx_body_.is_full()
+        || validated_bk_body_.is_full()
+        || validated_tx_body_.is_full()
+        || address_body_.is_full()
+        || neutrino_body_.is_full();
+        ////|| bootstrap_body_.is_full()
+        ////|| buffer_body_.is_full();
 }
 
 TEMPLATE
-void CLASS::clear_errors() NOEXCEPT
+void CLASS::reset_full() NOEXCEPT
 {
-    header_body_.clear_error();
-    input_body_.clear_error();
-    output_body_.clear_error();
-    point_body_.clear_error();
-    puts_body_.clear_error();
-    spend_body_.clear_error();
-    tx_body_.clear_error();
-    txs_body_.clear_error();
-    candidate_body_.clear_error();
-    confirmed_body_.clear_error();
-    strong_tx_body_.clear_error();
-    validated_bk_body_.clear_error();
-    validated_tx_body_.clear_error();
-    address_body_.clear_error();
-    neutrino_body_.clear_error();
-    ////bootstrap_body_.clear_error();
-    ////buffer_body_.clear_error();
+    header_body_.reset_full();
+    input_body_.reset_full();
+    output_body_.reset_full();
+    point_body_.reset_full();
+    puts_body_.reset_full();
+    spend_body_.reset_full();
+    tx_body_.reset_full();
+    txs_body_.reset_full();
+    candidate_body_.reset_full();
+    confirmed_body_.reset_full();
+    strong_tx_body_.reset_full();
+    validated_bk_body_.reset_full();
+    validated_tx_body_.reset_full();
+    address_body_.reset_full();
+    neutrino_body_.reset_full();
+    ////bootstrap_body_.reset_full();
+    ////buffer_body_.reset_full();
 }
 
 TEMPLATE
-void CLASS::report_errors(const error_handler& handler) const NOEXCEPT
+void CLASS::report_condition(const error_handler& handler) const NOEXCEPT
 {
     const auto report = [&handler](const auto& storage, table_t table) NOEXCEPT
     {
-        handler(storage.get_error(), table);
+        auto ec = storage.get_fault();
+        if (!ec && storage.is_full()) ec = error::disk_full;
+        handler(ec, table);
     };
 
     report(header_body_, table_t::header_body);

@@ -128,12 +128,17 @@ memory_ptr chunk_storage::get(size_t offset) const NOEXCEPT
     return ptr;
 }
 
-code chunk_storage::get_error() const NOEXCEPT
+code chunk_storage::get_fault() const NOEXCEPT
 {
     return {};
 }
 
-void chunk_storage::clear_error() NOEXCEPT
+bool chunk_storage::is_full() const NOEXCEPT
+{
+    return false;
+}
+
+void chunk_storage::reset_full() NOEXCEPT
 {
 }
 

@@ -67,11 +67,14 @@ public:
     /// Get r/w access to start/offset of memory map (or null).
     virtual memory_ptr get(size_t offset=zero) const NOEXCEPT = 0;
 
-    /// Get the current error condition.
-    virtual code get_error() const NOEXCEPT = 0;
+    /// Get the fault condition.
+    virtual code get_fault() const NOEXCEPT = 0;
 
-    /// Clear the error condition.
-    virtual void clear_error() NOEXCEPT = 0;
+    /// Get the disk full condition.
+    virtual bool is_full() const NOEXCEPT = 0;
+
+    /// Clear the disk full condition.
+    virtual void reset_full() NOEXCEPT = 0;
 };
 
 } // namespace database

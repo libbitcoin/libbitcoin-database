@@ -90,24 +90,18 @@ public:
     /// Get r/w access to start/offset of memory map (or null).
     memory_ptr get(size_t offset=zero) const NOEXCEPT override;
 
-    /// Get the current error condition.
-    code get_error() const NOEXCEPT override;
+    /// Get the fault condition.
+    code get_fault() const NOEXCEPT override;
 
-    /// Clear the error condition.
-    void clear_error() NOEXCEPT override;
+    /// Get the disk full condition.
+    bool is_full() const NOEXCEPT override;
+
+    /// Clear the disk full condition.
+    void reset_full() NOEXCEPT override;
 
 protected:
-    void set_first_code(const error::error_t& value) NOEXCEPT;
-    size_t to_capacity(size_t required) const NOEXCEPT
-    {
-        BC_PUSH_WARNING(NO_STATIC_CAST)
-        const auto resize = required * ((expansion_ + 100.0) / 100.0);
-        const auto target = std::max(minimum_, static_cast<size_t>(resize));
-        BC_POP_WARNING()
-    
-        BC_ASSERT_MSG(target >= required, "unexpected truncation");
-        return target;
-    }
+    size_t to_capacity(size_t required) const NOEXCEPT;
+    void set_first_code(const error::error_t& ec) NOEXCEPT;
 
 private:
     using path = std::filesystem::path;
@@ -140,7 +134,8 @@ private:
     size_t logical_{};
     mutable std::shared_mutex field_mutex_{};
 
-    // This is thread safe;
+    // These are thread safe;
+    std::atomic<bool> full_{ false };
     std::atomic<error::error_t> error_{ error::success };
 };
 
