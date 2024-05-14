@@ -70,6 +70,8 @@ bool CLASS::create() NOEXCEPT
 
     const auto allocation = size();
     const auto start = file_.allocate(allocation);
+
+    // This guards addition overflow in file_.get (start must be valid).
     if (start == storage::eof)
         return false;
 
