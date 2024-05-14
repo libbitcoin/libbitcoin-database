@@ -58,14 +58,12 @@ Link CLASS::allocate(const Link& size) NOEXCEPT
     if (size.is_terminal())
         return size;
 
-    // File allocation is bound only by logical_ type (size_t)...
     const auto start = file_.allocate(link_to_position(size));
 
-    // ...start may therefore overflow the Link (without being eof)...
+    // This guards addition overflow in position_to_link (start must be valid).
     if (start == storage::eof)
         return Link::terminal;
 
-    // ... so position_to_link returns terminal on Link overflow.
     // Callers (arraymap and hashmap) handle terminal allocation.
     return position_to_link(start);
 }
