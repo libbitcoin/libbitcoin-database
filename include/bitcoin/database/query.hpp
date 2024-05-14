@@ -85,16 +85,16 @@ public:
     /// Store management from query-holder (not store owner) context.
     /// -----------------------------------------------------------------------
 
-    /// True if disk is full and no other store error condition.
-    bool is_full() const NOEXCEPT;
+    /// Get first fault code.
+    code get_fault() const NOEXCEPT;
 
-    /// True if there is any store error condition (excludes error::disk_full).
+    /// True if there is a fault condition (disk full is not a fault).
     bool is_fault() const NOEXCEPT;
 
-    /// Get priority condition, error::disk_full if is_full, else first code.
-    code get_code() const NOEXCEPT;
+    /// True if there is a disk full condition.
+    bool is_full() const NOEXCEPT;
 
-    /// Clear a disk_full condition if it is the only store condition.
+    /// Clear a disk full condition.
     void reset_full() NOEXCEPT;
 
     /// Snapshot the store while running.

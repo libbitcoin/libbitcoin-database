@@ -77,11 +77,14 @@ public:
     /// Errors.
     /// -----------------------------------------------------------------------
 
-    /// Get the current error condition.
-    code get_error() const NOEXCEPT;
+    /// Get the fault condition.
+    code get_fault() const NOEXCEPT;
 
-    /// Clear the error condition.
-    void clear_error() NOEXCEPT;
+    /// Get the disk full condition.
+    bool is_full() const NOEXCEPT;
+
+    /// Clear the disk full condition.
+    void reset_full() NOEXCEPT;
 
     /// Query interface, iterator is not thread safe.
     /// -----------------------------------------------------------------------

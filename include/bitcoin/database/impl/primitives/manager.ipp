@@ -90,15 +90,21 @@ memory_ptr CLASS::get(const Link& value) const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-code CLASS::get_error() const NOEXCEPT
+code CLASS::get_fault() const NOEXCEPT
 {
-    return file_.get_error();
+    return file_.get_fault();
 }
 
 TEMPLATE
-void CLASS::clear_error() NOEXCEPT
+bool CLASS::is_full() const NOEXCEPT
 {
-    file_.clear_error();
+    file_.is_full();
+}
+
+TEMPLATE
+void CLASS::reset_full() NOEXCEPT
+{
+    file_.reset_full();
 }
 
 // private

@@ -260,21 +260,48 @@ memory_ptr map::get(size_t offset) const NOEXCEPT
     return ptr;
 }
 
-code map::get_error() const NOEXCEPT
+code map::get_fault() const NOEXCEPT
 {
     return error_.load();
 }
 
-void map::clear_error() NOEXCEPT
+bool map::is_full() const NOEXCEPT
 {
-    error_ = error::success;
+    return full_.load();
+}
+
+void map::reset_full() NOEXCEPT
+{
+    full_.store(false);
+}
+
+// protected
+// ----------------------------------------------------------------------------
+
+size_t map::to_capacity(size_t required) const NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_STATIC_CAST)
+    const auto resize = required * ((expansion_ + 100.0) / 100.0);
+    const auto target = std::max(minimum_, static_cast<size_t>(resize));
+    BC_POP_WARNING()
+
+    BC_ASSERT(target >= required);
+    return target;
 }
 
 // Read-write protected by atomic, write-write protected by remap_mutex.
-void map::set_first_code(const error::error_t& value) NOEXCEPT
+void map::set_first_code(const error::error_t& ec) NOEXCEPT
 {
+    // Disk full is a non-persistent condition.
+    if (ec == error::disk_full)
+    {
+        full_.store(true);
+        return;
+    }
+
+    // Best effort lock-free attempt to get first code.
     if (!error_)
-        error_.store(value);
+        error_.store(ec);
 }
 
 // private, mman wrappers, not thread safe

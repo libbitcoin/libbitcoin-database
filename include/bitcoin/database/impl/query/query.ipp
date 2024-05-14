@@ -75,35 +75,31 @@ CLASS::query(Store& value) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_full() const NOEXCEPT
+code CLASS::get_fault() const NOEXCEPT
 {
-    return store_.is_error(error::disk_full);
+    return store_.get_fault();
 }
 
 TEMPLATE
 bool CLASS::is_fault() const NOEXCEPT
 {
-    return !!store_.get_fault();
+    return !!get_fault();
 }
 
 TEMPLATE
-code CLASS::get_code() const NOEXCEPT
+bool CLASS::is_full() const NOEXCEPT
 {
-    return is_full() ? error::disk_full : store_.get_fault();
+    return store_.is_full();
 }
-
 
 TEMPLATE
 void CLASS::reset_full() NOEXCEPT
 {
-    // There is a possibility of clearing a non-disk-full condition here.
-    if (is_full())
-        store_.clear_errors();
+    return store_.reset_full();
 }
 
 TEMPLATE
-code CLASS::snapshot(
-    const typename Store::event_handler& handler) const NOEXCEPT
+code CLASS::snapshot(const typename Store::event_handler& handler) const NOEXCEPT
 {
     return store_.snapshot(handler);
 }

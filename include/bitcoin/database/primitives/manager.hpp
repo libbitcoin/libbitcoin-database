@@ -61,11 +61,14 @@ public:
     /// Return memory object for the full memory map.
     memory_ptr get() const NOEXCEPT;
 
-    /// Get the current error condition.
-    code get_error() const NOEXCEPT;
+    /// Get the fault condition.
+    code get_fault() const NOEXCEPT;
 
-    /// Clear the error condition.
-    void clear_error() NOEXCEPT;
+    /// Get the disk full condition.
+    bool is_full() const NOEXCEPT;
+
+    /// Clear the disk full condition.
+    void reset_full() NOEXCEPT;
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);
