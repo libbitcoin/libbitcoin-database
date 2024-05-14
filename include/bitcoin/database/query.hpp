@@ -85,6 +85,9 @@ public:
     /// Store management from query-holder (not store owner) context.
     /// -----------------------------------------------------------------------
 
+    /// Get first fault code, or disk_full if none and full, or success.
+    code get_code() const NOEXCEPT;
+
     /// Get first fault code.
     code get_fault() const NOEXCEPT;
 
