@@ -92,6 +92,15 @@ code CLASS::get_code() const NOEXCEPT
     return is_full() ? error::disk_full : store_.get_fault();
 }
 
+
+TEMPLATE
+void CLASS::reset_full() NOEXCEPT
+{
+    // There is a possibility of clearing a non-disk-full condition here.
+    if (is_full())
+        store_.clear_errors();
+}
+
 TEMPLATE
 code CLASS::snapshot(
     const typename Store::event_handler& handler) const NOEXCEPT

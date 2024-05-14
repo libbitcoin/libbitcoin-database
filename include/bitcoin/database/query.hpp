@@ -94,6 +94,9 @@ public:
     /// Get priority condition, error::disk_full if is_full, else first code.
     code get_code() const NOEXCEPT;
 
+    /// Clear a disk_full condition if it is the only store condition.
+    void reset_full() NOEXCEPT;
+
     /// Snapshot the store while running.
     code snapshot(const typename Store::event_handler& handler) const NOEXCEPT;
 
