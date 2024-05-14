@@ -344,6 +344,26 @@ BOOST_AUTO_TEST_CASE(utilities__size2__non_empty__true_expected)
     BOOST_REQUIRE_EQUAL(out, text.length());
 }
 
+BOOST_AUTO_TEST_CASE(utilities__space__file__true)
+{
+    const std::string text = "panopticon";
+    BOOST_REQUIRE(test::create(TEST_PATH, text));
+
+    size_t out{};
+    BOOST_REQUIRE(file::space(out, TEST_PATH));
+    BOOST_WARN(!is_zero(out));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__space__create_directory__true)
+{
+    const std::filesystem::path directory = TEST_PATH + "/foo";
+    BOOST_REQUIRE(file::create_directory(directory));
+
+    size_t out{};
+    BOOST_REQUIRE(file::space(out, directory));
+    BOOST_WARN(!is_zero(out));
+}
+
 BOOST_AUTO_TEST_CASE(utilities__page__always__non_zero)
 {
     BOOST_REQUIRE_NE(file::page(), zero);
