@@ -439,20 +439,6 @@ public:
     bool set_filter(const header_link& link, const hash_digest& head,
         const filter& body) NOEXCEPT;
 
-    ////// This is set within tx.
-    ////bool set_address_output(const output& output,
-    ////    const output_link& link) NOEXCEPT;
-    ////bool set_address_output(const hash_digest& key,
-    ////    const output_link& link) NOEXCEPT;
-
-    /////// Buffer (surrogate-keyed).
-    ////transaction::cptr get_buffered_tx(const tx_link& link) const NOEXCEPT;
-    ////bool set_buffered_tx(const tx_link& link, const transaction& tx) NOEXCEPT;
-
-    /////// Bootstrap (natural-keyed).
-    ////bool get_bootstrap(hashes& out) const NOEXCEPT;
-    ////bool set_bootstrap(size_t height) NOEXCEPT;
-
 protected:
     /// Translate.
     /// -----------------------------------------------------------------------

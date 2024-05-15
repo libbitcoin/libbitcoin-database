@@ -658,7 +658,6 @@ typename CLASS::inputs_ptr CLASS::get_spenders(const tx_link& link,
     return get_spenders(to_output(link, output_index));
 }
 
-// TODO: rename/change spend to archive table.
 // The only multitable write, all archive except header, also address.
 TEMPLATE
 tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
@@ -929,7 +928,7 @@ txs_link CLASS::set_link(const transactions& txs,
     const header_link& link, size_t size) NOEXCEPT
 {
     if (link.is_terminal())
-        return{};
+        return {};
 
     // GUARD (block (txs) redundancy)
     // This is only fully effective if there is a single database thread.

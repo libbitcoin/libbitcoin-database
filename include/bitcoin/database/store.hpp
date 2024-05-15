@@ -215,7 +215,7 @@ protected:
     // These are protected by mutex.
     flush_lock flush_lock_;
     interprocess_lock process_lock_;
-    std::shared_timed_mutex transactor_mutex_;
+    std::shared_timed_mutex transactor_mutex_{};
 
 private:
     using path = std::filesystem::path;
