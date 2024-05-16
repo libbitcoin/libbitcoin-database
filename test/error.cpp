@@ -648,14 +648,14 @@ BOOST_AUTO_TEST_CASE(error_t__code__txs_header__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "txs_header");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__txs_tx__true_exected_message)
-{
-    constexpr auto value = error::txs_tx;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "txs_tx");
-}
+////BOOST_AUTO_TEST_CASE(error_t__code__txs_tx__true_exected_message)
+////{
+////    constexpr auto value = error::txs_tx;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "txs_tx");
+////}
 
 BOOST_AUTO_TEST_CASE(error_t__code__txs_txs_put__true_exected_message)
 {

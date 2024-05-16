@@ -114,7 +114,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     // tx archive
     { txs_header, "txs_header" },
-    { txs_tx, "txs_tx" },
+    ////{ txs_tx, "txs_tx" },
     { txs_txs_put, "txs_txs_put" }
 };
 

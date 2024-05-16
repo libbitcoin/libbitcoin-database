@@ -344,10 +344,14 @@ public:
     header_link set_link(const block& block, const chain_context& ctx) NOEXCEPT;
     header_link set_link(const block& block, const context& ctx) NOEXCEPT;
     header_link set_link(const block& block) NOEXCEPT;
-    txs_link set_link(const transactions& txs, const header_link& link,
-        size_t size) NOEXCEPT;
+
+    txs_link set_link(const transactions& txs, const header_link& key, size_t size) NOEXCEPT;
     tx_link set_link(const transaction& tx) NOEXCEPT;
-    bool set_dissasociated(const header_link& link) NOEXCEPT;
+    
+    code set_code(const transactions& txs, const header_link& key, size_t size) NOEXCEPT;
+    code set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT;
+
+    bool set_dissasociated(const header_link& key) NOEXCEPT;
 
     /// Chain state.
     /// -----------------------------------------------------------------------
@@ -440,6 +444,9 @@ public:
         const filter& body) NOEXCEPT;
 
 protected:
+    code set_code(txs_link& out_fk, const transactions& txs,
+        const header_link& key, size_t size) NOEXCEPT;
+
     /// Translate.
     /// -----------------------------------------------------------------------
     uint32_t to_spend_index(const tx_link& parent_fk,

@@ -121,7 +121,7 @@ enum error_t : uint8_t
 
     /// txs archive
     txs_header,
-    txs_tx,
+    ////txs_tx,
     txs_txs_put
 };
 
