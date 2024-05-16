@@ -97,8 +97,11 @@ public:
     /// True if there is a disk full condition.
     bool is_full() const NOEXCEPT;
 
-    /// Clear a disk full condition.
-    void reset_full() NOEXCEPT;
+    /// Get the space required to clear the disk full condition.
+    size_t get_space() const NOEXCEPT;
+
+    /// Resume from disk full condition.
+    code reload(const typename Store::event_handler& handler) const NOEXCEPT;
 
     /// Snapshot the store while running.
     code snapshot(const typename Store::event_handler& handler) const NOEXCEPT;

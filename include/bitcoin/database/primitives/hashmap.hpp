@@ -80,11 +80,11 @@ public:
     /// Get the fault condition.
     code get_fault() const NOEXCEPT;
 
-    /// Get the disk full condition.
-    bool is_full() const NOEXCEPT;
+    /// Get the space required to clear the disk full condition.
+    size_t get_space() const NOEXCEPT;
 
-    /// Clear the disk full condition.
-    void reset_full() NOEXCEPT;
+    /// Resume from disk full condition.
+    code reload() NOEXCEPT;
 
     /// Query interface, iterator is not thread safe.
     /// -----------------------------------------------------------------------

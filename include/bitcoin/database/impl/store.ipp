@@ -401,6 +401,7 @@ code CLASS::snapshot(const event_handler& handler) NOEXCEPT
         handler(event_t::wait_lock, table_t::store);
     }
 
+    code ec{ error::success };
     const auto flush = [&handler](auto& ec, auto& storage, table_t table) NOEXCEPT
     {
         if (!ec)
@@ -409,8 +410,6 @@ code CLASS::snapshot(const event_handler& handler) NOEXCEPT
             ec = storage.flush();
         }
     };
-
-    code ec{ error::success };
 
     // Assumes/requires tables open/loaded.
     flush(ec, header_body_, table_t::header_body);
@@ -440,6 +439,70 @@ code CLASS::snapshot(const event_handler& handler) NOEXCEPT
 }
 
 TEMPLATE
+code CLASS::reload(const event_handler& handler) NOEXCEPT
+{
+    while (!transactor_mutex_.try_lock_for(std::chrono::seconds(1)))
+    {
+        handler(event_t::wait_lock, table_t::store);
+    }
+
+    code ec{ error::success };
+    const auto reload = [&handler](auto& ec, auto& storage, table_t table) NOEXCEPT
+    {
+        if (!ec)
+        {
+            // If any storage has a fault it will return as failure code.
+            if (to_bool(storage.get_space()))
+            {
+                handler(event_t::load_file, table);
+                ec = storage.reload();
+            }
+        }
+    };
+
+    reload(ec, header_head_, table_t::header_head);
+    reload(ec, header_body_, table_t::header_body);
+    reload(ec, input_head_, table_t::input_head);
+    reload(ec, input_body_, table_t::input_body);
+    reload(ec, output_head_, table_t::output_head);
+    reload(ec, output_body_, table_t::output_body);
+    reload(ec, point_head_, table_t::point_head);
+    reload(ec, point_body_, table_t::point_body);
+    reload(ec, puts_head_, table_t::puts_head);
+    reload(ec, puts_body_, table_t::puts_body);
+    reload(ec, spend_head_, table_t::spend_head);
+    reload(ec, spend_body_, table_t::spend_body);
+    reload(ec, tx_head_, table_t::tx_head);
+    reload(ec, tx_body_, table_t::tx_body);
+    reload(ec, txs_head_, table_t::txs_head);
+    reload(ec, txs_body_, table_t::txs_body);
+
+    reload(ec, candidate_head_, table_t::candidate_head);
+    reload(ec, candidate_body_, table_t::candidate_body);
+    reload(ec, confirmed_head_, table_t::confirmed_head);
+    reload(ec, confirmed_body_, table_t::confirmed_body);
+    reload(ec, strong_tx_head_, table_t::strong_tx_head);
+    reload(ec, strong_tx_body_, table_t::strong_tx_body);
+
+    reload(ec, validated_bk_head_, table_t::validated_bk_head);
+    reload(ec, validated_bk_body_, table_t::validated_bk_body);
+    reload(ec, validated_tx_head_, table_t::validated_tx_head);
+    reload(ec, validated_tx_body_, table_t::validated_tx_body);
+
+    reload(ec, address_head_, table_t::address_head);
+    reload(ec, address_body_, table_t::address_body);
+    reload(ec, neutrino_head_, table_t::neutrino_head);
+    reload(ec, neutrino_body_, table_t::neutrino_body);
+    ////reload(ec, bootstrap_head_, table_t::bootstrap_head);
+    ////reload(ec, bootstrap_body_, table_t::bootstrap_body);
+    ////reload(ec, buffer_head_, table_t::buffer_head);
+    ////reload(ec, buffer_body_, table_t::buffer_body);
+
+    transactor_mutex_.unlock();
+    return ec;
+}
+
+TEMPLATE
 code CLASS::close(const event_handler& handler) NOEXCEPT
 {
     // Transactor may be held outside of the node, such as for backup. 
@@ -449,36 +512,32 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
     }
 
     code ec{ error::success };
-
-    if (!ec)
+    const auto close = [&handler](auto& storage, table_t table) NOEXCEPT
     {
-        const auto close = [&handler](auto& storage, table_t table) NOEXCEPT
-        {
-            handler(event_t::close_table, table);
-            return storage.close();
-        };
+        handler(event_t::close_table, table);
+        return storage.close();
+    };
 
-        if      (!close(header, table_t::header_table)) ec = error::close_table;
-        else if (!close(input, table_t::input_table)) ec = error::close_table;
-        else if (!close(output, table_t::output_table)) ec = error::close_table;
-        else if (!close(point, table_t::point_table)) ec = error::close_table;
-        else if (!close(puts, table_t::puts_table)) ec = error::close_table;
-        else if (!close(spend, table_t::spend_table)) ec = error::close_table;
-        else if (!close(tx, table_t::tx_table)) ec = error::close_table;
-        else if (!close(txs, table_t::txs_table)) ec = error::close_table;
+    if      (!close(header, table_t::header_table)) ec = error::close_table;
+    else if (!close(input, table_t::input_table)) ec = error::close_table;
+    else if (!close(output, table_t::output_table)) ec = error::close_table;
+    else if (!close(point, table_t::point_table)) ec = error::close_table;
+    else if (!close(puts, table_t::puts_table)) ec = error::close_table;
+    else if (!close(spend, table_t::spend_table)) ec = error::close_table;
+    else if (!close(tx, table_t::tx_table)) ec = error::close_table;
+    else if (!close(txs, table_t::txs_table)) ec = error::close_table;
 
-        else if (!close(candidate, table_t::candidate_table)) ec = error::close_table;
-        else if (!close(confirmed, table_t::confirmed_table)) ec = error::close_table;
-        else if (!close(strong_tx, table_t::strong_tx_table)) ec = error::close_table;
+    else if (!close(candidate, table_t::candidate_table)) ec = error::close_table;
+    else if (!close(confirmed, table_t::confirmed_table)) ec = error::close_table;
+    else if (!close(strong_tx, table_t::strong_tx_table)) ec = error::close_table;
 
-        else if (!close(validated_bk, table_t::validated_bk_table)) ec = error::close_table;
-        else if (!close(validated_tx, table_t::validated_tx_table)) ec = error::close_table;
+    else if (!close(validated_bk, table_t::validated_bk_table)) ec = error::close_table;
+    else if (!close(validated_tx, table_t::validated_tx_table)) ec = error::close_table;
 
-        else if (!close(address, table_t::address_table)) ec = error::close_table;
-        else if (!close(neutrino, table_t::neutrino_table)) ec = error::close_table;
-        ////else if (!close(bootstrap, table_t::bootstrap_table)) ec = error::close_table;
-        ////else if (!close(buffer, table_t::buffer_table)) ec = error::close_table;
-    }
+    else if (!close(address, table_t::address_table)) ec = error::close_table;
+    else if (!close(neutrino, table_t::neutrino_table)) ec = error::close_table;
+    ////else if (!close(bootstrap, table_t::bootstrap_table)) ec = error::close_table;
+    ////else if (!close(buffer, table_t::buffer_table)) ec = error::close_table;
 
     if (!ec) ec = unload_close(handler);
 
@@ -604,7 +663,6 @@ TEMPLATE
 code CLASS::unload_close(const event_handler& handler) NOEXCEPT
 {
     code ec{ error::success };
-    
     const auto unload = [&handler](auto& ec, auto& storage, table_t table) NOEXCEPT
     {
         if (!ec)
@@ -975,7 +1033,7 @@ const typename CLASS::transactor CLASS::get_transactor() NOEXCEPT
 TEMPLATE
 code CLASS::get_fault() const NOEXCEPT
 {
-    code ec{};
+    code ec{ error::success };
     if ((ec = header_body_.get_fault())) return ec;
     if ((ec = input_body_.get_fault())) return ec;
     if ((ec = output_body_.get_fault())) return ec;
@@ -997,56 +1055,44 @@ code CLASS::get_fault() const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_full() const NOEXCEPT
+size_t CLASS::get_space() const NOEXCEPT
 {
-    return header_body_.is_full()
-        || input_body_.is_full()
-        || output_body_.is_full()
-        || point_body_.is_full()
-        || puts_body_.is_full()
-        || spend_body_.is_full()
-        || tx_body_.is_full()
-        || txs_body_.is_full()
-        || candidate_body_.is_full()
-        || confirmed_body_.is_full()
-        || strong_tx_body_.is_full()
-        || validated_bk_body_.is_full()
-        || validated_tx_body_.is_full()
-        || address_body_.is_full()
-        || neutrino_body_.is_full();
-        ////|| bootstrap_body_.is_full()
-        ////|| buffer_body_.is_full();
+    size_t total{};
+    const auto space = [&total](auto& storage) NOEXCEPT
+    {
+        total = system::ceilinged_add(total, storage.get_space());
+    };
+
+    space(header_body_);
+    space(input_body_);
+    space(output_body_);
+    space(point_body_);
+    space(puts_body_);
+    space(spend_body_);
+    space(tx_body_);
+    space(txs_body_);
+    space(candidate_body_);
+    space(confirmed_body_);
+    space(strong_tx_body_);
+    space(validated_bk_body_);
+    space(validated_tx_body_);
+    space(address_body_);
+    space(neutrino_body_);
+    ////space(bootstrap_body_);
+    ////space(buffer_body_);
+
+    return total;
 }
 
 TEMPLATE
-void CLASS::reset_full() NOEXCEPT
-{
-    header_body_.reset_full();
-    input_body_.reset_full();
-    output_body_.reset_full();
-    point_body_.reset_full();
-    puts_body_.reset_full();
-    spend_body_.reset_full();
-    tx_body_.reset_full();
-    txs_body_.reset_full();
-    candidate_body_.reset_full();
-    confirmed_body_.reset_full();
-    strong_tx_body_.reset_full();
-    validated_bk_body_.reset_full();
-    validated_tx_body_.reset_full();
-    address_body_.reset_full();
-    neutrino_body_.reset_full();
-    ////bootstrap_body_.reset_full();
-    ////buffer_body_.reset_full();
-}
-
-TEMPLATE
-void CLASS::report_condition(const error_handler& handler) const NOEXCEPT
+void CLASS::report(const error_handler& handler) const NOEXCEPT
 {
     const auto report = [&handler](const auto& storage, table_t table) NOEXCEPT
     {
         auto ec = storage.get_fault();
-        if (!ec && storage.is_full()) ec = error::disk_full;
+        if (!ec && to_bool(storage.get_space()))
+            ec = error::disk_full;
+
         handler(ec, table);
     };
 

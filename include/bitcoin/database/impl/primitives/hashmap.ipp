@@ -113,15 +113,15 @@ code CLASS::get_fault() const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_full() const NOEXCEPT
+size_t CLASS::get_space() const NOEXCEPT
 {
-    manager_.is_full();
+    return manager_.get_space();
 }
 
 TEMPLATE
-void CLASS::reset_full() NOEXCEPT
+code CLASS::reload() NOEXCEPT
 {
-    manager_.reset_full();
+    return manager_.reload();
 }
 
 // query interface

@@ -665,7 +665,7 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     return set_code(out, tx) ? tx_link{} : out;
 }
 
-// The only multitable write, all archive except header, also address.
+// The only multitable write query (except initialize/genesis).
 TEMPLATE
 code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
 {
@@ -961,11 +961,15 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
     if (!out_fk.is_terminal() && !is_malleable(key))
         return error::success;
 
+    code ec{};
+    tx_link tx_fk{};
     tx_links links{};
     links.reserve(txs.size());
     for (const auto& tx: txs)
-        if (!push_link_value(links, set_link(*tx)))
-            return error::txs_tx;
+    {
+        if ((ec = set_code(tx_fk, *tx))) return ec;
+        links.push_back(tx_fk.value);
+    }
 
     using bytes = linkage<schema::size>::integer;
     const auto wire = system::possible_narrow_cast<bytes>(size);

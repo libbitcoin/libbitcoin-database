@@ -94,15 +94,15 @@ code CLASS::get_fault() const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_full() const NOEXCEPT
+size_t CLASS::get_space() const NOEXCEPT
 {
-    file_.is_full();
+    return file_.get_space();
 }
 
 TEMPLATE
-void CLASS::reset_full() NOEXCEPT
+code CLASS::reload() NOEXCEPT
 {
-    file_.reset_full();
+    return file_.load();
 }
 
 // private

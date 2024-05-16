@@ -58,7 +58,7 @@ public:
     /// Methods.
     /// -----------------------------------------------------------------------
 
-    /// Create the set of empty files (from unloaded).
+    /// Create the set of empty files.
     code create(const event_handler& handler) NOEXCEPT;
 
     /// Open and load the set of tables, set locks.
@@ -67,8 +67,11 @@ public:
     /// Snapshot the set of tables (from loaded, leaves loaded).
     code snapshot(const event_handler& handler) NOEXCEPT;
 
-    /// Restore the most recent snapshot (from unloaded, leave loaded).
+    /// Restore the most recent snapshot (from closed, leaves loaded).
     code restore(const event_handler& handler) NOEXCEPT;
+
+    /// Continue from a disk full condition (from unloaded, leaves loaded).
+    code reload(const event_handler& handler) NOEXCEPT;
 
     /// Unload and close the set of tables, clear locks.
     code close(const event_handler& handler) NOEXCEPT;
@@ -82,14 +85,11 @@ public:
     /// Get first fault code or error::success.
     code get_fault() const NOEXCEPT;
 
-    /// True if there is a disk full condition.
-    bool is_full() const NOEXCEPT;
-
-    /// Clear a disk full condition.
-    void reset_full() NOEXCEPT;
+    /// Get the space required to clear the disk full condition.
+    size_t get_space() const NOEXCEPT;
 
     /// Dump all error/full conditions to handler.
-    void report_condition(const error_handler& handler) const NOEXCEPT;
+    void report(const error_handler& handler) const NOEXCEPT;
 
     /// Tables.
     /// -----------------------------------------------------------------------
