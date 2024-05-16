@@ -64,6 +64,11 @@ code chunk_storage::load() NOEXCEPT
     return error::success;
 }
 
+code chunk_storage::reload() NOEXCEPT
+{
+    return error::success;
+}
+
 code chunk_storage::flush() NOEXCEPT
 {
     return error::success;
@@ -133,13 +138,9 @@ code chunk_storage::get_fault() const NOEXCEPT
     return {};
 }
 
-bool chunk_storage::is_full() const NOEXCEPT
+size_t chunk_storage::get_space() const NOEXCEPT
 {
-    return false;
-}
-
-void chunk_storage::reset_full() NOEXCEPT
-{
+    return {};
 }
 
 BC_POP_WARNING()

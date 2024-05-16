@@ -96,7 +96,7 @@ private:
 
     storage& file_;
     const Link buckets_;
-    mutable std::shared_mutex mutex_;
+    mutable std::shared_mutex mutex_{};
 };
 
 } // namespace database

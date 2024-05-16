@@ -37,9 +37,11 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { size_failure, "filure obtaining file size" },
     { close_loaded, "closing loaded file" },
     { close_failure, "file failed to close" },
-    { load_locked, "loading locked file" },
     { load_loaded, "loading loaded file" },
-    { load_failure, "disk full" },
+    { load_locked, "loading locked file" },
+    { load_failure, "file failed to load, disk may be full" },
+    { reload_unloaded, "reloading unloaded file" },
+    { reload_locked, "reloading locked file" },
     { flush_unloaded, "flushing unloaded file" },
     { flush_failure, "file failed to flush" },
     { unload_locked, "unloading locked file" },
@@ -96,7 +98,26 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { unspent_coinbase_collision, "unspent coinbase collision" },
     { relative_time_locked, "relative time locked" },
     { unconfirmed_spend, "unconfirmed spend" },
-    { confirmed_double_spend, "confirmed double spend" }
+    { confirmed_double_spend, "confirmed double spend" },
+
+    // tx archive
+    { tx_empty, "tx_empty" },
+    { tx_tx_allocate, "tx_tx_allocate" },
+    { tx_spend_allocate, "tx_spend_allocate" },
+    { tx_input_put, "tx_input_put" },
+    { tx_point_put, "tx_point_put" },
+    { tx_spend_set, "tx_spend_set" },
+    { tx_output_put, "tx_output_put" },
+    { tx_tx_set, "tx_tx_set" },
+    { tx_puts_put, "tx_puts_put" },
+    { tx_spend_commit, "tx_spend_commit" },
+    { tx_address_put, "tx_address_put" },
+    { tx_tx_commit, "tx_tx_commit" },
+
+    // tx archive
+    { txs_header, "txs_header" },
+    ////{ txs_tx, "txs_tx" },
+    { txs_txs_put, "txs_txs_put" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "database", "database code")

@@ -95,15 +95,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__close_failure__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "file failed to close");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__load_locked__true_exected_message)
-{
-    constexpr auto value = error::load_locked;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "loading locked file");
-}
-
 BOOST_AUTO_TEST_CASE(error_t__code__load_loaded__true_exected_message)
 {
     constexpr auto value = error::load_loaded;
@@ -113,13 +104,40 @@ BOOST_AUTO_TEST_CASE(error_t__code__load_loaded__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "loading loaded file");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__load_locked__true_exected_message)
+{
+    constexpr auto value = error::load_locked;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "loading locked file");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__load_failure__true_exected_message)
 {
     constexpr auto value = error::load_failure;
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "disk full");
+    BOOST_REQUIRE_EQUAL(ec.message(), "file failed to load, disk may be full");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__reload_unloaded__true_exected_message)
+{
+    constexpr auto value = error::reload_unloaded;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "reloading unloaded file");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__reload_locked__true_exected_message)
+{
+    constexpr auto value = error::reload_locked;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "reloading locked file");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__flush_unloaded__true_exected_message)
@@ -525,6 +543,145 @@ BOOST_AUTO_TEST_CASE(error_t__code__confirmed_double_spend__true_exected_message
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "confirmed double spend");
+}
+
+// tx archive
+
+BOOST_AUTO_TEST_CASE(error_t__code__tx_empty__true_exected_message)
+{
+    constexpr auto value = error::tx_empty;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tx_empty");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tx_tx_allocate__true_exected_message)
+{
+    constexpr auto value = error::tx_tx_allocate;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tx_tx_allocate");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tx_spend_allocate__true_exected_message)
+{
+    constexpr auto value = error::tx_spend_allocate;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tx_spend_allocate");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tx_input_put__true_exected_message)
+{
+    constexpr auto value = error::tx_input_put;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tx_input_put");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tx_point_put__true_exected_message)
+{
+    constexpr auto value = error::tx_point_put;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tx_point_put");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tx_spend_set__true_exected_message)
+{
+    constexpr auto value = error::tx_spend_set;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tx_spend_set");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tx_output_put__true_exected_message)
+{
+    constexpr auto value = error::tx_output_put;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tx_output_put");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tx_tx_set__true_exected_message)
+{
+    constexpr auto value = error::tx_tx_set;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tx_tx_set");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tx_puts_put__true_exected_message)
+{
+    constexpr auto value = error::tx_puts_put;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tx_puts_put");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tx_spend_commit__true_exected_message)
+{
+    constexpr auto value = error::tx_spend_commit;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tx_spend_commit");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tx_address_put__true_exected_message)
+{
+    constexpr auto value = error::tx_address_put;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tx_address_put");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tx_tx_commit__true_exected_message)
+{
+    constexpr auto value = error::tx_tx_commit;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tx_tx_commit");
+}
+
+// txs archive
+
+BOOST_AUTO_TEST_CASE(error_t__code__txs_header__true_exected_message)
+{
+    constexpr auto value = error::txs_header;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "txs_header");
+}
+
+////BOOST_AUTO_TEST_CASE(error_t__code__txs_tx__true_exected_message)
+////{
+////    constexpr auto value = error::txs_tx;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "txs_tx");
+////}
+
+BOOST_AUTO_TEST_CASE(error_t__code__txs_txs_put__true_exected_message)
+{
+    constexpr auto value = error::txs_txs_put;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "txs_txs_put");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

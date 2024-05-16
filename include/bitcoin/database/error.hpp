@@ -44,9 +44,11 @@ enum error_t : uint8_t
     size_failure,
     close_loaded,
     close_failure,
-    load_locked,
     load_loaded,
+    load_locked,
     load_failure,
+    reload_unloaded,
+    reload_locked,
     flush_unloaded,
     flush_failure,
     unload_locked,
@@ -87,29 +89,14 @@ enum error_t : uint8_t
     restore_table,
     verify_table,
 
-    /// tx fully valid in the given header context.
+    /// validation/confirmation
     tx_connected,
-
-    /// tx conditionally valid in the given header context.
     tx_preconnected,
-
-    /// tx not valid in the given header context.
     tx_disconnected,
-
-    /// block is valid and confirmable.
     block_confirmable,
-
-    /// block is valid but has not been evaluated for confirmability.
     block_preconfirmable,
-
-    /// block is unconfirmable (invalid or spends not confirmable).
     block_unconfirmable,
-
-    /// header has not been invalidated and its txs are not associated.
     unassociated,
-
-    /// header|block has not been validated.
-    /// tx has not been validated in the given block context.
     unvalidated,
 
     /// confirmation (require not just context but prevouts and/or metadata).
@@ -118,7 +105,26 @@ enum error_t : uint8_t
     unspent_coinbase_collision,
     relative_time_locked,
     unconfirmed_spend,
-    confirmed_double_spend
+    confirmed_double_spend,
+
+    /// tx archive
+    tx_empty,
+    tx_tx_allocate,
+    tx_spend_allocate,
+    tx_input_put,
+    tx_point_put,
+    tx_spend_set,
+    tx_output_put,
+    tx_tx_set,
+    tx_puts_put,
+    tx_spend_commit,
+    tx_address_put,
+    tx_tx_commit,
+
+    /// txs archive
+    txs_header,
+    ////txs_tx,
+    txs_txs_put
 };
 
 // No current need for error_code equivalence mapping.

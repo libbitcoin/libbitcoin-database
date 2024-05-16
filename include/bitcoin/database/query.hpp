@@ -97,8 +97,11 @@ public:
     /// True if there is a disk full condition.
     bool is_full() const NOEXCEPT;
 
-    /// Clear a disk full condition.
-    void reset_full() NOEXCEPT;
+    /// Get the space required to clear the disk full condition.
+    size_t get_space() const NOEXCEPT;
+
+    /// Resume from disk full condition.
+    code reload(const typename Store::event_handler& handler) const NOEXCEPT;
 
     /// Snapshot the store while running.
     code snapshot(const typename Store::event_handler& handler) const NOEXCEPT;
@@ -344,10 +347,14 @@ public:
     header_link set_link(const block& block, const chain_context& ctx) NOEXCEPT;
     header_link set_link(const block& block, const context& ctx) NOEXCEPT;
     header_link set_link(const block& block) NOEXCEPT;
-    txs_link set_link(const transactions& txs, const header_link& link,
-        size_t size) NOEXCEPT;
+
+    txs_link set_link(const transactions& txs, const header_link& key, size_t size) NOEXCEPT;
     tx_link set_link(const transaction& tx) NOEXCEPT;
-    bool set_dissasociated(const header_link& link) NOEXCEPT;
+    
+    code set_code(const transactions& txs, const header_link& key, size_t size) NOEXCEPT;
+    code set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT;
+
+    bool set_dissasociated(const header_link& key) NOEXCEPT;
 
     /// Chain state.
     /// -----------------------------------------------------------------------
@@ -439,21 +446,10 @@ public:
     bool set_filter(const header_link& link, const hash_digest& head,
         const filter& body) NOEXCEPT;
 
-    ////// This is set within tx.
-    ////bool set_address_output(const output& output,
-    ////    const output_link& link) NOEXCEPT;
-    ////bool set_address_output(const hash_digest& key,
-    ////    const output_link& link) NOEXCEPT;
-
-    /////// Buffer (surrogate-keyed).
-    ////transaction::cptr get_buffered_tx(const tx_link& link) const NOEXCEPT;
-    ////bool set_buffered_tx(const tx_link& link, const transaction& tx) NOEXCEPT;
-
-    /////// Bootstrap (natural-keyed).
-    ////bool get_bootstrap(hashes& out) const NOEXCEPT;
-    ////bool set_bootstrap(size_t height) NOEXCEPT;
-
 protected:
+    code set_code(txs_link& out_fk, const transactions& txs,
+        const header_link& key, size_t size) NOEXCEPT;
+
     /// Translate.
     /// -----------------------------------------------------------------------
     uint32_t to_spend_index(const tx_link& parent_fk,

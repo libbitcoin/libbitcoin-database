@@ -66,6 +66,9 @@ public:
     /// Map file to memory, must be loaded.
     code load() NOEXCEPT override;
 
+    /// Clear disk full condition, fails if fault, must be loaded, idempotent.
+    code reload() NOEXCEPT override;
+
     /// Flush memory map to disk, suspend writes for call, must be loaded.
     code flush() NOEXCEPT override;
 
@@ -93,15 +96,14 @@ public:
     /// Get the fault condition.
     code get_fault() const NOEXCEPT override;
 
-    /// Get the disk full condition.
-    bool is_full() const NOEXCEPT override;
-
-    /// Clear the disk full condition.
-    void reset_full() NOEXCEPT override;
+    /// Get the space required to clear the disk full condition.
+    /// Use load() to clear the indicated space and allow restart.
+    size_t get_space() const NOEXCEPT override;
 
 protected:
     size_t to_capacity(size_t required) const NOEXCEPT;
     void set_first_code(const error::error_t& ec) NOEXCEPT;
+    void set_disk_space(size_t required) NOEXCEPT;
 
 private:
     using path = std::filesystem::path;
@@ -112,6 +114,7 @@ private:
     bool unmap_() NOEXCEPT;
     bool map_() NOEXCEPT;
     bool remap_(size_t size) NOEXCEPT;
+    bool resize_(size_t size) NOEXCEPT;
     bool finalize_(size_t size) NOEXCEPT;
 
     // Constants.
@@ -129,13 +132,14 @@ private:
     // fields require field_mutex_ exclusive lock for write.
     // fields require minimum field_mutex_ shared lock for flush/read.
     int opened_{ file::invalid };
+    bool fault_{};
     bool loaded_{};
     size_t capacity_{};
     size_t logical_{};
     mutable std::shared_mutex field_mutex_{};
 
-    // These are thread safe;
-    std::atomic<bool> full_{ false };
+    // These are thread safe.
+    std::atomic<size_t> space_{ zero };
     std::atomic<error::error_t> error_{ error::success };
 };
 

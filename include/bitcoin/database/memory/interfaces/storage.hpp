@@ -40,8 +40,11 @@ public:
     /// Close file, must be unloaded, idempotent.
     virtual code close() NOEXCEPT = 0;
 
-    /// Map file to memory, must be loaded.
+    /// Map file to memory, must be open and unloaded.
     virtual code load() NOEXCEPT = 0;
+
+    /// Clear disk full condition, fails if fault, must be loaded, idempotent.
+    virtual code reload() NOEXCEPT = 0;
 
     /// Flush memory map to disk, suspend writes for call, must be loaded.
     virtual code flush() NOEXCEPT = 0;
@@ -70,11 +73,8 @@ public:
     /// Get the fault condition.
     virtual code get_fault() const NOEXCEPT = 0;
 
-    /// Get the disk full condition.
-    virtual bool is_full() const NOEXCEPT = 0;
-
-    /// Clear the disk full condition.
-    virtual void reset_full() NOEXCEPT = 0;
+    /// Get the space required to clear the disk full condition.
+    virtual size_t get_space() const NOEXCEPT = 0;
 };
 
 } // namespace database

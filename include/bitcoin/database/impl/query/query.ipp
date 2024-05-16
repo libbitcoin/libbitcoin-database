@@ -77,7 +77,7 @@ CLASS::query(Store& value) NOEXCEPT
 TEMPLATE
 code CLASS::get_code() const NOEXCEPT
 {
-    auto ec = store_.get_fault();
+    auto ec = get_fault();
     return !ec && is_full() ? error::disk_full : error::success;
 }
 
@@ -96,13 +96,19 @@ bool CLASS::is_fault() const NOEXCEPT
 TEMPLATE
 bool CLASS::is_full() const NOEXCEPT
 {
-    return store_.is_full();
+    return to_bool(get_space()) && !is_fault();
 }
 
 TEMPLATE
-void CLASS::reset_full() NOEXCEPT
+size_t CLASS::get_space() const NOEXCEPT
 {
-    return store_.reset_full();
+    return store_.get_space();
+}
+
+TEMPLATE
+code CLASS::reload(const typename Store::event_handler& handler) const NOEXCEPT
+{
+    return store_.reload(handler);
 }
 
 TEMPLATE

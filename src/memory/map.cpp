@@ -107,6 +107,8 @@ bool map::is_open() const NOEXCEPT
 // Exclusive lock on remap_mutex_ ensures there are open accessor objects,
 // which allows for safely remapping the memory map.
 
+// TODO: map_, flush_, unmap_, remap_ (resize_, finalize_) return codes.
+
 code map::load() NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
@@ -126,12 +128,34 @@ code map::load() NOEXCEPT
             return error::load_failure;
         }
 
-        loaded_ = true;
         remap_mutex_.unlock();
         return error::success;
     }
 
     return error::load_locked;
+}
+
+// Suspend writes before calling.
+code map::reload() NOEXCEPT
+{
+    std::unique_lock field_lock(field_mutex_);
+
+    if (remap_mutex_.try_lock())
+    {
+        if (!loaded_)
+        {
+            remap_mutex_.unlock();
+            return error::reload_unloaded;
+        }
+
+        // Allow resume from disk full.
+        set_disk_space(zero);
+
+        remap_mutex_.unlock();
+        return error::success;
+    }
+
+    return error::reload_locked;
 }
 
 // Suspend writes before calling.
@@ -148,6 +172,7 @@ code map::flush() NOEXCEPT
     return flush_() ? error::success : error::flush_failure;
 }
 
+// Suspend writes before calling.
 code map::unload() NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
@@ -169,7 +194,6 @@ code map::unload() NOEXCEPT
             return error::unload_failure;
         }
 
-        loaded_ = false;
         remap_mutex_.unlock();
         return error::success;
     }
@@ -216,7 +240,7 @@ size_t map::allocate(size_t chunk) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    if (!loaded_ || is_add_overflow(logical_, chunk))
+    if (fault_ || !loaded_ || is_add_overflow(logical_, chunk))
         return storage::eof;
 
     auto end = logical_ + chunk;
@@ -227,7 +251,7 @@ size_t map::allocate(size_t chunk) NOEXCEPT
         // TODO: Could loop over a try lock here and log deadlock warning.
         std::unique_lock remap_lock(remap_mutex_);
 
-        // If disk_full set, suspend writes, create space, clear, and restart.
+        // Disk full condition leaves store in valid state despite eof return.
         if (!remap_(size))
             return storage::eof;
     }
@@ -265,14 +289,9 @@ code map::get_fault() const NOEXCEPT
     return error_.load();
 }
 
-bool map::is_full() const NOEXCEPT
+size_t map::get_space() const NOEXCEPT
 {
-    return full_.load();
-}
-
-void map::reset_full() NOEXCEPT
-{
-    full_.store(false);
+    return space_.load();
 }
 
 // protected
@@ -292,16 +311,19 @@ size_t map::to_capacity(size_t required) const NOEXCEPT
 // Read-write protected by atomic, write-write protected by remap_mutex.
 void map::set_first_code(const error::error_t& ec) NOEXCEPT
 {
-    // Disk full is a non-persistent condition.
-    if (ec == error::disk_full)
+    if (!fault_)
     {
-        full_.store(true);
-        return;
-    }
+        // fault is not exposed so requires no atomic (fast read).
+        fault_ = true;
 
-    // Best effort lock-free attempt to get first code.
-    if (!error_)
+        // error is atomic for public read exposure.
         error_.store(ec);
+    }
+}
+
+void map::set_disk_space(size_t required) NOEXCEPT
+{
+    space_.store(required);
 }
 
 // private, mman wrappers, not thread safe
@@ -362,8 +384,9 @@ bool map::unmap_() NOEXCEPT
     if (!success)
         set_first_code(error::munmap_failure);
 
+    loaded_ = false;
     capacity_ = zero;
-    memory_map_ = nullptr;
+    memory_map_ = {};
     return success;
 }
 
@@ -374,16 +397,9 @@ bool map::map_() NOEXCEPT
     auto size = logical_;
 
     // Cannot map empty file, and want mininum capacity, so expand as required.
-    if (size < minimum_)
-    {
-        size = minimum_;
-        if (::ftruncate(opened_, size) == fail)
-        {
-            set_first_code(error::ftruncate_failure);
-            unmap_();
-            return false;
-        }
-    }
+    // disk_full: space is set but no code is set with false return.
+    if ((size < minimum_) && !resize_((size = minimum_)))
+      return false;
 
     memory_map_ = pointer_cast<uint8_t>(::mmap(nullptr, size,
         PROT_READ | PROT_WRITE, MAP_SHARED, opened_, 0));
@@ -395,6 +411,8 @@ bool map::map_() NOEXCEPT
 // Remapping has no effect on logical size, sets map_/capacity_.
 bool map::remap_(size_t size) NOEXCEPT
 {
+    BC_ASSERT(size >= logical_);
+
     // Cannot remap empty file, so expand to minimum capacity if zero.
     if (is_zero(size))
         size = minimum_;
@@ -402,25 +420,20 @@ bool map::remap_(size_t size) NOEXCEPT
 #if !defined(HAVE_MSC) && !defined(MREMAP_MAYMOVE)
     // macOS: unmap before ftruncate sets new size.
     if (!unmap_())
+        return false;
+
+    // disk_full: unmap(ok), resize(fail for space), map(ok), return false.
+    // disk_full: if second unmap fails then code is set, and false return.
+    if (!resize_(size))
     {
-        set_first_code(error::mremap_failure);
+        /* bool */ map::map_();
         return false;
     }
+#else
+    // disk_full: space is set but no code is set with false return.
+    if (!resize_(size))
+        return false;
 #endif
-
-    if (::ftruncate(opened_, size) == fail)
-    {
-        // Disk full is the only restartable store failure (no unmap).
-        if (errno == ENOSPC)
-        {
-            set_first_code(error::disk_full);
-            return false;
-        }
-
-        set_first_code(error::ftruncate_failure);
-        unmap_();
-        return false;
-    }
 
 #if defined(HAVE_MSC)
     // mman-win32 mremap hack (umap/map) requires flags and file descriptor.
@@ -439,13 +452,37 @@ bool map::remap_(size_t size) NOEXCEPT
     return finalize_(size);
 }
 
+// disk_full: space is set but no code is set with false return.
+bool map::resize_(size_t size) NOEXCEPT
+{
+    // Disk full detection is platform common, any other failure is an abort.
+    if (::ftruncate(opened_, size) == fail)
+    {
+        // Disk full is the only restartable store failure (leave mapped).
+        if (errno == ENOSPC)
+        {
+            set_disk_space(size - logical_);
+            return false;
+        }
+
+        set_first_code(error::ftruncate_failure);
+        unmap_();
+        return false;
+    }
+
+    return true;
+}
+
 // Finalize failure results in unmapped.
 bool map::finalize_(size_t size) NOEXCEPT
 {
     if (memory_map_ == MAP_FAILED)
     {
+        loaded_ = false;
         capacity_ = zero;
-        memory_map_ = nullptr;
+        memory_map_ = {};
+
+        // mmap or mremap failure (not mapped).
         set_first_code(error::mmap_failure);
         return false;
     }
@@ -458,6 +495,7 @@ bool map::finalize_(size_t size) NOEXCEPT
         return false;
     }
 
+    loaded_ = true;
     capacity_ = size;
     return true;
 }
