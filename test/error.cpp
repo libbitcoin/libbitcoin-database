@@ -95,15 +95,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__close_failure__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "file failed to close");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__load_locked__true_exected_message)
-{
-    constexpr auto value = error::load_locked;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "loading locked file");
-}
-
 BOOST_AUTO_TEST_CASE(error_t__code__load_loaded__true_exected_message)
 {
     constexpr auto value = error::load_loaded;
@@ -113,13 +104,40 @@ BOOST_AUTO_TEST_CASE(error_t__code__load_loaded__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "loading loaded file");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__load_locked__true_exected_message)
+{
+    constexpr auto value = error::load_locked;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "loading locked file");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__load_failure__true_exected_message)
 {
     constexpr auto value = error::load_failure;
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "disk full");
+    BOOST_REQUIRE_EQUAL(ec.message(), "file failed to load, disk may be full");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__reload_unloaded__true_exected_message)
+{
+    constexpr auto value = error::reload_unloaded;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "reloading unloaded file");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__reload_locked__true_exected_message)
+{
+    constexpr auto value = error::reload_locked;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "reloading locked file");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__flush_unloaded__true_exected_message)
