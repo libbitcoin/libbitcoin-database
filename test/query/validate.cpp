@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(query_validate__get_block_state__confirmable__block_confirm
     BOOST_REQUIRE_EQUAL(fees, 42u);
 }
 
-BOOST_AUTO_TEST_CASE(query_validate__get_block_state__preconfirmable__block_preconfirmable)
+BOOST_AUTO_TEST_CASE(query_validate__get_block_state__valid__block_valid)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -219,10 +219,10 @@ BOOST_AUTO_TEST_CASE(query_validate__get_block_state__preconfirmable__block_prec
     BOOST_REQUIRE(query.set(test::block1, context{}));
 
     uint64_t fees{};
-    BOOST_REQUIRE(query.set_block_preconfirmable(1));
-    BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::block_preconfirmable);
-    BOOST_REQUIRE_EQUAL(query.get_block_state(1), error::block_preconfirmable);
-    BOOST_REQUIRE_EQUAL(query.get_block_state(fees, 1), error::block_preconfirmable);
+    BOOST_REQUIRE(query.set_block_valid(1));
+    BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::block_valid);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(1), error::block_valid);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(fees, 1), error::block_valid);
     BOOST_REQUIRE_EQUAL(fees, 0u);
 }
 

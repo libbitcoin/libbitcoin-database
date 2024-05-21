@@ -36,13 +36,13 @@ inline code CLASS::to_block_code(
 {
     switch (value)
     {
+        // Block satisfies validation rules (prevouts unverified).
+        case schema::block_state::valid:
+            return error::block_valid;
         // Final: Block satisfies confirmation rules (prevouts).
         case schema::block_state::confirmable:
             return error::block_confirmable;
-        // Block satisfies validation rules (prevouts unverified).
-        case schema::block_state::preconfirmable:
-            return error::block_preconfirmable;
-        // Final: Block does not satsify validation/confirmation rules.
+        // Final: Block does not satisfy validation/confirmation rules.
         case schema::block_state::unconfirmable:
             return error::block_unconfirmable;
         // Block has no recorded state, may be under checkpoint or milestone.
@@ -61,12 +61,12 @@ inline code CLASS::to_tx_code(
     // All states below are relevant only to the associated validation context.
     switch (value)
     {
-        // Final: Tx is valid (passed check, accept, and connect).
-        case schema::tx_state::connected:
-            return error::tx_connected;
         // Tx is valid in the case where standard prevouts are matched.
         case schema::tx_state::preconnected:
             return error::tx_preconnected;
+        // Final: Tx is valid (passed check, accept, and connect).
+        case schema::tx_state::connected:
+            return error::tx_connected;
         // Final: Tx is not valid (failed check, accept, or connect).
         case schema::tx_state::disconnected:
             return error::tx_disconnected;
@@ -251,7 +251,7 @@ code CLASS::get_tx_state(uint64_t& fee, size_t& sigops, const tx_link& link,
 }
 
 TEMPLATE
-bool CLASS::set_block_preconfirmable(const header_link& link) NOEXCEPT
+bool CLASS::set_block_valid(const header_link& link) NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
@@ -260,7 +260,7 @@ bool CLASS::set_block_preconfirmable(const header_link& link) NOEXCEPT
     return store_.validated_bk.put(link, table::validated_bk::slab
     {
         {},
-        schema::block_state::preconfirmable,
+        schema::block_state::valid,
         0 // fees
     });
     // ========================================================================

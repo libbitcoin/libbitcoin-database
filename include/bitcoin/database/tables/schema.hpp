@@ -90,7 +90,7 @@ namespace schema
     enum block_state : uint8_t
     {
         confirmable = 0,    // final
-        preconfirmable = 1, // transitional
+        valid = 1, // transitional
         unconfirmable = 2   // final
     };
 
