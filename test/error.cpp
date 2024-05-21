@@ -455,13 +455,13 @@ BOOST_AUTO_TEST_CASE(error_t__code__block_confirmable__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "block confirmable");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__block_preconfirmable__true_exected_message)
+BOOST_AUTO_TEST_CASE(error_t__code__block_valid__true_exected_message)
 {
-    constexpr auto value = error::block_preconfirmable;
+    constexpr auto value = error::block_valid;
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "block preconfirmable");
+    BOOST_REQUIRE_EQUAL(ec.message(), "block valid");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__block_unconfirmable__true_exected_message)
