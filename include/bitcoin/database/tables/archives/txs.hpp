@@ -115,7 +115,7 @@ struct txs
         {
             const auto count = source.read_little_endian<tx::integer, schema::count_>();
             source.skip_bytes(schema::bit + bytes::size);
-            if (!is_zero(count))
+            if (is_nonzero(count))
             {
                 coinbase_fk = source.read_little_endian<tx::integer, tx::size>();
                 return source;

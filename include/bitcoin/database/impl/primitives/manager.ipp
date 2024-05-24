@@ -119,7 +119,7 @@ constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
         // Slab implies link/key incorporated into size.
         return value;
     }
-    else if constexpr (!is_zero(array_count<Key>))
+    else if constexpr (is_nonzero(array_count<Key>))
     {
         // Record implies link/key independent of Size.
         constexpr auto element_size = Link::size + array_count<Key> + Size;
@@ -156,7 +156,7 @@ constexpr Link CLASS::position_to_link(size_t position) NOEXCEPT
         // Slab implies link/key incorporated into size.
         return { cast_link(position) };
     }
-    else if constexpr (!is_zero(array_count<Key>))
+    else if constexpr (is_nonzero(array_count<Key>))
     {
         // Record implies link/key independent of Size.
         constexpr auto element_size = Link::size + array_count<Key> + Size;
@@ -165,7 +165,7 @@ constexpr Link CLASS::position_to_link(size_t position) NOEXCEPT
     else
     {
         // No key implies no linked list.
-        static_assert(!is_zero(Size));
+        static_assert(is_nonzero(Size));
         return { cast_link(position / Size) };
     }
 }
