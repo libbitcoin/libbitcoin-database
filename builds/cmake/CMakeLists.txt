@@ -227,6 +227,7 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/locks/flush_lock.cpp"
     "../../src/locks/interprocess_lock.cpp"
     "../../src/memory/map.cpp"
+    "../../src/memory/utilities.cpp"
     "../../src/memory/mman-win32/mman.c"
     "../../src/memory/mman-win32/mman.h" )
 
@@ -277,6 +278,7 @@ if (with-tests)
         "../../test/locks/interprocess_lock.cpp"
         "../../test/memory/accessor.cpp"
         "../../test/memory/map.cpp"
+        "../../test/memory/utilities.cpp"
         "../../test/mocks/blocks.hpp"
         "../../test/mocks/chunk_storage.cpp"
         "../../test/mocks/chunk_storage.hpp"
