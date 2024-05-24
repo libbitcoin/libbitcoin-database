@@ -43,6 +43,7 @@ src_libbitcoin_database_la_SOURCES = \
     src/locks/flush_lock.cpp \
     src/locks/interprocess_lock.cpp \
     src/memory/map.cpp \
+    src/memory/utilities.cpp \
     src/memory/mman-win32/mman.c \
     src/memory/mman-win32/mman.h
 
@@ -69,6 +70,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/locks/interprocess_lock.cpp \
     test/memory/accessor.cpp \
     test/memory/map.cpp \
+    test/memory/utilities.cpp \
     test/mocks/blocks.hpp \
     test/mocks/chunk_storage.cpp \
     test/mocks/chunk_storage.hpp \
@@ -190,7 +192,8 @@ include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/reader.hpp \
     include/bitcoin/database/memory/simple_reader.hpp \
     include/bitcoin/database/memory/simple_writer.hpp \
-    include/bitcoin/database/memory/streamers.hpp
+    include/bitcoin/database/memory/streamers.hpp \
+    include/bitcoin/database/memory/utilities.hpp
 
 include_bitcoin_database_memory_interfacesdir = ${includedir}/bitcoin/database/memory/interfaces
 include_bitcoin_database_memory_interfaces_HEADERS = \

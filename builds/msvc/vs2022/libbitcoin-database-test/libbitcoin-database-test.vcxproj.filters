@@ -69,6 +69,9 @@
     <ClCompile Include="..\..\..\..\test\memory\map.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\memory\utilities.cpp">
+      <Filter>src\memory</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\mocks\chunk_storage.cpp">
       <Filter>src\mocks</Filter>
     </ClCompile>

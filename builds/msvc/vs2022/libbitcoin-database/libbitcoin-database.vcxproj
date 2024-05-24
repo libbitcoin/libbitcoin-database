@@ -75,12 +75,17 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\src\error.cpp" />
     <ClCompile Include="..\..\..\..\src\file\rotator.cpp" />
-    <ClCompile Include="..\..\..\..\src\file\utilities.cpp" />
+    <ClCompile Include="..\..\..\..\src\file\utilities.cpp">
+      <ObjectFileName>$(IntDir)src_file_utilities.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\locks\file_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\flush_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\interprocess_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\map.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\mman-win32\mman.c" />
+    <ClCompile Include="..\..\..\..\src\memory\utilities.cpp">
+      <ObjectFileName>$(IntDir)src_memory_utilities.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -107,6 +112,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\simple_reader.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\simple_writer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\streamers.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\utilities.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\arraymap.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hashmap.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\head.hpp" />

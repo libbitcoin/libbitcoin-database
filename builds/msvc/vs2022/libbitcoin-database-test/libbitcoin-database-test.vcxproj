@@ -72,13 +72,18 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\test\error.cpp" />
     <ClCompile Include="..\..\..\..\test\file\rotator.cpp" />
-    <ClCompile Include="..\..\..\..\test\file\utilities.cpp" />
+    <ClCompile Include="..\..\..\..\test\file\utilities.cpp">
+      <ObjectFileName>$(IntDir)test_file_utilities.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\locks\file_lock.cpp" />
     <ClCompile Include="..\..\..\..\test\locks\flush_lock.cpp" />
     <ClCompile Include="..\..\..\..\test\locks\interprocess_lock.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\accessor.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\map.cpp" />
+    <ClCompile Include="..\..\..\..\test\memory\utilities.cpp">
+      <ObjectFileName>$(IntDir)test_memory_utilities.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\mocks\chunk_storage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\arraymap.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hashmap.cpp" />
