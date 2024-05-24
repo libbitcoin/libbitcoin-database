@@ -60,7 +60,7 @@ size_t page_size() NOEXCEPT
     if (is_negative(size) || is_nonzero(errno))
         return zero;
 
-    BC_ASSERT(!system::is_limited<size_t>(size));
+    BC_ASSERT(!is_limited<size_t>(size));
     return possible_narrow_sign_cast<size_t>(size);
 }
 
