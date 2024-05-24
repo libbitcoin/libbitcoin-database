@@ -74,7 +74,8 @@ uint64_t system_memory() NOEXCEPT
         return zero;
 
     // Failed page_size also results in zero return.
-    return ceilinged_multiply(to_unsigned(pages), page_size());
+    return ceilinged_multiply(to_unsigned(pages),
+        possible_wide_cast<uint64_t>(page_size()));
 }
 
 #endif
