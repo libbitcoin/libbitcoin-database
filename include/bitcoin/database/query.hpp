@@ -106,29 +106,6 @@ public:
     /// Snapshot the store while running.
     code snapshot(const typename Store::event_handler& handler) const NOEXCEPT;
 
-    /// Initialization (natural-keyed).
-    /// -----------------------------------------------------------------------
-    /// Not reliable during organization.
-
-    inline bool is_initialized() const NOEXCEPT;
-    inline size_t get_top_candidate() const NOEXCEPT;
-    inline size_t get_top_confirmed() const NOEXCEPT;
-    size_t get_fork() const NOEXCEPT;
-    size_t get_top_associated() const NOEXCEPT;
-    size_t get_top_associated_from(size_t height) const NOEXCEPT;
-    associations get_all_unassociated() const NOEXCEPT;
-    associations get_unassociated_above(size_t height) const NOEXCEPT;
-    associations get_unassociated_above(size_t height,
-        size_t count) const NOEXCEPT;
-    associations get_unassociated_above(size_t height,
-        size_t count, size_t last) const NOEXCEPT;
-    size_t get_unassociated_count() const NOEXCEPT;
-    size_t get_unassociated_count_above(size_t height) const NOEXCEPT;
-    size_t get_unassociated_count_above(size_t height,
-        size_t last) const NOEXCEPT;
-    hashes get_candidate_hashes(const heights& heights) const NOEXCEPT;
-    hashes get_confirmed_hashes(const heights& heights) const NOEXCEPT;
-
     /// Store extent.
     /// -----------------------------------------------------------------------
 
@@ -219,6 +196,29 @@ public:
     /// Optional table state.
     bool address_enabled() const NOEXCEPT;
     bool neutrino_enabled() const NOEXCEPT;
+
+    /// Initialization (natural-keyed).
+    /// -----------------------------------------------------------------------
+    /// Not reliable during organization.
+
+    inline bool is_initialized() const NOEXCEPT;
+    inline size_t get_top_candidate() const NOEXCEPT;
+    inline size_t get_top_confirmed() const NOEXCEPT;
+    size_t get_fork() const NOEXCEPT;
+    size_t get_top_associated() const NOEXCEPT;
+    size_t get_top_associated_from(size_t height) const NOEXCEPT;
+    associations get_all_unassociated() const NOEXCEPT;
+    associations get_unassociated_above(size_t height) const NOEXCEPT;
+    associations get_unassociated_above(size_t height,
+        size_t count) const NOEXCEPT;
+    associations get_unassociated_above(size_t height,
+        size_t count, size_t last) const NOEXCEPT;
+    size_t get_unassociated_count() const NOEXCEPT;
+    size_t get_unassociated_count_above(size_t height) const NOEXCEPT;
+    size_t get_unassociated_count_above(size_t height,
+        size_t last) const NOEXCEPT;
+    hashes get_candidate_hashes(const heights& heights) const NOEXCEPT;
+    hashes get_confirmed_hashes(const heights& heights) const NOEXCEPT;
 
     /// Translation (key/link to link/s).
     /// -----------------------------------------------------------------------
