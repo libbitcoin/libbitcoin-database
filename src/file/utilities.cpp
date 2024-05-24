@@ -226,24 +226,6 @@ bool space(size_t& out, const path& filename) NOEXCEPT
     return true;
 }
 
-size_t page() NOEXCEPT
-{
-#if defined(HAVE_MSC)
-    SYSTEM_INFO configuration;
-    GetSystemInfo(&configuration);
-    return configuration.dwPageSize;
-#else
-    errno = 0;
-    const auto page_size = sysconf(_SC_PAGESIZE);
-
-    if (is_negative(page_size) || !is_zero(errno))
-        return 0;
-
-    BC_ASSERT(possible_narrow_sign_cast<uint64_t>(page_size) <= max_size_t);
-    return possible_narrow_sign_cast<size_t>(page_size);
-#endif
-}
-
 BC_POP_WARNING()
 
 } // namespace file

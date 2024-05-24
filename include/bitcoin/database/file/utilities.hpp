@@ -73,9 +73,6 @@ BCD_API bool size(size_t& out, const path& filename) NOEXCEPT;
 /// Volume space from path.
 BCD_API bool space(size_t& out, const path& filename) NOEXCEPT;
 
-/// System page size.
-BCD_API size_t page() NOEXCEPT;
-
 } // namespace file
 } // namespace database
 } // namespace libbitcoin

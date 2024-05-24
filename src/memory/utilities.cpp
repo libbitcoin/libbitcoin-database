@@ -31,29 +31,50 @@ namespace database {
 
 #if defined(HAVE_MSC)
 
+size_t page_size() NOEXCEPT
+{
+    using namespace system;
+    SYSTEM_INFO info{};
+    GetSystemInfo(&info);
+
+    BC_ASSERT(!system::is_limited<size_t>(info.dwPageSize));
+    return info.dwPageSize;
+}
+
 uint64_t system_memory() NOEXCEPT
 {
-    // learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/
-    // nf-sysinfoapi-globalmemorystatusex
-    // "If the function fails, the return value is zero."
     MEMORYSTATUSEX status{};
     status.dwLength = sizeof(status);
-    return GlobalMemoryStatusEx(&status) == zero ? zero :
+    return is_zero(GlobalMemoryStatusEx(&status)) ? zero :
         status.ullTotalPhys;
 }
 
 #else
 
+size_t page_size() NOEXCEPT
+{
+    using namespace system;
+    errno = 0;
+
+    const auto size = sysconf(_SC_PAGESIZE);
+    if (is_negative(size) || is_nonzero(errno))
+        return zero;
+
+    BC_ASSERT(!system::is_limited<size_t>(size));
+    return possible_narrow_sign_cast<size_t>(size);
+}
+
 uint64_t system_memory() NOEXCEPT
 {
     using namespace system;
+    errno = 0;
 
-    // man7.org/linux/man-pages/man3/sysconf.3.html
-    // "It is possible for the product of these values to overflow."
     const int64_t pages = sysconf(_SC_PHYS_PAGES);
-    const int64_t sizes = sysconf(_SC_PAGE_SIZE);
-    return (is_negative(pages) || is_negative(sizes)) ? zero :
-        ceilinged_multiply(to_unsigned(pages), to_unsigned(sizes));
+    if (is_negative(pages) || is_nonzero(errno))
+        return zero;
+
+    // Failed page_size also results in zero return.
+    return ceilinged_multiply(to_unsigned(pages), page_size());
 }
 
 #endif
