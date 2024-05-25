@@ -338,51 +338,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__copy_directory__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "copy directory failure");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__open_file__true_exected_message)
-{
-    constexpr auto value = error::open_file;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "open file failure");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__close_file__true_exected_message)
-{
-    constexpr auto value = error::close_file;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "close file failure");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__size_file__true_exected_message)
-{
-    constexpr auto value = error::size_file;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "size file failure");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__size_overflow__true_exected_message)
-{
-    constexpr auto value = error::size_overflow;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "size overflow failure");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__space_overflow__true_exected_message)
-{
-    constexpr auto value = error::space_overflow;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "space overflow failure");
-}
-
 BOOST_AUTO_TEST_CASE(error_t__code__missing_snapshot__true_exected_message)
 {
     constexpr auto value = error::missing_snapshot;
@@ -392,15 +347,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__missing_snapshot__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "missing snapshot");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__create_file__true_exected_message)
-{
-    constexpr auto value = error::create_file;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "file failed to create");
-}
-
 BOOST_AUTO_TEST_CASE(error_t__code__unloaded_file__true_exected_message)
 {
     constexpr auto value = error::unloaded_file;
@@ -408,15 +354,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__unloaded_file__true_exected_message)
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "file not loaded");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__dump_file__true_exected_message)
-{
-    constexpr auto value = error::dump_file;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "file failed to dump");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__create_table__true_exected_message)
@@ -710,15 +647,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__txs_header__true_exected_message)
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "txs_header");
 }
-
-////BOOST_AUTO_TEST_CASE(error_t__code__txs_tx__true_exected_message)
-////{
-////    constexpr auto value = error::txs_tx;
-////    const auto ec = code(value);
-////    BOOST_REQUIRE(ec);
-////    BOOST_REQUIRE(ec == value);
-////    BOOST_REQUIRE_EQUAL(ec.message(), "txs_tx");
-////}
 
 BOOST_AUTO_TEST_CASE(error_t__code__txs_txs_put__true_exected_message)
 {

@@ -70,17 +70,10 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { remove_directory, "remove directory failure" },
     { rename_directory, "rename directory failure" },
     { copy_directory, "copy directory failure" },
-    { open_file, "open file failure" },
-    { close_file, "close file failure" },
-    { size_file, "size file failure" },
-    { size_overflow, "size overflow failure" },
-    { space_overflow, "space overflow failure" },
 
     // store
     { missing_snapshot, "missing snapshot" },
-    { create_file, "file failed to create" },
     { unloaded_file, "file not loaded" },
-    { dump_file, "file failed to dump" },
 
     // tables
     { create_table, "failed to create table" },
@@ -123,7 +116,6 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     // tx archive
     { txs_header, "txs_header" },
-    ////{ txs_tx, "txs_tx" },
     { txs_txs_put, "txs_txs_put" }
 };
 
