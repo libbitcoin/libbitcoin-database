@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(store__open__uncreated__open_failure)
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
     store<map> instance{ configuration };
-    BOOST_REQUIRE_EQUAL(instance.open(events), error::open_failure);
+    BOOST_REQUIRE(instance.open(events));
 }
 
 BOOST_AUTO_TEST_CASE(store__open__created__success)
@@ -509,7 +509,7 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_closed__open_failure)
 
     // There are no backup index files to open.
     BOOST_REQUIRE(test::create(flush_lock_file(configuration.path)));
-    BOOST_REQUIRE_EQUAL(instance.restore_(), error::open_failure);
+    BOOST_REQUIRE(instance.restore_());
 
     // Rename /primary to /heads and copy to /primary.
     ////BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::primary));
@@ -534,7 +534,7 @@ BOOST_AUTO_TEST_CASE(store__restore__secondary_closed__open_failure)
 
     // There are no backup index files to open.
     BOOST_REQUIRE(test::create(flush_lock_file(configuration.path)));
-    BOOST_REQUIRE_EQUAL(instance.restore_(), error::open_failure);
+    BOOST_REQUIRE(instance.restore_());
 
     // No primary, so rename /secondary to /heads.
     BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::secondary));
@@ -559,7 +559,7 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_secondary_loaded__open_failure)
 
     // There are no backup index files to open.
     BOOST_REQUIRE(test::create(flush_lock_file(configuration.path)));
-    BOOST_REQUIRE_EQUAL(instance.restore_(), error::open_failure);
+    BOOST_REQUIRE(instance.restore_());
 
     // Rename /primary to /heads and copy to /primary.
     ////BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::primary));

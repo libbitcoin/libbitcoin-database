@@ -69,12 +69,10 @@ code map::open() NOEXCEPT
     if (opened_ != file::invalid)
         return error::open_open;
 
-    opened_ = file::open(filename_);
-    if (opened_ == file::invalid)
-        return error::open_failure;
+    if (const auto ec = file::open_ex(opened_, filename_))
+        return ec;
 
-    return file::size(logical_, opened_) ? error::success :
-        error::size_failure;
+    return file::size_ex(logical_, opened_);
 }
 
 code map::close() NOEXCEPT
@@ -92,7 +90,7 @@ code map::close() NOEXCEPT
     opened_ = file::invalid;
     logical_ = zero;
 
-    return file::close(descriptor) ? error::success : error::close_failure;
+    return file::close_ex(descriptor);
 }
 
 bool map::is_open() const NOEXCEPT
