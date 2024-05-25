@@ -338,6 +338,51 @@ BOOST_AUTO_TEST_CASE(error_t__code__copy_directory__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "copy directory failure");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__open_file__true_exected_message)
+{
+    constexpr auto value = error::open_file;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "open file failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__close_file__true_exected_message)
+{
+    constexpr auto value = error::close_file;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "close file failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__size_file__true_exected_message)
+{
+    constexpr auto value = error::size_file;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "size file failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__size_overflow__true_exected_message)
+{
+    constexpr auto value = error::size_overflow;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "size overflow failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__space_overflow__true_exected_message)
+{
+    constexpr auto value = error::space_overflow;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "space overflow failure");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__missing_snapshot__true_exected_message)
 {
     constexpr auto value = error::missing_snapshot;

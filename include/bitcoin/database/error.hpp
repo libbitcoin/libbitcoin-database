@@ -77,6 +77,13 @@ enum error_t : uint8_t
     remove_directory,
     rename_directory,
     copy_directory,
+    open_file,
+    close_file,
+    size_file,
+    size_overflow,
+    space_overflow,
+
+    /// store
     missing_snapshot,
     create_file,
     unloaded_file,
