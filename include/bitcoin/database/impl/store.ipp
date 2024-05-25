@@ -817,13 +817,13 @@ code CLASS::backup(const event_handler& handler) NOEXCEPT
     if (file::is_directory(primary))
     {
         // Delete /secondary, rename /primary to /secondary.
-        if (!file::clear_directory(secondary)) return error::clear_directory;
-        if (!file::remove(secondary)) return error::remove_directory;
-        if (!file::rename(primary, secondary)) return error::rename_directory;
+        if ((ec = file::clear_directory_ex(secondary))) return ec;
+        if ((ec = file::remove_ex(secondary))) return ec;
+        if ((ec = file::rename_ex(primary, secondary))) return ec;
     }
 
     // Dump /heads memory maps to /primary.
-    if (!file::clear_directory(primary)) return error::create_directory;
+    if ((ec = file::clear_directory_ex(primary))) return ec;
     ec = dump(primary, handler);
 
     // If failed clear primary and rename secondary to primary.
@@ -947,26 +947,20 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
     if (file::is_directory(primary))
     {
         // Clear invalid /heads, recover from /primary, clone to /primary.
-        if      (!file::clear_directory(heads)) ec = error::clear_directory;
-        else if (!file::remove(heads)) ec = error::remove_directory;
-        else if (!file::rename(primary, heads)) ec = error::rename_directory;
-        else if (!file::copy_directory(heads, primary))
-        {
-            ec = error::copy_directory;
-            /* bool */ file::remove(primary);
-        }
+        ec = file::clear_directory_ex(heads);
+        if (!ec) ec = file::remove_ex(heads);
+        if (!ec) ec = file::rename_ex(primary, heads);
+        if (!ec) ec = file::copy_directory_ex(heads, primary);
+        if (ec) /* bool */ file::remove_ex(primary);
     }
     else if (file::is_directory(secondary))
     {
         // Clear invalid /heads, recover from /secondary, clone to /primary.
-        if      (!file::clear_directory(heads)) ec = error::clear_directory;
-        else if (!file::remove(heads)) ec = error::remove_directory;
-        else if (!file::rename(secondary, heads)) ec = error::rename_directory;
-        else if (!file::copy_directory(heads, primary))
-        {
-            ec = error::copy_directory;
-            /* bool */ file::remove(primary);
-        }
+        ec = file::clear_directory_ex(heads);
+        if (!ec) ec = file::remove_ex(heads);
+        if (!ec) ec = file::rename_ex(secondary, heads);
+        if (!ec) ec = file::copy_directory_ex(heads, primary);
+        if (ec) /* bool */ file::remove_ex(secondary);
     }
     else
     {

@@ -49,16 +49,12 @@ inline path trim(const path& value) NOEXCEPT
     return system::trim_right_copy(value.string(), { "/", "\\", "\x20" });
 }
 
+// We don't use ec because it gets set (not found) when false, but no way to
+// differentiate from false with failure code (and never a code on success).
 bool is_directory(const path& directory) NOEXCEPT
 {
-    return !get_is_directory(directory);
-}
-
-code get_is_directory(const path& directory) NOEXCEPT
-{
-    code ec{};
-    std::filesystem::is_directory(system::to_extended_path(directory), ec);
-    return ec;
+    code ec{ system::error::errorno_t::no_error };
+    return std::filesystem::is_directory(system::to_extended_path(directory), ec);
 }
 
 bool clear_directory(const path& directory) NOEXCEPT
@@ -89,16 +85,12 @@ code create_directory_ex(const path& directory) NOEXCEPT
     return ec;
 }
 
+// We don't use ec because it gets set (not found) when false, but no way to
+// differentiate from false with failure code (and never a code on success).
 bool is_file(const path& filename) NOEXCEPT
 {
-    return !get_is_file(filename);
-}
-
-code get_is_file(const path& filename) NOEXCEPT
-{
     code ec{ system::error::errorno_t::no_error };
-    std::filesystem::is_regular_file(filename, ec);
-    return ec;
+    return std::filesystem::is_regular_file(filename, ec);
 }
 
 bool create_file(const path& filename) NOEXCEPT

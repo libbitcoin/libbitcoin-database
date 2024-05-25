@@ -485,7 +485,7 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_open__clear_directory)
     // Hits the process lock from being open.
     BOOST_REQUIRE_EQUAL(instance.restore_(), error::process_lock);
 
-    ////// Cannot delete /indexes with open files.
+    ////// Cannot delete /heads with open files.
     ////BOOST_REQUIRE_EQUAL(instance.restore_(), error::clear_directory);
     BOOST_REQUIRE(!instance.close(events));
 
@@ -511,7 +511,7 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_closed__open_failure)
     BOOST_REQUIRE(test::create(flush_lock_file(configuration.path)));
     BOOST_REQUIRE_EQUAL(instance.restore_(), error::open_failure);
 
-    // Rename /primary to /indexes and copy to /primary.
+    // Rename /primary to /heads and copy to /primary.
     ////BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::primary));
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::heads));
@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE(store__restore__secondary_closed__open_failure)
     BOOST_REQUIRE(test::create(flush_lock_file(configuration.path)));
     BOOST_REQUIRE_EQUAL(instance.restore_(), error::open_failure);
 
-    // No primary, so rename /secondary to /indexes.
+    // No primary, so rename /secondary to /heads.
     BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::secondary));
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::heads));
 }
@@ -561,7 +561,7 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_secondary_loaded__open_failure)
     BOOST_REQUIRE(test::create(flush_lock_file(configuration.path)));
     BOOST_REQUIRE_EQUAL(instance.restore_(), error::open_failure);
 
-    // Rename /primary to /indexes and copy to /primary.
+    // Rename /primary to /heads and copy to /primary.
     ////BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::primary));
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::secondary));

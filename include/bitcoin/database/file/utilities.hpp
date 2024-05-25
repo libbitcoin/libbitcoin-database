@@ -32,7 +32,6 @@ using path = std::filesystem::path;
 
 /// True only if directory existed.
 BCD_API bool is_directory(const path& directory) NOEXCEPT;
-BCD_API code get_is_directory(const path& directory) NOEXCEPT;
 
 /// Clear and recreate directory, true if path existed/created.
 BCD_API bool clear_directory(const path& directory) NOEXCEPT;
@@ -44,7 +43,6 @@ BCD_API code create_directory_ex(const path& directory) NOEXCEPT;
 
 /// True only if file existed.
 BCD_API bool is_file(const path& filename) NOEXCEPT;
-BCD_API code get_is_file(const path& filename) NOEXCEPT;
 
 /// Create/open/close file or open/close if existed.
 BCD_API bool create_file(const path& filename) NOEXCEPT;
