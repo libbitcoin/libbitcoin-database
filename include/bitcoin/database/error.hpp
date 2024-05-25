@@ -40,10 +40,8 @@ enum error_t : uint8_t
 
     /// memory map
     open_open,
-    open_failure,
     size_failure,
     close_loaded,
-    close_failure,
     load_loaded,
     load_locked,
     load_failure,
@@ -72,22 +70,13 @@ enum error_t : uint8_t
 
     /// filesystem
     missing_directory,
-    create_directory,
     clear_directory,
-    remove_directory,
     rename_directory,
     copy_directory,
-    open_file,
-    close_file,
-    size_file,
-    size_overflow,
-    space_overflow,
 
     /// store
     missing_snapshot,
-    create_file,
     unloaded_file,
-    dump_file,
 
     /// tables
     create_table,
@@ -130,7 +119,6 @@ enum error_t : uint8_t
 
     /// txs archive
     txs_header,
-    ////txs_tx,
     txs_txs_put
 };
 

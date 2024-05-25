@@ -25,6 +25,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <filesystem>
+#include <ios>
 #include <iostream>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -48,16 +49,12 @@ inline path trim(const path& value) NOEXCEPT
     return system::trim_right_copy(value.string(), { "/", "\\", "\x20" });
 }
 
+// We don't use ec because it gets set (not found) when false, but no way to
+// differentiate from false with failure code (and never a code on success).
 bool is_directory(const path& directory) NOEXCEPT
 {
-    return !get_is_directory(directory);
-}
-
-code get_is_directory(const path& directory) NOEXCEPT
-{
-    code ec{};
-    std::filesystem::is_directory(system::to_extended_path(directory), ec);
-    return ec;
+    code ec{ system::error::errorno_t::no_error };
+    return std::filesystem::is_directory(system::to_extended_path(directory), ec);
 }
 
 bool clear_directory(const path& directory) NOEXCEPT
@@ -67,7 +64,7 @@ bool clear_directory(const path& directory) NOEXCEPT
 
 code clear_directory_ex(const path& directory) NOEXCEPT
 {
-    code ec{};
+    code ec{ system::error::errorno_t::no_error };
     const auto path = system::to_extended_path(directory);
     std::filesystem::remove_all(path, ec);
     if (ec) return ec;
@@ -82,22 +79,18 @@ bool create_directory(const path& directory) NOEXCEPT
 
 code create_directory_ex(const path& directory) NOEXCEPT
 {
-    code ec{};
+    code ec{ system::error::errorno_t::no_error };
     const auto path = system::to_extended_path(trim(directory));
     std::filesystem::create_directories(path, ec);
     return ec;
 }
 
+// We don't use ec because it gets set (not found) when false, but no way to
+// differentiate from false with failure code (and never a code on success).
 bool is_file(const path& filename) NOEXCEPT
 {
-    return !get_is_file(filename);
-}
-
-code get_is_file(const path& filename) NOEXCEPT
-{
-    code ec{};
-    std::filesystem::is_regular_file(filename, ec);
-    return ec;
+    code ec{ system::error::errorno_t::no_error };
+    return std::filesystem::is_regular_file(filename, ec);
 }
 
 bool create_file(const path& filename) NOEXCEPT
@@ -105,13 +98,34 @@ bool create_file(const path& filename) NOEXCEPT
     return !create_file_ex(filename);
 }
 
-// TODO: get more error info.
+// std::filesystem does not provide file creation.
 code create_file_ex(const path& filename) NOEXCEPT
 {
-    system::ofstream file(filename);
-    const auto good = file.good();
-    file.close();
-    return good ? error::success : error::create_file;
+    try
+    {
+        // Throws.
+        ofstream file(filename);
+
+        // Allow throw.
+        file.exceptions(std::ifstream::failbit);
+
+        // noexcept.
+        if (!file.good())
+            return system::error::errorno_t::not_a_stream;
+
+        // Sets failbit (but not noexcept).
+        file.close();
+
+        // noexcept.
+        return file.good() ?
+            system::error::errorno_t::no_error :
+            system::error::errorno_t::not_a_stream;
+    }
+    catch (const std::ios_base::failure& e)
+    {
+        // Prefer throw, since we get a platform code.
+        return e.code();
+    }
 }
 
 bool create_file(const path& to, const uint8_t* data, size_t size) NOEXCEPT
@@ -119,16 +133,42 @@ bool create_file(const path& to, const uint8_t* data, size_t size) NOEXCEPT
     return !create_file_ex(to, data, size);
 }
 
-// TODO: get more error info.
+// std::filesystem does not provide file creation.
 code create_file_ex(const path& to, const uint8_t* data, size_t size) NOEXCEPT
 {
     // Binary mode on Windows ensures that \n not replaced with \r\n.
-    system::ofstream file(to, std::ios_base::binary);
-    if (!file.good()) return error::create_file;
-    file.write(pointer_cast<const char>(data), size);
-    if (!file.good()) return error::create_file;
-    file.close();
-    return file.good() ? error::success : error::create_file;
+    try
+    {
+        // Throws.
+        ofstream file(to, std::ios_base::binary);
+
+        // Allow throw.
+        file.exceptions(std::ifstream::failbit);
+
+        // noexcept.
+        if (!file.good())
+            return system::error::errorno_t::not_a_stream;
+
+        // May throw.
+        file.write(pointer_cast<const char>(data), size);
+
+        // noexcept.
+        if (!file.good())
+            return system::error::errorno_t::not_a_stream;
+
+        // Sets failbit (but not noexcept).
+        file.close();
+
+        // noexcept.
+        return file.good() ?
+            system::error::errorno_t::no_error :
+            system::error::errorno_t::stream_timeout;
+    }
+    catch (const std::ios_base::failure& e)
+    {
+        // Prefer throw, since we get a platform code.
+        return e.code();
+    }
 }
 
 // directory|file
@@ -141,7 +181,7 @@ bool remove(const path& name) NOEXCEPT
 // Error code is not set if file did not exist.
 code remove_ex(const path& name) NOEXCEPT
 {
-    code ec{};
+    code ec{ system::error::errorno_t::no_error };
     std::filesystem::remove(system::to_extended_path(name), ec);
     return ec;
 }
@@ -155,9 +195,10 @@ bool rename(const path& from, const path& to) NOEXCEPT
 // directory|file
 code rename_ex(const path& from, const path& to) NOEXCEPT
 {
-    code ec{};
+    code ec{ system::error::errorno_t::no_error };
     std::filesystem::rename(system::to_extended_path(from),
         system::to_extended_path(to), ec);
+
     return ec;
 }
 
@@ -170,9 +211,10 @@ bool copy(const path& from, const path& to) NOEXCEPT
 // file
 code copy_ex(const path& from, const path& to) NOEXCEPT
 {
-    code ec{};
+    code ec{ system::error::errorno_t::no_error };
     std::filesystem::copy_file(system::to_extended_path(from),
         system::to_extended_path(to), ec);
+
     return ec;
 }
 
@@ -185,12 +227,16 @@ bool copy_directory(const path& from, const path& to) NOEXCEPT
 // directory
 code copy_directory_ex(const path& from, const path& to) NOEXCEPT
 {
-    if (file::is_directory(to) || !file::is_directory(from))
-        return error::copy_directory;
+    if (file::is_directory(to))
+        return system::error::errorno_t::is_a_directory;
 
-    code ec{};
+    if (!file::is_directory(from))
+        return system::error::errorno_t::not_a_directory;
+
+    code ec{ system::error::errorno_t::no_error };
     std::filesystem::copy(system::to_extended_path(from),
         system::to_extended_path(to), ec);
+
     return ec;
 }
 
@@ -217,10 +263,9 @@ int open(const path& filename) NOEXCEPT
 
 code open_ex(int& file_descriptor, const path& filename) NOEXCEPT
 {
-    // TODO: map errno.
-    errno = 0;
+    system::error::clear_errno();
     file_descriptor = open(filename);
-    return file_descriptor == -1 ? error::open_file : error::success;
+    return system::error::get_errno();
 }
 
 bool close(int file_descriptor) NOEXCEPT
@@ -235,16 +280,16 @@ bool close(int file_descriptor) NOEXCEPT
 
 code close_ex(int file_descriptor) NOEXCEPT
 {
-    // TODO: map errno.
-    errno = 0;
-    return close(file_descriptor) ? error::success : error::close_file;
+    system::error::clear_errno();
+    close(file_descriptor);
+    return system::error::get_errno();
 }
 
 bool size(size_t& out, int file_descriptor) NOEXCEPT
 {
     if (file_descriptor == -1)
     {
-        errno = EINVAL;
+        system::error::set_errno(system::error::errorno_t::invalid_argument);
         return false;
     }
 
@@ -269,7 +314,7 @@ bool size(size_t& out, int file_descriptor) NOEXCEPT
 #endif
     if (is_limited<size_t>(sbuf.st_size))
     {
-        errno = EOVERFLOW;
+        system::error::set_errno(system::error::errorno_t::value_too_large);
         return false;
     }
 
@@ -279,9 +324,9 @@ bool size(size_t& out, int file_descriptor) NOEXCEPT
 
 code size_ex(size_t& out, int file_descriptor) NOEXCEPT
 {
-    // TODO: map errno.
-    errno = 0;
-    return size(out, file_descriptor) ? error::success : error::size_file;
+    system::error::clear_errno();
+    size(out, file_descriptor);
+    return system::error::get_errno();
 }
 
 bool size(size_t& out, const std::filesystem::path& filename) NOEXCEPT
@@ -291,10 +336,14 @@ bool size(size_t& out, const std::filesystem::path& filename) NOEXCEPT
 
 code size_ex(size_t& out, const std::filesystem::path& filename) NOEXCEPT
 {
-    code ec{};
-    const auto size = std::filesystem::file_size(to_extended_path(filename), ec);
+    code ec{ system::error::errorno_t::no_error };
+    const auto size = std::filesystem::file_size(
+        to_extended_path(filename), ec);
+
     if (ec) return ec;
-    if (is_limited<size_t>(size)) return error::size_overflow;
+    if (is_limited<size_t>(size))
+        return system::error::errorno_t::value_too_large;
+
     out = possible_narrow_cast<size_t>(size);
     return ec;
 }
@@ -306,10 +355,12 @@ bool space(size_t& out, const path& filename) NOEXCEPT
 
 code space_ex(size_t& out, const path& filename) NOEXCEPT
 {
-    code ec{};
+    code ec{ system::error::errorno_t::no_error };
     const auto space = std::filesystem::space(to_extended_path(filename), ec);
     if (ec) return ec;
-    if (is_limited<size_t>(space.available)) return error::space_overflow;
+    if (is_limited<size_t>(space.available))
+        return system::error::errorno_t::value_too_large;
+
     out = possible_narrow_cast<size_t>(space.available);
     return ec;
 }

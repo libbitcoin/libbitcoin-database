@@ -227,87 +227,91 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
         return error::flush_lock;
     }
 
-    code ec{ error::success };
-    static const auto heads = configuration_.path / schema::dir::heads;
-
-    const auto create = [&handler](const auto& storage, table_t table) NOEXCEPT
+    const auto create = [&handler](code& ec, const auto& storage,
+        table_t table) NOEXCEPT
     {
-        handler(event_t::create_file, table);
-        return file::create_file(storage.file());
+        if (!ec)
+        {
+            handler(event_t::create_file, table);
+            ec = file::create_file_ex(storage.file());
+        }
     };
 
-    if (!file::clear_directory(heads)) ec = error::clear_directory;
+    static const auto heads = configuration_.path / schema::dir::heads;
+    auto ec = file::clear_directory_ex(heads);
 
-    else if (!create(header_head_, table_t::header_head)) ec = error::create_file;
-    else if (!create(header_body_, table_t::header_body)) ec = error::create_file;
-    else if (!create(input_head_, table_t::input_head)) ec = error::create_file;
-    else if (!create(input_body_, table_t::input_body)) ec = error::create_file;
-    else if (!create(output_head_, table_t::output_head)) ec = error::create_file;
-    else if (!create(output_body_, table_t::output_body)) ec = error::create_file;
-    else if (!create(point_head_, table_t::point_head)) ec = error::create_file;
-    else if (!create(point_body_, table_t::point_body)) ec = error::create_file;
-    else if (!create(puts_head_, table_t::puts_head)) ec = error::create_file;
-    else if (!create(puts_body_, table_t::puts_body)) ec = error::create_file;
-    else if (!create(spend_head_, table_t::spend_head)) ec = error::create_file;
-    else if (!create(spend_body_, table_t::spend_body)) ec = error::create_file;
-    else if (!create(tx_head_, table_t::tx_head)) ec = error::create_file;
-    else if (!create(tx_body_, table_t::tx_body)) ec = error::create_file;
-    else if (!create(txs_head_, table_t::txs_head)) ec = error::create_file;
-    else if (!create(txs_body_, table_t::txs_body)) ec = error::create_file;
+    create(ec, header_head_, table_t::header_head);
+    create(ec, header_body_, table_t::header_body);
+    create(ec, input_head_, table_t::input_head);
+    create(ec, input_body_, table_t::input_body);
+    create(ec, output_head_, table_t::output_head);
+    create(ec, output_body_, table_t::output_body);
+    create(ec, point_head_, table_t::point_head);
+    create(ec, point_body_, table_t::point_body);
+    create(ec, puts_head_, table_t::puts_head);
+    create(ec, puts_body_, table_t::puts_body);
+    create(ec, spend_head_, table_t::spend_head);
+    create(ec, spend_body_, table_t::spend_body);
+    create(ec, tx_head_, table_t::tx_head);
+    create(ec, tx_body_, table_t::tx_body);
+    create(ec, txs_head_, table_t::txs_head);
+    create(ec, txs_body_, table_t::txs_body);
 
-    else if (!create(candidate_head_, table_t::candidate_head)) ec = error::create_file;
-    else if (!create(candidate_body_, table_t::candidate_body)) ec = error::create_file;
-    else if (!create(confirmed_head_, table_t::confirmed_head)) ec = error::create_file;
-    else if (!create(confirmed_body_, table_t::confirmed_body)) ec = error::create_file;
-    else if (!create(strong_tx_head_, table_t::strong_tx_head)) ec = error::create_file;
-    else if (!create(strong_tx_body_, table_t::strong_tx_body)) ec = error::create_file;
+    create(ec, candidate_head_, table_t::candidate_head);
+    create(ec, candidate_body_, table_t::candidate_body);
+    create(ec, confirmed_head_, table_t::confirmed_head);
+    create(ec, confirmed_body_, table_t::confirmed_body);
+    create(ec, strong_tx_head_, table_t::strong_tx_head);
+    create(ec, strong_tx_body_, table_t::strong_tx_body);
 
-    else if (!create(validated_bk_head_, table_t::validated_bk_head)) ec = error::create_file;
-    else if (!create(validated_bk_body_, table_t::validated_bk_body)) ec = error::create_file;
-    else if (!create(validated_tx_head_, table_t::validated_tx_head)) ec = error::create_file;
-    else if (!create(validated_tx_body_, table_t::validated_tx_body)) ec = error::create_file;
+    create(ec, validated_bk_head_, table_t::validated_bk_head);
+    create(ec, validated_bk_body_, table_t::validated_bk_body);
+    create(ec, validated_tx_head_, table_t::validated_tx_head);
+    create(ec, validated_tx_body_, table_t::validated_tx_body);
 
-    else if (!create(address_head_, table_t::address_head)) ec = error::create_file;
-    else if (!create(address_body_, table_t::address_body)) ec = error::create_file;
-    else if (!create(neutrino_head_, table_t::neutrino_head)) ec = error::create_file;
-    else if (!create(neutrino_body_, table_t::neutrino_body)) ec = error::create_file;
-    ////else if (!create(bootstrap_head_, table_t::bootstrap_head)) ec = error::create_file;
-    ////else if (!create(bootstrap_body_, table_t::bootstrap_body)) ec = error::create_file;
-    ////else if (!create(buffer_head_, table_t::buffer_head)) ec = error::create_file;
-    ////else if (!create(buffer_body_, table_t::buffer_body)) ec = error::create_file;
+    create(ec, address_head_, table_t::address_head);
+    create(ec, address_body_, table_t::address_body);
+    create(ec, neutrino_head_, table_t::neutrino_head);
+    create(ec, neutrino_body_, table_t::neutrino_body);
+    ////create(ec, bootstrap_head_, table_t::bootstrap_head);
+    ////create(ec, bootstrap_body_, table_t::bootstrap_body);
+    ////create(ec, buffer_head_, table_t::buffer_head);
+    ////create(ec, buffer_body_, table_t::buffer_body);
+
+    const auto populate = [&handler](code& ec, auto& storage,
+        table_t table) NOEXCEPT
+    {
+        if (!ec)
+        {
+            handler(event_t::create_table, table);
+            if (!storage.create())
+                ec = error::create_table;
+        }
+    };
 
     if (!ec) ec = open_load(handler);
 
-    if (!ec)
-    {
-        const auto populate = [&handler](auto& storage, table_t table) NOEXCEPT
-        {
-            handler(event_t::create_table, table);
-            return storage.create();
-        };
+    // Populate /heads files and truncate body sizes to zero.
+    populate(ec, header, table_t::header_table);
+    populate(ec, input, table_t::input_table);
+    populate(ec, output, table_t::output_table);
+    populate(ec, point, table_t::point_table);
+    populate(ec, puts, table_t::puts_table);
+    populate(ec, spend, table_t::spend_table);
+    populate(ec, tx, table_t::tx_table);
+    populate(ec, txs, table_t::txs_table);
 
-        // Populate /heads files and truncate body sizes to zero.
-        if      (!populate(header, table_t::header_table)) ec = error::create_table;
-        else if (!populate(input, table_t::input_table)) ec = error::create_table;
-        else if (!populate(output, table_t::output_table)) ec = error::create_table;
-        else if (!populate(point, table_t::point_table)) ec = error::create_table;
-        else if (!populate(puts, table_t::puts_table)) ec = error::create_table;
-        else if (!populate(spend, table_t::spend_table)) ec = error::create_table;
-        else if (!populate(tx, table_t::tx_table)) ec = error::create_table;
-        else if (!populate(txs, table_t::txs_table)) ec = error::create_table;
+    populate(ec, candidate, table_t::candidate_table);
+    populate(ec, confirmed, table_t::confirmed_table);
+    populate(ec, strong_tx, table_t::strong_tx_table);
 
-        else if (!populate(candidate, table_t::candidate_table)) ec = error::create_table;
-        else if (!populate(confirmed, table_t::confirmed_table)) ec = error::create_table;
-        else if (!populate(strong_tx, table_t::strong_tx_table)) ec = error::create_table;
+    populate(ec, validated_bk, table_t::validated_bk_table);
+    populate(ec, validated_tx, table_t::validated_tx_table);
 
-        else if (!populate(validated_bk, table_t::validated_bk_table)) ec = error::create_table;
-        else if (!populate(validated_tx, table_t::validated_tx_table)) ec = error::create_table;
-
-        else if (!populate(address, table_t::address_table)) ec = error::create_table;
-        else if (!populate(neutrino, table_t::neutrino_table)) ec = error::create_table;
-        ////else if (!populate(bootstrap, table_t::bootstrap_table)) ec = error::create_table;
-        ////else if (!populate(buffer, table_t::buffer_table)) ec = error::create_table;
-    }
+    populate(ec, address, table_t::address_table);
+    populate(ec, neutrino, table_t::neutrino_table);
+    ////populate(ec, bootstrap, table_t::bootstrap_table);
+    ////populate(ec, buffer, table_t::buffer_table);
 
     if (ec)
     {
@@ -347,37 +351,39 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
         return error::flush_lock;
     }
 
-    auto ec = open_load(handler);
-
-    if (!ec)
+    const auto verify = [&handler](code& ec, auto& storage,
+        table_t table) NOEXCEPT
     {
-        const auto verify = [&handler](auto& storage, table_t table) NOEXCEPT
+        if (!ec)
         {
             handler(event_t::verify_table, table);
-            return storage.verify();
-        };
+            if (!storage.verify())
+                ec = error::verify_table;
+        }
+    };
 
-        if      (!verify(header, table_t::header_table)) ec = error::verify_table;
-        else if (!verify(input, table_t::input_table)) ec = error::verify_table;
-        else if (!verify(output, table_t::output_table)) ec = error::verify_table;
-        else if (!verify(point, table_t::point_table)) ec = error::verify_table;
-        else if (!verify(puts, table_t::puts_table)) ec = error::verify_table;
-        else if (!verify(spend, table_t::spend_table)) ec = error::verify_table;
-        else if (!verify(tx, table_t::tx_table)) ec = error::verify_table;
-        else if (!verify(txs, table_t::txs_table)) ec = error::verify_table;
+    auto ec = open_load(handler);
 
-        else if (!verify(candidate, table_t::candidate_table)) ec = error::verify_table;
-        else if (!verify(confirmed, table_t::confirmed_table)) ec = error::verify_table;
-        else if (!verify(strong_tx, table_t::strong_tx_table)) ec = error::verify_table;
+    verify(ec, header, table_t::header_table);
+    verify(ec, input, table_t::input_table);
+    verify(ec, output, table_t::output_table);
+    verify(ec, point, table_t::point_table);
+    verify(ec, puts, table_t::puts_table);
+    verify(ec, spend, table_t::spend_table);
+    verify(ec, tx, table_t::tx_table);
+    verify(ec, txs, table_t::txs_table);
 
-        else if (!verify(validated_bk, table_t::validated_bk_table)) ec = error::verify_table;
-        else if (!verify(validated_tx, table_t::validated_tx_table)) ec = error::verify_table;
+    verify(ec, candidate, table_t::candidate_table);
+    verify(ec, confirmed, table_t::confirmed_table);
+    verify(ec, strong_tx, table_t::strong_tx_table);
 
-        else if (!verify(address, table_t::address_table)) ec = error::verify_table;
-        else if (!verify(neutrino, table_t::neutrino_table)) ec = error::verify_table;
-        ////else if (!verify(bootstrap, table_t::bootstrap_table)) ec = error::verify_table;
-        ////else if (!verify(buffer, table_t::buffer_table)) ec = error::verify_table;
-    }
+    verify(ec, validated_bk, table_t::validated_bk_table);
+    verify(ec, validated_tx, table_t::validated_tx_table);
+
+    verify(ec, address, table_t::address_table);
+    verify(ec, neutrino, table_t::neutrino_table);
+    ////verify(ec, bootstrap, table_t::bootstrap_table);
+    ////verify(ec, buffer, table_t::buffer_table);
 
     if (ec)
     {
@@ -402,7 +408,7 @@ code CLASS::snapshot(const event_handler& handler) NOEXCEPT
     }
 
     code ec{ error::success };
-    const auto flush = [&handler](auto& ec, auto& storage, table_t table) NOEXCEPT
+    const auto flush = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
     {
         if (!ec)
         {
@@ -447,7 +453,8 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     }
 
     code ec{ error::success };
-    const auto reload = [&handler](auto& ec, auto& storage, table_t table) NOEXCEPT
+    const auto reload = [&handler](code& ec, auto& storage,
+        table_t table) NOEXCEPT
     {
         if (!ec)
         {
@@ -512,32 +519,36 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
     }
 
     code ec{ error::success };
-    const auto close = [&handler](auto& storage, table_t table) NOEXCEPT
+    const auto close = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
     {
-        handler(event_t::close_table, table);
-        return storage.close();
+        if (!ec)
+        {
+            handler(event_t::close_table, table);
+            if (!storage.close())
+                ec = error::close_table;
+        }
     };
 
-    if      (!close(header, table_t::header_table)) ec = error::close_table;
-    else if (!close(input, table_t::input_table)) ec = error::close_table;
-    else if (!close(output, table_t::output_table)) ec = error::close_table;
-    else if (!close(point, table_t::point_table)) ec = error::close_table;
-    else if (!close(puts, table_t::puts_table)) ec = error::close_table;
-    else if (!close(spend, table_t::spend_table)) ec = error::close_table;
-    else if (!close(tx, table_t::tx_table)) ec = error::close_table;
-    else if (!close(txs, table_t::txs_table)) ec = error::close_table;
+    close(ec, header, table_t::header_table);
+    close(ec, input, table_t::input_table);
+    close(ec, output, table_t::output_table);
+    close(ec, point, table_t::point_table);
+    close(ec, puts, table_t::puts_table);
+    close(ec, spend, table_t::spend_table);
+    close(ec, tx, table_t::tx_table);
+    close(ec, txs, table_t::txs_table);
 
-    else if (!close(candidate, table_t::candidate_table)) ec = error::close_table;
-    else if (!close(confirmed, table_t::confirmed_table)) ec = error::close_table;
-    else if (!close(strong_tx, table_t::strong_tx_table)) ec = error::close_table;
+    close(ec, candidate, table_t::candidate_table);
+    close(ec, confirmed, table_t::confirmed_table);
+    close(ec, strong_tx, table_t::strong_tx_table);
 
-    else if (!close(validated_bk, table_t::validated_bk_table)) ec = error::close_table;
-    else if (!close(validated_tx, table_t::validated_tx_table)) ec = error::close_table;
+    close(ec, validated_bk, table_t::validated_bk_table);
+    close(ec, validated_tx, table_t::validated_tx_table);
 
-    else if (!close(address, table_t::address_table)) ec = error::close_table;
-    else if (!close(neutrino, table_t::neutrino_table)) ec = error::close_table;
-    ////else if (!close(bootstrap, table_t::bootstrap_table)) ec = error::close_table;
-    ////else if (!close(buffer, table_t::buffer_table)) ec = error::close_table;
+    close(ec, address, table_t::address_table);
+    close(ec, neutrino, table_t::neutrino_table);
+    ////close(ec, bootstrap, table_t::bootstrap_table);
+    ////close(ec, buffer, table_t::buffer_table);
 
     if (!ec) ec = unload_close(handler);
 
@@ -562,7 +573,7 @@ TEMPLATE
 code CLASS::open_load(const event_handler& handler) NOEXCEPT
 {
     code ec{ error::success };
-    const auto open = [&handler](auto& ec, auto& storage, table_t table) NOEXCEPT
+    const auto open = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
     {
         if (!ec)
         {
@@ -609,7 +620,7 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     ////open(ec, buffer_head_, table_t::buffer_head);
     ////open(ec, buffer_body_, table_t::buffer_body);
 
-    const auto load = [&handler](auto& ec, auto& storage, table_t table) NOEXCEPT
+    const auto load = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
     {
         if (!ec)
         {
@@ -663,7 +674,7 @@ TEMPLATE
 code CLASS::unload_close(const event_handler& handler) NOEXCEPT
 {
     code ec{ error::success };
-    const auto unload = [&handler](auto& ec, auto& storage, table_t table) NOEXCEPT
+    const auto unload = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
     {
         if (!ec)
         {
@@ -710,7 +721,7 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     ////unload(ec, buffer_head_, table_t::buffer_head);
     ////unload(ec, buffer_body_, table_t::buffer_body);
 
-    const auto close = [&handler](auto& ec, auto& storage, table_t table) NOEXCEPT
+    const auto close = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
     {
         if (!ec)
         {
@@ -763,32 +774,40 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
 TEMPLATE
 code CLASS::backup(const event_handler& handler) NOEXCEPT
 {
-    const auto backup = [&handler](auto& storage, table_t table) NOEXCEPT
+    code ec{ error::success };
+    const auto backup = [&handler](code& ec, auto& storage,
+        table_t table) NOEXCEPT
     {
-        handler(event_t::backup_table, table);
-        return storage.backup();
+        if (!ec)
+        {
+            handler(event_t::backup_table, table);
+            if (!storage.backup())
+                ec = error::backup_table;
+        }
     };
 
-    if (!backup(header, table_t::header_table)) return error::backup_table;
-    if (!backup(input, table_t::input_table)) return error::backup_table;
-    if (!backup(output, table_t::output_table)) return error::backup_table;
-    if (!backup(point, table_t::point_table)) return error::backup_table;
-    if (!backup(puts, table_t::puts_table)) return error::backup_table;
-    if (!backup(spend, table_t::spend_table)) return error::backup_table;
-    if (!backup(tx, table_t::tx_table)) return error::backup_table;
-    if (!backup(txs, table_t::txs_table)) return error::backup_table;
+    backup(ec, header, table_t::header_table);
+    backup(ec, input, table_t::input_table);
+    backup(ec, output, table_t::output_table);
+    backup(ec, point, table_t::point_table);
+    backup(ec, puts, table_t::puts_table);
+    backup(ec, spend, table_t::spend_table);
+    backup(ec, tx, table_t::tx_table);
+    backup(ec, txs, table_t::txs_table);
 
-    if (!backup(candidate, table_t::candidate_table)) return error::backup_table;
-    if (!backup(confirmed, table_t::confirmed_table)) return error::backup_table;
-    if (!backup(strong_tx, table_t::strong_tx_table)) return error::backup_table;
+    backup(ec, candidate, table_t::candidate_table);
+    backup(ec, confirmed, table_t::confirmed_table);
+    backup(ec, strong_tx, table_t::strong_tx_table);
 
-    if (!backup(validated_bk, table_t::validated_bk_table)) return error::backup_table;
-    if (!backup(validated_tx, table_t::validated_tx_table)) return error::backup_table;
+    backup(ec, validated_bk, table_t::validated_bk_table);
+    backup(ec, validated_tx, table_t::validated_tx_table);
 
-    if (!backup(address, table_t::address_table)) return error::backup_table;
-    if (!backup(neutrino, table_t::neutrino_table)) return error::backup_table;
-    ////if (!backup(bootstrap, table_t::bootstrap_table)) return error::backup_table;
-    ////if (!backup(buffer, table_t::buffer_table)) return error::backup_table;
+    backup(ec, address, table_t::address_table);
+    backup(ec, neutrino, table_t::neutrino_table);
+    ////backup(ec, bootstrap, table_t::bootstrap_table);
+    ////backup(ec, buffer, table_t::buffer_table);
+
+    if (ec) return ec;
 
     static const auto primary = configuration_.path / schema::dir::primary;
     static const auto secondary = configuration_.path / schema::dir::secondary;
@@ -798,14 +817,14 @@ code CLASS::backup(const event_handler& handler) NOEXCEPT
     if (file::is_directory(primary))
     {
         // Delete /secondary, rename /primary to /secondary.
-        if (!file::clear_directory(secondary)) return error::clear_directory;
-        if (!file::remove(secondary)) return error::remove_directory;
-        if (!file::rename(primary, secondary)) return error::rename_directory;
+        if ((ec = file::clear_directory_ex(secondary))) return ec;
+        if ((ec = file::remove_ex(secondary))) return ec;
+        if ((ec = file::rename_ex(primary, secondary))) return ec;
     }
 
     // Dump /heads memory maps to /primary.
-    if (!file::clear_directory(primary)) return error::create_directory;
-    const auto ec = dump(primary, handler);
+    if ((ec = file::clear_directory_ex(primary))) return ec;
+    ec = dump(primary, handler);
 
     // If failed clear primary and rename secondary to primary.
     if (ec && file::clear_directory(primary) && file::remove(primary))
@@ -862,53 +881,40 @@ code CLASS::dump(const path& folder,
     ////if (!bootstrap_buffer) return error::unloaded_file;
     ////if (!buffer_buffer) return error::unloaded_file;
 
-    const auto dump = [&handler, &folder](const auto& storage, const auto& name,
-        table_t table) NOEXCEPT
+    code ec{ error::success };
+    const auto dump = [&handler, &folder](code& ec, const auto& storage,
+        const auto& name, table_t table) NOEXCEPT
     {
-        handler(event_t::copy_header, table);
-        return file::create_file(head(folder, name), storage->begin(),
-            storage->size());
+        if (!ec)
+        {
+            handler(event_t::copy_header, table);
+            ec = file::create_file_ex(head(folder, name), storage->begin(),
+                storage->size());
+        }
     };
 
-    if (!dump(header_buffer, schema::archive::header, table_t::header_head))
-        return error::dump_file;
-    if (!dump(input_buffer, schema::archive::input, table_t::input_head))
-        return error::dump_file;
-    if (!dump(output_buffer, schema::archive::output, table_t::output_head))
-        return error::dump_file;
-    if (!dump(point_buffer, schema::archive::point, table_t::point_head))
-        return error::dump_file;
-    if (!dump(puts_buffer, schema::archive::puts, table_t::puts_head))
-        return error::dump_file;
-    if (!dump(spend_buffer, schema::archive::spend, table_t::spend_head))
-        return error::dump_file;
-    if (!dump(tx_buffer, schema::archive::tx, table_t::tx_head))
-        return error::dump_file;
-    if (!dump(txs_buffer, schema::archive::txs, table_t::txs_head))
-        return error::dump_file;
+    dump(ec, header_buffer, schema::archive::header, table_t::header_head);
+    dump(ec, input_buffer, schema::archive::input, table_t::input_head);
+    dump(ec, output_buffer, schema::archive::output, table_t::output_head);
+    dump(ec, point_buffer, schema::archive::point, table_t::point_head);
+    dump(ec, puts_buffer, schema::archive::puts, table_t::puts_head);
+    dump(ec, spend_buffer, schema::archive::spend, table_t::spend_head);
+    dump(ec, tx_buffer, schema::archive::tx, table_t::tx_head);
+    dump(ec, txs_buffer, schema::archive::txs, table_t::txs_head);
 
-    if (!dump(candidate_buffer, schema::indexes::candidate, table_t::candidate_head))
-        return error::dump_file;
-    if (!dump(confirmed_buffer, schema::indexes::confirmed, table_t::confirmed_head))
-        return error::dump_file;
-    if (!dump(strong_tx_buffer, schema::indexes::strong_tx, table_t::strong_tx_head))
-        return error::dump_file;
+    dump(ec, candidate_buffer, schema::indexes::candidate, table_t::candidate_head);
+    dump(ec, confirmed_buffer, schema::indexes::confirmed, table_t::confirmed_head);
+    dump(ec, strong_tx_buffer, schema::indexes::strong_tx, table_t::strong_tx_head);
 
-    if (!dump(validated_bk_buffer, schema::caches::validated_bk, table_t::validated_bk_head))
-        return error::dump_file;
-    if (!dump(validated_tx_buffer, schema::caches::validated_tx, table_t::validated_tx_head))
-        return error::dump_file;
+    dump(ec, validated_bk_buffer, schema::caches::validated_bk, table_t::validated_bk_head);
+    dump(ec, validated_tx_buffer, schema::caches::validated_tx, table_t::validated_tx_head);
 
-    if (!dump(address_buffer, schema::optionals::address, table_t::address_head))
-        return error::dump_file;
-    if (!dump(neutrino_buffer, schema::optionals::neutrino, table_t::neutrino_head))
-        return error::dump_file;
-    ////if (!dump(bootstrap_buffer, schema::optionals::bootstrap, table_t::bootstrap_head))
-    ////    return error::dump_file;
-    ////if (!dump(buffer_buffer, schema::optionals::buffer, table_t::buffer_head))
-    ////    return error::dump_file;
+    dump(ec, address_buffer, schema::optionals::address, table_t::address_head);
+    dump(ec, neutrino_buffer, schema::optionals::neutrino, table_t::neutrino_head);
+    ////dump(ec, bootstrap_buffer, schema::optionals::bootstrap, table_t::bootstrap_head);
+    ////dump(ec, buffer_buffer, schema::optionals::buffer, table_t::buffer_head);
 
-    return error::success;
+    return ec;
 }
 
 TEMPLATE
@@ -941,33 +947,27 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
     if (file::is_directory(primary))
     {
         // Clear invalid /heads, recover from /primary, clone to /primary.
-        if      (!file::clear_directory(heads)) ec = error::clear_directory;
-        else if (!file::remove(heads)) ec = error::remove_directory;
-        else if (!file::rename(primary, heads)) ec = error::rename_directory;
-        else if (!file::copy_directory(heads, primary))
-        {
-            ec = error::copy_directory;
-            /* bool */ file::remove(primary);
-        }
+        ec = file::clear_directory_ex(heads);
+        if (!ec) ec = file::remove_ex(heads);
+        if (!ec) ec = file::rename_ex(primary, heads);
+        if (!ec) ec = file::copy_directory_ex(heads, primary);
+        if (ec) /* bool */ file::remove_ex(primary);
     }
     else if (file::is_directory(secondary))
     {
         // Clear invalid /heads, recover from /secondary, clone to /primary.
-        if      (!file::clear_directory(heads)) ec = error::clear_directory;
-        else if (!file::remove(heads)) ec = error::remove_directory;
-        else if (!file::rename(secondary, heads)) ec = error::rename_directory;
-        else if (!file::copy_directory(heads, primary))
-        {
-            ec = error::copy_directory;
-            /* bool */ file::remove(primary);
-        }
+        ec = file::clear_directory_ex(heads);
+        if (!ec) ec = file::remove_ex(heads);
+        if (!ec) ec = file::rename_ex(secondary, heads);
+        if (!ec) ec = file::copy_directory_ex(heads, primary);
+        if (ec) /* bool */ file::remove_ex(secondary);
     }
     else
     {
         ec = error::missing_snapshot;
     }
 
-    const auto restore = [&handler](auto& ec, auto& storage, table_t table) NOEXCEPT
+    const auto restore = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
     {
         if (!ec)
         {

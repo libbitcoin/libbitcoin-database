@@ -53,20 +53,6 @@ BOOST_AUTO_TEST_CASE(file_utilities__is_directory__exists__true)
     BOOST_REQUIRE(file::is_directory(TEST_DIRECTORY));
 }
 
-// get_is_directory
-
-BOOST_AUTO_TEST_CASE(file_utilities__get_is_directory__missing__failure)
-{
-    BOOST_REQUIRE(file::get_is_directory(TEST_PATH));
-    BOOST_TEST_MESSAGE(file::get_is_directory(TEST_PATH).message());
-}
-
-BOOST_AUTO_TEST_CASE(file_utilities__get_is_directory__exists__success)
-{
-    BOOST_REQUIRE(!file::get_is_directory(TEST_DIRECTORY));
-    BOOST_TEST_MESSAGE(file::get_is_directory(TEST_DIRECTORY).message());
-}
-
 // clear_directory
 
 BOOST_AUTO_TEST_CASE(file_utilities__clear_directory__empty__true)
