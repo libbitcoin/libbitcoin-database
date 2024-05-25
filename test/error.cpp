@@ -59,15 +59,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__open_open__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "opening open file");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__open_failure__true_exected_message)
-{
-    constexpr auto value = error::open_failure;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "file failed to open");
-}
-
 BOOST_AUTO_TEST_CASE(error_t__code__size_failure__true_exected_message)
 {
     constexpr auto value = error::size_failure;
@@ -84,15 +75,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__close_loaded__true_exected_message)
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "closing loaded file");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__close_failure__true_exected_message)
-{
-    constexpr auto value = error::close_failure;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "file failed to close");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__load_loaded__true_exected_message)

@@ -40,10 +40,8 @@ enum error_t : uint8_t
 
     /// memory map
     open_open,
-    open_failure,
     size_failure,
     close_loaded,
-    close_failure,
     load_loaded,
     load_locked,
     load_failure,

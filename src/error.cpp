@@ -33,10 +33,8 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     // memory map
     { open_open, "opening open file" },
-    { open_failure, "file failed to open" },
     { size_failure, "filure obtaining file size" },
     { close_loaded, "closing loaded file" },
-    { close_failure, "file failed to close" },
     { load_loaded, "loading loaded file" },
     { load_locked, "loading locked file" },
     { load_failure, "file failed to load, disk may be full" },
