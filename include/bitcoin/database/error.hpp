@@ -72,9 +72,7 @@ enum error_t : uint8_t
 
     /// filesystem
     missing_directory,
-    create_directory,
     clear_directory,
-    remove_directory,
     rename_directory,
     copy_directory,
 

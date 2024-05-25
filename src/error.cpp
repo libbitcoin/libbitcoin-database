@@ -65,11 +65,8 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     // filesystem
     { missing_directory, "missing directory failure" },
-    { create_directory, "create directory failure" },
     { clear_directory, "clear directory failure" },
-    { remove_directory, "remove directory failure" },
     { rename_directory, "rename directory failure" },
-    { copy_directory, "copy directory failure" },
 
     // store
     { missing_snapshot, "missing snapshot" },
