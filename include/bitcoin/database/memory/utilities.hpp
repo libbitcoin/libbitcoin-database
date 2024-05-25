@@ -24,6 +24,9 @@
 namespace libbitcoin {
 namespace database {
 
+/// The byte size of system pages, zero if failed.
+BCD_API size_t page_size() NOEXCEPT;
+
 /// The bytes of physical memory, zero if failed.
 BCD_API uint64_t system_memory() NOEXCEPT;
 

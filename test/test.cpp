@@ -113,7 +113,7 @@ std::string read_line(const std::filesystem::path& file_path,
 {
     std::string out{};
     std::ifstream file(system::to_extended_path(file_path));
-    do { out.clear(); std::getline(file, out); } while (!is_zero(line--));
+    do { out.clear(); std::getline(file, out); } while (is_nonzero(line--));
     return out;
 }
 

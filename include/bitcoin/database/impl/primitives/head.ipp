@@ -47,7 +47,7 @@ size_t CLASS::buckets() const NOEXCEPT
 TEMPLATE
 Link CLASS::index(const Key& key) const NOEXCEPT
 {
-    BC_ASSERT_MSG(!is_zero(buckets_), "hash table requires buckets");
+    BC_ASSERT_MSG(is_nonzero(buckets_), "hash table requires buckets");
 
     // TODO: for greater flexibility, inject hash function through template.
     if constexpr (Hash)
@@ -65,7 +65,7 @@ Link CLASS::index(const Key& key) const NOEXCEPT
 TEMPLATE
 bool CLASS::create() NOEXCEPT
 {
-    if (!is_zero(file_.size()))
+    if (is_nonzero(file_.size()))
         return false;
 
     const auto allocation = size();

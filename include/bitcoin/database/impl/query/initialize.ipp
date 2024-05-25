@@ -33,20 +33,20 @@ namespace database {
 TEMPLATE
 inline bool CLASS::is_initialized() const NOEXCEPT
 {
-    return !is_zero(store_.confirmed.count()) &&
-        !is_zero(store_.candidate.count());
+    return is_nonzero(store_.confirmed.count()) &&
+        is_nonzero(store_.candidate.count());
 }
 TEMPLATE
 inline size_t CLASS::get_top_candidate() const NOEXCEPT
 {
-    BC_ASSERT_MSG(!is_zero(store_.candidate.count()), "empty");
+    BC_ASSERT_MSG(is_nonzero(store_.candidate.count()), "empty");
     return sub1(store_.candidate.count());
 }
 
 TEMPLATE
 inline size_t CLASS::get_top_confirmed() const NOEXCEPT
 {
-    BC_ASSERT_MSG(!is_zero(store_.confirmed.count()), "empty");
+    BC_ASSERT_MSG(is_nonzero(store_.confirmed.count()), "empty");
     return sub1(store_.confirmed.count());
 }
 
@@ -54,7 +54,7 @@ inline size_t CLASS::get_top_confirmed() const NOEXCEPT
 TEMPLATE
 size_t CLASS::get_fork() const NOEXCEPT
 {
-    for (auto height = get_top_confirmed(); !is_zero(height); --height)
+    for (auto height = get_top_confirmed(); is_nonzero(height); --height)
         if (to_confirmed(height) == to_candidate(height))
             return height;
 
@@ -104,7 +104,7 @@ associations CLASS::get_unassociated_above(size_t height,
     associations out{};
     const auto top = std::min(get_top_candidate(), last);
 
-    while (++height <= top && !is_zero(count))
+    while (++height <= top && is_nonzero(count))
     {
         if (get_unassociated(item, to_candidate(height)))
         {

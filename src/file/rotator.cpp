@@ -65,7 +65,7 @@ BC_POP_WARNING()
     // Always write it all, since it's a circular buffer.
     const auto written = count;
 
-    while (!is_zero(count))
+    while (is_nonzero(count))
     {
         if (is_zero(remaining_) && !rotate())
             throw ostream_exception{ "rotate" };

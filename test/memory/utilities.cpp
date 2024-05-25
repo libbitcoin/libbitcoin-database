@@ -20,12 +20,19 @@
 
 BOOST_AUTO_TEST_SUITE(memory_utilities_tests)
 
+// It is presumed impossible for the page size to be zero, in which case this
+// test should never fail on any platform, though an API failure returns zero.
+BOOST_AUTO_TEST_CASE(memory_utilities__page_size__always__non_zero)
+{
+    BOOST_REQUIRE(is_nonzero(page_size()));
+}
+
 // It is not possible for the actual memory to be zero and an overflow will
-// return max_uint64_t, so this test should never fail on any platform,
-// though an API failure will return zero.
+// return max_uint64, so this test should never fail on any platform, though
+// an API failure returns zero.
 BOOST_AUTO_TEST_CASE(memory_utilities__system_memory__always__nonzero)
 {
-    BOOST_REQUIRE(!is_zero(system_memory()));
+    BOOST_REQUIRE(is_nonzero(system_memory()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
