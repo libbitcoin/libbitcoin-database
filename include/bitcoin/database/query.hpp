@@ -41,6 +41,7 @@ using point_link = table::point::link;
 using spend_link = table::spend::link;
 using txs_link = table::txs::link;
 using tx_link = table::transaction::link;
+using filter_link = table::neutrino::link;
 
 using header_links = std_vector<header_link::integer>;
 using tx_links = std_vector<tx_link::integer>;
@@ -229,7 +230,8 @@ public:
     inline header_link to_header(const hash_digest& key) const NOEXCEPT;
     inline point_link to_point(const hash_digest& key) const NOEXCEPT;
     inline tx_link to_tx(const hash_digest& key) const NOEXCEPT;
-    inline txs_link to_txs_link(const header_link& link) const NOEXCEPT;
+    inline txs_link to_txs_link(const header_link& key) const NOEXCEPT;
+    inline filter_link to_filter(const header_link& key) const NOEXCEPT;
 
     /// put to tx (reverse navigation)
     tx_link to_spend_tx(const spend_link& link) const NOEXCEPT;
