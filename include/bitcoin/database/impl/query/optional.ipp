@@ -202,10 +202,10 @@ TEMPLATE
 bool CLASS::set_filter(const header_link& link, const hash_digest& filter_head,
     const filter& filter) NOEXCEPT
 {
-    // GUARD (filter redundancy)
-    // This is only fully effective if there is a single database thread.
-    if (!to_filter(link).is_terminal())
-        return true;
+    ////// GUARD (filter redundancy)
+    ////// This is only fully effective if there is a single database thread.
+    ////if (!to_filter(link).is_terminal())
+    ////    return true;
 
     // ========================================================================
     const auto scope = store_.get_transactor();
