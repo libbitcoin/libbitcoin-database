@@ -675,11 +675,11 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
 
     const auto key = tx.hash(false);
 
-    // GUARD (tx redundancy)
-    // This is only fully effective if there is a single database thread.
-    out_fk = to_tx(key);
-    if (!out_fk.is_terminal())
-        return error::success;
+    ////// GUARD (tx redundancy)
+    ////// This is only fully effective if there is a single database thread.
+    ////out_fk = to_tx(key);
+    ////if (!out_fk.is_terminal())
+    ////    return error::success;
 
     // Declare puts record.
     const auto& ins = *tx.inputs_ptr();
@@ -731,15 +731,23 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
         point_link hash_fk{};
         if (hash != null_hash)
         {
-            hash_fk = to_point(hash);
-            if (hash_fk.is_terminal())
+            // TODO: look into point table removal.
+            if (minimize_)
             {
-                // Safe allocation failure, duplicates limited but expected.
-                if (!store_.point.put_link(hash_fk, hash, table::point::record
+                // GUARD (tx redundancy)
+                // Only fully effective if there is a single database thread.
+                // This reduces point store by ~45GiB, but causes thrashing.
+                hash_fk = to_point(hash);
+                if (hash_fk.is_terminal())
                 {
-                }))
-                {
-                    return error::tx_point_put;
+                    // Safe allocation failure, duplicates limited but expected.
+                    if (!store_.point.put_link(hash_fk, hash, table::point::record
+                    {
+                        // Table stores no data other than the search key.
+                    }))
+                    {
+                        return error::tx_point_put;
+                    }
                 }
             }
         }
@@ -875,11 +883,11 @@ header_link CLASS::set_link(const header& header, const context& ctx) NOEXCEPT
 {
     const auto key = header.hash();
 
-    // GUARD (header redundancy)
-    // This is only fully effective if there is a single database thread.
-    auto header_fk = to_header(key);
-    if (!header_fk.is_terminal())
-        return header_fk;
+    ////// GUARD (header redundancy)
+    ////// This is only fully effective if there is a single database thread.
+    ////auto header_fk = to_header(key);
+    ////if (!header_fk.is_terminal())
+    ////    return header_fk;
 
     // Parent must be missing iff its hash is null.
     const auto& parent_sk = header.previous_block_hash();
@@ -953,13 +961,13 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
     if (key.is_terminal())
         return error::txs_header;
 
-    // GUARD (block (txs) redundancy)
-    // This is only fully effective if there is a single database thread.
-    // Guard must be lifted for an existing top malleable association so
-    // that a non-malleable association may be accomplished.
-    out_fk = to_txs_link(key);
-    if (!out_fk.is_terminal() && !is_malleable(key))
-        return error::success;
+    ////// GUARD (block (txs) redundancy)
+    ////// This is only fully effective if there is a single database thread.
+    ////// Guard must be lifted for an existing top malleable association so
+    ////// that a non-malleable association may be accomplished.
+    ////out_fk = to_txs_link(key);
+    ////if (!out_fk.is_terminal() && !is_malleable(key))
+    ////    return error::success;
 
     code ec{};
     tx_link tx_fk{};

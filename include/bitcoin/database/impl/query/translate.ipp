@@ -81,9 +81,15 @@ inline tx_link CLASS::to_tx(const hash_digest& key) const NOEXCEPT
 }
 
 TEMPLATE
-inline txs_link CLASS::to_txs_link(const header_link& link) const NOEXCEPT
+inline txs_link CLASS::to_txs_link(const header_link& key) const NOEXCEPT
 {
-    return store_.txs.first(link);
+    return store_.txs.first(key);
+}
+
+TEMPLATE
+inline filter_link CLASS::to_filter(const header_link& key) const NOEXCEPT
+{
+    return store_.neutrino.first(key);
 }
 
 // put to tx (reverse navigation)
