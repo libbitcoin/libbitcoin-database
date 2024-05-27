@@ -28,6 +28,7 @@ using namespace bc::system;
 
 settings::settings() NOEXCEPT
   : path{ "bitcoin" },
+    minimize(true),
 
     // Archives.
 

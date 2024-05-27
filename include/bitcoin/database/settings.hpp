@@ -38,6 +38,7 @@ struct BCD_API settings
 
     /// Properties.
     std::filesystem::path path;
+    bool minimize;
 
     /// Archives.
     /// -----------------------------------------------------------------------
