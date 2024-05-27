@@ -81,7 +81,7 @@ public:
     using heights = std_vector<size_t>;
     using filter = system::data_chunk;
 
-    query(Store& value) NOEXCEPT;
+    query(Store& store) NOEXCEPT;
 
     /// Store management from query-holder (not store owner) context.
     /// -----------------------------------------------------------------------
@@ -537,7 +537,9 @@ private:
     static inline bool contains(const block_txs& blocks,
         const block_tx& block) NOEXCEPT;
 
+    // These are thread safe.
     Store& store_;
+    bool minimize_;
 };
 
 } // namespace database

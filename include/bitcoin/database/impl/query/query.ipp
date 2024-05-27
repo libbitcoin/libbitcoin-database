@@ -69,8 +69,8 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-CLASS::query(Store& value) NOEXCEPT
-  : store_(value)
+CLASS::query(Store& store) NOEXCEPT
+  : store_(store), minimize_(store.minimize())
 {
 }
 

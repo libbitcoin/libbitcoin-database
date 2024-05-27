@@ -731,23 +731,25 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
         point_link hash_fk{};
         if (hash != null_hash)
         {
-            // TODO: look into point table removal or conditional duplicates.
-            // TODO: allowing duplication here increases store by 45GiB.
-
-            ////// GUARD (tx redundancy)
-            ////// Only fully effective if there is a single database thread.
-            ////hash_fk = to_point(hash);
-            ////if (hash_fk.is_terminal())
-            ////{
-            // Safe allocation failure, duplicates [limited but] expected.
-            if (!store_.point.put_link(hash_fk, hash, table::point::record
+            // TODO: look into point table removal.
+            if (minimize_)
             {
-                // Table stores no data other than the search key.
-            }))
-            {
-                return error::tx_point_put;
+                // GUARD (tx redundancy)
+                // Only fully effective if there is a single database thread.
+                // This reduces point store by ~45GiB, but causes thrashing.
+                hash_fk = to_point(hash);
+                if (hash_fk.is_terminal())
+                {
+                    // Safe allocation failure, duplicates limited but expected.
+                    if (!store_.point.put_link(hash_fk, hash, table::point::record
+                    {
+                        // Table stores no data other than the search key.
+                    }))
+                    {
+                        return error::tx_point_put;
+                    }
+                }
             }
-            ////}
         }
 
         // Accumulate spend keys in order (terminal for any null point).

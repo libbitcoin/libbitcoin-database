@@ -1115,6 +1115,12 @@ void CLASS::report(const error_handler& handler) const NOEXCEPT
     ////report(buffer_body_, table_t::buffer_body);
 }
 
+TEMPLATE
+bool CLASS::minimize() const NOEXCEPT
+{
+    return configuration_.minimize;
+}
+
 BC_POP_WARNING()
 
 } // namespace database
