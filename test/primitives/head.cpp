@@ -38,19 +38,7 @@ static_assert(buckets == 20u);
 using link = linkage<link_size>;
 using key = data_array<key_size>;
 using djb2_header = head<link, key, true>;
-
-// Derived accessor to also expose unique_hash.
-class unique_header
-  : public head<link, key, false>
-{
-public:
-    using head<link, key, false>::head;
-
-    static constexpr size_t unique_hash(const key& value) NOEXCEPT
-    {
-        return head<link, key, false>::unique_hash(value);
-    }
-};
+using unique_header = head<link, key, false>;
 
 class nullptr_storage
   : public test::chunk_storage
@@ -121,7 +109,7 @@ BOOST_AUTO_TEST_CASE(head__set_body_count__get__expected)
 BOOST_AUTO_TEST_CASE(head__unique_hash__null_key__expected)
 {
     constexpr key null_key{};
-    const auto expected = unique_header::unique_hash(null_key) % buckets;
+    const auto expected = system::unique_hash(null_key) % buckets;
     BOOST_REQUIRE_EQUAL(expected, 0u);
 
     test::chunk_storage store;

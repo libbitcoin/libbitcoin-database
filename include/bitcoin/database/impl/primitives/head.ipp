@@ -58,7 +58,7 @@ Link CLASS::index(const Key& key) const NOEXCEPT
     else
     {
         // unique_hash assumes sufficient uniqueness in low order key bytes.
-        return unique_hash(key) % buckets_;
+        return system::unique_hash(key) % buckets_;
     }
 }
 
