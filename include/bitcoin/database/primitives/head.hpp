@@ -62,20 +62,6 @@ public:
     bool push(const bytes& current, bytes& next, const Key& key) NOEXCEPT;
     bool push(const bytes& current, bytes& next, const Link& index) NOEXCEPT;
 
-protected:
-    /// Assumes a high degree of uniqueness in low order 8 bytes of key.
-    static constexpr size_t unique_hash(const Key& key) NOEXCEPT
-    {
-        constexpr auto length = array_count<Key>;
-        constexpr auto size = std::min(length, sizeof(size_t));
-
-        // This optimization breaks data portability (by endianness).
-        // Could be modified to use an endian conversion vs. simple copy.
-        size_t value{};
-        std::copy_n(key.begin(), size, system::byte_cast(value).begin());
-        return value;
-    }
-
 private:
     template <size_t Bytes>
     static auto& array_cast(memory& buffer) NOEXCEPT
