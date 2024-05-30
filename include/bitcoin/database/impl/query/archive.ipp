@@ -557,7 +557,7 @@ typename CLASS::transaction::cptr CLASS::get_transaction(
         tx.locktime
     );
 
-    ptr->set_hash(std::move(tx.key));
+    ptr->set_nominal_hash(std::move(tx.key));
     return ptr;
 }
 
