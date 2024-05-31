@@ -557,7 +557,7 @@ typename CLASS::transaction::cptr CLASS::get_transaction(
         tx.locktime
     );
 
-    ptr->set_hash(std::move(tx.key));
+    ptr->set_nominal_hash(std::move(tx.key));
     return ptr;
 }
 
@@ -727,27 +727,25 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
         const auto& prevout = in->point();
         const auto& hash = prevout.hash();
 
-        // Get or create prevout hash in point table (reduces duplicates).
+        // TODO: consider table removal.
+        // Create prevout hash in point table.
         point_link hash_fk{};
         if (hash != null_hash)
         {
-            // TODO: look into point table removal.
-            if (minimize_)
+            // GUARD (tx redundancy)
+            // Only fully effective if there is a single database thread.
+            // This reduces point store by ~45GiB, but causes thrashing.
+            if (minimize_) hash_fk = to_point(hash);
+
+            if (hash_fk.is_terminal())
             {
-                // GUARD (tx redundancy)
-                // Only fully effective if there is a single database thread.
-                // This reduces point store by ~45GiB, but causes thrashing.
-                hash_fk = to_point(hash);
-                if (hash_fk.is_terminal())
+                // Safe allocation failure, duplicates limited but expected.
+                if (!store_.point.put_link(hash_fk, hash, table::point::record
                 {
-                    // Safe allocation failure, duplicates limited but expected.
-                    if (!store_.point.put_link(hash_fk, hash, table::point::record
-                    {
-                        // Table stores no data other than the search key.
-                    }))
-                    {
-                        return error::tx_point_put;
-                    }
+                    // Table stores no data other than the search key.
+                }))
+                {
+                    return error::tx_point_put;
                 }
             }
         }
