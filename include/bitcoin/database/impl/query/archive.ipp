@@ -941,20 +941,21 @@ txs_link CLASS::set_link(const transactions& txs, const header_link& key,
     size_t size) NOEXCEPT
 {
     txs_link out{};
-    return set_code(out, txs, key, size) ? txs_link{} : out;
+    return set_code(out, txs, key, size, false) ? txs_link{} : out;
 }
 
 TEMPLATE
 code CLASS::set_code(const transactions& txs, const header_link& key,
-    size_t size) NOEXCEPT
+    size_t size, bool confirm) NOEXCEPT
 {
     txs_link out_fk{};
-    return set_code(out_fk, txs, key, size);
+    return set_code(out_fk, txs, key, size, confirm);
 }
 
+// protected
 TEMPLATE
 code CLASS::set_code(txs_link& out_fk, const transactions& txs,
-    const header_link& key, size_t size) NOEXCEPT
+    const header_link& key, size_t size, bool confirm) NOEXCEPT
 {
     if (key.is_terminal())
         return error::txs_header;
@@ -994,7 +995,13 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
         links
     });
 
-    return out_fk.is_terminal() ? error::txs_txs_put : error::success;
+    if (out_fk.is_terminal())
+        return error::txs_txs_put;
+
+    if (confirm && !set_strong(key, links, true))
+        return error::txs_confirm;
+
+    return error::success;
     // ========================================================================
 }
 

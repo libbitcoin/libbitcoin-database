@@ -350,11 +350,13 @@ public:
     header_link set_link(const block& block, const context& ctx) NOEXCEPT;
     header_link set_link(const block& block) NOEXCEPT;
 
-    txs_link set_link(const transactions& txs, const header_link& key, size_t size) NOEXCEPT;
     tx_link set_link(const transaction& tx) NOEXCEPT;
-    
-    code set_code(const transactions& txs, const header_link& key, size_t size) NOEXCEPT;
+    txs_link set_link(const transactions& txs, const header_link& key,
+        size_t size) NOEXCEPT;
+
     code set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT;
+    code set_code(const transactions& txs, const header_link& key, size_t size,
+        bool confirm) NOEXCEPT;
 
     bool set_dissasociated(const header_link& key) NOEXCEPT;
 
@@ -450,7 +452,9 @@ public:
 
 protected:
     code set_code(txs_link& out_fk, const transactions& txs,
-        const header_link& key, size_t size) NOEXCEPT;
+        const header_link& key, size_t size, bool confirm) NOEXCEPT;
+    bool set_strong(const header_link& link, const tx_links& txs,
+        bool positive) NOEXCEPT;
 
     /// Translate.
     /// -----------------------------------------------------------------------

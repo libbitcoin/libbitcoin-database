@@ -344,6 +344,23 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     return error::success;
 }
 
+// protected
+TEMPLATE
+bool CLASS::set_strong(const header_link& link, const tx_links& txs,
+    bool positive) NOEXCEPT
+{
+    return std::all_of(txs.begin(), txs.end(), [&](const tx_link& fk) NOEXCEPT
+    {
+        // Clean allocation failure (e.g. disk full), block not confirmed.
+        return store_.strong_tx.put(fk, table::strong_tx::record
+        {
+            {},
+            link,
+            positive
+        });
+    });
+}
+
 TEMPLATE
 bool CLASS::set_strong(const header_link& link) NOEXCEPT
 {
@@ -351,16 +368,10 @@ bool CLASS::set_strong(const header_link& link) NOEXCEPT
     if (txs.empty())
         return false;
 
-    const table::strong_tx::record strong{ {}, link, true };
-
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // Clean allocation failure (e.g. disk full), block not confirmed.
-    return std::all_of(txs.begin(), txs.end(), [&](const tx_link& fk) NOEXCEPT
-    {
-        return store_.strong_tx.put(fk, strong);
-    });
+    return set_strong(link, txs, true);
     // ========================================================================
 }
 
@@ -371,16 +382,10 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
     if (txs.empty())
         return false;
 
-    const table::strong_tx::record strong{ {}, link, false };
-
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // Clean allocation failure (e.g. disk full), block not unconfirmed.
-    return std::all_of(txs.begin(), txs.end(), [&](const tx_link& fk) NOEXCEPT
-    {
-        return store_.strong_tx.put(fk, strong);
-    });
+    return set_strong(link, txs, false);
     // ========================================================================
 }
 
@@ -393,7 +398,7 @@ bool CLASS::initialize(const block& genesis) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    if (!set(genesis, {}))
+    if (!set(genesis, context{}))
         return false;
 
     const auto link = to_header(genesis.hash());
