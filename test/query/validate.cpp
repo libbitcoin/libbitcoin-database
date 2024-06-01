@@ -196,9 +196,9 @@ BOOST_AUTO_TEST_CASE(query_validate__get_block_state__confirmable__block_confirm
     BOOST_REQUIRE(query.set(test::block1, context{}));
 
     uint64_t fees{};
-    BOOST_REQUIRE_EQUAL(query.get_header_state(0), error::block_confirmable);
-    BOOST_REQUIRE_EQUAL(query.get_block_state(0), error::block_confirmable);
-    BOOST_REQUIRE_EQUAL(query.get_block_state(fees, 0), error::block_confirmable);
+    BOOST_REQUIRE_EQUAL(query.get_header_state(0), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(0), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(fees, 0), error::unvalidated);
     BOOST_REQUIRE_EQUAL(fees, 0u);
 
     BOOST_REQUIRE(query.set_block_confirmable(1, 42));

@@ -78,8 +78,8 @@ BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.candidate_body_size(), schema::height::minrow);
     BOOST_REQUIRE_EQUAL(query.confirmed_body_size(), schema::height::minrow);
     BOOST_REQUIRE_EQUAL(query.strong_tx_body_size(), schema::strong_tx::minrow);
-    BOOST_REQUIRE_EQUAL(query.validated_tx_body_size(), schema::validated_tx::minrow);
-    BOOST_REQUIRE_EQUAL(query.validated_bk_body_size(), schema::validated_bk::minrow);
+    BOOST_REQUIRE_EQUAL(query.validated_tx_body_size(), 0u);
+    BOOST_REQUIRE_EQUAL(query.validated_bk_body_size(), 0u);
 
     BOOST_REQUIRE_EQUAL(query.address_body_size(), schema::address::minrow);
     BOOST_REQUIRE_EQUAL(query.neutrino_body_size(), 0u);
