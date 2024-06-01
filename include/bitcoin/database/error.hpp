@@ -119,7 +119,8 @@ enum error_t : uint8_t
 
     /// txs archive
     txs_header,
-    txs_txs_put
+    txs_txs_put,
+    txs_confirm
 };
 
 // No current need for error_code equivalence mapping.

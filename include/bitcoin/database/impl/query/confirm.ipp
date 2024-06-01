@@ -344,6 +344,23 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     return error::success;
 }
 
+// protected
+TEMPLATE
+bool CLASS::set_strong(const header_link& link, const tx_links& txs,
+    bool positive) NOEXCEPT
+{
+    return std::all_of(txs.begin(), txs.end(), [&](const tx_link& fk) NOEXCEPT
+    {
+        // Clean allocation failure (e.g. disk full), block not confirmed.
+        return store_.strong_tx.put(fk, table::strong_tx::record
+        {
+            {},
+            link,
+            positive
+        });
+    });
+}
+
 TEMPLATE
 bool CLASS::set_strong(const header_link& link) NOEXCEPT
 {
@@ -351,16 +368,10 @@ bool CLASS::set_strong(const header_link& link) NOEXCEPT
     if (txs.empty())
         return false;
 
-    const table::strong_tx::record strong{ {}, link, true };
-
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // Clean allocation failure (e.g. disk full), block not confirmed.
-    return std::all_of(txs.begin(), txs.end(), [&](const tx_link& fk) NOEXCEPT
-    {
-        return store_.strong_tx.put(fk, strong);
-    });
+    return set_strong(link, txs, true);
     // ========================================================================
 }
 
@@ -371,16 +382,10 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
     if (txs.empty())
         return false;
 
-    const table::strong_tx::record strong{ {}, link, false };
-
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // Clean allocation failure (e.g. disk full), block not unconfirmed.
-    return std::all_of(txs.begin(), txs.end(), [&](const tx_link& fk) NOEXCEPT
-    {
-        return store_.strong_tx.put(fk, strong);
-    });
+    return set_strong(link, txs, false);
     // ========================================================================
 }
 
@@ -393,18 +398,13 @@ bool CLASS::initialize(const block& genesis) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    const context ctx{};
-    if (!set(genesis, ctx))
+    if (!set(genesis, context{}))
         return false;
 
-    constexpr auto fees = 0u;
-    constexpr auto sigops = 0u;
     const auto link = to_header(genesis.hash());
 
     // Unsafe for allocation failure, but only used in store creation.
-    return set_strong(header_link{ 0 })
-        && set_tx_connected(tx_link{ 0 }, ctx, fees, sigops) // tx valid.
-        && set_block_confirmable(link, fees) // rename, block valid step.
+    return set_strong(link)
         && push_candidate(link)
         && push_confirmed(link);
     // ========================================================================

@@ -111,7 +111,8 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     // tx archive
     { txs_header, "txs_header" },
-    { txs_txs_put, "txs_txs_put" }
+    { txs_txs_put, "txs_txs_put" },
+    { txs_confirm, "txs_confirm" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "database", "database code")
