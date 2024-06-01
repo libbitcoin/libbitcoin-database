@@ -393,18 +393,13 @@ bool CLASS::initialize(const block& genesis) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    const context ctx{};
-    if (!set(genesis, ctx))
+    if (!set(genesis, {}))
         return false;
 
-    constexpr auto fees = 0u;
-    constexpr auto sigops = 0u;
     const auto link = to_header(genesis.hash());
 
     // Unsafe for allocation failure, but only used in store creation.
-    return set_strong(header_link{ 0 })
-        && set_tx_connected(tx_link{ 0 }, ctx, fees, sigops) // tx valid.
-        && set_block_confirmable(link, fees) // rename, block valid step.
+    return set_strong(link)
         && push_candidate(link)
         && push_confirmed(link);
     // ========================================================================
