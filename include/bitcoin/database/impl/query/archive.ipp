@@ -80,8 +80,12 @@ inline bool CLASS::is_coinbase(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-inline bool CLASS::is_malleated(const block& block) const NOEXCEPT
+inline bool CLASS::is_malleated64(const block& block) const NOEXCEPT
 {
+    // This is a very cheap prequalification.
+    if (!block.is_malleable64())
+        return false;
+
     auto it = store_.txs.it(to_header(block.hash()));
     const auto transactions = *block.transactions_ptr();
     do
@@ -94,7 +98,7 @@ inline bool CLASS::is_malleated(const block& block) const NOEXCEPT
         if (txs.tx_fks.size() != transactions.size())
             continue;
 
-        bool match{ true };
+        auto match{ true };
         auto tx = transactions.begin();
         for (const auto& link: txs.tx_fks)
         {
@@ -113,7 +117,7 @@ inline bool CLASS::is_malleated(const block& block) const NOEXCEPT
 }
 
 TEMPLATE
-inline bool CLASS::is_malleable(const header_link& link) const NOEXCEPT
+inline bool CLASS::is_malleable64(const header_link& link) const NOEXCEPT
 {
     table::txs::get_malleable txs{};
     return store_.txs.get(to_txs_link(link), txs) && txs.malleable;
@@ -1013,7 +1017,7 @@ bool CLASS::set_dissasociated(const header_link& key) NOEXCEPT
     if (key.is_terminal())
         return false;
 
-    const auto malleable = is_malleable(key);
+    const auto malleable = is_malleable64(key);
 
     // ========================================================================
     const auto scope = store_.get_transactor();
