@@ -754,10 +754,10 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
     BOOST_REQUIRE_EQUAL(hashes.size(), 1u);
     BOOST_REQUIRE_EQUAL(hashes, test::genesis.transaction_hashes(false));
 
-    BOOST_REQUIRE(!query.is_malleable(0));
+    BOOST_REQUIRE(!query.is_malleable64(0));
     BOOST_REQUIRE(query.set_dissasociated(0));
     BOOST_REQUIRE(!query.is_associated(0));
-    BOOST_REQUIRE(!query.is_malleable(0));
+    BOOST_REQUIRE(!query.is_malleable64(0));
 }
 
 // Moved to protected, set_link(block) covers.
@@ -906,7 +906,7 @@ BOOST_AUTO_TEST_CASE(query_archive__is_coinbase__non_coinbase__false)
     BOOST_REQUIRE(!query.is_coinbase(42));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive__is_malleable__non_malleable__false)
+BOOST_AUTO_TEST_CASE(query_archive__is_malleable64__non_malleable__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -917,19 +917,19 @@ BOOST_AUTO_TEST_CASE(query_archive__is_malleable__non_malleable__false)
     BOOST_REQUIRE(query.set(test::block1a, context{}));
     BOOST_REQUIRE(query.set(test::block2a, context{}));
 
-    BOOST_REQUIRE(!query.is_malleable(1));
-    BOOST_REQUIRE(!query.is_malleable(2));
-    BOOST_REQUIRE(!query.is_malleable(3));
-    BOOST_REQUIRE(!query.is_malleable(4));
-    BOOST_REQUIRE(!query.is_malleable(5));
-    BOOST_REQUIRE(!query.is_malleable(42));
+    BOOST_REQUIRE(!query.is_malleable64(1));
+    BOOST_REQUIRE(!query.is_malleable64(2));
+    BOOST_REQUIRE(!query.is_malleable64(3));
+    BOOST_REQUIRE(!query.is_malleable64(4));
+    BOOST_REQUIRE(!query.is_malleable64(5));
+    BOOST_REQUIRE(!query.is_malleable64(42));
 
-    BOOST_REQUIRE(!query.is_malleated(test::genesis));
-    BOOST_REQUIRE(!query.is_malleated(test::block1a));
-    BOOST_REQUIRE(!query.is_malleated(test::block2a));
+    BOOST_REQUIRE(!query.is_malleated64(test::genesis));
+    BOOST_REQUIRE(!query.is_malleated64(test::block1a));
+    BOOST_REQUIRE(!query.is_malleated64(test::block2a));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive__is_malleable__malleable__true)
+BOOST_AUTO_TEST_CASE(query_archive__is_malleable64__malleable__true)
 {
     using namespace system::chain;
     transaction tx64
@@ -963,16 +963,16 @@ BOOST_AUTO_TEST_CASE(query_archive__is_malleable__malleable__true)
     BOOST_REQUIRE(query.is_associated(3));
 
     // Only genesis is non-malleable.
-    BOOST_REQUIRE(!query.is_malleable(0));
-    BOOST_REQUIRE(query.is_malleable(1));
-    BOOST_REQUIRE(query.is_malleable(2));
-    BOOST_REQUIRE(query.is_malleable(3));
+    BOOST_REQUIRE(!query.is_malleable64(0));
+    BOOST_REQUIRE(query.is_malleable64(1));
+    BOOST_REQUIRE(query.is_malleable64(2));
+    BOOST_REQUIRE(query.is_malleable64(3));
 
     // Only genesis is non-malleated when compared against itself, since not malleable.
-    BOOST_REQUIRE(!query.is_malleated(test::genesis));
-    BOOST_REQUIRE(query.is_malleated(block1));
-    BOOST_REQUIRE(query.is_malleated(block2));
-    BOOST_REQUIRE(query.is_malleated(block3));
+    BOOST_REQUIRE(!query.is_malleated64(test::genesis));
+    BOOST_REQUIRE(query.is_malleated64(block1));
+    BOOST_REQUIRE(query.is_malleated64(block2));
+    BOOST_REQUIRE(query.is_malleated64(block3));
 
     // Disassociate 3 blocks.
     BOOST_REQUIRE(query.set_dissasociated(query.to_header(block1.hash())));
@@ -985,14 +985,14 @@ BOOST_AUTO_TEST_CASE(query_archive__is_malleable__malleable__true)
     BOOST_REQUIRE(!query.is_associated(3));
 
     // Verify all 3 remain malleable.
-    BOOST_REQUIRE(query.is_malleable(1));
-    BOOST_REQUIRE(query.is_malleable(2));
-    BOOST_REQUIRE(query.is_malleable(3));
+    BOOST_REQUIRE(query.is_malleable64(1));
+    BOOST_REQUIRE(query.is_malleable64(2));
+    BOOST_REQUIRE(query.is_malleable64(3));
 
     // Verify all 3 remain malleated by first association (against themselves).
-    BOOST_REQUIRE(query.is_malleated(block1));
-    BOOST_REQUIRE(query.is_malleated(block2));
-    BOOST_REQUIRE(query.is_malleated(block3));
+    BOOST_REQUIRE(query.is_malleated64(block1));
+    BOOST_REQUIRE(query.is_malleated64(block2));
+    BOOST_REQUIRE(query.is_malleated64(block3));
 
     // Reassociate the same transaction sets (first(n), disassociated (0), second(n))
     BOOST_REQUIRE(!query.set_link(*block1.transactions_ptr(), 1, block1.serialized_size(true)).is_terminal());
@@ -1005,14 +1005,14 @@ BOOST_AUTO_TEST_CASE(query_archive__is_malleable__malleable__true)
     BOOST_REQUIRE(query.is_associated(3));
 
     // Verify all 3 are associated as malleable.
-    BOOST_REQUIRE(query.is_malleable(1));
-    BOOST_REQUIRE(query.is_malleable(2));
-    BOOST_REQUIRE(query.is_malleable(3));
+    BOOST_REQUIRE(query.is_malleable64(1));
+    BOOST_REQUIRE(query.is_malleable64(2));
+    BOOST_REQUIRE(query.is_malleable64(3));
 
     // Verify all 3 remain malleated by second association (against themselves).
-    BOOST_REQUIRE(query.is_malleated(block1));
-    BOOST_REQUIRE(query.is_malleated(block2));
-    BOOST_REQUIRE(query.is_malleated(block3));
+    BOOST_REQUIRE(query.is_malleated64(block1));
+    BOOST_REQUIRE(query.is_malleated64(block2));
+    BOOST_REQUIRE(query.is_malleated64(block3));
 
     // Verify stored block sizes.
     BOOST_REQUIRE_EQUAL(query.get_block_size(0), test::genesis.serialized_size(true));

@@ -280,8 +280,8 @@ public:
     inline bool is_block(const hash_digest& key) const NOEXCEPT;
     inline bool is_tx(const hash_digest& key) const NOEXCEPT;
     inline bool is_coinbase(const tx_link& link) const NOEXCEPT;
-    inline bool is_malleated(const block& block) const NOEXCEPT;
-    inline bool is_malleable(const header_link& link) const NOEXCEPT;
+    inline bool is_malleated64(const block& block) const NOEXCEPT;
+    inline bool is_malleable64(const header_link& link) const NOEXCEPT;
     inline bool is_associated(const header_link& link) const NOEXCEPT;
 
     bool set(const header& header, const chain_context& ctx) NOEXCEPT;

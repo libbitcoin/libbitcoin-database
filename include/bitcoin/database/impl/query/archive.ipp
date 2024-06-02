@@ -80,8 +80,12 @@ inline bool CLASS::is_coinbase(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-inline bool CLASS::is_malleated(const block& block) const NOEXCEPT
+inline bool CLASS::is_malleated64(const block& block) const NOEXCEPT
 {
+    // This is a very cheap prequalification.
+    if (!block.is_malleable64())
+        return false;
+
     auto it = store_.txs.it(to_header(block.hash()));
     const auto transactions = *block.transactions_ptr();
     do
@@ -94,7 +98,7 @@ inline bool CLASS::is_malleated(const block& block) const NOEXCEPT
         if (txs.tx_fks.size() != transactions.size())
             continue;
 
-        bool match{ true };
+        auto match{ true };
         auto tx = transactions.begin();
         for (const auto& link: txs.tx_fks)
         {
@@ -113,7 +117,7 @@ inline bool CLASS::is_malleated(const block& block) const NOEXCEPT
 }
 
 TEMPLATE
-inline bool CLASS::is_malleable(const header_link& link) const NOEXCEPT
+inline bool CLASS::is_malleable64(const header_link& link) const NOEXCEPT
 {
     table::txs::get_malleable txs{};
     return store_.txs.get(to_txs_link(link), txs) && txs.malleable;
@@ -735,7 +739,8 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
             // GUARD (tx redundancy)
             // Only fully effective if there is a single database thread.
             // This reduces point store by ~45GiB, but causes thrashing.
-            if (minimize_) hash_fk = to_point(hash);
+            if (minimize_)
+                hash_fk = to_point(hash);
 
             if (hash_fk.is_terminal())
             {
@@ -974,7 +979,10 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
     links.reserve(txs.size());
     for (const auto& tx: txs)
     {
-        if ((ec = set_code(tx_fk, *tx))) return ec;
+        // Each tx is set under a distinct transactor.
+        if ((ec = set_code(tx_fk, *tx)))
+            return ec;
+
         links.push_back(tx_fk.value);
     }
 
@@ -984,6 +992,10 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
 
     // ========================================================================
     const auto scope = store_.get_transactor();
+
+    // Clean allocation failure (e.g. disk full), see set_strong() comments.
+    if (confirm && !set_strong(key, links, true))
+        return error::txs_confirm;
 
     // Header link is the key for the txs table.
     // Clean single allocation failure (e.g. disk full).
@@ -995,13 +1007,7 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
         links
     });
 
-    if (out_fk.is_terminal())
-        return error::txs_txs_put;
-
-    if (confirm && !set_strong(key, links, true))
-        return error::txs_confirm;
-
-    return error::success;
+    return out_fk.is_terminal() ? error::txs_txs_put : error::success;
     // ========================================================================
 }
 
@@ -1011,7 +1017,7 @@ bool CLASS::set_dissasociated(const header_link& key) NOEXCEPT
     if (key.is_terminal())
         return false;
 
-    const auto malleable = is_malleable(key);
+    const auto malleable = is_malleable64(key);
 
     // ========================================================================
     const auto scope = store_.get_transactor();
