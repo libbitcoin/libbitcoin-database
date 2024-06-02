@@ -351,7 +351,9 @@ bool CLASS::set_strong(const header_link& link, const tx_links& txs,
 {
     return std::all_of(txs.begin(), txs.end(), [&](const tx_link& fk) NOEXCEPT
     {
-        // Clean allocation failure (e.g. disk full), block not confirmed.
+        // If under checkpoint txs is set later, so under fault will reoccur.
+        // Otherwise confirmed by height is set later so will also reoccur.
+        // Confirmation by height always sequential so can be no inconsistency.
         return store_.strong_tx.put(fk, table::strong_tx::record
         {
             {},
@@ -371,6 +373,7 @@ bool CLASS::set_strong(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Clean allocation failure (e.g. disk full), see set_strong() comments.
     return set_strong(link, txs, true);
     // ========================================================================
 }
@@ -385,6 +388,7 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Clean allocation failure (e.g. disk full), see set_strong() comments.
     return set_strong(link, txs, false);
     // ========================================================================
 }

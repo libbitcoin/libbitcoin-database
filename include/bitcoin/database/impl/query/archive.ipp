@@ -735,7 +735,8 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
             // GUARD (tx redundancy)
             // Only fully effective if there is a single database thread.
             // This reduces point store by ~45GiB, but causes thrashing.
-            if (minimize_) hash_fk = to_point(hash);
+            if (minimize_)
+                hash_fk = to_point(hash);
 
             if (hash_fk.is_terminal())
             {
@@ -974,7 +975,10 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
     links.reserve(txs.size());
     for (const auto& tx: txs)
     {
-        if ((ec = set_code(tx_fk, *tx))) return ec;
+        // Each tx is set under a distinct transactor.
+        if ((ec = set_code(tx_fk, *tx)))
+            return ec;
+
         links.push_back(tx_fk.value);
     }
 
@@ -984,6 +988,10 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
 
     // ========================================================================
     const auto scope = store_.get_transactor();
+
+    // Clean allocation failure (e.g. disk full), see set_strong() comments.
+    if (confirm && !set_strong(key, links, true))
+        return error::txs_confirm;
 
     // Header link is the key for the txs table.
     // Clean single allocation failure (e.g. disk full).
@@ -995,13 +1003,7 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
         links
     });
 
-    if (out_fk.is_terminal())
-        return error::txs_txs_put;
-
-    if (confirm && !set_strong(key, links, true))
-        return error::txs_confirm;
-
-    return error::success;
+    return out_fk.is_terminal() ? error::txs_txs_put : error::success;
     // ========================================================================
 }
 
