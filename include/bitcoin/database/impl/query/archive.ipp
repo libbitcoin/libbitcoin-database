@@ -965,6 +965,9 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
     if (key.is_terminal())
         return error::txs_header;
 
+    if (txs.empty())
+        return error::txs_empty;
+
     ////// GUARD (block (txs) redundancy)
     ////// This is only fully effective if there is a single database thread.
     ////// Guard must be lifted for an existing top malleable association so
