@@ -110,6 +110,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { tx_tx_commit, "tx_tx_commit" },
 
     // tx archive
+    { txs_empty, "txs_empty" },
     { txs_header, "txs_header" },
     { txs_txs_put, "txs_txs_put" },
     { txs_confirm, "txs_confirm" }

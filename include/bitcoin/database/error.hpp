@@ -118,6 +118,7 @@ enum error_t : uint8_t
     tx_tx_commit,
 
     /// txs archive
+    txs_empty,
     txs_header,
     txs_txs_put,
     txs_confirm
