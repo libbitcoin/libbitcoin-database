@@ -284,6 +284,7 @@ inline error::error_t CLASS::unspendable_prevout(const point_link& link,
     return error::success;
 }
 
+
 TEMPLATE
 inline error::error_t CLASS::unspent_duplicates(const tx_link& link,
     const context& ctx) const NOEXCEPT
@@ -291,6 +292,7 @@ inline error::error_t CLASS::unspent_duplicates(const tx_link& link,
     if (!ctx.is_enabled(system::chain::flags::bip30_rule))
         return error::success;
 
+    // This will be empty if current block is not set_strong.
     const auto coinbases = to_strongs(get_tx_key(link));
     if (coinbases.empty())
         return error::integrity;
@@ -319,7 +321,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     if (txs.empty())
         return error::success;
 
-    code ec{};
+    code ec{}; 
     if ((ec = unspent_duplicates(txs.front(), ctx)))
         return ec;
 
