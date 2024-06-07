@@ -702,9 +702,9 @@ BOOST_AUTO_TEST_CASE(query_translate__to_block__set_strong__expected)
     BOOST_REQUIRE(query.to_strongs_(hash3).empty());
 
     // candidate/confirmed unaffected.
-    BOOST_REQUIRE(query.is_candidate_block(query.to_header(test::genesis.hash())));
+    BOOST_REQUIRE(query.is_candidate_header(query.to_header(test::genesis.hash())));
     BOOST_REQUIRE(query.is_confirmed_block(query.to_header(test::genesis.hash())));
-    BOOST_REQUIRE(!query.is_candidate_block(query.to_header(test::block1.hash())));
+    BOOST_REQUIRE(!query.is_candidate_header(query.to_header(test::block1.hash())));
     BOOST_REQUIRE(!query.is_confirmed_block(query.to_header(test::block1.hash())));
 
     // set_unstrong unsets strong_by, and is idempotent.

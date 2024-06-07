@@ -406,7 +406,7 @@ public:
     /// -----------------------------------------------------------------------
 
     /// These compare strong with height index (not for confirmation process).
-    bool is_candidate_block(const header_link& link) const NOEXCEPT;
+    bool is_candidate_header(const header_link& link) const NOEXCEPT;
     bool is_confirmed_block(const header_link& link) const NOEXCEPT;
     bool is_confirmed_tx(const tx_link& link) const NOEXCEPT;
     bool is_confirmed_input(const spend_link& link) const NOEXCEPT;

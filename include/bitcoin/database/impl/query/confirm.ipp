@@ -50,9 +50,9 @@ bool CLASS::is_confirmed_unspent(const output_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_candidate_block(const header_link& link) const NOEXCEPT
+bool CLASS::is_candidate_header(const header_link& link) const NOEXCEPT
 {
-    // The block is candidate (by height).
+    // The header is candidate (by height).
     const auto height = get_height(link);
     if (height.is_terminal())
         return false;
