@@ -130,7 +130,7 @@ bool CLASS::is_spent(const spend_link& link) const NOEXCEPT
 
 // unused
 TEMPLATE
-bool CLASS::is_strong(const spend_link& link) const NOEXCEPT
+bool CLASS::is_strong_spend(const spend_link& link) const NOEXCEPT
 {
     return !to_block(to_spend_tx(link)).is_terminal();
 }
@@ -361,6 +361,12 @@ bool CLASS::set_strong(const header_link& link, const tx_links& txs,
             positive
         });
     });
+}
+
+TEMPLATE
+bool CLASS::is_strong(const header_link& link) const NOEXCEPT
+{
+    return !to_block(to_coinbase(link)).is_terminal();
 }
 
 TEMPLATE
