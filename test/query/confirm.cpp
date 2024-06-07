@@ -65,28 +65,28 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_candidate_block__push_pop_candidate__expe
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }));
     BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }));
-    BOOST_REQUIRE(query.is_candidate_block(0));
-    BOOST_REQUIRE(!query.is_candidate_block(1));
-    BOOST_REQUIRE(!query.is_candidate_block(2));
+    BOOST_REQUIRE(query.is_candidate_header(0));
+    BOOST_REQUIRE(!query.is_candidate_header(1));
+    BOOST_REQUIRE(!query.is_candidate_header(2));
 
     BOOST_REQUIRE(query.push_candidate(1));
-    BOOST_REQUIRE(query.is_candidate_block(1));
+    BOOST_REQUIRE(query.is_candidate_header(1));
 
     BOOST_REQUIRE(query.push_candidate(2));
-    BOOST_REQUIRE(query.is_candidate_block(2));
+    BOOST_REQUIRE(query.is_candidate_header(2));
 
     BOOST_REQUIRE(query.pop_candidate());
-    BOOST_REQUIRE(query.is_candidate_block(0));
-    BOOST_REQUIRE(query.is_candidate_block(1));
-    BOOST_REQUIRE(!query.is_candidate_block(2));
+    BOOST_REQUIRE(query.is_candidate_header(0));
+    BOOST_REQUIRE(query.is_candidate_header(1));
+    BOOST_REQUIRE(!query.is_candidate_header(2));
 
     BOOST_REQUIRE(query.pop_candidate());
-    BOOST_REQUIRE(query.is_candidate_block(0));
-    BOOST_REQUIRE(!query.is_candidate_block(1));
-    BOOST_REQUIRE(!query.is_candidate_block(2));
+    BOOST_REQUIRE(query.is_candidate_header(0));
+    BOOST_REQUIRE(!query.is_candidate_header(1));
+    BOOST_REQUIRE(!query.is_candidate_header(2));
 
     // Terminal returns false.
-    BOOST_REQUIRE(!query.is_candidate_block(database::header_link::terminal));
+    BOOST_REQUIRE(!query.is_candidate_header(database::header_link::terminal));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__is_confirmed_block__push_pop_confirmed__expected)
