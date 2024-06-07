@@ -319,7 +319,7 @@ public:
     /// False implies fault.
     bool get_height(size_t& out, const header_link& link) const NOEXCEPT;
     bool get_value(uint64_t& out, const output_link& link) const NOEXCEPT;
-    bool get_unassociated(association& out, header_link link) const NOEXCEPT;
+    bool get_unassociated(association& out, const header_link& link) const NOEXCEPT;
 
     inputs_ptr get_inputs(const tx_link& link) const NOEXCEPT;
     outputs_ptr get_outputs(const tx_link& link) const NOEXCEPT;
