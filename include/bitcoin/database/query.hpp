@@ -416,7 +416,8 @@ public:
     /// These are not used in confirmation.
     /// These rely on strong (use only for confirmation process).
     bool is_spent(const spend_link& link) const NOEXCEPT;
-    bool is_strong(const spend_link& link) const NOEXCEPT;
+    bool is_strong(const header_link& link) const NOEXCEPT;
+    bool is_strong_spend(const spend_link& link) const NOEXCEPT;
     bool is_mature(const spend_link& link, size_t height) const NOEXCEPT;
     bool is_locked(const spend_link& link, uint32_t sequence,
         const context& ctx) const NOEXCEPT;

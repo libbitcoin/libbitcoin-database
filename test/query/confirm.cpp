@@ -238,6 +238,32 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_spent_output__strong_confirmed__true)
     BOOST_REQUIRE(query.is_spent_output(query.to_output(1, 1)));  // block1a
 }
 
+BOOST_AUTO_TEST_CASE(query_confirm__is_strong_spend__strong__true)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.is_strong_spend(query.to_spend(0, 0)));
+}
+
+BOOST_AUTO_TEST_CASE(query_confirm__is_strong_spend__weak__false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, context{}));
+    BOOST_REQUIRE(!query.is_strong_spend(query.to_spend(1, 0)));
+    BOOST_REQUIRE(query.set_strong(1));
+    BOOST_REQUIRE(query.is_strong_spend(query.to_spend(1, 0)));
+}
+
+// The coinbase tx is strong.
 BOOST_AUTO_TEST_CASE(query_confirm__is_strong__strong__true)
 {
     settings settings{};
@@ -246,7 +272,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_strong__strong__true)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.is_strong(query.to_spend(0, 0)));
+    BOOST_REQUIRE(query.is_strong(0));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__is_strong__weak__false)
@@ -258,9 +284,9 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_strong__weak__false)
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, context{}));
-    BOOST_REQUIRE(!query.is_strong(query.to_spend(1, 0)));
+    BOOST_REQUIRE(!query.is_strong(1));
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.is_strong(query.to_spend(1, 0)));
+    BOOST_REQUIRE(query.is_strong(1));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unspent__false)
