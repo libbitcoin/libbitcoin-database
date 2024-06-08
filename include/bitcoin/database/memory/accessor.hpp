@@ -45,7 +45,7 @@ public:
     inline void assign(uint8_t* begin, uint8_t* end) NOEXCEPT;
 
     /// Return an offset from begin, nullptr if end or past end.
-    inline uint8_t* offset(size_t bytes) NOEXCEPT override;
+    inline uint8_t* offset(size_t bytes) const NOEXCEPT override;
 
     /// The logical buffer size (from begin to end).
     inline ptrdiff_t size() const NOEXCEPT override;
