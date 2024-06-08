@@ -86,6 +86,7 @@ INLINE bool CLASS::is_match(const memory_ptr& ptr) const NOEXCEPT
         return false;
 
     return is_zero(std::memcmp(key_.data(), position, key_.size()));
+    ////return std::equal(key_.begin(), key_.end(), position);
 }
 
 TEMPLATE
@@ -107,8 +108,7 @@ INLINE Link CLASS::get_next(const memory_ptr& ptr) const NOEXCEPT
 TEMPLATE
 constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
 {
-    using namespace system;
-    const auto value = possible_narrow_cast<size_t>(link.value);
+    const auto value = system::possible_narrow_cast<size_t>(link.value);
 
     if constexpr (is_slab)
     {
@@ -119,7 +119,7 @@ constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
     {
         // Record implies link/key independent of Size.
         constexpr auto element_size = Link::size + array_count<Key> + Size;
-        BC_ASSERT(!is_multiply_overflow(value, element_size));
+        BC_ASSERT(!system::is_multiply_overflow(value, element_size));
         return value * element_size;
     }
 }
