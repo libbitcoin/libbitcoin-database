@@ -54,11 +54,12 @@ public:
     size_t get_space() const NOEXCEPT override;
 
 private:
-    system::data_chunk local_;
+    system::data_chunk local_{};
     system::data_chunk& buffer_;
+    const std::filesystem::path path_;
+
     mutable std::shared_mutex field_mutex_;
     mutable std::shared_mutex map_mutex_;
-    const std::filesystem::path path_{ "test" };
 };
 
 } // namespace test

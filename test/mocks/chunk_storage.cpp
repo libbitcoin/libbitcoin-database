@@ -29,18 +29,18 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // This is a trivial working chunk_storage interface implementation.
 chunk_storage::chunk_storage() NOEXCEPT
-  : path_{}, local_{}, buffer_{ local_ }
+  : buffer_{ local_ }, path_{ "test" }
 {
 }
 
 chunk_storage::chunk_storage(system::data_chunk& reference) NOEXCEPT
-  : path_{}, local_{}, buffer_{ reference }
+  : buffer_{ reference }, path_{ "test" }
 {
 }
 
 chunk_storage::chunk_storage(const std::filesystem::path& filename,
     size_t, size_t) NOEXCEPT
-  : path_{ filename }, local_{}, buffer_{ local_ }
+  : buffer_{ local_ }, path_{ filename }
 {
 }
 
