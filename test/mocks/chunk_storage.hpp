@@ -54,12 +54,14 @@ public:
     size_t get_space() const NOEXCEPT override;
 
 private:
+    // These are protected by mutex.
     system::data_chunk local_{};
     system::data_chunk& buffer_;
-    const std::filesystem::path path_;
 
-    mutable std::shared_mutex field_mutex_;
-    mutable std::shared_mutex map_mutex_;
+    // These are thread safe.
+    const std::filesystem::path path_;
+    mutable std::shared_mutex field_mutex_{};
+    mutable std::shared_mutex map_mutex_{};
 };
 
 } // namespace test
