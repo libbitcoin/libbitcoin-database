@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_IPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_IPP
 
+#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -148,8 +149,10 @@ Link CLASS::first(const Key& key) const NOEXCEPT
 TEMPLATE
 typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 {
-    // TODO: due to iterator design, key is copied into iterator.
-    return { manager_.get(), head_.top(key), key };
+    // TODO: key is copied into iterator, ref may be better for big keys.
+    // manager.get() is called for each memory access, avoiding deadlock
+    // risk that would arise if the memory accessor was held.
+    return { manager_, head_.top(key), key };
 }
 
 TEMPLATE

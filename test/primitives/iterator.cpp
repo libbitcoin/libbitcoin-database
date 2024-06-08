@@ -32,12 +32,12 @@ public:
 
     bool is_match_() const NOEXCEPT
     {
-        return base::is_match();
+        return base::is_match(base::get_ptr());
     }
 
     Link get_next_() const NOEXCEPT
     {
-        return base::get_next();
+        return base::get_next(base::get_ptr());
     }
 
 private:
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(iterator__get_next__empty__terminal)
 
     constexpr key key0{};
     test::chunk_storage file;
-    const slab_iterate iterator{ file.get(), link::terminal, key0 };
+    const slab_iterate iterator{ file, link::terminal, key0 };
     BOOST_REQUIRE(iterator.get_next_().is_terminal());
 }
 
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(iterator__get_next__overflow__terminal)
         0x00, 0x00, 0x00, 0x00
     };
     test::chunk_storage file{ data };
-    const slab_iterate iterator{ file.get(), start, key0 };
+    const slab_iterate iterator{ file, start, key0 };
     BOOST_REQUIRE(iterator.get_next_().is_terminal());
 }
 
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(iterator__get__offset0__expected)
         0x00, 0x00, 0x00, 0x00
     };
     test::chunk_storage file{ data };
-    const slab_iterate iterator{ file.get(), start, key0 };
+    const slab_iterate iterator{ file, start, key0 };
     BOOST_REQUIRE_EQUAL(iterator.get_next_(), 0x03020100_u32);
 }
 
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(iterator__get__offset1__expected)
         0x00, 0x01, 0x02, 0x03
     };
     test::chunk_storage file{ data };
-    const slab_iterate iterator{ file.get(), start, key0 };
+    const slab_iterate iterator{ file, start, key0 };
     BOOST_REQUIRE_EQUAL(iterator.get_next_(), 0x03020100_u32);
 }
 
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(iterator__get__offset_to_back__expected)
     constexpr key key0{};
     data_chunk data(42u, 0xff);
     test::chunk_storage file{ data };
-    const slab_iterate iterator{ file.get(), start, key0 };
+    const slab_iterate iterator{ file, start, key0 };
     BOOST_REQUIRE_EQUAL(iterator.get_next_(), 0xffu);
 }
 
@@ -142,12 +142,12 @@ BOOST_AUTO_TEST_CASE(iterator__next__self__expected)
         0xff, 0xcc, 0xcc, 0xee
     };
     test::chunk_storage file{ data };
-    record_iterate iterator1{ file.get(), start, key2 };
+    record_iterate iterator1{ file, start, key2 };
 
     // First link is zero, matched.
     BOOST_REQUIRE_EQUAL(iterator1.self(), 0x00u);
 
-    // Sets self/link to 0x01 (data[3]), matched.
+    // Sets self/link to 0x01 (data[4]), matched.
     BOOST_REQUIRE(iterator1.advance());
     BOOST_REQUIRE(!iterator1.self().is_terminal());
     BOOST_REQUIRE_EQUAL(iterator1.self(), 0x01u);
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(iterator__next__true__non_terminal)
         0xff, 0xcc, 0xcc, 0xee
     };
     test::chunk_storage file{ data };
-    slab_iterate iterator{ file.get(), start, key2 };
+    slab_iterate iterator{ file, start, key2 };
 
     BOOST_REQUIRE(!iterator.self().is_terminal());
     BOOST_REQUIRE(iterator.advance());

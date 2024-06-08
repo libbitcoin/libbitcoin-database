@@ -21,12 +21,12 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/// This class is not thread safe.
 /// Size non-max implies record manager (ordinal record links).
 template <typename Link, typename Key, size_t Size = max_size_t>
 class iterator
@@ -34,8 +34,10 @@ class iterator
 public:
     DEFAULT_COPY_MOVE_DESTRUCT(iterator);
 
+    using manager = database::manager<Link, Key, Size>;
+
     /// This advances to first match (or terminal).
-    INLINE iterator(const memory_ptr& data, const Link& start,
+    INLINE iterator(const manager& memory, const Link& start,
         const Key& key) NOEXCEPT;
 
     /// Advance to and return next iterator.
@@ -45,15 +47,17 @@ public:
     INLINE const Link& self() const NOEXCEPT;
 
 protected:
-    INLINE bool is_match() const NOEXCEPT;
-    INLINE Link get_next() const NOEXCEPT;
+    INLINE memory_ptr get_ptr() const NOEXCEPT;
+    INLINE bool advance(const memory_ptr& ptr) NOEXCEPT;
+    INLINE bool is_match(const memory_ptr& ptr) const NOEXCEPT;
+    INLINE Link get_next(const memory_ptr& ptr) const NOEXCEPT;
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);
     static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
 
     // These are thread safe.
-    const memory_ptr memory_;
+    const manager& manager_;
     const Key key_;
 
     // This is not thread safe.
