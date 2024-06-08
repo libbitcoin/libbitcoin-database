@@ -108,13 +108,12 @@ bool chunk_storage::truncate(size_t size) NOEXCEPT
 
 size_t chunk_storage::allocate(size_t chunk) NOEXCEPT
 {
+    std::unique_lock field_lock(field_mutex_);
     if (system::is_add_overflow<size_t>(buffer_.size(), chunk))
         return chunk_storage::eof;
-
     if (buffer_.size() + chunk > buffer_.max_size())
         return chunk_storage::eof;
 
-    std::unique_lock field_lock(field_mutex_);
     std::unique_lock map_lock(map_mutex_);
     const auto link = buffer_.size();
     buffer_.resize(buffer_.size() + chunk);
