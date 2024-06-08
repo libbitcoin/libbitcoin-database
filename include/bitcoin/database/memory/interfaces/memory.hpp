@@ -36,7 +36,7 @@ public:
     typedef std::shared_ptr<memory> ptr;
 
     /// Return an offset from begin, nullptr if end or past end.
-    virtual uint8_t* offset(size_t value) NOEXCEPT = 0;
+    virtual uint8_t* offset(size_t value) const NOEXCEPT = 0;
 
     /// The logical buffer size (from begin to end).
     virtual ptrdiff_t size() const NOEXCEPT = 0;

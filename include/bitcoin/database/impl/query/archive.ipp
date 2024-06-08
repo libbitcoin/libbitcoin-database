@@ -354,7 +354,7 @@ bool CLASS::get_value(uint64_t& out, const output_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::get_unassociated(association& out, header_link link) const NOEXCEPT
+bool CLASS::get_unassociated(association& out, const header_link& link) const NOEXCEPT
 {
     if (is_associated(link))
         return false;

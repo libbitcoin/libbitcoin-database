@@ -29,18 +29,18 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // This is a trivial working chunk_storage interface implementation.
 chunk_storage::chunk_storage() NOEXCEPT
-  : path_{}, local_{}, buffer_{ local_ }
+  : buffer_{ local_ }, path_{ "test" }
 {
 }
 
 chunk_storage::chunk_storage(system::data_chunk& reference) NOEXCEPT
-  : path_{}, local_{}, buffer_{ reference }
+  : buffer_{ reference }, path_{ "test" }
 {
 }
 
 chunk_storage::chunk_storage(const std::filesystem::path& filename,
     size_t, size_t) NOEXCEPT
-  : path_{ filename }, local_{}, buffer_{ local_ }
+  : buffer_{ local_ }, path_{ filename }
 {
 }
 
@@ -108,13 +108,12 @@ bool chunk_storage::truncate(size_t size) NOEXCEPT
 
 size_t chunk_storage::allocate(size_t chunk) NOEXCEPT
 {
+    std::unique_lock field_lock(field_mutex_);
     if (system::is_add_overflow<size_t>(buffer_.size(), chunk))
         return chunk_storage::eof;
-
     if (buffer_.size() + chunk > buffer_.max_size())
         return chunk_storage::eof;
 
-    std::unique_lock field_lock(field_mutex_);
     std::unique_lock map_lock(map_mutex_);
     const auto link = buffer_.size();
     buffer_.resize(buffer_.size() + chunk);
