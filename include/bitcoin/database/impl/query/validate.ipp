@@ -112,8 +112,7 @@ bool CLASS::get_version(uint32_t& version,
 }
 
 TEMPLATE
-bool CLASS::get_bits(uint32_t& bits,
-    const header_link& link) const NOEXCEPT
+bool CLASS::get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT
 {
     table::header::get_bits header{};
     if (!store_.header.get(link, header))
@@ -124,8 +123,7 @@ bool CLASS::get_bits(uint32_t& bits,
 }
 
 TEMPLATE
-bool CLASS::get_context(context& ctx,
-    const header_link& link) const NOEXCEPT
+bool CLASS::get_context(context& ctx, const header_link& link) const NOEXCEPT
 {
     table::header::record_context header{};
     if (!store_.header.get(link, header))
@@ -142,6 +140,17 @@ bool CLASS::get_work(uint256_t& work, const header_link& link) const NOEXCEPT
     const auto result = get_bits(bits, link);
     work = header::proof(bits);
     return result;
+}
+
+TEMPLATE
+bool CLASS::get_bypass(bool& bypass, const header_link& link) const NOEXCEPT
+{
+    table::header::get_bypass header{};
+    if (!store_.header.get(link, header))
+        return false;
+
+    bypass = header.bypass;
+    return true;
 }
 
 ////TEMPLATE

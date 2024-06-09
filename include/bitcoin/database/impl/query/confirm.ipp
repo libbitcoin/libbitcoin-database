@@ -410,7 +410,7 @@ bool CLASS::initialize(const block& genesis) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    if (!set(genesis, context{}))
+    if (!set(genesis, context{}, true))
         return false;
 
     const auto link = to_header(genesis.hash());
@@ -425,6 +425,9 @@ bool CLASS::initialize(const block& genesis) NOEXCEPT
 TEMPLATE
 bool CLASS::push_candidate(const header_link& link) NOEXCEPT
 {
+    if (link.is_terminal())
+        return false;
+
     // ========================================================================
     const auto scope = store_.get_transactor();
 
@@ -437,6 +440,9 @@ bool CLASS::push_candidate(const header_link& link) NOEXCEPT
 TEMPLATE
 bool CLASS::push_confirmed(const header_link& link) NOEXCEPT
 {
+    if (link.is_terminal())
+        return false;
+
     // ========================================================================
     const auto scope = store_.get_transactor();
 

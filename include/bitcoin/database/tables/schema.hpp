@@ -139,6 +139,7 @@ namespace schema
             schema::flags +
             schema::block +
             sizeof(uint32_t) +
+            bit +
             pk +
             sizeof(uint32_t) +
             sizeof(uint32_t) +
@@ -148,8 +149,8 @@ namespace schema
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 62u);
-        static_assert(minrow == 97u);
+        static_assert(minsize == 63u);
+        static_assert(minrow == 98u);
     };
 
     // blob

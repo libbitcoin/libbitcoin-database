@@ -284,10 +284,10 @@ public:
     inline bool is_malleable64(const header_link& link) const NOEXCEPT;
     inline bool is_associated(const header_link& link) const NOEXCEPT;
 
-    bool set(const header& header, const chain_context& ctx) NOEXCEPT;
-    bool set(const header& header, const context& ctx) NOEXCEPT;
-    bool set(const block& block, const chain_context& ctx) NOEXCEPT;
-    bool set(const block& block, const context& ctx) NOEXCEPT;
+    bool set(const header& header, const chain_context& ctx, bool bypass) NOEXCEPT;
+    bool set(const header& header, const context& ctx, bool bypass) NOEXCEPT;
+    bool set(const block& block, const chain_context& ctx, bool bypass) NOEXCEPT;
+    bool set(const block& block, const context& ctx, bool bypass) NOEXCEPT;
     bool set(const block& block) NOEXCEPT;
     bool set(const hash_digest& point_hash) NOEXCEPT;
     bool set(const transaction& tx) NOEXCEPT;
@@ -343,21 +343,28 @@ public:
     input::cptr get_input(const tx_link& link, uint32_t input_index) const NOEXCEPT;
     inputs_ptr get_spenders(const tx_link& link, uint32_t output_index) const NOEXCEPT;
 
-    // TODO: all except point expose idempotency guard option.
-    header_link set_link(const header& header, const chain_context& ctx) NOEXCEPT;
-    header_link set_link(const header& header, const context& ctx) NOEXCEPT;
-    header_link set_link(const block& block, const chain_context& ctx) NOEXCEPT;
-    header_link set_link(const block& block, const context& ctx) NOEXCEPT;
-    header_link set_link(const block& block) NOEXCEPT;
-
+    /// Set transaction.
     tx_link set_link(const transaction& tx) NOEXCEPT;
-    txs_link set_link(const transactions& txs, const header_link& key,
-        size_t size) NOEXCEPT;
-
     code set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT;
-    code set_code(const transactions& txs, const header_link& key, size_t size,
-        bool confirm) NOEXCEPT;
 
+    /// Set header.
+    header_link set_link(const header& header, const context& ctx, bool bypass) NOEXCEPT;
+    header_link set_link(const header& header, const chain_context& ctx, bool bypass) NOEXCEPT;
+    ////code set_code(header_link& out_fk, const block& block, const chain_context& ctx,
+    ////    bool bypass) NOEXCEPT;
+
+    /// Set full block (header and all transactions).
+    header_link set_link(const block& block, const context& ctx, bool bypass) NOEXCEPT;
+    header_link set_link(const block& block, const chain_context& ctx, bool bypass) NOEXCEPT;
+    ////code set_code(header_link& out_fk, const header& header, const chain_context& ctx,
+    ////    bool bypass) NOEXCEPT;
+
+    /// Set txs of a block (with header/context already archived).
+    header_link set_link(const block& block) NOEXCEPT;
+    txs_link set_link(const transactions& txs, const header_link& key, size_t size) NOEXCEPT;
+    code set_code(const transactions& txs, const header_link& key, size_t size, bool confirm) NOEXCEPT;
+
+    /// Disassociate txs of block from its header (unset).
     bool set_dissasociated(const header_link& key) NOEXCEPT;
 
     /// Chain state.
@@ -390,6 +397,7 @@ public:
     bool get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT;
     bool get_work(uint256_t& work, const header_link& link) const NOEXCEPT;
     bool get_context(context& ctx, const header_link& link) const NOEXCEPT;
+    bool get_bypass(bool& bypass, const header_link& link) const NOEXCEPT;
 
     bool set_block_confirmable(const header_link& link, uint64_t fees) NOEXCEPT;
     bool set_block_valid(const header_link& link) NOEXCEPT;

@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(query_optional__set_filter__get_filter_and_head__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{}));
+    BOOST_REQUIRE(query.set(test::block1a, context{}, false));
     BOOST_REQUIRE(query.set_filter(0, filter_head0, filter0));
     BOOST_REQUIRE(query.set_filter(1, filter_head1, filter1));
 

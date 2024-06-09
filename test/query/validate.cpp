@@ -88,6 +88,41 @@ BOOST_AUTO_TEST_CASE(query_validate__get_bits__genesis__expected)
     BOOST_REQUIRE_EQUAL(bits, 0x1d00ffff_u32);
 }
 
+BOOST_AUTO_TEST_CASE(query_validate__get_bypass__genesis__true)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    bool bypass{};
+    BOOST_REQUIRE(!query.get_bypass(bypass, 1));
+    BOOST_REQUIRE(query.get_bypass(bypass, 0));
+    BOOST_REQUIRE(bypass);
+}
+
+BOOST_AUTO_TEST_CASE(query_validate__get_bypass__set__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, context{}, false));
+    BOOST_REQUIRE(query.set(test::block2, context{}, true));
+
+    bool bypass{};
+    BOOST_REQUIRE(query.get_bypass(bypass, 0));
+    BOOST_REQUIRE(bypass);
+    BOOST_REQUIRE(query.get_bypass(bypass, 1));
+    BOOST_REQUIRE(!bypass);
+    BOOST_REQUIRE(query.get_bypass(bypass, 2));
+    BOOST_REQUIRE(bypass);
+}
+
 BOOST_AUTO_TEST_CASE(query_validate__get_context__genesis__default)
 {
     settings settings{};
@@ -127,7 +162,7 @@ BOOST_AUTO_TEST_CASE(query_validate__get_context__block1__expected)
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     const context expected{ 12, 34, 56 };
-    BOOST_REQUIRE(query.set(test::block1, expected));
+    BOOST_REQUIRE(query.set(test::block1, expected, false));
 
     context ctx{};
     BOOST_REQUIRE(query.get_context(ctx, 1));
@@ -158,7 +193,7 @@ BOOST_AUTO_TEST_CASE(query_validate__get_block_state__unassociated_link__unassoc
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1.header(), context{}));
+    BOOST_REQUIRE(query.set(test::block1.header(), context{}, false));
     BOOST_REQUIRE(query.set(*test::block1.transactions_ptr()->front()));
 
     uint64_t fees{};
@@ -176,7 +211,7 @@ BOOST_AUTO_TEST_CASE(query_validate__get_block_state__unvalidated_link__unvalida
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}));
+    BOOST_REQUIRE(query.set(test::block1, context{}, false));
 
     uint64_t fees{};
     BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::unvalidated);
@@ -193,7 +228,7 @@ BOOST_AUTO_TEST_CASE(query_validate__get_block_state__confirmable__block_confirm
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}));
+    BOOST_REQUIRE(query.set(test::block1, context{}, false));
 
     uint64_t fees{};
     BOOST_REQUIRE_EQUAL(query.get_header_state(0), error::unvalidated);
@@ -216,7 +251,7 @@ BOOST_AUTO_TEST_CASE(query_validate__get_block_state__valid__block_valid)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}));
+    BOOST_REQUIRE(query.set(test::block1, context{}, false));
 
     uint64_t fees{};
     BOOST_REQUIRE(query.set_block_valid(1));
@@ -234,7 +269,7 @@ BOOST_AUTO_TEST_CASE(query_validate__get_block_state__unconfirmable__block_uncon
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}));
+    BOOST_REQUIRE(query.set(test::block1, context{}, false));
 
     uint64_t fees{};
     BOOST_REQUIRE(query.set_block_unconfirmable(1));
@@ -268,7 +303,7 @@ BOOST_AUTO_TEST_CASE(query_validate__get_tx_state__unvalidated__unvalidated)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}));
+    BOOST_REQUIRE(query.set(test::block1, context{}, false));
 
     uint64_t fee{};
     size_t sigops{};
@@ -286,9 +321,9 @@ BOOST_AUTO_TEST_CASE(query_validate__get_tx_state__connected_out_of_context__unv
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}));
-    BOOST_REQUIRE(query.set(test::block2, context{}));
-    BOOST_REQUIRE(query.set(test::block3, context{}));
+    BOOST_REQUIRE(query.set(test::block1, context{}, false));
+    BOOST_REQUIRE(query.set(test::block2, context{}, false));
+    BOOST_REQUIRE(query.set(test::block3, context{}, false));
 
     uint64_t fee{};
     size_t sigops{};
@@ -314,9 +349,9 @@ BOOST_AUTO_TEST_CASE(query_validate__get_tx_state__connected_in_context__tx_conn
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}));
-    BOOST_REQUIRE(query.set(test::block2, context{}));
-    BOOST_REQUIRE(query.set(test::block3, context{}));
+    BOOST_REQUIRE(query.set(test::block1, context{}, false));
+    BOOST_REQUIRE(query.set(test::block2, context{}, false));
+    BOOST_REQUIRE(query.set(test::block3, context{}, false));
 
     uint64_t fee{};
     size_t sigops{};
@@ -343,9 +378,9 @@ BOOST_AUTO_TEST_CASE(query_validate__get_tx_state__connected_in_context__tx_prec
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}));
-    BOOST_REQUIRE(query.set(test::block2, context{}));
-    BOOST_REQUIRE(query.set(test::block3, context{}));
+    BOOST_REQUIRE(query.set(test::block1, context{}, false));
+    BOOST_REQUIRE(query.set(test::block2, context{}, false));
+    BOOST_REQUIRE(query.set(test::block3, context{}, false));
 
     uint64_t fee{};
     size_t sigops{};
@@ -365,9 +400,9 @@ BOOST_AUTO_TEST_CASE(query_validate__get_tx_state__connected_in_context__tx_disc
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}));
-    BOOST_REQUIRE(query.set(test::block2, context{}));
-    BOOST_REQUIRE(query.set(test::block3, context{}));
+    BOOST_REQUIRE(query.set(test::block1, context{}, false));
+    BOOST_REQUIRE(query.set(test::block2, context{}, false));
+    BOOST_REQUIRE(query.set(test::block3, context{}, false));
 
     uint64_t fee{};
     size_t sigops{};
