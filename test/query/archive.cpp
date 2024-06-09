@@ -49,7 +49,6 @@ const auto events_handler = [](auto, auto) {};
 // archive (natural-keyed)
 
 // slow test (mmap)
-#if !defined(UNDEFINED)
 BOOST_AUTO_TEST_CASE(query_archive__set_header__mmap_get_header__expected)
 {
     constexpr auto bypass = false;
@@ -94,7 +93,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_header__mmap_get_header__expected)
     BOOST_REQUIRE_EQUAL(element1.bits, header.bits());
     BOOST_REQUIRE_EQUAL(element1.nonce, header.nonce());
 }
-#endif
 
 BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
 {
