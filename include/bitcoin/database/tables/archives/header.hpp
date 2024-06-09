@@ -43,6 +43,7 @@ struct header
         inline bool from_data(reader& source) NOEXCEPT
         {
             context::from_data(source, ctx);
+            bypass      = to_bool(source.read_byte());
             parent_fk   = source.read_little_endian<link::integer, link::size>();
             version     = source.read_little_endian<uint32_t>();
             timestamp   = source.read_little_endian<uint32_t>();
@@ -56,6 +57,7 @@ struct header
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             context::to_data(sink, ctx);
+            sink.write_byte(to_int<uint8_t>(bypass));
             sink.write_little_endian<link::integer, link::size>(parent_fk);
             sink.write_little_endian<uint32_t>(version);
             sink.write_little_endian<uint32_t>(timestamp);
@@ -69,6 +71,7 @@ struct header
         inline bool operator==(const record& other) const NOEXCEPT
         {
             return ctx         == other.ctx
+                && bypass      == other.bypass
                 && parent_fk   == other.parent_fk
                 && version     == other.version
                 && timestamp   == other.timestamp
@@ -78,6 +81,7 @@ struct header
         }
 
         context ctx{};
+        bool bypass{};
         link::integer parent_fk{};
         uint32_t version{};
         uint32_t timestamp{};
@@ -94,6 +98,7 @@ struct header
         {
             BC_ASSERT(header);
             context::to_data(sink, ctx);
+            sink.write_byte(to_int<uint8_t>(bypass));
             sink.write_little_endian<link::integer, link::size>(parent_fk);
             sink.write_little_endian<uint32_t>(header->version());
             sink.write_little_endian<uint32_t>(header->timestamp());
@@ -105,6 +110,7 @@ struct header
         }
 
         const context ctx{};
+        const bool bypass{};
         const link::integer parent_fk{};
         system::chain::header::cptr header{};
     };
@@ -117,6 +123,7 @@ struct header
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             context::to_data(sink, ctx);
+            sink.write_byte(to_int<uint8_t>(bypass));
             sink.write_little_endian<link::integer, link::size>(parent_fk);
             sink.write_little_endian<uint32_t>(header.version());
             sink.write_little_endian<uint32_t>(header.timestamp());
@@ -128,6 +135,7 @@ struct header
         }
 
         const context& ctx{};
+        const bool bypass{};
         const link::integer parent_fk{};
         const system::chain::header& header;
     };
@@ -168,7 +176,7 @@ struct header
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(context::size + link::size);
+            source.skip_bytes(context::size + schema::bit + link::size);
             version = source.read_little_endian<uint32_t>();
             return source;
         }
@@ -181,7 +189,8 @@ struct header
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(context::size + link::size + sizeof(uint32_t));
+            source.skip_bytes(context::size + schema::bit + link::size +
+                sizeof(uint32_t));
             timestamp = source.read_little_endian<uint32_t>();
             return source;
         }
@@ -194,8 +203,8 @@ struct header
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(context::size + link::size + sizeof(uint32_t) +
-                sizeof(uint32_t));
+            source.skip_bytes(context::size + schema::bit + link::size +
+                sizeof(uint32_t) + sizeof(uint32_t));
             bits = source.read_little_endian<uint32_t>();
             return source;
         }
@@ -208,7 +217,7 @@ struct header
     {        
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(context::size);
+            source.skip_bytes(context::size + schema::bit);
             parent_fk = source.read_little_endian<link::integer, link::size>();
             return source;
         }
@@ -256,6 +265,19 @@ struct header
         uint32_t mtp{};
     };
 
+    struct get_bypass
+      : public schema::header
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(context::size);
+            bypass = to_bool(source.read_byte());
+            return source;
+        }
+
+        bool bypass{};
+    };
+
     struct get_check_context
       : public schema::header
     {
@@ -264,7 +286,7 @@ struct header
             source.rewind_bytes(sk);
             key = source.read_hash();
             context::from_data(source, ctx);
-            source.skip_bytes(link::size + sizeof(uint32_t));
+            source.skip_bytes(schema::bit + link::size + sizeof(uint32_t));
             timestamp = source.read_little_endian<uint32_t>();
             return source;
         }

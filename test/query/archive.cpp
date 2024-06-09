@@ -49,9 +49,10 @@ const auto events_handler = [](auto, auto) {};
 // archive (natural-keyed)
 
 // slow test (mmap)
-#if defined(UNDEFINED)
+#if !defined(UNDEFINED)
 BOOST_AUTO_TEST_CASE(query_archive__set_header__mmap_get_header__expected)
 {
+    constexpr auto bypass = false;
     constexpr auto parent = system::null_hash;
     constexpr auto merkle_root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
     constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
@@ -71,8 +72,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_header__mmap_get_header__expected)
     store<map> store{ settings };
     query<database::store<map>> query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
-
-    BOOST_REQUIRE(query.set(header, test::context));
+    BOOST_REQUIRE(query.set(header, test::context, bypass));
 
     table::header::record element1{};
     BOOST_REQUIRE(store.header.get(query.to_header(block_hash), element1));
@@ -86,6 +86,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_header__mmap_get_header__expected)
     BOOST_REQUIRE_EQUAL(element1.ctx.height, system::mask_left(test::context.height, byte_bits));
     BOOST_REQUIRE_EQUAL(element1.ctx.flags, test::context.flags);
     BOOST_REQUIRE_EQUAL(element1.ctx.mtp, test::context.mtp);
+    BOOST_REQUIRE_EQUAL(element1.bypass, bypass);
     BOOST_REQUIRE_EQUAL(element1.version, header.version());
     BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
     BOOST_REQUIRE_EQUAL(element1.merkle_root, header.merkle_root());
@@ -97,6 +98,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_header__mmap_get_header__expected)
 
 BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
 {
+    constexpr auto bypass = true;
     constexpr auto merkle_root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
     constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
     const system::chain::header header
@@ -129,6 +131,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
         "04030201" // flags
         "141312"   // height
         "24232221" // mtp
+        "01"       // bypass
         "ffffff"   // previous_block_hash (header_fk - not found)
         "34333231" // version
         "44434241" // timestamp
@@ -143,10 +146,11 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
 
+
     // store open/close flushes record count to head.
     BOOST_REQUIRE(!query.is_header(header.hash()));
     BOOST_REQUIRE(!query.is_associated(0));
-    BOOST_REQUIRE(!query.set_link(header, test::context).is_terminal());
+    BOOST_REQUIRE(!query.set_link(header, test::context, bypass).is_terminal());
     BOOST_REQUIRE(query.is_header(header.hash()));
     BOOST_REQUIRE(!query.is_associated(0));
     table::header::record element1{};
@@ -158,6 +162,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
     BOOST_REQUIRE_EQUAL(element1.ctx.height, system::mask_left(test::context.height, byte_bits));
     BOOST_REQUIRE_EQUAL(element1.ctx.flags, test::context.flags);
     BOOST_REQUIRE_EQUAL(element1.ctx.mtp, test::context.mtp);
+    BOOST_REQUIRE_EQUAL(element1.bypass, bypass);
     BOOST_REQUIRE_EQUAL(element1.version, header.version());
     BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
     BOOST_REQUIRE_EQUAL(element1.merkle_root, header.merkle_root());
@@ -456,6 +461,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__get_tx__expected)
 
 BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
 {
+    constexpr auto bypass = true;
     const auto genesis_header_head = system::base16_chunk(
         "010000"       // record count
         "ffffff"       // bucket[0]...
@@ -469,6 +475,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
         "04030201"     // flags
         "141312"       // height
         "24232221"     // mtp
+        "01"           // bypass
         "ffffff"       // previous_block_hash (header_fk - not found)
         "01000000"     // version
         "29ab5f49"     // timestamp
@@ -562,16 +569,17 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
 
+
     // Set block (header/txs).
     BOOST_REQUIRE(!query.is_block(test::genesis.hash()));
-    BOOST_REQUIRE(query.set(test::genesis, test::context));
+    BOOST_REQUIRE(query.set(test::genesis, test::context, bypass));
     BOOST_REQUIRE(query.is_block(test::genesis.hash()));
 
     // Verify idempotentcy (these do not change store state).
-    ////BOOST_REQUIRE(query.set(test::genesis.header(), test::context));
-    ////BOOST_REQUIRE(query.set(test::genesis.header(), test::context));
-    ////BOOST_REQUIRE(query.set(test::genesis, test::context));
-    ////BOOST_REQUIRE(query.set(test::genesis, test::context));
+    ////BOOST_REQUIRE(query.set(test::genesis.header(), test::context, bypass));
+    ////BOOST_REQUIRE(query.set(test::genesis.header(), test::context, bypass));
+    ////BOOST_REQUIRE(query.set(test::genesis, test::context, bypass));
+    ////BOOST_REQUIRE(query.set(test::genesis, test::context, bypass));
 
     table::header::record element1{};
     BOOST_REQUIRE(store.header.get(query.to_header(test::genesis.hash()), element1));
@@ -605,6 +613,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
 
 BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
 {
+    constexpr auto bypass = true;
     const auto genesis_header_head = system::base16_chunk(
         "010000"       // record count
         "ffffff"       // bucket[0]...
@@ -618,6 +627,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
         "04030201"     // flags
         "141312"       // height
         "24232221"     // mtp
+        "01"           // bypass
         "ffffff"       // previous_block_hash (header_fk - not found)
         "01000000"     // version
         "29ab5f49"     // timestamp
@@ -713,17 +723,17 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
 
     // Set header and then txs.
     BOOST_REQUIRE(!query.is_block(test::genesis.hash()));
-    BOOST_REQUIRE(query.set(test::genesis.header(), test::context));
+    BOOST_REQUIRE(query.set(test::genesis.header(), test::context, bypass));
     BOOST_REQUIRE(!query.is_associated(0));
     BOOST_REQUIRE(query.set(test::genesis));
     BOOST_REQUIRE(query.is_block(test::genesis.hash()));
     BOOST_REQUIRE(query.is_associated(0));
 
     // Verify idempotentcy (these do not change store state).
-    ////BOOST_REQUIRE(query.set(test::genesis.header(), test::context));
-    ////BOOST_REQUIRE(query.set(test::genesis.header(), test::context));
-    ////BOOST_REQUIRE(query.set(test::genesis, test::context));
-    ////BOOST_REQUIRE(query.set(test::genesis, test::context));
+    ////BOOST_REQUIRE(query.set(test::genesis.header(), test::context, bypass));
+    ////BOOST_REQUIRE(query.set(test::genesis.header(), test::context, bypass));
+    ////BOOST_REQUIRE(query.set(test::genesis, test::context, bypass));
+    ////BOOST_REQUIRE(query.set(test::genesis, test::context, bypass));
 
     table::header::record element1{};
     BOOST_REQUIRE(store.header.get(query.to_header(test::genesis.hash()), element1));
@@ -774,7 +784,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
 ////    BOOST_REQUIRE_EQUAL(store.create(events_handler));
 ////
 ////    // Assemble block.
-////    BOOST_REQUIRE(query.set(test::genesis.header(), test::context));
+////    BOOST_REQUIRE(query.set(test::genesis.header(), test::context, false));
 ////    BOOST_REQUIRE(query.set(*test::genesis.transactions_ptr()->front()));
 ////    BOOST_REQUIRE(query.set(query.to_header(test::genesis.hash()), tx_links{ 0 }));
 ////
@@ -796,7 +806,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
 ////    BOOST_REQUIRE_EQUAL(store.create(events_handler));
 ////
 ////    // Assemble block.
-////    BOOST_REQUIRE(query.set(test::genesis.header(), test::context));
+////    BOOST_REQUIRE(query.set(test::genesis.header(), test::context, false));
 ////    BOOST_REQUIRE(query.set(*test::genesis.transactions_ptr()->front()));
 ////    const auto tx_hashes = hashes{ test::genesis.transactions_ptr()->front()->hash(false) };
 ////    BOOST_REQUIRE(query.set(query.to_header(test::genesis.hash()), tx_hashes));
@@ -814,9 +824,9 @@ BOOST_AUTO_TEST_CASE(query_archive__populate__null_prevouts__true)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, test::context));
-    BOOST_REQUIRE(query.set(test::block2, test::context));
-    BOOST_REQUIRE(query.set(test::block3, test::context));
+    BOOST_REQUIRE(query.set(test::block1, test::context, false));
+    BOOST_REQUIRE(query.set(test::block2, test::context, false));
+    BOOST_REQUIRE(query.set(test::block3, test::context, false));
 
     system::chain::block copy{ test::genesis };
     BOOST_REQUIRE(query.populate(copy));
@@ -847,8 +857,8 @@ BOOST_AUTO_TEST_CASE(query_archive__populate__partial_prevouts__false)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(!query.set_link(test::block1a, test::context).is_terminal());
-    BOOST_REQUIRE(!query.set_link(test::block2a, test::context).is_terminal());
+    BOOST_REQUIRE(!query.set_link(test::block1a, test::context, false).is_terminal());
+    BOOST_REQUIRE(!query.set_link(test::block2a, test::context, false).is_terminal());
     BOOST_REQUIRE(query.set(test::tx4));
 
     system::chain::block copy1{ test::block1a };
@@ -879,9 +889,9 @@ BOOST_AUTO_TEST_CASE(query_archive__is_coinbase__coinbase__true)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}));
-    BOOST_REQUIRE(query.set(test::block2, context{}));
-    BOOST_REQUIRE(query.set(test::block3, context{}));
+    BOOST_REQUIRE(query.set(test::block1, context{}, false));
+    BOOST_REQUIRE(query.set(test::block2, context{}, false));
+    BOOST_REQUIRE(query.set(test::block3, context{}, false));
     BOOST_REQUIRE(query.is_coinbase(0));
     BOOST_REQUIRE(query.is_coinbase(1));
     BOOST_REQUIRE(query.is_coinbase(2));
@@ -896,8 +906,8 @@ BOOST_AUTO_TEST_CASE(query_archive__is_coinbase__non_coinbase__false)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{}));
-    BOOST_REQUIRE(query.set(test::block2a, context{}));
+    BOOST_REQUIRE(query.set(test::block1a, context{}, false));
+    BOOST_REQUIRE(query.set(test::block2a, context{}, false));
     BOOST_REQUIRE(!query.is_coinbase(1));
     BOOST_REQUIRE(!query.is_coinbase(2));
     BOOST_REQUIRE(!query.is_coinbase(3));
@@ -914,8 +924,8 @@ BOOST_AUTO_TEST_CASE(query_archive__is_malleable64__non_malleable__false)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{}));
-    BOOST_REQUIRE(query.set(test::block2a, context{}));
+    BOOST_REQUIRE(query.set(test::block1a, context{}, false));
+    BOOST_REQUIRE(query.set(test::block2a, context{}, false));
 
     BOOST_REQUIRE(!query.is_malleable64(1));
     BOOST_REQUIRE(!query.is_malleable64(2));
@@ -952,9 +962,9 @@ BOOST_AUTO_TEST_CASE(query_archive__is_malleable64__malleable__true)
 
     // Store 4 blocks.
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE_EQUAL(query.set_link(block1, database::context{}), 1u);
-    BOOST_REQUIRE_EQUAL(query.set_link(block2, database::context{}), 2u);
-    BOOST_REQUIRE_EQUAL(query.set_link(block3, database::context{}), 3u);
+    BOOST_REQUIRE_EQUAL(query.set_link(block1, database::context{}, false), 1u);
+    BOOST_REQUIRE_EQUAL(query.set_link(block2, database::context{}, false), 2u);
+    BOOST_REQUIRE_EQUAL(query.set_link(block3, database::context{}, false), 3u);
 
     // All are associated.
     BOOST_REQUIRE(query.is_associated(0));
@@ -1121,6 +1131,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_header__default__expected)
         "14131211" // flags
         "040302"   // height
         "24232221" // mtp
+        "01"       // bypass
         "ffffff"   // previous_block_hash (header_fk - terminal)
         "34333231" // version
         "44434241" // timestamp
@@ -1185,7 +1196,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_point_key__always__expected)
     BOOST_REQUIRE_EQUAL(query.get_point_key(1), system::null_hash);
 
     // block1a adds three prevouts of two txs.
-    BOOST_REQUIRE(query.set(test::block1a, context{}));
+    BOOST_REQUIRE(query.set(test::block1a, context{}, false));
     BOOST_REQUIRE_EQUAL(query.get_point_key(1), system::one_hash);
     BOOST_REQUIRE_EQUAL(query.get_point_key(2), test::two_hash);
     BOOST_REQUIRE_EQUAL(query.get_point_key(3), system::null_hash);
@@ -1216,11 +1227,11 @@ BOOST_AUTO_TEST_CASE(query_archive__get_height__always__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }));
-    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }));
-    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }, false));
 
     size_t out{};
     BOOST_REQUIRE(query.get_height(out, 0));
@@ -1260,9 +1271,9 @@ BOOST_AUTO_TEST_CASE(query_archive__get_tx_position__confirmed__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }));
-    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }));
-    BOOST_REQUIRE(query.set(test::block3a, context{ 0, 3, 0 }));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block3a, context{ 0, 3, 0 }, false));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.set_strong(2));
     BOOST_REQUIRE(query.set_strong(3));
@@ -1301,9 +1312,9 @@ BOOST_AUTO_TEST_CASE(query_archive__get_tx_position__always__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }));
-    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }));
-    BOOST_REQUIRE(query.set(test::block3a, context{ 0, 3, 0 }));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block3a, context{ 0, 3, 0 }, false));
     BOOST_REQUIRE(query.set(test::tx4));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.set_strong(2));
@@ -1359,7 +1370,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_input__genesis__expected)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
-    BOOST_REQUIRE(query.set(test::genesis, test::context));
+    BOOST_REQUIRE(query.set(test::genesis, test::context, false));
 
     const auto tx = test::genesis.transactions_ptr()->front();
     const auto& input = *tx->inputs_ptr()->front();
@@ -1414,7 +1425,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_output__genesis__expected)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
-    BOOST_REQUIRE(query.set(test::genesis, test::context));
+    BOOST_REQUIRE(query.set(test::genesis, test::context, false));
 
     const auto tx = test::genesis.transactions_ptr()->front();
     const auto& output1 = *tx->outputs_ptr()->front();
@@ -1466,8 +1477,8 @@ BOOST_AUTO_TEST_CASE(query_archive__get_transactions__found__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, test::context));
-    BOOST_REQUIRE(query.set(test::block2a, test::context));
+    BOOST_REQUIRE(query.set(test::block1a, test::context, false));
+    BOOST_REQUIRE(query.set(test::block2a, test::context, false));
     BOOST_REQUIRE(query.set(test::tx4));
     BOOST_REQUIRE_EQUAL(query.get_transactions(0)->size(), 1u);
     BOOST_REQUIRE_EQUAL(query.get_transactions(1)->size(), 1u);
@@ -1482,8 +1493,8 @@ BOOST_AUTO_TEST_CASE(query_archive__get_point__null_point__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, test::context));
-    BOOST_REQUIRE(query.set(test::block2a, test::context));
+    BOOST_REQUIRE(query.set(test::block1a, test::context, false));
+    BOOST_REQUIRE(query.set(test::block2a, test::context, false));
     BOOST_REQUIRE(!query.get_point(spend_link::terminal));
     BOOST_REQUIRE(query.get_point(query.to_spend(0, 0))->is_null());
     BOOST_REQUIRE(*query.get_point(query.to_spend(1, 0)) == test::block1a.inputs_ptr()->at(0)->point());
@@ -1503,9 +1514,9 @@ BOOST_AUTO_TEST_CASE(query_archive__get_spenders__unspent_or_not_found__expected
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, test::context));
-    BOOST_REQUIRE(query.set(test::block2, test::context));
-    BOOST_REQUIRE(query.set(test::block3, test::context));
+    BOOST_REQUIRE(query.set(test::block1, test::context, false));
+    BOOST_REQUIRE(query.set(test::block2, test::context, false));
+    BOOST_REQUIRE(query.set(test::block3, test::context, false));
 
     // Caller should always test for nullptr.
     BOOST_REQUIRE(query.get_spenders(output_link::terminal)->empty());
