@@ -88,6 +88,41 @@ BOOST_AUTO_TEST_CASE(query_validate__get_bits__genesis__expected)
     BOOST_REQUIRE_EQUAL(bits, 0x1d00ffff_u32);
 }
 
+BOOST_AUTO_TEST_CASE(query_validate__get_bypass__genesis__true)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    bool bypass{};
+    BOOST_REQUIRE(!query.get_bypass(bypass, 1));
+    BOOST_REQUIRE(query.get_bypass(bypass, 0));
+    BOOST_REQUIRE(bypass);
+}
+
+BOOST_AUTO_TEST_CASE(query_validate__get_bypass__set__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, context{}, false));
+    BOOST_REQUIRE(query.set(test::block2, context{}, true));
+
+    bool bypass{};
+    BOOST_REQUIRE(query.get_bypass(bypass, 0));
+    BOOST_REQUIRE(bypass);
+    BOOST_REQUIRE(query.get_bypass(bypass, 1));
+    BOOST_REQUIRE(!bypass);
+    BOOST_REQUIRE(query.get_bypass(bypass, 2));
+    BOOST_REQUIRE(bypass);
+}
+
 BOOST_AUTO_TEST_CASE(query_validate__get_context__genesis__default)
 {
     settings settings{};

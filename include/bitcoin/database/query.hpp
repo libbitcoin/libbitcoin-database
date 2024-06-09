@@ -397,6 +397,7 @@ public:
     bool get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT;
     bool get_work(uint256_t& work, const header_link& link) const NOEXCEPT;
     bool get_context(context& ctx, const header_link& link) const NOEXCEPT;
+    bool get_bypass(bool& bypass, const header_link& link) const NOEXCEPT;
 
     bool set_block_confirmable(const header_link& link, uint64_t fees) NOEXCEPT;
     bool set_block_valid(const header_link& link) NOEXCEPT;
