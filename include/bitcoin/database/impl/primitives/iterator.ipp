@@ -79,11 +79,11 @@ TEMPLATE
 INLINE Link CLASS::get_next() const NOEXCEPT
 {
     if (link_.is_terminal() || !memory_)
-        return Link::terminal;
+        return {};
 
     const auto link = memory_->offset(link_to_position(link_));
     if (is_null(link))
-        return Link::terminal;
+        return {};
 
     return { system::unsafe_array_cast<uint8_t, Link::size>(link) };
 }
