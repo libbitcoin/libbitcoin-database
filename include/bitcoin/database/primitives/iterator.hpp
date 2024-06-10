@@ -60,10 +60,11 @@ public:
     INLINE const memory_ptr& get() const NOEXCEPT;
 
 protected:
-    INLINE bool is_match() const NOEXCEPT;
-    INLINE Link get_next() const NOEXCEPT;
+    INLINE Link to_match(Link link) const NOEXCEPT;
+    INLINE Link to_next(Link link) const NOEXCEPT;
 
 private:
+    static constexpr auto key_size = array_count<Key>;
     static constexpr auto is_slab = (Size == max_size_t);
 
     // This is not thread safe, but it's object is not modified here and the

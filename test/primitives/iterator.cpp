@@ -23,45 +23,23 @@ BOOST_AUTO_TEST_SUITE(iterator_tests)
 
 using namespace system;
 
-template <typename Link, typename Key, size_t Size>
-class iterator_
-  : public iterator<Link, Key, Size>
-{
-public:
-    using iterator<Link, Key, Size>::iterator;
-
-    bool is_match_() const NOEXCEPT
-    {
-        return base::is_match();
-    }
-
-    Link get_next_() const NOEXCEPT
-    {
-        return base::get_next();
-    }
-
-private:
-    using base = iterator<Link, Key, Size>;
-};
-
-BOOST_AUTO_TEST_CASE(iterator__get_next__empty__terminal)
+BOOST_AUTO_TEST_CASE(iterator__self__empty__terminal)
 {
     using link = linkage<4>;
     using key = data_array<0>;
-    using slab_iterate = iterator_<link, key, max_size_t>;
-
+    using slab_iterate = iterator<link, key, max_size_t>;
+    constexpr auto start = link::terminal;
     constexpr key key0{};
     test::chunk_storage file;
-    const slab_iterate iterator{ file.get(), link::terminal, key0 };
-    BOOST_REQUIRE(iterator.get_next_().is_terminal());
+    const slab_iterate iterator{ file.get(), start, key0 };
+    BOOST_REQUIRE(iterator.self().is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(iterator__get_next__overflow__terminal)
+BOOST_AUTO_TEST_CASE(iterator__self__overflow__terminal)
 {
     using link = linkage<4>;
     using key = data_array<0>;
-    using slab_iterate = iterator_<link, key, max_size_t>;
-
+    using slab_iterate = iterator<link, key, max_size_t>;
     constexpr auto start = 13;
     constexpr key key0{};
     data_chunk data
@@ -72,67 +50,14 @@ BOOST_AUTO_TEST_CASE(iterator__get_next__overflow__terminal)
     };
     test::chunk_storage file{ data };
     const slab_iterate iterator{ file.get(), start, key0 };
-    BOOST_REQUIRE(iterator.get_next_().is_terminal());
+    BOOST_REQUIRE(iterator.self().is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(iterator__get__offset0__expected)
-{
-    using link = linkage<4>;
-    using key = data_array<0>;
-    using slab_iterate = iterator_<link, key, max_size_t>;
-
-    constexpr auto start = 0;
-    constexpr key key0{};
-    data_chunk data
-    {
-        0x00, 0x01, 0x02, 0x03,
-        0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00
-    };
-    test::chunk_storage file{ data };
-    const slab_iterate iterator{ file.get(), start, key0 };
-    BOOST_REQUIRE_EQUAL(iterator.get_next_(), 0x03020100_u32);
-}
-
-BOOST_AUTO_TEST_CASE(iterator__get__offset1__expected)
-{
-    using link = linkage<4>;
-    using key = data_array<0>;
-    using slab_iterate = iterator_<link, key, max_size_t>;
-
-    constexpr auto start = 8;
-    constexpr key key0{};
-    data_chunk data
-    {
-        0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00,
-        0x00, 0x01, 0x02, 0x03
-    };
-    test::chunk_storage file{ data };
-    const slab_iterate iterator{ file.get(), start, key0 };
-    BOOST_REQUIRE_EQUAL(iterator.get_next_(), 0x03020100_u32);
-}
-
-BOOST_AUTO_TEST_CASE(iterator__get__offset_to_back__expected)
-{
-    using link = linkage<1>;
-    using key = data_array<0>;
-    using slab_iterate = iterator_<link, key, max_size_t>;
-
-    constexpr auto start = 41;
-    constexpr key key0{};
-    data_chunk data(42u, 0xff);
-    test::chunk_storage file{ data };
-    const slab_iterate iterator{ file.get(), start, key0 };
-    BOOST_REQUIRE_EQUAL(iterator.get_next_(), 0xffu);
-}
-
-BOOST_AUTO_TEST_CASE(iterator__next__self__expected)
+BOOST_AUTO_TEST_CASE(iterator__advance__record__expected)
 {
     using link = linkage<1>;
     using key = data_array<2>;
-    using record_iterate = iterator_<link, key, 1>;
-
+    using record_iterate = iterator<link, key, 1>;
     constexpr auto start = 0;
     constexpr key key2{ 0x1a, 0x2a };
     data_chunk data
@@ -142,43 +67,41 @@ BOOST_AUTO_TEST_CASE(iterator__next__self__expected)
         0xff, 0xcc, 0xcc, 0xee
     };
     test::chunk_storage file{ data };
-    record_iterate iterator1{ file.get(), start, key2 };
-
-    // First link is zero, matched.
-    BOOST_REQUIRE_EQUAL(iterator1.self(), 0x00u);
-
-    // Sets self/link to 0x01 (data[3]), matched.
-    BOOST_REQUIRE(iterator1.advance());
-    BOOST_REQUIRE(!iterator1.self().is_terminal());
-    BOOST_REQUIRE_EQUAL(iterator1.self(), 0x01u);
-
-    // No more matches.
-    BOOST_REQUIRE(!iterator1.advance());
-    BOOST_REQUIRE_EQUAL(iterator1.self(), link::terminal);
+    record_iterate iterator{ file.get(), start, key2 };
+    BOOST_REQUIRE(!iterator.self().is_terminal());
+    BOOST_REQUIRE_EQUAL(iterator.self(), 0x00u);
+    BOOST_REQUIRE(iterator.advance());
+    BOOST_REQUIRE(!iterator.self().is_terminal());
+    BOOST_REQUIRE_EQUAL(iterator.self(), 0x01u);
+    BOOST_REQUIRE(!iterator.advance());
+    BOOST_REQUIRE(iterator.self().is_terminal());
+    BOOST_REQUIRE_EQUAL(iterator.self(), link::terminal);
 }
 
-BOOST_AUTO_TEST_CASE(iterator__next__true__non_terminal)
+BOOST_AUTO_TEST_CASE(iterator__advance__slab__expected)
 {
     using link = linkage<1>;
     using key = data_array<2>;
-    using slab_iterate = iterator_<link, key, max_size_t>;
-    constexpr auto start = 0;
+    using slab_iterate = iterator<link, key, max_size_t>;
 
+    constexpr auto start = 0;
     constexpr key key2{ 0x1a, 0x2a };
     data_chunk data
     {
-        0x04, 0x1a, 0x2a, 0xee,
-        0x08, 0x1a, 0x2a, 0xee,
-        0xff, 0xcc, 0xcc, 0xee
+        0x03, 0x1a, 0x2a,
+        0x07, 0x1a, 0x2a, 0xee,
+        0xff, 0xcc, 0xcc, 0xee, 0xee
     };
     test::chunk_storage file{ data };
     slab_iterate iterator{ file.get(), start, key2 };
-
     BOOST_REQUIRE(!iterator.self().is_terminal());
+    BOOST_REQUIRE_EQUAL(iterator.self(), 0x00u);
     BOOST_REQUIRE(iterator.advance());
     BOOST_REQUIRE(!iterator.self().is_terminal());
+    BOOST_REQUIRE_EQUAL(iterator.self(), 0x03u);
     BOOST_REQUIRE(!iterator.advance());
     BOOST_REQUIRE(iterator.self().is_terminal());
+    BOOST_REQUIRE_EQUAL(iterator.self(), link::terminal);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
