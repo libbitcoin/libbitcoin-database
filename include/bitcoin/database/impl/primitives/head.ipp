@@ -23,6 +23,9 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
+// Heads are not subject to resize/remap and therefore do not require memory
+// smart pointer with shared remap lock. Using get_raw() saves that allocation.
+
 namespace libbitcoin {
 namespace database {
 
@@ -100,7 +103,7 @@ bool CLASS::get_body_count(Link& count) const NOEXCEPT
     if (!ptr)
         return false;
 
-    count = array_cast<Link::size>(*ptr);
+    count = array_cast<Link::size>(ptr->begin());
     return true;
 }
 
@@ -111,7 +114,7 @@ bool CLASS::set_body_count(const Link& count) NOEXCEPT
     if (!ptr)
         return false;
 
-    array_cast<Link::size>(*ptr) = count;
+    array_cast<Link::size>(ptr->begin()) = count;
     return true;
 }
 
@@ -124,11 +127,11 @@ Link CLASS::top(const Key& key) const NOEXCEPT
 TEMPLATE
 Link CLASS::top(const Link& index) const NOEXCEPT
 {
-    const auto ptr = file_.get(offset(index));
-    if (!ptr)
-        return Link::terminal;
+    const auto ptr = file_.get_raw(offset(index));
+    if (is_null(ptr))
+        return {};
 
-    const auto& head = array_cast<Link::size>(*ptr);
+    const auto& head = array_cast<Link::size>(ptr);
 
     mutex_.lock_shared();
     const auto top = head;
@@ -145,11 +148,11 @@ bool CLASS::push(const bytes& current, bytes& next, const Key& key) NOEXCEPT
 TEMPLATE
 bool CLASS::push(const bytes& current, bytes& next, const Link& index) NOEXCEPT
 {
-    const auto ptr = file_.get(offset(index));
-    if (!ptr)
+    const auto ptr = file_.get_raw(offset(index));
+    if (is_null(ptr))
         return false;
 
-    auto& head = array_cast<Link::size>(*ptr);
+    auto& head = array_cast<Link::size>(ptr);
 
     mutex_.lock();
     next = head;

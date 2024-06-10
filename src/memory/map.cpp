@@ -282,6 +282,17 @@ memory_ptr map::get(size_t offset) const NOEXCEPT
     return ptr;
 }
 
+memory::iterator map::get_raw(size_t offset) const NOEXCEPT
+{
+    // Pointer is otherwise ungaurded, not remap safe (use for table heads).
+    if (offset > size())
+        return nullptr;
+
+    BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
+    return memory_map_ + offset;
+    BC_POP_WARNING()
+}
+
 code map::get_fault() const NOEXCEPT
 {
     return error_.load();
