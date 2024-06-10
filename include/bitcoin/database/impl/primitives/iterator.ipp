@@ -19,28 +19,34 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_IPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_IPP
 
-#include <cstring>
+////#include <algorithm>
+////#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-INLINE CLASS::iterator(const manager& memory, const Link& start,
+INLINE CLASS::iterator(const memory_ptr& data, const Link& start,
     const Key& key) NOEXCEPT
-  : manager_(memory), key_(key), link_(start)
+  : memory_(data), key_(key), link_(start)
 {
-    const auto ptr = get_ptr();
-    if (!is_match(ptr))
-        advance(ptr);
+    if (!is_match())
+        advance();
 }
 
 TEMPLATE
 INLINE bool CLASS::advance() NOEXCEPT
 {
-    return advance(get_ptr());
+    while (!link_.is_terminal())
+    {
+        link_ = get_next();
+        if (is_match())
+            return true;
+    }
+
+    return false;
 }
 
 TEMPLATE
@@ -53,53 +59,38 @@ INLINE const Link& CLASS::self() const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-INLINE memory_ptr CLASS::get_ptr() const NOEXCEPT
+INLINE bool CLASS::is_match() const NOEXCEPT
 {
-    return manager_.get();
+    using namespace system;
+    BC_ASSERT(!is_add_overflow(link_to_position(link_), Link::size));
+
+    if (!memory_)
+        return false;
+
+    auto link = memory_->offset(link_to_position(link_) + Link::size);
+    if (is_null(link))
+        return false;
+
+    // TODO: loop unroll.
+    for (const auto& byte: key_)
+        if (byte != *(link++))
+            return false;
+
+    return true;
+    ////return std::equal(key_.begin(), key_.end(), link);
 }
 
 TEMPLATE
-INLINE bool CLASS::advance(const memory_ptr& ptr) NOEXCEPT
+INLINE Link CLASS::get_next() const NOEXCEPT
 {
-    if (link_.is_terminal() || !ptr)
-        return false;
-
-    do
-    {
-        link_ = get_next(ptr);
-        if (is_match(ptr))
-            return true;
-    }
-    while (!link_.is_terminal());
-    return false;
-}
-
-TEMPLATE
-INLINE bool CLASS::is_match(const memory_ptr& ptr) const NOEXCEPT
-{
-    if (link_.is_terminal() || !ptr)
-        return false;
-
-    BC_ASSERT(!system::is_add_overflow(link_to_position(link_), Link::size));
-    const auto position = ptr->offset(link_to_position(link_) + Link::size);
-    if (is_null(position))
-        return false;
-
-    return is_zero(std::memcmp(key_.data(), position, key_.size()));
-    ////return std::equal(key_.begin(), key_.end(), position);
-}
-
-TEMPLATE
-INLINE Link CLASS::get_next(const memory_ptr& ptr) const NOEXCEPT
-{
-    if (link_.is_terminal() || !ptr)
+    if (link_.is_terminal() || !memory_)
         return Link::terminal;
 
-    const auto position = ptr->offset(link_to_position(link_));
-    if (is_null(position))
+    const auto link = memory_->offset(link_to_position(link_));
+    if (is_null(link))
         return Link::terminal;
 
-    return { system::unsafe_array_cast<uint8_t, Link::size>(position) };
+    return { system::unsafe_array_cast<uint8_t, Link::size>(link) };
 }
 
 // private

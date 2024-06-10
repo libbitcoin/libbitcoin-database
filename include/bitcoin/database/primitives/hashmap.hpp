@@ -95,7 +95,7 @@ public:
     /// Return first element or terimnal.
     Link first(const Key& key) const NOEXCEPT;
 
-    /// Iterator walks hashmap conflict stack for matches from top down.
+    /// Iterator holds shared lock on storage remap.
     iterator it(const Key& key) const NOEXCEPT;
 
     /// Return the link at the top of the conflict list (for table scanning).
