@@ -111,6 +111,10 @@ public:
     template <typename Element, if_equal<Element::size, Size> = true>
     bool get(const Link& link, Element& element) const NOEXCEPT;
 
+    /// Get element at link, false if deserialize error.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool get(const iterator& it, Element& element) const NOEXCEPT;
+
     /// Set element into previously allocated link (follow with commit).
     template <typename Element, if_equal<Element::size, Size> = true>
     bool set(const Link& link, const Element& element) NOEXCEPT;

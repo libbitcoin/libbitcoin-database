@@ -26,6 +26,14 @@
 namespace libbitcoin {
 namespace database {
 
+/// THIS HOLDS A memory_ptr WHICH HOLDS A SHARED REMAP LOCK. IT SHOULD NOT BE
+/// HELD WHILE THE HOLDING CODE EXECUTES READS AGAINST THE SAME TABLE.
+/// OTHERWISE A DEADLOCK WILL OCCUR WHEN THE TABLE'S FILE IS EXPANDED, WHICH
+/// WAITS ON THE RELEASE OF THE SHARED LOCK (REMAP REQUIRES EXCLUSIVE ACCESS).
+/// THE hashmap.get(const iterator& it, ...) METHOD EXISTS TO PREVENT A CALL TO
+/// manager.get(), WHICH DESPITE BEING A READ WOULD CAUSE A DEADLOCK. THIS IS
+/// BECAUSE IT CANNOT COMPLETE ITS READ WHILE REMAP IS WAITING ON ACCESS.
+
 /// This class is not thread safe.
 /// Size non-max implies record manager (ordinal record links).
 template <typename Link, typename Key, size_t Size = max_size_t>
@@ -34,8 +42,10 @@ class iterator
 public:
     DEFAULT_COPY_MOVE_DESTRUCT(iterator);
 
+    static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
+
     /// This advances to first match (or terminal).
-    // Key must be passed as an l-value as it is held by reference.
+    /// Key must be passed as an l-value as it is held by reference.
     INLINE iterator(const memory_ptr& data, const Link& start,
         const Key& key) NOEXCEPT;
 
@@ -45,16 +55,23 @@ public:
     /// Advance to next match and return false if terminal (not found).
     INLINE const Link& self() const NOEXCEPT;
 
+    /// Access the underlying memory pointer.
+    // TODO: for use by hashmap, make exclusive via friend.
+    INLINE const memory_ptr& get() const NOEXCEPT;
+
 protected:
     INLINE bool is_match() const NOEXCEPT;
     INLINE Link get_next() const NOEXCEPT;
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);
-    static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
 
-    // These are thread safe.
+    // This is not thread safe, but it's object is not modified here and the
+    // memory that it refers to is not addressable until written, and writes
+    // are guarded by allocator, which is protected by mutex.
     const memory_ptr memory_;
+
+    // This is thread safe.
     const Key& key_;
 
     // This is not thread safe.

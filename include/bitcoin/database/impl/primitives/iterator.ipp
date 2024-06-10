@@ -19,8 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_IPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_IPP
 
-////#include <algorithm>
-////#include <utility>
+#include <algorithm>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -55,6 +54,12 @@ INLINE const Link& CLASS::self() const NOEXCEPT
     return link_;
 }
 
+TEMPLATE
+INLINE const memory_ptr& CLASS::get() const NOEXCEPT
+{
+    return memory_;
+}
+
 // protected
 // ----------------------------------------------------------------------------
 
@@ -67,16 +72,7 @@ INLINE bool CLASS::is_match() const NOEXCEPT
 
     BC_ASSERT(!is_add_overflow(link_to_position(link_), Link::size));
     auto link = memory_->offset(link_to_position(link_) + Link::size);
-    if (is_null(link))
-        return false;
-
-    // TODO: loop unroll.
-    for (const auto& byte: key_)
-        if (byte != *(link++))
-            return false;
-
-    return true;
-    ////return std::equal(key_.begin(), key_.end(), link);
+    return !is_null(link) && std::equal(key_.begin(), key_.end(), link);
 }
 
 TEMPLATE

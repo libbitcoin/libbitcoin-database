@@ -58,7 +58,7 @@ public:
     /// memory is writeable. Non-const access implies memory map modify.
     memory_ptr get(const Link& link) const NOEXCEPT;
 
-    /// Return memory object for the full memory map.
+    /// Return memory object for full memory map (null only if oom or unloaded).
     memory_ptr get() const NOEXCEPT;
 
     /// Get the fault condition.

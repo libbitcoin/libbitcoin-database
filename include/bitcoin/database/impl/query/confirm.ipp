@@ -243,7 +243,7 @@ inline error::error_t CLASS::spent_prevout(const foreign_point& point,
     table::spend::get_parent spend{};
     do
     {
-        if (!store_.spend.get(it.self(), spend))
+        if (!store_.spend.get(it, spend))
             return error::integrity;
 
         // Skip current spend, which is the only one if not double spent.

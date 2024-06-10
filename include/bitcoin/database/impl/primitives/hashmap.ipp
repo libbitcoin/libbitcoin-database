@@ -191,6 +191,27 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::get(const iterator& it, Element& element) const NOEXCEPT
+{
+    using namespace system;
+    const auto ptr = it.get();
+    if (!ptr)
+        return false;
+
+    // To avoid construction of an additional memory object for each
+    // it.get(link), a reference to its full map pointer is offset here.
+    const auto offset = iterator::link_to_position(it.self());
+
+    iostream stream{ *ptr };
+    reader source{ stream };
+    source.skip_bytes(offset + Link::size + array_count<Key>);
+
+    if constexpr (!is_slab) { source.set_limit(Size); }
+    return element.from_data(source);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
 {
     using namespace system;
