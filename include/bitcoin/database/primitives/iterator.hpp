@@ -46,22 +46,22 @@ public:
 
     /// This advances to first match (or terminal).
     /// Key must be passed as an l-value as it is held by reference.
-    INLINE iterator(const memory_ptr& data, const Link& start,
+    iterator(const memory_ptr& data, const Link& start,
         const Key& key) NOEXCEPT;
 
     /// Advance to and return next iterator.
-    INLINE bool advance() NOEXCEPT;
+    bool advance() NOEXCEPT;
 
     /// Advance to next match and return false if terminal (not found).
-    INLINE const Link& self() const NOEXCEPT;
+    const Link& self() const NOEXCEPT;
 
     /// Access the underlying memory pointer.
     // TODO: for use by hashmap, make exclusive via friend.
-    INLINE const memory_ptr& get() const NOEXCEPT;
+    const memory_ptr& get() const NOEXCEPT;
 
 protected:
-    INLINE Link to_match(Link link) const NOEXCEPT;
-    INLINE Link to_next(Link link) const NOEXCEPT;
+    Link to_match(Link link) const NOEXCEPT;
+    Link to_next(Link link) const NOEXCEPT;
 
 private:
     static constexpr auto key_size = array_count<Key>;

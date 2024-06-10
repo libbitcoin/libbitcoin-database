@@ -28,26 +28,26 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-INLINE CLASS::iterator(const memory_ptr& data, const Link& start,
+CLASS::iterator(const memory_ptr& data, const Link& start,
     const Key& key) NOEXCEPT
   : memory_(data), key_(key), link_(to_match(start))
 {
 }
 
 TEMPLATE
-INLINE bool CLASS::advance() NOEXCEPT
+bool CLASS::advance() NOEXCEPT
 {
     return !((link_ = to_next(link_))).is_terminal();
 }
 
 TEMPLATE
-INLINE const Link& CLASS::self() const NOEXCEPT
+const Link& CLASS::self() const NOEXCEPT
 {
     return link_;
 }
 
 TEMPLATE
-INLINE const memory_ptr& CLASS::get() const NOEXCEPT
+const memory_ptr& CLASS::get() const NOEXCEPT
 {
     return memory_;
 }
@@ -56,7 +56,7 @@ INLINE const memory_ptr& CLASS::get() const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-INLINE Link CLASS::to_match(Link link) const NOEXCEPT
+Link CLASS::to_match(Link link) const NOEXCEPT
 {
     // Because of this !link_.is_terminal() subsequently guards both.
     if (!memory_)
@@ -82,7 +82,7 @@ INLINE Link CLASS::to_match(Link link) const NOEXCEPT
 }
 
 TEMPLATE
-INLINE Link CLASS::to_next(Link link) const NOEXCEPT
+Link CLASS::to_next(Link link) const NOEXCEPT
 {
     while (!link.is_terminal())
     {
@@ -109,33 +109,6 @@ INLINE Link CLASS::to_next(Link link) const NOEXCEPT
 
     return std::move(link);
 }
-
-////TEMPLATE
-////INLINE bool CLASS::is_match() const NOEXCEPT
-////{
-////    if (link_.is_terminal())
-////        return false;
-////
-////    const auto offset = memory_->offset(link_to_position(link_));
-////    if (is_null(offset))
-////        return false;
-////
-////    const auto key = std::next(offset, Link::size);
-////    return is_zero(std::memcmp(key_.data(), key, key_size));
-////}
-////
-////TEMPLATE
-////INLINE Link CLASS::get_next() const NOEXCEPT
-////{
-////    if (link_.is_terminal())
-////        return {};
-////
-////    const auto offset = memory_->offset(link_to_position(link_));
-////    if (is_null(offset))
-////        return {};
-////
-////    return { system::unsafe_array_cast<uint8_t, Link::size>(offset) };
-////}
 
 // private
 // ----------------------------------------------------------------------------
