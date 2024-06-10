@@ -148,7 +148,7 @@ Link CLASS::first(const Key& key) const NOEXCEPT
 TEMPLATE
 typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 {
-    // TODO: due to iterator design, key is copied into iterator.
+    // key is passed and retained by reference, origin must remain in scope.
     return { manager_.get(), head_.top(key), key };
 }
 

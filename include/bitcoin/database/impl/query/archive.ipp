@@ -86,7 +86,9 @@ inline bool CLASS::is_malleated64(const block& block) const NOEXCEPT
     if (!block.is_malleable64())
         return false;
 
-    auto it = store_.txs.it(to_header(block.hash()));
+    // Pass l-value to iterator.
+    const auto link = to_header(block.hash());
+    auto it = store_.txs.it(link);
     const auto transactions = *block.transactions_ptr();
     do
     {
@@ -100,9 +102,9 @@ inline bool CLASS::is_malleated64(const block& block) const NOEXCEPT
 
         auto match{ true };
         auto tx = transactions.begin();
-        for (const auto& link: txs.tx_fks)
+        for (const auto& tx_fk: txs.tx_fks)
         {
-            if (store_.tx.get_key(link) != (*tx++)->hash(false))
+            if (store_.tx.get_key(tx_fk) != (*tx++)->hash(false))
             {
                 match = false;
                 break;

@@ -35,6 +35,7 @@ public:
     DEFAULT_COPY_MOVE_DESTRUCT(iterator);
 
     /// This advances to first match (or terminal).
+    // Key must be passed as an l-value as it is held by reference.
     INLINE iterator(const memory_ptr& data, const Link& start,
         const Key& key) NOEXCEPT;
 
@@ -54,7 +55,7 @@ private:
 
     // These are thread safe.
     const memory_ptr memory_;
-    const Key key_;
+    const Key& key_;
 
     // This is not thread safe.
     Link link_;
