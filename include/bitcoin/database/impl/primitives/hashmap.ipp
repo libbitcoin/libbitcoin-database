@@ -142,6 +142,8 @@ bool CLASS::exists(const Key& key) const NOEXCEPT
 TEMPLATE
 Link CLASS::first(const Key& key) const NOEXCEPT
 {
+    // TODO: optimize by skipping the construction of an iterator just to
+    // obtain the first element. First still requires conflict list iteration.
     return it(key).self();
 }
 
@@ -232,7 +234,10 @@ template <typename Element, if_equal<Element::size, Size>>
 Link CLASS::set_link(const Element& element) NOEXCEPT
 {
     Link link{};
-    return set_link(link, element) ? link : Link{};
+    if (!set_link(link, element))
+        return {};
+    
+    return link;
 }
 
 TEMPLATE
@@ -248,7 +253,10 @@ template <typename Element, if_equal<Element::size, Size>>
 Link CLASS::put_link(const Key& key, const Element& element) NOEXCEPT
 {
     Link link{};
-    return put_link(link, key, element) ? link : Link{};
+    if (!put_link(link, key, element))
+        return {};
+
+    return link;
 }
 
 TEMPLATE
@@ -307,7 +315,6 @@ bool CLASS::put(const Link& link, const Key& key,
 
     if constexpr (!is_slab) { sink.set_limit(Size * count); }
     return element.to_data(sink) && sink.finalize();
-    return false;
 }
 
 TEMPLATE
@@ -329,7 +336,10 @@ bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
 TEMPLATE
 Link CLASS::commit_link(const Link& link, const Key& key) NOEXCEPT
 {
-    return commit(link, key) ? link : Link{};
+    if (!commit(link, key))
+        return {};
+
+    return link;
 }
 
 } // namespace database
