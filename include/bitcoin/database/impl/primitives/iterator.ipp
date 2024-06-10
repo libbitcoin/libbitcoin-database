@@ -62,11 +62,10 @@ TEMPLATE
 INLINE bool CLASS::is_match() const NOEXCEPT
 {
     using namespace system;
-    BC_ASSERT(!is_add_overflow(link_to_position(link_), Link::size));
-
-    if (!memory_)
+    if (link_.is_terminal() || !memory_)
         return false;
 
+    BC_ASSERT(!is_add_overflow(link_to_position(link_), Link::size));
     auto link = memory_->offset(link_to_position(link_) + Link::size);
     if (is_null(link))
         return false;
