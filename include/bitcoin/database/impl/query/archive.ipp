@@ -912,6 +912,7 @@ header_link CLASS::set_link(const header& header, const context& ctx,
 
 // set block
 // ----------------------------------------------------------------------------
+// TODO: add confirm option and pass to txs.
 
 TEMPLATE
 header_link CLASS::set_link(const block& block, const chain_context& ctx,
