@@ -59,6 +59,9 @@ public:
     // TODO: for use by hashmap, make exclusive via friend.
     const memory_ptr& get() const NOEXCEPT;
 
+    /// True if the iterator is not terminal.
+     operator bool() const NOEXCEPT;
+
 protected:
     Link to_match(Link link) const NOEXCEPT;
     Link to_next(Link link) const NOEXCEPT;

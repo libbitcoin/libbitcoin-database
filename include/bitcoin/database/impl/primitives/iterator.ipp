@@ -52,6 +52,12 @@ const memory_ptr& CLASS::get() const NOEXCEPT
     return memory_;
 }
 
+TEMPLATE
+CLASS::operator bool() const NOEXCEPT
+{
+    return !link_.is_terminal();
+}
+
 // protected
 // ----------------------------------------------------------------------------
 
