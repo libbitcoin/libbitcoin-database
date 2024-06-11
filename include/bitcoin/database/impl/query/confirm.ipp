@@ -236,7 +236,7 @@ TEMPLATE
 inline error::error_t CLASS::spent_prevout(const foreign_point& point,
     const tx_link& self) const NOEXCEPT
 {
-    // Expensive, dropped from 6% to 1% with head optimization.
+    // Modest (1.3%) after head optimization.
     auto it = store_.spend.it(point);
     if (!it)
         return error::success;
@@ -247,15 +247,19 @@ inline error::error_t CLASS::spent_prevout(const foreign_point& point,
         if (!store_.spend.get(it, spend))
             return error::integrity;
 
+        // Free (trivial).
         // Skip current spend, which is the only one if not double spent.
         if (spend.parent_fk == self)
             continue;
 
+        // Free (zero iteration without double spend).
         // If strong spender exists then prevout is confirmed double spent.
         if (!to_block(spend.parent_fk).is_terminal())
             return error::confirmed_double_spend;
     }
-    // Expensive, rose from 37% to 41%.
+    // Expensive (41%).
+    // Iteration exists because we allow double spending, and by design cannot
+    // preclude it because we download and index concurrently before confirm.
     while (it.advance());
     return error::success;
 }
@@ -268,7 +272,7 @@ inline error::error_t CLASS::unspendable_prevout(const point_link& link,
     // Modest (1.24%), and with 4.77 conflict ratio.
     const auto key = get_point_key(link);
 
-    // Expensize (21.31%).
+    // Expensize (8.6%).
     const auto strong = to_strong(key);
 
     if (strong.block.is_terminal())
@@ -328,7 +332,8 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     if (txs.empty())
         return error::success;
 
-    code ec{}; 
+    // Cheap (0.2%) because !bip30.
+    code ec{};
     if ((ec = unspent_duplicates(txs.front(), ctx)))
         return ec;
 
@@ -336,15 +341,19 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     table::spend::get_prevout_sequence spend{};
     for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
     {
+        // Modest (1.4% tx.get, 1% puts.get - to_tx_spends), reduce collision.
         for (const auto& spend_fk: to_tx_spends(version, *tx))
         {
+            // Modest, (1.4% spend.get), reduce collision.
             if (!store_.spend.get(spend_fk, spend))
                 return error::integrity;
 
+            // Expensive (11%).
             if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
                 version, ctx)))
                 return ec;
 
+            // Expensive (44%).
             if ((ec = spent_prevout(spend.prevout(), *tx)))
                 return ec;
         }

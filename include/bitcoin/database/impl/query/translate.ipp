@@ -196,14 +196,20 @@ header_link CLASS::to_parent(const header_link& link) const NOEXCEPT
 TEMPLATE
 header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
 {
-    table::strong_tx::record strong{};
+    // Expensive (3.8%) from block_confirmable->to_strong.
 
-    // Expensive (8%).
-    if (!store_.strong_tx.get(store_.strong_tx.first(link), strong))
+    // No to_strong_tx_link() because no type for strong_tx_link.
+    const auto to_strong_tx_link = store_.strong_tx.first(link);
+
+    table::strong_tx::record strong{};
+    if (!store_.strong_tx.get(to_strong_tx_link, strong))
         return {};
 
     // Terminal implies not strong (false).
-    return strong.positive ? strong.header_fk : header_link::terminal;
+    if (!strong.positive)
+        return {};
+    
+    return strong.header_fk;
 }
 
 // protected
@@ -213,6 +219,7 @@ header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
 TEMPLATE
 inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
 {
+    // Expensive (4.6%) from block_confirmable, reduce collision.
     auto it = store_.tx.it(tx_hash);
     strong_pair strong{ {}, it.self() };
     if (!it)
@@ -221,6 +228,8 @@ inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
     do
     {
         strong.tx = it.self();
+
+        // Expensive (3.8%) from block_confirmable.
         strong.block = to_block(strong.tx);
         if (!strong.block.is_terminal())
             return strong;
