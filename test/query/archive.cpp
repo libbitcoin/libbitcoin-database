@@ -1217,7 +1217,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_tx_key__always__expected)
     BOOST_REQUIRE_EQUAL(query.get_tx_key(3), system::null_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_archive__get_height__always__expected)
+BOOST_AUTO_TEST_CASE(query_archive__get_height1__always__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -1245,6 +1245,36 @@ BOOST_AUTO_TEST_CASE(query_archive__get_height__always__expected)
     BOOST_REQUIRE(query.get_height(out, 5));
     BOOST_REQUIRE_EQUAL(out, 2u);
     BOOST_REQUIRE(!query.get_height(out, 6));
+}
+
+BOOST_AUTO_TEST_CASE(query_archive__get_height2__always__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }, false));
+
+    size_t out{};
+    BOOST_REQUIRE(query.get_height(out, test::genesis.hash()));
+    BOOST_REQUIRE_EQUAL(out, 0u);
+    BOOST_REQUIRE(query.get_height(out, test::block1.hash()));
+    BOOST_REQUIRE_EQUAL(out, 1u);
+    BOOST_REQUIRE(query.get_height(out, test::block2.hash()));
+    BOOST_REQUIRE_EQUAL(out, 2u);
+    BOOST_REQUIRE(query.get_height(out, test::block3.hash()));
+    BOOST_REQUIRE_EQUAL(out, 3u);
+    BOOST_REQUIRE(query.get_height(out, test::block1a.hash()));
+    BOOST_REQUIRE_EQUAL(out, 1u);
+    BOOST_REQUIRE(query.get_height(out, test::block2a.hash()));
+    BOOST_REQUIRE_EQUAL(out, 2u);
+    BOOST_REQUIRE(!query.get_height(out, system::one_hash));
 }
 
 BOOST_AUTO_TEST_CASE(query_archive__get_tx_height__not_strong__false)

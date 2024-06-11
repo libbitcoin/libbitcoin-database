@@ -179,7 +179,7 @@ TEMPLATE
 bool CLASS::get_filter(filter& out, const header_link& link) const NOEXCEPT
 {
     table::neutrino::get_filter neutrino{};
-    if (!store_.neutrino.get(store_.neutrino.first(link), neutrino))
+    if (!store_.neutrino.find(link, neutrino))
         return false;
 
     out = std::move(neutrino.filter);
@@ -191,7 +191,7 @@ bool CLASS::get_filter_head(hash_digest& out,
     const header_link& link) const NOEXCEPT
 {
     table::neutrino::get_head neutrino{};
-    if (!store_.neutrino.get(store_.neutrino.first(link), neutrino))
+    if (!store_.neutrino.find(link, neutrino))
         return false;
 
     out = std::move(neutrino.filter_head);
@@ -229,7 +229,7 @@ bool CLASS::set_filter(const header_link& link, const hash_digest& filter_head,
 ////    const tx_link& link) const NOEXCEPT
 ////{
 ////    table::buffer::slab_ptr buffer{};
-////    if (!store_.buffer.get(store_.buffer.first(link), buffer))
+////    if (!store_.buffer.find(link, buffer))
 ////        return {};
 ////
 ////    return buffer.tx;

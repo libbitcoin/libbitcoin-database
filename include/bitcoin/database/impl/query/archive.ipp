@@ -125,14 +125,14 @@ TEMPLATE
 inline bool CLASS::is_malleable64(const header_link& link) const NOEXCEPT
 {
     table::txs::get_malleable txs{};
-    return store_.txs.get(to_txs_link(link), txs) && txs.malleable;
+    return store_.txs.find(link, txs) && txs.malleable;
 }
 
 TEMPLATE
 inline bool CLASS::is_associated(const header_link& link) const NOEXCEPT
 {
     table::txs::get_associated txs{};
-    return store_.txs.get(to_txs_link(link), txs) && txs.associated;
+    return store_.txs.find(link, txs) && txs.associated;
 }
 
 TEMPLATE
@@ -283,7 +283,7 @@ bool CLASS::populate_with_metadata(const block& block) const NOEXCEPT
 TEMPLATE
 hashes CLASS::get_tx_keys(const header_link& link) const NOEXCEPT
 {
-    const auto tx_fks = to_txs(link);
+    const auto tx_fks = to_transactions(link);
     if (tx_fks.empty())
         return {};
 
@@ -315,8 +315,20 @@ inline hash_digest CLASS::get_tx_key(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::get_height(size_t& out, const hash_digest& key) const NOEXCEPT
+{
+    const auto height = get_height(key);
+    if (height >= height_link::terminal)
+        return false;
+
+    out = system::possible_narrow_cast<size_t>(height.value);
+    return true;
+}
+
+TEMPLATE
 bool CLASS::get_height(size_t& out, const header_link& link) const NOEXCEPT
 {
+    // Use get_height(..., key) in place of get(to_header(key)).
     const auto height = get_height(link);
     if (height >= height_link::terminal)
         return false;
@@ -343,7 +355,7 @@ bool CLASS::get_tx_position(size_t& out, const tx_link& link) const NOEXCEPT
 
     // False return below implies an integrity error (tx should be indexed).
     table::txs::get_position txs{ {}, link };
-    if (!store_.txs.get(to_txs_link(block_fk), txs))
+    if (!store_.txs.find(block_fk, txs))
         return false;
 
     out = txs.position;
@@ -430,7 +442,7 @@ typename CLASS::transactions_ptr CLASS::get_transactions(
     const header_link& link) const NOEXCEPT
 {
     using namespace system;
-    const auto txs = to_txs(link);
+    const auto txs = to_transactions(link);
     if (txs.empty())
         return {};
 
@@ -482,7 +494,7 @@ TEMPLATE
 size_t CLASS::get_block_size(const header_link& link) const NOEXCEPT
 {
     table::txs::get_block_size txs{};
-    return store_.txs.get(to_txs_link(link), txs) ? txs.wire : zero;
+    return store_.txs.find(link, txs) ? txs.wire : zero;
 }
 
 TEMPLATE
@@ -997,7 +1009,7 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
     ////// This is only fully effective if there is a single database thread.
     ////// Guard must be lifted for an existing top malleable association so
     ////// that a non-malleable association may be accomplished.
-    ////out_fk = to_txs_link(key);
+    ////out_fk = to_txs(key);
     ////if (!out_fk.is_terminal() && !is_malleable(key))
     ////    return error::success;
 

@@ -65,30 +65,35 @@ inline header_link CLASS::to_confirmed(size_t height) const NOEXCEPT
 TEMPLATE
 inline header_link CLASS::to_header(const hash_digest& key) const NOEXCEPT
 {
+    // Use header.find(key) in place of get(to_header(key)).
     return store_.header.first(key);
 }
 
 TEMPLATE
 inline point_link CLASS::to_point(const hash_digest& key) const NOEXCEPT
 {
+    // Use point.find(key) in place of get(to_point(key)).
     return store_.point.first(key);
 }
 
 TEMPLATE
 inline tx_link CLASS::to_tx(const hash_digest& key) const NOEXCEPT
 {
+    // Use tx.find(key) in place of get(to_tx(key)).
     return store_.tx.first(key);
 }
 
 TEMPLATE
-inline txs_link CLASS::to_txs_link(const header_link& key) const NOEXCEPT
+inline txs_link CLASS::to_txs(const header_link& key) const NOEXCEPT
 {
+    // Use txs.find(key) in place of get(to_txs(key)).
     return store_.txs.first(key);
 }
 
 TEMPLATE
 inline filter_link CLASS::to_filter(const header_link& key) const NOEXCEPT
 {
+    // Use neutrino.find(key) in place of get(to_filter(key)).
     return store_.neutrino.first(key);
 }
 
@@ -196,13 +201,15 @@ header_link CLASS::to_parent(const header_link& link) const NOEXCEPT
 TEMPLATE
 header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
 {
-    // Expensive (3.8%) from block_confirmable->to_strong.
+    // (10.99%) from block_confirmable->unspendable_prevout->to_strong->to_block.
 
-    // No to_strong_tx_link() because no type for strong_tx_link.
-    const auto to_strong_tx_link = store_.strong_tx.first(link);
+    // (8.25%)
+    ////const auto to_strong_tx_link = store_.strong_tx.first(link);
 
+    // (2.68%)
     table::strong_tx::record strong{};
-    if (!store_.strong_tx.get(to_strong_tx_link, strong))
+    ////if (!store_.strong_tx.get(to_strong_tx_link, strong))
+    if (!store_.strong_tx.find(link, strong))
         return {};
 
     // Terminal implies not strong (false).
@@ -219,7 +226,7 @@ header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
 TEMPLATE
 inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
 {
-    // Expensive (4.6%) from block_confirmable, reduce collision.
+    // (14.21%) from block_confirmable, reduce collision.
     auto it = store_.tx.it(tx_hash);
     strong_pair strong{ {}, it.self() };
     if (!it)
@@ -229,11 +236,12 @@ inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
     {
         strong.tx = it.self();
 
-        // Expensive (3.8%) from block_confirmable.
+        // (10.99%) from block_confirmable.
         strong.block = to_block(strong.tx);
         if (!strong.block.is_terminal())
             return strong;
     }
+    // (0.28%)
     while (it.advance());
     return strong;
 }
@@ -444,12 +452,17 @@ TEMPLATE
 spend_links CLASS::to_tx_spends(uint32_t& version,
     const tx_link& link) const NOEXCEPT
 {
+    // (4.71%) from block_confirmable.
+
+    // (2.53%)
     table::transaction::get_version_puts tx{};
     if (!store_.tx.get(link, tx))
         return {};
 
     version = tx.version;
     table::puts::get_spends puts{};
+
+    // (2.1%)
     puts.spend_fks.resize(tx.ins_count);
     if (!store_.puts.get(tx.puts_fk, puts))
         return {};
@@ -461,10 +474,11 @@ spend_links CLASS::to_tx_spends(uint32_t& version,
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-tx_links CLASS::to_txs(const header_link& link) const NOEXCEPT
+tx_links CLASS::to_transactions(const header_link& link) const NOEXCEPT
 {
     table::txs::slab txs{};
-    if (!store_.txs.get(to_txs_link(link), txs))
+    ////if (!store_.txs.get(to_txs(link), txs))
+    if (!store_.txs.find(link, txs))
         return {};
 
     return std::move(txs.tx_fks);
@@ -474,7 +488,8 @@ TEMPLATE
 tx_link CLASS::to_coinbase(const header_link& link) const NOEXCEPT
 {
     table::txs::get_coinbase txs{};
-    if (!store_.txs.get(to_txs_link(link), txs))
+    ////if (!store_.txs.get(to_txs(link), txs))
+    if (!store_.txs.find(link, txs))
         return {};
 
     return txs.coinbase_fk;
@@ -484,7 +499,7 @@ TEMPLATE
 spend_links CLASS::to_non_coinbase_spends(
     const header_link& link) const NOEXCEPT
 {
-    const auto txs = to_txs(link);
+    const auto txs = to_transactions(link);
     if (txs.size() <= one)
         return {};
 
@@ -503,7 +518,7 @@ TEMPLATE
 spend_links CLASS::to_block_spends(const header_link& link) const NOEXCEPT
 {
     spend_links spends{};
-    const auto txs = to_txs(link);
+    const auto txs = to_transactions(link);
 
     for (const auto& tx: txs)
     {
@@ -518,7 +533,7 @@ TEMPLATE
 output_links CLASS::to_block_outputs(const header_link& link) const NOEXCEPT
 {
     output_links outputs{};
-    const auto txs = to_txs(link);
+    const auto txs = to_transactions(link);
 
     for (const auto& tx: txs)
     {
