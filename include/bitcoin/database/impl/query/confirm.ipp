@@ -236,7 +236,7 @@ TEMPLATE
 inline error::error_t CLASS::spent_prevout(const foreign_point& point,
     const tx_link& self) const NOEXCEPT
 {
-    // Expensive (6%).
+    // Expensive, dropped from 6% to 1% with head optimization.
     auto it = store_.spend.it(point);
     if (!it)
         return error::success;
@@ -255,7 +255,7 @@ inline error::error_t CLASS::spent_prevout(const foreign_point& point,
         if (!to_block(spend.parent_fk).is_terminal())
             return error::confirmed_double_spend;
     }
-    // Expensive (37%).
+    // Expensive, rose from 37% to 41%.
     while (it.advance());
     return error::success;
 }

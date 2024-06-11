@@ -71,13 +71,13 @@ Link CLASS::to_match(Link link) const NOEXCEPT
     while (!link.is_terminal())
     {
         // get element offset (fault)
-        auto offset = memory_->offset(link_to_position(link));
+        const auto offset = memory_->offset(link_to_position(link));
         if (is_null(offset))
             return {};
 
         // element key matches (found)
-        const auto key = std::next(offset, Link::size);
-        if (is_zero(std::memcmp(key_.data(), key, key_size)))
+        const auto key_ptr = std::next(offset, Link::size);
+        if (is_zero(std::memcmp(key_.data(), key_ptr, key_size)))
             return std::move(link);
 
         // set next element link (loop)
@@ -108,8 +108,8 @@ Link CLASS::to_next(Link link) const NOEXCEPT
             return {};
 
         // next element key matches (found)
-        const auto key = std::next(offset, Link::size);
-        if (is_zero(std::memcmp(key_.data(), key, key_size)))
+        const auto key_ptr = std::next(offset, Link::size);
+        if (is_zero(std::memcmp(key_.data(), key_ptr, key_size)))
             return std::move(link);
     }
 

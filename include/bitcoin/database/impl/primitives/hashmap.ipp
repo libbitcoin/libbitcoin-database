@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_IPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_IPP
 
+#include <algorithm>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -145,15 +146,38 @@ bool CLASS::exists(const Key& key) const NOEXCEPT
 TEMPLATE
 Link CLASS::first(const Key& key) const NOEXCEPT
 {
-    // TODO: optimize by skipping the construction of an iterator just to
-    // obtain the first element. First still requires conflict list iteration.
-    return it(key).self();
+    // This denormalization below is a clone of iterator::to_match(link).
+    // The significant performance benefit from avoiding iterator construct.
+    ////return it(key).self();
+
+    const auto ptr = manager_.get();
+    if (!ptr)
+        return {};
+
+    auto link = head_.top(key);
+    while (!link.is_terminal())
+    {
+        // get element offset (fault)
+        const auto offset = ptr->offset(iterator::link_to_position(link));
+        if (is_null(offset))
+            return {};
+
+        // element key matches (found)
+        const auto key_ptr = std::next(offset, Link::size);
+        if (is_zero(std::memcmp(key.data(), key_ptr, array_count<Key>)))
+            return link;
+
+        // set next element link (loop)
+        link = system::unsafe_array_cast<uint8_t, Link::size>(offset);
+    }
+
+    return link;
 }
 
 TEMPLATE
 typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 {
-    // Expensive (27%), avoid construction for use with first().
+    // Expensive, dropped from 27% to 1% from first() removal and head optimization.
     // key is passed and retained by reference, origin must remain in scope.
     return { manager_.get(), head_.top(key), key };
 }
@@ -201,7 +225,11 @@ bool CLASS::get(const iterator& it, Element& element) const NOEXCEPT
     if (!ptr)
         return false;
 
+    // This denormalization is a clone of hashmap::get(link, element).
+    // The significant performance benefit from avoiding mempry_ptr construct.
+    // This is also neccessary to avoid deadlock when holding an iterator.
     const auto buffer = ptr->offset(iterator::link_to_position(it.self()));
+
     iostream stream{ buffer, buffer_size };
     reader source{ stream };
     source.skip_bytes(index_size);
@@ -305,6 +333,8 @@ bool CLASS::put(const Link& link, const Key& key,
     finalizer sink{ stream };
     sink.skip_bytes(Link::size);
     sink.write_bytes(key);
+
+    // The finalizer provides deferred index commit following serialization.
     sink.set_finalizer([this, link, index = head_.index(key), ptr]() NOEXCEPT
     {
         auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
