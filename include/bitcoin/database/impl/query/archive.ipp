@@ -86,10 +86,8 @@ inline bool CLASS::is_malleated64(const block& block) const NOEXCEPT
     if (!block.is_malleable64())
         return false;
 
-    // Pass l-value to iterator.
     // block.get_hash() assumes cached or is not thread safe.
-    const auto link = to_header(block.get_hash());
-    auto it = store_.txs.it(link);
+    auto it = store_.txs.it(to_header(block.get_hash()));
     if (!it)
         return false;
 

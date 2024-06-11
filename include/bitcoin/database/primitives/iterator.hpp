@@ -76,7 +76,7 @@ private:
     const memory_ptr memory_;
 
     // This is thread safe.
-    const Key& key_;
+    const Key key_;
 
     // This is not thread safe.
     Link link_;
