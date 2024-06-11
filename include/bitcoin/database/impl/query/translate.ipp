@@ -215,9 +215,13 @@ inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
 {
     auto it = store_.tx.it(tx_hash);
     strong_pair strong{ {}, it.self() };
+    if (!it)
+        return strong;
+
     do
     {
-        strong.block = to_block((strong.tx = it.self()));
+        strong.tx = it.self();
+        strong.block = to_block(strong.tx);
         if (!strong.block.is_terminal())
             return strong;
     }
@@ -236,6 +240,9 @@ TEMPLATE
 inline strong_pairs CLASS::to_strongs(const hash_digest& tx_hash) const NOEXCEPT
 {
     auto it = store_.tx.it(tx_hash);
+    if (!it)
+        return {};
+
     strong_pairs strongs{};
     do
     {
@@ -258,10 +265,13 @@ TEMPLATE
 inline header_links CLASS::to_blocks(const tx_link& link) const NOEXCEPT
 {
     auto it = store_.strong_tx.it(link);
-    block_tx strong{};
+    if (!it)
+        return {};
+
     block_txs strongs{};
     do
     {
+        block_tx strong{};
         if (store_.strong_tx.get(it, strong) && !contains(strongs, strong))
             strongs.push_back(strong);
     }
