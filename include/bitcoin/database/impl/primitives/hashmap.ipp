@@ -146,39 +146,15 @@ bool CLASS::exists(const Key& key) const NOEXCEPT
 TEMPLATE
 Link CLASS::first(const Key& key) const NOEXCEPT
 {
-    // This denormalization below is a clone of iterator::to_match(link).
-    // The significant performance benefit from avoiding iterator construct.
     ////return it(key).self();
-
-    const auto ptr = manager_.get();
-    if (!ptr)
-        return {};
-
-    auto link = head_.top(key);
-    while (!link.is_terminal())
-    {
-        // get element offset (fault)
-        const auto offset = ptr->offset(iterator::link_to_position(link));
-        if (is_null(offset))
-            return {};
-
-        // element key matches (found)
-        const auto key_ptr = std::next(offset, Link::size);
-        if (is_zero(std::memcmp(key.data(), key_ptr, array_count<Key>)))
-            return link;
-
-        // set next element link (loop)
-        link = system::unsafe_array_cast<uint8_t, Link::size>(offset);
-    }
-
-    return link;
+    // Copied from iterator::to_match(link), avoids normal form it() construct.
+    return first(manager_.get(), head_.top(key), key);
 }
 
 TEMPLATE
 typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 {
-    // Expensive, dropped from 27% to 1% from first() removal and head optimization.
-    // key is passed and retained by reference, origin must remain in scope.
+    // Expensive construction, avoid unless iteration is necessary.
     return { manager_.get(), head_.top(key), key };
 }
 
@@ -201,41 +177,28 @@ Key CLASS::get_key(const Link& link) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::find(const Key& key, Element& element) const NOEXCEPT
+{
+    // Renamed to "find()" to avoid collision over link/key.
+    // This override avoids duplicated memory_ptr construct in get(first()).
+    const auto ptr = manager_.get();
+    return read(ptr, first(ptr, head_.top(key), key), element);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
-    using namespace system;
-    const auto ptr = manager_.get(link);
-    if (!ptr)
-        return false;
-
-    iostream stream{ *ptr };
-    reader source{ stream };
-    source.skip_bytes(index_size);
-
-    if constexpr (!is_slab) { source.set_limit(Size); }
-    return element.from_data(source);
+    // This override is the normal form.
+    return read(manager_.get(), link, element);
 }
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::get(const iterator& it, Element& element) const NOEXCEPT
 {
-    using namespace system;
-    const auto ptr = it.get();
-    if (!ptr)
-        return false;
-
-    // This denormalization is a clone of hashmap::get(link, element).
-    // The significant performance benefit from avoiding mempry_ptr construct.
-    // This is also neccessary to avoid deadlock when holding an iterator.
-    const auto buffer = ptr->offset(iterator::link_to_position(it.self()));
-
-    iostream stream{ buffer, buffer_size };
-    reader source{ stream };
-    source.skip_bytes(index_size);
-
-    if constexpr (!is_slab) { source.set_limit(Size); }
-    return element.from_data(source);
+    // This override avoids deadlock when holding iterator to the same table.
+    return read(it.get(), it.self(), element);
 }
 
 TEMPLATE
@@ -366,6 +329,64 @@ Link CLASS::commit_link(const Link& link, const Key& key) NOEXCEPT
 {
     if (!commit(link, key))
         return {};
+
+    return link;
+}
+
+// protected/static
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::read(const memory_ptr& ptr, const Link& link,
+    Element& element) NOEXCEPT
+{
+    if (!ptr || link.is_terminal())
+        return false;
+
+    using namespace system;
+    const auto start = iterator::link_to_position(link);
+    if (is_limited<ptrdiff_t>(start))
+        return false;
+
+    const auto size = ptr->size();
+    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
+    if (position > size)
+        return false;
+
+    const auto offset = ptr->offset(position);
+    if (is_null(offset))
+        return false;
+
+    // Stream starts at record and the index is skipped for reader convenience.
+    iostream stream{ offset, size - position };
+    reader source{ stream };
+    source.skip_bytes(index_size);
+    if constexpr (!is_slab) { source.set_limit(Size); }
+    return element.from_data(source);
+}
+
+TEMPLATE
+Link CLASS::first(const memory_ptr& ptr, Link link, const Key& key) NOEXCEPT
+{
+    if (!ptr)
+        return {};
+
+    while (!link.is_terminal())
+    {
+        // get element offset (fault)
+        const auto offset = ptr->offset(iterator::link_to_position(link));
+        if (is_null(offset))
+            return {};
+
+        // element key matches (found)
+        const auto key_ptr = std::next(offset, Link::size);
+        if (is_zero(std::memcmp(key.data(), key_ptr, array_count<Key>)))
+            return link;
+
+        // set next element link (loop)
+        link = system::unsafe_array_cast<uint8_t, Link::size>(offset);
+    }
 
     return link;
 }
