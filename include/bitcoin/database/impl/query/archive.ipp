@@ -87,7 +87,8 @@ inline bool CLASS::is_malleated64(const block& block) const NOEXCEPT
         return false;
 
     // Pass l-value to iterator.
-    const auto link = to_header(block.hash());
+    // block.get_hash() assumes cached or is not thread safe.
+    const auto link = to_header(block.get_hash());
     auto it = store_.txs.it(link);
     if (!it)
         return false;
@@ -887,7 +888,8 @@ TEMPLATE
 header_link CLASS::set_link(const header& header, const context& ctx,
     bool bypass) NOEXCEPT
 {
-    const auto key = header.hash();
+    // header.get_hash() assumes cached or is not thread safe.
+    const auto key = header.get_hash();
 
     ////// GUARD (header redundancy)
     ////// This is only fully effective if there is a single database thread.
@@ -950,11 +952,12 @@ header_link CLASS::set_link(const block& block, const context& ctx,
 // set/unset txs
 // ----------------------------------------------------------------------------
 
+// This sets only the txs of a block with header/context already archived.
 TEMPLATE
 header_link CLASS::set_link(const block& block) NOEXCEPT
 {
-    // This sets only the txs of a block with header/context already archived.
-    const auto header_fk = to_header(block.hash());
+    // block.get_hash() assumes cached or is not thread safe.
+    const auto header_fk = to_header(block.get_hash());
     if (header_fk.is_terminal())
         return {};
 
