@@ -197,6 +197,8 @@ TEMPLATE
 header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
 {
     table::strong_tx::record strong{};
+
+    // Expensive (8%).
     if (!store_.strong_tx.get(store_.strong_tx.first(link), strong))
         return {};
 
@@ -215,9 +217,9 @@ inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
     strong_pair strong{ {}, it.self() };
     do
     {
-        const auto link = to_block(it.self());
-        if (!link.is_terminal())
-            return { link, it.self() };
+        strong.block = to_block((strong.tx = it.self()));
+        if (!strong.block.is_terminal())
+            return strong;
     }
     while (it.advance());
     return strong;
@@ -260,8 +262,7 @@ inline header_links CLASS::to_blocks(const tx_link& link) const NOEXCEPT
     block_txs strongs{};
     do
     {
-        if (store_.strong_tx.get(it.self(), strong) &&
-            !contains(strongs, strong))
+        if (store_.strong_tx.get(it, strong) && !contains(strongs, strong))
             strongs.push_back(strong);
     }
     while(it.advance());
@@ -370,13 +371,14 @@ TEMPLATE
 spend_links CLASS::to_spenders(const foreign_point& point) const NOEXCEPT
 {
     auto it = store_.spend.it(point);
-    if (it.self().is_terminal())
+    if (!it)
         return {};
 
     // Iterate transactions that spend the point, saving each spender.
     spend_links spenders{};
     do
-    {
+    {   // BUGBUG: Deadlock due to holding iterator while querying own table.
+        // TODO: refactor to make safe and also pass boolean result code.
         spenders.push_back(to_spender(to_spend_tx(it.self()), point));
     }
     while (it.advance());

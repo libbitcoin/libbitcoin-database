@@ -218,13 +218,13 @@ code CLASS::get_tx_state(const tx_link& link,
     const context& ctx) const NOEXCEPT
 {
     auto it = store_.validated_tx.it(link);
-    if (it.self().is_terminal())
+    if (!it)
         return error::unvalidated;
 
     table::validated_tx::slab_get_code valid{};
     do
     {
-        if (!store_.validated_tx.get(it.self(), valid))
+        if (!store_.validated_tx.get(it, valid))
             return error::integrity;
 
         if (is_sufficient(ctx, valid.ctx))
@@ -239,13 +239,13 @@ code CLASS::get_tx_state(uint64_t& fee, size_t& sigops, const tx_link& link,
     const context& ctx) const NOEXCEPT
 {
     auto it = store_.validated_tx.it(link);
-    if (it.self().is_terminal())
+    if (!it)
         return error::unvalidated;
 
     table::validated_tx::slab valid{};
     do
     {
-        if (!store_.validated_tx.get(it.self(), valid))
+        if (!store_.validated_tx.get(it, valid))
             return error::integrity;
 
         if (is_sufficient(ctx, valid.ctx))

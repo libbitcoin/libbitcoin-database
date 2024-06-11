@@ -236,8 +236,9 @@ TEMPLATE
 inline error::error_t CLASS::spent_prevout(const foreign_point& point,
     const tx_link& self) const NOEXCEPT
 {
+    // Expensive (6%).
     auto it = store_.spend.it(point);
-    if (it.self().is_terminal())
+    if (!it)
         return error::success;
 
     table::spend::get_parent spend{};
@@ -254,6 +255,7 @@ inline error::error_t CLASS::spent_prevout(const foreign_point& point,
         if (!to_block(spend.parent_fk).is_terminal())
             return error::confirmed_double_spend;
     }
+    // Expensive (37%).
     while (it.advance());
     return error::success;
 }
@@ -263,7 +265,12 @@ TEMPLATE
 inline error::error_t CLASS::unspendable_prevout(const point_link& link,
     uint32_t sequence, uint32_t version, const context& ctx) const NOEXCEPT
 {
-    const auto strong = to_strong(get_point_key(link));
+    // Modest (1.24%), and with 4.77 conflict ratio.
+    const auto key = get_point_key(link);
+
+    // Expensize (21.31%).
+    const auto strong = to_strong(key);
+
     if (strong.block.is_terminal())
         return strong.tx.is_terminal() ? error::missing_previous_output :
             error::unconfirmed_spend;

@@ -87,14 +87,14 @@ inline bool CLASS::is_malleated64(const block& block) const NOEXCEPT
         return false;
 
     // Pass l-value to iterator.
+    const auto transactions = *block.transactions_ptr();
     const auto link = to_header(block.hash());
     auto it = store_.txs.it(link);
-    const auto transactions = *block.transactions_ptr();
     do
     {
         // Non-malleable is final so don't continue with that type association.
         table::txs::slab txs{};
-        if (!store_.txs.get(it.self(), txs) || !txs.malleable)
+        if (!store_.txs.get(it, txs) || !txs.malleable)
             return false;
 
         if (txs.tx_fks.size() != transactions.size())

@@ -33,6 +33,7 @@ BOOST_AUTO_TEST_CASE(iterator__self__empty__terminal)
     test::chunk_storage file;
     const slab_iterate iterator{ file.get(), start, key0 };
     BOOST_REQUIRE(iterator.self().is_terminal());
+    BOOST_REQUIRE(!iterator);
 }
 
 BOOST_AUTO_TEST_CASE(iterator__self__overflow__terminal)
@@ -51,6 +52,7 @@ BOOST_AUTO_TEST_CASE(iterator__self__overflow__terminal)
     test::chunk_storage file{ data };
     const slab_iterate iterator{ file.get(), start, key0 };
     BOOST_REQUIRE(iterator.self().is_terminal());
+    BOOST_REQUIRE(!iterator);
 }
 
 BOOST_AUTO_TEST_CASE(iterator__advance__record__expected)
@@ -68,13 +70,13 @@ BOOST_AUTO_TEST_CASE(iterator__advance__record__expected)
     };
     test::chunk_storage file{ data };
     record_iterate iterator{ file.get(), start, key2 };
-    BOOST_REQUIRE(!iterator.self().is_terminal());
+    BOOST_REQUIRE(iterator);
     BOOST_REQUIRE_EQUAL(iterator.self(), 0x00u);
     BOOST_REQUIRE(iterator.advance());
-    BOOST_REQUIRE(!iterator.self().is_terminal());
+    BOOST_REQUIRE(iterator);
     BOOST_REQUIRE_EQUAL(iterator.self(), 0x01u);
     BOOST_REQUIRE(!iterator.advance());
-    BOOST_REQUIRE(iterator.self().is_terminal());
+    BOOST_REQUIRE(!iterator);
     BOOST_REQUIRE_EQUAL(iterator.self(), link::terminal);
 }
 
@@ -94,13 +96,13 @@ BOOST_AUTO_TEST_CASE(iterator__advance__slab__expected)
     };
     test::chunk_storage file{ data };
     slab_iterate iterator{ file.get(), start, key2 };
-    BOOST_REQUIRE(!iterator.self().is_terminal());
+    BOOST_REQUIRE(iterator);
     BOOST_REQUIRE_EQUAL(iterator.self(), 0x00u);
     BOOST_REQUIRE(iterator.advance());
-    BOOST_REQUIRE(!iterator.self().is_terminal());
+    BOOST_REQUIRE(iterator);
     BOOST_REQUIRE_EQUAL(iterator.self(), 0x03u);
     BOOST_REQUIRE(!iterator.advance());
-    BOOST_REQUIRE(iterator.self().is_terminal());
+    BOOST_REQUIRE(!iterator);
     BOOST_REQUIRE_EQUAL(iterator.self(), link::terminal);
 }
 

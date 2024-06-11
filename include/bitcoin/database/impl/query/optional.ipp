@@ -36,14 +36,14 @@ bool CLASS::get_confirmed_balance(uint64_t& out,
     const hash_digest& key) const NOEXCEPT
 {
     auto it = store_.address.it(key);
-    if (it.self().is_terminal())
+    if (!it)
         return false;
 
     out = zero;
     do
     {
         table::address::record address{};
-        if (!store_.address.get(it.self(), address))
+        if (!store_.address.get(it, address))
             return false;
 
         // Failure or overflow returns maximum value.
@@ -66,14 +66,14 @@ bool CLASS::to_address_outputs(output_links& out,
     const hash_digest& key) const NOEXCEPT
 {
     auto it = store_.address.it(key);
-    if (it.self().is_terminal())
+    if (!it)
         return false;
 
     out.clear();
     do
     {
         table::address::record address{};
-        if (!store_.address.get(it.self(), address))
+        if (!store_.address.get(it, address))
         {
             out.clear();
             return false;
@@ -91,14 +91,14 @@ bool CLASS::to_unspent_outputs(output_links& out,
     const hash_digest& key) const NOEXCEPT
 {
     auto it = store_.address.it(key);
-    if (it.self().is_terminal())
-        return {};
+    if (!it)
+        return false;
 
     out.clear();
     do
     {
         table::address::record address{};
-        if (!store_.address.get(it.self(), address))
+        if (!store_.address.get(it, address))
         {
             out.clear();
             return false;
@@ -117,15 +117,15 @@ bool CLASS::to_minimum_unspent_outputs(output_links& out,
     const hash_digest& key, uint64_t minimum) const NOEXCEPT
 {
     auto it = store_.address.it(key);
-    if (it.self().is_terminal())
-        return {};
+    if (!it)
+        return false;
 
     out.clear();
     do
     {
         table::address::record address{};
-        if (!store_.address.get(it.self(), address))
-            return {};
+        if (!store_.address.get(it, address))
+            return false;
 
         // Confirmed and not spent, but possibly immature.
         if (is_confirmed_output(address.output_fk) &&
