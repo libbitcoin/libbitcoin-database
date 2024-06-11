@@ -107,7 +107,8 @@ inline bool CLASS::is_malleated64(const block& block) const NOEXCEPT
         auto tx = transactions.begin();
         for (const auto& tx_fk: txs.tx_fks)
         {
-            if (store_.tx.get_key(tx_fk) != (*tx++)->hash(false))
+            // tx.get_hash() assumes cached or is not thread safe.
+            if (store_.tx.get_key(tx_fk) != (*tx++)->get_hash(false))
             {
                 match = false;
                 break;
