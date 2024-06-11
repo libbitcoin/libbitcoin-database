@@ -144,11 +144,10 @@ public:
     Link commit_link(const Link& link, const Key& key) NOEXCEPT;
 
 private:
-    static constexpr auto key_size = array_count<Key>;
     static constexpr auto is_slab = (Size == max_size_t);
+    static constexpr auto index_size = Link::size + array_count<Key>;
     static constexpr auto buffer_size = is_slab ? system::maximum<ptrdiff_t> :
-        system::possible_narrow_and_sign_cast<ptrdiff_t>(
-            Size + Link::size + key_size);
+        system::possible_narrow_and_sign_cast<ptrdiff_t>(Size + index_size);
 
     using head = database::head<Link, Key, Hash>;
     using manager = database::manager<Link, Key, Size>;

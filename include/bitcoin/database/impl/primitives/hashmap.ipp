@@ -38,8 +38,8 @@ TEMPLATE
 bool CLASS::create() NOEXCEPT
 {
     Link count{};
-    return head_.create() &&
-        head_.get_body_count(count) && manager_.truncate(count);
+    return head_.create() && head_.get_body_count(count) &&
+        manager_.truncate(count);
 }
 
 TEMPLATE
@@ -58,16 +58,16 @@ TEMPLATE
 bool CLASS::restore() NOEXCEPT
 {
     Link count{};
-    return head_.verify() &&
-        head_.get_body_count(count) && manager_.truncate(count);
+    return head_.verify() && head_.get_body_count(count) &&
+        manager_.truncate(count);
 }
 
 TEMPLATE
 bool CLASS::verify() const NOEXCEPT
 {
     Link count{};
-    return head_.verify() &&
-        head_.get_body_count(count) && count == manager_.count();
+    return head_.verify() && head_.get_body_count(count) &&
+        (count == manager_.count());
 }
 
 // sizing
@@ -130,7 +130,10 @@ code CLASS::reload() NOEXCEPT
 TEMPLATE
 Link CLASS::top(const Link& link) const NOEXCEPT
 {
-    return link < head_.buckets() ? head_.top(link) : Link{};
+    if (link >= head_.buckets())
+        return {};
+
+    return head_.top(link);
 }
 
 TEMPLATE
@@ -165,12 +168,10 @@ TEMPLATE
 Key CLASS::get_key(const Link& link) NOEXCEPT
 {
     const auto ptr = manager_.get(link);
-
-    // As with link, search key is presumed valid (otherwise null array).
-    if (!ptr || system::is_lesser(ptr->size(), Link::size + key_size))
+    if (!ptr || system::is_lesser(ptr->size(), index_size))
         return {};
 
-    return system::unsafe_array_cast<uint8_t, key_size>(std::next(
+    return system::unsafe_array_cast<uint8_t, array_count<Key>>(std::next(
         ptr->begin(), Link::size));
 }
 
@@ -185,7 +186,7 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 
     iostream stream{ *ptr };
     reader source{ stream };
-    source.skip_bytes(Link::size + key_size);
+    source.skip_bytes(index_size);
 
     if constexpr (!is_slab) { source.set_limit(Size); }
     return element.from_data(source);
@@ -203,7 +204,7 @@ bool CLASS::get(const iterator& it, Element& element) const NOEXCEPT
     const auto buffer = ptr->offset(iterator::link_to_position(it.self()));
     iostream stream{ buffer, buffer_size };
     reader source{ stream };
-    source.skip_bytes(Link::size + key_size);
+    source.skip_bytes(index_size);
 
     if constexpr (!is_slab) { source.set_limit(Size); }
     return element.from_data(source);
@@ -220,7 +221,7 @@ bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
 
     iostream stream{ *ptr };
     finalizer sink{ stream };
-    sink.skip_bytes(Link::size + key_size);
+    sink.skip_bytes(index_size);
 
     if constexpr (!is_slab) { sink.set_limit(Size); }
     return element.to_data(sink);
@@ -322,8 +323,8 @@ bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
         return false;
 
     // Set element search key.
-    system::unsafe_array_cast<uint8_t, key_size>(std::next(ptr->begin(),
-        Link::size)) = key;
+    system::unsafe_array_cast<uint8_t, array_count<Key>>(
+        std::next(ptr->begin(), Link::size)) = key;
 
     // Commit element to search index.
     auto& next = system::unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
