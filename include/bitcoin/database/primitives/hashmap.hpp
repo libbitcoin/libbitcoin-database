@@ -92,10 +92,10 @@ public:
     /// True if an instance of object with key exists.
     bool exists(const Key& key) const NOEXCEPT;
 
-    /// Return first element or terimnal.
+    /// Return first element link or terimnal if not found/error.
     Link first(const Key& key) const NOEXCEPT;
 
-    /// Iterator walks hashmap conflict stack for matches from top down.
+    /// Iterator holds shared lock on storage remap.
     iterator it(const Key& key) const NOEXCEPT;
 
     /// Return the link at the top of the conflict list (for table scanning).
@@ -107,9 +107,18 @@ public:
     /// Return the associated search key (terminal link returns default).
     Key get_key(const Link& link) NOEXCEPT;
 
+    /// Get first element matching the search key, false if not found/error.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool find(const Key& key, Element& element) const NOEXCEPT;
+
     /// Get element at link, false if deserialize error.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool get(const Link& link, Element& element) const NOEXCEPT;
+
+    /// Get element at link, false if deserialize error.
+    /// Iterator must not be terminal, must be guarded by called.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool get(const iterator& it, Element& element) const NOEXCEPT;
 
     /// Set element into previously allocated link (follow with commit).
     template <typename Element, if_equal<Element::size, Size> = true>
@@ -139,8 +148,19 @@ public:
     bool commit(const Link& link, const Key& key) NOEXCEPT;
     Link commit_link(const Link& link, const Key& key) NOEXCEPT;
 
+protected:
+    /// Get element at link using memory object, false if deserialize error.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    static bool read(const memory_ptr& ptr, const Link& link,
+        Element& element) NOEXCEPT;
+
+    /// Get first element matching key, from top link and whole table memory.
+    static Link first(const memory_ptr& ptr, Link link, const Key& key) NOEXCEPT;
+
 private:
     static constexpr auto is_slab = (Size == max_size_t);
+    static constexpr auto index_size = Link::size + array_count<Key>;
+
     using head = database::head<Link, Key, Hash>;
     using manager = database::manager<Link, Key, Size>;
 

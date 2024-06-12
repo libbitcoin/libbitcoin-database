@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_IPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_IPP
 
-#include <utility>
+#include <algorithm>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -39,8 +39,8 @@ TEMPLATE
 bool CLASS::create() NOEXCEPT
 {
     Link count{};
-    return head_.create() &&
-        head_.get_body_count(count) && manager_.truncate(count);
+    return head_.create() && head_.get_body_count(count) &&
+        manager_.truncate(count);
 }
 
 TEMPLATE
@@ -59,16 +59,16 @@ TEMPLATE
 bool CLASS::restore() NOEXCEPT
 {
     Link count{};
-    return head_.verify() &&
-        head_.get_body_count(count) && manager_.truncate(count);
+    return head_.verify() && head_.get_body_count(count) &&
+        manager_.truncate(count);
 }
 
 TEMPLATE
 bool CLASS::verify() const NOEXCEPT
 {
     Link count{};
-    return head_.verify() &&
-        head_.get_body_count(count) && count == manager_.count();
+    return head_.verify() && head_.get_body_count(count) &&
+        (count == manager_.count());
 }
 
 // sizing
@@ -131,7 +131,10 @@ code CLASS::reload() NOEXCEPT
 TEMPLATE
 Link CLASS::top(const Link& link) const NOEXCEPT
 {
-    return link < head_.buckets() ? head_.top(link) : Link{};
+    if (link >= head_.buckets())
+        return {};
+
+    return head_.top(link);
 }
 
 TEMPLATE
@@ -143,16 +146,16 @@ bool CLASS::exists(const Key& key) const NOEXCEPT
 TEMPLATE
 Link CLASS::first(const Key& key) const NOEXCEPT
 {
-    return it(key).self();
+    ////return it(key).self();
+    // Copied from iterator::to_match(link), avoids normal form it() construct.
+    return first(manager_.get(), head_.top(key), key);
 }
 
 TEMPLATE
 typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 {
-    // TODO: key is copied into iterator, ref may be better for big keys.
-    // manager.get() is called for each memory access, avoiding deadlock
-    // risk that would arise if the memory accessor was held.
-    return { manager_, head_.top(key), key };
+    // Expensive construction, avoid unless iteration is necessary.
+    return { manager_.get(), head_.top(key), key };
 }
 
 TEMPLATE
@@ -164,32 +167,38 @@ Link CLASS::allocate(const Link& size) NOEXCEPT
 TEMPLATE
 Key CLASS::get_key(const Link& link) NOEXCEPT
 {
-    constexpr auto key_size = array_count<Key>;
     const auto ptr = manager_.get(link);
-
-    // As with link, search key is presumed valid (otherwise null array).
-    if (!ptr || system::is_lesser(ptr->size(), Link::size + key_size))
+    if (!ptr || system::is_lesser(ptr->size(), index_size))
         return {};
 
-    return system::unsafe_array_cast<uint8_t, key_size>(std::next(
+    return system::unsafe_array_cast<uint8_t, array_count<Key>>(std::next(
         ptr->begin(), Link::size));
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::find(const Key& key, Element& element) const NOEXCEPT
+{
+    // Renamed to "find()" to avoid collision over link/key.
+    // This override avoids duplicated memory_ptr construct in get(first()).
+    const auto ptr = manager_.get();
+    return read(ptr, first(ptr, head_.top(key), key), element);
 }
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
-    using namespace system;
-    const auto ptr = manager_.get(link);
-    if (!ptr)
-        return false;
+    // This override is the normal form.
+    return read(manager_.get(), link, element);
+}
 
-    iostream stream{ *ptr };
-    reader source{ stream };
-    source.skip_bytes(Link::size + array_count<Key>);
-
-    if constexpr (!is_slab) { source.set_limit(Size); }
-    return element.from_data(source);
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::get(const iterator& it, Element& element) const NOEXCEPT
+{
+    // This override avoids deadlock when holding iterator to the same table.
+    return read(it.get(), it.self(), element);
 }
 
 TEMPLATE
@@ -203,7 +212,7 @@ bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
 
     iostream stream{ *ptr };
     finalizer sink{ stream };
-    sink.skip_bytes(Link::size + array_count<Key>);
+    sink.skip_bytes(index_size);
 
     if constexpr (!is_slab) { sink.set_limit(Size); }
     return element.to_data(sink);
@@ -214,7 +223,10 @@ template <typename Element, if_equal<Element::size, Size>>
 Link CLASS::set_link(const Element& element) NOEXCEPT
 {
     Link link{};
-    return set_link(link, element) ? link : Link{};
+    if (!set_link(link, element))
+        return {};
+    
+    return link;
 }
 
 TEMPLATE
@@ -230,7 +242,10 @@ template <typename Element, if_equal<Element::size, Size>>
 Link CLASS::put_link(const Key& key, const Element& element) NOEXCEPT
 {
     Link link{};
-    return put_link(link, key, element) ? link : Link{};
+    if (!put_link(link, key, element))
+        return {};
+
+    return link;
 }
 
 TEMPLATE
@@ -281,6 +296,8 @@ bool CLASS::put(const Link& link, const Key& key,
     finalizer sink{ stream };
     sink.skip_bytes(Link::size);
     sink.write_bytes(key);
+
+    // The finalizer provides deferred index commit following serialization.
     sink.set_finalizer([this, link, index = head_.index(key), ptr]() NOEXCEPT
     {
         auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
@@ -289,7 +306,6 @@ bool CLASS::put(const Link& link, const Key& key,
 
     if constexpr (!is_slab) { sink.set_limit(Size * count); }
     return element.to_data(sink) && sink.finalize();
-    return false;
 }
 
 TEMPLATE
@@ -300,8 +316,8 @@ bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
         return false;
 
     // Set element search key.
-    system::unsafe_array_cast<uint8_t, array_count<Key>>(std::next(
-        ptr->begin(), Link::size)) = key;
+    system::unsafe_array_cast<uint8_t, array_count<Key>>(
+        std::next(ptr->begin(), Link::size)) = key;
 
     // Commit element to search index.
     auto& next = system::unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
@@ -311,7 +327,68 @@ bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
 TEMPLATE
 Link CLASS::commit_link(const Link& link, const Key& key) NOEXCEPT
 {
-    return commit(link, key) ? link : Link{};
+    if (!commit(link, key))
+        return {};
+
+    return link;
+}
+
+// protected/static
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::read(const memory_ptr& ptr, const Link& link,
+    Element& element) NOEXCEPT
+{
+    if (!ptr || link.is_terminal())
+        return false;
+
+    using namespace system;
+    const auto start = iterator::link_to_position(link);
+    if (is_limited<ptrdiff_t>(start))
+        return false;
+
+    const auto size = ptr->size();
+    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
+    if (position > size)
+        return false;
+
+    const auto offset = ptr->offset(position);
+    if (is_null(offset))
+        return false;
+
+    // Stream starts at record and the index is skipped for reader convenience.
+    iostream stream{ offset, size - position };
+    reader source{ stream };
+    source.skip_bytes(index_size);
+    if constexpr (!is_slab) { source.set_limit(Size); }
+    return element.from_data(source);
+}
+
+TEMPLATE
+Link CLASS::first(const memory_ptr& ptr, Link link, const Key& key) NOEXCEPT
+{
+    if (!ptr)
+        return {};
+
+    while (!link.is_terminal())
+    {
+        // get element offset (fault)
+        const auto offset = ptr->offset(iterator::link_to_position(link));
+        if (is_null(offset))
+            return {};
+
+        // element key matches (found)
+        const auto key_ptr = std::next(offset, Link::size);
+        if (is_zero(std::memcmp(key.data(), key_ptr, array_count<Key>)))
+            return link;
+
+        // set next element link (loop)
+        link = system::unsafe_array_cast<uint8_t, Link::size>(offset);
+    }
+
+    return link;
 }
 
 } // namespace database

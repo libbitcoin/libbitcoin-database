@@ -45,7 +45,7 @@ struct txs
         link count() const NOEXCEPT
         {
             return system::possible_narrow_cast<link::integer>(pk + sk +
-                schema::count_ + schema::bit + bytes::size +tx::size * tx_fks.size());
+                schema::count_ + schema::bit + bytes::size + tx::size * tx_fks.size());
         }
 
         inline bool from_data(reader& source) NOEXCEPT

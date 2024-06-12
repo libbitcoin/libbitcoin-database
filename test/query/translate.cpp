@@ -776,10 +776,10 @@ BOOST_AUTO_TEST_CASE(query_translate__to_txs__always__expected)
     BOOST_REQUIRE(query.set(test::block2a, test::context, false));
 
     const tx_links expected_links2{ 2, 3 };
-    BOOST_REQUIRE_EQUAL(query.to_txs(0), tx_links{ 0 });
-    BOOST_REQUIRE_EQUAL(query.to_txs(1), tx_links{ 1 });
-    BOOST_REQUIRE_EQUAL(query.to_txs(2), expected_links2);
-    BOOST_REQUIRE(query.to_txs(3).empty());
+    BOOST_REQUIRE_EQUAL(query.to_transactions(0), tx_links{ 0 });
+    BOOST_REQUIRE_EQUAL(query.to_transactions(1), tx_links{ 1 });
+    BOOST_REQUIRE_EQUAL(query.to_transactions(2), expected_links2);
+    BOOST_REQUIRE(query.to_transactions(3).empty());
 }
 
 // to_spenders

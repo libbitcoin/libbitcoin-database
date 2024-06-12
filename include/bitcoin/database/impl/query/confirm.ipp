@@ -33,6 +33,17 @@ namespace database {
 
 // protected
 TEMPLATE
+height_link CLASS::get_height(const hash_digest& key) const NOEXCEPT
+{
+    table::header::get_height header{};
+    if (!store_.header.find(key, header))
+        return {};
+
+    return header.height;
+}
+
+// protected
+TEMPLATE
 height_link CLASS::get_height(const header_link& link) const NOEXCEPT
 {
     table::header::get_height header{};
@@ -236,24 +247,31 @@ TEMPLATE
 inline error::error_t CLASS::spent_prevout(const foreign_point& point,
     const tx_link& self) const NOEXCEPT
 {
+    // (2.94%)
     auto it = store_.spend.it(point);
-    if (it.self().is_terminal())
+    if (!it)
         return error::success;
 
     table::spend::get_parent spend{};
     do
     {
-        if (!store_.spend.get(it.self(), spend))
+        // (0.38%)
+        if (!store_.spend.get(it, spend))
             return error::integrity;
 
+        // Free (trivial).
         // Skip current spend, which is the only one if not double spent.
         if (spend.parent_fk == self)
             continue;
 
+        // Free (zero iteration without double spend).
         // If strong spender exists then prevout is confirmed double spent.
         if (!to_block(spend.parent_fk).is_terminal())
             return error::confirmed_double_spend;
     }
+    // Expensive (31.19%).
+    // Iteration exists because we allow double spending, and by design cannot
+    // preclude it because we download and index concurrently before confirm.
     while (it.advance());
     return error::success;
 }
@@ -263,7 +281,12 @@ TEMPLATE
 inline error::error_t CLASS::unspendable_prevout(const point_link& link,
     uint32_t sequence, uint32_t version, const context& ctx) const NOEXCEPT
 {
-    const auto strong = to_strong(get_point_key(link));
+    // Modest (1.24%), and with 4.77 conflict ratio.
+    const auto key = get_point_key(link);
+
+    // Expensize (8.6%).
+    const auto strong = to_strong(key);
+
     if (strong.block.is_terminal())
         return strong.tx.is_terminal() ? error::missing_previous_output :
             error::unconfirmed_spend;
@@ -317,27 +340,34 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     if (!get_context(ctx, link))
         return error::integrity;
 
-    const auto txs = to_txs(link);
+    // (0.07%)
+    const auto txs = to_transactions(link);
     if (txs.empty())
         return error::success;
 
-    code ec{}; 
+    // (0.11%) because !bip30.
+    code ec{};
     if ((ec = unspent_duplicates(txs.front(), ctx)))
         return ec;
 
+    // (0.33%)
     uint32_t version{};
     table::spend::get_prevout_sequence spend{};
     for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
     {
+        // (4.71%) tx.get, puts.get, reduce collision.
         for (const auto& spend_fk: to_tx_spends(version, *tx))
         {
+            // (3.65%) spend.get, reduce collision.
             if (!store_.spend.get(spend_fk, spend))
                 return error::integrity;
 
+            // (33.42%)
             if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
                 version, ctx)))
                 return ec;
 
+            // (34.74%)
             if ((ec = spent_prevout(spend.prevout(), *tx)))
                 return ec;
         }
@@ -374,7 +404,7 @@ bool CLASS::is_strong(const header_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::set_strong(const header_link& link) NOEXCEPT
 {
-    const auto txs = to_txs(link);
+    const auto txs = to_transactions(link);
     if (txs.empty())
         return false;
 
@@ -389,7 +419,7 @@ bool CLASS::set_strong(const header_link& link) NOEXCEPT
 TEMPLATE
 bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 {
-    const auto txs = to_txs(link);
+    const auto txs = to_transactions(link);
     if (txs.empty())
         return false;
 

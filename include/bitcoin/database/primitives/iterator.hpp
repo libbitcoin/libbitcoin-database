@@ -21,12 +21,20 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
 
+/// THIS HOLDS A memory_ptr WHICH HOLDS A SHARED REMAP LOCK. IT SHOULD NOT BE
+/// HELD WHILE THE HOLDING CODE EXECUTES READS AGAINST THE SAME TABLE.
+/// OTHERWISE A DEADLOCK WILL OCCUR WHEN THE TABLE'S FILE IS EXPANDED, WHICH
+/// WAITS ON THE RELEASE OF THE SHARED LOCK (REMAP REQUIRES EXCLUSIVE ACCESS).
+/// THE hashmap.get(const iterator& it, ...) METHOD EXISTS TO PREVENT A CALL TO
+/// manager.get(), WHICH DESPITE BEING A READ WOULD CAUSE A DEADLOCK. THIS IS
+/// BECAUSE IT CANNOT COMPLETE ITS READ WHILE REMAP IS WAITING ON ACCESS.
+
+/// This class is not thread safe.
 /// Size non-max implies record manager (ordinal record links).
 template <typename Link, typename Key, size_t Size = max_size_t>
 class iterator
@@ -34,30 +42,40 @@ class iterator
 public:
     DEFAULT_COPY_MOVE_DESTRUCT(iterator);
 
-    using manager = database::manager<Link, Key, Size>;
+    static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
 
     /// This advances to first match (or terminal).
-    INLINE iterator(const manager& memory, const Link& start,
+    /// Key must be passed as an l-value as it is held by reference.
+    iterator(const memory_ptr& data, const Link& start,
         const Key& key) NOEXCEPT;
 
     /// Advance to and return next iterator.
-    INLINE bool advance() NOEXCEPT;
+    bool advance() NOEXCEPT;
 
     /// Advance to next match and return false if terminal (not found).
-    INLINE const Link& self() const NOEXCEPT;
+    const Link& self() const NOEXCEPT;
+
+    /// Access the underlying memory pointer.
+    // TODO: for use by hashmap, make exclusive via friend.
+    const memory_ptr& get() const NOEXCEPT;
+
+    /// True if the iterator is not terminal.
+     operator bool() const NOEXCEPT;
 
 protected:
-    INLINE memory_ptr get_ptr() const NOEXCEPT;
-    INLINE bool advance(const memory_ptr& ptr) NOEXCEPT;
-    INLINE bool is_match(const memory_ptr& ptr) const NOEXCEPT;
-    INLINE Link get_next(const memory_ptr& ptr) const NOEXCEPT;
+    Link to_match(Link link) const NOEXCEPT;
+    Link to_next(Link link) const NOEXCEPT;
 
 private:
+    static constexpr auto key_size = array_count<Key>;
     static constexpr auto is_slab = (Size == max_size_t);
-    static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
 
-    // These are thread safe.
-    const manager& manager_;
+    // This is not thread safe, but it's object is not modified here and the
+    // memory that it refers to is not addressable until written, and writes
+    // are guarded by allocator, which is protected by mutex.
+    const memory_ptr memory_;
+
+    // This is thread safe.
     const Key key_;
 
     // This is not thread safe.

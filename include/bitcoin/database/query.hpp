@@ -230,7 +230,7 @@ public:
     inline header_link to_header(const hash_digest& key) const NOEXCEPT;
     inline point_link to_point(const hash_digest& key) const NOEXCEPT;
     inline tx_link to_tx(const hash_digest& key) const NOEXCEPT;
-    inline txs_link to_txs_link(const header_link& key) const NOEXCEPT;
+    inline txs_link to_txs(const header_link& key) const NOEXCEPT;
     inline filter_link to_filter(const header_link& key) const NOEXCEPT;
 
     /// put to tx (reverse navigation)
@@ -260,8 +260,8 @@ public:
     spend_links to_tx_spends(const tx_link& link) const NOEXCEPT;
 
     /// block to txs/puts (forward navigation)
-    tx_links to_txs(const header_link& link) const NOEXCEPT;
     tx_link to_coinbase(const header_link& link) const NOEXCEPT;
+    tx_links to_transactions(const header_link& link) const NOEXCEPT;
     spend_links to_non_coinbase_spends(const header_link& link) const NOEXCEPT;
     spend_links to_block_spends(const header_link& link) const NOEXCEPT;
     output_links to_block_outputs(const header_link& link) const NOEXCEPT;
@@ -317,6 +317,7 @@ public:
     bool get_tx_position(size_t& out, const tx_link& link) const NOEXCEPT;
 
     /// False implies fault.
+    bool get_height(size_t& out, const hash_digest& key) const NOEXCEPT;
     bool get_height(size_t& out, const header_link& link) const NOEXCEPT;
     bool get_value(uint64_t& out, const output_link& link) const NOEXCEPT;
     bool get_unassociated(association& out, const header_link& link) const NOEXCEPT;
@@ -491,6 +492,7 @@ protected:
     /// Confirm.
     /// -----------------------------------------------------------------------
 
+    height_link get_height(const hash_digest& key) const NOEXCEPT;
     height_link get_height(const header_link& link) const NOEXCEPT;
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
     error::error_t mature_prevout(const point_link& link,
