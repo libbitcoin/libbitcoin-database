@@ -913,7 +913,7 @@ code CLASS::set_code(const header& header, const chain_context& ctx,
 
 TEMPLATE
 code CLASS::set_code(header_link& out_fk, const header& header,
-    const chain_context& ctx, bool milestone) NOEXCEPT
+    const chain_context& ctx, bool milestone, bool) NOEXCEPT
 {
     // Map chain context into database context.
     return set_code(out_fk, header, context
@@ -926,7 +926,7 @@ code CLASS::set_code(header_link& out_fk, const header& header,
 
 TEMPLATE
 code CLASS::set_code(header_link& out_fk, const header& header,
-    const context& ctx, bool milestone) NOEXCEPT
+    const context& ctx, bool milestone, bool) NOEXCEPT
 {
     // header.get_hash() assumes cached or is not thread safe.
     const auto& key = header.get_hash();
