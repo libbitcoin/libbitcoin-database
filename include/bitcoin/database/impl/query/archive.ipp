@@ -80,6 +80,13 @@ inline bool CLASS::is_coinbase(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
+inline bool CLASS::is_milestone(const header_link& link) const NOEXCEPT
+{
+    table::header::get_milestone header{};
+    return store_.header.get(link, header) && header.milestone;
+}
+
+TEMPLATE
 inline bool CLASS::is_malleated64(const block& block) const NOEXCEPT
 {
     // This is a very cheap prequalification.

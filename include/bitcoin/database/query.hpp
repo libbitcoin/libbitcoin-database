@@ -285,6 +285,7 @@ public:
     inline bool is_malleated64(const block& block) const NOEXCEPT;
     inline bool is_malleable64(const header_link& link) const NOEXCEPT;
     inline bool is_associated(const header_link& link) const NOEXCEPT;
+    inline bool is_milestone(const header_link& link) const NOEXCEPT;
 
     bool set(const header& header, const chain_context& ctx,
         bool milestone) NOEXCEPT;
@@ -427,7 +428,6 @@ public:
     bool get_work(uint256_t& work, const header_link& link) const NOEXCEPT;
     bool get_context(context& ctx, const header_link& link) const NOEXCEPT;
     bool get_version(uint32_t& version, const header_link& link) const NOEXCEPT;
-    bool get_milestone(bool& milestone, const header_link& link) const NOEXCEPT;
     bool get_timestamp(uint32_t& timestamp,
         const header_link& link) const NOEXCEPT;
 

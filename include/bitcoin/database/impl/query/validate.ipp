@@ -142,18 +142,6 @@ bool CLASS::get_work(uint256_t& work, const header_link& link) const NOEXCEPT
     return result;
 }
 
-TEMPLATE
-bool CLASS::get_milestone(bool& milestone,
-    const header_link& link) const NOEXCEPT
-{
-    table::header::get_milestone header{};
-    if (!store_.header.get(link, header))
-        return false;
-
-    milestone = header.milestone;
-    return true;
-}
-
 ////TEMPLATE
 ////bool CLASS::get_check_context(context& ctx, hash_digest& hash,
 ////    uint32_t& timestamp, const header_link& link) const NOEXCEPT

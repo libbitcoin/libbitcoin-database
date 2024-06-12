@@ -1046,6 +1046,33 @@ BOOST_AUTO_TEST_CASE(query_archive__is_malleable64__malleable__true)
     BOOST_REQUIRE_EQUAL(query.get_candidate_size(42), candidate_size);
 }
 
+BOOST_AUTO_TEST_CASE(query_archive__is_milestone__genesis__false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(!query.is_milestone(0));
+    BOOST_REQUIRE(!query.is_milestone(1));
+}
+
+BOOST_AUTO_TEST_CASE(query_archive__is_milestone__set__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, context{}, true, false));
+    BOOST_REQUIRE(query.set(test::block2, context{}, false, false));;
+    BOOST_REQUIRE(!query.is_milestone(0));
+    BOOST_REQUIRE(query.is_milestone(1));
+    BOOST_REQUIRE(!query.is_milestone(2));
+}
+
 BOOST_AUTO_TEST_CASE(query_archive__get_header__invalid_parent__expected)
 {
     constexpr auto root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");

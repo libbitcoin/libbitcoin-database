@@ -88,41 +88,6 @@ BOOST_AUTO_TEST_CASE(query_validate__get_bits__genesis__expected)
     BOOST_REQUIRE_EQUAL(bits, 0x1d00ffff_u32);
 }
 
-BOOST_AUTO_TEST_CASE(query_validate__get_milestone__genesis__false)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-
-    bool milestone{};
-    BOOST_REQUIRE(!query.get_milestone(milestone, 1));
-    BOOST_REQUIRE(query.get_milestone(milestone, 0));
-    BOOST_REQUIRE(!milestone);
-}
-
-BOOST_AUTO_TEST_CASE(query_validate__get_milestone__set__expected)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}, true, false));
-    BOOST_REQUIRE(query.set(test::block2, context{}, false, false));
-
-    bool milestone{};
-    BOOST_REQUIRE(query.get_milestone(milestone, 0));
-    BOOST_REQUIRE(!milestone);
-    BOOST_REQUIRE(query.get_milestone(milestone, 1));
-    BOOST_REQUIRE(milestone);
-    BOOST_REQUIRE(query.get_milestone(milestone, 2));
-    BOOST_REQUIRE(!milestone);
-}
-
 BOOST_AUTO_TEST_CASE(query_validate__get_context__genesis__default)
 {
     settings settings{};
