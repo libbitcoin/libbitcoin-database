@@ -109,7 +109,10 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { tx_address_put, "tx_address_put" },
     { tx_tx_commit, "tx_tx_commit" },
 
-    // tx archive
+    // header archive
+    { header_put, "header_put" },
+
+    // txs archive
     { txs_empty, "txs_empty" },
     { txs_header, "txs_header" },
     { txs_txs_put, "txs_txs_put" },

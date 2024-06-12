@@ -137,47 +137,42 @@ inline bool CLASS::is_associated(const header_link& link) const NOEXCEPT
 
 TEMPLATE
 bool CLASS::set(const header& header, const chain_context& ctx,
-    bool bypass) NOEXCEPT
+    bool milestone) NOEXCEPT
 {
-    return !set_link(header, ctx, bypass).is_terminal();
+    return !set_code(header, ctx, milestone);
 }
 
 TEMPLATE
-bool CLASS::set(const header& header, const context& ctx, bool bypass) NOEXCEPT
+bool CLASS::set(const header& header, const context& ctx, bool milestone) NOEXCEPT
 {
-    return !set_link(header, ctx, bypass).is_terminal();
+    return !set_code(header, ctx, milestone);
 }
 
 TEMPLATE
-bool CLASS::set(const block& block, const chain_context& ctx,
-    bool bypass) NOEXCEPT
+bool CLASS::set(const block& block, const chain_context& ctx, bool milestone,
+    bool strong) NOEXCEPT
 {
-    return !set_link(block, ctx, bypass).is_terminal();
+    return !set_code(block, ctx, milestone, strong);
 }
 
 TEMPLATE
-bool CLASS::set(const block& block, const context& ctx, bool bypass) NOEXCEPT
+bool CLASS::set(const block& block, const context& ctx, bool milestone,
+    bool strong) NOEXCEPT
 {
-    return !set_link(block, ctx, bypass).is_terminal();
-}
-
-TEMPLATE
-bool CLASS::set(const hash_digest& point_hash) NOEXCEPT
-{
-    return !set_link(point_hash).is_terminal();
-}
-
-TEMPLATE
-bool CLASS::set(const block& block) NOEXCEPT
-{
-    // This sets only the txs of a block with header/context already archived.
-    return !set_link(block).is_terminal();
+    return !set_code(block, ctx, milestone, strong);
 }
 
 TEMPLATE
 bool CLASS::set(const transaction& tx) NOEXCEPT
 {
-    return !set_link(tx).is_terminal();
+    return !set_code(tx);
+}
+
+TEMPLATE
+bool CLASS::set(const block& block, bool strong) NOEXCEPT
+{
+    // This sets only the txs of a block with header/context already archived.
+    return !set_code(block, strong);
 }
 
 TEMPLATE
@@ -684,7 +679,9 @@ typename CLASS::inputs_ptr CLASS::get_spenders(const tx_link& link,
 
 // set transaction
 // ----------------------------------------------------------------------------
+// The only multitable write query (except initialize/genesis).
 
+// deprecated
 TEMPLATE
 tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
 {
@@ -692,7 +689,13 @@ tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
     return set_code(tx_fk, tx) ? tx_link{} : tx_fk;
 }
 
-// The only multitable write query (except initialize/genesis).
+TEMPLATE
+code CLASS::set_code(const transaction& tx) NOEXCEPT
+{
+    tx_link unused{};
+    return set_code(unused, tx);
+}
+
 TEMPLATE
 code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
 {
@@ -700,13 +703,8 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     if (tx.is_empty())
         return error::tx_empty;
 
-    const auto key = tx.hash(false);
-
-    ////// GUARD (tx redundancy)
-    ////// This is only fully effective if there is a single database thread.
-    ////out_fk = to_tx(key);
-    ////if (!out_fk.is_terminal())
-    ////    return error::success;
+    // tx.get_hash() assumes cached or is not thread safe.
+    const auto& key = tx.get_hash(false);
 
     // Declare puts record.
     const auto& ins = *tx.inputs_ptr();
@@ -754,7 +752,6 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
         const auto& prevout = in->point();
         const auto& hash = prevout.hash();
 
-        // TODO: consider table removal.
         // Create prevout hash in point table.
         point_link hash_fk{};
         if (hash != null_hash)
@@ -881,123 +878,193 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
 // set header
 // ----------------------------------------------------------------------------
 
+// deprecated
 TEMPLATE
-header_link CLASS::set_link(const header& header, const chain_context& ctx,
-    bool bypass) NOEXCEPT
+header_link CLASS::set_link(const header& header, const auto& ctx,
+    bool milestone) NOEXCEPT
+{
+    header_link header_fk{};
+    return set_code(header_fk, header, ctx, milestone) ? header_link{} :
+        header_fk;
+}
+
+TEMPLATE
+code CLASS::set_code(const header& header, const context& ctx,
+    bool milestone) NOEXCEPT
+{
+    header_link unused{};
+    return set_code(unused, header, ctx, milestone);
+}
+
+TEMPLATE
+code CLASS::set_code(const header& header, const chain_context& ctx,
+    bool milestone) NOEXCEPT
+{
+    header_link unused{};
+    return set_code(unused, header, ctx, milestone);
+}
+
+TEMPLATE
+code CLASS::set_code(header_link& out_fk, const header& header,
+    const chain_context& ctx, bool milestone) NOEXCEPT
 {
     // Map chain context into database context.
-    return set_link(header, context
+    return set_code(out_fk, header, context
     {
         system::possible_narrow_cast<context::flag::integer>(ctx.flags),
         system::possible_narrow_cast<context::block::integer>(ctx.height),
         ctx.median_time_past
-    }, bypass);
+    }, milestone);
 }
 
 TEMPLATE
-header_link CLASS::set_link(const header& header, const context& ctx,
-    bool bypass) NOEXCEPT
+code CLASS::set_code(header_link& out_fk, const header& header,
+    const context& ctx, bool milestone) NOEXCEPT
 {
     // header.get_hash() assumes cached or is not thread safe.
-    const auto key = header.get_hash();
+    const auto& key = header.get_hash();
 
     ////// GUARD (header redundancy)
     ////// This is only fully effective if there is a single database thread.
-    ////auto header_fk = to_header(key);
-    ////if (!header_fk.is_terminal())
-    ////    return header_fk;
+    ////out_fk = to_header(key);
+    ////if (!out_fk.is_terminal())
+    ////    return error::success;
 
     // Parent must be missing iff its hash is null.
-    const auto& parent_sk = header.previous_block_hash();
-    const auto parent_fk = to_header(parent_sk);
-    if (parent_fk.is_terminal() != (parent_sk == system::null_hash))
-        return {};
+    const auto& previous = header.previous_block_hash();
+    const auto parent_fk = to_header(previous);
+    if (parent_fk.is_terminal() != (previous == system::null_hash))
+        return system::error::orphan_block;
 
     // ========================================================================
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.header.put_link(key, table::header::record_put_ref
+    out_fk = store_.header.put_link(key, table::header::record_put_ref
     {
         {},
         ctx,
-        bypass,
+        milestone,
         parent_fk,
         header
     });
+
+    return out_fk.is_terminal() ? error::header_put : error::success;
     // ========================================================================
 }
 
 // set block
 // ----------------------------------------------------------------------------
-// TODO: add confirm option and pass to txs.
+
+// deprecated
+TEMPLATE
+header_link CLASS::set_link(const block& block, const auto& ctx,
+    bool milestone, bool strong) NOEXCEPT
+{
+    header_link header_fk{};
+    return set_code(header_fk, block, ctx, milestone, strong) ? header_link{} :
+        header_fk;
+}
 
 TEMPLATE
-header_link CLASS::set_link(const block& block, const chain_context& ctx,
-    bool bypass) NOEXCEPT
+code CLASS::set_code(const block& block, const context& ctx, bool milestone,
+    bool strong) NOEXCEPT
+{
+    header_link unused{};
+    return set_code(unused, block, ctx, milestone, strong);
+}
+
+TEMPLATE
+code CLASS::set_code(const block& block, const chain_context& ctx,
+    bool milestone, bool strong) NOEXCEPT
+{
+    header_link unused{};
+    return set_code(unused, block, ctx, milestone, strong);
+}
+
+TEMPLATE
+code CLASS::set_code(header_link& out_fk, const block& block,
+    const chain_context& ctx, bool milestone, bool strong) NOEXCEPT
 {
     // Map chain context into database context.
-    return set_link(block, context
+    return set_code(out_fk, block, context
     {
         system::possible_narrow_cast<context::flag::integer>(ctx.flags),
         system::possible_narrow_cast<context::block::integer>(ctx.height),
         ctx.median_time_past
-    }, bypass);
+    }, milestone, strong);
 }
 
 TEMPLATE
-header_link CLASS::set_link(const block& block, const context& ctx,
-    bool bypass) NOEXCEPT
+code CLASS::set_code(header_link& out_fk, const block& block,
+    const context& ctx, bool milestone, bool strong) NOEXCEPT
 {
-    const auto header_fk = set_link(block.header(), ctx, bypass);
-    if (header_fk.is_terminal())
-        return {};
+    const auto ec = set_code(out_fk, block.header(), ctx, milestone);
+    if (ec)
+        return ec;
 
-    constexpr auto confirm = false;
     const auto size = block.serialized_size(true);
-    return set_code(*block.transactions_ptr(), header_fk, size, confirm) ?
-        header_link{} : header_fk;
+    return set_code(*block.transactions_ptr(), out_fk, size, strong);
 }
 
-// set/unset txs
+// set txs from block
 // ----------------------------------------------------------------------------
+
+// deprecated
+// This sets only the txs of a block with header/context already archived.
+TEMPLATE
+header_link CLASS::set_link(const block& block, bool strong) NOEXCEPT
+{
+    header_link header_fk{};
+    return set_code(header_fk, block, strong) ? header_link{} : header_fk;
+}
 
 // This sets only the txs of a block with header/context already archived.
 TEMPLATE
-header_link CLASS::set_link(const block& block) NOEXCEPT
+code CLASS::set_code(const block& block, bool strong) NOEXCEPT
 {
-    // block.get_hash() assumes cached or is not thread safe.
-    const auto header_fk = to_header(block.get_hash());
-    if (header_fk.is_terminal())
-        return {};
-
-    constexpr auto confirm = false;
-    const auto size = block.serialized_size(true);
-    return set_code(*block.transactions_ptr(), header_fk, size, confirm) ?
-        header_link{} : header_fk;
+    header_link unused{};
+    return set_code(unused, block, strong);
 }
 
+// This sets only the txs of a block with header/context already archived.
+TEMPLATE
+code CLASS::set_code(header_link& out_fk, const block& block,
+    bool strong) NOEXCEPT
+{
+    out_fk = to_header(block.get_hash());
+    if (out_fk.is_terminal())
+        return error::txs_header;
+
+    txs_link unused{};
+    const auto size = block.serialized_size(true);
+    return set_code(unused, *block.transactions_ptr(), out_fk, size, strong);
+}
+
+
+// set txs
+// ----------------------------------------------------------------------------
+
+// deprecated
 TEMPLATE
 txs_link CLASS::set_link(const transactions& txs, const header_link& key,
-    size_t size) NOEXCEPT
+    size_t size, bool strong) NOEXCEPT
 {
-    constexpr auto confirm = false;
     txs_link txs_fk{};
-    return set_code(txs_fk, txs, key, size, confirm) ? txs_link{} : txs_fk;
+    return set_code(txs_fk, txs, key, size, strong) ? txs_link{} : txs_fk;
 }
 
 TEMPLATE
 code CLASS::set_code(const transactions& txs, const header_link& key,
-    size_t size, bool confirm) NOEXCEPT
+    size_t block_size, bool strong) NOEXCEPT
 {
     txs_link unused{};
-    return set_code(unused, txs, key, size, confirm);
+    return set_code(unused, txs, key, block_size, strong);
 }
 
-// protected
 TEMPLATE
 code CLASS::set_code(txs_link& out_fk, const transactions& txs,
-    const header_link& key, size_t size, bool confirm) NOEXCEPT
+    const header_link& key, size_t block_size, bool strong) NOEXCEPT
 {
     if (key.is_terminal())
         return error::txs_header;
@@ -1027,7 +1094,7 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
     }
 
     using bytes = linkage<schema::size>::integer;
-    const auto wire = system::possible_narrow_cast<bytes>(size);
+    const auto wire = system::possible_narrow_cast<bytes>(block_size);
     const auto malleable = block::is_malleable64(txs);
 
     // ========================================================================
@@ -1035,7 +1102,7 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
     constexpr auto positive = true;
 
     // Clean allocation failure (e.g. disk full), see set_strong() comments.
-    if (confirm && !set_strong(key, links, positive))
+    if (strong && !set_strong(key, links, positive))
         return error::txs_confirm;
 
     // Header link is the key for the txs table.
@@ -1051,6 +1118,9 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
     return out_fk.is_terminal() ? error::txs_txs_put : error::success;
     // ========================================================================
 }
+
+// unset txs
+// ----------------------------------------------------------------------------
 
 TEMPLATE
 bool CLASS::set_dissasociated(const header_link& key) NOEXCEPT

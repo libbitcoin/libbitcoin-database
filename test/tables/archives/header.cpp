@@ -33,7 +33,7 @@ constexpr table::header::record expected
         0x00341201_u32, // height
         0x56341203_u32  // mtp
     },
-    true,           // bypass
+    true,           // milestone
     0x00341204_u32, // parent_fk
     0x56341205_u32, // version
     0x56341206_u32, // timestamp
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(header__put_ptr__get__expected)
     {
         {},
         expected.ctx,
-        expected.bypass,
+        expected.milestone,
         expected.parent_fk,
         system::to_shared(expected_header)
     };
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(header__put_ref__get__expected)
     {
         {},
         expected.ctx,
-        expected.bypass,
+        expected.milestone,
         expected.parent_fk,
         expected_header
     };

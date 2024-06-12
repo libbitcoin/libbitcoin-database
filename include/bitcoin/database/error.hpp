@@ -117,6 +117,9 @@ enum error_t : uint8_t
     tx_address_put,
     tx_tx_commit,
 
+    /// header archive
+    header_put,
+
     /// txs archive
     txs_empty,
     txs_header,

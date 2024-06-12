@@ -143,13 +143,14 @@ bool CLASS::get_work(uint256_t& work, const header_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::get_bypass(bool& bypass, const header_link& link) const NOEXCEPT
+bool CLASS::get_milestone(bool& milestone,
+    const header_link& link) const NOEXCEPT
 {
-    table::header::get_bypass header{};
+    table::header::get_milestone header{};
     if (!store_.header.get(link, header))
         return false;
 
-    bypass = header.bypass;
+    milestone = header.milestone;
     return true;
 }
 
