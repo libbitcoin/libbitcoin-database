@@ -365,9 +365,9 @@ public:
     code set_code(const header& header, const chain_context& ctx,
         bool milestone) NOEXCEPT;
     code set_code(header_link& out_fk, const header& header,
-        const context& ctx, bool milestone) NOEXCEPT;
+        const context& ctx, bool milestone, bool=false) NOEXCEPT;
     code set_code(header_link& out_fk, const header& header,
-        const chain_context& ctx, bool milestone) NOEXCEPT;
+        const chain_context& ctx, bool milestone, bool=false) NOEXCEPT;
     header_link set_link(const header& header, const auto& ctx,
         bool milestone) NOEXCEPT;
 
