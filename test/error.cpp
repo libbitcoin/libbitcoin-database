@@ -592,6 +592,17 @@ BOOST_AUTO_TEST_CASE(error_t__code__tx_tx_commit__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "tx_tx_commit");
 }
 
+// header archive
+
+BOOST_AUTO_TEST_CASE(error_t__code__header_put__true_exected_message)
+{
+    constexpr auto value = error::header_put;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "header_put");
+}
+
 // txs archive
 
 BOOST_AUTO_TEST_CASE(error_t__code__txs_header__true_exected_message)

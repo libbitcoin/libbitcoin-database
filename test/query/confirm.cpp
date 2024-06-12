@@ -63,8 +63,8 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_candidate_block__push_pop_candidate__expe
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
     BOOST_REQUIRE(query.is_candidate_header(0));
     BOOST_REQUIRE(!query.is_candidate_header(1));
     BOOST_REQUIRE(!query.is_candidate_header(2));
@@ -97,8 +97,8 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_confirmed_block__push_pop_confirmed__expe
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
     BOOST_REQUIRE(query.is_confirmed_block(0));
     BOOST_REQUIRE(!query.is_confirmed_block(1));
     BOOST_REQUIRE(!query.is_confirmed_block(2));
@@ -128,8 +128,8 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_confirmed_tx__confirm__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
     BOOST_REQUIRE(query.is_confirmed_tx(0));
     BOOST_REQUIRE(!query.is_confirmed_tx(1));
     BOOST_REQUIRE(!query.is_confirmed_tx(2));
@@ -154,8 +154,8 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_confirmed_input__confirm__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
 
     BOOST_REQUIRE(query.is_confirmed_input(query.to_spend(0, 0)));
     BOOST_REQUIRE(!query.is_confirmed_input(query.to_spend(1, 0)));
@@ -180,8 +180,8 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_confirmed_output__confirm__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
 
     BOOST_REQUIRE(query.is_confirmed_output(query.to_output(0, 0)));
     BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(1, 0)));
@@ -218,9 +218,9 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_spent_output__strong_confirmed__true)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false));
-    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }, false));
-    BOOST_REQUIRE(query.set(test::block3a, context{ 0, 3, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block3a, context{ 0, 3, 0 }, false, false));
     BOOST_REQUIRE(!query.is_spent_output(query.to_output(0, 0))); // genesis
     BOOST_REQUIRE(!query.is_spent_output(query.to_output(1, 0))); // block1a
     BOOST_REQUIRE(!query.is_spent_output(query.to_output(1, 1))); // block1a
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_strong_spend__weak__false)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}, false));
+    BOOST_REQUIRE(query.set(test::block1, context{}, false, false));
     BOOST_REQUIRE(!query.is_strong_spend(query.to_spend(1, 0)));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.is_strong_spend(query.to_spend(1, 0)));
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_strong__weak__false)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}, false));
+    BOOST_REQUIRE(query.set(test::block1, context{}, false, false));
     BOOST_REQUIRE(!query.is_strong(1));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.is_strong(1));
@@ -297,7 +297,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unspent__false)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}, false));
+    BOOST_REQUIRE(query.set(test::block1, context{}, false, false));
     BOOST_REQUIRE(!query.is_spent(query.to_spend(0, 0))); // unspendable
     BOOST_REQUIRE(!query.is_spent(query.to_spend(1, 0))); // unspent
     BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 0))); // non-existent
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unconfirmed_double_spend__false)
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
 
-    BOOST_REQUIRE(query.set(test::block1a, context{}, false));
+    BOOST_REQUIRE(query.set(test::block1a, context{}, false, false));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(!query.is_spent(query.to_spend(0, 0))); // unspendable
     BOOST_REQUIRE(!query.is_spent(query.to_spend(1, 0))); // spent by self (and missing)
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unconfirmed_double_spend__false)
     BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 0))); // missing tx
     BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 1))); // missing tx
 
-    BOOST_REQUIRE(query.set(test::block2a, context{}, false));
+    BOOST_REQUIRE(query.set(test::block2a, context{}, false, false));
     BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 0))); // unconfirmed self
     BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 1))); // unconfirmed self
 
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unconfirmed_double_spend__false)
     BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 0))); // confirmed self, unconfirmed
     BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 1))); // confirmed self, unconfirmed
 
-    BOOST_REQUIRE(query.set(test::block3a, context{}, false));
+    BOOST_REQUIRE(query.set(test::block3a, context{}, false, false));
     BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 0))); // confirmed self, unconfirmed(2)
     BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 1))); // confirmed self, unconfirmed(2)
 
@@ -363,11 +363,11 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_spent__confirmed_double_spend__true)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{}, false));
+    BOOST_REQUIRE(query.set(test::block1a, context{}, false, false));
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.set(test::block2a, context{}, false));
+    BOOST_REQUIRE(query.set(test::block2a, context{}, false, false));
     BOOST_REQUIRE(query.set_strong(2));
-    BOOST_REQUIRE(query.set(test::block3a, context{}, false));
+    BOOST_REQUIRE(query.set(test::block3a, context{}, false, false));
     BOOST_REQUIRE(query.set_strong(3));
     BOOST_REQUIRE(query.is_spent(query.to_spend(2, 0))); // confirmed self and confirmed (double spent)
     BOOST_REQUIRE(query.is_spent(query.to_spend(2, 1))); // confirmed self and confirmed (double spent)
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_mature__non_coinbase_strong_above__true)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
     BOOST_REQUIRE(query.set(test::tx4));
 
     // Is not actually mature at height zero, but strong is presumed to always
@@ -434,7 +434,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_mature__non_coinbase__true)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
     BOOST_REQUIRE(query.set(test::tx4));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.is_mature(query.to_spend(2, 0), 1));
@@ -448,7 +448,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_mature__coinbase__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1b, context{ 0, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block1b, context{ 0, 1, 0 }, false, false));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.set(test::tx2b));
     BOOST_REQUIRE(!query.is_mature(query.to_spend(2, 0), 100));
@@ -465,7 +465,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__bad_link__integrity)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ bip68, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ bip68, 1, 0 }, false, false));
     BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::integrity);
 }
 
@@ -477,9 +477,9 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__null_points__success)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ bip68 }, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ bip68 }, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ bip68 }, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ bip68 }, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ bip68 }, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ bip68 }, false, false));
 
     // block1/2/3 at links 1/2/3 confirming at heights 1/2/3.
     // blocks have only coinbase txs, all txs should be set strong before calling
@@ -497,7 +497,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__missing_prevouts__integri
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{ bip68, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block1a, context{ bip68, 1, 0 }, false, false));
 
     // block1a is missing all three input prevouts.
     BOOST_REQUIRE(query.set_strong(1));
@@ -514,7 +514,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_gensis__coinbase_ma
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     // block_spend_genesis spends the genesis output.
-    BOOST_REQUIRE(query.set(test::block_spend_genesis, context{ 0, 101, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block_spend_genesis, context{ 0, 101, 0 }, false, false));
     BOOST_REQUIRE(query.set_strong(1));
 
     // 1 + 100 = 101 (maturity, except genesis)
@@ -531,12 +531,12 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__immature_prevouts__coinba
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     // block1b has only a coinbase tx.
-    BOOST_REQUIRE(query.set(test::block1b, context{ bip68, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block1b, context{ bip68, 1, 0 }, false, false));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE_EQUAL(query.block_confirmable(1), error::success);
 
     // block2b prematurely spends block1b's coinbase outputs.
-    BOOST_REQUIRE(query.set(test::block2b, context{ 0, 100, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block2b, context{ 0, 100, 0 }, false, false));
     BOOST_REQUIRE(query.set_strong(2));
     BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
 }
@@ -551,12 +551,12 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__mature_prevouts__success)
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     // block1b has only a coinbase tx.
-    BOOST_REQUIRE(query.set(test::block1b, context{ bip68, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block1b, context{ bip68, 1, 0 }, false, false));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE_EQUAL(query.block_confirmable(1), error::success);
 
     // block2b spends block1b's coinbase outputs.
-    BOOST_REQUIRE(query.set(test::block2b, context{ 0, 101, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block2b, context{ 0, 101, 0 }, false, false));
     BOOST_REQUIRE(query.set_strong(2));
     BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
 }
@@ -571,11 +571,11 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__succe
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     // block1a has non-coinbase tx/outputs.
-    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
     BOOST_REQUIRE(query.set_strong(1));
 
     // block_spend_1a spends both block1a outputs.
-    BOOST_REQUIRE(query.set(test::block_spend_1a, context{ 0, 2, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block_spend_1a, context{ 0, 2, 0 }, false, false));
     BOOST_REQUIRE(query.set_strong(2));
 
     // Maturity applies only to coinbase prevouts.
@@ -597,7 +597,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__succe
 ////    BOOST_REQUIRE(query.set_strong(1));
 ////
 ////    // block_spend_internal_2b spends first block1a output and first own output.
-////    BOOST_REQUIRE(query.set(test::block_spend_internal_2b, context{ 0, 100, 0 }, false));
+////    BOOST_REQUIRE(query.set(test::block_spend_internal_2b, context{ 0, 100, 0 }, false, false));
 ////    ////BOOST_REQUIRE(query.set_strong(2));
 ////
 ////    // Not confirmable because tx not strong.
@@ -618,10 +618,10 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__succe
 ////    BOOST_REQUIRE(query.initialize(test::genesis));
 ////
 ////    // block1b has coinbase tx/outputs.
-////    BOOST_REQUIRE(query.set(test::block1b, context{ 0, 1, 0 }, false));
+////    BOOST_REQUIRE(query.set(test::block1b, context{ 0, 1, 0 }, false, false));
 ////    BOOST_REQUIRE(query.set_strong(1));
 ////
-////    BOOST_REQUIRE(query.set(test::block_spend_internal_2b, context{ 0, 101, 0 }, false));
+////    BOOST_REQUIRE(query.set(test::block_spend_internal_2b, context{ 0, 101, 0 }, false, false));
 ////    ////BOOST_REQUIRE(query.set_strong(2));
 ////
 ////    // Not confirmable because tx not strong.
@@ -645,15 +645,15 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__succe
 ////    BOOST_REQUIRE(query.initialize(test::genesis));
 ////
 ////    // block1a has non-coinbase tx/outputs.
-////    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false));
+////    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
 ////    BOOST_REQUIRE(query.set_strong(1));
 ////
 ////    // block2a spends both block1a outputs (though not itself confirmable is set strong).
-////    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }, false));
+////    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }, false, false));
 ////    BOOST_REQUIRE(query.set_strong(2));
 ////
 ////    // block_spend_1a (also) spends both block1a outputs (and is otherwise confirmable).
-////    BOOST_REQUIRE(query.set(test::block_spend_1a, context{ bip68, 3, 0 }, false));
+////    BOOST_REQUIRE(query.set(test::block_spend_1a, context{ bip68, 3, 0 }, false, false));
 ////    BOOST_REQUIRE(query.set_strong(3));
 ////
 ////    // Not confirmable because of intervening block2a implies double spend.
@@ -670,14 +670,14 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__succe
 ////    BOOST_REQUIRE(query.initialize(test::genesis));
 ////
 ////    // block1a has non-coinbase tx/outputs.
-////    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false));
+////    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
 ////    BOOST_REQUIRE(query.set_strong(1));
 ////
 ////    // tx5 spends first block1a output.
 ////    BOOST_REQUIRE(query.set(test::tx5));
 ////
 ////    // block_spend_1a (also) spends both block1a outputs.
-////    BOOST_REQUIRE(query.set(test::block_spend_1a, context{ 0, 2, 0 }, false));
+////    BOOST_REQUIRE(query.set(test::block_spend_1a, context{ 0, 2, 0 }, false, false));
 ////    BOOST_REQUIRE(query.set_strong(2));
 ////
 ////    // Confirmable because of intervening tx5 is unconfirmed double spend.
@@ -705,8 +705,8 @@ BOOST_AUTO_TEST_CASE(query_confirm__set_strong__set_unstrong__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
     BOOST_REQUIRE(query.push_confirmed(1));
     BOOST_REQUIRE(query.push_confirmed(2));
 

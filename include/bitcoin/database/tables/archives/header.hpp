@@ -43,7 +43,7 @@ struct header
         inline bool from_data(reader& source) NOEXCEPT
         {
             context::from_data(source, ctx);
-            bypass      = to_bool(source.read_byte());
+            milestone   = to_bool(source.read_byte());
             parent_fk   = source.read_little_endian<link::integer, link::size>();
             version     = source.read_little_endian<uint32_t>();
             timestamp   = source.read_little_endian<uint32_t>();
@@ -57,7 +57,7 @@ struct header
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             context::to_data(sink, ctx);
-            sink.write_byte(to_int<uint8_t>(bypass));
+            sink.write_byte(to_int<uint8_t>(milestone));
             sink.write_little_endian<link::integer, link::size>(parent_fk);
             sink.write_little_endian<uint32_t>(version);
             sink.write_little_endian<uint32_t>(timestamp);
@@ -71,7 +71,7 @@ struct header
         inline bool operator==(const record& other) const NOEXCEPT
         {
             return ctx         == other.ctx
-                && bypass      == other.bypass
+                && milestone   == other.milestone
                 && parent_fk   == other.parent_fk
                 && version     == other.version
                 && timestamp   == other.timestamp
@@ -81,7 +81,7 @@ struct header
         }
 
         context ctx{};
-        bool bypass{};
+        bool milestone{};
         link::integer parent_fk{};
         uint32_t version{};
         uint32_t timestamp{};
@@ -98,7 +98,7 @@ struct header
         {
             BC_ASSERT(header);
             context::to_data(sink, ctx);
-            sink.write_byte(to_int<uint8_t>(bypass));
+            sink.write_byte(to_int<uint8_t>(milestone));
             sink.write_little_endian<link::integer, link::size>(parent_fk);
             sink.write_little_endian<uint32_t>(header->version());
             sink.write_little_endian<uint32_t>(header->timestamp());
@@ -110,7 +110,7 @@ struct header
         }
 
         const context ctx{};
-        const bool bypass{};
+        const bool milestone{};
         const link::integer parent_fk{};
         system::chain::header::cptr header{};
     };
@@ -123,7 +123,7 @@ struct header
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             context::to_data(sink, ctx);
-            sink.write_byte(to_int<uint8_t>(bypass));
+            sink.write_byte(to_int<uint8_t>(milestone));
             sink.write_little_endian<link::integer, link::size>(parent_fk);
             sink.write_little_endian<uint32_t>(header.version());
             sink.write_little_endian<uint32_t>(header.timestamp());
@@ -135,7 +135,7 @@ struct header
         }
 
         const context& ctx{};
-        const bool bypass{};
+        const bool milestone{};
         const link::integer parent_fk{};
         const system::chain::header& header;
     };
@@ -265,17 +265,17 @@ struct header
         uint32_t mtp{};
     };
 
-    struct get_bypass
+    struct get_milestone
       : public schema::header
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.skip_bytes(context::size);
-            bypass = to_bool(source.read_byte());
+            milestone = to_bool(source.read_byte());
             return source;
         }
 
-        bool bypass{};
+        bool milestone{};
     };
 
     struct get_check_context

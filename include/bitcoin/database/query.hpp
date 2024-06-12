@@ -240,8 +240,10 @@ public:
     foreign_point to_spend_key(const spend_link& link) const NOEXCEPT;
 
     /// point to put (forward navigation)
-    spend_link to_spend(const tx_link& link, uint32_t input_index) const NOEXCEPT;
-    output_link to_output(const tx_link& link, uint32_t output_index) const NOEXCEPT;
+    spend_link to_spend(const tx_link& link,
+        uint32_t input_index) const NOEXCEPT;
+    output_link to_output(const tx_link& link,
+        uint32_t output_index) const NOEXCEPT;
     output_link to_prevout(const spend_link& link) const NOEXCEPT;
 
     /// block/tx to block/s (reverse navigation)
@@ -283,14 +285,18 @@ public:
     inline bool is_malleated64(const block& block) const NOEXCEPT;
     inline bool is_malleable64(const header_link& link) const NOEXCEPT;
     inline bool is_associated(const header_link& link) const NOEXCEPT;
+    inline bool is_milestone(const header_link& link) const NOEXCEPT;
 
-    bool set(const header& header, const chain_context& ctx, bool bypass) NOEXCEPT;
-    bool set(const header& header, const context& ctx, bool bypass) NOEXCEPT;
-    bool set(const block& block, const chain_context& ctx, bool bypass) NOEXCEPT;
-    bool set(const block& block, const context& ctx, bool bypass) NOEXCEPT;
-    bool set(const block& block) NOEXCEPT;
-    bool set(const hash_digest& point_hash) NOEXCEPT;
+    bool set(const header& header, const chain_context& ctx,
+        bool milestone) NOEXCEPT;
+    bool set(const header& header, const context& ctx,
+        bool milestone) NOEXCEPT;
+    bool set(const block& block, const chain_context& ctx,
+        bool milestone, bool strong) NOEXCEPT;
+    bool set(const block& block, const context& ctx,
+        bool milestone, bool strong) NOEXCEPT;
     bool set(const transaction& tx) NOEXCEPT;
+    bool set(const block& block, bool strong) NOEXCEPT;
 
     /// False implies not fully populated, input.metadata is not populated.
     bool populate(const input& input) const NOEXCEPT;
@@ -320,7 +326,8 @@ public:
     bool get_height(size_t& out, const hash_digest& key) const NOEXCEPT;
     bool get_height(size_t& out, const header_link& link) const NOEXCEPT;
     bool get_value(uint64_t& out, const output_link& link) const NOEXCEPT;
-    bool get_unassociated(association& out, const header_link& link) const NOEXCEPT;
+    bool get_unassociated(association& out,
+        const header_link& link) const NOEXCEPT;
 
     inputs_ptr get_inputs(const tx_link& link) const NOEXCEPT;
     outputs_ptr get_outputs(const tx_link& link) const NOEXCEPT;
@@ -340,37 +347,61 @@ public:
     inputs_ptr get_spenders(const output_link& link) const NOEXCEPT;
 
     output::cptr get_output(const point& prevout) const NOEXCEPT;
-    output::cptr get_output(const tx_link& link, uint32_t output_index) const NOEXCEPT;
-    input::cptr get_input(const tx_link& link, uint32_t input_index) const NOEXCEPT;
-    inputs_ptr get_spenders(const tx_link& link, uint32_t output_index) const NOEXCEPT;
+    output::cptr get_output(const tx_link& link,
+        uint32_t output_index) const NOEXCEPT;
+    input::cptr get_input(const tx_link& link,
+        uint32_t input_index) const NOEXCEPT;
+    inputs_ptr get_spenders(const tx_link& link,
+        uint32_t output_index) const NOEXCEPT;
 
     /// Set transaction.
-    tx_link set_link(const transaction& tx) NOEXCEPT;
+    code set_code(const transaction& tx) NOEXCEPT;
     code set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT;
+    tx_link set_link(const transaction& tx) NOEXCEPT;
 
-    /// Set header.
-    header_link set_link(const header& header, const context& ctx, bool bypass) NOEXCEPT;
-    header_link set_link(const header& header, const chain_context& ctx, bool bypass) NOEXCEPT;
-    ////code set_code(header_link& out_fk, const block& block, const chain_context& ctx,
-    ////    bool bypass) NOEXCEPT;
+    /// Set header (headers-first).
+    code set_code(const header& header, const context& ctx,
+        bool milestone) NOEXCEPT;
+    code set_code(const header& header, const chain_context& ctx,
+        bool milestone) NOEXCEPT;
+    code set_code(header_link& out_fk, const header& header,
+        const context& ctx, bool milestone) NOEXCEPT;
+    code set_code(header_link& out_fk, const header& header,
+        const chain_context& ctx, bool milestone) NOEXCEPT;
+    header_link set_link(const header& header, const auto& ctx,
+        bool milestone) NOEXCEPT;
 
-    /// Set full block (header and all transactions).
-    header_link set_link(const block& block, const context& ctx, bool bypass) NOEXCEPT;
-    header_link set_link(const block& block, const chain_context& ctx, bool bypass) NOEXCEPT;
-    ////code set_code(header_link& out_fk, const header& header, const chain_context& ctx,
-    ////    bool bypass) NOEXCEPT;
+    /// Set full block (blocks-first).
+    code set_code(const block& block, const context& ctx, bool milestone,
+        bool strong) NOEXCEPT;
+    code set_code(const block& block, const chain_context& ctx, bool milestone,
+        bool strong) NOEXCEPT;
+    code set_code(header_link& out_fk, const block& block, const context& ctx,
+        bool milestone, bool strong) NOEXCEPT;
+    code set_code(header_link& out_fk, const block& block,
+        const chain_context& ctx, bool milestone, bool strong) NOEXCEPT;
+    header_link set_link(const block& block, const auto& ctx, bool milestone,
+        bool strong) NOEXCEPT;
 
-    /// Set txs of a block (with header/context already archived).
-    header_link set_link(const block& block) NOEXCEPT;
-    txs_link set_link(const transactions& txs, const header_link& key, size_t size) NOEXCEPT;
-    code set_code(const transactions& txs, const header_link& key, size_t size, bool confirm) NOEXCEPT;
+    /// Set txs (headers-first).
+    code set_code(const transactions& txs, const header_link& key,
+        size_t block_size, bool strong) NOEXCEPT;
+    code set_code(txs_link& out_fk, const transactions& txs,
+        const header_link& key, size_t block_size, bool strong) NOEXCEPT;
+    txs_link set_link(const transactions& txs, const header_link& key,
+        size_t block_size, bool strong) NOEXCEPT;
 
-    /// Disassociate txs of block from its header (unset).
+    /// Set block.txs (headers-first).
+    code set_code(const block& block, bool strong) NOEXCEPT;
+    code set_code(header_link& out_fk, const block& block,
+        bool strong) NOEXCEPT;
+    header_link set_link(const block& block, bool strong) NOEXCEPT;
+
+    /// Disassociate txs of block from its header (malleable64 found invalid).
     bool set_dissasociated(const header_link& key) NOEXCEPT;
 
     /// Chain state.
     /// -----------------------------------------------------------------------
-
     chain_state_ptr get_chain_state(const system::settings& settings,
         const hash_digest& hash) const NOEXCEPT;
     chain_state_ptr get_candidate_chain_state(
@@ -393,16 +424,16 @@ public:
     code get_tx_state(uint64_t& fee, size_t& sigops, const tx_link& link,
         const context& ctx) const NOEXCEPT;
 
-    bool get_timestamp(uint32_t& timestamp, const header_link& link) const NOEXCEPT;
-    bool get_version(uint32_t& version, const header_link& link) const NOEXCEPT;
     bool get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT;
     bool get_work(uint256_t& work, const header_link& link) const NOEXCEPT;
     bool get_context(context& ctx, const header_link& link) const NOEXCEPT;
-    bool get_bypass(bool& bypass, const header_link& link) const NOEXCEPT;
+    bool get_version(uint32_t& version, const header_link& link) const NOEXCEPT;
+    bool get_timestamp(uint32_t& timestamp,
+        const header_link& link) const NOEXCEPT;
 
-    bool set_block_confirmable(const header_link& link, uint64_t fees) NOEXCEPT;
     bool set_block_valid(const header_link& link) NOEXCEPT;
     bool set_block_unconfirmable(const header_link& link) NOEXCEPT;
+    bool set_block_confirmable(const header_link& link, uint64_t fees) NOEXCEPT;
 
     // set_txs_connected is FOR PERFORMANCE EVALUATION ONLY.
     bool set_txs_connected(const header_link& link) NOEXCEPT;
@@ -448,21 +479,23 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Address, set internal to tx (natural-keyed).
-    bool get_confirmed_balance(uint64_t& out, const hash_digest& key) const NOEXCEPT;
-    bool to_address_outputs(output_links& out, const hash_digest& key) const NOEXCEPT;
-    bool to_unspent_outputs(output_links& out, const hash_digest& key) const NOEXCEPT;
+    bool get_confirmed_balance(uint64_t& out,
+        const hash_digest& key) const NOEXCEPT;
+    bool to_address_outputs(output_links& out,
+        const hash_digest& key) const NOEXCEPT;
+    bool to_unspent_outputs(output_links& out,
+        const hash_digest& key) const NOEXCEPT;
     bool to_minimum_unspent_outputs(output_links& out, const hash_digest& key,
         uint64_t value) const NOEXCEPT;
 
     /// Neutrino, set during validation with prevouts (surrogate-keyed).
     bool get_filter(filter& out, const header_link& link) const NOEXCEPT;
-    bool get_filter_head(hash_digest& out, const header_link& link) const NOEXCEPT;
+    bool get_filter_head(hash_digest& out,
+        const header_link& link) const NOEXCEPT;
     bool set_filter(const header_link& link, const hash_digest& head,
         const filter& body) NOEXCEPT;
 
 protected:
-    code set_code(txs_link& out_fk, const transactions& txs,
-        const header_link& key, size_t size, bool confirm) NOEXCEPT;
     bool set_strong(const header_link& link, const tx_links& txs,
         bool positive) NOEXCEPT;
 
@@ -479,8 +512,8 @@ protected:
 
     // Critical path
     inline header_links to_blocks(const tx_link& link) const NOEXCEPT;
-    inline strong_pair to_strong(const hash_digest& tx_hash) const NOEXCEPT;
     inline strong_pairs to_strongs(const hash_digest& tx_hash) const NOEXCEPT;
+    inline strong_pair to_strong(const hash_digest& tx_hash) const NOEXCEPT;
 
     /// Validate.
     /// -----------------------------------------------------------------------
@@ -506,7 +539,8 @@ protected:
     inline error::error_t spent_prevout(const foreign_point& point,
         const tx_link& self) const NOEXCEPT;
     inline error::error_t unspendable_prevout(const point_link& link,
-        uint32_t sequence, uint32_t version, const context& ctx) const NOEXCEPT;
+        uint32_t sequence, uint32_t version,
+        const context& ctx) const NOEXCEPT;
     inline error::error_t unspent_duplicates(const tx_link& link,
         const context& ctx) const NOEXCEPT;
 
@@ -521,13 +555,15 @@ protected:
         const chain_state::map& map, header_link link) const NOEXCEPT;
     bool populate_timestamps(chain_state::data& data,
         const chain_state::map& map, header_link link) const NOEXCEPT;
-    bool populate_retarget(chain_state::data& data, const chain_state::map& map,
-        header_link link) const NOEXCEPT;
+    bool populate_retarget(chain_state::data& data,
+        const chain_state::map& map, header_link link) const NOEXCEPT;
     bool populate_hashes(chain_state::data& data,
         const chain_state::map& map) const NOEXCEPT;
-    bool populate_work(chain_state::data& data, header_link link) const NOEXCEPT;
-    bool populate_all(chain_state::data& data, const system::settings& settings,
-        const header_link& link, size_t height) const NOEXCEPT;
+    bool populate_work(chain_state::data& data,
+        header_link link) const NOEXCEPT;
+    bool populate_all(chain_state::data& data,
+        const system::settings& settings, const header_link& link,
+        size_t height) const NOEXCEPT;
 
     /// candidate blocks
 

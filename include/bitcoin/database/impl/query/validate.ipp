@@ -142,17 +142,6 @@ bool CLASS::get_work(uint256_t& work, const header_link& link) const NOEXCEPT
     return result;
 }
 
-TEMPLATE
-bool CLASS::get_bypass(bool& bypass, const header_link& link) const NOEXCEPT
-{
-    table::header::get_bypass header{};
-    if (!store_.header.get(link, header))
-        return false;
-
-    bypass = header.bypass;
-    return true;
-}
-
 ////TEMPLATE
 ////bool CLASS::get_check_context(context& ctx, hash_digest& hash,
 ////    uint32_t& timestamp, const header_link& link) const NOEXCEPT
