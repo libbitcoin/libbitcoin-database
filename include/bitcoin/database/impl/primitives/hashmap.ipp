@@ -154,6 +154,7 @@ Link CLASS::first(const Key& key) const NOEXCEPT
 TEMPLATE
 typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 {
+    // (14.09% + 5.36%)
     // Expensive construction, avoid unless iteration is necessary.
     return { manager_.get(), head_.top(key), key };
 }
@@ -270,7 +271,8 @@ bool CLASS::put_link(Link& link, const Key& key,
         return head_.push(link, next, index);
     });
 
-    if constexpr (!is_slab) { sink.set_limit(Size * count); }
+    // (1.63%)
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * count);) }
     return element.to_data(sink) && sink.finalize();
 }
 

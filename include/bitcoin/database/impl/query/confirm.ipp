@@ -404,6 +404,7 @@ bool CLASS::is_strong(const header_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::set_strong(const header_link& link) NOEXCEPT
 {
+    // (0.22%) after milestone.
     const auto txs = to_transactions(link);
     if (txs.empty())
         return false;
@@ -411,6 +412,7 @@ bool CLASS::set_strong(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // (4.04%) after milestone.
     // Clean allocation failure (e.g. disk full), see set_strong() comments.
     return set_strong(link, txs, true);
     // ========================================================================

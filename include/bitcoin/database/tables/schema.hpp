@@ -163,6 +163,7 @@ namespace schema
             schema::put;
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = max_size_t;
+        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 9u);
         static_assert(minrow == 9u);
     };
@@ -199,6 +200,7 @@ namespace schema
             1u;  // variable_size (minimum 1, average 1)
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = max_size_t;
+        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 2u);
         static_assert(minrow == 2u);
     };
@@ -214,6 +216,7 @@ namespace schema
             1u;  // variable_size (minimum 1, average 1)
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = max_size_t;
+        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 10u);
         static_assert(minrow == 10u);
     };
@@ -262,6 +265,7 @@ namespace schema
             transaction::pk; // coinbase
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
+        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 11u);
         static_assert(minrow == 19u);
     };
@@ -328,6 +332,7 @@ namespace schema
             one;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
+        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 2u);
         static_assert(minrow == 8u);
     };
@@ -347,6 +352,7 @@ namespace schema
             one;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
+        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 14u);
         static_assert(minrow == 23u);
     };
@@ -362,6 +368,7 @@ namespace schema
             one;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
+        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 33u);
         static_assert(minrow == 41u);
     };
@@ -388,6 +395,7 @@ namespace schema
     ////    static constexpr size_t minsize = zero;
     ////    static constexpr size_t minrow = pk + sk + minsize;
     ////    static constexpr size_t size = max_size_t;
+    ////    static inline linkage<pk> count() NOEXCEPT;
     ////    static_assert(minsize == 0u);
     ////    static_assert(minrow == 9u);
     ////};
