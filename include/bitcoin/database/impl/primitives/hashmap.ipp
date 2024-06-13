@@ -215,7 +215,8 @@ bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
     finalizer sink{ stream };
     sink.skip_bytes(index_size);
 
-    if constexpr (!is_slab) { sink.set_limit(Size); }
+    // (1.65%)
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size);) }
     return element.to_data(sink);
 }
 
@@ -306,7 +307,7 @@ bool CLASS::put(const Link& link, const Key& key,
         return head_.push(link, next, index);
     });
 
-    if constexpr (!is_slab) { sink.set_limit(Size * count); }
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * count);) }
     return element.to_data(sink) && sink.finalize();
 }
 
@@ -364,7 +365,7 @@ bool CLASS::read(const memory_ptr& ptr, const Link& link,
     iostream stream{ offset, size - position };
     reader source{ stream };
     source.skip_bytes(index_size);
-    if constexpr (!is_slab) { source.set_limit(Size); }
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(source.set_limit(Size);) }
     return element.from_data(source);
 }
 
