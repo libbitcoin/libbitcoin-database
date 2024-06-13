@@ -163,7 +163,7 @@ bool CLASS::put_link(Link& link, const Element& element) NOEXCEPT
 
     iostream stream{ *ptr };
     flipper sink{ stream };
-    if constexpr (!is_slab) { sink.set_limit(Size * count); }
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * count);) }
     return element.to_data(sink);
 }
 

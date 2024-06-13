@@ -201,14 +201,8 @@ header_link CLASS::to_parent(const header_link& link) const NOEXCEPT
 TEMPLATE
 header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
 {
-    // (10.99%) from block_confirmable->unspendable_prevout->to_strong->to_block.
-
-    // (8.25%)
-    ////const auto to_strong_tx_link = store_.strong_tx.first(link);
-
-    // (2.68%)
+    // (10.36%)
     table::strong_tx::record strong{};
-    ////if (!store_.strong_tx.get(to_strong_tx_link, strong))
     if (!store_.strong_tx.find(link, strong))
         return {};
 
@@ -404,7 +398,8 @@ spend_links CLASS::to_spenders(const foreign_point& point) const NOEXCEPT
     // Iterate transactions that spend the point, saving each spender.
     spend_links spenders{};
     do
-    {   // BUGBUG: Deadlock due to holding iterator while querying own table.
+    {
+        // BUGBUG: Deadlock due to holding iterator while querying own table.
         // TODO: refactor to make safe and also pass boolean result code.
         spenders.push_back(to_spender(to_spend_tx(it.self()), point));
     }
@@ -477,7 +472,6 @@ TEMPLATE
 tx_links CLASS::to_transactions(const header_link& link) const NOEXCEPT
 {
     table::txs::slab txs{};
-    ////if (!store_.txs.get(to_txs(link), txs))
     if (!store_.txs.find(link, txs))
         return {};
 
@@ -488,7 +482,6 @@ TEMPLATE
 tx_link CLASS::to_coinbase(const header_link& link) const NOEXCEPT
 {
     table::txs::get_coinbase txs{};
-    ////if (!store_.txs.get(to_txs(link), txs))
     if (!store_.txs.find(link, txs))
         return {};
 
