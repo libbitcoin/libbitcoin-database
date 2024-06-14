@@ -583,6 +583,7 @@ typename CLASS::transaction::cptr CLASS::get_transaction(
         tx.locktime
     );
 
+    // Witness hash is not retained by the store.
     ptr->set_nominal_hash(std::move(tx.key));
     return ptr;
 }
@@ -798,7 +799,7 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
             return error::tx_spend_set;
         }
 
-        // Acumulate spends (input references) in order.
+        // Accumulate spends (input references) in order.
         puts.spend_fks.push_back(spend_fk.value++);
     }
 
@@ -817,7 +818,7 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
             return error::tx_output_put;
         }
 
-        // Acumulate outputs in order.
+        // Accumulate outputs in order.
         puts.out_fks.push_back(output_fk);
     }
 
