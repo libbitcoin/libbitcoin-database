@@ -212,7 +212,7 @@ bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
         return false;
 
     iostream stream{ *ptr };
-    finalizer sink{ stream };
+    flipper sink{ stream };
     sink.skip_bytes(index_size);
 
     // (1.65%)
@@ -263,18 +263,17 @@ bool CLASS::put_link(Link& link, const Key& key,
         return false;
 
     iostream stream{ *ptr };
-    finalizer sink{ stream };
+    flipper sink{ stream };
     sink.skip_bytes(Link::size);
     sink.write_bytes(key);
-    sink.set_finalizer([this, link, index = head_.index(key), ptr]() NOEXCEPT
-    {
-        auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
-        return head_.push(link, next, index);
-    });
 
     // (1.63%)
     if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * count);) }
-    return element.to_data(sink) && sink.finalize();
+    if (!element.to_data(sink))
+        return false;
+        
+    auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
+    return head_.push(link, next, head_.index(key));
 }
 
 TEMPLATE
@@ -296,19 +295,16 @@ bool CLASS::put(const Link& link, const Key& key,
         return false;
 
     iostream stream{ *ptr };
-    finalizer sink{ stream };
+    flipper sink{ stream };
     sink.skip_bytes(Link::size);
     sink.write_bytes(key);
 
-    // The finalizer provides deferred index commit following serialization.
-    sink.set_finalizer([this, link, index = head_.index(key), ptr]() NOEXCEPT
-    {
-        auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
-        return head_.push(link, next, index);
-    });
-
     if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * count);) }
-    return element.to_data(sink) && sink.finalize();
+    if (!element.to_data(sink))
+        return false;
+
+    auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
+    return head_.push(link, next, head_.index(key));
 }
 
 TEMPLATE
@@ -325,15 +321,6 @@ bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
     // Commit element to search index.
     auto& next = system::unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
     return head_.push(link, next, head_.index(key));
-}
-
-TEMPLATE
-Link CLASS::commit_link(const Link& link, const Key& key) NOEXCEPT
-{
-    if (!commit(link, key))
-        return {};
-
-    return link;
 }
 
 // protected/static

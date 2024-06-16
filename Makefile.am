@@ -186,7 +186,6 @@ include_bitcoin_database_locks_HEADERS = \
 include_bitcoin_database_memorydir = ${includedir}/bitcoin/database/memory
 include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/accessor.hpp \
-    include/bitcoin/database/memory/finalizer.hpp \
     include/bitcoin/database/memory/map.hpp \
     include/bitcoin/database/memory/memory.hpp \
     include/bitcoin/database/memory/reader.hpp \

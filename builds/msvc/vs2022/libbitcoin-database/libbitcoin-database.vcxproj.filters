@@ -152,9 +152,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\finalizer.hpp">
-      <Filter>include\bitcoin\database\memory</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\memory.hpp">
       <Filter>include\bitcoin\database\memory\interfaces</Filter>
     </ClInclude>

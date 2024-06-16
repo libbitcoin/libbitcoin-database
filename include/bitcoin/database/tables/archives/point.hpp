@@ -47,7 +47,7 @@ struct point
             return source;
         }
 
-        inline bool to_data(const finalizer& sink) const NOEXCEPT
+        inline bool to_data(const flipper& sink) const NOEXCEPT
         {
             return sink;
         }

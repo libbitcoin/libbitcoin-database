@@ -41,7 +41,7 @@ struct context
         context.mtp    = source.template read_little_endian<uint32_t>();
     };
 
-    static inline void to_data(finalizer& sink, const context& context) NOEXCEPT
+    static inline void to_data(flipper& sink, const context& context) NOEXCEPT
     {
         sink.template write_little_endian<flag::integer, flag::size>(context.flags);
         sink.template write_little_endian<block::integer, block::size>(context.height);
