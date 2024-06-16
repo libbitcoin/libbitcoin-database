@@ -62,7 +62,7 @@ struct txs
             return source;
         }
 
-        inline bool to_data(finalizer& sink) const NOEXCEPT
+        inline bool to_data(flipper& sink) const NOEXCEPT
         {
             BC_ASSERT(tx_fks.size() < system::power2<uint64_t>(to_bits(schema::count_)));
             const auto fks = system::possible_narrow_cast<tx::integer>(tx_fks.size());

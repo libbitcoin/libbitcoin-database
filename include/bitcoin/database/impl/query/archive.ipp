@@ -851,7 +851,7 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     for (const auto& spend: views_reverse(spends))
     {
         --spend_fk.value;
-        if (store_.spend.commit_link(spend_fk, spend).is_terminal())
+        if (!store_.spend.commit(spend_fk, spend))
             return error::tx_spend_commit;
     }
 
