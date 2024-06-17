@@ -464,10 +464,12 @@ public:
 
     /// These are used in confirmation.
     /// Block association relies on strong (confirmed or pending).
-    code tx_confirmable(const tx_link& link, const context& ctx) const NOEXCEPT;
-    code block_confirmable(const header_link& link) const NOEXCEPT;
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
+    code block_confirmable(const header_link& link) const NOEXCEPT;
+    code tx_confirmable(const tx_link& link, const context& ctx) const NOEXCEPT;
+    code unspent_duplicates(const tx_link& link,
+        const context& ctx) const NOEXCEPT;
 
     /// Height indexation.
     bool initialize(const block& genesis) NOEXCEPT;
@@ -541,8 +543,6 @@ protected:
         const tx_link& self) const NOEXCEPT;
     inline error::error_t unspendable_prevout(const point_link& link,
         uint32_t sequence, uint32_t version,
-        const context& ctx) const NOEXCEPT;
-    inline error::error_t unspent_duplicates(const tx_link& link,
         const context& ctx) const NOEXCEPT;
 
     /// context

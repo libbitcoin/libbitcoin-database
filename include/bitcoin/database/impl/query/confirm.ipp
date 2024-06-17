@@ -309,7 +309,7 @@ inline error::error_t CLASS::unspendable_prevout(const point_link& link,
 
 
 TEMPLATE
-inline error::error_t CLASS::unspent_duplicates(const tx_link& link,
+code CLASS::unspent_duplicates(const tx_link& link,
     const context& ctx) const NOEXCEPT
 {
     if (!ctx.is_enabled(system::chain::flags::bip30_rule))
