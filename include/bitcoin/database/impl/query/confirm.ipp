@@ -334,6 +334,34 @@ inline error::error_t CLASS::unspent_duplicates(const tx_link& link,
 }
 
 TEMPLATE
+code CLASS::tx_confirmable(const tx_link& link,
+    const context& ctx) const NOEXCEPT
+{
+    code ec{};
+    uint32_t version{};
+    table::spend::get_prevout_sequence spend{};
+
+    // (4.71%) tx.get, puts.get, reduce collision.
+    for (const auto& spend_fk: to_tx_spends(version, link))
+    {
+        // (3.65%) spend.get, reduce collision.
+        if (!store_.spend.get(spend_fk, spend))
+            return error::integrity;
+
+        // (33.42%)
+        if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
+            version, ctx)))
+            return ec;
+
+        // (34.74%)
+        if ((ec = spent_prevout(spend.prevout(), link)))
+            return ec;
+    }
+
+    return error::success;
+}
+
+TEMPLATE
 code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 {
     context ctx{};
@@ -351,27 +379,9 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         return ec;
 
     // (0.33%)
-    uint32_t version{};
-    table::spend::get_prevout_sequence spend{};
     for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
-    {
-        // (4.71%) tx.get, puts.get, reduce collision.
-        for (const auto& spend_fk: to_tx_spends(version, *tx))
-        {
-            // (3.65%) spend.get, reduce collision.
-            if (!store_.spend.get(spend_fk, spend))
-                return error::integrity;
-
-            // (33.42%)
-            if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
-                version, ctx)))
-                return ec;
-
-            // (34.74%)
-            if ((ec = spent_prevout(spend.prevout(), *tx)))
-                return ec;
-        }
-    }
+        if ((ec = tx_confirmable(*tx, ctx)))
+            return ec;
 
     return error::success;
 }
