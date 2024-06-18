@@ -144,7 +144,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
 
-
     // store open/close flushes record count to head.
     BOOST_REQUIRE(!query.is_header(header.hash()));
     BOOST_REQUIRE(!query.is_associated(0));
@@ -537,7 +536,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
         "4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73" // script
         "00");         // witness
     const auto genesis_txs_head = system::base16_chunk(
-        "1300000000"   // slabs size
+        "1200000000"   // slabs size
         "0000000000"   // pk->
         "ffffffffff"
         "ffffffffff"
@@ -552,7 +551,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
         "ffffffffff"   // next->
         "000000"       // header_fk
         "010000"       // txs count (1)
-        "00"           // txs malleable (false)
         "1d0100"       // txs wire (285)
         "00000000");   // transaction[0]
 
@@ -566,7 +564,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
-
 
     // Set block (header/txs).
     BOOST_REQUIRE(!query.is_block(test::genesis.hash()));
@@ -689,7 +686,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
         "4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73" // script
         "00");         // witness
     const auto genesis_txs_head = system::base16_chunk(
-        "1300000000"   // slabs size
+        "1200000000"   // slabs size
         "0000000000"   // pk->
         "ffffffffff"
         "ffffffffff"
@@ -704,7 +701,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
         "ffffffffff"   // next->
         "000000"       // header_fk
         "010000"       // txs count (1)
-        "00"           // txs malleable (false)
         "1d0100"       // txs wire (285)
         "00000000");   // transaction[0]
 
@@ -761,58 +757,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
     const auto hashes = query.get_tx_keys(query.to_header(test::genesis.hash()));
     BOOST_REQUIRE_EQUAL(hashes.size(), 1u);
     BOOST_REQUIRE_EQUAL(hashes, test::genesis.transaction_hashes(false));
-
-    BOOST_REQUIRE(!query.is_malleable64(0));
-    BOOST_REQUIRE(query.set_dissasociated(0));
-    BOOST_REQUIRE(!query.is_associated(0));
-    BOOST_REQUIRE(!query.is_malleable64(0));
 }
-
-// Moved to protected, set_link(block) covers.
-////BOOST_AUTO_TEST_CASE(query_archive__set_links__get_block__expected)
-////{
-////    settings settings{};
-////    settings.header_buckets = 5;
-////    settings.tx_buckets = 5;
-////    settings.point_buckets = 5;
-////    settings.txs_buckets = 10;
-////    settings.path = TEST_DIRECTORY;
-////    test::chunk_store store{ settings };
-////    test::query_accessor query{ store };
-////    BOOST_REQUIRE_EQUAL(store.create(events_handler));
-////
-////    // Assemble block.
-////    BOOST_REQUIRE(query.set(test::genesis.header(), test::context, false, false));
-////    BOOST_REQUIRE(query.set(*test::genesis.transactions_ptr()->front()));
-////    BOOST_REQUIRE(query.set(query.to_header(test::genesis.hash()), tx_links{ 0 }));
-////
-////    const auto pointer1 = query.get_block(query.to_header(test::genesis.hash()));
-////    BOOST_REQUIRE(pointer1);
-////    BOOST_REQUIRE(*pointer1 == test::genesis);
-////}
-
-////BOOST_AUTO_TEST_CASE(query_archive__set_hashes__get_block__expected)
-////{
-////    settings settings{};
-////    settings.header_buckets = 5;
-////    settings.tx_buckets = 5;
-////    settings.point_buckets = 5;
-////    settings.txs_buckets = 10;
-////    settings.path = TEST_DIRECTORY;
-////    test::chunk_store store{ settings };
-////    test::query_accessor query{ store };
-////    BOOST_REQUIRE_EQUAL(store.create(events_handler));
-////
-////    // Assemble block.
-////    BOOST_REQUIRE(query.set(test::genesis.header(), test::context, false, false));
-////    BOOST_REQUIRE(query.set(*test::genesis.transactions_ptr()->front()));
-////    const auto tx_hashes = hashes{ test::genesis.transactions_ptr()->front()->hash(false) };
-////    BOOST_REQUIRE(query.set(query.to_header(test::genesis.hash()), tx_hashes));
-////
-////    const auto pointer1 = query.get_block(query.to_header(test::genesis.hash()));
-////    BOOST_REQUIRE(pointer1);
-////    BOOST_REQUIRE(*pointer1 == test::genesis);
-////}
 
 BOOST_AUTO_TEST_CASE(query_archive__populate__null_prevouts__true)
 {
@@ -912,138 +857,6 @@ BOOST_AUTO_TEST_CASE(query_archive__is_coinbase__non_coinbase__false)
     BOOST_REQUIRE(!query.is_coinbase(4));
     BOOST_REQUIRE(!query.is_coinbase(5));
     BOOST_REQUIRE(!query.is_coinbase(42));
-}
-
-BOOST_AUTO_TEST_CASE(query_archive__is_malleable64__non_malleable__false)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{}, false, false));
-    BOOST_REQUIRE(query.set(test::block2a, context{}, false, false));
-
-    BOOST_REQUIRE(!query.is_malleable64(1));
-    BOOST_REQUIRE(!query.is_malleable64(2));
-    BOOST_REQUIRE(!query.is_malleable64(3));
-    BOOST_REQUIRE(!query.is_malleable64(4));
-    BOOST_REQUIRE(!query.is_malleable64(5));
-    BOOST_REQUIRE(!query.is_malleable64(42));
-
-    BOOST_REQUIRE(!query.is_malleated64(test::genesis));
-    BOOST_REQUIRE(!query.is_malleated64(test::block1a));
-    BOOST_REQUIRE(!query.is_malleated64(test::block2a));
-}
-
-BOOST_AUTO_TEST_CASE(query_archive__is_malleable64__malleable__true)
-{
-    using namespace system::chain;
-    transaction tx64
-    {
-        42,
-        inputs{ { point{}, script{ { opcode::dup, opcode::dup } }, 42 } },
-        outputs{ { 42, script{ { opcode::dup, opcode::dup } } } },
-        42
-    };
-
-    const block block1{ header{ 42, {}, {}, {}, {}, {} }, { tx64 } };
-    const block block2{ header{ 43, {}, {}, {}, {}, {} }, { tx64, tx64 } };
-    const block block3{ header{ 44, {}, {}, {}, {}, {} }, { tx64, tx64, tx64 } };
-
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(events_handler));
-
-    // Store 4 blocks.
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE_EQUAL(query.set_link(block1, database::context{}, false, false), 1u);
-    BOOST_REQUIRE_EQUAL(query.set_link(block2, database::context{}, false, false), 2u);
-    BOOST_REQUIRE_EQUAL(query.set_link(block3, database::context{}, false, false), 3u);
-
-    // All are associated.
-    BOOST_REQUIRE(query.is_associated(0));
-    BOOST_REQUIRE(query.is_associated(1));
-    BOOST_REQUIRE(query.is_associated(2));
-    BOOST_REQUIRE(query.is_associated(3));
-
-    // Only genesis is non-malleable.
-    BOOST_REQUIRE(!query.is_malleable64(0));
-    BOOST_REQUIRE(query.is_malleable64(1));
-    BOOST_REQUIRE(query.is_malleable64(2));
-    BOOST_REQUIRE(query.is_malleable64(3));
-
-    // Only genesis is non-malleated when compared against itself, since not malleable.
-    BOOST_REQUIRE(!query.is_malleated64(test::genesis));
-    BOOST_REQUIRE(query.is_malleated64(block1));
-    BOOST_REQUIRE(query.is_malleated64(block2));
-    BOOST_REQUIRE(query.is_malleated64(block3));
-
-    // Disassociate 3 blocks.
-    BOOST_REQUIRE(query.set_dissasociated(query.to_header(block1.hash())));
-    BOOST_REQUIRE(query.set_dissasociated(query.to_header(block2.hash())));
-    BOOST_REQUIRE(query.set_dissasociated(query.to_header(block3.hash())));
-
-    // Verify all 3 not associated.
-    BOOST_REQUIRE(!query.is_associated(1));
-    BOOST_REQUIRE(!query.is_associated(2));
-    BOOST_REQUIRE(!query.is_associated(3));
-
-    // Verify all 3 remain malleable.
-    BOOST_REQUIRE(query.is_malleable64(1));
-    BOOST_REQUIRE(query.is_malleable64(2));
-    BOOST_REQUIRE(query.is_malleable64(3));
-
-    // Verify all 3 remain malleated by first association (against themselves).
-    BOOST_REQUIRE(query.is_malleated64(block1));
-    BOOST_REQUIRE(query.is_malleated64(block2));
-    BOOST_REQUIRE(query.is_malleated64(block3));
-
-    // Reassociate the same transaction sets (first(n), disassociated (0), second(n))
-    BOOST_REQUIRE(!query.set_link(*block1.transactions_ptr(), 1, block1.serialized_size(true), false).is_terminal());
-    BOOST_REQUIRE(!query.set_link(*block2.transactions_ptr(), 2, block2.serialized_size(false), false).is_terminal());
-    BOOST_REQUIRE(!query.set_link(*block3.transactions_ptr(), 3, block3.serialized_size(true), false).is_terminal());
-
-    // Verify all 3 are reassociated.
-    BOOST_REQUIRE(query.is_associated(1));
-    BOOST_REQUIRE(query.is_associated(2));
-    BOOST_REQUIRE(query.is_associated(3));
-
-    // Verify all 3 are associated as malleable.
-    BOOST_REQUIRE(query.is_malleable64(1));
-    BOOST_REQUIRE(query.is_malleable64(2));
-    BOOST_REQUIRE(query.is_malleable64(3));
-
-    // Verify all 3 remain malleated by second association (against themselves).
-    BOOST_REQUIRE(query.is_malleated64(block1));
-    BOOST_REQUIRE(query.is_malleated64(block2));
-    BOOST_REQUIRE(query.is_malleated64(block3));
-
-    // Verify stored block sizes.
-    BOOST_REQUIRE_EQUAL(query.get_block_size(0), test::genesis.serialized_size(true));
-    BOOST_REQUIRE_EQUAL(query.get_block_size(1), block1.serialized_size(true));
-    BOOST_REQUIRE_EQUAL(query.get_block_size(2), block2.serialized_size(false));
-    BOOST_REQUIRE_EQUAL(query.get_block_size(3), block3.serialized_size(true));
-
-    // Verify confirmed wire size.
-    BOOST_REQUIRE_EQUAL(query.get_confirmed_size(), test::genesis.serialized_size(true));
-    BOOST_REQUIRE_EQUAL(query.get_confirmed_size(0), test::genesis.serialized_size(true));
-    BOOST_REQUIRE_EQUAL(query.get_confirmed_size(1), test::genesis.serialized_size(true));
-    BOOST_REQUIRE_EQUAL(query.get_confirmed_size(42), test::genesis.serialized_size(true));
-
-    const auto candidate_size = test::genesis.serialized_size(true) + block1.serialized_size(true) + block2.serialized_size(false) + block3.serialized_size(true);
-
-    // Verify candidate wire size.
-    BOOST_REQUIRE(query.push_candidate(query.to_header(block1.hash())));
-    BOOST_REQUIRE(query.push_candidate(query.to_header(block2.hash())));
-    BOOST_REQUIRE(query.push_candidate(query.to_header(block3.hash())));
-    BOOST_REQUIRE_EQUAL(query.get_candidate_size(), candidate_size);
-    BOOST_REQUIRE_EQUAL(query.get_candidate_size(0), test::genesis.serialized_size(true));
-    BOOST_REQUIRE_EQUAL(query.get_candidate_size(1), test::genesis.serialized_size(true) + block1.serialized_size(true));
-    BOOST_REQUIRE_EQUAL(query.get_candidate_size(42), candidate_size);
 }
 
 BOOST_AUTO_TEST_CASE(query_archive__is_milestone__genesis__false)

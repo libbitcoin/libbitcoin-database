@@ -27,7 +27,6 @@ const table::txs::slab expected0{};
 const table::txs::slab expected1
 {
     {}, // schema::txs [all const static members]
-    true,
     0x0000ab,
     std_vector<uint32_t>
     {
@@ -37,7 +36,6 @@ const table::txs::slab expected1
 const table::txs::slab expected2
 {
     {}, // schema::txs [all const static members]
-    false,
     0x00a00b,
     std_vector<uint32_t>
     {
@@ -48,7 +46,6 @@ const table::txs::slab expected2
 const table::txs::slab expected3
 {
     {}, // schema::txs [all const static members]
-    true,
     0xa0000b,
     std_vector<uint32_t>
     {
@@ -68,9 +65,6 @@ const data_chunk expected_file
     // slab0 (count) [0]
     0x00, 0x00, 0x00,
 
-    // slab0 (malleable) [false]
-    0x00,
-
     // slab0 (wire) [0x00]
     0x00, 0x00, 0x00,
 
@@ -78,7 +72,7 @@ const data_chunk expected_file
 
     // --------------------------------------------------------------------------------------------
 
-    // 11->00
+    // 14->00
     0x00, 0x00, 0x00, 0x00, 0x00,
 
     // key
@@ -86,9 +80,6 @@ const data_chunk expected_file
 
     // slab1 (count) [1]
     0x01, 0x00, 0x00,
-
-    // slab1 (malleable) [true]
-    0x01,
 
     // slab1 (wire) [0x0000ab]
     0xab, 0x00, 0x00,
@@ -98,17 +89,14 @@ const data_chunk expected_file
 
     // --------------------------------------------------------------------------------------------
 
-    // 26->11
-    0x0f, 0x00, 0x00, 0x00, 0x00,
+    // 32->14
+    0x0e, 0x00, 0x00, 0x00, 0x00,
 
     // key
     0x11, 0x22, 0x33,
 
     // slab2 (count) [2]
     0x02, 0x00, 0x00,
-
-    // slab2 (malleable) [false]
-    0x00,
 
     // slab2 (wire) [0x00a00b]
     0x0b, 0xa0, 0x00,
@@ -119,17 +107,14 @@ const data_chunk expected_file
 
     // --------------------------------------------------------------------------------------------
 
-    // 45->26
-    0x22, 0x00, 0x00, 0x00, 0x00,
+    // 54->32
+    0x20, 0x00, 0x00, 0x00, 0x00,
 
     // key
     0x11, 0x22, 0x33,
 
     // slab3 (count) [3]
     0x03, 0x00, 0x00,
-    
-    // slab3 (malleable) [true]
-    0x01,
 
     // slab3 (wire) [0xa0000b]
     0x0b, 0x00, 0xa0,
@@ -156,13 +141,13 @@ BOOST_AUTO_TEST_CASE(txs__put__get__expected)
     BOOST_REQUIRE(instance.get(0, slab));
     BOOST_REQUIRE(slab == expected0);
 
-    BOOST_REQUIRE(instance.get(15, slab));
+    BOOST_REQUIRE(instance.get(14, slab));
     BOOST_REQUIRE(slab == expected1);
 
-    BOOST_REQUIRE(instance.get(34, slab));
+    BOOST_REQUIRE(instance.get(32, slab));
     BOOST_REQUIRE(slab == expected2);
 
-    BOOST_REQUIRE(instance.get(57, slab));
+    BOOST_REQUIRE(instance.get(54, slab));
     BOOST_REQUIRE(slab == expected3);
 }
 
