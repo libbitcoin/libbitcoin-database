@@ -282,8 +282,6 @@ public:
     inline bool is_block(const hash_digest& key) const NOEXCEPT;
     inline bool is_tx(const hash_digest& key) const NOEXCEPT;
     inline bool is_coinbase(const tx_link& link) const NOEXCEPT;
-    ////inline bool is_malleated64(const block& block) const NOEXCEPT;
-    ////inline bool is_malleable64(const header_link& link) const NOEXCEPT;
     inline bool is_associated(const header_link& link) const NOEXCEPT;
     inline bool is_milestone(const header_link& link) const NOEXCEPT;
 
@@ -396,9 +394,6 @@ public:
     code set_code(header_link& out_fk, const block& block,
         bool strong) NOEXCEPT;
     header_link set_link(const block& block, bool strong) NOEXCEPT;
-
-    /////// Disassociate txs of block from its header (malleable64 found invalid).
-    ////bool set_dissasociated(const header_link& key) NOEXCEPT;
 
     /// Chain state.
     /// -----------------------------------------------------------------------
