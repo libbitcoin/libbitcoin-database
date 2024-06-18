@@ -45,13 +45,13 @@ struct txs
         link count() const NOEXCEPT
         {
             return system::possible_narrow_cast<link::integer>(pk + sk +
-                schema::count_ + schema::bit + bytes::size + tx::size * tx_fks.size());
+                schema::count_ + /*schema::bit +*/ bytes::size + tx::size * tx_fks.size());
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
             tx_fks.resize(source.read_little_endian<tx::integer, schema::count_>());
-            malleable = to_bool(source.read_byte());
+            ////malleable = to_bool(source.read_byte());
             wire = source.read_little_endian<bytes::integer, bytes::size>();
             std::for_each(tx_fks.begin(), tx_fks.end(), [&](auto& fk) NOEXCEPT
             {
@@ -68,7 +68,7 @@ struct txs
             const auto fks = system::possible_narrow_cast<tx::integer>(tx_fks.size());
 
             sink.write_little_endian<tx::integer, schema::count_>(fks);
-            sink.write_byte(to_int<uint8_t>(malleable));
+            ////sink.write_byte(to_int<uint8_t>(malleable));
             sink.write_little_endian<bytes::integer, bytes::size>(wire);
             std::for_each(tx_fks.begin(), tx_fks.end(), [&](const auto& fk) NOEXCEPT
             {
@@ -84,7 +84,7 @@ struct txs
             return tx_fks == other.tx_fks;
         }
 
-        bool malleable{ false };
+        ////bool malleable{ false };
         bytes::integer wire{}; // block.serialized_size(true)
         keys tx_fks{};
     };
@@ -95,7 +95,7 @@ struct txs
         inline bool from_data(reader& source) NOEXCEPT
         {
             const auto count = source.read_little_endian<tx::integer, schema::count_>();
-            source.skip_bytes(schema::bit + bytes::size);
+            source.skip_bytes(/*schema::bit +*/ bytes::size);
             for (position = zero; position < count; ++position)
                 if (source.read_little_endian<tx::integer, tx::size>() == link)
                     return source;
@@ -114,7 +114,7 @@ struct txs
         inline bool from_data(reader& source) NOEXCEPT
         {
             const auto count = source.read_little_endian<tx::integer, schema::count_>();
-            source.skip_bytes(schema::bit + bytes::size);
+            source.skip_bytes(/*schema::bit +*/ bytes::size);
             if (is_nonzero(count))
             {
                 coinbase_fk = source.read_little_endian<tx::integer, tx::size>();
@@ -128,26 +128,26 @@ struct txs
         tx::integer coinbase_fk{};
     };
 
-    struct get_malleable
-      : public schema::txs
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            source.skip_bytes(schema::count_);
-            malleable = to_bool(source.read_byte());
-            source.skip_bytes(bytes::size);
-            return source;
-        }
-
-        bool malleable{};
-    };
+    ////struct get_malleable
+    ////  : public schema::txs
+    ////{
+    ////    inline bool from_data(reader& source) NOEXCEPT
+    ////    {
+    ////        source.skip_bytes(schema::count_);
+    ////        malleable = to_bool(source.read_byte());
+    ////        source.skip_bytes(bytes::size);
+    ////        return source;
+    ////    }
+    ////
+    ////    bool malleable{};
+    ////};
 
     struct get_block_size
       : public schema::txs
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(schema::count_ + schema::bit);
+            source.skip_bytes(schema::count_ /*+ schema::bit*/);
             wire = source.read_little_endian<bytes::integer, bytes::size>();
             return source;
         }

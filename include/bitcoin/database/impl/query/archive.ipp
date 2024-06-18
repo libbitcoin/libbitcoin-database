@@ -86,54 +86,54 @@ inline bool CLASS::is_milestone(const header_link& link) const NOEXCEPT
     return store_.header.get(link, header) && header.milestone;
 }
 
-TEMPLATE
-inline bool CLASS::is_malleated64(const block& block) const NOEXCEPT
-{
-    // This is a very cheap prequalification.
-    if (!block.is_malleable64())
-        return false;
+////TEMPLATE
+////inline bool CLASS::is_malleated64(const block& block) const NOEXCEPT
+////{
+////    // This is a very cheap prequalification.
+////    if (!block.is_malleable64())
+////        return false;
+////
+////    // block.get_hash() assumes cached or is not thread safe.
+////    auto it = store_.txs.it(to_header(block.get_hash()));
+////    if (!it)
+////        return false;
+////
+////    const auto transactions = *block.transactions_ptr();
+////    do
+////    {
+////        // Non-malleable is final so don't continue with that type association.
+////        table::txs::slab txs{};
+////        if (!store_.txs.get(it, txs) || !txs.malleable)
+////            return false;
+////
+////        if (txs.tx_fks.size() != transactions.size())
+////            continue;
+////
+////        auto match{ true };
+////        auto tx = transactions.begin();
+////        for (const auto& tx_fk: txs.tx_fks)
+////        {
+////            // tx.get_hash() assumes cached or is not thread safe.
+////            if (store_.tx.get_key(tx_fk) != (*tx++)->get_hash(false))
+////            {
+////                match = false;
+////                break;
+////            }
+////        }
+////
+////        if (match)
+////            return true;
+////    }
+////    while (it.advance());
+////    return false;
+////}
 
-    // block.get_hash() assumes cached or is not thread safe.
-    auto it = store_.txs.it(to_header(block.get_hash()));
-    if (!it)
-        return false;
-
-    const auto transactions = *block.transactions_ptr();
-    do
-    {
-        // Non-malleable is final so don't continue with that type association.
-        table::txs::slab txs{};
-        if (!store_.txs.get(it, txs) || !txs.malleable)
-            return false;
-
-        if (txs.tx_fks.size() != transactions.size())
-            continue;
-
-        auto match{ true };
-        auto tx = transactions.begin();
-        for (const auto& tx_fk: txs.tx_fks)
-        {
-            // tx.get_hash() assumes cached or is not thread safe.
-            if (store_.tx.get_key(tx_fk) != (*tx++)->get_hash(false))
-            {
-                match = false;
-                break;
-            }
-        }
-
-        if (match)
-            return true;
-    }
-    while (it.advance());
-    return false;
-}
-
-TEMPLATE
-inline bool CLASS::is_malleable64(const header_link& link) const NOEXCEPT
-{
-    table::txs::get_malleable txs{};
-    return store_.txs.find(link, txs) && txs.malleable;
-}
+////TEMPLATE
+////inline bool CLASS::is_malleable64(const header_link& link) const NOEXCEPT
+////{
+////    table::txs::get_malleable txs{};
+////    return store_.txs.find(link, txs) && txs.malleable;
+////}
 
 TEMPLATE
 inline bool CLASS::is_associated(const header_link& link) const NOEXCEPT
@@ -1082,10 +1082,8 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
 
     ////// GUARD (block (txs) redundancy)
     ////// This is only fully effective if there is a single database thread.
-    ////// Guard must be lifted for an existing top malleable association so
-    ////// that a non-malleable association may be accomplished.
     ////out_fk = to_txs(key);
-    ////if (!out_fk.is_terminal() && !is_malleable(key))
+    ////if (!out_fk.is_terminal())
     ////    return error::success;
 
     code ec{};
@@ -1103,7 +1101,7 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
 
     using bytes = linkage<schema::size>::integer;
     const auto wire = system::possible_narrow_cast<bytes>(block_size);
-    const auto malleable = block::is_malleable64(txs);
+    ////const auto malleable = block::is_malleable64(txs);
 
     // ========================================================================
     const auto scope = store_.get_transactor();
@@ -1118,7 +1116,7 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
     out_fk = store_.txs.put_link(key, table::txs::slab
     {
         {},
-        malleable,
+        ////malleable,
         wire,
         links
     });
@@ -1127,31 +1125,31 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
     // ========================================================================
 }
 
-// unset txs
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-bool CLASS::set_dissasociated(const header_link& key) NOEXCEPT
-{
-    if (key.is_terminal())
-        return false;
-
-    const auto malleable = is_malleable64(key);
-
-    // ========================================================================
-    const auto scope = store_.get_transactor();
-
-    // Header link is the key for the txs table.
-    // Clean single allocation failure (e.g. disk full).
-    return store_.txs.put(key, table::txs::slab
-    {
-        {},
-        malleable,
-        {},
-        {}
-    });
-    // ========================================================================
-}
+////// unset txs
+////// ----------------------------------------------------------------------------
+////
+////TEMPLATE
+////bool CLASS::set_dissasociated(const header_link& key) NOEXCEPT
+////{
+////    if (key.is_terminal())
+////        return false;
+////
+////    const auto malleable = is_malleable64(key);
+////
+////    // ========================================================================
+////    const auto scope = store_.get_transactor();
+////
+////    // Header link is the key for the txs table.
+////    // Clean single allocation failure (e.g. disk full).
+////    return store_.txs.put(key, table::txs::slab
+////    {
+////        {},
+////        malleable,
+////        {},
+////        {}
+////    });
+////    // ========================================================================
+////}
 
 } // namespace database
 } // namespace libbitcoin

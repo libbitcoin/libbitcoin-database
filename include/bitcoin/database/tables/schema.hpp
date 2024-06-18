@@ -260,14 +260,14 @@ namespace schema
         static constexpr size_t sk = schema::header::pk;
         static constexpr size_t minsize =
             count_ +         // txs
-            bit +            // malleable (could compress with size)
+            ////bit +            // malleable (could compress with size)
             schema::size +   // block.serialized_size(true) (could be variable)
             transaction::pk; // coinbase
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
         static inline linkage<pk> count() NOEXCEPT;
-        static_assert(minsize == 11u);
-        static_assert(minrow == 19u);
+        static_assert(minsize == 10u);
+        static_assert(minrow == 18u);
     };
 
     /// Index tables.
