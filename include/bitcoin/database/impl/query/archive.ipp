@@ -302,13 +302,13 @@ TEMPLATE
 bool CLASS::get_tx_position(size_t& out, const tx_link& link) const NOEXCEPT
 {
     // to_block is strong but not necessarily confirmed.
-    const auto block_fk = to_block(link);
-    if (!is_confirmed_block(block_fk))
+    const auto fk = to_block(link);
+    if (!is_confirmed_block(fk))
         return false;
 
     // False return below implies an integrity error (tx should be indexed).
     table::txs::get_position txs{ {}, link };
-    if (!store_.txs.find(block_fk, txs))
+    if (!store_.txs.find(fk, txs))
         return false;
 
     out = txs.position;

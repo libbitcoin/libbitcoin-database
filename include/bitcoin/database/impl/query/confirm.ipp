@@ -143,7 +143,7 @@ bool CLASS::is_spent(const spend_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::is_strong_spend(const spend_link& link) const NOEXCEPT
 {
-    return !to_block(to_spend_tx(link)).is_terminal();
+    return is_strong_tx(to_spend_tx(link));
 }
 
 // unused
@@ -269,8 +269,7 @@ TEMPLATE
 code CLASS::unspendable_prevout(const point_link& link,
     uint32_t sequence, uint32_t version, const context& ctx) const NOEXCEPT
 {
-    const auto key = get_point_key(link);
-    const auto strong = to_strong(key);
+    const auto strong = to_strong(get_point_key(link));
 
     if (strong.block.is_terminal())
         return strong.tx.is_terminal() ? error::missing_previous_output :

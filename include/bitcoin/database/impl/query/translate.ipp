@@ -202,13 +202,10 @@ TEMPLATE
 header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
 {
     table::strong_tx::record strong{};
-    if (!store_.strong_tx.find(link, strong))
+    if (!store_.strong_tx.find(link, strong) || !strong.positive)
         return {};
 
-    // Terminal implies not strong (false).
-    if (!strong.positive)
-        return {};
-    
+    // Terminal implies not strong (not in block).
     return strong.header_fk;
 }
 
