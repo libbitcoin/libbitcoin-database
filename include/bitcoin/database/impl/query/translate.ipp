@@ -396,17 +396,36 @@ spend_links CLASS::to_spenders(const foreign_point& point) const NOEXCEPT
     if (!it)
         return {};
 
+    // Any terminal link in the set implies a store integrity failure.
+    static const spend_links fault{ spend_link{} };
+
     // Iterate transactions that spend the point, saving each spender.
     spend_links spenders{};
     do
     {
-        // BUGBUG: Deadlock due to holding iterator while querying own table.
-        // TODO: refactor to make safe and also pass boolean result code.
-        spenders.push_back(to_spender(to_spend_tx(it.self()), point));
+        table::spend::get_parent spender{};
+        if (!store_.spend.get(it, spender))
+            return fault;
+
+        auto found{ false };
+        for (const auto& spend_fk: to_tx_spends(spender.parent_fk))
+        {
+            table::spend::get_key spend{};
+            if (!store_.spend.get(it, spend_fk, spend))
+                return fault;
+
+            // Only one input of a given tx may spend an output.
+            if (spend.key == point)
+            {
+                spenders.push_back(spend_fk);
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) return fault;
     }
     while (it.advance());
-
-    // Any terminal link implies a store integrity failure.
     return spenders;
 }
 

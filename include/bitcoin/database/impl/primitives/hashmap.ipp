@@ -190,12 +190,23 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
     return read(manager_.get(), link, element);
 }
 
+// static
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::get(const iterator& it, Element& element) const NOEXCEPT
+bool CLASS::get(const iterator& it, Element& element) NOEXCEPT
 {
     // This override avoids deadlock when holding iterator to the same table.
     return read(it.get(), it.self(), element);
+}
+
+// static
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::get(const iterator& it, const Link& link,
+    Element& element) NOEXCEPT
+{
+    // This override avoids deadlock when holding iterator to the same table.
+    return read(it.get(), link, element);
 }
 
 TEMPLATE

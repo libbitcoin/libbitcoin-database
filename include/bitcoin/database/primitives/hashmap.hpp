@@ -118,7 +118,12 @@ public:
     /// Get element at link, false if deserialize error.
     /// Iterator must not be terminal, must be guarded by called.
     template <typename Element, if_equal<Element::size, Size> = true>
-    bool get(const iterator& it, Element& element) const NOEXCEPT;
+    static bool get(const iterator& it, Element& element) NOEXCEPT;
+
+    /// Get element at link using it memory object, false if deserialize error.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    static bool get(const iterator& it, const Link& link,
+        Element& element) NOEXCEPT;
 
     /// Set element into previously allocated link (follow with commit).
     template <typename Element, if_equal<Element::size, Size> = true>
