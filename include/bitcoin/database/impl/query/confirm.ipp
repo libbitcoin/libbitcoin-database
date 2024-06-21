@@ -250,7 +250,6 @@ code CLASS::spent_prevout(const foreign_point& point,
         return error::success;
 
     table::spend::get_parent spend{};
-    table::strong_tx::record strong{};
     do
     {
         if (!store_.spend.get(it, spend))
