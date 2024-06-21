@@ -201,7 +201,6 @@ header_link CLASS::to_parent(const header_link& link) const NOEXCEPT
 TEMPLATE
 header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
 {
-    // (10.36%)
     table::strong_tx::record strong{};
     if (!store_.strong_tx.find(link, strong))
         return {};
@@ -220,7 +219,6 @@ header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
 TEMPLATE
 inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
 {
-    // (14.21%) from block_confirmable, reduce collision.
     auto it = store_.tx.it(tx_hash);
     strong_pair strong{ {}, it.self() };
     if (!it)
@@ -229,13 +227,10 @@ inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
     do
     {
         strong.tx = it.self();
-
-        // (10.99%) from block_confirmable.
         strong.block = to_block(strong.tx);
         if (!strong.block.is_terminal())
             return strong;
     }
-    // (0.28%)
     while (it.advance());
     return strong;
 }
@@ -257,9 +252,15 @@ inline strong_pairs CLASS::to_strongs(const hash_digest& tx_hash) const NOEXCEPT
     strong_pairs strongs{};
     do
     {
-        // clang emplace_back bug (no matching constructor), using push_back.
         for (const auto& link: to_blocks(it.self()))
+        {
+#if defined(HAVE_CLANG)
+            // work around clang emplace_back bug (no matching constructor).
             strongs.push_back({ link, it.self() });
+#else
+            strongs.emplace_back(link, it.self());
+#endif
+        }
     }
     while (it.advance());
     return strongs;
@@ -444,25 +445,37 @@ spend_links CLASS::to_tx_spends(const tx_link& link) const NOEXCEPT
 
 // protected
 TEMPLATE
-spend_links CLASS::to_tx_spends(uint32_t& version,
-    const tx_link& link) const NOEXCEPT
+spend_set CLASS::to_spend_set(const tx_link& link) const NOEXCEPT
 {
-    // (4.71%) from block_confirmable.
-
-    // (2.53%)
     table::transaction::get_version_puts tx{};
     if (!store_.tx.get(link, tx))
         return {};
 
-    version = tx.version;
     table::puts::get_spends puts{};
-
-    // (2.1%)
     puts.spend_fks.resize(tx.ins_count);
     if (!store_.puts.get(tx.puts_fk, puts))
         return {};
 
-    return std::move(puts.spend_fks);
+    spend_set set{ link, tx.version, {} };
+    set.spends.reserve(tx.ins_count);
+    
+    // This is not concurrent because to_non_coinbase_spends is (by tx).
+    table::spend::get_prevout_sequence get{};
+    for (const auto& spend_fk: puts.spend_fks)
+    {
+        if (!store_.spend.get(spend_fk, get))
+            return {};
+
+        // Translate query to public struct.
+#if defined(HAVE_CLANG)
+        // work around clang emplace_back bug (no matching constructor).
+        set.spends.push_back({ get.point_fk, get.point_index, get.sequence });
+#else
+        set.spends.emplace_back(get.point_fk, get.point_index, get.sequence);
+#endif
+    }
+
+    return set;
 }
 
 // block to txs/puts (forward navigation)
@@ -471,7 +484,7 @@ spend_links CLASS::to_tx_spends(uint32_t& version,
 TEMPLATE
 tx_links CLASS::to_transactions(const header_link& link) const NOEXCEPT
 {
-    table::txs::slab txs{};
+    table::txs::get_txs txs{};
     if (!store_.txs.find(link, txs))
         return {};
 
@@ -488,24 +501,46 @@ tx_link CLASS::to_coinbase(const header_link& link) const NOEXCEPT
     return txs.coinbase_fk;
 }
 
+// protected
 TEMPLATE
-spend_links CLASS::to_non_coinbase_spends(
+spend_sets CLASS::to_non_coinbase_spends(
     const header_link& link) const NOEXCEPT
 {
     const auto txs = to_transactions(link);
     if (txs.size() <= one)
         return {};
 
-    // Dynamic spends allocation is an unnecessary block_confirmable cost.
-    spend_links spends{};
-    for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
+    spend_sets out{ sub1(txs.size()) };
+    const auto to_set = [this](const auto& tx) NOEXCEPT
     {
-        const auto tx_spends = to_tx_spends(*tx);
-        spends.insert(spends.end(), tx_spends.begin(), tx_spends.end());
-    }
+        return to_spend_set(tx);
+    };
 
-    return spends;
+    // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
+    std_transform(bc::par_unseq, std::next(txs.begin()), txs.end(),
+        out.begin(), to_set);
+
+    return out;
 }
+
+#if defined(UNDEFINED)
+// protected
+TEMPLATE
+spend_sets CLASS::to_non_coinbase_spends(
+    const header_link& link) const NOEXCEPT
+{
+    const auto txs = to_transactions(link);
+    if (txs.size() <= one)
+        return {};
+
+    spend_sets sets{};
+    sets.reserve(sub1(txs.size()));
+    for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
+        sets.push_back(to_spend_set(*tx));
+
+    return sets;
+}
+#endif
 
 TEMPLATE
 spend_links CLASS::to_block_spends(const header_link& link) const NOEXCEPT
@@ -515,7 +550,7 @@ spend_links CLASS::to_block_spends(const header_link& link) const NOEXCEPT
 
     for (const auto& tx: txs)
     {
-        const auto tx_spends = to_tx_spends(tx);
+        const auto tx_spends = to_tx_spenders(tx);
         spends.insert(spends.end(), tx_spends.begin(), tx_spends.end());
     }
 

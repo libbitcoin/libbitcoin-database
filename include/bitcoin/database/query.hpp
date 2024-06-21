@@ -45,14 +45,39 @@ using filter_link = table::neutrino::link;
 
 using header_links = std_vector<header_link::integer>;
 using tx_links = std_vector<tx_link::integer>;
-using spend_links = std_vector<spend_link::integer>;
 using input_links = std_vector<input_link::integer>;
 using output_links = std_vector<output_link::integer>;
+using spend_links = std_vector<spend_link::integer>;
 
 using foreign_point = table::spend::search_key;
 using two_counts = std::pair<size_t, size_t>;
-struct strong_pair { header_link block; tx_link tx; };
+struct strong_pair { header_link block{}; tx_link tx{}; };
 using strong_pairs = std_vector<strong_pair>;
+
+struct spend_set
+{
+    struct spend
+    {
+        inline table::spend::search_key prevout() const NOEXCEPT
+        {
+            return table::spend::compose(point_fk, point_index);
+        }
+
+        inline bool is_null() const NOEXCEPT
+        {
+            return point_fk == table::spend::pt::terminal;
+        }
+
+        table::spend::pt::integer point_fk{};
+        table::spend::ix::integer point_index{};
+        uint32_t sequence{};
+    };
+
+    tx_link tx{};
+    uint32_t version{};
+    std_vector<spend> spends{};
+};
+using spend_sets = std_vector<spend_set>;
 
 // Writers (non-const) are only: push_, pop_, set_ and initialize.
 template <typename Store>
@@ -264,9 +289,8 @@ public:
     /// block to txs/puts (forward navigation)
     tx_link to_coinbase(const header_link& link) const NOEXCEPT;
     tx_links to_transactions(const header_link& link) const NOEXCEPT;
-    spend_links to_non_coinbase_spends(const header_link& link) const NOEXCEPT;
-    spend_links to_block_spends(const header_link& link) const NOEXCEPT;
     output_links to_block_outputs(const header_link& link) const NOEXCEPT;
+    spend_links to_block_spends(const header_link& link) const NOEXCEPT;
 
     /// hashmap enumeration
     header_link top_header(size_t bucket) const NOEXCEPT;
@@ -494,19 +518,18 @@ public:
         const filter& body) NOEXCEPT;
 
 protected:
-    bool set_strong(const header_link& link, const tx_links& txs,
-        bool positive) NOEXCEPT;
-
     /// Translate.
     /// -----------------------------------------------------------------------
+
+    spend_set to_spend_set(const tx_link& link) const NOEXCEPT;
+    spend_sets to_non_coinbase_spends(const header_link& link) const NOEXCEPT;
+
     uint32_t to_spend_index(const tx_link& parent_fk,
         const spend_link& input_fk) const NOEXCEPT;
     uint32_t to_output_index(const tx_link& parent_fk,
         const output_link& output_fk) const NOEXCEPT;
     spend_link to_spender(const tx_link& link,
         const foreign_point& point) const NOEXCEPT;
-    spend_links to_tx_spends(uint32_t& version,
-        const tx_link& link) const NOEXCEPT;
 
     // Critical path
     inline header_links to_blocks(const tx_link& link) const NOEXCEPT;
@@ -526,19 +549,20 @@ protected:
     height_link get_height(const hash_digest& key) const NOEXCEPT;
     height_link get_height(const header_link& link) const NOEXCEPT;
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
-    error::error_t mature_prevout(const point_link& link,
+    code mature_prevout(const point_link& link,
         size_t height) const NOEXCEPT;
-    error::error_t locked_prevout(const point_link& link, uint32_t sequence,
+    code locked_prevout(const point_link& link, uint32_t sequence,
         const context& ctx) const NOEXCEPT;
 
     // Critical path
-    inline error::error_t spent_prevout(tx_link link,
-        index index) const NOEXCEPT;
-    inline error::error_t spent_prevout(const foreign_point& point,
+    code spent_prevout(tx_link link, index index) const NOEXCEPT;
+    code spent_prevout(const foreign_point& point,
         const tx_link& self) const NOEXCEPT;
-    inline error::error_t unspendable_prevout(const point_link& link,
+    code unspendable_prevout(const point_link& link,
         uint32_t sequence, uint32_t version,
         const context& ctx) const NOEXCEPT;
+    bool set_strong(const header_link& link, const tx_links& txs,
+        bool positive) NOEXCEPT;
 
     /// context
     /// -----------------------------------------------------------------------

@@ -136,7 +136,7 @@ bool CLASS::is_spent(const spend_link& link) const NOEXCEPT
     if (spend.is_null())
         return false;
 
-    return spent_prevout(spend.prevout(), spend.parent_fk);
+    return !!spent_prevout(spend.prevout(), spend.parent_fk);
 }
 
 // unused
@@ -157,12 +157,12 @@ bool CLASS::is_mature(const spend_link& link, size_t height) const NOEXCEPT
     if (spend.is_null())
         return true;
 
-    return mature_prevout(spend.point_fk, height) == error::success;
+    return !mature_prevout(spend.point_fk, height);
 }
 
 // protected (only for is_mature/unused)
 TEMPLATE
-error::error_t CLASS::mature_prevout(const point_link& link,
+code CLASS::mature_prevout(const point_link& link,
     size_t height) const NOEXCEPT
 {
     // Get hash from point, search for prevout tx and get its link.
@@ -201,12 +201,12 @@ bool CLASS::is_locked(const spend_link& link, uint32_t sequence,
     if (spend.is_null())
         return true;
 
-    return locked_prevout(spend.point_fk, sequence, ctx) == error::success;
+    return !locked_prevout(spend.point_fk, sequence, ctx);
 }
 
 // protected (only for is_locked/unused)
 TEMPLATE
-error::error_t CLASS::locked_prevout(const point_link& link, uint32_t sequence,
+code CLASS::locked_prevout(const point_link& link, uint32_t sequence,
     const context& ctx) const NOEXCEPT
 {
     if (!ctx.is_enabled(system::chain::flags::bip68_rule))
@@ -235,19 +235,16 @@ error::error_t CLASS::locked_prevout(const point_link& link, uint32_t sequence,
 
 // protected
 TEMPLATE
-inline error::error_t CLASS::spent_prevout(tx_link link,
-    index index) const NOEXCEPT
+code CLASS::spent_prevout(tx_link link, index index) const NOEXCEPT
 {
-    return spent_prevout(table::spend::compose(link, index),
-        tx_link::terminal);
+    return spent_prevout(table::spend::compose(link, index), tx_link::terminal);
 }
 
 // protected
 TEMPLATE
-inline error::error_t CLASS::spent_prevout(const foreign_point& point,
+code CLASS::spent_prevout(const foreign_point& point,
     const tx_link& self) const NOEXCEPT
 {
-    // (2.94%)
     auto it = store_.spend.it(point);
     if (!it)
         return error::success;
@@ -255,36 +252,27 @@ inline error::error_t CLASS::spent_prevout(const foreign_point& point,
     table::spend::get_parent spend{};
     do
     {
-        // (0.38%)
         if (!store_.spend.get(it, spend))
             return error::integrity;
 
-        // Free (trivial).
         // Skip current spend, which is the only one if not double spent.
         if (spend.parent_fk == self)
             continue;
 
-        // Free (zero iteration without double spend).
         // If strong spender exists then prevout is confirmed double spent.
         if (!to_block(spend.parent_fk).is_terminal())
             return error::confirmed_double_spend;
     }
-    // Expensive (31.19%).
-    // Iteration exists because we allow double spending, and by design cannot
-    // preclude it because we download and index concurrently before confirm.
     while (it.advance());
     return error::success;
 }
 
 // protected
 TEMPLATE
-inline error::error_t CLASS::unspendable_prevout(const point_link& link,
+code CLASS::unspendable_prevout(const point_link& link,
     uint32_t sequence, uint32_t version, const context& ctx) const NOEXCEPT
 {
-    // Modest (1.24%), and with 4.77 conflict ratio.
     const auto key = get_point_key(link);
-
-    // Expensize (8.6%).
     const auto strong = to_strong(key);
 
     if (strong.block.is_terminal())
@@ -306,7 +294,6 @@ inline error::error_t CLASS::unspendable_prevout(const point_link& link,
 
     return error::success;
 }
-
 
 TEMPLATE
 code CLASS::unspent_duplicates(const tx_link& link,
@@ -338,22 +325,13 @@ code CLASS::tx_confirmable(const tx_link& link,
     const context& ctx) const NOEXCEPT
 {
     code ec{};
-    uint32_t version{};
-    table::spend::get_prevout_sequence spend{};
-
-    // (4.71%) tx.get, puts.get, reduce collision.
-    for (const auto& spend_fk: to_tx_spends(version, link))
+    const auto set = to_spend_set(link);
+    for (const auto& spend: set.spends)
     {
-        // (3.65%) spend.get, reduce collision.
-        if (!store_.spend.get(spend_fk, spend))
-            return error::integrity;
-
-        // (33.42%)
         if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
-            version, ctx)))
+            set.version, ctx)))
             return ec;
 
-        // (34.74%)
         if ((ec = spent_prevout(spend.prevout(), link)))
             return ec;
     }
@@ -361,6 +339,7 @@ code CLASS::tx_confirmable(const tx_link& link,
     return error::success;
 }
 
+// split(3) 219 secs for 400k-410k; split(2) 255 and split(0) 456 (not shown).
 TEMPLATE
 code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 {
@@ -368,23 +347,127 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     if (!get_context(ctx, link))
         return error::integrity;
 
-    // (0.07%)
+    code ec{};
+    if ((ec = unspent_duplicates(to_coinbase(link), ctx)))
+        return ec;
+
+    const auto is_unspendable = [&ctx, this] (const auto& set) NOEXCEPT
+    {
+        for (const auto& spend: set.spends)
+            if (unspendable_prevout(spend.point_fk, spend.sequence,
+                set.version, ctx))
+                return true;
+
+        return false;
+    };
+
+    const auto is_spent = [this](const auto& set) NOEXCEPT
+    {
+        for (const auto& spend: set.spends)
+            if (spent_prevout(spend.prevout(), set.tx))
+                return true;
+
+        return false;
+    };
+
+    // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
+    const auto sets = to_non_coinbase_spends(link);
+
+    // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
+    if (std_any_of(bc::par_unseq, sets.begin(), sets.end(), is_unspendable))
+        return error::integrity;
+
+    // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
+    if (std_any_of(bc::par_unseq, sets.begin(), sets.end(), is_spent))
+        return error::integrity;
+    
+    return error::success;
+}
+
+#if defined(UNDEFINED)
+
+// split(0) 403 secs for 400k-410k
+TEMPLATE
+code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
+{
+    context ctx{};
+    if (!get_context(ctx, link))
+        return error::integrity;
+
+    code ec{};
     const auto txs = to_transactions(link);
     if (txs.empty())
-        return error::success;
+        return ec;
 
-    // (0.11%) because !bip30.
-    code ec{};
     if ((ec = unspent_duplicates(txs.front(), ctx)))
         return ec;
 
-    // (0.33%)
     for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
         if ((ec = tx_confirmable(*tx, ctx)))
             return ec;
 
-    return error::success;
+    return ec;
 }
+
+// split(1) 446 secs for 400k-410k
+TEMPLATE
+code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
+{
+    context ctx{};
+    if (!get_context(ctx, link))
+        return error::integrity;
+
+    code ec{};
+    if ((ec = unspent_duplicates(to_coinbase(link), ctx)))
+        return ec;
+
+    const auto sets = to_non_coinbase_spends(link);
+    for (const auto& set: sets)
+    {
+        for (const auto& spend: set.spends)
+        {
+            if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
+                set.version, ctx)))
+                return ec;
+
+            if ((ec = spent_prevout(spend.prevout(), set.tx)))
+                return ec;
+        }
+    }
+
+    return ec;
+}
+
+// split(3) 416 secs for 400k-410k
+TEMPLATE
+code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
+{
+    context ctx{};
+    if (!get_context(ctx, link))
+        return error::integrity;
+
+    code ec{};
+    if ((ec = unspent_duplicates(to_coinbase(link), ctx)))
+        return ec;
+
+    const auto sets = to_non_coinbase_spends(link);
+    for (const auto& set: sets)
+        for (const auto& spend: set.spends)
+            if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
+                set.version, ctx)))
+                return ec;
+    
+    if (ec) return ec;
+
+    for (const auto& set: sets)
+        for (const auto& spend: set.spends)
+            if ((ec = spent_prevout(spend.prevout(), set.tx)))
+                return ec;
+
+    return ec;
+}
+
+#endif // DISABLED
 
 // protected
 TEMPLATE
@@ -414,7 +497,6 @@ bool CLASS::is_strong(const header_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::set_strong(const header_link& link) NOEXCEPT
 {
-    // (0.22%) after milestone.
     const auto txs = to_transactions(link);
     if (txs.empty())
         return false;
@@ -422,7 +504,6 @@ bool CLASS::set_strong(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // (4.04%) after milestone.
     // Clean allocation failure (e.g. disk full), see set_strong() comments.
     return set_strong(link, txs, true);
     // ========================================================================
