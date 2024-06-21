@@ -272,7 +272,8 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_strong__strong__true)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.is_strong(0));
+    BOOST_REQUIRE(query.is_strong_tx(0));
+    BOOST_REQUIRE(query.is_strong_block(0));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__is_strong__weak__false)
@@ -284,9 +285,11 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_strong__weak__false)
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, context{}, false, false));
-    BOOST_REQUIRE(!query.is_strong(1));
+    BOOST_REQUIRE(!query.is_strong_tx(1));
+    BOOST_REQUIRE(!query.is_strong_block(1));
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.is_strong(1));
+    BOOST_REQUIRE(query.is_strong_tx(1));
+    BOOST_REQUIRE(query.is_strong_block(1));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unspent__false)

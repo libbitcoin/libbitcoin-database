@@ -250,17 +250,15 @@ code CLASS::spent_prevout(const foreign_point& point,
         return error::success;
 
     table::spend::get_parent spend{};
+    table::strong_tx::record strong{};
     do
     {
         if (!store_.spend.get(it, spend))
             return error::integrity;
 
         // Skip current spend, which is the only one if not double spent.
-        if (spend.parent_fk == self)
-            continue;
-
         // If strong spender exists then prevout is confirmed double spent.
-        if (!to_block(spend.parent_fk).is_terminal())
+        if ((spend.parent_fk != self) && is_strong_tx(spend.parent_fk))
             return error::confirmed_double_spend;
     }
     while (it.advance());
@@ -489,9 +487,16 @@ bool CLASS::set_strong(const header_link& link, const tx_links& txs,
 }
 
 TEMPLATE
-bool CLASS::is_strong(const header_link& link) const NOEXCEPT
+bool CLASS::is_strong_tx(const tx_link& link) const NOEXCEPT
 {
-    return !to_block(to_coinbase(link)).is_terminal();
+    table::strong_tx::record strong{};
+    return store_.strong_tx.find(link, strong) && strong.positive;
+}
+
+TEMPLATE
+bool CLASS::is_strong_block(const header_link& link) const NOEXCEPT
+{
+    return is_strong_tx(to_coinbase(link));
 }
 
 TEMPLATE
