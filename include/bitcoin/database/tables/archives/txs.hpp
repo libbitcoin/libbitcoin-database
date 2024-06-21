@@ -150,6 +150,24 @@ struct txs
 
         bool associated{};
     };
+
+    struct get_txs
+      : public schema::txs
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            tx_fks.resize(source.read_little_endian<tx::integer, schema::count_>());
+            source.skip_bytes(bytes::size);
+            std::for_each(tx_fks.begin(), tx_fks.end(), [&](auto& fk) NOEXCEPT
+            {
+                fk = source.read_little_endian<tx::integer, tx::size>();
+            });
+
+            return source;
+        }
+
+        keys tx_fks{};
+    };
 };
 
 } // namespace table

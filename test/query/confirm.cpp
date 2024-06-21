@@ -272,7 +272,8 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_strong__strong__true)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.is_strong(0));
+    BOOST_REQUIRE(query.is_strong_tx(0));
+    BOOST_REQUIRE(query.is_strong_block(0));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__is_strong__weak__false)
@@ -284,9 +285,11 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_strong__weak__false)
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, context{}, false, false));
-    BOOST_REQUIRE(!query.is_strong(1));
+    BOOST_REQUIRE(!query.is_strong_tx(1));
+    BOOST_REQUIRE(!query.is_strong_block(1));
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.is_strong(1));
+    BOOST_REQUIRE(query.is_strong_tx(1));
+    BOOST_REQUIRE(query.is_strong_block(1));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unspent__false)
@@ -484,9 +487,9 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__null_points__success)
     // block1/2/3 at links 1/2/3 confirming at heights 1/2/3.
     // blocks have only coinbase txs, all txs should be set strong before calling
     // confirmable, but these are bip30 default configuration.
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(1), error::success);
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(3), error::success);
+    BOOST_REQUIRE(!query.block_confirmable(1));
+    BOOST_REQUIRE(!query.block_confirmable(2));
+    BOOST_REQUIRE(!query.block_confirmable(3));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__missing_prevouts__integrity)
@@ -501,7 +504,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__missing_prevouts__integri
 
     // block1a is missing all three input prevouts.
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(1), error::success);
+    BOOST_REQUIRE(!query.block_confirmable(1));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_gensis__coinbase_maturity)
@@ -518,7 +521,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_gensis__coinbase_ma
     BOOST_REQUIRE(query.set_strong(1));
 
     // 1 + 100 = 101 (maturity, except genesis)
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(1), error::success);
+    BOOST_REQUIRE(!query.block_confirmable(1));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__immature_prevouts__coinbase_maturity)
@@ -533,12 +536,12 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__immature_prevouts__coinba
     // block1b has only a coinbase tx.
     BOOST_REQUIRE(query.set(test::block1b, context{ bip68, 1, 0 }, false, false));
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(1), error::success);
+    BOOST_REQUIRE(!query.block_confirmable(1));
 
     // block2b prematurely spends block1b's coinbase outputs.
     BOOST_REQUIRE(query.set(test::block2b, context{ 0, 100, 0 }, false, false));
     BOOST_REQUIRE(query.set_strong(2));
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
+    BOOST_REQUIRE(!query.block_confirmable(2));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__mature_prevouts__success)
@@ -553,12 +556,12 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__mature_prevouts__success)
     // block1b has only a coinbase tx.
     BOOST_REQUIRE(query.set(test::block1b, context{ bip68, 1, 0 }, false, false));
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(1), error::success);
+    BOOST_REQUIRE(!query.block_confirmable(1));
 
     // block2b spends block1b's coinbase outputs.
     BOOST_REQUIRE(query.set(test::block2b, context{ 0, 101, 0 }, false, false));
     BOOST_REQUIRE(query.set_strong(2));
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
+    BOOST_REQUIRE(!query.block_confirmable(2));
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__success)
@@ -579,7 +582,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__succe
     BOOST_REQUIRE(query.set_strong(2));
 
     // Maturity applies only to coinbase prevouts.
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
+    BOOST_REQUIRE(!query.block_confirmable(2));
 }
 
 // These pas but test vectors need to be updated to create clear test conditions.
@@ -605,7 +608,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__succe
 ////    BOOST_REQUIRE(query.set_strong(2));
 ////
 ////    // Not confirmable because lack of maturity.
-////    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
+////    BOOST_REQUIRE(!query.block_confirmable(2));
 ////}
 ////
 ////BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_coinbase_and_internal_mature__success)
@@ -632,7 +635,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__succe
 ////    // It spends only its first own output (coinbase) and that can never be mature.
 ////    // But spend target is not stored as coinbase because it's not a null point.
 ////    BOOST_REQUIRE(query.set_strong(2));
-////    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
+////    BOOST_REQUIRE(!query.block_confirmable(2));
 ////}
 ////
 ////BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__confirmed_double_spend__confirmed_double_spend)
@@ -657,7 +660,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__succe
 ////    BOOST_REQUIRE(query.set_strong(3));
 ////
 ////    // Not confirmable because of intervening block2a implies double spend.
-////    BOOST_REQUIRE_EQUAL(query.block_confirmable(3), error::success);
+////    BOOST_REQUIRE(!query.block_confirmable(3));
 ////}
 ////
 ////BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__unconfirmed_double_spend__success)
@@ -681,7 +684,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__succe
 ////    BOOST_REQUIRE(query.set_strong(2));
 ////
 ////    // Confirmable because of intervening tx5 is unconfirmed double spend.
-////    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
+////    BOOST_REQUIRE(!query.block_confirmable(2));
 ////}
 
 BOOST_AUTO_TEST_CASE(query_confirm__set_strong__unassociated__false)

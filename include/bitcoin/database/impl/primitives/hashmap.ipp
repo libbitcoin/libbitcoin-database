@@ -147,15 +147,12 @@ TEMPLATE
 Link CLASS::first(const Key& key) const NOEXCEPT
 {
     ////return it(key).self();
-    // Copied from iterator::to_match(link), avoids normal form it() construct.
     return first(manager_.get(), head_.top(key), key);
 }
 
 TEMPLATE
 typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 {
-    // (14.09% + 5.36%)
-    // Expensive construction, avoid unless iteration is necessary.
     return { manager_.get(), head_.top(key), key };
 }
 
@@ -180,7 +177,6 @@ TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::find(const Key& key, Element& element) const NOEXCEPT
 {
-    // Renamed to "find()" to avoid collision over link/key.
     // This override avoids duplicated memory_ptr construct in get(first()).
     const auto ptr = manager_.get();
     return read(ptr, first(ptr, head_.top(key), key), element);
@@ -194,12 +190,23 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
     return read(manager_.get(), link, element);
 }
 
+// static
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::get(const iterator& it, Element& element) const NOEXCEPT
+bool CLASS::get(const iterator& it, Element& element) NOEXCEPT
 {
     // This override avoids deadlock when holding iterator to the same table.
     return read(it.get(), it.self(), element);
+}
+
+// static
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::get(const iterator& it, const Link& link,
+    Element& element) NOEXCEPT
+{
+    // This override avoids deadlock when holding iterator to the same table.
+    return read(it.get(), link, element);
 }
 
 TEMPLATE
@@ -215,7 +222,6 @@ bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
     flipper sink{ stream };
     sink.skip_bytes(index_size);
 
-    // (1.65%)
     if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size);) }
     return element.to_data(sink);
 }
@@ -267,7 +273,6 @@ bool CLASS::put_link(Link& link, const Key& key,
     sink.skip_bytes(Link::size);
     sink.write_bytes(key);
 
-    // (1.63%)
     if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * count);) }
     if (!element.to_data(sink))
         return false;
@@ -352,6 +357,7 @@ bool CLASS::read(const memory_ptr& ptr, const Link& link,
     iostream stream{ offset, size - position };
     reader source{ stream };
     source.skip_bytes(index_size);
+
     if constexpr (!is_slab) { BC_DEBUG_ONLY(source.set_limit(Size);) }
     return element.from_data(source);
 }

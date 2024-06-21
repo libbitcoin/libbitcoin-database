@@ -125,7 +125,6 @@ bool CLASS::get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::get_context(context& ctx, const header_link& link) const NOEXCEPT
 {
-    // (4.04%)
     table::header::record_context header{};
     if (!store_.header.get(link, header))
         return false;
