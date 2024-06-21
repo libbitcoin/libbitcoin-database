@@ -296,14 +296,14 @@ code CLASS::unspendable_prevout(const point_link& link,
 }
 
 TEMPLATE
-code CLASS::unspent_duplicates(const tx_link& link,
+code CLASS::unspent_duplicates(const tx_link& coinbase,
     const context& ctx) const NOEXCEPT
 {
     if (!ctx.is_enabled(system::chain::flags::bip30_rule))
         return error::success;
 
     // This will be empty if current block is not set_strong.
-    const auto coinbases = to_strongs(get_tx_key(link));
+    const auto coinbases = to_strong_txs(get_tx_key(coinbase));
     if (coinbases.empty())
         return error::integrity;
 
@@ -312,9 +312,9 @@ code CLASS::unspent_duplicates(const tx_link& link,
 
     // bip30: all (but self) must be confirmed spent or dup invalid (cb only).
     size_t unspent{};
-    for (const auto& coinbase: coinbases)
-        for (index out{}; out < output_count(coinbase.tx); ++out)
-            if (!spent_prevout(coinbase.tx, out) && is_one(unspent++))
+    for (const auto& tx: coinbases)
+        for (index out{}; out < output_count(tx); ++out)
+            if (!spent_prevout(tx, out) && is_one(unspent++))
                 return error::unspent_coinbase_collision;
 
     return is_zero(unspent) ? error::integrity : error::success;

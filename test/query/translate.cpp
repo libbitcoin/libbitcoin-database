@@ -672,17 +672,17 @@ BOOST_AUTO_TEST_CASE(query_translate__to_block__set_strong__expected)
     {
     public:
         using test::query_accessor::query_accessor;
-        header_links to_blocks_(const tx_link& link) const NOEXCEPT
+        tx_links to_strong_txs_(const tx_link& link) const NOEXCEPT
         {
-            return to_blocks(link);
+            return to_strong_txs(link);
+        }
+        tx_links to_strong_txs_(const hash_digest& tx_hash) const NOEXCEPT
+        {
+            return to_strong_txs(tx_hash);
         }
         strong_pair to_strong_(const hash_digest& tx_hash) const NOEXCEPT
         {
             return to_strong(tx_hash);
-        }
-        strong_pairs to_strongs_(const hash_digest& tx_hash) const NOEXCEPT
-        {
-            return to_strongs(tx_hash);
         }
     };
 
@@ -704,15 +704,18 @@ BOOST_AUTO_TEST_CASE(query_translate__to_block__set_strong__expected)
     BOOST_REQUIRE_EQUAL(query.to_block(2), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_block(3), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_strong_(hash0).block, 0u);
+    BOOST_REQUIRE_EQUAL(query.to_strong_(hash0).tx, 0u);
     BOOST_REQUIRE_EQUAL(query.to_strong_(hash1).block, header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_strong_(hash1).tx, 1u);
     BOOST_REQUIRE_EQUAL(query.to_strong_(hash2).block, header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_strong_(hash2).tx, 2u);
     BOOST_REQUIRE_EQUAL(query.to_strong_(hash3).block, header_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_strongs_(hash0).size(), 1u);
-    BOOST_REQUIRE_EQUAL(query.to_strongs_(hash0).at(0).block, 0u);
-    BOOST_REQUIRE_EQUAL(query.to_strongs_(hash0).at(0).tx, 0u);
-    BOOST_REQUIRE(query.to_strongs_(hash1).empty());
-    BOOST_REQUIRE(query.to_strongs_(hash2).empty());
-    BOOST_REQUIRE(query.to_strongs_(hash3).empty());
+    BOOST_REQUIRE_EQUAL(query.to_strong_(hash3).tx, tx_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_strong_txs_(hash0).size(), 1u);
+    BOOST_REQUIRE_EQUAL(query.to_strong_txs_(hash0).front(), 0u);
+    BOOST_REQUIRE(query.to_strong_txs_(hash1).empty());
+    BOOST_REQUIRE(query.to_strong_txs_(hash2).empty());
+    BOOST_REQUIRE(query.to_strong_txs_(hash3).empty());
 
     // push_candidate/push_confirmed has no effect.
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::genesis.hash())));
@@ -722,17 +725,22 @@ BOOST_AUTO_TEST_CASE(query_translate__to_block__set_strong__expected)
     BOOST_REQUIRE_EQUAL(query.to_block(2), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_block(3), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_strong_(hash0).block, 0u);
+    BOOST_REQUIRE_EQUAL(query.to_strong_(hash0).tx, 0u);
     BOOST_REQUIRE_EQUAL(query.to_strong_(hash1).block, header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_strong_(hash1).tx, 1u);
     BOOST_REQUIRE_EQUAL(query.to_strong_(hash2).block, header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_strong_(hash2).tx, 2u);
     BOOST_REQUIRE_EQUAL(query.to_strong_(hash3).block, header_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_strongs_(hash0).size(), 1u);
-    BOOST_REQUIRE_EQUAL(query.to_strongs_(hash0).at(0).block, 0u);
-    BOOST_REQUIRE_EQUAL(query.to_strongs_(hash0).at(0).tx, 0u);
-    BOOST_REQUIRE(query.to_strongs_(hash1).empty());
-    BOOST_REQUIRE(query.to_strongs_(hash2).empty());
-    BOOST_REQUIRE(query.to_strongs_(hash3).empty());
+    BOOST_REQUIRE_EQUAL(query.to_strong_(hash3).tx, tx_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_strong_txs_(hash0).size(), 1u);
+    BOOST_REQUIRE_EQUAL(query.to_strong_txs_(hash0).front(), 0u);
+    BOOST_REQUIRE(query.to_strong_txs_(hash1).empty());
+    BOOST_REQUIRE(query.to_strong_txs_(hash2).empty());
+    BOOST_REQUIRE(query.to_strong_txs_(hash3).empty());
 
     // set_strong sets strong_by (only), and is idempotent.
+    // However this second genesis set_strong creates an additional tx link,
+    // which increments the link values returnedby to_strong_txs_(). 
     BOOST_REQUIRE(query.set_strong(query.to_header(test::genesis.hash())));
     BOOST_REQUIRE(query.set_strong(query.to_header(test::block1.hash())));
     BOOST_REQUIRE_EQUAL(query.to_block(0), 0u);
@@ -740,17 +748,19 @@ BOOST_AUTO_TEST_CASE(query_translate__to_block__set_strong__expected)
     BOOST_REQUIRE_EQUAL(query.to_block(2), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_block(3), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_strong_(hash0).block, 0u);
+    BOOST_REQUIRE_EQUAL(query.to_strong_(hash0).tx, 0u);
     BOOST_REQUIRE_EQUAL(query.to_strong_(hash1).block, 1u);
+    BOOST_REQUIRE_EQUAL(query.to_strong_(hash1).tx, 1u);
     BOOST_REQUIRE_EQUAL(query.to_strong_(hash2).block, header_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_strong_(hash2).tx, 2u);
     BOOST_REQUIRE_EQUAL(query.to_strong_(hash3).block, header_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_strongs_(hash0).size(), 1u);
-    BOOST_REQUIRE_EQUAL(query.to_strongs_(hash0).at(0).block, 0u);
-    BOOST_REQUIRE_EQUAL(query.to_strongs_(hash0).at(0).tx, 0u);
-    BOOST_REQUIRE_EQUAL(query.to_strongs_(hash1).size(), 1u);
-    BOOST_REQUIRE_EQUAL(query.to_strongs_(hash1).at(0).block, 1u);
-    BOOST_REQUIRE_EQUAL(query.to_strongs_(hash1).at(0).tx, 1u);
-    BOOST_REQUIRE(query.to_strongs_(hash2).empty());
-    BOOST_REQUIRE(query.to_strongs_(hash3).empty());
+    BOOST_REQUIRE_EQUAL(query.to_strong_(hash3).tx, tx_link::terminal);
+    BOOST_REQUIRE_EQUAL(query.to_strong_txs_(hash0).size(), 1u);
+    BOOST_REQUIRE_EQUAL(query.to_strong_txs_(hash0).front(), 1u);
+    BOOST_REQUIRE_EQUAL(query.to_strong_txs_(hash1).size(), 1u);
+    BOOST_REQUIRE_EQUAL(query.to_strong_txs_(hash1).front(), 2u);
+    BOOST_REQUIRE(query.to_strong_txs_(hash2).empty());
+    BOOST_REQUIRE(query.to_strong_txs_(hash3).empty());
 
     // candidate/confirmed unaffected.
     BOOST_REQUIRE(query.is_candidate_header(query.to_header(test::genesis.hash())));
@@ -770,10 +780,10 @@ BOOST_AUTO_TEST_CASE(query_translate__to_block__set_strong__expected)
     BOOST_REQUIRE_EQUAL(query.to_strong_(hash1).block, header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_strong_(hash2).block, header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_strong_(hash3).block, header_link::terminal);
-    BOOST_REQUIRE(query.to_strongs_(hash0).empty());
-    BOOST_REQUIRE(query.to_strongs_(hash1).empty());
-    BOOST_REQUIRE(query.to_strongs_(hash2).empty());
-    BOOST_REQUIRE(query.to_strongs_(hash3).empty());
+    BOOST_REQUIRE(query.to_strong_txs_(hash0).empty());
+    BOOST_REQUIRE(query.to_strong_txs_(hash1).empty());
+    BOOST_REQUIRE(query.to_strong_txs_(hash2).empty());
+    BOOST_REQUIRE(query.to_strong_txs_(hash3).empty());
 }
 
 // _to_parent

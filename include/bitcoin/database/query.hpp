@@ -49,10 +49,9 @@ using input_links = std_vector<input_link::integer>;
 using output_links = std_vector<output_link::integer>;
 using spend_links = std_vector<spend_link::integer>;
 
+struct strong_pair { header_link block{}; tx_link tx{}; };
 using foreign_point = table::spend::search_key;
 using two_counts = std::pair<size_t, size_t>;
-struct strong_pair { header_link block{}; tx_link tx{}; };
-using strong_pairs = std_vector<strong_pair>;
 
 struct spend_set
 {
@@ -487,7 +486,7 @@ public:
     bool set_unstrong(const header_link& link) NOEXCEPT;
     code block_confirmable(const header_link& link) const NOEXCEPT;
     code tx_confirmable(const tx_link& link, const context& ctx) const NOEXCEPT;
-    code unspent_duplicates(const tx_link& link,
+    code unspent_duplicates(const tx_link& coinbase,
         const context& ctx) const NOEXCEPT;
 
     /// Height indexation.
@@ -532,8 +531,8 @@ protected:
         const foreign_point& point) const NOEXCEPT;
 
     // Critical path
-    inline header_links to_blocks(const tx_link& link) const NOEXCEPT;
-    inline strong_pairs to_strongs(const hash_digest& tx_hash) const NOEXCEPT;
+    inline tx_links to_strong_txs(const tx_link& link) const NOEXCEPT;
+    inline tx_links to_strong_txs(const hash_digest& tx_hash) const NOEXCEPT;
     inline strong_pair to_strong(const hash_digest& tx_hash) const NOEXCEPT;
 
     /// Validate.
@@ -602,11 +601,12 @@ protected:
         const header_link& link, size_t height) const NOEXCEPT;
 
 private:
-    using block_tx = table::strong_tx::record;
-    using block_txs = std::vector<block_tx>;
-    static inline header_links strong_only(const block_txs& strongs) NOEXCEPT;
-    static inline bool contains(const block_txs& blocks,
-        const block_tx& block) NOEXCEPT;
+    struct maybe_strong { header_link block{}; tx_link tx{}; bool strong{}; };
+    using maybe_strongs = std_vector<maybe_strong>;
+
+    static inline tx_links strong_only(const maybe_strongs& pairs) NOEXCEPT;
+    static inline bool contains(const maybe_strongs& pairs,
+        const header_link& block) NOEXCEPT;
 
     // These are thread safe.
     Store& store_;

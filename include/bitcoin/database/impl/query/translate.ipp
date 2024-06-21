@@ -243,27 +243,20 @@ inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
 // is not possible that two tx instances are both strong by the same block.
 // Return the distinct set of block-tx tuples where tx is strong by block.
 TEMPLATE
-inline strong_pairs CLASS::to_strongs(const hash_digest& tx_hash) const NOEXCEPT
+inline tx_links CLASS::to_strong_txs(const hash_digest& tx_hash) const NOEXCEPT
 {
     auto it = store_.tx.it(tx_hash);
     if (!it)
         return {};
 
-    strong_pairs strongs{};
+    tx_links links{};
     do
     {
-        for (const auto& link: to_blocks(it.self()))
-        {
-#if defined(HAVE_CLANG)
-            // work around clang emplace_back bug (no matching constructor).
-            strongs.push_back({ link, it.self() });
-#else
-            strongs.emplace_back(link, it.self());
-#endif
-        }
+        for (const auto& tx: to_strong_txs(it.self()))
+            links.push_back(tx);
     }
     while (it.advance());
-    return strongs;
+    return links;
 }
 
 // protected
@@ -272,47 +265,57 @@ inline strong_pairs CLASS::to_strongs(const hash_digest& tx_hash) const NOEXCEPT
 // top of the strong_tx table will reflect the current state of only one block
 // association. This scans the multimap for the first instance of each block
 // that is associated by the tx.link and returns that set of block links.
-// Return the distinct set of block/header links where tx is strong by block.
+// Return the distinct set of tx links where each tx is strong by block.
 TEMPLATE
-inline header_links CLASS::to_blocks(const tx_link& link) const NOEXCEPT
+inline tx_links CLASS::to_strong_txs(const tx_link& link) const NOEXCEPT
 {
     auto it = store_.strong_tx.it(link);
     if (!it)
         return {};
 
-    block_txs strongs{};
+    // Obtain all first (by block) duplicate (by hash) tx records.
+    maybe_strongs pairs{};
     do
     {
-        block_tx strong{};
-        if (store_.strong_tx.get(it, strong) && !contains(strongs, strong))
-            strongs.push_back(strong);
+        table::strong_tx::record strong{};
+        if (store_.strong_tx.get(it, strong) &&
+            !contains(pairs, strong.header_fk))
+        {
+#if defined(HAVE_CLANG)
+            // Work around clang emplace_back bug (no matching constructor).
+            pairs.push_back({ strong.header_fk, it.self(), strong.positive });
+#else
+            pairs.emplace_back(strong.header_fk, it.self(), strong.positive);
+#endif
+        }
     }
     while(it.advance());
-    return strong_only(strongs);
+    return strong_only(pairs);
 }
 
 // private/static
 TEMPLATE
-inline bool CLASS::contains(const block_txs& blocks,
-    const block_tx& block) NOEXCEPT
+inline bool CLASS::contains(const maybe_strongs& pairs,
+    const header_link& block) NOEXCEPT
 {
-    return std::any_of(blocks.begin(), blocks.end(),
-        [&block](const auto& it) NOEXCEPT
+    return std::any_of(pairs.begin(), pairs.end(),
+        [&block](const auto& pair) NOEXCEPT
         {
-            return it.header_fk == block.header_fk;
+            return block == pair.block;
         });
 }
 
 // private/static
 TEMPLATE
-inline header_links CLASS::strong_only(const block_txs& strongs) NOEXCEPT
+inline tx_links CLASS::strong_only(const maybe_strongs& pairs) NOEXCEPT
 {
-    header_links blocks{};
-    for (const auto& strong: strongs)
-        if (strong.positive)
-            blocks.push_back(strong.header_fk);
+    tx_links links{};
+    for (const auto& pair: pairs)
+        if (pair.strong)
+            links.push_back(pair.tx);
 
-    return blocks;
+    // Reduced to the subset of strong duplicate (by hash) tx records.
+    return links;
 }
 
 // output to spenders (reverse navigation)
@@ -487,7 +490,7 @@ spend_set CLASS::to_spend_set(const tx_link& link) const NOEXCEPT
 
         // Translate query to public struct.
 #if defined(HAVE_CLANG)
-        // work around clang emplace_back bug (no matching constructor).
+        // Work around clang emplace_back bug (no matching constructor).
         set.spends.push_back({ get.point_fk, get.point_index, get.sequence });
 #else
         set.spends.emplace_back(get.point_fk, get.point_index, get.sequence);
