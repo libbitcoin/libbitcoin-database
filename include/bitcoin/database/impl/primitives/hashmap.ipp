@@ -272,6 +272,12 @@ bool CLASS::put_link(Link& link, const Key& key,
     finalizer sink{ stream };
     sink.skip_bytes(Link::size);
     sink.write_bytes(key);
+
+    // The finalizer provides deferred index commit following serialization.
+    // Because the lambda captures ptr and is in turn held as a member of sink,
+    // ptr is guaranteed in scope until sink destruction, which follows flush.
+    // It may be possible to instead assign ptr to a sink member, but not being
+    // referenced would make it subject to optimization (volatile might work).
     sink.set_finalizer([this, link, index = head_.index(key), ptr]() NOEXCEPT
     {
         auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
@@ -306,6 +312,10 @@ bool CLASS::put(const Link& link, const Key& key,
     sink.write_bytes(key);
 
     // The finalizer provides deferred index commit following serialization.
+    // Because the lambda captures ptr and is in turn held as a member of sink,
+    // ptr is guaranteed in scope until sink destruction, which follows flush.
+    // It may be possible to instead assign ptr to a sink member, but not being
+    // referenced would make it subject to optimization (volatile might work).
     sink.set_finalizer([this, link, index = head_.index(key), ptr]() NOEXCEPT
     {
         auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
