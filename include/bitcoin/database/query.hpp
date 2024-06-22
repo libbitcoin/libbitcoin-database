@@ -557,8 +557,10 @@ protected:
         const context& ctx) const NOEXCEPT;
 
     // Critical path
-    bool is_spent_prevout(tx_link link, index index) const NOEXCEPT;
+    bool is_spent_prevout(const tx_link& link, index index) const NOEXCEPT;
     bool is_spent_prevout(const foreign_point& point,
+        const tx_link& self) const NOEXCEPT;
+    error::error_t spent_prevout(const foreign_point& point,
         const tx_link& self) const NOEXCEPT;
     error::error_t unspendable_prevout(const point_link& link,
         uint32_t sequence, uint32_t version,

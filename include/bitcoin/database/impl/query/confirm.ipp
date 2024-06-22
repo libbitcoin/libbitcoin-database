@@ -236,7 +236,7 @@ code CLASS::locked_prevout(const point_link& link, uint32_t sequence,
 
 // protected
 TEMPLATE
-bool CLASS::is_spent_prevout(tx_link link, index index) const NOEXCEPT
+bool CLASS::is_spent_prevout(const tx_link& link, index index) const NOEXCEPT
 {
     const auto fp = table::spend::compose(link, index);
     return is_spent_prevout(fp, tx_link::terminal);
@@ -247,21 +247,29 @@ TEMPLATE
 bool CLASS::is_spent_prevout(const foreign_point& point,
     const tx_link& self) const NOEXCEPT
 {
+    return spent_prevout(point, self) != error::success;
+}
+
+// protected
+TEMPLATE
+error::error_t CLASS::spent_prevout(const foreign_point& point,
+    const tx_link& self) const NOEXCEPT
+{
     auto it = store_.spend.it(point);
     if (!it)
-        return false;
+        return error::success;
 
     table::spend::get_parent spend{};
     do
     {
-        // Skip current spend, which is the only one if not double spent.
-        // If strong spender exists then prevout is confirmed double spent.
-        if (store_.spend.get(it, spend) && (spend.parent_fk != self) &&
-            is_strong_tx(spend.parent_fk))
-            return true;
+        if (!store_.spend.get(it, spend))
+            return error::integrity;
+
+        if ((spend.parent_fk != self) && is_strong_tx(spend.parent_fk))
+            return error::confirmed_double_spend;
     }
     while (it.advance());
-    return false;
+    return error::success;
 }
 
 // protected
@@ -354,23 +362,25 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     {
         error::error_t ec{};
         for (const auto& spend: set.spends)
-        {
             if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
                 set.version, ctx)))
             {
                 fault.store(ec);
                 return true;
             }
-        }
 
         return false;
     };
 
-    const auto is_spent = [this](const auto& set) NOEXCEPT
+    const auto is_spent = [this, &fault](const auto& set) NOEXCEPT
     {
+        error::error_t ec{};
         for (const auto& spend: set.spends)
-            if (is_spent_prevout(spend.prevout(), set.tx))
+            if ((ec = spent_prevout(spend.prevout(), set.tx)))
+            {
+                fault.store(ec);
                 return true;
+            }
 
         return false;
     };
@@ -384,7 +394,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 
     // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
     if (std_any_of(bc::par_unseq, sets.begin(), sets.end(), is_spent))
-        return { error::confirmed_double_spend };
+        return { fault.load() };
  
     return ec;
 }
