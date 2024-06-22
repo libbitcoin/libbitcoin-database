@@ -478,7 +478,7 @@ spend_set CLASS::to_spend_set(const tx_link& link) const NOEXCEPT
     spend_set set{ link, tx.version, {} };
     set.spends.reserve(tx.ins_count);
     
-    // This is not concurrent because to_non_coinbase_spends is (by tx).
+    // This is not concurrent because to_spend_sets is (by tx).
     table::spend::get_prevout_sequence get{};
     for (const auto& spend_fk: puts.spend_fks)
     {
@@ -520,47 +520,6 @@ tx_link CLASS::to_coinbase(const header_link& link) const NOEXCEPT
     return txs.coinbase_fk;
 }
 
-// protected
-TEMPLATE
-spend_sets CLASS::to_non_coinbase_spends(
-    const header_link& link) const NOEXCEPT
-{
-    const auto txs = to_transactions(link);
-    if (txs.size() <= one)
-        return {};
-
-    spend_sets out{ sub1(txs.size()) };
-    const auto to_set = [this](const auto& tx) NOEXCEPT
-    {
-        return to_spend_set(tx);
-    };
-
-    // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
-    std_transform(bc::par_unseq, std::next(txs.begin()), txs.end(),
-        out.begin(), to_set);
-
-    return out;
-}
-
-#if defined(UNDEFINED)
-// protected
-TEMPLATE
-spend_sets CLASS::to_non_coinbase_spends(
-    const header_link& link) const NOEXCEPT
-{
-    const auto txs = to_transactions(link);
-    if (txs.size() <= one)
-        return {};
-
-    spend_sets sets{};
-    sets.reserve(sub1(txs.size()));
-    for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
-        sets.push_back(to_spend_set(*tx));
-
-    return sets;
-}
-#endif
-
 TEMPLATE
 spend_links CLASS::to_block_spends(const header_link& link) const NOEXCEPT
 {
@@ -569,7 +528,7 @@ spend_links CLASS::to_block_spends(const header_link& link) const NOEXCEPT
 
     for (const auto& tx: txs)
     {
-        const auto tx_spends = to_tx_spenders(tx);
+        const auto tx_spends = to_tx_spends(tx);
         spends.insert(spends.end(), tx_spends.begin(), tx_spends.end());
     }
 

@@ -486,7 +486,9 @@ public:
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
     code block_confirmable(const header_link& link) const NOEXCEPT;
+#if defined(UNDEFINED)
     code tx_confirmable(const tx_link& link, const context& ctx) const NOEXCEPT;
+#endif
     code unspent_duplicates(const tx_link& coinbase,
         const context& ctx) const NOEXCEPT;
 
@@ -522,7 +524,7 @@ protected:
     /// -----------------------------------------------------------------------
 
     spend_set to_spend_set(const tx_link& link) const NOEXCEPT;
-    spend_sets to_non_coinbase_spends(const header_link& link) const NOEXCEPT;
+    spend_sets to_spend_sets(const header_link& link) const NOEXCEPT;
 
     uint32_t to_spend_index(const tx_link& parent_fk,
         const spend_link& input_fk) const NOEXCEPT;
