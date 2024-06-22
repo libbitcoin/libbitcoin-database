@@ -329,10 +329,16 @@ TEMPLATE
 spend_sets CLASS::to_spend_sets(const header_link& link) const NOEXCEPT
 {
     const auto txs = to_transactions(link);
-    if (txs.size() <= one)
+    if (txs.empty())
         return {};
 
-    spend_sets out{ sub1(txs.size()) };
+    // Coinbase optimization.
+    spend_sets out{ txs.size() };
+    out.front().tx = txs.front();
+    if (is_one(out.size()))
+        return out;
+
+    const auto non_coinbase = std::next(txs.begin());
     const auto to_set = [this](const auto& tx) NOEXCEPT
     {
         return to_spend_set(tx);
@@ -340,7 +346,7 @@ spend_sets CLASS::to_spend_sets(const header_link& link) const NOEXCEPT
 
     // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
     std_transform(bc::par_unseq, std::next(txs.begin()), txs.end(),
-        out.begin(), to_set);
+        std::next(out.begin()), to_set);
 
     return out;
 }
@@ -353,11 +359,18 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     if (!get_context(ctx, link))
         return error::integrity;
 
-    code ec{};
-    if ((ec = unspent_duplicates(to_coinbase(link), ctx)))
-        return ec;
+    // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
+    const auto sets = to_spend_sets(link);
+    if (sets.empty())
+        return error::integrity;
 
+    code ec{};
+    if ((ec = unspent_duplicates(sets.front().tx, ctx)))
+        return ec;
+    
+    const auto non_coinbase = std::next(sets.begin());
     std::atomic<error::error_t> fault{ error::success };
+
     const auto is_unspendable = [this, &ctx, &fault](const auto& set) NOEXCEPT
     {
         error::error_t ec{};
@@ -386,14 +399,11 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     };
 
     // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
-    const auto sets = to_spend_sets(link);
-
-    // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
-    if (std_any_of(bc::par_unseq, sets.begin(), sets.end(), is_unspendable))
+    if (std_any_of(bc::par_unseq, non_coinbase, sets.end(), is_unspendable))
         return { fault.load() };
 
     // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
-    if (std_any_of(bc::par_unseq, sets.begin(), sets.end(), is_spent))
+    if (std_any_of(bc::par_unseq, non_coinbase, sets.end(), is_spent))
         return { fault.load() };
  
     return ec;
