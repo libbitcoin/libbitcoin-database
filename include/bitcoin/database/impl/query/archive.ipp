@@ -356,6 +356,7 @@ TEMPLATE
 typename CLASS::inputs_ptr CLASS::get_inputs(
     const tx_link& link) const NOEXCEPT
 {
+    // TODO: eliminate shared memory pointer reallcations.
     using namespace system;
     const auto fks = to_tx_spends(link);
     if (fks.empty())
@@ -375,6 +376,7 @@ TEMPLATE
 typename CLASS::outputs_ptr CLASS::get_outputs(
     const tx_link& link) const NOEXCEPT
 {
+    // TODO: eliminate shared memory pointer reallcations.
     using namespace system;
     const auto fks = to_tx_outputs(link);
     if (fks.empty())
@@ -394,6 +396,7 @@ TEMPLATE
 typename CLASS::transactions_ptr CLASS::get_transactions(
     const header_link& link) const NOEXCEPT
 {
+    // TODO: eliminate shared memory pointer reallcations.
     using namespace system;
     const auto txs = to_transactions(link);
     if (txs.empty())
@@ -502,6 +505,7 @@ TEMPLATE
 typename CLASS::transaction::cptr CLASS::get_transaction(
     const tx_link& link) const NOEXCEPT
 {
+    // TODO: eliminate shared memory pointer reallcations.
     using namespace system;
     table::transaction::only_with_sk tx{};
     if (!store_.tx.get(link, tx))
@@ -601,6 +605,7 @@ typename CLASS::inputs_ptr CLASS::get_spenders(
     const auto spenders = to_shared<chain::input_cptrs>();
     spenders->reserve(spend_fks.size());
 
+    // TODO: eliminate shared memory pointer reallcation.
     for (const auto& spend_fk: spend_fks)
         if (!push_bool(*spenders, get_input(spend_fk)))
             return {};
@@ -676,6 +681,7 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     std_vector<foreign_point> spends{};
     spends.reserve(ins.size());
 
+    // TODO: eliminate shared memory pointer reallcations.
     // ========================================================================
     const auto scope = store_.get_transactor();
 

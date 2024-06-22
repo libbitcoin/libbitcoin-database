@@ -111,8 +111,8 @@ enum error_t : uint8_t
     tx_point_put,
     tx_spend_set,
     tx_output_put,
-    tx_tx_set,
     tx_puts_put,
+    tx_tx_set,
     tx_spend_commit,
     tx_address_put,
     tx_tx_commit,
@@ -121,10 +121,10 @@ enum error_t : uint8_t
     header_put,
 
     /// txs archive
-    txs_empty,
     txs_header,
-    txs_txs_put,
-    txs_confirm
+    txs_empty,
+    txs_confirm,
+    txs_txs_put
 };
 
 // No current need for error_code equivalence mapping.

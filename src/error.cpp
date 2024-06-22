@@ -103,8 +103,8 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { tx_point_put, "tx_point_put" },
     { tx_spend_set, "tx_spend_set" },
     { tx_output_put, "tx_output_put" },
-    { tx_tx_set, "tx_tx_set" },
     { tx_puts_put, "tx_puts_put" },
+    { tx_tx_set, "tx_tx_set" },
     { tx_spend_commit, "tx_spend_commit" },
     { tx_address_put, "tx_address_put" },
     { tx_tx_commit, "tx_tx_commit" },
@@ -113,10 +113,10 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { header_put, "header_put" },
 
     // txs archive
-    { txs_empty, "txs_empty" },
     { txs_header, "txs_header" },
-    { txs_txs_put, "txs_txs_put" },
-    { txs_confirm, "txs_confirm" }
+    { txs_empty, "txs_empty" },
+    { txs_confirm, "txs_confirm" },
+    { txs_txs_put, "txs_txs_put" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "database", "database code")
