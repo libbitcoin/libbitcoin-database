@@ -537,7 +537,7 @@ bool CLASS::set_strong(const header_link& link, const tx_links& txs,
 {
     const auto set = [this, &link, positive](const tx_link& tx) NOEXCEPT
     {
-        // TODO: eliminate shared memory pointer reallcation.
+        // TODO: eliminate shared memory pointer reallocation.
         return store_.strong_tx.put(tx, table::strong_tx::record
         {
             {},
