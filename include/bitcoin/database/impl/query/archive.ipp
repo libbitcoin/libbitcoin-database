@@ -1064,6 +1064,7 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
     constexpr auto positive = true;
 
     // Clean allocation failure (e.g. disk full), see set_strong() comments.
+    // Transactor assures cannot be restored without txs, as required to unset.
     if (strong && !set_strong(key, links, positive))
         return error::txs_confirm;
 
