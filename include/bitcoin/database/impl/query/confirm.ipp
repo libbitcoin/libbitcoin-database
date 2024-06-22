@@ -547,7 +547,7 @@ bool CLASS::set_strong(const header_link& link, const tx_links& txs,
     };
 
     // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
-    return std_all_of(bc::par_unseq, txs.begin(), txs.end(), set);
+    return std_all_of(bc::seq, txs.begin(), txs.end(), set);
 }
 
 TEMPLATE
