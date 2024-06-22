@@ -279,7 +279,7 @@ inline tx_links CLASS::to_strong_txs(const tx_link& link) const NOEXCEPT
             !contains(pairs, strong.header_fk))
         {
 #if defined(HAVE_CLANG)
-            // Work around clang emplace_back bug (no matching constructor).
+            // emplace_back aggregate initialization requires clang 16.
             pairs.push_back({ strong.header_fk, it.self(), strong.positive });
 #else
             pairs.emplace_back(strong.header_fk, it.self(), strong.positive);
@@ -487,7 +487,7 @@ spend_set CLASS::to_spend_set(const tx_link& link) const NOEXCEPT
 
         // Translate query to public struct.
 #if defined(HAVE_CLANG)
-        // Work around clang emplace_back bug (no matching constructor).
+        // emplace_back aggregate initialization requires clang 16.
         set.spends.push_back({ get.point_fk, get.point_index, get.sequence });
 #else
         set.spends.emplace_back(get.point_fk, get.point_index, get.sequence);
