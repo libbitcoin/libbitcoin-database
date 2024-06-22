@@ -58,6 +58,7 @@ namespace schema
         constexpr auto candidate = "candidate";
         constexpr auto confirmed = "confirmed";
         constexpr auto strong_tx = "strong_tx";
+        ////constexpr auto spent_out = "spent_out";
     }
 
     namespace caches
@@ -70,8 +71,6 @@ namespace schema
     {
         constexpr auto address = "address";
         constexpr auto neutrino = "neutrino";
-        ////constexpr auto bootstrap = "bootstrap";
-        ////constexpr auto buffer = "buffer";
     }
 
     namespace locks
