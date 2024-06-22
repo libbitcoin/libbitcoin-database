@@ -376,8 +376,8 @@ Link CLASS::first(const memory_ptr& ptr, Link link, const Key& key) NOEXCEPT
             return {};
 
         // element key matches (found)
-        const auto key_ptr = std::next(offset, Link::size);
-        if (is_zero(std::memcmp(key.data(), key_ptr, array_count<Key>)))
+        if (is_zero(std::memcmp(key.data(), std::next(offset, Link::size),
+            array_count<Key>)))
             return link;
 
         // set next element link (loop)
