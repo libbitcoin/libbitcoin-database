@@ -147,19 +147,24 @@ TEMPLATE
 Link CLASS::first(const Key& key) const NOEXCEPT
 {
     ////return it(key).self();
-    return first(manager_.get(), head_.top(key), key);
+    return first(get_memory(), head_.top(key), key);
 }
 
 TEMPLATE
 typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 {
-    return { manager_.get(), head_.top(key), key };
+    return { get_memory(), head_.top(key), key };
 }
-
 TEMPLATE
 Link CLASS::allocate(const Link& size) NOEXCEPT
 {
     return manager_.allocate(size);
+}
+
+TEMPLATE
+memory_ptr CLASS::get_memory() const NOEXCEPT
+{
+    return manager_.get();
 }
 
 TEMPLATE
@@ -178,7 +183,7 @@ template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::find(const Key& key, Element& element) const NOEXCEPT
 {
     // This override avoids duplicated memory_ptr construct in get(first()).
-    const auto ptr = manager_.get();
+    const auto ptr = get_memory();
     return read(ptr, first(ptr, head_.top(key), key), element);
 }
 
@@ -187,7 +192,7 @@ template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
     // This override is the normal form.
-    return read(manager_.get(), link, element);
+    return read(get_memory(), link, element);
 }
 
 // static
@@ -363,7 +368,7 @@ bool CLASS::read(const memory_ptr& ptr, const Link& link,
         return false;
 
     using namespace system;
-    const auto start = iterator::link_to_position(link);
+    const auto start = manager::link_to_position(link);
     if (is_limited<ptrdiff_t>(start))
         return false;
 
@@ -394,7 +399,7 @@ Link CLASS::first(const memory_ptr& ptr, Link link, const Key& key) NOEXCEPT
     while (!link.is_terminal())
     {
         // get element offset (fault)
-        const auto offset = ptr->offset(iterator::link_to_position(link));
+        const auto offset = ptr->offset(manager::link_to_position(link));
         if (is_null(offset))
             return {};
 

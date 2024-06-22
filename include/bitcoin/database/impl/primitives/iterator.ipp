@@ -71,13 +71,13 @@ Link CLASS::to_match(Link link) const NOEXCEPT
     while (!link.is_terminal())
     {
         // get element offset (fault)
-        const auto offset = memory_->offset(link_to_position(link));
+        const auto offset = memory_->offset(manager::link_to_position(link));
         if (is_null(offset))
             return {};
 
         // element key matches (found)
         const auto key_ptr = std::next(offset, Link::size);
-        if (is_zero(std::memcmp(key_.data(), key_ptr, key_size)))
+        if (is_zero(std::memcmp(key_.data(), key_ptr, array_count<Key>)))
             return std::move(link);
 
         // set next element link (loop)
@@ -93,7 +93,7 @@ Link CLASS::to_next(Link link) const NOEXCEPT
     while (!link.is_terminal())
     {
         // get element offset (fault)
-        auto offset = memory_->offset(link_to_position(link));
+        auto offset = memory_->offset(manager::link_to_position(link));
         if (is_null(offset))
             return {};
 
@@ -103,40 +103,17 @@ Link CLASS::to_next(Link link) const NOEXCEPT
             return std::move(link);
 
         // get next element offset (fault)
-        offset = memory_->offset(link_to_position(link));
+        offset = memory_->offset(manager::link_to_position(link));
         if (is_null(offset))
             return {};
 
         // next element key matches (found)
         const auto key_ptr = std::next(offset, Link::size);
-        if (is_zero(std::memcmp(key_.data(), key_ptr, key_size)))
+        if (is_zero(std::memcmp(key_.data(), key_ptr, array_count<Key>)))
             return std::move(link);
     }
 
     return std::move(link);
-}
-
-// private
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
-{
-    const auto value = system::possible_narrow_cast<size_t>(link.value);
-
-    if constexpr (is_slab)
-    {
-        // Slab implies link/key incorporated into size.
-        return value;
-    }
-    else
-    {
-        // Record implies link/key independent of Size.
-        constexpr auto element_size = Link::size + array_count<Key> + Size;
-        BC_ASSERT(!system::is_multiply_overflow(value, element_size));
-
-        return value * element_size;
-    }
 }
 
 } // namespace database

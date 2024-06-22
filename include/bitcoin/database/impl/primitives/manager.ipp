@@ -105,7 +105,7 @@ code CLASS::reload() NOEXCEPT
     return file_.load();
 }
 
-// private
+// static
 // ----------------------------------------------------------------------------
 
 TEMPLATE
@@ -128,12 +128,13 @@ constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
     }
     else
     {
-        // No key implies no linked list.
+        // No key implies no linked list (not a hashmap), so record array.
         BC_ASSERT(!is_multiply_overflow(value, Size));
         return value * Size;
     }
 }
 
+// private
 TEMPLATE
 constexpr typename Link::integer CLASS::cast_link(size_t link) NOEXCEPT
 {
@@ -146,6 +147,7 @@ constexpr typename Link::integer CLASS::cast_link(size_t link) NOEXCEPT
     return link >= terminal ? terminal : possible_narrow_cast<integer>(link);
 }
 
+// private
 TEMPLATE
 constexpr Link CLASS::position_to_link(size_t position) NOEXCEPT
 {

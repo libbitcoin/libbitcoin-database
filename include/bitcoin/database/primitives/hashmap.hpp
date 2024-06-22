@@ -89,6 +89,9 @@ public:
     /// Query interface, iterator is not thread safe.
     /// -----------------------------------------------------------------------
 
+    /// Return the link at the top of the conflict list (for table scanning).
+    Link top(const Link& list) const NOEXCEPT;
+
     /// True if an instance of object with key exists.
     bool exists(const Key& key) const NOEXCEPT;
 
@@ -98,11 +101,11 @@ public:
     /// Iterator holds shared lock on storage remap.
     iterator it(const Key& key) const NOEXCEPT;
 
-    /// Return the link at the top of the conflict list (for table scanning).
-    Link top(const Link& list) const NOEXCEPT;
-
     /// Allocate element at returned link (follow with set|put).
     Link allocate(const Link& size) NOEXCEPT;
+
+    /// Return ptr for batch processing, holds shared lock on storage remap.
+    memory_ptr get_memory() const NOEXCEPT;
 
     /// Return the associated search key (terminal link returns default).
     Key get_key(const Link& link) NOEXCEPT;
@@ -160,7 +163,8 @@ protected:
         Element& element) NOEXCEPT;
 
     /// Get first element matching key, from top link and whole table memory.
-    static Link first(const memory_ptr& ptr, Link link, const Key& key) NOEXCEPT;
+    static Link first(const memory_ptr& ptr, Link link,
+        const Key& key) NOEXCEPT;
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);
