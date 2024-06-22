@@ -73,7 +73,7 @@ struct transaction
             return source;
         }
 
-        inline bool to_data(flipper& sink) const NOEXCEPT
+        inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             sink.write_byte(to_int<uint8_t>(coinbase));
             sink.write_little_endian<bytes::integer, bytes::size>(light);
@@ -139,7 +139,7 @@ struct transaction
     struct record_put_ref
       : public schema::transaction
     {
-        inline bool to_data(flipper& sink) const NOEXCEPT
+        inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             using namespace system;
             sink.write_byte(to_int<uint8_t>(tx.is_coinbase()));

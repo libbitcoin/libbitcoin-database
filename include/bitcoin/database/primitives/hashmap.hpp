@@ -30,7 +30,7 @@
 namespace libbitcoin {
 namespace database {
 
-/// Caution: iterator/reader/flipper hold body remap lock until disposed.
+/// Caution: iterator/reader/finalizer hold body remap lock until disposed.
 /// These handles should be used for serialization and immediately disposed.
 /// Readers and writers are always prepositioned at data, and are limited to
 /// the extent the record/slab size is known (limit can always be removed).
@@ -151,6 +151,7 @@ public:
 
     /// Commit previously set element at link to key.
     bool commit(const Link& link, const Key& key) NOEXCEPT;
+    Link commit_link(const Link& link, const Key& key) NOEXCEPT;
 
 protected:
     /// Get element at link using memory object, false if deserialize error.

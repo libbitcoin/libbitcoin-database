@@ -54,7 +54,7 @@ struct header
             return source;
         }
 
-        inline bool to_data(flipper& sink) const NOEXCEPT
+        inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             context::to_data(sink, ctx);
             sink.write_byte(to_int<uint8_t>(milestone));
@@ -94,7 +94,7 @@ struct header
       : public schema::header
     {
         // header->previous_block_hash() ignored.
-        inline bool to_data(flipper& sink) const NOEXCEPT
+        inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             BC_ASSERT(header);
             context::to_data(sink, ctx);
@@ -120,7 +120,7 @@ struct header
       : public schema::header
     {
         // header.previous_block_hash() ignored.
-        inline bool to_data(flipper& sink) const NOEXCEPT
+        inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             context::to_data(sink, ctx);
             sink.write_byte(to_int<uint8_t>(milestone));
