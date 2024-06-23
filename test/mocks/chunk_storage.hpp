@@ -50,7 +50,6 @@ public:
     bool truncate(size_t size) NOEXCEPT override;
     size_t allocate(size_t chunk) NOEXCEPT override;
     memory_ptr get(size_t offset=zero) const NOEXCEPT override;
-    memory::iterator get_raw(size_t offset=zero) const NOEXCEPT override;
     code get_fault() const NOEXCEPT override;
     size_t get_space() const NOEXCEPT override;
 

@@ -147,19 +147,24 @@ TEMPLATE
 Link CLASS::first(const Key& key) const NOEXCEPT
 {
     ////return it(key).self();
-    return first(manager_.get(), head_.top(key), key);
+    return first(get_memory(), head_.top(key), key);
 }
 
 TEMPLATE
 typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 {
-    return { manager_.get(), head_.top(key), key };
+    return { get_memory(), head_.top(key), key };
 }
-
 TEMPLATE
 Link CLASS::allocate(const Link& size) NOEXCEPT
 {
     return manager_.allocate(size);
+}
+
+TEMPLATE
+memory_ptr CLASS::get_memory() const NOEXCEPT
+{
+    return manager_.get();
 }
 
 TEMPLATE
@@ -178,7 +183,7 @@ template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::find(const Key& key, Element& element) const NOEXCEPT
 {
     // This override avoids duplicated memory_ptr construct in get(first()).
-    const auto ptr = manager_.get();
+    const auto ptr = get_memory();
     return read(ptr, first(ptr, head_.top(key), key), element);
 }
 
@@ -187,7 +192,7 @@ template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
     // This override is the normal form.
-    return read(manager_.get(), link, element);
+    return read(get_memory(), link, element);
 }
 
 // static
@@ -219,7 +224,7 @@ bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
         return false;
 
     iostream stream{ *ptr };
-    flipper sink{ stream };
+    finalizer sink{ stream };
     sink.skip_bytes(index_size);
 
     if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size);) }
@@ -269,16 +274,23 @@ bool CLASS::put_link(Link& link, const Key& key,
         return false;
 
     iostream stream{ *ptr };
-    flipper sink{ stream };
+    finalizer sink{ stream };
     sink.skip_bytes(Link::size);
     sink.write_bytes(key);
 
+    // The finalizer provides deferred index commit following serialization.
+    // Because the lambda captures ptr and is in turn held as a member of sink,
+    // ptr is guaranteed in scope until sink destruction, which follows flush.
+    // It may be possible to instead assign ptr to a sink member, but not being
+    // referenced would make it subject to optimization (volatile might work).
+    sink.set_finalizer([this, link, index = head_.index(key), ptr]() NOEXCEPT
+    {
+        auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
+        return head_.push(link, next, index);
+    });
+
     if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * count);) }
-    if (!element.to_data(sink))
-        return false;
-        
-    auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
-    return head_.push(link, next, head_.index(key));
+    return element.to_data(sink) && sink.finalize();
 }
 
 TEMPLATE
@@ -300,16 +312,23 @@ bool CLASS::put(const Link& link, const Key& key,
         return false;
 
     iostream stream{ *ptr };
-    flipper sink{ stream };
+    finalizer sink{ stream };
     sink.skip_bytes(Link::size);
     sink.write_bytes(key);
 
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * count);) }
-    if (!element.to_data(sink))
-        return false;
+    // The finalizer provides deferred index commit following serialization.
+    // Because the lambda captures ptr and is in turn held as a member of sink,
+    // ptr is guaranteed in scope until sink destruction, which follows flush.
+    // It may be possible to instead assign ptr to a sink member, but not being
+    // referenced would make it subject to optimization (volatile might work).
+    sink.set_finalizer([this, link, index = head_.index(key), ptr]() NOEXCEPT
+    {
+        auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
+        return head_.push(link, next, index);
+    });
 
-    auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
-    return head_.push(link, next, head_.index(key));
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * count);) }
+    return element.to_data(sink) && sink.finalize();
 }
 
 TEMPLATE
@@ -328,6 +347,15 @@ bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
     return head_.push(link, next, head_.index(key));
 }
 
+TEMPLATE
+Link CLASS::commit_link(const Link& link, const Key& key) NOEXCEPT
+{
+    if (!commit(link, key))
+        return {};
+
+    return link;
+}
+
 // protected/static
 // ----------------------------------------------------------------------------
 
@@ -340,7 +368,7 @@ bool CLASS::read(const memory_ptr& ptr, const Link& link,
         return false;
 
     using namespace system;
-    const auto start = iterator::link_to_position(link);
+    const auto start = manager::link_to_position(link);
     if (is_limited<ptrdiff_t>(start))
         return false;
 
@@ -371,7 +399,7 @@ Link CLASS::first(const memory_ptr& ptr, Link link, const Key& key) NOEXCEPT
     while (!link.is_terminal())
     {
         // get element offset (fault)
-        const auto offset = ptr->offset(iterator::link_to_position(link));
+        const auto offset = ptr->offset(manager::link_to_position(link));
         if (is_null(offset))
             return {};
 

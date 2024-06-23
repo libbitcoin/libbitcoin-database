@@ -22,6 +22,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/manager.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -41,8 +42,6 @@ class iterator
 {
 public:
     DEFAULT_COPY_MOVE_DESTRUCT(iterator);
-
-    static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
 
     /// This advances to first match (or terminal).
     /// Key must be passed as an l-value as it is held by reference.
@@ -67,8 +66,7 @@ protected:
     Link to_next(Link link) const NOEXCEPT;
 
 private:
-    static constexpr auto key_size = array_count<Key>;
-    static constexpr auto is_slab = (Size == max_size_t);
+    using manager = database::manager<Link, Key, Size>;
 
     // This is not thread safe, but it's object is not modified here and the
     // memory that it refers to is not addressable until written, and writes

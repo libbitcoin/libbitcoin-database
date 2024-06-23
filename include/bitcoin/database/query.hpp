@@ -485,6 +485,8 @@ public:
     /// Block association relies on strong (confirmed or pending).
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
+    bool set_strong_parallel(const header_link& link) NOEXCEPT;
+    bool set_unstrong_parallel(const header_link& link) NOEXCEPT;
     code block_confirmable(const header_link& link) const NOEXCEPT;
 #if defined(UNDEFINED)
     code tx_confirmable(const tx_link& link, const context& ctx) const NOEXCEPT;
@@ -565,8 +567,8 @@ protected:
     error::error_t unspendable_prevout(const point_link& link,
         uint32_t sequence, uint32_t version,
         const context& ctx) const NOEXCEPT;
-    bool set_strong(const header_link& link, const tx_links& txs,
-        bool positive) NOEXCEPT;
+    bool set_strong(const auto& execution, const header_link& link,
+        const tx_links& txs, bool positive) NOEXCEPT;
 
     /// context
     /// -----------------------------------------------------------------------

@@ -29,7 +29,7 @@ public:
     using base = hashmap<Link, Key, Size, true>;
     using hashmap<Link, Key, Size, true>::hashmap;
     ////using reader_ptr = std::shared_ptr<reader>;
-    ////using flipper_ptr = std::shared_ptr<flipper>;
+    ////using finalizer_ptr = std::shared_ptr<finalizer>;
     ////
     ////reader_ptr getter_(const Key& key) const NOEXCEPT
     ////{
@@ -48,7 +48,7 @@ public:
     ////    return source;
     ////}
     ////
-    ////flipper_ptr creater_(const Key& key, const Link& size=bc::one) NOEXCEPT
+    ////finalizer_ptr creater_(const Key& key, const Link& size=bc::one) NOEXCEPT
     ////{
     ////    using namespace system;
     ////    const auto link = allocate(size);
@@ -57,10 +57,10 @@ public:
     ////        return {};
     ////
     ////    iostream stream{ *ptr };
-    ////    const auto sink = std::make_shared<flipper>(stream);
+    ////    const auto sink = std::make_shared<finalizer>(stream);
     ////    sink->skip_bytes(Link::size);
     ////    sink->write_bytes(key);
-    ////    sink->set_flipper([this, link, index = head_.index(key), ptr]() NOEXCEPT
+    ////    sink->set_finalizer([this, link, index = head_.index(key), ptr]() NOEXCEPT
     ////    {
     ////        auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
     ////        return head_.push(link, next, index);
@@ -432,7 +432,7 @@ public:
         return source;
     }
 
-    bool to_data(database::flipper& sink) const NOEXCEPT
+    bool to_data(database::finalizer& sink) const NOEXCEPT
     {
         sink.write_little_endian(value);
         return sink;
@@ -453,7 +453,7 @@ public:
         return source;
     }
 
-    bool to_data(database::flipper& sink) const NOEXCEPT
+    bool to_data(database::finalizer& sink) const NOEXCEPT
     {
         sink.write_big_endian(value);
         return sink;
@@ -560,7 +560,7 @@ public:
         return source;
     }
 
-    bool to_data(database::flipper& sink) const NOEXCEPT
+    bool to_data(database::finalizer& sink) const NOEXCEPT
     {
         sink.write_little_endian(value);
         return sink;
@@ -584,7 +584,7 @@ public:
         return source;
     }
 
-    bool to_data(database::flipper& sink) const NOEXCEPT
+    bool to_data(database::finalizer& sink) const NOEXCEPT
     {
         sink.write_big_endian(value);
         return sink;
@@ -649,7 +649,7 @@ public:
         return source;
     }
 
-    bool to_data(database::flipper& sink) const NOEXCEPT
+    bool to_data(database::finalizer& sink) const NOEXCEPT
     {
         sink.write_big_endian(value);
         return sink;
@@ -711,7 +711,7 @@ public:
         return source;
     }
 
-    bool to_data(database::flipper& sink) const NOEXCEPT
+    bool to_data(database::finalizer& sink) const NOEXCEPT
     {
         sink.write_big_endian(value);
         return sink;
@@ -734,7 +734,7 @@ public:
         return source;
     }
 
-    bool to_data(database::flipper& sink) const NOEXCEPT
+    bool to_data(database::finalizer& sink) const NOEXCEPT
     {
         sink.write_big_endian(value);
         return sink;
@@ -1217,7 +1217,7 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_put2__record__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__commit__slab__expected)
+BOOST_AUTO_TEST_CASE(hashmap__set_commit_link__slab__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -1234,7 +1234,7 @@ BOOST_AUTO_TEST_CASE(hashmap__commit__slab__expected)
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("00000000000000000000000000000004030201"));
 
     constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
-    BOOST_REQUIRE(instance.commit(link, key1));
+    BOOST_REQUIRE(!instance.commit_link(link, key1).is_terminal());
     BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("00000000000000000000ffffffffff"));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("ffffffffff0102030405060708090a04030201"));
     BOOST_REQUIRE(!instance.get_fault());

@@ -44,7 +44,7 @@ struct address
             return source;
         }
 
-        inline bool to_data(flipper& sink) const NOEXCEPT
+        inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             sink.write_little_endian<out::integer, out::size>(output_fk);
             return sink;

@@ -50,7 +50,7 @@
 ////            return source;
 ////        }
 ////
-////        inline bool to_data(flipper& sink) const NOEXCEPT
+////        inline bool to_data(finalizer& sink) const NOEXCEPT
 ////        {
 ////            tx.to_data(sink, true);
 ////            BC_ASSERT(sink.get_write_position() == count());
@@ -81,7 +81,7 @@
 ////            return source;
 ////        }
 ////
-////        inline bool to_data(flipper& sink) const NOEXCEPT
+////        inline bool to_data(finalizer& sink) const NOEXCEPT
 ////        {
 ////            BC_ASSERT(tx);
 ////            tx->to_data(sink, true);
@@ -100,7 +100,7 @@
 ////                tx.serialized_size(true));
 ////        }
 ////
-////        inline bool to_data(flipper& sink) const NOEXCEPT
+////        inline bool to_data(finalizer& sink) const NOEXCEPT
 ////        {
 ////            tx.to_data(sink, true);
 ////            return sink;

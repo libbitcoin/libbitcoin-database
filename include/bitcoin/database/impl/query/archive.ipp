@@ -356,7 +356,7 @@ TEMPLATE
 typename CLASS::inputs_ptr CLASS::get_inputs(
     const tx_link& link) const NOEXCEPT
 {
-    // TODO: eliminate shared memory pointer reallcations.
+    // TODO: eliminate shared memory pointer reallocations.
     using namespace system;
     const auto fks = to_tx_spends(link);
     if (fks.empty())
@@ -376,7 +376,7 @@ TEMPLATE
 typename CLASS::outputs_ptr CLASS::get_outputs(
     const tx_link& link) const NOEXCEPT
 {
-    // TODO: eliminate shared memory pointer reallcations.
+    // TODO: eliminate shared memory pointer reallocations.
     using namespace system;
     const auto fks = to_tx_outputs(link);
     if (fks.empty())
@@ -396,7 +396,7 @@ TEMPLATE
 typename CLASS::transactions_ptr CLASS::get_transactions(
     const header_link& link) const NOEXCEPT
 {
-    // TODO: eliminate shared memory pointer reallcations.
+    // TODO: eliminate shared memory pointer reallocations.
     using namespace system;
     const auto txs = to_transactions(link);
     if (txs.empty())
@@ -505,7 +505,7 @@ TEMPLATE
 typename CLASS::transaction::cptr CLASS::get_transaction(
     const tx_link& link) const NOEXCEPT
 {
-    // TODO: eliminate shared memory pointer reallcations.
+    // TODO: eliminate shared memory pointer reallocations.
     using namespace system;
     table::transaction::only_with_sk tx{};
     if (!store_.tx.get(link, tx))
@@ -605,7 +605,7 @@ typename CLASS::inputs_ptr CLASS::get_spenders(
     const auto spenders = to_shared<chain::input_cptrs>();
     spenders->reserve(spend_fks.size());
 
-    // TODO: eliminate shared memory pointer reallcation.
+    // TODO: eliminate shared memory pointer reallocation.
     for (const auto& spend_fk: spend_fks)
         if (!push_bool(*spenders, get_input(spend_fk)))
             return {};
@@ -681,7 +681,7 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     std_vector<foreign_point> spends{};
     spends.reserve(ins.size());
 
-    // TODO: eliminate shared memory pointer reallcations.
+    // TODO: eliminate shared memory pointer reallocations.
     // ========================================================================
     const auto scope = store_.get_transactor();
 
@@ -808,7 +808,7 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     for (const auto& spend: views_reverse(spends))
     {
         --spend_fk.value;
-        if (!store_.spend.commit(spend_fk, spend))
+        if (store_.spend.commit_link(spend_fk, spend).is_terminal())
             return error::tx_spend_commit;
     }
 
@@ -1064,7 +1064,8 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
     constexpr auto positive = true;
 
     // Clean allocation failure (e.g. disk full), see set_strong() comments.
-    if (strong && !set_strong(key, links, positive))
+    // Transactor assures cannot be restored without txs, as required to unset.
+    if (strong && !set_strong(bc::par_unseq, key, links, positive))
         return error::txs_confirm;
 
     // Header link is the key for the txs table.

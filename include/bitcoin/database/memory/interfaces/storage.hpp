@@ -67,11 +67,8 @@ public:
     /// Allocate bytes and return offset to first allocated (or eof).
     virtual size_t allocate(size_t chunk) NOEXCEPT = 0;
 
-    /// Get remap-protected r/w access to start/offset of memory map (or null).
+    /// Get r/w access to start/offset of memory map (or null).
     virtual memory_ptr get(size_t offset=zero) const NOEXCEPT = 0;
-
-    /// Get unprotected r/w access to start/offset of memory map (or null).
-    virtual memory::iterator get_raw(size_t offset=zero) const NOEXCEPT = 0;
 
     /// Get the fault condition.
     virtual code get_fault() const NOEXCEPT = 0;

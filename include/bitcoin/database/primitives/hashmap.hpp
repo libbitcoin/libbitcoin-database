@@ -30,7 +30,7 @@
 namespace libbitcoin {
 namespace database {
 
-/// Caution: iterator/reader/flipper hold body remap lock until disposed.
+/// Caution: iterator/reader/finalizer hold body remap lock until disposed.
 /// These handles should be used for serialization and immediately disposed.
 /// Readers and writers are always prepositioned at data, and are limited to
 /// the extent the record/slab size is known (limit can always be removed).
@@ -89,6 +89,9 @@ public:
     /// Query interface, iterator is not thread safe.
     /// -----------------------------------------------------------------------
 
+    /// Return the link at the top of the conflict list (for table scanning).
+    Link top(const Link& list) const NOEXCEPT;
+
     /// True if an instance of object with key exists.
     bool exists(const Key& key) const NOEXCEPT;
 
@@ -98,11 +101,11 @@ public:
     /// Iterator holds shared lock on storage remap.
     iterator it(const Key& key) const NOEXCEPT;
 
-    /// Return the link at the top of the conflict list (for table scanning).
-    Link top(const Link& list) const NOEXCEPT;
-
     /// Allocate element at returned link (follow with set|put).
     Link allocate(const Link& size) NOEXCEPT;
+
+    /// Return ptr for batch processing, holds shared lock on storage remap.
+    memory_ptr get_memory() const NOEXCEPT;
 
     /// Return the associated search key (terminal link returns default).
     Key get_key(const Link& link) NOEXCEPT;
@@ -151,6 +154,7 @@ public:
 
     /// Commit previously set element at link to key.
     bool commit(const Link& link, const Key& key) NOEXCEPT;
+    Link commit_link(const Link& link, const Key& key) NOEXCEPT;
 
 protected:
     /// Get element at link using memory object, false if deserialize error.
@@ -159,7 +163,8 @@ protected:
         Element& element) NOEXCEPT;
 
     /// Get first element matching key, from top link and whole table memory.
-    static Link first(const memory_ptr& ptr, Link link, const Key& key) NOEXCEPT;
+    static Link first(const memory_ptr& ptr, Link link,
+        const Key& key) NOEXCEPT;
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);

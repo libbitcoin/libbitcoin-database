@@ -70,7 +70,7 @@ struct spend
             return source;
         }
 
-        inline bool to_data(flipper& sink) const NOEXCEPT
+        inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             sink.write_little_endian<tx::integer, tx::size>(parent_fk);
             sink.write_little_endian<uint32_t>(sequence);
