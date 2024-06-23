@@ -1065,7 +1065,7 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
 
     // Clean allocation failure (e.g. disk full), see set_strong() comments.
     // Transactor assures cannot be restored without txs, as required to unset.
-    if (strong && !set_strong(bc::seq, key, links, positive))
+    if (strong && !set_strong(bc::par_unseq, key, links, positive))
         return error::txs_confirm;
 
     // Header link is the key for the txs table.
