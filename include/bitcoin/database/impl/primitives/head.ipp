@@ -74,19 +74,19 @@ bool CLASS::create() NOEXCEPT
     const auto allocation = size();
     const auto start = file_.allocate(allocation);
 
-    // This guards addition overflow in file_.get (start must be valid).
+    // This guards addition overflow in file_.get_raw (start must be valid).
     if (start == storage::eof)
         return false;
 
-    const auto ptr = file_.get(start);
-    if (!ptr)
+    const auto raw = file_.get_raw(start);
+    if (is_null(raw))
         return false;
 
     BC_ASSERT_MSG(verify(), "unexpected body size");
 
     // std::memset/fill_n have identical performance (on win32).
-    ////std::memset(ptr->begin(), system::bit_all<uint8_t>, allocation);
-    std::fill_n(ptr->begin(), allocation, system::bit_all<uint8_t>);
+    ////std::memset(raw, system::bit_all<uint8_t>, allocation);
+    std::fill_n(raw, allocation, system::bit_all<uint8_t>);
     return set_body_count(zero);
 }
 
@@ -99,22 +99,22 @@ bool CLASS::verify() const NOEXCEPT
 TEMPLATE
 bool CLASS::get_body_count(Link& count) const NOEXCEPT
 {
-    const auto ptr = file_.get();
-    if (!ptr)
+    const auto raw = file_.get_raw();
+    if (is_null(raw))
         return false;
 
-    count = array_cast<Link::size>(ptr->begin());
+    count = array_cast<Link::size>(raw);
     return true;
 }
 
 TEMPLATE
 bool CLASS::set_body_count(const Link& count) NOEXCEPT
 {
-    const auto ptr = file_.get();
-    if (!ptr)
+    const auto raw = file_.get_raw();
+    if (is_null(raw))
         return false;
 
-    array_cast<Link::size>(ptr->begin()) = count;
+    array_cast<Link::size>(raw) = count;
     return true;
 }
 
@@ -127,11 +127,11 @@ Link CLASS::top(const Key& key) const NOEXCEPT
 TEMPLATE
 Link CLASS::top(const Link& index) const NOEXCEPT
 {
-    const auto ptr = file_.get_raw(offset(index));
-    if (is_null(ptr))
+    const auto raw = file_.get_raw(offset(index));
+    if (is_null(raw))
         return {};
 
-    const auto& head = array_cast<Link::size>(ptr);
+    const auto& head = array_cast<Link::size>(raw);
 
     mutex_.lock_shared();
     const auto top = head;
@@ -148,11 +148,11 @@ bool CLASS::push(const bytes& current, bytes& next, const Key& key) NOEXCEPT
 TEMPLATE
 bool CLASS::push(const bytes& current, bytes& next, const Link& index) NOEXCEPT
 {
-    const auto ptr = file_.get_raw(offset(index));
-    if (is_null(ptr))
+    const auto raw = file_.get_raw(offset(index));
+    if (is_null(raw))
         return false;
 
-    auto& head = array_cast<Link::size>(ptr);
+    auto& head = array_cast<Link::size>(raw);
 
     mutex_.lock();
     next = head;
