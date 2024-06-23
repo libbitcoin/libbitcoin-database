@@ -90,11 +90,8 @@ public:
     /// Allocate bytes and return offset to first allocated (or eof).
     size_t allocate(size_t chunk) NOEXCEPT override;
 
-    /// Get remap-protected r/w access to start/offset of memory map (or null).
+    /// Get r/w access to start/offset of memory map (or null).
     memory_ptr get(size_t offset=zero) const NOEXCEPT override;
-
-    /// Get unprotected r/w access to start/offset of memory map (or null).
-    memory::iterator get_raw(size_t offset=zero) const NOEXCEPT override;
 
     /// Get the fault condition.
     code get_fault() const NOEXCEPT override;
