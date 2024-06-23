@@ -530,26 +530,6 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 
 #endif // DISABLED
 
-// protected
-TEMPLATE
-bool CLASS::set_strong(const header_link& link, const tx_links& txs,
-    bool positive) NOEXCEPT
-{
-    const auto set = [this, &link, positive](const tx_link& tx) NOEXCEPT
-    {
-        // TODO: eliminate shared memory pointer reallocation.
-        return store_.strong_tx.put(tx, table::strong_tx::record
-        {
-            {},
-            link,
-            positive
-        });
-    };
-
-    // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
-    return std_all_of(bc::seq, txs.begin(), txs.end(), set);
-}
-
 TEMPLATE
 bool CLASS::is_strong_tx(const tx_link& link) const NOEXCEPT
 {
@@ -563,6 +543,26 @@ bool CLASS::is_strong_block(const header_link& link) const NOEXCEPT
     return is_strong_tx(to_coinbase(link));
 }
 
+// protected
+TEMPLATE
+bool CLASS::set_strong(const auto& execution, const header_link& link,
+    const tx_links& txs, bool positive) NOEXCEPT
+{
+    const auto set = [this, &link, positive](const tx_link& tx) NOEXCEPT
+    {
+        // TODO: eliminate shared memory pointer reallocation.
+        return store_.strong_tx.put(tx, table::strong_tx::record
+        {
+            {},
+            link,
+            positive
+        });
+    };
+
+    // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
+    return std_all_of(execution, txs.begin(), txs.end(), set);
+}
+
 TEMPLATE
 bool CLASS::set_strong(const header_link& link) NOEXCEPT
 {
@@ -573,8 +573,8 @@ bool CLASS::set_strong(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // Clean allocation failure (e.g. disk full), see set_strong() comments.
-    return set_strong(link, txs, true);
+    // Clean allocation failure (e.g. disk full).
+    return set_strong(bc::seq, link, txs, true);
     // ========================================================================
 }
 
@@ -588,8 +588,38 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // Clean allocation failure (e.g. disk full), see set_strong() comments.
-    return set_strong(link, txs, false);
+    // Clean allocation failure (e.g. disk full).
+    return set_strong(bc::seq, link, txs, false);
+    // ========================================================================
+}
+
+TEMPLATE
+bool CLASS::set_strong_parallel(const header_link& link) NOEXCEPT
+{
+    const auto txs = to_transactions(link);
+    if (txs.empty())
+        return false;
+
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    // Clean allocation failure (e.g. disk full).
+    return set_strong(bc::par_unseq, link, txs, true);
+    // ========================================================================
+}
+
+TEMPLATE
+bool CLASS::set_unstrong_parallel(const header_link& link) NOEXCEPT
+{
+    const auto txs = to_transactions(link);
+    if (txs.empty())
+        return false;
+
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    // Clean allocation failure (e.g. disk full).
+    return set_strong(bc::par_unseq, link, txs, false);
     // ========================================================================
 }
 
