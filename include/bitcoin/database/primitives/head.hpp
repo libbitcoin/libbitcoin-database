@@ -64,9 +64,9 @@ public:
 
 private:
     template <size_t Bytes>
-    static auto& array_cast(memory& buffer) NOEXCEPT
+    static auto& array_cast(memory::iterator buffer) NOEXCEPT
     {
-        return system::unsafe_array_cast<uint8_t, Bytes>(buffer.begin());
+        return system::unsafe_array_cast<uint8_t, Bytes>(buffer);
     }
 
     static constexpr size_t offset(const Link& index) NOEXCEPT
