@@ -81,8 +81,9 @@ code create_directory_ex(const path& directory) NOEXCEPT
 {
     code ec{ system::error::errorno_t::no_error };
     const auto path = system::to_extended_path(trim(directory));
-    std::filesystem::create_directories(path, ec);
-    return ec;
+    const auto created = std::filesystem::create_directories(path, ec);
+    if (ec || created) return ec;
+    return system::error::errorno_t::is_a_directory;
 }
 
 // We don't use ec because it gets set (not found) when false, but no way to

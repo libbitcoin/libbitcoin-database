@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(create_directory__missing__true)
     BOOST_REQUIRE(file::create_directory(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__create_directory__exists__talse)
+BOOST_AUTO_TEST_CASE(file_utilities__create_directory__exists__false)
 {
     BOOST_REQUIRE(test::create(TEST_PATH));
     BOOST_REQUIRE(!file::create_directory(TEST_PATH));
