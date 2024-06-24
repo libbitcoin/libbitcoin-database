@@ -343,7 +343,9 @@ public:
     bool get_tx_height(size_t& out, const tx_link& link) const NOEXCEPT;
     bool get_tx_position(size_t& out, const tx_link& link) const NOEXCEPT;
 
-    /// False implies fault.
+    /// Terminal implies not found, false implies fault.
+    height_link get_height(const hash_digest& key) const NOEXCEPT;
+    height_link get_height(const header_link& link) const NOEXCEPT;
     bool get_height(size_t& out, const hash_digest& key) const NOEXCEPT;
     bool get_height(size_t& out, const header_link& link) const NOEXCEPT;
     bool get_value(uint64_t& out, const output_link& link) const NOEXCEPT;
@@ -550,8 +552,6 @@ protected:
     /// Confirm.
     /// -----------------------------------------------------------------------
 
-    height_link get_height(const hash_digest& key) const NOEXCEPT;
-    height_link get_height(const header_link& link) const NOEXCEPT;
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
     code mature_prevout(const point_link& link,
         size_t height) const NOEXCEPT;
