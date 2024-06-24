@@ -127,11 +127,11 @@ Link CLASS::top(const Key& key) const NOEXCEPT
 TEMPLATE
 Link CLASS::top(const Link& index) const NOEXCEPT
 {
-    const auto ptr = file_.get_raw(offset(index));
-    if (is_null(ptr))
+    const auto raw = file_.get_raw(offset(index));
+    if (is_null(raw))
         return {};
 
-    const auto& head = array_cast<Link::size>(ptr);
+    const auto& head = array_cast<Link::size>(raw);
 
     mutex_.lock_shared();
     const auto top = head;
@@ -148,11 +148,11 @@ bool CLASS::push(const bytes& current, bytes& next, const Key& key) NOEXCEPT
 TEMPLATE
 bool CLASS::push(const bytes& current, bytes& next, const Link& index) NOEXCEPT
 {
-    const auto ptr = file_.get_raw(offset(index));
-    if (is_null(ptr))
+    const auto raw = file_.get_raw(offset(index));
+    if (is_null(raw))
         return false;
 
-    auto& head = array_cast<Link::size>(ptr);
+    auto& head = array_cast<Link::size>(raw);
 
     mutex_.lock();
     next = head;

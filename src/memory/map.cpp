@@ -284,7 +284,7 @@ memory_ptr map::get(size_t offset) const NOEXCEPT
 
 memory::iterator map::get_raw(size_t offset) const NOEXCEPT
 {
-    // Pointer is otherwise ungaurded, not remap safe (use for table heads).
+    // Pointer is otherwise unguarded, not remap safe (use for table heads).
     if (offset > size())
         return nullptr;
 
