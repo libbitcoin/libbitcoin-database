@@ -28,11 +28,10 @@
 namespace libbitcoin {
 namespace database {
 
-// Block status (surrogate-keyed).
+// Block status (mostly surrogate-keyed).
 // ----------------------------------------------------------------------------
 // Not for use in validatation (2 additional gets) or confirmation (height).
 
-// protected
 TEMPLATE
 height_link CLASS::get_height(const hash_digest& key) const NOEXCEPT
 {
@@ -43,7 +42,6 @@ height_link CLASS::get_height(const hash_digest& key) const NOEXCEPT
     return header.height;
 }
 
-// protected
 TEMPLATE
 height_link CLASS::get_height(const header_link& link) const NOEXCEPT
 {
