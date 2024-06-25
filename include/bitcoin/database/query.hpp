@@ -490,9 +490,7 @@ public:
     bool set_strong_parallel(const header_link& link) NOEXCEPT;
     bool set_unstrong_parallel(const header_link& link) NOEXCEPT;
     code block_confirmable(const header_link& link) const NOEXCEPT;
-#if defined(UNDEFINED)
     code tx_confirmable(const tx_link& link, const context& ctx) const NOEXCEPT;
-#endif
     code unspent_duplicates(const tx_link& coinbase,
         const context& ctx) const NOEXCEPT;
 

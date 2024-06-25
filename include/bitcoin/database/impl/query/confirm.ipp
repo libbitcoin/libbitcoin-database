@@ -407,6 +407,26 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     return ec;
 }
 
+// Used by node for ASIO concurrency by tx.
+TEMPLATE
+code CLASS::tx_confirmable(const tx_link& link,
+    const context& ctx) const NOEXCEPT
+{
+    code ec{};
+    const auto set = to_spend_set(link);
+    for (const auto& spend: set.spends)
+    {
+        if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
+            set.version, ctx)))
+            return ec;
+
+        if (is_spent_prevout(spend.prevout(), link))
+            return error::confirmed_double_spend;
+    }
+
+    return error::success;
+}
+
 #if defined(UNDEFINED)
 
 // protected
@@ -424,25 +444,6 @@ spend_sets CLASS::to_spend_sets(
         sets.push_back(to_spend_set(*tx));
 
     return sets;
-}
-
-TEMPLATE
-code CLASS::tx_confirmable(const tx_link& link,
-    const context& ctx) const NOEXCEPT
-{
-    code ec{};
-    const auto set = to_spend_set(link);
-    for (const auto& spend : set.spends)
-    {
-        if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
-            set.version, ctx)))
-            return ec;
-
-        if (is_spent_prevout(spend.prevout(), link))
-            return error::confirmed_double_spend;
-    }
-
-    return error::success;
 }
 
 // split(0) 403 secs for 400k-410k
