@@ -29,7 +29,7 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// Transaction is a cononical record hash table.
+/// Transaction is a canonical record hash table.
 struct transaction
   : public hash_map<schema::transaction>
 {

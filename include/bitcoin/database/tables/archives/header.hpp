@@ -30,7 +30,7 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// Header is a cononical record hash table.
+/// Header is a canonical record hash table.
 struct header
   : public hash_map<schema::header>
 {
