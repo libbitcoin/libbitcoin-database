@@ -336,6 +336,74 @@ spend_sets CLASS::to_spend_sets(const header_link& link) const NOEXCEPT
     if (is_one(out.size()))
         return out;
 
+    spend_sets sets{};
+    sets.reserve(sub1(txs.size()));
+    for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
+        sets.push_back(to_spend_set(*tx));
+
+    return sets;
+}
+
+// Used by node for ASIO concurrency by tx.
+TEMPLATE
+code CLASS::tx_confirmable(const tx_link& link,
+    const context& ctx) const NOEXCEPT
+{
+    code ec{};
+    const auto set = to_spend_set(link);
+    for (const auto& spend: set.spends)
+    {
+        if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
+            set.version, ctx)))
+            return ec;
+
+        if (is_spent_prevout(spend.prevout(), link))
+            return error::confirmed_double_spend;
+    }
+
+    return error::success;
+}
+
+// Used by node for sequential by block (unsed).
+// split(0) 403 secs for 400k-410k
+TEMPLATE
+code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
+{
+    context ctx{};
+    if (!get_context(ctx, link))
+        return error::integrity;
+
+    code ec{};
+    const auto txs = to_transactions(link);
+    if (txs.empty())
+        return ec;
+
+    if ((ec = unspent_duplicates(txs.front(), ctx)))
+        return ec;
+
+    for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
+        if ((ec = tx_confirmable(*tx, ctx)))
+            return ec;
+
+    return ec;
+}
+
+#if defined(UNDEFINED)
+
+// protected
+TEMPLATE
+spend_sets CLASS::to_spend_sets(const header_link& link) const NOEXCEPT
+{
+    const auto txs = to_transactions(link);
+    if (txs.empty())
+        return {};
+
+    // Coinbase optimization.
+    spend_sets out{ txs.size() };
+    out.front().tx = txs.front();
+    if (is_one(out.size()))
+        return out;
+
     const auto non_coinbase = std::next(txs.begin());
     const auto to_set = [this](const auto& tx) NOEXCEPT
     {
@@ -404,68 +472,6 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     if (std_any_of(bc::par_unseq, non_coinbase, sets.end(), is_spent))
         return { fault.load() };
  
-    return ec;
-}
-
-// Used by node for ASIO concurrency by tx.
-TEMPLATE
-code CLASS::tx_confirmable(const tx_link& link,
-    const context& ctx) const NOEXCEPT
-{
-    code ec{};
-    const auto set = to_spend_set(link);
-    for (const auto& spend: set.spends)
-    {
-        if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
-            set.version, ctx)))
-            return ec;
-
-        if (is_spent_prevout(spend.prevout(), link))
-            return error::confirmed_double_spend;
-    }
-
-    return error::success;
-}
-
-#if defined(UNDEFINED)
-
-// protected
-TEMPLATE
-spend_sets CLASS::to_spend_sets(
-    const header_link& link) const NOEXCEPT
-{
-    const auto txs = to_transactions(link);
-    if (txs.size() <= one)
-        return {};
-
-    spend_sets sets{};
-    sets.reserve(sub1(txs.size()));
-    for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
-        sets.push_back(to_spend_set(*tx));
-
-    return sets;
-}
-
-// split(0) 403 secs for 400k-410k
-TEMPLATE
-code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
-{
-    context ctx{};
-    if (!get_context(ctx, link))
-        return error::integrity;
-
-    code ec{};
-    const auto txs = to_transactions(link);
-    if (txs.empty())
-        return ec;
-
-    if ((ec = unspent_duplicates(txs.front(), ctx)))
-        return ec;
-
-    for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
-        if ((ec = tx_confirmable(*tx, ctx)))
-            return ec;
-
     return ec;
 }
 
