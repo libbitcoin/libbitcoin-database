@@ -488,16 +488,14 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spend_sets__populated__expected)
                              "02000000""b1""0179"
                              "03000000""b2""0179"));
 
-    // to_spend_sets keys on first-tx-ness, so only one input despite two points (second point).
+    // to_spend_sets keys on first-tx-ness, so only one input despite two points.
     const auto spends = query.to_spend_sets_(2);
-    BOOST_REQUIRE_EQUAL(spends.size(), 2u);
-    BOOST_REQUIRE_EQUAL(spends[0].tx, 2u);
-    BOOST_REQUIRE_EQUAL(spends[1].tx, 3u);
-    BOOST_REQUIRE_EQUAL(spends[0].spends.size(), 0u);
-    BOOST_REQUIRE_EQUAL(spends[1].spends.size(), 1u);
-    BOOST_REQUIRE_EQUAL(spends[1].spends[0].point_fk, 1u);
-    BOOST_REQUIRE_EQUAL(spends[1].spends[0].point_index, 0u);
-    BOOST_REQUIRE_EQUAL(spends[1].spends[0].sequence, 0xb2u);
+    BOOST_REQUIRE_EQUAL(spends.size(), 1u);
+    BOOST_REQUIRE_EQUAL(spends[0].tx, 3u);
+    BOOST_REQUIRE_EQUAL(spends[0].spends.size(), 1u);
+    BOOST_REQUIRE_EQUAL(spends[0].spends[0].point_fk, 1u);
+    BOOST_REQUIRE_EQUAL(spends[0].spends[0].point_index, 0u);
+    BOOST_REQUIRE_EQUAL(spends[0].spends[0].sequence, 0xb2u);
 }
 
 // to_output_tx/to_output/to_tx_outputs/to_block_outputs
