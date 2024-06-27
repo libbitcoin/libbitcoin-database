@@ -480,9 +480,10 @@ spend_set CLASS::to_spend_set(const tx_link& link) const NOEXCEPT
     
     // This is not concurrent because to_spend_sets is (by tx).
     table::spend::get_prevout_sequence get{};
+    const auto ptr = store_.spend.get_memory();
     for (const auto& spend_fk: puts.spend_fks)
     {
-        if (!store_.spend.get(spend_fk, get))
+        if (!store_.spend.get(ptr, spend_fk, get))
             return {};
 
         // Translate query to public struct.
