@@ -214,6 +214,16 @@ bool CLASS::get(const iterator& it, const Link& link,
     return read(it.get(), link, element);
 }
 
+// static
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::get(const memory_ptr& ptr, const Link& link,
+    Element& element) NOEXCEPT
+{
+    // This override avoids deadlock when holding iterator to the same table.
+    return read(ptr, link, element);
+}
+
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::set(const Link& link, const Element& element) NOEXCEPT

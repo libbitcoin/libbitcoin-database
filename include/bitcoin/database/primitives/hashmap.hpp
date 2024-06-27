@@ -128,6 +128,11 @@ public:
     static bool get(const iterator& it, const Link& link,
         Element& element) NOEXCEPT;
 
+    /// Get element at link using memory object, false if deserialize error.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    static bool get(const memory_ptr& ptr, const Link& link,
+        Element& element) NOEXCEPT;
+
     /// Set element into previously allocated link (follow with commit).
     template <typename Element, if_equal<Element::size, Size> = true>
     bool set(const Link& link, const Element& element) NOEXCEPT;
