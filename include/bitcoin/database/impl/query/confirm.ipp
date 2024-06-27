@@ -548,6 +548,39 @@ bool CLASS::is_strong_block(const header_link& link) const NOEXCEPT
     return is_strong_tx(to_coinbase(link));
 }
 
+TEMPLATE
+bool CLASS::set_strong(const header_link& block, const tx_link& tx) NOEXCEPT
+{
+    return set_strong(block, tx, true);
+}
+
+TEMPLATE
+bool CLASS::set_unstrong(const header_link& block, const tx_link& tx) NOEXCEPT
+{
+    return set_strong(block, tx, false);
+}
+
+// protected
+TEMPLATE
+bool CLASS::set_strong(const header_link& block, const tx_link& tx,
+    bool positive) NOEXCEPT
+{
+    ////if (block.is_terminal() || tx.is_terminal())
+    ////    return false;
+
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    // Clean allocation failure (e.g. disk full).
+    return store_.strong_tx.put(tx, table::strong_tx::record
+    {
+        {},
+        block,
+        positive
+    });
+    // ========================================================================
+}
+
 // protected
 TEMPLATE
 bool CLASS::set_strong(const auto& execution, const header_link& link,
