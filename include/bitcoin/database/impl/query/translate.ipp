@@ -199,10 +199,10 @@ header_link CLASS::to_parent(const header_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
+header_link CLASS::to_block(const tx_link& key) const NOEXCEPT
 {
     table::strong_tx::record strong{};
-    if (!store_.strong_tx.find(link, strong) || !strong.positive)
+    if (!store_.strong_tx.find(key, strong) || !strong.positive)
         return {};
 
     // Terminal implies not strong (not in block).
@@ -216,6 +216,8 @@ header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
 TEMPLATE
 inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
 {
+    // Iteration of tx is necessary because there may be duplicates.
+    // Only top block (strong) association for given tx instance is considered.
     auto it = store_.tx.it(tx_hash);
     strong_pair strong{ {}, it.self() };
     if (!it)

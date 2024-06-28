@@ -272,7 +272,7 @@ public:
 
     /// block/tx to block/s (reverse navigation)
     header_link to_parent(const header_link& link) const NOEXCEPT;
-    header_link to_block(const tx_link& link) const NOEXCEPT;
+    header_link to_block(const tx_link& key) const NOEXCEPT;
 
     /// output to spenders (reverse navigation)
     spend_links to_spenders(const point& prevout) const NOEXCEPT;
