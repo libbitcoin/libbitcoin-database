@@ -321,14 +321,17 @@ public:
 
     /// False implies not fully populated, input.metadata is not populated.
     bool populate(const input& input) const NOEXCEPT;
-    bool populate(const transaction& tx) const NOEXCEPT;
     bool populate(const block& block) const NOEXCEPT;
+    bool populate(const transaction& tx) const NOEXCEPT;
 
     /// For testing only.
     /// False implies not fully populated, input.metadata is populated.
-    bool populate_with_metadata(const input& input) const NOEXCEPT;
-    bool populate_with_metadata(const transaction& tx) const NOEXCEPT;
     bool populate_with_metadata(const block& block) const NOEXCEPT;
+    bool populate_with_metadata(const transaction& tx) const NOEXCEPT;
+    bool populate_with_metadata(const transaction& tx,
+        const tx_link& link) const NOEXCEPT;
+    bool populate_with_metadata(const input& input,
+        const tx_link& link) const NOEXCEPT;
 
     /// Archival (surrogate-keyed).
     /// -----------------------------------------------------------------------
