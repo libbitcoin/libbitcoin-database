@@ -275,16 +275,21 @@ TEMPLATE
 error::error_t CLASS::unspendable_prevout(const point_link& link,
     uint32_t sequence, uint32_t version, const context& ctx) const NOEXCEPT
 {
+    // utxo.find(spend.prevout()) no iteration or hash conversion.
+    // Read utxo => is_coinbase, header_link => ctx (height/mtp).
     const auto strong = to_strong(get_point_key(link));
 
+    // utxo is strong if present.
     if (strong.block.is_terminal())
         return strong.tx.is_terminal() ? error::missing_previous_output :
             error::unconfirmed_spend;
 
+    // utxo get context is still required.
     context out{};
     if (!get_context(out, strong.block))
         return error::integrity;
 
+    // utxo.is_coinbase (is known).
     if (is_coinbase(strong.tx) &&
         !transaction::is_coinbase_mature(out.height, ctx.height))
         return error::coinbase_maturity;
@@ -349,14 +354,28 @@ TEMPLATE
 code CLASS::tx_confirmable(const tx_link& link,
     const context& ctx) const NOEXCEPT
 {
-    code ec{};
+    // utxo needs spend set for sequence and spend.prevout(), which is the non-
+    // iterating key to utxo table. This is the identifier of the point:index
+    // which is used to obtain the output for validation by
+    // tx.find(get_point_key(link)). However we don't need the output for
+    // confirmation, just a unique identifier for it. Yet the point:index (fp)
+    // is not unique, because here are many fps for any given output due to tx
+    // and therefore point table duplication. So the spend sets identify all of
+    // the spends of a given tx, but one tx may have a different point for the
+    // same output. So all outputs of the point must be searched for existence,
+    // which requires point and tx table traversal just as before. :<
     const auto set = to_spend_set(link);
+
+    code ec{};
     for (const auto& spend: set.spends)
     {
+        // If utxo exists then it is strong (push own block first).
         if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
             set.version, ctx)))
             return ec;
 
+        // This query goes away.
+        // If utxo exists then it is not spent (push own block first).
         if (is_spent_prevout(spend.prevout(), link))
             return error::confirmed_double_spend;
     }
