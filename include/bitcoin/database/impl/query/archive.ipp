@@ -151,7 +151,7 @@ bool CLASS::populate(const input& input) const NOEXCEPT
 TEMPLATE
 bool CLASS::populate(const transaction& tx) const NOEXCEPT
 {
-    BC_ASSERT(!is_coinbase(tx));
+    BC_ASSERT(!tx->is_coinbase());
 
     auto result = true;
     const auto& ins = *tx.inputs_ptr();
