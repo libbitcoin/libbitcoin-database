@@ -23,7 +23,7 @@ struct file_utilities_setup_fixture
     DELETE_COPY_MOVE(file_utilities_setup_fixture);
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-        file_utilities_setup_fixture() NOEXCEPT
+    file_utilities_setup_fixture() NOEXCEPT
     {
         BOOST_REQUIRE(test::clear(test::directory));
     }
