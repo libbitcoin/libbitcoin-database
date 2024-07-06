@@ -116,7 +116,7 @@ size_t chunk_storage::allocate(size_t chunk) NOEXCEPT
 
     std::unique_lock map_lock(map_mutex_);
     const auto link = buffer_.size();
-    buffer_.resize(buffer_.size() + chunk);
+    buffer_.resize(buffer_.size() + chunk, 0x00);
     return link;
 }
 

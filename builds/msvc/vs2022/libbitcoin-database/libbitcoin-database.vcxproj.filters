@@ -99,7 +99,7 @@
     <ClCompile Include="..\..\..\..\src\memory\map.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\memory\mman-win32\mman.c">
+    <ClCompile Include="..\..\..\..\src\memory\mman-win32\mman.cpp">
       <Filter>src\memory\mman-win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\memory\utilities.cpp">
@@ -278,7 +278,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\src\memory\mman-win32\mman.h">
+    <ClInclude Include="..\..\..\..\src\memory\mman-win32\mman.hpp">
       <Filter>src\memory\mman-win32</Filter>
     </ClInclude>
   </ItemGroup>

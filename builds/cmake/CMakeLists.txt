@@ -228,8 +228,8 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/locks/interprocess_lock.cpp"
     "../../src/memory/map.cpp"
     "../../src/memory/utilities.cpp"
-    "../../src/memory/mman-win32/mman.c"
-    "../../src/memory/mman-win32/mman.h" )
+    "../../src/memory/mman-win32/mman.cpp"
+    "../../src/memory/mman-win32/mman.hpp" )
 
 # ${CANONICAL_LIB_NAME} project specific include directory normalization for build.
 #------------------------------------------------------------------------------

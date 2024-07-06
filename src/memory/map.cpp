@@ -19,7 +19,7 @@
 #include <bitcoin/database/memory/map.hpp>
 
 #if defined(HAVE_MSC)
-    #include "mman-win32/mman.h"
+    #include "mman-win32/mman.hpp"
 #else
     #include <sys/mman.h>
     #include <sys/stat.h>
