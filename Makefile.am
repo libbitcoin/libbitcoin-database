@@ -44,8 +44,8 @@ src_libbitcoin_database_la_SOURCES = \
     src/locks/interprocess_lock.cpp \
     src/memory/map.cpp \
     src/memory/utilities.cpp \
-    src/memory/mman-win32/mman.c \
-    src/memory/mman-win32/mman.h
+    src/memory/mman-win32/mman.cpp \
+    src/memory/mman-win32/mman.hpp
 
 # local: test/libbitcoin-database-test
 #------------------------------------------------------------------------------
