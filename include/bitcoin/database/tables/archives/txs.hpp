@@ -168,6 +168,18 @@ struct txs
 
         keys tx_fks{};
     };
+
+    struct get_tx_quantity
+      : public schema::txs
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            quantity = source.read_little_endian<tx::integer, schema::count_>();
+            return source;
+        }
+
+        size_t quantity{};
+    };
 };
 
 } // namespace table

@@ -297,6 +297,22 @@ struct transaction
 
         bool coinbase{};
     };
+
+    struct get_sizes
+      : public schema::transaction
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_byte();
+            light = source.read_little_endian<bytes::integer, bytes::size>();
+            heavy = source.read_little_endian<bytes::integer, bytes::size>();
+            return source;
+        }
+
+        size_t light{};
+        size_t heavy{};
+    };
+
 };
 
 } // namespace table

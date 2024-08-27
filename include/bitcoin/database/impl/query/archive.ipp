@@ -299,6 +299,16 @@ hashes CLASS::get_tx_keys(const header_link& link) const NOEXCEPT
 }
 
 TEMPLATE
+size_t CLASS::get_tx_count(const header_link& link) const NOEXCEPT
+{
+    table::txs::get_tx_quantity txs{};
+    if (!store_.txs.find(link, txs))
+        return {};
+
+    return txs.quantity;
+}
+
+TEMPLATE
 inline hash_digest CLASS::get_header_key(const header_link& link) const NOEXCEPT
 {
     return store_.header.get_key(link);
@@ -361,6 +371,19 @@ bool CLASS::get_tx_position(size_t& out, const tx_link& link) const NOEXCEPT
         return false;
 
     out = txs.position;
+    return true;
+}
+
+TEMPLATE
+bool CLASS::get_tx_sizes(size_t& light, size_t& heavy,
+    const tx_link& link) const NOEXCEPT
+{
+    table::transaction::get_sizes sizes{};
+    if (!store_.tx.get(link, sizes))
+        return false;
+
+    light = sizes.light;
+    heavy = sizes.heavy;
     return true;
 }
 
