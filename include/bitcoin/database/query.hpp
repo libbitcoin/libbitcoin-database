@@ -336,8 +336,9 @@ public:
     /// Archival (surrogate-keyed).
     /// -----------------------------------------------------------------------
 
-    /// Empty/null_hash implies fault.
+    /// Empty/null_hash implies fault, zero count implies unassociated.
     hashes get_tx_keys(const header_link& link) const NOEXCEPT;
+    size_t get_tx_count(const header_link& link) const NOEXCEPT;
     inline hash_digest get_header_key(const header_link& link) const NOEXCEPT;
     inline hash_digest get_point_key(const point_link& link) const NOEXCEPT;
     inline hash_digest get_tx_key(const tx_link& link) const NOEXCEPT;
@@ -345,6 +346,8 @@ public:
     /// False implies not confirmed.
     bool get_tx_height(size_t& out, const tx_link& link) const NOEXCEPT;
     bool get_tx_position(size_t& out, const tx_link& link) const NOEXCEPT;
+    bool get_tx_sizes(size_t& light, size_t& heavy,
+        const tx_link& link) const NOEXCEPT;
 
     /// Terminal implies not found, false implies fault.
     height_link get_height(const hash_digest& key) const NOEXCEPT;
