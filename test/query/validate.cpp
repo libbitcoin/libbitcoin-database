@@ -100,6 +100,10 @@ BOOST_AUTO_TEST_CASE(query_validate__get_context__genesis__default)
     context ctx{};
     BOOST_REQUIRE(query.get_context(ctx, 0));
     BOOST_REQUIRE(ctx == context{});
+
+    system::chain::context chain_ctx{};
+    BOOST_REQUIRE(query.get_context(chain_ctx, 0));
+    BOOST_REQUIRE(chain_ctx == system::chain::context{});
 }
 
 BOOST_AUTO_TEST_CASE(query_validate__get_context__invalid__default)
@@ -115,6 +119,11 @@ BOOST_AUTO_TEST_CASE(query_validate__get_context__invalid__default)
     BOOST_REQUIRE(!query.get_context(ctx, header_link::terminal));
     BOOST_REQUIRE(!query.get_context(ctx, 1));
     BOOST_REQUIRE(ctx == context{});
+
+    system::chain::context chain_ctx{};
+    BOOST_REQUIRE(!query.get_context(chain_ctx, header_link::terminal));
+    BOOST_REQUIRE(!query.get_context(chain_ctx, 1));
+    BOOST_REQUIRE(chain_ctx == system::chain::context{});
 }
 
 BOOST_AUTO_TEST_CASE(query_validate__get_context__block1__expected)
@@ -132,6 +141,11 @@ BOOST_AUTO_TEST_CASE(query_validate__get_context__block1__expected)
     context ctx{};
     BOOST_REQUIRE(query.get_context(ctx, 1));
     BOOST_REQUIRE(ctx == expected);
+
+    system::chain::context chain_ctx{};
+    const system::chain::context chain_expected{ expected.flags, 0, expected.mtp, expected.height, 0, 0 };
+    BOOST_REQUIRE(query.get_context(chain_ctx, 1));
+    BOOST_REQUIRE(chain_ctx == chain_expected);
 }
 
 BOOST_AUTO_TEST_CASE(query_validate__get_block_state__invalid_link__unassociated)

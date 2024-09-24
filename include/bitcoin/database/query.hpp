@@ -450,9 +450,12 @@ public:
     code get_tx_state(uint64_t& fee, size_t& sigops, const tx_link& link,
         const context& ctx) const NOEXCEPT;
 
+    /// get_context(chain::context) sets only flags, median_time_past, height.
     bool get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT;
     bool get_work(uint256_t& work, const header_link& link) const NOEXCEPT;
     bool get_context(context& ctx, const header_link& link) const NOEXCEPT;
+    bool get_context(system::chain::context& ctx,
+        const header_link& link) const NOEXCEPT;
     bool get_version(uint32_t& version, const header_link& link) const NOEXCEPT;
     bool get_timestamp(uint32_t& timestamp,
         const header_link& link) const NOEXCEPT;
