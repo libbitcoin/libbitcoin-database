@@ -383,7 +383,7 @@ code CLASS::tx_confirmable(const tx_link& link,
     return error::success;
 }
 
-// Used by node for sequential by block (unsed).
+// Used by node for sequential by block (unused).
 // split(0) 403 secs for 400k-410k
 TEMPLATE
 code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
@@ -392,11 +392,11 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     if (!get_context(ctx, link))
         return error::integrity;
 
-    code ec{};
     const auto txs = to_transactions(link);
     if (txs.empty())
-        return ec;
+        return error::txs_empty;
 
+    code ec{};
     if ((ec = unspent_duplicates(txs.front(), ctx)))
         return ec;
 
