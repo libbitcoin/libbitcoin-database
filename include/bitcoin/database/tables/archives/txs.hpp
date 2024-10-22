@@ -83,7 +83,7 @@ struct txs
         }
 
         // block.serialized_size(true)
-        bytes::integer wire{}; 
+        bytes::integer wire{};
         keys tx_fks{};
     };
 
