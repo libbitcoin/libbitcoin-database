@@ -24,11 +24,11 @@
 ////using namespace system;
 ////const chain::transaction empty{};
 ////const auto genesis = system::settings{ system::chain::selection::mainnet }.genesis_block;
-////const auto& genesis_tx = *genesis.transactions_ptr()->front();
+////const auto genesis_tx = genesis.transactions_ptr()->front();
 ////const table::buffer::key key1{ 0x01, 0x02, 0x03, 0x04 };
 ////const table::buffer::key key2{ 0xa1, 0xa2, 0xa3, 0xa4 };
 ////const table::buffer::slab slab1{ {}, empty };
-////const table::buffer::slab slab2{ {}, genesis_tx };
+////const table::buffer::slab slab2{ {}, *genesis_tx };
 ////const data_chunk expected_head = base16_chunk
 ////(
 ////    "0000000000"

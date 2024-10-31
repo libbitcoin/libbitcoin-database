@@ -1,8 +1,11 @@
 {
-    "folders": [
-        {
-	    "path": "../../../libbitcoin-database"
-	}
-    ],
-    "settings": {}
+	"folders": [
+		{
+			"path": "../../../libbitcoin-system"
+		},
+		{
+			"path": "../../../libbitcoin-database"
+		}
+	],
+	"settings": {}
 }

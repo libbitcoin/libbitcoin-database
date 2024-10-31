@@ -1273,9 +1273,9 @@ BOOST_AUTO_TEST_CASE(query_archive__get_input__genesis__expected)
     BOOST_REQUIRE(query.set(test::genesis, test::context, false, false));
 
     const auto tx = test::genesis.transactions_ptr()->front();
-    const auto& input = *tx->inputs_ptr()->front();
-    BOOST_REQUIRE(input == *query.get_input(query.to_tx(tx->hash(false)), 0u));
-    BOOST_REQUIRE(input == *query.get_input(0));
+    const auto input = tx->inputs_ptr()->front();
+    BOOST_REQUIRE(*input == *query.get_input(query.to_tx(tx->hash(false)), 0u));
+    BOOST_REQUIRE(*input == *query.get_input(0));
 }
 
 BOOST_AUTO_TEST_CASE(query_archive__get_inputs__tx_not_found__nullptr)
@@ -1328,10 +1328,10 @@ BOOST_AUTO_TEST_CASE(query_archive__get_output__genesis__expected)
     BOOST_REQUIRE(query.set(test::genesis, test::context, false, false));
 
     const auto tx = test::genesis.transactions_ptr()->front();
-    const auto& output1 = *tx->outputs_ptr()->front();
-    BOOST_REQUIRE(output1 == *query.get_output(query.to_tx(tx->hash(false)), 0u));
-    BOOST_REQUIRE(output1 == *query.get_output({ tx->hash(false), 0u }));
-    BOOST_REQUIRE(output1 == *query.get_output(0));
+    const auto output1 = tx->outputs_ptr()->front();
+    BOOST_REQUIRE(*output1 == *query.get_output(query.to_tx(tx->hash(false)), 0u));
+    BOOST_REQUIRE(*output1 == *query.get_output({ tx->hash(false), 0u }));
+    BOOST_REQUIRE(*output1 == *query.get_output(0));
 }
 
 BOOST_AUTO_TEST_CASE(query_archive__get_outputs__tx_not_found__nullptr)
@@ -1473,11 +1473,11 @@ BOOST_AUTO_TEST_CASE(query_archive__get_spenders__unspent_or_not_found__expected
 ////    BOOST_REQUIRE_EQUAL(query.get_spenders(1, 2)->size(), 0u);
 ////
 ////    // Match the two spenders.
-////    const auto& block_inputs = *test::block2a.transactions_ptr()->front()->inputs_ptr();
-////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 0))->front() == *block_inputs.front());
-////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 1))->front() == *block_inputs.back());
-////    BOOST_REQUIRE(*query.get_spenders(1, 0)->front() == *block_inputs.front());
-////    BOOST_REQUIRE(*query.get_spenders(1, 1)->front() == *block_inputs.back());
+////    const auto block_inputs = test::block2a.transactions_ptr()->front()->inputs_ptr();
+////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 0))->front() == *(*block_inputs).front());
+////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 1))->front() == *(*block_inputs).back());
+////    BOOST_REQUIRE(*query.get_spenders(1, 0)->front() == *(*block_inputs).front());
+////    BOOST_REQUIRE(*query.get_spenders(1, 1)->front() == *(*block_inputs).back());
 ////
 ////    // Each of the two outputs of block1a spent twice (two unconfirmed double spends).
 ////    BOOST_REQUIRE(query.set(test::tx4));
@@ -1489,15 +1489,15 @@ BOOST_AUTO_TEST_CASE(query_archive__get_spenders__unspent_or_not_found__expected
 ////    BOOST_REQUIRE_EQUAL(query.get_spenders(1, 2)->size(), 0u);
 ////
 ////    // Match the four spenders.
-////    const auto& tx_inputs = *test::tx4.inputs_ptr();
-////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 0))->front() == *tx_inputs.front());
-////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 1))->front() == *tx_inputs.back());
-////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 0))->back() == *block_inputs.front());
-////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 1))->back() == *block_inputs.back());
-////    BOOST_REQUIRE(*query.get_spenders(1, 0)->front() == *tx_inputs.front());
-////    BOOST_REQUIRE(*query.get_spenders(1, 1)->front() == *tx_inputs.back());
-////    BOOST_REQUIRE(*query.get_spenders(1, 0)->back() == *block_inputs.front());
-////    BOOST_REQUIRE(*query.get_spenders(1, 1)->back() == *block_inputs.back());
+////    const auto tx_inputs = test::tx4.inputs_ptr();
+////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 0))->front() == *(*tx_inputs).front());
+////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 1))->front() == *(*tx_inputs).back());
+////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 0))->back() == *(*block_inputs).front());
+////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 1))->back() == *(*block_inputs).back());
+////    BOOST_REQUIRE(*query.get_spenders(1, 0)->front() == *(*tx_inputs).front());
+////    BOOST_REQUIRE(*query.get_spenders(1, 1)->front() == *(*tx_inputs).back());
+////    BOOST_REQUIRE(*query.get_spenders(1, 0)->back() == *(*block_inputs).front());
+////    BOOST_REQUIRE(*query.get_spenders(1, 1)->back() == *(*block_inputs).back());
 ////}
 
 BOOST_AUTO_TEST_CASE(query_archive__get_value__genesis__expected)

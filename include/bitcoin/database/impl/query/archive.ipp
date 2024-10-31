@@ -154,8 +154,8 @@ bool CLASS::populate(const transaction& tx) const NOEXCEPT
     BC_ASSERT(!tx.is_coinbase());
 
     auto result = true;
-    const auto& ins = *tx.inputs_ptr();
-    std::for_each(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
+    const auto& ins = tx.inputs_ptr();
+    std::for_each(ins->begin(), ins->end(), [&](const auto& in) NOEXCEPT
     {
         result &= populate(*in);
     });
@@ -166,16 +166,16 @@ bool CLASS::populate(const transaction& tx) const NOEXCEPT
 TEMPLATE
 bool CLASS::populate(const block& block) const NOEXCEPT
 {
-    const auto& txs = *block.transactions_ptr();
-    if (txs.empty())
+    const auto& txs = block.transactions_ptr();
+    if (txs->empty())
         return false;
 
     auto result = true;
-    std::for_each(std::next(txs.begin()), txs.end(),
+    std::for_each(std::next(txs->begin()), txs->end(),
         [&](const auto& tx) NOEXCEPT
         {
-            const auto& ins = *tx->inputs_ptr();
-            std::for_each(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
+            const auto& ins = tx->inputs_ptr();
+            std::for_each(ins->begin(), ins->end(), [&](const auto& in) NOEXCEPT
             {
                 result &= populate(*in);
             });
@@ -225,8 +225,8 @@ bool CLASS::populate_with_metadata(const transaction& tx,
     const tx_link& link) const NOEXCEPT
 {
     auto result = true;
-    const auto& ins = *tx.inputs_ptr();
-    std::for_each(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
+    const auto& ins = tx.inputs_ptr();
+    std::for_each(ins->begin(), ins->end(), [&](const auto& in) NOEXCEPT
     {
         result &= populate_with_metadata(*in, link);
     });
@@ -240,7 +240,7 @@ bool CLASS::populate_with_metadata(const transaction& tx) const NOEXCEPT
     BC_ASSERT(is_coinbase(tx));
 
     // A coinbase tx is allowed only one input.
-    const auto& input = *tx.inputs_ptr()->front();
+    const auto& input = tx.inputs_ptr()->front();
 
     // Find any confirmed unspent duplicates of tx (unspent_coinbase_collision).
     const auto ec = unspent_duplicates(tx);
@@ -248,29 +248,29 @@ bool CLASS::populate_with_metadata(const transaction& tx) const NOEXCEPT
         return false;
 
     // The prevout of a coinbase is null (not an output of a coinbase tx).
-    input.metadata.coinbase = false;
-    input.metadata.spent = (ec != error::unspent_coinbase_collision);
-    input.metadata.median_time_past = max_uint32;
-    input.metadata.height = zero;
+    input->metadata.coinbase = false;
+    input->metadata.spent = (ec != error::unspent_coinbase_collision);
+    input->metadata.median_time_past = max_uint32;
+    input->metadata.height = zero;
     return true;
 }
 
 TEMPLATE
 bool CLASS::populate_with_metadata(const block& block) const NOEXCEPT
 {
-    const auto& txs = *block.transactions_ptr();
-    if (txs.empty())
+    const auto& txs = block.transactions_ptr();
+    if (txs->empty())
         return false;
 
     auto result = true;
-    const auto coinbase = populate_with_metadata(txs.front());
-    std::for_each(std::next(txs.begin()), txs.end(),
+    const auto coinbase = populate_with_metadata(txs->front());
+    std::for_each(std::next(txs->begin()), txs->end(),
         [&](const auto& tx) NOEXCEPT
         {
             const auto link = to_tx(tx.get_hash());
             result &= !link.is_terminal();
-            const auto& ins = *tx->inputs_ptr();
-            std::for_each(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
+            const auto& ins = tx->inputs_ptr();
+            std::for_each(ins->begin(), ins->end(), [&](const auto& in) NOEXCEPT
             {
                 result &= populate_with_metadata(*in, link);
             });
@@ -743,15 +743,15 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     const auto& key = tx.get_hash(false);
 
     // Declare puts record.
-    const auto& ins = *tx.inputs_ptr();
-    const auto& outs = *tx.outputs_ptr();
+    const auto& ins = tx.inputs_ptr();
+    const auto& outs = tx.outputs_ptr();
     table::puts::slab puts{};
-    puts.spend_fks.reserve(ins.size());
-    puts.out_fks.reserve(outs.size());
+    puts.spend_fks.reserve(ins->size());
+    puts.out_fks.reserve(outs->size());
 
     // Declare spends buffer.
     std_vector<foreign_point> spends{};
-    spends.reserve(ins.size());
+    spends.reserve(ins->size());
 
     // TODO: eliminate shared memory pointer reallocations.
     // ========================================================================
@@ -765,13 +765,13 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
 
     // Allocate spend records.
     // Clean single allocation failure (e.g. disk full).
-    const auto count = possible_narrow_cast<spend_link::integer>(ins.size());
+    const auto count = possible_narrow_cast<spend_link::integer>(ins->size());
     auto spend_fk = store_.spend.allocate(count);
     if (spend_fk.is_terminal())
         return error::tx_spend_allocate;
 
     // Commit input records (spend records not indexed).
-    for (const auto& in: ins)
+    for (const auto& in: *ins)
     {
         // Commit input record.
         // Safe allocation failure, blob linked by unindexed spend.
@@ -833,7 +833,7 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     }
 
     // Commit output records.
-    for (const auto& out: outs)
+    for (const auto& out: *outs)
     {
         // Safe allocation failure, blob unlinked.
         output_link output_fk{};
@@ -864,8 +864,8 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     {
         {},
         tx,
-        system::possible_narrow_cast<ix::integer>(ins.size()),
-        system::possible_narrow_cast<ix::integer>(outs.size()),
+        system::possible_narrow_cast<ix::integer>(ins->size()),
+        system::possible_narrow_cast<ix::integer>(outs->size()),
         puts_fk
     }))
     {
@@ -888,7 +888,7 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     if (address_enabled())
     {
         auto output_fk = puts.out_fks.begin();
-        for (const auto& out: outs)
+        for (const auto& out: *outs)
         {
             // Safe allocation failure, unindexed tx outputs linked by address,
             // others unlinked. A replay of committed addresses without indexed
