@@ -288,6 +288,7 @@ public:
     /// block to txs/puts (forward navigation)
     tx_link to_coinbase(const header_link& link) const NOEXCEPT;
     tx_links to_transactions(const header_link& link) const NOEXCEPT;
+    tx_links to_spending_transactions(const header_link& link) const NOEXCEPT;
     output_links to_block_outputs(const header_link& link) const NOEXCEPT;
     spend_links to_block_spends(const header_link& link) const NOEXCEPT;
 
@@ -497,8 +498,8 @@ public:
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
     code block_confirmable(const header_link& link) const NOEXCEPT;
-    code tx_confirmable(const tx_link& link, const context& ctx) const NOEXCEPT;
-    code unspent_duplicates(const tx_link& coinbase,
+    ////code tx_confirmable(const tx_link& link, const context& ctx) const NOEXCEPT;
+    code unspent_duplicates(const header_link& coinbase,
         const context& ctx) const NOEXCEPT;
 
     /// Height indexation.
