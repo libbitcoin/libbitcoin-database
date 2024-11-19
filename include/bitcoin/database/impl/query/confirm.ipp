@@ -303,19 +303,20 @@ error::error_t CLASS::unspendable_prevout(const point_link& link,
 }
 
 TEMPLATE
-code CLASS::unspent_duplicates(const tx_link& coinbase,
+code CLASS::unspent_duplicates(const header_link& link,
     const context& ctx) const NOEXCEPT
 {
     if (!ctx.is_enabled(system::chain::flags::bip30_rule))
         return error::success;
 
     // This will be empty if current block is not set_strong.
-    const auto coinbases = to_strong_txs(get_tx_key(coinbase));
-    if (coinbases.empty())
-        return error::integrity;
+    const auto coinbases = to_strong_txs(get_tx_key(to_coinbase(link)));
 
     if (is_one(coinbases.size()))
         return error::success;
+
+    if (coinbases.empty())
+        return error::integrity;
 
     // bip30: all (but self) must be confirmed spent or dup invalid (cb only).
     size_t unspent{};
@@ -326,6 +327,8 @@ code CLASS::unspent_duplicates(const tx_link& coinbase,
 
     return is_zero(unspent) ? error::integrity : error::success;
 }
+
+#if defined(UNDEFINED)
 
 // protected
 TEMPLATE
@@ -407,31 +410,27 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     return ec;
 }
 
-#if defined(UNDEFINED)
+#endif
+
 
 // protected
 TEMPLATE
 spend_sets CLASS::to_spend_sets(const header_link& link) const NOEXCEPT
 {
-    const auto txs = to_transactions(link);
+    // Coinbase tx does not spend.
+    const auto txs = to_spending_transactions(link);
+
     if (txs.empty())
         return {};
 
-    // Coinbase optimization.
     spend_sets out{ txs.size() };
-    out.front().tx = txs.front();
-    if (is_one(out.size()))
-        return out;
-
-    const auto non_coinbase = std::next(txs.begin());
     const auto to_set = [this](const auto& tx) NOEXCEPT
     {
         return to_spend_set(tx);
     };
 
     // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
-    std_transform(bc::par_unseq, std::next(txs.begin()), txs.end(),
-        std::next(out.begin()), to_set);
+    std_transform(bc::par_unseq, txs.begin(), txs.end(), out.begin(), to_set);
 
     return out;
 }
@@ -444,16 +443,14 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     if (!get_context(ctx, link))
         return error::integrity;
 
-    // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
-    const auto sets = to_spend_sets(link);
-    if (sets.empty())
-        return error::integrity;
-
     code ec{};
-    if ((ec = unspent_duplicates(sets.front().tx, ctx)))
+    if ((ec = unspent_duplicates(link, ctx)))
         return ec;
     
-    const auto non_coinbase = std::next(sets.begin());
+    const auto sets = to_spend_sets(link);
+    if (sets.empty())
+        return ec;
+
     std::atomic<error::error_t> fault{ error::success };
 
     const auto is_unspendable = [this, &ctx, &fault](const auto& set) NOEXCEPT
@@ -484,15 +481,17 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     };
 
     // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
-    if (std_any_of(bc::par_unseq, non_coinbase, sets.end(), is_unspendable))
+    if (std_any_of(bc::par_unseq, sets.begin(), sets.end(), is_unspendable))
         return { fault.load() };
 
     // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
-    if (std_any_of(bc::par_unseq, non_coinbase, sets.end(), is_spent))
+    if (std_any_of(bc::par_unseq, sets.begin(), sets.end(), is_spent))
         return { fault.load() };
- 
+
     return ec;
 }
+
+#if defined(UNDEFINED)
 
 // split(1) 446 secs for 400k-410k
 TEMPLATE
@@ -620,7 +619,7 @@ TEMPLATE
 bool CLASS::initialize(const block& genesis) NOEXCEPT
 {
     BC_ASSERT(!is_initialized());
-    BC_ASSERT(genesis.transactions_ptr()->size() == one);
+    BC_ASSERT(is_one(genesis.transactions_ptr()->size()));
 
     // ========================================================================
     const auto scope = store_.get_transactor();

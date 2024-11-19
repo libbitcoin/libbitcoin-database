@@ -479,13 +479,12 @@ spend_set CLASS::to_spend_set(const tx_link& link) const NOEXCEPT
 
     spend_set set{ link, tx.version, {} };
     set.spends.reserve(tx.ins_count);
-    
-    // This is not concurrent because to_spend_sets is (by tx).
     table::spend::get_prevout_sequence get{};
 
     // This reduced a no-bypass 840k sync/confirmable/confirm run by 8.3%.
     const auto ptr = store_.spend.get_memory();
 
+    // This is not concurrent because to_spend_sets is (by tx).
     for (const auto& spend_fk: puts.spend_fks)
     {
         if (!store_.spend.get(ptr, spend_fk, get))
@@ -510,6 +509,16 @@ TEMPLATE
 tx_links CLASS::to_transactions(const header_link& link) const NOEXCEPT
 {
     table::txs::get_txs txs{};
+    if (!store_.txs.find(link, txs))
+        return {};
+
+    return std::move(txs.tx_fks);
+}
+
+TEMPLATE
+tx_links CLASS::to_spending_transactions(const header_link& link) const NOEXCEPT
+{
+    table::txs::get_spending_txs txs{};
     if (!store_.txs.find(link, txs))
         return {};
 
