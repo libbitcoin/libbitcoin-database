@@ -430,7 +430,7 @@ typename CLASS::inputs_ptr CLASS::get_inputs(
 {
     // TODO: eliminate shared memory pointer reallocations.
     using namespace system;
-    const auto fks = to_tx_spends(link);
+    const auto fks = to_spends(link);
     if (fks.empty())
         return {};
 
@@ -450,7 +450,7 @@ typename CLASS::outputs_ptr CLASS::get_outputs(
 {
     // TODO: eliminate shared memory pointer reallocations.
     using namespace system;
-    const auto fks = to_tx_outputs(link);
+    const auto fks = to_outputs(link);
     if (fks.empty())
         return {};
 

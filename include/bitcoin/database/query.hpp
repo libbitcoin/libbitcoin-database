@@ -269,6 +269,7 @@ public:
     output_link to_output(const tx_link& link,
         uint32_t output_index) const NOEXCEPT;
     output_link to_prevout(const spend_link& link) const NOEXCEPT;
+    output_links to_prevouts(const tx_link& link) const NOEXCEPT;
 
     /// block/tx to block/s (reverse navigation)
     header_link to_parent(const header_link& link) const NOEXCEPT;
@@ -282,8 +283,8 @@ public:
         uint32_t output_index) const NOEXCEPT;
 
     /// tx to puts (forward navigation)
-    output_links to_tx_outputs(const tx_link& link) const NOEXCEPT;
-    spend_links to_tx_spends(const tx_link& link) const NOEXCEPT;
+    output_links to_outputs(const tx_link& link) const NOEXCEPT;
+    spend_links to_spends(const tx_link& link) const NOEXCEPT;
 
     /// block to txs/puts (forward navigation)
     tx_link to_coinbase(const header_link& link) const NOEXCEPT;
