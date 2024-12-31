@@ -435,6 +435,21 @@ spend_links CLASS::to_spenders(const foreign_point& point) const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+spend_links CLASS::to_spends(const tx_link& link) const NOEXCEPT
+{
+    table::transaction::get_puts tx{};
+    if (!store_.tx.get(link, tx))
+        return {};
+
+    table::puts::get_spends puts{};
+    puts.spend_fks.resize(tx.ins_count);
+    if (!store_.puts.get(tx.puts_fk, puts))
+        return {};
+
+    return std::move(puts.spend_fks);
+}
+
+TEMPLATE
 output_links CLASS::to_outputs(const tx_link& link) const NOEXCEPT
 {
     table::transaction::get_puts tx{};
@@ -450,18 +465,18 @@ output_links CLASS::to_outputs(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-spend_links CLASS::to_spends(const tx_link& link) const NOEXCEPT
+output_links CLASS::to_prevouts(const tx_link& link) const NOEXCEPT
 {
-    table::transaction::get_puts tx{};
-    if (!store_.tx.get(link, tx))
+    const auto spends = to_spends(link);
+    if (spends.empty())
         return {};
 
-    table::puts::get_spends puts{};
-    puts.spend_fks.resize(tx.ins_count);
-    if (!store_.puts.get(tx.puts_fk, puts))
-        return {};
+    output_links prevouts{};
+    prevouts.reserve(spends.size());
+    for (const auto& spend: spends)
+        prevouts.push_back(to_prevout(spend));
 
-    return std::move(puts.spend_fks);
+    return prevouts;
 }
 
 // protected
@@ -502,44 +517,14 @@ spend_set CLASS::to_spend_set(const tx_link& link) const NOEXCEPT
     return set;
 }
 
-// block to txs/puts (forward navigation)
+// block to puts (forward navigation)
 // ----------------------------------------------------------------------------
-
-TEMPLATE
-tx_links CLASS::to_transactions(const header_link& link) const NOEXCEPT
-{
-    table::txs::get_txs txs{};
-    if (!store_.txs.find(link, txs))
-        return {};
-
-    return std::move(txs.tx_fks);
-}
-
-TEMPLATE
-tx_links CLASS::to_spending_transactions(const header_link& link) const NOEXCEPT
-{
-    table::txs::get_spending_txs txs{};
-    if (!store_.txs.find(link, txs))
-        return {};
-
-    return std::move(txs.tx_fks);
-}
-
-TEMPLATE
-tx_link CLASS::to_coinbase(const header_link& link) const NOEXCEPT
-{
-    table::txs::get_coinbase txs{};
-    if (!store_.txs.find(link, txs))
-        return {};
-
-    return txs.coinbase_fk;
-}
 
 TEMPLATE
 spend_links CLASS::to_block_spends(const header_link& link) const NOEXCEPT
 {
     spend_links spends{};
-    const auto txs = to_transactions(link);
+    const auto txs = to_spending_transactions(link);
 
     for (const auto& tx: txs)
     {
@@ -563,6 +548,54 @@ output_links CLASS::to_block_outputs(const header_link& link) const NOEXCEPT
     }
 
     return outputs;
+}
+
+TEMPLATE
+output_links CLASS::to_block_prevouts(const header_link& link) const NOEXCEPT
+{
+    output_links prevouts{};
+    const auto txs = to_spending_transactions(link);
+
+    for (const auto& tx: txs)
+    {
+        const auto tx_prevouts = to_prevouts(tx);
+        prevouts.insert(prevouts.end(), tx_prevouts.begin(), tx_prevouts.end());
+    }
+
+    return prevouts;
+}
+
+// block to txs (forward navigation)
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+tx_link CLASS::to_coinbase(const header_link& link) const NOEXCEPT
+{
+    table::txs::get_coinbase txs{};
+    if (!store_.txs.find(link, txs))
+        return {};
+
+    return txs.coinbase_fk;
+}
+
+TEMPLATE
+tx_links CLASS::to_transactions(const header_link& link) const NOEXCEPT
+{
+    table::txs::get_txs txs{};
+    if (!store_.txs.find(link, txs))
+        return {};
+
+    return std::move(txs.tx_fks);
+}
+
+TEMPLATE
+tx_links CLASS::to_spending_transactions(const header_link& link) const NOEXCEPT
+{
+    table::txs::get_spending_txs txs{};
+    if (!store_.txs.find(link, txs))
+        return {};
+
+    return std::move(txs.tx_fks);
 }
 
 // hashmap enumeration
