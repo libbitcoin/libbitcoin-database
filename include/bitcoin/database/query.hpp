@@ -217,6 +217,9 @@ public:
     size_t input_count(const tx_link& link) const NOEXCEPT;
     size_t output_count(const tx_link& link) const NOEXCEPT;
     two_counts put_counts(const tx_link& link) const NOEXCEPT;
+    size_t input_count(const tx_links& txs) const NOEXCEPT;
+    size_t output_count(const tx_links& txs) const NOEXCEPT;
+    two_counts put_counts(const tx_links& txs) const NOEXCEPT;
 
     /// Optional table state.
     bool address_enabled() const NOEXCEPT;
@@ -285,6 +288,11 @@ public:
     spend_links to_spends(const tx_link& link) const NOEXCEPT;
     output_links to_outputs(const tx_link& link) const NOEXCEPT;
     output_links to_prevouts(const tx_link& link) const NOEXCEPT;
+
+    /// txs to puts (forward navigation)
+    spend_links to_spends(const tx_links& txs) const NOEXCEPT;
+    output_links to_outputs(const tx_links& txs) const NOEXCEPT;
+    output_links to_prevouts(const tx_links& txs) const NOEXCEPT;
 
     /// block to puts (forward navigation)
     spend_links to_block_spends(const header_link& link) const NOEXCEPT;

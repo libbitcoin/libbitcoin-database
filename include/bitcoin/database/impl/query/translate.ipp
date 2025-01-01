@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <numeric>
 #include <unordered_map>
 #include <utility>
 #include <bitcoin/system.hpp>
@@ -517,15 +518,13 @@ spend_set CLASS::to_spend_set(const tx_link& link) const NOEXCEPT
     return set;
 }
 
-// block to puts (forward navigation)
+// txs to puts (forward navigation)
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-spend_links CLASS::to_block_spends(const header_link& link) const NOEXCEPT
+spend_links CLASS::to_spends(const tx_links& txs) const NOEXCEPT
 {
     spend_links spends{};
-    const auto txs = to_spending_transactions(link);
-
     for (const auto& tx: txs)
     {
         const auto tx_spends = to_spends(tx);
@@ -536,11 +535,9 @@ spend_links CLASS::to_block_spends(const header_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-output_links CLASS::to_block_outputs(const header_link& link) const NOEXCEPT
+output_links CLASS::to_outputs(const tx_links& txs) const NOEXCEPT
 {
     output_links outputs{};
-    const auto txs = to_transactions(link);
-
     for (const auto& tx: txs)
     {
         const auto tx_outputs = to_outputs(tx);
@@ -551,18 +548,36 @@ output_links CLASS::to_block_outputs(const header_link& link) const NOEXCEPT
 }
 
 TEMPLATE
+output_links CLASS::to_prevouts(const tx_links& txs) const NOEXCEPT
+{
+    const auto ins = to_spends(txs);
+    output_links outs(ins.size());
+    const auto fn = [this](auto spend) NOEXCEPT{ return to_prevout(spend); };
+
+    // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
+    std_transform(bc::par_unseq, ins.begin(), ins.end(), outs.begin(), fn);
+    return outs;
+}
+
+// block to puts (forward navigation)
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+spend_links CLASS::to_block_spends(const header_link& link) const NOEXCEPT
+{
+    return to_spends(to_spending_transactions(link));
+}
+
+TEMPLATE
+output_links CLASS::to_block_outputs(const header_link& link) const NOEXCEPT
+{
+    return to_outputs(to_transactions(link));
+}
+
+TEMPLATE
 output_links CLASS::to_block_prevouts(const header_link& link) const NOEXCEPT
 {
-    output_links prevouts{};
-    const auto txs = to_spending_transactions(link);
-
-    for (const auto& tx: txs)
-    {
-        const auto tx_prevouts = to_prevouts(tx);
-        prevouts.insert(prevouts.end(), tx_prevouts.begin(), tx_prevouts.end());
-    }
-
-    return prevouts;
+    return to_prevouts(to_spending_transactions(link));
 }
 
 // block to txs (forward navigation)
