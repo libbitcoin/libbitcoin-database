@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <numeric>
 #include <unordered_map>
 #include <utility>
 #include <bitcoin/system.hpp>
@@ -326,7 +327,7 @@ uint32_t CLASS::to_spend_index(const tx_link& parent_fk,
     const spend_link& spend_fk) const NOEXCEPT
 {
     uint32_t index{};
-    for (const auto& in_fk: to_tx_spends(parent_fk))
+    for (const auto& in_fk: to_spends(parent_fk))
     {
         if (in_fk == spend_fk) return index;
         ++index;
@@ -341,7 +342,7 @@ uint32_t CLASS::to_output_index(const tx_link& parent_fk,
     const output_link& output_fk) const NOEXCEPT
 {
     uint32_t index{};
-    for (const auto& out_fk: to_tx_outputs(parent_fk))
+    for (const auto& out_fk: to_outputs(parent_fk))
     {
         if (out_fk == output_fk) return index;
         ++index;
@@ -356,7 +357,7 @@ spend_link CLASS::to_spender(const tx_link& link,
     const foreign_point& point) const NOEXCEPT
 {
     table::spend::get_key spend{};
-    for (const auto& spend_fk: to_tx_spends(link))
+    for (const auto& spend_fk: to_spends(link))
         if (store_.spend.get(spend_fk, spend) && (spend.key == point))
             return spend_fk;
 
@@ -410,7 +411,7 @@ spend_links CLASS::to_spenders(const foreign_point& point) const NOEXCEPT
             return fault;
 
         auto found{ false };
-        for (const auto& spend_fk: to_tx_spends(spender.parent_fk))
+        for (const auto& spend_fk: to_spends(spender.parent_fk))
         {
             table::spend::get_key spend{};
             if (!store_.spend.get(it, spend_fk, spend))
@@ -435,7 +436,22 @@ spend_links CLASS::to_spenders(const foreign_point& point) const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-output_links CLASS::to_tx_outputs(const tx_link& link) const NOEXCEPT
+spend_links CLASS::to_spends(const tx_link& link) const NOEXCEPT
+{
+    table::transaction::get_puts tx{};
+    if (!store_.tx.get(link, tx))
+        return {};
+
+    table::puts::get_spends puts{};
+    puts.spend_fks.resize(tx.ins_count);
+    if (!store_.puts.get(tx.puts_fk, puts))
+        return {};
+
+    return std::move(puts.spend_fks);
+}
+
+TEMPLATE
+output_links CLASS::to_outputs(const tx_link& link) const NOEXCEPT
 {
     table::transaction::get_puts tx{};
     if (!store_.tx.get(link, tx))
@@ -450,18 +466,18 @@ output_links CLASS::to_tx_outputs(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-spend_links CLASS::to_tx_spends(const tx_link& link) const NOEXCEPT
+output_links CLASS::to_prevouts(const tx_link& link) const NOEXCEPT
 {
-    table::transaction::get_puts tx{};
-    if (!store_.tx.get(link, tx))
+    const auto spends = to_spends(link);
+    if (spends.empty())
         return {};
 
-    table::puts::get_spends puts{};
-    puts.spend_fks.resize(tx.ins_count);
-    if (!store_.puts.get(tx.puts_fk, puts))
-        return {};
+    output_links prevouts{};
+    prevouts.reserve(spends.size());
+    for (const auto& spend: spends)
+        prevouts.push_back(to_prevout(spend));
 
-    return std::move(puts.spend_fks);
+    return prevouts;
 }
 
 // protected
@@ -502,8 +518,80 @@ spend_set CLASS::to_spend_set(const tx_link& link) const NOEXCEPT
     return set;
 }
 
-// block to txs/puts (forward navigation)
+// txs to puts (forward navigation)
 // ----------------------------------------------------------------------------
+
+TEMPLATE
+spend_links CLASS::to_spends(const tx_links& txs) const NOEXCEPT
+{
+    spend_links spends{};
+    for (const auto& tx: txs)
+    {
+        const auto tx_spends = to_spends(tx);
+        spends.insert(spends.end(), tx_spends.begin(), tx_spends.end());
+    }
+
+    return spends;
+}
+
+TEMPLATE
+output_links CLASS::to_outputs(const tx_links& txs) const NOEXCEPT
+{
+    output_links outputs{};
+    for (const auto& tx: txs)
+    {
+        const auto tx_outputs = to_outputs(tx);
+        outputs.insert(outputs.end(), tx_outputs.begin(), tx_outputs.end());
+    }
+
+    return outputs;
+}
+
+TEMPLATE
+output_links CLASS::to_prevouts(const tx_links& txs) const NOEXCEPT
+{
+    const auto ins = to_spends(txs);
+    output_links outs(ins.size());
+    const auto fn = [this](auto spend) NOEXCEPT{ return to_prevout(spend); };
+
+    // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
+    std_transform(bc::par_unseq, ins.begin(), ins.end(), outs.begin(), fn);
+    return outs;
+}
+
+// block to puts (forward navigation)
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+spend_links CLASS::to_block_spends(const header_link& link) const NOEXCEPT
+{
+    return to_spends(to_spending_transactions(link));
+}
+
+TEMPLATE
+output_links CLASS::to_block_outputs(const header_link& link) const NOEXCEPT
+{
+    return to_outputs(to_transactions(link));
+}
+
+TEMPLATE
+output_links CLASS::to_block_prevouts(const header_link& link) const NOEXCEPT
+{
+    return to_prevouts(to_spending_transactions(link));
+}
+
+// block to txs (forward navigation)
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+tx_link CLASS::to_coinbase(const header_link& link) const NOEXCEPT
+{
+    table::txs::get_coinbase txs{};
+    if (!store_.txs.find(link, txs))
+        return {};
+
+    return txs.coinbase_fk;
+}
 
 TEMPLATE
 tx_links CLASS::to_transactions(const header_link& link) const NOEXCEPT
@@ -523,46 +611,6 @@ tx_links CLASS::to_spending_transactions(const header_link& link) const NOEXCEPT
         return {};
 
     return std::move(txs.tx_fks);
-}
-
-TEMPLATE
-tx_link CLASS::to_coinbase(const header_link& link) const NOEXCEPT
-{
-    table::txs::get_coinbase txs{};
-    if (!store_.txs.find(link, txs))
-        return {};
-
-    return txs.coinbase_fk;
-}
-
-TEMPLATE
-spend_links CLASS::to_block_spends(const header_link& link) const NOEXCEPT
-{
-    spend_links spends{};
-    const auto txs = to_transactions(link);
-
-    for (const auto& tx: txs)
-    {
-        const auto tx_spends = to_tx_spends(tx);
-        spends.insert(spends.end(), tx_spends.begin(), tx_spends.end());
-    }
-
-    return spends;
-}
-
-TEMPLATE
-output_links CLASS::to_block_outputs(const header_link& link) const NOEXCEPT
-{
-    output_links outputs{};
-    const auto txs = to_transactions(link);
-
-    for (const auto& tx: txs)
-    {
-        const auto tx_outputs = to_tx_outputs(tx);
-        outputs.insert(outputs.end(), tx_outputs.begin(), tx_outputs.end());
-    }
-
-    return outputs;
 }
 
 // hashmap enumeration

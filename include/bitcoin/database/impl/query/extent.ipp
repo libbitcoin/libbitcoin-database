@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_EXTENT_IPP
 #define LIBBITCOIN_DATABASE_QUERY_EXTENT_IPP
 
+#include <numeric>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -205,6 +206,26 @@ two_counts CLASS::put_counts(const tx_link& link) const NOEXCEPT
         return {};
 
     return { tx.ins_count, tx.outs_count };
+}
+
+TEMPLATE
+size_t CLASS::input_count(const tx_links& txs) const NOEXCEPT
+{
+    const auto fn = [this](auto tx) NOEXCEPT { return input_count(tx); };
+    return std_reduce(bc::par_unseq, txs.begin(), txs.end(), zero, fn);
+}
+
+TEMPLATE
+size_t CLASS::output_count(const tx_links& txs) const NOEXCEPT
+{
+    const auto fn = [this](auto tx) NOEXCEPT { return output_count(tx); };
+    return std_reduce(bc::par_unseq, txs.begin(), txs.end(), zero, fn);
+}
+
+TEMPLATE
+two_counts CLASS::put_counts(const tx_links& txs) const NOEXCEPT
+{
+    return { input_count(txs), output_count(txs) };
 }
 
 TEMPLATE

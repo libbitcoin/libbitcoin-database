@@ -217,6 +217,9 @@ public:
     size_t input_count(const tx_link& link) const NOEXCEPT;
     size_t output_count(const tx_link& link) const NOEXCEPT;
     two_counts put_counts(const tx_link& link) const NOEXCEPT;
+    size_t input_count(const tx_links& txs) const NOEXCEPT;
+    size_t output_count(const tx_links& txs) const NOEXCEPT;
+    two_counts put_counts(const tx_links& txs) const NOEXCEPT;
 
     /// Optional table state.
     bool address_enabled() const NOEXCEPT;
@@ -270,7 +273,7 @@ public:
         uint32_t output_index) const NOEXCEPT;
     output_link to_prevout(const spend_link& link) const NOEXCEPT;
 
-    /// block/tx to block/s (reverse navigation)
+    /// block/tx to block (reverse navigation)
     header_link to_parent(const header_link& link) const NOEXCEPT;
     header_link to_block(const tx_link& key) const NOEXCEPT;
 
@@ -282,15 +285,24 @@ public:
         uint32_t output_index) const NOEXCEPT;
 
     /// tx to puts (forward navigation)
-    output_links to_tx_outputs(const tx_link& link) const NOEXCEPT;
-    spend_links to_tx_spends(const tx_link& link) const NOEXCEPT;
+    spend_links to_spends(const tx_link& link) const NOEXCEPT;
+    output_links to_outputs(const tx_link& link) const NOEXCEPT;
+    output_links to_prevouts(const tx_link& link) const NOEXCEPT;
 
-    /// block to txs/puts (forward navigation)
+    /// txs to puts (forward navigation)
+    spend_links to_spends(const tx_links& txs) const NOEXCEPT;
+    output_links to_outputs(const tx_links& txs) const NOEXCEPT;
+    output_links to_prevouts(const tx_links& txs) const NOEXCEPT;
+
+    /// block to puts (forward navigation)
+    spend_links to_block_spends(const header_link& link) const NOEXCEPT;
+    output_links to_block_outputs(const header_link& link) const NOEXCEPT;
+    output_links to_block_prevouts(const header_link& link) const NOEXCEPT;
+
+    /// block to txs (forward navigation)
     tx_link to_coinbase(const header_link& link) const NOEXCEPT;
     tx_links to_transactions(const header_link& link) const NOEXCEPT;
     tx_links to_spending_transactions(const header_link& link) const NOEXCEPT;
-    output_links to_block_outputs(const header_link& link) const NOEXCEPT;
-    spend_links to_block_spends(const header_link& link) const NOEXCEPT;
 
     /// hashmap enumeration
     header_link top_header(size_t bucket) const NOEXCEPT;

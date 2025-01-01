@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(query_translate__to_tx__txs__expected)
     BOOST_REQUIRE_EQUAL(query.to_tx(test::block3.transactions_ptr()->front()->hash(true)), tx_link::terminal);
 }
 
-// to_spend_tx/to_spend/to_tx_spends/to_spend_key/to_spend_sets
+// to_spend_tx/to_spend/to_spends/to_spend_key/to_spend_sets
 
 class accessor
   : public test::query_accessor
@@ -276,11 +276,11 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spend_tx__to_spend__expected)
     BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_spend(4, 2)), base16_array("010000002b0000"));
 
     const spend_links expected_links4{ 4, 5, 6 };
-    BOOST_REQUIRE_EQUAL(query.to_tx_spends(0), spend_links{ 0 });
-    BOOST_REQUIRE_EQUAL(query.to_tx_spends(1), spend_links{ 1 });
-    BOOST_REQUIRE_EQUAL(query.to_tx_spends(2), spend_links{ 2 });
-    BOOST_REQUIRE_EQUAL(query.to_tx_spends(3), spend_links{ 3 });
-    BOOST_REQUIRE_EQUAL(query.to_tx_spends(4), expected_links4);
+    BOOST_REQUIRE_EQUAL(query.to_spends(0), spend_links{ 0 });
+    BOOST_REQUIRE_EQUAL(query.to_spends(1), spend_links{ 1 });
+    BOOST_REQUIRE_EQUAL(query.to_spends(2), spend_links{ 2 });
+    BOOST_REQUIRE_EQUAL(query.to_spends(3), spend_links{ 3 });
+    BOOST_REQUIRE_EQUAL(query.to_spends(4), expected_links4);
 
     auto spends = query.to_spend_set_(0);
     BOOST_REQUIRE_EQUAL(spends.tx, 0u);
@@ -338,7 +338,7 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spend_tx__to_spend__expected)
     BOOST_REQUIRE_EQUAL(query.to_spend_key(spend_link::terminal), foreign_point{});
     BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_spend(5, 0)), foreign_point{});
     BOOST_REQUIRE_EQUAL(query.to_spend_sets_(5).size(), 0u);
-    BOOST_REQUIRE(query.to_tx_spends(5).empty());
+    BOOST_REQUIRE(query.to_spends(5).empty());
 
     // Verify expectations.
     const auto spend_head = base16_chunk
@@ -500,7 +500,7 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spend_sets__populated__expected)
     BOOST_REQUIRE_EQUAL(spends[0].spends[0].sequence, 0xb2u);
 }
 
-// to_output_tx/to_output/to_tx_outputs/to_block_outputs
+// to_output_tx/to_output/to_outputs/to_prevouts/to_block_outputs
 
 BOOST_AUTO_TEST_CASE(query_translate__to_output_tx__to_output__expected)
 {
@@ -530,24 +530,39 @@ BOOST_AUTO_TEST_CASE(query_translate__to_output_tx__to_output__expected)
     BOOST_REQUIRE_EQUAL(query.to_output(4, 0), 4u * 0x51u);
     BOOST_REQUIRE_EQUAL(query.to_output(4, 1), 4u * 0x51u + 7u);
 
-    const output_links expected_links4{ 4 * 0x51, 4 * 0x51 + 7 };
-    BOOST_REQUIRE_EQUAL(query.to_tx_outputs(0), output_links{ 0 * 0x51 });
-    BOOST_REQUIRE_EQUAL(query.to_tx_outputs(1), output_links{ 1 * 0x51 });
-    BOOST_REQUIRE_EQUAL(query.to_tx_outputs(2), output_links{ 2 * 0x51 });
-    BOOST_REQUIRE_EQUAL(query.to_tx_outputs(3), output_links{ 3 * 0x51 });
-    BOOST_REQUIRE_EQUAL(query.to_tx_outputs(4), expected_links4);
+    const output_links expected_outputs4{ 4 * 0x51, 4 * 0x51 + 7 };
+    BOOST_REQUIRE_EQUAL(query.to_outputs(0), output_links{ 0 * 0x51 });
+    BOOST_REQUIRE_EQUAL(query.to_outputs(1), output_links{ 1 * 0x51 });
+    BOOST_REQUIRE_EQUAL(query.to_outputs(2), output_links{ 2 * 0x51 });
+    BOOST_REQUIRE_EQUAL(query.to_outputs(3), output_links{ 3 * 0x51 });
+    BOOST_REQUIRE_EQUAL(query.to_outputs(4), expected_outputs4);
 
-    // TODO: All blocks have one transaction.
+    // All blocks have one transaction.
     BOOST_REQUIRE_EQUAL(query.to_block_outputs(0), output_links{ 0 * 0x51 });
     BOOST_REQUIRE_EQUAL(query.to_block_outputs(1), output_links{ 1 * 0x51 });
     BOOST_REQUIRE_EQUAL(query.to_block_outputs(2), output_links{ 2 * 0x51 });
     BOOST_REQUIRE_EQUAL(query.to_block_outputs(3), output_links{ 3 * 0x51 });
-    BOOST_REQUIRE_EQUAL(query.to_block_outputs(4), expected_links4);
+    BOOST_REQUIRE_EQUAL(query.to_block_outputs(4), expected_outputs4);
+
+    // No prevouts that exist.
+    const output_links expected_prevouts4{ output_link::terminal, output_link::terminal, output_link::terminal };
+    BOOST_REQUIRE_EQUAL(query.to_prevouts(0), output_links{ output_link::terminal });
+    BOOST_REQUIRE_EQUAL(query.to_prevouts(1), output_links{ output_link::terminal });
+    BOOST_REQUIRE_EQUAL(query.to_prevouts(2), output_links{ output_link::terminal });
+    BOOST_REQUIRE_EQUAL(query.to_prevouts(3), output_links{ output_link::terminal });
+    BOOST_REQUIRE_EQUAL(query.to_prevouts(4), expected_prevouts4);
+
+    // All blocks have one transaction.
+    BOOST_REQUIRE_EQUAL(query.to_block_prevouts(0), output_links{});
+    BOOST_REQUIRE_EQUAL(query.to_block_prevouts(1), output_links{});
+    BOOST_REQUIRE_EQUAL(query.to_block_prevouts(2), output_links{});
+    BOOST_REQUIRE_EQUAL(query.to_block_prevouts(3), output_links{});
+    BOOST_REQUIRE_EQUAL(query.to_block_prevouts(4), output_links{});
 
     // Past end.
     BOOST_REQUIRE_EQUAL(query.to_output_tx(4 * 0x51 + 14), tx_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_output(5, 0), output_link::terminal);
-    BOOST_REQUIRE(query.to_tx_outputs(5).empty());
+    BOOST_REQUIRE(query.to_outputs(5).empty());
     BOOST_REQUIRE(query.to_block_outputs(5).empty());
 
     // Verify expectations.
@@ -564,7 +579,7 @@ BOOST_AUTO_TEST_CASE(query_translate__to_output_tx__to_output__expected)
     BOOST_REQUIRE_EQUAL(store.output_body(), output_body);
 }
 
-// to_prevout_tx/to_prevout
+// to_prevout_tx/to_prevout/to_prevouts
 
 BOOST_AUTO_TEST_CASE(query_translate__to_prevout_tx__to_prevout__expected)
 {
@@ -596,6 +611,20 @@ BOOST_AUTO_TEST_CASE(query_translate__to_prevout_tx__to_prevout__expected)
     BOOST_REQUIRE_EQUAL(query.to_prevout(5), 0x51u + 7u); // block1a:0:1 (second serialized tx:1)
     BOOST_REQUIRE_EQUAL(query.to_prevout(6), output_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_prevout(7), output_link::terminal);
+
+    const output_links expected_prevouts1{ output_link::terminal };
+    const output_links expected_prevouts2{ output_link::terminal, output_link::terminal };
+    const output_links expected_prevouts3{ output_link::terminal, output_link::terminal, output_link::terminal };
+    const output_links expected_prevouts{ 0x51u, 0x51u + 7u };
+    BOOST_REQUIRE_EQUAL(query.to_prevouts(0), expected_prevouts1);
+    BOOST_REQUIRE_EQUAL(query.to_prevouts(1), expected_prevouts3);
+    BOOST_REQUIRE_EQUAL(query.to_prevouts(2), expected_prevouts);
+    BOOST_REQUIRE_EQUAL(query.to_prevouts(3), expected_prevouts2);
+
+    // First tx is coinbase, or tx has undefined prevouts.
+    BOOST_REQUIRE_EQUAL(query.to_block_prevouts(0), output_links{});
+    BOOST_REQUIRE_EQUAL(query.to_block_prevouts(1), output_links{});
+    BOOST_REQUIRE_EQUAL(query.to_block_prevouts(2), expected_prevouts2);
 
     // Past end.
     BOOST_REQUIRE_EQUAL(query.to_prevout_tx(8), tx_link::terminal);
