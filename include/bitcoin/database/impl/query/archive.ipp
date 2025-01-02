@@ -213,8 +213,11 @@ bool CLASS::populate_with_metadata(const input& input,
     if (!get_context(ctx, block))
         return false;
 
+    const auto point_fk = to_point(input.point().hash);
+    const auto point_index = input.point().index;
+
     input.metadata.coinbase = is_coinbase(tx);
-    input.metadata.spent = is_spent_prevout(input.point(), link);
+    input.metadata.spent = is_spent_prevout(point_fk, point_index, link);
     input.metadata.median_time_past = ctx.mtp;
     input.metadata.height = ctx.height;
     return true;

@@ -135,7 +135,8 @@ bool CLASS::is_spent(const spend_link& link) const NOEXCEPT
     if (spend.is_null())
         return false;
 
-    return is_spent_prevout(spend.prevout(), spend.parent_fk);
+    return is_spent_prevout(spend.point_fk, spend.point_index,
+        spend.parent_fk);
 }
 
 // unused
@@ -234,39 +235,41 @@ code CLASS::locked_prevout(const point_link& link, uint32_t sequence,
 
 // protected
 TEMPLATE
-bool CLASS::is_spent_prevout(const tx_link& link, index index) const NOEXCEPT
+bool CLASS::is_spent_prevout(const point_link& link, index index,
+    const tx_link& self) const NOEXCEPT
 {
-    const auto fp = table::spend::compose(link, index);
-    return is_spent_prevout(fp, tx_link::terminal);
+    return spent_prevout(link, index, self) != error::success;
 }
 
 // protected
 TEMPLATE
-bool CLASS::is_spent_prevout(const foreign_point& point,
+error::error_t CLASS::spent_prevout(const point_link& link, index index,
     const tx_link& self) const NOEXCEPT
 {
-    return spent_prevout(point, self) != error::success;
-}
+    // Iteration of points by tx hash because there may be duplicates.
+    auto point = store_.point.it(get_point_key(link));
+    if (!point)
+        return error::integrity;
 
-// protected
-TEMPLATE
-error::error_t CLASS::spent_prevout(const foreign_point& point,
-    const tx_link& self) const NOEXCEPT
-{
-    auto it = store_.spend.it(point);
-    if (!it)
-        return error::success;
-
-    table::spend::get_parent spend{};
     do
     {
-        if (!store_.spend.get(it, spend))
-            return error::integrity;
+        // Iterate all spends of each instance of the point.
+        auto it = store_.spend.it(table::spend::compose(point.self(), index));
+        if (!it)
+            return error::success;
 
-        if ((spend.parent_fk != self) && is_strong_tx(spend.parent_fk))
-            return error::confirmed_double_spend;
+        table::spend::get_parent spend{};
+        do
+        {
+            if (!store_.spend.get(it, spend))
+                return error::integrity;
+
+            if ((spend.parent_fk != self) && is_strong_tx(spend.parent_fk))
+                return error::confirmed_double_spend;
+        }
+        while (it.advance());
     }
-    while (it.advance());
+    while (point.advance());
     return error::success;
 }
 
@@ -379,7 +382,7 @@ code CLASS::tx_confirmable(const tx_link& link,
 
         // This query goes away.
         // If utxo exists then it is not spent (push own block first).
-        if (is_spent_prevout(spend.prevout(), link))
+        if (is_spent_prevout(spend.point_fk, spend.point_index, link))
             return error::confirmed_double_spend;
     }
 
@@ -471,7 +474,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     {
         error::error_t ec{};
         for (const auto& spend: set.spends)
-            if ((ec = spent_prevout(spend.prevout(), set.tx)))
+            if ((ec = spent_prevout(spend.point_fk, spend.point_index, set.tx)))
             {
                 fault.store(ec);
                 return true;
@@ -514,7 +517,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
                 set.version, ctx)))
                 return ec;
 
-            if (is_spent_prevout(spend.prevout(), set.tx))
+            if (is_spent_prevout(spend.point_fk, spend.point_index, set.tx))
                 return error::confirmed_double_spend;
         }
     }
@@ -545,7 +548,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 
     for (const auto& set: sets)
         for (const auto& spend: set.spends)
-            if (is_spent_prevout(spend.prevout(), set.tx))
+            if (is_spent_prevout(spend.point_fk, spend.point_index, set.tx))
                 return error::confirmed_double_spend;
 
     return ec;
