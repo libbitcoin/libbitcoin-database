@@ -305,6 +305,9 @@ error::error_t CLASS::unspendable_prevout(const point_link& link,
     return error::success;
 }
 
+// Duplicate tx instances (with the same hash) may result from a write race.
+// Duplicate cb tx instances are allowed by consensus. Apart from two bip30
+// exceptions, duplicate cb txs are allowed only if previous are fully spent.
 TEMPLATE
 code CLASS::unspent_duplicates(const header_link& link,
     const context& ctx) const NOEXCEPT
@@ -312,23 +315,25 @@ code CLASS::unspent_duplicates(const header_link& link,
     if (!ctx.is_enabled(system::chain::flags::bip30_rule))
         return error::success;
 
-    // This will be empty if current block is not set_strong.
-    const auto coinbases = to_strong_txs(get_tx_key(to_coinbase(link)));
+    auto coinbases = to_strong_txs(get_tx_key(to_coinbase(link)));
 
+    // Found only this block's coinbase instance, no duplicates.
     if (is_one(coinbases.size()))
         return error::success;
 
-    if (coinbases.empty())
+    // Remove self (will be not found if current block is not set_strong).
+    const auto self = std::find(coinbases.begin(), coinbases.end(), link);
+    if (self == coinbases.end() || coinbases.erase(self) == coinbases.end())
         return error::integrity;
 
-    // bip30: all (but self) must be confirmed spent or dup invalid (cb only).
-    size_t unspent{};
-    for (const auto& tx: coinbases)
-        for (index out{}; out < output_count(tx); ++out)
-            if (!is_spent_prevout(tx, out) && is_one(unspent++))
-                return error::unspent_coinbase_collision;
+    const auto spent = [this](const auto& tx) NOEXCEPT
+    {
+        return is_spent_coinbase(tx);
+    };
 
-    return is_zero(unspent) ? error::integrity : error::success;
+    // bip30: all outputs of all previous duplicate coinbases must be spent.
+    return std::all_of(coinbases.begin(), coinbases.end(), spent) ?
+        error::success : error::unspent_coinbase_collision;
 }
 
 #if defined(UNDEFINED)
@@ -414,7 +419,6 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 }
 
 #endif
-
 
 // protected
 TEMPLATE
@@ -555,6 +559,17 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 }
 
 #endif // DISABLED
+
+TEMPLATE
+bool CLASS::is_spent_coinbase(const tx_link& link) const NOEXCEPT
+{
+    const auto point_fk = to_point(get_tx_key(link));
+    for (index index{}; index < output_count(link); ++index)
+        if (!is_spent_prevout(point_fk, index))
+            return false;
+
+    return true;
+}
 
 TEMPLATE
 bool CLASS::is_strong_tx(const tx_link& link) const NOEXCEPT
