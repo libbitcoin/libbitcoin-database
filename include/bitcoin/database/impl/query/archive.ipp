@@ -146,6 +146,7 @@ bool CLASS::populate(const input& input) const NOEXCEPT
     static_assert(sizeof(size_t) >= sizeof(tx_link::integer));
     const auto tx = to_tx(input.point().hash());
     input.metadata.height = tx;
+    input.metadata.coinbase = is_coinbase(tx);
     input.prevout = get_output(tx, input.point().index());
 
     // input.metadata is not populated.
