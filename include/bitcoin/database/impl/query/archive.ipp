@@ -142,9 +142,15 @@ bool CLASS::populate(const input& input) const NOEXCEPT
     if (input.prevout)
         return true;
 
+    // HACK: overloading input.metadata.height with tx link.
+    static_assert(sizeof(size_t) >= sizeof(tx_link::integer));
+    const auto tx = to_tx(input.point().hash());
+    input.metadata.height = tx;
+    input.prevout = get_output(tx, input.point().index());
+
     // input.metadata is not populated.
     // Null point would return nullptr and be interpreted as missing.
-    input.prevout = get_output(input.point());
+    ////input.prevout = get_output(input.point());
     return !is_null(input.prevout);
 }
 
