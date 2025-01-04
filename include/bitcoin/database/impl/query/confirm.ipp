@@ -135,7 +135,8 @@ bool CLASS::is_spent(const spend_link& link) const NOEXCEPT
     if (spend.is_null())
         return false;
 
-    return is_spent_prevout(spend.prevout(), spend.parent_fk);
+    return is_spent_prevout(spend.point_fk, spend.point_index,
+        spend.parent_fk);
 }
 
 // unused
@@ -234,63 +235,130 @@ code CLASS::locked_prevout(const point_link& link, uint32_t sequence,
 
 // protected
 TEMPLATE
-bool CLASS::is_spent_prevout(const tx_link& link, index index) const NOEXCEPT
+bool CLASS::is_spent_prevout(const point_link& link, index index,
+    const tx_link& self) const NOEXCEPT
 {
-    const auto fp = table::spend::compose(link, index);
-    return is_spent_prevout(fp, tx_link::terminal);
+    return spent_prevout(link, index, self) != error::success;
 }
 
 // protected
 TEMPLATE
-bool CLASS::is_spent_prevout(const foreign_point& point,
+error::error_t CLASS::spent_prevout(const point_link& link, index index,
     const tx_link& self) const NOEXCEPT
 {
-    return spent_prevout(point, self) != error::success;
-}
+    // TODO: get_point_key(link) is redundant with unspendable_prevout().
+    // searches [point.iterate {new} x (spend.iterate + strong_tx.find)].
 
-// protected
-TEMPLATE
-error::error_t CLASS::spent_prevout(const foreign_point& point,
-    const tx_link& self) const NOEXCEPT
-{
-    auto it = store_.spend.it(point);
-    if (!it)
-        return error::success;
+    // The search for spenders must be exhaustive.
+    // This is walking the full conflict list for the hash, but there is only
+    // one match possible (self) unless there are duplicates/conflicts.
+    // Conflicts here are both likely tx pool conflicts and rare duplicate txs,
+    // since the points table is written for each spend (unless compressed and
+    // that is still not a guarantee. So all must be checked. This holds one
+    // instance of a tx for ***all spends of all outputs*** of that tx.
 
-    table::spend::get_parent spend{};
+    // TODO: evaluate.
+    // If point hash was in spend table key there would be just as many but the
+    // key would be the hash and index combined, resulting in no unnecessary
+    // point hash searches over irrelevant point indexes. Would save some space
+    // in table compression, and simplify some code, but would eliminate store
+    // compression and might increase paging cost due to spend table increase.
+    // There would be only one search unless duplicates, and this would be self
+    // so would not result in calling the is_strong_tx search. Spenders of outs
+    // of the same prevout.tx would not result in search hits. Table no-hash
+    // algorithm would require definition. This would eliminate spend.point_fk
+    // and a point.pk link per record, or 8 bytes per spend. This is the amount
+    // to be added by the new array cache table, maybe just repurpose point.
+    // Because cache can be removed this is a 19GB reduction, for the loss of
+    // ability to reduce 50GB, which we don't generally do. So also a win on
+    // nominal store size. All we need from the cache is the spend.pk/index.
+    // spend.pk size does not change because it's an array (count unchanged).
+    // So this is a reduction from plan, 4+3 bytes per cache row vs. 5+3.
+    // But if we hold the spend.pk/prevout.tx we can just read the
+    // spend.hash/index, so we don't need to store the index, and we need to
+    // read the spend.hash anyway, so index is free (no paging). So that's now
+    // just spend[4] + tx[4], back to 8 bytes (19GB).
+
+    // Iterate points by point hash (of output tx) because may be conflicts.
+    auto point = store_.point.it(get_point_key(link));
+    if (!point)
+        return error::integrity;
+
     do
     {
-        if (!store_.spend.get(it, spend))
-            return error::integrity;
+        // Iterate all spends of the point to find double spends.
+        auto it = store_.spend.it(table::spend::compose(point.self(), index));
+        if (!it)
+            return error::success;
 
-        if ((spend.parent_fk != self) && is_strong_tx(spend.parent_fk))
-            return error::confirmed_double_spend;
+        table::spend::get_parent spend{};
+        do
+        {
+            if (!store_.spend.get(it, spend))
+                return error::integrity;
+
+            // is_strong_tx (search) only called in the case of duplicate.
+            // Other parent tx of spend is strong (confirmed spent prevout).
+            if ((spend.parent_fk != self) && is_strong_tx(spend.parent_fk))
+                return error::confirmed_double_spend;
+        }
+        while (it.advance());
     }
-    while (it.advance());
+    while (point.advance());
     return error::success;
 }
+
+// Low cost.
+// header_link
+// header_link.ctx.mtp
+// header_link.ctx.flags
+// header_link.ctx.height
+// header_link:txs.tx.pk
+// header_link:txs.tx.version
+
+// unspendable_prevout
+// Given that these use the same txs association, there is no way for the 
+// header.txs.tx to change, and it is only ever this pk that is set strong.
+// If unconfirmed_spend is encountered, perform a search (free). It's not
+// possible for a confirmed spend to be the wrong tx instance.
+//
+// There is no strong (prevout->tx->block) association at this point in validation.
+// strong_tx is interrogated for each spend except self (0) and each prevout (2.6B).
+// to_tx(get_point_key(header_link:txs.tx.puts.spend.point_fk)):block.ctx.height|mtp
+// This is done in populate, except for to_strong, ***so save prevout tx [4]***
+//
+// is_coinbase_mature(is_coinbase(header_link:txs.tx), ...block.ctx.height), is_locked
+// is_locked(header_link:txs.tx.puts.spend.sequence, ...block.ctx.height|mtp)
+
+// spent_prevout (see notes in fn).
+// header_link:txs.tx.puts.spend.point_index
 
 // protected
 TEMPLATE
 error::error_t CLASS::unspendable_prevout(const point_link& link,
     uint32_t sequence, uint32_t version, const context& ctx) const NOEXCEPT
 {
-    // utxo.find(spend.prevout()) no iteration or hash conversion.
-    // Read utxo => is_coinbase, header_link => ctx (height/mtp).
-    const auto strong = to_strong(get_point_key(link));
+    // TODO: If unconfirmed_spend is encountered, perform a search (free).
+    // It's not possible for a confirmed spend to be the wrong tx instance.
+    // This eliminates the hash lookup and to_strong(hash) iteration.
 
-    // utxo is strong if present.
-    if (strong.block.is_terminal())
-        return strong.tx.is_terminal() ? error::missing_previous_output :
-            error::unconfirmed_spend;
+    // TODO: don't need to return tx link here, just the block (for strong/context).
+    // MOOT: get_point_key(link) is redundant with spent_prevout().
+    // to_strong has the only searches [tx.iterate, strong.find].
+    const auto strong_prevout = to_strong(get_point_key(link));
 
-    // utxo get context is still required.
+    // prevout is strong if present.
+    if (strong_prevout.block.is_terminal())
+        return strong_prevout.tx.is_terminal() ?
+            error::missing_previous_output : error::unconfirmed_spend;
+
     context out{};
-    if (!get_context(out, strong.block))
+    if (!get_context(out, strong_prevout.block))
         return error::integrity;
 
-    // utxo.is_coinbase (is known).
-    if (is_coinbase(strong.tx) &&
+    // All txs with same hash must be coinbase or not, so this query is redundant.
+    // TODO: Just use the cached value for the prevout, obtained in validation.
+    if (is_coinbase(strong_prevout.tx) &&
         !transaction::is_coinbase_mature(out.height, ctx.height))
         return error::coinbase_maturity;
 
@@ -302,30 +370,38 @@ error::error_t CLASS::unspendable_prevout(const point_link& link,
     return error::success;
 }
 
+// Duplicate tx instances (with the same hash) may result from a write race.
+// Duplicate cb tx instances are allowed by consensus. Apart from two bip30
+// exceptions, duplicate cb txs are allowed only if previous are fully spent.
 TEMPLATE
 code CLASS::unspent_duplicates(const header_link& link,
     const context& ctx) const NOEXCEPT
 {
+    // This is generally going to be disabled.
     if (!ctx.is_enabled(system::chain::flags::bip30_rule))
         return error::success;
 
-    // This will be empty if current block is not set_strong.
-    const auto coinbases = to_strong_txs(get_tx_key(to_coinbase(link)));
+    // [txs.find, {tx.iterate}, strong_tx.it]
+    auto coinbases = to_strong_txs(get_tx_key(to_coinbase(link)));
 
+    // Found only this block's coinbase instance, no duplicates.
     if (is_one(coinbases.size()))
         return error::success;
 
-    if (coinbases.empty())
+    // Remove self (will be not found if current block is not set_strong).
+    const auto self = std::find(coinbases.begin(), coinbases.end(), link);
+    if (self == coinbases.end() || coinbases.erase(self) == coinbases.end())
         return error::integrity;
 
-    // bip30: all (but self) must be confirmed spent or dup invalid (cb only).
-    size_t unspent{};
-    for (const auto& tx: coinbases)
-        for (index out{}; out < output_count(tx); ++out)
-            if (!is_spent_prevout(tx, out) && is_one(unspent++))
-                return error::unspent_coinbase_collision;
+    // [point.first, is_spent_prevout()]
+    const auto spent = [this](const auto& tx) NOEXCEPT
+    {
+        return is_spent_coinbase(tx);
+    };
 
-    return is_zero(unspent) ? error::integrity : error::success;
+    // bip30: all outputs of all previous duplicate coinbases must be spent.
+    return std::all_of(coinbases.begin(), coinbases.end(), spent) ?
+        error::success : error::unspent_coinbase_collision;
 }
 
 #if defined(UNDEFINED)
@@ -379,7 +455,7 @@ code CLASS::tx_confirmable(const tx_link& link,
 
         // This query goes away.
         // If utxo exists then it is not spent (push own block first).
-        if (is_spent_prevout(spend.prevout(), link))
+        if (is_spent_prevout(spend.point_fk, spend.point_index, link))
             return error::confirmed_double_spend;
     }
 
@@ -412,12 +488,12 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 
 #endif
 
-
 // protected
 TEMPLATE
 spend_sets CLASS::to_spend_sets(const header_link& link) const NOEXCEPT
 {
-    // Coinbase tx does not spend.
+    // This is the only search [txs.find].
+    // Coinbase tx does not spend so is not retrieved.
     const auto txs = to_spending_transactions(link);
 
     if (txs.empty())
@@ -443,10 +519,12 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     if (!get_context(ctx, link))
         return error::integrity;
 
+    // This is never invoked (bip30).
     code ec{};
     if ((ec = unspent_duplicates(link, ctx)))
         return ec;
     
+    // This is eliminated by caching, since each non-internal spend is cached.
     const auto sets = to_spend_sets(link);
     if (sets.empty())
         return ec;
@@ -471,7 +549,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     {
         error::error_t ec{};
         for (const auto& spend: set.spends)
-            if ((ec = spent_prevout(spend.prevout(), set.tx)))
+            if ((ec = spent_prevout(spend.point_fk, spend.point_index, set.tx)))
             {
                 fault.store(ec);
                 return true;
@@ -514,7 +592,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
                 set.version, ctx)))
                 return ec;
 
-            if (is_spent_prevout(spend.prevout(), set.tx))
+            if (is_spent_prevout(spend.point_fk, spend.point_index, set.tx))
                 return error::confirmed_double_spend;
         }
     }
@@ -545,13 +623,24 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 
     for (const auto& set: sets)
         for (const auto& spend: set.spends)
-            if (is_spent_prevout(spend.prevout(), set.tx))
+            if (is_spent_prevout(spend.point_fk, spend.point_index, set.tx))
                 return error::confirmed_double_spend;
 
     return ec;
 }
 
 #endif // DISABLED
+
+TEMPLATE
+bool CLASS::is_spent_coinbase(const tx_link& link) const NOEXCEPT
+{
+    const auto point_fk = to_point(get_tx_key(link));
+    for (index index{}; index < output_count(link); ++index)
+        if (!is_spent_prevout(point_fk, index))
+            return false;
+
+    return true;
+}
 
 TEMPLATE
 bool CLASS::is_strong_tx(const tx_link& link) const NOEXCEPT

@@ -142,9 +142,14 @@ bool CLASS::populate(const input& input) const NOEXCEPT
     if (input.prevout)
         return true;
 
+    const auto tx = to_tx(input.point().hash());
+    input.prevout = get_output(tx, input.point().index());
+    input.metadata.coinbase = is_coinbase(tx);
+    input.metadata.parent = tx;
+
     // input.metadata is not populated.
     // Null point would return nullptr and be interpreted as missing.
-    input.prevout = get_output(input.point());
+    ////input.prevout = get_output(input.point());
     return !is_null(input.prevout);
 }
 
@@ -213,8 +218,11 @@ bool CLASS::populate_with_metadata(const input& input,
     if (!get_context(ctx, block))
         return false;
 
+    const auto point_fk = to_point(input.point().hash());
+    const auto point_index = input.point().index();
+
     input.metadata.coinbase = is_coinbase(tx);
-    input.metadata.spent = is_spent_prevout(input.point(), link);
+    input.metadata.spent = is_spent_prevout(point_fk, point_index, link);
     input.metadata.median_time_past = ctx.mtp;
     input.metadata.height = ctx.height;
     return true;

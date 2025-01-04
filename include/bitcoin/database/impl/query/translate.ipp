@@ -218,7 +218,6 @@ TEMPLATE
 inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
 {
     // Iteration of tx is necessary because there may be duplicates.
-    // Only top block (strong) association for given tx instance is considered.
     auto it = store_.tx.it(tx_hash);
     strong_pair strong{ {}, it.self() };
     if (!it)
@@ -226,10 +225,13 @@ inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
 
     do
     {
-        strong.tx = it.self();
+        // Only top block (strong) association for given tx is considered.
         strong.block = to_block(strong.tx);
         if (!strong.block.is_terminal())
+        {
+            strong.tx = it.self();
             return strong;
+        }
     }
     while (it.advance());
     return strong;
@@ -237,11 +239,7 @@ inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
 
 // protected
 // Required for bip30 processing.
-// Each it.self() is a unique link to a tx instance with tx_hash.
-// Duplicate tx instances with the same hash result from a write race.
-// It is possible that one tx instance is strong by distinct blocks, but it
-// is not possible that two tx instances are both strong by the same block.
-// Return the distinct set of block-tx tuples where tx is strong by block.
+// Return distinct set of txs by link for hash where each is strong by block.
 TEMPLATE
 inline tx_links CLASS::to_strong_txs(const hash_digest& tx_hash) const NOEXCEPT
 {
@@ -261,11 +259,10 @@ inline tx_links CLASS::to_strong_txs(const hash_digest& tx_hash) const NOEXCEPT
 
 // protected
 // Required for bip30 processing.
-// A single tx.link may be associated to multiple blocks (see bip30). But the
-// top of the strong_tx table will reflect the current state of only one block
-// association. This scans the multimap for the first instance of each block
-// that is associated by the tx.link and returns that set of block links.
-// Return the distinct set of tx links where each tx is strong by block.
+// The top of the strong_tx table will reflect the current state of only one
+// block association. This scans the multimap for the first instance of each
+// block that is associated by the tx.link and returns that set of block links.
+// Return distinct set of txs by link where each is strong by block.
 TEMPLATE
 inline tx_links CLASS::to_strong_txs(const tx_link& link) const NOEXCEPT
 {
@@ -273,7 +270,7 @@ inline tx_links CLASS::to_strong_txs(const tx_link& link) const NOEXCEPT
     if (!it)
         return {};
 
-    // Obtain all first (by block) duplicate (by hash) tx records.
+    // Obtain all first (by block) duplicate (by link) tx records.
     maybe_strongs pairs{};
     do
     {
