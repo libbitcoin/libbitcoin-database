@@ -773,24 +773,14 @@ BOOST_AUTO_TEST_CASE(query_archive__populate__null_prevouts__true)
     BOOST_REQUIRE(query.set(test::block3, test::context, false, false));
 
     system::chain::block copy{ test::genesis };
-    BOOST_REQUIRE(query.populate(copy));
-    ////BOOST_REQUIRE(query.populate(*test::genesis.transactions_ptr()->front()));
-    ////BOOST_REQUIRE(query.populate(*test::genesis.inputs_ptr()->front()));
-
     system::chain::block copy1{ test::block1 };
-    BOOST_REQUIRE(query.populate(copy1));
-    ////BOOST_REQUIRE(query.populate(*test::block1.transactions_ptr()->front()));
-    ////BOOST_REQUIRE(query.populate(*test::block1.inputs_ptr()->front()));
-
     system::chain::block copy2{ test::block2 };
-    BOOST_REQUIRE(query.populate(copy2));
-    ////BOOST_REQUIRE(query.populate(*test::block2.transactions_ptr()->front()));
-    ///BOOST_REQUIRE(query.populate(*test::block2.inputs_ptr()->front()));
-
     system::chain::block copy3{ test::block3 };
+
+    BOOST_REQUIRE(query.populate(copy));
+    BOOST_REQUIRE(query.populate(copy1));
+    BOOST_REQUIRE(query.populate(copy2));
     BOOST_REQUIRE(query.populate(copy3));
-    ////BOOST_REQUIRE(query.populate(*test::block3.transactions_ptr()->front()));
-    ////BOOST_REQUIRE(query.populate(*test::block3.inputs_ptr()->front()));
 }
 
 BOOST_AUTO_TEST_CASE(query_archive__populate__partial_prevouts__false)
@@ -809,22 +799,58 @@ BOOST_AUTO_TEST_CASE(query_archive__populate__partial_prevouts__false)
 
     // Block populate treates first tx as null point.
     BOOST_REQUIRE( query.populate(copy1));
-    BOOST_REQUIRE(!query.populate(*test::block1a.transactions_ptr()->front()));
-    BOOST_REQUIRE(!query.populate(*test::block1a.inputs_ptr()->front()));
-    BOOST_REQUIRE(!query.populate(*test::block1a.inputs_ptr()->back()));
+    BOOST_REQUIRE(!query.populate(*copy1.transactions_ptr()->at(0)));
+    BOOST_REQUIRE(!query.populate(*copy1.inputs_ptr()->at(0)));
+    BOOST_REQUIRE(!query.populate(*copy1.inputs_ptr()->at(2)));
 
     // Block populate treates first tx as null point and other has missing prevouts.
     system::chain::block copy2{ test::block2a };
     BOOST_REQUIRE(!query.populate(copy2));
-    BOOST_REQUIRE( query.populate(*test::block2a.transactions_ptr()->front()));
-    BOOST_REQUIRE(!query.populate(*test::block2a.transactions_ptr()->back()));
-    BOOST_REQUIRE( query.populate(*test::block2a.inputs_ptr()->front()));
-    BOOST_REQUIRE(!query.populate(*test::block2a.inputs_ptr()->back()));
+    BOOST_REQUIRE( query.populate(*copy2.transactions_ptr()->at(0)));
+    BOOST_REQUIRE(!query.populate(*copy2.transactions_ptr()->at(1)));
+    BOOST_REQUIRE( query.populate(*copy2.inputs_ptr()->at(0)));
+    BOOST_REQUIRE(!query.populate(*copy2.inputs_ptr()->at(3)));
 
-    // Block populate treates first tx as null point and other has found prevouts.
-    BOOST_REQUIRE(query.populate(test::tx4));
-    BOOST_REQUIRE(query.populate(*test::tx4.inputs_ptr()->front()));
-    BOOST_REQUIRE(query.populate(*test::tx4.inputs_ptr()->back()));
+    system::chain::transaction copy4{ test::tx4 };
+    BOOST_REQUIRE(query.populate(copy4));
+    BOOST_REQUIRE(query.populate(*copy4.inputs_ptr()->at(0)));
+    BOOST_REQUIRE(query.populate(*copy4.inputs_ptr()->at(1)));
+}
+
+BOOST_AUTO_TEST_CASE(query_archive__populate__metadata__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block2a, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::tx4));
+    BOOST_REQUIRE(!query.is_coinbase(1));
+
+    // Genesis only has coinbase, which does not spend.
+    system::chain::block copy{ test::genesis };
+    BOOST_REQUIRE(query.populate(copy));
+    BOOST_REQUIRE(!copy.inputs_ptr()->at(0)->prevout);
+
+    // Transaction population.
+    system::chain::transaction copy4{ test::tx4 };
+    BOOST_REQUIRE(query.populate(copy4));
+
+    // TODO: test non-coinbase and other parent.
+    // spent/mtp are defaults, coinbase/parent are set (to non-default values).
+    BOOST_REQUIRE( copy4.inputs_ptr()->at(0)->prevout);
+    BOOST_REQUIRE( copy4.inputs_ptr()->at(0)->metadata.spent);
+    BOOST_REQUIRE(!copy4.inputs_ptr()->at(0)->metadata.coinbase);
+    BOOST_REQUIRE_EQUAL(copy4.inputs_ptr()->at(0)->metadata.parent, 1u);
+    BOOST_REQUIRE_EQUAL(copy4.inputs_ptr()->at(0)->metadata.median_time_past, max_uint32);
+    BOOST_REQUIRE( copy4.inputs_ptr()->at(1)->prevout);
+    BOOST_REQUIRE( copy4.inputs_ptr()->at(1)->metadata.spent);
+    BOOST_REQUIRE(!copy4.inputs_ptr()->at(1)->metadata.coinbase);
+    BOOST_REQUIRE_EQUAL(copy4.inputs_ptr()->at(1)->metadata.parent, 1u);
+    BOOST_REQUIRE_EQUAL(copy4.inputs_ptr()->at(1)->metadata.median_time_past, max_uint32);
 }
 
 // archive (foreign-keyed)
