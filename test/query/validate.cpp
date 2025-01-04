@@ -215,11 +215,11 @@ BOOST_AUTO_TEST_CASE(query_validate__get_block_state__confirmable__block_confirm
     BOOST_REQUIRE_EQUAL(query.get_block_state(fees, 0), error::unvalidated);
     BOOST_REQUIRE_EQUAL(fees, 0u);
 
-    BOOST_REQUIRE(query.set_block_confirmable(1, 42));
+    BOOST_REQUIRE(query.set_block_confirmable(1));
     BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::block_confirmable);
     BOOST_REQUIRE_EQUAL(query.get_block_state(1), error::block_confirmable);
     BOOST_REQUIRE_EQUAL(query.get_block_state(fees, 1), error::block_confirmable);
-    BOOST_REQUIRE_EQUAL(fees, 42u);
+    BOOST_REQUIRE_EQUAL(fees, 0u);
 }
 
 BOOST_AUTO_TEST_CASE(query_validate__get_block_state__valid__block_valid)
@@ -233,11 +233,11 @@ BOOST_AUTO_TEST_CASE(query_validate__get_block_state__valid__block_valid)
     BOOST_REQUIRE(query.set(test::block1, context{}, false, false));
 
     uint64_t fees{};
-    BOOST_REQUIRE(query.set_block_valid(1));
+    BOOST_REQUIRE(query.set_block_valid(1, 42));
     BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::block_valid);
     BOOST_REQUIRE_EQUAL(query.get_block_state(1), error::block_valid);
     BOOST_REQUIRE_EQUAL(query.get_block_state(fees, 1), error::block_valid);
-    BOOST_REQUIRE_EQUAL(fees, 0u);
+    BOOST_REQUIRE_EQUAL(fees, 42u);
 }
 
 BOOST_AUTO_TEST_CASE(query_validate__get_block_state__unconfirmable__block_unconfirmable)
