@@ -260,7 +260,7 @@ code CLASS::get_tx_state(uint64_t& fee, size_t& sigops, const tx_link& link,
 }
 
 TEMPLATE
-bool CLASS::set_block_valid(const header_link& link) NOEXCEPT
+bool CLASS::set_block_valid(const header_link& link, uint64_t fees) NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
@@ -270,14 +270,13 @@ bool CLASS::set_block_valid(const header_link& link) NOEXCEPT
     {
         {},
         schema::block_state::valid,
-        0 // fees
+        fees
     });
     // ========================================================================
 }
 
 TEMPLATE
-bool CLASS::set_block_confirmable(const header_link& link,
-    uint64_t fees) NOEXCEPT
+bool CLASS::set_block_confirmable(const header_link& link) NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
@@ -287,7 +286,7 @@ bool CLASS::set_block_confirmable(const header_link& link,
     {
         {},
         schema::block_state::confirmable,
-        fees
+        0 // fees
     });
     // ========================================================================
 }
