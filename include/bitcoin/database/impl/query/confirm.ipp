@@ -322,13 +322,10 @@ error::error_t CLASS::spent_prevout(const point_link& link, index index,
 // If unconfirmed_spend is encountered, perform a search (free). It's not
 // possible for a confirmed spend to be the wrong tx instance.
 //
-// There is no strong (prevout->tx->block) association at this time.
+// There is no strong (prevout->tx->block) association at this point in validation.
 // strong_tx is interrogated for each spend except self (0) and each prevout (2.6B).
 // to_tx(get_point_key(header_link:txs.tx.puts.spend.point_fk)):block.ctx.height|mtp
 // This is done in populate, except for to_strong, ***so save prevout tx [4]***
-// This would increase the cache to 11 bytes per row (27GB) less 19GB savings (above),
-// and the cache can be dropped (for less performant query).
-// If the cached prevout tx is not strong, perform duplicate search (free).
 //
 // is_coinbase_mature(is_coinbase(header_link:txs.tx), ...block.ctx.height), is_locked
 // is_locked(header_link:txs.tx.puts.spend.sequence, ...block.ctx.height|mtp)
@@ -341,7 +338,12 @@ TEMPLATE
 error::error_t CLASS::unspendable_prevout(const point_link& link,
     uint32_t sequence, uint32_t version, const context& ctx) const NOEXCEPT
 {
-    // TODO: get_point_key(link) is redundant with spent_prevout().
+    // TODO: If unconfirmed_spend is encountered, perform a search (free).
+    // It's not possible for a confirmed spend to be the wrong tx instance.
+    // This eliminates the hash lookup and to_strong(hash) iteration.
+
+    // TODO: don't need to return tx link here, just the block (for strong/context).
+    // MOOT: get_point_key(link) is redundant with spent_prevout().
     // to_strong has the only searches [tx.iterate, strong.find].
     const auto strong_prevout = to_strong(get_point_key(link));
 
@@ -354,6 +356,8 @@ error::error_t CLASS::unspendable_prevout(const point_link& link,
     if (!get_context(out, strong_prevout.block))
         return error::integrity;
 
+    // All txs with same hash must be coinbase or not, so this query is redundant.
+    // TODO: Just use the cached value for the prevout, obtained in validation.
     if (is_coinbase(strong_prevout.tx) &&
         !transaction::is_coinbase_mature(out.height, ctx.height))
         return error::coinbase_maturity;
@@ -515,11 +519,12 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     if (!get_context(ctx, link))
         return error::integrity;
 
+    // This is never invoked (bip30).
     code ec{};
     if ((ec = unspent_duplicates(link, ctx)))
         return ec;
     
-    // This is also eliminated by caching, since we cache each spend.
+    // This is eliminated by caching, since each non-internal spend is cached.
     const auto sets = to_spend_sets(link);
     if (sets.empty())
         return ec;
