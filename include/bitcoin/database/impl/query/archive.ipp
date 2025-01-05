@@ -145,6 +145,7 @@ bool CLASS::populate(const input& input) const NOEXCEPT
     const auto tx = to_tx(input.point().hash());
     input.prevout = get_output(tx, input.point().index());
     input.metadata.coinbase = is_coinbase(tx);
+    input.metadata.inside = false;
     input.metadata.parent = tx;
 
     // input.metadata is not populated.
