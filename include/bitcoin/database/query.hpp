@@ -536,11 +536,11 @@ public:
         uint64_t value) const NOEXCEPT;
 
     /// Neutrino, set during validation with prevouts (surrogate-keyed).
-    bool get_filter(filter& out, const header_link& link) const NOEXCEPT;
-    bool get_filter_head(hash_digest& out,
-        const header_link& link) const NOEXCEPT;
-    bool set_filter(const header_link& link, const hash_digest& head,
-        const filter& body) NOEXCEPT;
+    bool get_filter_body(filter& out, const header_link& link) const NOEXCEPT;
+    bool get_filter_head(hash_digest& out, const header_link& link) const NOEXCEPT;
+    bool set_filter_body(const header_link& link, const filter& body) NOEXCEPT;
+    bool set_filter_head(const header_link& link,
+        const hash_digest& head) NOEXCEPT;
 
 protected:
     /// Translate.
