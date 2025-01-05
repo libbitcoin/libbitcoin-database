@@ -538,6 +538,7 @@ public:
     /// Neutrino, set during validation with prevouts (surrogate-keyed).
     bool get_filter_body(filter& out, const header_link& link) const NOEXCEPT;
     bool get_filter_head(hash_digest& out, const header_link& link) const NOEXCEPT;
+    bool set_filter_body(const header_link& link, const block& block) NOEXCEPT;
     bool set_filter_body(const header_link& link, const filter& body) NOEXCEPT;
     bool set_filter_head(const header_link& link,
         const hash_digest& head) NOEXCEPT;
