@@ -142,35 +142,35 @@ BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__below__included
     BOOST_REQUIRE_EQUAL(out.front(), 0);
 }
 
-BOOST_AUTO_TEST_CASE(query_optional__set_filter__get_filter_and_head__expected)
-{
-    const auto& filter_head0 = system::null_hash;
-    const auto filter0 = system::base16_chunk("0102030405060708090a0b0c0d0e0f");
-    const auto& filter_head1 = system::one_hash;
-    const auto filter1 = system::base16_chunk("102030405060708090a0b0c0d0e0f0102030405060708090a0b0c0d0e0f0");
-
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{}, false, false));
-    BOOST_REQUIRE(query.set_filter(0, filter_head0, filter0));
-    BOOST_REQUIRE(query.set_filter(1, filter_head1, filter1));
-
-    hash_digest head{};
-    BOOST_REQUIRE(query.get_filter_head(head, 0));
-    BOOST_REQUIRE_EQUAL(head, filter_head0);
-    BOOST_REQUIRE(query.get_filter_head(head, 1));
-    BOOST_REQUIRE_EQUAL(head, filter_head1);
-
-    system::data_chunk out{};
-    BOOST_REQUIRE(query.get_filter(out, 0));
-    BOOST_REQUIRE_EQUAL(out, filter0);
-    BOOST_REQUIRE(query.get_filter(out, 1));
-    BOOST_REQUIRE_EQUAL(out, filter1);
-}
+////BOOST_AUTO_TEST_CASE(query_optional__set_filter__get_filter_and_head__expected)
+////{
+////    const auto& filter_head0 = system::null_hash;
+////    const auto filter0 = system::base16_chunk("0102030405060708090a0b0c0d0e0f");
+////    const auto& filter_head1 = system::one_hash;
+////    const auto filter1 = system::base16_chunk("102030405060708090a0b0c0d0e0f0102030405060708090a0b0c0d0e0f0");
+////
+////    settings settings{};
+////    settings.path = TEST_DIRECTORY;
+////    test::chunk_store store{ settings };
+////    test::query_accessor query{ store };
+////    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+////    BOOST_REQUIRE(query.initialize(test::genesis));
+////    BOOST_REQUIRE(query.set(test::block1a, context{}, false, false));
+////    BOOST_REQUIRE(query.set_filter(0, filter_head0, filter0));
+////    BOOST_REQUIRE(query.set_filter(1, filter_head1, filter1));
+////
+////    hash_digest head{};
+////    BOOST_REQUIRE(query.get_filter_head(head, 0));
+////    BOOST_REQUIRE_EQUAL(head, filter_head0);
+////    BOOST_REQUIRE(query.get_filter_head(head, 1));
+////    BOOST_REQUIRE_EQUAL(head, filter_head1);
+////
+////    system::data_chunk out{};
+////    BOOST_REQUIRE(query.get_filter(out, 0));
+////    BOOST_REQUIRE_EQUAL(out, filter0);
+////    BOOST_REQUIRE(query.get_filter(out, 1));
+////    BOOST_REQUIRE_EQUAL(out, filter1);
+////}
 
 ////BOOST_AUTO_TEST_CASE(query_optional__set_buffered_tx__get_buffered_tx__expected)
 ////{

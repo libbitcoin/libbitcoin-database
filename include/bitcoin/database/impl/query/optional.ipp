@@ -176,7 +176,7 @@ bool CLASS::to_minimum_unspent_outputs(output_links& out,
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-bool CLASS::get_filter(filter& out, const header_link& link) const NOEXCEPT
+bool CLASS::get_filter_body(filter& out, const header_link& link) const NOEXCEPT
 {
     table::neutrino::get_filter neutrino{};
     if (!store_.neutrino.find(link, neutrino))
@@ -199,8 +199,8 @@ bool CLASS::get_filter_head(hash_digest& out,
 }
 
 TEMPLATE
-bool CLASS::set_filter(const header_link& link, const hash_digest& filter_head,
-    const filter& filter) NOEXCEPT
+bool CLASS::set_filter_body(const header_link&,
+    const filter&) NOEXCEPT
 {
     ////// GUARD (filter redundancy)
     ////// This is only fully effective if there is a single database thread.
@@ -210,14 +210,40 @@ bool CLASS::set_filter(const header_link& link, const hash_digest& filter_head,
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // Clean single allocation failure (e.g. disk full).
-    return store_.neutrino.put(link, table::neutrino::put_ref
-    {
-        {},
-        filter_head,
-        filter
-    });
+    ////// Clean single allocation failure (e.g. disk full).
+    ////return store_.neutrino.put(link, table::neutrino::put_ref
+    ////{
+    ////    {},
+    ////    filter_head,
+    ////    filter
+    ////});
     // ========================================================================
+
+    return false;
+}
+
+TEMPLATE
+bool CLASS::set_filter_head(const header_link&,
+    const hash_digest&) NOEXCEPT
+{
+    ////// GUARD (filter redundancy)
+    ////// This is only fully effective if there is a single database thread.
+    ////if (!to_filter(link).is_terminal())
+    ////    return true;
+
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    ////// Clean single allocation failure (e.g. disk full).
+    ////return store_.neutrino.put(link, table::neutrino::put_ref
+    ////{
+    ////    {},
+    ////    filter_head,
+    ////    filter
+    ////});
+    // ========================================================================
+
+    return false;
 }
 
 ////// Buffer (surrogate-keyed).
