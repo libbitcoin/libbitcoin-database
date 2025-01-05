@@ -759,6 +759,24 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
     BOOST_REQUIRE_EQUAL(hashes, test::genesis.transaction_hashes(false));
 }
 
+// populate
+// ----------------------------------------------------------------------------
+
+// METADATA IS SETTABLE ON CONST TEST OBJECTS.
+// COPY CONSTRUCTION CREATES SAHRED POINTER REFERENCES.
+// SO POPULATE ON CONST OBJECTS HAS SIDE EFFECTS IF THE OBJECTS SPAN TESTS.
+const auto& clean_(const auto& block_or_tx) NOEXCEPT
+{
+    const auto inputs = block_or_tx.inputs_ptr();
+    for (const auto& input: *inputs)
+    {
+        input->prevout.reset();
+        input->metadata = system::chain::prevout{};
+    }
+
+    return block_or_tx;
+}
+
 // First four blocks have only coinbase txs.
 BOOST_AUTO_TEST_CASE(query_archive__populate__null_prevouts__true)
 {
@@ -772,10 +790,10 @@ BOOST_AUTO_TEST_CASE(query_archive__populate__null_prevouts__true)
     BOOST_REQUIRE(query.set(test::block2, test::context, false, false));
     BOOST_REQUIRE(query.set(test::block3, test::context, false, false));
 
-    system::chain::block copy{ test::genesis };
-    system::chain::block copy1{ test::block1 };
-    system::chain::block copy2{ test::block2 };
-    system::chain::block copy3{ test::block3 };
+    const auto& copy = clean_(test::genesis);
+    const auto& copy1 = clean_(test::block1);
+    const auto& copy2 = clean_(test::block2);
+    const auto& copy3 = clean_(test::block3);
 
     BOOST_REQUIRE(query.populate(copy));
     BOOST_REQUIRE(query.populate(copy1));
@@ -795,26 +813,26 @@ BOOST_AUTO_TEST_CASE(query_archive__populate__partial_prevouts__false)
     BOOST_REQUIRE(query.set(test::block2a, test::context, false, false));
     BOOST_REQUIRE(query.set(test::tx4));
 
-    system::chain::block copy1{ test::block1a };
+    const auto& block1a = clean_(test::block1a);
 
     // Block populate treates first tx as null point.
-    BOOST_REQUIRE( query.populate(copy1));
-    BOOST_REQUIRE(!query.populate(*copy1.transactions_ptr()->at(0)));
-    BOOST_REQUIRE(!query.populate(*copy1.inputs_ptr()->at(0)));
-    BOOST_REQUIRE(!query.populate(*copy1.inputs_ptr()->at(2)));
+    BOOST_REQUIRE( query.populate(block1a));
+    BOOST_REQUIRE(!query.populate(*block1a.transactions_ptr()->at(0)));
+    BOOST_REQUIRE(!query.populate(*block1a.inputs_ptr()->at(0)));
+    BOOST_REQUIRE(!query.populate(*block1a.inputs_ptr()->at(2)));
 
     // Block populate treates first tx as null point and other has missing prevouts.
-    system::chain::block copy2{ test::block2a };
-    BOOST_REQUIRE(!query.populate(copy2));
-    BOOST_REQUIRE( query.populate(*copy2.transactions_ptr()->at(0)));
-    BOOST_REQUIRE(!query.populate(*copy2.transactions_ptr()->at(1)));
-    BOOST_REQUIRE( query.populate(*copy2.inputs_ptr()->at(0)));
-    BOOST_REQUIRE(!query.populate(*copy2.inputs_ptr()->at(3)));
+    const auto& block2a = clean_(test::block2a);
+    BOOST_REQUIRE(!query.populate(block2a));
+    BOOST_REQUIRE( query.populate(*block2a.transactions_ptr()->at(0)));
+    BOOST_REQUIRE(!query.populate(*block2a.transactions_ptr()->at(1)));
+    BOOST_REQUIRE( query.populate(*block2a.inputs_ptr()->at(0)));
+    BOOST_REQUIRE(!query.populate(*block2a.inputs_ptr()->at(3)));
 
-    system::chain::transaction copy4{ test::tx4 };
-    BOOST_REQUIRE(query.populate(copy4));
-    BOOST_REQUIRE(query.populate(*copy4.inputs_ptr()->at(0)));
-    BOOST_REQUIRE(query.populate(*copy4.inputs_ptr()->at(1)));
+    const auto& tx4 = clean_(test::tx4);
+    BOOST_REQUIRE(query.populate(tx4));
+    BOOST_REQUIRE(query.populate(*tx4.inputs_ptr()->at(0)));
+    BOOST_REQUIRE(query.populate(*tx4.inputs_ptr()->at(1)));
 }
 
 BOOST_AUTO_TEST_CASE(query_archive__populate__metadata__expected)
@@ -831,27 +849,47 @@ BOOST_AUTO_TEST_CASE(query_archive__populate__metadata__expected)
     BOOST_REQUIRE(!query.is_coinbase(1));
 
     // Genesis only has coinbase, which does not spend.
-    system::chain::block copy{ test::genesis };
-    BOOST_REQUIRE(query.populate(copy));
-    BOOST_REQUIRE(!copy.inputs_ptr()->at(0)->prevout);
+    const auto& genesis = clean_(test::genesis);
+
+    BOOST_REQUIRE(!genesis.inputs_ptr()->at(0)->prevout);
+    BOOST_REQUIRE( genesis.inputs_ptr()->at(0)->metadata.inside);
+    BOOST_REQUIRE( genesis.inputs_ptr()->at(0)->metadata.coinbase);
+    BOOST_REQUIRE_EQUAL(genesis.inputs_ptr()->at(0)->metadata.parent, 0u);
+
+    BOOST_REQUIRE(query.populate(genesis));
+
+    BOOST_REQUIRE(!genesis.inputs_ptr()->at(0)->prevout);
+    BOOST_REQUIRE( genesis.inputs_ptr()->at(0)->metadata.inside);
+    BOOST_REQUIRE( genesis.inputs_ptr()->at(0)->metadata.coinbase);
+    BOOST_REQUIRE_EQUAL(genesis.inputs_ptr()->at(0)->metadata.parent, 0u);
 
     // Transaction population.
-    system::chain::transaction copy4{ test::tx4 };
-    BOOST_REQUIRE(query.populate(copy4));
+    const auto& tx4 = clean_(test::tx4);
+
+    BOOST_REQUIRE(!tx4.inputs_ptr()->at(0)->prevout);
+    BOOST_REQUIRE( tx4.inputs_ptr()->at(0)->metadata.inside);
+    BOOST_REQUIRE( tx4.inputs_ptr()->at(0)->metadata.coinbase);
+    BOOST_REQUIRE_EQUAL(tx4.inputs_ptr()->at(0)->metadata.parent, 0u);
+    BOOST_REQUIRE(!tx4.inputs_ptr()->at(1)->prevout);
+    BOOST_REQUIRE( tx4.inputs_ptr()->at(1)->metadata.inside);
+    BOOST_REQUIRE( tx4.inputs_ptr()->at(1)->metadata.coinbase);
+    BOOST_REQUIRE_EQUAL(tx4.inputs_ptr()->at(1)->metadata.parent, 0u);
+
+    BOOST_REQUIRE(query.populate(tx4));
 
     // TODO: test non-coinbase and other parent.
     // spent/mtp are defaults, coinbase/parent are set (to non-default values).
-    BOOST_REQUIRE( copy4.inputs_ptr()->at(0)->prevout);
-    BOOST_REQUIRE( copy4.inputs_ptr()->at(0)->metadata.spent);
-    BOOST_REQUIRE(!copy4.inputs_ptr()->at(0)->metadata.coinbase);
-    BOOST_REQUIRE_EQUAL(copy4.inputs_ptr()->at(0)->metadata.parent, 1u);
-    BOOST_REQUIRE_EQUAL(copy4.inputs_ptr()->at(0)->metadata.median_time_past, max_uint32);
-    BOOST_REQUIRE( copy4.inputs_ptr()->at(1)->prevout);
-    BOOST_REQUIRE( copy4.inputs_ptr()->at(1)->metadata.spent);
-    BOOST_REQUIRE(!copy4.inputs_ptr()->at(1)->metadata.coinbase);
-    BOOST_REQUIRE_EQUAL(copy4.inputs_ptr()->at(1)->metadata.parent, 1u);
-    BOOST_REQUIRE_EQUAL(copy4.inputs_ptr()->at(1)->metadata.median_time_past, max_uint32);
+    BOOST_REQUIRE( tx4.inputs_ptr()->at(0)->prevout);
+    BOOST_REQUIRE(!tx4.inputs_ptr()->at(0)->metadata.inside);
+    BOOST_REQUIRE(!tx4.inputs_ptr()->at(0)->metadata.coinbase);
+    BOOST_REQUIRE_EQUAL(tx4.inputs_ptr()->at(0)->metadata.parent, 1u);
+    BOOST_REQUIRE( tx4.inputs_ptr()->at(1)->prevout);
+    BOOST_REQUIRE(!tx4.inputs_ptr()->at(1)->metadata.inside);
+    BOOST_REQUIRE(!tx4.inputs_ptr()->at(1)->metadata.coinbase);
+    BOOST_REQUIRE_EQUAL(tx4.inputs_ptr()->at(1)->metadata.parent, 1u);
 }
+
+// ----------------------------------------------------------------------------
 
 // archive (foreign-keyed)
 
