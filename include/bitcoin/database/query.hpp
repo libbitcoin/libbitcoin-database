@@ -510,6 +510,7 @@ public:
     /// Block association relies on strong (confirmed or pending).
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
+    bool set_prevouts(const header_link& link, const block& block) NOEXCEPT;
     code block_confirmable(const header_link& link) const NOEXCEPT;
     ////code tx_confirmable(const tx_link& link, const context& ctx) const NOEXCEPT;
     code unspent_duplicates(const header_link& coinbase,
@@ -538,6 +539,7 @@ public:
     /// Neutrino, set during validation with prevouts (surrogate-keyed).
     bool get_filter_body(filter& out, const header_link& link) const NOEXCEPT;
     bool get_filter_head(hash_digest& out, const header_link& link) const NOEXCEPT;
+    bool set_filter_body(const header_link& link, const block& block) NOEXCEPT;
     bool set_filter_body(const header_link& link, const filter& body) NOEXCEPT;
     bool set_filter_head(const header_link& link,
         const hash_digest& head) NOEXCEPT;

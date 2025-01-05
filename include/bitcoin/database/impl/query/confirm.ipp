@@ -705,6 +705,17 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::set_prevouts(const header_link&, const block&) NOEXCEPT
+{
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    // TODO: implement.
+    return {};
+    // ========================================================================
+}
+
+TEMPLATE
 bool CLASS::initialize(const block& genesis) NOEXCEPT
 {
     BC_ASSERT(!is_initialized());

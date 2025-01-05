@@ -199,13 +199,22 @@ bool CLASS::get_filter_head(hash_digest& out,
 }
 
 TEMPLATE
+bool CLASS::set_filter_body(const header_link& link,
+    const block& block) NOEXCEPT
+{
+    filter bytes{};
+
+    // compute_filter is only false if prevouts are missing.
+    return system::neutrino::compute_filter(bytes, block) &&
+        set_filter_body(link, bytes);
+}
+
+TEMPLATE
 bool CLASS::set_filter_body(const header_link&,
     const filter&) NOEXCEPT
 {
-    ////// GUARD (filter redundancy)
-    ////// This is only fully effective if there is a single database thread.
-    ////if (!to_filter(link).is_terminal())
-    ////    return true;
+    if (!neutrino_enabled())
+        return true;
 
     // ========================================================================
     const auto scope = store_.get_transactor();
@@ -226,10 +235,8 @@ TEMPLATE
 bool CLASS::set_filter_head(const header_link&,
     const hash_digest&) NOEXCEPT
 {
-    ////// GUARD (filter redundancy)
-    ////// This is only fully effective if there is a single database thread.
-    ////if (!to_filter(link).is_terminal())
-    ////    return true;
+    if (!neutrino_enabled())
+        return true;
 
     // ========================================================================
     const auto scope = store_.get_transactor();
