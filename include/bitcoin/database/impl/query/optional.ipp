@@ -213,6 +213,9 @@ TEMPLATE
 bool CLASS::set_filter_body(const header_link&,
     const filter&) NOEXCEPT
 {
+    if (!neutrino_enabled())
+        return true;
+
     // ========================================================================
     const auto scope = store_.get_transactor();
 
@@ -232,6 +235,9 @@ TEMPLATE
 bool CLASS::set_filter_head(const header_link&,
     const hash_digest&) NOEXCEPT
 {
+    if (!neutrino_enabled())
+        return true;
+
     // ========================================================================
     const auto scope = store_.get_transactor();
 
