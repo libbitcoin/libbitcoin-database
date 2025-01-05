@@ -213,11 +213,6 @@ TEMPLATE
 bool CLASS::set_filter_body(const header_link&,
     const filter&) NOEXCEPT
 {
-    ////// GUARD (filter redundancy)
-    ////// This is only fully effective if there is a single database thread.
-    ////if (!to_filter(link).is_terminal())
-    ////    return true;
-
     // ========================================================================
     const auto scope = store_.get_transactor();
 
@@ -237,11 +232,6 @@ TEMPLATE
 bool CLASS::set_filter_head(const header_link&,
     const hash_digest&) NOEXCEPT
 {
-    ////// GUARD (filter redundancy)
-    ////// This is only fully effective if there is a single database thread.
-    ////if (!to_filter(link).is_terminal())
-    ////    return true;
-
     // ========================================================================
     const auto scope = store_.get_transactor();
 
