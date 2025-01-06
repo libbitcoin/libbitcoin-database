@@ -136,19 +136,6 @@ constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
 
 // private
 TEMPLATE
-constexpr typename Link::integer CLASS::cast_link(size_t link) NOEXCEPT
-{
-    using namespace system;
-    using integer = typename Link::integer;
-    constexpr auto terminal = Link::terminal;
-
-    // link limit is sub1(terminal), where terminal is 2^((8*Link::bytes)-1).
-    // It is ok for the payload to exceed link limit (link is identity only).
-    return link >= terminal ? terminal : possible_narrow_cast<integer>(link);
-}
-
-// private
-TEMPLATE
 constexpr Link CLASS::position_to_link(size_t position) NOEXCEPT
 {
     using namespace system;
@@ -170,6 +157,19 @@ constexpr Link CLASS::position_to_link(size_t position) NOEXCEPT
         static_assert(is_nonzero(Size));
         return { cast_link(position / Size) };
     }
+}
+
+// private
+TEMPLATE
+constexpr typename Link::integer CLASS::cast_link(size_t link) NOEXCEPT
+{
+    using namespace system;
+    using integer = typename Link::integer;
+    constexpr auto terminal = Link::terminal;
+
+    // link limit is sub1(terminal), where terminal is 2^((8*Link::bytes)-1).
+    // It is ok for the payload to exceed link limit (link is identity only).
+    return link >= terminal ? terminal : possible_narrow_cast<integer>(link);
 }
 
 } // namespace database

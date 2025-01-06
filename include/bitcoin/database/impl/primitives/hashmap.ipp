@@ -155,6 +155,7 @@ typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 {
     return { get_memory(), head_.top(key), key };
 }
+
 TEMPLATE
 Link CLASS::allocate(const Link& size) NOEXCEPT
 {
