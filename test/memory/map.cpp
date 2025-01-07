@@ -549,11 +549,10 @@ BOOST_AUTO_TEST_CASE(map__set__loaded__expected_fill)
     BOOST_REQUIRE_EQUAL(data[ 5], 'a');     // offset + 0
     BOOST_REQUIRE_EQUAL(data[ 6], 'b');     // offset + 1
     BOOST_REQUIRE_EQUAL(data[ 7], 'c');     // offset + 2
-    BOOST_REQUIRE_EQUAL(data[ 8], fill1);   // expansion
-    BOOST_REQUIRE_EQUAL(data[ 9], fill1);   // expansion
-    BOOST_REQUIRE_EQUAL(data[10], fill1);   // expansion
-    BOOST_REQUIRE_EQUAL(data[11], fill1);   // sub1(offset + size + to_half(offset + size))
-
+    BOOST_REQUIRE_EQUAL(data[ 8], fill2);   // expansion, macos trims on remap here.
+    BOOST_REQUIRE_EQUAL(data[ 9], fill2);   // expansion, so it goes to zero if not refilled.
+    BOOST_REQUIRE_EQUAL(data[10], fill2);   // expansion
+    BOOST_REQUIRE_EQUAL(data[11], fill2);   // sub1(offset + size + to_half(offset + size))
     BOOST_REQUIRE_EQUAL(data[12], fill2);   // cannot assume mmap default fill
     BOOST_REQUIRE_EQUAL(data[13], fill2);   // cannot assume mmap default fill
     BOOST_REQUIRE_EQUAL(data[14], fill2);   // cannot assume mmap default fill

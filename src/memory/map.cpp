@@ -279,7 +279,7 @@ memory_ptr map::set(size_t offset, size_t size, uint8_t backfill) NOEXCEPT
 
             // Fill new capacity as offset may not be at end due to expansion.
             BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
-            std::fill_n(memory_map_ + old_capacity, new_capacity - old_capacity,
+            std::fill_n(memory_map_ + logical_, new_capacity - logical_,
                 backfill);
             BC_POP_WARNING()
         }
