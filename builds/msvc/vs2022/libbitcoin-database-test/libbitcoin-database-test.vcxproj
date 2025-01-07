@@ -87,7 +87,9 @@
     <ClCompile Include="..\..\..\..\test\mocks\chunk_storage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\arraymap.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hashmap.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\hashmap2.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\head.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\head2.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\manager.cpp" />
@@ -106,17 +108,17 @@
     <ClCompile Include="..\..\..\..\test\tables\archives\output.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\point.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\puts.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\archives\spend.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\transaction.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\txs.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\caches\bootstrap.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\caches\buffer.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\caches\neutrino.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\caches\prevouts.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_bk.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_tx.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\indexes\address.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\height.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\indexes\spend.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\strong_tx.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\optional\address.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\optional\bootstrap.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\optional\neutrino.cpp" />
     <ClCompile Include="..\..\..\..\test\test.cpp" />
   </ItemGroup>
   <ItemGroup>

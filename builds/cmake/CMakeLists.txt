@@ -286,7 +286,9 @@ if (with-tests)
         "../../test/mocks/map_store.hpp"
         "../../test/primitives/arraymap.cpp"
         "../../test/primitives/hashmap.cpp"
+        "../../test/primitives/hashmap2.cpp"
         "../../test/primitives/head.cpp"
+        "../../test/primitives/head2.cpp"
         "../../test/primitives/iterator.cpp"
         "../../test/primitives/linkage.cpp"
         "../../test/primitives/manager.cpp"
@@ -303,17 +305,17 @@ if (with-tests)
         "../../test/tables/archives/output.cpp"
         "../../test/tables/archives/point.cpp"
         "../../test/tables/archives/puts.cpp"
+        "../../test/tables/archives/spend.cpp"
         "../../test/tables/archives/transaction.cpp"
         "../../test/tables/archives/txs.cpp"
-        "../../test/tables/caches/bootstrap.cpp"
-        "../../test/tables/caches/buffer.cpp"
-        "../../test/tables/caches/neutrino.cpp"
+        "../../test/tables/caches/prevouts.cpp"
         "../../test/tables/caches/validated_bk.cpp"
         "../../test/tables/caches/validated_tx.cpp"
-        "../../test/tables/indexes/address.cpp"
         "../../test/tables/indexes/height.cpp"
-        "../../test/tables/indexes/spend.cpp"
-        "../../test/tables/indexes/strong_tx.cpp" )
+        "../../test/tables/indexes/strong_tx.cpp"
+        "../../test/tables/optional/address.cpp"
+        "../../test/tables/optional/bootstrap.cpp"
+        "../../test/tables/optional/neutrino.cpp" )
 
     add_test( NAME libbitcoin-database-test COMMAND libbitcoin-database-test
             --run_test=*
