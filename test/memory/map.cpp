@@ -481,6 +481,8 @@ BOOST_AUTO_TEST_CASE(map__set__no_minimum_expansion__expected_capacity)
 
 BOOST_AUTO_TEST_CASE(map__set__loaded__expected_fill)
 {
+    BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
+
     constexpr auto half_rate = 50_size;
     constexpr auto minimum = 1_size;
     constexpr auto size1 = 3_size;
@@ -575,6 +577,8 @@ BOOST_AUTO_TEST_CASE(map__set__loaded__expected_fill)
     BOOST_REQUIRE(!instance.unload());
     BOOST_REQUIRE(!instance.close());
     BOOST_REQUIRE(!instance.get_fault());
+
+    BC_POP_WARNING()
 }
 
 BOOST_AUTO_TEST_CASE(map__get__unloaded__false)

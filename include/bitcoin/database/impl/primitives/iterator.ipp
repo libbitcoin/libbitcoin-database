@@ -19,8 +19,8 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_IPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_ELEMENT_IPP
 
-#include <algorithm>
-#include <utility>
+#include <iterator>
+#include <cstring>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -78,13 +78,13 @@ Link CLASS::to_match(Link link) const NOEXCEPT
         // element key matches (found)
         const auto key_ptr = std::next(offset, Link::size);
         if (is_zero(std::memcmp(key_.data(), key_ptr, array_count<Key>)))
-            return std::move(link);
+            return link;
 
         // set next element link (loop)
         link = system::unsafe_array_cast<uint8_t, Link::size>(offset);
     }
 
-    return std::move(link);
+    return link;
 }
 
 TEMPLATE
@@ -100,7 +100,7 @@ Link CLASS::to_next(Link link) const NOEXCEPT
         // set next element link (loop)
         link = { system::unsafe_array_cast<uint8_t, Link::size>(offset) };
         if (link.is_terminal())
-            return std::move(link);
+            return link;
 
         // get next element offset (fault)
         offset = memory_->offset(manager::link_to_position(link));
@@ -110,10 +110,10 @@ Link CLASS::to_next(Link link) const NOEXCEPT
         // next element key matches (found)
         const auto key_ptr = std::next(offset, Link::size);
         if (is_zero(std::memcmp(key_.data(), key_ptr, array_count<Key>)))
-            return std::move(link);
+            return link;
     }
 
-    return std::move(link);
+    return link;
 }
 
 } // namespace database

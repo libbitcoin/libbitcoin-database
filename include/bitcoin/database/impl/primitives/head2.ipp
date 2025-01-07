@@ -57,7 +57,8 @@ Link CLASS::index(const Key& key) const NOEXCEPT
 {
     // Key is the logical bucket index (no-hash).
     if (key < buckets())
-        return manager::cast_link(key);
+        return manager<Link, system::data_array<zero>, Link::size>::
+            cast_link(key);
 
     return {};
 }

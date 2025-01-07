@@ -66,8 +66,6 @@ public:
     bool push(const bytes& current, const Link& index) NOEXCEPT;
 
 private:
-    using manager = manager<Link, system::data_array<zero>, Link::size>;
-
     template <size_t Bytes>
     static auto& array_cast(memory::iterator buffer) NOEXCEPT
     {

@@ -49,8 +49,6 @@ struct record4 { static constexpr size_t size = 4; };
 using slab_table = hashmap_<link5, key10, slab0::size>;
 using record_table = hashmap_<link5, key10, record4::size>;
 
-constexpr auto element_size = link5::size + array_count<key10> + record4::size;
-
 // record hashmap
 // ----------------------------------------------------------------------------
 

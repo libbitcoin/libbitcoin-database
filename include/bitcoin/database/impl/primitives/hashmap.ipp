@@ -308,7 +308,6 @@ bool CLASS::put(const Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
     using namespace system;
-    const auto count = element.count();
     const auto ptr = manager_.get(link);
     if (!ptr)
         return false;
@@ -319,7 +318,11 @@ bool CLASS::put(const Link& link, const Key& key,
     sink.skip_bytes(Link::size);
     sink.write_bytes(key);
 
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * count);) }
+    if constexpr (!is_slab)
+    {
+        BC_DEBUG_ONLY(sink.set_limit(Size * element.count());)
+    }
+
     auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
     return element.to_data(sink) && head_.push(link, next, head_.index(key));
 }
