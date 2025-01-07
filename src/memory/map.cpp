@@ -242,18 +242,52 @@ size_t map::allocate(size_t chunk) NOEXCEPT
     auto end = logical_ + chunk;
     if (end > capacity_)
     {
-        const auto size = to_capacity(end);
+        const auto new_capacity = to_capacity(end);
 
         // TODO: Could loop over a try lock here and log deadlock warning.
         std::unique_lock remap_lock(remap_mutex_);
 
         // Disk full condition leaves store in valid state despite eof return.
-        if (!remap_(size))
+        if (!remap_(new_capacity))
             return storage::eof;
     }
 
     std::swap(logical_, end);
     return end;
+}
+
+memory_ptr map::set(size_t offset, size_t size, uint8_t backfill) NOEXCEPT
+{
+    {
+        std::unique_lock field_lock(field_mutex_);
+
+        if (fault_ || !loaded_ || is_add_overflow(offset, size))
+            return {};
+
+        const auto end = std::max(logical_, offset + size);
+        if (end > capacity_)
+        {
+            const auto old_capacity = capacity_;
+            const auto new_capacity = to_capacity(end);
+
+            // TODO: Could loop over a try lock here and log deadlock warning.
+            std::unique_lock remap_lock(remap_mutex_);
+
+            // Disk full condition leaves store in valid state despite null.
+            if (!remap_(new_capacity))
+                return {};
+
+            // Fill new capacity as offset may not be at end due to expansion.
+            BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
+            std::fill_n(memory_map_ + old_capacity, new_capacity - old_capacity,
+                backfill);
+            BC_POP_WARNING()
+        }
+
+        logical_ = end;
+    }
+
+    return get(offset);
 }
 
 memory_ptr map::get(size_t offset) const NOEXCEPT
