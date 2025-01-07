@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HEAD_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_HEAD_HPP
 
-#include <algorithm>
 #include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -69,14 +68,13 @@ private:
         return system::unsafe_array_cast<uint8_t, Bytes>(buffer);
     }
 
-    static constexpr size_t offset(const Link& index) NOEXCEPT
+    // Byte offset of bucket index within head file.
+    // [body_size][[bucket[0]...bucket[buckets-1]]]
+    static constexpr size_t link_to_position(const Link& index) NOEXCEPT
     {
         using namespace system;
         BC_ASSERT(!is_multiply_overflow<size_t>(index, Link::size));
         BC_ASSERT(!is_add_overflow(Link::size, index * Link::size));
-
-        // Byte offset of bucket index within head file.
-        // [body_size][[bucket[0]...bucket[buckets-1]]]
         return possible_narrow_cast<size_t>(Link::size + index * Link::size);
     }
 
@@ -87,7 +85,6 @@ private:
 
 } // namespace database
 } // namespace libbitcoin
-
 
 #define TEMPLATE template <typename Link, typename Key, bool Hash>
 #define CLASS head<Link, Key, Hash>

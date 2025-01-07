@@ -38,7 +38,7 @@ CLASS::head(storage& head, const Link& buckets) NOEXCEPT
 TEMPLATE
 size_t CLASS::size() const NOEXCEPT
 {
-    return offset(buckets_);
+    return link_to_position(buckets_);
 }
 
 TEMPLATE
@@ -74,7 +74,7 @@ bool CLASS::create() NOEXCEPT
     const auto allocation = size();
     const auto start = file_.allocate(allocation);
 
-    // This guards addition overflow in file_.get (start must be valid).
+    // Guards addition overflow in file_.get (start must be valid).
     if (start == storage::eof)
         return false;
 
@@ -85,8 +85,8 @@ bool CLASS::create() NOEXCEPT
     BC_ASSERT_MSG(verify(), "unexpected body size");
 
     // std::memset/fill_n have identical performance (on win32).
-    ////std::memset(ptr->begin(), system::bit_all<uint8_t>, allocation);
-    std::fill_n(ptr->begin(), allocation, system::bit_all<uint8_t>);
+    ////std::memset(ptr->data(), system::bit_all<uint8_t>, allocation);
+    std::fill_n(ptr->data(), allocation, system::bit_all<uint8_t>);
     return set_body_count(zero);
 }
 
@@ -103,7 +103,7 @@ bool CLASS::get_body_count(Link& count) const NOEXCEPT
     if (!ptr)
         return false;
 
-    count = array_cast<Link::size>(ptr->begin());
+    count = array_cast<Link::size>(ptr->data());
     return true;
 }
 
@@ -114,7 +114,7 @@ bool CLASS::set_body_count(const Link& count) NOEXCEPT
     if (!ptr)
         return false;
 
-    array_cast<Link::size>(ptr->begin()) = count;
+    array_cast<Link::size>(ptr->data()) = count;
     return true;
 }
 
@@ -127,7 +127,7 @@ Link CLASS::top(const Key& key) const NOEXCEPT
 TEMPLATE
 Link CLASS::top(const Link& index) const NOEXCEPT
 {
-    const auto raw = file_.get_raw(offset(index));
+    const auto raw = file_.get_raw(link_to_position(index));
     if (is_null(raw))
         return {};
 
@@ -148,7 +148,7 @@ bool CLASS::push(const bytes& current, bytes& next, const Key& key) NOEXCEPT
 TEMPLATE
 bool CLASS::push(const bytes& current, bytes& next, const Link& index) NOEXCEPT
 {
-    const auto raw = file_.get_raw(offset(index));
+    const auto raw = file_.get_raw(link_to_position(index));
     if (is_null(raw))
         return false;
 
