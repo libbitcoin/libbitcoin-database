@@ -22,7 +22,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/head.hpp>
+#include <bitcoin/database/primitives/arrayhead.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 
@@ -99,8 +99,8 @@ public:
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);
-    using head = database::head<Link, system::data_array<zero>, false>;
     using manager = database::manager<Link, system::data_array<zero>, Size>;
+    using head = database::arrayhead<Link>;
 
     // Unsafe with zero buckets (index/top/push).
     // Not thread safe (create/open/close/backup/restore).
