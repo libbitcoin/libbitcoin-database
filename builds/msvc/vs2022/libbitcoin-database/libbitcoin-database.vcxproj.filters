@@ -242,7 +242,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\txs.hpp">
       <Filter>include\bitcoin\database\tables\archives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\prevouts.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\prevout.hpp">
       <Filter>include\bitcoin\database\tables\caches</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_bk.hpp">

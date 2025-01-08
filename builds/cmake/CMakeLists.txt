@@ -308,7 +308,7 @@ if (with-tests)
         "../../test/tables/archives/spend.cpp"
         "../../test/tables/archives/transaction.cpp"
         "../../test/tables/archives/txs.cpp"
-        "../../test/tables/caches/prevouts.cpp"
+        "../../test/tables/caches/prevout.cpp"
         "../../test/tables/caches/validated_bk.cpp"
         "../../test/tables/caches/validated_tx.cpp"
         "../../test/tables/indexes/height.cpp"

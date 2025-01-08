@@ -63,6 +63,7 @@ namespace schema
 
     namespace caches
     {
+        constexpr auto prevout = "prevout";
         constexpr auto validated_bk = "validated_bk";
         constexpr auto validated_tx = "validated_tx";
     }
@@ -120,7 +121,6 @@ namespace schema
     constexpr size_t bk_slab = 3;   // ->validated_bk record.
     constexpr size_t tx_slab = 5;   // ->validated_tk record.
     constexpr size_t neutrino_ = 5; // ->neutrino record.
-    ////constexpr size_t buffer_ = 5;   // ->buffer record (guestimate).
 
     /// Search keys.
     constexpr size_t hash = system::hash_size;
@@ -353,6 +353,22 @@ namespace schema
         static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 14u);
         static_assert(minrow == 23u);
+    };
+
+    // record arraymap
+    struct prevout
+    {
+        static constexpr size_t pk = schema::spend_;
+        static constexpr size_t sk = zero;
+        static constexpr size_t minsize =
+            schema::bit + // TODO: merge bit.
+            schema::spend_ +
+            schema::tx;
+        static constexpr size_t minrow = minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 9u);
+        static_assert(minrow == 9u);
     };
 
     // slab hashmap
