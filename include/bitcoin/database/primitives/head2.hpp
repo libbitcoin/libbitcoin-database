@@ -16,31 +16,36 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HEAD_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_HEAD_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HEAD2_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_HEAD2_HPP
 
 #include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-template <typename Link, typename Key, bool Hash>
-class head
+/// Dynamically expanding array map header.
+/// Less efficient than a fixed-size header.
+template <typename Link, typename Key = size_t>
+class head2
 {
 public:
-    DEFAULT_COPY_MOVE_DESTRUCT(head);
+    DEFAULT_COPY_MOVE_DESTRUCT(head2);
 
     using bytes = typename Link::bytes;
 
     /// An array head has zero buckets (and cannot call index()).
-    head(storage& head, const Link& buckets) NOEXCEPT;
+    head2(storage& head, const Link& buckets) NOEXCEPT;
 
-    /// Sizing (thread safe).
+    /// Sizing is dynamic (thread safe).
     size_t size() const NOEXCEPT;
     size_t buckets() const NOEXCEPT;
+
+    /// Configure initial buckets to zero to disable the table.
+    bool enabled() const NOEXCEPT;
 
     /// Create from empty head file (not thread safe).
     bool create() NOEXCEPT;
@@ -58,14 +63,21 @@ public:
     /// Unsafe if verify false.
     Link top(const Key& key) const NOEXCEPT;
     Link top(const Link& index) const NOEXCEPT;
-    bool push(const bytes& current, bytes& next, const Key& key) NOEXCEPT;
-    bool push(const bytes& current, bytes& next, const Link& index) NOEXCEPT;
+    bool push(const bytes& current, const Link& index) NOEXCEPT;
 
 private:
     template <size_t Bytes>
     static auto& array_cast(memory::iterator buffer) NOEXCEPT
     {
         return system::unsafe_array_cast<uint8_t, Bytes>(buffer);
+    }
+
+    static constexpr Link position_to_link(size_t position) NOEXCEPT
+    {
+        using namespace system;
+        static_assert(is_nonzero(Link::size));
+        const auto link = floored_subtract(position / Link::size, one);
+        return possible_narrow_cast<typename Link::integer>(link);
     }
 
     // Byte offset of bucket index within head file.
@@ -79,17 +91,17 @@ private:
     }
 
     storage& file_;
-    const Link buckets_;
+    const Link initial_buckets_;
     mutable std::shared_mutex mutex_{};
 };
 
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, typename Key, bool Hash>
-#define CLASS head<Link, Key, Hash>
+#define TEMPLATE template <typename Link, typename Key>
+#define CLASS head2<Link, Key>
 
-#include <bitcoin/database/impl/primitives/head.ipp>
+#include <bitcoin/database/impl/primitives/head2.ipp>
 
 #undef CLASS
 #undef TEMPLATE

@@ -95,7 +95,7 @@ public:
     /// True if an instance of object with key exists.
     bool exists(const Key& key) const NOEXCEPT;
 
-    /// Return first element link or terimnal if not found/error.
+    /// Return first element link or terminal if not found/error.
     Link first(const Key& key) const NOEXCEPT;
 
     /// Iterator holds shared lock on storage remap.

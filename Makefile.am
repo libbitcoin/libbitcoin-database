@@ -78,7 +78,9 @@ test_libbitcoin_database_test_SOURCES = \
     test/mocks/map_store.hpp \
     test/primitives/arraymap.cpp \
     test/primitives/hashmap.cpp \
+    test/primitives/hashmap2.cpp \
     test/primitives/head.cpp \
+    test/primitives/head2.cpp \
     test/primitives/iterator.cpp \
     test/primitives/linkage.cpp \
     test/primitives/manager.cpp \
@@ -95,17 +97,17 @@ test_libbitcoin_database_test_SOURCES = \
     test/tables/archives/output.cpp \
     test/tables/archives/point.cpp \
     test/tables/archives/puts.cpp \
+    test/tables/archives/spend.cpp \
     test/tables/archives/transaction.cpp \
     test/tables/archives/txs.cpp \
-    test/tables/caches/bootstrap.cpp \
-    test/tables/caches/buffer.cpp \
-    test/tables/caches/neutrino.cpp \
+    test/tables/caches/prevouts.cpp \
     test/tables/caches/validated_bk.cpp \
     test/tables/caches/validated_tx.cpp \
-    test/tables/indexes/address.cpp \
     test/tables/indexes/height.cpp \
-    test/tables/indexes/spend.cpp \
-    test/tables/indexes/strong_tx.cpp
+    test/tables/indexes/strong_tx.cpp \
+    test/tables/optional/address.cpp \
+    test/tables/optional/bootstrap.cpp \
+    test/tables/optional/neutrino.cpp
 
 endif WITH_TESTS
 
@@ -159,7 +161,9 @@ include_bitcoin_database_impl_primitivesdir = ${includedir}/bitcoin/database/imp
 include_bitcoin_database_impl_primitives_HEADERS = \
     include/bitcoin/database/impl/primitives/arraymap.ipp \
     include/bitcoin/database/impl/primitives/hashmap.ipp \
+    include/bitcoin/database/impl/primitives/hashmap2.ipp \
     include/bitcoin/database/impl/primitives/head.ipp \
+    include/bitcoin/database/impl/primitives/head2.ipp \
     include/bitcoin/database/impl/primitives/iterator.ipp \
     include/bitcoin/database/impl/primitives/linkage.ipp \
     include/bitcoin/database/impl/primitives/manager.ipp
@@ -204,7 +208,9 @@ include_bitcoin_database_primitivesdir = ${includedir}/bitcoin/database/primitiv
 include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/arraymap.hpp \
     include/bitcoin/database/primitives/hashmap.hpp \
+    include/bitcoin/database/primitives/hashmap2.hpp \
     include/bitcoin/database/primitives/head.hpp \
+    include/bitcoin/database/primitives/head2.hpp \
     include/bitcoin/database/primitives/iterator.hpp \
     include/bitcoin/database/primitives/linkage.hpp \
     include/bitcoin/database/primitives/manager.hpp \
@@ -231,6 +237,7 @@ include_bitcoin_database_tables_archives_HEADERS = \
 
 include_bitcoin_database_tables_cachesdir = ${includedir}/bitcoin/database/tables/caches
 include_bitcoin_database_tables_caches_HEADERS = \
+    include/bitcoin/database/tables/caches/prevouts.hpp \
     include/bitcoin/database/tables/caches/validated_bk.hpp \
     include/bitcoin/database/tables/caches/validated_tx.hpp
 
@@ -243,7 +250,6 @@ include_bitcoin_database_tables_optionalsdir = ${includedir}/bitcoin/database/ta
 include_bitcoin_database_tables_optionals_HEADERS = \
     include/bitcoin/database/tables/optionals/address.hpp \
     include/bitcoin/database/tables/optionals/bootstrap.hpp \
-    include/bitcoin/database/tables/optionals/buffer.hpp \
     include/bitcoin/database/tables/optionals/neutrino.hpp
 
 

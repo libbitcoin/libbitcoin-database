@@ -90,6 +90,10 @@ public:
     /// Allocate bytes and return offset to first allocated (or eof).
     size_t allocate(size_t chunk) NOEXCEPT override;
 
+    /// Get remap-protected r/w access to offset (or null) allocated to size.
+    memory_ptr set(size_t offset, size_t size,
+        uint8_t backfill) NOEXCEPT override;
+
     /// Get remap-protected r/w access to start/offset of memory map (or null).
     memory_ptr get(size_t offset=zero) const NOEXCEPT override;
 

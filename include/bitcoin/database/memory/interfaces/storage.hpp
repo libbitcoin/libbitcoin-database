@@ -67,6 +67,10 @@ public:
     /// Allocate bytes and return offset to first allocated (or eof).
     virtual size_t allocate(size_t chunk) NOEXCEPT = 0;
 
+    /// Get remap-protected r/w access to offset (or null) allocated to size.
+    virtual memory_ptr set(size_t offset, size_t size,
+        uint8_t backfill) NOEXCEPT = 0;
+
     /// Get remap-protected r/w access to start/offset of memory map (or null).
     virtual memory_ptr get(size_t offset=zero) const NOEXCEPT = 0;
 

@@ -18,6 +18,7 @@
  */
 #include "../test.hpp"
 #include "chunk_storage.hpp"
+#include <algorithm>
 #include <filesystem>
 #include <mutex>
 #include <shared_mutex>
@@ -118,6 +119,21 @@ size_t chunk_storage::allocate(size_t chunk) NOEXCEPT
     const auto link = buffer_.size();
     buffer_.resize(buffer_.size() + chunk, 0x00);
     return link;
+}
+
+memory_ptr chunk_storage::set(size_t offset, size_t size,
+    uint8_t backfill) NOEXCEPT
+{
+    std::unique_lock field_lock(field_mutex_);
+    if (system::is_add_overflow(offset, size))
+        return {};
+
+    std::unique_lock map_lock(map_mutex_);
+    const auto minimum = offset + size;
+    if (minimum > buffer_.size())
+        buffer_.resize(minimum, backfill);
+
+    return get(offset);
 }
 
 memory_ptr chunk_storage::get(size_t offset) const NOEXCEPT

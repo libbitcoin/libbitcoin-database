@@ -44,7 +44,9 @@
 #include <bitcoin/database/memory/interfaces/storage.hpp>
 #include <bitcoin/database/primitives/arraymap.hpp>
 #include <bitcoin/database/primitives/hashmap.hpp>
+#include <bitcoin/database/primitives/hashmap2.hpp>
 #include <bitcoin/database/primitives/head.hpp>
+#include <bitcoin/database/primitives/head2.hpp>
 #include <bitcoin/database/primitives/iterator.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
@@ -62,13 +64,13 @@
 #include <bitcoin/database/tables/archives/spend.hpp>
 #include <bitcoin/database/tables/archives/transaction.hpp>
 #include <bitcoin/database/tables/archives/txs.hpp>
+#include <bitcoin/database/tables/caches/prevouts.hpp>
 #include <bitcoin/database/tables/caches/validated_bk.hpp>
 #include <bitcoin/database/tables/caches/validated_tx.hpp>
 #include <bitcoin/database/tables/indexes/height.hpp>
 #include <bitcoin/database/tables/indexes/strong_tx.hpp>
 #include <bitcoin/database/tables/optionals/address.hpp>
 #include <bitcoin/database/tables/optionals/bootstrap.hpp>
-#include <bitcoin/database/tables/optionals/buffer.hpp>
 #include <bitcoin/database/tables/optionals/neutrino.hpp>
 
 #endif

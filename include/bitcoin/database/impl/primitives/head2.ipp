@@ -16,53 +16,51 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HEAD_IPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_HEAD_IPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HEAD2_IPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_HEAD2_IPP
 
 #include <algorithm>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
-// Heads are not subject to resize/remap and therefore do not require memory
-// smart pointer with shared remap lock. Using get_raw() saves that allocation.
-
 namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-CLASS::head(storage& head, const Link& buckets) NOEXCEPT
-  : file_(head), buckets_(buckets)
+CLASS::head2(storage& head, const Link& buckets) NOEXCEPT
+  : file_(head), initial_buckets_(buckets)
 {
 }
 
 TEMPLATE
 size_t CLASS::size() const NOEXCEPT
 {
-    return link_to_position(buckets_);
+    return file_.size();
 }
 
 TEMPLATE
 size_t CLASS::buckets() const NOEXCEPT
 {
-    return buckets_;
+    const auto count = position_to_link(size()).value;
+    BC_ASSERT(count < Link::terminal);
+    return system::possible_narrow_cast<size_t>(count);
+}
+
+TEMPLATE
+bool CLASS::enabled() const NOEXCEPT
+{
+    return initial_buckets_ > one;
 }
 
 TEMPLATE
 Link CLASS::index(const Key& key) const NOEXCEPT
 {
-    BC_ASSERT_MSG(is_nonzero(buckets_), "hash table requires buckets");
+    // Key is the logical bucket index (no-hash).
+    if (key < buckets())
+        return manager<Link, system::data_array<zero>, Link::size>::
+            cast_link(key);
 
-    // TODO: for greater flexibility, inject hash function through template.
-    if constexpr (Hash)
-    {
-        // djb2_hash exhibits very poor uniqueness result for sequential keys.
-        return system::djb2_hash(key) % buckets_;
-    }
-    else
-    {
-        // unique_hash assumes sufficient uniqueness in low order key bytes.
-        return system::unique_hash(key) % buckets_;
-    }
+    return {};
 }
 
 TEMPLATE
@@ -71,10 +69,10 @@ bool CLASS::create() NOEXCEPT
     if (is_nonzero(file_.size()))
         return false;
 
-    const auto allocation = size();
+    const auto allocation = link_to_position(initial_buckets_);
     const auto start = file_.allocate(allocation);
 
-    // Guards addition overflow in file_.get (start must be valid).
+    // Guards addition overflow in manager_.get (start must be valid).
     if (start == storage::eof)
         return false;
 
@@ -85,15 +83,15 @@ bool CLASS::create() NOEXCEPT
     BC_ASSERT_MSG(verify(), "unexpected body size");
 
     // std::memset/fill_n have identical performance (on win32).
-    ////std::memset(ptr->data(), system::bit_all<uint8_t>, allocation);
-    std::fill_n(ptr->data(), allocation, system::bit_all<uint8_t>);
+    ////std::memset(ptr->data(), system::bit_all<uint8_t>, size());
+    std::fill_n(ptr->data(), size(), system::bit_all<uint8_t>);
     return set_body_count(zero);
 }
 
 TEMPLATE
 bool CLASS::verify() const NOEXCEPT
 {
-    return file_.size() == size();
+    return buckets() >= initial_buckets_;
 }
 
 TEMPLATE
@@ -127,11 +125,11 @@ Link CLASS::top(const Key& key) const NOEXCEPT
 TEMPLATE
 Link CLASS::top(const Link& index) const NOEXCEPT
 {
-    const auto raw = file_.get_raw(link_to_position(index));
-    if (is_null(raw))
+    const auto ptr = file_.get(link_to_position(index));
+    if (is_null(ptr))
         return {};
 
-    const auto& head = array_cast<Link::size>(raw);
+    const auto& head = array_cast<Link::size>(ptr->data());
 
     mutex_.lock_shared();
     const auto top = head;
@@ -140,22 +138,19 @@ Link CLASS::top(const Link& index) const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::push(const bytes& current, bytes& next, const Key& key) NOEXCEPT
+bool CLASS::push(const bytes& current, const Link& index) NOEXCEPT
 {
-    return push(current, next, index(key));
-}
+    constexpr auto fill = system::bit_all<uint8_t>;
 
-TEMPLATE
-bool CLASS::push(const bytes& current, bytes& next, const Link& index) NOEXCEPT
-{
-    const auto raw = file_.get_raw(link_to_position(index));
-    if (is_null(raw))
+    // Allocate as necessary and fill allocations.
+    const auto ptr = file_.set(link_to_position(index), Link::size, fill);
+
+    if (is_null(ptr))
         return false;
 
-    auto& head = array_cast<Link::size>(raw);
+    auto& head = array_cast<Link::size>(ptr->data());
 
     mutex_.lock();
-    next = head;
     head = current;
     mutex_.unlock();
     return true;

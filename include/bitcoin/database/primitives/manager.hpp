@@ -34,7 +34,9 @@ template <typename Link, typename Key, size_t Size>
 class manager
 {
 public:
+    static constexpr Link position_to_link(size_t position) NOEXCEPT;
     static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
+    static constexpr typename Link::integer cast_link(size_t link) NOEXCEPT;
 
     DEFAULT_COPY_MOVE_DESTRUCT(manager);
 
@@ -74,8 +76,6 @@ public:
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);
-    static constexpr Link position_to_link(size_t position) NOEXCEPT;
-    static constexpr typename Link::integer cast_link(size_t link) NOEXCEPT;
 
     // Thread and remap safe.
     storage& file_;
