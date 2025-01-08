@@ -102,7 +102,7 @@ private:
     using manager = database::manager<Link, system::data_array<zero>, Size>;
     using head = database::arrayhead<Link>;
 
-    // Unsafe with zero buckets (index/top/push).
+    // Thread safe (index/top/push).
     // Not thread safe (create/open/close/backup/restore).
     head head_;
 
