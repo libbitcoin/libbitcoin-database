@@ -113,7 +113,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\simple_writer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\streamers.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\utilities.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\arraymap.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hashmap.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hashmap2.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\head.hpp" />
@@ -121,6 +120,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\iterator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linkage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\manager.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\nomap.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\primitives.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\query.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
@@ -153,7 +153,6 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\accessor.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\simple_reader.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\simple_writer.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\arraymap.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hashmap.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hashmap2.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\head.ipp" />
@@ -161,6 +160,7 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\iterator.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\linkage.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\manager.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\nomap.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\archive.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\confirm.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\context.ipp" />

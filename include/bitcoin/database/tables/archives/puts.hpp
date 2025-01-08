@@ -32,13 +32,13 @@ namespace table {
 
 /// Puts is an blob of spend and output fk records.
 struct puts
-  : public array_map<schema::puts>
+  : public no_map<schema::puts>
 {
     using spend = linkage<schema::spend_>;
     using out = linkage<schema::put>;
     using spend_links = std_vector<spend::integer>;
     using output_links = std_vector<out::integer>;
-    using array_map<schema::puts>::arraymap;
+    using no_map<schema::puts>::nomap;
 
     // TODO: There is a potential optimization available given that the inputs
     // (spend puts) for a given transaction are sequential. This means that an

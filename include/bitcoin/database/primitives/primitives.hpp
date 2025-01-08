@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
 
-#include <bitcoin/database/primitives/arraymap.hpp>
+#include <bitcoin/database/primitives/nomap.hpp>
 #include <bitcoin/database/primitives/hashmap.hpp>
 #include <bitcoin/database/primitives/hashmap2.hpp>
 #include <bitcoin/database/primitives/head.hpp>

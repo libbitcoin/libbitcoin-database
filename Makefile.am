@@ -76,7 +76,6 @@ test_libbitcoin_database_test_SOURCES = \
     test/mocks/chunk_storage.hpp \
     test/mocks/chunk_store.hpp \
     test/mocks/map_store.hpp \
-    test/primitives/arraymap.cpp \
     test/primitives/hashmap.cpp \
     test/primitives/hashmap2.cpp \
     test/primitives/head.cpp \
@@ -84,6 +83,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/primitives/iterator.cpp \
     test/primitives/linkage.cpp \
     test/primitives/manager.cpp \
+    test/primitives/nomap.cpp \
     test/query/archive.cpp \
     test/query/confirm.cpp \
     test/query/context.cpp \
@@ -159,14 +159,14 @@ include_bitcoin_database_impl_memory_HEADERS = \
 
 include_bitcoin_database_impl_primitivesdir = ${includedir}/bitcoin/database/impl/primitives
 include_bitcoin_database_impl_primitives_HEADERS = \
-    include/bitcoin/database/impl/primitives/arraymap.ipp \
     include/bitcoin/database/impl/primitives/hashmap.ipp \
     include/bitcoin/database/impl/primitives/hashmap2.ipp \
     include/bitcoin/database/impl/primitives/head.ipp \
     include/bitcoin/database/impl/primitives/head2.ipp \
     include/bitcoin/database/impl/primitives/iterator.ipp \
     include/bitcoin/database/impl/primitives/linkage.ipp \
-    include/bitcoin/database/impl/primitives/manager.ipp
+    include/bitcoin/database/impl/primitives/manager.ipp \
+    include/bitcoin/database/impl/primitives/nomap.ipp
 
 include_bitcoin_database_impl_querydir = ${includedir}/bitcoin/database/impl/query
 include_bitcoin_database_impl_query_HEADERS = \
@@ -206,7 +206,6 @@ include_bitcoin_database_memory_interfaces_HEADERS = \
 
 include_bitcoin_database_primitivesdir = ${includedir}/bitcoin/database/primitives
 include_bitcoin_database_primitives_HEADERS = \
-    include/bitcoin/database/primitives/arraymap.hpp \
     include/bitcoin/database/primitives/hashmap.hpp \
     include/bitcoin/database/primitives/hashmap2.hpp \
     include/bitcoin/database/primitives/head.hpp \
@@ -214,6 +213,7 @@ include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/iterator.hpp \
     include/bitcoin/database/primitives/linkage.hpp \
     include/bitcoin/database/primitives/manager.hpp \
+    include/bitcoin/database/primitives/nomap.hpp \
     include/bitcoin/database/primitives/primitives.hpp
 
 include_bitcoin_database_tablesdir = ${includedir}/bitcoin/database/tables

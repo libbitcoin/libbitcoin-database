@@ -16,8 +16,8 @@
 /// You should have received a copy of the GNU Affero General Public License
 /// along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ARRAYMAP_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_ARRAYMAP_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_NOMAP_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_NOMAP_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -32,14 +32,14 @@ namespace database {
 /// Caution: reader/writer hold body remap lock until disposed.
 /// These handles should be used for serialization and immediately disposed.
 template <typename Link, size_t Size>
-class arraymap
+class nomap
 {
 public:
-    DEFAULT_COPY_MOVE_DESTRUCT(arraymap);
+    DEFAULT_COPY_MOVE_DESTRUCT(nomap);
 
     using link = Link;
 
-    arraymap(storage& header, storage& body) NOEXCEPT;
+    nomap(storage& header, storage& body) NOEXCEPT;
 
     /// Setup, not thread safe.
     /// -----------------------------------------------------------------------
@@ -111,15 +111,15 @@ private:
 };
 
 template <typename Element>
-using array_map = arraymap<linkage<Element::pk>, Element::size>;
+using no_map = nomap<linkage<Element::pk>, Element::size>;
 
 } // namespace database
 } // namespace libbitcoin
 
 #define TEMPLATE template <typename Link, size_t Size>
-#define CLASS arraymap<Link, Size>
+#define CLASS nomap<Link, Size>
 
-#include <bitcoin/database/impl/primitives/arraymap.ipp>
+#include <bitcoin/database/impl/primitives/nomap.ipp>
 
 #undef CLASS
 #undef TEMPLATE

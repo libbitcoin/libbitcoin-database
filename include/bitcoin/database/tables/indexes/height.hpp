@@ -30,10 +30,10 @@ namespace table {
 
 /// height is an array of header fk records.
 struct height
-  : public array_map<schema::height>
+  : public no_map<schema::height>
 {
     using block = linkage<schema::block>;
-    using array_map<schema::height>::arraymap;
+    using no_map<schema::height>::nomap;
 
     struct record
       : public schema::height

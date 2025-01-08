@@ -19,15 +19,15 @@
 #include "../test.hpp"
 #include "../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(arraymap_tests)
+BOOST_AUTO_TEST_SUITE(nomap_tests)
 
 template <typename Link, size_t Size>
-class arraymap_
-  : public arraymap<Link, Size>
+class nomap_
+  : public nomap<Link, Size>
 {
 public:
-    using base = arraymap<Link, Size>;
-    using base::arraymap;
+    using base = nomap<Link, Size>;
+    using base::nomap;
     ////using reader_ptr = std::shared_ptr<database::reader>;
     ////using writer_ptr = std::shared_ptr<database::writer>;
     ////
@@ -64,13 +64,13 @@ using namespace system;
 using link5 = linkage<5>;
 struct slab0 { static constexpr size_t size = max_size_t; };
 struct record4 { static constexpr size_t size = 4; };
-using slab_table = arraymap_<link5, slab0::size>;
-using record_table = arraymap_<link5, record4::size>;
+using slab_table = nomap_<link5, slab0::size>;
+using record_table = nomap_<link5, record4::size>;
 
-// record arraymap
+// record nomap
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(arraymap__record_construct__empty__expected)
+BOOST_AUTO_TEST_CASE(nomap__record_construct__empty__expected)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_construct__empty__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_construct__non_empty__expected)
+BOOST_AUTO_TEST_CASE(nomap__record_construct__non_empty__expected)
 {
     constexpr auto body_size = 12345u;
     data_chunk head_file;
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_construct__non_empty__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_getter__terminal__false)
+BOOST_AUTO_TEST_CASE(nomap__record_getter__terminal__false)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_getter__terminal__false)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_getter__empty__exhausted)
+BOOST_AUTO_TEST_CASE(nomap__record_getter__empty__exhausted)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -116,10 +116,10 @@ BOOST_AUTO_TEST_CASE(arraymap__record_getter__empty__exhausted)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-// slab arraymap
+// slab nomap
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_construct__empty__expected)
+BOOST_AUTO_TEST_CASE(nomap__slab_construct__empty__expected)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_construct__empty__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_construct__non_empty__expected)
+BOOST_AUTO_TEST_CASE(nomap__slab_construct__non_empty__expected)
 {
     constexpr auto body_size = 12345u;
     data_chunk head_file;
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_construct__non_empty__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_getter__terminal__false)
+BOOST_AUTO_TEST_CASE(nomap__slab_getter__terminal__false)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_getter__terminal__false)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_getter__empty__exhausted)
+BOOST_AUTO_TEST_CASE(nomap__slab_getter__empty__exhausted)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_getter__empty__exhausted)
 // push/found/at (protected interface positive tests)
 // ----------------------------------------------------------------------------
 
-////BOOST_AUTO_TEST_CASE(arraymap__record_readers__empty__expected)
+////BOOST_AUTO_TEST_CASE(nomap__record_readers__empty__expected)
 ////{
 ////    data_chunk head_file;
 ////    data_chunk body_file;
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_getter__empty__exhausted)
 ////    // 00000000 [1]
 ////}
 ////
-////BOOST_AUTO_TEST_CASE(arraymap__slab_readers__empty__expected)
+////BOOST_AUTO_TEST_CASE(nomap__slab_readers__empty__expected)
 ////{
 ////    data_chunk head_file;
 ////    data_chunk body_file;
@@ -276,39 +276,39 @@ public:
     uint32_t value{ 0 };
 };
 
-BOOST_AUTO_TEST_CASE(arraymap__record_get__terminal__invalid)
+BOOST_AUTO_TEST_CASE(nomap__record_get__terminal__invalid)
 {
     data_chunk head_file;
     data_chunk body_file;
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    const arraymap<link5, little_record::size> instance{ head_store, body_store };
+    const nomap<link5, little_record::size> instance{ head_store, body_store };
 
     little_record record{};
     BOOST_REQUIRE(!instance.get(link5::terminal, record));
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_get__empty__invalid)
+BOOST_AUTO_TEST_CASE(nomap__record_get__empty__invalid)
 {
     data_chunk head_file;
     data_chunk body_file;
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    const arraymap<link5, little_record::size> instance{ head_store, body_store };
+    const nomap<link5, little_record::size> instance{ head_store, body_store };
 
     little_record record{};
     BOOST_REQUIRE(!instance.get(0, record));
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_get__populated__valid)
+BOOST_AUTO_TEST_CASE(nomap__record_get__populated__valid)
 {
     data_chunk head_file;
     data_chunk body_file{ 0x01, 0x02, 0x03, 0x04 };
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    const arraymap<link5, little_record::size> instance{ head_store, body_store };
+    const nomap<link5, little_record::size> instance{ head_store, body_store };
 
     little_record record{};
     BOOST_REQUIRE(instance.get(0, record));
@@ -316,13 +316,13 @@ BOOST_AUTO_TEST_CASE(arraymap__record_get__populated__valid)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_put__get__expected)
+BOOST_AUTO_TEST_CASE(nomap__record_put__get__expected)
 {
     data_chunk head_file;
     data_chunk body_file;
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    arraymap<link5, big_record::size> instance{ head_store, body_store };
+    nomap<link5, big_record::size> instance{ head_store, body_store };
     BOOST_REQUIRE(instance.put(big_record{ 0xa1b2c3d4_u32 }));
 
     big_record record{};
@@ -334,13 +334,13 @@ BOOST_AUTO_TEST_CASE(arraymap__record_put__get__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_count__truncate__expected)
+BOOST_AUTO_TEST_CASE(nomap__record_count__truncate__expected)
 {
     data_chunk head_file;
     data_chunk body_file;
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    arraymap<link5, big_record::size> instance{ head_store, body_store };
+    nomap<link5, big_record::size> instance{ head_store, body_store };
     BOOST_REQUIRE(instance.put(big_record{ 0xa1b2c3d4_u32 }));
     BOOST_REQUIRE(instance.put(big_record{ 0xa1b2c3d4_u32 }));
 
@@ -357,13 +357,13 @@ BOOST_AUTO_TEST_CASE(arraymap__record_count__truncate__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_put_link__multiple__expected)
+BOOST_AUTO_TEST_CASE(nomap__record_put_link__multiple__expected)
 {
     data_chunk head_file;
     data_chunk body_file;
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    arraymap<link5, big_record::size> instance{ head_store, body_store };
+    nomap<link5, big_record::size> instance{ head_store, body_store };
 
     link5 link{};
     BOOST_REQUIRE(instance.put_link(link, big_record{ 0xa1b2c3d4_u32 }));
@@ -429,13 +429,13 @@ public:
     uint32_t value{ 0 };
 };
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_put__get__expected)
+BOOST_AUTO_TEST_CASE(nomap__slab_put__get__expected)
 {
     data_chunk head_file;
     data_chunk body_file;
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    arraymap<link5, big_slab::size> instance{ head_store, body_store };
+    nomap<link5, big_slab::size> instance{ head_store, body_store };
     BOOST_REQUIRE(instance.put(big_slab{ 0xa1b2c3d4_u32 }));
 
     big_slab slab{};
@@ -447,13 +447,13 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_put__get__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_count__truncate__expected)
+BOOST_AUTO_TEST_CASE(nomap__slab_count__truncate__expected)
 {
     data_chunk head_file;
     data_chunk body_file;
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    arraymap<link5, big_slab::size> instance{ head_store, body_store };
+    nomap<link5, big_slab::size> instance{ head_store, body_store };
     BOOST_REQUIRE(instance.put(big_slab{ 0xa1b2c3d4_u32 }));
     BOOST_REQUIRE(instance.put(big_slab{ 0xa1b2c3d4_u32 }));
 
@@ -470,13 +470,13 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_count__truncate__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_put_link__multiple__expected)
+BOOST_AUTO_TEST_CASE(nomap__slab_put_link__multiple__expected)
 {
     data_chunk head_file;
     data_chunk body_file;
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    arraymap<link5, big_slab::size> instance{ head_store, body_store };
+    nomap<link5, big_slab::size> instance{ head_store, body_store };
 
     link5 link{};
     BOOST_REQUIRE(instance.put_link(link, big_slab{ 0xa1b2c3d4_u32 }));
@@ -522,13 +522,13 @@ public:
     uint64_t value{ 0 };
 };
 
-BOOST_AUTO_TEST_CASE(arraymap__record_get__excess__false)
+BOOST_AUTO_TEST_CASE(nomap__record_get__excess__false)
 {
     data_chunk head_file;
     data_chunk body_file{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    const arraymap<link5, record_excess::size> instance{ head_store, body_store };
+    const nomap<link5, record_excess::size> instance{ head_store, body_store };
 
 
     record_excess record{};
@@ -536,13 +536,13 @@ BOOST_AUTO_TEST_CASE(arraymap__record_get__excess__false)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_put_link__excess__false)
+BOOST_AUTO_TEST_CASE(nomap__record_put_link__excess__false)
 {
     data_chunk head_file;
     data_chunk body_file;
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    arraymap<link5, record_excess::size> instance{ head_store, body_store };
+    nomap<link5, record_excess::size> instance{ head_store, body_store };
     BOOST_REQUIRE(instance.put_link(record_excess{ 0xa1b2c3d4_u32 }).is_terminal());
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -592,13 +592,13 @@ public:
     uint64_t value{ 0 };
 };
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_get__excess__true)
+BOOST_AUTO_TEST_CASE(nomap__slab_get__excess__true)
 {
     data_chunk head_file;
     data_chunk body_file{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    const arraymap<link5, slab_excess::size> instance{ head_store, body_store };
+    const nomap<link5, slab_excess::size> instance{ head_store, body_store };
 
     // Excess read allowed to eof here (reader has only knowledge of size).
     slab_excess record{};
@@ -606,13 +606,13 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_get__excess__true)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_get__file_excess__false)
+BOOST_AUTO_TEST_CASE(nomap__slab_get__file_excess__false)
 {
     data_chunk head_file;
     data_chunk body_file{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    const arraymap<link5, file_excess::size> instance{ head_store, body_store };
+    const nomap<link5, file_excess::size> instance{ head_store, body_store };
 
     // Excess read disallowed to here (past eof).
     file_excess record{};
@@ -620,13 +620,13 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_get__file_excess__false)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_put_link__excess__false)
+BOOST_AUTO_TEST_CASE(nomap__slab_put_link__excess__false)
 {
     data_chunk head_file;
     data_chunk body_file;
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    arraymap<link5, slab_excess::size> instance{ head_store, body_store };
+    nomap<link5, slab_excess::size> instance{ head_store, body_store };
     BOOST_REQUIRE(instance.put_link(slab_excess{ 0xa1b2c3d4_u32 }).is_terminal());
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -634,7 +634,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_put_link__excess__false)
 // record create/close/backup/restore/verify
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(arraymap__record_verify__empty_files__expected)
+BOOST_AUTO_TEST_CASE(nomap__record_verify__empty_files__expected)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -649,7 +649,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_verify__empty_files__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_create__non_empty_head_file__failure)
+BOOST_AUTO_TEST_CASE(nomap__record_create__non_empty_head_file__failure)
 {
     data_chunk head_file{ 0x42 };
     data_chunk body_file;
@@ -663,7 +663,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_create__non_empty_head_file__failure)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_create__non_empty_body_file__body_zeroed)
+BOOST_AUTO_TEST_CASE(nomap__record_create__non_empty_body_file__body_zeroed)
 {
     data_chunk head_file;
     data_chunk body_file{ 0x42 };
@@ -678,7 +678,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_create__non_empty_body_file__body_zeroed)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_body_count__create__zero)
+BOOST_AUTO_TEST_CASE(nomap__record_body_count__create__zero)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -690,7 +690,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_body_count__create__zero)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_body_count__empty_close__zero)
+BOOST_AUTO_TEST_CASE(nomap__record_body_count__empty_close__zero)
 {
     auto head_file = base16_chunk("1234567890");
     data_chunk body_file;
@@ -702,7 +702,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_body_count__empty_close__zero)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_body_count__two_close__two)
+BOOST_AUTO_TEST_CASE(nomap__record_body_count__two_close__two)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -716,7 +716,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_body_count__two_close__two)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_body_count__two_backup__two)
+BOOST_AUTO_TEST_CASE(nomap__record_body_count__two_backup__two)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -730,7 +730,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_body_count__two_backup__two)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_body_count__empty_restore__truncates)
+BOOST_AUTO_TEST_CASE(nomap__record_body_count__empty_restore__truncates)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -744,7 +744,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_body_count__empty_restore__truncates)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__record_body_count__non_empty_restore__truncates)
+BOOST_AUTO_TEST_CASE(nomap__record_body_count__non_empty_restore__truncates)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -762,7 +762,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_body_count__non_empty_restore__truncates)
 // slab create/close/backup/restore/verify
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_verify__empty_files__expected)
+BOOST_AUTO_TEST_CASE(nomap__slab_verify__empty_files__expected)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -777,7 +777,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_verify__empty_files__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_create__non_empty_head_file__failure)
+BOOST_AUTO_TEST_CASE(nomap__slab_create__non_empty_head_file__failure)
 {
     data_chunk head_file{ 0x42 };
     data_chunk body_file;
@@ -791,7 +791,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_create__non_empty_head_file__failure)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_create__non_empty_body_file__body_zeroed)
+BOOST_AUTO_TEST_CASE(nomap__slab_create__non_empty_body_file__body_zeroed)
 {
     data_chunk head_file;
     data_chunk body_file{ 0x42 };
@@ -806,7 +806,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_create__non_empty_body_file__body_zeroed)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_body_count__create__zero)
+BOOST_AUTO_TEST_CASE(nomap__slab_body_count__create__zero)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -818,7 +818,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_body_count__create__zero)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_body_count__empty_close__zero)
+BOOST_AUTO_TEST_CASE(nomap__slab_body_count__empty_close__zero)
 {
     auto head_file = base16_chunk("1234567890");
     data_chunk body_file;
@@ -829,7 +829,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_body_count__empty_close__zero)
     BOOST_REQUIRE_EQUAL(head_file, base16_chunk("0000000000"));
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_body_count__two_close__two)
+BOOST_AUTO_TEST_CASE(nomap__slab_body_count__two_close__two)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -843,7 +843,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_body_count__two_close__two)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_body_count__two_backup__two)
+BOOST_AUTO_TEST_CASE(nomap__slab_body_count__two_backup__two)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -857,7 +857,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_body_count__two_backup__two)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_body_count__empty_restore__truncates)
+BOOST_AUTO_TEST_CASE(nomap__slab_body_count__empty_restore__truncates)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -871,7 +871,7 @@ BOOST_AUTO_TEST_CASE(arraymap__slab_body_count__empty_restore__truncates)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(arraymap__slab_body_count__non_empty_restore__truncates)
+BOOST_AUTO_TEST_CASE(nomap__slab_body_count__non_empty_restore__truncates)
 {
     data_chunk head_file;
     data_chunk body_file;
