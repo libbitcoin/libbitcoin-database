@@ -64,7 +64,7 @@ Link CLASS::allocate(const Link& size) NOEXCEPT
     if (start == storage::eof)
         return Link::terminal;
 
-    // Callers (arraymap and hashmap) handle terminal allocation.
+    // Callers (nomap and hashmap) handle terminal allocation.
     return position_to_link(start);
 }
 

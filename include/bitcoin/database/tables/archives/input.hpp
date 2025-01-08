@@ -36,9 +36,9 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 /// Input is a blob (set of non-searchable slabs).
 /// Input can be obtained by fk navigation (eg from tx/puts/spend). 
 struct input
-  : public array_map<schema::input>
+  : public no_map<schema::input>
 {
-    using array_map<schema::input>::arraymap;
+    using no_map<schema::input>::nomap;
 
     struct slab
       : public schema::input

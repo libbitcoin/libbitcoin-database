@@ -35,10 +35,10 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 /// Output is a blob (set of non-searchable slabs).
 /// Output can be obtained by fk navigation (eg from tx/index). 
 struct output
-  : public array_map<schema::output>
+  : public no_map<schema::output>
 {
     using tx = linkage<schema::tx>;
-    using array_map<schema::output>::arraymap;
+    using no_map<schema::output>::nomap;
 
     struct slab
       : public schema::output

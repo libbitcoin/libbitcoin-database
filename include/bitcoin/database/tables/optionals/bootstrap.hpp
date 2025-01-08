@@ -30,9 +30,9 @@
 ////
 /////// bootstrap is an array of header hashes (initial blockchain).
 ////struct bootstrap
-////  : public array_map<schema::bootstrap>
+////  : public no_map<schema::bootstrap>
 ////{
-////    using array_map<schema::bootstrap>::arraymap;
+////    using no_map<schema::bootstrap>::nomap;
 ////
 ////    struct record
 ////      : public schema::bootstrap

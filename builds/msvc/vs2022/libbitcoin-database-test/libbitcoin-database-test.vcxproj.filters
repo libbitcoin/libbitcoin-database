@@ -78,19 +78,16 @@
     <ClCompile Include="..\..\..\..\test\mocks\chunk_storage.cpp">
       <Filter>src\mocks</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\primitives\arrayhead.cpp">
+      <Filter>src\primitives</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\arraymap.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\hashmap.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\hashmap2.cpp">
-      <Filter>src\primitives</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\head.cpp">
-      <Filter>src\primitives</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\head2.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp">
@@ -100,6 +97,9 @@
       <Filter>src\primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\manager.cpp">
+      <Filter>src\primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\primitives\nomap.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\archive.cpp">
