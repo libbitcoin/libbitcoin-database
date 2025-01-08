@@ -28,7 +28,7 @@ namespace database {
 
 TEMPLATE
 CLASS::arraymap(storage& header, storage& body, const Link& buckets) NOEXCEPT
-  : head_(header, buckets), manager_(body)
+  : head_(header, buckets), body_(body)
 {
 }
 
@@ -40,19 +40,19 @@ bool CLASS::create() NOEXCEPT
 {
     Link count{};
     return head_.create() && head_.get_body_count(count) &&
-        manager_.truncate(count);
+        body_.truncate(count);
 }
 
 TEMPLATE
 bool CLASS::close() NOEXCEPT
 {
-    return head_.set_body_count(manager_.count());
+    return head_.set_body_count(body_.count());
 }
 
 TEMPLATE
 bool CLASS::backup() NOEXCEPT
 {
-    return head_.set_body_count(manager_.count());
+    return head_.set_body_count(body_.count());
 }
 
 TEMPLATE
@@ -60,7 +60,7 @@ bool CLASS::restore() NOEXCEPT
 {
     Link count{};
     return head_.verify() && head_.get_body_count(count) &&
-        manager_.truncate(count);
+        body_.truncate(count);
 }
 
 TEMPLATE
@@ -68,7 +68,7 @@ bool CLASS::verify() const NOEXCEPT
 {
     Link count{};
     return head_.verify() && head_.get_body_count(count) &&
-        (count == manager_.count());
+        (count == body_.count());
 }
 
 // sizing
@@ -95,13 +95,13 @@ size_t CLASS::head_size() const NOEXCEPT
 TEMPLATE
 size_t CLASS::body_size() const NOEXCEPT
 {
-    return manager_.size();
+    return body_.size();
 }
 
 TEMPLATE
 Link CLASS::count() const NOEXCEPT
 {
-    return manager_.count();
+    return body_.count();
 }
 
 // query interface
@@ -110,19 +110,19 @@ Link CLASS::count() const NOEXCEPT
 TEMPLATE
 code CLASS::get_fault() const NOEXCEPT
 {
-    return manager_.get_fault();
+    return body_.get_fault();
 }
 
 TEMPLATE
 size_t CLASS::get_space() const NOEXCEPT
 {
-    return manager_.get_space();
+    return body_.get_space();
 }
 
 TEMPLATE
 code CLASS::reload() NOEXCEPT
 {
-    return manager_.reload();
+    return body_.reload();
 }
 
 // query interface
@@ -154,7 +154,7 @@ template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::find(const Key& key, Element& element) const NOEXCEPT
 {
     // This override avoids duplicated memory_ptr construct in get(first()).
-    const auto ptr = manager_.get();
+    const auto ptr = body_.get();
     return read(ptr, first(ptr, head_.top(key), key), element);
 }
 
@@ -163,7 +163,7 @@ template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
     // This override is the normal form.
-    return read(manager_.get(), link, element);
+    return read(body_.get(), link, element);
 }
 
 TEMPLATE
@@ -173,7 +173,7 @@ bool CLASS::put(const Key& key, const Element& element) NOEXCEPT
     using namespace system;
     const auto count = element.count();
     const auto link = allocate(count);
-    const auto ptr = manager_.get(link);
+    const auto ptr = body_.get(link);
     if (!ptr)
         return false;
 
@@ -199,7 +199,7 @@ bool CLASS::read(const memory_ptr& ptr, const Link& link,
         return false;
 
     using namespace system;
-    const auto start = manager::link_to_position(link);
+    const auto start = body::link_to_position(link);
     if (is_limited<ptrdiff_t>(start))
         return false;
 
