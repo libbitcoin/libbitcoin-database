@@ -37,8 +37,8 @@ static_assert(buckets == 20u);
 
 using link = linkage<link_size>;
 using key = data_array<key_size>;
-using djb2_header = head<link, key, true>;
-using unique_header = head<link, key, false>;
+using djb2_header = hashhead<link, key, true>;
+using unique_header = hashhead<link, key, false>;
 
 class nullptr_storage
   : public test::chunk_storage
@@ -52,7 +52,7 @@ public:
     }
 };
 
-BOOST_AUTO_TEST_CASE(head__create__size__expected)
+BOOST_AUTO_TEST_CASE(hashhead__create__size__expected)
 {
     data_chunk data;
     test::chunk_storage store{ data };
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(head__create__size__expected)
     BOOST_REQUIRE_EQUAL(data.size(), head_size);
 }
 
-BOOST_AUTO_TEST_CASE(head__verify__uncreated__false)
+BOOST_AUTO_TEST_CASE(hashhead__verify__uncreated__false)
 {
     data_chunk data;
     test::chunk_storage store{ data };
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(head__verify__uncreated__false)
     BOOST_REQUIRE(!head.verify());
 }
 
-BOOST_AUTO_TEST_CASE(head__verify__created__false)
+BOOST_AUTO_TEST_CASE(hashhead__verify__created__false)
 {
     data_chunk data;
     test::chunk_storage store{ data };
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(head__verify__created__false)
     BOOST_REQUIRE(head.verify());
 }
 
-BOOST_AUTO_TEST_CASE(head__get_body_count__created__zero)
+BOOST_AUTO_TEST_CASE(hashhead__get_body_count__created__zero)
 {
     data_chunk data;
     test::chunk_storage store{ data };
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(head__get_body_count__created__zero)
     BOOST_REQUIRE_EQUAL(count, zero);
 }
 
-BOOST_AUTO_TEST_CASE(head__set_body_count__get__expected)
+BOOST_AUTO_TEST_CASE(hashhead__set_body_count__get__expected)
 {
     data_chunk data;
     test::chunk_storage store{ data };
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(head__set_body_count__get__expected)
     BOOST_REQUIRE_EQUAL(count, expected);
 }
 
-BOOST_AUTO_TEST_CASE(head__unique_hash__null_key__expected)
+BOOST_AUTO_TEST_CASE(hashhead__unique_hash__null_key__expected)
 {
     constexpr key null_key{};
     const auto expected = system::unique_hash(null_key) % buckets;
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(head__unique_hash__null_key__expected)
     BOOST_REQUIRE_EQUAL(head.index(null_key), expected);
 }
 
-BOOST_AUTO_TEST_CASE(head__djb2_hash__null_key__expected)
+BOOST_AUTO_TEST_CASE(hashhead__djb2_hash__null_key__expected)
 {
     constexpr key null_key{};
     const auto expected = system::djb2_hash(null_key) % buckets;
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(head__djb2_hash__null_key__expected)
     BOOST_REQUIRE_EQUAL(head.index(null_key), expected);
 }
 
-BOOST_AUTO_TEST_CASE(head__top__link__terminal)
+BOOST_AUTO_TEST_CASE(hashhead__top__link__terminal)
 {
     test::chunk_storage store;
     djb2_header head{ store, buckets };
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(head__top__link__terminal)
     BOOST_REQUIRE(head.top(9).is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(head__top__nullptr__terminal)
+BOOST_AUTO_TEST_CASE(hashhead__top__nullptr__terminal)
 {
     nullptr_storage store;
     djb2_header head{ store, buckets };
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(head__top__nullptr__terminal)
     BOOST_REQUIRE(head.top(9).is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(head__top__key__terminal)
+BOOST_AUTO_TEST_CASE(hashhead__top__key__terminal)
 {
     constexpr key null_key{};
 
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(head__top__key__terminal)
     BOOST_REQUIRE(head.top(null_key).is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(head__push__link__terminal)
+BOOST_AUTO_TEST_CASE(hashhead__push__link__terminal)
 {
     test::chunk_storage store;
     djb2_header head{ store, buckets };
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(head__push__link__terminal)
     BOOST_REQUIRE_EQUAL(head.top(link_key), expected);
 }
 
-BOOST_AUTO_TEST_CASE(head__push__key__terminal)
+BOOST_AUTO_TEST_CASE(hashhead__push__key__terminal)
 {
     test::chunk_storage store;
     djb2_header head{ store, buckets };

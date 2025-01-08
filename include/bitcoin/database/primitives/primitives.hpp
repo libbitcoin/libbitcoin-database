@@ -21,7 +21,7 @@
 
 #include <bitcoin/database/primitives/arrayhead.hpp>
 #include <bitcoin/database/primitives/arraymap.hpp>
-#include <bitcoin/database/primitives/head.hpp>
+#include <bitcoin/database/primitives/hashhead.hpp>
 #include <bitcoin/database/primitives/hashmap.hpp>
 #include <bitcoin/database/primitives/iterator.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>

@@ -121,14 +121,14 @@ private:
     static constexpr auto is_slab = (Size == max_size_t);
 
     using head = database::arrayhead<Link>;
-    using manager = database::manager<Link, Key, Size>;
+    using body = database::manager<Link, Key, Size>;
 
     // Thread safe (index/top/push).
     // Not thread safe (create/open/close/backup/restore).
     head head_;
 
     // Thread safe.
-    manager manager_;
+    body body_;
 };
 
 template <typename Element>

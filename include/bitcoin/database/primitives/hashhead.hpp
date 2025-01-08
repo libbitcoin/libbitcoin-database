@@ -28,15 +28,15 @@ namespace libbitcoin {
 namespace database {
 
 template <typename Link, typename Key, bool Hash>
-class head
+class hashhead
 {
 public:
-    DEFAULT_COPY_MOVE_DESTRUCT(head);
+    DEFAULT_COPY_MOVE_DESTRUCT(hashhead);
 
     using bytes = typename Link::bytes;
 
-    /// An array head has zero buckets (and cannot call index()).
-    head(storage& head, const Link& buckets) NOEXCEPT;
+    /// A hash head has zero buckets (and cannot call index()).
+    hashhead(storage& head, const Link& buckets) NOEXCEPT;
 
     /// Sizing (thread safe).
     size_t size() const NOEXCEPT;
@@ -87,9 +87,9 @@ private:
 } // namespace libbitcoin
 
 #define TEMPLATE template <typename Link, typename Key, bool Hash>
-#define CLASS head<Link, Key, Hash>
+#define CLASS hashhead<Link, Key, Hash>
 
-#include <bitcoin/database/impl/primitives/head.ipp>
+#include <bitcoin/database/impl/primitives/hashhead.ipp>
 
 #undef CLASS
 #undef TEMPLATE
