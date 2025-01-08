@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HEAD2_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_HEAD2_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ARRAYHEAD_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_ARRAYHEAD_HPP
 
 #include <shared_mutex>
 #include <bitcoin/system.hpp>
@@ -30,15 +30,15 @@ namespace database {
 /// Dynamically expanding array map header.
 /// Less efficient than a fixed-size header.
 template <typename Link, typename Key = size_t>
-class head2
+class arrayhead
 {
 public:
-    DEFAULT_COPY_MOVE_DESTRUCT(head2);
+    DEFAULT_COPY_MOVE_DESTRUCT(arrayhead);
 
     using bytes = typename Link::bytes;
 
-    /// An array head has zero buckets (and cannot call index()).
-    head2(storage& head, const Link& buckets) NOEXCEPT;
+    /// An array head is disabled it if has one or less buckets.
+    arrayhead(storage& head, const Link& buckets) NOEXCEPT;
 
     /// Sizing is dynamic (thread safe).
     size_t size() const NOEXCEPT;
@@ -99,9 +99,9 @@ private:
 } // namespace libbitcoin
 
 #define TEMPLATE template <typename Link, typename Key>
-#define CLASS head2<Link, Key>
+#define CLASS arrayhead<Link, Key>
 
-#include <bitcoin/database/impl/primitives/head2.ipp>
+#include <bitcoin/database/impl/primitives/arrayhead.ipp>
 
 #undef CLASS
 #undef TEMPLATE
