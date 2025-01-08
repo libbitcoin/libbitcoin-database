@@ -16,8 +16,8 @@
 /// You should have received a copy of the GNU Affero General Public License
 /// along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP2_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP2_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ARRAYMAP_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_ARRAYMAP_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -36,16 +36,16 @@ namespace database {
 /// the extent the record/slab size is known (limit can always be removed).
 /// Streams are always initialized from first element byte up to file limit.
 template <typename Link, typename Key, size_t Size>
-class hashmap2
+class arraymap
 {
 public:
-    DEFAULT_COPY_MOVE_DESTRUCT(hashmap2);
+    DEFAULT_COPY_MOVE_DESTRUCT(arraymap);
 
     using key = Key;
     using link = Link;
     using iterator = database::iterator<Link, Key, Size>;
 
-    hashmap2(storage& header, storage& body, const Link& buckets) NOEXCEPT;
+    arraymap(storage& header, storage& body, const Link& buckets) NOEXCEPT;
 
     /// Setup, not thread safe.
     /// -----------------------------------------------------------------------
@@ -132,16 +132,16 @@ private:
 };
 
 template <typename Element>
-using hash_map2 = hashmap2<linkage<Element::pk>, system::data_array<Element::sk>,
+using array_map = arraymap<linkage<Element::pk>, system::data_array<Element::sk>,
     Element::size>;
 
 } // namespace database
 } // namespace libbitcoin
 
 #define TEMPLATE template <typename Link, typename Key, size_t Size>
-#define CLASS hashmap2<Link, Key, Size>
+#define CLASS arraymap<Link, Key, Size>
 
-#include <bitcoin/database/impl/primitives/hashmap2.ipp>
+#include <bitcoin/database/impl/primitives/arraymap.ipp>
 
 #undef CLASS
 #undef TEMPLATE

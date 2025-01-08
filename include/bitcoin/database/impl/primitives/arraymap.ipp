@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP2_IPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP2_IPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ARRAYMAP_IPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_ARRAYMAP_IPP
 
 #include <algorithm>
 #include <bitcoin/system.hpp>
@@ -27,7 +27,7 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-CLASS::hashmap2(storage& header, storage& body, const Link& buckets) NOEXCEPT
+CLASS::arraymap(storage& header, storage& body, const Link& buckets) NOEXCEPT
   : head_(header, buckets), manager_(body)
 {
 }

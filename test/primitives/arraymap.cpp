@@ -19,15 +19,15 @@
 #include "../test.hpp"
 #include "../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(hashmap2_tests)
+BOOST_AUTO_TEST_SUITE(arraymap_tests)
 
 template <typename Link, typename Key, size_t Size>
-class hashmap_
-  : public hashmap2<Link, Key, Size>
+class arraymap_
+  : public arraymap<Link, Key, Size>
 {
 public:
-    using base = hashmap2<Link, Key, Size>;
-    using hashmap2<Link, Key, Size>::hashmap2;
+    using base = arraymap<Link, Key, Size>;
+    using arraymap<Link, Key, Size>::arraymap;
 };
 
 using namespace system;
@@ -46,13 +46,13 @@ static_assert(buckets == 20u);
 
 struct slab0 { static constexpr size_t size = max_size_t; };
 struct record4 { static constexpr size_t size = 4; };
-using slab_table = hashmap_<link5, key10, slab0::size>;
-using record_table = hashmap_<link5, key10, record4::size>;
+using slab_table = arraymap_<link5, key10, slab0::size>;
+using record_table = arraymap_<link5, key10, record4::size>;
 
 // record hashmap
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(hashmap__record_construct__empty__expected)
+BOOST_AUTO_TEST_CASE(arraymap__record_construct__empty__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_construct__empty__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_construct__non_empty__expected)
+BOOST_AUTO_TEST_CASE(arraymap__record_construct__non_empty__expected)
 {
     constexpr auto body_size = 12345u;
     test::chunk_storage head_store{};
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_construct__non_empty__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_getter__terminal__false)
+BOOST_AUTO_TEST_CASE(arraymap__record_getter__terminal__false)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_getter__terminal__false)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_getter__empty__exhausted)
+BOOST_AUTO_TEST_CASE(arraymap__record_getter__empty__exhausted)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_getter__empty__exhausted)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_getter__empty__false)
+BOOST_AUTO_TEST_CASE(arraymap__record_getter__empty__false)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_getter__empty__false)
 // slab hashmap
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_construct__empty__expected)
+BOOST_AUTO_TEST_CASE(arraymap__slab_construct__empty__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_construct__empty__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_construct__non_empty__expected_enabled)
+BOOST_AUTO_TEST_CASE(arraymap__slab_construct__non_empty__expected_enabled)
 {
     constexpr auto body_size = 12345u;
     test::chunk_storage head_store{};
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_construct__non_empty__expected_enabled)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_getter__terminal__false)
+BOOST_AUTO_TEST_CASE(arraymap__slab_getter__terminal__false)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_getter__terminal__false)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_getter__empty__exhausted)
+BOOST_AUTO_TEST_CASE(arraymap__slab_getter__empty__exhausted)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_getter__empty__exhausted)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_getter__empty__false)
+BOOST_AUTO_TEST_CASE(arraymap__slab_getter__empty__false)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_getter__empty__false)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__enabled__non_empty_slab_zero_buckets__false)
+BOOST_AUTO_TEST_CASE(arraymap__enabled__non_empty_slab_zero_buckets__false)
 {
     constexpr auto body_size = 12345u;
     test::chunk_storage head_store{};
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(hashmap__enabled__non_empty_slab_zero_buckets__false)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__enabled__empty_slab_one_bucket__false)
+BOOST_AUTO_TEST_CASE(arraymap__enabled__empty_slab_one_bucket__false)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(hashmap__enabled__empty_slab_one_bucket__false)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__enabled__empty_slab_nonzero_buckets__true)
+BOOST_AUTO_TEST_CASE(arraymap__enabled__empty_slab_nonzero_buckets__true)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -237,7 +237,7 @@ public:
     uint32_t value{ 0 };
 };
 
-BOOST_AUTO_TEST_CASE(hashmap__record_get__terminal__invalid)
+BOOST_AUTO_TEST_CASE(arraymap__record_get__terminal__invalid)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__terminal__invalid)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_get__empty__invalid)
+BOOST_AUTO_TEST_CASE(arraymap__record_get__empty__invalid)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__empty__invalid)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_get__populated__valid)
+BOOST_AUTO_TEST_CASE(arraymap__record_get__populated__valid)
 {
     data_chunk head_file;
     data_chunk body_file
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__populated__valid)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_put__multiple__expected)
+BOOST_AUTO_TEST_CASE(arraymap__record_put__multiple__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -368,7 +368,7 @@ public:
     uint32_t value{ 0 };
 };
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_put__multiple__expected)
+BOOST_AUTO_TEST_CASE(arraymap__slab_put__multiple__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -433,7 +433,7 @@ public:
     uint64_t value{ 0 };
 };
 
-BOOST_AUTO_TEST_CASE(hashmap__record_get__excess__false)
+BOOST_AUTO_TEST_CASE(arraymap__record_get__excess__false)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -448,7 +448,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__excess__false)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_get_key__excess__expected)
+BOOST_AUTO_TEST_CASE(arraymap__record_get_key__excess__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -461,7 +461,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get_key__excess__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_put__excess__false)
+BOOST_AUTO_TEST_CASE(arraymap__record_put__excess__false)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -518,7 +518,7 @@ public:
     uint64_t value{ 0 };
 };
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_get__excess__true)
+BOOST_AUTO_TEST_CASE(arraymap__slab_get__excess__true)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -535,7 +535,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_get__excess__true)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_get_key__excess__expected)
+BOOST_AUTO_TEST_CASE(arraymap__slab_get_key__excess__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -550,7 +550,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_get_key__excess__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_get__file_excess__false)
+BOOST_AUTO_TEST_CASE(arraymap__slab_get__file_excess__false)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -566,7 +566,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_get__file_excess__false)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_put__excess__false)
+BOOST_AUTO_TEST_CASE(arraymap__slab_put__excess__false)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -577,7 +577,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_put__excess__false)
     BOOST_REQUIRE(instance.put_link(key, slab_excess{ 0xa1b2c3d4_u32 }).is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_top__default__terminal)
+BOOST_AUTO_TEST_CASE(arraymap__record_top__default__terminal)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -588,7 +588,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_top__default__terminal)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_top__past_end__terminal)
+BOOST_AUTO_TEST_CASE(arraymap__record_top__past_end__terminal)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -598,7 +598,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_top__past_end__terminal)
     BOOST_REQUIRE(instance.top(21).is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_top__existing__expected)
+BOOST_AUTO_TEST_CASE(arraymap__record_top__existing__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -631,7 +631,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_top__existing__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_exists__exists__true)
+BOOST_AUTO_TEST_CASE(arraymap__record_exists__exists__true)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -645,7 +645,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_exists__exists__true)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_exists__exists__true)
+BOOST_AUTO_TEST_CASE(arraymap__slab_exists__exists__true)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -659,7 +659,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_exists__exists__true)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_first__exists__true)
+BOOST_AUTO_TEST_CASE(arraymap__record_first__exists__true)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -674,7 +674,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_first__exists__true)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_first__exists__true)
+BOOST_AUTO_TEST_CASE(arraymap__slab_first__exists__true)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -689,7 +689,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_first__exists__true)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_it__exists__non_terminal)
+BOOST_AUTO_TEST_CASE(arraymap__record_it__exists__non_terminal)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -706,7 +706,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_it__exists__non_terminal)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_it__multiple__iterated)
+BOOST_AUTO_TEST_CASE(arraymap__record_it__multiple__iterated)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -865,7 +865,7 @@ public:
     uint32_t value{ 0 };
 };
 
-BOOST_AUTO_TEST_CASE(hashmap__set_commit__record__expected)
+BOOST_AUTO_TEST_CASE(arraymap__set_commit__record__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -887,7 +887,7 @@ BOOST_AUTO_TEST_CASE(hashmap__set_commit__record__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__allocate_set_commit__record__expected)
+BOOST_AUTO_TEST_CASE(arraymap__allocate_set_commit__record__expected)
 {
     data_chunk head_file;
     test::chunk_storage head_store{};
@@ -911,7 +911,7 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_set_commit__record__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__allocate_put1__record__expected)
+BOOST_AUTO_TEST_CASE(arraymap__allocate_put1__record__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -930,7 +930,7 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_put1__record__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__allocate_put2__record__expected)
+BOOST_AUTO_TEST_CASE(arraymap__allocate_put2__record__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -944,7 +944,7 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_put2__record__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__set_commit_link__slab__expected)
+BOOST_AUTO_TEST_CASE(arraymap__set_commit_link__slab__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -967,7 +967,7 @@ BOOST_AUTO_TEST_CASE(hashmap__set_commit_link__slab__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__allocate_set_commit__slab__expected)
+BOOST_AUTO_TEST_CASE(arraymap__allocate_set_commit__slab__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -990,7 +990,7 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_set_commit__slab__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__allocate_put1__slab__expected)
+BOOST_AUTO_TEST_CASE(arraymap__allocate_put1__slab__expected)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -1011,7 +1011,7 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_put1__slab__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__allocate_put2__slab__expected)
+BOOST_AUTO_TEST_CASE(arraymap__allocate_put2__slab__expected)
 {
     data_chunk head_file;
     data_chunk body_file;
@@ -1030,7 +1030,7 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_put2__slab__expected)
 // record create/close/backup/restore/verify
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(hashmap__record_verify__empty_files__expected)
+BOOST_AUTO_TEST_CASE(arraymap__record_verify__empty_files__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -1043,7 +1043,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_verify__empty_files__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_create__non_empty_head_file__failure)
+BOOST_AUTO_TEST_CASE(arraymap__record_create__non_empty_head_file__failure)
 {
     data_chunk head_file{ 0x42 };
     data_chunk body_file;
@@ -1057,7 +1057,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_create__non_empty_head_file__failure)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_create__non_empty_body_file__body_zeroed)
+BOOST_AUTO_TEST_CASE(arraymap__record_create__non_empty_body_file__body_zeroed)
 {
     data_chunk head_file;
     data_chunk body_file{ 0x42 };
@@ -1071,7 +1071,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_create__non_empty_body_file__body_zeroed)
     BOOST_REQUIRE(body_file.empty());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_body_count__create__zero)
+BOOST_AUTO_TEST_CASE(arraymap__record_body_count__create__zero)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -1081,7 +1081,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_body_count__create__zero)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_body_count__empty_close__zero)
+BOOST_AUTO_TEST_CASE(arraymap__record_body_count__empty_close__zero)
 {
     auto head_file = base16_chunk("1234567890");
     data_chunk body_file;
@@ -1093,7 +1093,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_body_count__empty_close__zero)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_body_count__two_close__two)
+BOOST_AUTO_TEST_CASE(arraymap__record_body_count__two_close__two)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -1105,7 +1105,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_body_count__two_close__two)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_body_count__two_backup__two)
+BOOST_AUTO_TEST_CASE(arraymap__record_body_count__two_backup__two)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -1117,7 +1117,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_body_count__two_backup__two)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_body_count__empty_restore__truncates)
+BOOST_AUTO_TEST_CASE(arraymap__record_body_count__empty_restore__truncates)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -1129,7 +1129,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_body_count__empty_restore__truncates)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_body_count__non_empty_restore__truncates)
+BOOST_AUTO_TEST_CASE(arraymap__record_body_count__non_empty_restore__truncates)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -1145,7 +1145,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_body_count__non_empty_restore__truncates)
 // slab create/close/backup/restore/verify
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_verify__empty_files__expected)
+BOOST_AUTO_TEST_CASE(arraymap__slab_verify__empty_files__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -1158,7 +1158,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_verify__empty_files__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_create__non_empty_head_file__failure)
+BOOST_AUTO_TEST_CASE(arraymap__slab_create__non_empty_head_file__failure)
 {
     data_chunk head_file{ 0x42 };
     data_chunk body_file;
@@ -1172,7 +1172,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_create__non_empty_head_file__failure)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_create__non_empty_body_file__body_zeroed)
+BOOST_AUTO_TEST_CASE(arraymap__slab_create__non_empty_body_file__body_zeroed)
 {
     data_chunk head_file;
     data_chunk body_file{ 0x42 };
@@ -1187,7 +1187,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_create__non_empty_body_file__body_zeroed)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__create__zero)
+BOOST_AUTO_TEST_CASE(arraymap__slab_body_count__create__zero)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -1197,7 +1197,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__create__zero)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__empty_close__zero)
+BOOST_AUTO_TEST_CASE(arraymap__slab_body_count__empty_close__zero)
 {
     auto head_file = base16_chunk("1234567890");
     data_chunk body_file;
@@ -1209,7 +1209,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__empty_close__zero)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__two_close__two)
+BOOST_AUTO_TEST_CASE(arraymap__slab_body_count__two_close__two)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -1221,7 +1221,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__two_close__two)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__two_backup__two)
+BOOST_AUTO_TEST_CASE(arraymap__slab_body_count__two_backup__two)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -1233,7 +1233,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__two_backup__two)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__empty_restore__truncates)
+BOOST_AUTO_TEST_CASE(arraymap__slab_body_count__empty_restore__truncates)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -1245,7 +1245,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__empty_restore__truncates)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__non_empty_restore__truncates)
+BOOST_AUTO_TEST_CASE(arraymap__slab_body_count__non_empty_restore__truncates)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};

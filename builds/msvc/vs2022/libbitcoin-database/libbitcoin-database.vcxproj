@@ -113,8 +113,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\simple_writer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\streamers.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\utilities.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\arraymap.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hashmap.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hashmap2.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\head.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\head2.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\iterator.hpp" />
@@ -153,8 +153,8 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\accessor.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\simple_reader.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\simple_writer.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\arraymap.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hashmap.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hashmap2.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\head.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\head2.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\iterator.ipp" />

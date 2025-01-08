@@ -85,8 +85,8 @@
       <ObjectFileName>$(IntDir)test_memory_utilities.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\mocks\chunk_storage.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\arraymap.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hashmap.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives\hashmap2.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\head.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\head2.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp" />
