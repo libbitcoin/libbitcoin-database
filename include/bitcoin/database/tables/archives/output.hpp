@@ -57,7 +57,7 @@ struct output
             parent_fk = source.read_little_endian<tx::integer, tx::size>();
             value     = source.read_variable();
             script = chain::script{ source, true };
-            BC_ASSERT(source.get_read_position() == count());
+            BC_ASSERT(!source || source.get_read_position() == count());
             return source;
         }
 
@@ -66,7 +66,7 @@ struct output
             sink.write_little_endian<tx::integer, tx::size>(parent_fk);
             sink.write_variable(value);
             script.to_data(sink, true);
-            BC_ASSERT(sink.get_write_position() == count());
+            BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }
 
@@ -143,7 +143,7 @@ struct output
             sink.write_little_endian<tx::integer, tx::size>(parent_fk);
             sink.write_variable(output.value());
             output.script().to_data(sink, true);
-            BC_ASSERT(sink.get_write_position() == count());
+            BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }
 

@@ -41,12 +41,14 @@ struct height
         inline bool from_data(reader& source) NOEXCEPT
         {
             header_fk = source.read_little_endian<block::integer, block::size>();
+            BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
             sink.write_little_endian<block::integer, block::size>(header_fk);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
 

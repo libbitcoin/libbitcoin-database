@@ -55,7 +55,7 @@
 ////                    hash = source.read_hash();
 ////                });
 ////
-////            BC_ASSERT(source.get_read_position() == count() * schema::hash);
+////            BC_ASSERT(!source || source.get_read_position() == count() * schema::hash);
 ////            return source;
 ////        }
 ////
@@ -71,7 +71,7 @@
 ////                    sink.write_bytes(hash);
 ////                });
 ////
-////            BC_ASSERT(sink.get_write_position() == count() * schema::hash);
+////            BC_ASSERT(!sink || sink.get_write_position() == count() * schema::hash);
 ////            return sink;
 ////        }
 ////

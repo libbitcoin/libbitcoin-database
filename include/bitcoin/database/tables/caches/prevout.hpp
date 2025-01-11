@@ -44,7 +44,7 @@ struct prevout
             coinbase = source.read_byte();
             spend_fk = source.read_little_endian<spend::integer, spend::size>();
             output_tx_fk = source.read_little_endian<tx::integer, tx::size>();
-            BC_ASSERT(source.get_read_position() == count());
+            BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
@@ -53,7 +53,7 @@ struct prevout
             sink.write_byte(coinbase);
             sink.write_little_endian<spend::integer, spend::size>(spend_fk);
             sink.write_little_endian<tx::integer, tx::size>(output_tx_fk);
-            BC_ASSERT(sink.get_write_position() == count());
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
 

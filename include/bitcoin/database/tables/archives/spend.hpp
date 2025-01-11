@@ -66,7 +66,7 @@ struct spend
             parent_fk = source.read_little_endian<tx::integer, tx::size>();
             sequence = source.read_little_endian<uint32_t>();
             input_fk = source.read_little_endian<in::integer, in::size>();
-            BC_ASSERT(source.get_read_position() == minrow);
+            BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
@@ -75,7 +75,7 @@ struct spend
             sink.write_little_endian<tx::integer, tx::size>(parent_fk);
             sink.write_little_endian<uint32_t>(sequence);
             sink.write_little_endian<in::integer, in::size>(input_fk);
-            BC_ASSERT(sink.get_write_position() == minrow);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
 
@@ -106,7 +106,7 @@ struct spend
             source.skip_bytes(tx::size);
             sequence = source.read_little_endian<uint32_t>();
             input_fk = source.read_little_endian<in::integer, in::size>();
-            BC_ASSERT(source.get_read_position() == minrow);
+            BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 

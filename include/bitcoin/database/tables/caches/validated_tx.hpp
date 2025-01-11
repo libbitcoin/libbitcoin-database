@@ -58,7 +58,7 @@ struct validated_tx
             code = source.read_little_endian<coding::integer, coding::size>();
             fee = source.read_variable();
             sigops = possible_narrow_cast<sigop::integer>(source.read_variable());
-            BC_ASSERT(source.get_read_position() == count());
+            BC_ASSERT(!source || source.get_read_position() == count());
             return source;
         }
 
@@ -68,7 +68,7 @@ struct validated_tx
             sink.write_little_endian<coding::integer, coding::size>(code);
             sink.write_variable(fee);
             sink.write_variable(sigops);
-            BC_ASSERT(sink.get_write_position() == count());
+            BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }
 

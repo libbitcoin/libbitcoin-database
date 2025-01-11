@@ -69,7 +69,7 @@ struct transaction
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
             outs_count = source.read_little_endian<ix::integer, ix::size>();
             puts_fk    = source.read_little_endian<puts::integer, puts::size>();
-            BC_ASSERT(source.get_read_position() == minrow);
+            BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
@@ -83,7 +83,7 @@ struct transaction
             sink.write_little_endian<ix::integer, ix::size>(ins_count);
             sink.write_little_endian<ix::integer, ix::size>(outs_count);
             sink.write_little_endian<puts::integer, puts::size>(puts_fk);
-            BC_ASSERT(sink.get_write_position() == minrow);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
 
@@ -125,7 +125,7 @@ struct transaction
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
             outs_count = source.read_little_endian<ix::integer, ix::size>();
             puts_fk    = source.read_little_endian<puts::integer, puts::size>();
-            BC_ASSERT(source.get_read_position() == minrow);
+            BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
@@ -152,7 +152,7 @@ struct transaction
             sink.write_little_endian<ix::integer, ix::size>(ins_count);
             sink.write_little_endian<ix::integer, ix::size>(outs_count);
             sink.write_little_endian<puts::integer, puts::size>(puts_fk);
-            BC_ASSERT(sink.get_write_position() == minrow);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
 
