@@ -53,14 +53,20 @@ bool CLASS::enabled() const NOEXCEPT
 }
 
 TEMPLATE
-Link CLASS::index(const Key& key) const NOEXCEPT
+Link CLASS::index(size_t key) const NOEXCEPT
+{
+    if (key >= buckets())
+        return {};
+
+    // Put index does not validate, allowing for head expansion.
+    return putter_index(key);
+}
+
+TEMPLATE
+Link CLASS::putter_index(size_t key) const NOEXCEPT
 {
     // Key is the logical bucket index (no-hash).
-    if (key < buckets())
-        return manager<Link, system::data_array<zero>, Link::size>::
-            cast_link(key);
-
-    return {};
+    return body::cast_link(key);
 }
 
 TEMPLATE
@@ -117,15 +123,13 @@ bool CLASS::set_body_count(const Link& count) NOEXCEPT
 }
 
 TEMPLATE
-Link CLASS::top(const Key& key) const NOEXCEPT
+Link CLASS::at(size_t key) const NOEXCEPT
 {
-    return top(index(key));
-}
+    const auto link = index(key);
+    if (link.is_terminal())
+        return {};
 
-TEMPLATE
-Link CLASS::top(const Link& index) const NOEXCEPT
-{
-    const auto ptr = file_.get(link_to_position(index));
+    const auto ptr = file_.get(link_to_position(link));
     if (is_null(ptr))
         return {};
 

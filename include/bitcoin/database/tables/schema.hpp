@@ -359,7 +359,7 @@ namespace schema
     struct prevout
     {
         static constexpr size_t pk = schema::spend_;
-        static constexpr size_t sk = zero;
+        ////static constexpr size_t sk = zero;
         static constexpr size_t minsize =
             schema::bit + // TODO: merge bit.
             schema::spend_ +
