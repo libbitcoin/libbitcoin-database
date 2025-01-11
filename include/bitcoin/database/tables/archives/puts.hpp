@@ -67,7 +67,7 @@ struct puts
                 fk = source.read_little_endian<out::integer, out::size>();
             });
 
-            BC_ASSERT(source.get_read_position() == count());
+            BC_ASSERT(!source || source.get_read_position() == count());
             return source;
         }
 
@@ -83,7 +83,7 @@ struct puts
                 sink.write_little_endian<out::integer, out::size>(fk);
             });
 
-            BC_ASSERT(sink.get_write_position() == count());
+            BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }
 

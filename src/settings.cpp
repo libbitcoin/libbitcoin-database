@@ -75,6 +75,10 @@ settings::settings() NOEXCEPT
 
     // Caches.
 
+    prevout_buckets{ 100 },
+    prevout_size{ 1 },
+    prevout_rate{ 50 },
+
     validated_bk_buckets{ 100 },
     validated_bk_size{ 1 },
     validated_bk_rate{ 50 },
@@ -93,14 +97,8 @@ settings::settings() NOEXCEPT
     neutrino_size{ 1 },
     neutrino_rate{ 50 }
 
-    // Caches.
-
     ////bootstrap_size{ 1 },
-    ////bootstrap_rate{ 50 },
-
-    ////buffer_buckets{ 100 },
-    ////buffer_size{ 1 },
-    ////buffer_rate{ 50 }
+    ////bootstrap_rate{ 50 }
 {
 }
 

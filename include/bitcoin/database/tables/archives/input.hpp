@@ -54,7 +54,7 @@ struct input
         {
             script = system::chain::script{ source, true };
             witness = system::chain::witness{ source, true };
-            BC_ASSERT(source.get_read_position() == count());
+            BC_ASSERT(!source || source.get_read_position() == count());
             return source;
         }
 
@@ -62,7 +62,7 @@ struct input
         {
             script.to_data(sink, true);
             witness.to_data(sink, true);
-            BC_ASSERT(sink.get_write_position() == count());
+            BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }
 
@@ -105,7 +105,7 @@ struct input
         {
             input.script().to_data(sink, true);
             input.witness().to_data(sink, true);
-            BC_ASSERT(sink.get_write_position() == count());
+            BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }
 

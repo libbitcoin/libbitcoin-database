@@ -68,16 +68,6 @@ public:
         return header_body_.file();
     }
 
-    inline const path& point_head_file() const NOEXCEPT
-    {
-        return point_head_.file();
-    }
-
-    inline const path& point_body_file() const NOEXCEPT
-    {
-        return point_body_.file();
-    }
-
     inline const path& input_head_file() const NOEXCEPT
     {
         return input_head_.file();
@@ -98,6 +88,16 @@ public:
         return output_body_.file();
     }
 
+    inline const path& point_head_file() const NOEXCEPT
+    {
+        return point_head_.file();
+    }
+
+    inline const path& point_body_file() const NOEXCEPT
+    {
+        return point_body_.file();
+    }
+
     inline const path& puts_head_file() const NOEXCEPT
     {
         return puts_head_.file();
@@ -106,6 +106,16 @@ public:
     inline const path& puts_body_file() const NOEXCEPT
     {
         return puts_body_.file();
+    }
+
+    inline const path& spend_head_file() const NOEXCEPT
+    {
+        return spend_head_.file();
+    }
+
+    inline const path& spend_body_file() const NOEXCEPT
+    {
+        return spend_body_.file();
     }
 
     inline const path& tx_head_file() const NOEXCEPT
@@ -130,16 +140,6 @@ public:
 
     // Indexes.
 
-    inline const path& address_head_file() const NOEXCEPT
-    {
-        return address_head_.file();
-    }
-
-    inline const path& address_body_file() const NOEXCEPT
-    {
-        return address_body_.file();
-    }
-
     inline const path& candidate_head_file() const NOEXCEPT
     {
         return candidate_head_.file();
@@ -160,16 +160,6 @@ public:
         return confirmed_body_.file();
     }
 
-    inline const path& spend_head_file() const NOEXCEPT
-    {
-        return spend_head_.file();
-    }
-
-    inline const path& spend_body_file() const NOEXCEPT
-    {
-        return spend_body_.file();
-    }
-
     inline const path& strong_tx_head_file() const NOEXCEPT
     {
         return strong_tx_head_.file();
@@ -181,6 +171,16 @@ public:
     }
 
     // Caches.
+
+    inline const path& prevout_head_file() const NOEXCEPT
+    {
+        return prevout_head_.file();
+    }
+
+    inline const path& prevout_body_file() const NOEXCEPT
+    {
+        return prevout_body_.file();
+    }
 
     inline const path& validated_bk_head_file() const NOEXCEPT
     {
@@ -202,6 +202,18 @@ public:
         return validated_tx_body_.file();
     }
 
+    // Optionals.
+
+    inline const path& address_head_file() const NOEXCEPT
+    {
+        return address_head_.file();
+    }
+
+    inline const path& address_body_file() const NOEXCEPT
+    {
+        return address_body_.file();
+    }
+
     inline const path& neutrino_head_file() const NOEXCEPT
     {
         return neutrino_head_.file();
@@ -220,16 +232,6 @@ public:
     ////inline const path& bootstrap_body_file() const NOEXCEPT
     ////{
     ////    return bootstrap_body_.file();
-    ////}
-
-    ////inline const path& buffer_head_file() const NOEXCEPT
-    ////{
-    ////    return buffer_head_.file();
-    ////}
-
-    ////inline const path& buffer_body_file() const NOEXCEPT
-    ////{
-    ////    return buffer_body_.file();
     ////}
 
     // Locks.

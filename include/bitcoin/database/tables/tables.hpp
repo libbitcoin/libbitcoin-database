@@ -28,6 +28,7 @@
 #include <bitcoin/database/tables/archives/transaction.hpp>
 #include <bitcoin/database/tables/archives/txs.hpp>
 
+#include <bitcoin/database/tables/caches/prevout.hpp>
 #include <bitcoin/database/tables/caches/validated_bk.hpp>
 #include <bitcoin/database/tables/caches/validated_tx.hpp>
 
@@ -37,7 +38,6 @@
 #include <bitcoin/database/tables/optionals/address.hpp>
 #include <bitcoin/database/tables/optionals/neutrino.hpp>
  ////#include <bitcoin/database/tables/optionals/bootstrap.hpp>
- ////#include <bitcoin/database/tables/optionals/buffer.hpp>
 
 #include <bitcoin/database/tables/context.hpp>
 #include <bitcoin/database/tables/event.hpp>

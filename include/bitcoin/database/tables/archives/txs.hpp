@@ -58,7 +58,7 @@ struct txs
                 fk = source.read_little_endian<tx::integer, tx::size>();
             });
 
-            BC_ASSERT(source.get_read_position() == count());
+            BC_ASSERT(!source || source.get_read_position() == count());
             return source;
         }
 
@@ -74,7 +74,7 @@ struct txs
                 sink.write_little_endian<tx::integer, tx::size>(fk);
             });
 
-            BC_ASSERT(sink.get_write_position() == count());
+            BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }
 

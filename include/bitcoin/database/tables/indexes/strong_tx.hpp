@@ -42,6 +42,7 @@ struct strong_tx
         {
             header_fk = source.read_little_endian<block::integer, block::size>();
             positive = to_bool(source.read_byte());
+            BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
@@ -49,6 +50,7 @@ struct strong_tx
         {
             sink.write_little_endian<block::integer, block::size>(header_fk);
             sink.write_byte(to_int<uint8_t>(positive));
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
 

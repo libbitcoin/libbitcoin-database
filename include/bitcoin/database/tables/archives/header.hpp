@@ -50,7 +50,7 @@ struct header
             bits        = source.read_little_endian<uint32_t>();
             nonce       = source.read_little_endian<uint32_t>();
             merkle_root = source.read_hash();
-            BC_ASSERT(source.get_read_position() == minrow);
+            BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
@@ -64,7 +64,7 @@ struct header
             sink.write_little_endian<uint32_t>(bits);
             sink.write_little_endian<uint32_t>(nonce);
             sink.write_bytes(merkle_root);
-            BC_ASSERT(sink.get_write_position() == minrow);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
 
@@ -105,7 +105,7 @@ struct header
             sink.write_little_endian<uint32_t>(header->bits());
             sink.write_little_endian<uint32_t>(header->nonce());
             sink.write_bytes(header->merkle_root());
-            BC_ASSERT(sink.get_write_position() == minrow);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
 
@@ -130,7 +130,7 @@ struct header
             sink.write_little_endian<uint32_t>(header.bits());
             sink.write_little_endian<uint32_t>(header.nonce());
             sink.write_bytes(header.merkle_root());
-            BC_ASSERT(sink.get_write_position() == minrow);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
 
