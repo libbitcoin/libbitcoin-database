@@ -88,6 +88,10 @@ struct BCD_API settings
     /// Caches.
     /// -----------------------------------------------------------------------
 
+    uint32_t prevout_buckets;
+    uint64_t prevout_size;
+    uint16_t prevout_rate;
+
     uint32_t validated_bk_buckets;
     uint64_t validated_bk_size;
     uint16_t validated_bk_rate;
@@ -109,10 +113,6 @@ struct BCD_API settings
 
     ////uint32_t bootstrap_size;
     ////uint16_t bootstrap_rate;
-
-    ////uint32_t buffer_buckets;
-    ////uint64_t buffer_size;
-    ////uint16_t buffer_rate;
 };
 
 } // namespace database
