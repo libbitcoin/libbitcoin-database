@@ -129,50 +129,38 @@ code CLASS::reload() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-Link CLASS::top(const Link& link) const NOEXCEPT
+bool CLASS::exists(size_t key) const NOEXCEPT
 {
-    if (link >= head_.buckets())
-        return {};
-
-    return head_.top(link);
+    return !at(key).is_terminal();
 }
 
 TEMPLATE
-bool CLASS::exists(const Key& key) const NOEXCEPT
+Link CLASS::at(size_t key) const NOEXCEPT
 {
-    return !first(key).is_terminal();
-}
-
-TEMPLATE
-Link CLASS::first(const Key& key) const NOEXCEPT
-{
-    return head_.top(key);
+    return head_.at(key);
 }
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::find(const Key& key, Element& element) const NOEXCEPT
+bool CLASS::at(size_t key, Element& element) const NOEXCEPT
 {
-    // This override avoids duplicated memory_ptr construct in get(first()).
-    const auto ptr = body_.get();
-    return read(ptr, first(ptr, head_.top(key), key), element);
+    return get(at(key), element);
 }
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
-    // This override is the normal form.
     return read(body_.get(), link, element);
 }
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::put(const Key& key, const Element& element) NOEXCEPT
+bool CLASS::put(size_t key, const Element& element) NOEXCEPT
 {
     using namespace system;
     const auto count = element.count();
-    const auto link = allocate(count);
+    const auto link = body_.allocate(count);
     const auto ptr = body_.get(link);
     if (!ptr)
         return false;
@@ -180,11 +168,9 @@ bool CLASS::put(const Key& key, const Element& element) NOEXCEPT
     // iostream.flush is a nop (direct copy).
     iostream stream{ *ptr };
     finalizer sink{ stream };
-    sink.skip_bytes(Link::size);
-    sink.write_bytes(key);
 
     if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * count);) }
-    return element.to_data(sink) && head_.push(link, head_.index(key));
+    return element.to_data(sink) && head_.push(link, head_.putter_index(key));
 }
 
 // protected
@@ -195,10 +181,10 @@ template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::read(const memory_ptr& ptr, const Link& link,
     Element& element) NOEXCEPT
 {
+    using namespace system;
     if (!ptr || link.is_terminal())
         return false;
 
-    using namespace system;
     const auto start = body::link_to_position(link);
     if (is_limited<ptrdiff_t>(start))
         return false;

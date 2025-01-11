@@ -35,15 +35,13 @@ namespace database {
 /// Readers and writers are always prepositioned at data, and are limited to
 /// the extent the record/slab size is known (limit can always be removed).
 /// Streams are always initialized from first element byte up to file limit.
-template <typename Link, typename Key, size_t Size>
+template <typename Link, size_t Size>
 class arraymap
 {
 public:
     DEFAULT_COPY_MOVE_DESTRUCT(arraymap);
 
-    using key = Key;
     using link = Link;
-    using iterator = database::iterator<Link, Key, Size>;
 
     arraymap(storage& header, storage& body, const Link& buckets) NOEXCEPT;
 
@@ -89,18 +87,15 @@ public:
     /// Query interface, iterator is not thread safe.
     /// -----------------------------------------------------------------------
 
-    /// Return the link at the top of the conflict list (for table scanning).
-    Link top(const Link& list) const NOEXCEPT;
-
     /// True if an instance of object with key exists.
-    bool exists(const Key& key) const NOEXCEPT;
+    bool exists(size_t key) const NOEXCEPT;
 
-    /// Return first element link or terminal if not found/error.
-    Link first(const Key& key) const NOEXCEPT;
+    /// Return element link at key or terminal if not found/error.
+    Link at(size_t key) const NOEXCEPT;
 
     /// Get first element matching the search key, false if not found/error.
     template <typename Element, if_equal<Element::size, Size> = true>
-    bool find(const Key& key, Element& element) const NOEXCEPT;
+    bool at(size_t key, Element& element) const NOEXCEPT;
 
     /// Get element at link, false if deserialize error.
     template <typename Element, if_equal<Element::size, Size> = true>
@@ -109,7 +104,7 @@ public:
     /// Allocate, set, commit element to key.
     /// Expands table AND HEADER as necessary.
     template <typename Element, if_equal<Element::size, Size> = true>
-    bool put(const Key& key, const Element& element) NOEXCEPT;
+    bool put(size_t key, const Element& element) NOEXCEPT;
 
 protected:
     /// Get element at link using memory object, false if deserialize error.
@@ -121,7 +116,7 @@ private:
     static constexpr auto is_slab = (Size == max_size_t);
 
     using head = database::arrayhead<Link>;
-    using body = database::manager<Link, Key, Size>;
+    using body = database::manager<Link, system::data_array<0>, Size>;
 
     // Thread safe (index/top/push).
     // Not thread safe (create/open/close/backup/restore).
@@ -132,14 +127,13 @@ private:
 };
 
 template <typename Element>
-using array_map = arraymap<linkage<Element::pk>, system::data_array<Element::sk>,
-    Element::size>;
+using array_map = arraymap<linkage<Element::pk>, Element::size>;
 
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, typename Key, size_t Size>
-#define CLASS arraymap<Link, Key, Size>
+#define TEMPLATE template <typename Link, size_t Size>
+#define CLASS arraymap<Link, Size>
 
 #include <bitcoin/database/impl/primitives/arraymap.ipp>
 

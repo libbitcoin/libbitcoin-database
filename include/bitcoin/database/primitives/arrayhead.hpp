@@ -29,7 +29,7 @@ namespace database {
 
 /// Dynamically expanding array map header.
 /// Less efficient than a fixed-size header.
-template <typename Link, typename Key = size_t>
+template <typename Link>
 class arrayhead
 {
 public:
@@ -57,15 +57,21 @@ public:
     bool get_body_count(Link& count) const NOEXCEPT;
     bool set_body_count(const Link& count) NOEXCEPT;
 
-    /// Convert natural key to head bucket index.
-    Link index(const Key& key) const NOEXCEPT;
+    /// Convert natural key to head bucket index (validated).
+    Link index(size_t key) const NOEXCEPT;
+
+    /// Convert natural key to head bucket index (unvalidated).
+    Link putter_index(size_t key) const NOEXCEPT;
 
     /// Unsafe if verify false.
-    Link top(const Key& key) const NOEXCEPT;
-    Link top(const Link& index) const NOEXCEPT;
+    Link at(size_t key) const NOEXCEPT;
+
+    /// Assign value to bucket index.
     bool push(const bytes& current, const Link& index) NOEXCEPT;
 
 private:
+    using body = manager<Link, system::data_array<zero>, Link::size>;
+
     template <size_t Bytes>
     static auto& array_cast(memory::iterator buffer) NOEXCEPT
     {
@@ -98,8 +104,8 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, typename Key>
-#define CLASS arrayhead<Link, Key>
+#define TEMPLATE template <typename Link>
+#define CLASS arrayhead<Link>
 
 #include <bitcoin/database/impl/primitives/arrayhead.ipp>
 
