@@ -35,7 +35,7 @@ constexpr auto buckets = sub1(links);
 static_assert(buckets == 20u);
 
 using link = linkage<link_size>;
-using test_header = arrayhead<link, size_t>;
+using test_header = arrayhead<link>;
 
 class nullptr_storage
   : public test::chunk_storage
@@ -103,30 +103,14 @@ BOOST_AUTO_TEST_CASE(arrayhead__set_body_count__get__expected)
     BOOST_REQUIRE_EQUAL(count, expected);
 }
 
-BOOST_AUTO_TEST_CASE(arrayhead__top__link__terminal)
-{
-    test::chunk_storage store;
-    test_header head{ store, buckets };
-    BOOST_REQUIRE(head.create());
-    BOOST_REQUIRE(head.top(9).is_terminal());
-}
-
-BOOST_AUTO_TEST_CASE(arrayhead__top__nullptr__terminal)
-{
-    nullptr_storage store;
-    test_header head{ store, buckets };
-    BOOST_REQUIRE(head.create());
-    BOOST_REQUIRE(head.top(9).is_terminal());
-}
-
-BOOST_AUTO_TEST_CASE(arrayhead__top__key__terminal)
+BOOST_AUTO_TEST_CASE(arrayhead__at__key__terminal)
 {
     test::chunk_storage store;
     test_header head{ store, buckets };
 
     // create() allocates and fills buckets with terminal.
     BOOST_REQUIRE(head.create());
-    BOOST_REQUIRE(head.top(zero).is_terminal());
+    BOOST_REQUIRE(head.at(zero).is_terminal());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
