@@ -22,12 +22,11 @@
 BOOST_AUTO_TEST_SUITE(prevout_tests)
 
 using namespace system;
-constexpr table::prevout::record record1{ {}, true, 0x01020304, 0xbaadf00d };
-constexpr table::prevout::record record2{ {}, false, 0xbaadf00d, 0x01020304 };
+constexpr table::prevout::record record1{ {}, 0x01020304_u32 };
+constexpr table::prevout::record record2{ {}, 0xbaadf00d_u32 };
 
-BOOST_AUTO_TEST_CASE(header__put__at1__expected)
+BOOST_AUTO_TEST_CASE(prevout__put__at1__expected)
 {
-    table::prevout::record element{};
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
     table::prevout instance{ head_store, body_store, 5 };
@@ -43,7 +42,7 @@ BOOST_AUTO_TEST_CASE(header__put__at1__expected)
     BOOST_REQUIRE_EQUAL(instance.at(42), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(header__put__at2__expected)
+BOOST_AUTO_TEST_CASE(prevout__put__at2__expected)
 {
     table::prevout::record element{};
     test::chunk_storage head_store{};
@@ -63,9 +62,8 @@ BOOST_AUTO_TEST_CASE(header__put__at2__expected)
     BOOST_REQUIRE(element == record2);
 }
 
-BOOST_AUTO_TEST_CASE(header__put__exists__expected)
+BOOST_AUTO_TEST_CASE(prevout__put__exists__expected)
 {
-    table::prevout::record element{};
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
     table::prevout instance{ head_store, body_store, 5 };
@@ -81,7 +79,7 @@ BOOST_AUTO_TEST_CASE(header__put__exists__expected)
     BOOST_REQUIRE(instance.exists(42));
 }
 
-BOOST_AUTO_TEST_CASE(header__put__get__expected)
+BOOST_AUTO_TEST_CASE(prevout__put__get__expected)
 {
     table::prevout::record element{};
     test::chunk_storage head_store{};
@@ -99,6 +97,57 @@ BOOST_AUTO_TEST_CASE(header__put__get__expected)
     BOOST_REQUIRE(element == record1);
     BOOST_REQUIRE(instance.get(1, element));
     BOOST_REQUIRE(element == record2);
+}
+
+// values
+
+BOOST_AUTO_TEST_CASE(prevout__put__isolated_values__expected)
+{
+    constexpr auto bits = sub1(to_bits(linkage<schema::tx>::size));
+
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::prevout instance{ head_store, body_store, 5 };
+    BOOST_REQUIRE(instance.create());
+
+    constexpr auto cb_only = table::prevout::record{ {}, 0b10000000'00000000'00000000'00000000_u32 };
+    BOOST_REQUIRE(instance.put(3, cb_only));
+
+    constexpr auto tx_only = table::prevout::record{ {}, 0b01010101'01010101'01010101'01010101_u32 };
+    BOOST_REQUIRE(instance.put(42, tx_only));
+
+    table::prevout::record element1{};
+    BOOST_REQUIRE(instance.at(3, element1));
+    BOOST_REQUIRE(element1.coinbase());
+    BOOST_REQUIRE_EQUAL(element1.coinbase(), cb_only.coinbase());
+    BOOST_REQUIRE_EQUAL(element1.output_tx_fk(), cb_only.output_tx_fk());
+    BOOST_REQUIRE_EQUAL(element1.output_tx_fk(), set_right(cb_only.value, bits, false));
+
+    table::prevout::record element2{};
+    BOOST_REQUIRE(instance.at(42, element2));
+    BOOST_REQUIRE(!element2.coinbase());
+    BOOST_REQUIRE_EQUAL(element2.coinbase(), tx_only.coinbase());
+    BOOST_REQUIRE_EQUAL(element2.output_tx_fk(), tx_only.output_tx_fk());
+    BOOST_REQUIRE_EQUAL(element2.output_tx_fk(), set_right(tx_only.value, bits, false));
+}
+
+BOOST_AUTO_TEST_CASE(prevout__put__merged_values__expected)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::prevout instance{ head_store, body_store, 5 };
+    BOOST_REQUIRE(instance.create());
+
+    constexpr auto expected_cb = true;
+    constexpr auto expected_tx = 0b01010101'01010101'01010101'01010101_u32;
+    auto record = table::prevout::record{ {}, 0_u32 };
+    record.set(expected_cb, expected_tx);
+    BOOST_REQUIRE(instance.put(3, record));
+
+    table::prevout::record element{};
+    BOOST_REQUIRE(instance.at(3, element));
+    BOOST_REQUIRE_EQUAL(element.coinbase(), expected_cb);
+    BOOST_REQUIRE_EQUAL(element.output_tx_fk(), expected_tx);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
