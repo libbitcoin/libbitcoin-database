@@ -202,7 +202,7 @@ bool CLASS::read(const memory_ptr& ptr, const Link& link,
     iostream stream{ offset, size - position };
     reader source{ stream };
 
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(source.set_limit(Size);) }
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(source.set_limit(Size * element.count());) }
     return element.from_data(source);
 }
 
