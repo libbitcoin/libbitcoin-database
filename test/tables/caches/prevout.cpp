@@ -22,5 +22,83 @@
 BOOST_AUTO_TEST_SUITE(prevout_tests)
 
 using namespace system;
+constexpr table::prevout::record record1{ {}, true, 0x01020304, 0xbaadf00d };
+constexpr table::prevout::record record2{ {}, false, 0xbaadf00d, 0x01020304 };
+
+BOOST_AUTO_TEST_CASE(header__put__at1__expected)
+{
+    table::prevout::record element{};
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::prevout instance{ head_store, body_store, 5 };
+    BOOST_REQUIRE(instance.create());
+
+    // Put at key.
+    BOOST_REQUIRE(instance.put(3, record1));
+    BOOST_REQUIRE(instance.put(42, record2));
+
+    // Dereference at key to get link.
+    BOOST_REQUIRE(instance.at(0).is_terminal());
+    BOOST_REQUIRE_EQUAL(instance.at(3), 0u);
+    BOOST_REQUIRE_EQUAL(instance.at(42), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(header__put__at2__expected)
+{
+    table::prevout::record element{};
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::prevout instance{ head_store, body_store, 5 };
+    BOOST_REQUIRE(instance.create());
+
+    // Put at key.
+    BOOST_REQUIRE(instance.put(3, record1));
+    BOOST_REQUIRE(instance.put(42, record2));
+
+    // Dereference at key to get element.
+    BOOST_REQUIRE(!instance.at(0, element));
+    BOOST_REQUIRE(instance.at(3, element));
+    BOOST_REQUIRE(element == record1);
+    BOOST_REQUIRE(instance.at(42, element));
+    BOOST_REQUIRE(element == record2);
+}
+
+BOOST_AUTO_TEST_CASE(header__put__exists__expected)
+{
+    table::prevout::record element{};
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::prevout instance{ head_store, body_store, 5 };
+    BOOST_REQUIRE(instance.create());
+
+    // Put at key.
+    BOOST_REQUIRE(instance.put(3, record1));
+    BOOST_REQUIRE(instance.put(42, record2));
+
+    // Exists at key.
+    BOOST_REQUIRE(!instance.exists(0));
+    BOOST_REQUIRE(instance.exists(3));
+    BOOST_REQUIRE(instance.exists(42));
+}
+
+BOOST_AUTO_TEST_CASE(header__put__get__expected)
+{
+    table::prevout::record element{};
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::prevout instance{ head_store, body_store, 5 };
+    BOOST_REQUIRE(instance.create());
+
+    // Put at key.
+    BOOST_REQUIRE(instance.put(3, record1));
+    BOOST_REQUIRE(instance.put(42, record2));
+
+    // Get at link.
+    BOOST_REQUIRE(!instance.get(2, element));
+    BOOST_REQUIRE(instance.get(0, element));
+    BOOST_REQUIRE(element == record1);
+    BOOST_REQUIRE(instance.get(1, element));
+    BOOST_REQUIRE(element == record2);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
