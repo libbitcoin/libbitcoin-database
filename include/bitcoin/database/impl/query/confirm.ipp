@@ -277,7 +277,10 @@ error::error_t CLASS::spent_prevout(const point_link& link, index index,
     // But if we hold the spend.pk/prevout.tx we can just read the
     // spend.hash/index, so we don't need to store the index, and we need to
     // read the spend.hash anyway, so index is free (no paging). So that's now
-    // just spend[4] + tx[4], back to 8 bytes (19GB).
+    // just spend[4] + tx[4], back to 8 bytes (19GB). But getting spends is
+    // relatively cheap, just search txs[hash] and navigate puts. The downside
+    // is the extra search and puts is > 2x prevouts and can't be pruned.
+    // The upside is half the prevout size (read/write/page) and store increase.
 
     // Iterate points by point hash (of output tx) because may be conflicts.
     auto point = store_.point.it(get_point_key(link));
@@ -705,13 +708,14 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set_prevouts(const header_link&, const block&) NOEXCEPT
+bool CLASS::set_prevouts(size_t height, const block& block) NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // TODO: implement.
-    return {};
+    // Clean single allocation failure (e.g. disk full).
+    const table::prevout::record_put_ref prevouts{ {}, block };
+    return store_.prevout.put(height, prevouts);
     // ========================================================================
 }
 
