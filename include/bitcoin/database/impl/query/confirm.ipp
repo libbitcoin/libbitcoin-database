@@ -710,6 +710,10 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 TEMPLATE
 bool CLASS::set_prevouts(size_t height, const block& block) NOEXCEPT
 {
+    // Empty or coinbase only implies no spends.
+    if (block.transactions() <= one)
+        return true;
+
     // ========================================================================
     const auto scope = store_.get_transactor();
 
