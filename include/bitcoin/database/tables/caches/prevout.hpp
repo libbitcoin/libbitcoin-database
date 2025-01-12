@@ -103,31 +103,24 @@ struct prevout
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             const auto txs = *block.transactions_ptr();
-            if (txs.size() <= one)
+            BC_ASSERT_MSG(txs.size() > one, "empty block");
+
+            const auto write_spend = [&](const auto& in) NOEXCEPT
             {
-                // Empty or coinbase only implies no spends.
-                sink.invalidate();
-            }
-            else
+                // Sets terminal sentinel for block-internal spends.
+                const auto value = in->metadata.inside ? tx::terminal :
+                    merge(in->metadata.coinbase, in->metadata.parent);
+
+                sink.write_little_endian<tx::integer, tx::size>(value);
+            };
+
+            const auto write_tx = [&](const auto& tx) NOEXCEPT
             {
-                const auto write_spend = [&](const auto& in) NOEXCEPT
-                {
-                    // Sets terminal sentinel for block-internal spends.
-                    const auto value = in->metadata.inside ? tx::terminal :
-                        merge(in->metadata.coinbase, in->metadata.parent);
+                const auto& ins = tx->inputs_ptr();
+                return std::for_each(ins->begin(), ins->end(), write_spend);
+            };
 
-                    sink.write_little_endian<tx::integer, tx::size>(value);
-                };
-
-                const auto write_tx = [&](const auto& tx) NOEXCEPT
-                {
-                    const auto& ins = tx->inputs_ptr();
-                    return std::for_each(ins->begin(), ins->end(), write_spend);
-                };
-
-                std::for_each(std::next(txs.begin()), txs.end(), write_tx);
-            }
-
+            std::for_each(std::next(txs.begin()), txs.end(), write_tx);
             BC_ASSERT(!sink || (sink.get_write_position() == count() * minrow));
             return sink;
         }

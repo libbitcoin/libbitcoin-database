@@ -264,17 +264,18 @@ BOOST_AUTO_TEST_CASE(prevout__put__merged_values__expected)
 
 // record_put_ref
 
-BOOST_AUTO_TEST_CASE(prevout__record_put_ref__empty_block__false)
-{
-    test::chunk_storage head_store{};
-    test::chunk_storage body_store{};
-    table::prevout instance{ head_store, body_store, 5 };
-    BOOST_REQUIRE(instance.create());
-
-    const auto genesis = system::settings(selection::mainnet).genesis_block;
-    const auto record = table::prevout::record_put_ref{ {}, genesis };
-    BOOST_REQUIRE(!instance.put(4, record));
-}
+// Empty block is now guarded at the query level (set_prevouts(...)).
+////BOOST_AUTO_TEST_CASE(prevout__record_put_ref__empty_block__false)
+////{
+////    test::chunk_storage head_store{};
+////    test::chunk_storage body_store{};
+////    table::prevout instance{ head_store, body_store, 5 };
+////    BOOST_REQUIRE(instance.create());
+////
+////    const auto genesis = system::settings(selection::mainnet).genesis_block;
+////    const auto record = table::prevout::record_put_ref{ {}, genesis };
+////    BOOST_REQUIRE(!instance.put(4, record));
+////}
 
 BOOST_AUTO_TEST_CASE(prevout__put_ref__get_non_empty_block_with_default_metadata__inside_spend_terminals)
 {
