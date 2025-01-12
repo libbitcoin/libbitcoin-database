@@ -103,8 +103,9 @@ struct prevout
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             const auto txs = *block.transactions_ptr();
-            if (txs.empty())
+            if (txs.size() <= one)
             {
+                // Empty or coinbase only implies no spends.
                 sink.invalidate();
             }
             else
@@ -167,13 +168,18 @@ struct prevout
         inline bool coinbase(size_t index) const NOEXCEPT
         {
             BC_ASSERT(index < count());
+
+            // Inside are always reflected as coinbase.
             return system::get_right(values.at(index), offset);
         }
 
         inline tx::integer output_tx_fk(size_t index) const NOEXCEPT
         {
             BC_ASSERT(index < count());
-            return system::set_right(values.at(index), offset, false);
+
+            // Inside are always mapped to terminal.
+            return inside(index) ? tx::terminal :
+                system::set_right(values.at(index), offset, false);
         }
 
         // Spend count is derived in confirmation by summing block.txs.puts.
