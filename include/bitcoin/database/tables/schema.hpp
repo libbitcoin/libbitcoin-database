@@ -319,6 +319,22 @@ namespace schema
     /// Cache tables.
     /// -----------------------------------------------------------------------
 
+    // record arraymap
+    struct prevout
+    {
+        static constexpr size_t pk = schema::spend_;
+        static constexpr size_t minsize =
+            ////schema::bit + // merged bit into tx.
+            schema::tx;
+        static constexpr size_t minrow = minsize;
+        static constexpr size_t size = minsize;
+
+        // This is hidden by derivatives, to avoid virtual methods.
+        inline linkage<pk> count() const NOEXCEPT { return one; }
+        static_assert(minsize == 4u);
+        static_assert(minrow == 4u);
+    };
+
     // slab hashmap
     struct validated_bk
     {
@@ -353,22 +369,6 @@ namespace schema
         static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 14u);
         static_assert(minrow == 23u);
-    };
-
-    // record arraymap
-    struct prevout
-    {
-        static constexpr size_t pk = schema::spend_;
-        ////static constexpr size_t sk = zero;
-        static constexpr size_t minsize =
-            schema::bit + // TODO: merge bit.
-            schema::spend_ +
-            schema::tx;
-        static constexpr size_t minrow = minsize;
-        static constexpr size_t size = minsize;
-        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 9u);
-        static_assert(minrow == 9u);
     };
 
     // slab hashmap

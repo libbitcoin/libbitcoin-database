@@ -21,13 +21,124 @@
 
 BOOST_AUTO_TEST_SUITE(prevout_tests)
 
-using namespace system;
-constexpr table::prevout::record record1{ {}, true, 0x01020304, 0xbaadf00d };
-constexpr table::prevout::record record2{ {}, false, 0xbaadf00d, 0x01020304 };
+// Setting block metadata on a shared instance creates test side effects.
+// Chain objects such as blocks cannot be copied for side-effect-free metadata tests, since
+// block copy takes shared pointer references. So create new test blocks for each metadata test.
+#define DECLARE_BOGUS_BLOCK \
+    const block bogus_block \
+    { \
+        header \
+        { \
+            0x31323334, \
+            system::null_hash, \
+            system::one_hash, \
+            0x41424344, \
+            0x51525354, \
+            0x61626364 \
+        }, \
+        transactions \
+        { \
+            transaction \
+            { \
+                0x01, \
+                inputs \
+                { \
+                    input \
+                    { \
+                        point{}, \
+                        script{}, \
+                        witness{}, \
+                        0x02 \
+                    }, \
+                    input \
+                    { \
+                        point{}, \
+                        script{}, \
+                        witness{}, \
+                        0x03 \
+                    } \
+                }, \
+                outputs \
+                { \
+                    output \
+                    { \
+                        0x04, \
+                        script{} \
+                    } \
+                }, \
+                0x05 \
+            }, \
+            transaction \
+            { \
+                0x06, \
+                inputs \
+                { \
+                    input \
+                    { \
+                        point{}, \
+                        script{}, \
+                        witness{}, \
+                        0x07 \
+                    }, \
+                    input \
+                    { \
+                        point{}, \
+                        script{}, \
+                        witness{}, \
+                        0x08 \
+                    } \
+                }, \
+                outputs \
+                { \
+                    output \
+                    { \
+                        0x09, \
+                        script{} \
+                    } \
+                }, \
+                0x0a \
+            }, \
+            transaction \
+            { \
+                0x0b, \
+                inputs \
+                { \
+                    input \
+                    { \
+                        point{}, \
+                        script{}, \
+                        witness{}, \
+                        0x0c \
+                    }, \
+                    input \
+                    { \
+                        point{}, \
+                        script{}, \
+                        witness{}, \
+                        0x0d \
+                    } \
+                }, \
+                outputs \
+                { \
+                    output \
+                    { \
+                        0x0e, \
+                        script{} \
+                    } \
+                }, \
+                0x0f \
+            } \
+        } \
+    }
 
-BOOST_AUTO_TEST_CASE(header__put__at1__expected)
+using namespace system;
+using namespace system::chain;
+constexpr auto terminal = linkage<schema::tx>::terminal;
+constexpr table::prevout::record record1{ {}, 0x01020304_u32 };
+constexpr table::prevout::record record2{ {}, 0xbaadf00d_u32 };
+
+BOOST_AUTO_TEST_CASE(prevout__put__at1__expected)
 {
-    table::prevout::record element{};
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
     table::prevout instance{ head_store, body_store, 5 };
@@ -43,7 +154,7 @@ BOOST_AUTO_TEST_CASE(header__put__at1__expected)
     BOOST_REQUIRE_EQUAL(instance.at(42), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(header__put__at2__expected)
+BOOST_AUTO_TEST_CASE(prevout__put__at2__expected)
 {
     table::prevout::record element{};
     test::chunk_storage head_store{};
@@ -63,9 +174,8 @@ BOOST_AUTO_TEST_CASE(header__put__at2__expected)
     BOOST_REQUIRE(element == record2);
 }
 
-BOOST_AUTO_TEST_CASE(header__put__exists__expected)
+BOOST_AUTO_TEST_CASE(prevout__put__exists__expected)
 {
-    table::prevout::record element{};
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
     table::prevout instance{ head_store, body_store, 5 };
@@ -81,7 +191,7 @@ BOOST_AUTO_TEST_CASE(header__put__exists__expected)
     BOOST_REQUIRE(instance.exists(42));
 }
 
-BOOST_AUTO_TEST_CASE(header__put__get__expected)
+BOOST_AUTO_TEST_CASE(prevout__put__get__expected)
 {
     table::prevout::record element{};
     test::chunk_storage head_store{};
@@ -99,6 +209,198 @@ BOOST_AUTO_TEST_CASE(header__put__get__expected)
     BOOST_REQUIRE(element == record1);
     BOOST_REQUIRE(instance.get(1, element));
     BOOST_REQUIRE(element == record2);
+}
+
+// values
+
+BOOST_AUTO_TEST_CASE(prevout__put__isolated_values__expected)
+{
+    constexpr auto bits = sub1(to_bits(linkage<schema::tx>::size));
+
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::prevout instance{ head_store, body_store, 5 };
+    BOOST_REQUIRE(instance.create());
+
+    constexpr auto cb_only = table::prevout::record{ {}, 0b10000000'00000000'00000000'00000000_u32 };
+    BOOST_REQUIRE(instance.put(3, cb_only));
+
+    constexpr auto tx_only = table::prevout::record{ {}, 0b01010101'01010101'01010101'01010101_u32 };
+    BOOST_REQUIRE(instance.put(42, tx_only));
+
+    table::prevout::record element1{};
+    BOOST_REQUIRE(instance.at(3, element1));
+    BOOST_REQUIRE(element1.coinbase());
+    BOOST_REQUIRE_EQUAL(element1.coinbase(), cb_only.coinbase());
+    BOOST_REQUIRE_EQUAL(element1.output_tx_fk(), cb_only.output_tx_fk());
+    BOOST_REQUIRE_EQUAL(element1.output_tx_fk(), set_right(cb_only.value, bits, false));
+
+    table::prevout::record element2{};
+    BOOST_REQUIRE(instance.at(42, element2));
+    BOOST_REQUIRE(!element2.coinbase());
+    BOOST_REQUIRE_EQUAL(element2.coinbase(), tx_only.coinbase());
+    BOOST_REQUIRE_EQUAL(element2.output_tx_fk(), tx_only.output_tx_fk());
+    BOOST_REQUIRE_EQUAL(element2.output_tx_fk(), set_right(tx_only.value, bits, false));
+}
+
+BOOST_AUTO_TEST_CASE(prevout__put__merged_values__expected)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::prevout instance{ head_store, body_store, 5 };
+    BOOST_REQUIRE(instance.create());
+
+    constexpr auto expected_cb = true;
+    constexpr auto expected_tx = 0b01010101'01010101'01010101'01010101_u32;
+    auto record = table::prevout::record{ {}, 0_u32 };
+    record.set(expected_cb, expected_tx);
+    BOOST_REQUIRE(instance.put(3, record));
+
+    table::prevout::record element{};
+    BOOST_REQUIRE(instance.at(3, element));
+    BOOST_REQUIRE_EQUAL(element.coinbase(), expected_cb);
+    BOOST_REQUIRE_EQUAL(element.output_tx_fk(), expected_tx);
+}
+
+// record_put_ref
+
+BOOST_AUTO_TEST_CASE(prevout__record_put_ref__empty_block__false)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::prevout instance{ head_store, body_store, 5 };
+    BOOST_REQUIRE(instance.create());
+
+    const auto genesis = system::settings(selection::mainnet).genesis_block;
+    const auto record = table::prevout::record_put_ref{ {}, genesis };
+    BOOST_REQUIRE(!instance.put(4, record));
+}
+
+BOOST_AUTO_TEST_CASE(prevout__put_ref__get_non_empty_block_with_default_metadata__inside_spend_terminals)
+{
+    DECLARE_BOGUS_BLOCK;
+
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::prevout instance{ head_store, body_store, 5 };
+    BOOST_REQUIRE(instance.create());
+
+    const auto record = table::prevout::record_put_ref{ {}, bogus_block };
+    BOOST_REQUIRE(instance.put(2, record));
+
+    table::prevout::record_get element{};
+    const auto spends = bogus_block.spends();
+    BOOST_REQUIRE_EQUAL(spends, 4u);
+
+    element.values.resize(spends);
+    BOOST_REQUIRE(instance.at(2, element));
+    BOOST_REQUIRE_EQUAL(element.count(), 4u);
+
+    // First block.tx is coinbase, no spends, so only 4, all terminal (defaults).
+    BOOST_REQUIRE_EQUAL(element.values.at(0), terminal);
+    BOOST_REQUIRE_EQUAL(element.values.at(1), terminal);
+    BOOST_REQUIRE_EQUAL(element.values.at(2), terminal);
+    BOOST_REQUIRE_EQUAL(element.values.at(3), terminal);
+
+    // Block-internal spend.
+    // Positionally identifies spends not requiring a double spend check.
+    // Blocks are guarded agianst internal double spends, and tx previously
+    // confirmed would imply a double spend of it or one of its ancestors.
+    BOOST_REQUIRE(element.inside(0));
+    BOOST_REQUIRE(element.inside(1));
+    BOOST_REQUIRE(element.inside(2));
+    BOOST_REQUIRE(element.inside(3));
+
+    // Inside are always reflected as coinbase.
+    BOOST_REQUIRE(element.coinbase(0));
+    BOOST_REQUIRE(element.coinbase(1));
+    BOOST_REQUIRE(element.coinbase(2));
+    BOOST_REQUIRE(element.coinbase(3));
+
+    // Inside are always mapped to terminal.
+    BOOST_REQUIRE_EQUAL(element.output_tx_fk(0), terminal);
+    BOOST_REQUIRE_EQUAL(element.output_tx_fk(1), terminal);
+    BOOST_REQUIRE_EQUAL(element.output_tx_fk(2), terminal);
+    BOOST_REQUIRE_EQUAL(element.output_tx_fk(3), terminal);
+}
+
+BOOST_AUTO_TEST_CASE(prevout__put_ref__get_non_empty_block_with_metadata__expected)
+{
+    DECLARE_BOGUS_BLOCK;
+
+    const auto tx0 = bogus_block.transactions_ptr()->at(0);
+    const auto tx1 = bogus_block.transactions_ptr()->at(1);
+    const auto tx2 = bogus_block.transactions_ptr()->at(2);
+
+    const auto& in0_0 = *tx0->inputs_ptr()->at(0);
+    const auto& in0_1 = *tx0->inputs_ptr()->at(1);
+    const auto& in1_0 = *tx1->inputs_ptr()->at(0);
+    const auto& in1_1 = *tx1->inputs_ptr()->at(1);
+    const auto& in2_0 = *tx2->inputs_ptr()->at(0);
+    const auto& in2_1 = *tx2->inputs_ptr()->at(1);
+
+    // Coinbase identifies parent of prevout (spent), not input (spender).
+    in0_0.metadata.parent = 0x01234560_u32;
+    in0_1.metadata.parent = 0x01234561_u32;
+    in1_0.metadata.parent = 0x01234562_u32;
+    in1_1.metadata.parent = 0x01234563_u32;
+    in2_0.metadata.parent = 0x01234564_u32;
+    in2_1.metadata.parent = 0x01234565_u32;
+
+    // Coinbase identifies prevout (spent), not input (spender).
+    in0_0.metadata.coinbase = false;
+    in0_1.metadata.coinbase = true;
+    in1_0.metadata.coinbase = false;
+    in1_1.metadata.coinbase = false;
+    in2_0.metadata.coinbase = false;
+    in2_1.metadata.coinbase = true;
+
+    // Inside implies prevout spent in block (terminal).
+    in0_0.metadata.inside = false;
+    in0_1.metadata.inside = true;
+    in1_0.metadata.inside = false;
+    in1_1.metadata.inside = false;
+    in2_0.metadata.inside = true;
+    in2_1.metadata.inside = false;
+
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::prevout instance{ head_store, body_store, 5 };
+    BOOST_REQUIRE(instance.create());
+
+    const auto record = table::prevout::record_put_ref{ {}, bogus_block };
+    BOOST_REQUIRE(instance.put(2, record));
+
+    table::prevout::record_get element{};
+    const auto spends = bogus_block.spends();
+    BOOST_REQUIRE_EQUAL(spends, 4u);
+
+    element.values.resize(spends);
+    BOOST_REQUIRE(instance.at(2, element));
+    BOOST_REQUIRE_EQUAL(element.count(), spends);
+
+    // First block.tx is coinbase, no spends, so only 4, none terminal.
+    BOOST_REQUIRE_NE(element.values.at(0), terminal);
+    BOOST_REQUIRE_NE(element.values.at(1), terminal);
+    BOOST_REQUIRE_EQUAL(element.values.at(2), terminal);
+    BOOST_REQUIRE_NE(element.values.at(3), terminal);
+
+    // Inside spends are used as positional placeholders for double spend check bypass.
+    BOOST_REQUIRE(!element.inside(0));
+    BOOST_REQUIRE(!element.inside(1));
+    BOOST_REQUIRE(element.inside(2));
+    BOOST_REQUIRE(!element.inside(3));
+
+    BOOST_REQUIRE(!element.coinbase(0));
+    BOOST_REQUIRE(!element.coinbase(1));
+    BOOST_REQUIRE(element.coinbase(2));
+    BOOST_REQUIRE(element.coinbase(3));
+
+    // Spend ordinal position relative to the block must be preserved (coinbase excluded).
+    BOOST_REQUIRE_EQUAL(element.output_tx_fk(0), in1_0.metadata.parent);
+    BOOST_REQUIRE_EQUAL(element.output_tx_fk(1), in1_1.metadata.parent);
+    BOOST_REQUIRE_EQUAL(element.output_tx_fk(2), terminal);
+    BOOST_REQUIRE_EQUAL(element.output_tx_fk(3), in2_1.metadata.parent);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
