@@ -133,7 +133,7 @@ bool CLASS::set(const block& block, bool strong) NOEXCEPT
     return !set_code(block, strong);
 }
 
-// populate
+// populate (with node metadata)
 
 TEMPLATE
 bool CLASS::populate(const input& input) const NOEXCEPT
@@ -188,98 +188,52 @@ bool CLASS::populate(const block& block) const NOEXCEPT
     return result;
 }
 
-// populate_with_metadata
+// populate_without_metadata
 
 TEMPLATE
-bool CLASS::populate_with_metadata(const input& input,
-    const tx_link& link) const NOEXCEPT
+bool CLASS::populate_without_metadata(const input& input) const NOEXCEPT
 {
+    // Null point would return nullptr and be interpreted as missing.
     BC_ASSERT(!input.point().is_null());
+
     if (input.prevout)
         return true;
 
-    // null point returns nullptr and is therefore interpreted as missing.
-    input.prevout = get_output(input.point());
-    if (is_null(input.prevout))
-        return false;
-
-    // tx of input point exists.
     const auto tx = to_tx(input.point().hash());
-    if (tx.is_terminal())
-        return false;
-
-    // tx of input point is strong.
-    const auto block = to_block(tx);
-    if (block.is_terminal())
-        return false;
-
-    context ctx{};
-    if (!get_context(ctx, block))
-        return false;
-
-    const auto point_fk = to_point(input.point().hash());
-    const auto point_index = input.point().index();
-
-    input.metadata.coinbase = is_coinbase(tx);
-    input.metadata.spent = is_spent_prevout(point_fk, point_index, link);
-    input.metadata.median_time_past = ctx.mtp;
-    input.metadata.height = ctx.height;
-    return true;
+    input.prevout = get_output(tx, input.point().index());
+    return !is_null(input.prevout);
 }
 
 TEMPLATE
-bool CLASS::populate_with_metadata(const transaction& tx,
-    const tx_link& link) const NOEXCEPT
+bool CLASS::populate_without_metadata(const transaction& tx) const NOEXCEPT
 {
+    BC_ASSERT(!tx.is_coinbase());
+
     auto result = true;
     const auto& ins = tx.inputs_ptr();
     std::for_each(ins->begin(), ins->end(), [&](const auto& in) NOEXCEPT
     {
-        result &= populate_with_metadata(*in, link);
+        result &= populate_without_metadata(*in);
     });
 
     return result;
 }
 
 TEMPLATE
-bool CLASS::populate_with_metadata(const transaction& tx) const NOEXCEPT
-{
-    BC_ASSERT(is_coinbase(tx));
-
-    // A coinbase tx is allowed only one input.
-    const auto& input = tx.inputs_ptr()->front();
-
-    // Find any confirmed unspent duplicates of tx (unspent_coinbase_collision).
-    const auto ec = unspent_duplicates(tx);
-    if (ec == error::integrity)
-        return false;
-
-    // The prevout of a coinbase is null (not an output of a coinbase tx).
-    input->metadata.coinbase = false;
-    input->metadata.spent = (ec != error::unspent_coinbase_collision);
-    input->metadata.median_time_past = max_uint32;
-    input->metadata.height = zero;
-    return true;
-}
-
-TEMPLATE
-bool CLASS::populate_with_metadata(const block& block) const NOEXCEPT
+bool CLASS::populate_without_metadata(const block& block) const NOEXCEPT
 {
     const auto& txs = block.transactions_ptr();
     if (txs->empty())
         return false;
 
     auto result = true;
-    const auto coinbase = populate_with_metadata(txs->front());
     std::for_each(std::next(txs->begin()), txs->end(),
         [&](const auto& tx) NOEXCEPT
         {
-            const auto link = to_tx(tx.get_hash());
-            result &= !link.is_terminal();
             const auto& ins = tx->inputs_ptr();
             std::for_each(ins->begin(), ins->end(), [&](const auto& in) NOEXCEPT
             {
-                result &= populate_with_metadata(*in, link);
+                result &= populate_without_metadata(*in);
             });
         });
 
