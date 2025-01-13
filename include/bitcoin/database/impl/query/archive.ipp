@@ -138,19 +138,17 @@ bool CLASS::set(const block& block, bool strong) NOEXCEPT
 TEMPLATE
 bool CLASS::populate(const input& input) const NOEXCEPT
 {
+    // Null point would return nullptr and be interpreted as missing.
     BC_ASSERT(!input.point().is_null());
+
     if (input.prevout)
         return true;
 
     const auto tx = to_tx(input.point().hash());
-    input.prevout = get_output(tx, input.point().index());
-    input.metadata.coinbase = is_coinbase(tx);
-    input.metadata.inside = false;
     input.metadata.parent = tx;
-
-    // input.metadata is not populated.
-    // Null point would return nullptr and be interpreted as missing.
-    ////input.prevout = get_output(input.point());
+    input.metadata.inside = false;
+    input.metadata.coinbase = is_coinbase(tx);
+    input.prevout = get_output(tx, input.point().index());
     return !is_null(input.prevout);
 }
 
