@@ -134,8 +134,8 @@ BOOST_AUTO_TEST_SUITE(prevout_tests)
 using namespace system;
 using namespace system::chain;
 constexpr auto terminal = linkage<schema::tx>::terminal;
-constexpr table::prevout::record record1{ {}, 0x01020304_u32 };
-constexpr table::prevout::record record2{ {}, 0xbaadf00d_u32 };
+constexpr table::prevout::record record1{ {}, 0x00112233_u32, 0x01020304_u32 };
+constexpr table::prevout::record record2{ {}, 0x00aabbcc_u32, 0xbaadf00d_u32 };
 
 BOOST_AUTO_TEST_CASE(prevout__put__at1__expected)
 {
@@ -151,7 +151,9 @@ BOOST_AUTO_TEST_CASE(prevout__put__at1__expected)
     // Dereference at key to get link.
     BOOST_REQUIRE(instance.at(0).is_terminal());
     BOOST_REQUIRE_EQUAL(instance.at(3), 0u);
-    BOOST_REQUIRE_EQUAL(instance.at(42), 1u);
+
+    // First record is two elements, so link for second record is 3.
+    BOOST_REQUIRE_EQUAL(instance.at(42), 2u);
 }
 
 BOOST_AUTO_TEST_CASE(prevout__put__at2__expected)
@@ -204,10 +206,13 @@ BOOST_AUTO_TEST_CASE(prevout__put__get__expected)
     BOOST_REQUIRE(instance.put(42, record2));
 
     // Get at link.
-    BOOST_REQUIRE(!instance.get(2, element));
+    // First and second records are two elements each, so link for next record is 4.
+    BOOST_REQUIRE(!instance.get(4, element));
     BOOST_REQUIRE(instance.get(0, element));
     BOOST_REQUIRE(element == record1);
-    BOOST_REQUIRE(instance.get(1, element));
+
+    // First record is two elements, so link for second record is 3.
+    BOOST_REQUIRE(instance.get(2, element));
     BOOST_REQUIRE(element == record2);
 }
 
@@ -222,15 +227,16 @@ BOOST_AUTO_TEST_CASE(prevout__put__isolated_values__expected)
     table::prevout instance{ head_store, body_store, 5 };
     BOOST_REQUIRE(instance.create());
 
-    constexpr auto cb_only = table::prevout::record{ {}, 0b10000000'00000000'00000000'00000000_u32 };
+    constexpr auto cb_only = table::prevout::record{ {}, 42_u32, 0b10000000'00000000'00000000'00000000_u32 };
     BOOST_REQUIRE(instance.put(3, cb_only));
 
-    constexpr auto tx_only = table::prevout::record{ {}, 0b01010101'01010101'01010101'01010101_u32 };
+    constexpr auto tx_only = table::prevout::record{ {}, 24_u32, 0b01010101'01010101'01010101'01010101_u32 };
     BOOST_REQUIRE(instance.put(42, tx_only));
 
     table::prevout::record element1{};
     BOOST_REQUIRE(instance.at(3, element1));
     BOOST_REQUIRE(element1.coinbase());
+    BOOST_REQUIRE_EQUAL(element1.header_fk, 42_u32);
     BOOST_REQUIRE_EQUAL(element1.coinbase(), cb_only.coinbase());
     BOOST_REQUIRE_EQUAL(element1.output_tx_fk(), cb_only.output_tx_fk());
     BOOST_REQUIRE_EQUAL(element1.output_tx_fk(), set_right(cb_only.value, bits, false));
@@ -238,6 +244,7 @@ BOOST_AUTO_TEST_CASE(prevout__put__isolated_values__expected)
     table::prevout::record element2{};
     BOOST_REQUIRE(instance.at(42, element2));
     BOOST_REQUIRE(!element2.coinbase());
+    BOOST_REQUIRE_EQUAL(element2.header_fk, 24_u32);
     BOOST_REQUIRE_EQUAL(element2.coinbase(), tx_only.coinbase());
     BOOST_REQUIRE_EQUAL(element2.output_tx_fk(), tx_only.output_tx_fk());
     BOOST_REQUIRE_EQUAL(element2.output_tx_fk(), set_right(tx_only.value, bits, false));
@@ -252,30 +259,18 @@ BOOST_AUTO_TEST_CASE(prevout__put__merged_values__expected)
 
     constexpr auto expected_cb = true;
     constexpr auto expected_tx = 0b01010101'01010101'01010101'01010101_u32;
-    auto record = table::prevout::record{ {}, 0_u32 };
+    auto record = table::prevout::record{ {}, 42_u32, 0_u32 };
     record.set(expected_cb, expected_tx);
     BOOST_REQUIRE(instance.put(3, record));
 
     table::prevout::record element{};
     BOOST_REQUIRE(instance.at(3, element));
+    BOOST_REQUIRE_EQUAL(element.header_fk, 42_u32);
     BOOST_REQUIRE_EQUAL(element.coinbase(), expected_cb);
     BOOST_REQUIRE_EQUAL(element.output_tx_fk(), expected_tx);
 }
 
 // record_put_ref
-
-// Empty block is now guarded at the query level (set_prevouts(...)).
-////BOOST_AUTO_TEST_CASE(prevout__record_put_ref__empty_block__false)
-////{
-////    test::chunk_storage head_store{};
-////    test::chunk_storage body_store{};
-////    table::prevout instance{ head_store, body_store, 5 };
-////    BOOST_REQUIRE(instance.create());
-////
-////    const auto genesis = system::settings(selection::mainnet).genesis_block;
-////    const auto record = table::prevout::record_put_ref{ {}, genesis };
-////    BOOST_REQUIRE(!instance.put(4, record));
-////}
 
 BOOST_AUTO_TEST_CASE(prevout__put_ref__get_non_empty_block_with_default_metadata__inside_spend_terminals)
 {
@@ -286,7 +281,7 @@ BOOST_AUTO_TEST_CASE(prevout__put_ref__get_non_empty_block_with_default_metadata
     table::prevout instance{ head_store, body_store, 5 };
     BOOST_REQUIRE(instance.create());
 
-    const auto record = table::prevout::record_put_ref{ {}, bogus_block };
+    const auto record = table::prevout::record_put_ref{ {}, 42_u32, bogus_block };
     BOOST_REQUIRE(instance.put(2, record));
 
     table::prevout::record_get element{};
@@ -295,7 +290,7 @@ BOOST_AUTO_TEST_CASE(prevout__put_ref__get_non_empty_block_with_default_metadata
 
     element.values.resize(spends);
     BOOST_REQUIRE(instance.at(2, element));
-    BOOST_REQUIRE_EQUAL(element.count(), 4u);
+    BOOST_REQUIRE_EQUAL(element.count(), add1(4u));
 
     // First block.tx is coinbase, no spends, so only 4, all terminal (defaults).
     BOOST_REQUIRE_EQUAL(element.values.at(0), terminal);
@@ -369,7 +364,7 @@ BOOST_AUTO_TEST_CASE(prevout__put_ref__get_non_empty_block_with_metadata__expect
     table::prevout instance{ head_store, body_store, 5 };
     BOOST_REQUIRE(instance.create());
 
-    const auto record = table::prevout::record_put_ref{ {}, bogus_block };
+    const auto record = table::prevout::record_put_ref{ {}, 42_u32, bogus_block };
     BOOST_REQUIRE(instance.put(2, record));
 
     table::prevout::record_get element{};
@@ -378,7 +373,7 @@ BOOST_AUTO_TEST_CASE(prevout__put_ref__get_non_empty_block_with_metadata__expect
 
     element.values.resize(spends);
     BOOST_REQUIRE(instance.at(2, element));
-    BOOST_REQUIRE_EQUAL(element.count(), spends);
+    BOOST_REQUIRE_EQUAL(element.count(), add1(spends));
 
     // First block.tx is coinbase, no spends, so only 4, none terminal.
     BOOST_REQUIRE_NE(element.values.at(0), terminal);

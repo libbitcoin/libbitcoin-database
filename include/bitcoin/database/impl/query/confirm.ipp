@@ -708,17 +708,21 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set_prevouts(size_t height, const block& block) NOEXCEPT
+bool CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
 {
     // Empty or coinbase only implies no spends.
     if (block.transactions() <= one)
         return true;
 
+    const auto height = get_height(link);
+    if (height.is_terminal())
+        return false;
+
     // ========================================================================
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    const table::prevout::record_put_ref prevouts{ {}, block };
+    const table::prevout::record_put_ref prevouts{ {}, link, block };
     return store_.prevout.put(height, prevouts);
     // ========================================================================
 }
