@@ -506,9 +506,11 @@ spend_set CLASS::to_spend_set(const tx_link& link) const NOEXCEPT
         // Translate query to public struct.
 #if defined(HAVE_CLANG)
         // emplace_back aggregate initialization requires clang 16.
-        set.spends.push_back({ get.point_fk, get.point_index, get.sequence });
+        set.spends.push_back({ get.point_fk, get.point_index, get.sequence,
+            table::prevout::tx::integer{}, bool{} });
 #else
-        set.spends.emplace_back(get.point_fk, get.point_index, get.sequence);
+        set.spends.emplace_back(get.point_fk, get.point_index, get.sequence,
+            table::prevout::tx::integer{}, bool{});
 #endif
     }
 

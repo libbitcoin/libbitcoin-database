@@ -158,6 +158,10 @@ struct prevout
             // First tx-sized entry overloaded for header link.
             header_fk = source.read_little_endian<header::integer, tx::size>();
 
+            // TODO: Can be optimized using unsafe_array_cast copy, as long as
+            // TODO: endianness lines up. Should have writer methods for native
+            // TODO: endianness so that both big and little are optimal. But
+            // TODO: this would prevent store portability across endianness.
             // Values must be set to read size (i.e. using knowledge of spends).
             std::for_each(values.begin(), values.end(), [&](auto& value) NOEXCEPT
             {

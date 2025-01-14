@@ -67,9 +67,14 @@ struct spend_set
             return point_fk == table::spend::pt::terminal;
         }
 
+        // From tx input.
         table::spend::pt::integer point_fk{};
         table::spend::ix::integer point_index{};
         uint32_t sequence{};
+
+        // From prevouts table.
+        table::prevout::tx::integer prevout_tx_fk{};
+        bool coinbase{};
     };
 
     tx_link tx{};
@@ -581,8 +586,8 @@ protected:
         const tx_link& self=tx_link::terminal) const NOEXCEPT;
     error::error_t spent_prevout(const point_link& link, index index,
         const tx_link& self=tx_link::terminal) const NOEXCEPT;
-    error::error_t unspendable_prevout(const point_link& link,
-        uint32_t sequence, uint32_t version,
+    error::error_t unspendable_prevout(uint32_t sequence, bool coinbase,
+        const tx_link& prevout_tx, uint32_t version,
         const context& ctx) const NOEXCEPT;
     bool set_strong(const header_link& link, const tx_links& txs,
         bool positive) NOEXCEPT;
