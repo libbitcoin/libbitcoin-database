@@ -517,20 +517,18 @@ spend_sets CLASS::to_spend_sets(const header_link& link) const NOEXCEPT
     };
     const auto spends = std::accumulate(sets.begin(), sets.end(), zero, count);
 
-    // TODO: deal with exta link element in data set before testing.
+    ////// TODO: deal with exta link element in data set before testing.
     table::prevout::record_get prevouts{};
     prevouts.values.resize(spends);
     store_.prevout.at(get_height(link), prevouts);
 
     size_t index{};
     for (auto& set: sets)
-    {
         for (auto& spend: set.spends)
         {
             spend.coinbase = prevouts.coinbase(index);
             spend.prevout_tx_fk = prevouts.output_tx_fk(index++);
         }
-    }
 
     return sets;
 }
@@ -547,8 +545,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     code ec{};
     if ((ec = unspent_duplicates(link, ctx)))
         return ec;
-    
-    // TODO: can be eliminated by caching each non-internal spend link.
+
     const auto sets = to_spend_sets(link);
     if (sets.empty())
         return ec;
@@ -560,12 +557,17 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         // TODO: prevout table optimized, evaluate.
         error::error_t ec{};
         for (const auto& spend: set.spends)
+        {
+            if (spend.prevout_tx_fk == table::prevout::tx::terminal)
+                continue;
+
             if ((ec = unspendable_prevout(spend.sequence, spend.coinbase,
-                spend.prevout_tx_fk, set.version, ctx)))
+                    spend.prevout_tx_fk, set.version, ctx)))
             {
                 fault.store(ec);
                 return true;
             }
+        }
 
         return false;
     };
@@ -575,11 +577,16 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         // TODO: point table optimize via consolidation with spend table.
         error::error_t ec{};
         for (const spend_set::spend& spend: set.spends)
+        {
+            if (spend.prevout_tx_fk == table::prevout::tx::terminal)
+                continue;
+
             if ((ec = spent_prevout(spend.point_fk, spend.point_index, set.tx)))
             {
                 fault.store(ec);
                 return true;
             }
+        }
 
         return false;
     };
