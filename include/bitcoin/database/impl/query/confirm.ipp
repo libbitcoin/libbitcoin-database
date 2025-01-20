@@ -745,7 +745,7 @@ bool CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    const table::prevout::record_put_ref prevouts{ {}, link, block };
+    const table::prevout::record_put_ref prevouts{ {}, /*link,*/ block };
     return store_.prevout.put(height, prevouts);
     // ========================================================================
 }
