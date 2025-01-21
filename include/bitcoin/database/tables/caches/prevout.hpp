@@ -28,16 +28,18 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// prevout is an array map index of previous outputs by block.
+/// prevout is an array map index of previous outputs by block link.
 /// The coinbase flag is merged into the tx field, reducing it's domain.
 /// Masking is from the right in order to accomodate non-integral domain.
 struct prevout
   : public array_map<schema::prevout>
 {
     using tx = linkage<schema::tx>;
+    using header = linkage<schema::block>;
     using array_map<schema::prevout>::arraymap;
     static constexpr size_t offset = sub1(to_bits(tx::size));
 
+    // This supports only a single record (not too useful).
     struct record
       : public schema::prevout
     {
@@ -61,14 +63,14 @@ struct prevout
         inline bool from_data(reader& source) NOEXCEPT
         {
             value = source.read_little_endian<tx::integer, tx::size>();
-            BC_ASSERT(!source || source.get_read_position() == minrow);
+            BC_ASSERT(!source || source.get_read_position() == count() * minrow);
             return source;
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             sink.write_little_endian<tx::integer, tx::size>(value);
-            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
             return sink;
         }
 
@@ -140,6 +142,10 @@ struct prevout
 
         inline bool from_data(reader& source) NOEXCEPT
         {
+            // TODO: Can be optimized using unsafe_array_cast copy, as long as
+            // TODO: endianness lines up. Should have writer methods for native
+            // TODO: endianness so that both big and little are optimal. But
+            // TODO: this would prevent store portability across endianness.
             // Values must be set to read size (i.e. using knowledge of spends).
             std::for_each(values.begin(), values.end(), [&](auto& value) NOEXCEPT
             {

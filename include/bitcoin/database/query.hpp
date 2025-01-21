@@ -67,9 +67,14 @@ struct spend_set
             return point_fk == table::spend::pt::terminal;
         }
 
+        // From tx input.
         table::spend::pt::integer point_fk{};
         table::spend::ix::integer point_index{};
         uint32_t sequence{};
+
+        // From prevouts table.
+        table::prevout::tx::integer prevout_tx_fk{};
+        bool coinbase{};
     };
 
     tx_link tx{};
@@ -507,7 +512,7 @@ public:
     /// Block association relies on strong (confirmed or pending).
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
-    bool set_prevouts(size_t height, const block& block) NOEXCEPT;
+    bool set_prevouts(const header_link& link, const block& block) NOEXCEPT;
     code block_confirmable(const header_link& link) const NOEXCEPT;
     ////code tx_confirmable(const tx_link& link, const context& ctx) const NOEXCEPT;
     code unspent_duplicates(const header_link& coinbase,
@@ -538,6 +543,7 @@ public:
     bool get_filter_head(hash_digest& out, const header_link& link) const NOEXCEPT;
     bool set_filter_body(const header_link& link, const block& block) NOEXCEPT;
     bool set_filter_body(const header_link& link, const filter& body) NOEXCEPT;
+    bool set_filter_head(const header_link& link) NOEXCEPT;
     bool set_filter_head(const header_link& link,
         const hash_digest& head) NOEXCEPT;
 
@@ -581,8 +587,8 @@ protected:
         const tx_link& self=tx_link::terminal) const NOEXCEPT;
     error::error_t spent_prevout(const point_link& link, index index,
         const tx_link& self=tx_link::terminal) const NOEXCEPT;
-    error::error_t unspendable_prevout(const point_link& link,
-        uint32_t sequence, uint32_t version,
+    error::error_t unspendable_prevout(uint32_t sequence, bool coinbase,
+        const tx_link& prevout_tx, uint32_t version,
         const context& ctx) const NOEXCEPT;
     bool set_strong(const header_link& link, const tx_links& txs,
         bool positive) NOEXCEPT;

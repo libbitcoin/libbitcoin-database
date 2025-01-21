@@ -338,31 +338,31 @@ error::error_t CLASS::spent_prevout(const point_link& link, index index,
 
 // protected
 TEMPLATE
-error::error_t CLASS::unspendable_prevout(const point_link& link,
-    uint32_t sequence, uint32_t version, const context& ctx) const NOEXCEPT
+error::error_t CLASS::unspendable_prevout(uint32_t sequence, bool coinbase,
+    const tx_link& prevout_tx, uint32_t version,
+    const context& ctx) const NOEXCEPT
 {
-    // TODO: If unconfirmed_spend is encountered, perform a search (free).
-    // It's not possible for a confirmed spend to be the wrong tx instance.
-    // This eliminates the hash lookup and to_strong(hash) iteration.
-
     // TODO: don't need to return tx link here, just the block (for strong/context).
     // MOOT: get_point_key(link) is redundant with spent_prevout().
     // to_strong has the only searches [tx.iterate, strong.find].
-    const auto strong_prevout = to_strong(get_point_key(link));
+    ////const auto strong_prevout = to_strong(get_point_key(link));
+    ////
+    ////// prevout is strong if present.
+    ////if (strong_prevout.block.is_terminal())
+    ////    return strong_prevout.tx.is_terminal() ?
+    ////        error::missing_previous_output : error::unconfirmed_spend;
 
-    // prevout is strong if present.
-    if (strong_prevout.block.is_terminal())
-        return strong_prevout.tx.is_terminal() ?
-            error::missing_previous_output : error::unconfirmed_spend;
+    // TODO: If unconfirmed_spend is encountered, perform a search (free).
+    // It's not possible for a confirmed spend to be the wrong tx instance.
+    // This eliminates the hash lookup and to_strong(hash) iteration.
+    const auto block = to_block(prevout_tx);
 
     context out{};
-    if (!get_context(out, strong_prevout.block))
+    if (!get_context(out, block))
         return error::integrity;
 
-    // All txs with same hash must be coinbase or not, so this query is redundant.
-    // TODO: Just use the cached value for the prevout, obtained in validation.
-    if (is_coinbase(strong_prevout.tx) &&
-        !transaction::is_coinbase_mature(out.height, ctx.height))
+    // All txs with same hash must be coinbase or not.
+    if (coinbase && !transaction::is_coinbase_mature(out.height, ctx.height))
         return error::coinbase_maturity;
 
     if (ctx.is_enabled(system::chain::flags::bip68_rule) &&
@@ -387,14 +387,9 @@ code CLASS::unspent_duplicates(const header_link& link,
     // [txs.find, {tx.iterate}, strong_tx.it]
     auto coinbases = to_strong_txs(get_tx_key(to_coinbase(link)));
 
-    // Found only this block's coinbase instance, no duplicates.
-    if (is_one(coinbases.size()))
+    // Current block is not set strong.
+    if (is_zero(coinbases.size()))
         return error::success;
-
-    // Remove self (will be not found if current block is not set_strong).
-    const auto self = std::find(coinbases.begin(), coinbases.end(), link);
-    if (self == coinbases.end() || coinbases.erase(self) == coinbases.end())
-        return error::integrity;
 
     // [point.first, is_spent_prevout()]
     const auto spent = [this](const auto& tx) NOEXCEPT
@@ -502,16 +497,34 @@ spend_sets CLASS::to_spend_sets(const header_link& link) const NOEXCEPT
     if (txs.empty())
         return {};
 
-    spend_sets out{ txs.size() };
+    spend_sets sets{ txs.size() };
     const auto to_set = [this](const auto& tx) NOEXCEPT
     {
         return to_spend_set(tx);
     };
 
     // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
-    std_transform(bc::par_unseq, txs.begin(), txs.end(), out.begin(), to_set);
+    std_transform(bc::par_unseq, txs.begin(), txs.end(), sets.begin(), to_set);
 
-    return out;
+    const auto count = [](size_t total, const auto& set) NOEXCEPT
+    {
+        return system::ceilinged_add(total, set.spends.size());
+    };
+    const auto spends = std::accumulate(sets.begin(), sets.end(), zero, count);
+
+    table::prevout::record_get prevouts{};
+    prevouts.values.resize(spends);
+    store_.prevout.at(link, prevouts);
+
+    size_t index{};
+    for (auto& set: sets)
+        for (auto& spend: set.spends)
+        {
+            spend.coinbase = prevouts.coinbase(index);
+            spend.prevout_tx_fk = prevouts.output_tx_fk(index++);
+        }
+
+    return sets;
 }
 
 // split(3) 219 secs for 400k-410k; split(2) 255 and split(0) 456 (not shown).
@@ -526,8 +539,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     code ec{};
     if ((ec = unspent_duplicates(link, ctx)))
         return ec;
-    
-    // This is eliminated by caching, since each non-internal spend is cached.
+
     const auto sets = to_spend_sets(link);
     if (sets.empty())
         return ec;
@@ -536,27 +548,39 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 
     const auto is_unspendable = [this, &ctx, &fault](const auto& set) NOEXCEPT
     {
+        // TODO: prevout table optimized, evaluate.
         error::error_t ec{};
         for (const auto& spend: set.spends)
-            if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
-                set.version, ctx)))
+        {
+            if (spend.prevout_tx_fk == table::prevout::tx::terminal)
+                continue;
+
+            if ((ec = unspendable_prevout(spend.sequence, spend.coinbase,
+                    spend.prevout_tx_fk, set.version, ctx)))
             {
                 fault.store(ec);
                 return true;
             }
+        }
 
         return false;
     };
 
     const auto is_spent = [this, &fault](const auto& set) NOEXCEPT
     {
+        // TODO: point table optimize via consolidation with spend table.
         error::error_t ec{};
-        for (const auto& spend: set.spends)
+        for (const spend_set::spend& spend: set.spends)
+        {
+            if (spend.prevout_tx_fk == table::prevout::tx::terminal)
+                continue;
+
             if ((ec = spent_prevout(spend.point_fk, spend.point_index, set.tx)))
             {
                 fault.store(ec);
                 return true;
             }
+        }
 
         return false;
     };
@@ -708,7 +732,7 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set_prevouts(size_t height, const block& block) NOEXCEPT
+bool CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
 {
     // Empty or coinbase only implies no spends.
     if (block.transactions() <= one)
@@ -719,7 +743,7 @@ bool CLASS::set_prevouts(size_t height, const block& block) NOEXCEPT
 
     // Clean single allocation failure (e.g. disk full).
     const table::prevout::record_put_ref prevouts{ {}, block };
-    return store_.prevout.put(height, prevouts);
+    return store_.prevout.put(link, prevouts);
     // ========================================================================
 }
 
