@@ -199,12 +199,37 @@ bool CLASS::get_filter_head(hash_digest& out,
 }
 
 TEMPLATE
+bool CLASS::set_filter_head(const header_link& link) NOEXCEPT
+{
+    if (!neutrino_enabled())
+        return true;
+
+    // The filter body must have been previously stored under the block link.
+    filter bytes{};
+    if (!get_filter_body(bytes, link))
+        return false;
+
+    // If genesis then previous is null_hash otherwise get by confirmed height.
+    hash_digest previous{};
+    const auto height = get_height(link);
+    if (!is_zero(height))
+        if (!get_filter_head(previous, to_confirmed(sub1(height))))
+            return false;
+
+    // Use the previous head and current body to compute the current head.
+    return set_filter_head(link,
+        system::neutrino::compute_filter_header(previous, bytes));
+}
+
+TEMPLATE
 bool CLASS::set_filter_body(const header_link& link,
     const block& block) NOEXCEPT
 {
-    filter bytes{};
+    if (!neutrino_enabled())
+        return true;
 
-    // compute_filter is only false if prevouts are missing.
+    // Compute the current filter from the block and store under the link.
+    filter bytes{};
     return system::neutrino::compute_filter(bytes, block) &&
         set_filter_body(link, bytes);
 }
