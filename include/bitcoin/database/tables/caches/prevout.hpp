@@ -168,7 +168,7 @@ struct prevout
                 value = source.read_little_endian<tx::integer, tx::size>();
             });
 
-            BC_ASSERT(!source || source.get_read_position() == /*add1*/(count()) * minrow);
+            BC_ASSERT(!source || source.get_read_position() == add1(count()) * minrow);
             return source;
         }
 
