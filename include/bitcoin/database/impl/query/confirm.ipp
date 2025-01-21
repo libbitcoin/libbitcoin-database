@@ -387,14 +387,9 @@ code CLASS::unspent_duplicates(const header_link& link,
     // [txs.find, {tx.iterate}, strong_tx.it]
     auto coinbases = to_strong_txs(get_tx_key(to_coinbase(link)));
 
-    // Found only this block's coinbase instance, no duplicates.
-    if (is_one(coinbases.size()))
+    // Current block is not set strong.
+    if (is_zero(coinbases.size()))
         return error::success;
-
-    // Remove self (will be not found if current block is not set_strong).
-    const auto self = std::find(coinbases.begin(), coinbases.end(), link);
-    if (self == coinbases.end() || coinbases.erase(self) == coinbases.end())
-        return error::integrity;
 
     // [point.first, is_spent_prevout()]
     const auto spent = [this](const auto& tx) NOEXCEPT
