@@ -512,10 +512,9 @@ spend_sets CLASS::to_spend_sets(const header_link& link) const NOEXCEPT
     };
     const auto spends = std::accumulate(sets.begin(), sets.end(), zero, count);
 
-    ////// TODO: deal with exta link element in data set before testing.
     table::prevout::record_get prevouts{};
     prevouts.values.resize(spends);
-    store_.prevout.at(get_height(link), prevouts);
+    store_.prevout.at(link, prevouts);
 
     size_t index{};
     for (auto& set: sets)
@@ -739,16 +738,12 @@ bool CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
     if (block.transactions() <= one)
         return true;
 
-    const auto height = get_height(link);
-    if (height.is_terminal())
-        return false;
-
     // ========================================================================
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    const table::prevout::record_put_ref prevouts{ {}, link, block };
-    return store_.prevout.put(height, prevouts);
+    const table::prevout::record_put_ref prevouts{ {}, block };
+    return store_.prevout.put(link, prevouts);
     // ========================================================================
 }
 

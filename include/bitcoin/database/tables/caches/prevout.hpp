@@ -28,7 +28,7 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// prevout is an array map index of previous outputs by block.
+/// prevout is an array map index of previous outputs by block link.
 /// The coinbase flag is merged into the tx field, reducing it's domain.
 /// Masking is from the right in order to accomodate non-integral domain.
 struct prevout
@@ -38,9 +38,6 @@ struct prevout
     using header = linkage<schema::block>;
     using array_map<schema::prevout>::arraymap;
     static constexpr size_t offset = sub1(to_bits(tx::size));
-
-    // First tx-sized entry overloaded for header link.
-    static_assert(header::size <= tx::size);
 
     // This supports only a single record (not too useful).
     struct record
@@ -65,7 +62,6 @@ struct prevout
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            header_fk = source.read_little_endian<header::integer, tx::size>();
             value = source.read_little_endian<tx::integer, tx::size>();
             BC_ASSERT(!source || source.get_read_position() == count() * minrow);
             return source;
@@ -73,7 +69,6 @@ struct prevout
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            sink.write_little_endian<header::integer, tx::size>(header_fk);
             sink.write_little_endian<tx::integer, tx::size>(value);
             BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
             return sink;
@@ -85,7 +80,6 @@ struct prevout
                 && output_tx_fk() == other.output_tx_fk();
         }
 
-        header::integer header_fk{};
         tx::integer value{};
     };
 
@@ -103,8 +97,7 @@ struct prevout
         // This is called once by put(), and hides base count().
         inline link count() const NOEXCEPT
         {
-            // First entry overloaded for header (count is records not values).
-            const auto spends = add1(block.spends());
+            const auto spends = block.spends();
             BC_ASSERT(spends < link::terminal);
             return system::possible_narrow_cast<link::integer>(spends);
         }
@@ -129,16 +122,11 @@ struct prevout
                 return std::for_each(ins->begin(), ins->end(), write_spend);
             };
 
-            // First tx-sized entry overloaded for header link.
-            sink.write_little_endian<header::integer, tx::size>(header_fk);
-
             std::for_each(std::next(txs.begin()), txs.end(), write_tx);
             BC_ASSERT(!sink || (sink.get_write_position() == count() * minrow));
             return sink;
         }
 
-        // One entry is written for each spend in the block in order.
-        header::integer header_fk{};
         const system::chain::block& block{};
     };
 
@@ -148,16 +136,12 @@ struct prevout
         // This is called once by assert, and hides base class count().
         inline link count() const NOEXCEPT
         {
-            // First entry overloaded for header (count is records not values).
-            BC_ASSERT(add1(values.size()) < link::terminal);
-            return system::possible_narrow_cast<link::integer>(add1(values.size()));
+            BC_ASSERT(values.size() < link::terminal);
+            return system::possible_narrow_cast<link::integer>(values.size());
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            // First tx-sized entry overloaded for header link.
-            header_fk = source.read_little_endian<header::integer, tx::size>();
-
             // TODO: Can be optimized using unsafe_array_cast copy, as long as
             // TODO: endianness lines up. Should have writer methods for native
             // TODO: endianness so that both big and little are optimal. But
@@ -168,7 +152,7 @@ struct prevout
                 value = source.read_little_endian<tx::integer, tx::size>();
             });
 
-            BC_ASSERT(!source || source.get_read_position() == add1(count()) * minrow);
+            BC_ASSERT(!source || source.get_read_position() == count() * minrow);
             return source;
         }
 
@@ -198,7 +182,6 @@ struct prevout
         }
 
         // Spend count is derived in confirmation by summing block.txs.puts.
-        header::integer header_fk{};
         std::vector<tx::integer> values{};
     };
 };

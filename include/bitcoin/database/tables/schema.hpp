@@ -330,7 +330,7 @@ namespace schema
         static constexpr size_t size = minsize;
 
         // This is hidden by derivatives, to avoid virtual methods.
-        inline linkage<pk> count() const NOEXCEPT { return two; }
+        inline linkage<pk> count() const NOEXCEPT { return one; }
         static_assert(minsize == 4u);
         static_assert(minrow == 4u);
     };
