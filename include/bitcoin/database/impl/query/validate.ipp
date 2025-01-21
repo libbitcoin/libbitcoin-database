@@ -196,7 +196,6 @@ code CLASS::get_block_state(const header_link& link) const NOEXCEPT
     if (!store_.validated_bk.find(link, valid))
         return is_associated(link) ? error::unvalidated : error::unassociated;
 
-    // Fees only valid if block_confirmable.
     return to_block_code(valid.code);
 }
 
@@ -208,8 +207,9 @@ code CLASS::get_block_state(uint64_t& fees,
     if (!store_.validated_bk.find(link, valid))
         return is_associated(link) ? error::unvalidated : error::unassociated;
 
-    // Fees only valid if block_confirmable.
+    // TODO: Fees only valid if block_valid is the current state (iterate for valid).
     fees = valid.fees;
+
     return to_block_code(valid.code);
 }
 
