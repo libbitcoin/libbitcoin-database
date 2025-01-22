@@ -251,6 +251,107 @@ BOOST_AUTO_TEST_CASE(linkage__assign_array__8__expected)
     BOOST_REQUIRE_EQUAL(instance, expected);
 }
 
+// pre/post increment
+
+BOOST_AUTO_TEST_CASE(linkage__increment__0__expected)
+{
+    linkage<0> instance{ 0x00 };
+
+    BOOST_REQUIRE_EQUAL(instance++, 0u);
+    BOOST_REQUIRE_EQUAL(instance, 1u);
+
+    BOOST_REQUIRE_EQUAL(++instance, 2u);
+    BOOST_REQUIRE_EQUAL(instance, 2u);
+}
+
+BOOST_AUTO_TEST_CASE(linkage__increment__1__expected)
+{
+    linkage<1> instance{ 0x42 };
+
+    BOOST_REQUIRE_EQUAL(instance++, 0x42u);
+    BOOST_REQUIRE_EQUAL(instance, 0x43u);
+
+    BOOST_REQUIRE_EQUAL(++instance, 0x44u);
+    BOOST_REQUIRE_EQUAL(instance, 0x44u);
+}
+
+BOOST_AUTO_TEST_CASE(linkage__increment__2__expected)
+{
+    linkage<2> instance{ 0x4200 };
+
+    BOOST_REQUIRE_EQUAL(instance++, 0x4200u);
+    BOOST_REQUIRE_EQUAL(instance, 0x4201u);
+
+    BOOST_REQUIRE_EQUAL(++instance, 0x4202u);
+    BOOST_REQUIRE_EQUAL(instance, 0x4202u);
+}
+
+BOOST_AUTO_TEST_CASE(linkage__increment__3__expected)
+{
+    linkage<3> instance{ 0x420100 };
+
+    BOOST_REQUIRE_EQUAL(instance++, 0x420100u);
+    BOOST_REQUIRE_EQUAL(instance, 0x420101u);
+
+    BOOST_REQUIRE_EQUAL(++instance, 0x420102u);
+    BOOST_REQUIRE_EQUAL(instance, 0x420102u);
+}
+
+BOOST_AUTO_TEST_CASE(linkage__increment__4__expected)
+{
+    linkage<4> instance{ 0x42010200 };
+
+    BOOST_REQUIRE_EQUAL(instance++, 0x42010200u);
+    BOOST_REQUIRE_EQUAL(instance, 0x42010201u);
+
+    BOOST_REQUIRE_EQUAL(++instance, 0x42010202u);
+    BOOST_REQUIRE_EQUAL(instance, 0x42010202u);
+}
+
+BOOST_AUTO_TEST_CASE(linkage__increment__5__expected)
+{
+    linkage<5> instance{ 0x4201020300 };
+
+    BOOST_REQUIRE_EQUAL(instance++, 0x4201020300u);
+    BOOST_REQUIRE_EQUAL(instance, 0x4201020301u);
+
+    BOOST_REQUIRE_EQUAL(++instance, 0x4201020302u);
+    BOOST_REQUIRE_EQUAL(instance, 0x4201020302u);
+}
+
+BOOST_AUTO_TEST_CASE(linkage__increment_6__expected)
+{
+    linkage<6> instance{ 0x420102030400 };
+
+    BOOST_REQUIRE_EQUAL(instance++, 0x420102030400u);
+    BOOST_REQUIRE_EQUAL(instance, 0x420102030401u);
+
+    BOOST_REQUIRE_EQUAL(++instance, 0x420102030402u);
+    BOOST_REQUIRE_EQUAL(instance, 0x420102030402u);
+}
+
+BOOST_AUTO_TEST_CASE(linkage__increment__7__expected)
+{
+    linkage<7> instance{ 0x42010203040500 };
+
+    BOOST_REQUIRE_EQUAL(instance++, 0x42010203040500u);
+    BOOST_REQUIRE_EQUAL(instance, 0x42010203040501u);
+
+    BOOST_REQUIRE_EQUAL(++instance, 0x42010203040502u);
+    BOOST_REQUIRE_EQUAL(instance, 0x42010203040502u);
+}
+
+BOOST_AUTO_TEST_CASE(linkage__increment__8__expected)
+{
+    linkage<8> instance{ 0x4201020304050600 };
+
+    BOOST_REQUIRE_EQUAL(instance++, 0x4201020304050600u);
+    BOOST_REQUIRE_EQUAL(instance, 0x4201020304050601u);
+
+    BOOST_REQUIRE_EQUAL(++instance, 0x4201020304050602u);
+    BOOST_REQUIRE_EQUAL(instance, 0x4201020304050602u);
+}
+
 // cast bytes
 
 BOOST_AUTO_TEST_CASE(linkage__bytes__0__expected)

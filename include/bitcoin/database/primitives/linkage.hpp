@@ -45,6 +45,10 @@ struct linkage
     constexpr linkage<Size>& operator=(integer other) NOEXCEPT;
     inline linkage<Size>& operator=(const bytes& other) NOEXCEPT;
 
+    /// Increment operators (not for use with slab links).
+    inline linkage<Size>& operator++() NOEXCEPT;
+    inline linkage<Size> operator++(int) NOEXCEPT;
+
     /// Integral and array cast operators.
     ////constexpr operator bool() const NOEXCEPT;
     constexpr operator integer() const NOEXCEPT;
