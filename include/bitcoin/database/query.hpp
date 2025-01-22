@@ -543,10 +543,6 @@ public:
     bool set_filter_head(const header_link& link,
         const hash_digest& head) NOEXCEPT;
 
-// TODO: protected
-    spend_set to_spend_set(const tx_link& link) const NOEXCEPT;
-    spend_sets to_spend_sets(const header_link& link) const NOEXCEPT;
-
 protected:
     /// Translate.
     /// -----------------------------------------------------------------------
@@ -580,6 +576,8 @@ protected:
         const context& ctx) const NOEXCEPT;
 
     // Critical path
+    spend_set to_spend_set(const tx_link& link) const NOEXCEPT;
+    spend_sets to_spend_sets(const header_link& link) const NOEXCEPT;
     bool is_spent_prevout(const point_link& link, index index,
         const tx_link& self=tx_link::terminal) const NOEXCEPT;
     error::error_t spent_prevout(const point_link& link, index index,

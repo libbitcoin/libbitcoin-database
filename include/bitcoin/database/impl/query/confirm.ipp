@@ -406,89 +406,45 @@ code CLASS::unspent_duplicates(const header_link& link,
         error::success : error::unspent_coinbase_collision;
 }
 
-#if defined(UNDEFINED)
-
 // protected
 TEMPLATE
-spend_sets CLASS::to_spend_sets(const header_link& link) const NOEXCEPT
+spend_set CLASS::to_spend_set(const tx_link& link) const NOEXCEPT
 {
-    const auto txs = to_transactions(link);
-    if (txs.empty())
+    table::transaction::get_version_puts tx{};
+    if (!store_.tx.get(link, tx))
         return {};
 
-    // Coinbase optimization.
-    spend_sets out{ txs.size() };
-    out.front().tx = txs.front();
-    if (is_one(out.size()))
-        return out;
+    table::puts::get_spends puts{};
+    puts.spend_fks.resize(tx.ins_count);
+    if (!store_.puts.get(tx.puts_fk, puts))
+        return {};
 
-    spend_sets sets{};
-    sets.reserve(sub1(txs.size()));
-    for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
-        sets.push_back(to_spend_set(*tx));
+    spend_set set{ link, tx.version, {} };
+    set.spends.reserve(tx.ins_count);
+    table::spend::get_prevout_sequence get{};
 
-    return sets;
-}
+    // This reduced a no-bypass 840k sync/confirmable/confirm run by 8.3%.
+    const auto ptr = store_.spend.get_memory();
 
-// Used by node for ASIO concurrency by tx.
-TEMPLATE
-code CLASS::tx_confirmable(const tx_link& link,
-    const context& ctx) const NOEXCEPT
-{
-    // utxo needs spend set for sequence and spend.prevout(), which is the non-
-    // iterating key to utxo table. This is the identifier of the point:index
-    // which is used to obtain the output for validation by
-    // tx.find(get_point_key(link)). However we don't need the output for
-    // confirmation, just a unique identifier for it. Yet the point:index (fp)
-    // is not unique, because here are many fps for any given output due to tx
-    // and therefore point table duplication. So the spend sets identify all of
-    // the spends of a given tx, but one tx may have a different point for the
-    // same output. So all outputs of the point must be searched for existence,
-    // which requires point and tx table traversal just as before. :<
-    const auto set = to_spend_set(link);
-
-    code ec{};
-    for (const auto& spend: set.spends)
+    // This is not concurrent because to_spend_sets is (by tx).
+    for (const auto& spend_fk: puts.spend_fks)
     {
-        // If utxo exists then it is strong (push own block first).
-        if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
-            set.version, ctx)))
-            return ec;
+        if (!store_.spend.get(ptr, spend_fk, get))
+            return {};
 
-        // This query goes away.
-        // If utxo exists then it is not spent (push own block first).
-        if (is_spent_prevout(spend.point_fk, spend.point_index, link))
-            return error::confirmed_double_spend;
+        // Translate result set to public struct.
+#if defined(HAVE_CLANG)
+        // emplace_back aggregate initialization requires clang 16.
+        set.spends.push_back({ get.point_fk, get.point_index, get.sequence,
+            table::prevout::tx::integer{}, bool{} });
+#else
+        set.spends.emplace_back(get.point_fk, get.point_index, get.sequence,
+            table::prevout::tx::integer{}, bool{});
+#endif
     }
 
-    return error::success;
+    return set;
 }
-
-// Used by node for sequential by block (unused).
-// split(0) 403 secs for 400k-410k
-TEMPLATE
-code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
-{
-    context ctx{};
-    if (!get_context(ctx, link))
-        return error::integrity;
-
-    const auto txs = to_transactions(link);
-    if (txs.empty())
-        return error::txs_empty;
-
-    code ec{};
-    if ((ec = unspent_duplicates(txs.front(), ctx)))
-        return ec;
-
-    for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
-        if ((ec = tx_confirmable(*tx, ctx)))
-            return ec;
-
-    return ec;
-}
-
-#endif
 
 // protected
 TEMPLATE
@@ -545,7 +501,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     if (!get_context(ctx, link))
         return error::integrity;
 
-    // This is never invoked (bip30).
+    // This is rarely invoked (bip30).
     code ec{};
     if ((ec = unspent_duplicates(link, ctx)))
         return ec;
@@ -559,7 +515,6 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 
     const auto is_unspendable = [this, &ctx, &fault](const auto& set) NOEXCEPT
     {
-        // TODO: prevout table optimized, evaluate.
         error::error_t ec{};
         for (const auto& spend: set.spends)
         {
@@ -579,7 +534,6 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 
     const auto is_spent = [this, &fault](const auto& set) NOEXCEPT
     {
-        // TODO: point table optimize via consolidation with spend table.
         error::error_t ec{};
         for (const spend_set::spend& spend: set.spends)
         {
@@ -606,68 +560,6 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 
     return ec;
 }
-
-#if defined(UNDEFINED)
-
-// split(1) 446 secs for 400k-410k
-TEMPLATE
-code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
-{
-    context ctx{};
-    if (!get_context(ctx, link))
-        return error::integrity;
-
-    code ec{};
-    if ((ec = unspent_duplicates(to_coinbase(link), ctx)))
-        return ec;
-
-    const auto sets = to_spend_sets(link);
-    for (const auto& set: sets)
-    {
-        for (const auto& spend: set.spends)
-        {
-            if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
-                set.version, ctx)))
-                return ec;
-
-            if (is_spent_prevout(spend.point_fk, spend.point_index, set.tx))
-                return error::confirmed_double_spend;
-        }
-    }
-
-    return ec;
-}
-
-// split(3) 416 secs for 400k-410k
-TEMPLATE
-code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
-{
-    context ctx{};
-    if (!get_context(ctx, link))
-        return error::integrity;
-
-    code ec{};
-    if ((ec = unspent_duplicates(to_coinbase(link), ctx)))
-        return ec;
-
-    const auto sets = to_spend_sets(link);
-    for (const auto& set: sets)
-        for (const auto& spend: set.spends)
-            if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
-                set.version, ctx)))
-                return ec;
-    
-    if (ec) return ec;
-
-    for (const auto& set: sets)
-        for (const auto& spend: set.spends)
-            if (is_spent_prevout(spend.point_fk, spend.point_index, set.tx))
-                return error::confirmed_double_spend;
-
-    return ec;
-}
-
-#endif // DISABLED
 
 TEMPLATE
 bool CLASS::is_spent_coinbase(const tx_link& link) const NOEXCEPT
@@ -852,75 +744,218 @@ bool CLASS::pop_confirmed() NOEXCEPT
     // ========================================================================
 }
 
-////// TEMP: testing cached values for confirmation.
-////struct cached_point
-////{
-////    // input (under validation)
-////    foreign_point key; // double-spendness
-////    uint32_t parent;   // input.parent
-////    uint32_t sequence; // bip68
-////
-////    // input->prevout
-////    uint32_t tx;       // confirmedness
-////    uint32_t height;   // bip68/maturity
-////    uint32_t mtp;      // bip68
-////    bool coinbase;     // maturity
-////};
-////// coinbase aligns at 4 bytes on msvc x64.
-////////static_assert(sizeof(cached_point) == 32u);
-////using cached_points = std_vector<cached_point>;
-////bool create_cached_points(cached_points& out,
-////    const header_link& link) const NOEXCEPT;
-////TEMPLATE
-////code CLASS::point_confirmable(const cached_point& point) const NOEXCEPT
-////{
-////    code ec{ error::success };
-////
-////    // height is always needed for coinbase (maturity).
-////    // sequence value tells which is needed, height or mtp (bip68).
-////    // but both may apply, so need to allow for two (no flags at prevout).
-////    const context ctx{ 0, point.height, point.mtp };
-////    if ((ec = unspendable_prevout(point.tx, point.coinbase, point.sequence, ctx)))
-////        return ec;
-////
-////    // may only be strong-spent by self (and must be but is not checked).
-////    if (spent_prevout(point.key, point.parent))
-////        return error::confirmed_double_spend;
-////
-////    return ec;
-////}
-////
-////TEMPLATE
-////bool CLASS::create_cached_points(cached_points& out,
-////    const header_link& link) const NOEXCEPT
-////{
-////    context ctx{};
-////    if (!get_context(ctx, link))
-////        return false;
-////
-////    table::input::get_prevout_sequence input{};
-////    for (const auto& in: to_non_coinbase_inputs(link))
-////    {
-////        if (!store_.input.get(in, input))
-////            return false;
-////    
-////        out.emplace_back
-////        (
-////            // input (under validation)
-////            input.prevout(),
-////            input.parent_fk,
-////            input.sequence,
-////
-////            // input->prevout
-////            to_tx(get_point_key(input.point_fk)),
-////            system::possible_narrow_cast<uint32_t>(ctx.height),
-////            ctx.mtp,
-////            is_coinbase(spent_fk)
-////        );
-////    }
-////
-////    return true;
-////}
+#if defined(UNDEFINED)
+
+// TEMP: testing cached values for confirmation.
+struct cached_point
+{
+    // input (under validation)
+    foreign_point key; // double-spendness
+    uint32_t parent;   // input.parent
+    uint32_t sequence; // bip68
+
+    // input->prevout
+    uint32_t tx;       // confirmedness
+    uint32_t height;   // bip68/maturity
+    uint32_t mtp;      // bip68
+    bool coinbase;     // maturity
+};
+
+// coinbase aligns at 4 bytes on msvc x64.
+////static_assert(sizeof(cached_point) == 32u);
+using cached_points = std_vector<cached_point>;
+bool create_cached_points(cached_points& out,
+    const header_link& link) const NOEXCEPT;
+TEMPLATE
+code CLASS::point_confirmable(const cached_point& point) const NOEXCEPT
+{
+    code ec{ error::success };
+
+    // height is always needed for coinbase (maturity).
+    // sequence value tells which is needed, height or mtp (bip68).
+    // but both may apply, so need to allow for two (no flags at prevout).
+    const context ctx{ 0, point.height, point.mtp };
+    if ((ec = unspendable_prevout(point.tx, point.coinbase, point.sequence, ctx)))
+        return ec;
+
+    // may only be strong-spent by self (and must be but is not checked).
+    if (spent_prevout(point.key, point.parent))
+        return error::confirmed_double_spend;
+
+    return ec;
+}
+
+TEMPLATE
+bool CLASS::create_cached_points(cached_points& out,
+    const header_link& link) const NOEXCEPT
+{
+    context ctx{};
+    if (!get_context(ctx, link))
+        return false;
+
+    table::input::get_prevout_sequence input{};
+    for (const auto& in: to_non_coinbase_inputs(link))
+    {
+        if (!store_.input.get(in, input))
+            return false;
+    
+        out.emplace_back
+        (
+            // input (under validation)
+            input.prevout(),
+            input.parent_fk,
+            input.sequence,
+
+            // input->prevout
+            to_tx(get_point_key(input.point_fk)),
+            system::possible_narrow_cast<uint32_t>(ctx.height),
+            ctx.mtp,
+            is_coinbase(spent_fk)
+        );
+    }
+
+    return true;
+}
+
+// protected
+TEMPLATE
+spend_sets CLASS::to_spend_sets(const header_link& link) const NOEXCEPT
+{
+    const auto txs = to_transactions(link);
+    if (txs.empty())
+        return {};
+
+    // Coinbase optimization.
+    spend_sets out{ txs.size() };
+    out.front().tx = txs.front();
+    if (is_one(out.size()))
+        return out;
+
+    spend_sets sets{};
+    sets.reserve(sub1(txs.size()));
+    for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
+        sets.push_back(to_spend_set(*tx));
+
+    return sets;
+}
+
+// Used by node for ASIO concurrency by tx.
+TEMPLATE
+code CLASS::tx_confirmable(const tx_link& link,
+    const context& ctx) const NOEXCEPT
+{
+    // utxo needs spend set for sequence and spend.prevout(), which is the non-
+    // iterating key to utxo table. This is the identifier of the point:index
+    // which is used to obtain the output for validation by
+    // tx.find(get_point_key(link)). However we don't need the output for
+    // confirmation, just a unique identifier for it. Yet the point:index (fp)
+    // is not unique, because here are many fps for any given output due to tx
+    // and therefore point table duplication. So the spend sets identify all of
+    // the spends of a given tx, but one tx may have a different point for the
+    // same output. So all outputs of the point must be searched for existence,
+    // which requires point and tx table traversal just as before. :<
+    const auto set = to_spend_set(link);
+
+    code ec{};
+    for (const auto& spend: set.spends)
+    {
+        // If utxo exists then it is strong (push own block first).
+        if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
+            set.version, ctx)))
+            return ec;
+
+        // This query goes away.
+        // If utxo exists then it is not spent (push own block first).
+        if (is_spent_prevout(spend.point_fk, spend.point_index, link))
+            return error::confirmed_double_spend;
+    }
+
+    return error::success;
+}
+
+// Used by node for sequential by block (unused).
+// split(0) 403 secs for 400k-410k
+TEMPLATE
+code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
+{
+    context ctx{};
+    if (!get_context(ctx, link))
+        return error::integrity;
+
+    const auto txs = to_transactions(link);
+    if (txs.empty())
+        return error::txs_empty;
+
+    code ec{};
+    if ((ec = unspent_duplicates(txs.front(), ctx)))
+        return ec;
+
+    for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
+        if ((ec = tx_confirmable(*tx, ctx)))
+            return ec;
+
+    return ec;
+}
+
+// split(1) 446 secs for 400k-410k
+TEMPLATE
+code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
+{
+    context ctx{};
+    if (!get_context(ctx, link))
+        return error::integrity;
+
+    code ec{};
+    if ((ec = unspent_duplicates(to_coinbase(link), ctx)))
+        return ec;
+
+    const auto sets = to_spend_sets(link);
+    for (const auto& set: sets)
+    {
+        for (const auto& spend: set.spends)
+        {
+            if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
+                set.version, ctx)))
+                return ec;
+
+            if (is_spent_prevout(spend.point_fk, spend.point_index, set.tx))
+                return error::confirmed_double_spend;
+        }
+    }
+
+    return ec;
+}
+
+// split(3) 416 secs for 400k-410k
+TEMPLATE
+code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
+{
+    context ctx{};
+    if (!get_context(ctx, link))
+        return error::integrity;
+
+    code ec{};
+    if ((ec = unspent_duplicates(to_coinbase(link), ctx)))
+        return ec;
+
+    const auto sets = to_spend_sets(link);
+    for (const auto& set: sets)
+        for (const auto& spend: set.spends)
+            if ((ec = unspendable_prevout(spend.point_fk, spend.sequence,
+                set.version, ctx)))
+                return ec;
+    
+    if (ec) return ec;
+
+    for (const auto& set: sets)
+        for (const auto& spend: set.spends)
+            if (is_spent_prevout(spend.point_fk, spend.point_index, set.tx))
+                return error::confirmed_double_spend;
+
+    return ec;
+}
+
+#endif // UNDEFINED
 
 } // namespace database
 } // namespace libbitcoin
