@@ -598,17 +598,12 @@ bool CLASS::set_strong(const header_link& link, const tx_links& txs,
     const auto ptr = store_.strong_tx.get_memory();
 
     for (const tx_link& tx: txs)
-    {
         if (!store_.strong_tx.put(ptr, record++, tx, table::strong_tx::record
         {
             {},
             link,
             positive
-        }))
-        {
-            return false;
-        }
-    }
+        })) return false;
 
     return true;
 }
