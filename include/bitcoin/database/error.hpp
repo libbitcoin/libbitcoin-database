@@ -37,6 +37,10 @@ enum error_t : uint8_t
     success,
     unknown_state,
     integrity,
+    integrity1,
+    integrity2,
+    integrity3,
+    integrity4,
 
     /// memory map
     open_open,
@@ -87,10 +91,9 @@ enum error_t : uint8_t
 
     /// validation/confirmation
     tx_connected,
-    tx_preconnected,
     tx_disconnected,
-    block_confirmable,
     block_valid,
+    block_confirmable,
     block_unconfirmable,
     unassociated,
     unvalidated,

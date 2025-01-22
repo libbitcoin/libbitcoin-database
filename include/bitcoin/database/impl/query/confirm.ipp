@@ -285,7 +285,7 @@ error::error_t CLASS::spent_prevout(const point_link& link, index index,
     // Iterate points by point hash (of output tx) because may be conflicts.
     auto point = store_.point.it(get_point_key(link));
     if (!point)
-        return error::integrity;
+        return error::integrity1;
 
     do
     {
@@ -298,7 +298,7 @@ error::error_t CLASS::spent_prevout(const point_link& link, index index,
         do
         {
             if (!store_.spend.get(it, spend))
-                return error::integrity;
+                return error::integrity2;
 
             // is_strong_tx (search) only called in the case of duplicate.
             // Other parent tx of spend is strong (confirmed spent prevout).
@@ -359,7 +359,7 @@ error::error_t CLASS::unspendable_prevout(uint32_t sequence, bool coinbase,
 
     context out{};
     if (!get_context(out, block))
-        return error::integrity;
+        return error::integrity3;
 
     // All txs with same hash must be coinbase or not.
     if (coinbase && !transaction::is_coinbase_mature(out.height, ctx.height))
@@ -533,7 +533,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 {
     context ctx{};
     if (!get_context(ctx, link))
-        return error::integrity;
+        return error::integrity4;
 
     // This is never invoked (bip30).
     code ec{};

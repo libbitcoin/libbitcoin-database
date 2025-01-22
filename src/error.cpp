@@ -30,6 +30,10 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { success, "success" },
     { unknown_state, "unknown state" },
     { integrity, "store corrupted" },
+    { integrity1, "store corrupted1" },
+    { integrity2, "store corrupted2" },
+    { integrity3, "store corrupted3" },
+    { integrity4, "store corrupted4" },
 
     // memory map
     { open_open, "opening open file" },
@@ -79,10 +83,9 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     // states
     { tx_connected, "transaction connected" },
-    { tx_preconnected, "transaction preconnected" },
     { tx_disconnected, "transaction disconnected" },
-    { block_confirmable, "block confirmable" },
     { block_valid, "block valid" },
+    { block_confirmable, "block confirmable" },
     { block_unconfirmable, "block unconfirmable" },
     { unassociated, "unassociated" },
     { unvalidated, "unvalidated" },
