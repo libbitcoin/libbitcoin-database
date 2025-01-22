@@ -593,7 +593,7 @@ bool CLASS::set_strong(const header_link& link, const tx_links& txs,
     // Preallocate all strong_tx records for the block and reuse memory ptr.
     using namespace system;
     using link_t = table::strong_tx::link;
-    const link_t records = possible_narrow_cast<link_t::integer>(txs.size());
+    const auto records = possible_narrow_cast<link_t::integer>(txs.size());
     auto record = store_.strong_tx.allocate(records);
     const auto ptr = store_.strong_tx.get_memory();
 
