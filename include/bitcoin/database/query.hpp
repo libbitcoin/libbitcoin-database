@@ -478,10 +478,6 @@ public:
     bool set_block_valid(const header_link& link, uint64_t fees) NOEXCEPT;
     bool set_block_unconfirmable(const header_link& link) NOEXCEPT;
     bool set_block_confirmable(const header_link& link) NOEXCEPT;
-
-    // set_txs_connected is FOR PERFORMANCE EVALUATION ONLY.
-    bool set_txs_connected(const header_link& link) NOEXCEPT;
-    bool set_tx_preconnected(const tx_link& link, const context& ctx) NOEXCEPT;
     bool set_tx_disconnected(const tx_link& link, const context& ctx) NOEXCEPT;
     bool set_tx_connected(const tx_link& link, const context& ctx,
         uint64_t fee, size_t sigops) NOEXCEPT;
@@ -547,12 +543,13 @@ public:
     bool set_filter_head(const header_link& link,
         const hash_digest& head) NOEXCEPT;
 
+// TODO: protected
+    spend_set to_spend_set(const tx_link& link) const NOEXCEPT;
+    spend_sets to_spend_sets(const header_link& link) const NOEXCEPT;
+
 protected:
     /// Translate.
     /// -----------------------------------------------------------------------
-
-    spend_set to_spend_set(const tx_link& link) const NOEXCEPT;
-    spend_sets to_spend_sets(const header_link& link) const NOEXCEPT;
 
     uint32_t to_spend_index(const tx_link& parent_fk,
         const spend_link& input_fk) const NOEXCEPT;

@@ -349,28 +349,6 @@ BOOST_AUTO_TEST_CASE(query_validate__get_tx_state__connected_in_context__tx_conn
     BOOST_REQUIRE_EQUAL(sigops, expected_sigops);
 }
 
-BOOST_AUTO_TEST_CASE(query_validate__get_tx_state__connected_in_context__tx_preconnected)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{}, false, false));
-
-    uint64_t fee{};
-    size_t sigops{};
-    constexpr context ctx{ 7, 8, 9 };
-    BOOST_REQUIRE(query.set_tx_preconnected(3, ctx));
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(3, ctx), error::tx_preconnected);
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(fee, sigops, 3, ctx), error::tx_preconnected);
-    BOOST_REQUIRE_EQUAL(fee, 0u);
-    BOOST_REQUIRE_EQUAL(sigops, 0u);
-}
-
 BOOST_AUTO_TEST_CASE(query_validate__get_tx_state__connected_in_context__tx_disconnected)
 {
     settings settings{};

@@ -283,14 +283,18 @@ error::error_t CLASS::spent_prevout(const point_link& link, index index,
     // The upside is half the prevout size (read/write/page) and store increase.
 
     // Iterate points by point hash (of output tx) because may be conflicts.
-    auto point = store_.point.it(get_point_key(link));
+    // Search key must be passed as an l-value as it is held by reference.
+    const auto point_sk = get_point_key(link);
+    auto point = store_.point.it(point_sk);
     if (!point)
         return error::integrity;
 
     do
     {
         // Iterate all spends of the point to find double spends.
-        auto it = store_.spend.it(table::spend::compose(point.self(), index));
+        // Search key must be passed as an l-value as it is held by reference.
+        const auto spend_sk = table::spend::compose(point.self(), index);
+        auto it = store_.spend.it(spend_sk);
         if (!it)
             return error::success;
 
@@ -494,12 +498,14 @@ spend_sets CLASS::to_spend_sets(const header_link& link) const NOEXCEPT
     // Coinbase tx does not spend so is not retrieved.
     const auto txs = to_spending_transactions(link);
 
+    // Empty here is normal.
     if (txs.empty())
         return {};
 
     spend_sets sets{ txs.size() };
     const auto to_set = [this](const auto& tx) NOEXCEPT
     {
+        // Empty here implies integrity fault.
         return to_spend_set(tx);
     };
 
@@ -540,6 +546,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     if ((ec = unspent_duplicates(link, ctx)))
         return ec;
 
+    // Empty here could imply integrity fault.
     const auto sets = to_spend_sets(link);
     if (sets.empty())
         return ec;
@@ -752,6 +759,8 @@ bool CLASS::initialize(const block& genesis) NOEXCEPT
 {
     BC_ASSERT(!is_initialized());
     BC_ASSERT(is_one(genesis.transactions_ptr()->size()));
+
+    // TODO: add genesis block neutrino head and body when neutrino is enabled.
 
     // ========================================================================
     const auto scope = store_.get_transactor();
