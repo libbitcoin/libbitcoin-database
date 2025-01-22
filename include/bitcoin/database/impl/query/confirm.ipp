@@ -512,6 +512,10 @@ spend_sets CLASS::to_spend_sets(const header_link& link) const NOEXCEPT
     // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
     std_transform(bc::par_unseq, txs.begin(), txs.end(), sets.begin(), to_set);
 
+    // TODO: move to new method populate_prevout_tx_and_coinbase.
+    // TODO: provide alternate implementations using prevout table and not.
+    // TODO: with consolidated points this becomes is_cb(to_tx(get_spend_key)).
+    // TODO: populate alternate within to_spend_set, which adds only tx table.
     const auto count = [](size_t total, const auto& set) NOEXCEPT
     {
         return system::ceilinged_add(total, set.spends.size());
