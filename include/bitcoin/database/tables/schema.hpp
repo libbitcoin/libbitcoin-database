@@ -58,7 +58,6 @@ namespace schema
         constexpr auto candidate = "candidate";
         constexpr auto confirmed = "confirmed";
         constexpr auto strong_tx = "strong_tx";
-        ////constexpr auto spent_out = "spent_out";
     }
 
     namespace caches
@@ -89,16 +88,15 @@ namespace schema
 
     enum block_state : uint8_t
     {
-        confirmable = 0,    // final
-        valid = 1, // transitional
-        unconfirmable = 2   // final
+        confirmable = 0,            // final
+        valid = 1,                  // transitional
+        unconfirmable = 2           // final
     };
 
     enum tx_state : uint8_t
     {
-        connected = 0,      // final
-        preconnected = 1,   // transitional
-        disconnected = 2    // final
+        connected = 0,              // final
+        disconnected = 1            // final
     };
 
     /// Values.
