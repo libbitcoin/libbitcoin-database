@@ -576,8 +576,10 @@ protected:
         const context& ctx) const NOEXCEPT;
 
     // Critical path
-    spend_set to_spend_set(const tx_link& link) const NOEXCEPT;
-    spend_sets to_spend_sets(const header_link& link) const NOEXCEPT;
+    bool populate_prevout1(spend_sets& sets, const header_link& link) const NOEXCEPT;
+    bool populate_prevout2(spend_sets& sets, const header_link& link) const NOEXCEPT;
+    bool get_spend_set(spend_set& set, const tx_link& link) const NOEXCEPT;
+    bool get_spend_sets(spend_sets& set, const header_link& link) const NOEXCEPT;
     bool is_spent_prevout(const point_link& link, index index,
         const tx_link& self=tx_link::terminal) const NOEXCEPT;
     error::error_t spent_prevout(const point_link& link, index index,
@@ -629,6 +631,7 @@ private:
     struct maybe_strong { header_link block{}; tx_link tx{}; bool strong{}; };
     using maybe_strongs = std_vector<maybe_strong>;
 
+    static size_t sets_size(const spend_sets& sets) NOEXCEPT;
     static inline tx_links strong_only(const maybe_strongs& pairs) NOEXCEPT;
     static inline bool contains(const maybe_strongs& pairs,
         const header_link& block) NOEXCEPT;

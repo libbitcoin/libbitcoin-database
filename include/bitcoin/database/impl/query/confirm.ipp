@@ -408,29 +408,29 @@ code CLASS::unspent_duplicates(const header_link& link,
 
 // protected
 TEMPLATE
-spend_set CLASS::to_spend_set(const tx_link& link) const NOEXCEPT
+bool CLASS::get_spend_set(spend_set& set, const tx_link& link) const NOEXCEPT
 {
     table::transaction::get_version_puts tx{};
     if (!store_.tx.get(link, tx))
-        return {};
+        return false;
 
     table::puts::get_spends puts{};
     puts.spend_fks.resize(tx.ins_count);
     if (!store_.puts.get(tx.puts_fk, puts))
-        return {};
+        return false;
 
-    spend_set set{ link, tx.version, {} };
+    set.tx = link;
+    set.version = tx.version;
+    set.spends.clear();
     set.spends.reserve(tx.ins_count);
     table::spend::get_prevout_sequence get{};
-
-    // This reduced a no-bypass 840k sync/confirmable/confirm run by 8.3%.
     const auto ptr = store_.spend.get_memory();
 
-    // This is not concurrent because to_spend_sets is (by tx).
+    // This is not concurrent because get_spend_sets is (by tx).
     for (const auto& spend_fk: puts.spend_fks)
     {
         if (!store_.spend.get(ptr, spend_fk, get))
-            return {};
+            return false;
 
         // Translate result set to public struct.
 #if defined(HAVE_CLANG)
@@ -443,44 +443,56 @@ spend_set CLASS::to_spend_set(const tx_link& link) const NOEXCEPT
 #endif
     }
 
-    return set;
+    return true;
 }
 
 // protected
 TEMPLATE
-spend_sets CLASS::to_spend_sets(const header_link& link) const NOEXCEPT
+bool CLASS::get_spend_sets(spend_sets& sets,
+    const header_link& link) const NOEXCEPT
 {
     // This is the only search [txs.find].
     // Coinbase tx does not spend so is not retrieved.
     const auto txs = to_spending_transactions(link);
-
-    // Empty here is normal.
     if (txs.empty())
-        return {};
-
-    spend_sets sets{ txs.size() };
-    const auto to_set = [this](const auto& tx) NOEXCEPT
     {
-        // Empty here implies integrity fault.
-        return to_spend_set(tx);
+        sets.clear();
+        return true;
+    }
+
+    std::atomic<bool> fault{};
+    const auto to_set = [this, &fault](const auto& tx) NOEXCEPT
+    {
+        spend_set set{};
+        if (!get_spend_set(set, tx)) fault.store(true);
+        return set;
     };
 
     // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
+    sets.resize(txs.size());
     std_transform(bc::par_unseq, txs.begin(), txs.end(), sets.begin(), to_set);
+    return populate_prevout1(sets, link);
+}
 
-    // TODO: move to new method populate_prevout_tx_and_coinbase.
-    // TODO: provide alternate implementations using prevout table and not.
-    // TODO: with consolidated points this becomes is_cb(to_tx(get_spend_key)).
-    // TODO: populate alternate within to_spend_set, which adds only tx table.
-    const auto count = [](size_t total, const auto& set) NOEXCEPT
-    {
-        return system::ceilinged_add(total, set.spends.size());
-    };
-    const auto spends = std::accumulate(sets.begin(), sets.end(), zero, count);
+// private/static
+TEMPLATE
+size_t CLASS::sets_size(const spend_sets& sets) NOEXCEPT
+{
+    return std::accumulate(sets.begin(), sets.end(), zero,
+        [](size_t total, const auto& set) NOEXCEPT
+        {
+            return system::ceilinged_add(total, set.spends.size());
+        });
+}
 
+TEMPLATE
+bool CLASS::populate_prevout1(spend_sets& sets,
+    const header_link& link) const NOEXCEPT
+{
     table::prevout::record_get prevouts{};
-    prevouts.values.resize(spends);
-    store_.prevout.at(link, prevouts);
+    prevouts.values.resize(sets_size(sets));
+    if (!store_.prevout.at(link, prevouts))
+        return false;
 
     size_t index{};
     for (auto& set: sets)
@@ -490,7 +502,13 @@ spend_sets CLASS::to_spend_sets(const header_link& link) const NOEXCEPT
             spend.prevout_tx_fk = prevouts.output_tx_fk(index++);
         }
 
-    return sets;
+    return true;
+}
+
+TEMPLATE
+bool CLASS::populate_prevout2(spend_sets&, const header_link&) const NOEXCEPT
+{
+    return true;
 }
 
 // split(3) 219 secs for 400k-410k; split(2) 255 and split(0) 456 (not shown).
@@ -501,15 +519,16 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     if (!get_context(ctx, link))
         return error::integrity;
 
-    // This is rarely invoked (bip30).
     code ec{};
     if ((ec = unspent_duplicates(link, ctx)))
         return ec;
 
-    // Empty here could imply integrity fault.
-    const auto sets = to_spend_sets(link);
+    spend_sets sets{};
+    if (!get_spend_sets(sets, link))
+        return error::integrity;
+
     if (sets.empty())
-        return ec;
+        return error::success;
 
     std::atomic<error::error_t> fault{ error::success };
 
@@ -590,15 +609,17 @@ TEMPLATE
 bool CLASS::set_strong(const header_link& link, const tx_links& txs,
     bool positive) NOEXCEPT
 {
-    // Preallocate all strong_tx records for the block and reuse memory ptr.
     using namespace system;
     using link_t = table::strong_tx::link;
+    using element_t = table::strong_tx::record;
+
+    // Preallocate all strong_tx records for the block and reuse memory ptr.
     const auto records = possible_narrow_cast<link_t::integer>(txs.size());
     auto record = store_.strong_tx.allocate(records);
     const auto ptr = store_.strong_tx.get_memory();
 
-    for (const tx_link& tx: txs)
-        if (!store_.strong_tx.put(ptr, record++, tx, table::strong_tx::record
+    for (const auto tx: txs)
+        if (!store_.strong_tx.put(ptr, record++, link_t{ tx }, element_t
         {
             {},
             link,
