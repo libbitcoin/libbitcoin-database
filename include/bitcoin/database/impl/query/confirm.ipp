@@ -698,18 +698,27 @@ TEMPLATE
 bool CLASS::set_strong(const header_link& link, const tx_links& txs,
     bool positive) NOEXCEPT
 {
-    const auto set = [this, &link, positive](const tx_link& tx) NOEXCEPT
+    // Preallocate all strong_tx records for the block and reuse memory ptr.
+    using namespace system;
+    using link_t = table::strong_tx::link;
+    const link_t records = possible_narrow_cast<link_t::integer>(txs.size());
+    auto record = store_.strong_tx.allocate(records);
+    const auto ptr = store_.strong_tx.get_memory();
+
+    for (const tx_link& tx: txs)
     {
-        // TODO: eliminate shared memory pointer reallocation.
-        return store_.strong_tx.put(tx, table::strong_tx::record
+        if (!store_.strong_tx.put(ptr, record++, tx, table::strong_tx::record
         {
             {},
             link,
             positive
-        });
-    };
+        }))
+        {
+            return false;
+        }
+    }
 
-    return std::all_of(txs.begin(), txs.end(), set);
+    return true;
 }
 
 TEMPLATE
