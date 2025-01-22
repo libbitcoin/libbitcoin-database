@@ -543,12 +543,13 @@ public:
     bool set_filter_head(const header_link& link,
         const hash_digest& head) NOEXCEPT;
 
+// TODO: protected
+    spend_set to_spend_set(const tx_link& link) const NOEXCEPT;
+    spend_sets to_spend_sets(const header_link& link) const NOEXCEPT;
+
 protected:
     /// Translate.
     /// -----------------------------------------------------------------------
-
-    spend_set to_spend_set(const tx_link& link) const NOEXCEPT;
-    spend_sets to_spend_sets(const header_link& link) const NOEXCEPT;
 
     uint32_t to_spend_index(const tx_link& parent_fk,
         const spend_link& input_fk) const NOEXCEPT;

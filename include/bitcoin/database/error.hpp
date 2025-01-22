@@ -37,10 +37,6 @@ enum error_t : uint8_t
     success,
     unknown_state,
     integrity,
-    integrity1,
-    integrity2,
-    integrity3,
-    integrity4,
 
     /// memory map
     open_open,
