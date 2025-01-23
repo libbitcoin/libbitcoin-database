@@ -402,7 +402,6 @@ public:
     /// Set transaction.
     code set_code(const transaction& tx) NOEXCEPT;
     code set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT;
-    tx_link set_link(const transaction& tx) NOEXCEPT;
 
     /// Set header (headers-first).
     code set_code(const header& header, const context& ctx,
@@ -413,8 +412,6 @@ public:
         const context& ctx, bool milestone, bool=false) NOEXCEPT;
     code set_code(header_link& out_fk, const header& header,
         const chain_context& ctx, bool milestone, bool=false) NOEXCEPT;
-    header_link set_link(const header& header, const auto& ctx,
-        bool milestone) NOEXCEPT;
 
     /// Set full block (blocks-first).
     code set_code(const block& block, const context& ctx, bool milestone,
@@ -425,22 +422,15 @@ public:
         bool milestone, bool strong) NOEXCEPT;
     code set_code(header_link& out_fk, const block& block,
         const chain_context& ctx, bool milestone, bool strong) NOEXCEPT;
-    header_link set_link(const block& block, const auto& ctx, bool milestone,
-        bool strong) NOEXCEPT;
-
-    /// Set txs (headers-first).
-    code set_code(const transactions& txs, const header_link& key,
-        size_t block_size, bool strong) NOEXCEPT;
-    code set_code(txs_link& out_fk, const transactions& txs,
-        const header_link& key, size_t block_size, bool strong) NOEXCEPT;
-    txs_link set_link(const transactions& txs, const header_link& key,
-        size_t block_size, bool strong) NOEXCEPT;
 
     /// Set block.txs (headers-first).
     code set_code(const block& block, bool strong) NOEXCEPT;
-    code set_code(header_link& out_fk, const block& block,
-        bool strong) NOEXCEPT;
-    header_link set_link(const block& block, bool strong) NOEXCEPT;
+    code set_code(header_link& out_fk, const block& block, bool strong) NOEXCEPT;
+    code set_code(const block& block, const header_link& key, bool strong) NOEXCEPT;
+    code set_code(const block& block, const header_link& key, bool strong,
+        size_t block_size) NOEXCEPT;
+    code set_code(txs_link& out_fk, const block& block, const header_link& key,
+        bool strong, size_t block_size) NOEXCEPT;
 
     /// Chain state.
     /// -----------------------------------------------------------------------

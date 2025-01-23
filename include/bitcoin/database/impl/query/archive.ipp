@@ -678,14 +678,6 @@ typename CLASS::inputs_ptr CLASS::get_spenders(const tx_link& link,
 // ----------------------------------------------------------------------------
 // The only multitable write query (except initialize/genesis).
 
-// deprecated
-TEMPLATE
-tx_link CLASS::set_link(const transaction& tx) NOEXCEPT
-{
-    tx_link tx_fk{};
-    return set_code(tx_fk, tx) ? tx_link{} : tx_fk;
-}
-
 TEMPLATE
 code CLASS::set_code(const transaction& tx) NOEXCEPT
 {
@@ -876,16 +868,6 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
 // set header
 // ----------------------------------------------------------------------------
 
-// deprecated
-TEMPLATE
-header_link CLASS::set_link(const header& header, const auto& ctx,
-    bool milestone) NOEXCEPT
-{
-    header_link header_fk{};
-    return set_code(header_fk, header, ctx, milestone) ? header_link{} :
-        header_fk;
-}
-
 TEMPLATE
 code CLASS::set_code(const header& header, const context& ctx,
     bool milestone) NOEXCEPT
@@ -954,16 +936,6 @@ code CLASS::set_code(header_link& out_fk, const header& header,
 // set block
 // ----------------------------------------------------------------------------
 
-// deprecated
-TEMPLATE
-header_link CLASS::set_link(const block& block, const auto& ctx,
-    bool milestone, bool strong) NOEXCEPT
-{
-    header_link header_fk{};
-    return set_code(header_fk, block, ctx, milestone, strong) ? header_link{} :
-        header_fk;
-}
-
 TEMPLATE
 code CLASS::set_code(const block& block, const context& ctx, bool milestone,
     bool strong) NOEXCEPT
@@ -998,26 +970,15 @@ code CLASS::set_code(header_link& out_fk, const block& block,
     const context& ctx, bool milestone, bool strong) NOEXCEPT
 {
     const auto ec = set_code(out_fk, block.header(), ctx, milestone);
-    if (ec)
-        return ec;
-
-    const auto size = block.serialized_size(true);
-    return set_code(*block.transactions_ptr(), out_fk, size, strong);
+    return ec ? ec : set_code(block, out_fk, strong);
 }
 
 // set txs from block
 // ----------------------------------------------------------------------------
-
-// deprecated
 // This sets only the txs of a block with header/context already archived.
-TEMPLATE
-header_link CLASS::set_link(const block& block, bool strong) NOEXCEPT
-{
-    header_link header_fk{};
-    return set_code(header_fk, block, strong) ? header_link{} : header_fk;
-}
+// Block MUST be kept in scope until all transactions are written. ~block()
+// releases all memory for parts of itself, due to the custom allocator.
 
-// This sets only the txs of a block with header/context already archived.
 TEMPLATE
 code CLASS::set_code(const block& block, bool strong) NOEXCEPT
 {
@@ -1025,7 +986,6 @@ code CLASS::set_code(const block& block, bool strong) NOEXCEPT
     return set_code(unused, block, strong);
 }
 
-// This sets only the txs of a block with header/context already archived.
 TEMPLATE
 code CLASS::set_code(header_link& out_fk, const block& block,
     bool strong) NOEXCEPT
@@ -1034,40 +994,34 @@ code CLASS::set_code(header_link& out_fk, const block& block,
     if (out_fk.is_terminal())
         return error::txs_header;
 
-    txs_link unused{};
-    const auto size = block.serialized_size(true);
-    return set_code(unused, *block.transactions_ptr(), out_fk, size, strong);
-}
-
-
-// set txs
-// ----------------------------------------------------------------------------
-
-// deprecated
-TEMPLATE
-txs_link CLASS::set_link(const transactions& txs, const header_link& key,
-    size_t size, bool strong) NOEXCEPT
-{
-    txs_link txs_fk{};
-    return set_code(txs_fk, txs, key, size, strong) ? txs_link{} : txs_fk;
+    return set_code(block, out_fk, strong);
 }
 
 TEMPLATE
-code CLASS::set_code(const transactions& txs, const header_link& key,
-    size_t block_size, bool strong) NOEXCEPT
+code CLASS::set_code(const block& block, const header_link& key,
+    bool strong) NOEXCEPT
 {
     txs_link unused{};
-    return set_code(unused, txs, key, block_size, strong);
+    return set_code(unused, block, key, strong, block.serialized_size(true));
 }
 
 TEMPLATE
-code CLASS::set_code(txs_link& out_fk, const transactions& txs,
-    const header_link& key, size_t block_size, bool strong) NOEXCEPT
+code CLASS::set_code(const block& block, const header_link& key,
+    bool strong, size_t block_size) NOEXCEPT
+{
+    txs_link unused{};
+    return set_code(unused, block, key, strong, block_size);
+}
+
+TEMPLATE
+code CLASS::set_code(txs_link& out_fk, const block& block,
+    const header_link& key, bool strong, size_t block_size) NOEXCEPT
 {
     if (key.is_terminal())
         return error::txs_header;
 
-    if (txs.empty())
+    const auto count = block.transactions();
+    if (is_zero(count))
         return error::txs_empty;
 
     ////// GUARD (block (txs) redundancy)
@@ -1079,8 +1033,8 @@ code CLASS::set_code(txs_link& out_fk, const transactions& txs,
     code ec{};
     tx_link tx_fk{};
     tx_links links{};
-    links.reserve(txs.size());
-    for (const auto& tx: txs)
+    links.reserve(count);
+    for (const auto& tx: *block.transactions_ptr())
     {
         // Each tx is set under a distinct transactor.
         if ((ec = set_code(tx_fk, *tx)))

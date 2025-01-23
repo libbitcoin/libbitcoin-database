@@ -137,6 +137,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
         "64636261" // nonce
         "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); //merkle_root
 
+    header_link link{};
     settings settings{};
     settings.header_buckets = 10;
     settings.path = TEST_DIRECTORY;
@@ -147,7 +148,8 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
     // store open/close flushes record count to head.
     BOOST_REQUIRE(!query.is_header(header.hash()));
     BOOST_REQUIRE(!query.is_associated(0));
-    BOOST_REQUIRE(!query.set_link(header, test::context, milestone).is_terminal());
+    BOOST_REQUIRE(!query.set_code(link, header, test::context, milestone));
+    BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE(query.is_header(header.hash()));
     BOOST_REQUIRE(!query.is_associated(0));
     table::header::record element1{};
@@ -284,6 +286,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_tx__null_input__expected)
     BOOST_REQUIRE_EQUAL(tx_hash, tx.hash(false));
 
     // data_chunk store.
+    tx_link link{};
     settings settings{};
     settings.tx_buckets = 5;
     settings.point_buckets = 5;
@@ -292,9 +295,8 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_tx__null_input__expected)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
-    const auto link = query.set_link(tx);
+    BOOST_REQUIRE(!query.set_code(link, tx));
     BOOST_REQUIRE(!link.is_terminal());
-    ////BOOST_REQUIRE_EQUAL(query.set_link(tx), link);
     BOOST_REQUIRE(!store.close(events_handler));
 
     BOOST_REQUIRE_EQUAL(store.tx_head(), expected_tx_head);
