@@ -284,34 +284,34 @@ error::error_t CLASS::spent_prevout(const point_link& link, index index,
 
     // Iterate points by point hash (of output tx) because may be conflicts.
     // Search key must be passed as an l-value as it is held by reference.
-    const auto point_sk = get_point_key(link);
-    auto point = store_.point.it(point_sk);
-    if (!point)
-        return error::integrity;
+    ////const auto point_sk = get_point_key(link);
+    ////auto point = store_.point.it(point_sk);
+    ////if (!point)
+    ////    return error::integrity;
 
+////do
+////{
+    // Iterate all spends of the point to find double spends.
+    // Search key must be passed as an l-value as it is held by reference.
+    const auto spend_sk = table::spend::compose(link /*point.self()*/, index);
+    auto it = store_.spend.it(spend_sk);
+    if (!it)
+        return error::success;
+
+    table::spend::get_parent spend{};
     do
     {
-        // Iterate all spends of the point to find double spends.
-        // Search key must be passed as an l-value as it is held by reference.
-        const auto spend_sk = table::spend::compose(point.self(), index);
-        auto it = store_.spend.it(spend_sk);
-        if (!it)
-            return error::success;
+        if (!store_.spend.get(it, spend))
+            return error::integrity;
 
-        table::spend::get_parent spend{};
-        do
-        {
-            if (!store_.spend.get(it, spend))
-                return error::integrity;
-
-            // is_strong_tx (search) only called in the case of duplicate.
-            // Other parent tx of spend is strong (confirmed spent prevout).
-            if ((spend.parent_fk != self) && is_strong_tx(spend.parent_fk))
-                return error::confirmed_double_spend;
-        }
-        while (it.advance());
+        // is_strong_tx (search) only called in the case of duplicate.
+        // Other parent tx of spend is strong (confirmed spent prevout).
+        if ((spend.parent_fk != self) && is_strong_tx(spend.parent_fk))
+            return error::confirmed_double_spend;
     }
-    while (point.advance());
+    while (it.advance());
+////}
+////while (point.advance());
     return error::success;
 }
 
@@ -391,9 +391,23 @@ code CLASS::unspent_duplicates(const header_link& link,
     // [txs.find, {tx.iterate}, strong_tx.it]
     auto coinbases = to_strong_txs(get_tx_key(to_coinbase(link)));
 
-    // Current block is not set strong.
-    if (is_zero(coinbases.size()))
-        return error::success;
+    if (prevout_enabled())
+    {
+        // Current block is not set strong.
+        if (is_zero(coinbases.size()))
+            return error::success;
+    }
+    else
+    {
+        // Found only this block's coinbase instance, no duplicates.
+        if (is_one(coinbases.size()))
+            return error::success;
+
+        // Remove self (will be not found if current block is not set_strong).
+        const auto self = std::find(coinbases.begin(), coinbases.end(), link);
+        if (self == coinbases.end() || coinbases.erase(self) == coinbases.end())
+            return error::integrity;
+    }
 
     // [point.first, is_spent_prevout()]
     const auto spent = [this](const auto& tx) NOEXCEPT
@@ -468,29 +482,27 @@ bool CLASS::get_spend_sets(spend_sets& sets,
         return set;
     };
 
-    // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
     sets.resize(txs.size());
+
+    // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
     std_transform(bc::par_unseq, txs.begin(), txs.end(), sets.begin(), to_set);
-    return populate_prevout1(sets, link);
+
+    return prevout_enabled() ? populate_prevouts(sets, link) :
+        populate_prevouts(sets);
 }
 
-// private/static
 TEMPLATE
-size_t CLASS::sets_size(const spend_sets& sets) NOEXCEPT
+bool CLASS::populate_prevouts(spend_sets& sets,
+    const header_link& link) const NOEXCEPT
 {
-    return std::accumulate(sets.begin(), sets.end(), zero,
+    const auto sets_size = std::accumulate(sets.begin(), sets.end(), zero,
         [](size_t total, const auto& set) NOEXCEPT
         {
             return system::ceilinged_add(total, set.spends.size());
         });
-}
 
-TEMPLATE
-bool CLASS::populate_prevout1(spend_sets& sets,
-    const header_link& link) const NOEXCEPT
-{
     table::prevout::record_get prevouts{};
-    prevouts.values.resize(sets_size(sets));
+    prevouts.values.resize(sets_size);
     if (!store_.prevout.at(link, prevouts))
         return false;
 
@@ -506,8 +518,19 @@ bool CLASS::populate_prevout1(spend_sets& sets,
 }
 
 TEMPLATE
-bool CLASS::populate_prevout2(spend_sets&, const header_link&) const NOEXCEPT
+bool CLASS::populate_prevouts(spend_sets& sets) const NOEXCEPT
 {
+    // This technique does not benefit from skipping internal spends, and
+    // therefore also requires set_strong before query, and self removal.
+    for (auto& set: sets)
+        for (auto& spend: set.spends)
+        {
+            spend.prevout_tx_fk = to_tx(get_point_key(spend.point_fk));
+            spend.coinbase = is_coinbase(spend.prevout_tx_fk);
+            if (spend.prevout_tx_fk == table::prevout::tx::terminal)
+                return false;
+        }
+
     return true;
 }
 
@@ -662,6 +685,9 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 TEMPLATE
 bool CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
 {
+    if (!prevout_enabled())
+        return true;
+
     // Empty or coinbase only implies no spends.
     if (block.transactions() <= one)
         return true;
