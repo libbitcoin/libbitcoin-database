@@ -229,6 +229,7 @@ public:
     /// Optional table state.
     bool address_enabled() const NOEXCEPT;
     bool neutrino_enabled() const NOEXCEPT;
+    bool prevout_enabled() const NOEXCEPT;
 
     /// Initialization (natural-keyed).
     /// -----------------------------------------------------------------------

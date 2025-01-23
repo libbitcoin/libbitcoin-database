@@ -74,6 +74,16 @@ public:
         return output_body_.buffer();
     }
 
+    system::data_chunk& prevout_head() NOEXCEPT
+    {
+        return prevout_head_.buffer();
+    }
+
+    system::data_chunk& prevout_body() NOEXCEPT
+    {
+        return prevout_body_.buffer();
+    }
+
     system::data_chunk& puts_head() NOEXCEPT
     {
         return puts_head_.buffer();
@@ -115,16 +125,6 @@ public:
     }
 
     // Indexes.
-
-    system::data_chunk& address_head() NOEXCEPT
-    {
-        return address_head_.buffer();
-    }
-
-    system::data_chunk& address_body() NOEXCEPT
-    {
-        return address_body_.buffer();
-    }
 
     system::data_chunk& candidate_head() NOEXCEPT
     {
@@ -178,6 +178,18 @@ public:
         return validated_tx_body_.buffer();
     }
 
+    // Optionals.
+
+    system::data_chunk& address_head() NOEXCEPT
+    {
+        return address_head_.buffer();
+    }
+
+    system::data_chunk& address_body() NOEXCEPT
+    {
+        return address_body_.buffer();
+    }
+
     system::data_chunk& neutrino_head() NOEXCEPT
     {
         return neutrino_head_.buffer();
@@ -187,26 +199,6 @@ public:
     {
         return neutrino_body_.buffer();
     }
-
-    ////system::data_chunk& bootstrap_head() NOEXCEPT
-    ////{
-    ////    return bootstrap_head_.buffer();
-    ////}
-
-    ////system::data_chunk& bootstrap_body() NOEXCEPT
-    ////{
-    ////    return bootstrap_body_.buffer();
-    ////}
-
-    ////system::data_chunk& buffer_head() NOEXCEPT
-    ////{
-    ////    return buffer_head_.buffer();
-    ////}
-
-    ////system::data_chunk& buffer_body() NOEXCEPT
-    ////{
-    ////    return buffer_body_.buffer();
-    ////}
 };
 
 using query_accessor = query<store<chunk_storage>>;

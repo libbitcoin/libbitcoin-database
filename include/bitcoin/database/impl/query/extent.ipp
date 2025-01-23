@@ -240,6 +240,12 @@ bool CLASS::neutrino_enabled() const NOEXCEPT
     return store_.neutrino.enabled();
 }
 
+TEMPLATE
+bool CLASS::prevout_enabled() const NOEXCEPT
+{
+    return store_.prevout.enabled();
+}
+
 } // namespace database
 } // namespace libbitcoin
 
