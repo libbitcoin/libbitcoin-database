@@ -229,6 +229,7 @@ public:
     /// Optional table state.
     bool address_enabled() const NOEXCEPT;
     bool neutrino_enabled() const NOEXCEPT;
+    bool prevout_enabled() const NOEXCEPT;
 
     /// Initialization (natural-keyed).
     /// -----------------------------------------------------------------------
@@ -543,10 +544,6 @@ public:
     bool set_filter_head(const header_link& link,
         const hash_digest& head) NOEXCEPT;
 
-// TODO: protected
-    spend_set to_spend_set(const tx_link& link) const NOEXCEPT;
-    spend_sets to_spend_sets(const header_link& link) const NOEXCEPT;
-
 protected:
     /// Translate.
     /// -----------------------------------------------------------------------
@@ -580,6 +577,10 @@ protected:
         const context& ctx) const NOEXCEPT;
 
     // Critical path
+    bool populate_prevouts(spend_sets& sets) const NOEXCEPT;
+    bool populate_prevouts(spend_sets& sets, const header_link& link) const NOEXCEPT;
+    bool get_spend_set(spend_set& set, const tx_link& link) const NOEXCEPT;
+    bool get_spend_sets(spend_sets& set, const header_link& link) const NOEXCEPT;
     bool is_spent_prevout(const point_link& link, index index,
         const tx_link& self=tx_link::terminal) const NOEXCEPT;
     error::error_t spent_prevout(const point_link& link, index index,

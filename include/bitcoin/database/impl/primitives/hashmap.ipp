@@ -199,6 +199,15 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 // static
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::get(const memory_ptr& ptr, const Link& link,
+    Element& element) NOEXCEPT
+{
+    return read(ptr, link, element);
+}
+
+// static
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::get(const iterator& it, Element& element) NOEXCEPT
 {
     // This override avoids deadlock when holding iterator to the same table.
@@ -213,16 +222,6 @@ bool CLASS::get(const iterator& it, const Link& link,
 {
     // This override avoids deadlock when holding iterator to the same table.
     return read(it.get(), link, element);
-}
-
-// static
-TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::get(const memory_ptr& ptr, const Link& link,
-    Element& element) NOEXCEPT
-{
-    // This override avoids deadlock when holding iterator to the same table.
-    return read(ptr, link, element);
 }
 
 TEMPLATE
@@ -307,24 +306,16 @@ template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::put(const Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
-    using namespace system;
-    const auto ptr = body_.get(link);
-    if (!ptr)
-        return false;
+    // This override is the normal form.
+    return write(get_memory(), link, key, element);
+}
 
-    // iostream.flush is a nop (direct copy).
-    iostream stream{ *ptr };
-    finalizer sink{ stream };
-    sink.skip_bytes(Link::size);
-    sink.write_bytes(key);
-
-    if constexpr (!is_slab)
-    {
-        BC_DEBUG_ONLY(sink.set_limit(Size * element.count());)
-    }
-
-    auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
-    return element.to_data(sink) && head_.push(link, next, head_.index(key));
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put(const memory_ptr& ptr, const Link& link, const Key& key,
+    const Element& element) NOEXCEPT
+{
+    return write(ptr, link, key, element);
 }
 
 TEMPLATE
@@ -354,6 +345,31 @@ Link CLASS::commit_link(const Link& link, const Key& key) NOEXCEPT
 
 // protected/static
 // ----------------------------------------------------------------------------
+
+TEMPLATE
+Link CLASS::first(const memory_ptr& ptr, Link link, const Key& key) NOEXCEPT
+{
+    if (!ptr)
+        return {};
+
+    while (!link.is_terminal())
+    {
+        // get element offset (fault)
+        const auto offset = ptr->offset(body::link_to_position(link));
+        if (is_null(offset))
+            return {};
+
+        // element key matches (found)
+        if (is_zero(std::memcmp(key.data(), std::next(offset, Link::size),
+            array_count<Key>)))
+            return link;
+
+        // set next element link (loop)
+        link = system::unsafe_array_cast<uint8_t, Link::size>(offset);
+    }
+
+    return link;
+}
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
@@ -387,28 +403,40 @@ bool CLASS::read(const memory_ptr& ptr, const Link& link,
 }
 
 TEMPLATE
-Link CLASS::first(const memory_ptr& ptr, Link link, const Key& key) NOEXCEPT
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::write(const memory_ptr& ptr, const Link& link, const Key& key,
+    const Element& element) NOEXCEPT
 {
-    if (!ptr)
-        return {};
+    if (!ptr || link.is_terminal())
+        return false;
 
-    while (!link.is_terminal())
+    using namespace system;
+    const auto start = body::link_to_position(link);
+    if (is_limited<ptrdiff_t>(start))
+        return false;
+
+    const auto size = ptr->size();
+    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
+    if (position > size)
+        return false;
+
+    const auto offset = ptr->offset(position);
+    if (is_null(offset))
+        return false;
+
+    // iostream.flush is a nop (direct copy).
+    iostream stream{ offset, size - position };
+    finalizer sink{ stream };
+    sink.skip_bytes(Link::size);
+    sink.write_bytes(key);
+
+    if constexpr (!is_slab)
     {
-        // get element offset (fault)
-        const auto offset = ptr->offset(body::link_to_position(link));
-        if (is_null(offset))
-            return {};
-
-        // element key matches (found)
-        if (is_zero(std::memcmp(key.data(), std::next(offset, Link::size),
-            array_count<Key>)))
-            return link;
-
-        // set next element link (loop)
-        link = system::unsafe_array_cast<uint8_t, Link::size>(offset);
+        BC_DEBUG_ONLY(sink.set_limit(Size * element.count());)
     }
 
-    return link;
+    auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
+    return element.to_data(sink) && head_.push(link, next, head_.index(key));
 }
 
 } // namespace database

@@ -477,46 +477,6 @@ output_links CLASS::to_prevouts(const tx_link& link) const NOEXCEPT
     return prevouts;
 }
 
-// protected
-TEMPLATE
-spend_set CLASS::to_spend_set(const tx_link& link) const NOEXCEPT
-{
-    table::transaction::get_version_puts tx{};
-    if (!store_.tx.get(link, tx))
-        return {};
-
-    table::puts::get_spends puts{};
-    puts.spend_fks.resize(tx.ins_count);
-    if (!store_.puts.get(tx.puts_fk, puts))
-        return {};
-
-    spend_set set{ link, tx.version, {} };
-    set.spends.reserve(tx.ins_count);
-    table::spend::get_prevout_sequence get{};
-
-    // This reduced a no-bypass 840k sync/confirmable/confirm run by 8.3%.
-    const auto ptr = store_.spend.get_memory();
-
-    // This is not concurrent because to_spend_sets is (by tx).
-    for (const auto& spend_fk: puts.spend_fks)
-    {
-        if (!store_.spend.get(ptr, spend_fk, get))
-            return {};
-
-        // Translate query to public struct.
-#if defined(HAVE_CLANG)
-        // emplace_back aggregate initialization requires clang 16.
-        set.spends.push_back({ get.point_fk, get.point_index, get.sequence,
-            table::prevout::tx::integer{}, bool{} });
-#else
-        set.spends.emplace_back(get.point_fk, get.point_index, get.sequence,
-            table::prevout::tx::integer{}, bool{});
-#endif
-    }
-
-    return set;
-}
-
 // txs to puts (forward navigation)
 // ----------------------------------------------------------------------------
 

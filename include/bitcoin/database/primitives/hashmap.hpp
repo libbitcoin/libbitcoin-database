@@ -118,6 +118,11 @@ public:
     template <typename Element, if_equal<Element::size, Size> = true>
     bool get(const Link& link, Element& element) const NOEXCEPT;
 
+    /// Get element at link using memory object, false if deserialize error.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    static bool get(const memory_ptr& ptr, const Link& link,
+        Element& element) NOEXCEPT;
+
     /// Get element at link, false if deserialize error.
     /// Iterator must not be terminal, must be guarded by called.
     template <typename Element, if_equal<Element::size, Size> = true>
@@ -126,11 +131,6 @@ public:
     /// Get element at link using it memory object, false if deserialize error.
     template <typename Element, if_equal<Element::size, Size> = true>
     static bool get(const iterator& it, const Link& link,
-        Element& element) NOEXCEPT;
-
-    /// Get element at link using memory object, false if deserialize error.
-    template <typename Element, if_equal<Element::size, Size> = true>
-    static bool get(const memory_ptr& ptr, const Link& link,
         Element& element) NOEXCEPT;
 
     /// Set element into previously allocated link (follow with commit).
@@ -157,19 +157,29 @@ public:
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put(const Link& link, const Key& key, const Element& element) NOEXCEPT;
 
+    /// Set/commit allocated element at link to key, using memory object.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool put(const memory_ptr& ptr, const Link& link, const Key& key,
+        const Element& element) NOEXCEPT;
+
     /// Commit previously set element at link to key.
     bool commit(const Link& link, const Key& key) NOEXCEPT;
     Link commit_link(const Link& link, const Key& key) NOEXCEPT;
 
 protected:
+    /// Get first element matching key, from top link and whole table memory.
+    static Link first(const memory_ptr& ptr, Link link,
+        const Key& key) NOEXCEPT;
+
     /// Get element at link using memory object, false if deserialize error.
     template <typename Element, if_equal<Element::size, Size> = true>
     static bool read(const memory_ptr& ptr, const Link& link,
         Element& element) NOEXCEPT;
 
-    /// Get first element matching key, from top link and whole table memory.
-    static Link first(const memory_ptr& ptr, Link link,
-        const Key& key) NOEXCEPT;
+    /// Set and commit previously allocated element at link to key.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool write(const memory_ptr& ptr, const Link& link, const Key& key,
+        const Element& element) NOEXCEPT;
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);

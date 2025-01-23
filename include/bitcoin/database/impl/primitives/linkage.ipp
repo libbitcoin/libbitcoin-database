@@ -44,19 +44,34 @@ inline CLASS::linkage(const bytes& other) NOEXCEPT
 }
 
 TEMPLATE
-constexpr linkage<Size>& CLASS::operator=(integer other) NOEXCEPT
+constexpr CLASS& CLASS::operator=(integer other) NOEXCEPT
 {
     value = other;
     return *this;
 }
 
 TEMPLATE
-inline linkage<Size>& CLASS::operator=(const bytes& other) NOEXCEPT
+inline CLASS& CLASS::operator=(const bytes& other) NOEXCEPT
 {
     value = 0;
     system::unsafe_array_cast<uint8_t, Size>(&value) = other;
     value = system::native_from_little_end(value);
     return *this;
+}
+
+TEMPLATE
+inline CLASS& CLASS::operator++() NOEXCEPT
+{
+    ++value;
+    return *this;
+}
+
+TEMPLATE
+inline CLASS CLASS::operator++(int) NOEXCEPT
+{
+    auto self = *this;
+    ++(*this);
+    return self;
 }
 
 ////TEMPLATE
