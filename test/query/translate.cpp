@@ -131,12 +131,15 @@ BOOST_AUTO_TEST_CASE(query_translate__to_header__always__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
+    header_link link{};
+
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE_EQUAL(query.to_header(test::genesis.hash()), header_link::terminal);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE_EQUAL(query.to_header(test::genesis.hash()), 0u);
     BOOST_REQUIRE_EQUAL(query.to_header(test::block1.hash()), header_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.set_link(test::block1.header(), test::context, false), 1u);
+    BOOST_REQUIRE_EQUAL(query.set_code(link, test::block1.header(), test::context, false), error::success);
+    BOOST_REQUIRE_EQUAL(link, 1u);
     BOOST_REQUIRE_EQUAL(query.to_header(test::block1.hash()), 1u);
 }
 
