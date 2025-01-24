@@ -243,6 +243,7 @@ inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
 TEMPLATE
 inline tx_links CLASS::to_strong_txs(const hash_digest& tx_hash) const NOEXCEPT
 {
+    // TODO: deadlock.
     auto it = store_.tx.it(tx_hash);
     if (!it)
         return {};
@@ -250,6 +251,7 @@ inline tx_links CLASS::to_strong_txs(const hash_digest& tx_hash) const NOEXCEPT
     tx_links links{};
     do
     {
+        // TODO: deadlock.
         for (const auto& tx: to_strong_txs(it.self()))
             links.push_back(tx);
     }

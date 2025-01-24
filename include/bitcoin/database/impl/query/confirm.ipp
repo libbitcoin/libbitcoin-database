@@ -388,6 +388,7 @@ code CLASS::unspent_duplicates(const header_link& link,
     if (!ctx.is_enabled(system::chain::flags::bip30_rule))
         return error::success;
 
+    // TODO: deadlock.
     // [txs.find, {tx.iterate}, strong_tx.it]
     auto coinbases = to_strong_txs(get_tx_key(to_coinbase(link)));
 
