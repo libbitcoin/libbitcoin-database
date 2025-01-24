@@ -1005,20 +1005,12 @@ code CLASS::set_code(const block& block, const header_link& key,
     bool strong) NOEXCEPT
 {
     txs_link unused{};
-    return set_code(unused, block, key, strong, block.serialized_size(true));
-}
-
-TEMPLATE
-code CLASS::set_code(const block& block, const header_link& key,
-    bool strong, size_t block_size) NOEXCEPT
-{
-    txs_link unused{};
-    return set_code(unused, block, key, strong, block_size);
+    return set_code(unused, block, key, strong);
 }
 
 TEMPLATE
 code CLASS::set_code(txs_link& out_fk, const block& block,
-    const header_link& key, bool strong, size_t block_size) NOEXCEPT
+    const header_link& key, bool strong) NOEXCEPT
 {
     if (key.is_terminal())
         return error::txs_header;
@@ -1046,8 +1038,11 @@ code CLASS::set_code(txs_link& out_fk, const block& block,
         links.push_back(tx_fk.value);
     }
 
+    // block.serialized_size may keep block in scope during writes above.
+    // However the compiler may reorder this calculation since block is const.
     using bytes = linkage<schema::size>::integer;
-    const auto wire = system::possible_narrow_cast<bytes>(block_size);
+    const auto size = block.serialized_size(true);
+    const auto wire = system::possible_narrow_cast<bytes>(size);
 
     // ========================================================================
     const auto scope = store_.get_transactor();

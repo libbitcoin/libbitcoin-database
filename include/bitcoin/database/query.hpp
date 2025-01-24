@@ -427,10 +427,8 @@ public:
     code set_code(const block& block, bool strong) NOEXCEPT;
     code set_code(header_link& out_fk, const block& block, bool strong) NOEXCEPT;
     code set_code(const block& block, const header_link& key, bool strong) NOEXCEPT;
-    code set_code(const block& block, const header_link& key, bool strong,
-        size_t block_size) NOEXCEPT;
     code set_code(txs_link& out_fk, const block& block, const header_link& key,
-        bool strong, size_t block_size) NOEXCEPT;
+        bool strong) NOEXCEPT;
 
     /// Chain state.
     /// -----------------------------------------------------------------------
