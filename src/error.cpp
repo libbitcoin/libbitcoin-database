@@ -30,6 +30,14 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { success, "success" },
     { unknown_state, "unknown state" },
     { integrity, "store corrupted" },
+    { integrity1, "store corrupted1" },
+    { integrity2, "store corrupted2" },
+    { integrity3, "store corrupted3" },
+    { integrity4, "store corrupted4" },
+    { integrity5, "store corrupted5" },
+    { integrity6, "store corrupted6" },
+    { integrity7, "store corrupted7" },
+    { integrity8, "store corrupted8" },
 
     // memory map
     { open_open, "opening open file" },

@@ -647,13 +647,6 @@ typename CLASS::inputs_ptr CLASS::get_spenders(
 }
 
 TEMPLATE
-typename CLASS::output::cptr CLASS::get_output(
-    const point& prevout) const NOEXCEPT
-{
-    return get_output(to_tx(prevout.hash()), prevout.index());
-}
-
-TEMPLATE
 typename CLASS::output::cptr CLASS::get_output(const tx_link& link,
     uint32_t output_index) const NOEXCEPT
 {
@@ -710,7 +703,6 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // TODO: deadlock.
     // Allocate tx record.
     // Clean single allocation failure (e.g. disk full).
     out_fk = store_.tx.allocate(1);
@@ -811,7 +803,6 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     if (puts_fk.is_terminal())
         return error::tx_puts_put;
 
-    // TODO: deadlock.
     // Write tx record.
     // Safe allocation failure, index is deferred for spend index consistency.
     using ix = linkage<schema::index>;
@@ -861,7 +852,6 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
         }
     }
 
-    // TODO: deadlock.
     // Commit tx to search.
     // Clean single allocation failure (e.g. disk full).
     return store_.tx.commit(out_fk, key) ? error::success : error::tx_tx_commit;

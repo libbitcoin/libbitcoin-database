@@ -1375,7 +1375,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_output__not_found__nullptr)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
     BOOST_REQUIRE(!query.get_output(query.to_tx(system::null_hash), 0u));
-    BOOST_REQUIRE(!query.get_output({ system::null_hash, 0u }));
+    BOOST_REQUIRE(!query.get_output(query.to_output(system::chain::point{ system::null_hash, 0u })));
     BOOST_REQUIRE(!query.get_output(0));
     BOOST_REQUIRE(!store.close(events_handler));
 }
@@ -1396,7 +1396,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_output__genesis__expected)
     const auto tx = test::genesis.transactions_ptr()->front();
     const auto output1 = tx->outputs_ptr()->front();
     BOOST_REQUIRE(*output1 == *query.get_output(query.to_tx(tx->hash(false)), 0u));
-    BOOST_REQUIRE(*output1 == *query.get_output({ tx->hash(false), 0u }));
+    BOOST_REQUIRE(*output1 == *query.get_output(query.to_output(tx->hash(false), 0u)));
     BOOST_REQUIRE(*output1 == *query.get_output(0));
 }
 

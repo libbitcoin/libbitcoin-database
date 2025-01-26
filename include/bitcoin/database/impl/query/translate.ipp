@@ -98,6 +98,19 @@ inline filter_link CLASS::to_filter(const header_link& key) const NOEXCEPT
     return store_.neutrino.first(key);
 }
 
+TEMPLATE
+output_link CLASS::to_output(const point& prevout) const NOEXCEPT
+{
+    return to_output(prevout.hash(), prevout.index());
+}
+
+TEMPLATE
+output_link CLASS::to_output(const hash_digest& key,
+    uint32_t input_index) const NOEXCEPT
+{
+    return to_output(to_tx(key), input_index);
+}
+
 // put to tx (reverse navigation)
 // ----------------------------------------------------------------------------
 
@@ -206,7 +219,7 @@ header_link CLASS::to_block(const tx_link& key) const NOEXCEPT
     if (!store_.strong_tx.find(key, strong) || !strong.positive)
         return {};
 
-    // Terminal implies not strong (not in block).
+    // Terminal implies not in strong block (reorganized).
     return strong.header_fk;
 }
 
@@ -235,86 +248,6 @@ inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
     }
     while (it.advance());
     return strong;
-}
-
-// protected
-// Required for bip30 processing.
-// Return distinct set of txs by link for hash where each is strong by block.
-TEMPLATE
-inline tx_links CLASS::to_strong_txs(const hash_digest& tx_hash) const NOEXCEPT
-{
-    // TODO: deadlock.
-    auto it = store_.tx.it(tx_hash);
-    if (!it)
-        return {};
-
-    tx_links links{};
-    do
-    {
-        // TODO: deadlock.
-        for (const auto& tx: to_strong_txs(it.self()))
-            links.push_back(tx);
-    }
-    while (it.advance());
-    return links;
-}
-
-// protected
-// Required for bip30 processing.
-// The top of the strong_tx table will reflect the current state of only one
-// block association. This scans the multimap for the first instance of each
-// block that is associated by the tx.link and returns that set of block links.
-// Return distinct set of txs by link where each is strong by block.
-TEMPLATE
-inline tx_links CLASS::to_strong_txs(const tx_link& link) const NOEXCEPT
-{
-    auto it = store_.strong_tx.it(link);
-    if (!it)
-        return {};
-
-    // Obtain all first (by block) duplicate (by link) tx records.
-    maybe_strongs pairs{};
-    do
-    {
-        table::strong_tx::record strong{};
-        if (store_.strong_tx.get(it, strong) &&
-            !contains(pairs, strong.header_fk))
-        {
-#if defined(HAVE_CLANG)
-            // emplace_back aggregate initialization requires clang 16.
-            pairs.push_back({ strong.header_fk, it.self(), strong.positive });
-#else
-            pairs.emplace_back(strong.header_fk, it.self(), strong.positive);
-#endif
-        }
-    }
-    while(it.advance());
-    return strong_only(pairs);
-}
-
-// private/static
-TEMPLATE
-inline bool CLASS::contains(const maybe_strongs& pairs,
-    const header_link& block) NOEXCEPT
-{
-    return std::any_of(pairs.begin(), pairs.end(),
-        [&block](const auto& pair) NOEXCEPT
-        {
-            return block == pair.block;
-        });
-}
-
-// private/static
-TEMPLATE
-inline tx_links CLASS::strong_only(const maybe_strongs& pairs) NOEXCEPT
-{
-    tx_links links{};
-    for (const auto& pair: pairs)
-        if (pair.strong)
-            links.push_back(pair.tx);
-
-    // Reduced to the subset of strong duplicate (by hash) tx records.
-    return links;
 }
 
 // output to spenders (reverse navigation)

@@ -469,7 +469,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__bad_link__integrity)
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, context{ bip68, 1, 0 }, false, false));
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::integrity);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::integrity1);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__null_points__success)
