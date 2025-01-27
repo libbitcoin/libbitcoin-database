@@ -426,7 +426,7 @@ bool CLASS::write(const memory_ptr& ptr, const Link& link, const Key& key,
         BC_DEBUG_ONLY(sink.set_limit(Size * element.count());)
     }
 
-    auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
+    auto& next = unsafe_array_cast<uint8_t, Link::size>(offset);
     return element.to_data(sink) && head_.push(link, next, head_.index(key));
 }
 
