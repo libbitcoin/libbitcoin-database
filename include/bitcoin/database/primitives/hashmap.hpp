@@ -101,7 +101,7 @@ public:
     /// Iterator holds shared lock on storage remap.
     iterator it(const Key& key) const NOEXCEPT;
 
-    /// Allocate element at returned link (follow with set|put).
+    /// Allocate count or slab size at returned link (follow with set|put).
     Link allocate(const Link& size) NOEXCEPT;
 
     /// Return ptr for batch processing, holds shared lock on storage remap.
@@ -118,7 +118,7 @@ public:
     template <typename Element, if_equal<Element::size, Size> = true>
     bool get(const Link& link, Element& element) const NOEXCEPT;
 
-    /// Get element at link using memory object, false if deserialize error.
+    /// Get element at link using get_memory() ptr, false if deserialize error.
     template <typename Element, if_equal<Element::size, Size> = true>
     static bool get(const memory_ptr& ptr, const Link& link,
         Element& element) NOEXCEPT;
@@ -157,7 +157,7 @@ public:
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put(const Link& link, const Key& key, const Element& element) NOEXCEPT;
 
-    /// Set/commit allocated element at link to key, using memory object.
+    /// Set/commit allocated element at link to key, using get_memory() ptr.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put(const memory_ptr& ptr, const Link& link, const Key& key,
         const Element& element) NOEXCEPT;
@@ -167,15 +167,18 @@ public:
     Link commit_link(const Link& link, const Key& key) NOEXCEPT;
 
 protected:
+    /// memory_ptr parameter must be from start (i.e. from get_memory()).
     /// Get first element matching key, from top link and whole table memory.
     static Link first(const memory_ptr& ptr, const Link& link,
         const Key& key) NOEXCEPT;
 
+    /// memory_ptr parameter must be from start (i.e. from get_memory()).
     /// Get element at link using memory object, false if deserialize error.
     template <typename Element, if_equal<Element::size, Size> = true>
     static bool read(const memory_ptr& ptr, const Link& link,
         Element& element) NOEXCEPT;
 
+    /// memory_ptr parameter must be from start (i.e. from get_memory()).
     /// Set and commit previously allocated element at link to key.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool write(const memory_ptr& ptr, const Link& link, const Key& key,

@@ -171,11 +171,12 @@ memory_ptr CLASS::get_memory() const NOEXCEPT
 TEMPLATE
 Key CLASS::get_key(const Link& link) NOEXCEPT
 {
+    using namespace system;
     const auto ptr = body_.get(link);
-    if (!ptr || system::is_lesser(ptr->size(), index_size))
+    if (!ptr || is_lesser(ptr->size(), index_size))
         return {};
 
-    return system::unsafe_array_cast<uint8_t, key_size>(std::next(ptr->begin(),
+    return unsafe_array_cast<uint8_t, key_size>(std::next(ptr->begin(),
         Link::size));
 }
 
@@ -276,22 +277,8 @@ template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::put_link(Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
-    using namespace system;
-    const auto count = element.count();
-    link = allocate(count);
-    const auto ptr = body_.get(link);
-    if (!ptr)
-        return false;
-
-    // iostream.flush is a nop (direct copy).
-    iostream stream{ *ptr };
-    finalizer sink{ stream };
-    sink.skip_bytes(Link::size);
-    sink.write_bytes(key);
-
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * count);) }
-    auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
-    return element.to_data(sink) && head_.push(link, next, head_.index(key));
+    link = allocate(element.count());
+    return put(link, key, element);
 }
 
 TEMPLATE
@@ -321,16 +308,17 @@ bool CLASS::put(const memory_ptr& ptr, const Link& link, const Key& key,
 TEMPLATE
 bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
 {
+    using namespace system;
     const auto ptr = body_.get(link);
     if (!ptr)
         return false;
 
     // Set element search key.
-    system::unsafe_array_cast<uint8_t, key_size>(std::next(ptr->begin(),
+    unsafe_array_cast<uint8_t, key_size>(std::next(ptr->begin(),
         Link::size)) = key;
 
     // Commit element to search index.
-    auto& next = system::unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
+    auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
     return head_.push(link, next, head_.index(key));
 }
 
@@ -350,6 +338,7 @@ TEMPLATE
 Link CLASS::first(const memory_ptr& ptr, const Link& link,
     const Key& key) NOEXCEPT
 {
+    using namespace system;
     if (!ptr)
         return {};
 
@@ -367,7 +356,7 @@ Link CLASS::first(const memory_ptr& ptr, const Link& link,
             return next;
 
         // set next element link (loop)
-        next = system::unsafe_array_cast<uint8_t, Link::size>(offset);
+        next = unsafe_array_cast<uint8_t, Link::size>(offset);
     }
 
     return next;
@@ -378,10 +367,10 @@ template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::read(const memory_ptr& ptr, const Link& link,
     Element& element) NOEXCEPT
 {
+    using namespace system;
     if (!ptr || link.is_terminal())
         return false;
 
-    using namespace system;
     const auto start = body::link_to_position(link);
     if (is_limited<ptrdiff_t>(start))
         return false;
@@ -391,7 +380,7 @@ bool CLASS::read(const memory_ptr& ptr, const Link& link,
     if (position > size)
         return false;
 
-    const auto offset = ptr->offset(position);
+    const auto offset = ptr->offset(start);
     if (is_null(offset))
         return false;
 
@@ -409,10 +398,10 @@ template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::write(const memory_ptr& ptr, const Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
+    using namespace system;
     if (!ptr || link.is_terminal())
         return false;
 
-    using namespace system;
     const auto start = body::link_to_position(link);
     if (is_limited<ptrdiff_t>(start))
         return false;
@@ -422,7 +411,7 @@ bool CLASS::write(const memory_ptr& ptr, const Link& link, const Key& key,
     if (position > size)
         return false;
 
-    const auto offset = ptr->offset(position);
+    const auto offset = ptr->offset(start);
     if (is_null(offset))
         return false;
 
