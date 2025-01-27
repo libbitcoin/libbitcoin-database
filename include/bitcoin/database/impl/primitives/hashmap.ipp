@@ -175,8 +175,8 @@ Key CLASS::get_key(const Link& link) NOEXCEPT
     if (!ptr || system::is_lesser(ptr->size(), index_size))
         return {};
 
-    return system::unsafe_array_cast<uint8_t, array_count<Key>>(std::next(
-        ptr->begin(), Link::size));
+    return system::unsafe_array_cast<uint8_t, key_size>(std::next(ptr->begin(),
+        Link::size));
 }
 
 TEMPLATE
@@ -326,8 +326,8 @@ bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
         return false;
 
     // Set element search key.
-    system::unsafe_array_cast<uint8_t, array_count<Key>>(
-        std::next(ptr->begin(), Link::size)) = key;
+    system::unsafe_array_cast<uint8_t, key_size>(std::next(ptr->begin(),
+        Link::size)) = key;
 
     // Commit element to search index.
     auto& next = system::unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
@@ -347,28 +347,30 @@ Link CLASS::commit_link(const Link& link, const Key& key) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-Link CLASS::first(const memory_ptr& ptr, Link link, const Key& key) NOEXCEPT
+Link CLASS::first(const memory_ptr& ptr, const Link& link,
+    const Key& key) NOEXCEPT
 {
     if (!ptr)
         return {};
 
-    while (!link.is_terminal())
+    auto next = link;
+    while (!next.is_terminal())
     {
         // get element offset (fault)
-        const auto offset = ptr->offset(body::link_to_position(link));
+        const auto offset = ptr->offset(body::link_to_position(next));
         if (is_null(offset))
             return {};
 
         // element key matches (found)
         if (is_zero(std::memcmp(key.data(), std::next(offset, Link::size),
-            array_count<Key>)))
-            return link;
+            key_size)))
+            return next;
 
         // set next element link (loop)
-        link = system::unsafe_array_cast<uint8_t, Link::size>(offset);
+        next = system::unsafe_array_cast<uint8_t, Link::size>(offset);
     }
 
-    return link;
+    return next;
 }
 
 TEMPLATE

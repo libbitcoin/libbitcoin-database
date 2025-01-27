@@ -168,7 +168,7 @@ public:
 
 protected:
     /// Get first element matching key, from top link and whole table memory.
-    static Link first(const memory_ptr& ptr, Link link,
+    static Link first(const memory_ptr& ptr, const Link& link,
         const Key& key) NOEXCEPT;
 
     /// Get element at link using memory object, false if deserialize error.
@@ -183,7 +183,8 @@ protected:
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);
-    static constexpr auto index_size = Link::size + array_count<Key>;
+    static constexpr auto key_size = array_count<Key>;
+    static constexpr auto index_size = Link::size + key_size;
 
     using head = database::hashhead<Link, Key, Hash>;
     using body = database::manager<Link, Key, Size>;
