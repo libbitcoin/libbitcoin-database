@@ -40,17 +40,6 @@ inline bool push_bool(std_vector<Bool>& stack, const Bool& element) NOEXCEPT
     return true;
 }
 
-template <typename Link>
-inline bool push_link_value(std_vector<typename Link::integer>& stack,
-    const Link& element) NOEXCEPT
-{
-    if (element.is_terminal())
-        return false;
-
-    stack.push_back(element.value);
-    return true;
-}
-
 // Archival (mostly natural-keyed).
 // ----------------------------------------------------------------------------
 
@@ -1028,8 +1017,6 @@ code CLASS::set_code(txs_link& out_fk, const block& block,
         links.push_back(tx_fk.value);
     }
 
-    // block.serialized_size may keep block in scope during writes above.
-    // However the compiler may reorder this calculation since block is const.
     using bytes = linkage<schema::size>::integer;
     const auto size = block.serialized_size(true);
     const auto wire = system::possible_narrow_cast<bytes>(size);
