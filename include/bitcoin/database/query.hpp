@@ -153,6 +153,7 @@ public:
     size_t candidate_size() const NOEXCEPT;
     size_t confirmed_size() const NOEXCEPT;
     size_t strong_tx_size() const NOEXCEPT;
+    size_t prevout_size() const NOEXCEPT;
     size_t validated_tx_size() const NOEXCEPT;
     size_t validated_bk_size() const NOEXCEPT;
     size_t address_size() const NOEXCEPT;
@@ -172,6 +173,7 @@ public:
     size_t candidate_body_size() const NOEXCEPT;
     size_t confirmed_body_size() const NOEXCEPT;
     size_t strong_tx_body_size() const NOEXCEPT;
+    size_t prevout_body_size() const NOEXCEPT;
     size_t validated_tx_body_size() const NOEXCEPT;
     size_t validated_bk_body_size() const NOEXCEPT;
     size_t address_body_size() const NOEXCEPT;
@@ -191,6 +193,7 @@ public:
     size_t candidate_head_size() const NOEXCEPT;
     size_t confirmed_head_size() const NOEXCEPT;
     size_t strong_tx_head_size() const NOEXCEPT;
+    size_t prevout_head_size() const NOEXCEPT;
     size_t validated_tx_head_size() const NOEXCEPT;
     size_t validated_bk_head_size() const NOEXCEPT;
     size_t address_head_size() const NOEXCEPT;
@@ -203,6 +206,7 @@ public:
     size_t txs_buckets() const NOEXCEPT;
     size_t tx_buckets() const NOEXCEPT;
     size_t strong_tx_buckets() const NOEXCEPT;
+    size_t prevout_buckets() const NOEXCEPT;
     size_t validated_tx_buckets() const NOEXCEPT;
     size_t validated_bk_buckets() const NOEXCEPT;
     size_t address_buckets() const NOEXCEPT;
@@ -216,6 +220,7 @@ public:
     size_t candidate_records() const NOEXCEPT;
     size_t confirmed_records() const NOEXCEPT;
     size_t strong_tx_records() const NOEXCEPT;
+    size_t prevout_records() const NOEXCEPT;
     size_t address_records() const NOEXCEPT;
 
     /// Counters (archive slabs - txs/puts/neutrino can be derived).
