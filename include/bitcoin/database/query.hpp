@@ -43,11 +43,11 @@ using txs_link = table::txs::link;
 using tx_link = table::transaction::link;
 using filter_link = table::neutrino::link;
 
-using header_links = std_vector<header_link::integer>;
-using tx_links = std_vector<tx_link::integer>;
-using input_links = std_vector<input_link::integer>;
-using output_links = std_vector<output_link::integer>;
-using spend_links = std_vector<spend_link::integer>;
+using header_links = std::vector<header_link::integer>;
+using tx_links = std::vector<tx_link::integer>;
+using input_links = std::vector<input_link::integer>;
+using output_links = std::vector<output_link::integer>;
+using spend_links = std::vector<spend_link::integer>;
 
 struct strong_pair { header_link block{}; tx_link tx{}; };
 using foreign_point = table::spend::search_key;
@@ -79,9 +79,9 @@ struct spend_set
 
     tx_link tx{};
     uint32_t version{};
-    std_vector<spend> spends{};
+    std::vector<spend> spends{};
 };
-using spend_sets = std_vector<spend_set>;
+using spend_sets = std::vector<spend_set>;
 
 // Writers (non-const) are only: push_, pop_, set_ and initialize.
 template <typename Store>
@@ -626,7 +626,7 @@ protected:
 
 private:
     struct maybe_strong { header_link block{}; tx_link tx{}; bool strong{}; };
-    using maybe_strongs = std_vector<maybe_strong>;
+    using maybe_strongs = std::vector<maybe_strong>;
 
     static inline tx_links strong_only(const maybe_strongs& pairs) NOEXCEPT;
     static inline bool contains(const maybe_strongs& pairs,

@@ -36,8 +36,8 @@ struct puts
 {
     using spend = linkage<schema::spend_>;
     using out = linkage<schema::put>;
-    using spend_links = std_vector<spend::integer>;
-    using output_links = std_vector<out::integer>;
+    using spend_links = std::vector<spend::integer>;
+    using output_links = std::vector<out::integer>;
     using no_map<schema::puts>::nomap;
 
     // TODO: There is a potential optimization available given that the inputs
