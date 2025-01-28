@@ -429,6 +429,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__get_tx__expected)
     settings.tx_buckets = 5;
     settings.point_buckets = 5;
     settings.spend_buckets = 5;
+    settings.minimize = true;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -1091,6 +1092,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_header_key__always__expected)
 BOOST_AUTO_TEST_CASE(query_archive__get_point_key__always__expected)
 {
     settings settings{};
+    settings.minimize = true;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

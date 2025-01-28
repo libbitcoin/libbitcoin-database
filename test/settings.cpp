@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
 {
     database::settings configuration;
     BOOST_REQUIRE_EQUAL(configuration.path, "bitcoin");
-    BOOST_REQUIRE(configuration.minimize);
+    BOOST_REQUIRE(!configuration.minimize);
 
     // Archives.
     BOOST_REQUIRE_EQUAL(configuration.header_buckets, 100u);
