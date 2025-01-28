@@ -179,6 +179,7 @@ BOOST_AUTO_TEST_CASE(query_translate__to_point__null_points__empty_points_table)
 BOOST_AUTO_TEST_CASE(query_translate__to_point__points__expected)
 {
     settings settings{};
+    settings.minimize = true;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -241,6 +242,7 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spend_tx__to_spend__expected)
     settings settings{};
     settings.path = TEST_DIRECTORY;
     settings.spend_buckets = 5;
+    settings.minimize = true;
     test::chunk_store store{ settings };
     accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
@@ -904,6 +906,7 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spenders__point__expected)
     settings.tx_buckets = 5;
     settings.point_buckets = 5;
     settings.spend_buckets = 5;
+    settings.minimize = true;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
