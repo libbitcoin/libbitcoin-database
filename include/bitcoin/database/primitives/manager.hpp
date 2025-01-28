@@ -76,6 +76,7 @@ public:
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);
+    static constexpr auto key_size = array_count<Key>;
 
     // Thread and remap safe.
     storage& file_;

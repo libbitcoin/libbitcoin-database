@@ -40,17 +40,6 @@ inline bool push_bool(std_vector<Bool>& stack, const Bool& element) NOEXCEPT
     return true;
 }
 
-template <typename Link>
-inline bool push_link_value(std_vector<typename Link::integer>& stack,
-    const Link& element) NOEXCEPT
-{
-    if (element.is_terminal())
-        return false;
-
-    stack.push_back(element.value);
-    return true;
-}
-
 // Archival (mostly natural-keyed).
 // ----------------------------------------------------------------------------
 
@@ -647,13 +636,6 @@ typename CLASS::inputs_ptr CLASS::get_spenders(
 }
 
 TEMPLATE
-typename CLASS::output::cptr CLASS::get_output(
-    const point& prevout) const NOEXCEPT
-{
-    return get_output(to_tx(prevout.hash()), prevout.index());
-}
-
-TEMPLATE
 typename CLASS::output::cptr CLASS::get_output(const tx_link& link,
     uint32_t output_index) const NOEXCEPT
 {
@@ -703,7 +685,7 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     puts.out_fks.reserve(outs->size());
 
     // Declare spends buffer.
-    std_vector<foreign_point> spends{};
+    std::vector<foreign_point> spends{};
     spends.reserve(ins->size());
 
     // TODO: eliminate shared memory pointer reallocations.
@@ -1002,20 +984,12 @@ code CLASS::set_code(const block& block, const header_link& key,
     bool strong) NOEXCEPT
 {
     txs_link unused{};
-    return set_code(unused, block, key, strong, block.serialized_size(true));
-}
-
-TEMPLATE
-code CLASS::set_code(const block& block, const header_link& key,
-    bool strong, size_t block_size) NOEXCEPT
-{
-    txs_link unused{};
-    return set_code(unused, block, key, strong, block_size);
+    return set_code(unused, block, key, strong);
 }
 
 TEMPLATE
 code CLASS::set_code(txs_link& out_fk, const block& block,
-    const header_link& key, bool strong, size_t block_size) NOEXCEPT
+    const header_link& key, bool strong) NOEXCEPT
 {
     if (key.is_terminal())
         return error::txs_header;
@@ -1044,7 +1018,8 @@ code CLASS::set_code(txs_link& out_fk, const block& block,
     }
 
     using bytes = linkage<schema::size>::integer;
-    const auto wire = system::possible_narrow_cast<bytes>(block_size);
+    const auto size = block.serialized_size(true);
+    const auto wire = system::possible_narrow_cast<bytes>(size);
 
     // ========================================================================
     const auto scope = store_.get_transactor();

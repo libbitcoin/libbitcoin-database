@@ -36,7 +36,7 @@ struct txs
   : public hash_map<schema::txs>
 {
     using tx = linkage<schema::tx>;
-    using keys = std_vector<tx::integer>;
+    using keys = std::vector<tx::integer>;
     using bytes = linkage<schema::size>;
     using hash_map<schema::txs>::hashmap;
 

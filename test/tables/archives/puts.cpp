@@ -26,22 +26,22 @@ const table::puts::slab expected0{};
 const table::puts::slab expected1
 {
     {}, // schema::puts [all const static members]
-    std_vector<uint32_t>
+    std::vector<uint32_t>
     {
         0x56341211_u32
     },
-    std_vector<uint64_t>
+    std::vector<uint64_t>
     {
     }
 };
 const table::puts::slab expected2
 {
     {}, // schema::puts [all const static members]
-    std_vector<uint32_t>
+    std::vector<uint32_t>
     {
         0x56341221_u32
     },
-    std_vector<uint64_t>
+    std::vector<uint64_t>
     {
         0x0000007856341222_u64
     }
@@ -49,11 +49,11 @@ const table::puts::slab expected2
 const table::puts::slab expected3
 {
     {}, // schema::puts [all const static members]
-    std_vector<uint32_t>
+    std::vector<uint32_t>
     {
         0x56341231_u32
     },
-    std_vector<uint64_t>
+    std::vector<uint64_t>
     {
         0x0000007856341232_u64,
         0x0000007856341233_u64

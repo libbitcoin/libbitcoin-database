@@ -119,10 +119,10 @@ constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
         // Slab implies link/key incorporated into size.
         return value;
     }
-    else if constexpr (is_nonzero(array_count<Key>))
+    else if constexpr (is_nonzero(key_size))
     {
         // Record implies link/key independent of Size.
-        constexpr auto element_size = Link::size + array_count<Key> + Size;
+        constexpr auto element_size = Link::size + key_size + Size;
         BC_ASSERT(!is_multiply_overflow(value, element_size));
         return value * element_size;
     }
@@ -145,10 +145,10 @@ constexpr Link CLASS::position_to_link(size_t position) NOEXCEPT
         // Slab implies link/key incorporated into size.
         return { cast_link(position) };
     }
-    else if constexpr (is_nonzero(array_count<Key>))
+    else if constexpr (is_nonzero(key_size))
     {
         // Record implies link/key independent of Size.
-        constexpr auto element_size = Link::size + array_count<Key> + Size;
+        constexpr auto element_size = Link::size + key_size + Size;
         return { cast_link(position / element_size) };
     }
     else

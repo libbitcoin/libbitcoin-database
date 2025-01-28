@@ -43,11 +43,11 @@ using txs_link = table::txs::link;
 using tx_link = table::transaction::link;
 using filter_link = table::neutrino::link;
 
-using header_links = std_vector<header_link::integer>;
-using tx_links = std_vector<tx_link::integer>;
-using input_links = std_vector<input_link::integer>;
-using output_links = std_vector<output_link::integer>;
-using spend_links = std_vector<spend_link::integer>;
+using header_links = std::vector<header_link::integer>;
+using tx_links = std::vector<tx_link::integer>;
+using input_links = std::vector<input_link::integer>;
+using output_links = std::vector<output_link::integer>;
+using spend_links = std::vector<spend_link::integer>;
 
 struct strong_pair { header_link block{}; tx_link tx{}; };
 using foreign_point = table::spend::search_key;
@@ -79,9 +79,9 @@ struct spend_set
 
     tx_link tx{};
     uint32_t version{};
-    std_vector<spend> spends{};
+    std::vector<spend> spends{};
 };
-using spend_sets = std_vector<spend_set>;
+using spend_sets = std::vector<spend_set>;
 
 // Writers (non-const) are only: push_, pop_, set_ and initialize.
 template <typename Store>
@@ -245,8 +245,8 @@ public:
     associations get_unassociated_above(size_t height) const NOEXCEPT;
     associations get_unassociated_above(size_t height,
         size_t count) const NOEXCEPT;
-    associations get_unassociated_above(size_t height,
-        size_t count, size_t last) const NOEXCEPT;
+    associations get_unassociated_above(size_t height, size_t count,
+        size_t last) const NOEXCEPT;
     size_t get_unassociated_count() const NOEXCEPT;
     size_t get_unassociated_count_above(size_t height) const NOEXCEPT;
     size_t get_unassociated_count_above(size_t height,
@@ -256,6 +256,7 @@ public:
 
     /// Translation (key/link to link/s).
     /// -----------------------------------------------------------------------
+    /// to_input not provided as input_link cannot produce chain::input.
 
     /// search key (entry)
     inline header_link to_candidate(size_t height) const NOEXCEPT;
@@ -265,6 +266,9 @@ public:
     inline tx_link to_tx(const hash_digest& key) const NOEXCEPT;
     inline txs_link to_txs(const header_link& key) const NOEXCEPT;
     inline filter_link to_filter(const header_link& key) const NOEXCEPT;
+    inline output_link to_output(const point& prevout) const NOEXCEPT;
+    inline output_link to_output(const hash_digest& key,
+        uint32_t output_index) const NOEXCEPT;
 
     /// put to tx (reverse navigation)
     tx_link to_spend_tx(const spend_link& link) const NOEXCEPT;
@@ -323,9 +327,13 @@ public:
     inline bool is_header(const hash_digest& key) const NOEXCEPT;
     inline bool is_block(const hash_digest& key) const NOEXCEPT;
     inline bool is_tx(const hash_digest& key) const NOEXCEPT;
-    inline bool is_coinbase(const tx_link& link) const NOEXCEPT;
-    inline bool is_associated(const header_link& link) const NOEXCEPT;
-    inline bool is_milestone(const header_link& link) const NOEXCEPT;
+
+    size_t get_candidate_size() const NOEXCEPT;
+    size_t get_candidate_size(size_t top) const NOEXCEPT;
+    size_t get_confirmed_size() const NOEXCEPT;
+    size_t get_confirmed_size(size_t top) const NOEXCEPT;
+    height_link get_height(const hash_digest& key) const NOEXCEPT;
+    bool get_height(size_t& out, const hash_digest& key) const NOEXCEPT;
 
     bool set(const header& header, const chain_context& ctx,
         bool milestone) NOEXCEPT;
@@ -349,8 +357,12 @@ public:
     bool populate_without_metadata(const block& block) const NOEXCEPT;
     bool populate_without_metadata(const transaction& tx) const NOEXCEPT;
 
-    /// Archival (surrogate-keyed).
+    /// Archival (mostly surrogate-keyed).
     /// -----------------------------------------------------------------------
+
+    inline bool is_coinbase(const tx_link& link) const NOEXCEPT;
+    inline bool is_associated(const header_link& link) const NOEXCEPT;
+    inline bool is_milestone(const header_link& link) const NOEXCEPT;
 
     /// Empty/null_hash implies fault, zero count implies unassociated.
     hashes get_tx_keys(const header_link& link) const NOEXCEPT;
@@ -366,9 +378,7 @@ public:
         const tx_link& link) const NOEXCEPT;
 
     /// Terminal implies not found, false implies fault.
-    height_link get_height(const hash_digest& key) const NOEXCEPT;
     height_link get_height(const header_link& link) const NOEXCEPT;
-    bool get_height(size_t& out, const hash_digest& key) const NOEXCEPT;
     bool get_height(size_t& out, const header_link& link) const NOEXCEPT;
     bool get_value(uint64_t& out, const output_link& link) const NOEXCEPT;
     bool get_unassociated(association& out,
@@ -378,10 +388,6 @@ public:
     outputs_ptr get_outputs(const tx_link& link) const NOEXCEPT;
     transactions_ptr get_transactions(const header_link& link) const NOEXCEPT;
 
-    size_t get_candidate_size() const NOEXCEPT;
-    size_t get_candidate_size(size_t top) const NOEXCEPT;
-    size_t get_confirmed_size() const NOEXCEPT;
-    size_t get_confirmed_size(size_t top) const NOEXCEPT;
     size_t get_block_size(const header_link& link) const NOEXCEPT;
     header::cptr get_header(const header_link& link) const NOEXCEPT;
     block::cptr get_block(const header_link& link) const NOEXCEPT;
@@ -391,13 +397,15 @@ public:
     point::cptr get_point(const spend_link& link) const NOEXCEPT;
     inputs_ptr get_spenders(const output_link& link) const NOEXCEPT;
 
-    output::cptr get_output(const point& prevout) const NOEXCEPT;
-    output::cptr get_output(const tx_link& link,
-        uint32_t output_index) const NOEXCEPT;
     input::cptr get_input(const tx_link& link,
         uint32_t input_index) const NOEXCEPT;
+    output::cptr get_output(const tx_link& link,
+        uint32_t output_index) const NOEXCEPT;
     inputs_ptr get_spenders(const tx_link& link,
         uint32_t output_index) const NOEXCEPT;
+
+    /// Archival (code-returning writers).
+    /// -----------------------------------------------------------------------
 
     /// Set transaction.
     code set_code(const transaction& tx) NOEXCEPT;
@@ -427,10 +435,8 @@ public:
     code set_code(const block& block, bool strong) NOEXCEPT;
     code set_code(header_link& out_fk, const block& block, bool strong) NOEXCEPT;
     code set_code(const block& block, const header_link& key, bool strong) NOEXCEPT;
-    code set_code(const block& block, const header_link& key, bool strong,
-        size_t block_size) NOEXCEPT;
     code set_code(txs_link& out_fk, const block& block, const header_link& key,
-        bool strong, size_t block_size) NOEXCEPT;
+        bool strong) NOEXCEPT;
 
     /// Chain state.
     /// -----------------------------------------------------------------------
@@ -546,8 +552,8 @@ protected:
         const foreign_point& point) const NOEXCEPT;
 
     // Critical path
-    inline tx_links to_strong_txs(const tx_link& link) const NOEXCEPT;
-    inline tx_links to_strong_txs(const hash_digest& tx_hash) const NOEXCEPT;
+    inline tx_links get_strong_txs(const tx_link& link) const NOEXCEPT;
+    inline tx_links get_strong_txs(const hash_digest& tx_hash) const NOEXCEPT;
     inline strong_pair to_strong(const hash_digest& tx_hash) const NOEXCEPT;
 
     /// Validate.
@@ -620,7 +626,7 @@ protected:
 
 private:
     struct maybe_strong { header_link block{}; tx_link tx{}; bool strong{}; };
-    using maybe_strongs = std_vector<maybe_strong>;
+    using maybe_strongs = std::vector<maybe_strong>;
 
     static inline tx_links strong_only(const maybe_strongs& pairs) NOEXCEPT;
     static inline bool contains(const maybe_strongs& pairs,
