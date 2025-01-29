@@ -53,13 +53,13 @@ public:
     bool set_body_count(const Link& count) NOEXCEPT;
 
     /// Convert natural key to head bucket index.
-    Link index(const Key& key) const NOEXCEPT;
+    inline Link index(const Key& key) const NOEXCEPT;
 
     /// Unsafe if verify false.
-    Link top(const Key& key) const NOEXCEPT;
-    Link top(const Link& index) const NOEXCEPT;
-    bool push(const bytes& current, bytes& next, const Key& key) NOEXCEPT;
-    bool push(const bytes& current, bytes& next, const Link& index) NOEXCEPT;
+    inline Link top(const Key& key) const NOEXCEPT;
+    inline Link top(const Link& index) const NOEXCEPT;
+    inline bool push(const bytes& current, bytes& next, const Key& key) NOEXCEPT;
+    inline bool push(const bytes& current, bytes& next, const Link& index) NOEXCEPT;
 
 private:
     template <size_t Bytes>

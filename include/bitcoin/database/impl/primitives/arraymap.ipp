@@ -129,27 +129,27 @@ code CLASS::reload() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-bool CLASS::exists(size_t key) const NOEXCEPT
+inline bool CLASS::exists(size_t key) const NOEXCEPT
 {
     return !at(key).is_terminal();
 }
 
 TEMPLATE
-Link CLASS::at(size_t key) const NOEXCEPT
+inline Link CLASS::at(size_t key) const NOEXCEPT
 {
     return head_.at(key);
 }
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::at(size_t key, Element& element) const NOEXCEPT
+inline bool CLASS::at(size_t key, Element& element) const NOEXCEPT
 {
     return get(at(key), element);
 }
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
+inline bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
     return read(body_.get(), link, element);
 }

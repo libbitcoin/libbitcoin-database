@@ -129,7 +129,7 @@ code CLASS::reload() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-Link CLASS::top(const Link& link) const NOEXCEPT
+inline Link CLASS::top(const Link& link) const NOEXCEPT
 {
     if (link >= head_.buckets())
         return {};
@@ -138,32 +138,32 @@ Link CLASS::top(const Link& link) const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::exists(const Key& key) const NOEXCEPT
+inline bool CLASS::exists(const Key& key) const NOEXCEPT
 {
     return !first(key).is_terminal();
 }
 
 TEMPLATE
-Link CLASS::first(const Key& key) const NOEXCEPT
+inline Link CLASS::first(const Key& key) const NOEXCEPT
 {
     ////return it(key).self();
     return first(get_memory(), head_.top(key), key);
 }
 
 TEMPLATE
-typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
+inline typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 {
     return { get_memory(), head_.top(key), key };
 }
 
 TEMPLATE
-Link CLASS::allocate(const Link& size) NOEXCEPT
+inline Link CLASS::allocate(const Link& size) NOEXCEPT
 {
     return body_.allocate(size);
 }
 
 TEMPLATE
-memory_ptr CLASS::get_memory() const NOEXCEPT
+inline memory_ptr CLASS::get_memory() const NOEXCEPT
 {
     return body_.get();
 }
@@ -191,7 +191,7 @@ bool CLASS::find(const Key& key, Element& element) const NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
+inline bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
     // This override is the normal form.
     return read(get_memory(), link, element);
@@ -200,7 +200,7 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 // static
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::get(const memory_ptr& ptr, const Link& link,
+inline bool CLASS::get(const memory_ptr& ptr, const Link& link,
     Element& element) NOEXCEPT
 {
     return read(ptr, link, element);
@@ -209,7 +209,7 @@ bool CLASS::get(const memory_ptr& ptr, const Link& link,
 // static
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::get(const iterator& it, Element& element) NOEXCEPT
+inline bool CLASS::get(const iterator& it, Element& element) NOEXCEPT
 {
     // This override avoids deadlock when holding iterator to the same table.
     return read(it.get(), it.self(), element);
@@ -218,7 +218,7 @@ bool CLASS::get(const iterator& it, Element& element) NOEXCEPT
 // static
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::get(const iterator& it, const Link& link,
+inline bool CLASS::get(const iterator& it, const Link& link,
     Element& element) NOEXCEPT
 {
     // This override avoids deadlock when holding iterator to the same table.
@@ -244,7 +244,7 @@ bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-Link CLASS::set_link(const Element& element) NOEXCEPT
+inline Link CLASS::set_link(const Element& element) NOEXCEPT
 {
     Link link{};
     if (!set_link(link, element))
@@ -255,7 +255,7 @@ Link CLASS::set_link(const Element& element) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::set_link(Link& link, const Element& element) NOEXCEPT
+inline bool CLASS::set_link(Link& link, const Element& element) NOEXCEPT
 {
     link = allocate(element.count());
     return set(link, element);
@@ -263,7 +263,7 @@ bool CLASS::set_link(Link& link, const Element& element) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-Link CLASS::put_link(const Key& key, const Element& element) NOEXCEPT
+inline Link CLASS::put_link(const Key& key, const Element& element) NOEXCEPT
 {
     Link link{};
     if (!put_link(link, key, element))
@@ -274,7 +274,7 @@ Link CLASS::put_link(const Key& key, const Element& element) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::put_link(Link& link, const Key& key,
+inline bool CLASS::put_link(Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
     link = allocate(element.count());
@@ -283,14 +283,14 @@ bool CLASS::put_link(Link& link, const Key& key,
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::put(const Key& key, const Element& element) NOEXCEPT
+inline bool CLASS::put(const Key& key, const Element& element) NOEXCEPT
 {
     return !put_link(key, element).is_terminal();
 }
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::put(const Link& link, const Key& key,
+inline bool CLASS::put(const Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
     // This override is the normal form.
@@ -299,7 +299,7 @@ bool CLASS::put(const Link& link, const Key& key,
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::put(const memory_ptr& ptr, const Link& link, const Key& key,
+inline bool CLASS::put(const memory_ptr& ptr, const Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
     return write(ptr, link, key, element);
@@ -323,7 +323,7 @@ bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
 }
 
 TEMPLATE
-Link CLASS::commit_link(const Link& link, const Key& key) NOEXCEPT
+inline Link CLASS::commit_link(const Link& link, const Key& key) NOEXCEPT
 {
     if (!commit(link, key))
         return {};

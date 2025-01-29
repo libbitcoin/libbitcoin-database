@@ -32,13 +32,13 @@ CLASS::manager(storage& file) NOEXCEPT
 }
 
 TEMPLATE
-size_t CLASS::size() const NOEXCEPT
+inline size_t CLASS::size() const NOEXCEPT
 {
     return file_.size();
 }
 
 TEMPLATE
-Link CLASS::count() const NOEXCEPT
+inline Link CLASS::count() const NOEXCEPT
 {
     return position_to_link(size());
 }
@@ -69,13 +69,13 @@ Link CLASS::allocate(const Link& size) NOEXCEPT
 }
 
 TEMPLATE
-memory_ptr CLASS::get() const NOEXCEPT
+inline memory_ptr CLASS::get() const NOEXCEPT
 {
     return file_.get();
 }
 
 TEMPLATE
-memory_ptr CLASS::get(const Link& value) const NOEXCEPT
+inline memory_ptr CLASS::get(const Link& value) const NOEXCEPT
 {
     if (value.is_terminal())
         return nullptr;
@@ -134,7 +134,6 @@ constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
     }
 }
 
-// private
 TEMPLATE
 constexpr Link CLASS::position_to_link(size_t position) NOEXCEPT
 {
@@ -159,7 +158,6 @@ constexpr Link CLASS::position_to_link(size_t position) NOEXCEPT
     }
 }
 
-// private
 TEMPLATE
 constexpr typename Link::integer CLASS::cast_link(size_t link) NOEXCEPT
 {

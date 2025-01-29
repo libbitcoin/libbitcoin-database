@@ -58,10 +58,10 @@ public:
     bool set_body_count(const Link& count) NOEXCEPT;
 
     /// Convert natural key to head bucket index (validated).
-    Link index(size_t key) const NOEXCEPT;
+    inline Link index(size_t key) const NOEXCEPT;
 
     /// Convert natural key to head bucket index (unvalidated).
-    Link putter_index(size_t key) const NOEXCEPT;
+    inline Link putter_index(size_t key) const NOEXCEPT;
 
     /// Unsafe if verify false.
     Link at(size_t key) const NOEXCEPT;
@@ -73,7 +73,7 @@ private:
     using body = manager<Link, system::data_array<zero>, Link::size>;
 
     template <size_t Bytes>
-    static auto& array_cast(memory::iterator buffer) NOEXCEPT
+    static inline auto& array_cast(memory::iterator buffer) NOEXCEPT
     {
         return system::unsafe_array_cast<uint8_t, Bytes>(buffer);
     }

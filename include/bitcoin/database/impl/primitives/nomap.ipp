@@ -144,7 +144,7 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::put(const Element& element) NOEXCEPT
+inline bool CLASS::put(const Element& element) NOEXCEPT
 {
     Link link{};
     return put_link(link, element);
@@ -169,7 +169,7 @@ bool CLASS::put_link(Link& link, const Element& element) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-Link CLASS::put_link(const Element& element) NOEXCEPT
+inline Link CLASS::put_link(const Element& element) NOEXCEPT
 {
     Link link{};
     return put_link(link, element) ? link : Link{};
