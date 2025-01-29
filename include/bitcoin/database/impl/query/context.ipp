@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_CONTEXT_IPP
 #define LIBBITCOIN_DATABASE_QUERY_CONTEXT_IPP
 
+#include <ranges>
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -40,7 +41,7 @@ bool CLASS::populate_bits(chain_state::data& data,
         return false;
 
     data.bits.ordered.resize(map.bits.count);
-    for (auto& bit: views_reverse(data.bits.ordered))
+    for (auto& bit: std::views::reverse(data.bits.ordered))
     {
         if (!get_bits(bit, link)) return false;
         link = to_parent(link);
@@ -57,7 +58,7 @@ bool CLASS::populate_versions(chain_state::data& data,
         return false;
 
     data.version.ordered.resize(map.version.count);
-    for (auto& version: views_reverse(data.version.ordered))
+    for (auto& version: std::views::reverse(data.version.ordered))
     {
         if (!get_version(version, link)) return false;
         link = to_parent(link);
@@ -74,7 +75,7 @@ bool CLASS::populate_timestamps(chain_state::data& data,
         return false;
 
     data.timestamp.ordered.resize(map.timestamp.count);
-    for (auto& timestamp: views_reverse(data.timestamp.ordered))
+    for (auto& timestamp: std::views::reverse(data.timestamp.ordered))
     {
         if (!get_timestamp(timestamp, link)) return false;
         link = to_parent(link);

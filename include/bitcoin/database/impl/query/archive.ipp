@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_QUERY_ARCHIVE_IPP
 
 #include <algorithm>
+#include <ranges>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -812,7 +813,7 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     // A replay of committed spends without indexed tx will appear as double
     // spends, but the spend cannot be confirmed without the indexed tx. Spends
     // without indexed txs should be suppressed by c/s interface query.
-    for (const auto& spend: views_reverse(spends))
+    for (const auto& spend: std::views::reverse(spends))
     {
         --spend_fk.value;
         if (store_.spend.commit_link(spend_fk, spend).is_terminal())
