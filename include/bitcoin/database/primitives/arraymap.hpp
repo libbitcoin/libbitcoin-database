@@ -88,18 +88,18 @@ public:
     /// -----------------------------------------------------------------------
 
     /// True if an instance of object with key exists.
-    bool exists(size_t key) const NOEXCEPT;
+    inline bool exists(size_t key) const NOEXCEPT;
 
     /// Return element link at key or terminal if not found/error.
-    Link at(size_t key) const NOEXCEPT;
+    inline Link at(size_t key) const NOEXCEPT;
 
     /// Get first element matching the search key, false if not found/error.
     template <typename Element, if_equal<Element::size, Size> = true>
-    bool at(size_t key, Element& element) const NOEXCEPT;
+    inline bool at(size_t key, Element& element) const NOEXCEPT;
 
     /// Get element at link, false if deserialize error.
     template <typename Element, if_equal<Element::size, Size> = true>
-    bool get(const Link& link, Element& element) const NOEXCEPT;
+    inline bool get(const Link& link, Element& element) const NOEXCEPT;
 
     /// Allocate, set, commit element to key.
     /// Expands table AND HEADER as necessary.

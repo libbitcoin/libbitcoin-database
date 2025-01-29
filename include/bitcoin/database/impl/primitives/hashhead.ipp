@@ -48,24 +48,6 @@ size_t CLASS::buckets() const NOEXCEPT
 }
 
 TEMPLATE
-Link CLASS::index(const Key& key) const NOEXCEPT
-{
-    BC_ASSERT_MSG(is_nonzero(buckets_), "hash table requires buckets");
-
-    // TODO: for greater flexibility, inject hash function through template.
-    if constexpr (Hash)
-    {
-        // djb2_hash exhibits very poor uniqueness result for sequential keys.
-        return system::djb2_hash(key) % buckets_;
-    }
-    else
-    {
-        // unique_hash assumes sufficient uniqueness in low order key bytes.
-        return system::unique_hash(key) % buckets_;
-    }
-}
-
-TEMPLATE
 bool CLASS::create() NOEXCEPT
 {
     if (is_nonzero(file_.size()))
@@ -119,13 +101,31 @@ bool CLASS::set_body_count(const Link& count) NOEXCEPT
 }
 
 TEMPLATE
-Link CLASS::top(const Key& key) const NOEXCEPT
+inline Link CLASS::index(const Key& key) const NOEXCEPT
+{
+    BC_ASSERT_MSG(is_nonzero(buckets_), "hash table requires buckets");
+
+    // TODO: for greater flexibility, inject hash function through template.
+    if constexpr (Hash)
+    {
+        // djb2_hash exhibits very poor uniqueness result for sequential keys.
+        return system::djb2_hash(key) % buckets_;
+    }
+    else
+    {
+        // unique_hash assumes sufficient uniqueness in low order key bytes.
+        return system::unique_hash(key) % buckets_;
+    }
+}
+
+TEMPLATE
+inline Link CLASS::top(const Key& key) const NOEXCEPT
 {
     return top(index(key));
 }
 
 TEMPLATE
-Link CLASS::top(const Link& index) const NOEXCEPT
+inline Link CLASS::top(const Link& index) const NOEXCEPT
 {
     const auto raw = file_.get_raw(link_to_position(index));
     if (is_null(raw))
@@ -140,13 +140,15 @@ Link CLASS::top(const Link& index) const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::push(const bytes& current, bytes& next, const Key& key) NOEXCEPT
+inline bool CLASS::push(const bytes& current, bytes& next,
+    const Key& key) NOEXCEPT
 {
     return push(current, next, index(key));
 }
 
 TEMPLATE
-bool CLASS::push(const bytes& current, bytes& next, const Link& index) NOEXCEPT
+inline bool CLASS::push(const bytes& current, bytes& next,
+    const Link& index) NOEXCEPT
 {
     const auto raw = file_.get_raw(link_to_position(index));
     if (is_null(raw))

@@ -89,13 +89,13 @@ public:
 
     /// Put element.
     template <typename Element, if_equal<Element::size, Size> = true>
-    bool put(const Element& element) NOEXCEPT;
+    inline bool put(const Element& element) NOEXCEPT;
 
     /// Put element and return link.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put_link(Link& link, const Element& element) NOEXCEPT;
     template <typename Element, if_equal<Element::size, Size> = true>
-    Link put_link(const Element& element) NOEXCEPT;
+    inline Link put_link(const Element& element) NOEXCEPT;
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);

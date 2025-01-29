@@ -35,25 +35,25 @@ CLASS::iterator(const memory_ptr& data, const Link& start,
 }
 
 TEMPLATE
-bool CLASS::advance() NOEXCEPT
+inline bool CLASS::advance() NOEXCEPT
 {
     return !((link_ = to_next(link_))).is_terminal();
 }
 
 TEMPLATE
-const Link& CLASS::self() const NOEXCEPT
+inline const Link& CLASS::self() const NOEXCEPT
 {
     return link_;
 }
 
 TEMPLATE
-const memory_ptr& CLASS::get() const NOEXCEPT
+inline const memory_ptr& CLASS::get() const NOEXCEPT
 {
     return memory_;
 }
 
 TEMPLATE
-CLASS::operator bool() const NOEXCEPT
+inline CLASS::operator bool() const NOEXCEPT
 {
     return !link_.is_terminal();
 }

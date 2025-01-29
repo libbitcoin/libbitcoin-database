@@ -90,22 +90,22 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Return the link at the top of the conflict list (for table scanning).
-    Link top(const Link& list) const NOEXCEPT;
+    inline Link top(const Link& list) const NOEXCEPT;
 
     /// True if an instance of object with key exists.
-    bool exists(const Key& key) const NOEXCEPT;
+    inline bool exists(const Key& key) const NOEXCEPT;
 
     /// Return first element link or terminal if not found/error.
-    Link first(const Key& key) const NOEXCEPT;
+    inline Link first(const Key& key) const NOEXCEPT;
 
     /// Iterator holds shared lock on storage remap.
-    iterator it(const Key& key) const NOEXCEPT;
+    inline iterator it(const Key& key) const NOEXCEPT;
 
     /// Allocate count or slab size at returned link (follow with set|put).
-    Link allocate(const Link& size) NOEXCEPT;
+    inline Link allocate(const Link& size) NOEXCEPT;
 
     /// Return ptr for batch processing, holds shared lock on storage remap.
-    memory_ptr get_memory() const NOEXCEPT;
+    inline memory_ptr get_memory() const NOEXCEPT;
 
     /// Return the associated search key (terminal link returns default).
     Key get_key(const Link& link) NOEXCEPT;
@@ -116,21 +116,21 @@ public:
 
     /// Get element at link, false if deserialize error.
     template <typename Element, if_equal<Element::size, Size> = true>
-    bool get(const Link& link, Element& element) const NOEXCEPT;
+    inline bool get(const Link& link, Element& element) const NOEXCEPT;
 
     /// Get element at link using get_memory() ptr, false if deserialize error.
     template <typename Element, if_equal<Element::size, Size> = true>
-    static bool get(const memory_ptr& ptr, const Link& link,
+    static inline bool get(const memory_ptr& ptr, const Link& link,
         Element& element) NOEXCEPT;
 
     /// Get element at link, false if deserialize error.
     /// Iterator must not be terminal, must be guarded by called.
     template <typename Element, if_equal<Element::size, Size> = true>
-    static bool get(const iterator& it, Element& element) NOEXCEPT;
+    static inline bool get(const iterator& it, Element& element) NOEXCEPT;
 
     /// Get element at link using it memory object, false if deserialize error.
     template <typename Element, if_equal<Element::size, Size> = true>
-    static bool get(const iterator& it, const Link& link,
+    static inline bool get(const iterator& it, const Link& link,
         Element& element) NOEXCEPT;
 
     /// Set element into previously allocated link (follow with commit).
@@ -139,32 +139,34 @@ public:
 
     /// Allocate and set element, and return link (follow with commit).
     template <typename Element, if_equal<Element::size, Size> = true>
-    Link set_link(const Element& element) NOEXCEPT;
+    inline Link set_link(const Element& element) NOEXCEPT;
     template <typename Element, if_equal<Element::size, Size> = true>
-    bool set_link(Link& link, const Element& element) NOEXCEPT;
+    inline bool set_link(Link& link, const Element& element) NOEXCEPT;
 
     /// Allocate, set, commit element to key, and return link.
     template <typename Element, if_equal<Element::size, Size> = true>
-    Link put_link(const Key& key, const Element& element) NOEXCEPT;
+    inline Link put_link(const Key& key, const Element& element) NOEXCEPT;
     template <typename Element, if_equal<Element::size, Size> = true>
-    bool put_link(Link& link, const Key& key, const Element& element) NOEXCEPT;
+    inline bool put_link(Link& link, const Key& key,
+        const Element& element) NOEXCEPT;
 
     /// Allocate, set, commit element to key.
     template <typename Element, if_equal<Element::size, Size> = true>
-    bool put(const Key& key, const Element& element) NOEXCEPT;
+    inline bool put(const Key& key, const Element& element) NOEXCEPT;
 
     /// Set and commit previously allocated element at link to key.
     template <typename Element, if_equal<Element::size, Size> = true>
-    bool put(const Link& link, const Key& key, const Element& element) NOEXCEPT;
+    inline bool put(const Link& link, const Key& key,
+        const Element& element) NOEXCEPT;
 
     /// Set/commit allocated element at link to key, using get_memory() ptr.
     template <typename Element, if_equal<Element::size, Size> = true>
-    bool put(const memory_ptr& ptr, const Link& link, const Key& key,
+    inline bool put(const memory_ptr& ptr, const Link& link, const Key& key,
         const Element& element) NOEXCEPT;
 
     /// Commit previously set element at link to key.
     bool commit(const Link& link, const Key& key) NOEXCEPT;
-    Link commit_link(const Link& link, const Key& key) NOEXCEPT;
+    inline Link commit_link(const Link& link, const Key& key) NOEXCEPT;
 
 protected:
     /// memory_ptr parameter must be from start (i.e. from get_memory()).

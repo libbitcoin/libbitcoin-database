@@ -44,10 +44,10 @@ public:
     manager(storage& file) NOEXCEPT;
 
     /// The file size.
-    size_t size() const NOEXCEPT;
+    inline size_t size() const NOEXCEPT;
 
     /// The logical record count or slab size.
-    Link count() const NOEXCEPT;
+    inline Link count() const NOEXCEPT;
 
     /// Reduce the number of records (false if not lesser).
     bool truncate(const Link& count) NOEXCEPT;
@@ -60,10 +60,10 @@ public:
     /// Return memory object for record at specified position (null possible).
     /// Obtaining memory object is considered const access despite fact that
     /// memory is writeable. Non-const access implies memory map modify.
-    memory_ptr get(const Link& link) const NOEXCEPT;
+    inline memory_ptr get(const Link& link) const NOEXCEPT;
 
     /// Return memory object for full memory map (null only if oom or unloaded).
-    memory_ptr get() const NOEXCEPT;
+    inline memory_ptr get() const NOEXCEPT;
 
     /// Get the fault condition.
     code get_fault() const NOEXCEPT;

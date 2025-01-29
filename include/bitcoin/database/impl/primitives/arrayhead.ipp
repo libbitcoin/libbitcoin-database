@@ -53,7 +53,7 @@ bool CLASS::enabled() const NOEXCEPT
 }
 
 TEMPLATE
-Link CLASS::index(size_t key) const NOEXCEPT
+inline Link CLASS::index(size_t key) const NOEXCEPT
 {
     if (key >= buckets())
         return {};
@@ -63,7 +63,7 @@ Link CLASS::index(size_t key) const NOEXCEPT
 }
 
 TEMPLATE
-Link CLASS::putter_index(size_t key) const NOEXCEPT
+inline Link CLASS::putter_index(size_t key) const NOEXCEPT
 {
     // Key is the logical bucket index (no-hash).
     return body::cast_link(key);

@@ -49,17 +49,17 @@ public:
         const Key& key) NOEXCEPT;
 
     /// Advance to and return next iterator.
-    bool advance() NOEXCEPT;
+    inline bool advance() NOEXCEPT;
 
     /// Advance to next match and return false if terminal (not found).
-    const Link& self() const NOEXCEPT;
+    inline const Link& self() const NOEXCEPT;
 
     /// Access the underlying memory pointer.
     // TODO: for use by hashmap, make exclusive via friend.
-    const memory_ptr& get() const NOEXCEPT;
+    inline const memory_ptr& get() const NOEXCEPT;
 
     /// True if the iterator is not terminal.
-     operator bool() const NOEXCEPT;
+    inline operator bool() const NOEXCEPT;
 
 protected:
     Link to_match(Link link) const NOEXCEPT;
