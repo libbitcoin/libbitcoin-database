@@ -354,12 +354,7 @@ inline tx_links CLASS::get_strong_txs(const tx_link& link) const NOEXCEPT
         if (store_.strong_tx.get(it, strong) &&
             !contains(pairs, strong.header_fk))
         {
-#if defined(HAVE_CLANG)
-            // emplace_back aggregate initialization requires clang 16.
-            pairs.push_back({ strong.header_fk, it.self(), strong.positive });
-#else
             pairs.emplace_back(strong.header_fk, it.self(), strong.positive);
-#endif
         }
 
     }
@@ -478,14 +473,8 @@ bool CLASS::get_spend_set(spend_set& set, const tx_link& link) const NOEXCEPT
             return false;
 
         // Translate result set to public struct.
-#if defined(HAVE_CLANG)
-        // emplace_back aggregate initialization requires clang 16.
-        set.spends.push_back({ get.point_fk, get.point_index, get.sequence,
-            table::prevout::tx::integer{}, bool{} });
-#else
         set.spends.emplace_back(get.point_fk, get.point_index, get.sequence,
             table::prevout::tx::integer{}, bool{});
-#endif
     }
 
     return true;
