@@ -115,6 +115,9 @@ inline Link CLASS::index(const Key& key) const NOEXCEPT
     {
         // unique_hash assumes sufficient uniqueness in low order key bytes.
         return system::unique_hash(key) % buckets_;
+
+        // TODO: restrict buckets to power of two and replace modulo above with
+        // return and(sub1(buckets), unique_hash(key)) [and() is much faster].
     }
 }
 
