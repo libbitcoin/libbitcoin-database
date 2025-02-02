@@ -265,11 +265,11 @@ inline hash_digest CLASS::get_header_key(const header_link& link) const NOEXCEPT
     return store_.header.get_key(link);
 }
 
-TEMPLATE
-inline hash_digest CLASS::get_point_key(const point_link& link) const NOEXCEPT
-{
-    return store_.point.get_key(link);
-}
+////TEMPLATE
+////inline hash_digest CLASS::get_point_key(const point_link& link) const NOEXCEPT
+////{
+////    return store_.point.get_key(link);
+////}
 
 TEMPLATE
 inline hash_digest CLASS::get_tx_key(const tx_link& link) const NOEXCEPT
@@ -593,31 +593,32 @@ typename CLASS::input::cptr CLASS::get_input(
 
     return to_shared<input>
     (
-        spend.is_null() ? null_point : to_shared<point>
-        (
-            get_point_key(spend.point_fk),
-            spend.point_index
-        ),
+        null_point,
+        ////spend.is_null() ? null_point : to_shared<point>
+        ////(
+        ////    {},////get_point_key(spend.point_fk),
+        ////    spend.point_index
+        ////),
         in.script,
         in.witness,
         spend.sequence
     );
 }
 
-TEMPLATE
-typename CLASS::point::cptr CLASS::get_point(
-    const spend_link& link) const NOEXCEPT
-{
-    table::spend::get_prevout spend{};
-    if (!store_.spend.get(link, spend))
-        return {};
-
-    return system::to_shared<point>
-    (
-        get_point_key(spend.point_fk),
-        spend.point_index
-    );
-}
+////TEMPLATE
+////typename CLASS::point::cptr CLASS::get_point(
+////    const spend_link& link) const NOEXCEPT
+////{
+////    table::spend::get_prevout spend{};
+////    if (!store_.spend.get(link, spend))
+////        return {};
+////
+////    return system::to_shared<point>
+////    (
+////        {},////get_point_key(spend.point_fk),
+////        spend.point_index
+////    );
+////}
 
 TEMPLATE
 typename CLASS::inputs_ptr CLASS::get_spenders(
@@ -722,34 +723,34 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
         }
 
         // Input point aliases.
-        const auto& prevout = in->point();
-        const auto& hash = prevout.hash();
+        ////const auto& prevout = in->point();
+        ////const auto& hash = prevout.hash();
 
-        // Create prevout hash in point table.
-        point_link hash_fk{};
-        if (hash != null_hash)
-        {
-            // GUARD (tx redundancy)
-            // Only fully effective if there is a single database thread.
-            // This reduces point store by ~45GiB, but causes thrashing.
-            if (minimize_)
-                hash_fk = to_point(hash);
-
-            if (hash_fk.is_terminal())
-            {
-                // Safe allocation failure, duplicates limited but expected.
-                if (!store_.point.put_link(hash_fk, hash, table::point::record
-                {
-                    // Table stores no data other than the search key.
-                }))
-                {
-                    return error::tx_point_put;
-                }
-            }
-        }
+        ////// Create prevout hash in point table.
+        ////point_link hash_fk{};
+        ////if (hash != null_hash)
+        ////{
+        ////    // GUARD (tx redundancy)
+        ////    // Only fully effective if there is a single database thread.
+        ////    // This reduces point store by ~45GiB, but causes thrashing.
+        ////    if (minimize_)
+        ////        hash_fk = to_point(hash);
+        ////
+        ////    if (hash_fk.is_terminal())
+        ////    {
+        ////        // Safe allocation failure, duplicates limited but expected.
+        ////        if (!store_.point.put_link(hash_fk, hash, table::point::record
+        ////        {
+        ////            // Table stores no data other than the search key.
+        ////        }))
+        ////        {
+        ////            return error::tx_point_put;
+        ////        }
+        ////    }
+        ////}
 
         // Accumulate spend keys in order (terminal for any null point).
-        spends.push_back(table::spend::compose(hash_fk, prevout.index()));
+        ////spends.push_back(table::spend::compose(hash_fk, prevout.index()));
 
         // Write spend record.
         // Safe allocation failure, index is deferred because invalid tx_fk.

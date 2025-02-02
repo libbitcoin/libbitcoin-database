@@ -135,8 +135,7 @@ bool CLASS::is_spent(const spend_link& link) const NOEXCEPT
     if (spend.is_null())
         return false;
 
-    return is_spent_prevout(spend.point_fk, spend.point_index,
-        spend.parent_fk);
+    return {};//// is_spent_prevout(spend.point_fk, spend.point_index, spend.parent_fk);
 }
 
 // unused
@@ -157,37 +156,37 @@ bool CLASS::is_mature(const spend_link& link, size_t height) const NOEXCEPT
     if (spend.is_null())
         return true;
 
-    return !mature_prevout(spend.point_fk, height);
+    return {};//// !mature_prevout(spend.point_fk, height);
 }
 
-// protected (only for is_mature/unused)
-TEMPLATE
-code CLASS::mature_prevout(const point_link& link,
-    size_t height) const NOEXCEPT
-{
-    // Get hash from point, search for prevout tx and get its link.
-    const auto tx_fk = to_tx(get_point_key(link));
-    if (tx_fk.is_terminal())
-        return error::integrity;
-
-    // to_block assures confirmation by strong_tx traversal so this must remain
-    // prior to is_coinbase in execution order, despite the lack of dependency.
-    const auto header_fk = to_block(tx_fk);
-    if (header_fk.is_terminal())
-        return error::unconfirmed_spend;
-
-    if (!is_coinbase(tx_fk))
-        return error::success;
-
-    const auto prevout_height = get_height(header_fk);
-    if (prevout_height.is_terminal())
-        return error::integrity;
-
-    if (!transaction::is_coinbase_mature(prevout_height, height))
-        return error::coinbase_maturity;
-
-    return error::success;
-}
+////// protected (only for is_mature/unused)
+////TEMPLATE
+////code CLASS::mature_prevout(const point_link& link,
+////    size_t height) const NOEXCEPT
+////{
+////    // Get hash from point, search for prevout tx and get its link.
+////    const auto tx_fk = to_tx(get_point_key(link));
+////    if (tx_fk.is_terminal())
+////        return error::integrity;
+////
+////    // to_block assures confirmation by strong_tx traversal so this must remain
+////    // prior to is_coinbase in execution order, despite the lack of dependency.
+////    const auto header_fk = to_block(tx_fk);
+////    if (header_fk.is_terminal())
+////        return error::unconfirmed_spend;
+////
+////    if (!is_coinbase(tx_fk))
+////        return error::success;
+////
+////    const auto prevout_height = get_height(header_fk);
+////    if (prevout_height.is_terminal())
+////        return error::integrity;
+////
+////    if (!transaction::is_coinbase_mature(prevout_height, height))
+////        return error::coinbase_maturity;
+////
+////    return error::success;
+////}
 
 // unused
 TEMPLATE
@@ -201,84 +200,84 @@ bool CLASS::is_locked(const spend_link& link, uint32_t sequence,
     if (spend.is_null())
         return true;
 
-    return !locked_prevout(spend.point_fk, sequence, ctx);
+    return {};//// !locked_prevout(spend.point_fk, sequence, ctx);
 }
 
-// protected (only for is_locked/unused)
-TEMPLATE
-code CLASS::locked_prevout(const point_link& link, uint32_t sequence,
-    const context& ctx) const NOEXCEPT
-{
-    if (!ctx.is_enabled(system::chain::flags::bip68_rule))
-        return error::success;
-
-    // Get hash from point, search for prevout tx and get its link.
-    const auto tx_fk = to_tx(get_point_key(link));
-    if (tx_fk.is_terminal())
-        return error::missing_previous_output;
-
-    // to_block assures confirmation by strong_tx traversal.
-    const auto header_fk = to_block(tx_fk);
-    if (header_fk.is_terminal())
-        return error::unconfirmed_spend;
-
-    context prevout_ctx{};
-    if (!get_context(prevout_ctx, header_fk))
-        return error::integrity;
-
-    if (input::is_locked(sequence, ctx.height, ctx.mtp, prevout_ctx.height,
-        prevout_ctx.mtp))
-        return error::relative_time_locked;
-
-    return error::success;
-}
-
-// protected
-TEMPLATE
-bool CLASS::is_spent_prevout(const point_link& link, index index,
-    const tx_link& self) const NOEXCEPT
-{
-    // Prevout is confirmed spent by other than self.
-    return spent_prevout(link, index, self) == error::confirmed_double_spend;
-}
-
-// protected
-TEMPLATE
-error::error_t CLASS::spent_prevout(const point_link& link, index index,
-    const tx_link& self) const NOEXCEPT
-{
-    // Iterate points by point hash (of output tx) because may be conflicts.
-// Search key must be passed as an l-value as it is held by reference.
-////const auto point_sk = get_point_key(link);
-////auto point = store_.point.it(point_sk);
-////if (!point)
-////    return error::integrity;
-////
-////do
+////// protected (only for is_locked/unused)
+////TEMPLATE
+////code CLASS::locked_prevout(const point_link& link, uint32_t sequence,
+////    const context& ctx) const NOEXCEPT
 ////{
-    // Iterate all spends of the point to find double spends.
-    // Search key must be passed as an l-value as it is held by reference.
-    const auto spend_sk = table::spend::compose(link /*point.self()*/, index);
-    auto it = store_.spend.it(spend_sk);
-    if (!it)
-        return self.is_terminal() ? error::success : error::integrity3;
-
-    table::spend::get_parent spend{};
-    do
-    {
-        if (!store_.spend.get(it, spend))
-            return error::integrity4;
-
-        // is_strong_tx (search) only called in the case of duplicate.
-        // Other parent tx of spend is strong (confirmed spent prevout).
-        if ((spend.parent_fk != self) && is_strong_tx(spend.parent_fk))
-            return error::confirmed_double_spend;
-    }
-    while (it.advance());
+////    if (!ctx.is_enabled(system::chain::flags::bip68_rule))
+////        return error::success;
+////
+////    // Get hash from point, search for prevout tx and get its link.
+////    const auto tx_fk = to_tx(get_point_key(link));
+////    if (tx_fk.is_terminal())
+////        return error::missing_previous_output;
+////
+////    // to_block assures confirmation by strong_tx traversal.
+////    const auto header_fk = to_block(tx_fk);
+////    if (header_fk.is_terminal())
+////        return error::unconfirmed_spend;
+////
+////    context prevout_ctx{};
+////    if (!get_context(prevout_ctx, header_fk))
+////        return error::integrity;
+////
+////    if (input::is_locked(sequence, ctx.height, ctx.mtp, prevout_ctx.height,
+////        prevout_ctx.mtp))
+////        return error::relative_time_locked;
+////
+////    return error::success;
 ////}
-////while (point.advance());
-    return error::success;
-}
+
+////// protected
+////TEMPLATE
+////bool CLASS::is_spent_prevout(const point_link& link, index index,
+////    const tx_link& self) const NOEXCEPT
+////{
+////    // Prevout is confirmed spent by other than self.
+////    return spent_prevout(link, index, self) == error::confirmed_double_spend;
+////}
+
+////// protected
+////TEMPLATE
+////error::error_t CLASS::spent_prevout(const point_link& link, index index,
+////    const tx_link& self) const NOEXCEPT
+////{
+////    // Iterate points by point hash (of output tx) because may be conflicts.
+////// Search key must be passed as an l-value as it is held by reference.
+////////const auto point_sk = get_point_key(link);
+////////auto point = store_.point.it(point_sk);
+////////if (!point)
+////////    return error::integrity;
+////////
+////////do
+////////{
+////    // Iterate all spends of the point to find double spends.
+////    // Search key must be passed as an l-value as it is held by reference.
+////    const auto spend_sk = table::spend::compose(link /*point.self()*/, index);
+////    auto it = store_.spend.it(spend_sk);
+////    if (!it)
+////        return self.is_terminal() ? error::success : error::integrity3;
+////
+////    table::spend::get_parent spend{};
+////    do
+////    {
+////        if (!store_.spend.get(it, spend))
+////            return error::integrity4;
+////
+////        // is_strong_tx (search) only called in the case of duplicate.
+////        // Other parent tx of spend is strong (confirmed spent prevout).
+////        if ((spend.parent_fk != self) && is_strong_tx(spend.parent_fk))
+////            return error::confirmed_double_spend;
+////    }
+////    while (it.advance());
+////////}
+////////while (point.advance());
+////    return error::success;
+////}
 
 // protected
 TEMPLATE
@@ -472,9 +471,9 @@ bool CLASS::get_spend_set(spend_set& set, const tx_link& link) const NOEXCEPT
         if (!store_.spend.get(ptr, spend_fk, get))
             return false;
 
-        // Translate result set to public struct.
-        set.spends.emplace_back(get.point_fk, get.point_index, get.sequence,
-            table::prevout::tx::integer{}, bool{});
+        ////// Translate result set to public struct.
+        ////set.spends.emplace_back(get.point_fk, get.point_index, get.sequence,
+        ////    table::prevout::tx::integer{}, bool{});
     }
 
     return true;
@@ -545,7 +544,7 @@ bool CLASS::populate_prevouts(spend_sets& sets) const NOEXCEPT
     for (auto& set: sets)
         for (auto& spend: set.spends)
         {
-            spend.prevout_tx_fk = to_tx(get_point_key(spend.point_fk));
+            ////spend.prevout_tx_fk = to_tx(get_point_key(spend.point_fk));
             spend.coinbase = is_coinbase(spend.prevout_tx_fk);
             if (spend.prevout_tx_fk == table::prevout::tx::terminal)
                 return false;
@@ -589,10 +588,10 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     const auto is_spent = [this, &result](const auto& set) NOEXCEPT
     {
         error::error_t ec{};
-        for (const auto& spend: set.spends)
-            if ((spend.prevout_tx_fk != table::prevout::tx::terminal) &&
-                ((ec = spent_prevout(spend.point_fk, spend.point_index, set.tx))))
-                result.store(ec);
+        ////for (const auto& spend: set.spends)
+        ////    if ((spend.prevout_tx_fk != table::prevout::tx::terminal) &&
+        ////        ((ec = spent_prevout(spend.point_fk, spend.point_index, set.tx))))
+        ////        result.store(ec);
 
         return result != error::success;
     };
@@ -611,11 +610,11 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::is_spent_coinbase(const tx_link& link) const NOEXCEPT
 {
-    // All outputs of the tx are confirmed spent.
-    const auto point_fk = to_point(get_tx_key(link));
-    for (index index{}; index < output_count(link); ++index)
-        if (!is_spent_prevout(point_fk, index))
-            return false;
+    ////// All outputs of the tx are confirmed spent.
+    ////const auto point_fk = to_point(get_tx_key(link));
+    ////for (index index{}; index < output_count(link); ++index)
+    ////    if (!is_spent_prevout(point_fk, index))
+    ////        return false;
 
     return true;
 }

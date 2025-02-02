@@ -37,7 +37,7 @@ using height_link = table::height::link;
 using header_link = table::header::link;
 using output_link = table::output::link;
 using input_link = table::input::link;
-using point_link = table::point::link;
+////using point_link = table::point::link;
 using spend_link = table::spend::link;
 using txs_link = table::txs::link;
 using tx_link = table::transaction::link;
@@ -59,16 +59,16 @@ struct spend_set
     {
         inline table::spend::search_key prevout() const NOEXCEPT
         {
-            return table::spend::compose(point_fk, point_index);
+            return {};//// table::spend::compose(point_fk, point_index);
         }
 
         inline bool is_null() const NOEXCEPT
         {
-            return point_fk == table::spend::pt::terminal;
+            return {};//// point_fk == table::spend::pt::terminal;
         }
 
         // From tx input.
-        table::spend::pt::integer point_fk{};
+        ////table::spend::pt::integer point_fk{};
         table::spend::ix::integer point_index{};
         uint32_t sequence{};
 
@@ -165,7 +165,7 @@ public:
     size_t header_body_size() const NOEXCEPT;
     size_t output_body_size() const NOEXCEPT;
     size_t input_body_size() const NOEXCEPT;
-    size_t point_body_size() const NOEXCEPT;
+    ////size_t point_body_size() const NOEXCEPT;
     size_t puts_body_size() const NOEXCEPT;
     size_t spend_body_size() const NOEXCEPT;
     size_t txs_body_size() const NOEXCEPT;
@@ -201,7 +201,7 @@ public:
 
     /// Buckets.
     size_t header_buckets() const NOEXCEPT;
-    size_t point_buckets() const NOEXCEPT;
+    ////size_t point_buckets() const NOEXCEPT;
     size_t spend_buckets() const NOEXCEPT;
     size_t txs_buckets() const NOEXCEPT;
     size_t tx_buckets() const NOEXCEPT;
@@ -214,7 +214,7 @@ public:
 
     /// Records.
     size_t header_records() const NOEXCEPT;
-    size_t point_records() const NOEXCEPT;
+    ////size_t point_records() const NOEXCEPT;
     size_t spend_records() const NOEXCEPT;
     size_t tx_records() const NOEXCEPT;
     size_t candidate_records() const NOEXCEPT;
@@ -267,7 +267,7 @@ public:
     inline header_link to_candidate(size_t height) const NOEXCEPT;
     inline header_link to_confirmed(size_t height) const NOEXCEPT;
     inline header_link to_header(const hash_digest& key) const NOEXCEPT;
-    inline point_link to_point(const hash_digest& key) const NOEXCEPT;
+    ////inline point_link to_point(const hash_digest& key) const NOEXCEPT;
     inline tx_link to_tx(const hash_digest& key) const NOEXCEPT;
     inline txs_link to_txs(const header_link& key) const NOEXCEPT;
     inline filter_link to_filter(const header_link& key) const NOEXCEPT;
@@ -278,7 +278,7 @@ public:
     /// put to tx (reverse navigation)
     tx_link to_spend_tx(const spend_link& link) const NOEXCEPT;
     tx_link to_output_tx(const output_link& link) const NOEXCEPT;
-    tx_link to_prevout_tx(const spend_link& link) const NOEXCEPT;
+    ////tx_link to_prevout_tx(const spend_link& link) const NOEXCEPT;
     foreign_point to_spend_key(const spend_link& link) const NOEXCEPT;
 
     /// point to put (forward navigation)
@@ -321,7 +321,7 @@ public:
 
     /// hashmap enumeration
     header_link top_header(size_t bucket) const NOEXCEPT;
-    point_link top_point(size_t bucket) const NOEXCEPT;
+    ////point_link top_point(size_t bucket) const NOEXCEPT;
     spend_link top_spend(size_t bucket) const NOEXCEPT;
     txs_link top_txs(size_t bucket) const NOEXCEPT;
     tx_link top_tx(size_t bucket) const NOEXCEPT;
@@ -373,7 +373,7 @@ public:
     hashes get_tx_keys(const header_link& link) const NOEXCEPT;
     size_t get_tx_count(const header_link& link) const NOEXCEPT;
     inline hash_digest get_header_key(const header_link& link) const NOEXCEPT;
-    inline hash_digest get_point_key(const point_link& link) const NOEXCEPT;
+    ////inline hash_digest get_point_key(const point_link& link) const NOEXCEPT;
     inline hash_digest get_tx_key(const tx_link& link) const NOEXCEPT;
 
     /// False implies not confirmed.
@@ -399,7 +399,7 @@ public:
     transaction::cptr get_transaction(const tx_link& link) const NOEXCEPT;
     output::cptr get_output(const output_link& link) const NOEXCEPT;
     input::cptr get_input(const spend_link& link) const NOEXCEPT;
-    point::cptr get_point(const spend_link& link) const NOEXCEPT;
+    ////point::cptr get_point(const spend_link& link) const NOEXCEPT;
     inputs_ptr get_spenders(const output_link& link) const NOEXCEPT;
 
     input::cptr get_input(const tx_link& link,
@@ -572,20 +572,20 @@ protected:
     /// -----------------------------------------------------------------------
 
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
-    code mature_prevout(const point_link& link,
-        size_t height) const NOEXCEPT;
-    code locked_prevout(const point_link& link, uint32_t sequence,
-        const context& ctx) const NOEXCEPT;
+    ////code mature_prevout(const point_link& link,
+    ////    size_t height) const NOEXCEPT;
+    ////code locked_prevout(const point_link& link, uint32_t sequence,
+    ////    const context& ctx) const NOEXCEPT;
 
     // Critical path
     bool populate_prevouts(spend_sets& sets) const NOEXCEPT;
     bool populate_prevouts(spend_sets& sets, const header_link& link) const NOEXCEPT;
     bool get_spend_set(spend_set& set, const tx_link& link) const NOEXCEPT;
     bool get_spend_sets(spend_sets& set, const header_link& link) const NOEXCEPT;
-    bool is_spent_prevout(const point_link& link, index index,
-        const tx_link& self=tx_link::terminal) const NOEXCEPT;
-    error::error_t spent_prevout(const point_link& link, index index,
-        const tx_link& self=tx_link::terminal) const NOEXCEPT;
+    ////bool is_spent_prevout(const point_link& link, index index,
+    ////    const tx_link& self=tx_link::terminal) const NOEXCEPT;
+    ////error::error_t spent_prevout(const point_link& link, index index,
+    ////    const tx_link& self=tx_link::terminal) const NOEXCEPT;
     error::error_t unspendable_prevout(uint32_t sequence, bool coinbase,
         const tx_link& prevout_tx, uint32_t version,
         const context& ctx) const NOEXCEPT;

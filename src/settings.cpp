@@ -42,9 +42,9 @@ settings::settings() NOEXCEPT
     output_size{ 1 },
     output_rate{ 50 },
 
-    point_buckets{ 100 },
-    point_size{ 1 },
-    point_rate{ 50 },
+    ////point_buckets{ 100 },
+    ////point_size{ 1 },
+    ////point_rate{ 50 },
 
     puts_size{ 1 },
     puts_rate{ 50 },

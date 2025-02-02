@@ -77,9 +77,9 @@ const std::unordered_map<table_t, std::string> CLASS::tables
     { table_t::output_table, "output_table" },
     { table_t::output_head, "output_head" },
     { table_t::output_body, "output_body" },
-    { table_t::point_table, "point_table" },
-    { table_t::point_head, "point_head" },
-    { table_t::point_body, "point_body" },
+    ////{ table_t::point_table, "point_table" },
+    ////{ table_t::point_head, "point_head" },
+    ////{ table_t::point_body, "point_body" },
     { table_t::puts_table, "puts_table" },
     { table_t::puts_head, "puts_head" },
     { table_t::puts_body, "puts_body" },
@@ -146,9 +146,9 @@ CLASS::store(const settings& config) NOEXCEPT
     output_body_(body(config.path, schema::archive::output), config.output_size, config.output_rate),
     output(output_head_, output_body_),
 
-    point_head_(head(config.path / schema::dir::heads, schema::archive::point)),
-    point_body_(body(config.path, schema::archive::point), config.point_size, config.point_rate),
-    point(point_head_, point_body_, std::max(config.point_buckets, nonzero)),
+    ////point_head_(head(config.path / schema::dir::heads, schema::archive::point)),
+    ////point_body_(body(config.path, schema::archive::point), config.point_size, config.point_rate),
+    ////point(point_head_, point_body_, std::max(config.point_buckets, nonzero)),
 
     puts_head_(head(config.path / schema::dir::heads, schema::archive::puts)),
     puts_body_(body(config.path, schema::archive::puts), config.puts_size, config.puts_rate),
@@ -257,8 +257,8 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     create(ec, input_body_, table_t::input_body);
     create(ec, output_head_, table_t::output_head);
     create(ec, output_body_, table_t::output_body);
-    create(ec, point_head_, table_t::point_head);
-    create(ec, point_body_, table_t::point_body);
+    ////create(ec, point_head_, table_t::point_head);
+    ////create(ec, point_body_, table_t::point_body);
     create(ec, puts_head_, table_t::puts_head);
     create(ec, puts_body_, table_t::puts_body);
     create(ec, spend_head_, table_t::spend_head);
@@ -306,7 +306,7 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     populate(ec, header, table_t::header_table);
     populate(ec, input, table_t::input_table);
     populate(ec, output, table_t::output_table);
-    populate(ec, point, table_t::point_table);
+    ////populate(ec, point, table_t::point_table);
     populate(ec, puts, table_t::puts_table);
     populate(ec, spend, table_t::spend_table);
     populate(ec, tx, table_t::tx_table);
@@ -378,7 +378,7 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, header, table_t::header_table);
     verify(ec, input, table_t::input_table);
     verify(ec, output, table_t::output_table);
-    verify(ec, point, table_t::point_table);
+    ////verify(ec, point, table_t::point_table);
     verify(ec, puts, table_t::puts_table);
     verify(ec, spend, table_t::spend_table);
     verify(ec, tx, table_t::tx_table);
@@ -432,7 +432,7 @@ code CLASS::snapshot(const event_handler& handler) NOEXCEPT
     flush(ec, header_body_, table_t::header_body);
     flush(ec, input_body_, table_t::input_body);
     flush(ec, output_body_, table_t::output_body);
-    flush(ec, point_body_, table_t::point_body);
+    ////flush(ec, point_body_, table_t::point_body);
     flush(ec, puts_body_, table_t::puts_body);
     flush(ec, spend_body_, table_t::spend_body);
     flush(ec, tx_body_, table_t::tx_body);
@@ -484,8 +484,8 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     reload(ec, input_body_, table_t::input_body);
     reload(ec, output_head_, table_t::output_head);
     reload(ec, output_body_, table_t::output_body);
-    reload(ec, point_head_, table_t::point_head);
-    reload(ec, point_body_, table_t::point_body);
+    ////reload(ec, point_head_, table_t::point_head);
+    ////reload(ec, point_body_, table_t::point_body);
     reload(ec, puts_head_, table_t::puts_head);
     reload(ec, puts_body_, table_t::puts_body);
     reload(ec, spend_head_, table_t::spend_head);
@@ -543,7 +543,7 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
     close(ec, header, table_t::header_table);
     close(ec, input, table_t::input_table);
     close(ec, output, table_t::output_table);
-    close(ec, point, table_t::point_table);
+    ////close(ec, point, table_t::point_table);
     close(ec, puts, table_t::puts_table);
     close(ec, spend, table_t::spend_table);
     close(ec, tx, table_t::tx_table);
@@ -599,8 +599,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, input_body_, table_t::input_body);
     open(ec, output_head_, table_t::output_head);
     open(ec, output_body_, table_t::output_body);
-    open(ec, point_head_, table_t::point_head);
-    open(ec, point_body_, table_t::point_body);
+    ////open(ec, point_head_, table_t::point_head);
+    ////open(ec, point_body_, table_t::point_body);
     open(ec, puts_head_, table_t::puts_head);
     open(ec, puts_body_, table_t::puts_body);
     open(ec, spend_head_, table_t::spend_head);
@@ -646,8 +646,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, input_body_, table_t::input_body);
     load(ec, output_head_, table_t::output_head);
     load(ec, output_body_, table_t::output_body);
-    load(ec, point_head_, table_t::point_head);
-    load(ec, point_body_, table_t::point_body);
+    ////load(ec, point_head_, table_t::point_head);
+    ////load(ec, point_body_, table_t::point_body);
     load(ec, puts_head_, table_t::puts_head);
     load(ec, puts_body_, table_t::puts_body);
     load(ec, spend_head_, table_t::spend_head);
@@ -700,8 +700,8 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, input_body_, table_t::input_body);
     unload(ec, output_head_, table_t::output_head);
     unload(ec, output_body_, table_t::output_body);
-    unload(ec, point_head_, table_t::point_head);
-    unload(ec, point_body_, table_t::point_body);
+    ////unload(ec, point_head_, table_t::point_head);
+    ////unload(ec, point_body_, table_t::point_body);
     unload(ec, puts_head_, table_t::puts_head);
     unload(ec, puts_body_, table_t::puts_body);
     unload(ec, spend_head_, table_t::spend_head);
@@ -747,8 +747,8 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, input_body_, table_t::input_body);
     close(ec, output_head_, table_t::output_head);
     close(ec, output_body_, table_t::output_body);
-    close(ec, point_head_, table_t::point_head);
-    close(ec, point_body_, table_t::point_body);
+    ////close(ec, point_head_, table_t::point_head);
+    ////close(ec, point_body_, table_t::point_body);
     close(ec, puts_head_, table_t::puts_head);
     close(ec, puts_body_, table_t::puts_body);
     close(ec, spend_head_, table_t::spend_head);
@@ -800,7 +800,7 @@ code CLASS::backup(const event_handler& handler) NOEXCEPT
     backup(ec, header, table_t::header_table);
     backup(ec, input, table_t::input_table);
     backup(ec, output, table_t::output_table);
-    backup(ec, point, table_t::point_table);
+    ////backup(ec, point, table_t::point_table);
     backup(ec, puts, table_t::puts_table);
     backup(ec, spend, table_t::spend_table);
     backup(ec, tx, table_t::tx_table);
@@ -853,7 +853,7 @@ code CLASS::dump(const path& folder,
     auto header_buffer = header_head_.get();
     auto input_buffer = input_head_.get();
     auto output_buffer = output_head_.get();
-    auto point_buffer = point_head_.get();
+    ////auto point_buffer = point_head_.get();
     auto puts_buffer = puts_head_.get();
     auto spend_buffer = spend_head_.get();
     auto tx_buffer = tx_head_.get();
@@ -874,7 +874,7 @@ code CLASS::dump(const path& folder,
     if (!header_buffer) return error::unloaded_file;
     if (!input_buffer) return error::unloaded_file;
     if (!output_buffer) return error::unloaded_file;
-    if (!point_buffer) return error::unloaded_file;
+    ////if (!point_buffer) return error::unloaded_file;
     if (!puts_buffer) return error::unloaded_file;
     if (!spend_buffer) return error::unloaded_file;
     if (!tx_buffer) return error::unloaded_file;
@@ -907,7 +907,7 @@ code CLASS::dump(const path& folder,
     dump(ec, header_buffer, schema::archive::header, table_t::header_head);
     dump(ec, input_buffer, schema::archive::input, table_t::input_head);
     dump(ec, output_buffer, schema::archive::output, table_t::output_head);
-    dump(ec, point_buffer, schema::archive::point, table_t::point_head);
+    ////dump(ec, point_buffer, schema::archive::point, table_t::point_head);
     dump(ec, puts_buffer, schema::archive::puts, table_t::puts_head);
     dump(ec, spend_buffer, schema::archive::spend, table_t::spend_head);
     dump(ec, tx_buffer, schema::archive::tx, table_t::tx_head);
@@ -996,7 +996,7 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         restore(ec, header, table_t::header_table);
         restore(ec, input, table_t::input_table);
         restore(ec, output, table_t::output_table);
-        restore(ec, point, table_t::point_table);
+        ////restore(ec, point, table_t::point_table);
         restore(ec, puts, table_t::puts_table);
         restore(ec, spend, table_t::spend_table);
         restore(ec, tx, table_t::tx_table);
@@ -1048,7 +1048,7 @@ code CLASS::get_fault() const NOEXCEPT
     if ((ec = header_body_.get_fault())) return ec;
     if ((ec = input_body_.get_fault())) return ec;
     if ((ec = output_body_.get_fault())) return ec;
-    if ((ec = point_body_.get_fault())) return ec;
+    ////if ((ec = point_body_.get_fault())) return ec;
     if ((ec = puts_body_.get_fault())) return ec;
     if ((ec = spend_body_.get_fault())) return ec;
     if ((ec = tx_body_.get_fault())) return ec;
@@ -1077,7 +1077,7 @@ size_t CLASS::get_space() const NOEXCEPT
     space(header_body_);
     space(input_body_);
     space(output_body_);
-    space(point_body_);
+    ////space(point_body_);
     space(puts_body_);
     space(spend_body_);
     space(tx_body_);
@@ -1110,7 +1110,7 @@ void CLASS::report(const error_handler& handler) const NOEXCEPT
     report(header_body_, table_t::header_body);
     report(input_body_, table_t::input_body);
     report(output_body_, table_t::output_body);
-    report(point_body_, table_t::point_body);
+    ////report(point_body_, table_t::point_body);
     report(puts_body_, table_t::puts_body);
     report(spend_body_, table_t::spend_body);
     report(tx_body_, table_t::tx_body);

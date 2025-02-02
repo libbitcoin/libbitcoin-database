@@ -235,19 +235,19 @@ namespace schema
         static_assert(minrow == 24u);
     };
 
-    // record hashmap
-    struct point
-    {
-        static constexpr bool hash_function = false;
-        static constexpr size_t pk = schema::point_;
-        static constexpr size_t sk = schema::hash;
-        static constexpr size_t minsize = zero;
-        static constexpr size_t minrow = pk + sk + minsize;
-        static constexpr size_t size = minsize;
-        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 0u);
-        static_assert(minrow == 36u);
-    };
+    ////// record hashmap
+    ////struct point
+    ////{
+    ////    static constexpr bool hash_function = false;
+    ////    static constexpr size_t pk = schema::point_;
+    ////    static constexpr size_t sk = schema::hash;
+    ////    static constexpr size_t minsize = zero;
+    ////    static constexpr size_t minrow = pk + sk + minsize;
+    ////    static constexpr size_t size = minsize;
+    ////    static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+    ////    static_assert(minsize == 0u);
+    ////    static_assert(minrow == 36u);
+    ////};
 
     // slab hashmap
     struct txs

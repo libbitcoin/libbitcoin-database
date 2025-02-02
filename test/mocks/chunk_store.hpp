@@ -44,15 +44,15 @@ public:
         return header_body_.buffer();
     }
 
-    system::data_chunk& point_head() NOEXCEPT
-    {
-        return point_head_.buffer();
-    }
+    ////system::data_chunk& point_head() NOEXCEPT
+    ////{
+    ////    return point_head_.buffer();
+    ////}
 
-    system::data_chunk& point_body() NOEXCEPT
-    {
-        return point_body_.buffer();
-    }
+    ////system::data_chunk& point_body() NOEXCEPT
+    ////{
+    ////    return point_body_.buffer();
+    ////}
 
     system::data_chunk& input_head() NOEXCEPT
     {

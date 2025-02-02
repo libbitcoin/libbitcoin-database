@@ -101,7 +101,7 @@ public:
     table::header header;
     table::input input;
     table::output output;
-    table::point point;
+    ////table::point point;
     table::puts puts;
     table::spend spend;
     table::transaction tx;
@@ -147,9 +147,9 @@ protected:
     Storage output_head_;
     Storage output_body_;
 
-    // record hashmap
-    Storage point_head_;
-    Storage point_body_;
+    ////// record hashmap
+    ////Storage point_head_;
+    ////Storage point_body_;
 
     // array
     Storage puts_head_;

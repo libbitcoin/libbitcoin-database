@@ -88,15 +88,15 @@ public:
         return output_body_.file();
     }
 
-    inline const path& point_head_file() const NOEXCEPT
-    {
-        return point_head_.file();
-    }
+    ////inline const path& point_head_file() const NOEXCEPT
+    ////{
+    ////    return point_head_.file();
+    ////}
 
-    inline const path& point_body_file() const NOEXCEPT
-    {
-        return point_body_.file();
-    }
+    ////inline const path& point_body_file() const NOEXCEPT
+    ////{
+    ////    return point_body_.file();
+    ////}
 
     inline const path& puts_head_file() const NOEXCEPT
     {
