@@ -218,12 +218,12 @@ namespace schema
         static_assert(minrow == 10u);
     };
 
-    // moderate (sk:7) record multimap, with low multiple rate.
+    // large (sk:35) record multimap, with low multiple rate.
     struct spend
     {
         static constexpr bool hash_function = false;
         static constexpr size_t pk = schema::spend_;
-        static constexpr size_t sk = transaction::pk + schema::index;
+        static constexpr size_t sk = schema::hash + schema::index;
         static constexpr size_t minsize =
             schema::transaction::pk +
             sizeof(uint32_t) +
@@ -232,7 +232,7 @@ namespace schema
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
         static_assert(minsize == 13u);
-        static_assert(minrow == 24u);
+        static_assert(minrow == 52u);
     };
 
     ////// record hashmap
