@@ -265,12 +265,6 @@ inline hash_digest CLASS::get_header_key(const header_link& link) const NOEXCEPT
     return store_.header.get_key(link);
 }
 
-////TEMPLATE
-////inline hash_digest CLASS::get_point_key(const point_link& link) const NOEXCEPT
-////{
-////    return store_.point.get_key(link);
-////}
-
 TEMPLATE
 inline hash_digest CLASS::get_tx_key(const tx_link& link) const NOEXCEPT
 {
@@ -589,36 +583,20 @@ typename CLASS::input::cptr CLASS::get_input(
         return {};
 
     // Share null point instances to reduce memory consumption.
-    static const auto null_point = to_shared<const point>();
+    static const auto null_point = to_shared<point>();
 
     return to_shared<input>
     (
-        null_point,
-        ////spend.is_null() ? null_point : to_shared<point>
-        ////(
-        ////    {},////get_point_key(spend.point_fk),
-        ////    spend.point_index
-        ////),
+        spend.is_null() ? null_point : to_shared<point>
+        (
+            spend.point_hash,
+            spend.point_index
+        ),
         in.script,
         in.witness,
         spend.sequence
     );
 }
-
-////TEMPLATE
-////typename CLASS::point::cptr CLASS::get_point(
-////    const spend_link& link) const NOEXCEPT
-////{
-////    table::spend::get_prevout spend{};
-////    if (!store_.spend.get(link, spend))
-////        return {};
-////
-////    return system::to_shared<point>
-////    (
-////        {},////get_point_key(spend.point_fk),
-////        spend.point_index
-////    );
-////}
 
 TEMPLATE
 typename CLASS::inputs_ptr CLASS::get_spenders(
@@ -676,9 +654,6 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     if (tx.is_empty())
         return error::tx_empty;
 
-    // tx.get_hash() assumes cached or is not thread safe.
-    const auto& key = tx.get_hash(false);
-
     // Declare puts record.
     const auto& ins = tx.inputs_ptr();
     const auto& outs = tx.outputs_ptr();
@@ -686,9 +661,9 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     puts.spend_fks.reserve(ins->size());
     puts.out_fks.reserve(outs->size());
 
-    // Declare spends buffer.
-    std::vector<foreign_point> spends{};
-    spends.reserve(ins->size());
+    // Declare spends points accumulator.
+    std::vector<chain::point_cref> points{};
+    points.reserve(ins->size());
 
     // TODO: eliminate shared memory pointer reallocations.
     // ========================================================================
@@ -722,35 +697,8 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
             return error::tx_input_put;
         }
 
-        // Input point aliases.
-        ////const auto& prevout = in->point();
-        ////const auto& hash = prevout.hash();
-
-        ////// Create prevout hash in point table.
-        ////point_link hash_fk{};
-        ////if (hash != null_hash)
-        ////{
-        ////    // GUARD (tx redundancy)
-        ////    // Only fully effective if there is a single database thread.
-        ////    // This reduces point store by ~45GiB, but causes thrashing.
-        ////    if (minimize_)
-        ////        hash_fk = to_point(hash);
-        ////
-        ////    if (hash_fk.is_terminal())
-        ////    {
-        ////        // Safe allocation failure, duplicates limited but expected.
-        ////        if (!store_.point.put_link(hash_fk, hash, table::point::record
-        ////        {
-        ////            // Table stores no data other than the search key.
-        ////        }))
-        ////        {
-        ////            return error::tx_point_put;
-        ////        }
-        ////    }
-        ////}
-
-        // Accumulate spend keys in order (terminal for any null point).
-        ////spends.push_back(table::spend::compose(hash_fk, prevout.index()));
+        // Accumulate spend point (natural key) in order.
+        points.emplace_back(in->point());
 
         // Write spend record.
         // Safe allocation failure, index is deferred because invalid tx_fk.
@@ -765,7 +713,7 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
             return error::tx_spend_set;
         }
 
-        // Accumulate spends (input references) in order.
+        // Accumulate input links in order.
         puts.spend_fks.push_back(spend_fk.value++);
     }
 
@@ -814,10 +762,12 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     // A replay of committed spends without indexed tx will appear as double
     // spends, but the spend cannot be confirmed without the indexed tx. Spends
     // without indexed txs should be suppressed by c/s interface query.
-    for (const auto& spend: std::views::reverse(spends))
+    for (const auto& point: std::views::reverse(points))
     {
         --spend_fk.value;
-        if (store_.spend.commit_link(spend_fk, spend).is_terminal())
+        const auto& spent = point.get();
+        const auto key = table::spend::compose(spent.hash(), spent.index());
+        if (store_.spend.commit_link(spend_fk, key).is_terminal())
             return error::tx_spend_commit;
     }
 
@@ -845,7 +795,9 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
 
     // Commit tx to search.
     // Clean single allocation failure (e.g. disk full).
-    return store_.tx.commit(out_fk, key) ? error::success : error::tx_tx_commit;
+    // tx.get_hash() assumes cached or is not thread safe.
+    return store_.tx.commit(out_fk, tx.get_hash(false)) ?
+        error::success : error::tx_tx_commit;
     // ========================================================================
 }
 

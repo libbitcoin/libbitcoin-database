@@ -37,7 +37,6 @@ using height_link = table::height::link;
 using header_link = table::header::link;
 using output_link = table::output::link;
 using input_link = table::input::link;
-////using point_link = table::point::link;
 using spend_link = table::spend::link;
 using txs_link = table::txs::link;
 using tx_link = table::transaction::link;
@@ -165,7 +164,6 @@ public:
     size_t header_body_size() const NOEXCEPT;
     size_t output_body_size() const NOEXCEPT;
     size_t input_body_size() const NOEXCEPT;
-    ////size_t point_body_size() const NOEXCEPT;
     size_t puts_body_size() const NOEXCEPT;
     size_t spend_body_size() const NOEXCEPT;
     size_t txs_body_size() const NOEXCEPT;
@@ -201,7 +199,6 @@ public:
 
     /// Buckets.
     size_t header_buckets() const NOEXCEPT;
-    ////size_t point_buckets() const NOEXCEPT;
     size_t spend_buckets() const NOEXCEPT;
     size_t txs_buckets() const NOEXCEPT;
     size_t tx_buckets() const NOEXCEPT;
@@ -214,7 +211,6 @@ public:
 
     /// Records.
     size_t header_records() const NOEXCEPT;
-    ////size_t point_records() const NOEXCEPT;
     size_t spend_records() const NOEXCEPT;
     size_t tx_records() const NOEXCEPT;
     size_t candidate_records() const NOEXCEPT;
@@ -321,7 +317,6 @@ public:
 
     /// hashmap enumeration
     header_link top_header(size_t bucket) const NOEXCEPT;
-    ////point_link top_point(size_t bucket) const NOEXCEPT;
     spend_link top_spend(size_t bucket) const NOEXCEPT;
     txs_link top_txs(size_t bucket) const NOEXCEPT;
     tx_link top_tx(size_t bucket) const NOEXCEPT;
@@ -373,7 +368,6 @@ public:
     hashes get_tx_keys(const header_link& link) const NOEXCEPT;
     size_t get_tx_count(const header_link& link) const NOEXCEPT;
     inline hash_digest get_header_key(const header_link& link) const NOEXCEPT;
-    ////inline hash_digest get_point_key(const point_link& link) const NOEXCEPT;
     inline hash_digest get_tx_key(const tx_link& link) const NOEXCEPT;
 
     /// False implies not confirmed.
@@ -399,7 +393,6 @@ public:
     transaction::cptr get_transaction(const tx_link& link) const NOEXCEPT;
     output::cptr get_output(const output_link& link) const NOEXCEPT;
     input::cptr get_input(const spend_link& link) const NOEXCEPT;
-    ////point::cptr get_point(const spend_link& link) const NOEXCEPT;
     inputs_ptr get_spenders(const output_link& link) const NOEXCEPT;
 
     input::cptr get_input(const tx_link& link,
