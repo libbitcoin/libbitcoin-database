@@ -70,13 +70,6 @@ inline header_link CLASS::to_header(const hash_digest& key) const NOEXCEPT
     return store_.header.first(key);
 }
 
-////TEMPLATE
-////inline point_link CLASS::to_point(const hash_digest& key) const NOEXCEPT
-////{
-////    // Use point.find(key) in place of get(to_point(key)).
-////    return store_.point.first(key);
-////}
-
 TEMPLATE
 inline tx_link CLASS::to_tx(const hash_digest& key) const NOEXCEPT
 {
@@ -124,15 +117,16 @@ tx_link CLASS::to_output_tx(const output_link& link) const NOEXCEPT
     return out.parent_fk;
 }
 
-////TEMPLATE
-////tx_link CLASS::to_prevout_tx(const spend_link& link) const NOEXCEPT
-////{
-////    table::spend::get_point spend{};
-////    if (!store_.spend.get(link, spend) || spend.is_null())
-////        return {};
-////
-////    return to_tx(get_point_key(spend.point_fk));
-////}
+TEMPLATE
+tx_link CLASS::to_prevout_tx(const spend_link& link) const NOEXCEPT
+{
+    table::spend::get_point_hash spend{};
+    if (!store_.spend.get(link, spend) || spend.is_null())
+        return {};
+
+    // Could skip is_null check above if not expected to be called on coinbase.
+    return to_tx(spend.point_hash);
+}
 
 TEMPLATE
 tx_link CLASS::to_spend_tx(const spend_link& link) const NOEXCEPT
@@ -190,11 +184,11 @@ output_link CLASS::to_output(const tx_link& link,
 TEMPLATE
 output_link CLASS::to_prevout(const spend_link& link) const NOEXCEPT
 {
-    ////table::spend::get_prevout spend{};
-    ////if (!store_.spend.get(link, spend) || spend.is_null())
-    ////    return {};
+    table::spend::get_point spend{};
+    if (!store_.spend.get(link, spend) || spend.is_null())
+        return {};
 
-    return {};//// to_output(to_tx(get_point_key(spend.point_fk)), spend.point_index);
+    return to_output(to_tx(spend.point_hash), spend.point_index);
 }
 
 // block/tx to block (reverse navigation)
@@ -308,25 +302,23 @@ spend_links CLASS::to_spenders(const output_link& link) const NOEXCEPT
 }
 
 TEMPLATE
+spend_links CLASS::to_spenders(const point& point) const NOEXCEPT
+{
+    return to_spenders(point.hash(), point.index());
+}
+
+TEMPLATE
 spend_links CLASS::to_spenders(const tx_link& link,
     uint32_t output_index) const NOEXCEPT
 {
-    return to_spenders(point{ get_tx_key(link), output_index });
+    return to_spenders(get_tx_key(link), output_index);
 }
 
 TEMPLATE
-spend_links CLASS::to_spenders(const point&) const NOEXCEPT
+spend_links CLASS::to_spenders(const hash_digest& tx_hash,
+    uint32_t output_index) const NOEXCEPT
 {
-    ////const auto point_fk = to_point(prevout.hash());
-    ////if (point_fk.is_terminal())
-    ////    return {};
-
-    return {};//// to_spenders(table::spend::compose(point_fk, prevout.index()));
-}
-
-TEMPLATE
-spend_links CLASS::to_spenders(const foreign_point& point) const NOEXCEPT
-{
+    const auto point = table::spend::compose(tx_hash, output_index);
     auto it = store_.spend.it(point);
     if (!it)
         return {};
@@ -516,13 +508,6 @@ header_link CLASS::top_header(size_t bucket) const NOEXCEPT
     using namespace system;
     return store_.header.top(possible_narrow_cast<header_link::integer>(bucket));
 }
-
-////TEMPLATE
-////point_link CLASS::top_point(size_t bucket) const NOEXCEPT
-////{
-////    using namespace system;
-////    return store_.point.top(possible_narrow_cast<point_link::integer>(bucket));
-////}
 
 TEMPLATE
 spend_link CLASS::top_spend(size_t bucket) const NOEXCEPT

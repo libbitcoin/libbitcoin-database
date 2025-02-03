@@ -59,16 +59,16 @@ struct spend_set
     {
         inline table::spend::search_key prevout() const NOEXCEPT
         {
-            return {};//// table::spend::compose(point_fk, point_index);
+            return table::spend::compose(point_hash, point_index);
         }
 
         inline bool is_null() const NOEXCEPT
         {
-            return {};//// point_fk == table::spend::pt::terminal;
+            return table::spend::null_point(point_index);
         }
 
-        // From tx input.
-        ////table::spend::pt::integer point_fk{};
+        // From spend table.
+        hash_digest point_hash{};
         table::spend::ix::integer point_index{};
         uint32_t sequence{};
 
@@ -267,7 +267,6 @@ public:
     inline header_link to_candidate(size_t height) const NOEXCEPT;
     inline header_link to_confirmed(size_t height) const NOEXCEPT;
     inline header_link to_header(const hash_digest& key) const NOEXCEPT;
-    ////inline point_link to_point(const hash_digest& key) const NOEXCEPT;
     inline tx_link to_tx(const hash_digest& key) const NOEXCEPT;
     inline txs_link to_txs(const header_link& key) const NOEXCEPT;
     inline filter_link to_filter(const header_link& key) const NOEXCEPT;
@@ -278,7 +277,7 @@ public:
     /// put to tx (reverse navigation)
     tx_link to_spend_tx(const spend_link& link) const NOEXCEPT;
     tx_link to_output_tx(const output_link& link) const NOEXCEPT;
-    ////tx_link to_prevout_tx(const spend_link& link) const NOEXCEPT;
+    tx_link to_prevout_tx(const spend_link& link) const NOEXCEPT;
     foreign_point to_spend_key(const spend_link& link) const NOEXCEPT;
 
     /// point to put (forward navigation)
@@ -295,8 +294,9 @@ public:
     /// output to spenders (reverse navigation)
     spend_links to_spenders(const point& prevout) const NOEXCEPT;
     spend_links to_spenders(const output_link& link) const NOEXCEPT;
-    spend_links to_spenders(const foreign_point& point) const NOEXCEPT;
     spend_links to_spenders(const tx_link& link,
+        uint32_t output_index) const NOEXCEPT;
+    spend_links to_spenders(const hash_digest& tx_hash,
         uint32_t output_index) const NOEXCEPT;
 
     /// tx to puts (forward navigation)
