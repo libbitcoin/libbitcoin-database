@@ -69,7 +69,6 @@ BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.header_body_size(), schema::header::minrow);
     BOOST_REQUIRE_EQUAL(query.output_body_size(), 81u);
     BOOST_REQUIRE_EQUAL(query.input_body_size(), 79u);
-    ////BOOST_REQUIRE_EQUAL(query.point_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.spend_body_size(), schema::spend::minrow);
     BOOST_REQUIRE_EQUAL(query.puts_body_size(), schema::puts::minrow);
     BOOST_REQUIRE_EQUAL(query.txs_body_size(), schema::txs::minrow);
@@ -97,7 +96,6 @@ BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     BOOST_REQUIRE_EQUAL(query.header_buckets(), 100u);
-    ////BOOST_REQUIRE_EQUAL(query.point_buckets(), 100u);
     BOOST_REQUIRE_EQUAL(query.spend_buckets(), 100u);
     BOOST_REQUIRE_EQUAL(query.txs_buckets(), 100u);
     BOOST_REQUIRE_EQUAL(query.tx_buckets(), 100u);
@@ -120,9 +118,7 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
 
-    // point_records is zero because there is only coinbase in genesis.
     BOOST_REQUIRE_EQUAL(query.header_records(), 1u);
-    ////BOOST_REQUIRE_EQUAL(query.point_records(), 0u);
     BOOST_REQUIRE_EQUAL(query.spend_records(), 1u);
     BOOST_REQUIRE_EQUAL(query.tx_records(), 1u);
 

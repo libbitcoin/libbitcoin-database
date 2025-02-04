@@ -253,28 +253,20 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_tx__null_input__expected)
         "00000000"     // parent_fk->
         "00"           // value
         "00");         // script
-    const auto expected_point_head = system::base16_chunk(
-        "00000000"     // record count (null point, empty)
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff");
-    const auto expected_point_body = system::base16_chunk("");
-    const auto expected_spend_head = system::base16_chunk(
-        "01000000"     // record count
-        "00000000"     // pk->
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff");
-    const auto expected_spend_body = system::base16_chunk(
-        "ffffffff"     // terminal->
-        "ffffffff"     // fp: point_fk->
-        "ffffff"       // fp: point_index (null)
-        "00000000"     // parent_fk->
-        "00000000"     // sequence
-        "0000000000"); // input_fk->
+    ////const auto expected_spend_head = system::base16_chunk(
+    ////    "01000000"     // record count
+    ////    "00000000"     // pk->
+    ////    "ffffffff"
+    ////    "ffffffff"
+    ////    "ffffffff"
+    ////    "ffffffff");
+    ////const auto expected_spend_body = system::base16_chunk(
+    ////    "ffffffff"     // terminal->
+    ////    "ffffffff"     // fp: point_fk->
+    ////    "ffffff"       // fp: point_index (null)
+    ////    "00000000"     // parent_fk->
+    ////    "00000000"     // sequence
+    ////    "0000000000"); // input_fk->
     const auto expected_input_head = system::base16_chunk("0200000000");
     const auto expected_input_body = system::base16_chunk(
         "00"           // script
@@ -286,7 +278,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_tx__null_input__expected)
     tx_link link{};
     settings settings{};
     settings.tx_buckets = 5;
-    ////settings.point_buckets = 5;
     settings.spend_buckets = 5;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -378,9 +369,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__get_tx__expected)
         "00000000"     // parent_fk->
         "2a"           // value
         "017a");       // script
-    ////const auto expected_point_body = system::base16_chunk(
-    ////    "ffffffff"     // next->
-    ////    "0100000000000000000000000000000000000000000000000000000000000000"); // sk (prevout.hash)
     const auto expected_spend_head = system::base16_chunk(
         "02000000"     // record count
         "ffffffff"
@@ -494,30 +482,20 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
         "00000000"     // parent_fk->
         "ff00f2052a01000000" // value
         "434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac"); // script
-    const auto genesis_point_head = system::base16_chunk(
-        "00000000"     // record count (null point, empty)
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff");
-    const auto genesis_point_body = system::base16_chunk("");
-    const auto genesis_spend_head = system::base16_chunk(
-        "01000000"     // record count
-        "00000000"     // spend0_fk->
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff");
-
-    // ffffffffffffffffffffff00000000ffffffff0000000000
-    const auto genesis_spend_body = system::base16_chunk(
-        "ffffffff"     // terminal->
-        "ffffffff"     // fp: point_fk->
-        "ffffff"       // fp: point_index (null)
-        "00000000"     // parent_fk->
-        "ffffffff"     // sequence
-        "0000000000"); // input_fk-> (coinbase)
+    ////const auto genesis_spend_head = system::base16_chunk(
+    ////    "01000000"     // record count
+    ////    "00000000"     // spend0_fk->
+    ////    "ffffffff"
+    ////    "ffffffff"
+    ////    "ffffffff"
+    ////    "ffffffff");
+    ////const auto genesis_spend_body = system::base16_chunk(
+    ////    "ffffffff"     // terminal->
+    ////    "ffffffff"     // fp: point_fk->
+    ////    "ffffff"       // fp: point_index (null)
+    ////    "00000000"     // parent_fk->
+    ////    "ffffffff"     // sequence
+    ////    "0000000000"); // input_fk-> (coinbase)
     const auto genesis_input_head = system::base16_chunk("4f00000000");
     const auto genesis_input_body = system::base16_chunk(
         "4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73" // script
@@ -642,22 +620,20 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
         "ff00f2052a01000000" // value
         "434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac"); // script
     ////const auto genesis_point_body = system::base16_chunk("");
-    const auto genesis_spend_head = system::base16_chunk(
-        "01000000"     // record count
-        "00000000"     // spend0_fk->
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff");
-
-    // ffffffffffffffffffffff00000000ffffffff0000000000
-    const auto genesis_spend_body = system::base16_chunk(
-        "ffffffff"     // terminal->
-        "ffffffff"     // fp: point_fk->
-        "ffffff"       // fp: point_index (null)
-        "00000000"     // parent_fk->
-        "ffffffff"     // sequence
-        "0000000000"); // input_fk-> (coinbase)
+    ////const auto genesis_spend_head = system::base16_chunk(
+    ////    "01000000"     // record count
+    ////    "00000000"     // spend0_fk->
+    ////    "ffffffff"
+    ////    "ffffffff"
+    ////    "ffffffff"
+    ////    "ffffffff");
+    ////const auto genesis_spend_body = system::base16_chunk(
+    ////    "ffffffff"     // terminal->
+    ////    "ffffffff"     // fp: point_fk->
+    ////    "ffffff"       // fp: point_index (null)
+    ////    "00000000"     // parent_fk->
+    ////    "ffffffff"     // sequence
+    ////    "0000000000"); // input_fk-> (coinbase)
     const auto genesis_input_head = system::base16_chunk("4f00000000");
     const auto genesis_input_body = system::base16_chunk(
         "4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73" // script

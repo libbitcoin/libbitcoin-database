@@ -147,10 +147,6 @@ protected:
     Storage output_head_;
     Storage output_body_;
 
-    ////// record hashmap
-    ////Storage point_head_;
-    ////Storage point_body_;
-
     // array
     Storage puts_head_;
     Storage puts_body_;

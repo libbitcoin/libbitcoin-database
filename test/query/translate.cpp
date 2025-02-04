@@ -1020,13 +1020,6 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spenders__point__expected)
     BOOST_REQUIRE(query.to_spenders(4, 1).empty()); // n/a, only one output
     BOOST_REQUIRE(query.to_spenders(tx_link::terminal, 0).empty());
 
-    // Verify expectations.
-    ////const auto point_body = system::base16_chunk
-    ////(
-    ////    "ffffffff""0100000000000000000000000000000000000000000000000000000000000000" // block1a:tx1(0,1) and block2a:tx2(0,1) invalid spends
-    ////    "ffffffff""0200000000000000000000000000000000000000000000000000000000000000" // block1a:tx1(2) invalid spend
-    ////    "ffffffff""d19c4584d53264e5d0f9d2f852578c4d4382b69abee853bfbd6bc580f84069cf" // block2a:tx1(0,1) valid spends of block1a:tx1(0,1)
-    ////);
     const auto spend_head = system::base16_chunk
     (
         "00000000" // size

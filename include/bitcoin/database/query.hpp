@@ -144,7 +144,6 @@ public:
     size_t header_size() const NOEXCEPT;
     size_t output_size() const NOEXCEPT;
     size_t input_size() const NOEXCEPT;
-    size_t point_size() const NOEXCEPT;
     size_t puts_size() const NOEXCEPT;
     size_t spend_size() const NOEXCEPT;
     size_t txs_size() const NOEXCEPT;
@@ -183,7 +182,6 @@ public:
     size_t header_head_size() const NOEXCEPT;
     size_t output_head_size() const NOEXCEPT;
     size_t input_head_size() const NOEXCEPT;
-    size_t point_head_size() const NOEXCEPT;
     size_t puts_head_size() const NOEXCEPT;
     size_t spend_head_size() const NOEXCEPT;
     size_t txs_head_size() const NOEXCEPT;
