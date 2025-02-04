@@ -128,14 +128,15 @@ bool CLASS::is_spent_output(const output_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::is_spent(const spend_link& link) const NOEXCEPT
 {
-    table::spend::get_prevout_parent spend{};
+    table::spend::get_point_parent spend{};
     if (!store_.spend.get(link, spend))
         return false;
 
     if (spend.is_null())
         return false;
 
-    return {};//// is_spent_prevout(spend.point_fk, spend.point_index, spend.parent_fk);
+    return is_spent_prevout(spend.point_hash, spend.point_index,
+        spend.parent_fk);
 }
 
 // unused
@@ -156,37 +157,37 @@ bool CLASS::is_mature(const spend_link& link, size_t height) const NOEXCEPT
     if (spend.is_null())
         return true;
 
-    return {};//// !mature_prevout(spend.point_fk, height);
+    return !mature_prevout(spend.point_hash, height);
 }
 
-////// protected (only for is_mature/unused)
-////TEMPLATE
-////code CLASS::mature_prevout(const point_link& link,
-////    size_t height) const NOEXCEPT
-////{
-////    // Get hash from point, search for prevout tx and get its link.
-////    const auto tx_fk = to_tx(get_point_key(link));
-////    if (tx_fk.is_terminal())
-////        return error::integrity;
-////
-////    // to_block assures confirmation by strong_tx traversal so this must remain
-////    // prior to is_coinbase in execution order, despite the lack of dependency.
-////    const auto header_fk = to_block(tx_fk);
-////    if (header_fk.is_terminal())
-////        return error::unconfirmed_spend;
-////
-////    if (!is_coinbase(tx_fk))
-////        return error::success;
-////
-////    const auto prevout_height = get_height(header_fk);
-////    if (prevout_height.is_terminal())
-////        return error::integrity;
-////
-////    if (!transaction::is_coinbase_mature(prevout_height, height))
-////        return error::coinbase_maturity;
-////
-////    return error::success;
-////}
+// protected (only for is_mature/unused)
+TEMPLATE
+code CLASS::mature_prevout(const hash_digest& point_hash,
+    size_t height) const NOEXCEPT
+{
+    // Search for prevout tx and get its link.
+    const auto tx_fk = to_tx(point_hash);
+    if (tx_fk.is_terminal())
+        return error::integrity;
+
+    // to_block assures confirmation by strong_tx traversal so this must remain
+    // prior to is_coinbase in execution order, despite the lack of dependency.
+    const auto header_fk = to_block(tx_fk);
+    if (header_fk.is_terminal())
+        return error::unconfirmed_spend;
+
+    if (!is_coinbase(tx_fk))
+        return error::success;
+
+    const auto prevout_height = get_height(header_fk);
+    if (prevout_height.is_terminal())
+        return error::integrity;
+
+    if (!transaction::is_coinbase_mature(prevout_height, height))
+        return error::coinbase_maturity;
+
+    return error::success;
+}
 
 // unused
 TEMPLATE
@@ -200,84 +201,74 @@ bool CLASS::is_locked(const spend_link& link, uint32_t sequence,
     if (spend.is_null())
         return true;
 
-    return {};//// !locked_prevout(spend.point_fk, sequence, ctx);
+    return !locked_prevout(spend.point_hash, sequence, ctx);
 }
 
-////// protected (only for is_locked/unused)
-////TEMPLATE
-////code CLASS::locked_prevout(const point_link& link, uint32_t sequence,
-////    const context& ctx) const NOEXCEPT
-////{
-////    if (!ctx.is_enabled(system::chain::flags::bip68_rule))
-////        return error::success;
-////
-////    // Get hash from point, search for prevout tx and get its link.
-////    const auto tx_fk = to_tx(get_point_key(link));
-////    if (tx_fk.is_terminal())
-////        return error::missing_previous_output;
-////
-////    // to_block assures confirmation by strong_tx traversal.
-////    const auto header_fk = to_block(tx_fk);
-////    if (header_fk.is_terminal())
-////        return error::unconfirmed_spend;
-////
-////    context prevout_ctx{};
-////    if (!get_context(prevout_ctx, header_fk))
-////        return error::integrity;
-////
-////    if (input::is_locked(sequence, ctx.height, ctx.mtp, prevout_ctx.height,
-////        prevout_ctx.mtp))
-////        return error::relative_time_locked;
-////
-////    return error::success;
-////}
+// protected (only for is_locked/unused)
+TEMPLATE
+code CLASS::locked_prevout(const hash_digest& point_hash, uint32_t sequence,
+    const context& ctx) const NOEXCEPT
+{
+    if (!ctx.is_enabled(system::chain::flags::bip68_rule))
+        return error::success;
 
-////// protected
-////TEMPLATE
-////bool CLASS::is_spent_prevout(const point_link& link, index index,
-////    const tx_link& self) const NOEXCEPT
-////{
-////    // Prevout is confirmed spent by other than self.
-////    return spent_prevout(link, index, self) == error::confirmed_double_spend;
-////}
+    const auto tx_fk = to_tx(point_hash);
+    if (tx_fk.is_terminal())
+        return error::missing_previous_output;
 
-////// protected
-////TEMPLATE
-////error::error_t CLASS::spent_prevout(const point_link& link, index index,
-////    const tx_link& self) const NOEXCEPT
-////{
-////    // Iterate points by point hash (of output tx) because may be conflicts.
-////// Search key must be passed as an l-value as it is held by reference.
-////////const auto point_sk = get_point_key(link);
-////////auto point = store_.point.it(point_sk);
-////////if (!point)
-////////    return error::integrity;
-////////
-////////do
-////////{
-////    // Iterate all spends of the point to find double spends.
-////    // Search key must be passed as an l-value as it is held by reference.
-////    const auto spend_sk = table::spend::compose(link /*point.self()*/, index);
-////    auto it = store_.spend.it(spend_sk);
-////    if (!it)
-////        return self.is_terminal() ? error::success : error::integrity3;
-////
-////    table::spend::get_parent spend{};
-////    do
-////    {
-////        if (!store_.spend.get(it, spend))
-////            return error::integrity4;
-////
-////        // is_strong_tx (search) only called in the case of duplicate.
-////        // Other parent tx of spend is strong (confirmed spent prevout).
-////        if ((spend.parent_fk != self) && is_strong_tx(spend.parent_fk))
-////            return error::confirmed_double_spend;
-////    }
-////    while (it.advance());
-////////}
-////////while (point.advance());
-////    return error::success;
-////}
+    // to_block assures confirmation by strong_tx traversal.
+    const auto header_fk = to_block(tx_fk);
+    if (header_fk.is_terminal())
+        return error::unconfirmed_spend;
+
+    context prevout_ctx{};
+    if (!get_context(prevout_ctx, header_fk))
+        return error::integrity;
+
+    if (input::is_locked(sequence, ctx.height, ctx.mtp, prevout_ctx.height,
+        prevout_ctx.mtp))
+        return error::relative_time_locked;
+
+    return error::success;
+}
+
+// protected
+TEMPLATE
+bool CLASS::is_spent_prevout(const hash_digest& point_hash, index point_index,
+    const tx_link& self) const NOEXCEPT
+{
+    // Prevout is confirmed spent by other than self.
+    return spent_prevout(point_hash, point_index, self) ==
+        error::confirmed_double_spend;
+}
+
+// protected
+TEMPLATE
+error::error_t CLASS::spent_prevout(const hash_digest& point_hash,
+    index point_index, const tx_link& self) const NOEXCEPT
+{
+    // Search key must be passed as an l-value as it is held by reference.
+    const auto key = table::spend::compose(point_hash, point_index);
+
+    // Iterate all spends of the point to find double spends.
+    auto it = store_.spend.it(key);
+    if (!it)
+        return self.is_terminal() ? error::success : error::integrity3;
+
+    table::spend::get_parent spend{};
+    do
+    {
+        if (!store_.spend.get(it, spend))
+            return error::integrity4;
+
+        // is_strong_tx (search) only called in the case of duplicate.
+        // Other parent tx of spend is strong (confirmed spent prevout).
+        if ((spend.parent_fk != self) && is_strong_tx(spend.parent_fk))
+            return error::confirmed_double_spend;
+    }
+    while (it.advance());
+    return error::success;
+}
 
 // protected
 TEMPLATE
@@ -361,86 +352,74 @@ inline tx_links CLASS::get_strong_txs(const tx_link& link) const NOEXCEPT
     return strong_only(pairs);
 }
 
-// protected
-// Required for bip30 processing.
-// Return distinct set of txs by link for hash where each is strong by block.
-TEMPLATE
-inline tx_links CLASS::get_strong_txs(const hash_digest& tx_hash) const NOEXCEPT
-{
-    // TODO: avoid nested iterators. accumulate set of tx_links and iterate set
-    // TODO: after releasing the initial iterator.
-
-    // TODO: deadlock.
-    auto it = store_.tx.it(tx_hash);
-    if (!it)
-        return {};
-
-    tx_links links{};
-    do
-    {
-        // TODO: deadlock.
-        for (const auto& tx: get_strong_txs(it.self()))
-            links.push_back(tx);
-    }
-    while (it.advance());
-    return links;
-}
-
 // Duplicate tx instances (with the same hash) may result from a write race.
 // Duplicate cb tx instances are allowed by consensus. Apart from two bip30
 // exceptions, duplicate cb txs are allowed only if previous are fully spent.
 TEMPLATE
-code CLASS::unspent_duplicates(const header_link&,
+code CLASS::unspent_duplicates(const header_link& link,
     const context& ctx) const NOEXCEPT
 {
     // This is generally going to be disabled.
     if (!ctx.is_enabled(system::chain::flags::bip30_rule))
         return error::success;
 
-    // TODO:
-    ////// Get the block's first tx link
-    ////const auto tx = to_coinbase(link);
-    ////if (tx.is_terminal())
-    ////    return error::integrity;
-    ////
-    ////// Get the block's first tx hash.
-    ////const auto tx_hash = get_tx_key(tx);
-    ////if (tx_hash == system::null_hash)
-    ////    return error::integrity;
-    ////
-    ////// TODO: deadlock.
-    ////// Iterate all strong records for each tx link of the same hash.
-    ////// The same link may be the coinbase for more than one block.
-    ////// Distinct links may be the coinbase for independent blocks.
-    ////// Duplicate instances of a tx (including cb) may exist because of a race.
-    ////// Strong records for a link may be reorganized and again organized.
-    ////auto coinbases = get_strong_txs(tx_hash);
-    ////
-    ////if (prevout_enabled())
-    ////{
-    ////    // Current block is not set strong, so zero is expected.
-    ////    if (is_zero(coinbases.size()))
-    ////        return error::success;
-    ////}
-    ////else
-    ////{
-    ////    // Current block is set strong, so self is expected.
-    ////    if (is_one(coinbases.size()))
-    ////        return error::success;
-    ////
-    ////    // Remove self (will be not found if current block is not set_strong).
-    ////    const auto self = std::find(coinbases.begin(), coinbases.end(), link);
-    ////    if (self == coinbases.end() || coinbases.erase(self) == coinbases.end())
-    ////        return error::integrity;
-    ////}
-    /////
-    ////// bip30: all outputs of all previous duplicate coinbases must be spent.
-    ////// BUGBUG: with !prevout_enabled() this can locate spends in current block.
-    ////// BUGBUG: with multiple previous duplicates there must be same number of
-    ////// BUGBUG: spends of each coinbase output, but this will identify only one.
-    ////for (const auto coinbase: coinbases)
-    ////    if (!is_spent_coinbase(tx))
-    ////        return error::unspent_coinbase_collision;
+    // Get the block's first tx link.
+    const auto cb = to_coinbase(link);
+    if (cb.is_terminal())
+        return error::integrity;
+    
+    // Get the coinbase tx hash.
+    const auto tx_hash = get_tx_key(cb);
+    if (tx_hash == system::null_hash)
+        return error::integrity;
+
+    // Iterate all strong records for each tx link of the same hash.
+    // The same link may be the coinbase for more than one block.
+    // Distinct links may be the coinbase for independent blocks.
+    // Duplicate instances of a tx (including cb) may exist because of a race.
+    // Strong records for a link may be reorganized and again organized.
+    auto it = store_.tx.it(tx_hash);
+    if (!it)
+        return error::integrity;
+
+    // TODO: avoid nested iterators. accumulate set of tx_links and iterate set
+    // TODO: after releasing the initial iterator.
+    tx_links coinbases{};
+    do
+    {
+        ////////////////////////////////////////////////
+        // TODO: deadlock.
+        ////////////////////////////////////////////////
+        for (const auto& tx: get_strong_txs(it.self()))
+            coinbases.push_back(tx);
+    }
+    while (it.advance());
+    
+    if (prevout_enabled())
+    {
+        // Current block is not set strong, so zero is expected.
+        if (is_zero(coinbases.size()))
+            return error::success;
+    }
+    else
+    {
+        // Current block is set strong, so self is expected.
+        if (is_one(coinbases.size()))
+            return error::success;
+    
+        // Remove self (will be not found if current block is not set_strong).
+        const auto self = std::find(coinbases.begin(), coinbases.end(), link);
+        if (self == coinbases.end() || coinbases.erase(self) == coinbases.end())
+            return error::integrity;
+    }
+    
+    // bip30: all outputs of all previous duplicate coinbases must be spent.
+    // BUGBUG: with !prevout_enabled() this can locate spends in current block.
+    // BUGBUG: with multiple previous duplicates there must be same number of
+    // BUGBUG: spends of each coinbase output, but this will identify only one.
+    for (const auto coinbase: coinbases)
+        if (!is_spent_coinbase(coinbase))
+            return error::unspent_coinbase_collision;
 
     return error::success;
 }
@@ -462,18 +441,18 @@ bool CLASS::get_spend_set(spend_set& set, const tx_link& link) const NOEXCEPT
     set.version = tx.version;
     set.spends.clear();
     set.spends.reserve(tx.ins_count);
-    table::spend::get_prevout_sequence get{};
+    table::spend::get_point_sequence spend{};
     const auto ptr = store_.spend.get_memory();
 
     // This is not concurrent because get_spend_sets is (by tx).
     for (const auto& spend_fk: puts.spend_fks)
     {
-        if (!store_.spend.get(ptr, spend_fk, get))
+        if (!store_.spend.get(ptr, spend_fk, spend))
             return false;
 
-        ////// Translate result set to public struct.
-        ////set.spends.emplace_back(get.point_fk, get.point_index, get.sequence,
-        ////    table::prevout::tx::integer{}, bool{});
+        // Translate result set to public struct.
+        set.spends.emplace_back(spend.point_hash, spend.point_index,
+            spend.sequence, table::prevout::tx::integer{}, bool{});
     }
 
     return true;
@@ -530,7 +509,7 @@ bool CLASS::populate_prevouts(spend_sets& sets,
         for (auto& spend: set.spends)
         {
             spend.coinbase = prevouts.coinbase(index);
-            spend.prevout_tx_fk = prevouts.output_tx_fk(index++);
+            spend.tx_fk = prevouts.output_tx_fk(index++);
         }
 
     return true;
@@ -544,9 +523,11 @@ bool CLASS::populate_prevouts(spend_sets& sets) const NOEXCEPT
     for (auto& set: sets)
         for (auto& spend: set.spends)
         {
-            ////spend.prevout_tx_fk = to_tx(get_point_key(spend.point_fk));
-            spend.coinbase = is_coinbase(spend.prevout_tx_fk);
-            if (spend.prevout_tx_fk == table::prevout::tx::terminal)
+            // This should be converted when the spend set is generated.
+            spend.tx_fk = to_tx(spend.hash);
+
+            spend.coinbase = is_coinbase(spend.tx_fk);
+            if (spend.tx_fk == table::prevout::tx::terminal)
                 return false;
         }
 
@@ -577,9 +558,9 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     {
         error::error_t ec{};
         for (const auto& spend: set.spends)
-            if ((spend.prevout_tx_fk != table::prevout::tx::terminal) &&
+            if ((spend.tx_fk != table::prevout::tx::terminal) &&
                 ((ec = unspendable_prevout(spend.sequence, spend.coinbase,
-                    spend.prevout_tx_fk, set.version, ctx))))
+                    spend.tx_fk, set.version, ctx))))
                 result.store(ec);
 
         return result != error::success;
@@ -588,10 +569,10 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     const auto is_spent = [this, &result](const auto& set) NOEXCEPT
     {
         error::error_t ec{};
-        ////for (const auto& spend: set.spends)
-        ////    if ((spend.prevout_tx_fk != table::prevout::tx::terminal) &&
-        ////        ((ec = spent_prevout(spend.point_fk, spend.point_index, set.tx))))
-        ////        result.store(ec);
+        for (const auto& spend: set.spends)
+            if ((spend.tx_fk != table::prevout::tx::terminal) &&
+                ((ec = spent_prevout(spend.hash, spend.index, set.tx))))
+                result.store(ec);
 
         return result != error::success;
     };
@@ -610,11 +591,11 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::is_spent_coinbase(const tx_link& link) const NOEXCEPT
 {
-    ////// All outputs of the tx are confirmed spent.
-    ////const auto point_fk = to_point(get_tx_key(link));
-    ////for (index index{}; index < output_count(link); ++index)
-    ////    if (!is_spent_prevout(point_fk, index))
-    ////        return false;
+    // All outputs of the tx are confirmed spent.
+    const auto point_hash = get_tx_key(link);
+    for (index index{}; index < output_count(link); ++index)
+        if (!is_spent_prevout(point_hash, index))
+            return false;
 
     return true;
 }

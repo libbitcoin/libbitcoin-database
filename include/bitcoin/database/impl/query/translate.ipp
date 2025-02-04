@@ -139,7 +139,7 @@ tx_link CLASS::to_spend_tx(const spend_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-foreign_point CLASS::to_spend_key(const spend_link& link) const NOEXCEPT
+spend_key CLASS::to_spend_key(const spend_link& link) const NOEXCEPT
 {
     table::spend::get_key spend{};
     if (!store_.spend.get(link, spend))
@@ -280,11 +280,11 @@ uint32_t CLASS::to_output_index(const tx_link& parent_fk,
 // protected/to_spenders
 TEMPLATE
 spend_link CLASS::to_spender(const tx_link& link,
-    const foreign_point& point) const NOEXCEPT
+    const spend_key& key) const NOEXCEPT
 {
     table::spend::get_key spend{};
     for (const auto& spend_fk: to_spends(link))
-        if (store_.spend.get(spend_fk, spend) && (spend.key == point))
+        if (store_.spend.get(spend_fk, spend) && (spend.key == key))
             return spend_fk;
 
     return {};

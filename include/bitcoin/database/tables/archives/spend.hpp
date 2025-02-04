@@ -110,7 +110,7 @@ struct spend
 
         inline bool is_null() const NOEXCEPT
         {
-            return null_point(system::chain::point::null_index);
+            return null_point(point_index);
         }
 
         hash_digest point_hash{};
@@ -135,7 +135,7 @@ struct spend
 
         inline bool is_null() const NOEXCEPT
         {
-            return null_point(system::chain::point::null_index);
+            return null_point(point_index);
         }
 
         hash_digest point_hash{};
@@ -162,7 +162,7 @@ struct spend
         hash_digest point_hash{};
     };
 
-    struct get_prevout_parent
+    struct get_point_parent
       : public schema::spend
     {
         inline bool from_data(reader& source) NOEXCEPT
@@ -179,7 +179,7 @@ struct spend
 
         inline bool is_null() const NOEXCEPT
         {
-            return null_point(system::chain::point::null_index);
+            return null_point(point_index);
         }
 
         hash_digest point_hash{};
@@ -187,7 +187,7 @@ struct spend
         tx::integer parent_fk{};
     };
 
-    struct get_prevout_sequence
+    struct get_point_sequence
       : public schema::spend
     {
         inline bool from_data(reader& source) NOEXCEPT
@@ -205,7 +205,7 @@ struct spend
 
         inline bool is_null() const NOEXCEPT
         {
-            return null_point(system::chain::point::null_index);
+            return null_point(point_index);
         }
 
         hash_digest point_hash{};

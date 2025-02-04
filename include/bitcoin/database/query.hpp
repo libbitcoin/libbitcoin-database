@@ -49,7 +49,7 @@ using output_links = std::vector<output_link::integer>;
 using spend_links = std::vector<spend_link::integer>;
 
 struct strong_pair { header_link block{}; tx_link tx{}; };
-using foreign_point = table::spend::search_key;
+using spend_key = table::spend::search_key;
 using two_counts = std::pair<size_t, size_t>;
 
 struct spend_set
@@ -58,21 +58,21 @@ struct spend_set
     {
         inline table::spend::search_key prevout() const NOEXCEPT
         {
-            return table::spend::compose(point_hash, point_index);
+            return table::spend::compose(hash, index);
         }
 
         inline bool is_null() const NOEXCEPT
         {
-            return table::spend::null_point(point_index);
+            return table::spend::null_point(index);
         }
 
         // From spend table.
-        hash_digest point_hash{};
-        table::spend::ix::integer point_index{};
+        hash_digest hash{};
+        table::spend::ix::integer index{};
         uint32_t sequence{};
 
         // From prevouts table.
-        table::prevout::tx::integer prevout_tx_fk{};
+        table::prevout::tx::integer tx_fk{};
         bool coinbase{};
     };
 
@@ -274,7 +274,7 @@ public:
     tx_link to_spend_tx(const spend_link& link) const NOEXCEPT;
     tx_link to_output_tx(const output_link& link) const NOEXCEPT;
     tx_link to_prevout_tx(const spend_link& link) const NOEXCEPT;
-    foreign_point to_spend_key(const spend_link& link) const NOEXCEPT;
+    spend_key to_spend_key(const spend_link& link) const NOEXCEPT;
 
     /// point to put (forward navigation)
     spend_link to_spend(const tx_link& link,
@@ -506,7 +506,7 @@ public:
     bool set_prevouts(const header_link& link, const block& block) NOEXCEPT;
     code block_confirmable(const header_link& link) const NOEXCEPT;
     ////code tx_confirmable(const tx_link& link, const context& ctx) const NOEXCEPT;
-    code unspent_duplicates(const header_link& coinbase,
+    code unspent_duplicates(const header_link& link,
         const context& ctx) const NOEXCEPT;
 
     /// Height indexation.
@@ -547,11 +547,10 @@ protected:
     uint32_t to_output_index(const tx_link& parent_fk,
         const output_link& output_fk) const NOEXCEPT;
     spend_link to_spender(const tx_link& link,
-        const foreign_point& point) const NOEXCEPT;
+        const spend_key& point) const NOEXCEPT;
 
     // Critical path
     inline tx_links get_strong_txs(const tx_link& link) const NOEXCEPT;
-    inline tx_links get_strong_txs(const hash_digest& tx_hash) const NOEXCEPT;
     inline strong_pair to_strong(const hash_digest& tx_hash) const NOEXCEPT;
 
     /// Validate.
@@ -565,20 +564,20 @@ protected:
     /// -----------------------------------------------------------------------
 
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
-    ////code mature_prevout(const point_link& link,
-    ////    size_t height) const NOEXCEPT;
-    ////code locked_prevout(const point_link& link, uint32_t sequence,
-    ////    const context& ctx) const NOEXCEPT;
+    code mature_prevout(const hash_digest& point_hash,
+        size_t height) const NOEXCEPT;
+    code locked_prevout(const hash_digest& point_hash, uint32_t sequence,
+        const context& ctx) const NOEXCEPT;
 
     // Critical path
     bool populate_prevouts(spend_sets& sets) const NOEXCEPT;
     bool populate_prevouts(spend_sets& sets, const header_link& link) const NOEXCEPT;
     bool get_spend_set(spend_set& set, const tx_link& link) const NOEXCEPT;
     bool get_spend_sets(spend_sets& set, const header_link& link) const NOEXCEPT;
-    ////bool is_spent_prevout(const point_link& link, index index,
-    ////    const tx_link& self=tx_link::terminal) const NOEXCEPT;
-    ////error::error_t spent_prevout(const point_link& link, index index,
-    ////    const tx_link& self=tx_link::terminal) const NOEXCEPT;
+    bool is_spent_prevout(const hash_digest& point_hash, index point_index,
+        const tx_link& self=tx_link::terminal) const NOEXCEPT;
+    error::error_t spent_prevout(const hash_digest& point_hash, index point_index,
+        const tx_link& self=tx_link::terminal) const NOEXCEPT;
     error::error_t unspendable_prevout(uint32_t sequence, bool coinbase,
         const tx_link& prevout_tx, uint32_t version,
         const context& ctx) const NOEXCEPT;
